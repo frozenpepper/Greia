@@ -115,12 +115,13 @@ Read:
 ```text
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 src/greia_launcher/system_chrome.py
 src/greia_launcher/trusted_chrome_supervisor.py
 ```
 
-The real Home/Back path is platform authority, not an Activity helper. Current R7.3 source composes a Legacy-X migration backend through `SystemChromeCoordinator`; do not move trusted navigation back into Activity drawing/event code. The installed primary child shell and installed fallback must both preserve trusted chrome. A Legacy-X overlay PASS is migration evidence only and does not supersede ADR 0014's direct/appliance target.
+The real Home/Back path is platform authority, not an Activity helper. Current R7.3 source composes a Legacy-X migration backend through `SystemChromeCoordinator`; do not move trusted navigation back into Activity drawing/event code. The installed primary child shell and installed fallback must both preserve trusted chrome. Activity safe/protected geometry remains valid, but first-party Activity code must not import/call the retired cooperative Home helpers or request Activity-side canvas chrome. Use `tools/audit_activity_system_chrome_ownership.py --strict` for the current catalogue migration gate. A Legacy-X overlay PASS is migration evidence only and does not supersede ADR 0014's direct/appliance target.
 
 ### Input, controller, pointer or touch ownership
 
@@ -153,6 +154,8 @@ docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
 docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
 docs/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md
+docs/reviews/2026-08-29_R7_R73_TRUSTED_CHROME_SOURCE_TRANCHE.md
+docs/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
 docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
@@ -163,6 +166,7 @@ src/greia_launcher/system_chrome_legacy_x.py
 src/greia_launcher/trusted_chrome_supervisor.py
 src/greia_launcher/trusted_presentation.py
 src/greia_platform/activity_backend_policy.py
+src/greia_platform/pygame_canvas.py
 ```
 
 Preserve the existing seams rather than inventing a parallel platform layer:
@@ -173,7 +177,9 @@ Preserve the existing seams rather than inventing a parallel platform layer:
 - `TrustedChromeActivitySupervisor` binds chrome to the same Activity lifecycle and graceful/forced stop authority;
 - installed primary and fallback launcher compositions must both use trusted chrome;
 - Activity source stays backend-neutral and may continue using ordinary SDL/Pygame rendering/performance techniques;
-- `tools/audit_activity_backend_independence.py` inventories blockers and temporary migration debt.
+- renderer-neutral safe/protected geometry remains available to Activities, but real Home/Back rendering and action handling do not;
+- `tools/audit_activity_backend_independence.py` inventories backend blockers;
+- `tools/audit_activity_system_chrome_ownership.py --strict` is the current zero-debt Activity Home/Back ownership gate.
 
 The current `LegacyXSystemChromeBackend` is intentionally a tiny migration adapter: one launcher-process window limited to the protected region, event-driven redraw, no Activity pixel copies and no second Pygame process. Do not expand it into a desktop/window manager or call it final third-party isolation. Shared X11 remains a migration limitation under ADR 0014.
 
@@ -415,7 +421,7 @@ Before calling substantive OS/platform work done, record:
 6. If audio/microphone changed: does audio.basic still receive only the platform route, does Parent OFF still apply on next open, and is readiness truthful?
 7. If prerecorded speech was produced: did it go through VoiceEngine, retain human-review authority, and avoid adding child-runtime model dependencies?
 8. Were required active-plan/HANDOVER/manual/skill updates made?
-9. If display/session/input changed: is Activity source still backend-neutral, is trusted authority outside Activities, are installed primary/fallback paths both protected, and were existing low-resource optimization opportunities preserved rather than hidden behind a slow common path?
+9. If display/session/input changed: is Activity source still backend-neutral, free of Activity-owned real Home/Back, is trusted authority outside Activities, are installed primary/fallback paths both protected, and were existing low-resource optimization opportunities preserved rather than hidden behind a slow common path?
 ```
 
 Do not load broad architecture documents just because they exist. Start with this router, read the narrow authorities for the actual task, and expand only when the change genuinely crosses subsystem boundaries.
