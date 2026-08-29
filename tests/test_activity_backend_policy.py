@@ -44,6 +44,8 @@ pygame.display.flip()
             "import pywayland",
             "from evdev import InputDevice",
             "import libinput",
+            "import pykms",
+            "import gbm",
         ):
             with self.subTest(statement=statement):
                 root = self._activity(statement + "\n")
@@ -85,22 +87,27 @@ pygame.display.flip()
                 with self.assertRaises(ActivityBackendPolicyError):
                     assert_python_activity_backend_independent(root)
 
-    def test_raw_input_and_drm_device_paths_are_blockers(self) -> None:
+    def test_raw_input_drm_and_sysfs_device_paths_are_blockers(self) -> None:
         root = self._activity(
-            'INPUT = "/dev/input/event0"\nDRM = "/dev/dri/card0"\n'
+            'INPUT = "/dev/input/event0"\n'
+            'DRM = "/dev/dri/card0"\n'
+            'INPUT_SYS = "/sys/class/input/event0"\n'
+            'DRM_SYS = "/sys/class/drm/card0"\n'
         )
         with self.assertRaisesRegex(ActivityBackendPolicyError, "raw-device-path"):
             assert_python_activity_backend_independent(root)
 
     def test_backend_shell_commands_are_blockers_only_when_executed(self) -> None:
-        root = self._activity(
-            """
-import subprocess
-subprocess.run(["xrandr", "--query"])
-"""
+        cases = (
+            'import subprocess\nsubprocess.run(["xrandr", "--query"])\n',
+            'import subprocess\nsubprocess.run(["weston", "--help"])\n',
+            'import subprocess\nsubprocess.run(["modetest"])\n',
         )
-        with self.assertRaisesRegex(ActivityBackendPolicyError, "backend-command"):
-            assert_python_activity_backend_independent(root)
+        for source in cases:
+            with self.subTest(source=source):
+                root = self._activity(source)
+                with self.assertRaisesRegex(ActivityBackendPolicyError, "backend-command"):
+                    assert_python_activity_backend_independent(root)
 
         harmless = self._activity(
             'NOTE = "xrandr is a platform implementation detail"\n'
@@ -120,6 +127,24 @@ subprocess.run(["xrandr", "--query"])
                     ActivityBackendPolicyError, "backend-native-library"
                 ):
                     assert_python_activity_backend_independent(root)
+
+    def test_pygame_backend_introspection_is_blocked_but_display_use_is_not(self) -> None:
+        cases = (
+            'import pygame\nbackend = pygame.display.get_driver()\n',
+            'import pygame as pg\ninfo = pg.display.get_wm_info()\n',
+        )
+        for source in cases:
+            with self.subTest(source=source):
+                root = self._activity(source)
+                with self.assertRaisesRegex(
+                    ActivityBackendPolicyError, "backend-introspection"
+                ):
+                    assert_python_activity_backend_independent(root)
+
+        allowed = self._activity(
+            'import pygame\nscreen = pygame.display.set_mode((1024, 600))\npygame.display.flip()\n'
+        )
+        assert_python_activity_backend_independent(allowed)
 
     def test_current_activity_side_system_chrome_is_migration_debt_not_new_blocker(self) -> None:
         root = self._activity(
