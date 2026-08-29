@@ -6,7 +6,7 @@ description: Task router for creating, modifying, refactoring, validating, packa
 # Greia Activity Authoring — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-08-28
+**Reviewed:** 2026-08-29
 
 Keep this file small. It tells an agent **what to read for the task**; it is not a duplicate Activity manual.
 
@@ -28,6 +28,7 @@ These apply to all substantive Activity work:
 12. Simulator launch evidence becomes stale after any runtime-relevant edit. Relaunch the final state.
 13. If the simulator cannot be run, report `INTEGRATION-UNVERIFIED` / `SOURCE-VERIFIED / SIMULATOR-UNVERIFIED`; do not call the Activity complete or working.
 14. Claim only evidence that actually executed. Simulator evidence is not physical Acer/Pi evidence.
+15. **Activity source is display/input-backend independent.** Ordinary Pygame/SDL rendering, display creation, event handling, dirty rendering, cached transforms and other accepted performance fast paths remain valid. Activity code must not select, probe, configure or branch on X11, Wayland, DRM/KMS, raw `/dev/input`/`/dev/dri`/backend sysfs, backend environment, native backend libraries or host display/input commands. Activities also do not implement the real Greia Home/Back or own physical controller devices. `src/greia_platform/activity_backend_policy.py` owns the structured Python source gate; `tools/audit_activity_backend_independence.py` inventories both hard violations and temporary R7 migration debt. Do not weaken this boundary to make a package convenient, and do not replace efficient direct SDL rendering/high-rate pointer or text paths with generic Python frame/input IPC.
 
 For child-facing pre-reader design, read:
 
@@ -132,6 +133,7 @@ runtime/child-runtime.toml
 src/greia_launcher/runtime_adapter.py
 src/greia_platform/activity_api.py
 src/greia_platform/activities.py
+src/greia_platform/activity_backend_policy.py
 ```
 
 ### Changing existing Activity code
@@ -222,6 +224,7 @@ docs/adr/0027-activity-coordinate-spaces-canvas-and-world-camera.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 docs/product/ACTIVITY_INPUT_STANDARDS.md
 docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
+docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
 ```
 
 For Pygame Activities inspect current shared primitives instead of copying launcher code:
@@ -232,6 +235,7 @@ src/greia_platform/pygame_canvas.py
 src/greia_platform/activity_ui.py
 src/greia_platform/activity_viewport.py
 src/greia_platform/responsive_layout.py
+src/greia_platform/activity_backend_policy.py
 ```
 
 Runtime-relevant UI/input work must finish with `LAUNCH_ACCEPTANCE.md` and, when the child-facing flow changed, a no-reading UX pass from `PRE_READER_UX.md`.
@@ -286,6 +290,7 @@ src/greia_platform/activity_packages.py
 src/greia_platform/activity_assets.py
 src/greia_platform/activity_tree_cleanup.py
 src/greia_platform/trust.py
+src/greia_platform/activity_backend_policy.py
 ```
 
 Use the Simulator's canonical package-install path for package acceptance; then follow `LAUNCH_ACCEPTANCE.md`.
@@ -393,7 +398,10 @@ Read:
 ```text
 skills/greia-activity-authoring/ENGINEERING.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
+docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
 ```
+
+Backend independence is not permission to replace direct SDL drawing with generic frame IPC or to route high-rate pointer/text input through Python brokers. Preserve measured fast paths while keeping backend/device authority below the Greia platform boundary.
 
 Then rerun `LAUNCH_ACCEPTANCE.md` because an optimized Activity that no longer launches is not an optimization. Hardware performance claims require named physical hardware and exact source SHA.
 
@@ -420,9 +428,10 @@ Before saying substantive Activity work is done, answer:
 6. Did the Activity avoid duplicating OS-owned canonical character self-introductions?
 7. For a new Activity: was microphone/voice recording considered, and if included does it use audio.basic + the Greia SDK route?
 8. For a new Activity: what score/progress/events/Stars/achievement decision was made?
-9. Which source/test validation actually ran?
+9. Which source/test validation actually ran, including Activity backend-independence validation where applicable?
 10. What exact final source SHA/state was launched through Greia Simulator?
 11. Did it reach a usable frame, survive >=10s, survive meaningful input, exercise relevant completion/score/milestone/recording paths, and return cleanly to Shell?
+12. Does Activity source remain backend-neutral while preserving the appropriate direct SDL/performance optimization opportunities?
 ```
 
 If the Activity requires reading for ordinary core instructions, the child-facing UX is failed even if code launches and tests pass.
