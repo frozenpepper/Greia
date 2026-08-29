@@ -20,8 +20,6 @@ from greia_platform.activity_api import (
 from greia_platform.activity_ui import (
     ChildUiMetrics,
     draw_activity_pointer,
-    draw_system_chrome_overlay,
-    is_home_clicked,
     load_icon,
     mix,
 )
@@ -376,9 +374,6 @@ class PaintingApp:
             self._finish_stroke()
             return True
 
-        if is_home_clicked(self.screen, pos):
-            return not self._save()
-
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
@@ -593,8 +588,7 @@ class PaintingApp:
             self._draw_canvas()
             self._draw_palette()
 
-        # 4. System chrome & pointer
-        draw_system_chrome_overlay(self.screen)
+        # 4. Activity-local pointer. Trusted Home/Back is platform-owned.
         draw_activity_pointer(self.screen)
 
     def _draw_studio_background(self) -> None:
