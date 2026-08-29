@@ -116,18 +116,22 @@ Run:
 python3 -m unittest \
   tests.test_activity_enciclopedia \
   tests.test_activity_enciclopedia_visual_foundation \
-  tests.test_encyclopedia_authoring_tools
+  tests.test_encyclopedia_authoring_tools \
+  tests.test_encyclopedia_e3_review_tools
 ```
 
-The focused visual-foundation suite must prove at least:
+The focused visual/review suites must prove at least:
 
 - eleven editable masters are known to the build contract;
 - `VisualLibrary` maps exactly the eleven runtime PNGs;
 - page hot paths do not decode/scale assets;
 - E3 section pages use the authored-scene seam with fail-soft fallback;
 - Home/Animals/Earth/Body/Machines/History source target centers match actual input geometry;
+- Space's live planet geometry stays inside the authored observatory stage bounds;
 - the golden runtime tranche is complete;
-- the E3 runtime tranche is all-or-none, never partial.
+- the E3 runtime tranche is all-or-none, never partial;
+- the E3 review harness is exactly Home + the six section pages;
+- E3 capture evidence is bound to one clean tracked source SHA and an unchanged runtime-PNG hash inventory.
 
 Then run the repository-local aggregate gate required by current `main`:
 
@@ -170,7 +174,8 @@ python3 tools/build_encyclopedia_visual_assets.py --check --group all
 python3 -m unittest \
   tests.test_activity_enciclopedia \
   tests.test_activity_enciclopedia_visual_foundation \
-  tests.test_encyclopedia_authoring_tools
+  tests.test_encyclopedia_authoring_tools \
+  tests.test_encyclopedia_e3_review_tools
 ```
 
 If the pushed SHA no longer matches the source/runtime state that was tested, stop and reconcile before Simulator capture.
@@ -209,7 +214,25 @@ The harness reuses the established golden-master Simulator driver. Every job mus
 - capture the requested page;
 - exercise protected Greia Home return before shutdown.
 
-Stop on the first failed session. Do not substitute direct page-module rendering or isolated Pygame screenshots.
+The harness itself now enforces evidence integrity:
+
+- tracked source must be clean before capture (`git status --short --untracked-files=no`);
+- `source-sha.txt` records the exact starting `HEAD`;
+- `capture-manifest.json` records source SHA, selected/completed jobs, viewport/locale/interface size and SHA-256 of every Activity runtime PNG;
+- the final `HEAD` and tracked status must match the start;
+- the final runtime-PNG hash inventory must equal the starting inventory;
+- successful completion writes `"status": "PASS"`.
+
+After the command succeeds, inspect:
+
+```text
+tmp/encyclopedia-e3-section-review-2026-08-29/source-sha.txt
+tmp/encyclopedia-e3-section-review-2026-08-29/capture-manifest.json
+```
+
+The manifest must show exactly the requested seven jobs in `completed_jobs` and `status=PASS` before any screenshot is treated as current evidence.
+
+Stop on the first failed session or evidence-integrity failure. Do not substitute direct page-module rendering or isolated Pygame screenshots.
 
 ---
 
@@ -261,7 +284,8 @@ Review the actual Simulator contact sheet at 100% and each 1024×600 frame indiv
 
 - authored observatory and live Solar System complement one another;
 - observatory does not obscure moving planet/Moon targets;
-- dynamic targets remain visually dominant enough to select.
+- dynamic targets remain visually dominant enough to select;
+- no planet/ring/marker visibly escapes the authored observation stage.
 
 ### Earth & Nature
 
