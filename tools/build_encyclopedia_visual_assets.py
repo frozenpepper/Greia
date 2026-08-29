@@ -8,7 +8,10 @@ build product therefore requires an intentional rebuild and commit.
 
 The visual migration is deliberately tranche-based. ``golden`` owns the six
 accepted golden-master renditions and ``sections`` owns the five E3 section
-worlds. The default ``all`` group produces both tranches together.
+worlds. The default ``all`` group produces both tranches together. A full
+``--check --group all`` additionally requires the runtime directory to contain
+exactly those eleven PNGs, preventing stale or abandoned renditions from being
+silently carried into exact-SHA Simulator evidence.
 """
 from __future__ import annotations
 
@@ -71,6 +74,12 @@ def _selected_names(group: str) -> tuple[str, ...]:
     return NAMES
 
 
+def _runtime_png_names() -> set[str]:
+    if not RUNTIME.exists():
+        return set()
+    return {path.name for path in RUNTIME.glob("*.png") if path.is_file()}
+
+
 def build(names: tuple[str, ...]) -> int:
     total = 0
     for name in names:
@@ -83,15 +92,22 @@ def build(names: tuple[str, ...]) -> int:
 
 
 def check(names: tuple[str, ...]) -> int:
-    missing = [
-        RUNTIME / f"{name}.png"
-        for name in names
-        if not (RUNTIME / f"{name}.png").is_file()
-    ]
-    if missing:
-        for path in missing:
-            print(f"MISSING {path.relative_to(ROOT)}")
+    expected = {f"{name}.png" for name in names}
+    present = _runtime_png_names()
+    missing_names = sorted(expected - present)
+    if missing_names:
+        for filename in missing_names:
+            print(f"MISSING {(RUNTIME / filename).relative_to(ROOT)}")
         return 1
+
+    # Tranche checks intentionally coexist with the other tranche. The full
+    # check is the release/review contract and therefore rejects stale extras.
+    if names == NAMES:
+        unexpected = sorted(present - expected)
+        if unexpected:
+            for filename in unexpected:
+                print(f"UNEXPECTED {(RUNTIME / filename).relative_to(ROOT)}")
+            return 1
 
     with TemporaryDirectory(prefix="greia-encyclopedia-art-") as temporary:
         rebuilt_root = Path(temporary)
