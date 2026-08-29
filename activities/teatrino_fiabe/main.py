@@ -38,8 +38,6 @@ from greia_platform.activity_api import (
 from greia_platform.activity_ui import (
     ChildUiMetrics,
     draw_activity_pointer,
-    draw_system_chrome_overlay,
-    is_home_clicked,
     mix,
 )
 from greia_platform.pygame_canvas import (
@@ -1160,9 +1158,6 @@ def main() -> int:
                 break
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if is_home_clicked(screen, event.pos):
-                    running = False
-                    continue
                 if not _is_safe_point(screen, event.pos):
                     continue
 
