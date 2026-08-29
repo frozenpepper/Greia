@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
+from greia_launcher.composition import provisional_installed_system_chrome
 from greia_launcher.system_chrome_legacy_x import LegacyXSystemChromeBackend
 from greia_platform.system_chrome import (
     ActivitySystemChromeLayout,
@@ -41,6 +42,10 @@ class _Bridge:
 
 
 class LegacyXSystemChromeBackendTests(unittest.TestCase):
+    def test_installed_composition_selects_legacy_x_chrome_only_below_coordinator(self) -> None:
+        coordinator = provisional_installed_system_chrome()
+        self.assertEqual(coordinator.backend_id, "legacy-x11-system-chrome")
+
     def test_home_is_mapped_by_platform_layout(self) -> None:
         bridge = _Bridge()
         backend = LegacyXSystemChromeBackend(bridge=bridge)
