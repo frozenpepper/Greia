@@ -1,0 +1,389 @@
+{
+  "activity_id": "org.greia.enciclopedia",
+  "child_warnings": [
+    "libpng error: bad adaptive filter value"
+  ],
+  "entries_captured": 36,
+  "entries_expected": 36,
+  "entry_evidence": [
+    {
+      "after_png": "screenshots/entries/animals.lion-after.png",
+      "before_png": "screenshots/entries/animals.lion-before.png",
+      "changed_pixel_fraction": 0.028228,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "animals.lion",
+      "section_id": "animals"
+    },
+    {
+      "after_png": "screenshots/entries/animals.elephant-after.png",
+      "before_png": "screenshots/entries/animals.elephant-before.png",
+      "changed_pixel_fraction": 0.017852,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "animals.elephant",
+      "section_id": "animals"
+    },
+    {
+      "after_png": "screenshots/entries/animals.octopus-after.png",
+      "before_png": "screenshots/entries/animals.octopus-before.png",
+      "changed_pixel_fraction": 0.06819,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "animals.octopus",
+      "section_id": "animals"
+    },
+    {
+      "after_png": "screenshots/entries/animals.bee-after.png",
+      "before_png": "screenshots/entries/animals.bee-before.png",
+      "changed_pixel_fraction": 0.014551,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "animals.bee",
+      "section_id": "animals"
+    },
+    {
+      "after_png": "screenshots/entries/animals.penguin-after.png",
+      "before_png": "screenshots/entries/animals.penguin-before.png",
+      "changed_pixel_fraction": 0.889023,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "animals.penguin",
+      "section_id": "animals"
+    },
+    {
+      "after_png": "screenshots/entries/animals.frog-after.png",
+      "before_png": "screenshots/entries/animals.frog-before.png",
+      "changed_pixel_fraction": 0.025942,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "animals.frog",
+      "section_id": "animals"
+    },
+    {
+      "after_png": "screenshots/entries/space.sun-after.png",
+      "before_png": "screenshots/entries/space.sun-before.png",
+      "changed_pixel_fraction": 0.029048,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.sun",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.mercury-after.png",
+      "before_png": "screenshots/entries/space.mercury-before.png",
+      "changed_pixel_fraction": 0.017695,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.mercury",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.venus-after.png",
+      "before_png": "screenshots/entries/space.venus-before.png",
+      "changed_pixel_fraction": 0.019224,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.venus",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.earth-after.png",
+      "before_png": "screenshots/entries/space.earth-before.png",
+      "changed_pixel_fraction": 0.041491,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.earth",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.moon-after.png",
+      "before_png": "screenshots/entries/space.moon-before.png",
+      "changed_pixel_fraction": 0.028888,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.moon",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.mars-after.png",
+      "before_png": "screenshots/entries/space.mars-before.png",
+      "changed_pixel_fraction": 0.049111,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.mars",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.jupiter-after.png",
+      "before_png": "screenshots/entries/space.jupiter-before.png",
+      "changed_pixel_fraction": 0.014279,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.jupiter",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.saturn-after.png",
+      "before_png": "screenshots/entries/space.saturn-before.png",
+      "changed_pixel_fraction": 0.02314,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.saturn",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.uranus-after.png",
+      "before_png": "screenshots/entries/space.uranus-before.png",
+      "changed_pixel_fraction": 0.018656,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.uranus",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/space.neptune-after.png",
+      "before_png": "screenshots/entries/space.neptune-before.png",
+      "changed_pixel_fraction": 0.015977,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "space.neptune",
+      "section_id": "space"
+    },
+    {
+      "after_png": "screenshots/entries/earth.volcano-after.png",
+      "before_png": "screenshots/entries/earth.volcano-before.png",
+      "changed_pixel_fraction": 0.019495,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "earth.volcano",
+      "section_id": "earth"
+    },
+    {
+      "after_png": "screenshots/entries/earth.rain-after.png",
+      "before_png": "screenshots/entries/earth.rain-before.png",
+      "changed_pixel_fraction": 0.013309,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "earth.rain",
+      "section_id": "earth"
+    },
+    {
+      "after_png": "screenshots/entries/earth.ocean-after.png",
+      "before_png": "screenshots/entries/earth.ocean-before.png",
+      "changed_pixel_fraction": 0.045586,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "earth.ocean",
+      "section_id": "earth"
+    },
+    {
+      "after_png": "screenshots/entries/earth.tree-after.png",
+      "before_png": "screenshots/entries/earth.tree-before.png",
+      "changed_pixel_fraction": 0.015853,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "earth.tree",
+      "section_id": "earth"
+    },
+    {
+      "after_png": "screenshots/entries/earth.rainbow-after.png",
+      "before_png": "screenshots/entries/earth.rainbow-before.png",
+      "changed_pixel_fraction": 0.021745,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "earth.rainbow",
+      "section_id": "earth"
+    },
+    {
+      "after_png": "screenshots/entries/body.heart-after.png",
+      "before_png": "screenshots/entries/body.heart-before.png",
+      "changed_pixel_fraction": 0.017329,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "body.heart",
+      "section_id": "body"
+    },
+    {
+      "after_png": "screenshots/entries/body.lungs-after.png",
+      "before_png": "screenshots/entries/body.lungs-before.png",
+      "changed_pixel_fraction": 0.027036,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "body.lungs",
+      "section_id": "body"
+    },
+    {
+      "after_png": "screenshots/entries/body.bones-after.png",
+      "before_png": "screenshots/entries/body.bones-before.png",
+      "changed_pixel_fraction": 0.013757,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "body.bones",
+      "section_id": "body"
+    },
+    {
+      "after_png": "screenshots/entries/body.teeth-after.png",
+      "before_png": "screenshots/entries/body.teeth-before.png",
+      "changed_pixel_fraction": 0.018327,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "body.teeth",
+      "section_id": "body"
+    },
+    {
+      "after_png": "screenshots/entries/body.senses-after.png",
+      "before_png": "screenshots/entries/body.senses-before.png",
+      "changed_pixel_fraction": 0.01507,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "body.senses",
+      "section_id": "body"
+    },
+    {
+      "after_png": "screenshots/entries/machines.gears-after.png",
+      "before_png": "screenshots/entries/machines.gears-before.png",
+      "changed_pixel_fraction": 0.029813,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "machines.gears",
+      "section_id": "machines"
+    },
+    {
+      "after_png": "screenshots/entries/machines.magnet-after.png",
+      "before_png": "screenshots/entries/machines.magnet-before.png",
+      "changed_pixel_fraction": 0.022741,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "machines.magnet",
+      "section_id": "machines"
+    },
+    {
+      "after_png": "screenshots/entries/machines.bicycle-after.png",
+      "before_png": "screenshots/entries/machines.bicycle-before.png",
+      "changed_pixel_fraction": 0.021188,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "machines.bicycle",
+      "section_id": "machines"
+    },
+    {
+      "after_png": "screenshots/entries/machines.airplane-after.png",
+      "before_png": "screenshots/entries/machines.airplane-before.png",
+      "changed_pixel_fraction": 0.023167,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "machines.airplane",
+      "section_id": "machines"
+    },
+    {
+      "after_png": "screenshots/entries/machines.bridge-after.png",
+      "before_png": "screenshots/entries/machines.bridge-before.png",
+      "changed_pixel_fraction": 0.02236,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "machines.bridge",
+      "section_id": "machines"
+    },
+    {
+      "after_png": "screenshots/entries/history.dinosaurs-after.png",
+      "before_png": "screenshots/entries/history.dinosaurs-before.png",
+      "changed_pixel_fraction": 0.039119,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "history.dinosaurs",
+      "section_id": "history"
+    },
+    {
+      "after_png": "screenshots/entries/history.fossils-after.png",
+      "before_png": "screenshots/entries/history.fossils-before.png",
+      "changed_pixel_fraction": 0.021468,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "history.fossils",
+      "section_id": "history"
+    },
+    {
+      "after_png": "screenshots/entries/history.mammoth-after.png",
+      "before_png": "screenshots/entries/history.mammoth-before.png",
+      "changed_pixel_fraction": 0.018771,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "history.mammoth",
+      "section_id": "history"
+    },
+    {
+      "after_png": "screenshots/entries/history.cave_paintings-after.png",
+      "before_png": "screenshots/entries/history.cave_paintings-before.png",
+      "changed_pixel_fraction": 0.027795,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "history.cave_paintings",
+      "section_id": "history"
+    },
+    {
+      "after_png": "screenshots/entries/history.pyramids-after.png",
+      "before_png": "screenshots/entries/history.pyramids-before.png",
+      "changed_pixel_fraction": 0.021243,
+      "interaction_keys": [
+        "RETURN"
+      ],
+      "page_id": "history.pyramids",
+      "section_id": "history"
+    }
+  ],
+  "first_failure": null,
+  "locale": "it",
+  "narration_acceptance_pending": true,
+  "pointer_parity_review_pending": true,
+  "pre_reader_review_pending": true,
+  "section_pngs": {
+    "animals": "screenshots/sections/01-animals.png",
+    "body": "screenshots/sections/04-body.png",
+    "earth": "screenshots/sections/03-earth.png",
+    "history": "screenshots/sections/06-history.png",
+    "machines": "screenshots/sections/05-machines.png",
+    "space": "screenshots/sections/02-space.png"
+  },
+  "sections_captured": 6,
+  "sections_expected": 6,
+  "shell_route": "home[2]=learn -> activity[4]=org.greia.enciclopedia",
+  "status": "PASS",
+  "viewport": "1024x600",
+  "visual_signature_review_pending": true
+}
