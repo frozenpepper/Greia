@@ -138,12 +138,14 @@ def install_pygame_display_patch(
         except Exception:
             pass
 
-    def _draw_chrome_overlay(surface: pygame.Surface | None) -> None:
+    def _draw_chrome_overlay(surface: pygame.Surface | None) -> pygame.Rect | None:
         if surface is None:
-            return
+            return None
         w, h = surface.get_size()
         chrome = ActivitySystemChromeLayout.for_surface(w, h)
         draw_system_chrome_overlay(surface, back_available=chrome.back_available)
+        region = chrome.protected_region
+        return pygame.Rect(region.x, region.y, region.width, region.height)
 
     def simulator_flip():
         surface = pygame.display.get_surface()
@@ -153,9 +155,18 @@ def install_pygame_display_patch(
 
     def simulator_update(*args, **kwargs):
         surface = pygame.display.get_surface()
-        _draw_chrome_overlay(surface)
+        chrome_region = _draw_chrome_overlay(surface)
         _maybe_post_frame(surface)
-        return original_update(*args, **kwargs)
+        result = original_update(*args, **kwargs)
+        # A dirty-rectangle Activity may omit the Home corner from its requested
+        # update. Preserve the Activity's cheap partial update, then present only
+        # Greia's small protected rectangle so trusted chrome cannot disappear.
+        is_full_update = not args and not kwargs
+        if len(args) == 1 and args[0] is None and not kwargs:
+            is_full_update = True
+        if chrome_region is not None and not is_full_update:
+            original_update(chrome_region)
+        return result
 
     def simulator_get_events(*args, **kwargs):
         _poll_remote_events()
