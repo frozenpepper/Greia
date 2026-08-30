@@ -1,7 +1,7 @@
 # Greia Visual Foundation and Asset System — Active Art Workstream Plan
 
-**Status:** ACTIVE ART/VISUAL WORKSTREAM  
-**Last checkpoint review:** 2026-08-29  
+**Status:** ACTIVE ART/VISUAL WORKSTREAM — Encyclopedia E3 ACCEPTED at 03bf76ac; Activity modernization COMPLETE at e2b831da (source green)  
+**Last checkpoint review:** 2026-08-30  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Stable system/index guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  

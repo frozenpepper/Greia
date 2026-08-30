@@ -1,8 +1,8 @@
 # Greia Encyclopedia v0.1 — Visual Reauthoring Plan
 
-**Status:** ACTIVE SUBPLAN — E2 DIRECTION OWNER-APPROVED; E3 SECTION SOURCE IMPLEMENTED; RUNTIME BUILD + SIX-SECTION SIMULATOR REVIEW CURRENT  
+**Status:** COMPLETE for E3 — E2 APPROVED; E3 SOURCE + 11-PNG RUNTIME + SIMULATOR ACCEPTED at 03bf76ac; E4 UNBLOCKED/NEXT (deferred per post-activity-pass protocol)  
 **Date:** 2026-08-28  
-**Current checkpoint:** 2026-08-29  
+**Current checkpoint:** 2026-08-30 — E3 ACCEPTED (see `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`; evidence HEAD 69cf8966)  
 **Parent visual authority:** `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`  
 **Stable visual architecture:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
 **Forensic audit:** `docs/reviews/2026-08-28_ENCYCLOPEDIA_GRAPHICS_FORENSIC_AUDIT.md`  

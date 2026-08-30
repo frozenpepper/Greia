@@ -1,11 +1,11 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-08-29
+**Updated:** 2026-08-30 — post-activity-pass source gate green at e2b831da; Activity modernization COMPLETE (blockers=0); physical R7.2/R7.3 Acer INCOMPLETE (no hardware in this environment)
 **Canonical repository:** `frozenpepper/Greia`
 **Canonical branch:** `main`
-**Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture**
-**Current parallel visual focus:** **Encyclopedia E3 six-section runtime closure after owner approval of corrected golden-master direction**
-**Active Activity-modernization plan:** `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` (one Activity at a time, sequential, scoped to R7.3)
+**Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture (source-integrated; awaiting Acer physical acceptance at e2b831da)**
+**Current parallel visual focus:** **Encyclopedia E3 ACCEPTED at 03bf76ac (11/11 PNGs, 7/7 Simulator, visual ACCEPTED); E4 UNBLOCKED/NEXT but deferred per post-activity-pass protocol**
+**Active Activity-modernization plan:** `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` — COMPLETE (strict migration COMPLETE, app pass COMPLETE; future refactoring per-Activity only; see §8 closure at e2b831da)
 **Purpose:** short current continuation contract. Detailed chronology belongs in active plans and dated reviews/handovers.
 
 Historical long-form root state remains preserved under:
@@ -422,6 +422,27 @@ Only after the exact R7.3 gate is accepted:
 Do not combine Activity authority migration with unrelated gameplay/visual refactors.
 
 Separate policy item: resolve tap-to-click `AGENTS.md` versus runtime-source contradiction explicitly; do not mutate R7 evidence opportunistically.
+
+### Post-activity-pass closure — 2026-08-30 (new)
+
+**Acceptance SHA:** `e2b831da19a1ae706a8b675985f4191881a95321` (clean, origin/main same, one commit past 69cf8966 E3 evidence HEAD)
+
+**Source gates (exact SHA):**
+
+```text
+make verify: PASS — 1494 tests, OK (skipped=2), 34 Activities, project + per-Activity + shell/footprint PASS
+audit_activity_backend_independence: blockers=0
+audit_activity_system_chrome_ownership --strict: blockers=0
+focused R7.2 suite: 35/35 PASS (backend policy, shell window, device authority, hardware session, legacy-X containment, display session, supervisor display)
+focused R7.3 suite: 57/57 PASS (system chrome, Legacy-X chrome, trusted supervisor, child-shell composition, noncooperative fixture, etc.)
+final five Activity Simulator gate (external workspace): writing PASS, painting PASS, workshop_settings PASS, shape_garden PASS, orchestra_animali PASS (each 8s survival + first frame + clean stop)
+```
+
+**Activity modernization pass:** COMPLETE — strict R7.3 migration COMPLETE, architecture/performance app pass COMPLETE, no further catalogue-wide refactor scheduled, future Activity refactoring per-Activity only. See `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` §8 closure and `docs/plans/2026-08-29_R7_R73_ACTIVITY_QUEUE.md` (HISTORICAL).
+
+**Encyclopedia:** E1 COMPLETE, E2/E2R APPROVED, E3 COMPLETE / ACCEPTED at `03bf76acb3e4c3f6d40b346d510f55a4763efc2d` (11/11 PNGs, 11/11 Git blobs, 7/7 Simulator, 59/59 tests, verify PASS, visual ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`), E4 UNBLOCKED/NEXT but deferred per post-activity-pass protocol.
+
+**Physical R7.2/R7.3 Acer:** `INCOMPLETE` — no Acer hardware reachable in this environment (greia-dev.local NXDOMAIN; `tools/greia_remote.py --password greia status/snapshot` fail with ssh resolve 255; `tools/deploy_to_acer.py` requires pexpect + reachable host). Source evidence above is complete; physical evidence (Shell/focus/input, Writing, Painting, crash, 20-cycle durability, trusted Home, 10× hostile cycles, performance) must be executed on the reference Acer at the exact SHA e2b831da before R7.2/R7.3 can be ACCEPTED. Do not claim ACCEPTED from Simulator/shell tests alone. Next exact step is Acer deploy of e2b831da and the full physical sequences per `docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md` and `...R73...` — on ACCEPT, next blocking work is R7.4 controller/system-input + ADR-0014 direct/compositor evidence; on REJECT/INCOMPLETE, record first failing invariant and do not jump ahead.
 
 ### Activity-modernization tranche (2026-08-29, plan-only)
 

@@ -1255,3 +1255,27 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   `0ea810cb` (cucciolo_mio); `5e19328b` (enciclopedia_greia,
   mechanical only); `b1205fc6` (festa_delle_rime);
   `9bb528ab` (foresta_parole); `cb9ef48d` (test patch fix).
+
+## 2026-08-30 — Post-activity-pass closure + final decomposition + E3 acceptance
+
+- Implemented: closed the Activity-modernization pass that was functionally complete at 69cf8966 but lacked one aggregate green source gate on the final SHA. Repaired one narrow test-contract drift in `tests/test_activity_festa_delle_rime.py` (`_MockAudio` lacked `play_sfx` after `rhyme_app.py` migrated `play_feedback` → `play_sfx`) and committed it as `e2b831da`. Decomposed the five remaining large composition roots from the previous review (writing 942→~140 + 4 modules, painting 845→thin, workshop_settings 707→thin, shape_garden 432→thin, orchestra_animali 420→thin). Per the post-activity-pass protocol, stopped further catalogue-wide refactors and did not start Encyclopedia E4.
+
+- Tests/evidence at **e2b831da19a1ae706a8b675985f4191881a95321** (clean, origin/main same, `PY=/opt/homebrew/bin/python3.12` with `regex`/`pytest` + `cairocffi`/`pygame`):
+  - `make verify`: **PASS** — `Ran 1494 tests, OK (skipped=2)`; project validation 34 Activities PASS; per-Activity validation 34 PASS; shell-check/footprint PASS. Previous run at 69cf8966 had been **1516/1520 FAIL** only due to missing `regex` (emoji palette `⭐` mis-classified as text) and stale `_MockAudio`; with `regex` installed it is `1494 PASS` after the one mock fix.
+  - `tools/audit_activity_backend_independence.py activities`: `activities=34 blockers=0`
+  - `tools/audit_activity_system_chrome_ownership.py --strict`: `Activity system chrome ownership audit: blockers=0`
+  - Focused R7.2 suite (7 test modules, 35 tests): **PASS**
+  - Focused R7.3 suite (11 test modules, 57 tests): **PASS**
+  - Final-five Simulator gate (real Greia Simulator headless, external workspace outside repo per `SimulatorWorkspace` boundary): `writing PASS`, `painting PASS`, `workshop_settings PASS`, `shape_garden PASS`, `orchestra_animali PASS` — each 8s survival, first frame produced, clean stop through gate.
+  - E3 visual runtime capture remains accepted at `03bf76acb3e4c3f6d40b346d510f55a4763efc2d` (11/11 PNGs, 11/11 Git blobs, 7/7 Simulator, 59/59 focused tests, verify PASS, visual ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` added this tranche). E4 remains UNBLOCKED/NEXT but deferred per protocol §6 acceptance SHA freeze.
+
+- Physical Acer R7.2/R7.3: **INCOMPLETE** — no reference Acer reachable in this environment. `greia-dev.local` returns `NXDOMAIN`; `tools/greia_remote.py --password greia status` → `ssh: Could not resolve hostname greia-dev.local` (exit 255); `snapshot` similarly fails; `tools/deploy_to_acer.py` requires `pexpect` + reachable host and also fails. Source gates above are therefore **green but physical evidence was not executed here**. The exact SHA e2b831da is frozen for the operator's Acer run; no Activity/E4/R7 source commits were made after the SHA freeze.
+
+- Decisions: Activity modernization pass is **COMPLETE** (strict migration COMPLETE, app pass COMPLETE; future Activity refactoring per-Activity only). Encyclopedia E3 is **ACCEPTED** and E4 is **UNBLOCKED**. The accepted SHA e2b831da must be deployed unchanged to the reference Acer for R7.2/R7.3 physical acceptance before R7.4 can begin. Simulator evidence is launch/lifecycle regression coverage only and does not substitute for physical.
+
+- Remaining blockers: R7.2/R7.3 physical verdict on the Acer (`ACCEPTED`/`REJECTED` is outstanding; currently `INCOMPLETE` in this connector). On ACCEPT, next blocking work is R7.4 controller/system-input ownership + ADR-0014 direct/compositor evidence; on REJECT/INCOMPLETE record first failing invariant and do not jump ahead.
+
+- Next exact step: operator deploys **e2b831da** to the reference Acer (`python3 tools/deploy_to_acer.py`, `wait --timeout 180`, `snapshot`), then executes `docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md` §§9–14 and `docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md` §§7–13 exactly, capturing `r72-shell.png`, Writing/Painting/hostile/crash/durability/performance/logs evidence, and returning `ACCEPTED`/`REJECTED`/`INCOMPLETE` with first-failure detail.
+
+- Commit(s): `e2b831da` (festa mock fix, pushes origin/main same); this docs tranche `docs/reviews/visual/.../runtime/REVIEW.md` + `encyclopedia/HANDOVER.md` + `docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` + `docs/plans/2026-08-28_...` + `docs/plans/2026-08-20_...` + `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` §8 + `docs/plans/2026-08-29_R7_R73_ACTIVITY_QUEUE.md` + `HANDOVER.md` + this plan entry.
+

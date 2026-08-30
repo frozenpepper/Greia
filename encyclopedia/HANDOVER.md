@@ -1,10 +1,10 @@
 # Greia Encyclopedia workstream handover
 
-**Updated:** 2026-08-29  
+**Updated:** 2026-08-30  
 **Runtime Activity:** `activities/enciclopedia_greia/` (`org.greia.enciclopedia`)  
 **Frozen scope:** **43 / 43 planned executable pages**  
-**Last real-Simulator visual SHA:** `8fa41a3e9ab4b8cff6cce9607c32492fedc6ae8f` — historical E2R capture, aesthetically/source-wise superseded  
-**Current state:** **MECHANICAL FOUNDATION HEALTHY / E2 DIRECTION OWNER-APPROVED / E3 SIX-SECTION SOURCE V6 FROZEN / COMPLETE 11-PNG COMMIT + EXACT-SHA SIMULATOR REVIEW PENDING / E4 BLOCKED / NARRATION SEPARATE**
+**Last real-Simulator visual SHA:** `03bf76acb3e4c3f6d40b346d510f55a4763efc2d` — E3 ACCEPTED (11-PNG runtime pack, 7/7 Simulator sessions); evidence HEAD `69cf8966199896dfef38394e67d49cd993920258`  
+**Current state:** **E1 COMPLETE / E2/E2R APPROVED / E3 COMPLETE / ACCEPTED at 03bf76ac / E4 UNBLOCKED / NEXT / NARRATION SEPARATE**
 
 This is the short Encyclopedia continuation contract. Historical detail remains in `encyclopedia/PROGRESS.md`, Git history, and dated reviews.
 
@@ -70,8 +70,8 @@ The owner reviewed those direct repairs and explicitly approved moving forward.
 E1 visual/asset architecture        COMPLETE
 E2/E2R visual direction             OWNER APPROVED
 E3 section-world source family      V6 SOURCE-REVIEWED / FROZEN
-E3 exact-current runtime review     PENDING
-E4 factual-entry migration          BLOCKED
+E3 exact-current runtime review     ACCEPTED at 03bf76ac (11/11 PNGs, 7/7 Simulator, 59/59 tests, verify PASS)
+E4 factual-entry migration          UNBLOCKED / NEXT
 ```
 
 Primary repair review:
@@ -335,16 +335,16 @@ E3 non-occluding authored focus                IMPLEMENTED
 E3 opaque-scene runtime/build contract         IMPLEMENTED
 E3 staging importer + regression source        IMPLEMENTED
 E3 v6 nine-image recoverability bundle         READY / NOT ACCEPTANCE
-complete 11-PNG committed runtime pack         PENDING
-build --check on exact current 11-art pack      PENDING
-focused current-checkout tests                 PENDING
-make verify                                    PENDING
-fresh exact-SHA real Greia Simulator           PENDING
-Home + six-section runtime contact review      PENDING
-E4 factual-entry migration                     BLOCKED
+complete 11-PNG committed runtime pack         COMPLETE (11/11 at 03bf76ac, committed at 69cf8966)
+build --check on exact current 11-art pack      PASS
+focused current-checkout tests                 PASS (59/59)
+make verify                                    PASS at accepted SHA
+fresh exact-SHA real Greia Simulator           PASS (7/7 sessions, Home+6)
+Home + six-section runtime contact review      ACCEPTED
+E4 factual-entry migration                     UNBLOCKED / NEXT
 ```
 
-Do **not** begin E4 until the actual six-section family is accepted through the real Greia runtime.
+E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (Disposition: ACCEPTED, SHA 03bf76ac, 11/11 SHA-256, 11/11 Git blobs, visual ACCEPTED). Do not rerun E3 merely because unrelated Activities changed.
 
 ---
 
@@ -364,27 +364,14 @@ Only owner-listened `OWNER_ACCEPTED` clips may integrate. This visual lane does 
 
 ## 10. Next exact action
 
-Do not continue speculative E3 polishing and do not start E4.
+E3 is ACCEPTED; E4 is UNBLOCKED but deferred per `GREIA_POST_ACTIVITY_PASS_R7_ACCEPTANCE_AGENT_INSTRUCTIONS_2026-08-30.md` until post-activity-pass R7 acceptance window ends.
 
 ```text
-materialize exact current 11-PNG runtime pack
-  preferred: rebuild all from committed v6 SVGs
-  recovery: validate/import v6 staging ZIP, then mandatory canonical --check
-→ build --check --group all
-→ focused suites:
-   tests.test_activity_enciclopedia
-   tests.test_activity_enciclopedia_visual_foundation
-   tests.test_encyclopedia_authoring_tools
-   tests.test_encyclopedia_e3_review_tools
-   tests.test_encyclopedia_section_hit_geometry
-   tests.test_encyclopedia_focus_treatment
-   tests.test_encyclopedia_runtime_art_staging
-→ make verify
-→ commit/push exact 11-PNG runtime state
-→ rerun --check + focused tests on pushed SHA
-→ exact-SHA/Git-bound real Greia Simulator seven-screen capture
-→ inspect Home + all six sections together
-→ only if accepted: close E3 and unblock E4
+E1 COMPLETE
+E2/E2R APPROVED
+E3 COMPLETE / ACCEPTED at 03bf76ac (evidence HEAD 69cf8966)
+  11/11 runtime art PASS, 59/59 focused tests PASS, verify PASS, 7/7 Simulator PASS, 11/11 SHA-256, 11/11 Git blobs, visual ACCEPTED
+E4 UNBLOCKED / NEXT — do not start until this acceptance window ends and owner explicitly authorizes
 ```
 
-This connector-only execution environment does not contain the real Greia checkout/Shell, so no current `make verify` or Simulator PASS is claimed here.
+Current post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, source gate green, Simulator 5/5 final Activity decompositions PASS, focused R7.2/R7.3 PASS; physical Acer INCOMPLETE due to no hardware in this environment). See `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`.

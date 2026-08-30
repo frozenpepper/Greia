@@ -1,7 +1,8 @@
 # R7.3 Activity Modernization Plan
 
 **Date:** 2026-08-29
-**Status:** ACTIVE implementation plan — one Activity at a time, sequential
+**Status:** COMPLETE — strict R7.3 Activity migration COMPLETE, architecture/performance app pass COMPLETE; no further catalogue-wide refactor pass scheduled; future Activity refactoring only evidence-driven / per-Activity (closed 2026-08-30 at e2b831da)
+**Historical blocker snapshot (see §0 pre-flight and §1 queue — preserved below, not erased):** strict audit 62 blockers across 16 Activities at 5ef7850; now blockers=0 at e2b831da
 **Authoritative review (gap analysis):** `docs/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md` (tranche review) and `docs/reviews/2026-08-29_R7_R73_TRUSTED_CHROME_SOURCE_TRANCHE.md`
 **Subordinate to:** `AGENTS.md`, `HANDOVER.md`, `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`
 **Phase:** R7.3 (trusted Greia Home + Activity ownership migration)
@@ -938,3 +939,39 @@ Notes: This is the reference architecture for the rest of this plan.
 ```
 
 (Subsequent rows are filled in as the lighter architecture/performance pass proceeds.)
+
+---
+
+## 8. Closure — 2026-08-30 post-activity-pass (append-only; do not rewrite §0–§7)
+
+**Closed SHA:** `e2b831da19a1ae706a8b675985f4191881a95321` (one commit past E3 evidence HEAD `69cf8966199896dfef38394e67d49cd993920258`)
+**Previous evidence HEAD:** `69cf8966` (`Docs: E3 visual runtime capture`)
+**Accepted E3 SHA:** `03bf76acb3e4c3f6d40b346d510f55a4763efc2d` (11/11 PNGs, 11/11 Git blobs, 7/7 Simulator, 59/59 tests, verify PASS)
+
+**Source gates at e2b831da:**
+
+```text
+make verify: PASS (1494 tests, OK skipped=2, 34 Activities, project + per-Activity + shell/footprint PASS)
+audit_activity_backend_independence: blockers=0 (migration 2 in chrome audit only)
+audit_activity_system_chrome_ownership --strict: blockers=0
+focused R7.2 suite: 35/35 PASS
+focused R7.3 suite: 57/57 PASS
+final five Simulator gate: writing PASS, painting PASS, workshop_settings PASS, shape_garden PASS, orchestra_animali PASS (each 8s survival + first frame + clean stop)
+```
+
+**Activity modernization ledger (post-§7 execution, 2026-08-29–30):**
+
+The queue in §1 / `docs/plans/2026-08-29_R7_R73_ACTIVITY_QUEUE.md` was executed end-to-end (28 commits on 2026-08-29 per `HANDOVER.md` §7, plus 5 composition-roots decomposed in the final wave: writing, painting, workshop_settings, shape_garden, orchestra_animali). Remaining strict-audit blockers are 0; backend blockers are 0. No further catalogue-wide refactor pass is scheduled.
+
+**Required state per post-activity-pass protocol §14.1:**
+
+```text
+strict R7.3 Activity migration: COMPLETE
+architecture/performance app pass: COMPLETE
+no further catalogue-wide refactor pass scheduled
+future Activity refactoring: only evidence-driven / per-Activity
+```
+
+**Physical R7.2/R7.3 Acer verdict at this SHA:** `INCOMPLETE` — no Acer hardware present in this environment (`greia-dev.local` NXDOMAIN; `greia_remote status`/`snapshot` fail with host-unresolvable). Source evidence above is complete; physical evidence (Shell/focus/input, Writing, Painting, crash recovery, 20-cycle durability, trusted Home, 10× hostile cycles, performance) was not executed here and must be run on the reference Acer before R7.2/R7.3 can be ACCEPTED. See `GREIA_POST_ACTIVITY_PASS_R7_ACCEPTANCE_REPORT` below.
+
+**Next:** R7.2/R7.3 Acer acceptance on the exact SHA e2b831da (source-identical deploy); on ACCEPT, next blocking work is R7.4 controller/system-input ownership + ADR-0014 direct/compositor evidence; on INCOMPLETE, do not jump ahead in the blocking platform plan.

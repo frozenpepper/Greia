@@ -1,9 +1,10 @@
-# R7.3 Activity Queue — flat reference
+# R7.3 Activity Queue — flat reference (HISTORICAL)
 
-**Date:** 2026-08-29
-**Companion to:** `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md`
+**Date:** 2026-08-29 — queue is HISTORICAL; closed 2026-08-30 at e2b831da
+**Companion to:** `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` (now COMPLETE)
 **Source of truth:** `PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict`
 **Status on the current SHA (`5ef785085d106fdcf8e876323f6e7ab3ca2e0d7c`):** strict audit `blockers=62` across 16 non-exemplar Activities + the 6 first-wave exemplars already clean.
+**Current status (2026-08-30 at e2b831da):** strict R7.3 Activity migration COMPLETE — blockers=0; architecture/performance app pass COMPLETE; no further catalogue-wide refactor pass scheduled; future Activity refactoring only evidence-driven / per-Activity. Do not erase this historical blocker list; it is preserved above. See modernization plan §8 closure.
 
 ## A. Strict-queue (mandatory R7.3 migration, items 1–17 of the plan)
 

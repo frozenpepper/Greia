@@ -1,7 +1,7 @@
 # Greia Visual System — Current Resume File
 
 **Status:** current visual-workstream continuation contract  
-**Last reviewed:** 2026-08-29  
+**Last reviewed:** 2026-08-30  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -39,12 +39,12 @@ E3 focus treatment                      NON-OCCLUDING HALO / SOURCE-REVIEWED
 E3 runtime scene surface policy         OPAQUE FULL-SCREEN SCENES OPTIMIZED
 E3 staging-import recovery path         IMPLEMENTED / MAINTAINER-ONLY
 E3 evidence-integrity tooling           HARDENED
-E3 committed 11-PNG runtime pack        PENDING
-E3 exact-SHA Simulator review           PENDING
-E4 factual-entry migration              BLOCKED
+E3 committed 11-PNG runtime pack        COMPLETE at 03bf76ac (evidence HEAD 69cf8966)
+E3 exact-SHA Simulator review           ACCEPTED (7/7 sessions, 11/11 SHA-256, 11/11 Git blobs)
+E4 factual-entry migration              UNBLOCKED / NEXT (deferred per post-activity-pass protocol)
 ```
 
-Owner approval is an aesthetic-direction decision. It does not retroactively make the old E2R Simulator screenshots current evidence for the repaired source.
+E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md` (Disposition: ACCEPTED, SHA 03bf76ac, visual ACCEPTED). Do not rerun E3 merely because unrelated Activities changed.
 
 ---
 
@@ -295,13 +295,13 @@ E3 V6 SOURCE FAMILY                     CURRENT / FROZEN
 OLDER E2R RUNTIME PNG/SIMULATOR PIXELS  STALE FOR EXACT CURRENT SOURCE
 OLDER PRE-V6 STAGING ZIP                SUPERSEDED
 V6 NINE-PNG STAGING BUNDLE              RECOVERABLE / NOT COMMITTED EVIDENCE
-COMPLETE 11-PNG COMMITTED PACK          PENDING
-FRESH FINAL-SHA SIMULATOR               PENDING
-E3 RUNTIME VISUAL ACCEPTANCE            NOT CLAIMED
-E4                                       BLOCKED
+COMPLETE 11-PNG COMMITTED PACK          COMPLETE at 03bf76ac (11/11 PNGs, 11/11 Git blobs)
+FRESH FINAL-SHA SIMULATOR               PASS at 03bf76ac (Home+6, 7/7 sessions)
+E3 RUNTIME VISUAL ACCEPTANCE            ACCEPTED at 03bf76ac
+E4                                       UNBLOCKED / NEXT
 ```
 
-Do not call E3 complete until the full current 11-PNG art pack is built/imported, verified against the current SVG masters, committed, checked, and the six sections are reviewed together through the real Greia runtime.
+E3 is ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`. The pack remains valid until an Encyclopedia source/runtime change.
 
 ---
 
@@ -328,25 +328,16 @@ No arbitrary runtime source scanning, runtime SVG rasterization, per-frame disk 
 
 # 10. Immediate next action
 
-Do not begin E4.
-
-Next exact visual gate:
+E3 is ACCEPTED; E4 is UNBLOCKED but deferred per `GREIA_POST_ACTIVITY_PASS_R7_ACCEPTANCE_AGENT_INSTRUCTIONS_2026-08-30.md`.
 
 ```text
-materialize the exact complete 11-PNG runtime pack from current v6 masters
-  (canonical rebuild from SVG, or validated v6 staging import followed by canonical --check)
-→ python3 tools/build_encyclopedia_visual_assets.py --check --group all
-→ focused Encyclopedia tests including staging/focus/evidence/runtime-surface regressions
-→ required repository verification
-→ commit/push the exact complete 11-PNG runtime-art state
-→ rerun --check + focused tests on that pushed SHA
-→ fresh exact-SHA real Greia Simulator
-→ capture Home + all six section pages with the Git-bound E3 review harness
-→ inspect the single runtime contact sheet + interaction/navigation sanity
-→ if accepted, close E3 and unblock E4
+E1 COMPLETE
+E2/E2R APPROVED
+E3 COMPLETE / ACCEPTED at 03bf76ac (11/11 PNGs, 7/7 Simulator, visual ACCEPTED)
+E4 UNBLOCKED / NEXT — deferred until post-activity-pass R7 acceptance window ends
 ```
 
-This execution environment still does not contain a real Greia checkout/Shell runtime, so no current `make verify` or Simulator PASS is claimed here.
+Post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, source gate green, Simulator 5/5 final decompositions PASS, focused R7.2/R7.3 PASS; physical Acer INCOMPLETE due to no hardware in this environment). Do not rerun E3 merely because unrelated Activities changed.
 
 `docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner explicitly changes the direct-work instruction.
 
