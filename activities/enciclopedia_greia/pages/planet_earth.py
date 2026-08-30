@@ -205,24 +205,89 @@ class EarthPlanetPage(EncyclopediaPage):
 
     def _draw_earth(self, surface: pygame.Surface) -> None:
         center = (505, 326)
-        radius = 96
+        radius = 108
         angle = self._time * (1.15 if self._rotation_age > 0 else 0.20)
 
-        # Thin atmosphere first, then ocean disk and stylized land. This is a
-        # teaching globe, deliberately not a geographic map.
-        pygame.draw.circle(surface, (128, 203, 242), center, radius + 7, 5)
-        pygame.draw.circle(surface, (63, 137, 210), center, radius)
-
-        land_color = (100, 174, 99)
-        for base_angle, spread in ((0.25, 0.42), (2.0, 0.50), (4.2, 0.38)):
-            theta = base_angle + angle
-            x = center[0] + int(math.cos(theta) * 48)
-            y = center[1] + int(math.sin(theta) * 34)
-            pygame.draw.ellipse(
-                surface,
-                land_color,
-                (x - int(38 * spread), y - int(28 * spread), int(76 * spread), int(56 * spread)),
-            )
+        # Try authored sprite first — instantly recognizable Earth
+        diam = radius * 2 + 8
+        sprite = None
+        try:
+            sprite = self.context.visuals.planet("earth", diam)
+        except Exception:
+            sprite = None
+        # Direct file fallback if VisualLibrary miss (e.g., dummy context)
+        if sprite is None:
+            try:
+                from pathlib import Path as _P
+                direct = _P(__file__).resolve().parent.parent / "assets" / "runtime" / "earth_planet_sprite.png"
+                if direct.is_file():
+                    raw = pygame.image.load(str(direct)).convert_alpha()
+                    sprite = pygame.transform.smoothscale(raw, (diam, diam))
+            except Exception:
+                sprite = None
+        if sprite is not None:
+            # Soft atmospheric glow behind the sprite
+            glow_surf = pygame.Surface((diam + 18, diam + 18), pygame.SRCALPHA)
+            pygame.draw.circle(glow_surf, (128, 203, 242, 55), (diam // 2 + 9, diam // 2 + 9), radius + 12, 7)
+            surface.blit(glow_surf, (center[0] - diam // 2 - 9, center[1] - diam // 2 - 9))
+            surface.blit(sprite, sprite.get_rect(center=center))
+            # Subtle terminator / highlight for depth when not in rotation demo
+            if self._rotation_age == 0:
+                highlight = pygame.Surface((diam, diam), pygame.SRCALPHA)
+                pygame.draw.ellipse(highlight, (255, 255, 255, 18), (radius // 2, 6, radius, radius - 12))
+                surface.blit(highlight, (center[0] - radius, center[1] - radius))
+            inner_shadow = pygame.Surface((diam, diam), pygame.SRCALPHA)
+            pygame.draw.circle(inner_shadow, (0, 0, 0, 0), (radius, radius), radius)
+            pygame.draw.circle(inner_shadow, (20, 40, 90, 22), (radius, radius), radius, 4)
+            surface.blit(inner_shadow, (center[0] - radius, center[1] - radius))
+        else:
+            # Fallback procedural — more continents, clouds, depth
+            pygame.draw.circle(surface, (128, 203, 242), center, radius + 7, 5)
+            pygame.draw.circle(surface, (63, 137, 210), center, radius)
+            # Volumetric highlight
+            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.ellipse(hl, (255, 255, 255, 26), (radius // 2, 10, radius, radius // 2))
+            surface.blit(hl, (center[0] - radius, center[1] - radius))
+            land_color = (96, 168, 92)
+            land_dark = (76, 142, 71)
+            land_light = (122, 192, 118)
+            # Eight continents with varied sizes, slowly rotating — more realistic distribution
+            for base_angle, spread, phase, jitter in (
+                (0.18, 0.52, 0.14, 0.0),
+                (0.95, 0.44, -0.18, 0.22),
+                (1.88, 0.58, 0.09, -0.15),
+                (2.75, 0.42, -0.10, 0.30),
+                (3.55, 0.48, 0.16, -0.18),
+                (4.42, 0.40, -0.06, 0.25),
+                (5.15, 0.46, 0.20, -0.28),
+                (5.95, 0.36, -0.09, 0.12),
+            ):
+                theta = base_angle + angle * (0.90 + phase * 0.12)
+                r = 50 + 10 * math.sin(theta * 1.6 + jitter)
+                x = center[0] + int(math.cos(theta) * r)
+                y = center[1] + int(math.sin(theta) * (r * 0.66))
+                w = int(38 * spread + 12 * math.cos(theta + jitter))
+                h = int(26 * spread + 10 * math.sin(theta + jitter))
+                # Base land with subtle variation
+                pygame.draw.ellipse(surface, land_color, (x - w // 2, y - h // 2, w, h))
+                # Lighter edge for relief
+                pygame.draw.ellipse(surface, land_light, (x - w // 3, y - h // 3 - 2, w // 2, h // 3))
+                # Darker core
+                pygame.draw.ellipse(surface, land_dark, (x - w // 4, y - h // 4 + 1, w // 3, h // 3))
+            # Cloud veil — layered, subtle, slowly drifting
+            cloud = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            for ca, cr, alpha in ((0.75, 0.56, 36), (2.55, 0.50, 30), (4.65, 0.53, 34), (1.60, 0.48, 26)):
+                ct = ca + angle * 0.28
+                cx = radius + int(math.cos(ct) * (42 + 6 * math.sin(ct)))
+                cy = radius + int(math.sin(ct) * (28 + 4 * math.cos(ct)))
+                w, h = 48 + int(8 * math.cos(ct)), 22 + int(6 * math.sin(ct))
+                pygame.draw.ellipse(cloud, (255, 255, 255, alpha), (cx - w // 2, cy - h // 2, w, h))
+                pygame.draw.ellipse(cloud, (255, 255, 255, alpha - 8), (cx - w // 3, cy - h // 3, w // 2, h // 2))
+            surface.blit(cloud, (center[0] - radius, center[1] - radius))
+            # Subtle ocean texture — faint wave lines
+            for wy in range(-radius + 18, radius - 12, 22):
+                y = center[1] + wy + int(2 * math.sin(angle + wy * 0.04))
+                pygame.draw.arc(surface, (71, 158, 221, 18), (center[0] - radius + 14, y, radius * 2 - 28, 14), 0.15, 3.0, 2)
 
         if self._rotation_age > 0:
             # Fixed Sun at left; clipped shade on the opposite half makes the
