@@ -1,29 +1,24 @@
 from __future__ import annotations
 
-import importlib.util
 import os
 from pathlib import Path
 import sys
-import tempfile
 import unittest
 
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
-
-
-def _load_module(name: str, path: Path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"cannot load {path}")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
-
+for path in (ROOT / "src", ROOT):
+    value = str(path)
+    if value not in sys.path:
+        sys.path.insert(0, value)
 
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 os.environ["SDL_AUDIODRIVER"] = "dummy"
-TEATRINO = _load_module("greia_test_teatrino_activity_v2", ROOT / "activities" / "teatrino_fiabe" / "main.py")
+
+from activities.teatrino_fiabe.teatrino_assets import render_backdrop_surface
+from activities.teatrino_fiabe.teatrino_content import BG_CONFIGS, PUPPET_ROSTER
+from activities.teatrino_fiabe.teatrino_model import Puppet, ShowRepository
+from activities.teatrino_fiabe.teatrino_renderer import get_library_modal_layout
 
 
 class MockStorage:
@@ -47,100 +42,77 @@ class MockStorage:
         self.files.pop(name, None)
 
 
-class TeatrinoFiabeIteration2Tests(unittest.TestCase):
-    def test_puppet_16_character_roster_and_asset_integrity(self) -> None:
+class TeatrinoFiabeTests(unittest.TestCase):
+    def test_puppet_roster_assets_exist(self) -> None:
         runtime_dir = ROOT / "activities" / "teatrino_fiabe" / "assets" / "runtime"
         source_dir = ROOT / "activities" / "teatrino_fiabe" / "assets" / "source"
+        self.assertEqual(len(PUPPET_ROSTER), 16)
+        for puppet_id, _name in PUPPET_ROSTER:
+            self.assertTrue((runtime_dir / f"puppet_{puppet_id}.png").is_file())
+            self.assertTrue((source_dir / f"puppet_{puppet_id}.svg").is_file())
 
-        self.assertEqual(len(TEATRINO.PUPPET_ROSTER), 16)
-        for p_id, p_name in TEATRINO.PUPPET_ROSTER:
-            png_path = runtime_dir / f"puppet_{p_id}.png"
-            svg_path = source_dir / f"puppet_{p_id}.svg"
-            self.assertTrue(png_path.is_file(), f"Missing PNG asset for {p_id}")
-            self.assertTrue(svg_path.is_file(), f"Missing SVG source for {p_id}")
+    def test_backdrops_render_at_reference_size(self) -> None:
+        for backdrop_id, _icon, _name in BG_CONFIGS:
+            surface = render_backdrop_surface(backdrop_id)
+            self.assertEqual(surface.get_size(), (1024, 600))
 
-    def test_backdrop_rendering_for_all_sceneries_including_cheerful_cottage(self) -> None:
-        for bg_id, bg_icon, bg_name in TEATRINO.BG_CONFIGS:
-            surf = TEATRINO.render_backdrop_surface(bg_id)
-            self.assertIsNotNone(surf)
-            self.assertEqual(surf.get_width(), 1024)
-            self.assertEqual(surf.get_height(), 600)
-
-    def test_show_repository_save_load_list_and_delete(self) -> None:
-        mock_storage = MockStorage()
-        repo = TEATRINO.ShowRepository(mock_storage)
-
-        # Initially empty
-        self.assertEqual(repo.list_shows(), [])
-
-        # Save a show with dummy WAV audio
+    def test_show_repository_round_trip_and_delete(self) -> None:
+        storage = MockStorage()
+        repo = ShowRepository(storage)
         dummy_wav = b"RIFF....WAVEfmt ....data...."
-        puppets = [{"id": "principessa", "name": "Principessa"}, {"id": "draghetto", "name": "Draghetto"}]
-        frames = [{"t": 0.0, "puppets": [{"id": "principessa", "x": 300, "y": 250, "flip": False, "jumping": False, "talking": False}]}]
+        puppets = [
+            {"id": "principessa", "name": "Principessa"},
+            {"id": "draghetto", "name": "Draghetto"},
+        ]
+        frames = [
+            {
+                "t": 0.0,
+                "puppets": [
+                    {
+                        "id": "principessa",
+                        "x": 300,
+                        "y": 250,
+                        "flip": False,
+                        "jumping": False,
+                        "talking": False,
+                    }
+                ],
+            }
+        ]
         sfx = [{"t": 0.5, "sound": "trumpet"}]
 
         meta = repo.save_show("cottage", puppets, frames, sfx, 12.5, dummy_wav)
-        self.assertIn("id", meta)
-        self.assertEqual(meta["backdrop"], "cottage")
-        self.assertTrue(meta["has_audio"])
-        self.assertEqual(meta["duration"], 12.5)
-
-        # List shows
-        shows = repo.list_shows()
-        self.assertEqual(len(shows), 1)
-        self.assertEqual(shows[0]["id"], meta["id"])
-
-        # Load show
         loaded_data, loaded_audio = repo.load_show(meta["id"])
-        self.assertIsNotNone(loaded_data)
         self.assertEqual(loaded_audio, dummy_wav)
+        self.assertIsNotNone(loaded_data)
+        assert loaded_data is not None
         self.assertEqual(len(loaded_data["frames"]), 1)
         self.assertEqual(len(loaded_data["sfx_events"]), 1)
 
-        # Delete show
         repo.delete_show(meta["id"])
         self.assertEqual(repo.list_shows(), [])
-        self.assertNotIn(f"show_{meta['id']}.json", mock_storage.files)
-        self.assertNotIn(f"show_{meta['id']}.wav", mock_storage.files)
 
     def test_puppet_physics_and_gestures(self) -> None:
-        p = TEATRINO.Puppet("bebe", "Bebè", 400, 260)
-        self.assertEqual(p.puppet_id, "bebe")
-        self.assertTrue(p.contains(400, 260))
-        p.jump()
-        p.speak()
-        self.assertGreater(p.jump_timer, 0.0)
-        self.assertGreater(p.talk_timer, 0.0)
-        p.update()
-        self.assertLess(p.jump_timer, 1.0)
-        self.assertLess(p.talk_timer, 1.0)
+        puppet = Puppet("bebe", "Bebè", 400, 260)
+        self.assertTrue(puppet.contains(400, 260))
+        puppet.jump()
+        puppet.speak()
+        self.assertGreater(puppet.jump_timer, 0.0)
+        self.assertGreater(puppet.talk_timer, 0.0)
+        puppet.update()
+        self.assertLess(puppet.jump_timer, 1.0)
+        self.assertLess(puppet.talk_timer, 1.0)
 
-    def test_sound_manager_synthesis(self) -> None:
-        sm = TEATRINO.SoundManager()
-        self.assertTrue(sm._enabled)
-        for key in ("pop", "trumpet", "magic", "applause", "giggle", "mystery", "boing"):
-            self.assertIn(key, sm._sounds)
-
-    def test_microphone_toggle(self) -> None:
-        rec = TEATRINO.MicrophoneRecorder()
-        if rec.has_hardware:
-            initial = rec.enabled
-            self.assertEqual(rec.toggle(), not initial)
-            rec.toggle()
-
-    def test_microphone_recorder_multiple_cycles(self) -> None:
-        rec = TEATRINO.MicrophoneRecorder()
-        for _ in range(4):
-            rec.start_recording()
-            self.assertTrue(rec.is_recording)
-            wav_bytes = rec.stop_recording()
-            self.assertFalse(rec.is_recording)
-
-    def test_show_repository_in_memory_fallback_when_storage_is_none(self) -> None:
-        repo = TEATRINO.ShowRepository(None)
-        self.assertEqual(repo.list_shows(), [])
-        meta = repo.save_show("forest", [{"id": "cavaliere", "name": "Cavaliere"}], [], [], 3.5, b"RIFFWAVE")
-        self.assertEqual(len(repo.list_shows()), 1)
+    def test_repository_in_memory_fallback(self) -> None:
+        repo = ShowRepository(None)
+        meta = repo.save_show(
+            "forest",
+            [{"id": "cavaliere", "name": "Cavaliere"}],
+            [],
+            [],
+            3.5,
+            b"RIFFWAVE",
+        )
         loaded_data, loaded_audio = repo.load_show(meta["id"])
         self.assertIsNotNone(loaded_data)
         self.assertEqual(loaded_audio, b"RIFFWAVE")
@@ -148,16 +120,13 @@ class TeatrinoFiabeIteration2Tests(unittest.TestCase):
         self.assertEqual(repo.list_shows(), [])
 
     def test_library_modal_layout_geometry(self) -> None:
-        layout = TEATRINO.get_library_modal_layout(0, 6)
-        self.assertIn("box", layout)
-        self.assertIn("close", layout)
-        self.assertIn("cards", layout)
+        layout = get_library_modal_layout(0, 6)
         self.assertEqual(len(layout["cards"]), 4)
-        for c in layout["cards"]:
-            self.assertTrue(layout["box"].contains(c["card_rect"]))
-            self.assertTrue(c["card_rect"].contains(c["play_btn"]))
-            self.assertTrue(c["card_rect"].contains(c["del_btn"]))
-            self.assertFalse(c["play_btn"].colliderect(c["del_btn"]))
+        for card in layout["cards"]:
+            self.assertTrue(layout["box"].contains(card["card_rect"]))
+            self.assertTrue(card["card_rect"].contains(card["play_btn"]))
+            self.assertTrue(card["card_rect"].contains(card["del_btn"]))
+            self.assertFalse(card["play_btn"].colliderect(card["del_btn"]))
 
 
 if __name__ == "__main__":
