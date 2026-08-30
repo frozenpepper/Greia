@@ -1,8 +1,8 @@
 # R7.3 Home Overlay — Post-Modernization Evidence Correction
 
 **Date:** 2026-08-30  
-**Status:** current continuation/evidence correction  
-**Current source reviewed:** `83738f737a41aec7c139b3a4a3363e746ba0f266`  
+**Status:** current continuation/evidence correction; post-fix execution pending  
+**Current runtime source reviewed:** `45b185d92bb577a3f40c741552fe247a8f6d0b70`  
 **Phase:** R7.3 trusted system chrome, still subordinate to the active architecture-remediation plan  
 **Release relationship:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md` remains the public-release gate; this correction does not bypass R7.
 
@@ -25,7 +25,7 @@ The defect was in the Simulator compatibility presentation layer.
 
 ---
 
-## 2. Implemented fix at `83738f7`
+## 2. First fix — fail-loud trusted Home rendering
 
 Commit:
 
@@ -45,7 +45,7 @@ except Exception:
 
 That failure mode was unacceptable because the Activity could keep running while the visible platform Home control disappeared.
 
-The current code now:
+The code now:
 
 - imports the platform Pygame chrome renderer from trusted Greia source before Activity package path insertion;
 - derives layout from `ActivitySystemChromeLayout`;
@@ -69,7 +69,38 @@ This remains Simulator/developer evidence only. It does not prove the installed 
 
 ---
 
-## 3. Evidence consequence
+## 3. Second fix — preserve Home during dirty-rectangle updates
+
+Source review after `83738f7` found a second, more general presentation edge case.
+
+`pygame.display.flip()` is always a full display presentation, so drawing trusted chrome immediately before the flip guarantees that the Home pixels are included.
+
+`pygame.display.update(...)` may instead receive a dirty rectangle or list of dirty rectangles. The first fix drew Home and then forwarded the Activity's original dirty update unchanged. If that dirty region excluded the protected Home corner, the Home pixels were not guaranteed to reach the displayed window.
+
+This was a general Simulator compatibility issue, not the explanation for the Encyclopedia report, because the Encyclopedia uses `pygame.display.flip()`.
+
+Commit:
+
+```text
+45b185d92bb577a3f40c741552fe247a8f6d0b70
+Simulator: preserve trusted Home on partial display updates
+```
+
+implements a bounded fix:
+
+- Greia draws trusted chrome before presentation as before;
+- the Activity's requested dirty update is preserved unchanged;
+- when the update is partial, Greia performs one additional update only for `ActivitySystemChromeLayout.protected_region`;
+- a full update/flip does not receive the extra protected-region update;
+- no full-screen proxy/copy or Activity-side Home ownership was introduced.
+
+This preserves the Activity dirty-rendering optimization while guaranteeing that the small trusted chrome footprint is presented even when the Activity updates another part of the window.
+
+No extra source-string test was added. The next execution should validate the user-visible behavior rather than freeze function/file text shape.
+
+---
+
+## 4. Evidence consequence
 
 The following distinction is mandatory.
 
@@ -86,34 +117,13 @@ The Activity-modernization pass therefore stays **COMPLETE**. Do not reopen all 
 
 ### Stale for current Home visibility
 
-Any Simulator runtime/visual evidence captured before `83738f7` is stale for the specific claim:
+Any Simulator runtime/visual evidence captured before `45b185d9` is stale for the specific claim:
 
-> the current Simulator visibly presents the Greia-owned Home layer over migrated Activities.
+> the current Simulator visibly presents the Greia-owned Home layer over migrated Activities through the current presentation adapter.
 
-In particular, older captures or survival runs cannot certify the runtime behavior of `src/greia_simulator/python_activity.py` after its Home-rendering change.
+Older captures or survival runs cannot certify the runtime behavior of `src/greia_simulator/python_activity.py` after the two Home-presentation changes.
 
-No visual/runtime PASS is claimed for `83738f7` merely because the source change is straightforward.
-
----
-
-## 4. Additional source-review observation: dirty-rectangle update hardening
-
-The current Simulator compatibility patch wraps both:
-
-```text
-pygame.display.flip()
-pygame.display.update(...)
-```
-
-For `flip()`, the sequence is unambiguous: Greia draws trusted chrome immediately before the full display flip.
-
-For `display.update(...)`, however, the wrapper currently draws trusted chrome and then forwards the Activity's original update arguments unchanged. If a future/current Activity uses a dirty rectangle or dirty-rectangle list that excludes the Home corner, the newly drawn Home pixels are not guaranteed to be included in that presentation update.
-
-This is a **general Simulator hardening issue**, not the explanation for the Encyclopedia report: the Encyclopedia uses `pygame.display.flip()`.
-
-Before claiming that the Simulator compatibility adapter preserves visible Home for arbitrary conforming Pygame presentation styles, change the `display.update(...)` path so the protected chrome region is always included in the presented region (or otherwise perform an equivalent bounded trusted presentation). Do not solve this by moving Home drawing back into Activities.
-
-A behavioral check is preferable to another source-string test. The user-visible contract is that a dirty-region Activity cannot accidentally omit platform Home from the displayed update.
+No focused-test, visual/runtime, `make verify`, or Acer PASS is claimed for `45b185d9` merely because the source diff is small.
 
 ---
 
@@ -123,20 +133,20 @@ Do not go directly from the old `e2b831da` source gate to Acer acceptance. The c
 
 On the next owner-controlled checkout, use one exact current SHA and:
 
-1. resolve the dirty-rectangle `display.update(...)` compatibility issue described in §4 if the current Simulator adapter is expected to support partial display updates;
-2. run the focused Simulator tests relevant to the compatibility bootstrap/display adapter;
-3. launch the Encyclopedia through the real Greia Simulator and visually verify:
+1. run the focused Simulator tests relevant to the compatibility bootstrap/display adapter;
+2. launch the Encyclopedia through the real Greia Simulator and visually verify:
    - Home visibly present in the canonical protected corner;
    - normal Encyclopedia navigation works;
    - Activity-internal Back remains distinct from Greia Home;
    - Home exits cleanly to Shell;
-4. rerun a representative migrated-Activity Simulator matrix, at minimum Writing, Painting, Encyclopedia and one continuously animated/game Activity;
+3. rerun a representative migrated-Activity Simulator matrix, at minimum Writing, Painting, Encyclopedia and one continuously animated/game Activity;
+4. if a safe small developer fixture or existing Activity path uses `pygame.display.update(rect/list)`, exercise it and verify partial presentation cannot make Home disappear; do not modify an Activity merely to manufacture this evidence;
 5. rerun the canonical R7.3 source gate from `docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md` on that same SHA:
    - focused R7.3 source suite;
    - backend-independence audit `blockers=0`;
    - system-chrome ownership audit `blockers=0`;
    - `make verify` exit 0;
-6. only after that source state is fixed and green, deploy that **exact same SHA** to the reference Acer and execute the R7.2/R7.3 physical protocol.
+6. only after that source state is green, deploy that **exact same SHA** to the reference Acer and execute the R7.2/R7.3 physical protocol.
 
 Acer acceptance remains required because Simulator evidence cannot establish that an Activity cannot cover the installed trusted sibling window, that protected input is consumed first by the real backend, or that the performance cost is acceptable on the Atom floor.
 
@@ -160,11 +170,28 @@ Do not add a trivial test merely to assert that one shell-script line or functio
 
 ---
 
-## 7. Current disposition
+## 7. Active-plan progress entry
+
+The active architecture plan is append-only and large. Preserve this exact semantic entry for its next safe append rather than rewriting/truncating plan history through a connector-only edit:
+
+```text
+2026-08-30 — R7.3 post-Activity Home presentation correction
+- Implemented: after the completed catalogue Home-ownership migration, manual Simulator inspection exposed a platform presentation failure where migrated Activities could run without visibly presented Home. Commit 83738f7 removed broad exception swallowing from the trusted Simulator Home render path. Follow-up source review found partial pygame.display.update(rect/list) could still omit the protected corner from the actual window update; commit 45b185d9 preserves the Activity dirty update and performs one additional bounded update only for ActivitySystemChromeLayout.protected_region.
+- Tests/evidence: no current-SHA execution PASS is claimed in this connector tranche. Historical e2b831da Activity modernization/audit evidence remains valid for that source state, but pre-45b185d9 Simulator Home visual/runtime evidence is stale for current presentation behavior.
+- Decisions: keep the Activity catalogue modernization pass closed; fix the platform adapter rather than restoring Activity-owned Home. Preserve dirty-region rendering rather than forcing full-screen updates. Continue pruning brittle source-shape tests; do not add a string-presence test for this fix.
+- Remaining blockers: execute focused Simulator tests and visual Home matrix, rerun the R7.3 source gate on one exact current SHA, then execute same-SHA R7.2/R7.3 Acer physical acceptance.
+- Next exact step: current-SHA Simulator Home verification (Encyclopedia, Writing, Painting, animated Activity; partial-update path where already available), then exact R7.3 source gate, then same-SHA Acer protocol.
+- Commits: 83738f737a41aec7c139b3a4a3363e746ba0f266, 45b185d92bb577a3f40c741552fe247a8f6d0b70.
+```
+
+---
+
+## 8. Current disposition
 
 ```text
 Activity-modernization catalogue pass: COMPLETE (historical closure at e2b831da)
-Current Simulator Home source fix: IMPLEMENTED at 83738f7
+Simulator Home fail-loud source fix: IMPLEMENTED at 83738f7
+Simulator partial-update Home hardening: IMPLEMENTED at 45b185d9
 Current Simulator Home visual/runtime acceptance: NOT YET RERUN
 R7.3 source acceptance on current post-fix SHA: NOT YET RERUN
 R7.2/R7.3 Acer physical acceptance: INCOMPLETE
@@ -172,4 +199,4 @@ R7 overall: OPEN
 Ordinary-family public release: NOT READY
 ```
 
-The next legitimate blocking work remains R7.3 verification/physical acceptance, followed by R7.4 controller/system-input ownership and then the remaining ADR-0014 direct/compositor evidence. Public-release work must continue to use `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md` as the release gate rather than treating source-green development state as family-release certification.
+The next legitimate blocking work is R7.3 verification/physical acceptance, followed by R7.4 controller/system-input ownership and then the remaining ADR-0014 direct/compositor evidence. Public-release work must continue to use `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md` as the release gate rather than treating source-green development state as family-release certification.
