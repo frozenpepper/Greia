@@ -10,10 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from activities.acquario_magico.main import (
-    _get_cached_background,
-    _get_scaled_asset,
-)
+from activities.acquario_magico.acquarium_assets import AquariumAssetCache
 
 ACTIVITY_DIR = PROJECT_ROOT / "activities" / "acquario_magico"
 RUNTIME_ASSETS = ACTIVITY_DIR / "assets" / "runtime"
@@ -48,21 +45,24 @@ class AcquarioMagicoRuntimeTests(unittest.TestCase):
                     f"Invalid PNG: {name}",
                 )
 
-    def test_cached_backgrounds_have_reference_size(self) -> None:
-        self.assertEqual(
-            _get_cached_background(glow_mode=False).get_size(),
-            (1024, 600),
-        )
-        self.assertEqual(
-            _get_cached_background(glow_mode=True).get_size(),
-            (1024, 600),
-        )
+    def test_background_cache_has_reference_size_and_reuses_surface(self) -> None:
+        cache = AquariumAssetCache()
+        day = cache.background(glow_mode=False)
+        night = cache.background(glow_mode=True)
+        self.assertEqual(day.get_size(), (1024, 600))
+        self.assertEqual(night.get_size(), (1024, 600))
+        self.assertIs(cache.background(glow_mode=False), day)
 
-    def test_scaled_asset_cache_supports_both_facings(self) -> None:
-        right = _get_scaled_asset("clownfish.png", 72, 54, facing_right=True)
-        left = _get_scaled_asset("clownfish.png", 72, 54, facing_right=False)
+    def test_scaled_asset_cache_supports_both_facings_and_reuses_surface(self) -> None:
+        cache = AquariumAssetCache()
+        right = cache.scaled("clownfish.png", 72, 54, facing_right=True)
+        left = cache.scaled("clownfish.png", 72, 54, facing_right=False)
+        self.assertIsNotNone(right)
+        self.assertIsNotNone(left)
+        assert right is not None and left is not None
         self.assertEqual(right.get_size(), (72, 54))
         self.assertEqual(left.get_size(), (72, 54))
+        self.assertIs(cache.scaled("clownfish.png", 72, 54, facing_right=True), right)
 
 
 if __name__ == "__main__":
