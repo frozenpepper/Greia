@@ -236,13 +236,34 @@ class HeartPage(EncyclopediaPage):
         )
 
     def _draw_body_and_heart(self, surface: pygame.Surface) -> None:
+        # More child-friendly torso with subtle shading and rib hint
         skin = (235, 189, 160)
+        skin_light = (245, 210, 185)
+        skin_shadow = (210, 165, 138)
+        # Head with highlight
         pygame.draw.circle(surface, skin, (505, 184), 42)
-        pygame.draw.rect(surface, skin, (445, 225, 120, 230), border_radius=48)
+        pygame.draw.circle(surface, skin_light, (494, 172), 12)
+        pygame.draw.circle(surface, skin, (505, 184), 42, 2)
+        # Torso with rounded top and soft shadow
+        torso = pygame.Rect(445, 225, 120, 230)
+        pygame.draw.rect(surface, skin_shadow, torso.move(4, 6), border_radius=48)
+        pygame.draw.rect(surface, skin, torso, border_radius=48)
+        pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=40, width=4)
+        # Arms
+        pygame.draw.line(surface, skin_shadow, (458, 264), (393, 409), 26)
         pygame.draw.line(surface, skin, (455, 260), (390, 405), 24)
+        pygame.draw.line(surface, skin_shadow, (558, 264), (623, 409), 26)
         pygame.draw.line(surface, skin, (555, 260), (620, 405), 24)
+        # Ribs hint
+        for ry in (268, 285, 302, 320):
+            pygame.draw.arc(surface, (218, 175, 160), (462, ry, 80, 18), 0.25, 2.9, 2)
+        # Lungs
         pygame.draw.ellipse(surface, (224, 155, 163), (456, 266, 48, 82))
+        pygame.draw.ellipse(surface, (235, 175, 182), (462, 273, 36, 68))
         pygame.draw.ellipse(surface, (224, 155, 163), (506, 266, 48, 82))
+        pygame.draw.ellipse(surface, (235, 175, 182), (512, 273, 36, 68))
+        pygame.draw.ellipse(surface, (210, 135, 145), (456, 266, 48, 82), 2)
+        pygame.draw.ellipse(surface, (210, 135, 145), (506, 266, 48, 82), 2)
 
         beat = self._model.beat_phase
         double_pulse = max(0.0, math.sin(beat * math.pi * 2.0)) + 0.45 * max(
@@ -264,15 +285,25 @@ class HeartPage(EncyclopediaPage):
     @staticmethod
     def _draw_heart(surface: pygame.Surface, center: tuple[int, int], size: int) -> None:
         cx, cy = center
-        color = (197, 63, 78)
-        pygame.draw.circle(surface, color, (cx - size // 3, cy - size // 5), size // 2)
-        pygame.draw.circle(surface, color, (cx + size // 3, cy - size // 5), size // 2)
-        pygame.draw.polygon(
-            surface,
-            color,
-            [(cx - size, cy), (cx + size, cy), (cx, cy + int(size * 1.55))],
-        )
+        # Base heart with gradient and highlight
+        base = (197, 63, 78)
+        highlight = (218, 95, 110)
+        shadow = (142, 46, 58)
+        # Two lobes
+        pygame.draw.circle(surface, shadow, (cx - size // 3 + 2, cy - size // 5 + 2), size // 2)
+        pygame.draw.circle(surface, shadow, (cx + size // 3 + 2, cy - size // 5 + 2), size // 2)
+        pygame.draw.circle(surface, base, (cx - size // 3, cy - size // 5), size // 2)
+        pygame.draw.circle(surface, base, (cx + size // 3, cy - size // 5), size // 2)
+        pygame.draw.circle(surface, highlight, (cx - size // 3 - 4, cy - size // 3), size // 4)
+        pygame.draw.circle(surface, highlight, (cx + size // 3 - 2, cy - size // 3), size // 5)
+        # Pointed bottom with subtle bevel
+        pts = [(cx - size, cy + 2), (cx + size, cy + 2), (cx, cy + int(size * 1.55))]
+        pygame.draw.polygon(surface, shadow, [(x, y + 2) for x, y in pts])
+        pygame.draw.polygon(surface, base, pts)
+        # Septum line with highlight
+        pygame.draw.line(surface, shadow, (cx + 1, cy - 16), (cx + 1, cy + 44), 4)
         pygame.draw.line(surface, (127, 45, 62), (cx, cy - 18), (cx, cy + 42), 3)
+        pygame.draw.line(surface, highlight, (cx - 1, cy - 12), (cx - 1, cy + 10), 2)
 
     @staticmethod
     def _draw_chambers(surface: pygame.Surface, center: tuple[int, int]) -> None:
