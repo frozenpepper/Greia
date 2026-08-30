@@ -62,6 +62,9 @@ class _MockAudio:
     def play_feedback(self, correct: bool) -> None:
         self.played.append("correct" if correct else "retry")
 
+    def play_sfx(self, cue: str) -> None:
+        self.played.append(cue)
+
     def stop_speech(self) -> None:
         self.stopped += 1
 
