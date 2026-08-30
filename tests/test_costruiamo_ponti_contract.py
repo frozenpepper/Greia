@@ -19,13 +19,13 @@ class CostruiamoPontiContractTests(unittest.TestCase):
         self.assertEqual(raw["permissions"]["requested"], [])
 
     def test_activity_uses_shared_logical_canvas_and_platform_navigation(self) -> None:
-        source = (ACTIVITY / "main.py").read_text(encoding="utf-8")
-        self.assertIn("PygameReferenceCanvas", source)
-        self.assertIn("activity_viewport_for_surface", source)
-        self.assertIn("canvas.pointer(event.pos)", source)
-        self.assertIn("ChildUiMetrics.for_size", source)
-        self.assertIn("get_theme()", source)
-        self.assertIn("activity_stop_requested()", source)
+        combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))
+        self.assertIn("PygameReferenceCanvas", combined)
+        self.assertIn("activity_viewport_for_surface", combined)
+        self.assertIn("canvas.pointer(event.pos)", combined)
+        self.assertIn("ChildUiMetrics.for_size", combined)
+        self.assertIn("get_theme()", combined)
+        self.assertIn("activity_stop_requested()", combined)
 
     def test_materials_and_runtime_assets_exist(self) -> None:
         runtime_dir = ACTIVITY / "assets" / "runtime"
@@ -40,17 +40,17 @@ class CostruiamoPontiContractTests(unittest.TestCase):
         self.assertTrue((runtime_dir / "bank_space.png").is_file())
 
     def test_reference_geometry_is_semantic_and_bounded(self) -> None:
-        source = (ACTIVITY / "main.py").read_text(encoding="utf-8")
-        self.assertIn("REFERENCE_WIDTH = 1024", source)
-        self.assertIn("REFERENCE_HEIGHT = 600", source)
-        self.assertIn("SceneActorDefinition", source)
-        self.assertIn("character.flash", source)
+        combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))
+        self.assertIn("REFERENCE_WIDTH = 1024", combined)
+        self.assertIn("REFERENCE_HEIGHT = 600", combined)
+        self.assertIn("SceneActorDefinition", combined)
+        self.assertIn("character.flash", combined)
 
     def test_crossing_reaches_right_cliff_and_celebrates(self) -> None:
-        source = (ACTIVITY / "main.py").read_text(encoding="utf-8")
-        self.assertIn("target_x = bridge_end_x + 50", source)
-        self.assertIn("flash_motion = \"celebrate_pop\"", source)
-        self.assertIn("flash_anim_timer = 0.0", source)
+        combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))
+        self.assertIn("target_x = bridge_end_x + 50", combined)
+        self.assertIn("flash_motion = \"celebrate_pop\"", combined)
+        self.assertIn("flash_anim_timer = 0.0", combined)
 
 
 if __name__ == "__main__":

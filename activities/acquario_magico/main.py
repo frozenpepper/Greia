@@ -56,23 +56,23 @@ if __package__:
     from .acquarium_model import AquariumSession
     from .acquarium_renderer import AquariumRenderer, ToolLayout
 else:
-    from aquarium_app import AquariumApp, CHEST_RECT, build_app
-    from aquarium_assets import (
+    from acquarium_app import AquariumApp, CHEST_RECT, build_app
+    from acquarium_assets import (
         AquariumAssetCache,
         _get_cached_background,
         _get_scaled_asset,
         _load_asset_surface,
     )
-    from aquarium_audio import AquariumAudio
-    from aquarium_content import (
+    from acquarium_audio import AquariumAudio
+    from acquarium_content import (
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
         SPECIES,
         STORAGE_KEY,
         ToolIndex,
     )
-    from aquarium_model import AquariumSession
-    from aquarium_renderer import AquariumRenderer, ToolLayout
+    from acquarium_model import AquariumSession
+    from acquarium_renderer import AquariumRenderer, ToolLayout
 
 
 def _resolve_locale() -> LocalizedResources:
