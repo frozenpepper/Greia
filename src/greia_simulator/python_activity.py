@@ -46,8 +46,8 @@ def install_pygame_display_patch(
     # package-local pygame module from replacing the trusted renderer dependency
     # used to establish the synthetic surface.
     import pygame
+    from greia_platform.activity_ui import draw_system_chrome_overlay
     from greia_platform.system_chrome import ActivitySystemChromeLayout
-    from greia_platform.activity_ui import draw_home_symbol, draw_back_symbol
 
     original = pygame.display.set_mode
     original_flip = pygame.display.flip
@@ -142,13 +142,8 @@ def install_pygame_display_patch(
         if surface is None:
             return
         w, h = surface.get_size()
-        try:
-            from greia_platform.activity_ui import draw_system_chrome_overlay
-
-            chrome = ActivitySystemChromeLayout.for_surface(w, h)
-            draw_system_chrome_overlay(surface, back_available=chrome.back_available)
-        except Exception:
-            pass
+        chrome = ActivitySystemChromeLayout.for_surface(w, h)
+        draw_system_chrome_overlay(surface, back_available=chrome.back_available)
 
     def simulator_flip():
         surface = pygame.display.get_surface()
