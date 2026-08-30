@@ -91,7 +91,6 @@ class EncyclopediaApp:
                 self._handle_event(event)
             self.navigator.update(dt)
             self.navigator.draw(self.canvas.surface)
-            self._draw_internal_back()
             self.canvas.present(pointer=True)
             pygame.display.flip()
             if not self._ready_published:
@@ -119,9 +118,6 @@ class EncyclopediaApp:
                 return
             logical = self.canvas.pointer(event.pos)
             if logical is not None:
-                if self.navigator.can_go_back and self._internal_back_rect().collidepoint((int(logical[0]), int(logical[1]))):
-                    self.go_back()
-                    return
                 self.navigator.handle_input(PageInput.pointer_press(logical))
             return
 
@@ -135,44 +131,6 @@ class EncyclopediaApp:
             self.go_back()
             return
         self.navigator.handle_input(PageInput.command_event(command))
-
-    @staticmethod
-    def _internal_back_rect() -> pygame.Rect:
-        # Activity-internal page navigation. This is intentionally placed away
-        # from Greia's protected system Home chrome and styled as a book tab,
-        # not as a replacement system button.
-        return pygame.Rect(894, 90, 78, 58)
-
-    def _draw_internal_back(self) -> None:
-        if not self.navigator.can_go_back:
-            return
-        rect = self._internal_back_rect()
-        pygame.draw.rect(
-            self.canvas.surface,
-            (255, 232, 154),
-            rect,
-            border_radius=18,
-        )
-        pygame.draw.rect(
-            self.canvas.surface,
-            self._palette.ink,
-            rect,
-            width=3,
-            border_radius=18,
-        )
-        cx, cy = rect.center
-        pygame.draw.line(
-            self.canvas.surface,
-            self._palette.ink,
-            (cx + 15, cy),
-            (cx - 13, cy),
-            6,
-        )
-        pygame.draw.polygon(
-            self.canvas.surface,
-            self._palette.ink,
-            [(cx - 18, cy), (cx - 2, cy - 14), (cx - 2, cy + 14)],
-        )
 
     def _point_in_activity_viewport(self, pos: tuple[int, int]) -> bool:
         viewport = activity_viewport_for_surface(self.screen)
