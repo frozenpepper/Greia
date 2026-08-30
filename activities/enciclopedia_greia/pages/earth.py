@@ -18,6 +18,7 @@ if __package__ and "." in __package__:
         draw_navigation_arrows,
         draw_title,
     )
+    from ..enciclopedia_focus_audio import FocusAudioTracker
     from .common import draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
@@ -30,6 +31,7 @@ else:
         draw_navigation_arrows,
         draw_title,
     )
+    from enciclopedia_focus_audio import FocusAudioTracker
     from pages.common import draw_presenter, focus_ring
 
 
@@ -58,6 +60,8 @@ class EarthPage(EncyclopediaPage):
 
     def __init__(self, context) -> None:
         super().__init__(context)
+
+        self._focus_audio = FocusAudioTracker()
         self._time = 0.0
         self._selected = 0
         self._hovered: int | None = None
@@ -71,7 +75,7 @@ class EarthPage(EncyclopediaPage):
 
     def _announce_selected(self) -> None:
         dest = DESTINATIONS[self._selected]
-        announce_focus_name(self.context.audio, encyclopedia_focus_cue("earth", dest.destination_id, "name"))
+        self._focus_audio.announce_once(self.context.audio, encyclopedia_focus_cue("earth", dest.destination_id, "name"))
 
     def _set_selected(self, index: int) -> None:
         index = max(0, min(len(DESTINATIONS) - 1, index))
@@ -105,7 +109,7 @@ class EarthPage(EncyclopediaPage):
             )
             if event.kind is PageInputKind.POINTER_MOVE and self._hovered is not None:
                 dest = DESTINATIONS[self._hovered]
-                announce_focus_name(self.context.audio, encyclopedia_focus_cue("earth", dest.destination_id, "name"))
+                self._focus_audio.announce_once(self.context.audio, encyclopedia_focus_cue("earth", dest.destination_id, "name"))
             if event.kind is PageInputKind.POINTER_PRESS and self._hovered is not None:
                 self._set_selected(self._hovered)
                 self._open_selected()

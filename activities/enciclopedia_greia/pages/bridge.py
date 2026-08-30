@@ -18,6 +18,7 @@ if __package__ and "." in __package__:
         draw_navigation_arrows,
         encyclopedia_focus_cue,
     )
+    from ..enciclopedia_focus_audio import FocusAudioTracker
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
@@ -28,6 +29,7 @@ else:
         draw_navigation_arrows,
         encyclopedia_focus_cue,
     )
+    from enciclopedia_focus_audio import FocusAudioTracker
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -90,6 +92,8 @@ class BridgePage(EncyclopediaPage):
 
     def __init__(self, context) -> None:
         super().__init__(context)
+
+        self._focus_audio = FocusAudioTracker()
         self._model = BridgeLoadModel()
         self._selected = 0
         self._hovered: int | None = None
@@ -109,9 +113,11 @@ class BridgePage(EncyclopediaPage):
 
     def _announce_selected(self) -> None:
         disc = DISCOVERIES[self._selected]
-        cue = encyclopedia_focus_cue("machines", disc.discovery_id, "name")
-        if not announce_focus_name(self.context.audio, cue):
-            announce_focus_name(self.context.audio, disc.cue_id)
+        cue = encyclopedia_focus_cue(disc.discovery_id, "name")
+        # Use deduped announce for focus changes
+        if not self._focus_audio.announce_once(self.context.audio, cue):
+            # Fallback to disc.cue_id if focus cue not yet integrated (will fail silently until audio exists)
+            self._focus_audio.announce_once(self.context.audio, disc.cue_id)
 
     def _set_selected(self, index: int) -> None:
         index = max(0, min(len(DISCOVERIES) - 1, index))
@@ -121,8 +127,8 @@ class BridgePage(EncyclopediaPage):
         self._announce_selected()
 
     def _trigger_main(self) -> None:
-        self._activate(0)
-        announce_focus_name(self.context.audio, encyclopedia_focus_cue("machines", DISCOVERIES[0].discovery_id, "name"))
+        # Action button now correctly activates the currently selected discovery
+        self._activate(self._selected)
 
     def update(self, dt: float) -> None:
         self._time = getattr(self, '_time', 0.0) + dt
@@ -151,7 +157,7 @@ class BridgePage(EncyclopediaPage):
             if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
                 disc = DISCOVERIES[hit]
                 cue = encyclopedia_focus_cue("machines", disc.discovery_id, "name")
-                announce_focus_name(self.context.audio, cue)
+                self._focus_audio.announce_once(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
                 self._set_selected(hit)
@@ -202,9 +208,6 @@ class BridgePage(EncyclopediaPage):
         )
         self._draw_bridge(surface)
         self._draw_hotspots(surface)
-        for idx, rect in enumerate(self._hotspots):
-            if idx == self._selected or idx == self._hovered:
-                draw_focus_patch(surface, rect, active=True, radius=16, time=getattr(self, '_time', 0.0))
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
         self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(

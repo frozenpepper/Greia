@@ -17,6 +17,7 @@ if __package__ and "." in __package__:
         draw_navigation_arrows,
         encyclopedia_focus_cue,
     )
+    from ..enciclopedia_focus_audio import FocusAudioTracker
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
@@ -27,6 +28,7 @@ else:
         draw_navigation_arrows,
         encyclopedia_focus_cue,
     )
+    from enciclopedia_focus_audio import FocusAudioTracker
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -66,6 +68,8 @@ class OceanPage(EncyclopediaPage):
 
     def __init__(self, context) -> None:
         super().__init__(context)
+
+        self._focus_audio = FocusAudioTracker()
         self._depth = OceanDepthModel()
         self._time = 0.0
         self._selected = 0
@@ -90,8 +94,8 @@ class OceanPage(EncyclopediaPage):
         disc = DISCOVERIES[self._selected]
         # Use helper that avoids ledger fragment
         cue = encyclopedia_focus_cue(disc.discovery_id, "name")
-        if not announce_focus_name(self.context.audio, cue):
-            announce_focus_name(self.context.audio, disc.cue_id)
+        if not self._focus_audio.announce_once(self.context.audio, cue):
+            self._focus_audio.announce_once(self.context.audio, disc.cue_id)
 
     def _set_selected(self, index: int) -> None:
         index = max(0, min(len(DISCOVERIES) - 1, index))
@@ -101,7 +105,8 @@ class OceanPage(EncyclopediaPage):
         self._announce_selected()
 
     def _trigger_main(self) -> None:
-        self._activate(0)
+        self._activate(self._selected)
+        # Announce is handled by _activate's audio; no extra cue needed
         disc = DISCOVERIES[0]
         cue = encyclopedia_focus_cue(disc.discovery_id, "name")
         announce_focus_name(self.context.audio, cue)
@@ -134,7 +139,7 @@ class OceanPage(EncyclopediaPage):
             if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
                 disc = DISCOVERIES[hit]
                 cue = encyclopedia_focus_cue(disc.discovery_id, "name")
-                announce_focus_name(self.context.audio, cue)
+                self._focus_audio.announce_once(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
                 self._set_selected(hit)
@@ -147,6 +152,7 @@ class OceanPage(EncyclopediaPage):
                 self._trigger_main()
                 return
             self._activate(self._selected)
+        # Announce is handled by _activate's audio; no extra cue needed
             return
         prev = self._selected
         self._selected = grid_step(
@@ -187,9 +193,6 @@ class OceanPage(EncyclopediaPage):
         )
         self._draw_water_column(surface)
         self._draw_hotspots(surface)
-        for idx, rect in enumerate(self._hotspots):
-            if idx == self._selected or idx == self._hovered:
-                draw_focus_patch(surface, rect, active=True, radius=16, time=getattr(self, '_time', 0.0))
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
         self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(

@@ -17,6 +17,7 @@ if __package__ and "." in __package__:
         draw_speed_slider,
         encyclopedia_focus_cue,
     )
+    from ..enciclopedia_focus_audio import FocusAudioTracker
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
@@ -30,6 +31,7 @@ else:
         draw_speed_slider,
         encyclopedia_focus_cue,
     )
+    from enciclopedia_focus_audio import FocusAudioTracker
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -120,6 +122,8 @@ class VolcanoPage(EncyclopediaPage):
 
     def __init__(self, context) -> None:
         super().__init__(context)
+
+        self._focus_audio = FocusAudioTracker()
         self._model = VolcanoModel()
         self._time = 0.0
         self._selected = 0
@@ -150,8 +154,8 @@ class VolcanoPage(EncyclopediaPage):
         disc = DISCOVERIES[self._selected]
         cue = encyclopedia_focus_cue("earth", "volcano", disc.discovery_id, "name")
         # Provisional — fail-soft until dedicated name cues are produced
-        if not announce_focus_name(self.context.audio, cue):
-            announce_focus_name(self.context.audio, disc.cue_id)
+        if not self._focus_audio.announce_once(self.context.audio, cue):
+            self._focus_audio.announce_once(self.context.audio, disc.cue_id)
 
     def _set_selected(self, index: int) -> None:
         index = max(0, min(len(DISCOVERIES) - 1, index))
@@ -191,7 +195,7 @@ class VolcanoPage(EncyclopediaPage):
             if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
                 disc = DISCOVERIES[hit]
                 cue = encyclopedia_focus_cue("earth", "volcano", disc.discovery_id, "name")
-                announce_focus_name(self.context.audio, cue)
+                self._focus_audio.announce_once(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
                 self._set_selected(hit)

@@ -22,6 +22,7 @@ if __package__ and "." in __package__:
         draw_speed_slider,
         encyclopedia_focus_cue,
     )
+    from ..enciclopedia_focus_audio import FocusAudioTracker
     from .common import draw_centered_text, draw_presenter
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
@@ -38,6 +39,7 @@ else:
         draw_speed_slider,
         encyclopedia_focus_cue,
     )
+    from enciclopedia_focus_audio import FocusAudioTracker
     from pages.common import draw_centered_text, draw_presenter
 
 
@@ -116,6 +118,8 @@ class SpacePage(EncyclopediaPage):
 
     def __init__(self, context) -> None:
         super().__init__(context)
+
+        self._focus_audio = FocusAudioTracker()
         self._time = 0.0
         self._selected = 3  # Earth.
         self._target_positions: list[tuple[str, int, int, int]] = []
@@ -141,10 +145,7 @@ class SpacePage(EncyclopediaPage):
         target = _TARGET_IDS[self._selected]
         # Prefer dedicated name cue; falls back silently if not yet produced.
         cue = encyclopedia_focus_cue("space", target, "name")
-        if not announce_focus_name(self.context.audio, cue):
-            # Fallback: try generic planet cue from label key
-            label = _TARGET_LABEL_KEYS[self._selected]
-            announce_focus_name(self.context.audio, encyclopedia_focus_cue(label, "name"))
+        self._focus_audio.announce_once(self.context.audio, cue)
 
     def _set_selected(self, index: int) -> None:
         index = max(0, min(len(_TARGET_IDS) - 1, index))
@@ -174,7 +175,7 @@ class SpacePage(EncyclopediaPage):
             # Hover announces name without changing persistent selection
             for idx, (_, x, y, hit_radius) in enumerate(self._target_positions):
                 if (px - x) ** 2 + (py - y) ** 2 <= hit_radius**2:
-                    announce_focus_name(
+                    self._focus_audio.announce_once(
                         self.context.audio, encyclopedia_focus_cue("space", _TARGET_IDS[idx], "name")
                     )
                     break
@@ -303,7 +304,7 @@ class SpacePage(EncyclopediaPage):
         pygame.draw.circle(surface, (251, 205, 66), center, 27)
         if selected_id == "sun":
             sun_rect = pygame.Rect(center[0] - 38, center[1] - 38, 76, 76)
-            draw_focus_patch(surface, sun_rect, active=True, radius=18, time=self._time)
+            draw_focus_patch(surface, sun_rect, active=True, radius=18, time=self._time, shape="circle")
         if self._labels_enabled:
             self._draw_open_marker(surface, "sun", (524, 318), 6)
 
@@ -326,8 +327,21 @@ class SpacePage(EncyclopediaPage):
             if planet.planet_id == "earth":
                 earth_position = (x, y)
 
-            pygame.draw.circle(surface, planet.color, (x, y), planet.size)
-            decorate_planet(surface, planet.planet_id, (x, y), planet.size, planet.color, self._time)
+            # Earth uses authored sprite when available — instant recognition
+            if planet.planet_id == "earth":
+                is_sel = selected_id == "earth"
+                diam = planet.size * 2 + (2 if is_sel else 0)
+                if is_sel:
+                    diam = int(diam * 1.25)
+                sprite = self.context.visuals.planet("earth", diam)
+                if sprite is not None:
+                    surface.blit(sprite, sprite.get_rect(center=(x, y)))
+                else:
+                    pygame.draw.circle(surface, planet.color, (x, y), planet.size)
+                    decorate_planet(surface, planet.planet_id, (x, y), planet.size, planet.color, self._time)
+            else:
+                pygame.draw.circle(surface, planet.color, (x, y), planet.size)
+                decorate_planet(surface, planet.planet_id, (x, y), planet.size, planet.color, self._time)
             if planet.planet_id == "saturn":
                 pygame.draw.ellipse(
                     surface,
@@ -343,10 +357,10 @@ class SpacePage(EncyclopediaPage):
                     4,
                 )
             if selected_id == planet.planet_id:
-                # Fitted halo instead of thin yellow ring — consistent grammar.
+                # Fitted halo — circle for planets
                 pad = max(14, planet.size + 10)
                 halo_rect = pygame.Rect(x - pad, y - pad, pad * 2, pad * 2)
-                draw_focus_patch(surface, halo_rect, active=True, radius=16, time=self._time)
+                draw_focus_patch(surface, halo_rect, active=True, radius=16, time=self._time, shape="circle")
 
         if earth_position is not None:
             ex, ey = earth_position
@@ -360,7 +374,7 @@ class SpacePage(EncyclopediaPage):
                 self._draw_open_marker(surface, "moon", (moon_x + 9, moon_y - 8), 3)
             if selected_id == "moon":
                 moon_rect = pygame.Rect(moon_x - 18, moon_y - 18, 36, 36)
-                draw_focus_patch(surface, moon_rect, active=True, radius=14, time=self._time)
+                draw_focus_patch(surface, moon_rect, active=True, radius=14, time=self._time, shape="circle")
 
         self._target_positions = [
             (target_id, *positions[target_id])

@@ -18,6 +18,7 @@ if __package__ and "." in __package__:
         draw_title,
         encyclopedia_focus_cue,
     )
+    from ..enciclopedia_focus_audio import FocusAudioTracker
     from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
@@ -30,6 +31,7 @@ else:
         draw_title,
         encyclopedia_focus_cue,
     )
+    from enciclopedia_focus_audio import FocusAudioTracker
     from pages.common import draw_presenter, grid_step
 
 
@@ -81,6 +83,8 @@ class HomePage(EncyclopediaPage):
 
     def __init__(self, context) -> None:
         super().__init__(context)
+
+        self._focus_audio = FocusAudioTracker()
         self._selected = 0
         self._hovered: int | None = None
         self._time = 0.0
@@ -98,7 +102,7 @@ class HomePage(EncyclopediaPage):
     def _announce_selected(self) -> None:
         portal = PORTALS[self._selected]
         cue = encyclopedia_focus_cue("section", portal.page_id, "name")
-        announce_focus_name(self.context.audio, cue)
+        self._focus_audio.announce_once(self.context.audio, cue)
 
     def _set_selected(self, index: int) -> None:
         if index == self._selected:
@@ -131,7 +135,7 @@ class HomePage(EncyclopediaPage):
             if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
                 # Hover does not change persistent selection, but announce hovered name for discoverability
                 portal = PORTALS[hit]
-                announce_focus_name(
+                self._focus_audio.announce_once(
                     self.context.audio, encyclopedia_focus_cue("section", portal.page_id, "name")
                 )
             self._hovered = hit

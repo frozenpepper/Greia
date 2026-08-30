@@ -18,6 +18,7 @@ if __package__ and "." in __package__:
         draw_navigation_arrows,
         draw_title,
     )
+    from ..enciclopedia_focus_audio import FocusAudioTracker
     from .common import draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
@@ -30,6 +31,7 @@ else:
         draw_navigation_arrows,
         draw_title,
     )
+    from enciclopedia_focus_audio import FocusAudioTracker
     from pages.common import draw_presenter, focus_ring, grid_step
 
 
@@ -58,6 +60,8 @@ class MachinesPage(EncyclopediaPage):
 
     def __init__(self, context) -> None:
         super().__init__(context)
+
+        self._focus_audio = FocusAudioTracker()
         self._time = 0.0
         self._selected = 0
         self._hovered: int | None = None
@@ -80,7 +84,7 @@ class MachinesPage(EncyclopediaPage):
 
     def _announce_selected(self) -> None:
         target = MACHINE_TARGETS[self._selected]
-        announce_focus_name(self.context.audio, encyclopedia_focus_cue("machines", target.target_id, "name"))
+        self._focus_audio.announce_once(self.context.audio, encyclopedia_focus_cue("machines", target.target_id, "name"))
 
     def _set_selected(self, index: int) -> None:
         index = max(0, min(len(MACHINE_TARGETS) - 1, index))
@@ -113,7 +117,7 @@ class MachinesPage(EncyclopediaPage):
                 None,
             )
             if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
-                announce_focus_name(
+                self._focus_audio.announce_once(
                     self.context.audio, encyclopedia_focus_cue("machines", MACHINE_TARGETS[hit].target_id, "name")
                 )
             self._hovered = hit
