@@ -1,0 +1,860 @@
+"""Application coordinator for Teatrino delle Fiabe.
+
+Owns Pygame screen/canvas, model session, audio owners, renderer helpers
+and bounded asset caches. This is the only place that touches Pygame
+events + platform APIs together.
+"""
+
+from __future__ import annotations
+
+import io
+import json
+import math
+import random
+import time
+from pathlib import Path
+
+import pygame
+
+from greia_platform.activity_api import (
+    activity_stop_requested,
+    emit_activity_event,
+    get_profile_locale,
+    get_storage,
+    get_theme,
+    mark_activity_ready,
+)
+from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.child_text import display_text
+from greia_platform.localization import (
+    ActivityLocaleSupport,
+    LocalizedResources,
+    resolve_activity_locale,
+)
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.typography import FontRole, GreiaTypography
+
+if __package__:
+    from .teatrino_assets import clear_all_caches, render_backdrop_surface
+    from .teatrino_audio import MicrophoneRecorder, SoundManager
+    from .teatrino_content import (
+        BG_CONFIGS,
+        DARK_TEXT,
+        FX_BUTTONS,
+        MAX_RECORDING_SECONDS,
+        PUPPET_ROSTER,
+        REC_RED,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        STAGE_CURTAIN,
+        STAGE_CURTAIN_DARK,
+        STAGE_CURTAIN_LIGHT,
+        STAGE_GOLD,
+        MIC_GREEN,
+        WHITE,
+    )
+    from .teatrino_model import AmbientSpark, Puppet, ShowRepository
+    from .teatrino_renderer import (
+        draw_ambient_spark,
+        draw_puppet,
+        draw_stage_curtains_and_valance,
+        get_library_modal_layout,
+    )
+else:
+    from teatrino_assets import clear_all_caches, render_backdrop_surface
+    from teatrino_audio import MicrophoneRecorder, SoundManager
+    from teatrino_content import (
+        BG_CONFIGS,
+        DARK_TEXT,
+        FX_BUTTONS,
+        MAX_RECORDING_SECONDS,
+        PUPPET_ROSTER,
+        REC_RED,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        STAGE_CURTAIN,
+        STAGE_CURTAIN_DARK,
+        STAGE_CURTAIN_LIGHT,
+        STAGE_GOLD,
+        MIC_GREEN,
+        WHITE,
+    )
+    from teatrino_model import AmbientSpark, Puppet, ShowRepository
+    from teatrino_renderer import (
+        draw_ambient_spark,
+        draw_puppet,
+        draw_stage_curtains_and_valance,
+        get_library_modal_layout,
+    )
+
+
+def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    vp = activity_viewport_for_surface(surface)
+    x, y = position
+    if not (0 <= x < vp.surface.width and 0 <= y < vp.surface.height):
+        return False
+    for protected in vp.protected_regions:
+        if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
+            return False
+    return True
+
+
+class TeatrinoApp:
+    """Lifecycle owner for the puppet theater.
+
+    Composition root for screen, storage, audio, spark/puppet state,
+    recording/playback engines and rendering.
+    """
+
+    def __init__(self, screen: pygame.Surface | None = None) -> None:
+        pygame.font.init()
+        if screen is None:
+            screen = pygame.display.get_surface()
+            if screen is None:
+                # Match original monolith: fullscreen native display.
+                try:
+                    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                except Exception:
+                    screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
+        pygame.mouse.set_visible(False)
+        self.screen = screen
+        self.canvas = PygameReferenceCanvas(screen)
+        self.metrics = ChildUiMetrics.for_size(*screen.get_size())
+        self.clock = pygame.time.Clock()
+        try:
+            self.theme = get_theme()
+        except Exception:
+
+            class _FallbackTheme:
+                background = (245, 240, 225)
+
+            self.theme = _FallbackTheme()  # type: ignore
+        self.typography = GreiaTypography()
+        try:
+            self.storage = get_storage()
+        except Exception:
+            self.storage = None
+        self.show_repo = ShowRepository(self.storage)
+
+        # Localization — preserve original JSON loading while also supporting
+        # platform LocalizedResources for future locale handling.
+        self._resources: LocalizedResources | None = None
+        self._active_locale = "it"
+        locales_dir = Path(__file__).resolve().parent / "locales"
+        it_file = locales_dir / "it.json"
+        self.ui_strings: dict[str, str] = {}
+        self.puppet_names: dict[str, str] = {}
+        if it_file.is_file():
+            try:
+                loc_data = json.loads(it_file.read_text(encoding="utf-8"))
+                self.ui_strings = loc_data.get("ui", {})
+                self.puppet_names = loc_data.get("puppets", {})
+            except Exception:
+                pass
+        # Also build platform resources if possible (reuse, don't invent).
+        try:
+            support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+            ctx = resolve_activity_locale(get_profile_locale(), support)
+            if ctx is not None:
+                self._resources = LocalizedResources(Path(__file__).resolve().parent, ctx)
+                self._active_locale = ctx.selected.language
+        except Exception:
+            pass
+
+        # Sprites — convert_alpha once, pre-scale thumbnails to eliminate
+        # per-frame smoothscale (case-study performance pattern).
+        runtime_dir = Path(__file__).resolve().parent / "assets" / "runtime"
+        self.puppet_sprites: dict[str, pygame.Surface] = {}
+        for p_id, p_name in PUPPET_ROSTER:
+            png_path = runtime_dir / f"puppet_{p_id}.png"
+            if png_path.is_file():
+                try:
+                    img = pygame.image.load(str(png_path)).convert_alpha()
+                    self.puppet_sprites[p_id] = pygame.transform.smoothscale(img, (110, 110))
+                except Exception:
+                    pass
+        if "lilli" not in self.puppet_sprites:
+            fb_s = pygame.Surface((110, 110), pygame.SRCALPHA)
+            pygame.draw.circle(fb_s, (244, 114, 182), (55, 55), 45)
+            self.puppet_sprites["lilli"] = fb_s
+
+        self.puppet_thumbs: dict[str, pygame.Surface] = {
+            p_id: pygame.transform.smoothscale(spr, (52, 52)) for p_id, spr in self.puppet_sprites.items()
+        }
+        self.puppet_micro_thumbs: dict[str, pygame.Surface] = {
+            p_id: pygame.transform.smoothscale(spr, (38, 38)) for p_id, spr in self.puppet_sprites.items()
+        }
+
+        # Text cache bounded with explicit invalidation.
+        self.text_cache: dict[tuple, pygame.Surface] = {}
+
+        # Pre-render & cache all 5 backdrops via bounded asset cache.
+        self.cached_backdrops: dict[str, pygame.Surface] = {}
+        for bg_id, _, _ in BG_CONFIGS:
+            self.cached_backdrops[bg_id] = render_backdrop_surface(bg_id)
+
+        self.sound_mgr = SoundManager()
+        self.mic_recorder = MicrophoneRecorder()
+
+        self.sparks = [AmbientSpark("cottage") for _ in range(16)]
+
+        self.active_bg_idx = 0
+        self.puppets_on_stage: list[Puppet] = [
+            Puppet("lilli", self.puppet_names.get("lilli", "Lilli"), 380, 270),
+            Puppet("draghetto", self.puppet_names.get("draghetto", "Draghetto"), 600, 270),
+        ]
+        self.puppets_on_stage[1].flip_x = True
+        self.held_puppet: Puppet | None = None
+        self.held_offset_x = 0.0
+        self.held_offset_y = 0.0
+
+        self.tray_page = 0
+        self.puppets_per_page = 6
+        self.max_tray_pages = (len(PUPPET_ROSTER) + self.puppets_per_page - 1) // self.puppets_per_page
+
+        self.app_mode = "stage"
+        self.is_recording = False
+        self.rec_start_time = 0.0
+        self.recorded_frames: list[dict] = []
+        self.recorded_sfx: list[dict] = []
+        self.last_recorded_wav: bytes | None = None
+        self.feedback_text = ""
+        self.feedback_timer = 0.0
+
+        self.is_playing_show = False
+        self.play_start_time = 0.0
+        self.playback_frames: list[dict] = []
+        self.playback_sfx: list[dict] = []
+        self.playback_audio_channel: pygame.mixer.Channel | None = None
+        self.playback_duration = 0.0
+        self.playback_show_meta: dict | None = None
+
+        self.library_page = 0
+        self.library_shows = self.show_repo.list_shows()
+
+        self.running = True
+
+    # -- text helper -------------------------------------------------------
+
+    def get_text(self, text: str, role: FontRole, size: int, color: tuple) -> pygame.Surface:
+        key = (text, role, size, color)
+        res = self.text_cache.get(key)
+        if res is None:
+            res = self.typography.render(display_text(text), role, size, color)
+            if len(self.text_cache) > 256:
+                self.text_cache.clear()
+            self.text_cache[key] = res
+        return res
+
+    # -- frame step ---------------------------------------------------------
+
+    def _step_frame(self, dt: float) -> None:
+        if self.feedback_timer > 0.0:
+            self.feedback_timer -= dt
+            if self.feedback_timer <= 0.0:
+                self.feedback_text = ""
+
+        active_bg_id = BG_CONFIGS[self.active_bg_idx][0]
+        for sp in self.sparks:
+            sp.bg_id = active_bg_id
+            sp.update()
+
+        for p in self.puppets_on_stage:
+            p.update()
+
+        if self.is_recording:
+            elapsed = time.time() - self.rec_start_time
+            if elapsed >= MAX_RECORDING_SECONDS:
+                self.is_recording = False
+                wav_bytes = self.mic_recorder.stop_recording()
+                self.last_recorded_wav = wav_bytes
+                saved_meta = self.show_repo.save_show(
+                    active_bg_id,
+                    [{"id": p.puppet_id, "name": p.name} for p in self.puppets_on_stage],
+                    self.recorded_frames,
+                    self.recorded_sfx,
+                    elapsed,
+                    wav_bytes,
+                )
+                self.library_shows = self.show_repo.list_shows()
+                self.feedback_text = f"🎉 {self.ui_strings.get('recording_saved', 'Spettacolo salvato nella libreria!')}"
+                self.feedback_timer = 4.0
+                try:
+                    emit_activity_event(
+                        "story.recorded",
+                        idempotency_key=f"rec-{saved_meta['id']}",
+                        payload={"duration": round(elapsed, 1), "id": saved_meta["id"]},
+                    )
+                except Exception:
+                    pass
+                self.sound_mgr.play("applause")
+            else:
+                frame_data = {
+                    "t": round(elapsed, 2),
+                    "puppets": [
+                        {
+                            "id": p.puppet_id,
+                            "x": round(p.x, 1),
+                            "y": round(p.y, 1),
+                            "flip": p.flip_x,
+                            "jumping": p.jump_timer > 0.0,
+                            "talking": p.talk_timer > 0.0,
+                        }
+                        for p in self.puppets_on_stage
+                    ],
+                }
+                self.recorded_frames.append(frame_data)
+
+        if self.is_playing_show:
+            play_elapsed = time.time() - self.play_start_time
+            if play_elapsed >= self.playback_duration:
+                self.is_playing_show = False
+                self.feedback_text = "👏 Evviva lo Spettacolo!"
+                self.feedback_timer = 3.0
+                self.sound_mgr.play("applause")
+            else:
+                if self.playback_frames:
+                    prev_f = self.playback_frames[0]
+                    next_f = self.playback_frames[-1]
+                    for f in self.playback_frames:
+                        if f["t"] <= play_elapsed:
+                            prev_f = f
+                        else:
+                            next_f = f
+                            break
+                    span = max(0.01, next_f["t"] - prev_f["t"])
+                    ratio = min(1.0, max(0.0, (play_elapsed - prev_f["t"]) / span))
+                    for p_data in prev_f["puppets"]:
+                        for live_p in self.puppets_on_stage:
+                            if live_p.puppet_id == p_data["id"]:
+                                target_x = p_data["x"]
+                                target_y = p_data["y"]
+                                for np in next_f["puppets"]:
+                                    if np["id"] == p_data["id"]:
+                                        target_x = p_data["x"] + (np["x"] - p_data["x"]) * ratio
+                                        target_y = p_data["y"] + (np["y"] - p_data["y"]) * ratio
+                                        break
+                                live_p.x = target_x
+                                live_p.y = target_y
+                                live_p.flip_x = p_data["flip"]
+                                if p_data["jumping"] and live_p.jump_timer <= 0.0:
+                                    live_p.jump()
+                                if p_data["talking"] and live_p.talk_timer <= 0.0:
+                                    live_p.speak()
+                for sfx in list(self.playback_sfx):
+                    if sfx["t"] <= play_elapsed:
+                        self.sound_mgr.play(sfx["sound"])
+                        self.playback_sfx.remove(sfx)
+
+    # -- input dispatch -----------------------------------------------------
+
+    def _handle_mouse_down(self, rx: int, ry: int) -> None:
+        if self.app_mode == "library":
+            modal_layout = get_library_modal_layout(self.library_page, len(self.library_shows))
+            if modal_layout["close"].collidepoint(rx, ry):
+                self.sound_mgr.play("pop")
+                self.app_mode = "stage"
+                return
+            if modal_layout["prev_btn"].collidepoint(rx, ry) and self.library_page > 0:
+                self.sound_mgr.play("pop")
+                self.library_page -= 1
+                return
+            if modal_layout["next_btn"].collidepoint(rx, ry) and (self.library_page + 1) * modal_layout["cards_per_page"] < len(
+                self.library_shows
+            ):
+                self.sound_mgr.play("pop")
+                self.library_page += 1
+                return
+            for card_info in modal_layout["cards"]:
+                s_idx = card_info["show_index"]
+                if s_idx >= len(self.library_shows):
+                    continue
+                show_item = self.library_shows[s_idx]
+                if card_info["play_btn"].collidepoint(rx, ry):
+                    show_data, wav_bytes = self.show_repo.load_show(show_item["id"])
+                    if show_data:
+                        self.sound_mgr.play("trumpet")
+                        self.app_mode = "viewer"
+                        self.is_playing_show = True
+                        self.play_start_time = time.time()
+                        self.playback_show_meta = show_item
+                        self.playback_frames = show_data.get("frames", [])
+                        self.playback_sfx = list(show_data.get("sfx_events", []))
+                        self.playback_duration = max(1.0, float(show_item.get("duration", 5.0)))
+                        saved_bg = show_item.get("backdrop", "cottage")
+                        for b_idx, (b_id, _, _) in enumerate(BG_CONFIGS):
+                            if b_id == saved_bg:
+                                self.active_bg_idx = b_idx
+                                break
+                        self.puppets_on_stage = []
+                        for p_meta in show_data.get("puppets", []):
+                            p_obj = Puppet(
+                                p_meta["id"],
+                                self.puppet_names.get(p_meta["id"], p_meta.get("name", "Puppet")),
+                                512,
+                                270,
+                            )
+                            self.puppets_on_stage.append(p_obj)
+                        if self.playback_audio_channel:
+                            try:
+                                self.playback_audio_channel.stop()
+                            except Exception:
+                                pass
+                            self.playback_audio_channel = None
+                        if wav_bytes and len(wav_bytes) > 44:
+                            try:
+                                snd = pygame.mixer.Sound(io.BytesIO(wav_bytes))
+                                self.playback_audio_channel = snd.play()
+                            except Exception:
+                                self.playback_audio_channel = None
+                    break
+                if card_info["del_btn"].collidepoint(rx, ry):
+                    self.sound_mgr.play("boing")
+                    self.show_repo.delete_show(show_item["id"])
+                    self.library_shows = self.show_repo.list_shows()
+                    if self.library_page * modal_layout["cards_per_page"] >= len(self.library_shows) and self.library_page > 0:
+                        self.library_page -= 1
+                    break
+            return
+
+        if self.app_mode == "viewer":
+            if 140 <= rx <= 250 and 16 <= ry <= 68:
+                self.sound_mgr.play("pop")
+                if self.playback_audio_channel:
+                    try:
+                        self.playback_audio_channel.stop()
+                    except Exception:
+                        pass
+                    self.playback_audio_channel = None
+                self.is_playing_show = False
+                self.app_mode = "stage"
+                return
+            if 265 <= rx <= 385 and 16 <= ry <= 68:
+                if self.playback_show_meta:
+                    self.sound_mgr.play("trumpet")
+                    if self.playback_audio_channel:
+                        try:
+                            self.playback_audio_channel.stop()
+                        except Exception:
+                            pass
+                        self.playback_audio_channel = None
+                    self.is_playing_show = True
+                    self.play_start_time = time.time()
+                    show_data, wav_bytes = self.show_repo.load_show(self.playback_show_meta["id"])
+                    if show_data:
+                        self.playback_frames = show_data.get("frames", [])
+                        self.playback_sfx = list(show_data.get("sfx_events", []))
+                        self.playback_duration = max(1.0, float(self.playback_show_meta.get("duration", 5.0)))
+                        if wav_bytes and len(wav_bytes) > 44:
+                            try:
+                                snd = pygame.mixer.Sound(io.BytesIO(wav_bytes))
+                                self.playback_audio_channel = snd.play()
+                            except Exception:
+                                self.playback_audio_channel = None
+                return
+
+        # MODE: STAGE EDITOR
+        if 140 <= rx <= 215 and 16 <= ry <= 68:
+            self.sound_mgr.play("pop")
+            new_state = self.mic_recorder.toggle()
+            self.feedback_text = "🎙️ Microfono ATTIVO" if new_state else "🔇 Microfono DISATTIVATO"
+            self.feedback_timer = 2.5
+            return
+        if 225 <= rx <= 345 and 16 <= ry <= 68:
+            self.sound_mgr.play("pop")
+            self.library_shows = self.show_repo.list_shows()
+            self.app_mode = "library"
+            return
+        if 415 <= rx <= 545 and 16 <= ry <= 68:
+            if not self.is_recording:
+                self.is_recording = True
+                self.rec_start_time = time.time()
+                self.recorded_frames = []
+                self.recorded_sfx = []
+                self.mic_recorder.start_recording()
+                self.feedback_text = f"🔴 {self.ui_strings.get('recording_active', 'Registrazione in corso... Racconta la tua storia!')}"
+                self.feedback_timer = 3.0
+                self.sound_mgr.play("trumpet")
+            else:
+                self.is_recording = False
+                elapsed = max(0.5, time.time() - self.rec_start_time)
+                wav_bytes = self.mic_recorder.stop_recording()
+                self.last_recorded_wav = wav_bytes
+                active_bg_id = BG_CONFIGS[self.active_bg_idx][0]
+                saved_meta = self.show_repo.save_show(
+                    active_bg_id,
+                    [{"id": p.puppet_id, "name": p.name} for p in self.puppets_on_stage],
+                    self.recorded_frames,
+                    self.recorded_sfx,
+                    elapsed,
+                    wav_bytes,
+                )
+                self.library_shows = self.show_repo.list_shows()
+                self.feedback_text = f"🎉 {self.ui_strings.get('recording_saved', 'Spettacolo salvato nella libreria!')}"
+                self.feedback_timer = 3.5
+                try:
+                    emit_activity_event(
+                        "story.recorded",
+                        idempotency_key=f"rec-{saved_meta['id']}",
+                        payload={"duration": round(elapsed, 1), "id": saved_meta["id"]},
+                    )
+                except Exception:
+                    pass
+                self.sound_mgr.play("applause")
+            return
+        if 560 <= rx <= 690 and 16 <= ry <= 68:
+            if self.recorded_frames:
+                self.is_playing_show = True
+                self.play_start_time = time.time()
+                self.playback_frames = list(self.recorded_frames)
+                self.playback_sfx = list(self.recorded_sfx)
+                self.playback_duration = max(2.0, self.recorded_frames[-1]["t"])
+                self.feedback_text = f"▶️ {self.ui_strings.get('playing_show', 'Spettacolo in corso! Evviva!')}"
+                self.feedback_timer = 3.0
+                self.sound_mgr.play("trumpet")
+                if self.playback_audio_channel:
+                    try:
+                        self.playback_audio_channel.stop()
+                    except Exception:
+                        pass
+                    self.playback_audio_channel = None
+                if self.last_recorded_wav and len(self.last_recorded_wav) > 44:
+                    try:
+                        snd = pygame.mixer.Sound(io.BytesIO(self.last_recorded_wav))
+                        self.playback_audio_channel = snd.play()
+                    except Exception:
+                        self.playback_audio_channel = None
+            else:
+                self.is_playing_show = True
+                self.play_start_time = time.time()
+                self.playback_duration = 5.0
+                for p in self.puppets_on_stage:
+                    p.jump()
+                    p.speak()
+                self.sound_mgr.play("trumpet")
+                self.feedback_text = "▶️ Spettacolo delle Marionette!"
+                self.feedback_timer = 3.0
+            return
+        if 740 <= rx <= 805 and 16 <= ry <= 68:
+            self.sound_mgr.play("boing")
+            self.puppets_on_stage.clear()
+            self.feedback_text = f"✨ {self.ui_strings.get('stage_cleared', 'Palcoscenico pronto!')}"
+            self.feedback_timer = 2.0
+            return
+        if 915 <= rx <= 985 and 24 <= ry <= 78:
+            self.sound_mgr.play("magic")
+            self.active_bg_idx = (self.active_bg_idx + 1) % len(BG_CONFIGS)
+            self.feedback_text = f"✨ Scena: {BG_CONFIGS[self.active_bg_idx][2]}"
+            self.feedback_timer = 2.0
+            return
+        fx_clicked = False
+        for f_idx, (fx_id, _) in enumerate(FX_BUTTONS):
+            fy = 88 + f_idx * 58
+            if 915 <= rx <= 985 and fy <= ry <= fy + 52:
+                self.sound_mgr.play(fx_id)
+                for p in self.puppets_on_stage:
+                    p.jump()
+                if self.is_recording:
+                    self.recorded_sfx.append({"t": round(time.time() - self.rec_start_time, 2), "sound": fx_id})
+                fx_clicked = True
+                break
+        if fx_clicked:
+            return
+        if ry >= 500:
+            if 40 <= rx <= 94 and 522 <= ry <= 576:
+                self.sound_mgr.play("pop")
+                self.tray_page = (self.tray_page - 1) % self.max_tray_pages
+                return
+            if 930 <= rx <= 984 and 522 <= ry <= 576:
+                self.sound_mgr.play("pop")
+                self.tray_page = (self.tray_page + 1) % self.max_tray_pages
+                return
+            page_puppets = PUPPET_ROSTER[self.tray_page * self.puppets_per_page : (self.tray_page + 1) * self.puppets_per_page]
+            for p_idx, (p_id, p_name) in enumerate(page_puppets):
+                card_x = 110 + p_idx * 135
+                if card_x <= rx <= card_x + 120 and 508 <= ry <= 592:
+                    self.sound_mgr.play("pop")
+                    loc_name = self.puppet_names.get(p_id, p_name)
+                    spawn_x = random.randint(300, 720)
+                    new_puppet = Puppet(p_id, loc_name, spawn_x, 270)
+                    new_puppet.jump()
+                    self.puppets_on_stage.append(new_puppet)
+                    break
+            return
+        for p in reversed(self.puppets_on_stage):
+            if p.contains(rx, ry):
+                self.held_puppet = p
+                p.is_held = True
+                p.speak()
+                self.sound_mgr.play("pop")
+                self.held_offset_x = p.x - rx
+                self.held_offset_y = p.y - ry
+                self.puppets_on_stage.remove(p)
+                self.puppets_on_stage.append(p)
+                break
+
+    # -- drawing ------------------------------------------------------------
+
+    def _draw(self) -> None:
+        surf = self.canvas.surface
+        active_bg_id = BG_CONFIGS[self.active_bg_idx][0]
+        surf.blit(self.cached_backdrops[active_bg_id], (0, 0))
+        for sp in self.sparks:
+            draw_ambient_spark(surf, sp)
+        for p in self.puppets_on_stage:
+            spr = self.puppet_sprites.get(p.puppet_id, self.puppet_sprites["lilli"])
+            draw_puppet(surf, p, spr, self.typography)
+        draw_stage_curtains_and_valance(surf)
+
+        if self.app_mode == "stage":
+            mic_rect = pygame.Rect(140, 16, 75, 52)
+            mic_bg = (220, 255, 225) if self.mic_recorder.enabled else (255, 230, 230)
+            mic_border = MIC_GREEN if self.mic_recorder.enabled else (220, 38, 38)
+            pygame.draw.rect(surf, mic_bg, mic_rect, border_radius=14)
+            pygame.draw.rect(surf, mic_border, mic_rect, width=3, border_radius=14)
+            mic_label = f"🎙️ {self.ui_strings.get('mic_on', 'ON')}" if self.mic_recorder.enabled else f"🔇 {self.ui_strings.get('mic_off', 'OFF')}"
+            mic_s = self.get_text(mic_label, FontRole.TITLE, 14, mic_border)
+            surf.blit(mic_s, (mic_rect.centerx - mic_s.get_width() // 2, mic_rect.centery - mic_s.get_height() // 2))
+            lib_rect = pygame.Rect(225, 16, 120, 52)
+            pygame.draw.rect(surf, (255, 250, 240), lib_rect, border_radius=14)
+            pygame.draw.rect(surf, (61, 44, 31), lib_rect, width=2, border_radius=14)
+            num_saved = len(self.library_shows)
+            lib_label = f"🎬 {self.ui_strings.get('stories', 'Storie')} ({num_saved})"
+            lib_s = self.get_text(lib_label, FontRole.TITLE, 14, DARK_TEXT)
+            surf.blit(lib_s, (lib_rect.centerx - lib_s.get_width() // 2, lib_rect.centery - lib_s.get_height() // 2))
+            rec_rect = pygame.Rect(415, 16, 130, 52)
+            if self.is_recording:
+                pygame.draw.rect(surf, (255, 210, 210), rec_rect, border_radius=14)
+                pygame.draw.rect(surf, REC_RED, rec_rect, width=3, border_radius=14)
+                rec_label = f"⏹️ {self.ui_strings.get('stop', 'STOP')}"
+                rec_s = self.get_text(rec_label, FontRole.TITLE, 16, REC_RED)
+                surf.blit(rec_s, (rec_rect.centerx - rec_s.get_width() // 2, rec_rect.centery - rec_s.get_height() // 2))
+                meter_x = 425
+                meter_y = 72
+                vol = self.mic_recorder.current_volume
+                for bar_idx in range(5):
+                    bar_h = int(4 + math.sin(time.time() * 12 + bar_idx * 1.5) * 8 * vol + vol * 14)
+                    pygame.draw.rect(surf, REC_RED, (meter_x + bar_idx * 6, meter_y + (20 - bar_h) // 2, 4, bar_h), border_radius=2)
+                t_str = f"{int(time.time() - self.rec_start_time)}s / {int(MAX_RECORDING_SECONDS)}s"
+                t_surf = self.get_text(t_str, FontRole.CONTROL, 11, REC_RED)
+                surf.blit(t_surf, (meter_x + 36, meter_y + 3))
+            else:
+                pygame.draw.rect(surf, (255, 250, 240), rec_rect, border_radius=14)
+                pygame.draw.rect(surf, (61, 44, 31), rec_rect, width=2, border_radius=14)
+                rec_label = f"🔴 {self.ui_strings.get('rec', 'REC')}"
+                rec_s = self.get_text(rec_label, FontRole.TITLE, 16, DARK_TEXT)
+                surf.blit(rec_s, (rec_rect.centerx - rec_s.get_width() // 2, rec_rect.centery - rec_s.get_height() // 2))
+            play_rect = pygame.Rect(560, 16, 130, 52)
+            pygame.draw.rect(surf, (255, 250, 240), play_rect, border_radius=14)
+            pygame.draw.rect(surf, (61, 44, 31), play_rect, width=2, border_radius=14)
+            play_label = f"▶️ {self.ui_strings.get('show', 'SHOW')}"
+            ply_s = self.get_text(play_label, FontRole.TITLE, 16, DARK_TEXT)
+            surf.blit(ply_s, (play_rect.centerx - ply_s.get_width() // 2, play_rect.centery - ply_s.get_height() // 2))
+            clear_rect = pygame.Rect(740, 16, 65, 52)
+            pygame.draw.rect(surf, (255, 250, 240), clear_rect, border_radius=14)
+            pygame.draw.rect(surf, (61, 44, 31), clear_rect, width=2, border_radius=14)
+            clr_s = self.get_text("🗑️", FontRole.TITLE, 22, DARK_TEXT)
+            surf.blit(clr_s, (clear_rect.centerx - clr_s.get_width() // 2, clear_rect.centery - clr_s.get_height() // 2))
+        elif self.app_mode == "viewer":
+            exit_rect = pygame.Rect(140, 16, 110, 52)
+            pygame.draw.rect(surf, (255, 230, 230), exit_rect, border_radius=14)
+            pygame.draw.rect(surf, (220, 38, 38), exit_rect, width=2, border_radius=14)
+            exit_s = self.get_text(f"⏹️ {self.ui_strings.get('exit_viewer', 'Esci')}", FontRole.TITLE, 15, (185, 28, 28))
+            surf.blit(exit_s, (exit_rect.centerx - exit_s.get_width() // 2, exit_rect.centery - exit_s.get_height() // 2))
+            rep_rect = pygame.Rect(265, 16, 120, 52)
+            pygame.draw.rect(surf, (255, 250, 240), rep_rect, border_radius=14)
+            pygame.draw.rect(surf, (61, 44, 31), rep_rect, width=2, border_radius=14)
+            rep_s = self.get_text(f"🔁 {self.ui_strings.get('replay_story', 'Rivedi')}", FontRole.TITLE, 15, DARK_TEXT)
+            surf.blit(rep_s, (rep_rect.centerx - rep_s.get_width() // 2, rep_rect.centery - rep_s.get_height() // 2))
+            prog_bg = pygame.Rect(410, 24, 360, 34)
+            pygame.draw.rect(surf, (20, 16, 30), prog_bg, border_radius=10)
+            pygame.draw.rect(surf, STAGE_GOLD, prog_bg, width=2, border_radius=10)
+            play_elapsed = time.time() - self.play_start_time if self.is_playing_show else self.playback_duration
+            ratio = min(1.0, max(0.0, play_elapsed / max(0.1, self.playback_duration)))
+            if ratio > 0.0:
+                prog_fill = pygame.Rect(prog_bg.x + 3, prog_bg.y + 3, int((prog_bg.width - 6) * ratio), prog_bg.height - 6)
+                pygame.draw.rect(surf, STAGE_GOLD, prog_fill, border_radius=8)
+            t_title = self.playback_show_meta.get("title", "Storia") if self.playback_show_meta else "Spettacolo"
+            time_str = f"🎬 {t_title} ({min(int(self.playback_duration), int(play_elapsed))}s / {int(self.playback_duration)}s)"
+            t_s = self.get_text(time_str, FontRole.CONTROL, 12, (255, 250, 240))
+            surf.blit(t_s, (prog_bg.centerx - t_s.get_width() // 2, prog_bg.centery - t_s.get_height() // 2))
+
+        if self.app_mode == "stage":
+            sc_icon, sc_name = BG_CONFIGS[self.active_bg_idx][1], BG_CONFIGS[self.active_bg_idx][2]
+            sc_rect = pygame.Rect(915, 24, 70, 54)
+            pygame.draw.rect(surf, (255, 250, 240), sc_rect, border_radius=14)
+            pygame.draw.rect(surf, STAGE_GOLD, sc_rect, width=3, border_radius=14)
+            sc_s = self.get_text(sc_icon, FontRole.DISPLAY, 26, DARK_TEXT)
+            surf.blit(sc_s, (sc_rect.centerx - sc_s.get_width() // 2, sc_rect.centery - sc_s.get_height() // 2 - 4))
+            sc_lbl = self.get_text(self.ui_strings.get("scene", "Scena"), FontRole.CONTROL, 10, DARK_TEXT)
+            surf.blit(sc_lbl, (sc_rect.centerx - sc_lbl.get_width() // 2, sc_rect.bottom - 13))
+            for f_idx, (fx_id, fx_sym) in enumerate(FX_BUTTONS):
+                fy = 88 + f_idx * 58
+                fx_rect = pygame.Rect(915, fy, 70, 50)
+                pygame.draw.rect(surf, (255, 250, 240), fx_rect, border_radius=14)
+                pygame.draw.rect(surf, STAGE_GOLD, fx_rect, width=2, border_radius=14)
+                fx_s = self.get_text(fx_sym, FontRole.DISPLAY, 26, DARK_TEXT)
+                surf.blit(fx_s, (fx_rect.centerx - fx_s.get_width() // 2, fx_rect.centery - fx_s.get_height() // 2))
+
+        if self.app_mode == "stage":
+            pygame.draw.rect(surf, (30, 24, 40), (0, 500, REFERENCE_WIDTH, 100))
+            pygame.draw.rect(surf, STAGE_GOLD, (0, 500, REFERENCE_WIDTH, 4))
+            tray_prev_rect = pygame.Rect(40, 522, 54, 54)
+            pygame.draw.rect(surf, (255, 250, 240), tray_prev_rect, border_radius=12)
+            pygame.draw.rect(surf, STAGE_GOLD, tray_prev_rect, width=2, border_radius=12)
+            cx, cy = tray_prev_rect.center
+            pygame.draw.polygon(surf, (61, 44, 31), [(cx - 8, cy), (cx + 6, cy - 10), (cx + 6, cy + 10)])
+            tray_next_rect = pygame.Rect(930, 522, 54, 54)
+            pygame.draw.rect(surf, (255, 250, 240), tray_next_rect, border_radius=12)
+            pygame.draw.rect(surf, STAGE_GOLD, tray_next_rect, width=2, border_radius=12)
+            cx, cy = tray_next_rect.center
+            pygame.draw.polygon(surf, (61, 44, 31), [(cx + 8, cy), (cx - 6, cy - 10), (cx - 6, cy + 10)])
+            page_puppets = PUPPET_ROSTER[self.tray_page * self.puppets_per_page : (self.tray_page + 1) * self.puppets_per_page]
+            for p_idx, (p_id, p_name) in enumerate(page_puppets):
+                card_x = 110 + p_idx * 135
+                card_rect = pygame.Rect(card_x, 508, 120, 84)
+                pygame.draw.rect(surf, (255, 250, 240), card_rect, border_radius=14)
+                pygame.draw.rect(surf, (61, 44, 31), card_rect, width=2, border_radius=14)
+                thumb = self.puppet_thumbs.get(p_id, self.puppet_thumbs.get("lilli"))
+                if thumb is not None:
+                    surf.blit(thumb, (card_rect.centerx - 26, card_rect.y + 6))
+                loc_name = self.puppet_names.get(p_id, p_name)
+                name_s = self.get_text(loc_name, FontRole.CONTROL, 11, DARK_TEXT)
+                surf.blit(name_s, (card_rect.centerx - name_s.get_width() // 2, card_rect.y + 63))
+
+        if self.app_mode == "library":
+            modal_overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
+            modal_overlay.fill((10, 8, 20, 220))
+            surf.blit(modal_overlay, (0, 0))
+            modal_layout = get_library_modal_layout(self.library_page, len(self.library_shows))
+            box_rect = modal_layout["box"]
+            pygame.draw.rect(surf, (255, 250, 240), box_rect, border_radius=20)
+            pygame.draw.rect(surf, STAGE_GOLD, box_rect, width=4, border_radius=20)
+            hdr_surf = self.get_text(f"🎬 {self.ui_strings.get('stories', 'Storie Magiche')}", FontRole.DISPLAY, 26, DARK_TEXT)
+            surf.blit(hdr_surf, (box_rect.centerx - hdr_surf.get_width() // 2, box_rect.y + 16))
+            cls_rect = modal_layout["close"]
+            pygame.draw.rect(surf, (254, 226, 226), cls_rect, border_radius=10)
+            pygame.draw.rect(surf, (220, 38, 38), cls_rect, width=2, border_radius=10)
+            cx, cy = cls_rect.center
+            pygame.draw.line(surf, (185, 28, 28), (cx - 8, cy - 8), (cx + 8, cy + 8), 3)
+            pygame.draw.line(surf, (185, 28, 28), (cx + 8, cy - 8), (cx - 8, cy + 8), 3)
+            if not self.library_shows:
+                no_s = self.get_text(
+                    self.ui_strings.get("no_stories", "Nessuna storia salvata! Registra uno spettacolo!"),
+                    FontRole.TITLE,
+                    18,
+                    (140, 100, 60),
+                )
+                surf.blit(no_s, (box_rect.centerx - no_s.get_width() // 2, box_rect.centery - 20))
+            else:
+                for card_info in modal_layout["cards"]:
+                    s_idx = card_info["show_index"]
+                    if s_idx >= len(self.library_shows):
+                        continue
+                    show_item = self.library_shows[s_idx]
+                    c_rect = card_info["card_rect"]
+                    ply_btn_rect = card_info["play_btn"]
+                    del_btn_rect = card_info["del_btn"]
+                    pygame.draw.rect(surf, (248, 240, 225), c_rect, border_radius=14)
+                    pygame.draw.rect(surf, (180, 140, 90), c_rect, width=2, border_radius=14)
+                    bg_sym = "🏡"
+                    for b_id, b_sym, _ in BG_CONFIGS:
+                        if b_id == show_item.get("backdrop"):
+                            bg_sym = b_sym
+                            break
+                    bg_icon_s = self.get_text(bg_sym, FontRole.DISPLAY, 32, DARK_TEXT)
+                    surf.blit(bg_icon_s, (c_rect.x + 18, c_rect.centery - bg_icon_s.get_height() // 2))
+                    for a_idx, actor_id in enumerate(show_item.get("actors", [])[:3]):
+                        micro = self.puppet_micro_thumbs.get(actor_id, self.puppet_micro_thumbs.get("lilli"))
+                        if micro is not None:
+                            surf.blit(micro, (c_rect.x + 70 + a_idx * 34, c_rect.centery - 19))
+                    title_s = self.get_text(show_item.get("title", f"Storia {s_idx + 1}"), FontRole.TITLE, 18, DARK_TEXT)
+                    surf.blit(title_s, (c_rect.x + 190, c_rect.y + 16))
+                    mic_indicator = "🎙️ " if show_item.get("has_audio") else ""
+                    dur_text = f"{mic_indicator}{show_item.get('duration', 0)}s"
+                    dur_s = self.get_text(dur_text, FontRole.CONTROL, 13, (120, 60, 20))
+                    surf.blit(dur_s, (c_rect.x + 190, c_rect.y + 46))
+                    pygame.draw.rect(surf, (220, 255, 225), ply_btn_rect, border_radius=12)
+                    pygame.draw.rect(surf, MIC_GREEN, ply_btn_rect, width=2, border_radius=12)
+                    ply_btn_s = self.get_text(f"▶️ {self.ui_strings.get('play_story', 'Guarda')}", FontRole.TITLE, 15, (20, 100, 40))
+                    surf.blit(ply_btn_s, (ply_btn_rect.centerx - ply_btn_s.get_width() // 2, ply_btn_rect.centery - ply_btn_s.get_height() // 2))
+                    pygame.draw.rect(surf, (255, 230, 230), del_btn_rect, border_radius=12)
+                    pygame.draw.rect(surf, (220, 38, 38), del_btn_rect, width=2, border_radius=12)
+                    del_btn_s = self.get_text("🗑️", FontRole.TITLE, 18, (185, 28, 28))
+                    surf.blit(del_btn_s, (del_btn_rect.centerx - del_btn_s.get_width() // 2, del_btn_rect.centery - del_btn_s.get_height() // 2))
+                if len(self.library_shows) > modal_layout["cards_per_page"]:
+                    if self.library_page > 0:
+                        prev_rect = modal_layout["prev_btn"]
+                        pygame.draw.rect(surf, (255, 250, 240), prev_rect, border_radius=10)
+                        pygame.draw.rect(surf, STAGE_GOLD, prev_rect, width=2, border_radius=10)
+                        p_txt = self.get_text("◀ Indietro", FontRole.CONTROL, 12, DARK_TEXT)
+                        surf.blit(p_txt, (prev_rect.centerx - p_txt.get_width() // 2, prev_rect.centery - p_txt.get_height() // 2))
+                    if (self.library_page + 1) * modal_layout["cards_per_page"] < len(self.library_shows):
+                        next_rect = modal_layout["next_btn"]
+                        pygame.draw.rect(surf, (255, 250, 240), next_rect, border_radius=10)
+                        pygame.draw.rect(surf, STAGE_GOLD, next_rect, width=2, border_radius=10)
+                        n_txt = self.get_text("Avanti ▶", FontRole.CONTROL, 12, DARK_TEXT)
+                        surf.blit(n_txt, (next_rect.centerx - n_txt.get_width() // 2, next_rect.centery - n_txt.get_height() // 2))
+
+        if self.feedback_text and self.app_mode == "stage":
+            fb_surf = self.get_text(self.feedback_text, FontRole.TITLE, 19, STAGE_GOLD)
+            fb_bg = pygame.Rect(REFERENCE_WIDTH // 2 - fb_surf.get_width() // 2 - 20, 100, fb_surf.get_width() + 40, 42)
+            pygame.draw.rect(surf, (20, 16, 32), fb_bg, border_radius=12)
+            pygame.draw.rect(surf, STAGE_GOLD, fb_bg, width=2, border_radius=12)
+            surf.blit(fb_surf, (REFERENCE_WIDTH // 2 - fb_surf.get_width() // 2, 108))
+
+    # -- main loop --------------------------------------------------------
+
+    def run(self) -> int:
+        pygame.display.set_caption("Teatrino delle Fiabe")
+        ready_published = False
+        self.running = True
+        while self.running and not activity_stop_requested():
+            dt = self.clock.tick(30) / 1000.0
+            self._step_frame(dt)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                    break
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    if not _is_safe_point(self.screen, event.pos):
+                        continue
+                    logical = self.canvas.pointer(event.pos)
+                    if logical is None:
+                        continue
+                    rx, ry = int(logical[0]), int(logical[1])
+                    self._handle_mouse_down(rx, ry)
+                elif event.type == pygame.MOUSEMOTION:
+                    if self.held_puppet is not None:
+                        logical = self.canvas.pointer(event.pos)
+                        if logical is not None:
+                            rx, ry = int(logical[0]), int(logical[1])
+                            self.held_puppet.x = max(180, min(840, rx + self.held_offset_x))
+                            self.held_puppet.y = max(160, min(360, ry + self.held_offset_y))
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    if self.held_puppet is not None:
+                        self.held_puppet.is_held = False
+                        self.held_puppet = None
+                elif event.type == pygame.VIDEORESIZE:
+                    # Keep bounded caches valid on resize and rebuild canvas.
+                    self.screen = pygame.display.get_surface() or self.screen
+                    self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
+                    self.canvas = PygameReferenceCanvas(self.screen)
+                    clear_all_caches()
+                    # Re-cache backdrops after invalidation (still bounded).
+                    for bg_id, _, _ in BG_CONFIGS:
+                        self.cached_backdrops[bg_id] = render_backdrop_surface(bg_id)
+
+            self._draw()
+            self.canvas.present(clear=self.theme.background)
+            pygame.display.flip()
+            if not ready_published:
+                mark_activity_ready()
+                ready_published = True
+
+        pygame.quit()
+        return 0
+
+
+__all__ = ["TeatrinoApp"]
