@@ -7,14 +7,47 @@ import unittest
 
 
 def _load_writing_module():
+    # Support both the historical monolith (file-spec load) and the
+    # decomposed package layout (activities.writing.*). Prefer the
+    # package import so sibling modules resolve via relative imports.
+    try:
+        import importlib
+
+        return importlib.import_module("activities.writing.main")
+    except Exception:
+        pass
     root = Path(__file__).resolve().parents[1]
     path = root / "activities" / "writing" / "main.py"
-    spec = importlib.util.spec_from_file_location("greia_test_writing_activity", path)
+    spec = importlib.util.spec_from_file_location(
+        "activities.writing.main", path, submodule_search_locations=[str(path.parent)]
+    )
     if spec is None or spec.loader is None:
         raise RuntimeError("could not load Writing Activity module")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
+    # Ensure the package parent is loadable when executed as a file spec.
+    parent_spec = importlib.util.spec_from_file_location(
+        "activities.writing", path.parent / "__init__.py"
+    )
+    if parent_spec is None:
+        # Namespace package fallback: create a minimal package module.
+        import types
+
+        pkg = types.ModuleType("activities.writing")
+        pkg.__path__ = [str(path.parent)]  # type: ignore[attr-defined]
+        sys.modules["activities.writing"] = pkg
+    else:
+        if "activities.writing" not in sys.modules:
+            pkg = importlib.util.module_from_spec(parent_spec)
+            sys.modules["activities.writing"] = pkg
+            if parent_spec.loader is not None:
+                try:
+                    parent_spec.loader.exec_module(pkg)  # type: ignore[union-attr]
+                except FileNotFoundError:
+                    pkg.__path__ = [str(path.parent)]  # type: ignore[attr-defined]
     spec.loader.exec_module(module)
+    # Keep legacy alias for any external consumers expecting the old name.
+    sys.modules["greia_test_writing_activity"] = module
     return module
 
 

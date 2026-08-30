@@ -12,11 +12,45 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def _load(name: str, path: Path):
-    spec = importlib.util.spec_from_file_location(name, path)
+    # Prefer package import for decomposed Activities so sibling modules
+    # resolve via relative imports. Fall back to file-spec with proper
+    # package name for the legacy monolith path.
+    package_map = {
+        "greia_test_writing_activity": "activities.writing.main",
+        "greia_test_painting_activity": "activities.painting.main",
+    }
+    pkg_name = package_map.get(name)
+    if pkg_name is not None:
+        try:
+            import importlib
+
+            mod = importlib.import_module(pkg_name)
+            sys.modules[name] = mod
+            return mod
+        except Exception:
+            pass
+    # Legacy file-spec fallback.
+    spec_name = pkg_name or name
+    parent = str(path.parent)
+    # Ensure submodule_search_locations so relative imports work for decomposed layout.
+    spec = importlib.util.spec_from_file_location(
+        spec_name, path, submodule_search_locations=[parent] if path.parent.is_dir() else None
+    )
     if spec is None or spec.loader is None:
         raise RuntimeError(f"cannot load {path}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[name] = module
+    if spec_name != name:
+        sys.modules[spec_name] = module
+    # Ensure package entry exists for relative import resolution.
+    if "." in spec_name:
+        pkg = spec_name.rpartition(".")[0]
+        if pkg not in sys.modules:
+            import types
+
+            pkg_mod = types.ModuleType(pkg)
+            pkg_mod.__path__ = [parent]  # type: ignore[attr-defined]
+            sys.modules[pkg] = pkg_mod
     spec.loader.exec_module(module)
     return module
 
