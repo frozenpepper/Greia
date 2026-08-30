@@ -1,0 +1,116 @@
+"""Acquario Magico — synthesized sound bank.
+
+The Activity ships without packaged audio assets. ``AquariumAudio``
+synthesizes the five short cues (bubble, nibble, glow, chest,
+splash) once at construction time. Playback is then a name lookup,
+which means the frame loop never re-decodes or re-synthesizes
+audio.
+
+The mixer may be unavailable in headless runs; ``play`` is then
+a no-op.
+"""
+
+from __future__ import annotations
+
+import io
+import math
+import random
+import struct
+import wave
+
+import pygame
+
+
+def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        raw = bytearray()
+        for s in samples:
+            clamped = max(-32768, min(32767, int(s)))
+            raw.extend(struct.pack("<h", clamped))
+        w.writeframes(raw)
+    return buf.getvalue()
+
+
+class AquariumAudio:
+    """Prepared sound bank for acquario_magico.
+
+    Sounds are synthesized once at construction time. ``play(name)``
+    is the only public surface Activities or tests should call.
+
+    The ``_sounds`` attribute is exposed so contract tests can
+    verify the bank's name keys without a real mixer.
+    """
+
+    def __init__(self) -> None:
+        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
+            self._init_sounds()
+        except Exception:
+            # Mixer may be unavailable in headless test runs; the bank
+            # is then empty and play() is a no-op.
+            pass
+
+    def _init_sounds(self) -> None:
+        rate = 22050
+
+        # 1. Bubble pop
+        bubble_samples: list[int] = []
+        for i in range(int(rate * 0.08)):
+            t = i / rate
+            env = math.exp(-20.0 * t)
+            val = math.sin(2.0 * math.pi * (500.0 + 400.0 * (t / 0.08)) * t)
+            bubble_samples.append(int(32767.0 * 0.25 * env * val))
+        self._sounds["bubble"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(bubble_samples)))
+
+        # 2. Nibble food
+        nibble_samples: list[int] = []
+        for i in range(int(rate * 0.10)):
+            t = i / rate
+            env = math.exp(-15.0 * t)
+            val = math.sin(2.0 * math.pi * 750.0 * t) + 0.3 * math.sin(2.0 * math.pi * 1200.0 * t)
+            nibble_samples.append(int(32767.0 * 0.22 * env * val))
+        self._sounds["nibble"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(nibble_samples)))
+
+        # 3. Glow chime
+        glow_samples: list[int] = []
+        for i in range(int(rate * 0.35)):
+            t = i / rate
+            env = math.exp(-3.5 * t)
+            val = 0.5 * math.sin(2.0 * math.pi * 523.25 * t) + 0.5 * math.sin(2.0 * math.pi * 783.99 * t)
+            glow_samples.append(int(32767.0 * 0.25 * env * val))
+        self._sounds["glow"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(glow_samples)))
+
+        # 4. Treasure chest chime
+        chest_samples: list[int] = []
+        for i in range(int(rate * 0.40)):
+            t = i / rate
+            env = math.exp(-3.0 * t)
+            freq = 659.25 if t < 0.1 else (783.99 if t < 0.2 else 1046.50)
+            val = math.sin(2.0 * math.pi * freq * t)
+            chest_samples.append(int(32767.0 * 0.25 * env * val))
+        self._sounds["chest"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(chest_samples)))
+
+        # 5. Splash sound
+        splash_samples: list[int] = []
+        for i in range(int(rate * 0.12)):
+            t = i / rate
+            env = math.exp(-12.0 * t)
+            noise = (random.random() * 2.0 - 1.0) * 0.4
+            val = math.sin(2.0 * math.pi * 320.0 * t) * 0.6 + noise
+            splash_samples.append(int(32767.0 * 0.22 * env * val))
+        self._sounds["splash"] = pygame.mixer.Sound(io.BytesIO(_synth_wav(splash_samples)))
+
+    def play(self, name: str) -> None:
+        snd = self._sounds.get(name)
+        if snd is None:
+            return
+        try:
+            snd.play()
+        except Exception:
+            pass
