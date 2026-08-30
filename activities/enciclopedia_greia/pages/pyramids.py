@@ -528,28 +528,53 @@ class PyramidsPage(EncyclopediaPage):
         capstone: bool = False,
         animating: bool = False,
     ) -> None:
-        fill = (240, 218, 165) if placed else (235, 220, 175)
+        # More tactile stone with subtle gradient and chisel marks
+        base = (240, 218, 165) if placed else (235, 220, 175)
         if animating:
-            fill = (250, 230, 185)
+            base = (250, 230, 185)
         edge = (93, 66, 46)
-        # Soft shadow for supply blocks
+        highlight = (252, 238, 200)
+        # Soft drop shadow for supply (grounded)
         if not placed and not animating:
-            shadow = pygame.Surface((rect.width + 6, rect.height + 6), pygame.SRCALPHA)
-            pygame.draw.rect(shadow, (40, 28, 20, 32), shadow.get_rect(), border_radius=4)
+            shadow = pygame.Surface((rect.width + 10, rect.height + 8), pygame.SRCALPHA)
+            pygame.draw.ellipse(shadow, (40, 28, 20, 30), (2, shadow.get_height() - 8, rect.width, 8))
             surface.blit(shadow, (rect.x - 3, rect.y + 2))
-        pygame.draw.rect(surface, fill, rect, border_radius=3 if not capstone else 2)
-        pygame.draw.rect(surface, edge, rect, width=3, border_radius=3 if not capstone else 2)
-        # Stone lines
+            # Outer soft shadow rect
+            s2 = pygame.Surface((rect.width + 6, rect.height + 6), pygame.SRCALPHA)
+            pygame.draw.rect(s2, (40, 28, 20, 22), s2.get_rect(), border_radius=4)
+            surface.blit(s2, (rect.x - 3, rect.y + 1))
+        # Body with subtle top highlight
+        pygame.draw.rect(surface, base, rect, border_radius=4 if not capstone else 3)
+        # Top bevel highlight
+        hl_rect = pygame.Rect(rect.x + 2, rect.y + 2, rect.width - 4, rect.height // 2)
+        pygame.draw.rect(surface, highlight, hl_rect, border_radius=3)
+        pygame.draw.rect(surface, edge, rect, width=3, border_radius=4 if not capstone else 3)
+        # Chisel / stratification lines
         if not capstone:
             mid = rect.y + rect.height // 2
+            pygame.draw.line(surface, (180, 150, 110), (rect.x + 8, mid), (rect.right - 8, mid), 2)
             pygame.draw.line(surface, edge, (rect.x + 6, mid), (rect.right - 6, mid), 1)
+            # Small pits
+            for px in (rect.x + 14, rect.right - 14):
+                pygame.draw.circle(surface, (210, 185, 140), (px, rect.y + 6), 2)
         else:
-            # Capstone facets
+            # Capstone with facet shading
+            pygame.draw.polygon(
+                surface,
+                highlight,
+                [(rect.centerx, rect.top + 3), (rect.right - 5, rect.bottom - 3), (rect.centerx + 6, rect.bottom - 3)],
+            )
             pygame.draw.polygon(
                 surface,
                 (93, 66, 46),
                 [(rect.centerx, rect.top + 2), (rect.right - 4, rect.bottom - 2), (rect.x + 4, rect.bottom - 2)],
                 2,
+            )
+            pygame.draw.polygon(
+                surface,
+                (180, 150, 110),
+                [(rect.centerx, rect.top + 2), (rect.centerx - 8, rect.bottom - 2), (rect.x + 8, rect.bottom - 2)],
+                1,
             )
 
     @staticmethod
