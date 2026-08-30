@@ -97,6 +97,10 @@ class VisualLibrary:
         "encyclopedia.machines.gallery.workbench": "machines_gallery_workbench.png",
         "encyclopedia.history.gallery.time_trail": "history_gallery_time_trail.png",
     }
+    # Small planet sprites — transparent, cached, not full-screen
+    PLANET_ASSETS = {
+        "earth": "earth_planet_sprite.png",
+    }
 
     def __init__(self, package_root: Path) -> None:
         self._runtime_root = package_root / "assets" / "runtime"
@@ -135,6 +139,28 @@ class VisualLibrary:
             if size is not None and source.get_size() != size:
                 source = pygame.transform.smoothscale(source, size).convert()
             result = source
+        except (OSError, RuntimeError, ValueError, pygame.error):
+            result = None
+        self._remember(key, result)
+        return result
+
+    def planet(self, planet_id: str, diameter: int) -> pygame.Surface | None:
+        """Small transparent planet sprite, cached, with fallback to procedural."""
+        relative = self.PLANET_ASSETS.get(planet_id)
+        if relative is None:
+            return None
+        key = (f"planet:{planet_id}", "planet", int(diameter), 0)
+        if key in self._cache:
+            result = self._cache.pop(key)
+            self._cache[key] = result
+            return result
+        result: pygame.Surface | None = None
+        try:
+            source = pygame.image.load(str(self._runtime_root / relative)).convert_alpha()
+            if diameter > 0:
+                result = pygame.transform.smoothscale(source, (diameter, diameter))
+            else:
+                result = source
         except (OSError, RuntimeError, ValueError, pygame.error):
             result = None
         self._remember(key, result)
