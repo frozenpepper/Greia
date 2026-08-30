@@ -11,9 +11,23 @@ from greia_platform.typography import FontRole
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from ..enciclopedia_presentation import (
+        announce_focus_name,
+        draw_animal_action_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from enciclopedia_presentation import (
+        announce_focus_name,
+        draw_animal_action_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -122,9 +136,33 @@ class BeePage(EncyclopediaPage):
             pygame.Rect(cx - 43, cy - 43, 86, 86)
             for cx, cy in (item.center for item in DISCOVERIES)
         )
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._action_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.animals.bee.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        disc = DISCOVERIES[self._selected]
+        cue = encyclopedia_focus_cue("animals", "bee", disc.discovery_id, "name")
+        if not announce_focus_name(self.context.audio, cue):
+            announce_focus_name(self.context.audio, disc.cue_id)
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(DISCOVERIES) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
+
+    def _trigger_main(self) -> None:
+        # Bee flight with pollen — most playful
+        self._model.travel()
+        self._caption_key = "bee.pollen"
+        announce_focus_name(self.context.audio, encyclopedia_focus_cue("animals", "bee", "pollen", "name"))
+        self.context.audio.play("encyclopedia.animals.bee.pollen")
 
     def update(self, dt: float) -> None:
         self._time += dt
@@ -136,26 +174,46 @@ class BeePage(EncyclopediaPage):
             PageInputKind.POINTER_PRESS,
         }:
             point = (int(event.position[0]), int(event.position[1]))
+            if event.kind is PageInputKind.POINTER_PRESS:
+                if self._action_hit.collidepoint(point):
+                    self._trigger_main()
+                    return
+                if self._arrow_left_hit.collidepoint(point):
+                    self._set_selected(self._selected - 1)
+                    return
+                if self._arrow_right_hit.collidepoint(point):
+                    self._set_selected(self._selected + 1)
+                    return
             hit = next(
                 (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
                 None,
             )
+            if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
+                disc = DISCOVERIES[hit]
+                cue = encyclopedia_focus_cue("animals", "bee", disc.discovery_id, "name")
+                announce_focus_name(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
-                self._selected = hit
+                self._set_selected(hit)
                 self._activate(hit)
             return
         if event.kind is not PageInputKind.COMMAND or event.command is None:
             return
         if event.command is PageCommand.ACTIVATE:
+            if DISCOVERIES[self._selected].discovery_id == "pollen":
+                self._trigger_main()
+                return
             self._activate(self._selected)
             return
+        prev = self._selected
         self._selected = grid_step(
             self._selected,
             event.command,
             columns=2,
             count=len(DISCOVERIES),
         )
+        if self._selected != prev:
+            self._announce_selected()
 
     def _activate(self, index: int) -> None:
         discovery = DISCOVERIES[index]
@@ -187,6 +245,17 @@ class BeePage(EncyclopediaPage):
         self._draw_bee(surface)
         self._draw_home_demo(surface)
         self._draw_hotspots(surface)
+        for idx, rect in enumerate(self._hotspots):
+            if idx == self._selected or idx == self._hovered:
+                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
+        can_left = self._selected > 0
+        can_right = self._selected < len(DISCOVERIES) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
+        )
+        self._action_hit = draw_animal_action_button(
+            surface, (512, 485), animal="bee", time=self._time, active=True
+        )
         self._draw_caption(surface)
         draw_presenter(
             surface,
@@ -201,14 +270,23 @@ class BeePage(EncyclopediaPage):
     def _draw_flowers(self, surface: pygame.Surface) -> None:
         colors = ((223, 108, 133), (125, 137, 220))
         for index, ((cx, cy), petal_color) in enumerate(zip(_FLOWER_POSITIONS, colors)):
-            pygame.draw.line(surface, (75, 135, 72), (cx, cy + 22), (cx, 455), 10)
+            # Soft shadow for depth
+            shadow = pygame.Surface((36, 10), pygame.SRCALPHA)
+            pygame.draw.ellipse(shadow, (40, 30, 20, 28), shadow.get_rect())
+            surface.blit(shadow, (cx - 18, 448))
+            # Stem with slight sway
+            sway = int(math.sin(self._time * 0.85 + index) * 2)
+            pygame.draw.line(surface, (75, 135, 72), (cx + sway, cy + 22), (cx, 455), 10)
+            # Petals with highlight
             for angle in range(0, 360, 60):
-                radians = math.radians(angle)
+                radians = math.radians(angle + math.sin(self._time * 0.6 + index) * 4)
                 px = cx + int(math.cos(radians) * 26)
                 py = cy + int(math.sin(radians) * 26)
                 pygame.draw.circle(surface, petal_color, (px, py), 20)
+                pygame.draw.circle(surface, (255, 255, 255, 22), (px - 5, py - 5), 7)
             center_color = (246, 205, 68) if index == 0 or self._model.pollinated else (220, 181, 70)
             pygame.draw.circle(surface, center_color, (cx, cy), 22)
+            pygame.draw.circle(surface, (255, 245, 180, 60), (cx - 6, cy - 6), 8)
 
             if self._model.food_age > 0:
                 for grain in range(8):
@@ -216,25 +294,37 @@ class BeePage(EncyclopediaPage):
                     px = cx + int(math.cos(angle) * 13)
                     py = cy + int(math.sin(angle) * 13)
                     pygame.draw.circle(surface, (245, 177, 53), (px, py), 3)
+                    # Pollen glow
+                    pygame.draw.circle(surface, (255, 230, 120, 40), (px, py), 6, 1)
                 pygame.draw.circle(surface, (106, 177, 223), (cx + 36, cy - 28), 7)
+                pygame.draw.circle(surface, (135, 200, 240, 60), (cx + 36, cy - 28), 10, 2)
 
         if self._model.pollination_age > 0 or self._model.pollinated:
             for index in range(4):
                 x = 600 + index * 17
+                # Young shoot with highlight
                 pygame.draw.ellipse(surface, (103, 161, 82), (x, 415 - index * 4, 11, 18))
+                pygame.draw.ellipse(surface, (145, 200, 120, 60), (x + 2, 418 - index * 4, 5, 8))
 
     def _draw_bee(self, surface: pygame.Surface) -> None:
         cx, cy = self._model.bee_position()
         wing_bob = int(math.sin(self._time * 16.0) * 5)
+        # Wings with subtle vein and shadow
         pygame.draw.ellipse(surface, (218, 239, 247), (cx - 30, cy - 26 - wing_bob, 28, 26))
         pygame.draw.ellipse(surface, (218, 239, 247), (cx + 2, cy - 26 + wing_bob, 28, 26))
+        pygame.draw.line(surface, (180, 200, 215), (cx - 16, cy - 14 - wing_bob), (cx - 8, cy - 6 - wing_bob), 1)
+        pygame.draw.line(surface, (180, 200, 215), (cx + 16, cy - 14 + wing_bob), (cx + 8, cy - 6 + wing_bob), 1)
+        # Body with soft highlight
         pygame.draw.ellipse(surface, (247, 204, 63), (cx - 28, cy - 16, 56, 32))
+        pygame.draw.ellipse(surface, (255, 235, 120, 60), (cx - 20, cy - 12, 30, 14))
         for x in (cx - 12, cx + 5):
             pygame.draw.line(surface, (55, 49, 43), (x, cy - 13), (x, cy + 13), 5)
         pygame.draw.circle(surface, (55, 49, 43), (cx + 22, cy - 2), 4)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + 20, cy - 4), 2)
         if self._model.carrying_pollen:
             for dx, dy in ((-22, 13), (-10, 17), (5, 16), (18, 10)):
                 pygame.draw.circle(surface, (241, 158, 44), (cx + dx, cy + dy), 4)
+                pygame.draw.circle(surface, (255, 210, 90, 60), (cx + dx, cy + dy), 7, 1)
 
     def _draw_home_demo(self, surface: pygame.Surface) -> None:
         if self._model.home_age <= 0:

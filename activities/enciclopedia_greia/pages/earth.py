@@ -9,11 +9,27 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from ..enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
+    from ..enciclopedia_presentation import (
+        announce_focus_name,
+        encyclopedia_focus_cue,
+        draw_authored_scene,
+        draw_discover_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        draw_title,
+    )
     from .common import draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
+    from enciclopedia_presentation import (
+        announce_focus_name,
+        encyclopedia_focus_cue,
+        draw_authored_scene,
+        draw_discover_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        draw_title,
+    )
     from pages.common import draw_presenter, focus_ring
 
 
@@ -45,9 +61,24 @@ class EarthPage(EncyclopediaPage):
         self._time = 0.0
         self._selected = 0
         self._hovered: int | None = None
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._discover_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.earth.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        dest = DESTINATIONS[self._selected]
+        announce_focus_name(self.context.audio, encyclopedia_focus_cue("earth", dest.destination_id, "name"))
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(DESTINATIONS) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
 
     def update(self, dt: float) -> None:
         self._time += dt
@@ -58,21 +89,34 @@ class EarthPage(EncyclopediaPage):
             PageInputKind.POINTER_PRESS,
         }:
             point = (int(event.position[0]), int(event.position[1]))
+            if event.kind is PageInputKind.POINTER_PRESS:
+                if self._discover_hit.collidepoint(point):
+                    self._open_selected()
+                    return
+                if self._arrow_left_hit.collidepoint(point):
+                    self._set_selected(self._selected - 1)
+                    return
+                if self._arrow_right_hit.collidepoint(point):
+                    self._set_selected(self._selected + 1)
+                    return
             self._hovered = next(
                 (index for index, item in enumerate(DESTINATIONS) if item.rect.collidepoint(point)),
                 None,
             )
+            if event.kind is PageInputKind.POINTER_MOVE and self._hovered is not None:
+                dest = DESTINATIONS[self._hovered]
+                announce_focus_name(self.context.audio, encyclopedia_focus_cue("earth", dest.destination_id, "name"))
             if event.kind is PageInputKind.POINTER_PRESS and self._hovered is not None:
-                self._selected = self._hovered
+                self._set_selected(self._hovered)
                 self._open_selected()
             return
 
         if event.kind is not PageInputKind.COMMAND or event.command is None:
             return
         if event.command in {PageCommand.LEFT, PageCommand.UP}:
-            self._selected = max(0, self._selected - 1)
+            self._set_selected(self._selected - 1)
         elif event.command in {PageCommand.RIGHT, PageCommand.DOWN}:
-            self._selected = min(len(DESTINATIONS) - 1, self._selected + 1)
+            self._set_selected(self._selected + 1)
         elif event.command is PageCommand.ACTIVATE:
             self._open_selected()
 
@@ -98,9 +142,19 @@ class EarthPage(EncyclopediaPage):
         for index, item in enumerate(DESTINATIONS):
             active = index == self._selected or index == self._hovered
             if authored:
-                draw_focus_patch(surface, item.rect, active=active, radius=22)
+                draw_focus_patch(surface, item.rect, active=active, radius=22, time=self._time)
             else:
                 focus_ring(surface, item.rect, active)
+
+        # Standard navigation chrome — consistent across encyclopedia pages.
+        can_left = self._selected > 0
+        can_right = self._selected < len(DESTINATIONS) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
+        )
+        self._discover_hit = draw_discover_button(
+            surface, active=True, time=self._time, enabled=True
+        )
 
         draw_presenter(
             surface,

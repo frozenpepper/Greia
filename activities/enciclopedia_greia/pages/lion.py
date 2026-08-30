@@ -11,20 +11,30 @@ if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
         TOKEN_SHAPE_FELT_TAG,
+        announce_focus_name,
+        draw_animal_action_button,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
+        draw_focus_patch,
+        draw_navigation_arrows,
         draw_title,
+        encyclopedia_focus_cue,
     )
     from .common import draw_presenter, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
         TOKEN_SHAPE_FELT_TAG,
+        announce_focus_name,
+        draw_animal_action_button,
         draw_authored_scene,
         draw_caption_ribbon,
         draw_discovery_token,
+        draw_focus_patch,
+        draw_navigation_arrows,
         draw_title,
+        encyclopedia_focus_cue,
     )
     from pages.common import draw_presenter, grid_step
 
@@ -66,11 +76,30 @@ class LionPage(EncyclopediaPage):
             pygame.Rect(cx - 50, cy - 50, 100, 100)
             for cx, cy in (item.center for item in DISCOVERIES)
         )
+        self._time = 0.0
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._roar_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.animals.lion.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        disc = DISCOVERIES[self._selected]
+        cue = encyclopedia_focus_cue("animals", "lion", disc.discovery_id, "name")
+        if not announce_focus_name(self.context.audio, cue):
+            announce_focus_name(self.context.audio, disc.cue_id)
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(DISCOVERIES) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
 
     def update(self, dt: float) -> None:
+        self._time += dt
         self._pride_age = max(0.0, self._pride_age - dt)
         self._roar_age = max(0.0, self._roar_age - dt)
         self._foreleg_age = max(0.0, self._foreleg_age - dt)
@@ -81,26 +110,53 @@ class LionPage(EncyclopediaPage):
             PageInputKind.POINTER_PRESS,
         }:
             point = (int(event.position[0]), int(event.position[1]))
+            if event.kind is PageInputKind.POINTER_PRESS:
+                if self._roar_hit.collidepoint(point):
+                    self._trigger_roar()
+                    return
+                if self._arrow_left_hit.collidepoint(point):
+                    self._set_selected(self._selected - 1)
+                    return
+                if self._arrow_right_hit.collidepoint(point):
+                    self._set_selected(self._selected + 1)
+                    return
             hit = next(
                 (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
                 None,
             )
+            if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
+                disc = DISCOVERIES[hit]
+                cue = encyclopedia_focus_cue("animals", "lion", disc.discovery_id, "name")
+                announce_focus_name(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
-                self._selected = hit
+                self._set_selected(hit)
                 self._activate(hit)
             return
         if event.kind is not PageInputKind.COMMAND or event.command is None:
             return
         if event.command is PageCommand.ACTIVATE:
+            if DISCOVERIES[self._selected].discovery_id == "roar":
+                self._trigger_roar()
+                return
             self._activate(self._selected)
         else:
+            prev = self._selected
             self._selected = grid_step(
                 self._selected,
                 event.command,
                 columns=2,
                 count=len(DISCOVERIES),
             )
+            if self._selected != prev:
+                self._announce_selected()
+
+    def _trigger_roar(self) -> None:
+        self._roar_age = 3.0
+        self._mane_state = (self._mane_state + 1) % 3
+        self._caption_key = "lion.roar"
+        announce_focus_name(self.context.audio, encyclopedia_focus_cue("animals", "lion", "roar", "name"))
+        self.context.audio.play("encyclopedia.animals.lion.roar")
 
     def _activate(self, index: int) -> None:
         discovery = DISCOVERIES[index]
@@ -143,6 +199,18 @@ class LionPage(EncyclopediaPage):
                 ),
                 token_shape=TOKEN_SHAPE_FELT_TAG,
             )
+            if index == self._selected or index == self._hovered:
+                draw_focus_patch(surface, self._hotspots[index], active=True, radius=18, time=self._time)
+        # Standard navigation
+        can_left = self._selected > 0
+        can_right = self._selected < len(DISCOVERIES) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
+        )
+        # Main toy — big lion roar button at bottom center (above caption)
+        self._roar_hit = draw_animal_action_button(
+            surface, (512, 485), animal="lion", time=self._time, active=True
+        )
         draw_caption_ribbon(
             surface,
             self.context.typography,

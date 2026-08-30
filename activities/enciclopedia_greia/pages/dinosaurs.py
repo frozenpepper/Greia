@@ -11,9 +11,23 @@ from greia_platform.typography import FontRole
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from ..enciclopedia_presentation import (
+        announce_focus_name,
+        draw_focus_patch,
+        draw_history_action_button,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from enciclopedia_presentation import (
+        announce_focus_name,
+        draw_focus_patch,
+        draw_history_action_button,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -50,9 +64,31 @@ class DinosaursPage(EncyclopediaPage):
             pygame.Rect(cx - 43, cy - 43, 86, 86)
             for cx, cy in (item.center for item in DISCOVERIES)
         )
+        self._time = getattr(self, '_time', 0.0)
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._action_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.history.dinosaurs.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        disc = DISCOVERIES[self._selected]
+        cue = encyclopedia_focus_cue("history", disc.discovery_id, "name")
+        if not announce_focus_name(self.context.audio, cue):
+            announce_focus_name(self.context.audio, disc.cue_id)
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(DISCOVERIES) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
+
+    def _trigger_main(self) -> None:
+        self._activate(0)
+        announce_focus_name(self.context.audio, encyclopedia_focus_cue("history", DISCOVERIES[0].discovery_id, "name"))
 
     def update(self, dt: float) -> None:
         self._time += dt
@@ -61,21 +97,51 @@ class DinosaursPage(EncyclopediaPage):
         self._evidence_age = max(0.0, self._evidence_age - dt)
 
     def handle_input(self, event: PageInput) -> None:
-        if event.position is not None and event.kind in {PageInputKind.POINTER_MOVE, PageInputKind.POINTER_PRESS}:
+        if event.position is not None and event.kind in {
+            PageInputKind.POINTER_MOVE,
+            PageInputKind.POINTER_PRESS,
+        }:
             point = (int(event.position[0]), int(event.position[1]))
-            hit = next((i for i, rect in enumerate(self._hotspots) if rect.collidepoint(point)), None)
+            if event.kind is PageInputKind.POINTER_PRESS:
+                if self._action_hit.collidepoint(point):
+                    self._trigger_main()
+                    return
+                if self._arrow_left_hit.collidepoint(point):
+                    self._set_selected(self._selected - 1)
+                    return
+                if self._arrow_right_hit.collidepoint(point):
+                    self._set_selected(self._selected + 1)
+                    return
+            hit = next(
+                (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
+                None,
+            )
+            if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
+                disc = DISCOVERIES[hit]
+                cue = encyclopedia_focus_cue("history", disc.discovery_id, "name")
+                announce_focus_name(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
-                self._selected = hit
+                self._set_selected(hit)
                 self._activate(hit)
             return
         if event.kind is not PageInputKind.COMMAND or event.command is None:
             return
         if event.command is PageCommand.ACTIVATE:
+            if DISCOVERIES[self._selected].discovery_id == DISCOVERIES[0].discovery_id:
+                self._trigger_main()
+                return
             self._activate(self._selected)
-        else:
-            self._selected = grid_step(self._selected, event.command, columns=2, count=len(DISCOVERIES))
-
+            return
+        prev = self._selected
+        self._selected = grid_step(
+            self._selected,
+            event.command,
+            columns=2,
+            count=len(DISCOVERIES),
+        )
+        if self._selected != prev:
+            self._announce_selected()
     def _activate(self, index: int) -> None:
         item = DISCOVERIES[index]
         self._caption_key = item.caption_key
@@ -94,6 +160,17 @@ class DinosaursPage(EncyclopediaPage):
         draw_centered_text(surface, self.context.typography, self.context.resources.text("dinosaurs.title"), center=(500, 92), size=40, color=self.context.palette.ink, role=FontRole.DISPLAY)
         self._draw_scene(surface)
         self._draw_hotspots(surface)
+        for idx, rect in enumerate(self._hotspots):
+            if idx == self._selected or idx == self._hovered:
+                draw_focus_patch(surface, rect, active=True, radius=16, time=getattr(self, '_time', 0.0))
+        can_left = self._selected > 0
+        can_right = self._selected < len(DISCOVERIES) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=getattr(self, '_time', 0.0), can_go_left=can_left, can_go_right=can_right
+        )
+        self._action_hit = draw_history_action_button(
+            surface, (512, 485), history="dinosaurs", time=getattr(self, '_time', 0.0), active=True
+        )
         self._draw_caption(surface)
         draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="default")
 

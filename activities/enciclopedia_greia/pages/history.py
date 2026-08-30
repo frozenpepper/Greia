@@ -9,11 +9,27 @@ import pygame
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from ..enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
+    from ..enciclopedia_presentation import (
+        announce_focus_name,
+        encyclopedia_focus_cue,
+        draw_authored_scene,
+        draw_discover_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        draw_title,
+    )
     from .common import draw_centered_text, draw_presenter, focus_ring
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
-    from enciclopedia_presentation import draw_authored_scene, draw_focus_patch, draw_title
+    from enciclopedia_presentation import (
+        announce_focus_name,
+        encyclopedia_focus_cue,
+        draw_authored_scene,
+        draw_discover_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        draw_title,
+    )
     from pages.common import draw_centered_text, draw_presenter, focus_ring
 
 
@@ -65,39 +81,69 @@ class HistoryPage(EncyclopediaPage):
             pygame.Rect(cx - width // 2, cy - height // 2, width, height)
             for cx, cy in HISTORY_TARGET_CENTERS
         )
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._discover_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.history.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        cue = encyclopedia_focus_cue("history", HISTORY_TARGET_IDS[self._selected], "name")
+        announce_focus_name(self.context.audio, cue)
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(MOMENTS) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
 
     def update(self, dt: float) -> None:
         self._time += dt
 
     def handle_input(self, event: PageInput) -> None:
         if event.kind is PageInputKind.COMMAND and event.command:
+            prev = self._selected
             if event.command is PageCommand.LEFT:
-                self._selected = max(0, self._selected - 1)
+                self._set_selected(self._selected - 1)
             elif event.command is PageCommand.RIGHT:
-                self._selected = min(len(MOMENTS) - 1, self._selected + 1)
+                self._set_selected(self._selected + 1)
             elif event.command is PageCommand.ACTIVATE:
                 self._open_selected()
             return
 
         if event.kind is PageInputKind.POINTER_MOVE and event.position:
             point = (int(event.position[0]), int(event.position[1]))
-            self._hovered = next(
+            hit = next(
                 (index for index, rect in enumerate(self._rects) if rect.collidepoint(point)),
                 None,
             )
+            if hit is not None and hit != self._selected:
+                announce_focus_name(
+                    self.context.audio, encyclopedia_focus_cue("history", HISTORY_TARGET_IDS[hit], "name")
+                )
+            self._hovered = hit
             return
 
         if event.kind is PageInputKind.POINTER_PRESS and event.position:
             point = (int(event.position[0]), int(event.position[1]))
+            if self._discover_hit.collidepoint(point):
+                self._open_selected()
+                return
+            if self._arrow_left_hit.collidepoint(point):
+                self._set_selected(self._selected - 1)
+                return
+            if self._arrow_right_hit.collidepoint(point):
+                self._set_selected(self._selected + 1)
+                return
             hit = next(
                 (index for index, rect in enumerate(self._rects) if rect.collidepoint(point)),
                 None,
             )
             if hit is not None:
-                self._selected = hit
+                self._set_selected(hit)
                 self._open_selected()
 
     def _open_selected(self) -> None:
@@ -122,7 +168,7 @@ class HistoryPage(EncyclopediaPage):
         for index, (moment, rect) in enumerate(zip(MOMENTS, self._rects)):
             active = index == self._selected or index == self._hovered
             if authored:
-                draw_focus_patch(surface, rect, active=active, radius=20)
+                draw_focus_patch(surface, rect, active=active, radius=20, time=self._time)
             else:
                 focus_ring(surface, rect, active)
             if authored:
@@ -134,6 +180,14 @@ class HistoryPage(EncyclopediaPage):
                     size=16,
                     color=self.context.palette.ink,
                 )
+        can_left = self._selected > 0
+        can_right = self._selected < len(MOMENTS) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
+        )
+        self._discover_hit = draw_discover_button(
+            surface, active=True, time=self._time, enabled=True
+        )
 
         draw_presenter(
             surface,

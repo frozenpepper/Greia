@@ -11,9 +11,23 @@ from greia_platform.typography import FontRole
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from ..enciclopedia_presentation import (
+        announce_focus_name,
+        draw_animal_action_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from enciclopedia_presentation import (
+        announce_focus_name,
+        draw_animal_action_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -52,9 +66,26 @@ class ElephantPage(EncyclopediaPage):
             pygame.Rect(cx - 43, cy - 43, 86, 86)
             for cx, cy in (item.center for item in DISCOVERIES)
         )
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._trunk_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.animals.elephant.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        disc = DISCOVERIES[self._selected]
+        cue = encyclopedia_focus_cue("animals", "elephant", disc.discovery_id, "name")
+        if not announce_focus_name(self.context.audio, cue):
+            announce_focus_name(self.context.audio, disc.cue_id)
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(DISCOVERIES) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
 
     def update(self, dt: float) -> None:
         self._time += dt
@@ -68,26 +99,53 @@ class ElephantPage(EncyclopediaPage):
             PageInputKind.POINTER_PRESS,
         }:
             point = (int(event.position[0]), int(event.position[1]))
+            if event.kind is PageInputKind.POINTER_PRESS:
+                if self._trunk_hit.collidepoint(point):
+                    self._trigger_trunk()
+                    return
+                if self._arrow_left_hit.collidepoint(point):
+                    self._set_selected(self._selected - 1)
+                    return
+                if self._arrow_right_hit.collidepoint(point):
+                    self._set_selected(self._selected + 1)
+                    return
             hit = next(
                 (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
                 None,
             )
+            if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
+                disc = DISCOVERIES[hit]
+                cue = encyclopedia_focus_cue("animals", "elephant", disc.discovery_id, "name")
+                announce_focus_name(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
-                self._selected = hit
+                self._set_selected(hit)
                 self._activate(hit)
             return
         if event.kind is not PageInputKind.COMMAND or event.command is None:
             return
         if event.command is PageCommand.ACTIVATE:
+            if DISCOVERIES[self._selected].discovery_id == "trunk":
+                self._trigger_trunk()
+                return
             self._activate(self._selected)
             return
+        prev = self._selected
         self._selected = grid_step(
             self._selected,
             event.command,
             columns=2,
             count=len(DISCOVERIES),
         )
+        if self._selected != prev:
+            self._announce_selected()
+
+    def _trigger_trunk(self) -> None:
+        self._trunk_state = (self._trunk_state + 1) % 3
+        self._water_age = 3.0 if self._trunk_state == 2 else 0.0
+        self._caption_key = "elephant.trunk"
+        announce_focus_name(self.context.audio, encyclopedia_focus_cue("animals", "elephant", "trunk", "name"))
+        self.context.audio.play("encyclopedia.animals.elephant.trunk")
 
     def _activate(self, index: int) -> None:
         discovery = DISCOVERIES[index]
@@ -117,6 +175,16 @@ class ElephantPage(EncyclopediaPage):
         )
         self._draw_elephant(surface)
         self._draw_hotspots(surface)
+        # Standard navigation for discovery
+        can_left = self._selected > 0
+        can_right = self._selected < len(DISCOVERIES) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
+        )
+        # Main toy — big trunk button
+        self._trunk_hit = draw_animal_action_button(
+            surface, (512, 485), animal="elephant", time=self._time, active=True
+        )
         self._draw_caption(surface)
         draw_presenter(
             surface,
@@ -200,7 +268,8 @@ class ElephantPage(EncyclopediaPage):
                 pygame.draw.circle(surface, (143, 153, 160), (cx - 13, cy), 13)
                 pygame.draw.circle(surface, (170, 177, 181), (cx + 13, cy), 11)
                 pygame.draw.line(surface, (75, 73, 68), (cx - 2, cy + 5), (cx + 3, cy + 5), 5)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+            if index == self._selected or index == self._hovered:
+                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
         panel = pygame.Rect(305, 510, 400, 68)

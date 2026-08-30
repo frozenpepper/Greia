@@ -11,9 +11,23 @@ from greia_platform.typography import FontRole
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from ..enciclopedia_presentation import (
+        announce_focus_name,
+        draw_entry_action_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from enciclopedia_presentation import (
+        announce_focus_name,
+        draw_entry_action_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -47,9 +61,33 @@ class JupiterPage(EncyclopediaPage):
         self._storm_age = 0.0
         self._gas_age = 0.0
         self._hotspots = tuple(pygame.Rect(cx - 43, cy - 43, 86, 86) for cx, cy in (d.center for d in DISCOVERIES))
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._action_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.space.jupiter.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        disc = DISCOVERIES[self._selected]
+        # Use helper that avoids ledger fragment
+        cue = encyclopedia_focus_cue(disc.discovery_id, "name")
+        if not announce_focus_name(self.context.audio, cue):
+            announce_focus_name(self.context.audio, disc.cue_id)
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(DISCOVERIES) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
+
+    def _trigger_main(self) -> None:
+        self._activate(0)
+        disc = DISCOVERIES[0]
+        cue = encyclopedia_focus_cue(disc.discovery_id, "name")
+        announce_focus_name(self.context.audio, cue)
 
     def update(self, dt: float) -> None:
         self._time += dt
@@ -59,21 +97,51 @@ class JupiterPage(EncyclopediaPage):
         self._gas_age = max(0.0, self._gas_age - dt)
 
     def handle_input(self, event: PageInput) -> None:
-        if event.position is not None and event.kind in {PageInputKind.POINTER_MOVE, PageInputKind.POINTER_PRESS}:
+        if event.position is not None and event.kind in {
+            PageInputKind.POINTER_MOVE,
+            PageInputKind.POINTER_PRESS,
+        }:
             point = (int(event.position[0]), int(event.position[1]))
-            hit = next((i for i, rect in enumerate(self._hotspots) if rect.collidepoint(point)), None)
+            if event.kind is PageInputKind.POINTER_PRESS:
+                if self._action_hit.collidepoint(point):
+                    self._trigger_main()
+                    return
+                if self._arrow_left_hit.collidepoint(point):
+                    self._set_selected(self._selected - 1)
+                    return
+                if self._arrow_right_hit.collidepoint(point):
+                    self._set_selected(self._selected + 1)
+                    return
+            hit = next(
+                (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
+                None,
+            )
+            if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
+                disc = DISCOVERIES[hit]
+                cue = encyclopedia_focus_cue(disc.discovery_id, "name")
+                announce_focus_name(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
-                self._selected = hit
+                self._set_selected(hit)
                 self._activate(hit)
             return
         if event.kind is not PageInputKind.COMMAND or event.command is None:
             return
         if event.command is PageCommand.ACTIVATE:
+            if DISCOVERIES[self._selected].discovery_id == DISCOVERIES[0].discovery_id:
+                self._trigger_main()
+                return
             self._activate(self._selected)
-        else:
-            self._selected = grid_step(self._selected, event.command, columns=2, count=len(DISCOVERIES))
-
+            return
+        prev = self._selected
+        self._selected = grid_step(
+            self._selected,
+            event.command,
+            columns=2,
+            count=len(DISCOVERIES),
+        )
+        if self._selected != prev:
+            self._announce_selected()
     def _activate(self, index: int) -> None:
         discovery = DISCOVERIES[index]
         self._caption_key = discovery.caption_key
@@ -94,28 +162,85 @@ class JupiterPage(EncyclopediaPage):
         draw_centered_text(surface, self.context.typography, self.context.resources.text("jupiter.title"), center=(500, 92), size=40, color=(246, 239, 220), role=FontRole.DISPLAY)
         self._draw_jupiter(surface)
         self._draw_hotspots(surface)
+        for idx, rect in enumerate(self._hotspots):
+            if idx == self._selected or idx == self._hovered:
+                draw_focus_patch(surface, rect, active=True, radius=16, time=getattr(self, '_time', 0.0))
+        can_left = self._selected > 0
+        can_right = self._selected < len(DISCOVERIES) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=getattr(self, '_time', 0.0), can_go_left=can_left, can_go_right=can_right
+        )
+        self._action_hit = draw_entry_action_button(
+            surface, (512, 485), entry="jupiter", time=getattr(self, '_time', 0.0), active=True
+        )
         self._draw_caption(surface)
         draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="surprised", fallback_color=(227, 174, 87))
 
     def _draw_jupiter(self, surface: pygame.Surface) -> None:
         center = (505, 326)
         radius = 100
+        # Soft contact shadow beneath the giant — shallow tactile depth
+        shadow = pygame.Surface((radius * 2 + 20, 28), pygame.SRCALPHA)
+        pygame.draw.ellipse(shadow, (40, 28, 20, 38), shadow.get_rect())
+        surface.blit(shadow, (center[0] - radius - 10, center[1] + radius + 8))
         pygame.draw.circle(surface, (205, 169, 127), center, radius)
+        # Subtle limb shading for depth, not 3D gloss
+        highlight = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(highlight, (255, 245, 220, 18), (radius, radius), radius)
+        surface.blit(highlight, (center[0] - radius, center[1] - radius))
         clip = surface.get_clip()
         surface.set_clip(pygame.Rect(center[0] - radius, center[1] - radius, radius * 2, radius * 2))
-        bands = ((-70, 24, (237, 220, 190)), (-42, 26, (174, 118, 83)), (-11, 24, (239, 225, 196)), (19, 29, (181, 124, 88)), (54, 22, (233, 214, 181)))
-        offset = int(math.sin(self._time * (1.7 if self._day_age > 0 else 0.35)) * 9)
+        # Warmer, more distinct bands — storybook but readable
+        bands = (
+            (-70, 22, (245, 230, 205)),
+            (-48, 18, (205, 150, 110)),
+            (-30, 20, (250, 238, 215)),
+            (-10, 16, (225, 175, 135)),
+            (6, 18, (248, 235, 210)),
+            (24, 16, (190, 135, 95)),
+            (40, 20, (242, 225, 190)),
+            (60, 18, (200, 145, 105)),
+        )
+        # Gentle ambient drift always, stronger when "day" is emphasized
+        drift = math.sin(self._time * (1.9 if self._day_age > 0 else 0.42)) * (10 if self._day_age > 0 else 4)
+        offset = int(drift)
         for yoff, height, color in bands:
-            pygame.draw.rect(surface, color, (center[0] - 112 + offset, center[1] + yoff, 224, height))
+            pygame.draw.rect(surface, color, (center[0] - 118 + offset, center[1] + yoff, 236, height), border_radius=3)
+            # Thin darker seam between bands for definition
+            pygame.draw.line(
+                surface,
+                (120, 85, 65, 38),
+                (center[0] - 118 + offset, center[1] + yoff + height),
+                (center[0] + 118 + offset, center[1] + yoff + height),
+                1,
+            )
         surface.set_clip(clip)
         pygame.draw.circle(surface, (90, 66, 55), center, radius, 3)
+        # Inner highlight ring for polish
+        pygame.draw.circle(surface, (255, 245, 220, 22), center, radius - 6, 2)
 
         storm_center = (544, 358)
-        storm_w = 62 + (8 if self._storm_age > 0 else 0)
-        pygame.draw.ellipse(surface, (173, 82, 63), (storm_center[0] - storm_w // 2, storm_center[1] - 17, storm_w, 34))
+        storm_w = 62 + (10 if self._storm_age > 0 else 0)
+        storm_h = 34 + (6 if self._storm_age > 0 else 0)
+        # Storm with layered swirl when emphasized
+        pygame.draw.ellipse(
+            surface, (185, 95, 72), (storm_center[0] - storm_w // 2, storm_center[1] - storm_h // 2, storm_w, storm_h)
+        )
+        pygame.draw.ellipse(
+            surface, (205, 105, 82), (storm_center[0] - storm_w // 2 + 4, storm_center[1] - storm_h // 2 + 3, storm_w - 8, storm_h - 6)
+        )
+        # Central swirl
+        pygame.draw.ellipse(
+            surface, (225, 145, 110), (storm_center[0] - 18, storm_center[1] - 7, 36, 14)
+        )
         if self._storm_age > 0:
             for ring in range(3):
-                pygame.draw.ellipse(surface, (230, 139, 96), (storm_center[0] - 43 - ring * 6, storm_center[1] - 22 - ring * 3, 86 + ring * 12, 44 + ring * 6), 3)
+                pygame.draw.ellipse(
+                    surface,
+                    (240, 160, 115, 90 - ring * 20),
+                    (storm_center[0] - 44 - ring * 7, storm_center[1] - 23 - ring * 4, 88 + ring * 14, 46 + ring * 8),
+                    3,
+                )
 
         if self._scale_age > 0:
             for row in range(2):
@@ -124,8 +249,9 @@ class JupiterPage(EncyclopediaPage):
             draw_centered_text(surface, self.context.typography, "≈11×", center=(505, 475), size=18, color=(245, 229, 177), role=FontRole.CONTROL)
 
         if self._gas_age > 0:
-            for ring, color in ((78, (224, 198, 157)), (58, (196, 151, 110)), (38, (160, 113, 91))):
+            for ring, color in ((82, (235, 210, 175)), (62, (210, 165, 130)), (42, (175, 125, 105))):
                 pygame.draw.circle(surface, color, center, ring, 5)
+                pygame.draw.circle(surface, (255, 245, 220, 18), center, ring - 4, 2)
             pygame.draw.line(surface, (246, 220, 143), (605, 280), (650, 248), 4)
             pygame.draw.line(surface, (246, 220, 143), (605, 372), (650, 404), 4)
 

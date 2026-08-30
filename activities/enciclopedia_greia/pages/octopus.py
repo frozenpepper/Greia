@@ -11,9 +11,23 @@ from greia_platform.typography import FontRole
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from ..enciclopedia_presentation import (
+        announce_focus_name,
+        draw_animal_action_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from enciclopedia_presentation import (
+        announce_focus_name,
+        draw_animal_action_button,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -59,9 +73,33 @@ class OctopusPage(EncyclopediaPage):
             pygame.Rect(cx - 44, cy - 44, 88, 88)
             for cx, cy in (item.center for item in DISCOVERIES)
         )
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._action_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.animals.octopus.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        disc = DISCOVERIES[self._selected]
+        cue = encyclopedia_focus_cue("animals", "octopus", disc.discovery_id, "name")
+        if not announce_focus_name(self.context.audio, cue):
+            announce_focus_name(self.context.audio, disc.cue_id)
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(DISCOVERIES) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
+
+    def _trigger_main(self) -> None:
+        # Playful reaction — ink burst is most memorable
+        self._ink_age = 2.6
+        self._caption_key = "octopus.ink"
+        announce_focus_name(self.context.audio, encyclopedia_focus_cue("animals", "octopus", "ink", "name"))
+        self.context.audio.play("encyclopedia.animals.octopus.ink")
 
     def update(self, dt: float) -> None:
         self._time += dt
@@ -75,26 +113,46 @@ class OctopusPage(EncyclopediaPage):
             PageInputKind.POINTER_PRESS,
         }:
             point = (int(event.position[0]), int(event.position[1]))
+            if event.kind is PageInputKind.POINTER_PRESS:
+                if self._action_hit.collidepoint(point):
+                    self._trigger_main()
+                    return
+                if self._arrow_left_hit.collidepoint(point):
+                    self._set_selected(self._selected - 1)
+                    return
+                if self._arrow_right_hit.collidepoint(point):
+                    self._set_selected(self._selected + 1)
+                    return
             hit = next(
                 (i for i, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
                 None,
             )
+            if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
+                disc = DISCOVERIES[hit]
+                cue = encyclopedia_focus_cue("animals", "octopus", disc.discovery_id, "name")
+                announce_focus_name(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
-                self._selected = hit
+                self._set_selected(hit)
                 self._activate(hit)
             return
         if event.kind is not PageInputKind.COMMAND or event.command is None:
             return
         if event.command is PageCommand.ACTIVATE:
+            if DISCOVERIES[self._selected].discovery_id == "ink":
+                self._trigger_main()
+                return
             self._activate(self._selected)
             return
+        prev = self._selected
         self._selected = grid_step(
             self._selected,
             event.command,
             columns=2,
             count=len(DISCOVERIES),
         )
+        if self._selected != prev:
+            self._announce_selected()
 
     def _activate(self, index: int) -> None:
         discovery = DISCOVERIES[index]
@@ -129,6 +187,18 @@ class OctopusPage(EncyclopediaPage):
 
         self._draw_octopus(surface)
         self._draw_discovery_hotspots(surface)
+        # Unified focus chrome
+        for idx, rect in enumerate(self._hotspots):
+            if idx == self._selected or idx == self._hovered:
+                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
+        can_left = self._selected > 0
+        can_right = self._selected < len(DISCOVERIES) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
+        )
+        self._action_hit = draw_animal_action_button(
+            surface, (512, 485), animal="octopus", time=self._time, active=True
+        )
         self._draw_caption(surface)
         draw_presenter(
             surface,
@@ -143,13 +213,19 @@ class OctopusPage(EncyclopediaPage):
     def _draw_octopus(self, surface: pygame.Surface) -> None:
         color = _BODY_COLORS[self._camouflage_state]
         center = (505, 310)
+        # Soft contact shadow beneath body — shallow depth
+        shadow = pygame.Surface((140, 22), pygame.SRCALPHA)
+        pygame.draw.ellipse(shadow, (40, 35, 50, 30), shadow.get_rect())
+        surface.blit(shadow, (center[0] - 70, center[1] + 62))
+        # Gentle ambient sway for arms — low-cost, not obscuring
+        sway_phase = self._time * 0.9
         arm_paths = (
-            ((475, 340), (440, 380), (400, 415), (350, 430)),
+            ((475, 340), (440 + int(math.sin(sway_phase) * 3), 380), (400 + int(math.sin(sway_phase + 0.5) * 2), 415), (350, 430)),
             ((485, 345), (465, 395), (445, 440), (420, 475)),
             ((495, 346), (490, 405), (485, 455), (470, 500)),
             ((505, 348), (515, 405), (525, 455), (535, 500)),
             ((515, 346), (545, 395), (570, 440), (595, 475)),
-            ((525, 340), (570, 380), (610, 415), (660, 430)),
+            ((525, 340), (570, 380), (610 + int(math.cos(sway_phase) * 3), 415), (660, 430)),
             ((485, 335), (420, 350), (365, 345), (320, 325)),
             ((520, 335), (585, 350), (645, 345), (695, 320)),
         )
@@ -157,19 +233,36 @@ class OctopusPage(EncyclopediaPage):
             pygame.draw.lines(surface, color, False, path, 22)
             for point in (path[1], path[2], path[3]):
                 pygame.draw.circle(surface, color, point, 11)
+                # Subtle sucker hint even without activation — tactile
+                pygame.draw.circle(surface, (color[0] + 20, color[1] + 18, color[2] + 15), (point[0], point[1] + 4), 4, 2)
+        # Head with soft highlight for polish
         pygame.draw.ellipse(surface, color, (445, 215, 120, 145))
+        highlight = pygame.Surface((120, 145), pygame.SRCALPHA)
+        pygame.draw.ellipse(highlight, (255, 255, 255, 18), (10, 10, 100, 60))
+        surface.blit(highlight, (445, 215))
+        pygame.draw.ellipse(surface, (color[0] + 30, color[1] + 30, color[2] + 30), (445, 215, 120, 145), 3)
         pygame.draw.circle(surface, (248, 238, 215), (482, 270), 14)
         pygame.draw.circle(surface, (248, 238, 215), (528, 270), 14)
+        pygame.draw.circle(surface, (255, 255, 255), (478, 266), 4)
+        pygame.draw.circle(surface, (255, 255, 255), (524, 266), 4)
         pygame.draw.circle(surface, (49, 44, 52), (484, 272), 6)
         pygame.draw.circle(surface, (49, 44, 52), (526, 272), 6)
+        # Cheek blush for warmth, not babyish
+        pygame.draw.circle(surface, (220, 160, 170, 60), (470, 295), 7)
+        pygame.draw.circle(surface, (220, 160, 170, 60), (540, 295), 7)
 
         if self._sucker_age > 0:
             for arm in arm_paths[:6]:
                 for x, y in arm[1:]:
                     pygame.draw.circle(surface, (248, 224, 201), (x, y + 7), 5, 2)
+                    pygame.draw.circle(surface, (240, 210, 185), (x, y + 7), 2)
         if self._heart_age > 0:
+            # Three hearts plus subtle glow
             for dx, dy in ((-26, 0), (0, -16), (26, 0)):
                 self._draw_heart(surface, (center[0] + dx, center[1] + dy), 10)
+            glow = pygame.Surface((80, 40), pygame.SRCALPHA)
+            pygame.draw.ellipse(glow, (220, 100, 120, 28), glow.get_rect())
+            surface.blit(glow, (center[0] - 40, center[1] - 8))
         if self._ink_age > 0:
             progress = 1.0 - self._ink_age / 2.6
             for i in range(18):
@@ -178,7 +271,9 @@ class OctopusPage(EncyclopediaPage):
                 x = 650 + int(math.cos(angle) * radius)
                 y = 330 + int(math.sin(angle) * radius * 0.65)
                 size = 8 + (i % 4) * 3
+                # Ink with soft edge and highlight
                 pygame.draw.circle(surface, (35, 38, 55), (x, y), size)
+                pygame.draw.circle(surface, (65, 68, 85), (x - 2, y - 2), max(1, size // 3))
 
     def _draw_discovery_hotspots(self, surface: pygame.Surface) -> None:
         for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):

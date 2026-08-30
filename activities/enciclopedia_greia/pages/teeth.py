@@ -11,9 +11,21 @@ from greia_platform.typography import FontRole
 
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from ..enciclopedia_presentation import (
+        announce_focus_name,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from .common import draw_centered_text, draw_presenter, focus_ring, grid_step
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
+    from enciclopedia_presentation import (
+        announce_focus_name,
+        draw_focus_patch,
+        draw_navigation_arrows,
+        encyclopedia_focus_cue,
+    )
     from pages.common import draw_centered_text, draw_presenter, focus_ring, grid_step
 
 
@@ -50,9 +62,25 @@ class TeethPage(EncyclopediaPage):
             pygame.Rect(cx - 43, cy - 43, 86, 86)
             for cx, cy in (item.center for item in DISCOVERIES)
         )
+        self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.body.teeth.intro")
+        self._announce_selected()
+
+    def _announce_selected(self) -> None:
+        disc = DISCOVERIES[self._selected]
+        cue = encyclopedia_focus_cue("body", "teeth", disc.discovery_id, "name")
+        if not announce_focus_name(self.context.audio, cue):
+            announce_focus_name(self.context.audio, disc.cue_id)
+
+    def _set_selected(self, index: int) -> None:
+        index = max(0, min(len(DISCOVERIES) - 1, index))
+        if index == self._selected:
+            return
+        self._selected = index
+        self._announce_selected()
 
     def update(self, dt: float) -> None:
         self._time += dt
@@ -65,13 +93,24 @@ class TeethPage(EncyclopediaPage):
             PageInputKind.POINTER_PRESS,
         }:
             point = (int(event.position[0]), int(event.position[1]))
+            if event.kind is PageInputKind.POINTER_PRESS:
+                if self._arrow_left_hit.collidepoint(point):
+                    self._set_selected(self._selected - 1)
+                    return
+                if self._arrow_right_hit.collidepoint(point):
+                    self._set_selected(self._selected + 1)
+                    return
             hit = next(
                 (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
                 None,
             )
+            if event.kind is PageInputKind.POINTER_MOVE and hit is not None and hit != self._selected:
+                disc = DISCOVERIES[hit]
+                cue = encyclopedia_focus_cue("body", "teeth", disc.discovery_id, "name")
+                announce_focus_name(self.context.audio, cue)
             self._hovered = hit
             if event.kind is PageInputKind.POINTER_PRESS and hit is not None:
-                self._selected = hit
+                self._set_selected(hit)
                 self._activate(hit)
             return
         if event.kind is not PageInputKind.COMMAND or event.command is None:
@@ -79,12 +118,15 @@ class TeethPage(EncyclopediaPage):
         if event.command is PageCommand.ACTIVATE:
             self._activate(self._selected)
             return
+        prev = self._selected
         self._selected = grid_step(
             self._selected,
             event.command,
             columns=2,
             count=len(DISCOVERIES),
         )
+        if self._selected != prev:
+            self._announce_selected()
 
     def _activate(self, index: int) -> None:
         discovery = DISCOVERIES[index]
@@ -112,6 +154,11 @@ class TeethPage(EncyclopediaPage):
         )
         self._draw_mouth(surface)
         self._draw_hotspots(surface)
+        can_left = self._selected > 0
+        can_right = self._selected < len(DISCOVERIES) - 1
+        self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
+            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
+        )
         self._draw_caption(surface)
         draw_presenter(
             surface,
@@ -212,7 +259,8 @@ class TeethPage(EncyclopediaPage):
             pygame.draw.circle(surface, (254, 249, 237), item.center, 37)
             pygame.draw.circle(surface, (94, 70, 72), item.center, 37, 3)
             self._draw_hotspot_icon(surface, item)
-            focus_ring(surface, rect, index == self._selected or index == self._hovered)
+            if index == self._selected or index == self._hovered:
+                draw_focus_patch(surface, rect, active=True, radius=16, time=self._time)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
         panel = pygame.Rect(305, 510, 400, 68)
