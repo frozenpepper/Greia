@@ -977,3 +977,34 @@ encyclopedia/research/history/pyramids.md
 Generated/retained exact recording rows: **378**.
 
 All 36 factual v0.1 entries now have research-ready bilingual requests. Do not add post-v0.1 topic batches until the owner deliberately expands the encyclopedia scope.
+---
+
+## 17. Requested batch E6-FOCUS-01 — Solar System focus names (correction)
+
+Required for `faa46ec4` correction §7 — spoken focus names must be real prerecorded cues, not silent hooks.
+
+Presenter: Leo (warm, patient) per Encyclopedia voice authority.
+
+| STATUS | CUE_ID | KIND | SPEAKER | VOICE_ID | LOCALE | EXACT_TEXT | FINAL_FILENAME | FINAL_PATH | RECORDER_NOTES |
+|---|---|---|---|---|---|---|---|---|---|
+| REQUESTED | `encyclopedia.space.sun.name` | character_dialogue | Leo | `greia.leo.v1` | it | Sole | `sun-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/sun-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.sun.name` | character_dialogue | Leo | `greia.leo.v1` | en | Sun | `sun-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/sun-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.mercury.name` | character_dialogue | Leo | `greia.leo.v1` | it | Mercurio | `mercury-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/mercury-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.mercury.name` | character_dialogue | Leo | `greia.leo.v1` | en | Mercury | `mercury-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/mercury-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.venus.name` | character_dialogue | Leo | `greia.leo.v1` | it | Venere | `venus-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/venus-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.venus.name` | character_dialogue | Leo | `greia.leo.v1` | en | Venus | `venus-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/venus-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.earth.name` | character_dialogue | Leo | `greia.leo.v1` | it | Terra | `earth-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/earth-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.earth.name` | character_dialogue | Leo | `greia.leo.v1` | en | Earth | `earth-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/earth-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.moon.name` | character_dialogue | Leo | `greia.leo.v1` | it | Luna | `moon-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/moon-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.moon.name` | character_dialogue | Leo | `greia.leo.v1` | en | Moon | `moon-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/moon-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.mars.name` | character_dialogue | Leo | `greia.leo.v1` | it | Marte | `mars-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/mars-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.mars.name` | character_dialogue | Leo | `greia.leo.v1` | en | Mars | `mars-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/mars-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.jupiter.name` | character_dialogue | Leo | `greia.leo.v1` | it | Giove | `jupiter-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/jupiter-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.jupiter.name` | character_dialogue | Leo | `greia.leo.v1` | en | Jupiter | `jupiter-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/jupiter-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.saturn.name` | character_dialogue | Leo | `greia.leo.v1` | it | Saturno | `saturn-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/saturn-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.saturn.name` | character_dialogue | Leo | `greia.leo.v1` | en | Saturn | `saturn-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/saturn-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.uranus.name` | character_dialogue | Leo | `greia.leo.v1` | it | Urano | `uranus-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/uranus-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.uranus.name` | character_dialogue | Leo | `greia.leo.v1` | en | Uranus | `uranus-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/uranus-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.neptune.name` | character_dialogue | Leo | `greia.leo.v1` | it | Nettuno | `neptune-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/it/neptune-name-leo.ogg` | focus name |
+| REQUESTED | `encyclopedia.space.neptune.name` | character_dialogue | Leo | `greia.leo.v1` | en | Neptune | `neptune-name-leo.ogg` | `encyclopedia/pages/space/assets/audio/en/neptune-name-leo.ogg` | focus name |
+
