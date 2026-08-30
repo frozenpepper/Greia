@@ -379,21 +379,35 @@ class GearsPage(EncyclopediaPage):
         color: tuple[int, int, int],
     ) -> None:
         cx, cy = center
-        # Body
+        # Soft drop shadow
+        shadow = pygame.Surface((radius * 2 + 12, radius * 2 + 12), pygame.SRCALPHA)
+        pygame.draw.circle(shadow, (0, 0, 0, 28), (radius + 6, radius + 8), radius)
+        surface.blit(shadow, (cx - radius - 6, cy - radius - 6))
+        # Body with radial highlight
+        pygame.draw.circle(surface, (75, 70, 67), center, radius + 1)
         pygame.draw.circle(surface, color, center, radius)
-        pygame.draw.circle(surface, (75, 70, 67), center, radius, 3)
-        pygame.draw.circle(surface, (239, 231, 205), center, max(8, radius // 4))
-        pygame.draw.circle(surface, (75, 70, 67), center, max(8, radius // 4), 2)
-        # Teeth
+        # Highlight quadrant
+        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(hl, (255, 255, 255, 38), (radius - 12, radius - 14), radius // 2)
+        pygame.draw.circle(hl, (255, 255, 255, 18), (radius - 8, radius - 10), radius // 3)
+        surface.blit(hl, (cx - radius, cy - radius))
+        pygame.draw.circle(surface, (65, 60, 57), center, radius, 3)
+        # Hub
+        hub_r = max(8, radius // 4)
+        pygame.draw.circle(surface, (52, 48, 45), center, hub_r + 2)
+        pygame.draw.circle(surface, (239, 231, 205), center, hub_r)
+        pygame.draw.circle(surface, (75, 70, 67), center, hub_r, 2)
+        # Teeth with bevel
         for i in range(teeth):
             theta = angle + i * math.tau / teeth
             x1 = cx + int(math.cos(theta) * radius)
             y1 = cy + int(math.sin(theta) * radius)
-            x2 = cx + int(math.cos(theta) * (radius + 8))
-            y2 = cy + int(math.sin(theta) * (radius + 8))
+            x2 = cx + int(math.cos(theta) * (radius + 9))
+            y2 = cy + int(math.sin(theta) * (radius + 9))
+            pygame.draw.line(surface, (65, 60, 57), (x1, y1), (x2, y2), 4)
             pygame.draw.line(surface, (75, 70, 67), (x1, y1), (x2, y2), 3)
-            # Tooth cap small rect
-            pygame.draw.circle(surface, color, (x2, y2), 3)
+            pygame.draw.circle(surface, color, (x2, y2), 4)
+            pygame.draw.circle(surface, (255, 255, 255, 30), (x2 - 1, y2 - 1), 2)
 
     def _recent(self, discovery_id: str) -> bool:
         ages = {
