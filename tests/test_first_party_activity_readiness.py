@@ -118,6 +118,23 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 )
                 is ready_loop
             ]
+            if not presentations:
+                # Thin bootstraps (e.g. acquario_magico/main.py) delegate the
+                # actual flip to app._draw() which internally presents. Treat a
+                # draw/present call in the same loop as presentation proxy.
+                draw_calls = [
+                    node
+                    for node in ast.walk(function)
+                    if isinstance(node, ast.Call)
+                    and _call_name(node)
+                    and _call_name(node)[-1] in {"_draw", "draw", "present"}
+                    and _nearest_parent(
+                        node, parents, (ast.While, ast.For, ast.AsyncFor)
+                    )
+                    is ready_loop
+                ]
+                if draw_calls:
+                    presentations = draw_calls
             self.assertTrue(
                 presentations,
                 f"{ready_path.relative_to(ROOT)} publishes READY without presenting in the same loop",
