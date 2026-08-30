@@ -11,11 +11,32 @@ ACTIVITY_ROOT = ROOT / "activities" / "painting"
 
 
 def _load_painting_module():
-    spec = importlib.util.spec_from_file_location("painting_test_mod", ACTIVITY_ROOT / "main.py")
+    # Prefer package import for decomposed Activities so sibling modules
+    # resolve via relative imports (mirrors test_core_creation_activities).
+    try:
+        import importlib
+
+        mod = importlib.import_module("activities.painting.main")
+        sys.modules["painting_test_mod"] = mod
+        return mod
+    except Exception:
+        pass
+    spec = importlib.util.spec_from_file_location(
+        "activities.painting.main",
+        ACTIVITY_ROOT / "main.py",
+        submodule_search_locations=[str(ACTIVITY_ROOT)],
+    )
     if spec is None or spec.loader is None:
         raise RuntimeError("cannot load painting main.py")
     mod = importlib.util.module_from_spec(spec)
     sys.modules["painting_test_mod"] = mod
+    sys.modules["activities.painting.main"] = mod
+    if "activities.painting" not in sys.modules:
+        import types
+
+        pkg_mod = types.ModuleType("activities.painting")
+        pkg_mod.__path__ = [str(ACTIVITY_ROOT)]  # type: ignore[attr-defined]
+        sys.modules["activities.painting"] = pkg_mod
     spec.loader.exec_module(mod)
     return mod
 

@@ -28,10 +28,13 @@ class CoreActivitySystemSafeUiTests(unittest.TestCase):
                 self.assertIn("activity_stop_requested()", combined)
 
     def test_painting_palette_is_anchored_to_activity_safe_rect(self) -> None:
-        source = (ACTIVITIES / "painting" / "main.py").read_text(encoding="utf-8")
-        self.assertIn("self.metrics.activity_safe_rect()", source)
-        self.assertIn("bottom_reserve=self.palette_height", source)
-        self.assertNotIn("self.screen.get_height() - self.metrics.margin - self.palette_height", source)
+        # Geometry may live in painting_app/renderer after decomposition; scan the package.
+        pkg_sources = "".join(
+            p.read_text(encoding="utf-8") for p in sorted((ACTIVITIES / "painting").glob("*.py"))
+        )
+        self.assertIn("self.metrics.activity_safe_rect()", pkg_sources)
+        self.assertIn("bottom_reserve=self.palette_height", pkg_sources)
+        self.assertNotIn("self.screen.get_height() - self.metrics.margin - self.palette_height", pkg_sources)
 
     def test_writing_editor_is_owned_by_shared_activity_content_geometry(self) -> None:
         # Geometry may live in writing_app after decomposition; scan the package.
