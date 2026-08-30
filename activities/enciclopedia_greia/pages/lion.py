@@ -238,54 +238,50 @@ class LionPage(EncyclopediaPage):
         )
 
     def _draw_reveals(self, surface: pygame.Surface) -> None:
+        # Use authored savanna as base; add subtle floating dust for depth
+        dust_phase = self._time * 0.9
+        for dx, dy, r in ((512, 448, 3), (620, 462, 2), (410, 472, 2), (700, 452, 2)):
+            x = dx + int(math.sin(dust_phase + dx * 0.03) * 4)
+            y = dy + int(math.cos(dust_phase + dy * 0.04) * 2)
+            pygame.draw.circle(surface, (255, 255, 255, 42), (x, y), r)
         if self._mane_state:
-            # Two visible growth rings, growing outward, plus a mane
-            # color shift to make the change clearly readable.
             outer = (125, 72, 40) if self._mane_state == 1 else (74, 54, 42)
             inner = (168, 100, 58) if self._mane_state == 1 else (122, 84, 58)
-            pygame.draw.circle(
-                surface,
-                outer,
-                (446, 336),
-                96 + self._mane_state * 8,
-                10,
-            )
-            pygame.draw.circle(
-                surface,
-                inner,
-                (446, 336),
-                80 + self._mane_state * 6,
-                6,
-            )
-            # A few small "spike" marks showing the mane growing.
-            import math
-            for index in range(8):
-                angle = index * (math.pi * 2 / 8) - math.pi / 2
-                rx = 446 + int(math.cos(angle) * (108 + self._mane_state * 8))
-                ry = 336 + int(math.sin(angle) * (108 + self._mane_state * 8))
-                pygame.draw.circle(surface, (74, 54, 42), (rx, ry), 4)
+            # Soft glow behind mane
+            glow = pygame.Surface((220, 220), pygame.SRCALPHA)
+            pygame.draw.circle(glow, (200, 130, 60, 38), (110, 110), 108 + self._mane_state * 8)
+            surface.blit(glow, (336, 226))
+            pygame.draw.circle(surface, outer, (446, 336), 96 + self._mane_state * 8, 10)
+            pygame.draw.circle(surface, inner, (446, 336), 80 + self._mane_state * 6, 6)
+            for index in range(12):
+                angle = index * (math.pi * 2 / 12) - math.pi / 2
+                rx = 446 + int(math.cos(angle) * (112 + self._mane_state * 8))
+                ry = 336 + int(math.sin(angle) * (112 + self._mane_state * 8))
+                pygame.draw.circle(surface, (74, 54, 42), (rx, ry), 5)
+                pygame.draw.circle(surface, (210, 160, 90), (rx - 1, ry - 1), 2)
         if self._pride_age > 0:
-            for x in (620, 690, 755):
-                pygame.draw.ellipse(surface, (202, 143, 70), (x - 22, 418, 44, 30))
-                pygame.draw.circle(surface, (202, 143, 70), (x + 18, 420), 12)
+            # Pride as small distant silhouettes with soft shadow
+            for x, scale in ((620, 1.0), (690, 0.92), (755, 0.88)):
+                shadow = pygame.Surface((54, 20), pygame.SRCALPHA)
+                pygame.draw.ellipse(shadow, (0, 0, 0, 28), shadow.get_rect())
+                surface.blit(shadow, (x - 27, 438))
+                pygame.draw.ellipse(surface, (202, 143, 70), (x - int(22 * scale), 418, int(44 * scale), int(30 * scale)))
+                pygame.draw.circle(surface, (162, 112, 54), (x + int(18 * scale), 420), int(12 * scale))
+                pygame.draw.circle(surface, (255, 232, 180), (x + int(16 * scale), 418), 3)
         if self._roar_age > 0:
-            for radius in (35, 58, 82):
-                pygame.draw.arc(
-                    surface,
-                    (255, 229, 118),
-                    (432 - radius, 327 - radius, radius * 2, radius * 2),
-                    -0.5,
-                    0.5,
-                    4,
-                )
+            # Concentric roar waves with fading alpha
+            for radius, alpha in ((38, 220), (62, 160), (88, 110), (112, 70)):
+                s = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+                pygame.draw.circle(s, (255, 229, 118, alpha), (radius, radius), radius, 4)
+                surface.blit(s, (432 - radius, 327 - radius))
+            # Roar mouth highlight
+            pygame.draw.ellipse(surface, (255, 240, 180, 90), (432, 335, 28, 18))
         if self._foreleg_age > 0:
+            # Stronger leg press with contact shadow and highlight
             for center in ((490, 520), (610, 520)):
-                pygame.draw.ellipse(
-                    surface,
-                    (255, 218, 99),
-                    (center[0] - 32, center[1] - 12, 64, 24),
-                    5,
-                )
+                pygame.draw.ellipse(surface, (0, 0, 0, 32), (center[0] - 34, center[1] - 4, 68, 16))
+                pygame.draw.ellipse(surface, (255, 218, 99), (center[0] - 32, center[1] - 12, 64, 24), 5)
+                pygame.draw.ellipse(surface, (255, 235, 160), (center[0] - 28, center[1] - 10, 56, 10), 3)
 
     @staticmethod
     def _draw_icon(
