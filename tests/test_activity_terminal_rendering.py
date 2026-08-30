@@ -16,7 +16,12 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
             PROJECT_ROOT / "activities" / "labirinto_magico" / "maze_app.py",
             PROJECT_ROOT / "activities" / "labirinto_magico" / "maze_renderer.py",
         ),
-        "serra": (PROJECT_ROOT / "activities" / "piccola_serra" / "main.py",),
+        "serra": (
+            PROJECT_ROOT / "activities" / "piccola_serra" / "main.py",
+            PROJECT_ROOT / "activities" / "piccola_serra" / "serra_app.py",
+            PROJECT_ROOT / "activities" / "piccola_serra" / "serra_renderer.py",
+            PROJECT_ROOT / "activities" / "piccola_serra" / "serra_model.py",
+        ),
         "treno": (
             PROJECT_ROOT / "activities" / "treno_numeri" / "main.py",
             PROJECT_ROOT / "activities" / "treno_numeri" / "treno_app.py",
@@ -54,11 +59,29 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
         )
 
         serra = self._source("serra")
-        self.assertLess(
-            serra.index("if is_victory:\n            if not completion_presented:"),
-            serra.index("# RENDER TO CANVAS"),
+        # Victory gate must be before the reference render marker.
+        # Monolith used `if is_victory:` while decomposed uses
+        # `if self.model.is_victory:` – accept either but require ordering.
+        victory_markers_serra = [
+            "if is_victory:\n            if not completion_presented:",
+            "if self.model.is_victory:\n                if not self.completion_presented:",
+            "if self.model.is_victory:",
+        ]
+        victory_idx_serra = min(
+            (serra.index(m) for m in victory_markers_serra if m in serra),
+            default=None,
         )
-        self.assertIn("if not is_victory:\n            surviving = []", serra)
+        self.assertIsNotNone(victory_idx_serra, "serra must contain victory gate")
+        assert victory_idx_serra is not None
+        # Render marker lives in serra_app._draw (`# RENDER TO CANVAS`)
+        self.assertIn("# RENDER TO CANVAS", serra)
+        self.assertLess(victory_idx_serra, serra.index("# RENDER TO CANVAS"))
+        # Active particle update must be gated behind victory check.
+        self.assertTrue(
+            "if not is_victory:\n            surviving = []" in serra
+            or "if not self.model.is_victory:\n            surviving = []" in serra,
+            "serra must gate particle update on non-victory",
+        )
 
         treno = self._source("treno")
         # Terminal gate (victory + completion) must be before active arrival logic.
@@ -101,7 +124,8 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
         self.assertEqual(maze.count('emit_activity_event(\n                            "maze.completed"'), 1)
 
         serra = self._source("serra")
-        self.assertEqual(serra.count('emit_activity_event("greenhouse.harvest_completed"'), 1)
+        # Harvest completion is emitted once; one-liner vs multi-line still counts once.
+        self.assertEqual(serra.count('"greenhouse.harvest_completed"'), 1)
 
         treno = self._source("treno")
         self.assertEqual(treno.count('"train.station_completed"'), 1)
