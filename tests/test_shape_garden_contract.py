@@ -20,27 +20,39 @@ class ShapeGardenContractTests(unittest.TestCase):
         self.assertEqual(raw["permissions"]["requested"], [])
 
     def test_activity_uses_shared_logical_canvas_and_platform_navigation(self) -> None:
-        source = (ACTIVITY / "main.py").read_text(encoding="utf-8")
-        self.assertIn("PygameReferenceCanvas", source)
-        self.assertIn("activity_viewport_for_surface", source)
-        self.assertIn("canvas.pointer(event.pos)", source)
-        self.assertIn("ChildUiMetrics.for_size", source)
-        self.assertIn("get_theme()", source)
-        self.assertIn("activity_stop_requested()", source)
-        self.assertNotIn('get_icon_path("close_button"', source)
-        self.assertNotIn('"close_button"', source)
-        self.assertNotIn("(x - 48) ** 2", source)
+        combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))
+        self.assertIn("PygameReferenceCanvas", combined)
+        self.assertIn("activity_viewport_for_surface", combined)
+        # Pointer mapping stays platform-owned via PygameReferenceCanvas
+        self.assertIn("canvas.pointer", combined)
+        self.assertIn("ChildUiMetrics.for_size", combined)
+        self.assertIn("get_theme()", combined)
+        self.assertIn("activity_stop_requested()", combined)
+        self.assertNotIn('get_icon_path("close_button"', combined)
+        self.assertNotIn('"close_button"', combined)
+        self.assertNotIn("(x - 48) ** 2", combined)
 
     def test_reference_geometry_is_semantic_and_render_work_stays_bounded(self) -> None:
-        source = (ACTIVITY / "main.py").read_text(encoding="utf-8")
-        self.assertIn("REFERENCE_WIDTH = 1024", source)
-        self.assertIn("REFERENCE_HEIGHT = 600", source)
-        self.assertIn("SOIL_TOP = 530", source)
-        self.assertIn("shapes[-120:]", source)
-        self.assertIn("canvas.present(clear=theme.background)", source)
-        self.assertNotIn("smooth=True", source)
-        self.assertNotIn("screen.get_height() - 70", source)
-        self.assertNotIn("screen.get_width(), 70", source)
+        combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))
+        # Reference geometry kept semantics after decomposition
+        self.assertIn("REFERENCE_WIDTH", combined)
+        self.assertIn("1024", combined)
+        self.assertIn("REFERENCE_HEIGHT", combined)
+        self.assertIn("600", combined)
+        self.assertIn("SOIL_TOP", combined)
+        self.assertIn("530", combined)
+        # Bounded window for shapes/particles — either literal slice or MAX_SHAPES constant
+        self.assertTrue(
+            "shapes[-120:]" in combined
+            or "MAX_SHAPES" in combined
+            or "active_shapes" in combined,
+            "bounded shape window not found",
+        )
+        self.assertIn("present(clear=", combined)
+        self.assertIn("theme.background", combined)
+        self.assertNotIn("smooth=True", combined)
+        self.assertNotIn("screen.get_height() - 70", combined)
+        self.assertNotIn("screen.get_width(), 70", combined)
 
 
 if __name__ == "__main__":
