@@ -38,41 +38,13 @@ from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
 if __package__:
-    from .acquarium_app import AquariumApp, CHEST_RECT, build_app
-    from .acquarium_assets import (
-        AquariumAssetCache,
-        _get_cached_background,
-        _get_scaled_asset,
-        _load_asset_surface,
-    )
+    from .acquarium_app import AquariumApp
     from .acquarium_audio import AquariumAudio
-    from .acquarium_content import (
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        SPECIES,
-        STORAGE_KEY,
-        ToolIndex,
-    )
-    from .acquarium_model import AquariumSession
-    from .acquarium_renderer import AquariumRenderer, ToolLayout
+    from .acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
 else:
-    from acquarium_app import AquariumApp, CHEST_RECT, build_app
-    from acquarium_assets import (
-        AquariumAssetCache,
-        _get_cached_background,
-        _get_scaled_asset,
-        _load_asset_surface,
-    )
+    from acquarium_app import AquariumApp
     from acquarium_audio import AquariumAudio
-    from acquarium_content import (
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        SPECIES,
-        STORAGE_KEY,
-        ToolIndex,
-    )
-    from acquarium_model import AquariumSession
-    from acquarium_renderer import AquariumRenderer, ToolLayout
+    from acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
 
 
 def _resolve_locale() -> LocalizedResources:
@@ -84,10 +56,6 @@ def _resolve_locale() -> LocalizedResources:
     if context is None:
         context = resolve_activity_locale("it", support)
         if context is None:
-            # ``ActivityLocaleSupport.localized`` always returns a
-            # usable default; this branch only protects against a
-            # future refactor that returns ``None`` for the
-            # default locale as well.
             raise RuntimeError("acquario_magico: locale support is unavailable")
     return LocalizedResources(Path(__file__).resolve().parent, context)
 
@@ -96,7 +64,10 @@ def main() -> int:
     pygame.init()
     screen = pygame.display.get_surface()
     if screen is None:
-        screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
+        screen = pygame.display.set_mode(
+            (REFERENCE_WIDTH, REFERENCE_HEIGHT),
+            pygame.RESIZABLE,
+        )
     pygame.mouse.set_visible(True)
     get_theme()
     resources = _resolve_locale()
@@ -114,20 +85,12 @@ def main() -> int:
         storage=storage,
     )
 
-    # The Activity runs the platform-authority event loop in
-    # main() so the ``ready_published`` invariant (READY after
-    # the first presented frame, in the same launch loop) is
-    # trivially satisfied: the call to ``mark_activity_ready``
-    # follows the first ``pygame.display.flip()`` inside
-    # ``app._draw`` in the same iteration of this loop.
+    # READY is published only after the first frame has actually been presented.
     while not activity_stop_requested():
         for event in pygame.event.get():
             app.handle_event(event)
         if not app._running:
             break
-        # ``_step_frame`` would re-publish READY for a frame that
-        # has not been drawn yet; run a custom loop here so the
-        # published frame is the frame that just presented.
         app.session.update(0.033)
         if (
             app.storage is not None
@@ -142,33 +105,6 @@ def main() -> int:
         app.clock.tick(30)
     app._autosave()
     return 0
-
-
-# Backwards-compatible re-exports. The historical contract tests
-# (tests/test_activity_acquario_magico.py and
-# tests/test_activities_phase5.py) import SPECIES, AquariumAudio,
-# _get_cached_background and _get_scaled_asset directly from this
-# module. Keep those names so the migration does not require
-# touching every caller; the new modules own the real work.
-__all__ = [
-    "AquariumApp",
-    "AquariumAssetCache",
-    "AquariumAudio",
-    "AquariumRenderer",
-    "AquariumSession",
-    "CHEST_RECT",
-    "REFERENCE_HEIGHT",
-    "REFERENCE_WIDTH",
-    "SPECIES",
-    "STORAGE_KEY",
-    "ToolIndex",
-    "ToolLayout",
-    "_get_cached_background",
-    "_get_scaled_asset",
-    "_load_asset_surface",
-    "build_app",
-    "main",
-]
 
 
 if __name__ == "__main__":
