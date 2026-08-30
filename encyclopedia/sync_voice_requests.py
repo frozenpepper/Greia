@@ -42,6 +42,25 @@ RESEARCH_ROOT = ROOT / "research"
 EXPECTED_V01_TOPIC_COUNT = 36
 EXPECTED_V01_RECORDING_ROWS = 378
 
+# Focus-name cues for Solar System navigation (E6-FOCUS-01, correction §7).
+# These are prerecorded navigation names, not factual narration blocks, so they
+# must not be counted as research-derived rows and must not trigger legacy
+# block-count drift. They are preserved as manual extra after the v0.1 checkpoint.
+_FOCUS_SPACE_BODIES = (
+    "sun",
+    "mercury",
+    "venus",
+    "earth",
+    "moon",
+    "mars",
+    "jupiter",
+    "saturn",
+    "uranus",
+    "neptune",
+)
+_FOCUS_NAME_CUES: set[str] = {f"encyclopedia.space.{body}.name" for body in _FOCUS_SPACE_BODIES}
+_FOCUS_NAME_KEYS: set[tuple[str, str]] = {(cue, loc) for cue in _FOCUS_NAME_CUES for loc in ("it", "en")}
+
 _PRESENTER_RE = re.compile(r"^\*\*Presenter:\*\*\s+(.+?)\s+\(`([^`]+)`\)\s*$", re.MULTILINE)
 _CANONICAL_CUE_RE = re.compile(
     r"^### `(?P<cue>encyclopedia\.[^`]+)`\s*\n\n"
@@ -229,8 +248,11 @@ def _parse_legacy_topic(
         )
 
     prefix = f"encyclopedia.{spec.page_id}."
+    # Exclude Solar System focus-name cues from factual block validation.
     topic_rows = [
-        row for row in existing_rows.values() if row.cue_id.startswith(prefix)
+        row
+        for row in existing_rows.values()
+        if row.cue_id.startswith(prefix) and (row.cue_id, row.locale) not in _FOCUS_NAME_KEYS
     ]
     if not topic_rows:
         raise ValueError(
@@ -371,7 +393,8 @@ def render_ledger(existing_text: str) -> str:
     # E0 navigation/orientation is deliberately manual because it has no
     # factual research record. All of its cue IDs have exactly two dots.
     manual_keys = {key for key in existing_rows if key[0].count(".") == 2}
-    unexplained = set(existing_rows) - generated_keys - manual_keys
+    focus_keys = {key for key in existing_rows if key in _FOCUS_NAME_KEYS}
+    unexplained = set(existing_rows) - generated_keys - manual_keys - focus_keys
     if unexplained:
         raise ValueError(f"existing factual rows are not represented by TOPICS: {sorted(unexplained)!r}")
 

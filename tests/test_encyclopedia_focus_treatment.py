@@ -61,12 +61,25 @@ class EncyclopediaFocusTreatmentTests(unittest.TestCase):
     def test_existing_runtime_scene_pngs_are_opaque_rgb(self) -> None:
         if not RUNTIME.exists():
             return
+        # Planet sprites are small transparent assets, not full-screen opaque scenes.
+        planet_sprites = {"earth_planet_sprite.png"}
+        # Also consider any future planet sprites registered in VisualLibrary.PLANET_ASSETS
+        try:
+            from activities.enciclopedia_greia.enciclopedia_services import VisualLibrary
+
+            planet_sprites.update(VisualLibrary.PLANET_ASSETS.values())
+        except Exception:
+            pass
         for path in sorted(RUNTIME.glob("*.png")):
             data = path.read_bytes()
             with self.subTest(path=path.name):
                 self.assertGreaterEqual(len(data), 26)
                 self.assertTrue(data.startswith(PNG_SIGNATURE))
-                self.assertEqual(data[25], PNG_COLOR_TYPE_RGB)
+                if path.name in planet_sprites:
+                    # Transparent small sprite must be RGBA (color type 6)
+                    self.assertEqual(data[25], 6)
+                else:
+                    self.assertEqual(data[25], PNG_COLOR_TYPE_RGB)
 
 
 if __name__ == "__main__":

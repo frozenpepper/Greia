@@ -82,6 +82,10 @@ def _runtime_narration_cues() -> set[str]:
             and node.value.startswith("encyclopedia.")
         )
     cues.difference_update(_visual_scene_ids())
+    # Focus-name cues (E6-FOCUS-01) are navigation, preserved as manual extra after
+    # the v0.1 checkpoint. Exclude them from the v0.1 factual sync comparison.
+    focus = {f"encyclopedia.space.{body}.name" for body in ("sun","mercury","venus","earth","moon","mars","jupiter","saturn","uranus","neptune")}
+    cues.difference_update(focus)
     return cues
 
 
