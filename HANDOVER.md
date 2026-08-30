@@ -1,20 +1,23 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-08-30 — post-activity-pass source gate green at e2b831da; Activity modernization COMPLETE (blockers=0); physical R7.2/R7.3 Acer INCOMPLETE (no hardware in this environment)
-**Canonical repository:** `frozenpepper/Greia`
-**Canonical branch:** `main`
-**Primary blocking platform phase:** **R7 — Direct graphics/session/input architecture (source-integrated; awaiting Acer physical acceptance at e2b831da)**
-**Current parallel visual focus:** **Encyclopedia E3 ACCEPTED at 03bf76ac (11/11 PNGs, 7/7 Simulator, visual ACCEPTED); E4 UNBLOCKED/NEXT but deferred per post-activity-pass protocol**
-**Active Activity-modernization plan:** `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` — COMPLETE (strict migration COMPLETE, app pass COMPLETE; future refactoring per-Activity only; see §8 closure at e2b831da)
-**Purpose:** short current continuation contract. Detailed chronology belongs in active plans and dated reviews/handovers.
+**Updated:** 2026-08-30  
+**Canonical repository:** `frozenpepper/Greia`  
+**Canonical branch:** `main`  
+**Current documentation head at this handover update:** includes `2f78e5eab03e4c1a31a57d113edca6bc9c647d01`  
+**Latest runtime implementation change under review:** `83738f737a41aec7c139b3a4a3363e746ba0f266` — Simulator trusted Home render fix  
+**Primary blocking platform phase:** **R7 — direct graphics/session/input architecture**  
+**Current R7 subphase:** **R7.3 trusted Home verification/physical acceptance; source changed after the previous Activity-pass evidence**  
+**Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`  
+**Activity modernization:** **COMPLETE**; do not reopen the catalogue-wide pass merely because the Simulator platform adapter changed  
+**Physical R7.2/R7.3 Acer acceptance:** **INCOMPLETE**
+
+This file is intentionally a short continuation contract. Detailed chronology belongs in the active plan, dated reviews and Git history.
 
 Historical long-form root state remains preserved under:
 
 ```text
 docs/handovers/GREIA_ROOT_HANDOVER_ARCHIVE_2026-08-27.md
 ```
-
-and in Git history / dated reviews.
 
 ---
 
@@ -26,528 +29,349 @@ Before substantive work, read:
 AGENTS.md
 README.md
 docs/DOCUMENTATION.md
+docs/architecture/GREIA_ARCHITECTURE.md
 docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
 HANDOVER.md
+skills/greia-os-work/SKILL.md
 ```
 
-Then load the relevant OS/Activity/visual/voice skill.
-
-For R7 display/session/input work also read:
+For the current R7 work also read:
 
 ```text
+docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md
+docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
+docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/product/ACTIVITY_INPUT_STANDARDS.md
+docs/engineering/ENGINEERING_FOUNDATIONS.md
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
 docs/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md
 docs/reviews/2026-08-29_R7_R73_TRUSTED_CHROME_SOURCE_TRANCHE.md
 docs/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
+docs/reviews/2026-08-30_R7_R73_HOME_OVERLAY_POST_MODERNIZATION_CORRECTION.md
 docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
-docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
 
-For visual work also read:
-
-```text
-docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
-docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
-docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
-```
-
-Work on current `main`, refresh before writes, preserve concurrent work, and do not use GitHub-hosted Actions unless the owner explicitly authorizes that execution.
+Work directly on current `main`, refresh before writes, preserve concurrent work, and do not use GitHub-hosted Actions unless the owner explicitly authorizes that specific execution.
 
 No PASS claim may be generalized beyond the exact source/evidence lane that actually executed.
 
 ---
 
-## 2. Platform state
+## 2. Release-preparation state
 
-R7 remains the first incomplete blocking platform phase. Current installed Greia still uses the provisional Xorg/xinit compatibility path while the ADR-0014 target direct/appliance display/session/input implementation is resolved.
-
-The 2026-08-29 R7 review clarified the execution architecture without closing R7:
-
-- Activity rendering is backend-independent by invariant. Ordinary Pygame/SDL drawing is valid; Activities must not know/select/probe X11, Wayland, DRM/KMS, evdev/libinput or backend-specific environment.
-- Do **not** invent a Greia drawing API. SDL/Pygame remains the renderer abstraction.
-- `src/greia_launcher/display_session.py` is the polymorphic runtime seam. Complete `DisplaySessionCoordinator` / `DisplaySessionBackend`; do not create a parallel giant HAL.
-- `LegacyXDisplaySessionBackend` is the current compatibility implementation. A direct/compositor implementation must sit behind the same contract and require zero Activity changes.
-- **Backend independence must not create an abstraction tax.** Preserve precomposed opaque backdrops, converted surfaces, bounded caches, cached transforms, dirty/invalidation rendering, adaptive pacing and direct high-rate SDL pointer/text handling where safe.
-- backend-private fast paths are allowed and expected below common contracts.
-
-### R7.1 — Activity backend independence
-
-Materially source-integrated on `main`:
-
-- structured `greia_platform.activity_backend_policy`;
-- standalone Activity validation enforcement;
-- project validation enforcement;
-- installed Python runtime validation;
-- repository-wide `tools/audit_activity_backend_independence.py`;
-- normal backend-neutral Pygame/SDL APIs remain valid.
-
-No exact-current PASS is inferred merely from committed tests. R7.1 remains part of the current combined source gate.
-
-### R7.2 — Legacy-X containment
-
-Materially source-integrated; exact-current execution and Acer acceptance remain pending.
-
-Implemented:
-
-- generic launcher no longer owns native Xlib focus code;
-- `ShellWindowController` is the one-shot Shell-window setup seam;
-- installed composition selects `LegacyXShellWindowController`; development uses no-op;
-- rich `presentation.py` now uses that same composed hook rather than importing the deleted `_set_x11_input_focus` helper;
-- generic hardware watcher is backend-neutral; `hardware_session_legacy_x` owns current executable X selection;
-- ordinary Activity Bubblewrap no longer grants `/dev/dri`;
-- regression source denies ordinary `/dev/dri`, `/dev/input`, `/sys/class/drm`, `/sys/class/input` host authority;
-- Xorg profile/package/service/Xwrapper/xinput/xrandr files remain explicit migration plumbing until replacement evidence exists.
-
-Ownership inventory:
+The ordinary-family release target is defined by:
 
 ```text
-docs/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md
+docs/release/GREIA_PUBLIC_RELEASE_READINESS.md
 ```
 
-Acceptance:
+It deliberately distinguishes:
 
 ```text
-docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
+Threshold A — public source repository
+Threshold B — public technical preview
+Threshold C — ordinary-family public release
 ```
 
-### R7.3 — trusted Greia Home + Activity ownership migration
+The target is Threshold C: a normal parent/family can install, use, administer, update, back up and recover Greia without Linux/developer knowledge.
 
-R7.3 is **source-integrated but unexecuted/unaccepted**. Beginning this isolated source tranche does not retroactively close R7.2 and does not authorize final backend migration.
+Do not mistake source-green development state for release certification. The release gate explicitly depends on closure of the blocking platform spine, including R7 and later architecture/package/backup/parent/update/recovery/certification phases.
 
-Trusted source boundaries now include:
+Current ordinary-family disposition:
 
 ```text
-src/greia_platform/pygame_canvas.py
-src/greia_launcher/system_chrome_legacy_x.py
-src/greia_launcher/trusted_chrome_supervisor.py
-src/greia_launcher/trusted_presentation.py
-src/greia_launcher/system_chrome.py
-src/greia_launcher/child_shell.py
-src/greia_launcher/composition.py
-src/greia_simulator/python_activity.py
-build/overlay/usr/local/lib/greia-os/greia-x-session
-tools/audit_activity_system_chrome_ownership.py
+NOT READY
 ```
 
-Architecture:
-
-- `SystemChromeCoordinator` remains runtime/backend-neutral authority;
-- `LegacyXSystemChromeBackend` is a migration adapter, not target architecture;
-- current Legacy-X adapter owns one tiny launcher-process X11 window covering only `ActivitySystemChromeLayout.protected_region`;
-- it does not copy Activity pixels, create a second Pygame renderer/process, or add a full-screen composition layer;
-- chrome is drawn on show/expose only and input polling is nonblocking;
-- `TrustedChromeActivitySupervisor` binds the chrome lease to the authoritative Activity session and existing graceful/forced stop lifecycle;
-- the installed `GreiaChildShell` composes trusted chrome; its X-session fallback uses `greia_launcher.trusted_presentation`, which composes the same authority rather than falling back to plain unprotected presentation;
-- the Simulator's trusted Python bootstrap independently draws/intercepts its compatibility Home above Activity code, so Activity migration does not remove Simulator navigation;
-- Home is the first mandatory action closed here. Optional Back remains disabled in the installed supervisor until real launch-origin context is passed through the trusted boundary;
-- chrome prepare/show/poll/cleanup failures fail the Activity path closed as `platform_failure`;
-- failed preparation performs one bounded rollback attempt and returns the coordinator to `HIDDEN` when cleanup succeeds; if rollback fails, the coordinator remains `FAILED`.
-
-The shared Activity canvas no longer renders trusted chrome:
-
-- `PygameReferenceCanvas.present()` retains renderer-neutral safe/protected viewport geometry and Activity-local pointer presentation;
-- the legacy `system_chrome=` keyword is temporarily accepted but ignored during catalogue migration;
-- new Activity code must not use that keyword or the retired cooperative helper functions.
-
-Explicit migrated exemplars now include:
-
-```text
-activities/writing/main.py
-activities/painting/main.py
-activities/labirinto_magico/maze_app.py
-activities/volo_draghetto/dragon_app.py
-activities/shape_garden/main.py
-activities/storie_della_mia_voce/voice_app.py
-```
-
-For these Activities the edits were authority-only: Activity-owned Home drawing/hit-testing was removed while platform stop handling, safe-region geometry, gameplay, storage, microphone routing and direct Pygame performance paths were preserved.
-
-Catalogue-wide authority inventory is now source-owned by:
-
-```text
-tools/audit_activity_system_chrome_ownership.py
-```
-
-It is AST-based and reports retired helper imports/calls plus lingering `PygameReferenceCanvas.present(system_chrome=...)` requests. The R7.3 acceptance protocol now requires:
-
-```bash
-PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
-```
-
-with:
-
-```text
-Activity system chrome ownership audit: blockers=0
-```
-
-**Do not claim catalogue-wide zero debt yet:** the strict scanner has not executed on this current source state in this connector-only tranche. If it reports remaining callers, migrate exactly those callers without gameplay/visual rewrites, then restart the source gate on the new SHA.
-
-Permanent hostile acceptance fixture:
-
-```text
-tests/fixtures/activities/r7_noncooperative_chrome/
-```
-
-It fills its complete SDL surface, draws no Home, ignores local input, ignores the graceful STOP marker and therefore can return only through trusted Home + bounded platform forced termination.
-
-R7.3 regression source now includes:
-
-```text
-tests/test_system_chrome.py
-tests/test_system_chrome_legacy_x.py
-tests/test_trusted_chrome_supervisor.py
-tests/test_r7_child_shell_trusted_chrome_composition.py
-tests/test_r7_noncooperative_chrome_fixture.py
-tests/test_activity_system_chrome_audit.py
-tests/test_r7_first_wave_activity_trusted_chrome_migration.py
-```
-
-Exact source + Acer protocol:
-
-```text
-docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
-```
-
-The protocol requires both Activity audits, Writing, Painting, hostile non-cooperative Home/forced return, 10/10 hostile cycles, crash cleanup and exact-device performance evidence.
-
-**Important limitation:** shared X11 cannot become final hostile-third-party isolation merely because a sibling trusted window works against ordinary/non-cooperative Pygame content. ADR 0014 still requires replacement by the target DRM/KMS-centered direct/appliance architecture; a minimal compositor is allowed if measurement shows it is the thinnest practical trusted session path.
-
-### Current provisional debt / constraints
-
-- `greia-x-session` still contains literal `SynPS/2 Synaptics TouchPad` startup tuning. It is contained Legacy-X plumbing but should not survive into the final common input/session architecture.
-- `Xwrapper.config` remains security-sensitive migration plumbing. Retaining Xorg as a target shipping architecture would require an explicit amendment/supersession of ADR 0014.
-- a future Wayland Activity transport cannot simply pass host `XDG_RUNTIME_DIR`: Activity sandbox masks `/run`; project only the required compositor socket into a narrow child runtime directory.
-- **tap-to-click policy contradiction remains unresolved:** current runtime source intentionally sets `touchpad_tap = true` after the 2026-08-23 Acer responsiveness fix, while `AGENTS.md` still says defaults off. Do not silently change working touchpad behavior inside R7; resolve product policy explicitly and align source/tests/docs together.
-- catalogue-wide absence of retired Activity Home helpers remains **unverified until the strict audit executes**; do not infer zero from the six migrated exemplars or incomplete GitHub code search.
-
-R7 invariants:
-
-- Greia owns display/session authority;
-- real Home/Back remain outside Activity rendering/input authority;
-- protected system input is consumed before Activity delivery;
-- controller discovery/normalization is platform-owned;
-- ordinary Activities do not get raw `/dev/input` or DRM authority;
-- backend selection belongs to trusted composition/profile, never Activity logic;
-- no generic Python framebuffer/IPC pixel proxy;
-- trusted chrome stays bounded/event-driven and must not impose permanent full-screen redraw/composition cost;
-- Activity optimization opportunities remain available on every production backend;
-- backend and hardware claims require exact-source evidence.
-
-Primary authorities remain:
-
-```text
-docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
-docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REVIEW.md
-```
-
-The first-generation Acer Aspire One remains the low-resource floor.
+The first incomplete blocking work remains R7. Do not jump ahead to release cosmetics or public packaging in a way that bypasses this architecture/evidence gate.
 
 ---
 
-## 3. Visual workstream
+## 3. Activity modernization state
 
-Stable architecture:
-
-```text
-docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
-```
-
-Active art plan:
-
-```text
-docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
-```
-
-Current resume:
-
-```text
-docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
-```
-
-Existing accepted visual/runtime foundations remain valid: semantic visual catalogues, build-time PNG renditions, bounded Pygame cache, scene composition runtime, shared UI, canonical six-character cast, and previously owner-reviewed Activity productization work.
-
-The current visual lesson is that mechanically complete Activities may still fail the product quality bar. Final real-world subjects must not default to crude programmer-drawn primitives merely because they are fast and deterministic.
-
----
-
-## 4. Greia Encyclopedia v0.1 — current parallel Activity workstream
-
-Activity:
-
-```text
-activities/enciclopedia_greia/
-org.greia.enciclopedia
-```
-
-Frozen runtime scope:
-
-```text
-1 Home
-6 section pages
-36 factual entries
-43 executable pages total
-```
-
-Prior owner-machine evidence established the mechanical runtime foundation: source gate at its accepted SHA, real Shell lifecycle, 43/43 reachability, 36/36 semantic ACTIVATE, 36/36 Encyclopedia-internal Back, protected Greia Home -> Shell. The headless page-transition capture race has since been repaired on `main`.
-
-Golden-master direction is owner-approved after direct source repair. Current gate remains:
-
-```text
-E1 VISUAL/ASSET ARCHITECTURE:        COMPLETE
-E2/E2R VISUAL DIRECTION:             OWNER APPROVED
-LATEST CORRECTED RUNTIME PNGS:       LOCAL STAGING / COMMITTED PACK PENDING
-LATEST EXACT-SOURCE SIMULATOR PROOF: PENDING
-E3 SECTION-PAGE REAUTHORING:         SOURCE-IMPLEMENTED / RUNTIME REVIEW PENDING
-E4 FACTUAL-ENTRY MIGRATION:          BLOCKED UNTIL E3 REVIEW
-```
-
-Animals remains the section-world reference. Five authored section masters are on `main`:
-
-```text
-space_gallery_observatory.svg
-earth_gallery_landscape.svg
-body_gallery_discovery_room.svg
-machines_gallery_workbench.svg
-history_gallery_time_trail.svg
-```
-
-Source-review authority:
-
-```text
-docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
-```
-
-The five section pages are source-wired through bounded `VisualLibrary`; missing E3 generated PNGs fall back to the prior procedural scene. Space preserves its live orbiting Solar System model. Runtime section art is either 0/5 during staged source work or 5/5 after generation; partial pack is forbidden.
-
-The source side is now hardened before runtime capture:
-
-- Home/Animals/Earth/Body/Machines/History authored target positions are machine-bound to input geometry;
-- Earth/Body/Machines/History static hit regions are bounded and non-overlapping;
-- Space has an authored Solar-System stage contract proving the moving planets/Moon stay inside the observatory stage;
-- authored section selection uses a non-occluding perimeter halo instead of a filled translucent UI-card wash;
-- Earth's duplicate floating focus dot is removed;
-- full-screen authored scenes are flattened opaque RGB and use display-optimized `Surface.convert()`; transparent canonical character sprites retain `convert_alpha()`;
-- the authoring builder rejects wrong-size or alpha-bearing/non-RGB Encyclopedia scene PNGs;
-- E3 evidence requires exactly eleven PNGs already committed in the exact captured `HEAD`, with working bytes equal to the committed Git blobs, and records both SHA-256 and Git blob IDs.
-
-The current local nine-PNG staging set is recoverability/source-review material only. It cannot satisfy the E3 gate until the complete eleven-PNG state is rebuilt, checked and committed in the canonical repository.
-
-Current Encyclopedia continuation authority:
-
-```text
-encyclopedia/HANDOVER.md
-docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md
-docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/SOURCE_REVIEW.md
-docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md
-docs/testing/2026-08-29_ENCYCLOPEDIA_E3_SECTION_RUNTIME_REVIEW.md
-```
-
-No local-agent visual-authoring task is currently authorized; the owner asked the primary agent to perform this work directly.
-
-Narration remains separate from graphics acceptance. Canonical coordination is `encyclopedia/VOICE_RECORDING_REQUESTS.md`; only owner-listened `OWNER_ACCEPTED` clips may integrate and no runtime TTS is allowed.
-
----
-
-## 5. Greia Voice Production Engine
-
-Canonical authoring-time voice subsystem:
-
-```text
-tools/greia_voice.py
-tools/greia_voice_core/
-skills/greia-voice-production/SKILL.md
-docs/architecture/GREIA_VOICE_PRODUCTION_ENGINE.md
-```
-
-Boundaries:
-
-- authoring-time only;
-- canonical characters route through the Voice Engine, not Activity-owned TTS code;
-- deterministic pedagogical/Dani system paths remain engine/provider controlled;
-- Whisper verification is advisory and cannot owner-accept audio;
-- one warm model/service path and cross-process lock prevent duplicate inference workers;
-- every new recording requires human listening acceptance.
-
-Owner workstation Apple-Silicon setup/doctor and narrow smoke generation succeeded. Shared character reaction/introduction library v0.2 has 192 owner-accepted clips; v0.1 remains retired historical evidence. Do not introduce voice models, Whisper or `tools/greia_voice.py` into child runtime.
-
----
-
-## 6. Parent / microphone / updates
-
-The external Parent client remains source-pinned/integrity-checked. Production pairing/encrypted transport remains separate from provisional development transport.
-
-Runtime microphone cleanup remains platform-owned and lightweight by default; advanced processing requires explicit parent opt-in and real availability. Build-time prerecorded voice generation and child microphone capture are separate systems.
-
-Current x86 update architecture remains provisional single-root; signed-update foundations do not authorize unsafe active-root mutation.
-
----
-
-## 7. Immediate next work
-
-### Blocking platform lane — R7
-
-Do **not** restart R7.1/R7.2/R7.3 implementation from scratch and do not claim acceptance from committed source alone.
-
-The exact next gate is combined evidence on current `main`:
-
-```text
-refresh current main
-→ run the R7.3 focused source suite from
-  docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
-→ Activity backend audit (blockers=0)
-→ Activity system-chrome ownership audit --strict (blockers=0)
-→ if that strict audit reports remaining callers: migrate exactly those callers,
-  preserve Activity behavior/performance/safe geometry, commit, restart source gate
-→ make verify
-→ if source green, deploy exact SHA to reference Acer
-→ satisfy remaining R7.2 focus/pointer/Writing/Painting/crash/cycle evidence
-→ prove trusted Home with migrated Writing + Painting
-→ deploy hostile r7_noncooperative_chrome fixture
-→ hostile fullscreen cannot cover Home
-→ Home request -> fixture ignores graceful STOP -> bounded forced return
-→ 10/10 hostile return cycles, no stale chrome/window/process
-→ crash cleanup + next launch
-→ exact workload CPU/RSS/latency/performance review
-→ ACCEPT / REJECT / INCOMPLETE honestly
-```
-
-Only after the exact R7.3 gate is accepted:
-
-1. promote the zero-debt Activity system-chrome rule into normal Activity validation;
-2. remove the temporary ignored `PygameReferenceCanvas.present(system_chrome=...)` compatibility keyword after zero callers are proven;
-3. preserve renderer-neutral protected/safe geometry;
-4. continue R7.4 physical controller/system-input ownership and ADR-0014 direct/compositor backend evidence.
-
-Do not combine Activity authority migration with unrelated gameplay/visual refactors.
-
-Separate policy item: resolve tap-to-click `AGENTS.md` versus runtime-source contradiction explicitly; do not mutate R7 evidence opportunistically.
-
-### Post-activity-pass closure — 2026-08-30 (new)
-
-**Acceptance SHA:** `e2b831da19a1ae706a8b675985f4191881a95321` (clean, origin/main same, one commit past 69cf8966 E3 evidence HEAD)
-
-**Source gates (exact SHA):**
-
-```text
-make verify: PASS — 1494 tests, OK (skipped=2), 34 Activities, project + per-Activity + shell/footprint PASS
-audit_activity_backend_independence: blockers=0
-audit_activity_system_chrome_ownership --strict: blockers=0
-focused R7.2 suite: 35/35 PASS (backend policy, shell window, device authority, hardware session, legacy-X containment, display session, supervisor display)
-focused R7.3 suite: 57/57 PASS (system chrome, Legacy-X chrome, trusted supervisor, child-shell composition, noncooperative fixture, etc.)
-final five Activity Simulator gate (external workspace): writing PASS, painting PASS, workshop_settings PASS, shape_garden PASS, orchestra_animali PASS (each 8s survival + first frame + clean stop)
-```
-
-**Activity modernization pass:** COMPLETE — strict R7.3 migration COMPLETE, architecture/performance app pass COMPLETE, no further catalogue-wide refactor scheduled, future Activity refactoring per-Activity only. See `docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md` §8 closure and `docs/plans/2026-08-29_R7_R73_ACTIVITY_QUEUE.md` (HISTORICAL).
-
-**Encyclopedia:** E1 COMPLETE, E2/E2R APPROVED, E3 COMPLETE / ACCEPTED at `03bf76acb3e4c3f6d40b346d510f55a4763efc2d` (11/11 PNGs, 11/11 Git blobs, 7/7 Simulator, 59/59 tests, verify PASS, visual ACCEPTED per `docs/reviews/visual/2026-08-29_encyclopedia_e3_sections/runtime/REVIEW.md`), E4 UNBLOCKED/NEXT but deferred per post-activity-pass protocol.
-
-**Physical R7.2/R7.3 Acer:** `INCOMPLETE` — no Acer hardware reachable in this environment (greia-dev.local NXDOMAIN; `tools/greia_remote.py --password greia status/snapshot` fail with ssh resolve 255; `tools/deploy_to_acer.py` requires pexpect + reachable host). Source evidence above is complete; physical evidence (Shell/focus/input, Writing, Painting, crash, 20-cycle durability, trusted Home, 10× hostile cycles, performance) must be executed on the reference Acer at the exact SHA e2b831da before R7.2/R7.3 can be ACCEPTED. Do not claim ACCEPTED from Simulator/shell tests alone. Next exact step is Acer deploy of e2b831da and the full physical sequences per `docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md` and `...R73...` — on ACCEPT, next blocking work is R7.4 controller/system-input + ADR-0014 direct/compositor evidence; on REJECT/INCOMPLETE, record first failing invariant and do not jump ahead.
-
-### Activity-modernization tranche (2026-08-29, plan-only)
-
-A new Activity-modernization plan was written to drive the R7.3 strict-queue Activity work, one Activity at a time, against current `main`:
+The catalogue modernization plan is:
 
 ```text
 docs/plans/2026-08-29_R7_R73_ACTIVITY_MODERNIZATION.md
 ```
 
-The plan was executed end-to-end on `2026-08-29` (28 commits):
+Its catalogue-wide pass is **COMPLETE**.
 
-- **Stage A** (source-gate repair) — fixed the
-  `test_r7_noncooperative_chrome_fixture` docstring token
-  false positive (AST-based name/attribute walk); updated three
-  contract tests that still expected the retired
-  `-m greia_launcher.presentation` substring in
-  `build/overlay/usr/local/lib/greia-os/greia-x-session` to expect
-  the R7.3 trusted fallback
-  `-m greia_launcher.trusted_presentation`; rewrote
-  `test_installation_hardware_regressions` so it asserts the
-  composed `ShellWindowController` seam (used by `main.py` and
-  `presentation.py`) instead of the removed inline X11 focus
-  repair symbols.
-
-- **Stage B** (Activity queue) — 26 first-party Activities
-  received the R7.3 Home/Back migration. Each commit also
-  preserved the renderer-neutral protected/safe viewport
-  geometry and the platform lifecycle. Three Activities were
-  given focused architecture decomposition alongside the
-  migration (memory_meraviglie, orchestra_animali,
-  memory_meraviglie) and the previously well-decomposed
-  Activities (la_discesa_della_biglia, luci_di_momo,
-  nascondino_bosco, officina_dei_suoni, pasticceria_magica,
-  piccola_serra, posta_di_leo, sillabe_magiche,
-  specchi_magici, teatrino_fiabe, treno_numeri,
-  viaggio_delfino, workshop_settings, clinica_cuccioli,
-  baia_delle_orche, bottega_delle_misure, casa_del_dieci,
-  costruiamo_ponti, cucciolo_mio, festa_delle_rime,
-  foresta_parole, labirinto_magico, shape_garden,
-  storie_della_mia_voce, volo_draghetto, writing,
-  painting) only needed the Home/Back removal because the
-  architecture was already adequate.
-
-  `enciclopedia_greia` received a mechanical R7.3 migration
-  only (Home/Back removal and dropping the
-  `system_chrome=True` argument from `canvas.present`). E3/E4
-  visual work continues to be owned by
-  `docs/plans/2026-08-28_ENCYCLOPEDIA_VISUAL_REAUTHORING.md`.
-
-- **Stage C** (final repository gate) — all three gates pass on
-  the current `main`:
-  - `audit_activity_system_chrome_ownership.py --strict` →
-    `Activity system chrome ownership audit: blockers=0`
-  - `audit_activity_backend_independence.py activities` →
-    `activities=34 blockers=0 blocker_activities=0`
-  - `make verify` → `Ran 1520 tests, OK` (exit 0)
-
-The catalogue-wide zero-debt Activity system-chrome rule has
-not yet been promoted into the normal Activity validator
-(this happens after Acer acceptance per the active R7.3 plan);
-the temporary ignored `PygameReferenceCanvas.present(system_chrome=...)`
-keyword was already removed by enciclopedia_greia this round
-(no other caller remains) and so the catalogue is naturally
-clean.
-
-### Current Encyclopedia visual lane
-
-Do **not** begin E4.
-
-Next exact visual gate:
+Historical closure at `e2b831da19a1ae706a8b675985f4191881a95321` recorded:
 
 ```text
-build corrected six golden-master PNGs + five E3 section PNGs
-→ verify all 11 current SVG/PNG renditions, including opaque RGB contract
-→ focused Encyclopedia tests including focus/evidence/runtime-surface regressions
-→ required repository verification
-→ commit/push exact complete 11-PNG runtime-art state
-→ rerun build --check + focused tests on that pushed SHA
-→ fresh exact-SHA real Greia Simulator
-→ capture/review Home + all six section pages as one family through the Git-bound E3 harness
-→ if accepted, close E3 and unblock E4
+Activity system chrome ownership audit: blockers=0
+Activity backend-independence audit: blockers=0
+make verify: PASS at that exact historical SHA
+architecture/performance Activity pass: COMPLETE
 ```
 
-`docs/testing/GREIA_ENCYCLOPEDIA_V01_LOCAL_AGENT_NEXT.md` remains HOLD unless the owner explicitly changes the direct-work instruction.
+The pass included real decomposition work and a final composition-root wave. Future Activity refactoring is evidence-driven/per-Activity only.
+
+Do **not** restart a catalogue-wide monolith/refactor sweep merely because a later platform/Simulator source file changed.
+
+Likewise, do not reintroduce Activity-owned Home rendering or hit-testing. Activities draw only their own content and retain renderer-neutral safe/protected geometry.
 
 ---
 
-## 8. Non-negotiable continuation reminders
+## 4. Current R7.3 Home issue and fix
 
-- `main` is canonical; preserve concurrent work;
-- GitHub is canonical persistence;
-- no unauthorized hosted Actions execution/inspection;
-- Activity `main.py` stays a bootstrap/composition boundary;
-- Activities are display-backend independent;
-- backend plumbing terminates in trusted Greia composition/adapters;
-- Activities never implement the real Home/Back or own physical controller/device authority;
-- Activities may reserve Greia protected geometry but must not import/call retired cooperative Home helpers or request Activity-side canvas chrome;
-- performance is a correctness contract on the Acer floor;
-- preserve Activity-side optimization strategies and allow backend-private fast paths;
-- do not add generic pixel proxying, avoidable full-frame copies, continuous chrome redraw/composition or high-rate input IPC for symmetry;
-- multiple physical inputs converge on semantic/domain actions;
-- child-facing flows remain offline-first and pre-reader friendly;
-- no runtime AI/TTS/speech recognition merely to fill content gaps;
-- all new prerecorded speech production uses Greia Voice Production Engine;
-- visual/runtime/Activity caches stay bounded with explicit invalidation;
-- performance claims require measurement on claimed execution scope;
-- **simplified graphics means low production/runtime complexity, not crude final art**;
-- R7 remains open until its own evidence/closure criteria are satisfied.
+After the Activity pass, manual Simulator inspection found that at least the Encyclopedia could run without a visibly presented Home control.
+
+That is a platform defect, not intended behavior.
+
+The Encyclopedia follows the desired architecture:
+
+```text
+activities/enciclopedia_greia/enciclopedia_app.py
+```
+
+- it presents with `pygame.display.flip()`;
+- it avoids Greia's protected region for Activity pointer handling;
+- it keeps its internal page Back control separate from system Home;
+- it does not draw/hit-test the real Home control.
+
+Commit:
+
+```text
+83738f737a41aec7c139b3a4a3363e746ba0f266
+Simulator: make trusted Home overlay deterministic and fail loud
+```
+
+changed:
+
+```text
+src/greia_simulator/python_activity.py
+```
+
+The Simulator now imports the trusted Pygame chrome renderer explicitly and no longer silently suppresses exceptions while drawing Home after Activity presentation.
+
+Architecture remains:
+
+```text
+Activity renders its own surface
+        ↓
+Greia Simulator trusted compatibility hook
+        ↓
+Home drawn last above Activity pixels
+        ↓
+Home input consumed by Greia
+        ↓
+Activity ends independently of Activity cooperation
+```
+
+This is Simulator/developer composition only. Production Legacy-X and final direct/compositor trust still require their own evidence.
+
+---
+
+## 5. Evidence correction after `83738f7`
+
+The Activity modernization evidence at `e2b831da` remains valid for what it proved: the catalogue source migration, architecture audits and source gate at that SHA.
+
+However, **Simulator Home runtime/visual evidence captured before `83738f7` is stale for the current Home presentation path** because the Simulator runtime source changed afterward.
+
+Therefore the current state is:
+
+```text
+Activity modernization: COMPLETE
+Simulator Home source fix: IMPLEMENTED
+Simulator Home visual/runtime acceptance after fix: NOT YET RERUN
+R7.3 current-source gate after fix: NOT YET RERUN
+Acer physical R7.2/R7.3 acceptance: INCOMPLETE
+```
+
+The exact correction record is:
+
+```text
+docs/reviews/2026-08-30_R7_R73_HOME_OVERLAY_POST_MODERNIZATION_CORRECTION.md
+```
+
+Do not send the owner directly into Acer acceptance using `e2b831da` evidence.
+
+---
+
+## 6. Simulator `display.update(...)` hardening item
+
+The current Simulator patch is correct for full `pygame.display.flip()` presentation, including the Encyclopedia.
+
+A general compatibility hardening item remains in the `pygame.display.update(...)` wrapper:
+
+- Greia draws trusted chrome before forwarding the Activity's update call;
+- if the Activity supplies a dirty rectangle/list that excludes the Home corner, that original dirty update may not present the newly drawn Home pixels;
+- therefore arbitrary partial-update Pygame presentation is not yet proven to preserve visible Home.
+
+Resolve this in the platform-owned Simulator compatibility adapter, not in Activities.
+
+The preferred behavior is to guarantee that the protected chrome region is included in the actual display update while preserving bounded/cheap presentation. Do not add a source-string test; protect the user-visible behavior at the narrowest meaningful layer if a regression test is warranted.
+
+This issue is **not** the explanation for the Encyclopedia report because the Encyclopedia uses `pygame.display.flip()`.
+
+---
+
+## 7. Exact next step
+
+The next bounded tranche is:
+
+1. harden the Simulator `pygame.display.update(...)` path so partial updates cannot omit trusted Home;
+2. run the focused Simulator/bootstrap tests on one exact new SHA;
+3. visually exercise through the real Greia Simulator at minimum:
+   - Encyclopedia;
+   - Writing;
+   - Painting;
+   - one animated/game Activity;
+4. verify Home is visible, Home input exits cleanly, and ordinary Activity interaction still works;
+5. rerun the exact R7.3 source protocol on the same SHA:
+
+```bash
+PYTHONPATH=src python3 -m unittest \
+  tests.test_system_chrome \
+  tests.test_system_chrome_legacy_x \
+  tests.test_trusted_chrome_supervisor \
+  tests.test_r7_child_shell_trusted_chrome_composition \
+  tests.test_r7_noncooperative_chrome_fixture \
+  tests.test_r7_shell_window_composition \
+  tests.test_display_session_legacy_x \
+  tests.test_supervisor_display_session \
+  tests.test_r7_activity_device_authority \
+  tests.test_activity_backend_policy \
+  tests.test_activity_system_chrome_audit \
+  -v
+
+PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities
+PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
+make verify
+```
+
+Required:
+
+```text
+Activity backend blockers: 0
+Activity system chrome ownership audit: blockers=0
+make verify: exit 0
+```
+
+6. only after that current-source gate is green, deploy that exact SHA to the reference Acer and execute:
+
+```text
+docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
+docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
+```
+
+7. on physical `ACCEPTED`, continue R7.4 controller/system-input ownership and the remaining ADR-0014 direct/compositor evidence; on `INCOMPLETE`, do not bypass the missing lane.
+
+---
+
+## 8. Test-suite direction
+
+The test count is not a success metric.
+
+The owner explicitly wants brittle/redundant tests pruned where they slow refactoring without protecting product behavior. Continue that cleanup opportunistically.
+
+Good candidates for removal/replacement:
+
+```text
+source-string/name presence assertions
+implementation-shape scans
+one test duplicating a stronger AST/project audit
+historical tests that freeze file/function layout rather than contract
+unrelated cross-subsystem assertions placed in the wrong test module
+```
+
+Keep meaningful tests around:
+
+```text
+security/trust and privilege boundaries
+sandbox/device authority
+lifecycle/forced return/cleanup
+storage/profile/package/progression semantics
+renderer-neutral Home geometry/action routing
+backend-independence and ownership audits
+real rollback/failure behavior
+game/domain rules and important regressions
+```
+
+Do not add a test simply because a line was edited. Add or retain a test when it protects a behavior/invariant that would otherwise plausibly regress.
+
+---
+
+## 9. R7 architecture invariants
+
+Preserve all of the following:
+
+- Activity rendering remains backend-independent; ordinary Pygame/SDL is valid.
+- Do not invent a Greia drawing API or Python framebuffer proxy.
+- `DisplaySessionCoordinator` / `DisplaySessionBackend` remains the display/session polymorphic seam.
+- `SystemChromeCoordinator` remains runtime/backend-neutral Home/Back authority.
+- installed Home remains outside Activity rendering/input authority.
+- protected system input is consumed before Activity delivery.
+- ordinary Activities do not get raw `/dev/input` or `/dev/dri` authority.
+- controller discovery/normalization remains platform-owned.
+- trusted chrome stays tiny, bounded and event/invalidation driven.
+- preserve direct high-rate SDL pointer/text paths where safe.
+- preserve Activity-side precomposed opaque backdrops, converted surfaces, bounded caches, cached transforms and dirty/invalidation rendering.
+- X11 is a migration baseline, not the target architecture.
+- final architecture remains DRM/KMS-centered direct/appliance graphics; a minimal compositor is allowed only if measured evidence justifies it.
+- exact hardware/performance claims require exact-source physical evidence.
+
+---
+
+## 10. Other current workstreams
+
+### Encyclopedia visual work
+
+E3 remains historically accepted at its recorded exact SHA/evidence lane. E4 is not the current blocking platform task and should not displace R7 verification.
+
+### Voice production
+
+New prerecorded speech remains authoring-time work through the canonical Voice Production Engine; do not grow parallel TTS/Whisper logic inside OS/Activity code.
+
+### Microphone processing
+
+The lightweight Greia-owned microphone route has separate physical acceptance evidence. Do not disturb it during R7 Home work.
+
+---
+
+## 11. Evidence vocabulary
+
+Use exact labels:
+
+```text
+SOURCE / UNIT
+SIMULATOR
+VM / IMAGE
+PHYSICAL ACER
+PHYSICAL PI
+DESKTOP VISUAL REVIEW
+SIMULATOR VISUAL REVIEW
+PHYSICAL VISUAL REVIEW
+INCOMPLETE / NOT RUN
+```
+
+Never promote one lane into another.
+
+Especially:
+
+```text
+Simulator Home visible != installed trusted sibling window cannot be covered
+source tests green != Acer graphics/input accepted
+old-SHA runtime evidence != new-SHA runtime acceptance
+```
+
+---
+
+## 12. Current disposition
+
+```text
+Public ordinary-family release: NOT READY
+Blocking phase: R7 OPEN
+Activity modernization: COMPLETE
+Post-modernization Simulator Home source fix: IMPLEMENTED
+Post-fix Simulator visual/runtime gate: PENDING
+Post-fix R7.3 source gate: PENDING
+R7.2/R7.3 Acer physical gate: INCOMPLETE
+Next implementation: harden partial display.update Home presentation
+Next execution: current-SHA Simulator + source gate, then same-SHA Acer acceptance
+```
