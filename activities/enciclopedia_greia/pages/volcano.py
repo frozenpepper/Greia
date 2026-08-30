@@ -290,10 +290,20 @@ class VolcanoPage(EncyclopediaPage):
     def _draw_cross_section(self, surface: pygame.Surface) -> None:
         cx = 505
         crater_y = 205
-        # Mountain silhouette — tactile storybook, not CAD
-        pygame.draw.polygon(surface, (105, 91, 79), [(355, 345), (470, 185), (540, 185), (655, 345)])
+        # Mountain silhouette — tactile storybook with soft shading and snow hint
+        pygame.draw.polygon(surface, (92, 78, 68), [(355, 345), (470, 185), (540, 185), (655, 345)])
+        # Light side
         pygame.draw.polygon(surface, (137, 105, 83), [(445, 225), (470, 185), (540, 185), (565, 225)])
+        # Shadow side
+        pygame.draw.polygon(surface, (115, 88, 70), [(515, 225), (540, 185), (655, 345), (560, 345)])
+        # Crater rim with highlight
         pygame.draw.ellipse(surface, (78, 68, 61), (470, 174, 70, 24))
+        pygame.draw.ellipse(surface, (105, 90, 78), (472, 176, 66, 20), 2)
+        # Snow cap
+        snow = pygame.Surface((70, 24), pygame.SRCALPHA)
+        pygame.draw.ellipse(snow, (250, 250, 248, 210), snow.get_rect())
+        pygame.draw.ellipse(snow, (220, 220, 218, 140), (4, 4, 62, 16), 2)
+        surface.blit(snow, (470, 174))
         # Magma chamber — glows with pressure + breathe
         chamber = pygame.Rect(435, 430, 140, 74)
         pygame.draw.ellipse(surface, (221, 78, 48), chamber)
