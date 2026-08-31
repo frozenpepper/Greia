@@ -203,17 +203,27 @@ class MarsPage(EncyclopediaPage):
 
     def _draw_mars(self, surface: pygame.Surface) -> None:
         center = (505, 326)
-        radius = 92
-        # Soft shadow for tactile depth
-        shadow = pygame.Surface((radius * 2 + 16, 22), pygame.SRCALPHA)
-        pygame.draw.ellipse(shadow, (40, 28, 20, 32), shadow.get_rect())
-        surface.blit(shadow, (center[0] - radius - 8, center[1] + radius + 6))
-        base = (185, 93, 64) if self._rust_age <= 0 else (211, 104, 65)
+        radius = 94
+        # Soft drop shadow + rim light for depth
+        shadow = pygame.Surface((radius * 2 + 18, 24), pygame.SRCALPHA)
+        pygame.draw.ellipse(shadow, (40, 28, 20, 34), shadow.get_rect())
+        surface.blit(shadow, (center[0] - radius - 9, center[1] + radius + 7))
+        base = (184, 92, 63) if self._rust_age <= 0 else (210, 103, 64)
+        pygame.draw.circle(surface, (58, 42, 38), center, radius + 2)
         pygame.draw.circle(surface, base, center, radius)
-        pygame.draw.circle(surface, (255, 245, 220, 16), center, radius - 8, 2)
-        for dx, dy, rr in ((-38, -28, 16), (27, -42, 11), (43, 18, 18), (-18, 44, 13)):
-            pygame.draw.circle(surface, (133, 72, 57), (center[0] + dx, center[1] + dy), rr)
-            pygame.draw.circle(surface, (215, 137, 92), (center[0] + dx - 3, center[1] + dy - 3), max(3, rr - 5), 2)
+        # Subtle terminator highlight (not during rust pulse)
+        if self._rust_age == 0:
+            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.ellipse(hl, (255, 225, 190, 22), (radius // 2, 8, radius, radius // 2))
+            surface.blit(hl, (center[0] - radius, center[1] - radius))
+        pygame.draw.circle(surface, (255, 245, 220, 14), center, radius - 8, 2)
+        # Craters — more, with inner highlight
+        for dx, dy, rr, depth in ((-38, -28, 16, 0.52), (27, -42, 11, 0.48), (43, 18, 18, 0.55), (-18, 44, 13, 0.50), (12, 22, 9, 0.44), (-42, 12, 12, 0.46)):
+            cx, cy = center[0] + dx, center[1] + dy
+            pygame.draw.circle(surface, (133, 72, 57), (cx, cy), rr)
+            pygame.draw.circle(surface, (175, 105, 80), (cx - 2, cy - 2), max(4, int(rr * 0.62)))
+            pygame.draw.circle(surface, (215, 137, 92), (cx - 3, cy - 3), max(3, rr - 6), 2)
+            pygame.draw.circle(surface, (90, 52, 40), (cx, cy), rr, 1)
         pygame.draw.arc(surface, (231, 211, 184), (450, 238, 110, 42), 0.1, 3.0, 5)
         pygame.draw.arc(surface, (231, 211, 184), (459, 371, 91, 33), 3.2, 6.0, 4)
 
