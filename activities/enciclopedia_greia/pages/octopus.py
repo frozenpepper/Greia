@@ -257,26 +257,40 @@ class OctopusPage(EncyclopediaPage):
         if self._sucker_age > 0:
             for arm in arm_paths[:6]:
                 for x, y in arm[1:]:
-                    pygame.draw.circle(surface, (248, 224, 201), (x, y + 7), 5, 2)
+                    # Suckers with highlight
+                    pygame.draw.circle(surface, (248, 224, 201), (x, y + 7), 6, 2)
+                    pygame.draw.circle(surface, (255, 245, 230), (x - 1, y + 6), 2)
                     pygame.draw.circle(surface, (240, 210, 185), (x, y + 7), 2)
+            # Arm shimmer when suckers active
+            shimmer = pygame.Surface((1024, 600), pygame.SRCALPHA)
+            for path in arm_paths[:3]:
+                for px, py in path[1:]:
+                    pygame.draw.circle(shimmer, (255, 255, 255, 22), (px, py), 14)
+            surface.blit(shimmer, (0, 0))
         if self._heart_age > 0:
-            # Three hearts plus subtle glow
+            # Three hearts plus pulsing glow
+            pulse = 0.5 + 0.5 * math.sin(self._time * 6.0)
             for dx, dy in ((-26, 0), (0, -16), (26, 0)):
-                self._draw_heart(surface, (center[0] + dx, center[1] + dy), 10)
-            glow = pygame.Surface((80, 40), pygame.SRCALPHA)
-            pygame.draw.ellipse(glow, (220, 100, 120, 28), glow.get_rect())
-            surface.blit(glow, (center[0] - 40, center[1] - 8))
+                self._draw_heart(surface, (center[0] + dx, center[1] + dy), 10 + int(pulse * 2))
+            glow = pygame.Surface((90, 48), pygame.SRCALPHA)
+            pygame.draw.ellipse(glow, (220, 100, 120, int(28 + pulse * 18)), glow.get_rect())
+            surface.blit(glow, (center[0] - 45, center[1] - 12))
         if self._ink_age > 0:
             progress = 1.0 - self._ink_age / 2.6
-            for i in range(18):
-                angle = i * 0.72 + self._time * 0.35
-                radius = 12 + int(progress * (35 + (i % 5) * 8))
+            # Ink cloud with soft outer haze and inner core
+            for i in range(22):
+                angle = i * 0.62 + self._time * 0.32
+                radius = 14 + int(progress * (38 + (i % 5) * 9))
                 x = 650 + int(math.cos(angle) * radius)
-                y = 330 + int(math.sin(angle) * radius * 0.65)
-                size = 8 + (i % 4) * 3
-                # Ink with soft edge and highlight
+                y = 330 + int(math.sin(angle) * radius * 0.62)
+                size = 9 + (i % 4) * 3
+                # Outer haze
+                haze = pygame.Surface((size * 2 + 8, size * 2 + 8), pygame.SRCALPHA)
+                pygame.draw.circle(haze, (35, 38, 55, 90), (size + 4, size + 4), size + 2)
+                surface.blit(haze, (x - size - 4, y - size - 4))
                 pygame.draw.circle(surface, (35, 38, 55), (x, y), size)
                 pygame.draw.circle(surface, (65, 68, 85), (x - 2, y - 2), max(1, size // 3))
+                pygame.draw.circle(surface, (85, 88, 105, 70), (x - 3, y - 3), max(1, size // 4))
 
     def _draw_discovery_hotspots(self, surface: pygame.Surface) -> None:
         for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
