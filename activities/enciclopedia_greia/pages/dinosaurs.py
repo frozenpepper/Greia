@@ -178,28 +178,51 @@ class DinosaursPage(EncyclopediaPage):
         draw_presenter(surface, self.context.visuals, "leo", position=(925, 565), height=142, variant="default")
 
     def _draw_scene(self, surface: pygame.Surface) -> None:
+        # Ground with subtle texture
         pygame.draw.rect(surface, (177, 194, 126), (330, 365, 350, 92), border_radius=24)
+        for gx in range(340, 670, 48):
+            pygame.draw.line(surface, (190, 208, 140), (gx, 395), (gx + 8, 410), 2)
         center = (505, 327)
         colors = ((111, 151, 92), (173, 128, 86), (104, 145, 111))
         color = colors[self._silhouette]
+        shadow_col = (90, 120, 75) if self._silhouette == 0 else (140, 105, 70) if self._silhouette == 1 else (80, 115, 85)
+        # Soft ground shadow
+        pygame.draw.ellipse(surface, (0, 0, 0, 22), (center[0] - 80, 398, 160, 16))
         if self._silhouette == 0:  # tyrannosaur-like biped
+            pygame.draw.ellipse(surface, shadow_col, (446, 290, 118, 58))
             pygame.draw.ellipse(surface, color, (448, 288, 118, 58))
+            pygame.draw.circle(surface, shadow_col, (570, 287), 30)
             pygame.draw.circle(surface, color, (570, 285), 30)
+            pygame.draw.circle(surface, (255, 255, 255, 18), (562, 272), 14)
+            pygame.draw.line(surface, shadow_col, (462, 324), (407, 300), 20)
             pygame.draw.line(surface, color, (460, 322), (405, 298), 20)
+            pygame.draw.line(surface, shadow_col, (482, 338), (467, 394), 15)
             pygame.draw.line(surface, color, (480, 336), (465, 392), 15)
+            pygame.draw.line(surface, shadow_col, (527, 338), (542, 394), 15)
             pygame.draw.line(surface, color, (525, 336), (540, 392), 15)
         elif self._silhouette == 1:  # ceratopsian-like quadruped
+            pygame.draw.ellipse(surface, shadow_col, (432, 302, 145, 62))
             pygame.draw.ellipse(surface, color, (430, 300, 145, 62))
+            pygame.draw.circle(surface, shadow_col, (586, 312), 34)
             pygame.draw.circle(surface, color, (586, 310), 34)
+            pygame.draw.circle(surface, (255, 255, 255, 16), (578, 296, 16))
+            pygame.draw.polygon(surface, shadow_col, [(573, 287), (607, 267), (603, 300)])
             pygame.draw.polygon(surface, color, [(573, 285), (607, 265), (603, 298)])
             for x in (455, 492, 535, 565):
+                pygame.draw.line(surface, shadow_col, (x, 344), (x - 4, 392), 13)
                 pygame.draw.line(surface, color, (x, 342), (x - 4, 390), 13)
         else:  # sauropod-like long neck
+            pygame.draw.ellipse(surface, shadow_col, (427, 312, 140, 55))
             pygame.draw.ellipse(surface, color, (425, 310, 140, 55))
+            pygame.draw.line(surface, shadow_col, (547, 324), (597, 247), 25)
             pygame.draw.line(surface, color, (545, 322), (595, 245), 25)
+            pygame.draw.circle(surface, shadow_col, (602, 238), 16)
             pygame.draw.circle(surface, color, (602, 236), 16)
+            pygame.draw.circle(surface, (255, 255, 255, 14), (596, 228, 8))
+            pygame.draw.line(surface, shadow_col, (440, 327), (384, 294), 20)
             pygame.draw.line(surface, color, (438, 325), (382, 292), 20)
             for x in (450, 485, 530, 555):
+                pygame.draw.line(surface, shadow_col, (x, 347), (x - 3, 395), 13)
                 pygame.draw.line(surface, color, (x, 345), (x - 3, 393), 13)
 
         if self._time_age > 0.0:
