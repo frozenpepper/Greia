@@ -6,7 +6,7 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 # Greia OS Work — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-08-29
+**Reviewed:** 2026-08-31
 
 Keep this file small. It tells an agent **what to read for the task**; it is not a second architecture manual.
 
@@ -116,6 +116,7 @@ Read:
 docs/adr/0019-platform-owned-activity-system-navigation.md
 docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 docs/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
+docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 src/greia_launcher/system_chrome.py
 src/greia_launcher/trusted_chrome_supervisor.py
@@ -156,6 +157,7 @@ docs/reviews/2026-08-29_R7_ACTIVITY_BACKEND_INDEPENDENCE_AND_DISPLAY_SESSION_REV
 docs/reviews/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_INVENTORY.md
 docs/reviews/2026-08-29_R7_R73_TRUSTED_CHROME_SOURCE_TRANCHE.md
 docs/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
+docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
 docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
@@ -222,9 +224,15 @@ Read:
 ```text
 docs/adr/0029-real-runtime-activity-simulator.md
 docs/development/GREIA_ACTIVITY_SIMULATOR.md
+docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
+src/greia_simulator/system_chrome.py
 ```
 
 Simulator evidence does not prove physical hardware/session/backend behavior.
+
+For protected Activity Home in the remote/headless Simulator, preserve the platform lifecycle seam instead of relying on Activity cooperation: `GreiaSimulatorChildShell` composes `SystemChromeCoordinator` with `SimulatorSystemChromeBackend`; the remote bridge diverts pointer input in the protected region before the ordinary Activity event queue; `TrustedChromeActivitySupervisor` then owns graceful/forced return. The hostile fixture deliberately never calls `pygame.event.get()` and must still return through Home. Do not “fix” that gate by extending its timeout, teaching the fixture to cooperate, or making remote Home depend on Activity-side event polling again.
+
+The Greia-owned Python display bootstrap may continue to draw the synthetic Home overlay after Activity presentation calls, but remote protected input/lifecycle authority belongs to the host/coordinator path. Keep ordinary Activity pointer/text traffic on the existing direct bounded route; do not proxy all high-rate input through a generic platform queue.
 
 ### Parent management, Parent API/client or pairing/device management
 
