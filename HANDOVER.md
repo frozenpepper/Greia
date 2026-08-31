@@ -3,10 +3,10 @@
 **Updated:** 2026-08-31  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Primary blocking phase:** **R7 — direct graphics/session/input architecture**  
-**Current subphase:** **R7.2/R7.3 exact-current source re-verification after Encyclopedia performance correction**  
-**Latest runtime source change requiring execution:** `6024240034a20bb8724eaaf548d4ac14061bef43`  
+**Current subphase:** **R7.2/R7.3 exact-current source re-verification after two Encyclopedia hot-path corrections**  
+**Latest runtime source change requiring execution:** `0828cd35b957203775759f442069b9d51e0caf5a`  
 **Activity modernization:** **COMPLETE**  
-**R7.2/R7.3 current-source acceptance:** **REJECTED at `9b6b055e`; corrective source committed, retest pending**  
+**R7.2/R7.3 current-source acceptance:** **REJECTED twice; second corrective source committed, retest pending**  
 **R7.2/R7.3 Acer physical acceptance:** **INCOMPLETE**  
 **Ordinary-family public release:** **NOT READY**  
 **Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`
@@ -41,6 +41,7 @@ docs/engineering/ENGINEERING_FOUNDATIONS.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 docs/reviews/2026-08-30_R7_R73_HOME_OVERLAY_POST_MODERNIZATION_CORRECTION.md
 docs/reviews/2026-08-31_R7_CURRENT_HEAD_SOURCE_GATE_REJECTION_AND_EARTH_CACHE_FIX.md
+docs/reviews/2026-08-31_R7_SECOND_SOURCE_REJECTION_MAGNET_TYPOGRAPHY_FIX.md
 docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
 ```
@@ -70,11 +71,9 @@ The intended ordinary-family release is not certified by source tests alone. R7 
 
 ## 3. Activity modernization remains closed
 
-The catalogue-wide R7.3 modernization pass is complete. Historical accepted source evidence remains recorded at its exact historical SHAs.
+The catalogue-wide R7.3 modernization pass is complete. Do **not** reopen another catalogue-wide refactor sweep because of these Encyclopedia failures.
 
-Do **not** reopen another catalogue-wide refactor sweep because of the current failure.
-
-The 2026-08-31 rejection is one evidence-driven Encyclopedia correction, not evidence that all Activities need another modernization round.
+The two current failures are evidence-driven corrections inside one Activity visual/runtime lane, not evidence that the Activity catalogue needs another modernization pass.
 
 Continue to preserve:
 
@@ -86,7 +85,7 @@ no Activity-owned Home drawing or Home hit-testing
 
 ---
 
-## 4. Trusted Home Simulator fixes remain implemented
+## 4. Trusted Home Simulator source fixes remain implemented
 
 The platform presentation corrections remain:
 
@@ -98,53 +97,58 @@ Simulator: make trusted Home overlay deterministic and fail loud
 Simulator: preserve trusted Home on partial display updates
 ```
 
-They fixed the Simulator compatibility presentation path rather than adding Activity-side Home behavior.
+They fix the Simulator compatibility presentation path rather than adding Activity-side Home behavior.
 
-Current Simulator Home evidence still must be collected on the new exact post-fix source state before any current-head acceptance claim.
+Current Simulator Home evidence still must be collected on the exact source state that finally passes the aggregate source gate.
 
 ---
 
-## 5. 2026-08-31 exact-current rejection
+## 5. First current-head rejection — Earth page hot-path decode/scale
 
-The local acceptance operator froze:
+The first local acceptance operator froze:
 
 ```text
 9b6b055e48681714672869f8800a5f7a7c407165
 ```
 
-The run was disciplined and stopped at the first aggregate source failure.
-
-Results at that exact SHA:
+Results:
 
 ```text
 working tree before/after: clean
-focused R7/Simulator/Encyclopedia gate: 136 PASS
+focused discovery gate: 136 PASS
 Activity backend audit: PASS, blockers=0
 Activity system-chrome ownership audit: PASS, blockers=0
 make verify: FAIL
 reported test count: 1507
 failures: 2
-Simulator matrix: not run after source failure
+Simulator: not run after source failure
 Acer: unreachable / not run
 verdict: REJECTED
 ```
 
-Both failures were the same product issue:
+Both failures traced to:
 
 ```text
 activities/enciclopedia_greia/pages/planet_earth.py
 ```
 
-had reintroduced direct:
+which directly used:
 
 ```text
 pygame.image.load(...)
 pygame.transform.smoothscale(...)
 ```
 
-inside the page draw path.
+inside a frame-draw fallback.
 
-This violated the established Acer-floor rule that page hot paths must not decode or scale authored assets.
+Correction:
+
+```text
+6024240034a20bb8724eaaf548d4ac14061bef43
+Encyclopedia: keep Earth asset decode behind VisualLibrary
+```
+
+`VisualLibrary.planet()` remains the sole authored-Earth package lookup/decode/scale/cache owner. If it cannot provide the sprite, the page uses its existing procedural Earth renderer.
 
 Full record:
 
@@ -154,66 +158,124 @@ docs/reviews/2026-08-31_R7_CURRENT_HEAD_SOURCE_GATE_REJECTION_AND_EARTH_CACHE_FI
 
 ---
 
-## 6. Corrective source change
+## 6. Second current-head rejection — Magnet page direct SysFont
 
-Committed:
+The next disciplined gate froze:
 
 ```text
-6024240034a20bb8724eaaf548d4ac14061bef43
-Encyclopedia: keep Earth asset decode behind VisualLibrary
+650ce2ebeb9eaee82efb292745568afabde7cce9
 ```
 
-Root cause:
+The Earth correction was confirmed:
 
-- `VisualLibrary.planet()` already owned semantic asset lookup, PNG decode, conversion, size-specific scaling and the bounded cache;
-- `planet_earth.py` called that owner but then added a second direct filesystem/decode/scale fallback when the owner returned `None`;
-- that fallback bypassed the cache and made expensive work per-frame-capable.
+```text
+planet_earth direct image decode/scale scan: empty
+previous Encyclopedia visual-foundation decode/scale test: PASS
+```
 
-Fix:
+The same aggregate contract then exposed the next previously masked violation:
 
-- remove the direct page-local file/decode/scale path;
-- ask the injected visual provider for the prepared planet surface only;
-- if no prepared sprite is available, retain the existing procedural Earth renderer.
+```text
+activities/enciclopedia_greia/pages/magnet.py
+MagnetPage._draw_bar_magnet()
+```
 
-No test was weakened or added merely because a line changed.
+contained:
 
-The two lexical hot-path tests are retained for now because this run demonstrated that they caught a real performance-boundary regression. They can be replaced later only by an equally strong or stronger, less-brittle contract.
+```python
+pygame.font.SysFont(None, 22)
+```
 
-No Home/system-chrome authority, display backend, sandbox grant, DRM/input authority or Activity lifecycle contract changed in this fix.
+inside a helper called from the normal page draw path.
+
+Second-run results:
+
+```text
+working tree before/after: clean
+focused discovery gate: 136 PASS
+Activity backend audit: PASS, blockers=0
+Activity system-chrome ownership audit: PASS, blockers=0
+make verify: FAIL
+reported test count: 1507
+failures: 1
+Simulator: not run after source failure
+Acer: unreachable / not run
+verdict: REJECTED
+```
+
+Correction:
+
+```text
+0828cd35b957203775759f442069b9d51e0caf5a
+Encyclopedia: route magnet labels through Greia typography
+```
+
+`_draw_bar_magnet()` is now an instance helper and renders its constant `N` / `S` labels through:
+
+```text
+self.context.typography.render(...)
+FontRole.CONTROL
+size 22
+```
+
+The real Encyclopedia context uses `CachedEncyclopediaTypography`, which already owns Greia font-family/role selection and a hard-bounded `MAX_TEXT_SURFACES = 160` rendered-line cache. No second page cache or typography subsystem was introduced.
+
+Full record:
+
+```text
+docs/reviews/2026-08-31_R7_SECOND_SOURCE_REJECTION_MAGNET_TYPOGRAPHY_FIX.md
+```
 
 ---
 
-## 7. Post-fix evidence boundary
+## 7. Test disposition
 
-Current honest state:
+Do **not** weaken the existing Encyclopedia hot-path test in response to either failure.
+
+Although its current implementation includes lexical forbidden-token checks, these two sequential runs have demonstrated real product value:
+
+```text
+masked violation 1: page-level image decode + smoothscale
+masked violation 2: page-level font construction
+```
+
+Both violate established low-resource and visual-service ownership rules on the Acer floor.
+
+The right correction is to restore the existing service/cache boundaries. A future test-quality pass may replace the lexical mechanism with an equally strong or stronger architectural/behavioral contract if that is less brittle.
+
+No new test was added merely because either line changed.
+
+---
+
+## 8. Current evidence boundary
+
+Honest current state after the second source correction:
 
 ```text
 Activity modernization: COMPLETE
 trusted Home Simulator source fixes: IMPLEMENTED
-9b6b055e focused gate: PASS
-9b6b055e backend audit: blockers=0
-9b6b055e chrome audit: blockers=0
-9b6b055e aggregate gate: REJECTED
-Earth VisualLibrary ownership fix: IMPLEMENTED at 6024240
-post-6024240 focused source gate: NOT RUN
-post-6024240 audits: NOT RUN
-post-6024240 make verify: NOT RUN
-post-6024240 Simulator Home matrix: NOT RUN
+9b6b055e source gate: REJECTED — Earth decode/scale
+6024240 Earth correction: IMPLEMENTED
+650ce2eb source gate: REJECTED — Earth confirmed clean; Magnet SysFont exposed
+0828cd35 Magnet typography correction: IMPLEMENTED
+post-0828cd35 focused gate: NOT RUN
+post-0828cd35 backend audit: NOT RUN
+post-0828cd35 chrome audit: NOT RUN
+post-0828cd35 make verify: NOT RUN
+post-0828cd35 Simulator Home matrix: NOT RUN
 R7.2/R7.3 Acer physical gate: INCOMPLETE
 ordinary-family public release: NOT READY
 ```
 
-Do not infer PASS from the narrow diff.
+Do not infer PASS from source inspection.
 
 ---
 
-## 8. Focused-test invocation correction
+## 9. Focused-test invocation correction
 
-The 2026-08-31 local machine has a regular site-packages package named `tests` that shadows this repository's namespace-style `tests/` directory when commands import `tests.test_*` directly.
+The local execution machine has a regular site-packages package named `tests` that shadows this repository's namespace-style `tests/` directory when using dotted imports such as `tests.test_system_chrome`.
 
-Therefore future focused local gates should use `unittest discover` patterns rather than importing `tests.<module>` by dotted name.
-
-Example:
+Use `unittest discover` patterns instead:
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover \
@@ -222,13 +284,13 @@ PYTHONPATH=src python3 -m unittest discover \
   -v
 ```
 
-The full `make verify` already uses discovery and was not affected by this environment issue.
+The aggregate `make verify` already uses discovery and is unaffected.
 
-Do not change the repository test package merely to work around one machine unless a separate engineering review justifies that change.
+Do not change repository test packaging merely to work around this machine unless a separate engineering review justifies it.
 
 ---
 
-## 9. Next exact step — re-run the source gate on current `main`
+## 10. Next exact step — repeat the unchanged exact-current source gate
 
 On the local execution machine:
 
@@ -239,11 +301,9 @@ git status --short
 git rev-parse HEAD
 ```
 
-Require a clean worktree and freeze the exact resulting SHA. Do not hard-reset to `6024240` if legitimate docs-only or concurrent reviewed commits have advanced `main`.
+Require a clean worktree and freeze the exact resulting current SHA. Do not hard-reset to `0828cd35` if legitimate reviewed docs or concurrent work has advanced `main`.
 
-### A. Focused tests
-
-Run the same intended focused modules using discovery patterns. At minimum cover:
+Run the same 17 focused files using one `unittest discover -s tests -p '<filename>' -v` invocation per file:
 
 ```text
 test_activity_backend_policy.py
@@ -265,35 +325,30 @@ test_encyclopedia_focus_treatment.py
 test_encyclopedia_authoring_tools.py
 ```
 
-A simple shell loop invoking `python3 -m unittest discover -s tests -p '<filename>' -v` once per file is acceptable and avoids the site-packages shadowing seen on the rejected run.
-
-### B. Architecture audits
+Then:
 
 ```bash
 PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities
 PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
+make verify
 ```
 
 Required:
 
 ```text
+focused gate: PASS
 backend blockers=0
 chrome blockers=0
+make verify exit 0
 ```
 
-### C. Aggregate gate
+Stop at the first genuine failure and preserve it. Do not fix-as-you-go during the acceptance run.
 
-```bash
-make verify
-```
-
-Require exit 0. Record the actual current test count rather than assuming 1507.
-
-Stop at the first genuine failure and preserve it.
+The operator's all-pages scan at `650ce2eb` identified `magnet.py` as the remaining direct `pygame.font.SysFont` / `pygame.font.Font` page occurrence after the Earth correction. That scan is useful but does not replace the third aggregate execution.
 
 ---
 
-## 10. Only after a green current source gate
+## 11. Only after a green current source gate
 
 Run the real-Shell Simulator matrix on the same exact SHA:
 
@@ -305,7 +360,7 @@ one continuously animated Activity
 R7 non-cooperative hostile fixture
 ```
 
-For each require:
+For every case require:
 
 ```text
 first usable frame
@@ -316,7 +371,7 @@ no Activity-owned duplicate Home
 clean teardown
 ```
 
-For Encyclopedia additionally scan output for:
+For Encyclopedia also scan output for:
 
 ```text
 libpng error
@@ -326,15 +381,15 @@ platform_failure
 ready timeout
 ```
 
-and inspect the current screenshots. A mechanical survival result is not permission to ignore an asset-decode warning.
+and inspect the screenshots. A mechanical survival result does not override a real asset/runtime warning.
 
-Simulator acceptance proves developer/runtime semantics only; it does not prove physical/backend isolation.
+Simulator evidence proves developer/runtime semantics only; it does not prove physical/backend isolation.
 
 ---
 
-## 11. Physical Acer gate
+## 12. Physical Acer gate
 
-The reference Acer was unreachable during the 9b6b055e attempt, so no current physical PASS exists.
+The reference Acer was unreachable during both rejected attempts, so no current physical PASS exists.
 
 Only after current source + Simulator gates are green, deploy that same accepted source state to the reference Acer and execute:
 
@@ -363,38 +418,17 @@ If the Acer is unreachable or a required physical interaction cannot honestly be
 
 ---
 
-## 12. Test-suite policy
+## 13. Test-suite policy
 
 The test count is not a product goal.
 
-Continue pruning tests that merely freeze implementation shape or duplicate stronger audits, especially:
-
-```text
-source-string/name-presence assertions with no real invariant
-historical function/file-shape scans
-duplicate checks already covered by AST/project audits
-unrelated cross-subsystem assertions in the wrong test module
-```
-
-Keep tests/contracts protecting real behavior and boundaries:
-
-```text
-security/trust/privilege boundaries
-sandbox/device authority
-lifecycle/forced return/cleanup
-storage/profile/package/progression semantics
-renderer-neutral Home geometry/action routing
-backend independence and Home-ownership audits
-low-resource hot-path constraints with proven product impact
-rollback/failure behavior
-game/domain rules and important regressions
-```
+Prune tests that merely freeze implementation shape or duplicate stronger audits, especially unrelated source-string/name-presence checks. Keep tests/contracts that protect real behavior and boundaries, including low-resource hot-path constraints with demonstrated product impact.
 
 Do not add a test simply because a line changed.
 
 ---
 
-## 13. R7 invariants
+## 14. R7 invariants
 
 Preserve:
 
@@ -408,24 +442,27 @@ Preserve:
 - controller discovery/normalization remains platform-owned.
 - trusted chrome stays tiny, bounded and event/invalidation driven.
 - preserve direct high-rate SDL pointer/text paths where safe.
-- preserve bounded visual caches and keep image decode/scale outside page/frame hot paths.
+- preserve bounded visual/text caches and keep decode/scale/font construction outside page/frame hot paths.
 - X11 is migration plumbing, not the target architecture.
 - final graphics direction remains DRM/KMS-centered; a minimal compositor requires measured justification.
 - Simulator evidence is not physical/backend evidence.
 
 ---
 
-## 14. Current disposition
+## 15. Current disposition
 
 ```text
 Ordinary-family public release: NOT READY
 Blocking phase: R7 OPEN
 Activity modernization: COMPLETE
-Rejected tested source: 9b6b055e48681714672869f8800a5f7a7c407165
-Rejection reason: Encyclopedia Earth page bypassed VisualLibrary cache with direct draw-path decode/scale
-Corrective runtime commit: 6024240034a20bb8724eaaf548d4ac14061bef43
-Post-fix source verification: PENDING
-Post-fix Simulator verification: PENDING
+First rejected source: 9b6b055e48681714672869f8800a5f7a7c407165
+First reason: Encyclopedia Earth draw-path image decode/scale
+First correction: 6024240034a20bb8724eaaf548d4ac14061bef43
+Second rejected source: 650ce2ebeb9eaee82efb292745568afabde7cce9
+Second reason: Encyclopedia Magnet draw-path pygame.font.SysFont
+Second correction: 0828cd35b957203775759f442069b9d51e0caf5a
+Post-second-fix source verification: PENDING
+Post-second-fix Simulator verification: PENDING
 R7.2/R7.3 Acer acceptance: INCOMPLETE
 Next action: current-SHA focused discovery gate + audits + make verify; if green, same-SHA Simulator; then same-SHA Acer when reachable
 ```
