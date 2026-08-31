@@ -11,14 +11,19 @@ from typing import Any
 from greia_launcher.child_shell import GreiaChildShell
 from greia_launcher.lifecycle import ActivityExitReason
 from greia_launcher.runtime_adapter import PythonRuntimePolicy
+from greia_launcher.system_chrome import SystemChromeCoordinator
 
 from .device import (
     DEFAULT_CAPABILITIES,
     SimulatedDeviceProfile,
     parse_viewport,
 )
-from .remote_bridge import DEFAULT_REMOTE_PORT, SimulatorRemoteBridge
+from .remote_bridge import DEFAULT_REMOTE_PORT
 from .runtime import SimulatorPythonRuntimeAdapter
+from .system_chrome import (
+    SimulatorSystemChromeBackend,
+    SimulatorSystemChromeRemoteBridge,
+)
 
 
 class _SimulatorShutdownRequested(BaseException):
@@ -37,7 +42,7 @@ class GreiaSimulatorChildShell(GreiaChildShell):
     ):
         self.simulated_device = device
         self._remote_bridge = (
-            SimulatorRemoteBridge(port=remote_port or DEFAULT_REMOTE_PORT)
+            SimulatorSystemChromeRemoteBridge(port=remote_port or DEFAULT_REMOTE_PORT)
             if enable_remote
             else None
         )
@@ -61,6 +66,18 @@ class GreiaSimulatorChildShell(GreiaChildShell):
                 policy=PythonRuntimePolicy.load(self.paths.runtime_catalogue),
                 remote_port=remote_port,
             ),
+        )
+
+    def _system_chrome_coordinator(self) -> SystemChromeCoordinator | None:
+        bridge = self._remote_bridge
+        if bridge is None:
+            return None
+        return SystemChromeCoordinator(
+            SimulatorSystemChromeBackend(
+                bridge,
+                width=self.simulated_device.width,
+                height=self.simulated_device.height,
+            )
         )
 
     def _initial_display_request(self, pygame: Any) -> tuple[tuple[int, int], int]:
