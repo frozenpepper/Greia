@@ -17,9 +17,14 @@ USER = "greia"
 PASSWORD = "greia"
 KNOWN_HOSTS = Path.home() / ".greia" / "known_hosts"
 REMOTE_TAR = "/var/lib/greia/greia-deploy.tar.gz"
+DEFAULT_SSH_TIMEOUT_SECONDS = 60
+DEPLOY_EXTRACT_TIMEOUT_SECONDS = 180
 
 
-def run_ssh_cmd(cmd_str: str, timeout: int = 60) -> tuple[int, str]:
+def run_ssh_cmd(
+    cmd_str: str,
+    timeout: int = DEFAULT_SSH_TIMEOUT_SECONDS,
+) -> tuple[int, str]:
     args = [
         "-o", "StrictHostKeyChecking=accept-new",
         "-o", f"UserKnownHostsFile={KNOWN_HOSTS}",
@@ -107,7 +112,15 @@ def main() -> int:
         f"&& echo greia | sudo -S find /opt/greia-os -name '._*' -delete "
         f"&& echo greia | sudo -S chown -R greiakid:greiakid /opt/greia-os/"
     )
-    status, out = run_ssh_cmd(extract_cmd)
+    # The reference Atom N270 has measured this extraction/chown operation
+    # beyond 60 seconds for a ~110 MB developer bundle. Keep ordinary SSH
+    # probes bounded at 60s, but give this known slow hardware operation the
+    # measured 180s acceptance window so operators never patch the tool after
+    # freezing an evidence SHA.
+    status, out = run_ssh_cmd(
+        extract_cmd,
+        timeout=DEPLOY_EXTRACT_TIMEOUT_SECONDS,
+    )
     if status != 0:
         print(f"   ERROR: Extraction failed with status {status}: {out}")
         return 1
