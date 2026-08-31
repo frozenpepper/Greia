@@ -235,18 +235,20 @@ class RainbowPage(EncyclopediaPage):
             )
 
         if self._aligned:
+            # Sun rays to viewer with glow
             for y in range(435, 285, -22):
                 pygame.draw.line(surface, (246, 203, 73), (505, y), (505, y - 12), 3)
+                pygame.draw.circle(surface, (255, 235, 140, 60), (505, y - 6), 4)
+            # Rainbow with soft outer glow and inner highlight
             for index, color in enumerate(_COLORS):
                 inset = index * 7
-                pygame.draw.arc(
-                    surface,
-                    color,
-                    (350 + inset, 190 + inset, 310 - inset * 2, 245 - inset * 2),
-                    0,
-                    math.pi,
-                    6,
-                )
+                # Outer glow
+                glow = pygame.Surface((310, 245), pygame.SRCALPHA)
+                pygame.draw.arc(glow, (color[0], color[1], color[2], 28), (inset, inset, 310 - inset * 2, 245 - inset * 2), 0, math.pi, 10)
+                surface.blit(glow, (350, 190))
+                pygame.draw.arc(surface, color, (350 + inset, 190 + inset, 310 - inset * 2, 245 - inset * 2), 0, math.pi, 6)
+                # Inner highlight
+                pygame.draw.arc(surface, (255, 255, 255, 38), (350 + inset + 2, 190 + inset + 2, 310 - inset * 2 - 4, 245 - inset * 2 - 4), 0.15, 2.95, 2)
 
         if self._droplet_age > 0:
             center = (505, 285)
