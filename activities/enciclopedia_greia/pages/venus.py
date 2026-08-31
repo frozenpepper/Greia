@@ -231,17 +231,23 @@ class VenusPage(EncyclopediaPage):
 
         if not self._clouds_hidden:
             pygame.draw.circle(surface, (222, 185, 103), center, radius)
+            # Volumetric highlight
+            hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+            pygame.draw.ellipse(hl, (255, 235, 190, 32), (radius // 2, 8, radius, radius // 3))
+            surface.blit(hl, (center[0] - radius, center[1] - radius))
             for index in range(8):
                 y = center[1] - 65 + index * 19
                 wave = int(math.sin(self._time * 0.45 + index) * 8)
+                wobble = int(math.cos(self._time * 0.33 + index * 0.7) * 3)
                 pygame.draw.arc(
                     surface,
                     (242, 218, 154),
-                    (center[0] - 82 + wave, y - 8, 164, 30),
+                    (center[0] - 82 + wave, y - 8 + wobble, 164, 30),
                     0.05,
                     3.05,
                     5,
                 )
+                pygame.draw.arc(surface, (255, 245, 210, 22), (center[0] - 78 + wave, y - 6 + wobble, 156, 24), 0.05, 3.05, 2)
 
         if self._heat_age > 0:
             for ring in range(4):
