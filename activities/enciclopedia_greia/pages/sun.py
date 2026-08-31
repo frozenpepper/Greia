@@ -205,9 +205,19 @@ class SunPage(EncyclopediaPage):
         center = (505, 326)
         radius = 112
         pulse = int(4 * math.sin(self._time * 2.0))
+        # Corona with soft glow
+        glow = pygame.Surface((radius * 2 + 40, radius * 2 + 40), pygame.SRCALPHA)
+        pygame.draw.circle(glow, (231, 116, 37, 38), (radius + 20, radius + 20), radius + 20, 8)
+        pygame.draw.circle(glow, (248, 169, 48, 22), (radius + 20, radius + 20), radius + 14, 4)
+        surface.blit(glow, (center[0] - radius - 20, center[1] - radius - 20))
         pygame.draw.circle(surface, (231, 116, 37), center, radius + 13 + pulse, 4)
         pygame.draw.circle(surface, (248, 169, 48), center, radius)
+        # Inner highlight for depth
+        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(hl, (255, 235, 140, 40), (radius - 18, radius - 22), radius // 2)
+        surface.blit(hl, (center[0] - radius, center[1] - radius))
         pygame.draw.circle(surface, (255, 206, 76), center, radius - 22)
+        pygame.draw.circle(surface, (255, 230, 120, 30), center, radius - 30)
 
         for index in range(12):
             angle = self._time * 0.22 + index * math.tau / 12
