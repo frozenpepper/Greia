@@ -312,22 +312,34 @@ class BeePage(EncyclopediaPage):
     def _draw_bee(self, surface: pygame.Surface) -> None:
         cx, cy = self._model.bee_position()
         wing_bob = int(math.sin(self._time * 16.0) * 5)
-        # Wings with subtle vein and shadow
-        pygame.draw.ellipse(surface, (218, 239, 247), (cx - 30, cy - 26 - wing_bob, 28, 26))
-        pygame.draw.ellipse(surface, (218, 239, 247), (cx + 2, cy - 26 + wing_bob, 28, 26))
+        # Wings with vein, shadow, and translucent edge
+        for wx, wy in ((-30, -26 - wing_bob), (2, -26 + wing_bob)):
+            shadow = pygame.Surface((30, 28), pygame.SRCALPHA)
+            pygame.draw.ellipse(shadow, (0, 0, 0, 18), shadow.get_rect())
+            surface.blit(shadow, (cx + wx + 1, cy + wy + 2))
+            pygame.draw.ellipse(surface, (218, 239, 247), (cx + wx, cy + wy, 28, 26))
+            pygame.draw.ellipse(surface, (235, 245, 250, 70), (cx + wx + 4, cy + wy + 4, 18, 14))
         pygame.draw.line(surface, (180, 200, 215), (cx - 16, cy - 14 - wing_bob), (cx - 8, cy - 6 - wing_bob), 1)
         pygame.draw.line(surface, (180, 200, 215), (cx + 16, cy - 14 + wing_bob), (cx + 8, cy - 6 + wing_bob), 1)
-        # Body with soft highlight
-        pygame.draw.ellipse(surface, (247, 204, 63), (cx - 28, cy - 16, 56, 32))
-        pygame.draw.ellipse(surface, (255, 235, 120, 60), (cx - 20, cy - 12, 30, 14))
+        # Body with gradient and highlight
+        body_rect = pygame.Rect(cx - 28, cy - 16, 56, 32)
+        pygame.draw.ellipse(surface, (55, 49, 43, 30), body_rect.move(2, 3))
+        pygame.draw.ellipse(surface, (247, 204, 63), body_rect)
+        pygame.draw.ellipse(surface, (255, 235, 120, 70), (cx - 20, cy - 12, 30, 14))
+        pygame.draw.ellipse(surface, (255, 245, 180, 40), (cx - 16, cy - 8, 18, 8))
         for x in (cx - 12, cx + 5):
+            pygame.draw.line(surface, (35, 33, 30), (x, cy - 13), (x, cy + 13), 6)
             pygame.draw.line(surface, (55, 49, 43), (x, cy - 13), (x, cy + 13), 5)
-        pygame.draw.circle(surface, (55, 49, 43), (cx + 22, cy - 2), 4)
+        # Head with eye highlight
+        pygame.draw.circle(surface, (35, 33, 30), (cx + 22, cy - 2), 5)
         pygame.draw.circle(surface, (255, 255, 255), (cx + 20, cy - 4), 2)
+        pygame.draw.circle(surface, (255, 255, 255, 90), (cx + 21, cy - 3), 1)
         if self._model.carrying_pollen:
             for dx, dy in ((-22, 13), (-10, 17), (5, 16), (18, 10)):
+                pygame.draw.circle(surface, (231, 145, 35), (cx + dx, cy + dy), 5)
                 pygame.draw.circle(surface, (241, 158, 44), (cx + dx, cy + dy), 4)
-                pygame.draw.circle(surface, (255, 210, 90, 60), (cx + dx, cy + dy), 7, 1)
+                pygame.draw.circle(surface, (255, 210, 90, 70), (cx + dx, cy + dy), 7, 1)
+                pygame.draw.circle(surface, (255, 255, 200, 50), (cx + dx, cy + dy), 3)
 
     def _draw_home_demo(self, surface: pygame.Surface) -> None:
         if self._model.home_age <= 0:
