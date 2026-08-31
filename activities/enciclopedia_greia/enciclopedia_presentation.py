@@ -19,66 +19,130 @@ import pygame
 
 from greia_platform.typography import FontRole
 
-# Re-export split modules for compatibility
-from .enciclopedia_controls import (
-    DISCOVER_CENTER,
-    DISCOVER_HIT_RADIUS,
-    DISCOVER_RADIUS,
-    NAV_ARROW_HIT_SIZE,
-    NAV_ARROW_LEFT_CENTER,
-    NAV_ARROW_RIGHT_CENTER,
-    NAV_ARROW_SIZE,
-    NAV_ARROW_Y,
-    ORBIT_LABELS_TOGGLE_SIZE,
-    ORBIT_PAUSE_SIZE,
-    ORBIT_SLIDER_TRACK,
-    ORBIT_SPEED_FACTORS,
-    ORBIT_SPEED_HIT_SIZE,
-    ORBIT_SPEED_LABELS,
-    clear_controls_cache,
-    draw_direction_toggle,
-    draw_discover_button,
-    draw_labels_toggle,
-    draw_navigation_arrows,
-    draw_pause_button,
-    draw_smoke_toggle,
-    draw_speed_slider,
-)
-from .enciclopedia_focus import (
-    FocusShape,
-    FocusSpec,
-    clear_focus_cache,
-    draw_focus_patch as _draw_focus_patch_impl,
-    draw_portal_focus as _draw_portal_focus_impl,
-    get_focus_cache_stats,
-)
-from .enciclopedia_planet_art import decorate_planet
-from .enciclopedia_toy_controls import (
-    ANIMAL_ACTION_HIT,
-    ANIMAL_ACTION_SIZE,
-    ENTRY_ACTION_HIT,
-    ENTRY_ACTION_SIZE,
-    GEAR_TURN_HIT,
-    GEAR_TURN_SIZE,
-    HEART_ACTION_HIT,
-    HEART_ACTION_SIZE,
-    BREATHE_ACTION_HIT,
-    BREATHE_ACTION_SIZE,
-    HISTORY_ACTION_HIT,
-    HISTORY_ACTION_SIZE,
-    MACHINE_ACTION_HIT,
-    MACHINE_ACTION_SIZE,
-    VOLCANO_ACTION_HIT,
-    VOLCANO_ACTION_SIZE,
-    draw_animal_action_button,
-    draw_breathe_button,
-    draw_entry_action_button,
-    draw_erupt_button,
-    draw_heart_button,
-    draw_history_action_button,
-    draw_machine_action_button,
-    draw_turn_button,
-)
+# Greia executes Activity entrypoints as scripts, while source tests and tools
+# also import the Activity as a package. Preserve both modes explicitly instead
+# of catching ImportError: a real error inside one split module must still fail
+# loudly rather than being mistaken for an import-mode fallback.
+if __package__:
+    from .enciclopedia_controls import (
+        DISCOVER_CENTER,
+        DISCOVER_HIT_RADIUS,
+        DISCOVER_RADIUS,
+        NAV_ARROW_HIT_SIZE,
+        NAV_ARROW_LEFT_CENTER,
+        NAV_ARROW_RIGHT_CENTER,
+        NAV_ARROW_SIZE,
+        NAV_ARROW_Y,
+        ORBIT_LABELS_TOGGLE_SIZE,
+        ORBIT_PAUSE_SIZE,
+        ORBIT_SLIDER_TRACK,
+        ORBIT_SPEED_FACTORS,
+        ORBIT_SPEED_HIT_SIZE,
+        ORBIT_SPEED_LABELS,
+        clear_controls_cache,
+        draw_direction_toggle,
+        draw_discover_button,
+        draw_labels_toggle,
+        draw_navigation_arrows,
+        draw_pause_button,
+        draw_smoke_toggle,
+        draw_speed_slider,
+    )
+    from .enciclopedia_focus import (
+        FocusShape,
+        FocusSpec,
+        clear_focus_cache,
+        draw_focus_patch as _draw_focus_patch_impl,
+        draw_portal_focus as _draw_portal_focus_impl,
+        get_focus_cache_stats,
+    )
+    from .enciclopedia_planet_art import decorate_planet
+    from .enciclopedia_toy_controls import (
+        ANIMAL_ACTION_HIT,
+        ANIMAL_ACTION_SIZE,
+        ENTRY_ACTION_HIT,
+        ENTRY_ACTION_SIZE,
+        GEAR_TURN_HIT,
+        GEAR_TURN_SIZE,
+        HEART_ACTION_HIT,
+        HEART_ACTION_SIZE,
+        BREATHE_ACTION_HIT,
+        BREATHE_ACTION_SIZE,
+        HISTORY_ACTION_HIT,
+        HISTORY_ACTION_SIZE,
+        MACHINE_ACTION_HIT,
+        MACHINE_ACTION_SIZE,
+        VOLCANO_ACTION_HIT,
+        VOLCANO_ACTION_SIZE,
+        draw_animal_action_button,
+        draw_breathe_button,
+        draw_entry_action_button,
+        draw_erupt_button,
+        draw_heart_button,
+        draw_history_action_button,
+        draw_machine_action_button,
+        draw_turn_button,
+    )
+else:
+    from enciclopedia_controls import (
+        DISCOVER_CENTER,
+        DISCOVER_HIT_RADIUS,
+        DISCOVER_RADIUS,
+        NAV_ARROW_HIT_SIZE,
+        NAV_ARROW_LEFT_CENTER,
+        NAV_ARROW_RIGHT_CENTER,
+        NAV_ARROW_SIZE,
+        NAV_ARROW_Y,
+        ORBIT_LABELS_TOGGLE_SIZE,
+        ORBIT_PAUSE_SIZE,
+        ORBIT_SLIDER_TRACK,
+        ORBIT_SPEED_FACTORS,
+        ORBIT_SPEED_HIT_SIZE,
+        ORBIT_SPEED_LABELS,
+        clear_controls_cache,
+        draw_direction_toggle,
+        draw_discover_button,
+        draw_labels_toggle,
+        draw_navigation_arrows,
+        draw_pause_button,
+        draw_smoke_toggle,
+        draw_speed_slider,
+    )
+    from enciclopedia_focus import (
+        FocusShape,
+        FocusSpec,
+        clear_focus_cache,
+        draw_focus_patch as _draw_focus_patch_impl,
+        draw_portal_focus as _draw_portal_focus_impl,
+        get_focus_cache_stats,
+    )
+    from enciclopedia_planet_art import decorate_planet
+    from enciclopedia_toy_controls import (
+        ANIMAL_ACTION_HIT,
+        ANIMAL_ACTION_SIZE,
+        ENTRY_ACTION_HIT,
+        ENTRY_ACTION_SIZE,
+        GEAR_TURN_HIT,
+        GEAR_TURN_SIZE,
+        HEART_ACTION_HIT,
+        HEART_ACTION_SIZE,
+        BREATHE_ACTION_HIT,
+        BREATHE_ACTION_SIZE,
+        HISTORY_ACTION_HIT,
+        HISTORY_ACTION_SIZE,
+        MACHINE_ACTION_HIT,
+        MACHINE_ACTION_SIZE,
+        VOLCANO_ACTION_HIT,
+        VOLCANO_ACTION_SIZE,
+        draw_animal_action_button,
+        draw_breathe_button,
+        draw_entry_action_button,
+        draw_erupt_button,
+        draw_heart_button,
+        draw_history_action_button,
+        draw_machine_action_button,
+        draw_turn_button,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -276,7 +340,6 @@ def draw_discovery_token(
 # ---------------------------------------------------------------------------
 # Focus — thin wrappers that preserve the original test contract
 # ---------------------------------------------------------------------------
-
 def draw_focus_patch(
     surface: pygame.Surface,
     rect: pygame.Rect,
@@ -319,7 +382,6 @@ def draw_portal_focus(
 # ---------------------------------------------------------------------------
 # Re-export helpers for package/script import compatibility
 # ---------------------------------------------------------------------------
-
 def ambient_breathe(time: float, *, phase: float = 0.0, amplitude: float = 1.0) -> float:
     import math as _math
     return (_math.sin(time * 1.2 + phase) * 0.5 + 0.5) * amplitude
