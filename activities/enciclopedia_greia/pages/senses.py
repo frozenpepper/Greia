@@ -179,19 +179,33 @@ class SensesPage(EncyclopediaPage):
     def _draw_sense_scene(self, surface: pygame.Surface) -> None:
         face = (505, 323)
         skin = (234, 190, 162)
+        skin_light = (244, 210, 185)
+        skin_shadow = (210, 165, 138)
+        # Face with soft shadow and highlight
+        pygame.draw.circle(surface, skin_shadow, (face[0] + 3, face[1] + 3), 92)
         pygame.draw.circle(surface, skin, face, 92)
+        pygame.draw.circle(surface, skin_light, (face[0] - 18, face[1] - 18), 28)
         pygame.draw.circle(surface, (255, 255, 250), (474, 300), 15)
         pygame.draw.circle(surface, (255, 255, 250), (536, 300), 15)
+        pygame.draw.circle(surface, (255, 255, 255, 90), (472, 298), 4)
+        pygame.draw.circle(surface, (255, 255, 255, 90), (534, 298), 4)
         pygame.draw.circle(surface, (83, 94, 118), (474, 300), 7)
         pygame.draw.circle(surface, (83, 94, 118), (536, 300), 7)
+        pygame.draw.circle(surface, (35, 45, 60), (474, 300), 3)
+        pygame.draw.circle(surface, (35, 45, 60), (536, 300), 3)
         pygame.draw.arc(surface, (116, 74, 77), (475, 338, 60, 37), 0.15, math.pi - 0.15, 4)
+        pygame.draw.arc(surface, (180, 110, 115), (478, 340, 54, 32), 0.15, math.pi - 0.15, 2)
         pygame.draw.arc(surface, (139, 94, 86), (402, 286, 30, 66), math.pi / 2, math.pi * 1.5, 5)
+        pygame.draw.arc(surface, (155, 115, 105), (404, 290, 26, 58), math.pi / 2, math.pi * 1.5, 2)
         pygame.draw.arc(surface, (139, 94, 86), (578, 286, 30, 66), -math.pi / 2, math.pi / 2, 5)
+        pygame.draw.arc(surface, (155, 115, 105), (580, 290, 26, 58), -math.pi / 2, math.pi / 2, 2)
         pygame.draw.circle(surface, (209, 126, 124), (505, 332), 7)
-
+        pygame.draw.circle(surface, (235, 160, 158), (505, 330), 4)
         brain_center = (505, 245)
         for dx, dy in ((-16, 0), (0, -9), (16, 0), (-7, 13), (10, 14)):
-            pygame.draw.circle(surface, (202, 141, 178), (brain_center[0] + dx, brain_center[1] + dy), 17)
+            pygame.draw.circle(surface, (185, 125, 165), (brain_center[0] + dx, brain_center[1] + dy), 17)
+            pygame.draw.circle(surface, (202, 141, 178), (brain_center[0] + dx - 2, brain_center[1] + dy - 2), 17)
+            pygame.draw.circle(surface, (220, 170, 195), (brain_center[0] + dx - 4, brain_center[1] + dy - 4), 8)
 
         if self._sight_age > 0.0:
             object_center = (650, 284)
