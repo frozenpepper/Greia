@@ -282,9 +282,14 @@ class FossilsPage(EncyclopediaPage):
         )
 
     def _draw_dig(self, surface: pygame.Surface) -> None:
+        # Dig pit with subtle inner shadow and sediment layers
         pygame.draw.rect(surface, (206, 174, 124), _DIG_RECT, border_radius=20)
+        # Inner bevel
+        pygame.draw.rect(surface, (225, 190, 145), _DIG_RECT.inflate(-6, -6), border_radius=16, width=3)
+        # Sediment strata lines
+        for sy in (_DIG_RECT.y + 45, _DIG_RECT.y + 120, _DIG_RECT.y + 195):
+            pygame.draw.line(surface, (190, 158, 110), (_DIG_RECT.x + 12, sy), (_DIG_RECT.right - 12, sy + 2), 2)
         self._draw_hidden_fossils(surface)
-
         for index in range(_COLUMNS * _ROWS):
             if self._model.is_cleared(index):
                 continue
@@ -296,16 +301,15 @@ class FossilsPage(EncyclopediaPage):
                 _CELL_H,
             )
             shade = 188 + (index % 3) * 8
-            pygame.draw.rect(
-                surface,
-                (shade, 151, 102),
-                rect.inflate(-2, -2),
-                border_radius=8,
-            )
-            for pebble in range(3):
-                px = rect.x + 15 + ((index * 17 + pebble * 19) % max(20, rect.width - 30))
-                py = rect.y + 16 + ((index * 11 + pebble * 23) % max(20, rect.height - 30))
-                pygame.draw.circle(surface, (148, 113, 82), (px, py), 3 + pebble)
+            # Cell with highlight and pebbles
+            pygame.draw.rect(surface, (shade, 151, 102), rect.inflate(-2, -2), border_radius=8)
+            pygame.draw.rect(surface, (255, 255, 255, 18), rect.inflate(-6, -6), border_radius=6, width=1)
+            for pebble in range(4):
+                px = rect.x + 12 + ((index * 17 + pebble * 19) % max(20, rect.width - 24))
+                py = rect.y + 14 + ((index * 11 + pebble * 23) % max(20, rect.height - 28))
+                r = 3 + (pebble % 3)
+                pygame.draw.circle(surface, (148, 113, 82), (px, py), r)
+                pygame.draw.circle(surface, (180, 145, 110), (px - 1, py - 1), max(1, r - 2))
 
         pygame.draw.rect(surface, (92, 71, 55), _DIG_RECT, 4, border_radius=20)
 
