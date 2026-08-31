@@ -185,10 +185,17 @@ class UranusPage(EncyclopediaPage):
 
         ring_rect = pygame.Rect(center[0] - 132, center[1] - 44, 264, 88)
         if self._rings_visible:
-            for inset in (0, 8, 16):
-                pygame.draw.ellipse(surface, (151, 160, 160), ring_rect.inflate(-inset * 2, -inset), 2)
-
+            for inset, alpha in ((0, 90), (8, 70), (16, 50), (24, 30)):
+                pygame.draw.ellipse(surface, (151, 160, 160, alpha), ring_rect.inflate(-inset * 2, -inset), 2)
+                pygame.draw.ellipse(surface, (255, 255, 255, 18), ring_rect.inflate(-inset * 2 - 4, -inset - 2), 1)
+        # Soft shadow + highlight for depth
+        shadow = pygame.Surface((radius * 2 + 12, radius * 2 + 12), pygame.SRCALPHA)
+        pygame.draw.circle(shadow, (0, 0, 0, 24), (radius + 6, radius + 6), radius)
+        surface.blit(shadow, (center[0] - radius - 6, center[1] - radius - 6))
         pygame.draw.circle(surface, planet_color, center, radius)
+        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.ellipse(hl, (255, 255, 255, 22), (radius // 2, 6, radius, radius // 3))
+        surface.blit(hl, (center[0] - radius, center[1] - radius))
         pygame.draw.circle(surface, (82, 116, 123), center, radius, 3)
 
         axis_angle = math.radians(82)
