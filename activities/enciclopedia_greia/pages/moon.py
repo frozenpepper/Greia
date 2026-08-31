@@ -254,8 +254,11 @@ class MoonPage(EncyclopediaPage):
             return
 
         pygame.draw.circle(surface, (67, 68, 75), center, radius)
+        # Subtle terminator highlight for depth
+        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.ellipse(hl, (255, 255, 255, 18), (radius // 2, 6, radius, radius // 3))
+        surface.blit(hl, (center[0] - radius, center[1] - radius))
         self._draw_phase(surface, center, radius, self._model.phase_index)
-
         if self._model.surface_age > 0.0:
             for dx, dy, crater_radius in (
                 (-38, -28, 17),
@@ -263,16 +266,22 @@ class MoonPage(EncyclopediaPage):
                 (44, 18, 18),
                 (-20, 43, 13),
                 (4, 4, 9),
+                (-12, -38, 10),
+                (18, 38, 11),
             ):
                 x, y = center[0] + dx, center[1] + dy
+                # Crater with inner shadow and highlight
                 pygame.draw.circle(surface, (126, 125, 122), (x, y), crater_radius)
+                pygame.draw.circle(surface, (95, 95, 92), (x, y), crater_radius, 2)
                 pygame.draw.circle(surface, (206, 205, 198), (x - 3, y - 3), max(3, crater_radius - 5), 2)
+                pygame.draw.circle(surface, (255, 255, 255, 16), (x - 4, y - 4), max(2, crater_radius // 4))
             for rect in (
                 pygame.Rect(447, 302, 48, 26),
                 pygame.Rect(510, 345, 55, 31),
                 pygame.Rect(493, 270, 37, 21),
             ):
                 pygame.draw.ellipse(surface, (105, 106, 109), rect)
+                pygame.draw.ellipse(surface, (135, 136, 139), rect.inflate(-4, -4), 1)
 
         if self._model.gravity_age > 0.0:
             ground_y = 447
