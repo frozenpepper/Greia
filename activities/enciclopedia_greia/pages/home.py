@@ -195,10 +195,15 @@ class HomePage(EncyclopediaPage):
             enabled=True,
         )
 
-        # Subtle ambient shimmer on book (low-cost cheap motion, never obscures hits)
+        # Subtle ambient shimmer on book + floating motes
         bob = int(round(math.sin(self._time * 2.0) * 4))
-        # Extra tiny sway for presenter — baseline ambient layer
         sway = int(round(math.sin(self._time * 0.85) * 2))
+        # Floating dust motes for depth
+        for mx, my, phase in ((512, 320, 0.2), (620, 280, 1.1), (410, 360, 0.7)):
+            mx2 = mx + int(math.sin(self._time * 0.7 + phase) * 6)
+            my2 = my + int(math.cos(self._time * 0.9 + phase) * 3)
+            pygame.draw.circle(surface, (255, 255, 255, 38), (mx2, my2), 2)
+            pygame.draw.circle(surface, (255, 255, 255, 22), (mx2, my2), 4, 1)
         draw_presenter(
             surface,
             self.context.visuals,
