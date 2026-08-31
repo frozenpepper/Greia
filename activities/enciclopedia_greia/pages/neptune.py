@@ -182,13 +182,23 @@ class NeptunePage(EncyclopediaPage):
         center = (505, 326)
         radius = 90
         if self._rings_visible:
-            for inset in (0, 7):
-                pygame.draw.ellipse(surface, (113, 125, 149), (center[0] - 132 + inset, center[1] - 33 + inset // 2, 264 - inset * 2, 66 - inset), 2)
+            for inset, alpha in ((0, 90), (7, 70), (14, 45)):
+                pygame.draw.ellipse(surface, (113, 125, 149, alpha), (center[0] - 132 + inset, center[1] - 33 + inset // 2, 264 - inset * 2, 66 - inset), 2)
+                pygame.draw.ellipse(surface, (255, 255, 255, 18), (center[0] - 130 + inset, center[1] - 31 + inset // 2, 260 - inset * 2, 62 - inset), 1)
+        # Soft shadow + highlight for depth
+        shadow = pygame.Surface((radius * 2 + 12, radius * 2 + 12), pygame.SRCALPHA)
+        pygame.draw.circle(shadow, (0, 0, 0, 24), (radius + 6, radius + 6), radius)
+        surface.blit(shadow, (center[0] - radius - 6, center[1] - radius - 6))
         pygame.draw.circle(surface, (75, 112, 194), center, radius)
+        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.ellipse(hl, (255, 255, 255, 20), (radius // 2, 8, radius, radius // 3))
+        surface.blit(hl, (center[0] - radius, center[1] - radius))
         pygame.draw.circle(surface, (45, 67, 122), center, radius, 3)
         for yoff in (-47, -19, 14, 46):
             wave = int(math.sin(self._time * 0.45 + yoff) * 7)
-            pygame.draw.arc(surface, (110, 148, 218), (center[0] - 80 + wave, center[1] + yoff - 9, 160, 22), 0.15, 3.0, 4)
+            wobble = int(math.cos(self._time * 0.33 + yoff * 0.08) * 2)
+            pygame.draw.arc(surface, (110, 148, 218), (center[0] - 80 + wave, center[1] + yoff - 9 + wobble, 160, 22), 0.15, 3.0, 4)
+            pygame.draw.arc(surface, (255, 255, 255, 14), (center[0] - 78 + wave, center[1] + yoff - 7 + wobble, 156, 18), 0.15, 3.0, 2)
 
         if self._wind_age > 0:
             speed = 155
