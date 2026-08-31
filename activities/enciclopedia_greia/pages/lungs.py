@@ -238,16 +238,35 @@ class LungsPage(EncyclopediaPage):
 
     def _draw_body_and_lungs(self, surface: pygame.Surface) -> None:
         skin = (235, 190, 161)
+        skin_light = (245, 210, 185)
+        skin_shadow = (210, 165, 138)
+        # Head with highlight
         pygame.draw.circle(surface, skin, (505, 178), 40)
-        pygame.draw.rect(surface, skin, (442, 222, 126, 235), border_radius=48)
-
+        pygame.draw.circle(surface, skin_light, (494, 166), 10)
+        pygame.draw.circle(surface, skin, (505, 178), 40, 2)
+        # Torso with soft shadow and rib hint
+        torso = pygame.Rect(442, 222, 126, 235)
+        pygame.draw.rect(surface, skin_shadow, torso.move(3, 5), border_radius=48)
+        pygame.draw.rect(surface, skin, torso, border_radius=48)
+        pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=42, width=3)
+        for ry in (240, 258, 276):
+            pygame.draw.arc(surface, (218, 175, 160), (450, ry, 90, 16), 0.30, 2.84, 2)
         expansion = self._model.expansion
         lung_width = 46 + int(5 * expansion)
         lung_height = 96 + int(8 * expansion)
         left = pygame.Rect(505 - lung_width - 4, 265, lung_width, lung_height)
         right = pygame.Rect(509, 265, lung_width, lung_height)
-        pygame.draw.ellipse(surface, (221, 151, 161), left)
-        pygame.draw.ellipse(surface, (221, 151, 161), right)
+        # Lung shadow + highlight for depth
+        for rect in (left, right):
+            shadow = pygame.Surface((rect.width + 10, rect.height + 10), pygame.SRCALPHA)
+            pygame.draw.ellipse(shadow, (0, 0, 0, 22), shadow.get_rect())
+            surface.blit(shadow, (rect.x - 3, rect.y + 4))
+        pygame.draw.ellipse(surface, (210, 135, 145), left)
+        pygame.draw.ellipse(surface, (210, 135, 145), right)
+        pygame.draw.ellipse(surface, (221, 151, 161), left.inflate(-4, -4))
+        pygame.draw.ellipse(surface, (221, 151, 161), right.inflate(-4, -4))
+        pygame.draw.ellipse(surface, (235, 175, 182), left.inflate(-12, -12))
+        pygame.draw.ellipse(surface, (235, 175, 182), right.inflate(-12, -12))
 
         diaphragm_y = 382 + int(9 * expansion)
         pygame.draw.arc(
