@@ -224,8 +224,7 @@ class MagnetPage(EncyclopediaPage):
 
         self._draw_material_sample(surface)
 
-    @staticmethod
-    def _draw_bar_magnet(surface: pygame.Surface, rect: pygame.Rect, *, reverse: bool) -> None:
+    def _draw_bar_magnet(self, surface: pygame.Surface, rect: pygame.Rect, *, reverse: bool) -> None:
         half = rect.width // 2
         first = (87, 133, 199) if reverse else (213, 81, 82)
         second = (213, 81, 82) if reverse else (87, 133, 199)
@@ -238,12 +237,19 @@ class MagnetPage(EncyclopediaPage):
         # Top highlight
         pygame.draw.rect(surface, (255, 255, 255, 38), (rect.x + 4, rect.y + 4, rect.width - 8, rect.height // 3), border_radius=6)
         pygame.draw.rect(surface, (75, 70, 67), rect, 3, border_radius=10)
-        # Pole labels
-        font = pygame.font.SysFont(None, 22)
-        for x, label, col in ((rect.x + half // 2, "N", first), (rect.x + half + half // 2, "S", second)):
-            # Use contrasting text
-            txt = font.render(label, True, (255, 255, 255))
-            surface.blit(txt, txt.get_rect(center=(x, rect.centery)))
+        # Constant pole labels go through the injected cached Greia typography
+        # service instead of constructing a new font in the frame draw path.
+        for x, label in (
+            (rect.x + half // 2, "N"),
+            (rect.x + half + half // 2, "S"),
+        ):
+            text = self.context.typography.render(
+                label,
+                FontRole.CONTROL,
+                22,
+                (255, 255, 255),
+            )
+            surface.blit(text, text.get_rect(center=(x, rect.centery)))
 
     def _draw_material_sample(self, surface: pygame.Surface) -> None:
         samples = (
