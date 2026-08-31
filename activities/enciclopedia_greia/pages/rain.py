@@ -224,12 +224,23 @@ class RainPage(EncyclopediaPage):
 
     def _draw_cycle(self, surface: pygame.Surface) -> None:
         sun = (395, 210)
+        # Sun with glow
+        glow = pygame.Surface((80, 80), pygame.SRCALPHA)
+        pygame.draw.circle(glow, (251, 211, 73, 38), (40, 40), 34)
+        pygame.draw.circle(glow, (255, 230, 120, 22), (40, 40), 44)
+        surface.blit(glow, (sun[0] - 40, sun[1] - 40))
         pygame.draw.circle(surface, (251, 211, 73), sun, 34)
+        pygame.draw.circle(surface, (255, 235, 140), (sun[0] - 8, sun[1] - 8), 12)
         water = pygame.Rect(380, 407, 250, 86)
+        # Water with highlight
+        pygame.draw.ellipse(surface, (58, 140, 180), (382, 409, 250, 86))
         pygame.draw.ellipse(surface, (71, 159, 196), water)
+        pygame.draw.ellipse(surface, (120, 185, 210), (410, 418, 80, 28))
         pygame.draw.polygon(surface, (115, 173, 91), [(350, 454), (450, 332), (535, 454)])
+        pygame.draw.polygon(surface, (130, 188, 106), [(365, 452), (450, 344), (520, 452)])
         pygame.draw.rect(surface, (116, 85, 58), (577, 394, 20, 70), border_radius=6)
         pygame.draw.circle(surface, (84, 157, 76), (587, 375), 39)
+        pygame.draw.circle(surface, (105, 175, 95), (582, 368), 18)
 
         vapor_count = int(round(self._model.vapor * 12))
         for index in range(vapor_count):
