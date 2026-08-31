@@ -258,11 +258,17 @@ class SaturnPage(EncyclopediaPage):
                     3,
                 )
         if self._rings_age > 0:
-            for index in range(28):
-                angle = self._time * 0.3 + index * 0.71
-                x = 510 + int(math.cos(angle) * (160 + index % 5 * 9))
-                y = 335 + int(math.sin(angle) * (42 + index % 3 * 4))
-                pygame.draw.circle(surface, (246, 232, 197), (x, y), 2 + index % 2)
+            # More detailed ring particles with shadow and highlight
+            for index in range(32):
+                angle = self._time * 0.32 + index * 0.68
+                base_r = 148 + (index % 5) * 8
+                x = 510 + int(math.cos(angle) * base_r)
+                y = 335 + int(math.sin(angle) * (base_r * 0.28))
+                size = 2 + (index % 3)
+                # Particle with highlight
+                pygame.draw.circle(surface, (210, 198, 165), (x + 1, y + 1), size)
+                pygame.draw.circle(surface, (246, 232, 197), (x, y), size)
+                pygame.draw.circle(surface, (255, 255, 255, 38), (x - 1, y - 1), max(1, size // 2))
         if self._tilt_state:
             color = ((255, 220, 117), (176, 199, 240))[self._tilt_state - 1]
             pygame.draw.line(surface, color, (510, 210), (510, 455), 4)
