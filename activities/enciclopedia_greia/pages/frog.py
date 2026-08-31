@@ -304,21 +304,29 @@ class FrogPage(EncyclopediaPage):
     def _draw_frog(surface: pygame.Surface, center: tuple[int, int], *, scale: float) -> None:
         cx, cy = center
         body = (93, 173, 86)
+        body_light = (118, 190, 110)
+        body_shadow = (68, 138, 62)
         body_w = int(110 * scale)
         body_h = int(70 * scale)
+        # Body with shadow and highlight
+        pygame.draw.ellipse(surface, (0, 0, 0, 22), (cx - body_w // 2 + 3, cy - body_h // 2 + 4, body_w, body_h))
         pygame.draw.ellipse(surface, body, (cx - body_w // 2, cy - body_h // 2, body_w, body_h))
+        pygame.draw.ellipse(surface, body_light, (cx - body_w // 2 + 8, cy - body_h // 2 + 6, body_w - 16, body_h // 2))
+        pygame.draw.ellipse(surface, body_shadow, (cx - body_w // 2, cy + 4, body_w, body_h // 2))
         eye_offset = int(34 * scale)
         eye_radius = max(8, int(15 * scale))
-        pygame.draw.circle(surface, body, (cx - eye_offset, cy - body_h // 2), eye_radius)
-        pygame.draw.circle(surface, body, (cx + eye_offset, cy - body_h // 2), eye_radius)
-        pygame.draw.circle(surface, (247, 247, 229), (cx - eye_offset, cy - body_h // 2), max(5, int(8 * scale)))
-        pygame.draw.circle(surface, (247, 247, 229), (cx + eye_offset, cy - body_h // 2), max(5, int(8 * scale)))
-        pygame.draw.circle(surface, (38, 48, 36), (cx - eye_offset, cy - body_h // 2), max(2, int(4 * scale)))
-        pygame.draw.circle(surface, (38, 48, 36), (cx + eye_offset, cy - body_h // 2), max(2, int(4 * scale)))
-        pygame.draw.line(surface, body, (cx - 35, cy + 18), (cx - 77, cy + 55), max(7, int(12 * scale)))
-        pygame.draw.line(surface, body, (cx + 35, cy + 18), (cx + 77, cy + 55), max(7, int(12 * scale)))
-        pygame.draw.line(surface, body, (cx - 28, cy + 5), (cx - 62, cy + 18), max(5, int(9 * scale)))
-        pygame.draw.line(surface, body, (cx + 28, cy + 5), (cx + 62, cy + 18), max(5, int(9 * scale)))
+        for ex in (-eye_offset, eye_offset):
+            pygame.draw.circle(surface, body_shadow, (cx + ex, cy - body_h // 2 + 2), eye_radius)
+            pygame.draw.circle(surface, body, (cx + ex, cy - body_h // 2), eye_radius)
+            pygame.draw.circle(surface, (247, 247, 229), (cx + ex, cy - body_h // 2), max(5, int(8 * scale)))
+            pygame.draw.circle(surface, (255, 255, 255, 90), (cx + ex - 2, cy - body_h // 2 - 2), max(2, int(3 * scale)))
+            pygame.draw.circle(surface, (38, 48, 36), (cx + ex, cy - body_h // 2), max(2, int(4 * scale)))
+            pygame.draw.circle(surface, (255, 255, 255, 40), (cx + ex - 1, cy - body_h // 2 - 1), 1)
+        # Legs with highlight
+        for lx, ly, rx, ry in ((-35, 18, -77, 55), (35, 18, 77, 55), (-28, 5, -62, 18), (28, 5, 62, 18)):
+            pygame.draw.line(surface, body_shadow, (cx + lx, cy + ly + 1), (cx + rx, cy + ry + 1), max(8, int(13 * scale)))
+            pygame.draw.line(surface, body, (cx + lx, cy + ly), (cx + rx, cy + ry), max(7, int(12 * scale)))
+            pygame.draw.line(surface, body_light, (cx + lx, cy + ly), (cx + (lx + rx) // 2, cy + (ly + ry) // 2), max(3, int(6 * scale)))
 
     def _draw_skin_reveal(self, surface: pygame.Surface) -> None:
         if self._model.skin_age <= 0:
