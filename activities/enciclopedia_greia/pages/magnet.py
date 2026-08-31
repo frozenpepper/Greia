@@ -229,9 +229,21 @@ class MagnetPage(EncyclopediaPage):
         half = rect.width // 2
         first = (87, 133, 199) if reverse else (213, 81, 82)
         second = (213, 81, 82) if reverse else (87, 133, 199)
+        # Soft shadow
+        shadow = pygame.Surface((rect.width + 8, rect.height + 6), pygame.SRCALPHA)
+        pygame.draw.rect(shadow, (0, 0, 0, 28), shadow.get_rect(), border_radius=10)
+        surface.blit(shadow, (rect.x - 2, rect.y + 3))
         pygame.draw.rect(surface, first, (rect.x, rect.y, half, rect.height), border_radius=10)
         pygame.draw.rect(surface, second, (rect.x + half, rect.y, rect.width - half, rect.height), border_radius=10)
+        # Top highlight
+        pygame.draw.rect(surface, (255, 255, 255, 38), (rect.x + 4, rect.y + 4, rect.width - 8, rect.height // 3), border_radius=6)
         pygame.draw.rect(surface, (75, 70, 67), rect, 3, border_radius=10)
+        # Pole labels
+        font = pygame.font.SysFont(None, 22)
+        for x, label, col in ((rect.x + half // 2, "N", first), (rect.x + half + half // 2, "S", second)):
+            # Use contrasting text
+            txt = font.render(label, True, (255, 255, 255))
+            surface.blit(txt, txt.get_rect(center=(x, rect.centery)))
 
     def _draw_material_sample(self, surface: pygame.Surface) -> None:
         samples = (
