@@ -191,9 +191,7 @@ class JupiterPage(EncyclopediaPage):
         highlight = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
         pygame.draw.circle(highlight, (255, 245, 220, 18), (radius, radius), radius)
         surface.blit(highlight, (center[0] - radius, center[1] - radius))
-        clip = surface.get_clip()
-        surface.set_clip(pygame.Rect(center[0] - radius, center[1] - radius, radius * 2, radius * 2))
-        # Warmer, more distinct bands — storybook but readable
+        # Bands via circular-masked temp for clean limb (avoids square clip)
         bands = (
             (-70, 22, (245, 230, 205)),
             (-48, 18, (205, 150, 110)),
@@ -204,22 +202,23 @@ class JupiterPage(EncyclopediaPage):
             (40, 20, (242, 225, 190)),
             (60, 18, (200, 145, 105)),
         )
-        # Gentle ambient drift always, stronger when "day" is emphasized
         drift = math.sin(self._time * (1.9 if self._day_age > 0 else 0.42)) * (10 if self._day_age > 0 else 4)
         offset = int(drift)
+        mask = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.circle(mask, (255, 255, 255, 255), (radius, radius), radius)
+        temp = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
         for yoff, height, color in bands:
-            pygame.draw.rect(surface, color, (center[0] - 118 + offset, center[1] + yoff, 236, height), border_radius=3)
-            # Thin darker seam between bands for definition
-            pygame.draw.line(
-                surface,
-                (120, 85, 65, 38),
-                (center[0] - 118 + offset, center[1] + yoff + height),
-                (center[0] + 118 + offset, center[1] + yoff + height),
-                1,
-            )
-        surface.set_clip(clip)
+            rect = pygame.Rect(radius - 118 + offset, radius + yoff, 236, height)
+            pygame.draw.rect(temp, color, rect, border_radius=3)
+            hl = pygame.Rect(rect.x + 4, rect.y + 2, rect.width - 8, height // 2)
+            pygame.draw.rect(temp, (255, 255, 255, 18), hl, border_radius=2)
+            pygame.draw.line(temp, (120, 85, 65, 42), (rect.x, rect.y + height), (rect.right, rect.y + height), 1)
+            for tx in range(0, 220, 38):
+                sx = rect.x + tx + int(4 * math.sin(self._time * 0.6 + yoff * 0.1 + tx * 0.02))
+                pygame.draw.line(temp, (255, 255, 255, 12), (sx, rect.y + 4), (sx + 12, rect.y + height - 4), 1)
+        temp.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
+        surface.blit(temp, (center[0] - radius, center[1] - radius))
         pygame.draw.circle(surface, (90, 66, 55), center, radius, 3)
-        # Inner highlight ring for polish
         pygame.draw.circle(surface, (255, 245, 220, 22), center, radius - 6, 2)
 
         storm_center = (544, 358)
