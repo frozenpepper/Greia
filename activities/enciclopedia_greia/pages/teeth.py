@@ -178,10 +178,13 @@ class TeethPage(EncyclopediaPage):
 
     def _draw_mouth(self, surface: pygame.Surface) -> None:
         mouth = pygame.Rect(390, 238, 230, 185)
+        # Lips with highlight and shadow
+        pygame.draw.ellipse(surface, (92, 50, 58), mouth.move(2, 3))
         pygame.draw.ellipse(surface, (172, 75, 91), mouth)
+        pygame.draw.ellipse(surface, (200, 95, 115), (mouth.x + 8, mouth.y + 8, mouth.width - 16, mouth.height - 24))
         pygame.draw.ellipse(surface, (92, 50, 58), mouth, 4)
         pygame.draw.ellipse(surface, (230, 127, 142), (413, 310, 184, 82))
-
+        pygame.draw.ellipse(surface, (245, 160, 175), (420, 316, 170, 68))
         # A complete primary set has 20 teeth; the permanent comparison has 32.
         # The rows are schematic and evenly spaced for readability, not a dental chart.
         per_row = 16 if self._show_permanent else 10
@@ -192,8 +195,10 @@ class TeethPage(EncyclopediaPage):
         for row_y in (270, 352):
             for index in range(per_row):
                 x = int(start_x + index * gap)
-                color = (253, 250, 229)
-                pygame.draw.circle(surface, color, (x, row_y), radius)
+                # Tooth with shadow and highlight
+                pygame.draw.circle(surface, (180, 160, 140), (x + 1, row_y + 1), radius)
+                pygame.draw.circle(surface, (253, 250, 229), (x, row_y), radius)
+                pygame.draw.circle(surface, (255, 255, 255, 90), (x - 3, row_y - 3), max(1, radius // 3))
                 pygame.draw.circle(surface, (181, 166, 144), (x, row_y), radius, 1)
 
         self._draw_job_demo(surface)
