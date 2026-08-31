@@ -181,11 +181,19 @@ class CavePaintingsPage(EncyclopediaPage):
 
     def _draw_cave(self, surface: pygame.Surface) -> None:
         wall = pygame.Rect(350, 225, 320, 235)
+        # Cave wall with subtle gradient and pitting
         pygame.draw.rect(surface, (132, 101, 76), wall, border_radius=35)
-        for index in range(14):
-            x = wall.x + 24 + (index * 47) % (wall.width - 40)
-            y = wall.y + 20 + (index * 37) % (wall.height - 35)
-            pygame.draw.circle(surface, (116, 88, 68), (x, y), 4 + index % 5)
+        # Inner highlight
+        pygame.draw.rect(surface, (148, 118, 92), wall.inflate(-10, -10), border_radius=30, width=4)
+        for index in range(18):
+            x = wall.x + 20 + (index * 41) % (wall.width - 36)
+            y = wall.y + 16 + (index * 33) % (wall.height - 32)
+            r = 3 + (index * 7) % 5
+            pygame.draw.circle(surface, (116, 88, 68), (x, y), r)
+            pygame.draw.circle(surface, (90, 70, 54), (x + 1, y + 1), r, 1)
+        # Subtle stalactite hint
+        for sx, sy, h in ((398, 225, 18), (612, 225, 22), (505, 225, 14)):
+            pygame.draw.polygon(surface, (110, 85, 65), [(sx, sy), (sx - 6, sy + h), (sx + 6, sy + h)])
 
         lamp_positions = ((395, 410), (505, 390), (615, 410))
         lamp = lamp_positions[self._lamp_step]
