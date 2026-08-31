@@ -203,12 +203,20 @@ class TreePage(EncyclopediaPage):
 
     def _draw_tree(self, surface: pygame.Surface) -> None:
         ground_y = 405
+        # Ground with subtle gradient and grass texture
         pygame.draw.rect(surface, (137, 101, 66), (0, ground_y, 1024, 195))
         pygame.draw.rect(surface, (108, 177, 92), (0, ground_y - 16, 1024, 22))
+        for gx in range(0, 1024, 48):
+            pygame.draw.line(surface, (122, 190, 106), (gx, ground_y - 6), (gx + 8, ground_y - 14), 2)
         trunk = pygame.Rect(474, 265, 58, 155)
+        # Trunk with bark highlight and shadow
+        pygame.draw.rect(surface, (105, 70, 44), trunk.move(3, 4), border_radius=12)
         pygame.draw.rect(surface, (126, 83, 53), trunk, border_radius=12)
-        pygame.draw.line(surface, (126, 83, 53), (493, 310), (430, 255), 18)
-        pygame.draw.line(surface, (126, 83, 53), (514, 318), (577, 260), 17)
+        pygame.draw.rect(surface, (148, 108, 78), (trunk.x + 6, trunk.y + 8, 18, trunk.height - 16), border_radius=6)
+        pygame.draw.line(surface, (105, 70, 44), (493, 310), (430, 255), 18)
+        pygame.draw.line(surface, (126, 83, 53), (493, 310), (432, 257), 16)
+        pygame.draw.line(surface, (105, 70, 44), (514, 318), (577, 260), 17)
+        pygame.draw.line(surface, (126, 83, 53), (514, 318), (575, 262), 15)
 
         leaf_palette = (
             ((71, 153, 77), (91, 172, 85)),
