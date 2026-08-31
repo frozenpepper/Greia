@@ -204,15 +204,27 @@ class ElephantPage(EncyclopediaPage):
 
     def _draw_elephant(self, surface: pygame.Surface) -> None:
         body = (143, 153, 160)
+        body_light = (168, 176, 182)
+        body_shadow = (115, 124, 131)
         dark = (77, 79, 82)
         cx, cy = 500, 330
-        pygame.draw.ellipse(surface, body, (405, 285, 190, 130))
-        pygame.draw.circle(surface, body, (548, 282), 62)
-
+        # Soft ground shadow
+        pygame.draw.ellipse(surface, (0, 0, 0, 24), (405, 462, 190, 16))
+        pygame.draw.ellipse(surface, body_shadow, (405, 285, 190, 130))
+        pygame.draw.ellipse(surface, body, (405, 283, 190, 130))
+        pygame.draw.ellipse(surface, body_light, (418, 292, 60, 48))
+        pygame.draw.circle(surface, body_shadow, (548, 282), 62)
+        pygame.draw.circle(surface, body, (548, 280), 62)
+        pygame.draw.circle(surface, body_light, (532, 262), 22)
         flap = math.sin(self._time * (5.0 if self._ear_age > 0 else 1.2))
         ear_w = 58 + int(abs(flap) * (13 if self._ear_age > 0 else 4))
-        pygame.draw.ellipse(surface, (126, 139, 149), (500 - ear_w, 245, ear_w, 90))
-        pygame.draw.ellipse(surface, (126, 139, 149), (548, 245, ear_w, 90))
+        # Ears with inner pink and highlight
+        pygame.draw.ellipse(surface, (108, 122, 133), (500 - ear_w, 245, ear_w, 90))
+        pygame.draw.ellipse(surface, (126, 139, 149), (500 - ear_w + 4, 249, ear_w - 8, 82))
+        pygame.draw.ellipse(surface, (178, 145, 155), (500 - ear_w + 14, 265, ear_w - 28, 50))
+        pygame.draw.ellipse(surface, (108, 122, 133), (548, 245, ear_w, 90))
+        pygame.draw.ellipse(surface, (126, 139, 149), (548 + 4, 249, ear_w - 8, 82))
+        pygame.draw.ellipse(surface, (178, 145, 155), (548 + 14, 265, ear_w - 28, 50))
 
         for x in (438, 482, 548, 580):
             pygame.draw.line(surface, body, (x, 380), (x - 3, 465), 23)
