@@ -179,23 +179,39 @@ class BonesPage(EncyclopediaPage):
 
     def _draw_body_and_skeleton(self, surface: pygame.Surface) -> None:
         skin = (234, 190, 162)
+        skin_light = (245, 210, 185)
+        skin_shadow = (210, 165, 138)
         bone = (245, 239, 211)
+        bone_light = (252, 247, 228)
+        bone_shadow = (210, 200, 170)
         outline = (112, 100, 91)
+        # Head with highlight
         pygame.draw.circle(surface, skin, (505, 178), 45)
-        pygame.draw.rect(surface, skin, (442, 220, 126, 235), border_radius=48)
-        pygame.draw.line(surface, skin, (454, 256), (386, 410), 27)
-        pygame.draw.line(surface, skin, (556, 256), (624, 410), 27)
-        pygame.draw.line(surface, skin, (478, 430), (453, 545), 29)
-        pygame.draw.line(surface, skin, (532, 430), (557, 545), 29)
-
-        # Friendly schematic skeleton: enough structure to teach support without
-        # turning the page into a medical plate.
-        pygame.draw.circle(surface, bone, (505, 178), 31)
+        pygame.draw.circle(surface, skin_light, (494, 166), 12)
+        pygame.draw.circle(surface, skin, (505, 178), 45, 2)
+        # Torso with soft shadow
+        torso = pygame.Rect(442, 220, 126, 235)
+        pygame.draw.rect(surface, skin_shadow, torso.move(3, 4), border_radius=48)
+        pygame.draw.rect(surface, skin, torso, border_radius=48)
+        pygame.draw.rect(surface, skin_light, torso.inflate(-12, -12), border_radius=44, width=3)
+        # Limbs with highlight
+        for x1, y1, x2, y2 in ((454, 256, 386, 410), (556, 256, 624, 410), (478, 430, 453, 545), (532, 430, 557, 545)):
+            pygame.draw.line(surface, skin_shadow, (x1 + 2, y1 + 2), (x2 + 2, y2 + 2), 29)
+            pygame.draw.line(surface, skin, (x1, y1), (x2, y2), 27)
+            pygame.draw.line(surface, skin_light, (x1, y1), (x2, y2), 12)
+        # Friendly schematic skeleton
+        pygame.draw.circle(surface, bone_shadow, (505, 178), 31)
+        pygame.draw.circle(surface, bone, (505, 176), 31)
+        pygame.draw.circle(surface, bone_light, (496, 168), 10)
         pygame.draw.circle(surface, outline, (505, 178), 31, 3)
+        pygame.draw.line(surface, bone_shadow, (505, 215), (505, 390), 12)
         pygame.draw.line(surface, bone, (505, 215), (505, 390), 10)
+        pygame.draw.line(surface, bone_light, (505, 215), (505, 390), 4)
         pygame.draw.line(surface, outline, (505, 215), (505, 390), 2)
         for y, width in ((248, 46), (267, 52), (286, 55), (305, 51)):
+            pygame.draw.arc(surface, bone_shadow, (505 - width, y - 13, width * 2, 42), 0.15, math.pi - 0.15, 9)
             pygame.draw.arc(surface, bone, (505 - width, y - 15, width * 2, 42), 0.15, math.pi - 0.15, 7)
+            pygame.draw.arc(surface, bone_light, (505 - width + 4, y - 13, width * 2 - 8, 36), 0.15, math.pi - 0.15, 3)
 
         shoulder_left = (475, 245)
         elbow_left = (430, 325)
