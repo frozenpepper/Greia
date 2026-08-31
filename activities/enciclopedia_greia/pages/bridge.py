@@ -230,9 +230,14 @@ class BridgePage(EncyclopediaPage):
     def _draw_bridge(self, surface: pygame.Surface) -> None:
         left_x, right_x = 350, 665
         deck_y = 350
-        pygame.draw.rect(surface, (142, 115, 89), (left_x - 30, deck_y + 10, 45, 100))
-        pygame.draw.rect(surface, (142, 115, 89), (right_x - 15, deck_y + 10, 45, 100))
+        # Towers with highlight and shadow
+        for tx in (left_x - 30, right_x - 15):
+            pygame.draw.rect(surface, (120, 95, 72), (tx + 2, deck_y + 12, 45, 100))
+            pygame.draw.rect(surface, (142, 115, 89), (tx, deck_y + 10, 45, 100))
+            pygame.draw.rect(surface, (165, 138, 110), (tx + 4, deck_y + 14, 14, 92))
+        pygame.draw.line(surface, (70, 73, 74), (left_x, deck_y + 2), (right_x, deck_y + 2), 12)
         pygame.draw.line(surface, (83, 86, 86), (left_x, deck_y), (right_x, deck_y), 10)
+        pygame.draw.line(surface, (110, 112, 112), (left_x, deck_y - 2), (right_x, deck_y - 2), 2)
 
         shape = self._model.shape
         if shape == "beam":
