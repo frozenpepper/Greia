@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 import pygame
 
@@ -214,6 +215,10 @@ class OceanPage(EncyclopediaPage):
 
     def _draw_water_column(self, surface: pygame.Surface) -> None:
         panel = pygame.Rect(385, 145, 240, 330)
+        # Soft outer glow for depth
+        glow = pygame.Surface((260, 350), pygame.SRCALPHA)
+        pygame.draw.rect(glow, (19, 49, 87, 38), glow.get_rect(), border_radius=28)
+        surface.blit(glow, (panel.x - 8, panel.y - 8))
         pygame.draw.rect(surface, (19, 49, 87), panel, border_radius=26)
         bands = (
             (pygame.Rect(400, 160, 210, 92), (77, 174, 210)),
@@ -222,7 +227,11 @@ class OceanPage(EncyclopediaPage):
         )
         for rect, color in bands:
             pygame.draw.rect(surface, color, rect)
+            # Subtle wave highlight
+            wave_y = rect.y + 18 + int(3 * math.sin(self._time * 1.1 + rect.y * 0.02))
+            pygame.draw.line(surface, (255, 255, 255, 22), (rect.x + 12, wave_y), (rect.right - 12, wave_y + 4), 2)
         pygame.draw.rect(surface, (239, 233, 199), panel, 3, border_radius=26)
+        pygame.draw.rect(surface, (255, 255, 255, 18), panel.inflate(-6, -6), 2, border_radius=22)
 
         for index in range(7):
             end_y = 226 + index * 13
