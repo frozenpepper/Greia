@@ -7,8 +7,12 @@ and :mod:`writing_app`. This module only re-exports the historical API
 surface and composes the lifecycle owned by :class:`WritingApp`.
 
 The Activity remains R7.3-migrated: it does not own the trusted Greia
-Home/Back chrome and respects the protected viewport through the shared
-``PygameReferenceCanvas``/``activity_viewport_for_surface`` seam.
+Home/Back chrome. Writing already renders responsively to the physical SDL
+surface through ``ChildUiMetrics`` and keeps protected system-navigation
+geometry through ``activity_viewport_for_surface`` in ``WritingApp``. It must
+not compose a separate ``PygameReferenceCanvas`` unless its renderer targets
+that logical surface; presenting an untouched reference surface would overwrite
+the real Writing frame on the physical display.
 """
 
 from __future__ import annotations
@@ -17,7 +21,6 @@ import pygame
 
 from greia_platform.activity_api import get_storage, get_theme
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
 if __package__:
@@ -83,10 +86,6 @@ def main() -> int:
         screen = pygame.display.get_surface()
         if screen is None:
             screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-        try:
-            canvas = PygameReferenceCanvas(screen)
-        except Exception:
-            canvas = None
         metrics = ChildUiMetrics.for_size(*screen.get_size())
         typography = GreiaTypography()
         theme = get_theme()
@@ -118,7 +117,10 @@ def main() -> int:
         repository = DocumentRepository(storage)
         app = WritingApp(
             screen=screen,
-            canvas=canvas,
+            # WritingRenderer draws directly to this responsive physical SDL
+            # surface. Keep the legacy optional canvas seam disabled until a
+            # renderer actually targets canvas.surface end-to-end.
+            canvas=None,
             metrics=metrics,
             typography=typography,
             theme=theme,
