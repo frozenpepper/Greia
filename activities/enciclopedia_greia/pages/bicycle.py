@@ -243,13 +243,20 @@ class BicyclePage(EncyclopediaPage):
 
         crank = (505, 348)
         frame = (76, 135, 181)
+        frame_dark = (58, 108, 145)
+        # Frame with highlight and shadow
+        pygame.draw.line(surface, frame_dark, (rear[0] + 2, rear[1] + 2), (470 + 2, 267), 8)
+        pygame.draw.line(surface, frame_dark, (470 + 2, 267), (crank[0] + 2, crank[1] + 2), 8)
         pygame.draw.line(surface, frame, rear, (470, 265), 7)
         pygame.draw.line(surface, frame, (470, 265), crank, 7)
+        pygame.draw.line(surface, (96, 155, 201), (472, 267), (crank[0] - 2, crank[1] - 2), 3)
         pygame.draw.line(surface, frame, crank, rear, 7)
         pygame.draw.line(surface, frame, crank, (578, 272), 7)
         pygame.draw.line(surface, frame, (578, 272), front, 7)
         pygame.draw.line(surface, frame, (470, 265), (578, 272), 7)
+        pygame.draw.line(surface, (96, 155, 201), (472, 267), (576, 274), 2)
         pygame.draw.line(surface, (73, 69, 65), (460, 255), (492, 255), 7)
+        pygame.draw.line(surface, (90, 86, 82), (462, 257), (490, 257), 2)
         pygame.draw.line(surface, (73, 69, 65), (578, 272), (592, 226), 6)
         pygame.draw.line(surface, (73, 69, 65), (574, 226), (615, 226), 5)
 
