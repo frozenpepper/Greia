@@ -230,7 +230,11 @@ class MercuryPage(EncyclopediaPage):
             return
 
         pygame.draw.circle(surface, (177, 170, 157), center, radius)
-
+        # Subtle terminator highlight for depth
+        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
+        pygame.draw.ellipse(hl, (255, 255, 255, 20), (radius // 2, 6, radius, radius // 3))
+        hl.set_alpha(70)
+        surface.blit(hl, (center[0] - radius, center[1] - radius))
         # One circle, two clipped hemispheres: the comparison stays visually a
         # single world and does not allocate a temporary surface in the hot loop.
         if self._temperature_age > 0:
@@ -243,11 +247,13 @@ class MercuryPage(EncyclopediaPage):
             pygame.draw.line(surface, (237, 215, 165), (505, 235), (505, 417), 3)
             pygame.draw.circle(surface, (250, 202, 73), (420, 253), 14)
             pygame.draw.circle(surface, (191, 222, 244), (585, 395), 12)
-
         for dx, dy, crater_radius in _CRATERS:
             x, y = center[0] + dx, center[1] + dy
+            # Crater with inner shadow and highlight
             pygame.draw.circle(surface, (127, 121, 113), (x, y), crater_radius)
+            pygame.draw.circle(surface, (95, 90, 84), (x, y), crater_radius, 2)
             pygame.draw.circle(surface, (201, 194, 179), (x - 3, y - 3), max(3, crater_radius - 5), 2)
+            pygame.draw.circle(surface, (255, 255, 255, 18), (x - 4, y - 4), max(2, crater_radius // 3))
 
         if self._crater_age > 0:
             for dx, dy, crater_radius in _CRATERS[:3]:
