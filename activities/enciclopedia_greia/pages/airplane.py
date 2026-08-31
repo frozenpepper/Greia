@@ -200,11 +200,19 @@ class AirplanePage(EncyclopediaPage):
 
     def _draw_airplane(self, surface: pygame.Surface) -> None:
         center = (510, 330)
+        # Fuselage with highlight and shadow
+        pygame.draw.ellipse(surface, (200, 205, 210), (390, 308, 250, 54))
         pygame.draw.ellipse(surface, (237, 238, 231), (390, 306, 250, 54))
+        pygame.draw.ellipse(surface, (255, 255, 255, 30), (400, 310, 220, 20))
         pygame.draw.polygon(surface, (217, 222, 220), [(485, 330), (430, 396), (518, 349)])
+        pygame.draw.polygon(surface, (235, 238, 235), [(488, 332), (438, 386), (510, 346)])
         pygame.draw.polygon(surface, (217, 222, 220), [(520, 330), (590, 267), (535, 346)])
+        pygame.draw.polygon(surface, (235, 238, 235), [(522, 332), (580, 278), (536, 342)])
         pygame.draw.polygon(surface, (196, 204, 207), [(615, 316), (648, 286), (638, 337)])
-        pygame.draw.circle(surface, (102, 151, 190), (420, 332), 17)
+        pygame.draw.polygon(surface, (210, 218, 220), [(618, 318), (642, 292), (634, 330)])
+        pygame.draw.circle(surface, (90, 135, 170), (420, 332), 17)
+        pygame.draw.circle(surface, (102, 151, 190), (420, 332), 17, 2)
+        pygame.draw.circle(surface, (255, 255, 255, 40), (414, 326), 10)
 
         wing_angle = (-0.12, 0.0, 0.12)[self._angle_step]
         if self._airflow_age > 0.0:
