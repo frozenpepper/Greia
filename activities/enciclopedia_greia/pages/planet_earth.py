@@ -153,6 +153,7 @@ class EarthPlanetPage(EncyclopediaPage):
         )
         if self._selected != prev:
             self._announce_selected()
+
     def _activate(self, index: int) -> None:
         discovery = DISCOVERIES[index]
         self._caption_key = discovery.caption_key
@@ -208,23 +209,12 @@ class EarthPlanetPage(EncyclopediaPage):
         radius = 108
         angle = self._time * (1.15 if self._rotation_age > 0 else 0.20)
 
-        # Try authored sprite first — instantly recognizable Earth
+        # VisualLibrary owns package lookup, decode, scaling, and its bounded
+        # cache. Test/dummy visual providers may omit planet(); in that case
+        # use the existing procedural renderer rather than touching disk here.
         diam = radius * 2 + 8
-        sprite = None
-        try:
-            sprite = self.context.visuals.planet("earth", diam)
-        except Exception:
-            sprite = None
-        # Direct file fallback if VisualLibrary miss (e.g., dummy context)
-        if sprite is None:
-            try:
-                from pathlib import Path as _P
-                direct = _P(__file__).resolve().parent.parent / "assets" / "runtime" / "earth_planet_sprite.png"
-                if direct.is_file():
-                    raw = pygame.image.load(str(direct)).convert_alpha()
-                    sprite = pygame.transform.smoothscale(raw, (diam, diam))
-            except Exception:
-                sprite = None
+        planet_loader = getattr(self.context.visuals, "planet", None)
+        sprite = planet_loader("earth", diam) if callable(planet_loader) else None
         if sprite is not None:
             # Soft atmospheric glow behind the sprite
             glow_surf = pygame.Surface((diam + 18, diam + 18), pygame.SRCALPHA)
