@@ -190,12 +190,16 @@ class MammothPage(EncyclopediaPage):
             pygame.draw.line(surface, body, (x, 345), (x - 3, 410), 20)
         pygame.draw.arc(surface, (233, 220, 188), (584, 305, 76, 90), 0.25, math.pi * 1.35, 7)
         if self._coat_age > 0.0:
-            for row in range(4):
-                y = 285 + row * 20
-                for col in range(7):
-                    x = 445 + col * 22 + (row % 2) * 9
+            # Fur with layered depth and highlight
+            for row in range(5):
+                y = 282 + row * 18
+                for col in range(8):
+                    x = 442 + col * 20 + (row % 2) * 10
+                    pygame.draw.line(surface, (85, 58, 42), (x + 1, y + 1), (x - 3, y + 22), 6)
                     pygame.draw.line(surface, fur, (x, y), (x - 4, y + 22), 5)
+                    pygame.draw.line(surface, (130, 95, 70), (x, y), (x - 2, y + 12), 2)
             pygame.draw.arc(surface, (231, 197, 135), (442, 288, 132, 70), math.pi, math.tau, 7)
+            pygame.draw.arc(surface, (255, 225, 175, 60), (444, 290, 128, 66), math.pi, math.tau, 3)
         if self._ears_age > 0.0:
             pygame.draw.ellipse(surface, (116, 82, 64), (563, 286, 30, 38))
             pygame.draw.ellipse(surface, (177, 135, 101), (710, 280, 72, 92))
