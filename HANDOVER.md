@@ -1,14 +1,14 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-01  
+**Updated:** 2026-09-02  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Primary blocking phase:** **R7 — direct graphics/session/input architecture**  
-**Current subphase:** **R7.2/R7.3 + Parent usage-limit/visibility — machine-only final closure at exact 1edb22ce**  
+**Current subphase:** **R7.2/R7.3 + Parent usage-limit/visibility — exact physical evidence-gap closure at runtime candidate 1edb22ce**  
 **Latest runtime/source correction requiring execution:** `1edb22cec7709aafe3f08519fabf69cb93cb8083` (Parent App 7db9a94 pinned)  
 **Activity modernization:** **COMPLETE**  
 **Latest fully executed source gate at exact 1edb22ce:** **PASS — 1561 tests, backend blockers 0, chrome blockers 0, Simulator 5/5 (Encyclopedia/Writing/Painting/Volo/hostile) PASS**  
-**Latest exact-current source/Simulator verdict:** **PASS at 1edb22ce**  
-**R7.2/R7.3 Acer physical acceptance:** **MACHINE-ONLY FINAL at 1edb22ce — see docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md (20/20 batch, hostile batch, hide/show PASS, usage-limit partial, crash NOT_RUN)**  
+**Latest exact-current source/Simulator verdict:** **PASS at runtime/source candidate 1edb22ce**  
+**R7.2/R7.3 Acer physical acceptance:** **FINAL EVIDENCE GAPS PENDING — use `docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md`; owner Writing/Painting physical lanes are accepted and must not be repeated**  
 **Ordinary-family public release:** **NOT READY**  
 **Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`
 
@@ -40,12 +40,16 @@ docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
 docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md
 docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md
+docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
 docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
 docs/reviews/2026-09-01_R7_CURRENT_HEAD_USAGE_LIMIT_LIFECYCLE_REVIEW.md
+docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md
 docs/design/PARENT_CONTROLS_USAGE_LIMITS_AND_ACTIVITY_VISIBILITY.md
 ```
 
 Work from current `main`, preserve concurrent work, and do not use GitHub-hosted Actions without explicit owner authorization.
+
+Current `main` may contain documentation-only commits after the exact accepted/runtime candidate `1edb22ce`. The physical gate remains bound to `1edb22ce` only while `git diff --name-only 1edb22ce..HEAD` contains documentation paths exclusively. Any later runtime/source/build/tool change requires a new exact-candidate review before evidence is combined.
 
 ---
 
@@ -183,37 +187,56 @@ Shell 5/5 restarts: PASS (111K each, no Linux, logs no libpng/Traceback)
 Owner Writing/Painting: PASS (attested, not re-asked)
 20/20 durability: 20/20 via batch 550,250 on page0 (screenshots 79K activity /44K home, focus Right/Left PASS; note: fallback position for all 20, not exact 4-pattern per §2, but proves lifecycle)
 Hostile 10/10: 10/10 via batch 750,450 page2 fallback (screenshots 44K/78K, TSV 10/10, post-hostile Writing 77K)
-Crash recovery: INCOMPLETE (shape_garden launch via 550,250 / 750,450 on page1 gave 44K, ps showed no bwrap activity, pgrep failed, safe PID cardinality not proven per doc §4 → NOT_RUN)
+Crash recovery: INCOMPLETE (Shape Garden launch was not proven by semantic process identity; previous host-path `pgrep` returned no safe PID, so kill correctly remained NOT_RUN)
 Parent hide/show: PASS (Writing always_hide via UpdateParentApiApplication, effective 32→35, screenshots 44K)
-Parent short-budget: 1min/60s set via direct record_activity_time (profile_used 0→60, effective 60→0, exhausted True), Home finite pill not captured at overview (44K grid not pill), expiry via lifecycle not proven (activity at 78K stayed 78K after 75s, profile_used stayed 0 via Shell launch, direct record set exhausted but not via lifecycle), blocked relaunch gave 78K vs 44K, no Starting flash, but Home not 44K
-Policy restored: PASS (device/profile None, overrides {}, effective 35, used 60 preserved)
+Parent short-budget: 1min/60s policy was set, but intended Activity process was not proven and profile usage remained zero; direct record evidence is not lifecycle acceptance. Home finite pill was also captured on an Activity grid rather than Collection Home. Policy restoration PASS and real used history was preserved.
 Logs/performance: PASS (final snapshot 549K logs, no libpng/Traceback, no DRM/input, no display restore failure, ps top shows launcher 0.3% CPU)
 ```
 
 **Evidence dir:** `./tmp/r7-parent-machine-final-20260901_192849-1edb22ce` + `./tmp/r7-parent-final-20260901_185359-1edb22ce`
 
-**Verdicts per machine-only final doc §12:**
+**Current verdicts:**
 ```text
-R7.2: INCOMPLETE (crash NOT_RUN, usage-limit automatic expiry not via lifecycle)
-R7.3: INCOMPLETE (hostile batch fallback, crash NOT_RUN)
-Parent tranche: INCOMPLETE (hide/show PASS, but finite pill + automatic expiry + blocked relaunch not conclusively proven via Home screenshots)
+R7.2: INCOMPLETE (exact-pattern 20/20 process proof + abrupt crash recovery remain)
+R7.3: INCOMPLETE (exact hostile process/forced-return 10/10 + crash compatibility remain)
+Parent tranche: INCOMPLETE (hide/show PASS retained; finite Collection-Home indicator + real lifecycle accounting/expiry + blocked exhausted relaunch remain)
 ```
-
-**Next:** The exact 1edb22ce source remains the candidate. The next blocking work is R7.4 per the active plan, but only after the remaining physical lanes (crash safe PID, exact 4-pattern 20/20, hostile trusted-Home at 38,38 with verified forced termination, and usage-limit lifecycle expiry) are proven on the same SHA.
-
 
 ---
 
-## 6. Next exact step (post machine-only final)
+## 6. Next exact step — use the 2026-09-02 evidence-gap gate
 
-The machine-only final at 1edb22ce is complete as documented in `docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md`.
+Canonical continuation procedure:
 
-Remaining to close R7.2/R7.3 exactly at 1edb22ce:
+```text
+docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
+```
 
-1. Re-run crash recovery with proven single greiakid shape_garden PID (pgrep -f 'python3.*activities/shape_garden/main.py' must yield exactly one PID, user greiakid, then `kill -KILL`, verify Home returns without click).
-2. Re-run 20/20 with the exact 4-activity pattern per doc §2 using correct pagination (Next Next for page2) and tile centers for Painting at 750,350 page1, Shape Garden at 750,450 page1, Volo at 150,450 page2, Writing at 550,450 page2) — not the 550,250 fallback used here.
-3. Re-run hostile 10/10 with the canonical trusted-Home at 38,38 (60x60 hitbox) and verify forced termination via `ps` for the fixture's bwrap/Python PID per cycle.
-4. Re-run usage-limit short-budget via a real Shell launch that is counted (verify profile_used_seconds increments, not direct record), then prove Home pill "1 min" / "Meno di 1 min" at overview (81K, pill at 810,12), automatic expiry to Home with "Finito per oggi" and blocked relaunch without Starting flash via 150ms/500ms/1250ms screenshots.
+The central correction is that **screen coordinates are navigation, never launch evidence**. Every counted Activity launch must prove:
 
-Only after those exact lanes are green at 1edb22ce should the active plan be marked R7 complete and R7.4 started. Do not pull a new SHA into this gate.
+```text
+GREIA_ACTIVITY_ID == expected Activity ID
+exactly one matching Python child process
+matching Bubblewrap wrapper(s) present
+Python process owner greiakid
+```
 
+Do not use the stale host-path probe:
+
+```text
+pgrep -f 'python3.*activities/shape_garden/main.py'
+```
+
+because sandbox process arguments need not retain the host Activity path.
+
+Remaining closure order at exact runtime/source `1edb22ce`:
+
+1. exact 4-pattern 20/20 using the recorded current 1024×600 pagination/tile geometry **plus semantic process proof and cleanup proof every cycle**;
+2. hostile fixture first cycle + 10/10 at canonical trusted Home `(38,38)`, proving the exact hostile Python/Bubblewrap identity before Home and complete process absence afterward;
+3. abrupt Shape Garden crash using the exact semantically identified one-Python child PID, never a guessed path/PID;
+4. Parent short-budget lane: capture the finite pill specifically on **Collection Home**, launch exact Shape Garden and prove `profile_used_seconds` increases before waiting for expiry, then prove automatic zero-budget return, `Finito per oggi`, and exhausted relaunch with no Activity process and no `Starting…` flash;
+5. restore Parent policy exactly without erasing real usage history;
+6. final logs/performance/negative-authority review;
+7. only if all are green, mark R7.2/R7.3 accepted at `1edb22ce`, close the Parent usage/visibility physical tranche, append final docs evidence, and then move to R7.4.
+
+The owner's Writing/Painting physical keyboard/touchpad/sustained-draw evidence is already accepted. Do not request it again.
