@@ -199,19 +199,23 @@ class UsageLimitStore:
                 pass
             try:
                 import fcntl
-
-                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-            except (ImportError, OSError):
-                pass
-            try:
+            except ImportError:
+                # Greia runtime and supported Unix authoring hosts provide
+                # ``fcntl``. Keep a single-process fallback for non-POSIX
+                # developer tooling rather than making the data format itself
+                # platform-specific.
                 yield
-            finally:
-                try:
-                    import fcntl
-
-                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
-                except (ImportError, OSError):
-                    pass
+                return
+            try:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            except OSError as exc:
+                # Parent policy writes and launcher accounting must never both
+                # proceed under the fiction that serialization succeeded.
+                raise UsageLimitError("cannot acquire usage-limit state lock") from exc
+            # Closing the lock file releases flock atomically even if the body
+            # raises, avoiding a second unlock operation that could mask the
+            # primary error after a successful state mutation.
+            yield
 
     def _parse(self, raw: object) -> _UsageState:
         if not isinstance(raw, dict) or raw.get("schema_version") != self.SCHEMA_VERSION:
@@ -359,84 +363,69 @@ class UsageLimitService:
         _validate_profile_id(profile_id)
         return self._status_from_state(profile_id, self.store.read())
 
-    def record_activity_time(
-        self, profile_id: str, elapsed_seconds: int
-    ) -> UsageLimitStatus:
-        """Persist monotonic Activity elapsed time and return the new status."""
+    def record_activity_time(self, profile_id: str, elapsed_seconds: int) -> UsageLimitStatus:
         _validate_profile_id(profile_id)
         if (
             not isinstance(elapsed_seconds, int)
             or isinstance(elapsed_seconds, bool)
             or elapsed_seconds < 0
         ):
-            raise UsageLimitError(
-                "elapsed Activity time must be a non-negative integer"
-            )
+            raise UsageLimitError("elapsed activity time must be a non-negative integer")
+
+        accounting_date = self._accounting_date(self.store.read())
+        date_key = accounting_date.isoformat()
 
         def update(state: _UsageState) -> _UsageState:
-            accounting_date = self._accounting_date(state)
-            key = accounting_date.isoformat()
+            newest = self._accounting_date(state)
+            current_key = newest.isoformat()
             device_usage = dict(state.device_usage)
             profile_usage = {
-                profile: dict(usage) for profile, usage in state.profile_usage
+                key: dict(value) for key, value in state.profile_usage
             }
-            if elapsed_seconds:
-                device_usage[key] = device_usage.get(key, 0) + elapsed_seconds
-                child_usage = profile_usage.setdefault(profile_id, {})
-                child_usage[key] = child_usage.get(key, 0) + elapsed_seconds
-            keep_dates = _latest_date_keys(
-                (
-                    *device_usage.keys(),
-                    *(
-                        usage_key
-                        for usage in profile_usage.values()
-                        for usage_key in usage
-                    ),
-                ),
-                self.store.MAX_DAYS,
-            )
-            device_usage = {
-                usage_key: value
-                for usage_key, value in device_usage.items()
-                if usage_key in keep_dates
-            }
-            profile_usage = {
-                profile: {
-                    usage_key: value
-                    for usage_key, value in usage.items()
-                    if usage_key in keep_dates
-                }
-                for profile, usage in profile_usage.items()
-            }
+            device_usage[current_key] = device_usage.get(current_key, 0) + elapsed_seconds
+            by_day = profile_usage.setdefault(profile_id, {})
+            by_day[current_key] = by_day.get(current_key, 0) + elapsed_seconds
             return _UsageState(
                 state.device_policy,
                 state.profile_policies,
-                accounting_date,
-                tuple(sorted(device_usage.items())),
+                newest,
+                _bounded_days(device_usage),
                 tuple(
                     sorted(
-                        (profile, tuple(sorted(usage.items())))
-                        for profile, usage in profile_usage.items()
-                        if usage
+                        (key, _bounded_days(value))
+                        for key, value in profile_usage.items()
                     )
                 ),
             )
 
-        updated = self.store.mutate(update)
-        return self._status_from_state(profile_id, updated)
+        state = self.store.mutate(update)
+        return self._status_from_state(profile_id, state)
 
-    def _status_from_state(
-        self, profile_id: str, state: _UsageState
-    ) -> UsageLimitStatus:
+    def policy_force_stop_seconds(self, profile_id: str) -> int | None:
+        return self.status(profile_id).effective_remaining_seconds
+
+    def _accounting_date(self, state: _UsageState) -> date:
+        today = self._date_provider()
+        if not isinstance(today, date):
+            raise UsageLimitError("date provider returned an invalid date")
+        if state.latest_accounting_date is not None and today < state.latest_accounting_date:
+            return state.latest_accounting_date
+        return today
+
+    def _status_from_state(self, profile_id: str, state: _UsageState) -> UsageLimitStatus:
         accounting_date = self._accounting_date(state)
-        key = accounting_date.isoformat()
-        device_used = dict(state.device_usage).get(key, 0)
-        profile_usage = dict(state.profile_usage).get(profile_id, ())
-        profile_used = dict(profile_usage).get(key, 0)
+        date_key = accounting_date.isoformat()
         profile_policy = state.profile_policy(profile_id)
+        device_used = dict(state.device_usage).get(date_key, 0)
+        profile_used = dict(dict(state.profile_usage).get(profile_id, ())).get(date_key, 0)
         device_remaining = _remaining(state.device_policy, device_used)
         profile_remaining = _remaining(profile_policy, profile_used)
-        effective = _most_restrictive(device_remaining, profile_remaining)
+        limited_remaining = tuple(
+            remaining
+            for remaining in (device_remaining, profile_remaining)
+            if remaining is not None
+        )
+        effective_remaining = min(limited_remaining) if limited_remaining else None
         return UsageLimitStatus(
             accounting_date=accounting_date,
             profile_id=profile_id,
@@ -446,80 +435,56 @@ class UsageLimitService:
             profile_used_seconds=profile_used,
             device_remaining_seconds=device_remaining,
             profile_remaining_seconds=profile_remaining,
-            effective_remaining_seconds=effective,
+            effective_remaining_seconds=effective_remaining,
         )
 
-    def _accounting_date(self, state: _UsageState) -> date:
-        observed = self._date_provider()
-        latest = state.latest_accounting_date
-        if latest is not None and observed < latest:
-            return latest
-        return observed
 
-
-def _remaining(policy: UsageLimitPolicy, used_seconds: int) -> int | None:
-    budget = policy.budget_seconds
-    return None if budget is None else max(0, budget - used_seconds)
-
-
-def _most_restrictive(*remaining: int | None) -> int | None:
-    finite = [value for value in remaining if value is not None]
-    return min(finite) if finite else None
+def _validate_profile_id(profile_id: str) -> None:
+    if (
+        not isinstance(profile_id, str)
+        or not profile_id
+        or len(profile_id) > 64
+        or profile_id in {".", ".."}
+        or any(ch not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_" for ch in profile_id)
+    ):
+        raise UsageLimitError("invalid profile id")
 
 
 def _optional_minutes(value: object) -> int | None:
     if value is None:
         return None
     if not isinstance(value, int) or isinstance(value, bool):
-        raise UsageLimitError("daily usage limit must be an integer or null")
+        raise UsageLimitError("usage-limit minutes must be an integer or null")
     return value
-
-
-def _parse_usage_map(
-    value: object, maximum: int
-) -> tuple[tuple[str, int], ...]:
-    if not isinstance(value, dict) or len(value) > maximum:
-        raise UsageLimitError("invalid usage accounting map")
-    result: list[tuple[str, int]] = []
-    for raw_date, seconds in value.items():
-        if not isinstance(raw_date, str):
-            raise UsageLimitError("usage accounting date must be text")
-        _parse_date(raw_date)
-        if (
-            not isinstance(seconds, int)
-            or isinstance(seconds, bool)
-            or seconds < 0
-        ):
-            raise UsageLimitError(
-                "usage accounting seconds must be non-negative integers"
-            )
-        result.append((raw_date, seconds))
-    return tuple(sorted(result))
 
 
 def _parse_date(value: object) -> date:
     if not isinstance(value, str):
-        raise UsageLimitError("usage accounting date must be text")
+        raise UsageLimitError("usage-limit date must be text")
     try:
         return date.fromisoformat(value)
     except ValueError as exc:
-        raise UsageLimitError("usage accounting date is invalid") from exc
+        raise UsageLimitError("invalid usage-limit date") from exc
 
 
-def _latest_date_keys(values: tuple[str, ...], maximum: int) -> frozenset[str]:
-    unique = sorted({_parse_date(value) for value in values}, reverse=True)[:maximum]
-    return frozenset(value.isoformat() for value in unique)
+def _parse_usage_map(value: object, max_days: int) -> tuple[tuple[str, int], ...]:
+    if not isinstance(value, dict) or len(value) > max_days:
+        raise UsageLimitError("invalid usage-limit day map")
+    parsed: list[tuple[str, int]] = []
+    for key, seconds in value.items():
+        day = _parse_date(key)
+        if not isinstance(seconds, int) or isinstance(seconds, bool) or seconds < 0:
+            raise UsageLimitError("usage-limit seconds must be a non-negative integer")
+        parsed.append((day.isoformat(), seconds))
+    return tuple(sorted(parsed))
 
 
-def _validate_profile_id(profile_id: object) -> None:
-    if (
-        not isinstance(profile_id, str)
-        or not profile_id
-        or len(profile_id) > 128
-        or any(
-            character
-            not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-"
-            for character in profile_id
-        )
-    ):
-        raise UsageLimitError("unsafe profile identifier")
+def _remaining(policy: UsageLimitPolicy, used_seconds: int) -> int | None:
+    budget = policy.budget_seconds
+    if budget is None:
+        return None
+    return max(0, budget - used_seconds)
+
+
+def _bounded_days(values: dict[str, int]) -> tuple[tuple[str, int], ...]:
+    return tuple(sorted(values.items())[-UsageLimitStore.MAX_DAYS :])
