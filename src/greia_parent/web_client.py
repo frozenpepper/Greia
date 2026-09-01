@@ -4,9 +4,9 @@ from __future__ import annotations
 def render_parent_web_app() -> str:
     """Return the dependency-free Greia Parents HTML client.
 
-    The page contains no privileged implementation knowledge. All state and
-    mutations go through the same /api/v1 contract intended for future native
-    parent clients.
+    The fallback client intentionally contains no privileged implementation
+    knowledge. It is a responsive API client for the same versioned Parent API
+    used by future native or separately-vendored clients.
     """
 
     return r"""<!doctype html>
@@ -16,266 +16,87 @@ def render_parent_web_app() -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Greia Parents</title>
 <style>
-:root{--cream:#f6ecd1;--paper:#fffaf0;--ink:#3d2c1f;--accent:#f1b923;--muted:#76685d;--danger:#a83434;--ok:#2f7551}
-*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,sans-serif}
-header{padding:1.1rem 1.2rem;background:#07152d;color:white;position:sticky;top:0;z-index:3}
-header h1{font-size:1.25rem;margin:0}header p{opacity:.8;margin:.25rem 0 0;font-size:.9rem}
-main{max-width:70rem;margin:auto;padding:1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(17rem,1fr));gap:1rem}
-section,.card{background:var(--paper);border-radius:1rem;padding:1rem;box-shadow:0 1px 3px #0001}
-section{margin-bottom:1rem}h2{margin:.1rem 0 .8rem}h3{margin:.2rem 0}
-label{display:block;font-weight:700;margin:.65rem 0 .25rem}input,select{width:100%;padding:.6rem;border:1px solid #0003;border-radius:.6rem;font:inherit;background:white}
-input[type=checkbox]{width:auto}button{border:0;border-radius:.7rem;padding:.7rem .9rem;background:var(--accent);color:var(--ink);font:inherit;font-weight:800;cursor:pointer}
-button.danger{background:var(--danger);color:white}button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
-.muted{color:var(--muted)}.status{font-weight:800}.ok{color:var(--ok)}.error{color:var(--danger)}
-code{background:#0001;padding:.1rem .25rem;border-radius:.25rem}.capability{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid #0001;padding:.45rem 0}
-ul{padding-left:1.2rem}.hidden{display:none}
+:root{
+  --navy:#07152d;--cream:#f5edd9;--paper:#fffdf7;--ink:#33271f;--muted:#756a60;
+  --line:#e2d8c7;--accent:#f1b923;--accent-soft:#fff3c3;--ok:#2f7551;
+  --danger:#a83434;--danger-soft:#fbe6e3;--blue-soft:#e7f0ff;--shadow:0 2px 10px #402b1612
+}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.4}
+button,input,select{font:inherit}button{cursor:pointer}.shell{min-height:100vh}.topbar{background:var(--navy);color:white;padding:1rem 1.2rem;position:sticky;top:0;z-index:4;box-shadow:0 2px 8px #0003}.topbar-inner{max-width:76rem;margin:auto;display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap}.brand h1{font-size:1.3rem;margin:0}.brand p{font-size:.86rem;opacity:.78;margin:.2rem 0 0}.connection{font-size:.86rem;font-weight:700}.layout{max-width:76rem;margin:auto;padding:1rem;display:grid;grid-template-columns:15rem minmax(0,1fr);gap:1rem}.sidebar,.panel{background:var(--paper);border:1px solid var(--line);border-radius:1rem;box-shadow:var(--shadow)}.sidebar{padding:.7rem;height:max-content;position:sticky;top:5.4rem}.nav-button{width:100%;text-align:left;border:0;background:transparent;border-radius:.65rem;padding:.7rem .75rem;font-weight:750;color:var(--ink)}.nav-button:hover,.nav-button.active{background:var(--accent-soft)}main{min-width:0}.view{display:none}.view.active{display:block}.panel{padding:1rem;margin-bottom:1rem}h2{margin:.05rem 0 .3rem;font-size:1.35rem}h3{margin:.2rem 0 .65rem;font-size:1.05rem}.intro{color:var(--muted);margin:.1rem 0 1rem}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.8rem}.card{background:white;border:1px solid var(--line);border-radius:.85rem;padding:.9rem}.card h3{margin-top:0}.row{display:flex;gap:.55rem;align-items:center;flex-wrap:wrap}.spread{display:flex;gap:.7rem;align-items:center;justify-content:space-between;flex-wrap:wrap}.stack>*+*{margin-top:.65rem}label{display:block;font-weight:720;font-size:.91rem}input,select{width:100%;margin-top:.25rem;padding:.62rem .65rem;border:1px solid #bdb4a8;border-radius:.58rem;background:white;color:var(--ink)}input[type=checkbox]{width:auto;margin:0}.button{border:0;border-radius:.62rem;padding:.62rem .78rem;background:var(--accent);color:var(--ink);font-weight:800}.button.secondary{background:#eee8dd}.button.danger{background:var(--danger);color:white}.button:disabled{opacity:.45;cursor:not-allowed}.muted{color:var(--muted)}.small{font-size:.84rem}.status{font-weight:760}.ok{color:var(--ok)}.error{color:var(--danger)}.notice{padding:.7rem .8rem;border-radius:.7rem;background:var(--blue-soft);font-size:.9rem}.notice.warning{background:var(--danger-soft)}.profile-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin:.7rem 0 1rem}.profile-tab{border:1px solid var(--line);background:white;border-radius:999px;padding:.5rem .78rem;font-weight:750}.profile-tab.active{background:var(--navy);color:white;border-color:var(--navy)}.chips{display:flex;gap:.35rem;flex-wrap:wrap}.chip{font-size:.76rem;font-weight:750;background:#f0ece5;border-radius:999px;padding:.25rem .5rem}.chip.ok{background:#e1f2e9;color:#225b40}.chip.hidden-state{background:var(--danger-soft);color:#7b2727}.activity-tools{display:grid;grid-template-columns:minmax(12rem,2fr) repeat(2,minmax(9rem,1fr));gap:.55rem;margin:.7rem 0}.activity-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(17rem,1fr));gap:.7rem}.activity-card{background:white;border:1px solid var(--line);border-radius:.8rem;padding:.8rem;display:flex;flex-direction:column;gap:.55rem}.activity-card.is-hidden{opacity:.73;background:#fff9f8}.activity-name{font-weight:850;overflow-wrap:anywhere}.activity-id{font-size:.75rem;color:var(--muted);overflow-wrap:anywhere}.activity-card select{margin-top:0}.summary-pill{display:inline-flex;align-items:center;gap:.35rem;background:#f0ece5;border-radius:999px;padding:.3rem .55rem;font-size:.8rem;font-weight:760}.metric{font-size:1.5rem;font-weight:850}.capability{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--line);padding:.52rem 0}.hidden{display:none!important}ul{padding-left:1.15rem;margin:.4rem 0}.sticky-message{position:fixed;right:1rem;bottom:1rem;max-width:26rem;background:var(--navy);color:white;border-radius:.75rem;padding:.75rem .9rem;box-shadow:0 4px 18px #0004;z-index:8}.sticky-message.error{background:#762626}.sticky-message.ok{background:#245d42}
+@media(max-width:760px){.layout{display:block}.sidebar{position:static;margin-bottom:1rem;display:flex;overflow:auto;gap:.3rem}.nav-button{width:auto;white-space:nowrap}.activity-tools{grid-template-columns:1fr}.topbar{position:static}}
 </style>
 </head>
-<body>
-<header><h1>Greia Parents</h1><p id="connection">Connecting to this Greia…</p></header>
+<body><div class="shell">
+<header class="topbar"><div class="topbar-inner"><div class="brand"><h1>Greia Parents</h1><p>Simple controls for this Greia</p></div><div id="connection" class="connection">Connecting…</div></div></header>
+<div class="layout">
+<nav class="sidebar" aria-label="Parent sections">
+  <button class="nav-button active" data-view="children">Children</button>
+  <button class="nav-button" data-view="activities">Activities</button>
+  <button class="nav-button" data-view="device">Device</button>
+  <button class="nav-button" data-view="parent">Parent access</button>
+</nav>
 <main>
-<section>
-  <h2>System</h2>
-  <div id="system" class="grid"><div class="card muted">Loading…</div></div>
+<section id="view-children" class="view active">
+  <div class="panel"><h2>Children</h2><p class="intro">Choose a child to set age, challenge level and what they can find on Greia.</p><div id="profile-tabs" class="profile-tabs"></div><div id="selected-profile"></div></div>
+  <div class="panel"><h3>Add child</h3><form id="create-profile" class="stack"><div class="grid"><label>Name<input name="display_name" maxlength="24" required></label><label>Avatar<select name="avatar_id" id="new-avatar"></select></label><label>Age (optional)<select name="approximate_age" id="new-age"></select></label><label>Challenge preference<select name="challenge_preference"><option value="automatic">Automatic</option><option value="easier">A little easier</option><option value="standard">Standard</option><option value="harder">A little harder</option></select></label></div><div class="row"><label><input type="checkbox" name="uppercase_text" checked> CAPITAL-letter text</label><label><input type="checkbox" name="mask_secret"> Hide password while typing</label></div><label>Optional simple password<input name="secret" maxlength="32"></label><button class="button" type="submit">Add child</button></form></div>
 </section>
-
-<section>
-  <h2>Children</h2>
-  <div id="profiles" class="grid"></div>
-  <h3>Add child</h3>
-  <form id="create-profile">
-    <div class="grid">
-      <label>Name<input name="display_name" maxlength="24" required></label>
-      <label>Avatar<select name="avatar_id" id="new-avatar"></select></label>
-      <label>Optional simple password<input name="secret" maxlength="32"></label>
-    </div>
-    <label><input type="checkbox" name="mask_secret"> Hide password while the child types</label>
-    <label><input type="checkbox" name="uppercase_text" checked> CAPITAL-letter text (recommended for young children)</label>
-    <button type="submit">Add child</button>
-  </form>
+<section id="view-activities" class="view">
+  <div class="panel"><div class="spread"><div><h2>Activities</h2><p class="intro">Control what the selected child can see. “Hide” removes the Activity from the child catalogue; it is not just hidden on this page.</p></div><span id="activity-count" class="summary-pill"></span></div><div id="activity-profile-tabs" class="profile-tabs"></div><div id="activity-policy"></div></div>
+  <div class="panel"><div class="activity-tools"><label>Find an Activity<input id="activity-search" type="search" placeholder="Name, category or tag"></label><label>Age metadata<select id="activity-age-filter"><option value="all">All ages</option><option value="recommended">Recommended for child</option><option value="unknown">No age metadata</option></select></label><label>Difficulty<select id="activity-difficulty-filter"><option value="all">All difficulties</option><option value="1">Difficulty 1</option><option value="2">Difficulty 2</option><option value="3">Difficulty 3</option><option value="4">Difficulty 4</option><option value="5">Difficulty 5</option></select></label></div><div id="activities" class="activity-list"></div></div>
 </section>
-
-<section>
-  <h2>Mouse, touchpad, display and audio</h2>
-  <form id="hardware">
-    <div class="grid">
-      <label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step=".25"></label>
-      <label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step=".25"></label>
-      <label>Resolution<select name="resolution" id="resolution"></select></label>
-      <label>Microphone gain (<span id="mic-gain-label">200%</span>)<input type="range" name="mic_gain" id="mic-gain" min="0.5" max="4.0" step="0.25"></label>
-    </div>
-    <div class="row">
-      <label><input type="checkbox" name="touchpad_tap"> Tap touchpad to click</label>
-      <label><input type="checkbox" name="natural_scrolling"> Natural scrolling</label>
-    </div>
-    <button type="submit">Apply settings</button>
-  </form>
+<section id="view-device" class="view">
+  <div class="panel"><h2>This Greia</h2><div id="system" class="grid"><div class="card muted">Loading…</div></div></div>
+  <div class="panel"><h2>Mouse, touchpad, display and audio</h2><form id="hardware" class="stack"><div class="grid"><label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step=".25"></label><label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step=".25"></label><label>Resolution<select name="resolution" id="resolution"></select></label><label>Microphone gain (<span id="mic-gain-label">200%</span>)<input type="range" name="mic_gain" id="mic-gain" min="0.5" max="4.0" step="0.25"></label></div><div class="row"><label><input type="checkbox" name="touchpad_tap"> Tap touchpad to click</label><label><input type="checkbox" name="natural_scrolling"> Natural scrolling</label></div><button class="button" type="submit">Apply device settings</button></form></div>
 </section>
-
-<section>
-  <h2>Activities</h2>
-  <div id="activities" class="grid"></div>
+<section id="view-parent" class="view">
+  <div class="panel"><h2>Parent devices</h2><p class="intro">Paired parent devices can manage this Greia. Revoke any device you no longer use.</p><div id="devices" class="grid"></div></div>
+  <div class="panel"><h2>Parent password</h2><form id="change-password" class="stack"><input type="hidden" name="username" value="greia" autocomplete="username"><label>Current password<input name="current_password" type="password" autocomplete="current-password"></label><label>New password<input name="new_password" type="password" autocomplete="new-password"></label><button class="button" type="submit">Change Parent password</button></form></div>
+  <div class="panel"><h2>Other Parent API capabilities</h2><div id="capabilities"></div></div>
 </section>
-
-<section>
-  <h2>Parent devices</h2>
-  <p class="muted">Each future parent client receives its own revocable credential. The current browser-pairing bootstrap is transitional.</p>
-  <div id="devices" class="grid"></div>
-</section>
-
-<section>
-  <h2>Parent password</h2>
-  <form id="change-password">
-    <input type="hidden" name="username" value="greia" autocomplete="username">
-    <label>Current password<input name="current_password" type="password" autocomplete="current-password"></label>
-    <label>New password<input name="new_password" type="password" autocomplete="new-password"></label>
-    <button type="submit">Change Parent password</button>
-  </form>
-  <p class="muted">The main Greia admin login. Stored only as a digest and never returned by the API.</p>
-</section>
-
-<section>
-  <h2>Coming through the same Parent API</h2>
-  <div id="capabilities"></div>
-  <p class="muted">Unavailable controls are not emulated with shell commands. They become available only when Greia exposes the corresponding typed platform service.</p>
-</section>
-
-<p id="message" class="status"></p>
-</main>
+</main></div><div id="message" class="sticky-message hidden" role="status"></div></div>
 <script>
 const API="/api/v1";
+const state={profiles:[],activities:[],policies:new Map(),selectedProfileId:null,avatars:[]};
 const message=document.getElementById("message");
 
-async function request(path, options={}) {
-  const response=await fetch(API+path,{credentials:"same-origin",headers:{"Accept":"application/json","Content-Type":"application/json",...(options.headers||{})},...options});
-  let body={};
-  try { body=await response.json(); } catch (_) {}
-  if(!response.ok) throw new Error(body?.error?.message || `Request failed (${response.status})`);
-  return body;
-}
-function formatUptime(seconds){
-  if(typeof seconds !== "number" || seconds < 0) return "0s";
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const mins = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  if(days > 0) return `${days}d ${hours}h ${mins}m`;
-  if(hours > 0) return `${hours}h ${mins}m`;
-  if(mins > 0) return `${mins}m ${secs}s`;
-  return `${secs}s`;
-}
-function formatBytes(bytes){
-  if(!bytes || bytes < 0) return "0 MiB";
-  const mib = bytes / 1048576;
-  if(mib >= 1024) return `${(mib / 1024).toFixed(1)} GiB`;
-  return `${Math.round(mib)} MiB`;
-}
-function text(value){ return String(value ?? ""); }
-function card(title, body){ const el=document.createElement("article"); el.className="card"; const h=document.createElement("h3"); h.textContent=title; el.append(h,body); return el; }
-function lines(items){ const ul=document.createElement("ul"); for(const item of items){const li=document.createElement("li");li.textContent=item;ul.append(li)} return ul; }
-function showError(error){ message.className="status error"; message.textContent=error.message; }
+async function request(path,options={}){const response=await fetch(API+path,{credentials:"same-origin",headers:{"Accept":"application/json","Content-Type":"application/json",...(options.headers||{})},...options});let body={};try{body=await response.json()}catch(_){}if(!response.ok)throw new Error(body?.error?.message||`Request failed (${response.status})`);return body}
+function text(value){return String(value??"")}
+function humanize(value){return text(value).replaceAll("_"," ").replaceAll("-"," ").replace(/\b\w/g,c=>c.toUpperCase())}
+function showMessage(value,kind="ok"){message.className=`sticky-message ${kind}`;message.textContent=value;clearTimeout(showMessage.timer);showMessage.timer=setTimeout(()=>message.classList.add("hidden"),4500)}
+function showError(error){showMessage(error.message||String(error),"error")}
+function formatUptime(seconds){if(typeof seconds!=="number"||seconds<0)return"0s";const d=Math.floor(seconds/86400),h=Math.floor((seconds%86400)/3600),m=Math.floor((seconds%3600)/60);if(d)return`${d}d ${h}h`;if(h)return`${h}h ${m}m`;return`${m}m`}
+function formatBytes(bytes){if(!bytes||bytes<0)return"0 MiB";const mib=bytes/1048576;return mib>=1024?`${(mib/1024).toFixed(1)} GiB`:`${Math.round(mib)} MiB`}
+function selectedProfile(){return state.profiles.find(p=>p.profile_id===state.selectedProfileId)||null}
+function ageOptions(select,selected=null,includeUnknown=true){select.replaceChildren();if(includeUnknown){const o=document.createElement("option");o.value="";o.textContent="Not set";select.append(o)}for(let age=2;age<=18;age++){const o=document.createElement("option");o.value=String(age);o.textContent=String(age);o.selected=selected===age;select.append(o)}}
+function recommendedFor(activity,profile){if(!profile||profile.approximate_age==null)return true;const age=profile.approximate_age,min=activity.recommended_age_min,max=activity.recommended_age_max;if(min==null&&max==null)return true;return(min==null||age>=min)&&(max==null||age<=max)}
+function ageLabel(activity){const min=activity.recommended_age_min,max=activity.recommended_age_max;if(min==null&&max==null)return"Age: not specified";if(min!=null&&max!=null)return min===max?`Age ${min}`:`Ages ${min}–${max}`;return min!=null?`Age ${min}+`:`Up to age ${max}`}
+function difficultyLabel(activity){const min=activity.difficulty_min,max=activity.difficulty_max;if(activity.adaptive_difficulty&&min!=null&&max!=null)return`Difficulty ${min}–${max} · adaptive`;return`Difficulty ${activity.difficulty}`}
 
-async function load() {
-  try {
-    const [index,system,profiles,activities,hardware,devices]=await Promise.all([
-      request(""),request("/system"),request("/profiles"),request("/activities"),request("/settings/hardware"),request("/devices")
-    ]);
-    document.getElementById("connection").textContent=`Connected · Parent API v${index.api_version}`;
+function switchView(name){document.querySelectorAll(".view").forEach(el=>el.classList.toggle("active",el.id===`view-${name}`));document.querySelectorAll(".nav-button").forEach(el=>el.classList.toggle("active",el.dataset.view===name))}
+document.querySelectorAll(".nav-button").forEach(button=>button.onclick=()=>switchView(button.dataset.view));
 
-    const systemBox=document.getElementById("system"); systemBox.replaceChildren();
-    const memAvail = formatBytes(system.memory_available_bytes);
-    const memTotal = formatBytes(system.memory_total_bytes);
-    const memLine = system.memory_total_bytes ? `Memory: ${memAvail} free / ${memTotal}` : `Memory available: ${memAvail}`;
-    const diskFree = formatBytes(system.disk_free_bytes);
-    const diskTotal = formatBytes(system.disk_total_bytes);
-    const diskLine = system.disk_total_bytes ? `Disk: ${diskFree} free / ${diskTotal}` : `Disk free: ${diskFree}`;
+async function load(){try{const[index,system,profiles,activities,hardware,devices]=await Promise.all([request(""),request("/system"),request("/profiles"),request("/activities"),request("/settings/hardware"),request("/devices")]);state.profiles=profiles;state.activities=activities;state.avatars=system.profile_policy?.avatars||[];if(!state.selectedProfileId||!profiles.some(p=>p.profile_id===state.selectedProfileId))state.selectedProfileId=profiles[0]?.profile_id||null;await loadSelectedPolicy();document.getElementById("connection").textContent=`Connected · ${text(index.product||"Greia")} · Parent API v${index.api_version}`;renderSystem(system);renderProfileTabs();renderSelectedProfile();renderActivityPolicy();renderActivities();renderHardware(hardware);renderDevices(devices);renderCapabilities(index.capabilities||{});populateNewProfile();}catch(error){document.getElementById("connection").textContent="Connection needs attention";showError(error)}}
+async function loadSelectedPolicy(){if(!state.selectedProfileId)return;const policy=await request(`/profiles/${encodeURIComponent(state.selectedProfileId)}/activity-policy`);state.policies.set(state.selectedProfileId,policy)}
+async function chooseProfile(id){state.selectedProfileId=id;try{await loadSelectedPolicy();renderProfileTabs();renderSelectedProfile();renderActivityPolicy();renderActivities()}catch(error){showError(error)}}
 
-    const systemLines=[
-      `Uptime: ${formatUptime(system.uptime_seconds)}`,
-      memLine,
-      diskLine,
-      `Runtime API: ${text(system.runtime_api_version)}`
-    ];
-    systemBox.append(card("This Greia",lines(systemLines)));
+function renderProfileTabs(){for(const box of [document.getElementById("profile-tabs"),document.getElementById("activity-profile-tabs")]){box.replaceChildren();for(const profile of state.profiles){const b=document.createElement("button");b.className=`profile-tab ${profile.profile_id===state.selectedProfileId?"active":""}`;b.textContent=profile.display_name;b.onclick=()=>chooseProfile(profile.profile_id);box.append(b)}}}
+function renderSelectedProfile(){const box=document.getElementById("selected-profile");box.replaceChildren();const profile=selectedProfile();if(!profile){box.innerHTML='<p class="muted">Add a child to begin.</p>';return}const form=document.createElement("form");form.className="stack";const grid=document.createElement("div");grid.className="grid";const name=document.createElement("label");name.textContent="Name";name.innerHTML+=' <input name="display_name" required>';name.querySelector("input").value=profile.display_name;const age=document.createElement("label");age.textContent="Approximate age";const ageSelect=document.createElement("select");ageSelect.name="approximate_age";ageOptions(ageSelect,profile.approximate_age);age.append(ageSelect);const challenge=document.createElement("label");challenge.textContent="Challenge preference";const challengeSelect=document.createElement("select");challengeSelect.name="challenge_preference";for(const[value,label]of [["automatic","Automatic"],["easier","A little easier"],["standard","Standard"],["harder","A little harder"]]){const o=document.createElement("option");o.value=value;o.textContent=label;o.selected=profile.challenge_preference===value;challengeSelect.append(o)}challenge.append(challengeSelect);const letters=document.createElement("label");letters.textContent="Child-facing text";const letterSelect=document.createElement("select");letterSelect.name="uppercase_text";letterSelect.innerHTML=`<option value="true" ${profile.uppercase_text!==false?"selected":""}>CAPITAL letters</option><option value="false" ${profile.uppercase_text===false?"selected":""}>Normal letters</option>`;letters.append(letterSelect);grid.append(name,age,challenge,letters);form.append(grid);const controls=document.createElement("div");controls.className="spread";const save=document.createElement("button");save.className="button";save.type="submit";save.textContent="Save child settings";const remove=document.createElement("button");remove.className="button danger";remove.type="button";remove.textContent="Delete child";remove.onclick=async()=>{if(!confirm(`Delete ${profile.display_name}? This removes this Greia profile.`))return;try{await request(`/profiles/${encodeURIComponent(profile.profile_id)}`,{method:"DELETE"});state.policies.delete(profile.profile_id);await load();showMessage("Child profile deleted.")}catch(e){showError(e)}};controls.append(save,remove);form.append(controls);form.onsubmit=async event=>{event.preventDefault();const data=new FormData(form);try{await request(`/profiles/${encodeURIComponent(profile.profile_id)}`,{method:"PATCH",body:JSON.stringify({display_name:data.get("display_name"),approximate_age:data.get("approximate_age")?Number(data.get("approximate_age")):null,challenge_preference:data.get("challenge_preference"),uppercase_text:data.get("uppercase_text")==="true"})});await load();showMessage("Child settings saved.")}catch(e){showError(e)}};box.append(form)}
 
-    renderProfiles(profiles,system.profile_policy?.avatars || []);
-    renderActivities(activities);
-    renderHardware(hardware);
-    renderDevices(devices);
-    renderCapabilities(index.capabilities || {});
-    message.textContent="";
-  } catch(error) { showError(error); }
-}
+function renderActivityPolicy(){const box=document.getElementById("activity-policy");box.replaceChildren();const profile=selectedProfile(),policy=profile?state.policies.get(profile.profile_id):null;if(!profile||!policy){box.innerHTML='<p class="muted">Choose a child first.</p>';return}const wrap=document.createElement("div");wrap.className="stack";const note=document.createElement("div");note.className="notice";note.textContent=profile.approximate_age==null?"Set an approximate age on the Children page to use automatic age recommendations. Activities without age metadata stay available unless you hide them explicitly.":`Automatic recommendations currently use age ${profile.approximate_age}. Explicit “Always show” and “Hide” choices take precedence.`;wrap.append(note);const label=document.createElement("label");label.textContent="Automatic visibility";const select=document.createElement("select");select.innerHTML='<option value="show_all">Show all Activities</option><option value="recommended_only">Show only Activities recommended for this age</option><option value="hide_too_simple">Hide Activities marked too young</option><option value="custom">Only use my explicit per-Activity choices</option>';select.value=policy.visibility_mode;select.onchange=async()=>{try{await updatePolicy({visibility_mode:select.value});showMessage("Activity visibility updated.")}catch(e){showError(e)}};label.append(select);wrap.append(label);box.append(wrap)}
+async function updatePolicy(changes){const profile=selectedProfile();if(!profile)return;const current=state.policies.get(profile.profile_id);const payload={visibility_mode:current?.visibility_mode||"show_all",overrides:{...(current?.overrides||{})},...changes};const updated=await request(`/profiles/${encodeURIComponent(profile.profile_id)}/activity-policy`,{method:"PUT",body:JSON.stringify(payload)});state.policies.set(profile.profile_id,updated);renderActivityPolicy();renderActivities()}
+async function setActivityOverride(activityId,value){const profile=selectedProfile();if(!profile)return;const current=state.policies.get(profile.profile_id);const overrides={...(current?.overrides||{})};if(value==="default")delete overrides[activityId];else overrides[activityId]=value;await updatePolicy({overrides})}
+function renderActivities(){const box=document.getElementById("activities");box.replaceChildren();const profile=selectedProfile(),policy=profile?state.policies.get(profile.profile_id):null;if(!profile||!policy){box.innerHTML='<p class="muted">Choose a child first.</p>';return}const effective=new Set(policy.effective_activity_ids||[]);const q=document.getElementById("activity-search").value.trim().toLowerCase();const ageFilter=document.getElementById("activity-age-filter").value;const difficulty=document.getElementById("activity-difficulty-filter").value;let visible=state.activities.filter(activity=>{const hay=[activity.activity_id,...(activity.presentation_categories||[]),...(activity.categories||[]),...(activity.discovery_tags||[])].join(" ").toLowerCase();if(q&&!hay.includes(q))return false;if(ageFilter==="recommended"&&!recommendedFor(activity,profile))return false;if(ageFilter==="unknown"&&(activity.recommended_age_min!=null||activity.recommended_age_max!=null))return false;if(difficulty!=="all"&&Number(difficulty)!==Number(activity.difficulty))return false;return true});document.getElementById("activity-count").textContent=`${effective.size} of ${state.activities.length} shown to ${profile.display_name}`;if(!visible.length){box.innerHTML='<p class="muted">No Activities match these filters.</p>';return}for(const activity of visible){const enabled=effective.has(activity.activity_id);const override=policy.overrides?.[activity.activity_id]||"default";const card=document.createElement("article");card.className=`activity-card ${enabled?"":"is-hidden"}`;const head=document.createElement("div");head.innerHTML=`<div class="activity-name">${humanize(activity.activity_id)}</div><div class="activity-id"></div>`;head.querySelector(".activity-id").textContent=activity.activity_id;const chips=document.createElement("div");chips.className="chips";for(const value of [ageLabel(activity),difficultyLabel(activity),...(activity.presentation_categories||[]).slice(0,2)]){const chip=document.createElement("span");chip.className="chip";chip.textContent=humanize(value);chips.append(chip)}const stateChip=document.createElement("span");stateChip.className=`chip ${enabled?"ok":"hidden-state"}`;stateChip.textContent=enabled?"Shown to child":"Hidden from child";chips.prepend(stateChip);const selector=document.createElement("select");selector.setAttribute("aria-label",`Visibility for ${activity.activity_id}`);selector.innerHTML='<option value="default">Automatic</option><option value="always_show">Always show</option><option value="always_hide">Hide from child</option>';selector.value=override;selector.onchange=async()=>{selector.disabled=true;try{await setActivityOverride(activity.activity_id,selector.value);showMessage(`${humanize(activity.activity_id)} visibility saved.`)}catch(e){showError(e);selector.disabled=false}};card.append(head,chips,selector);box.append(card)}}
+for(const id of ["activity-search","activity-age-filter","activity-difficulty-filter"]){document.getElementById(id).addEventListener(id==="activity-search"?"input":"change",renderActivities)}
 
-function renderProfiles(profiles,avatars){
-  const box=document.getElementById("profiles"); box.replaceChildren();
-  for(const profile of profiles){
-    const body=document.createElement("div");
-    body.append(lines([
-      `Avatar: ${text(profile.avatar_id)}`,
-      `Password: ${profile.has_secret ? "set" : "none"}`,
-      `Text style: ${profile.uppercase_text === false ? "normal letters" : "CAPITAL letters"}`
-    ]));
-    const caseToggle=document.createElement("button");
-    caseToggle.textContent=profile.uppercase_text === false ? "Use CAPITAL letters" : "Use normal letters";
-    caseToggle.onclick=async()=>{ try{ await request(`/profiles/${encodeURIComponent(profile.profile_id)}`,{method:"PATCH",body:JSON.stringify({uppercase_text:profile.uppercase_text===false})}); await load(); }catch(e){ showError(e); } };
-    body.append(caseToggle);
-    const remove=document.createElement("button"); remove.className="danger"; remove.textContent="Delete";
-    remove.onclick=async()=>{ if(!confirm(`Delete ${profile.display_name}?`)) return; try{await request(`/profiles/${encodeURIComponent(profile.profile_id)}`,{method:"DELETE"});await load()}catch(e){showError(e)} };
-    body.append(remove);
-    box.append(card(text(profile.display_name),body));
-  }
-  const select=document.getElementById("new-avatar"); select.replaceChildren();
-  for(const avatar of avatars){const option=document.createElement("option");option.value=avatar;option.textContent=text(avatar).replaceAll("_"," ");select.append(option)}
-}
+function renderSystem(system){const box=document.getElementById("system");box.replaceChildren();for(const[title,value]of [["Uptime",formatUptime(system.uptime_seconds)],["Memory free",formatBytes(system.memory_available_bytes)],["Disk free",formatBytes(system.disk_free_bytes)],["Runtime API",text(system.runtime_api_version)]]){const c=document.createElement("div");c.className="card";c.innerHTML=`<div class="muted small">${title}</div><div class="metric"></div>`;c.querySelector(".metric").textContent=value;box.append(c)}}
+function renderHardware(hardware){const desired=hardware.desired||{},form=document.getElementById("hardware");form.mouse_speed.value=desired.mouse_speed??0;form.touchpad_speed.value=desired.touchpad_speed??0;form.touchpad_tap.checked=!!desired.touchpad_tap;form.natural_scrolling.checked=!!desired.natural_scrolling;form.mic_gain.value=desired.mic_gain??2;const updateMic=v=>document.getElementById("mic-gain-label").textContent=`${Math.round(v*100)}%`;updateMic(form.mic_gain.value);form.mic_gain.oninput=e=>updateMic(e.target.value);const select=document.getElementById("resolution");select.replaceChildren();const values=[...new Set(["auto",...(hardware.display_modes||[]).map(i=>i.id).filter(Boolean),desired.resolution].filter(Boolean))];for(const value of values){const o=document.createElement("option");o.value=value;o.textContent=value==="auto"?"Automatic":value;o.selected=value===desired.resolution;select.append(o)}}
+function renderDevices(devices){const box=document.getElementById("devices");box.replaceChildren();if(!devices.length){const c=document.createElement("div");c.className="card muted";c.textContent="No per-device parent credentials are registered yet.";box.append(c);return}for(const device of devices){const c=document.createElement("article");c.className="card stack";const title=document.createElement("h3");title.textContent=device.display_name;const meta=document.createElement("div");meta.className="muted small";meta.textContent=`Paired ${text(device.created_at)}`;const revoke=document.createElement("button");revoke.className="button danger";revoke.textContent="Revoke";revoke.onclick=async()=>{if(!confirm(`Revoke ${device.display_name}?`))return;try{await request(`/devices/${encodeURIComponent(device.device_id)}`,{method:"DELETE"});await load();showMessage("Parent device revoked.")}catch(e){showError(e)}};c.append(title,meta,revoke);box.append(c)}}
+function renderCapabilities(capabilities){const labels={"activities.install":"Install / update Activities","backup.manage":"Backup / restore","settings.audio":"Sound settings","network.manage":"Network settings","maintenance.ssh":"SSH maintenance"},box=document.getElementById("capabilities");box.replaceChildren();for(const[key,label]of Object.entries(labels)){const row=document.createElement("div");row.className="capability";const a=document.createElement("span");a.textContent=label;const b=document.createElement("strong");b.textContent=capabilities[key]?"Available":"Not available yet";row.append(a,b);box.append(row)}}
+function populateNewProfile(){const select=document.getElementById("new-avatar");select.replaceChildren();for(const avatar of state.avatars){const o=document.createElement("option");o.value=avatar;o.textContent=humanize(avatar);select.append(o)}ageOptions(document.getElementById("new-age"),null,true)}
 
-function renderActivities(activities){
-  const box=document.getElementById("activities"); box.replaceChildren();
-  for(const activity of activities){
-    box.append(card(text(activity.activity_id),lines([
-      `Version: ${text(activity.version)}`,
-      `Input: ${text(activity.input_profile)}`,
-      `Languages: ${(activity.languages||[]).join(", ")}`
-    ])));
-  }
-}
-
-function renderHardware(hardware){
-  const desired=hardware.desired || {};
-  const form=document.getElementById("hardware");
-  form.mouse_speed.value=desired.mouse_speed ?? 0;
-  form.touchpad_speed.value=desired.touchpad_speed ?? 0;
-  form.touchpad_tap.checked=!!desired.touchpad_tap;
-  form.natural_scrolling.checked=!!desired.natural_scrolling;
-  form.mic_gain.value=desired.mic_gain ?? 2.0;
-  const updateMic=val=>{ const el=document.getElementById("mic-gain-label"); if(el) el.textContent=`${Math.round(val*100)}% (${val}x Boost)`; };
-  updateMic(form.mic_gain.value);
-  form.mic_gain.oninput=e=>updateMic(e.target.value);
-  const select=document.getElementById("resolution"); select.replaceChildren();
-  const choices=["auto",...(hardware.display_modes||[]).map(item=>item.id).filter(Boolean)];
-  const unique=[...new Set(choices)];
-  if(desired.resolution && !unique.includes(desired.resolution)) unique.push(desired.resolution);
-  for(const value of unique){const option=document.createElement("option");option.value=value;option.textContent=value==="auto"?"Automatic":value;option.selected=value===desired.resolution;select.append(option)}
-}
-
-function renderDevices(devices){
-  const box=document.getElementById("devices"); box.replaceChildren();
-  if(!devices.length){box.append(card("Current browser",lines(["Using transitional pairing credential"])));return}
-  for(const device of devices){
-    const body=document.createElement("div"); body.append(lines([`Paired: ${text(device.created_at)}`]));
-    const revoke=document.createElement("button"); revoke.className="danger"; revoke.textContent="Revoke";
-    revoke.onclick=async()=>{if(!confirm(`Revoke ${device.display_name}?`))return;try{await request(`/devices/${encodeURIComponent(device.device_id)}`,{method:"DELETE"});await load()}catch(e){showError(e)}};
-    body.append(revoke); box.append(card(text(device.display_name),body));
-  }
-}
-
-function renderCapabilities(capabilities){
-  const labels={
-    "activities.install":"Install / update Activities",
-    "backup.manage":"Backup / restore",
-    "settings.audio":"Sound settings",
-    "network.manage":"Network settings",
-    "maintenance.ssh":"SSH maintenance"
-  };
-  const box=document.getElementById("capabilities");box.replaceChildren();
-  for(const [key,label] of Object.entries(labels)){
-    const row=document.createElement("div");row.className="capability";
-    const name=document.createElement("span");name.textContent=label;
-    const state=document.createElement("strong");state.textContent=capabilities[key]?"Available":"Not implemented yet";
-    row.append(name,state);box.append(row);
-  }
-}
-
-document.getElementById("change-password").addEventListener("submit",async event=>{
-  event.preventDefault(); const form=new FormData(event.currentTarget);
-  try{
-    await request("/parent-password",{method:"PUT",body:JSON.stringify({
-      current_password:form.get("current_password"),new_password:form.get("new_password")
-    })});
-    event.currentTarget.reset(); message.className="status ok"; message.textContent="Parent password changed.";
-  }catch(error){showError(error)}
-});
-document.getElementById("create-profile").addEventListener("submit",async event=>{
-  event.preventDefault(); const form=new FormData(event.currentTarget);
-  try{
-    await request("/profiles",{method:"POST",body:JSON.stringify({
-      display_name:form.get("display_name"),avatar_id:form.get("avatar_id"),secret:form.get("secret")||"",mask_secret:form.get("mask_secret")==="on",uppercase_text:form.get("uppercase_text")==="on"
-    })});
-    event.currentTarget.reset(); await load();
-  }catch(error){showError(error)}
-});
-document.getElementById("hardware").addEventListener("submit",async event=>{
-  event.preventDefault(); const form=new FormData(event.currentTarget);
-  try{
-    await request("/settings/hardware",{method:"PUT",body:JSON.stringify({
-      mouse_speed:Number(form.get("mouse_speed")),touchpad_speed:Number(form.get("touchpad_speed")),
-      resolution:form.get("resolution"),touchpad_tap:form.get("touchpad_tap")==="on",natural_scrolling:form.get("natural_scrolling")==="on",
-      mic_gain:Number(form.get("mic_gain"))||2.0
-    })});
-    await load();
-  }catch(error){showError(error)}
-});
+document.getElementById("create-profile").addEventListener("submit",async event=>{event.preventDefault();const form=new FormData(event.currentTarget);try{const created=await request("/profiles",{method:"POST",body:JSON.stringify({display_name:form.get("display_name"),avatar_id:form.get("avatar_id"),secret:form.get("secret")||"",mask_secret:form.get("mask_secret")==="on",uppercase_text:form.get("uppercase_text")==="on",approximate_age:form.get("approximate_age")?Number(form.get("approximate_age")):null,challenge_preference:form.get("challenge_preference")})});state.selectedProfileId=created.profile_id;event.currentTarget.reset();await load();showMessage("Child profile added.")}catch(error){showError(error)}});
+document.getElementById("hardware").addEventListener("submit",async event=>{event.preventDefault();const form=new FormData(event.currentTarget);try{await request("/settings/hardware",{method:"PUT",body:JSON.stringify({mouse_speed:Number(form.get("mouse_speed")),touchpad_speed:Number(form.get("touchpad_speed")),resolution:form.get("resolution"),touchpad_tap:form.get("touchpad_tap")==="on",natural_scrolling:form.get("natural_scrolling")==="on",mic_gain:Number(form.get("mic_gain"))||2})});showMessage("Device settings applied.");await load()}catch(error){showError(error)}});
+document.getElementById("change-password").addEventListener("submit",async event=>{event.preventDefault();const form=new FormData(event.currentTarget);try{await request("/parent-password",{method:"PUT",body:JSON.stringify({current_password:form.get("current_password"),new_password:form.get("new_password")})});event.currentTarget.reset();showMessage("Parent password changed.")}catch(error){showError(error)}});
 load();
 </script>
-</body>
-</html>"""
+</body></html>"""
