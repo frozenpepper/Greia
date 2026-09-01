@@ -336,6 +336,25 @@ class UsageLimitService:
 
         self.store.mutate(update)
 
+    def remove_profile(self, profile_id: str) -> None:
+        """Remove stale per-profile policy/accounting after profile deletion."""
+        _validate_profile_id(profile_id)
+
+        def update(state: _UsageState) -> _UsageState:
+            policies = dict(state.profile_policies)
+            policies.pop(profile_id, None)
+            profile_usage = dict(state.profile_usage)
+            profile_usage.pop(profile_id, None)
+            return _UsageState(
+                state.device_policy,
+                tuple(sorted(policies.items())),
+                state.latest_accounting_date,
+                state.device_usage,
+                tuple(sorted(profile_usage.items())),
+            )
+
+        self.store.mutate(update)
+
     def status(self, profile_id: str) -> UsageLimitStatus:
         _validate_profile_id(profile_id)
         return self._status_from_state(profile_id, self.store.read())

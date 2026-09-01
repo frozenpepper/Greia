@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from datetime import date
@@ -28,7 +29,8 @@ class UsageLimitServiceTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.today = date(2026, 9, 1)
-        self.store = UsageLimitStore(Path(self.temporary.name) / "usage-limits.json")
+        self.path = Path(self.temporary.name) / "usage-limits.json"
+        self.store = UsageLimitStore(self.path)
         self.service = UsageLimitService(self.store, date_provider=lambda: self.today)
 
     def test_unconfigured_profile_is_unlimited(self) -> None:
@@ -89,6 +91,64 @@ class UsageLimitServiceTests(unittest.TestCase):
         status = restarted.status("child-a")
         self.assertEqual(status.profile_policy.daily_minutes, 30)
         self.assertEqual(status.profile_used_seconds, 91)
+
+    def test_clearing_profile_and_device_policy_restores_unlimited(self) -> None:
+        self.service.set_device_policy(UsageLimitPolicy(30))
+        self.service.set_profile_policy("child-a", UsageLimitPolicy(10))
+        self.service.set_device_policy(UsageLimitPolicy())
+        self.service.set_profile_policy("child-a", UsageLimitPolicy())
+        status = self.service.status("child-a")
+        self.assertIsNone(status.device_policy.daily_minutes)
+        self.assertIsNone(status.profile_policy.daily_minutes)
+        self.assertIsNone(status.effective_remaining_seconds)
+
+    def test_remove_profile_cleans_policy_and_accounting_only_for_that_child(self) -> None:
+        self.service.set_device_policy(UsageLimitPolicy(60))
+        self.service.set_profile_policy("child-a", UsageLimitPolicy(10))
+        self.service.set_profile_policy("child-b", UsageLimitPolicy(20))
+        self.service.record_activity_time("child-a", 61)
+        self.service.record_activity_time("child-b", 31)
+        device_before = self.service.status("child-b").device_used_seconds
+
+        self.service.remove_profile("child-a")
+
+        removed = self.service.status("child-a")
+        retained = self.service.status("child-b")
+        self.assertIsNone(removed.profile_policy.daily_minutes)
+        self.assertEqual(removed.profile_used_seconds, 0)
+        self.assertEqual(retained.profile_policy.daily_minutes, 20)
+        self.assertEqual(retained.profile_used_seconds, 31)
+        self.assertEqual(retained.device_used_seconds, device_before)
+
+    def test_zero_elapsed_time_does_not_increment_accounting(self) -> None:
+        self.service.set_profile_policy("child-a", UsageLimitPolicy(10))
+        status = self.service.record_activity_time("child-a", 0)
+        self.assertEqual(status.device_used_seconds, 0)
+        self.assertEqual(status.profile_used_seconds, 0)
+
+    def test_store_rejects_malformed_or_unsupported_state(self) -> None:
+        for body in ("not-json", '{"schema_version":999}'):
+            with self.subTest(body=body):
+                self.path.write_text(body, encoding="utf-8")
+                with self.assertRaises(UsageLimitError):
+                    self.store.read()
+
+    def test_store_rejects_unsafe_profile_id(self) -> None:
+        self.path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "device_daily_minutes": None,
+                    "profile_daily_minutes": {"../escape": 10},
+                    "latest_accounting_date": None,
+                    "device_usage": {},
+                    "profile_usage": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        with self.assertRaises(UsageLimitError):
+            self.store.read()
 
     def test_store_rejects_symlink(self) -> None:
         target = Path(self.temporary.name) / "target.json"

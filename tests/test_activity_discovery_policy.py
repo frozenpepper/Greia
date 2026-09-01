@@ -7,6 +7,7 @@ from pathlib import Path
 from greia_launcher.catalogue_view import ActivityCatalogue
 from greia_platform.activities import ActivityManifest
 from greia_platform.activity_discovery import (
+    ActivityDiscoveryError,
     ActivityDiscoveryPolicy,
     ActivityDiscoveryPolicyStore,
     ActivityDiscoveryService,
@@ -25,6 +26,9 @@ def _activity(
     age_max: int | None = None,
     tags: tuple[str, ...] = (),
     categories: tuple[str, ...] = ("create",),
+    adaptive: bool = False,
+    difficulty_min: int | None = None,
+    difficulty_max: int | None = None,
 ) -> ActivityManifest:
     return ActivityManifest(
         activity_id=f"org.greia.test-{index}",
@@ -49,6 +53,9 @@ def _activity(
         discovery_tags=tags,
         recommended_age_min=age_min,
         recommended_age_max=age_max,
+        adaptive_difficulty=adaptive,
+        difficulty_min=difficulty_min,
+        difficulty_max=difficulty_max,
     )
 
 
@@ -119,16 +126,95 @@ class ActivityDiscoveryPolicyTests(unittest.TestCase):
         self.assertEqual(easier, (easy, hard))
         self.assertEqual(harder, (hard, easy))
 
+    def test_difficulty_range_filters_fixed_and_adaptive_activities(self) -> None:
+        easy = _activity(1, difficulty=2)
+        hard = _activity(2, difficulty=9)
+        adaptive = _activity(
+            3,
+            difficulty=5,
+            adaptive=True,
+            difficulty_min=3,
+            difficulty_max=7,
+        )
+        service = ActivityDiscoveryService()
+        policy = ActivityDiscoveryPolicy(difficulty_min=4, difficulty_max=6)
+        result = service.effective_activities(
+            (easy, hard, adaptive),
+            approximate_age=None,
+            challenge_preference=ChallengePreference.AUTOMATIC,
+            policy=policy,
+        )
+        self.assertEqual(tuple(item.activity_id for item in result), (adaptive.activity_id,))
+
+    def test_explicit_override_wins_over_difficulty_range(self) -> None:
+        outside = _activity(1, difficulty=10)
+        inside = _activity(2, difficulty=4)
+        policy = ActivityDiscoveryPolicy(
+            difficulty_min=3,
+            difficulty_max=5,
+            overrides=(
+                (outside.activity_id, ActivityVisibilityOverride.ALWAYS_SHOW),
+                (inside.activity_id, ActivityVisibilityOverride.ALWAYS_HIDE),
+            ),
+        )
+        result = ActivityDiscoveryService().effective_activities(
+            (outside, inside),
+            approximate_age=None,
+            challenge_preference=ChallengePreference.AUTOMATIC,
+            policy=policy,
+        )
+        self.assertEqual(tuple(item.activity_id for item in result), (outside.activity_id,))
+
+    def test_open_ended_difficulty_ranges_are_supported(self) -> None:
+        activities = tuple(_activity(i, difficulty=i) for i in range(1, 7))
+        service = ActivityDiscoveryService()
+        lower = service.effective_activities(
+            activities,
+            approximate_age=None,
+            challenge_preference=ChallengePreference.AUTOMATIC,
+            policy=ActivityDiscoveryPolicy(difficulty_min=4),
+        )
+        upper = service.effective_activities(
+            activities,
+            approximate_age=None,
+            challenge_preference=ChallengePreference.AUTOMATIC,
+            policy=ActivityDiscoveryPolicy(difficulty_max=2),
+        )
+        self.assertEqual([item.difficulty for item in lower], [4, 5, 6])
+        self.assertEqual([item.difficulty for item in upper], [1, 2])
+
+    def test_policy_rejects_invalid_difficulty_range(self) -> None:
+        for minimum, maximum in ((0, None), (None, 11), (7, 3), (True, 5)):
+            with self.subTest(minimum=minimum, maximum=maximum):
+                with self.assertRaises(ActivityDiscoveryError):
+                    ActivityDiscoveryPolicy(  # type: ignore[arg-type]
+                        difficulty_min=minimum,
+                        difficulty_max=maximum,
+                    )
+
     def test_policy_store_roundtrip_preserves_parent_and_hysteresis_state(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             store = ActivityDiscoveryPolicyStore(Path(temporary) / "policy.json")
             policy = ActivityDiscoveryPolicy(
                 visibility_mode=ActivityVisibilityMode.CUSTOM,
+                difficulty_min=2,
+                difficulty_max=7,
                 overrides=(("org.greia.example", ActivityVisibilityOverride.ALWAYS_HIDE),),
                 subdivided_collections=("learn",),
             )
             store.write(policy)
             self.assertEqual(store.read(), policy)
+
+    def test_old_policy_without_difficulty_fields_remains_compatible(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "policy.json"
+            path.write_text(
+                '{"schema_version":1,"visibility_mode":"show_all","overrides":{},"subdivided_collections":[]}',
+                encoding="utf-8",
+            )
+            policy = ActivityDiscoveryPolicyStore(path).read()
+            self.assertIsNone(policy.difficulty_min)
+            self.assertIsNone(policy.difficulty_max)
 
     def test_adaptive_thresholds_and_hysteresis(self) -> None:
         planner = AdaptiveCollectionPlanner()

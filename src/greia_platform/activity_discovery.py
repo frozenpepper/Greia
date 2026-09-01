@@ -38,6 +38,12 @@ class ActivityVisibilityOverride(str, Enum):
 class ActivityDiscoveryPolicy:
     """Parent-owned visibility policy plus platform-owned adaptive UI state.
 
+    ``difficulty_min`` and ``difficulty_max`` are optional inclusive bounds on
+    Activities the child can discover. Fixed-difficulty Activities are compared
+    directly; adaptive Activities are visible when their declared achievable
+    range overlaps the requested range. Explicit per-Activity overrides always
+    take precedence over age and difficulty automation.
+
     ``overrides`` is stored as an ordered tuple rather than a mutable mapping so
     one policy value can be compared, cached and passed across presentation
     boundaries safely. ``subdivided_collections`` is not Parent intent: it is a
@@ -46,8 +52,13 @@ class ActivityDiscoveryPolicy:
     """
 
     visibility_mode: ActivityVisibilityMode = ActivityVisibilityMode.SHOW_ALL
+    difficulty_min: int | None = None
+    difficulty_max: int | None = None
     overrides: tuple[tuple[str, ActivityVisibilityOverride], ...] = ()
     subdivided_collections: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        _validate_difficulty_range(self.difficulty_min, self.difficulty_max)
 
     def override_for(self, activity_id: str) -> ActivityVisibilityOverride | None:
         for candidate, value in self.overrides:
@@ -68,6 +79,8 @@ class ActivityDiscoveryPolicy:
             mapping[activity_id] = value
         return ActivityDiscoveryPolicy(
             visibility_mode=self.visibility_mode,
+            difficulty_min=self.difficulty_min,
+            difficulty_max=self.difficulty_max,
             overrides=tuple(sorted(mapping.items())),
             subdivided_collections=self.subdivided_collections,
         )
@@ -77,6 +90,22 @@ class ActivityDiscoveryPolicy:
     ) -> "ActivityDiscoveryPolicy":
         return ActivityDiscoveryPolicy(
             visibility_mode=mode,
+            difficulty_min=self.difficulty_min,
+            difficulty_max=self.difficulty_max,
+            overrides=self.overrides,
+            subdivided_collections=self.subdivided_collections,
+        )
+
+    def with_difficulty_range(
+        self,
+        minimum: int | None,
+        maximum: int | None,
+    ) -> "ActivityDiscoveryPolicy":
+        _validate_difficulty_range(minimum, maximum)
+        return ActivityDiscoveryPolicy(
+            visibility_mode=self.visibility_mode,
+            difficulty_min=minimum,
+            difficulty_max=maximum,
             overrides=self.overrides,
             subdivided_collections=self.subdivided_collections,
         )
@@ -92,6 +121,8 @@ class ActivityDiscoveryPolicy:
             state.discard(collection_id)
         return ActivityDiscoveryPolicy(
             visibility_mode=self.visibility_mode,
+            difficulty_min=self.difficulty_min,
+            difficulty_max=self.difficulty_max,
             overrides=self.overrides,
             subdivided_collections=tuple(sorted(state)),
         )
@@ -171,6 +202,13 @@ class ActivityDiscoveryPolicyStore:
         self.write(updated)
         return updated
 
+    def update_difficulty_range(
+        self, minimum: int | None, maximum: int | None
+    ) -> ActivityDiscoveryPolicy:
+        updated = self.read().with_difficulty_range(minimum, maximum)
+        self.write(updated)
+        return updated
+
     def update_override(
         self,
         activity_id: str,
@@ -198,6 +236,10 @@ class ActivityDiscoveryPolicyStore:
             mode = ActivityVisibilityMode(raw.get("visibility_mode", "show_all"))
         except (TypeError, ValueError) as exc:
             raise ActivityDiscoveryError("invalid Activity visibility mode") from exc
+
+        difficulty_min = _optional_difficulty(raw.get("difficulty_min"))
+        difficulty_max = _optional_difficulty(raw.get("difficulty_max"))
+        _validate_difficulty_range(difficulty_min, difficulty_max)
 
         raw_overrides = raw.get("overrides", {})
         if not isinstance(raw_overrides, dict) or len(raw_overrides) > self.MAX_OVERRIDES:
@@ -228,6 +270,8 @@ class ActivityDiscoveryPolicyStore:
 
         return ActivityDiscoveryPolicy(
             visibility_mode=mode,
+            difficulty_min=difficulty_min,
+            difficulty_max=difficulty_max,
             overrides=tuple(sorted(overrides)),
             subdivided_collections=tuple(sorted(subdivided)),
         )
@@ -238,6 +282,7 @@ class ActivityDiscoveryPolicyStore:
             raise ActivityDiscoveryError("too many per-Activity visibility overrides")
         if len(policy.subdivided_collections) > cls.MAX_SUBDIVIDED_COLLECTIONS:
             raise ActivityDiscoveryError("too many adaptive Collection state entries")
+        _validate_difficulty_range(policy.difficulty_min, policy.difficulty_max)
         for activity_id, _ in policy.overrides:
             _validate_activity_id(activity_id)
         for collection_id in policy.subdivided_collections:
@@ -245,6 +290,8 @@ class ActivityDiscoveryPolicyStore:
         return {
             "schema_version": cls.SCHEMA_VERSION,
             "visibility_mode": policy.visibility_mode.value,
+            "difficulty_min": policy.difficulty_min,
+            "difficulty_max": policy.difficulty_max,
             "overrides": {
                 activity_id: value.value for activity_id, value in policy.overrides
             },
@@ -257,7 +304,7 @@ class ActivityDiscoveryService:
 
     This service never changes registry trust, permissions, Activity identity or
     save state. Missing audience metadata fails open. Parent explicit overrides
-    are evaluated before automatic age-based policy.
+    are evaluated before automatic age/difficulty policy.
     """
 
     def effective_activities(
@@ -316,19 +363,19 @@ class ActivityDiscoveryService:
             return False
         if override is ActivityVisibilityOverride.ALWAYS_SHOW:
             return True
-        if policy.visibility_mode in {
+
+        age_visible = True
+        if policy.visibility_mode not in {
             ActivityVisibilityMode.SHOW_ALL,
             ActivityVisibilityMode.CUSTOM,
-        }:
-            return True
-        if approximate_age is None:
-            return True
-        if policy.visibility_mode is ActivityVisibilityMode.HIDE_TOO_SIMPLE:
-            maximum = activity.recommended_age_max
-            return maximum is None or approximate_age <= maximum
-        if policy.visibility_mode is ActivityVisibilityMode.RECOMMENDED_ONLY:
-            return _age_within_declared_range(activity, approximate_age)
-        return True
+        } and approximate_age is not None:
+            if policy.visibility_mode is ActivityVisibilityMode.HIDE_TOO_SIMPLE:
+                maximum = activity.recommended_age_max
+                age_visible = maximum is None or approximate_age <= maximum
+            elif policy.visibility_mode is ActivityVisibilityMode.RECOMMENDED_ONLY:
+                age_visible = _age_within_declared_range(activity, approximate_age)
+
+        return age_visible and _difficulty_ranges_overlap(activity, policy)
 
     @staticmethod
     def _age_rank(activity: ActivityManifest, approximate_age: int | None) -> int:
@@ -438,8 +485,6 @@ class AdaptiveCollectionPlanner:
             for _, bucket in nonempty
             for activity in bucket
         }
-        # Do not create a hierarchy that hides or strands Activities, and do not
-        # manufacture a meaningless catch-all just to satisfy the threshold.
         if unassigned or len(assigned_ids) != len(items):
             return AdaptiveCollectionPlan(collection_id, items)
         if not self.minimum_groups <= len(nonempty) <= self.maximum_groups:
@@ -457,10 +502,51 @@ class AdaptiveCollectionPlanner:
 def _age_within_declared_range(activity: ActivityManifest, age: int) -> bool:
     minimum = activity.recommended_age_min
     maximum = activity.recommended_age_max
-    # Missing audience metadata is unknown/general and therefore fails open.
     if minimum is None and maximum is None:
         return True
     return (minimum is None or age >= minimum) and (maximum is None or age <= maximum)
+
+
+def _difficulty_ranges_overlap(
+    activity: ActivityManifest, policy: ActivityDiscoveryPolicy
+) -> bool:
+    requested_min = policy.difficulty_min
+    requested_max = policy.difficulty_max
+    if requested_min is None and requested_max is None:
+        return True
+    if activity.adaptive_difficulty:
+        activity_min = activity.difficulty_min or activity.difficulty
+        activity_max = activity.difficulty_max or activity.difficulty
+    else:
+        activity_min = activity.difficulty
+        activity_max = activity.difficulty
+    return (requested_min is None or activity_max >= requested_min) and (
+        requested_max is None or activity_min <= requested_max
+    )
+
+
+def _optional_difficulty(value: object) -> int | None:
+    if value is None:
+        return None
+    if not isinstance(value, int) or isinstance(value, bool) or not 1 <= value <= 10:
+        raise ActivityDiscoveryError("Activity difficulty bound must be an integer from 1 through 10 or null")
+    return value
+
+
+def _validate_difficulty_range(minimum: int | None, maximum: int | None) -> None:
+    for value in (minimum, maximum):
+        if value is not None and (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or not 1 <= value <= 10
+        ):
+            raise ActivityDiscoveryError(
+                "Activity difficulty bound must be an integer from 1 through 10 or null"
+            )
+    if minimum is not None and maximum is not None and minimum > maximum:
+        raise ActivityDiscoveryError(
+            "Activity difficulty minimum must not exceed maximum"
+        )
 
 
 def _validate_activity_id(value: str) -> None:
