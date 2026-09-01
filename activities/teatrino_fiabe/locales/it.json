@@ -47,5 +47,14 @@
     "recording_saved": "Spettacolo salvato nella tua libreria!",
     "playing_show": "Spettacolo in corso! Evviva!",
     "stage_cleared": "Palcoscenico pronto!"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  },
+  "strings": {
+    "activity.title": "Teatrino Fiabe"
   }
 }

@@ -513,6 +513,12 @@ class LauncherApplication:
         self._mode = "profiles"
 
     def _activate_profile(self, profile: ChildProfile, pygame: Any) -> None:
+        try:
+            spoken = getattr(self, "_spoken_labels", None)
+            if spoken is not None:
+                spoken.stop()
+        except Exception:
+            pass
         pygame.key.stop_text_input()
         context = self.session.activate(self.profile_store, profile.profile_id)
         self._active_profile = context
@@ -526,6 +532,12 @@ class LauncherApplication:
         self._mode = "activities"
 
     def _logout(self, pygame: Any) -> None:
+        try:
+            spoken = getattr(self, "_spoken_labels", None)
+            if spoken is not None:
+                spoken.stop()
+        except Exception:
+            pass
         pygame.key.stop_text_input()
         self.session.clear()
         self._active_profile = None
@@ -535,6 +547,12 @@ class LauncherApplication:
         self.theme_controller = self.selector_theme
 
     def _launch_selected(self, pygame: Any) -> None:
+        try:
+            spoken = getattr(self, "_spoken_labels", None)
+            if spoken is not None:
+                spoken.stop()
+        except Exception:
+            pass
         if not self._activities or self._active_profile is None:
             return
         manifest = self._activities[self._selected]

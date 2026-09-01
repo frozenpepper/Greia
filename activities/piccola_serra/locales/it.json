@@ -17,5 +17,10 @@
     "victory.subtitle": "La tua serra è un vero paradiso!",
     "btn.play_again": "🎉 Coltiva Ancora!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

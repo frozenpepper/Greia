@@ -13,5 +13,10 @@
     "victory.title": "Festa Splendente!",
     "victory.subtitle": "Tutte le lanterne delle rime brillano con Leo!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

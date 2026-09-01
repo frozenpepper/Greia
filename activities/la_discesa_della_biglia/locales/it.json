@@ -21,7 +21,13 @@
     "ui.best_label": "MIGLIORE",
     "ui.tools_label": "STRUMENTI",
     "ui.clear": "PULISCI",
-    "ui.drop": "FAI CADERE!"
+    "ui.drop": "FAI CADERE!",
+    "activity.title": "LA DISCESA DELLA BIGLIA"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

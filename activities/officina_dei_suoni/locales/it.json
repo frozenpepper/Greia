@@ -13,5 +13,10 @@
     "victory.title": "Officina delle Parole!",
     "victory.subtitle": "Tutti i suoni e le parole sono completi con Leo!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

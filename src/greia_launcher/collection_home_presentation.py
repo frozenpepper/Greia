@@ -87,6 +87,13 @@ class CollectionFirstHomeMixin:
         if self._mode != "activities" or self._category_id != ALL_ACTIVITIES_ID:
             return super()._handle_key(key, pygame)
 
+        old_idx = getattr(self, "_home_collection_selected", 0)
+        was_launch = key in {pygame.K_RETURN, pygame.K_SPACE}
+        if was_launch:
+            try:
+                self._stop_spoken_labels()  # type: ignore[attr-defined]
+            except Exception:
+                pass
         self._last_result = None
         self._catalogue_error = False
         collections = self._home_collections()
@@ -116,13 +123,37 @@ class CollectionFirstHomeMixin:
                 delta = columns
             self._set_home_collection_selected(self._home_collection_selected + delta)
         elif key in {pygame.K_RETURN, pygame.K_SPACE} and collections:
-            self._set_category(collections[self._home_collection_selected].collection_id)
+            cid = collections[self._home_collection_selected].collection_id
+            self._set_category(cid)
+            try:
+                self._spoken_labels.announce_collection(cid, self._spoken_locale(), pygame)  # type: ignore[attr-defined]
+            except Exception:
+                pass
+            return True
         elif key in {pygame.K_BACKSPACE, pygame.K_ESCAPE}:
             # At launcher root, Back returns to profile choice rather than
             # manufacturing an additional hidden hierarchy level.
+            try:
+                self._stop_spoken_labels()  # type: ignore[attr-defined]
+            except Exception:
+                pass
             self._logout(pygame)
+            return True
         elif self.allow_exit and key == pygame.K_q:
+            try:
+                self._stop_spoken_labels()  # type: ignore[attr-defined]
+            except Exception:
+                pass
             return False
+        # Announce home collection selection changes
+        try:
+            if getattr(self, "_home_collection_selected", 0) != old_idx:
+                cols = self._home_collections()
+                if 0 <= self._home_collection_selected < len(cols):
+                    cid = cols[self._home_collection_selected].collection_id
+                    self._spoken_labels.announce_collection(cid, self._spoken_locale(), pygame)  # type: ignore[attr-defined]
+        except Exception:
+            pass
         return True
 
     def _handle_click(self, position: tuple[int, int], pygame: Any) -> None:
@@ -138,7 +169,15 @@ class CollectionFirstHomeMixin:
                         if collection.collection_id == collection_id:
                             self._home_collection_selected = index
                             break
+                    try:
+                        self._stop_spoken_labels()  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
                     self._set_category(collection_id)
+                    try:
+                        self._spoken_labels.announce_collection(collection_id, self._spoken_locale(), pygame)  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
                     return
         super()._handle_click(position, pygame)
 

@@ -78,12 +78,19 @@ class LocaleParityTests(unittest.TestCase):
         for locale in ("it", "en"):
             data = self._bundle(locale)
             audio = data.get("audio") or {}
-            self.assertEqual(set(audio), set(cue_keys))
-            for key in cue_keys:
+            # Launcher spoken title is an additional optional-catalogue cue
+            self.assertIn("activity.title", audio)
+            self.assertEqual(set(audio) - {"activity.title"}, set(cue_keys))
+            for key in cue_keys + ["activity.title"]:
                 with self.subTest(locale=locale, key=key):
                     relative = audio[key]["path"]
                     self.assertNotIn("..", relative)
-                    self.assertTrue(relative.startswith(f"assets/audio/{locale}/"))
+                    if key == "activity.title":
+                        self.assertTrue(
+                            relative.startswith(f"locales/{locale}/audio/"), relative
+                        )
+                    else:
+                        self.assertTrue(relative.startswith(f"assets/audio/{locale}/"), relative)
                     packaged = PACKAGE / relative
                     self.assertTrue(packaged.is_file(), relative)
                     size = packaged.stat().st_size

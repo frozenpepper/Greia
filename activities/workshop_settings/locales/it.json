@@ -11,5 +11,10 @@
     "section.wallpaper": "Sfondo Schermo",
     "section.size": "Dimensione Icone"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

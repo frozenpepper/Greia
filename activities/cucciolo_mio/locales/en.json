@@ -21,5 +21,10 @@
     "stat.hunger": "Tummy",
     "stat.clean": "Clean"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

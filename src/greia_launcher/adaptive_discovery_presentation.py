@@ -188,12 +188,23 @@ class AdaptiveActivityDiscoveryMixin:
                 self._selected = 0
                 self._activity_scroll_start = 0
                 self._cached_activities_key = None
+                try:
+                    self._stop_spoken_labels()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
                 return True
 
         if self._mode == "activities" and self._group_chooser_active():
             groups = self._adaptive_groups()
             if not groups:
                 return super()._handle_key(key, pygame)
+            old_sel = getattr(self, "_subcollection_selected", 0)
+            was_open = key in {pygame.K_RETURN, pygame.K_SPACE}
+            if was_open:
+                try:
+                    self._stop_spoken_labels()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
             self._last_result = None
             self._catalogue_error = False
             columns = self._subcollection_columns(pygame)
@@ -212,14 +223,33 @@ class AdaptiveActivityDiscoveryMixin:
                     max(0, self._subcollection_selected + delta), len(groups) - 1
                 )
             elif key in {pygame.K_RETURN, pygame.K_SPACE}:
-                self._open_subcollection(
-                    groups[self._subcollection_selected].collection_id
-                )
+                cid = groups[self._subcollection_selected].collection_id
+                self._open_subcollection(cid)
+                try:
+                    self._spoken_labels.announce_collection(cid, self._spoken_locale(), pygame)  # type: ignore[attr-defined]
+                except Exception:
+                    pass
+                return True
             elif key in {pygame.K_BACKSPACE, pygame.K_ESCAPE}:
                 self._set_category(ALL_ACTIVITIES_ID)
+                try:
+                    self._stop_spoken_labels()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
+                return True
             elif self.allow_exit and key == pygame.K_q:
+                try:
+                    self._stop_spoken_labels()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
                 return False
             self._cached_activities_key = None
+            try:
+                if getattr(self, "_subcollection_selected", 0) != old_sel:
+                    cid = groups[self._subcollection_selected].collection_id
+                    self._spoken_labels.announce_collection(cid, self._spoken_locale(), pygame)  # type: ignore[attr-defined]
+            except Exception:
+                pass
             return True
         return super()._handle_key(key, pygame)
 
@@ -228,7 +258,16 @@ class AdaptiveActivityDiscoveryMixin:
             if not target.rect.collidepoint(position):
                 continue
             if target.action == "activity_subcollection":
-                self._open_subcollection(str(target.value))
+                cid = str(target.value)
+                try:
+                    self._stop_spoken_labels()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
+                self._open_subcollection(cid)
+                try:
+                    self._spoken_labels.announce_collection(cid, self._spoken_locale(), pygame)  # type: ignore[attr-defined]
+                except Exception:
+                    pass
                 return
             if (
                 target.action == "activity_category_back"
@@ -239,6 +278,10 @@ class AdaptiveActivityDiscoveryMixin:
                 self._selected = 0
                 self._activity_scroll_start = 0
                 self._cached_activities_key = None
+                try:
+                    self._stop_spoken_labels()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
                 return
         super()._handle_click(position, pygame)
 

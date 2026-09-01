@@ -13,5 +13,10 @@
     "victory.title": "Glowing Festival!",
     "victory.subtitle": "All rhyme lanterns are glowing bright with Leo!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

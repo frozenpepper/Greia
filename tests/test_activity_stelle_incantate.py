@@ -92,8 +92,14 @@ class ConstellationContentTests(unittest.TestCase):
             data = json.loads((package / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
             audio = data.get("audio") or {}
             keys_by_locale[locale] = set(audio)
-            for path in (entry["path"] for entry in audio.values()):
-                self.assertTrue(path.startswith(f"assets/audio/{locale}/"), path)
+            for cue_id, entry in audio.items():
+                path = entry["path"]
+                if cue_id == "activity.title":
+                    self.assertTrue(
+                        path.startswith(f"locales/{locale}/audio/"), path
+                    )
+                else:
+                    self.assertTrue(path.startswith(f"assets/audio/{locale}/"), path)
         self.assertEqual(keys_by_locale["it"], keys_by_locale["en"])
 
 

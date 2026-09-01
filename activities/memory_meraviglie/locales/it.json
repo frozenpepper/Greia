@@ -20,5 +20,10 @@
     "victory.subtitle": "Che memoria fantastica!",
     "grid.giant": "6x3"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

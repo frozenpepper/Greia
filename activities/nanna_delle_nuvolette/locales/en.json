@@ -19,5 +19,10 @@
     "blanket.lavender": "Lavender Blanket",
     "blanket.peach": "Peach Blanket"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

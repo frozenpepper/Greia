@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import time
 from pathlib import Path
@@ -29,15 +30,12 @@ from greia_platform.ui_motion import HoverMotion, InteractionVisualState, Launch
 from greia_platform.ui_scroll import ScrollModel
 
 from .activity_icon import ActivityIconError, package_icon_path
+from .spoken_labels import SpokenLabelController
 from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue, _category_title
 from .composition import build_launcher_runtime_services, provisional_installed_display_session
 from .title_presentation import (
-    CARD_TITLE_DISPLAY_CAP,
-    cap_title_for_card,
     contain_fit_icon_surface,
     render_activity_card_label,
-    render_full_title_disclosure_surface,
-    split_title_two_lines,
 )
 from .main import (
     HitTarget,
@@ -117,6 +115,126 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._tile_surface_cache: BoundedCache[Any, Any] = BoundedCache(64)
         self._backdrop_cache: BoundedCache[Any, Any] = BoundedCache(16)
         self._disclosure_cache: BoundedCache[Any, Any] = BoundedCache(32)
+        try:
+            env_root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
+            if (env_root / "assets/audio/system/launcher-labels").exists():
+                spoken_root = env_root
+            else:
+                spoken_root = Path(__file__).resolve().parents[2]
+        except Exception:
+            spoken_root = Path(__file__).resolve().parents[2]
+        self._spoken_labels = SpokenLabelController(spoken_root)
+
+    def _spoken_locale(self) -> str:
+        try:
+            return str(self._active_locale)  # type: ignore[attr-defined]
+        except Exception:
+            return "it"
+
+    def _speakable_for_target(
+        self, target: tuple[str, Any] | None, locale: str | None = None
+    ) -> tuple[str, Any] | None:
+        if target is None:
+            return None
+        action, value = target
+        loc = locale or self._spoken_locale()
+        try:
+            if action == "presented_activity" or action == "presented_activity_select":
+                idx = int(value)
+                acts = self._presented_activities  # type: ignore[attr-defined]
+                if not (0 <= idx < len(acts)):
+                    return None
+                manifest = acts[idx]
+                clip = self._spoken_labels.player  # noqa: F841 - keep for linter
+                from .spoken_labels import activity_title_audio
+
+                clip_path = activity_title_audio(manifest, loc)
+                if clip_path is None:
+                    return None
+                return (f"activity:{manifest.activity_id}", clip_path)
+            if action == "home_collection":
+                cid = str(value)
+                from .spoken_labels import collection_title_audio
+
+                clip_path = collection_title_audio(self._spoken_labels._root, cid, loc)
+                if clip_path is None:
+                    return None
+                return (f"collection:{cid}", clip_path)
+            if action == "activity_subcollection":
+                cid = str(value)
+                from .spoken_labels import collection_title_audio
+
+                clip_path = collection_title_audio(self._spoken_labels._root, cid, loc)
+                if clip_path is None:
+                    return None
+                return (f"collection:{cid}", clip_path)
+            if action == "activity_category":
+                cid = str(value)
+                from .spoken_labels import collection_title_audio
+
+                clip_path = collection_title_audio(self._spoken_labels._root, cid, loc)
+                if clip_path is None:
+                    return None
+                return (f"collection:{cid}", clip_path)
+        except Exception:
+            return None
+        return None
+
+    def _announce_selected_activity(self, pygame: Any) -> bool:
+        try:
+            acts = self._presented_activities  # type: ignore[attr-defined]
+            if not acts or not (0 <= self._selected < len(acts)):  # type: ignore[attr-defined]
+                return False
+            manifest = acts[self._selected]  # type: ignore[attr-defined]
+            return self._spoken_labels.announce_activity(
+                manifest, self._spoken_locale(), pygame
+            )
+        except Exception:
+            return False
+
+    def _announce_selected_home_collection(self, pygame: Any) -> bool:
+        try:
+            cols = getattr(self, "_home_collections", lambda: ())()
+            if not cols:
+                return False
+            idx = getattr(self, "_home_collection_selected", 0)
+            if not (0 <= idx < len(cols)):
+                return False
+            cid = cols[idx].collection_id
+            return self._spoken_labels.announce_collection(cid, self._spoken_locale(), pygame)
+        except Exception:
+            return False
+
+    def _announce_selected_subcollection(self, pygame: Any) -> bool:
+        try:
+            groups = getattr(self, "_adaptive_groups", lambda: ())()
+            if not groups:
+                return False
+            idx = getattr(self, "_subcollection_selected", 0)
+            if not (0 <= idx < len(groups)):
+                return False
+            cid = groups[idx].collection_id
+            return self._spoken_labels.announce_collection(cid, self._spoken_locale(), pygame)
+        except Exception:
+            return False
+
+    def _poll_spoken_labels(self, pygame: Any, now: float) -> None:
+        try:
+            self._spoken_labels.poll_pending_pointer_focus(now, pygame)
+        except Exception:
+            pass
+
+    def _clear_spoken_pointer(self) -> None:
+        try:
+            self._spoken_labels.clear_pointer_focus()
+        except Exception:
+            pass
+
+    def _stop_spoken_labels(self) -> None:
+        try:
+            self._spoken_labels.stop()
+        except Exception:
+            pass
 
     def _configure_parent_package_source(self) -> None:
         """Compose parent-installed packages into the same launch authority path."""
@@ -290,6 +408,19 @@ class GreiaLauncherPresentation(LauncherApplication):
                             new_target = self._target_at(event.pos)
                             if prev_target != new_target:
                                 _needs_redraw = True
+                            try:
+                                now = time.monotonic()
+                                prev_sp = self._speakable_for_target(prev_target)
+                                new_sp = self._speakable_for_target(new_target)
+                                if new_sp is None:
+                                    self._spoken_labels.pointer_focus_changed(None, None, now)
+                                    self._spoken_labels.clear_pointer_focus()
+                                elif prev_sp is None or new_sp[0] != prev_sp[0]:
+                                    self._spoken_labels.pointer_focus_changed(
+                                        new_sp[0], new_sp[1], now
+                                    )
+                            except Exception:
+                                pass
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         _needs_redraw = True
                         if self._mode == "parent_panel":
@@ -341,6 +472,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                         _needs_redraw = True
                 if self._rescan_if_due():
                     _needs_redraw = True
+                try:
+                    self._poll_spoken_labels(pygame, time.monotonic())
+                except Exception:
+                    pass
 
                 is_animating = bool(self._launching_activity_id is not None)
                 if _needs_redraw or is_animating or not self._first_frame_released:
@@ -388,6 +523,15 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self._mode != "activities":
             return super()._handle_key(key, pygame)
+        old_selected = getattr(self, "_selected", 0)
+        old_category = getattr(self, "_category_id", None)
+        old_scroll = getattr(self, "_activity_scroll_start", 0)
+        was_launching = key in {pygame.K_RETURN, pygame.K_SPACE}
+        if was_launching:
+            try:
+                self._stop_spoken_labels()  # type: ignore[attr-defined]
+            except Exception:
+                pass
         self._last_result = None
         self._catalogue_error = False
         activities = self._presented_activities
@@ -416,6 +560,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             self._scroll_activity_rows(1, pygame)
         elif key in {pygame.K_RETURN, pygame.K_SPACE}:
             self._launch_selected(pygame)
+            return True
         elif key == pygame.K_BACKSPACE and self._category_id != ALL_ACTIVITIES_ID:
             self._set_category(ALL_ACTIVITIES_ID)
         elif key == pygame.K_ESCAPE:
@@ -423,8 +568,34 @@ class GreiaLauncherPresentation(LauncherApplication):
                 self._set_category(ALL_ACTIVITIES_ID)
             else:
                 self._logout(pygame)
+                try:
+                    self._stop_spoken_labels()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
+                return True
         elif self.allow_exit and key == pygame.K_q:
+            try:
+                self._stop_spoken_labels()  # type: ignore[attr-defined]
+            except Exception:
+                pass
             return False
+        # Spoken labels – immediate for real semantic changes
+        try:
+            if getattr(self, "_category_id", None) != old_category:
+                if self._category_id == ALL_ACTIVITIES_ID:
+                    pass
+                else:
+                    self._spoken_labels.announce_collection(  # type: ignore[attr-defined]
+                        self._category_id, self._spoken_locale(), pygame  # type: ignore[attr-defined]
+                    )
+            elif was_launching:
+                pass
+            elif getattr(self, "_selected", 0) != old_selected or getattr(
+                self, "_activity_scroll_start", 0
+            ) != old_scroll:
+                self._announce_selected_activity(pygame)  # type: ignore[attr-defined]
+        except Exception:
+            pass
         return True
 
     def _handle_click(self, position: tuple[int, int], pygame: Any) -> None:
@@ -439,6 +610,12 @@ class GreiaLauncherPresentation(LauncherApplication):
                 self._last_result = None
                 self._catalogue_error = False
                 self._set_category(str(target.value))
+                try:
+                    self._spoken_labels.announce_collection(  # type: ignore[attr-defined]
+                        str(target.value), self._spoken_locale(), pygame  # type: ignore[attr-defined]
+                    )
+                except Exception:
+                    pass
                 return
             if target.action == "activity_category_back":
                 self._last_result = None
@@ -448,33 +625,61 @@ class GreiaLauncherPresentation(LauncherApplication):
             if target.action == "presented_activity_page_prev":
                 self._last_result = None
                 self._catalogue_error = False
+                old = getattr(self, "_selected", 0)
                 self._scroll_activity_rows(-1, pygame)
+                if getattr(self, "_selected", 0) != old:
+                    try:
+                        self._announce_selected_activity(pygame)  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
                 return
             if target.action == "presented_activity_page_next":
                 self._last_result = None
                 self._catalogue_error = False
+                old = getattr(self, "_selected", 0)
                 self._scroll_activity_rows(1, pygame)
+                if getattr(self, "_selected", 0) != old:
+                    try:
+                        self._announce_selected_activity(pygame)  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
                 return
             if target.action == "presented_activity_page":
                 self._last_result = None
                 self._catalogue_error = False
+                old = getattr(self, "_selected", 0)
                 page_idx = int(target.value)
                 columns = self._columns(pygame)
                 page_cap = columns * 2
                 self._selected = min(page_idx * page_cap, len(self._presented_activities) - 1)
                 self._ensure_selected_visible(pygame)
+                if getattr(self, "_selected", 0) != old:
+                    try:
+                        self._announce_selected_activity(pygame)  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
                 return
             if target.action == "presented_activity_select":
                 self._last_result = None
                 self._catalogue_error = False
+                old = getattr(self, "_selected", 0)
                 self._selected = int(target.value)
                 self._ensure_selected_visible(pygame)
+                if getattr(self, "_selected", 0) != old:
+                    try:
+                        self._announce_selected_activity(pygame)  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
                 return
             if target.action == "presented_activity":
                 self._last_result = None
                 self._catalogue_error = False
                 self._selected = int(target.value)
                 self._ensure_selected_visible(pygame)
+                try:
+                    self._stop_spoken_labels()  # type: ignore[attr-defined]
+                except Exception:
+                    pass
                 self._launch_selected(pygame)
                 return
         super()._handle_click(position, pygame)
@@ -583,7 +788,7 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _draw_activities(
         self,
         screen: Any,
-        theme: LauncherThemeSnapshot,
+        theme: Any,
         pygame: Any,
     ) -> None:
         width, height = screen.get_size()
@@ -774,7 +979,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         return True
 
     def _draw_activity_title_disclosure(
-        self, screen: Any, theme: LauncherThemeSnapshot, pygame: Any
+        self, screen: Any, theme: Any, pygame: Any
     ) -> None:
         try:
             activities = self._presented_activities
@@ -1094,7 +1299,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         from greia_platform.activity_ui import draw_back_symbol
 
         arrow_color = theme.accent if hovered else theme.text
-        draw_back_symbol(screen, drawn, arrow_color)
+        draw_back_symbol(screen, back_rect, arrow_color)
         self._targets.append(
             HitTarget("activity_category_back", ALL_ACTIVITIES_ID, back_rect)
         )

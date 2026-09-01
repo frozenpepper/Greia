@@ -17,5 +17,10 @@
     "victory.subtitle": "Your greenhouse is a true paradise!",
     "btn.play_again": "🎉 Plant More!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

@@ -13,5 +13,10 @@
     "victory.title": "Word Workshop!",
     "victory.subtitle": "All sounds and words are complete with Leo!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

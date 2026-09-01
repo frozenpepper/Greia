@@ -26,5 +26,10 @@
     "recipient.pina": "Pina",
     "recipient.tito": "Tito"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

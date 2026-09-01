@@ -12,5 +12,10 @@
     "victory.title": "Galleria Splendente!",
     "victory.subtitle": "Tutti i mosaici riflettono la magia con Lilli!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

@@ -24,5 +24,10 @@
     "btn.next_patient": "🐾 Next Patient!",
     "btn.play_again": "PLAY AGAIN"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

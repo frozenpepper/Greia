@@ -3,12 +3,12 @@
 **Updated:** 2026-09-01  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Primary blocking phase:** **R7 — direct graphics/session/input architecture**  
-**Current subphase:** **R7.2/R7.3 exact-current re-acceptance after Parent usage-limit lifecycle integration**  
-**Latest runtime/source correction requiring execution:** `496786ef64c8ecc9e920178e06e426fba287bd92`  
+**Current subphase:** **Launcher spoken labels (Collection + Activity) – implementation + voice migration (38 system + 68 Activity)**  
+**Latest runtime/source correction requiring execution:** `a5bac27a` + spoken-label tranche (this handover)  
 **Activity modernization:** **COMPLETE**  
 **Latest fully executed source gate retained from earlier head:** **PASS at `d947eb7ef5ad3703cb7293a8bba73bf9db9277e4` — 1512 tests (skipped=2)**  
-**Latest exact-current source/Simulator verdict:** **PENDING — main advanced after the executed d947eb7e evidence**  
-**R7.2/R7.3 Acer physical acceptance:** **PARTIAL historically; exact-current full durability gate PENDING**  
+**Latest exact-current source/Simulator verdict:** **PENDING — spoken-label implementation + voice assets added, `audit_launcher_spoken_labels` now PASS, controller tests 13 passed, full `make verify` 1561 passed after updating 3 source-contract tests**  
+**R7.2/R7.3 Acer physical acceptance:** **PARTIAL historically; exact-current full durability gate PENDING (plus spoken-label Simulator/Acer acceptance per runbook)**  
 **Ordinary-family public release:** **NOT READY**  
 **Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`
 

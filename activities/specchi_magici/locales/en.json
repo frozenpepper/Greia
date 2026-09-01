@@ -12,5 +12,10 @@
     "victory.title": "Shining Gallery!",
     "victory.subtitle": "All mosaics reflect their magic with Lilli!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

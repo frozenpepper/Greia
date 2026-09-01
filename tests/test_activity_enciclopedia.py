@@ -168,7 +168,9 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
             self.assertIsInstance(audio, dict)
             for cue_id, cue_spec in audio.items():
                 with self.subTest(locale=locale, cue_id=cue_id):
-                    self.assertTrue(cue_id.startswith("encyclopedia."))
+                    self.assertTrue(
+                        cue_id.startswith("encyclopedia.") or cue_id == "activity.title"
+                    )
                     self.assertIsInstance(cue_spec, dict)
                     self.assertIn("path", cue_spec)
                     self.assertTrue(set(cue_spec).issubset({"path", "caption_key"}))
@@ -179,10 +181,14 @@ class EncyclopediaSourceContractTests(unittest.TestCase):
                     self.assertNotIn("..", path.parts)
                     self.assertIn(path.suffix, {".ogg", ".wav"})
                     self.assertGreaterEqual(len(path.parts), 2)
-                    self.assertEqual(path.parts[0], "assets")
-                    if path.parts[:2] == ("assets", "audio"):
-                        self.assertGreaterEqual(len(path.parts), 4)
-                        self.assertEqual(path.parts[2], locale)
+                    if cue_id == "activity.title":
+                        self.assertEqual(path.parts[:2], ("locales", locale))
+                        self.assertEqual(path.parts[2], "audio")
+                    else:
+                        self.assertEqual(path.parts[0], "assets")
+                        if path.parts[:2] == ("assets", "audio"):
+                            self.assertGreaterEqual(len(path.parts), 4)
+                            self.assertEqual(path.parts[2], locale)
                     caption_key = cue_spec.get("caption_key")
                     if caption_key is not None:
                         self.assertIsInstance(caption_key, str)

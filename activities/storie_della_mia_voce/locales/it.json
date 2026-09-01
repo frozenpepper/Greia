@@ -24,7 +24,13 @@
     "ui.no_stories": "ANCORA NESSUNA STORIA!",
     "ui.story": "STORIA",
     "ui.scenes": "SCENE",
-    "ui.durations": "DURATA"
+    "ui.durations": "DURATA",
+    "activity.title": "STORIE DELLA MIA VOCE"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

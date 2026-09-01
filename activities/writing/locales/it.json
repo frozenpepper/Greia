@@ -9,5 +9,10 @@
     "btn.undo": "Annulla",
     "btn.clear": "Pulisci"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

@@ -247,7 +247,13 @@
     "fossils.types": "Fossili del corpo e di traccia",
     "fossils.burial": "Essere coperti aiuta a conservarsi",
     "fossils.clues": "I fossili raccontano ambienti antichi",
-    "fossils.rare": "Diventare un fossile è raro"
+    "fossils.rare": "Diventare un fossile è raro",
+    "activity.title": "Enciclopedia di Greia"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

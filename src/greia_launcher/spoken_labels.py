@@ -132,3 +132,99 @@ class SpokenLabelPlayer:
             pass
         self._channel = None
         self._last_identity = None
+
+
+class SpokenLabelController:
+    """Launcher-owned semantic focus controller for spoken collection/activity titles.
+
+    One instance owns the single interruptible narration channel, the short
+    pointer dwell and the semantic deduplication policy.  Collection Home,
+    adaptive sub-Collections and the Activity grid all route through this
+    single path.
+
+    Pointer dwell is intentionally tiny (default 160 ms) and is evaluated
+    against the launcher's own ``time.monotonic()`` polling – no thread,
+    subprocess or extra redraw is required.
+
+    Keyboard/controller navigation announces immediately after a *real*
+    semantic selection change; a clamped arrow or a repeated motion inside the
+    same tile does not replay.
+    """
+
+    def __init__(
+        self,
+        root: Path,
+        *,
+        player: SpokenLabelPlayer | None = None,
+        dwell_ms: int = 160,
+        cache_entries: int = 48,
+    ) -> None:
+        self._root = Path(root)
+        self._player = player if player is not None else SpokenLabelPlayer(
+            cache_entries=cache_entries
+        )
+        self._dwell_seconds = max(0, dwell_ms) / 1000.0
+        self._pending: tuple[str, Path | None, float] | None = None
+
+    @property
+    def player(self) -> SpokenLabelPlayer:
+        return self._player
+
+    def announce_activity(
+        self, manifest: ActivityManifest, locale: str, pygame: Any
+    ) -> bool:
+        clip = activity_title_audio(manifest, locale)
+        identity = f"activity:{manifest.activity_id}"
+        self._pending = None
+        return self._player.announce(identity, clip, pygame)
+
+    def announce_collection(
+        self, collection_id: str, locale: str, pygame: Any
+    ) -> bool:
+        clip = collection_title_audio(self._root, collection_id, locale)
+        identity = f"collection:{collection_id}"
+        self._pending = None
+        return self._player.announce(identity, clip, pygame)
+
+    def navigation_focus_changed(
+        self, identity: str, clip: Path | None, pygame: Any
+    ) -> bool:
+        """Immediate announcement for keyboard/controller focus changes."""
+
+        self._pending = None
+        return self._player.announce(identity, clip, pygame)
+
+    def pointer_focus_changed(
+        self, identity: str | None, clip: Path | None, now: float
+    ) -> None:
+        """Stage or cancel a pending pointer announcement.
+
+        ``identity`` is semantic (``activity:…`` or ``collection:…``) or
+        ``None`` when the pointer left any speakable target.  The pending
+        announcement fires after ``dwell_ms`` via
+        :meth:`poll_pending_pointer_focus`.
+        """
+
+        if identity is None or clip is None:
+            self._pending = None
+            return
+        if self._pending is not None and self._pending[0] == identity:
+            return
+        self._pending = (identity, clip, now + self._dwell_seconds)
+
+    def poll_pending_pointer_focus(self, now: float, pygame: Any) -> bool:
+        if self._pending is None:
+            return False
+        identity, clip, due_at = self._pending
+        if now < due_at:
+            return False
+        self._pending = None
+        return self._player.announce(identity, clip, pygame)
+
+    def clear_pointer_focus(self) -> None:
+        self._pending = None
+        self._player.clear_focus()
+
+    def stop(self) -> None:
+        self._pending = None
+        self._player.stop()

@@ -16,5 +16,11 @@
     "feedback.word_complete": "Parola completata!",
     "ui.replay_audio": "Riascolta suono",
     "ui.stars": "Stelle"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
   }
 }

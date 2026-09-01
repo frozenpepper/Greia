@@ -38,5 +38,10 @@
     "phonics.t": "Topo",
     "phonics.u": "Uva"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

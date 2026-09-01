@@ -13,5 +13,10 @@
     "victory.title": "Evviva! Il ponte è solidissimo! 🐾🎉",
     "victory.subtitle": "Il cucciolo ha raggiunto il picnic sano e salvo!"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

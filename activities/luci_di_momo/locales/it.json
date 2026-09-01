@@ -12,5 +12,10 @@
     "victory.subtitle": "Hai svegliato tutte le lucciole di Momo.",
     "button.play_again": "GIOCA ANCORA"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }
