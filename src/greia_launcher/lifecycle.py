@@ -28,6 +28,7 @@ class ActivityExitReason(StrEnum):
     FORCED_STOP = "forced_stop"
     SYSTEM_SHUTDOWN = "system_shutdown"
     PLATFORM_FAILURE = "platform_failure"
+    TIME_LIMIT_REACHED = "time_limit_reached"
 
 
 class ActivityLifecycleControl(Protocol):
