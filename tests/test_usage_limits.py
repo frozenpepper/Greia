@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
+from unittest import mock
 
 from greia_platform.usage_limits import (
     UsageLimitError,
@@ -160,6 +161,16 @@ class UsageLimitServiceTests(unittest.TestCase):
             self.skipTest("symlinks unavailable")
         with self.assertRaises(UsageLimitError):
             UsageLimitStore(link).read()
+
+    def test_posix_lock_failure_does_not_proceed_without_serialization(self) -> None:
+        try:
+            import fcntl
+        except ImportError:
+            self.skipTest("fcntl unavailable on this development host")
+
+        with mock.patch.object(fcntl, "flock", side_effect=OSError("lock failed")):
+            with self.assertRaisesRegex(UsageLimitError, "cannot acquire"):
+                self.store.read()
 
 
 if __name__ == "__main__":
