@@ -113,7 +113,7 @@ class SpokenLabelPlayer:
             sound = self._cache.get(key)
             if sound is None:
                 sound = pygame.mixer.Sound(key)
-                self._cache.put(key, sound)
+                self._cache[key] = sound
             if self._channel is None:
                 self._channel = pygame.mixer.find_channel(force=True)
             if self._channel is None:
