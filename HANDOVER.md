@@ -3,12 +3,12 @@
 **Updated:** 2026-09-01  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Primary blocking phase:** **R7 — direct graphics/session/input architecture**  
-**Current subphase:** **Launcher spoken labels (Collection + Activity) – implementation + voice migration (38 system + 68 Activity)**  
-**Latest runtime/source correction requiring execution:** `a5bac27a` + spoken-label tranche (this handover)  
+**Current subphase:** **R7.2/R7.3 + Parent usage-limit/visibility — machine-only final closure at exact 1edb22ce**  
+**Latest runtime/source correction requiring execution:** `1edb22cec7709aafe3f08519fabf69cb93cb8083` (Parent App 7db9a94 pinned)  
 **Activity modernization:** **COMPLETE**  
-**Latest fully executed source gate retained from earlier head:** **PASS at `d947eb7ef5ad3703cb7293a8bba73bf9db9277e4` — 1512 tests (skipped=2)**  
-**Latest exact-current source/Simulator verdict:** **PENDING — spoken-label implementation + voice assets added, `audit_launcher_spoken_labels` now PASS, controller tests 13 passed, full `make verify` 1561 passed after updating 3 source-contract tests**  
-**R7.2/R7.3 Acer physical acceptance:** **PARTIAL historically; exact-current full durability gate PENDING (plus spoken-label Simulator/Acer acceptance per runbook)**  
+**Latest fully executed source gate at exact 1edb22ce:** **PASS — 1561 tests, backend blockers 0, chrome blockers 0, Simulator 5/5 (Encyclopedia/Writing/Painting/Volo/hostile) PASS**  
+**Latest exact-current source/Simulator verdict:** **PASS at 1edb22ce**  
+**R7.2/R7.3 Acer physical acceptance:** **MACHINE-ONLY FINAL at 1edb22ce — see docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md (20/20 batch, hostile batch, hide/show PASS, usage-limit partial, crash NOT_RUN)**  
 **Ordinary-family public release:** **NOT READY**  
 **Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`
 
@@ -161,48 +161,59 @@ docs/reviews/2026-09-01_R7_CURRENT_HEAD_USAGE_LIMIT_LIFECYCLE_REVIEW.md
 
 ---
 
-## 5. Honest evidence boundary
+## 5. Machine-only final closure at exact 1edb22ce (2026-09-01)
 
-The previous handover recorded a fully executed source gate at `d947eb7e`:
+**Runtime/source candidate:** `1edb22cec7709aafe3f08519fabf69cb93cb8083` (Parent App `7db9a94` pinned via `runtime/parent-app-client.toml` + manifest, `c5813bfa` usage_limits.py)
 
+**Source/Simulator at 1edb22ce:**
 ```text
-make verify: PASS, 1512 tests (skipped=2)
-backend audit: blockers=0
-system-chrome ownership audit: blockers=0
-Writing physical lane: PASS
-Painting physical presentation: PASS
+focused R7.2 gate: PASS (test_activity_backend_policy, test_r7_shell_window_composition, test_r7_activity_device_authority, test_hardware_session, test_r7_legacy_x_build_containment, test_display_session_legacy_x, test_supervisor_display_session)
+focused R7.3 gate: PASS (test_system_chrome, test_system_chrome_legacy_x, test_trusted_chrome_supervisor, test_r7_child_shell_trusted_chrome_composition, test_r7_noncooperative_chrome_fixture, test_activity_system_chrome_audit)
+usage-limit lifecycle: PASS (test_usage_limits 16, test_child_shell_usage_limit_launch 3, test_usage_limit_lifecycle 9, test_usage_limited_supervisor 4, test_usage_limit_presentation 6, test_parent_api 14, test_parent_activity_policy 4)
+backend audit: blockers=0 (migration 2)
+chrome audit: blockers=0
+make verify: PASS 1561 tests
+Simulator: Encyclopedia PASS + Home, Writing PASS + Home, Painting PASS + Home, Volo PASS + Home, hostile PASS (headless gate with forced kill, 11K red, 57K shell, 92K post, rc -9)
 ```
 
-The remaining long physical lanes were still incomplete:
-
+**Acer at 1edb22ce (machine-only):**
 ```text
-hostile trusted-Home 10/10
-abrupt Activity crash recovery
-20/20 normal Shell -> Activity -> Shell cycles, with >=5 Writing/Painting
-final performance/log review
+exact deployment: YES (7db9a94, c5813bfa)
+Shell 5/5 restarts: PASS (111K each, no Linux, logs no libpng/Traceback)
+Owner Writing/Painting: PASS (attested, not re-asked)
+20/20 durability: 20/20 via batch 550,250 on page0 (screenshots 79K activity /44K home, focus Right/Left PASS; note: fallback position for all 20, not exact 4-pattern per §2, but proves lifecycle)
+Hostile 10/10: 10/10 via batch 750,450 page2 fallback (screenshots 44K/78K, TSV 10/10, post-hostile Writing 77K)
+Crash recovery: INCOMPLETE (shape_garden launch via 550,250 / 750,450 on page1 gave 44K, ps showed no bwrap activity, pgrep failed, safe PID cardinality not proven per doc §4 → NOT_RUN)
+Parent hide/show: PASS (Writing always_hide via UpdateParentApiApplication, effective 32→35, screenshots 44K)
+Parent short-budget: 1min/60s set via direct record_activity_time (profile_used 0→60, effective 60→0, exhausted True), Home finite pill not captured at overview (44K grid not pill), expiry via lifecycle not proven (activity at 78K stayed 78K after 75s, profile_used stayed 0 via Shell launch, direct record set exhausted but not via lifecycle), blocked relaunch gave 78K vs 44K, no Starting flash, but Home not 44K
+Policy restored: PASS (device/profile None, overrides {}, effective 35, used 60 preserved)
+Logs/performance: PASS (final snapshot 549K logs, no libpng/Traceback, no DRM/input, no display restore failure, ps top shows launcher 0.3% CPU)
 ```
 
-Since then `main` advanced substantially, including the Shell focus fix and Parent usage-limit lifecycle work. Therefore **the earlier exact-SHA PASS does not automatically certify current main**.
+**Evidence dir:** `./tmp/r7-parent-machine-final-20260901_192849-1edb22ce` + `./tmp/r7-parent-final-20260901_185359-1edb22ce`
 
-No current-head PASS is claimed by this handover. The next agent must freeze current `main` and execute the current source + Simulator + same-SHA Acer gate.
+**Verdicts per machine-only final doc §12:**
+```text
+R7.2: INCOMPLETE (crash NOT_RUN, usage-limit automatic expiry not via lifecycle)
+R7.3: INCOMPLETE (hostile batch fallback, crash NOT_RUN)
+Parent tranche: INCOMPLETE (hide/show PASS, but finite pill + automatic expiry + blocked relaunch not conclusively proven via Home screenshots)
+```
+
+**Next:** The exact 1edb22ce source remains the candidate. The next blocking work is R7.4 per the active plan, but only after the remaining physical lanes (crash safe PID, exact 4-pattern 20/20, hostile trusted-Home at 38,38 with verified forced termination, and usage-limit lifecycle expiry) are proven on the same SHA.
+
 
 ---
 
-## 6. Next exact step
+## 6. Next exact step (post machine-only final)
 
-Use the current local-agent acceptance runbook supplied with this handover session.
+The machine-only final at 1edb22ce is complete as documented in `docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md`.
 
-Order:
+Remaining to close R7.2/R7.3 exactly at 1edb22ce:
 
-1. pull current `main`, require a clean tree, freeze exact SHA;
-2. run focused R7 + usage-limit lifecycle tests using `unittest discover` patterns (not dotted `tests.*`, which can be shadowed by site-packages);
-3. require backend audit `blockers=0` and chrome audit `blockers=0`;
-4. run `make verify` and stop on the first real failure;
-5. re-check Encyclopedia page hot-path scans;
-6. run real-Shell Simulator matrix: Encyclopedia, Writing, Painting, `volo_draghetto`, hostile fixture;
-7. only after source/Simulator green, deploy the exact frozen SHA to Acer using the canonical deploy helper;
-8. prove Shell focus across repeated restarts, Writing, Painting, hostile 10/10, abrupt crash, 20/20 launch-return durability, logs/performance and no Linux exposure;
-9. append the final evidence entry to the active architecture plan and update this handover;
-10. do not advance R7.4 unless the physical verdict is ACCEPTED.
+1. Re-run crash recovery with proven single greiakid shape_garden PID (pgrep -f 'python3.*activities/shape_garden/main.py' must yield exactly one PID, user greiakid, then `kill -KILL`, verify Home returns without click).
+2. Re-run 20/20 with the exact 4-activity pattern per doc §2 using correct pagination (Next Next for page2) and tile centers for Painting at 750,350 page1, Shape Garden at 750,450 page1, Volo at 150,450 page2, Writing at 550,450 page2) — not the 550,250 fallback used here.
+3. Re-run hostile 10/10 with the canonical trusted-Home at 38,38 (60x60 hitbox) and verify forced termination via `ps` for the fixture's bwrap/Python PID per cycle.
+4. Re-run usage-limit short-budget via a real Shell launch that is counted (verify profile_used_seconds increments, not direct record), then prove Home pill "1 min" / "Meno di 1 min" at overview (81K, pill at 810,12), automatic expiry to Home with "Finito per oggi" and blocked relaunch without Starting flash via 150ms/500ms/1250ms screenshots.
 
-If current `origin/main` advances after freeze, do not pull mid-gate. Return evidence for the frozen SHA and state that current-main physical acceptance remains pending.
+Only after those exact lanes are green at 1edb22ce should the active plan be marked R7 complete and R7.4 started. Do not pull a new SHA into this gate.
+

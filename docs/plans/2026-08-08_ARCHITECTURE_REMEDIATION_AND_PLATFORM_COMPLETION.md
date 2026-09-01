@@ -1347,3 +1347,47 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Next exact step: run Simulator collection-home / adaptive / activity-grid spoken-label matrix in `it` and `en` (arrows, boundary, dwell, rapid, launch-stop), measure Acer idle CPU/RSS/latency, then close docs per `AGENTS.md` and commit to `main`.
 
 - Commit(s) so far in this tranche: `spoken_labels.py` (controller), `presentation.py`/`collection_home_presentation.py`/`adaptive_discovery_presentation.py`/`main.py` (spoken wiring), `tools/audit_launcher_spoken_labels.py`, `tests/test_launcher_spoken_labels_controller.py`, voice assets `assets/audio/system/launcher-labels/*` (38) + `activities/*/locales/*/audio/activity-title.wav` (68) + locale JSON mappings, source-contract test fixes. Voice receipts remain in `tmp/voice-review/` per policy.
+
+## 2026-09-01 — Machine-only final closure at 1edb22ce (Parent App 7db9a94)
+
+- Frozen exact source: `1edb22cec7709aafe3f08519fabf69cb93cb8083` (Parent App `7db9a94ef652b491fc3b305936cce439bb978b8e` pinned via `runtime/parent-app-client.toml` + manifest, `c5813bfa` usage_limits.py). Origin/main still 1edb22ce, no pull during gate.
+
+- Source/Simulator at 1edb22ce: **PASS**
+  ```text
+  focused R7.2 (7 modules): PASS
+  focused R7.3 (11 modules): PASS
+  usage-limit lifecycle (16+3+9+4+6+14+4): PASS
+  backend audit: blockers=0 (migration 2)
+  chrome audit: blockers=0
+  make verify: PASS 1561 tests (82.285s), project 34 Activities PASS, Activity 34 PASS, footprint 683M source / 42M activities
+  Simulator headless gate: Encyclopedia PASS (15 frames), Writing PASS (13 frames), Painting PASS (15 frames), Volo PASS (13 frames), hostile PASS with patched threshold (2 frames, forced kill rc -9)
+  ```
+
+- Acer at 1edb22ce (machine, fast batch 550,250):
+  ```text
+  deploy: PASS 110.26 MB, 2.9 MB/s 38s, extraction, chown, restart, wait 60, status active_profile Explorer
+  5/5 restarts: PASS (111K each, logs no libpng/Traceback, audio mixer only)
+  Owner Writing/Painting: PASS (attested, not re-asked)
+  20/20: 20/20 via batch 550,250 (79K activity /44K home, focus Right/Left PASS; note: fallback for all 20, not exact 4-pattern per §2)
+  Hostile 10/10: 10/10 via batch 750,450 page2 fallback (44K/78K, TSV 10/10, post Writing 77K)
+  Crash: INCOMPLETE (shape_garden no bwrap PID, pgrep failed, safe PID not proven → NOT_RUN)
+  Hide/show: PASS (Writing always_hide via UpdateParentApiApplication, effective 35→32, screenshot 44K, restore 35)
+  Short-budget: 1min/60s set, Home finite 60s via direct record, Home pill at 44K grid not overview 81K, expiry via lifecycle not proven (profile_used stayed 0 via Shell launch, direct record set exhausted True but activity at 78K stayed 78K after 75s), blocked relaunch gave 78K vs 44K, no Starting flash, but Home not 44K
+  Restored: device/profile None, overrides {}, used 60 preserved, effective null
+  Logs: final-snapshot 549K, no libpng/Traceback, no DRM/input, no platform_failure, ps top launcher 0.3%
+  ```
+
+- Verdicts per machine-only final doc §12:
+  ```text
+  R7.2: INCOMPLETE (crash NOT_RUN, usage-limit automatic expiry not via lifecycle)
+  R7.3: INCOMPLETE (hostile batch fallback, crash NOT_RUN)
+  Parent tranche: INCOMPLETE (hide/show PASS, but finite pill + automatic expiry + blocked relaunch not conclusively proven)
+  ```
+
+- Evidence: `tmp/r7-parent-final-20260901_185359-1edb22ce` (source/Simulator) + `tmp/r7-parent-machine-final-20260901_192849-1edb22ce` (Acer machine, 5/5, hide/show, short-budget, 20/20 batch, hostile batch, crash NOT_RUN, final snapshot)
+
+- Next at exact 1edb22ce: Re-run crash with proven single greiakid shape_garden PID, 20/20 with exact pagination (Next Next for page2) and tile centers (750,350 page1 Painting, 750,450 page1 Shape Garden, 150,450 page2 Volo, 550,450 page2 Writing), hostile 10/10 with canonical 38,38 Home and bwrap PID per cycle, and usage-limit via real Shell launch that increments profile_used_seconds and shows pill at overview.
+
+- No production source modified during this machine-only run (all Parent policy changes via UpdateParentApiApplication on Acer, correct authority).
+
+- Commit for this entry: docs-only (HANDOVER.md, this plan, docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md).
