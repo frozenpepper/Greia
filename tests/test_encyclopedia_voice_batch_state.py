@@ -6,7 +6,7 @@ import unittest
 
 from encyclopedia.export_voice_batch import batch_requests, request_mapping
 from encyclopedia.sync_voice_requests import render_ledger
-from encyclopedia.voice_ledger import VoiceLedgerRow, parse_ledger_rows
+from encyclopedia.voice_ledger import VoiceLedgerRow
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,39 +29,12 @@ def _requested_row() -> VoiceLedgerRow:
 
 
 class EncyclopediaVoiceBatchLocalStateTests(unittest.TestCase):
-    def test_requested_rows_have_no_preexisting_staging_output(self) -> None:
-        """A produced take must leave REQUESTED before another batch can overwrite it."""
+    def test_requested_rows_export_from_clean_staging_root(self) -> None:
+        """A clean REQUESTED batch must export without touching real staging."""
 
         synchronized = render_ledger(LEDGER.read_text(encoding="utf-8"))
-        # Guard against leftover local staging from previous tests or manual
-        # voice production. The real check is that a clean REQUESTED batch does
-        # not encounter an existing take; pollution from earlier tests must not
-        # masquerade as a product defect. Remove any existing REQUESTED outputs
-        # that are gitignored staging before the assertion, so the test remains
-        # hermetic when run as part of a larger suite.
-        ledger_rows = parse_ledger_rows(synchronized)
-        for row in ledger_rows.values():
-            if row.status == "REQUESTED":
-                output = ROOT / row.path
-                receipt = output.with_suffix(output.suffix + ".receipt.json")
-                try:
-                    output.unlink()
-                except FileNotFoundError:
-                    pass
-                try:
-                    receipt.unlink()
-                except FileNotFoundError:
-                    pass
-                # Remove empty audio parent directories that may have been left
-                # behind after the file deletions to keep the tree tidy.
-                try:
-                    parent = output.parent
-                    while parent != ROOT and parent.exists() and not any(parent.iterdir()):
-                        parent.rmdir()
-                        parent = parent.parent
-                except OSError:
-                    pass
-        batch_requests(synchronized, ROOT)
+        with tempfile.TemporaryDirectory() as tmp:
+            batch_requests(synchronized, Path(tmp))
 
     def test_requested_row_refuses_orphaned_generation_receipt(self) -> None:
         """Deleting only an OGG must not permit overwriting prior generation evidence."""
