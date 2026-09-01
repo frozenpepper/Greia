@@ -37,6 +37,12 @@ from greia_platform.hardware import HardwareSettingsError
 from greia_platform.main_credential import MainCredentialError, MainCredentialStore
 from greia_platform.profiles import ProfileError
 from greia_platform.ssh_maintenance import SshMaintenanceService, SshStatus
+from greia_platform.usage_limits import (
+    UsageLimitError,
+    UsageLimitPolicy,
+    UsageLimitService,
+    UsageLimitStore,
+)
 from greia_platform.wifi import (
     DemoWifiBackend,
     IwdWifiBackend,
@@ -58,6 +64,7 @@ class ParentApiApplication(ParentStatusApplication):
     def __init__(self, *args: object, **kwargs: object):
         wifi_backend = kwargs.pop("wifi_backend", None)
         ssh_service = kwargs.pop("ssh_service", None)
+        usage_limit_service = kwargs.pop("usage_limit_service", None)
         super().__init__(*args, **kwargs)
         self.device_credentials = ParentDeviceCredentialStore(self.state_dir)
         self.main_credential = MainCredentialStore(self.state_dir / "main-credential.json")
@@ -67,6 +74,9 @@ class ParentApiApplication(ParentStatusApplication):
         )
         self.ssh_service: SshMaintenanceService = ssh_service or SshMaintenanceService()
         self.activity_discovery = ActivityDiscoveryService()
+        self.usage_limits = usage_limit_service or UsageLimitService(
+            UsageLimitStore(self.profiles_dir / "usage-limits.json")
+        )
 
     def authorized(
         self,
@@ -181,6 +191,8 @@ class ParentApiApplication(ParentStatusApplication):
         return {
             "profile_id": profile_id,
             "visibility_mode": policy.visibility_mode.value,
+            "difficulty_min": policy.difficulty_min,
+            "difficulty_max": policy.difficulty_max,
             "overrides": {
                 activity_id: override.value
                 for activity_id, override in policy.overrides
@@ -193,6 +205,8 @@ class ParentApiApplication(ParentStatusApplication):
         profile_id: str,
         *,
         visibility_mode: object,
+        difficulty_min: object,
+        difficulty_max: object,
         overrides: object,
     ) -> dict[str, object]:
         context = self.profile_store.context(profile_id)
@@ -204,8 +218,11 @@ class ParentApiApplication(ParentStatusApplication):
             raise ActivityDiscoveryError("invalid Activity visibility mode") from exc
         if not isinstance(overrides, dict):
             raise ActivityDiscoveryError("Activity visibility overrides must be an object")
+        updated = policy.with_visibility_mode(mode).with_difficulty_range(
+            difficulty_min,  # type: ignore[arg-type]
+            difficulty_max,  # type: ignore[arg-type]
+        )
         known_ids = {manifest.activity_id for manifest in self.registry.discover()}
-        updated = policy.with_visibility_mode(mode)
         for activity_id, raw_value in overrides.items():
             if not isinstance(activity_id, str) or activity_id not in known_ids:
                 raise ActivityDiscoveryError(
@@ -223,6 +240,38 @@ class ParentApiApplication(ParentStatusApplication):
             updated = updated.with_override(activity_id, value)
         store.write(updated)
         return self.activity_policy_payload(profile_id)
+
+    def usage_limits_payload(self) -> dict[str, object]:
+        profiles = self.profile_store.list_profiles()
+        if not profiles:
+            raise ProfileError("Greia has no child profile")
+        status = self.usage_limits.status(profiles[0].profile_id)
+        return {
+            "date": status.accounting_date.isoformat(),
+            "daily_minutes": status.device_policy.daily_minutes,
+            "used_seconds": status.device_used_seconds,
+            "remaining_seconds": status.device_remaining_seconds,
+            "exhausted": status.device_remaining_seconds == 0,
+            "counting_mode": "activity_time",
+        }
+
+    def update_usage_limits(self, daily_minutes: object) -> dict[str, object]:
+        self.usage_limits.set_device_policy(UsageLimitPolicy(daily_minutes))  # type: ignore[arg-type]
+        return self.usage_limits_payload()
+
+    def profile_usage_limit_payload(self, profile_id: str) -> dict[str, object]:
+        self.profile_store.context(profile_id)
+        return self.usage_limits.status(profile_id).public_dict()
+
+    def update_profile_usage_limit(
+        self, profile_id: str, daily_minutes: object
+    ) -> dict[str, object]:
+        self.profile_store.context(profile_id)
+        self.usage_limits.set_profile_policy(
+            profile_id,
+            UsageLimitPolicy(daily_minutes),  # type: ignore[arg-type]
+        )
+        return self.profile_usage_limit_payload(profile_id)
 
     def api_meta_payload(self) -> dict[str, object]:
         return {
@@ -270,17 +319,12 @@ class ParentApiRequestHandler(ParentRequestHandler):
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
 
-        # The client shell is intentionally public: an unpaired browser needs
-        # the HTML/JS pairing UI before it can hold a Parent API credential.
-        # All management data and mutations remain protected by /api/v1 auth.
         if parsed.path == "/" or parsed.path.startswith(_STATIC_PREFIXES):
             asset = self.static_client.read(parsed.path)
             if asset is not None:
                 self._send_static_asset(asset)
                 return
             if parsed.path == "/":
-                # Transitional fallback until the separately maintained client
-                # is vendored into release images. It contains no server secret.
                 self._send_html(200, render_parent_web_app())
                 return
             self._send_static_not_found()
@@ -312,6 +356,28 @@ class ParentApiRequestHandler(ParentRequestHandler):
             if not self._require_api_authorization(query):
                 return
             self._send_json(200, self.app.activities_payload())
+            return
+        if parsed.path == f"{API_BASE}/usage-limits":
+            if not self._require_api_authorization(query):
+                return
+            try:
+                self._send_json(200, self.app.usage_limits_payload())
+            except (UsageLimitError, ProfileError) as exc:
+                self._send_api_error(500, "usage_limit_unavailable", str(exc))
+            return
+        usage_profile_id = self._profile_usage_limit_id(parsed.path)
+        if usage_profile_id is not None:
+            if not self._require_api_authorization(query):
+                return
+            try:
+                payload = self.app.profile_usage_limit_payload(usage_profile_id)
+            except ProfileError:
+                self._send_api_error(404, "profile_not_found", "Profile not found")
+                return
+            except UsageLimitError as exc:
+                self._send_api_error(500, "usage_limit_unavailable", str(exc))
+                return
+            self._send_json(200, payload)
             return
         policy_profile_id = self._profile_policy_id(parsed.path)
         if policy_profile_id is not None:
@@ -442,6 +508,37 @@ class ParentApiRequestHandler(ParentRequestHandler):
     def do_PUT(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
+        if parsed.path == f"{API_BASE}/usage-limits":
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                payload = self.app.update_usage_limits(
+                    self._required_optional_int(body, "daily_minutes")
+                )
+            except (UsageLimitError, ValueError) as exc:
+                self._send_api_error(400, "invalid_usage_limit", str(exc))
+                return
+            self._send_json(200, payload)
+            return
+        usage_profile_id = self._profile_usage_limit_id(parsed.path)
+        if usage_profile_id is not None:
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                payload = self.app.update_profile_usage_limit(
+                    usage_profile_id,
+                    self._required_optional_int(body, "daily_minutes"),
+                )
+            except ProfileError:
+                self._send_api_error(404, "profile_not_found", "Profile not found")
+                return
+            except (UsageLimitError, ValueError) as exc:
+                self._send_api_error(400, "invalid_usage_limit", str(exc))
+                return
+            self._send_json(200, payload)
+            return
         policy_profile_id = self._profile_policy_id(parsed.path)
         if policy_profile_id is not None:
             if not self._require_api_authorization(query):
@@ -454,6 +551,8 @@ class ParentApiRequestHandler(ParentRequestHandler):
                     visibility_mode=body.get(
                         "visibility_mode", current["visibility_mode"]
                     ),
+                    difficulty_min=body.get("difficulty_min", current["difficulty_min"]),
+                    difficulty_max=body.get("difficulty_max", current["difficulty_max"]),
                     overrides=body.get("overrides", current["overrides"]),
                 )
             except ProfileError:
@@ -579,8 +678,12 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 payload = self.app.delete_profile(
                     {"profile_id": [profile_id], "confirm": ["delete"]}
                 )
+                self.app.usage_limits.remove_profile(profile_id)
             except ProfileError as exc:
                 self._send_api_error(400, "profile_delete_rejected", str(exc))
+                return
+            except UsageLimitError as exc:
+                self._send_api_error(500, "usage_limit_cleanup_failed", str(exc))
                 return
             self._send_json(200, payload)
             return
@@ -640,6 +743,14 @@ class ParentApiRequestHandler(ParentRequestHandler):
             raise ValueError(f"{key} must be an integer or null")
         return value
 
+    @classmethod
+    def _required_optional_int(
+        cls, body: dict[str, object], key: str
+    ) -> int | None:
+        if key not in body:
+            raise ValueError(f"{key} is required")
+        return cls._json_optional_int(body, key)
+
     @staticmethod
     def _resource_id(path: str, prefix: str) -> str | None:
         if not path.startswith(prefix):
@@ -651,8 +762,15 @@ class ParentApiRequestHandler(ParentRequestHandler):
 
     @staticmethod
     def _profile_policy_id(path: str) -> str | None:
+        return ParentApiRequestHandler._profile_suffix_id(path, "/activity-policy")
+
+    @staticmethod
+    def _profile_usage_limit_id(path: str) -> str | None:
+        return ParentApiRequestHandler._profile_suffix_id(path, "/usage-limit")
+
+    @staticmethod
+    def _profile_suffix_id(path: str, suffix: str) -> str | None:
         prefix = f"{API_BASE}/profiles/"
-        suffix = "/activity-policy"
         if not path.startswith(prefix) or not path.endswith(suffix):
             return None
         value = path[len(prefix) : -len(suffix)]

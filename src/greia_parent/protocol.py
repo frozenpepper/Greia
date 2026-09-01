@@ -41,10 +41,16 @@ RESOURCES = (
         ("GET", "PUT"),
     ),
     ParentApiResource(
+        "profile_usage_limit",
+        f"{API_BASE}/profiles/{{profile_id}}/usage-limit",
+        ("GET", "PUT"),
+    ),
+    ParentApiResource(
         "profile_presentation",
         f"{API_BASE}/profiles/{{profile_id}}/presentation",
         ("GET", "PUT"),
     ),
+    ParentApiResource("usage_limits", f"{API_BASE}/usage-limits", ("GET", "PUT")),
     ParentApiResource("activities", f"{API_BASE}/activities", ("GET",)),
     ParentApiResource(
         "activity_install",
@@ -94,6 +100,7 @@ RESOURCES = (
 CAPABILITIES = {
     "profiles.manage": True,
     "profiles.presentation": False,
+    "usage_limits.manage": True,
     "activities.read": True,
     "activities.policy": True,
     "progress.read": True,

@@ -22,6 +22,7 @@ from greia_parent.protocol import (
     api_index_payload,
 )
 from greia_parent.web_client import render_parent_web_app
+from greia_platform.usage_limits import UsageLimitError
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +31,17 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 class _Handler:
     def __init__(self, **headers: str):
         self.headers = headers
+
+
+def _app(root: Path) -> ParentApiApplication:
+    return ParentApiApplication(
+        PROJECT_ROOT,
+        root / "parent",
+        profiles_dir=root / "profiles",
+        hardware_settings_dir=root / "hardware",
+        hardware_status_path=root / "hardware-status.json",
+        active_profile_status_path=root / "active-profile.json",
+    )
 
 
 class ParentApiTests(unittest.TestCase):
@@ -82,6 +94,7 @@ class ParentApiTests(unittest.TestCase):
         self.assertEqual(payload["service_type"], SERVICE_TYPE)
         capabilities = payload["capabilities"]
         self.assertTrue(capabilities["profiles.manage"])
+        self.assertTrue(capabilities["usage_limits.manage"])
         self.assertTrue(capabilities["settings.input"])
         self.assertFalse(capabilities["activities.install"])
         self.assertFalse(capabilities["backup.manage"])
@@ -91,6 +104,8 @@ class ParentApiTests(unittest.TestCase):
         self.assertTrue(capabilities["parent.password"])
         paths = {resource["path"] for resource in payload["resources"]}
         self.assertIn(f"{API_BASE}/activities/install", paths)
+        self.assertIn(f"{API_BASE}/usage-limits", paths)
+        self.assertIn(f"{API_BASE}/profiles/{{profile_id}}/usage-limit", paths)
         self.assertIn(f"{API_BASE}/network/wifi", paths)
         self.assertIn(f"{API_BASE}/maintenance/ssh", paths)
 
@@ -119,15 +134,7 @@ class ParentApiTests(unittest.TestCase):
 
     def test_parent_api_bootstrap_issues_device_credential_and_bearer_authenticates(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            app = ParentApiApplication(
-                PROJECT_ROOT,
-                root / "parent",
-                profiles_dir=root / "profiles",
-                hardware_settings_dir=root / "hardware",
-                hardware_status_path=root / "hardware-status.json",
-                active_profile_status_path=root / "active-profile.json",
-            )
+            app = _app(Path(temporary))
             issued = app.bootstrap_device(app.token, "Family laptop")
             credential = str(issued["credential"])
             device = issued["device"]
@@ -150,15 +157,7 @@ class ParentApiTests(unittest.TestCase):
 
     def test_parent_password_change_requires_current_password_and_never_exposes_secret(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            app = ParentApiApplication(
-                PROJECT_ROOT,
-                root / "parent",
-                profiles_dir=root / "profiles",
-                hardware_settings_dir=root / "hardware",
-                hardware_status_path=root / "hardware-status.json",
-                active_profile_status_path=root / "active-profile.json",
-            )
+            app = _app(Path(temporary))
             payload = app.parent_password_payload()
             self.assertEqual(payload["username"], "greia")
             self.assertNotIn("password", payload)
@@ -170,20 +169,81 @@ class ParentApiTests(unittest.TestCase):
 
     def test_activity_api_payload_hides_filesystem_and_runtime_entrypoint_details(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            app = ParentApiApplication(
-                PROJECT_ROOT,
-                root / "parent",
-                profiles_dir=root / "profiles",
-                hardware_settings_dir=root / "hardware",
-                hardware_status_path=root / "hardware-status.json",
-            )
+            app = _app(Path(temporary))
             payload = app.activities_payload()
             self.assertTrue(payload)
             encoded = json.dumps(payload, sort_keys=True)
             self.assertNotIn(str(PROJECT_ROOT), encoded)
             self.assertNotIn("entrypoint", encoded)
             self.assertNotIn("\"root\"", encoded)
+
+    def test_activity_policy_exposes_and_persists_difficulty_range(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = _app(Path(temporary))
+            profile = app.profile_store.list_profiles()[0]
+            updated = app.update_activity_policy(
+                profile.profile_id,
+                visibility_mode="show_all",
+                difficulty_min=3,
+                difficulty_max=6,
+                overrides={},
+            )
+            self.assertEqual(updated["difficulty_min"], 3)
+            self.assertEqual(updated["difficulty_max"], 6)
+            reloaded = app.activity_policy_payload(profile.profile_id)
+            self.assertEqual(reloaded["difficulty_min"], 3)
+            self.assertEqual(reloaded["difficulty_max"], 6)
+            with self.assertRaises(Exception):
+                app.update_activity_policy(
+                    profile.profile_id,
+                    visibility_mode="show_all",
+                    difficulty_min=8,
+                    difficulty_max=4,
+                    overrides={},
+                )
+
+    def test_usage_limit_domain_api_supports_device_and_profile_budgets(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = _app(root)
+            profile = app.profile_store.list_profiles()[0]
+
+            device = app.usage_limits_payload()
+            self.assertIsNone(device["daily_minutes"])
+            self.assertIsNone(device["remaining_seconds"])
+
+            device = app.update_usage_limits(90)
+            self.assertEqual(device["daily_minutes"], 90)
+            self.assertEqual(device["remaining_seconds"], 90 * 60)
+
+            child = app.update_profile_usage_limit(profile.profile_id, 45)
+            self.assertEqual(child["profile_daily_minutes"], 45)
+            self.assertEqual(child["effective_remaining_seconds"], 45 * 60)
+
+            app.usage_limits.record_activity_time(profile.profile_id, 120)
+            child = app.profile_usage_limit_payload(profile.profile_id)
+            self.assertEqual(child["profile_used_seconds"], 120)
+            self.assertEqual(child["device_used_seconds"], 120)
+            self.assertEqual(child["effective_remaining_seconds"], 43 * 60)
+
+            app.update_profile_usage_limit(profile.profile_id, None)
+            app.update_usage_limits(None)
+            child = app.profile_usage_limit_payload(profile.profile_id)
+            self.assertIsNone(child["profile_daily_minutes"])
+            self.assertIsNone(child["device_daily_minutes"])
+            self.assertIsNone(child["effective_remaining_seconds"])
+            self.assertTrue((root / "profiles" / "usage-limits.json").is_file())
+
+    def test_usage_limit_domain_api_rejects_invalid_minutes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = _app(Path(temporary))
+            profile = app.profile_store.list_profiles()[0]
+            for invalid in (0, -1, 1441, True, "30"):
+                with self.subTest(invalid=invalid):
+                    with self.assertRaises(UsageLimitError):
+                        app.update_usage_limits(invalid)
+                    with self.assertRaises(UsageLimitError):
+                        app.update_profile_usage_limit(profile.profile_id, invalid)
 
     def test_html_parent_client_uses_versioned_api_not_legacy_mutation_paths(self) -> None:
         page = render_parent_web_app()
@@ -232,26 +292,15 @@ class ParentApiTests(unittest.TestCase):
 
     def test_parent_api_wifi_and_ssh_payloads(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            root = Path(temporary)
-            app = ParentApiApplication(
-                PROJECT_ROOT,
-                root / "parent",
-                profiles_dir=root / "profiles",
-                hardware_settings_dir=root / "hardware",
-                hardware_status_path=root / "hardware-status.json",
-                active_profile_status_path=root / "active-profile.json",
-            )
-            # Wi-Fi payload
+            app = _app(Path(temporary))
             wifi_data = app.wifi_payload()
             self.assertTrue(wifi_data["available"])
             self.assertIsInstance(wifi_data["networks"], list)
 
-            # Wi-Fi connect
             conn = app.connect_wifi("Greia Family Wi-Fi", "testpassphrase")
             self.assertTrue(conn["connected"])
             self.assertEqual(conn["ssid"], "Greia Family Wi-Fi")
 
-            # SSH payload & update
             ssh_data = app.ssh_payload()
             self.assertIn("active", ssh_data)
             self.assertIn("enabled", ssh_data)
