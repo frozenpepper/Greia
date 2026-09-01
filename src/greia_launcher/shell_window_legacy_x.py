@@ -16,13 +16,14 @@ LibraryLoader = Callable[[str], Any]
 
 
 class CtypesX11FocusBridge:
-    """Perform the current no-WM X11 focus fix through libX11.
+    """Perform the current no-WM X11 focus repair through libX11.
 
     Greia's compatibility xinit session has no window manager, so the Shell's
-    SDL window may otherwise never receive keyboard focus. This object owns the
-    native Xlib detail so generic launcher code does not.
+    SDL window may otherwise fail to receive keyboard focus both when it is
+    created and after a full-screen Activity window disappears. This object
+    owns the native Xlib detail so generic launcher code does not.
 
-    The operation is one-shot after window creation. There is no polling,
+    Each operation is a bounded lifecycle call. There is no polling,
     background worker or frame-loop cost.
     """
 
@@ -66,8 +67,8 @@ class CtypesX11FocusBridge:
             finally:
                 x11.XCloseDisplay(display)
         except Exception:
-            # This compatibility repair has historically been best-effort. A
-            # missing/broken Xlib must not crash the child-facing Shell.
+            # Compatibility focus repair is best-effort. A missing/broken Xlib
+            # must not crash the child-facing Shell.
             return False
 
     @staticmethod
@@ -94,10 +95,12 @@ class CtypesX11FocusBridge:
 
 
 class LegacyXShellWindowController:
-    """Legacy-X implementation of Greia's one-shot Shell window setup.
+    """Legacy-X focus lifecycle for Greia's own Shell window.
 
     This class is instantiated only by the trusted Legacy-X composition path.
     It therefore never chooses or detects the active display backend itself.
+    It repairs focus at the two lifecycle points where the no-window-manager
+    session can lose it: initial Shell-window creation and Activity return.
     """
 
     backend_id = "legacy-x11-shell-window"
@@ -106,6 +109,12 @@ class LegacyXShellWindowController:
         self._focus_bridge = focus_bridge or CtypesX11FocusBridge()
 
     def after_window_created(self, pygame: Any) -> bool:
+        return self._focus_shell_window(pygame)
+
+    def after_activity_return(self, pygame: Any) -> bool:
+        return self._focus_shell_window(pygame)
+
+    def _focus_shell_window(self, pygame: Any) -> bool:
         try:
             info = pygame.display.get_wm_info()
         except Exception:

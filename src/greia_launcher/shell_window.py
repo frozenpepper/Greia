@@ -4,20 +4,23 @@ from typing import Any, Protocol
 
 
 class ShellWindowController(Protocol):
-    """Backend-private setup for Greia's own Shell window.
+    """Backend-private lifecycle hooks for Greia's own Shell window.
 
     The controller is a trusted launcher collaborator, not an Activity API.
     Implementations may use backend-specific focus/session mechanics while the
     generic launcher remains ignorant of X11, Wayland or future display stacks.
 
-    This hook is intentionally one-shot: it runs after the Shell SDL window is
-    created. It must not introduce a polling loop or per-frame work.
+    Hooks are deliberately bounded lifecycle operations: once after Shell
+    window creation and once after an Activity returns. They must not introduce
+    polling, background workers or per-frame work.
     """
 
     @property
     def backend_id(self) -> str: ...
 
     def after_window_created(self, pygame: Any) -> bool: ...
+
+    def after_activity_return(self, pygame: Any) -> bool: ...
 
 
 class NoopShellWindowController:
@@ -26,6 +29,10 @@ class NoopShellWindowController:
     backend_id = "noop-shell-window"
 
     def after_window_created(self, pygame: Any) -> bool:
+        del pygame
+        return True
+
+    def after_activity_return(self, pygame: Any) -> bool:
         del pygame
         return True
 

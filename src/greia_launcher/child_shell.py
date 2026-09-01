@@ -196,6 +196,15 @@ class GreiaChildShell(
         self.runtime_services = runtime_services
         self.supervisor = supervisor
 
+    def _launch_selected(self, pygame: Any) -> None:
+        """Run one Activity lifecycle, then restore trusted Shell input focus."""
+
+        super()._launch_selected(pygame)
+        # The no-window-manager Legacy-X session can leave focus on the child
+        # window that just disappeared. Keep the backend-specific repair behind
+        # the trusted Shell-window seam and invoke it once per completed return.
+        self._shell_window_backend.after_activity_return(pygame)
+
     def _font(self, size: int, pygame: Any) -> Any:
         effective = max(
             12,
