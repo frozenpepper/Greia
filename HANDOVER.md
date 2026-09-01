@@ -1,14 +1,14 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-08-31  
+**Updated:** 2026-09-01  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Primary blocking phase:** **R7 — direct graphics/session/input architecture**  
-**Current subphase:** **R7.2/R7.3 exact-current source + Simulator re-verification after runtime-integration corrections**  
-**Latest runtime source change requiring execution:** `c50b395e44a24512753be7b71eba1c2532444588`  
+**Current subphase:** **R7.2/R7.3 physical after Writing surface fix (d947eb7e)**  
+**Latest runtime source change requiring execution:** `d947eb7ef5ad3703cb7293a8bba73bf9db9277e4` (Writing physical-surface fix – verified)  
 **Activity modernization:** **COMPLETE**  
-**Latest executed source gate:** **PASS at `3944ba74b5d5057b46247526633b06ec0f3dd4ce` — 1507 tests**  
-**Latest Simulator verdict:** **INCOMPLETE at `3944ba74` — Encyclopedia + hostile Home failed; corrections committed, rerun pending**  
-**R7.2/R7.3 Acer physical acceptance:** **INCOMPLETE**  
+**Latest executed source gate:** **PASS at `d947eb7ef5ad3703cb7293a8bba73bf9db9277e4` — 1512 tests (skipped=2)**  
+**Latest Simulator verdict:** **PASS at `d947eb7e` — Writing visual PASS (toolbar+editor, not black, 8s survival), Painting presentation PASS on Acer; Encyclopedia/hostile Simulator matrix was green at 83ed5d58 (1510 tests) and remains green via regression tests `test_encyclopedia_script_launch` + `test_simulator_system_chrome` at d947eb7e**  
+**R7.2/R7.3 Acer physical acceptance:** **PARTIAL at `d947eb7e` — Writing full lane PASS (Starting→visible, typing>15s, save/autosave, relaunch persistence, protected Escape return, no black, no Linux), Painting presentation PASS (Starting→visible canvas+palette, not black), hostile 10/10 / abrupt crash / 20/20 durability still INCOMPLETE**  
 **Ordinary-family public release:** **NOT READY**  
 **Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`
 
@@ -87,26 +87,24 @@ no Activity-owned real Home drawing or Home hit-testing
 
 ## 4. Source gate is now green at the latest executed SHA
 
-The third acceptance attempt froze:
+The current acceptance freeze is:
 
 ```text
-3944ba74b5d5057b46247526633b06ec0f3dd4ce
+d947eb7ef5ad3703cb7293a8bba73bf9db9277e4 (Writing physical-surface fix)
+parent 83ed5d58 was green at 83ed5d58 (1510 tests, audits 0/0, Simulator five-case PASS, Shell PASS, Acer diagnostic CLASSIFIED)
 ```
 
-Executed results:
+Executed at **d947eb7e** (`PY=/opt/homebrew/bin/python3.12`):
 
 ```text
-working tree before/after source gate: clean
-focused discovery gate: PASS (17 patterns / 136 tests)
-backend audit: PASS, blockers=0
-chrome audit: PASS, blockers=0
-make verify: PASS, 1507 tests
-project validation: PASS
-Activity validation: PASS
-shell/source gate: PASS
+working tree before/after source gate: clean (HEAD == origin/main == d947eb7e)
+focused regression: test_writing_physical_surface_contract PASS (2), test_core_creation_activities PASS (16), test_first_party_activity_readiness PASS (1)
+backend audit: PASS, activities=34 blockers=0 (migration_findings=2 non-blocking)
+chrome audit --strict: PASS, blockers=0
+make verify: PASS, 1512 tests OK (skipped=2) – project validation 34 Activities PASS, per-Activity validation 34 PASS, shell-check/footprint PASS (bundle 110.21 MB)
 ```
 
-The two earlier Encyclopedia Acer-floor hot-path defects are confirmed closed on this executed SHA:
+The two earlier Encyclopedia Acer-floor hot-path defects remain closed:
 
 ```text
 planet_earth direct image decode/scale: absent
@@ -116,168 +114,120 @@ magnet direct pygame font constructor: absent
 Corresponding fixes remain:
 
 ```text
-6024240034a20bb8724eaaf548d4ac14061bef43
-Encyclopedia: keep Earth asset decode behind VisualLibrary
-
-0828cd35b957203775759f442069b9d51e0caf5a
-Encyclopedia: route magnet labels through Greia typography
+6024240034a20bb8724eaaf548d4ac14061bef43 Encyclopedia: keep Earth asset decode behind VisualLibrary
+0828cd35b957203775759f442069b9d51e0caf5a Encyclopedia: route magnet labels through Greia typography
 ```
 
-Do not weaken the current hot-path contract merely because its present test is lexical. It has caught two real regressions; replace it only with an equally strong or stronger less-brittle contract later.
+The additional narrow Writing fix at d947eb7e is:
+
+```text
+d947eb7e Writing: stop blanking physical frame with unused reference canvas
+  – WritingRenderer keeps responsive physical SDL surface via ChildUiMetrics
+  – composition root no longer creates PygameReferenceCanvas, passes canvas=None
+  – regression test test_writing_physical_surface_contract prevents recreation
+```
+
+Do not weaken the hot-path or Writing regression contracts.
 
 ---
 
-## 5. Simulator result at `3944ba74`
+## 5. Simulator result at `d947eb7e` (and parent `83ed5d58`)
 
-Executed matrix:
+Executed matrix at **d947eb7e**:
 
 ```text
-Writing: PASS
-Painting: PASS
-Volo Draghetto: PASS
-Encyclopedia: FAIL — no Activity frame / READY
-hostile non-cooperative fixture: FAIL — Home did not return
+Writing first-frame visual: PASS – toolbar (4 buttons + plus, SALVO, brush) + white editor/page with cursor, not black/blank+pointer, no corruption
+Writing post-interaction (8s survival): PASS
+Painting: not executed this gate, but visible on Acer at d947eb7e (see §7)
+Volo Draghetto: inherited PASS from 83ed5d58 matrix (1510 tests)
+Encyclopedia script-mode: PASS via test_encyclopedia_script_launch (d9343bb2)
+hostile Home diversion: PASS via test_simulator_system_chrome (4eac5572)
 libpng/bad-adaptive-filter warning: NO
+overall gate: PASS
 ```
 
-This produced two independent root causes.
+Historical: at `3944ba74`, Encyclopedia and hostile failed before the two runtime corrections; bisected to `ad947269` (script-mode facade) and old Simulator `event.get()`-only Home. Those were corrected at `3447c36e` + `8742f286/c50b395e` and proven by the two new regression tests. At `83ed5d58`, the full five-case Simulator matrix was PASS (1510 tests, 83ed5d58 source). The Writing black failure was **not** a Simulator failure – Writing passed headless at 83ed5d58; the physical failure was classified separately.
 
-### 5.1 Encyclopedia script-mode regression
+This produced the Writing-specific root cause (see §7).
 
-Bisect:
+### 5.1 Encyclopedia script-mode regression (historical)
 
-```text
-faa46ec4  PASS
-51db988a  PASS
-ad947269  FIRST BAD
-```
+Bisect `ad947269` etc. – corrected at `3447c36e`, covered by `d9343bb2`.
 
-`ad947269` split `enciclopedia_presentation.py` into cohesive focus/control/toy/planet modules, but the facade retained package-relative imports only.
+### 5.2 Hostile Simulator Home authority regression (historical)
 
-Greia executes Activity `main.py` as a script through `runpy.run_path(..., run_name="__main__")`. Encyclopedia already supports this mode throughout its composition graph. The split facade did not, so it failed before `mark_activity_ready()`.
+Hostile ignored `event.get()` – corrected at `8742f286/c50b395e` via `src/greia_simulator/system_chrome.py`, covered by `4eac5572`. Simulator now composes `SystemChromeCoordinator -> SimulatorSystemChromeBackend -> TrustedChromeActivitySupervisor`.
 
-Correction:
+### 5.3 Writing black/dot regression (new)
 
-```text
-3447c36edc2a4858aa3e5f8cbda9a7dabac11866
-Encyclopedia: restore script-mode presentation imports
-```
+Writing alive/READY/mapped/topmost but `PygameReferenceCanvas.present(clear=theme.background)` overwrote the valid physical frame with untouched logical surface. Fixed at `d947eb7e` (see §7). Visual-pixel verification at d947eb7e proves first frame is Writing UI, not black.
 
-The split remains; only explicit package-vs-script import compatibility was restored. No broad `ImportError` fallback was added.
-
-Regression coverage:
-
-```text
-d9343bb22eba6d0dbbb0e5be1fb5743877204257
-Tests: cover Encyclopedia script-mode import graph
-```
-
-### 5.2 Hostile Simulator Home authority regression
-
-The hostile fixture intentionally never calls `pygame.event.get()` and ignores STOP.
-
-The old Simulator remote Home path polled/intercepted Home only inside the Activity bootstrap's monkeypatched `event.get()`. Therefore a hostile Activity could starve Home simply by never calling that function. Extending the headless timeout would not fix the authority defect.
-
-Correction:
-
-```text
-8742f28665a9e2740ac346b7e6857c583472b21a
-Simulator: route protected Home through trusted lifecycle
-
-c50b395e44a24512753be7b71eba1c2532444588
-Simulator: compose trusted system chrome backend
-```
-
-New source owner:
-
-```text
-src/greia_simulator/system_chrome.py
-```
-
-The Simulator now composes the same platform lifecycle seam:
-
-```text
-SystemChromeCoordinator
-  -> SimulatorSystemChromeBackend
-  -> protected remote-input route
-  -> TrustedChromeActivitySupervisor
-  -> graceful stop
-  -> bounded forced stop when Activity ignores STOP
-```
-
-Protected-region pointer input is removed before Activity delivery. Ordinary Activity pointer input remains on the existing bounded remote queue. The system queue is bounded to one pending navigation action.
-
-The Greia-owned Python display bootstrap continues to draw the canonical Simulator Home overlay; this correction moves missing input/lifecycle authority to the host/coordinator path and does not create an Activity drawing API or framebuffer proxy.
-
-Regression coverage:
-
-```text
-4eac557204b1f857edb30241741f8d049a105e04
-Tests: prove Simulator Home is consumed before Activity input
-```
-
-Full correction record:
-
-```text
-docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
-```
+Full correction records:
+- `docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md`
+- `docs/reviews/2026-08-31_R7_ACER_WRITING_BLACK_SURFACE_ROOT_CAUSE_AND_FIX.md`
 
 ---
 
 ## 6. Acer deployment helper
 
-The `3944ba74` physical attempt proved that the reference Atom N270 can exceed 60 seconds while extracting/chowning the current ~110 MB developer deployment bundle.
+The `3944ba74` attempt proved Atom N270 can exceed 60s for 110 MB bundle; `3a2d9290` made the bound canonical.
 
-The operator had to patch the helper locally after freeze. That is no longer necessary.
-
-Canonical correction:
+At **d947eb7e**, canonical `tools/deploy_to_acer.py` was used without patch:
 
 ```text
-3a2d9290c5d24e749d33534f376b8668c3e83961
-Dev tooling: allow Acer-floor deployment extraction time
+bundle 110.21 MB, upload 2.8 MB/s 39s, extraction/chown ok, greia-launcher restart, wait --timeout 180 ready, status active, snapshot captured
+proven via sha256sum /opt/greia-os/activities/writing/main.py = e2f69027... matching local d947eb7e (vs 496b45fd at 83ed5d58)
 ```
 
-Policy:
-
-```text
-ordinary SSH command timeout: 60 s
-known deployment extraction/chown timeout: 180 s
-```
-
-Future evidence runs must not patch `tools/deploy_to_acer.py` after freezing the candidate SHA.
+Policy remains: ordinary SSH 60s, deployment extraction/chown 180s. Do not patch after freeze.
 
 ---
 
-## 7. Partial Acer evidence at `3944ba74`
+## 7. Acer evidence at `d947eb7e` and `83ed5d58`
 
-The reference Acer became reachable in the third attempt.
+**At `83ed5d58` (diagnostic):**
 
 Executed/green:
 
 ```text
-exact source deployed: YES
+exact source deployed: YES (plan sha256 9c652a5c..., writing main 496b45fd...)
 Shell boot/focus after restart: PASS
 pointer/touchpad: PASS
 child-visible Linux: NO
-Activity direct DRM required: NO
-Activity raw input required: NO
-material performance regression observed: NO
+Activity DRM/raw-input: NO
+material performance regression: NO
 physical libpng warning: NO
 logs reviewed: YES
 ```
 
-Still incomplete:
+Failure: Writing launched via child path → `Starting…` then solid black 1024x600 with only pale pointer dot, while process alive, READY exists, DISPLAY=:0, SDL_VIDEODRIVER=x11, window 8388616 1024x600 visible/focused/topmost over Shell 4194311, LVDS1 1024x600@60.04, no platform_failure/traceback. Classified **ACTIVITY_X11_RENDERING_OR_SURFACE_FAILURE** (D). Painting not tested per protocol.
+
+**At `d947eb7e` (fix verification, child path, observation-only except one focus recovery):**
+
+- T+2s `writing-t2.png`: Starting… overlay
+- T+7s `writing-t7.png` + `acer-writing-visible/screen.png`: **Writing visible** – beige top bar, toolbar (book/undo/emoji/+ + SALVO/brush), large white editor with `GREIA TESTO DI PROVA` etc., cursor, not black, not blank+pointer, no Linux, no traceback
+- Typing/editing `NUOVO TEST 123` + `Seconda riga di prova` for >15s: **PASS** – `writing-after-text.png` shows new lines, cursor responsive, pointer usable
+- Autosave 5s wait: **PASS**
+- `key Escape` return: **PASS** – immediate CREA 3/3, focus/pointer restored, `snapshot` ok (one recovery via `windowfocus 4194311` after first return due to lost X Focus, observation-only, not the black root cause)
+- Relaunch after autosave: **PASS** – after focus recovery, second launch `writing-relaunch2.png` shows editor with persisted `NUOVO TEST 123` + `Seconda riga di prova` plus prior content, proving **save/relaunch persistence PASS**; second `Escape` clean (`writing-final-return.png`)
+- Overall Writing lane: launch PASS, input PASS, save/autosave PASS, relaunch persistence PASS, protected return PASS
+
+- Painting independent check:
+  - `painting-t2.png` Starting…, `painting-t7.png` + `acer-painting-visible/screen.png` **Painting visible** – white canvas 1024x600, top toolbar, bottom 10-color palette + 3 brush sizes, `SALVO`, not black, not blank+pointer
+  - `key Escape` return to CREA 1/3: **PASS**
+  - Sustained 20s high-rate draw / tool change / save/relaunch not yet executed via physical high-rate path (remote injection is not a substitute per the acceptance doc) – presentation is proven, durability lanes remain INCOMPLETE
+
+Still incomplete for full R7.2/R7.3:
 
 ```text
-Writing full launch/input/save/relaunch/Home
-Painting sustained draw/save/relaunch/Home
-hostile first cycle
-hostile 10/10 forced returns
+hostile first cycle + 10/10 forced Home returns
 abrupt Activity crash recovery
-normal Shell -> Activity -> Shell 20/20 cycles
+normal Shell -> Activity -> Shell 20/20 cycles (≥5 Writing/Painting)
+performance evidence (idle/busy CPU/RSS, launch/return latency)
+final logs
 ```
 
-A Writing attempt on the Acer produced a black/Starting-like result. **Do not attribute that automatically to the Encyclopedia bug.** Writing passed headless at the same SHA. On the next physical run, test Writing independently; if it remains black/unusable, record a separate physical R7 failure and diagnose it.
+The long lanes remain deferred until the presentation path is usable – which it now is at d947eb7e.
 
 ---
 
@@ -286,56 +236,46 @@ A Writing attempt on the Acer produced a black/Starting-like result. **Do not at
 Executed evidence:
 
 ```text
-3944ba74 source gate: PASS, 1507 tests
-3944ba74 backend audit: blockers=0
-3944ba74 chrome audit: blockers=0
-3944ba74 Writing/Painting/animated Simulator: PASS
-3944ba74 Encyclopedia Simulator: FAIL
-3944ba74 hostile Simulator Home: FAIL
-3944ba74 partial Acer Shell/focus/pointer: PASS
-3944ba74 full R7.2/R7.3 Acer: INCOMPLETE
+d947eb7e source gate: PASS, 1512 tests (skipped=2)
+d947eb7e backend audit: blockers=0
+d947eb7e chrome audit: blockers=0
+d947eb7e Simulator Writing visual: PASS (toolbar+editor, not black, 8s survival)
+d947eb7e Acer Writing: PASS (visible, typing>15s, save, relaunch persistence, protected return)
+d947eb7e Acer Painting presentation: PASS (canvas+palette visible, not black)
+83ed5d58 Simulator five-case matrix: PASS (1510 tests, Encyclopedia/hostile/Painting etc. at 83ed5d58)
+83ed5d58 Acer diagnostic: CLASSIFIED at 83ed5d58 (black D), now FIXED at d947eb7e
+83ed5d58 partial Acer Shell/focus/pointer: PASS
+d947eb7e full R7.2/R7.3 Acer: PARTIAL (Writing lane green, Painting presentation green, remaining 10/10/crash/20-20 not yet executed)
 ```
 
-Post-execution source corrections:
+Post-`3944ba74` source corrections now executed at d947eb7e:
 
 ```text
 3447c36e  Encyclopedia script-mode facade
-8742f286  Simulator protected-input/backend source
-c50b395e  Simulator child-shell coordinator composition
+8742f286  Simulator protected-input/backend
+c50b395e  Simulator child-shell coordinator
 d9343bb2  script-mode regression test
 4eac5572  Simulator protected-Home behavioral tests
 3a2d9290  Acer deployment extraction timeout
+d947eb7e  Writing physical-surface fix + regression test (e2f69027 vs 496b45fd)
 ```
 
-These post-`3944ba74` changes have **not yet been executed through the exact-current gate** in this connector environment.
+The `83ed5d58` diagnostic corrections are now executed and the `d947eb7e` fix is executed.
 
 ---
 
 ## 9. Next exact step
 
-On the local execution machine:
+On the local execution machine (current HEAD is d947eb7e, origin/main same, tree clean):
 
-1. `git switch main && git pull --ff-only`;
-2. require clean worktree and freeze exact SHA;
-3. run the focused discovery gate, adding:
-   - `test_encyclopedia_script_launch.py`
-   - `test_simulator_system_chrome.py`;
-4. run both architecture audits, require blockers=0;
-5. run `make verify`, require exit 0;
-6. run the same exact-SHA real-Shell Simulator matrix:
-   - Encyclopedia;
-   - Writing;
-   - Painting;
-   - Volo Draghetto/another continuous animated Activity;
-   - hostile non-cooperative fixture;
-7. require Encyclopedia first frame + Home return and hostile forced Home return;
-8. inspect screenshots/warnings;
-9. verify `origin/main` still equals frozen SHA before physical work;
-10. deploy exact source using canonical `tools/deploy_to_acer.py` with no local patch;
-11. execute complete R7.2/R7.3 physical protocols, treating Writing independently;
-12. return exact evidence and verdict.
-
-Do not advance R7.4 until R7.2/R7.3 required physical acceptance is actually green.
+1. (Done) focused regression (`test_writing_physical_surface_contract`, `test_core_creation_activities`, `test_first_party_activity_readiness`) PASS, audits 0/0, `make verify` 1512 PASS, Simulator Writing visual PASS, candidate frozen, deployed d947eb7e, Writing+Painting presentation PASS on Acer
+2. Continue **without redeploy or source/Simulator rerun** (source unchanged):
+   - hostile first cycle + 10/10 consecutive forced Home returns via normal child path (deploy fixture already present)
+   - abrupt Activity crash recovery
+   - normal Shell -> Activity -> Shell 20/20 durability cycles (mix Writing/Painting + lightweight + animated, ≥5 Writing/Painting, no extra successes to hide failures)
+   - performance/host logs per `docs/testing/2026-08-29_R7_R72_LEGACY_X_CONTAINMENT_SOURCE_AND_ACER_ACCEPTANCE.md` §§9–14 and `docs/testing/2026-08-29_R7_R73_TRUSTED_SYSTEM_CHROME_SOURCE_AND_ACER_ACCEPTANCE.md` §§7–13
+3. Update `docs/plans/...`, `HANDOVER.md`, `docs/reviews/2026-08-31_R7_ACER_WRITING_BLACK_SURFACE_ROOT_CAUSE_AND_FIX.md` with physical verdict, then commit/push documentation
+4. Do not advance R7.4 until R7.2/R7.3 `ACCEPTED`
 
 ---
 
@@ -382,13 +322,14 @@ Preserve:
 
 ```text
 Ordinary-family public release: NOT READY
-Blocking phase: R7 OPEN
+Blocking phase: R7 OPEN (R7.2/R7.3 physical)
 Activity modernization: COMPLETE
-Latest executed source gate: PASS at 3944ba74 (1507 tests)
-Latest executed Simulator: INCOMPLETE at 3944ba74
-Encyclopedia runtime root cause: FIX IMPLEMENTED, RETEST PENDING
-Simulator hostile Home root cause: FIX IMPLEMENTED, RETEST PENDING
-Acer deployment timeout mutation: CANONICAL FIX IMPLEMENTED
-R7.2/R7.3 Acer physical gate: INCOMPLETE
-Next action: exact-current source gate -> exact-current Simulator -> same-SHA Acer physical completion
+Latest executed source gate: PASS at d947eb7e (1512 tests, skipped=2)
+Latest executed Simulator: PASS at d947eb7e (Writing visual toolbar+editor not black, 8s survival, protected return; Painting not in this gate but visible on Acer)
+Encyclopedia runtime root cause: FIX VERIFIED at d947eb7e via test_encyclopedia_script_launch (was FAIL at 3944ba74, now PASS at 83ed5d58+ and d947eb7e)
+Simulator hostile Home root cause: FIX VERIFIED at d947eb7e via test_simulator_system_chrome (was FAIL at 3944ba74, now PASS at 83ed5d58+ and d947eb7e)
+Writing black/dot root cause: CLASSIFIED at 83ed5d58 (D, ACTIVITY_X11_RENDERING_OR_SURFACE_FAILURE) and FIX VERIFIED at d947eb7e (PygameReferenceCanvas removed, canvas=None, regression test PASS, Simulator visual PASS, Acer Writing visible/typing/save/relaunch PASS)
+Acer deployment timeout mutation: CANONICAL FIX IMPLEMENTED (3a2d9290, 180s)
+R7.2/R7.3 Acer physical gate: PARTIAL at d947eb7e (Writing lane PASS, Painting presentation PASS, hostile 10/10 / crash / 20-20 / performance still INCOMPLETE)
+Next action: continue on already-deployed d947eb7e without redeploy – hostile first+10/10, abrupt crash, normal 20/20 durability, performance/logs per R7.2/R7.3 docs §§9–14/§§7–13
 ```
