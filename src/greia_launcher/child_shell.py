@@ -22,6 +22,7 @@ from greia_platform.hal import GreiaHAL
 from greia_platform.profile_presentation import ProfilePresentationStore
 from greia_platform.theme_snapshot import ThemeSnapshotError, encode_theme_snapshot
 from greia_platform.ui_preferences import UiPreferencesStore
+from greia_platform.usage_limits import UsageLimitError, UsageLimitService, UsageLimitStore
 
 from .adaptive_discovery_presentation import AdaptiveActivityDiscoveryMixin
 from .achievement_presentation import AchievementLibraryMixin
@@ -47,6 +48,8 @@ from .shared_ui_presentation import (
 from .supervisor import ActivitySupervisor
 from .system_chrome import SystemChromeCoordinator
 from .trusted_chrome_supervisor import TrustedChromeActivitySupervisor
+from .usage_limit_lifecycle import ActivityUsageLimitGuard
+from .usage_limit_presentation import home_usage_limit_presentation
 
 
 class ProfileVisualActivitySupervisor(TrustedChromeActivitySupervisor):
@@ -162,6 +165,18 @@ class GreiaChildShell(
     def _system_chrome_coordinator(self) -> SystemChromeCoordinator | None:
         return provisional_installed_system_chrome() if self._installed_root() else None
 
+    def _usage_limit_service(self) -> UsageLimitService:
+        service = getattr(self, "_usage_limits", None)
+        if service is None:
+            # Parent API and Shell deliberately open the same inter-process-safe
+            # ledger below the managed profile root. There is no second cache or
+            # launcher-private screen-time authority.
+            service = UsageLimitService(
+                UsageLimitStore(self.paths.profiles_dir / "usage-limits.json")
+            )
+            self._usage_limits = service
+        return service
+
     def _rebuild_runtime_services(self) -> None:
         runtime_services = build_launcher_runtime_services(
             self.runtime,
@@ -192,6 +207,7 @@ class GreiaChildShell(
             display_coordinator=self._display_session_coordinator(),
             system_chrome_coordinator=self._system_chrome_coordinator(),
             audio_service=audio_service,
+            usage_limit_guard=ActivityUsageLimitGuard(self._usage_limit_service()),
         )
         self.runtime_services = runtime_services
         self.supervisor = supervisor
@@ -200,10 +216,109 @@ class GreiaChildShell(
         """Run one Activity lifecycle, then restore trusted Shell input focus."""
 
         super()._launch_selected(pygame)
+        # Returning from an Activity changes today's usage status. Rebuild Home
+        # once on return rather than turning the passive readout into a ticking
+        # idle timer.
+        self._cached_activities_key = None
         # The no-window-manager Legacy-X session can leave focus on the child
         # window that just disappeared. Keep the backend-specific repair behind
         # the trusted Shell-window seam and invoke it once per completed return.
         self._shell_window_backend.after_activity_return(pygame)
+
+    def _render_collection_home(self, screen: Any, theme: Any, pygame: Any) -> None:
+        super()._render_collection_home(screen, theme, pygame)
+        self._draw_home_usage_limit(screen, theme, pygame)
+
+    def _draw_home_usage_limit(self, screen: Any, theme: Any, pygame: Any) -> None:
+        profile_context = self._active_profile
+        if profile_context is None:
+            return
+        try:
+            status = self._usage_limit_service().status(
+                profile_context.profile.profile_id
+            )
+        except (UsageLimitError, OSError, TypeError, ValueError):
+            # Enforcement remains fail-closed at launch. A readout failure must
+            # not crash or continuously redraw the otherwise usable Home.
+            return
+        presentation = home_usage_limit_presentation(
+            status,
+            locale=getattr(self, "_active_locale", "en"),
+            uppercase=profile_context.profile.uppercase_text,
+        )
+        if not presentation.visible:
+            return
+
+        from greia_platform.typography import FontRole
+
+        width, height = screen.get_size()
+        font_size = max(15, min(21, height // 30))
+        label = self._typography.font(FontRole.CONTROL, font_size).render(
+            presentation.text,
+            True,
+            theme.text,
+        )
+        clock_diameter = max(24, min(32, height // 18))
+        horizontal_padding = 12
+        gap = 8
+        pill_width = min(
+            max(120, width - 120),
+            clock_diameter + gap + label.get_width() + horizontal_padding * 2,
+        )
+        pill_height = max(clock_diameter + 10, label.get_height() + 14)
+        pill = pygame.Rect(
+            max(8, width - pill_width - 14),
+            12,
+            pill_width,
+            pill_height,
+        )
+        pygame.draw.rect(screen, theme.panel, pill, border_radius=pill_height // 2)
+        pygame.draw.rect(
+            screen,
+            theme.accent if presentation.exhausted else theme.text,
+            pill,
+            width=2,
+            border_radius=pill_height // 2,
+        )
+
+        clock_center = (
+            pill.left + horizontal_padding + clock_diameter // 2,
+            pill.centery,
+        )
+        radius = clock_diameter // 2
+        pygame.draw.circle(screen, theme.text, clock_center, radius, width=2)
+        pygame.draw.line(
+            screen,
+            theme.text,
+            clock_center,
+            (clock_center[0], clock_center[1] - max(4, radius // 2)),
+            width=2,
+        )
+        pygame.draw.line(
+            screen,
+            theme.text,
+            clock_center,
+            (clock_center[0] + max(4, radius // 2), clock_center[1]),
+            width=2,
+        )
+        text_left = clock_center[0] + radius + gap
+        available_width = max(1, pill.right - horizontal_padding - text_left)
+        if label.get_width() > available_width:
+            label = pygame.transform.smoothscale(
+                label,
+                (
+                    available_width,
+                    max(
+                        1,
+                        round(
+                            label.get_height()
+                            * available_width
+                            / label.get_width()
+                        ),
+                    ),
+                ),
+            )
+        screen.blit(label, label.get_rect(midleft=(text_left, pill.centery)))
 
     def _font(self, size: int, pygame: Any) -> Any:
         effective = max(
