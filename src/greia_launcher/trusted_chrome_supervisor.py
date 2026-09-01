@@ -5,7 +5,6 @@ from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext
 
 from .lifecycle import ActivityExitReason, ActivityResult, ActivitySession, ActivitySessionState
-from .supervisor import ActivitySupervisor
 from .system_chrome import (
     SystemChromeCoordinator,
     SystemChromeError,
@@ -13,19 +12,22 @@ from .system_chrome import (
     SystemChromeNavigationBridge,
     SystemChromePhase,
 )
+from .usage_limited_supervisor import UsageLimitedActivitySupervisor
 
 
-class TrustedChromeActivitySupervisor(ActivitySupervisor):
+class TrustedChromeActivitySupervisor(UsageLimitedActivitySupervisor):
     """Bind mandatory Greia Home chrome to the authoritative Activity lifecycle.
 
-    The base supervisor remains the owner of process/runtime/display/history
-    semantics. This narrow specialization adds the trusted system-chrome lease
-    beside the display lease:
+    The usage-limited base supervisor remains the owner of process/runtime/
+    display/history semantics and daily Activity-time enforcement. This narrow
+    specialization adds the trusted system-chrome lease beside the display
+    lease:
 
     * prepare after the Activity session identity exists but before READY;
     * show only after the display session has successfully presented READY;
     * poll protected navigation outside Activity input authority;
-    * route Home through the existing graceful/forced stop lifecycle;
+    * route Home and time-limit expiry through the same graceful/forced stop
+      lifecycle;
     * hide/abort on every normal, crash and failed-launch cleanup path.
 
     No Activity pixels or high-rate ordinary input pass through this class.
