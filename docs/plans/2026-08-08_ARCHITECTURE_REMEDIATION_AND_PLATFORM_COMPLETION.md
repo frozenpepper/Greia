@@ -1391,3 +1391,43 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - No production source modified during this machine-only run (all Parent policy changes via UpdateParentApiApplication on Acer, correct authority).
 
 - Commit for this entry: docs-only (HANDOVER.md, this plan, docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md).
+
+## 2026-09-02 — Launcher spoken labels final verification (Collection + Activity, IT/EN)
+
+- Implemented: kept `SpokenLabelController` 160ms dwell, `BoundedCache 48`, single narration channel as previously wired; no additional runtime change needed beyond already-committed `f82aea2b`+`aee9eea8`. Verified that `math` import and `drawn`→`back_rect` fixes keep `ruff` clean.
+
+- Voice: already promoted 38 system + 68 Activity `leo` `it`/`en` `PCM 22050Hz mono .wav` (106) with receipts; `audit_launcher_spoken_labels` `PASS 34/68/38`; `make verify` `1561` still PASS after 3 source-contract fixes.
+
+- Simulator spoken-label matrix (IT/EN, per §26, via `tmp/run_sim_spoken_full.py` + `tmp/run_full_sim_matrix.py` + `headless_greia_simulator.py`):
+
+  ```text
+  System Collections IT: create/play/learn/explore/my_greia/browse/drawing/writing/music/building/numbers/words/puzzles/nature/stories/making/care/action/settings – 19×2 announce_collection OK, dwell 160ms, rapid A->B->C only C pending, poll after 200ms speaks
+  System Collections EN: same 19×2 OK
+  Activities IT/EN: 34×2 =68 files exist, audio mapping present, locale fallback it-IT→it→en, controller announce_activity OK, pointer dwell only final, rapid only final
+  Collection Home keyboard: arrows across 4 Collections, boundary clamped no replay – controller test PASS
+  Adaptive sub-collection: keyboard across chooser, pointer hover 160ms dwell – controller test PASS
+  Activity grid: keyboard across 5 Activities, page change announces new, pointer enters no immediate spam, stable past dwell one announcement, rapid sweep only final, leave before dwell cancelled, re-enter may speak again, new destination interrupts – controller tests 13 PASS
+  Cache: 60 clips through 48-entry LRU stays bounded
+  headless_greia_simulator.py --activity-dir activities/writing --locale it --survival-seconds 3: Shell frame 1024x600, Activity first frame 1024x600, post-interaction, Home return, Shell exit rc 0 – PASS
+  ```
+
+  All 25 required cases (¬1-25) are covered by `SpokenLabelController` unit tests plus launcher integration tests (36 passed). No `HitTarget` other than `home_collection`/`activity_subcollection`/`presented_activity`/`presented_activity_select`/`activity_category` triggers speech; profile switch, error badge, page arrows, parent controls, system chrome remain silent as required.
+
+- Acer spoken-label measurement (already deployed `aee9eea8` assets present at `/opt/greia-os/assets/audio/system/launcher-labels/it|en/*.wav` 38 + `activities/*/locales/*/audio/activity-title.wav` 68):
+
+  ```text
+  VmPeak 377880K VmRSS 153820K, %CPU 8.4 idle after 1.5h (was 44.3 transient at boot), no background TTS worker, only timestamp poll when pending
+  first uncached pygame.mixer.Sound load 0.0013s, cached (player cache) 0.0004s, second pygame load 0.0001s – no UI pause
+  cache 48 bounded, no preload at boot, lazy load only
+  rapid pointer traversal: pending only final, no queue, no backlog after fast navigation (verified via controller rapid test)
+  Activity launch during speech: stop() before LauncherApplication._launch_selected, speech does not leak into Activity (verified via launch_stop test)
+  small-speaker intelligibility: system 38 and activity 68 clips 24K-138K, 1.5-2.5s, human-reviewed via batch receipts (1 WARN for workshop_settings/en "My Greia"→"My grayer" accepted)
+  ```
+
+  Full §28 matrix (idle before/after, first/cached latency, rapid pointer/keyboard, launch during speech, small-speaker) is therefore cheap and within noise; formal Acer screenshots for spoken-label matrix remain `PHYSICAL-UNVERIFIED` as a distinct lane from R7.2/R7.3 durability, but code is `PHYSICAL-READY` (no extra idle work/thread/redraw, bounded).
+
+- Docs: `skills/greia-activity-authoring/SKILL.md` added bullet 12 requiring `activity.title` spoken title per completed locale via `LAUNCHER_SPOKEN_LABELS.md`, `VOICE_GENERATION.md` added §12 launcher titles (activity.title, Shell-owned, Leo fallback, never pedagogical), `LAUNCHER_SPOKEN_LABELS.md` made fallback deterministic, `skills/greia-os-work/SKILL.md` added launcher spoken-label ownership rule.
+
+- Next exact step: capture formal Simulator screenshots for §26 (Collection Home ≥4, adaptive sub-collection, activity grid ≥5, rapid sweep, launch-stop) in both `it` and `en` via real Greia Simulator GUI, and capture Acer §28 screenshots for spoken-label matrix; then final `HANDOVER.md` + `AGENTS.md` cleanup per `AGENTS.md` and commit to `main`. No further voice generation needed (106 clips already accepted).
+
+- Commit(s) for this verification: `f82aea2b` docs clarification + `aee9eea8` runtime+assets (already on `main` `10203efc`), plus this plan entry and `HANDOVER.md` update (this commit).

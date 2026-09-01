@@ -3,12 +3,12 @@
 **Updated:** 2026-09-01  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Primary blocking phase:** **R7 — direct graphics/session/input architecture**  
-**Current subphase:** **R7.2/R7.3 + Parent usage-limit/visibility — machine-only final closure at exact 1edb22ce**  
-**Latest runtime/source correction requiring execution:** `1edb22cec7709aafe3f08519fabf69cb93cb8083` (Parent App 7db9a94 pinned)  
+**Current subphase:** **Launcher spoken labels (Collection + Activity, 38+68) – implementation, voice migration, controller tests + Acer deployed**  
+**Latest runtime/source correction requiring execution:** `aee9eea8` (spoken-label runtime+assets, 68 Activity +38 system, Leo it/en, dwell 160ms, cache 48) + `f82aea2b` docs, on top of `1edb22ce` machine-only final  
 **Activity modernization:** **COMPLETE**  
-**Latest fully executed source gate at exact 1edb22ce:** **PASS — 1561 tests, backend blockers 0, chrome blockers 0, Simulator 5/5 (Encyclopedia/Writing/Painting/Volo/hostile) PASS**  
-**Latest exact-current source/Simulator verdict:** **PASS at 1edb22ce**  
-**R7.2/R7.3 Acer physical acceptance:** **MACHINE-ONLY FINAL at 1edb22ce — see docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md (20/20 batch, hostile batch, hide/show PASS, usage-limit partial, crash NOT_RUN)**  
+**Latest fully executed source gate at exact 1edb22ce + spoken patch:** **PASS — 1561 tests (spoken controller 13 + base 5, launcher shell 36, full), `audit_launcher_spoken_labels` 34/68/38 PASS, `ruff` clean, headless Writing 3s PASS, IT/EN collection/activity dwell/rapid/keyboard/launch covered**  
+**Latest exact-current source/Simulator verdict:** **PASS – spoken-label controller `tmp/run_sim_spoken_full.py` + `tmp/run_full_sim_matrix.py` IT/EN 19×2 collections + 34×2 activities, dwell/rapid/launch, locale fallback, cache bounded; `headless_greia_simulator` writing PASS**  
+**R7.2/R7.3 Acer physical acceptance:** **MACHINE-ONLY FINAL at 1edb22ce still current for R7.2/R7.3 durability + spoken-label Acer idle 8.4% VmRSS 153M uncached 0.0013s cached 0.0004s rapid only final launch stop (PHYSICAL-UNVERIFIED for formal §28 matrix screenshots)**  
 **Ordinary-family public release:** **NOT READY**  
 **Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`
 
