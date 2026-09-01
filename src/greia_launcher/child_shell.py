@@ -225,7 +225,7 @@ class GreiaChildShell(
         launch path so presentation code never becomes a fail-open authority.
         """
 
-        profile_context = self._active_profile
+        profile_context = getattr(self, "_active_profile", None)
         if profile_context is not None:
             try:
                 status = self._usage_limit_service().status(
@@ -256,7 +256,7 @@ class GreiaChildShell(
         self._draw_home_usage_limit(screen, theme, pygame)
 
     def _draw_home_usage_limit(self, screen: Any, theme: Any, pygame: Any) -> None:
-        profile_context = self._active_profile
+        profile_context = getattr(self, "_active_profile", None)
         if profile_context is None:
             return
         try:

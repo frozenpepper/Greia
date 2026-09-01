@@ -441,7 +441,9 @@ class ActivitySupervisor:
                 and session.forced_reason is None
                 and now - requested_at >= session.graceful_stop_seconds
             ):
-                self.force_stop(session, ActivityExitReason.FORCED_STOP)
+                result = self.force_stop(session, ActivityExitReason.FORCED_STOP)
+                if result is not None:
+                    return result
 
         runtime_exit = self._runtime_manager.collect_exit(preparation, process)
         if runtime_exit is not None:

@@ -61,6 +61,8 @@ class ParentActivityPolicyTests(unittest.TestCase):
             updated = app.update_activity_policy(
                 profile.profile_id,
                 visibility_mode=ActivityVisibilityMode.CUSTOM.value,
+                difficulty_min=baseline["difficulty_min"],
+                difficulty_max=baseline["difficulty_max"],
                 overrides={target: "always_hide"},
             )
             self.assertEqual(updated["visibility_mode"], "custom")

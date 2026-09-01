@@ -79,17 +79,18 @@ class AchievementLibraryMixin:
         super()._logout(pygame)
 
     def _launch_selected(self, pygame: Any) -> None:
+        snapshot = getattr(self, "_achievement_snapshot", None)
         before = {
             entry.definition.achievement_id
             for entry in (
-                self._achievement_snapshot.entries
-                if self._achievement_snapshot is not None
+                snapshot.entries
+                if snapshot is not None
                 else ()
             )
             if entry.unlocked
         }
         super()._launch_selected(pygame)
-        if self._active_profile is None:
+        if getattr(self, "_active_profile", None) is None:
             return
         self._refresh_achievement_locale()
         snapshot = self._refresh_achievements()
@@ -106,7 +107,7 @@ class AchievementLibraryMixin:
 
     def _refresh_achievements(self) -> AchievementSnapshot | None:
         service = self._achievement_service
-        profile = self._active_profile
+        profile = getattr(self, "_active_profile", None)
         if service is None or profile is None:
             self._achievement_snapshot = None
             return None
