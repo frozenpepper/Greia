@@ -61,7 +61,15 @@ tools/greia_voice.py
 
 Launcher titles are ordinary communicative speech, not pronunciation teaching. Do not route them through `pedagogical_speech` merely because the title is short.
 
-Choose a canonical Greia speaker that matches the Activity's accepted presenter/identity when one exists. If an Activity deliberately has no presenter, use the project-approved neutral/system speaker route defined by the Voice Production skill; do not pick an arbitrary host voice.
+Choose the speaker deterministically:
+
+```text
+explicit accepted Activity lead presenter -> use that presenter
+no explicit presenter                    -> Leo (Greia launcher fallback narrator)
+platform Collections / sub-Collections   -> Leo
+```
+
+Launcher titles are never `pedagogical_speech` (even for one-word titles). Do not pick an arbitrary host voice.
 
 Generate into a review workspace first. Example:
 

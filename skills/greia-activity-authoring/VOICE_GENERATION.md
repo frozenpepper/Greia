@@ -303,7 +303,23 @@ rejected/unreviewed generations
 
 Generated presenter speech and runtime child microphone recording are separate systems. Child voice capture uses the platform-owned `audio.basic` route described in `MICROPHONE_RECORDING.md`.
 
-## 12. Completion check for Activity speech
+## 12. Launcher spoken titles
+
+Launcher catalogue titles are a distinct first-party completeness requirement:
+
+```text
+semantic cue is activity.title
+runtime playback is Shell-owned (Activity does not listen for hover or play)
+production is through tools/greia_voice.py / VoiceEngine
+use explicit accepted lead presenter when defined in current design/source authority
+otherwise use Leo as the Greia launcher fallback narrator
+never pedagogical_speech (even for one-word titles)
+human review mandatory before copying to locales/<locale>/audio/activity-title.wav
+```
+
+See `skills/greia-activity-authoring/LAUNCHER_SPOKEN_LABELS.md` for the full contract, inventory and promotion steps. Launcher titles are ordinary communicative speech; a one-word title is not a pronunciation exercise.
+
+## 13. Completion check for Activity speech (including launcher titles)
 
 Before calling an Activity's speech work complete, confirm:
 
