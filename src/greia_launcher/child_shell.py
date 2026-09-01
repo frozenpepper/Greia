@@ -26,6 +26,7 @@ from greia_platform.usage_limits import UsageLimitError, UsageLimitService, Usag
 
 from .adaptive_discovery_presentation import AdaptiveActivityDiscoveryMixin
 from .achievement_presentation import AchievementLibraryMixin
+from .catalogue_view import ALL_ACTIVITIES_ID
 from .collection_home_presentation import CollectionFirstHomeMixin
 from .composition import (
     build_launcher_runtime_services,
@@ -213,7 +214,32 @@ class GreiaChildShell(
         self.supervisor = supervisor
 
     def _launch_selected(self, pygame: Any) -> None:
-        """Run one Activity lifecycle, then restore trusted Shell input focus."""
+        """Run one Activity lifecycle, with a friendly exhausted-budget pre-check.
+
+        The usage-limit supervisor remains the authoritative enforcement point:
+        it accounts real Activity time and closes races where the budget changes
+        between this presentation check and process creation. This early read is
+        only child-facing UX. If the already-authoritative ledger says the day is
+        exhausted, stay on Greia Home rather than flashing ``Starting…`` and a
+        generic launch error. If the read itself fails, delegate to the normal
+        launch path so presentation code never becomes a fail-open authority.
+        """
+
+        profile_context = self._active_profile
+        if profile_context is not None:
+            try:
+                status = self._usage_limit_service().status(
+                    profile_context.profile.profile_id
+                )
+            except (UsageLimitError, OSError, TypeError, ValueError):
+                status = None
+            if status is not None and status.exhausted:
+                self._last_result = None
+                self._catalogue_error = False
+                self._home_collection_selected = 0
+                self._set_category(ALL_ACTIVITIES_ID)
+                self._cached_activities_key = None
+                return
 
         super()._launch_selected(pygame)
         # Returning from an Activity changes today's usage status. Rebuild Home
