@@ -31,17 +31,25 @@ docs/agents/GREIA_AGENT_OPERATIONS.md
 
 The current handover owns the **current exact evidence boundary and next legitimate gate**. Do not infer the current gate from the newest-looking filename or from an old result document.
 
-## 2. Current blocking R7 route
+## 2. Current blocking route
 
-As of this review, R7 remains the primary blocking architecture phase. The current continuation procedure is:
+R7 remains the primary blocking architecture phase, but current source has a focused Parent/toddler-runtime cleanup that must earn execution evidence first.
+
+Run first:
+
+```text
+docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
+```
+
+Only after that exact-current cleanup gate is green and the same source candidate remains current, continue with authoritative R7 closure:
 
 ```text
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
 ```
 
-However, always re-read `HANDOVER.md` before execution. Source may have advanced after the last physical candidate, in which case old physical evidence stays scoped to its exact SHA and the procedure must execute against a newly frozen current candidate.
+Always re-read `HANDOVER.md` immediately before execution. Source may have advanced after the last physical candidate, in which case old physical evidence stays scoped to its exact SHA and the procedure must execute against a newly frozen current candidate.
 
-The Home regression itself is physically green at the exact candidate recorded in `HANDOVER.md`; do not put Home back into Activity rendering to “help” R7.
+The Home regression itself is physically green only at the exact earlier candidate recorded in `HANDOVER.md`; do not put Home back into Activity rendering to “help” R7.
 
 ## 3. Dated procedures are scope-specific evidence contracts
 
@@ -54,7 +62,7 @@ Examples include:
 2026-08-19_*       Activity Simulator acceptance
 2026-08-23_*       microphone processing acceptance
 2026-08-29_R7_*    R7.2/R7.3 focused backend/chrome contracts
-2026-09-02_R7_*    current R7/Parent/spoken-label closure gates
+2026-09-02_*       current cleanup/R7/Parent/spoken-label closure gates
 ```
 
 Do **not** run every dated test document as one giant ritual. Select the current gate from the handover and expand only where that gate tells you to.
@@ -81,7 +89,8 @@ Never obtain a PASS by:
 - hard-coding one Acer resolution/device into shared semantics;
 - converting a Simulator result into a physical-backend claim;
 - deleting or suppressing useful failure evidence;
-- extending timeouts without evidence that the operation is legitimately slow.
+- extending timeouts without evidence that the operation is legitimately slow;
+- weakening the Parent service sandbox merely to advertise a capability that current authority cannot actually complete.
 
 ## 5. Baseline source verification
 
@@ -95,14 +104,14 @@ Run it on the **exact current checkout** when the active procedure requires the 
 
 Do not copy a PASS count from this document, an old review or another SHA. Test counts evolve as Greia evolves; the retained evidence record owns the count that actually ran.
 
-Subsystem gates should come from the current named procedure or task router. For example, R7 currently includes the strict Activity backend/system-chrome audits:
+Subsystem gates should come from the current named procedure or task router. R7 and the current cleanup gate both include the strict Activity backend/system-chrome audits where named:
 
 ```bash
 PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities
 PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
 ```
 
-Use exact expected summaries from the current R7 procedure.
+Use exact expected summaries from the current procedure.
 
 ## 6. Evidence storage and result reporting
 
@@ -139,6 +148,8 @@ runtime/parent-app-client.manifest.json
 ```
 
 If Parent client source changes, update its own repository first, then repin Greia with exact revision/integrity metadata. Do not invent an SSH/shell fallback for a missing Parent API capability.
+
+The installed Greia Parent server remains unprivileged. If `network.manage` is false because direct IWD mutation is unavailable under the service sandbox, preserve that fail-closed truth; privileged mutation belongs behind the narrow typed broker described by the Parent architecture.
 
 ## 8. Physical/developer-device work
 
