@@ -21,10 +21,17 @@ README.md
 docs/DOCUMENTATION.md
 docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
 HANDOVER.md
-skills/greia-os-work/SKILL.md   # OS/platform work
+skills/greia-os-work/SKILL.md
 ```
 
 Before installing/configuring tools read `SETUP.md`.
+
+For the source cleanup that must now be executed before new acceptance claims read:
+
+```text
+docs/reviews/2026-09-02_RECENT_COMMIT_CLEANUP_PARENT_AND_TODDLER_RUNTIME.md
+docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
+```
 
 For public-source/release preparation also read:
 
@@ -38,40 +45,30 @@ Do not use GitHub-hosted Actions without explicit owner authorization.
 
 ---
 
-## 2. Exact current source/evidence boundary
+## 2. Current source/evidence boundary
 
-Current `main` at this handover update is descended from:
+The latest reviewed **runtime** cleanup source boundary is:
 
 ```text
-1e851eef53e68e13f17053bc464c130b14bc3687
-Enforce Greia voice contract: Chatterbox for Leo character dialogue, deterministic TTS for pedagogical targets
+2b0a1d7ac020ce83148cc3218889fab1a389f795
+Tests: reject unsigned PCM16 mixer format
 ```
 
-That latest runtime-affecting commit changes Activity audio/assets and receipts. It does not provide new R7 physical evidence.
+Later commits in the same continuation may be documentation-only. Always freeze the actual `origin/main` at execution time rather than copying this SHA into a new acceptance claim.
 
-The trusted-Home regression itself was physically proven on the Acer at exact runtime candidate:
+The recent runtime cleanup is **SOURCE-only** until the named focused gate executes. No post-cleanup `make verify`, Simulator PASS, audio-listening PASS or Acer PASS has been claimed.
+
+The latest earlier trusted-Home physical evidence remains scoped to its exact runtime candidate:
 
 ```text
 57626d3f65a8bf3ae074eee15b00ee32ba3277bd
 ```
 
-At that candidate:
-
-- Writing Home visible/action: PASS;
-- Painting Home visible/action: PASS;
-- Shape Garden Home visible/action: PASS;
-- Acquario Home visible/action: PASS;
-- protected Home returned through Greia lifecycle;
-- Activity process was gone after return;
-- Shell was immediately responsive;
-- usage-limit wrapper sanity was physically observed;
-- no additional Legacy-X visibility hardening was required.
-
-**Do not promote that PASS to later platform/system-control source.** Exact-current R7.2/R7.3 claims require a newly frozen candidate and the current named gate.
+At that candidate Writing, Painting, Shape Garden and Acquario physically showed/actioned trusted Home and returned to a responsive Shell. That physical PASS does **not** automatically certify later system-control, Parent or toddler-runtime source.
 
 ---
 
-## 3. R7 — still blocking
+## 3. R7 is still blocking
 
 Core invariants remain:
 
@@ -84,71 +81,25 @@ Core invariants remain:
 - Legacy X is migration/compatibility plumbing, not the final architecture;
 - Simulator evidence never substitutes for production backend/hardware evidence.
 
-Current exact-candidate procedure:
+Authoritative exact-current R7 procedure:
 
 ```text
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
 ```
 
-The obsolete version of that document hard-coded `1edb22ce`, a fixed Activity count and old catalogue geometry. The current version resolves the candidate dynamically from `origin/main` and requires semantic Shell launch identity rather than coordinate-only launch assumptions.
+Recent system-control source corrections still await exact-current physical execution, including normal media keys, rapid key bursts, Parent-setting→physical-relative-key composition and media-key isolation while an Activity is active.
 
-### Post-physical system-control corrections awaiting execution
-
-```text
-adec85c4fdf005ac473124dbf973405c37f3ddfa
-  relative volume/brightness/mute key changes compute inside one locked desired-state mutation
-
-e89e2e52d88f31b42c4faf6894bc25893435d362
-  Legacy-X media-key listener drains Xlib-buffered events before waiting on the X socket
-
-8610efc7dfb19ef9b82ace7b823a348f728a6f98
-  focused behavioral regressions for those two contracts
-
-b7a3d0ddc671898286c00dea0ca1aeb6f022723a
-  exact-candidate-safe final R7 evidence procedure
-
-a2123bae269dad4fbc48c7346f914ee011a932f7
-  dated review of the two system-control defects/corrections
-```
-
-These are **SOURCE corrections, not PASS evidence**. The next R7 acceptance must include normal media keys, rapid key bursts, Parent-setting→physical-relative-key composition and media-key isolation while an Activity is active.
-
-**Do not begin R7.4 implementation before the required R7.2/R7.3 exact-current physical closure is accepted.**
+**Do not begin R7.4 implementation before required R7.2/R7.3 exact-current physical closure is accepted.**
 
 ---
 
-## 4. Home regression — closed at its exact candidate
-
-The September 2 missing-Home regression was caused by a fail-open supervisor-composition path when Parent-package discovery raised `ActivityValidationError`.
-
-Correction:
-
-```text
-918770a3d3c98baffe02e1e2388ce9b169b1c06c
-```
-
-`GreiaLauncherPresentation._configure_parent_package_source()` rebuilds the current specialized runtime services around the already validated registry instead of retaining the plain base `ActivitySupervisor`.
-
-The intended composition remains:
-
-```text
-ProfileVisualActivitySupervisor
-  -> TrustedChromeActivitySupervisor
-  -> UsageLimitedActivitySupervisor
-  -> ActivitySupervisor
-```
-
-Do not restore retired Activity-side Home helpers.
-
----
-
-## 5. Activity catalogue
+## 4. Activity catalogue and recent toddler cleanup
 
 Current built-in Activity inventory: **37**.
 
-The catalogue-wide modernization/decomposition pass is **COMPLETE**. Do not restart a broad refactor sweep without a concrete defect.
+The catalogue-wide modernization/decomposition pass remains **COMPLETE**. Do not restart a broad refactor sweep without a concrete defect.
 
-Current catalogue includes the toddler Activities:
+Toddler Activities in the current catalogue:
 
 ```text
 org.greia.il-giardino-dei-numeri
@@ -156,20 +107,27 @@ org.greia.alfabeto-leo
 org.greia.bosco-numeri
 ```
 
-Recent source evidence recorded in current history includes:
+The latest cleanup preserved Bosco's owner-authored educational-flow remediation: count completion auto-advance, final-cardinality reinforcement and continuing guess rounds.
 
-- launcher spoken-label audit: `BUILT_IN_ACTIVITIES=36`, `ACTIVITY_TITLE_COMPLETE=72`;
-- backend-independence audit: `activities=36 blockers=0`;
-- strict system-chrome audit: `blockers=0`;
-- headless Simulator smoke PASS for toddler Activities (il-giardino-dei-numeri, alfabeto-leo, and bosco-numeri auto-advance, cardinality and guess mode).
+Recent source cleanup then corrected concrete runtime/architecture residue:
 
-Those recorded results do not replace the current exact R7 gate where that gate requires a freshly frozen candidate.
+- Bosco, Giardino and Alfabeto use `PygameReferenceCanvas.pointer()` instead of copied physical→logical transforms;
+- Activity-local attempts to protect/own the Greia Home region were removed;
+- Bosco and Alfabeto no longer synthesize full feedback waveforms in the click hot path;
+- Bosco fanfare is one sequenced clip instead of repeated same-channel replacement calls;
+- bounded generated PCM in all three toddler Activities now uses the actual signed-PCM16 mixer rate/channel layout through `src/greia_platform/pygame_audio.py`;
+- Bosco renderer now resolves child-facing strings through `LocalizedResources`; its duplicate hard-coded localization table and Italian-only progress word were removed;
+- obsolete project-specific root `tools/generate_toddler_audio.py` was removed. Reusable voice production remains `tools/greia_voice.py` / VoiceEngine.
+
+Important open measurement: Alfabeto now prebuilds 26 marimba cues outside interaction. This removes click-time synthesis but may increase startup cost on the Atom floor. **Measure first-frame/READY latency on the Acer; do not assume desktop behavior.** If materially slow, prefer pre-generated bounded SFX or another startup-safe strategy rather than moving synthesis back into the interaction hot path.
+
+Historical toddler Simulator evidence predates parts of this cleanup and does not replace a fresh exact-current run.
 
 ---
 
-## 6. Launcher spoken labels and voice assets
+## 5. Voice/audio evidence boundary
 
-Launcher spoken-label architecture/content is complete for the accepted catalogue set and remains Shell-owned prerecorded audio; no child-runtime TTS is introduced.
+Launcher spoken labels remain Shell-owned prerecorded audio; no child-runtime narration TTS is introduced.
 
 Shared accepted character speech remains:
 
@@ -179,50 +137,60 @@ Shared accepted character speech remains:
 accepted set: assets/audio/characters/shared/v0.2/
 ```
 
-Runtime shared-utterance resolver/product placement remains a separate concern.
+The earlier Alfabeto voice correction remains valid in source intent: Leo character dialogue uses the Leo Chatterbox voice while deterministic pedagogical targets use the deterministic path. Newly generated receipts/provider or Whisper success never replaces human listening acceptance.
 
-The latest `1e851eef` toddler-audio correction enforces the voice-production contract for `alfabeto_leo`: Leo character dialogue uses the Leo Chatterbox voice while deterministic pedagogical targets remain on the deterministic path. Newly regenerated receipts remain subject to the normal human-listening acceptance rule; generation/provider success is not human acceptance.
-
-All new prerecorded speech continues through `tools/greia_voice.py` / VoiceEngine; no authoring model stack belongs on child devices.
+The new `pygame_audio.py` helper is only a tiny format boundary for bounded Activity-generated SFX. It is **not** a replacement audio engine and does not own prerecorded speech or platform microphone/audio policy.
 
 ---
 
-## 7. Parent/system controls
+## 6. Parent production path
 
 Current exact owners include:
 
 ```text
+src/greia_parent/protocol.py
+src/greia_parent/api_server.py
+src/greia_parent/package_api.py
+src/greia_parent/update_api.py
+src/greia_parent/production_api.py
 src/greia_platform/system_controls.py
 src/greia_platform/system_controls_legacy_x.py
 src/greia_platform/hardware_session.py
 src/greia_platform/hardware_session_legacy_x.py
-src/greia_parent/protocol.py
-src/greia_parent/update_api.py
 ```
 
-Persistent desired state is platform-owned. Parent/browser code may mutate only typed bounded settings; it does not own host mixer/backlight mechanics or expose arbitrary commands.
+The installed `greia-parent.service` now launches `greia_parent.production_api` rather than relying on a generic composition plus environmental demo fallback.
 
-Because this subsystem changed after the `57626d` physical Home candidate, the current exact-candidate physical system-control lane is mandatory before claiming current runtime acceptance.
+Production policy now is explicit and fail-closed:
+
+- default Wi-Fi backend is real IWD, not sample/demo Wi-Fi;
+- unavailable management returns no fake network list and no simulated connection success;
+- capability composition preserves package/update/settings/profile features;
+- direct IWD is advertised as `network.manage` only when it is available **and** its state boundary is writable by the current process;
+- the Parent HTTP process remains unprivileged `greiapanel` under its strict service sandbox.
+
+`network.manage=false` may therefore be the correct current appliance truth. Do **not** grant the HTTP server root or broad `/var/lib/iwd` authority merely to make that capability true. The living Parent architecture already places future privileged mutations behind a narrow typed privileged broker.
+
+The obsolete one-shot self-mutating workflow `.github/workflows/repair-real-parent-production.yml` was removed after the intended policy existed in normal source/tests. Do not recreate it.
+
+Because this Parent production seam is new source, it has not yet earned post-cleanup execution evidence.
 
 ---
 
-## 8. Public-source documentation cleanup
+## 7. Public-source cleanup
 
-The first public-repository deep dive is:
+The first public-repository deep dive remains:
 
 ```text
 docs/reviews/2026-09-02_PUBLIC_REPOSITORY_DOCUMENTATION_DEEP_DIVE.md
 ```
 
-Completed/high-confidence cleanup already present in current history:
+Recent cleanup additionally removed two steady-state public-repo liabilities:
 
-- `HANDOVER.md` converted back into a short current continuation contract;
-- `docs/testing/LOCAL_AGENT_START_HERE.md` converted into a living router rather than an old fixed test session;
-- historical root `LOCAL_AGENT_RESULT.md` removed from the public front door;
-- README/SETUP/voice status refreshed;
-- `docs/DOCUMENTATION.md` now includes ADR 0034 and newer exact owners such as child text, launcher spoken labels and system controls;
-- `skills/greia-os-work/SKILL.md` references the correct ADR 0013 filename and current R7/system-control routes;
-- `docs/agents/GREIA_AGENT_OPERATIONS.md` was compacted into a living operating router with current `main` branch policy, current handover-selected R7 routing, evidence separation and local-agent failure-preservation rules (`17ab93218c24029a911c64a566a7fcf912eb4bbb`).
+```text
+.github/workflows/repair-real-parent-production.yml
+tools/generate_toddler_audio.py
+```
 
 Still pending for Threshold A public-source readiness:
 
@@ -240,26 +208,47 @@ docs/release/GREIA_PUBLIC_RELEASE_READINESS.md
 
 ---
 
-## 9. Next exact work
+## 8. Next exact work
 
-### Blocking engineering
+### First: execute the recent cleanup gate
 
-1. freeze the actual current candidate using `docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md`;
-2. run the focused source gate, both architecture audits and `make verify`;
-3. run the real-Shell Simulator matrix;
-4. only if green, deploy that exact frozen SHA to the Acer;
-5. execute system-control, Writing, Painting, hostile 10/10, crash-recovery, 20/20 durability and performance/log lanes;
-6. classify the exact candidate `ACCEPTED`, `REJECTED` or `INCOMPLETE`;
-7. only after accepted R7.2/R7.3 closure advance the next R7 subphase permitted by the active plan.
+Use:
 
-### Public-source cleanup that may proceed in parallel
+```text
+docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
+```
 
-1. implement the deterministic living-document path/link audit;
-2. begin the licensing/provenance/security/community-file Threshold-A audit without unsupported legal claims.
+It requires:
+
+1. freeze exact clean `origin/main`;
+2. run `test_pygame_audio.py`, `test_parent_production_api.py` and `test_parent_api.py` by unittest discovery;
+3. run backend-independence and strict system-chrome audits;
+4. run `make verify` and record its fresh test count;
+5. run the three toddler Activities through real-Shell Simulator, including scaled pointer mapping and Bosco IT/EN localization;
+6. only on the same still-current SHA, use the Acer to measure toddler first-frame/READY latency, listen for generated-SFX pitch/channel correctness and inspect the real Parent capability/sandbox behavior.
+
+Do not repair failures inside that gate. Preserve evidence and create a new source candidate if a correction is needed.
+
+### Then: current R7 closure
+
+If the cleanup gate is green and `main` is still frozen, execute:
+
+```text
+docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
+```
+
+including system-control, Writing, Painting, hostile 10/10, crash-recovery, 20/20 durability and performance/log lanes. Classify the exact candidate `ACCEPTED`, `REJECTED` or `INCOMPLETE`.
+
+Only after accepted R7.2/R7.3 closure may the next R7 subphase permitted by the active plan advance.
+
+### Public-source work may continue in parallel
+
+- deterministic living-document path/link audit;
+- licensing/provenance/security/community-file Threshold-A audit without unsupported legal claims.
 
 ---
 
-## 10. Evidence discipline
+## 9. Evidence discipline
 
 Always preserve these distinctions:
 
@@ -271,4 +260,4 @@ VM / IMAGE
 PHYSICAL DEVICE
 ```
 
-A later source commit does not inherit a physical PASS automatically. A valid audio receipt/Whisper result does not replace human listening. A Simulator screenshot does not prove production trusted chrome. Historical reviews remain evidence for their exact state, not current truth by default.
+A committed test is not a PASS. A later source commit does not inherit an earlier physical PASS. A valid audio receipt/Whisper result does not replace human listening. A Simulator screenshot does not prove production trusted chrome. Historical reviews remain evidence for their exact state, not current truth by default.
