@@ -84,7 +84,7 @@ class ParentApiTests(unittest.TestCase):
 
             for index in range(MAX_PAIRED_DEVICES):
                 store.issue(f"Device {index}")
-            with self.assertRaises(ParentCredentialError):
+            with self.assertRaisesRegex(ParentCredentialError, "limit"):
                 store.issue("One too many")
 
     def test_versioned_protocol_advertises_only_real_capabilities(self) -> None:
