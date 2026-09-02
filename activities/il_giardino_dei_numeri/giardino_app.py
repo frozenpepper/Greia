@@ -4,38 +4,22 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Final
 
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
-from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .giardino_audio import GiardinoAudio
-    from .giardino_model import (
-        BASKET_RADIUS,
-        BASKET_X,
-        BASKET_Y,
-        GardenModel,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-    )
+    from .giardino_model import GardenModel
     from .giardino_renderer import GiardinoRenderer
     from .giardino_services import GiardinoServices, GiardinoStorageState
 else:
     from giardino_audio import GiardinoAudio
-    from giardino_model import (
-        BASKET_RADIUS,
-        BASKET_X,
-        BASKET_Y,
-        GardenModel,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-    )
+    from giardino_model import GardenModel
     from giardino_renderer import GiardinoRenderer
     from giardino_services import GiardinoServices, GiardinoStorageState
 
@@ -52,12 +36,10 @@ class GiardinoApp:
     resources: LocalizedResources
     typography: GreiaTypography
     model: GardenModel = field(default_factory=GardenModel)
-    metrics: ChildUiMetrics = field(init=False)
     ready_published: bool = False
     anim_time: float = 0.0
 
     def __post_init__(self) -> None:
-        self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         saved = self.services.load_state()
         self.model.baskets_filled = saved.baskets_filled
         self.model.total_counted = saved.total_counted
@@ -83,14 +65,11 @@ class GiardinoApp:
                         self._handle_advance()
                     elif pygame.K_1 <= event.key <= pygame.K_5:
                         self._handle_number_key(event.key - pygame.K_0)
-                elif event.type == pygame.VIDEORESIZE:
-                    self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Map click to reference coordinates via canvas
-                    ref_pos = self._screen_to_reference(event.pos)
-                    self._handle_click(ref_pos)
+                    ref_pos = self.canvas.pointer(event.pos)
+                    if ref_pos is not None:
+                        self._handle_click(ref_pos)
 
-            # Update model and trigger sounds/events
             events = self.model.update(dt)
             for ev in events:
                 self.services.emit_event(ev)
@@ -106,7 +85,6 @@ class GiardinoApp:
                         )
                     )
 
-            # Render frame
             self.renderer.render(self.model, self.anim_time)
             self.canvas.present()
             pygame.display.flip()
@@ -118,7 +96,6 @@ class GiardinoApp:
 
             clock.tick(30)
 
-        # Save on exit
         self.services.save_state(
             GiardinoStorageState(
                 total_counted=self.model.total_counted,
@@ -129,18 +106,9 @@ class GiardinoApp:
         self.typography.clear()
         return 0
 
-    def _screen_to_reference(self, pos: tuple[int, int]) -> tuple[float, float]:
-        sw, sh = self.screen.get_size()
-        scale_x = REFERENCE_WIDTH / max(1, sw)
-        scale_y = REFERENCE_HEIGHT / max(1, sh)
-        return (pos[0] * scale_x, pos[1] * scale_y)
-
     def _handle_click(self, ref_pos: tuple[float, float]) -> None:
         rx, ry = ref_pos
-        # Protect top-left reserved system chrome area (80x80)
-        if rx <= 88 and ry <= 88:
-            return
-
+        # Greia consumes protected Home/Back input before Activity delivery.
         outcome, order = self.model.handle_tap(rx, ry)
         if outcome == "counted":
             self.audio.play_count(order)
@@ -157,7 +125,9 @@ class GiardinoApp:
             self.audio.play("rustle")
 
     def _handle_number_key(self, num: int) -> None:
-        # Tap uncounted items up to num
+        # One key press advances one countable object; the number keys are a
+        # secondary keyboard-access path, not a replacement for pointer counting.
+        del num
         uncounted = [it for it in self.model.items if not it.counted]
         if uncounted:
             outcome, order = self.model.handle_tap(uncounted[0].x, uncounted[0].y)
