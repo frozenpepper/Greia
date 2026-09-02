@@ -225,12 +225,7 @@ class LegacyXMediaKeyListener:
             self.close()
             raise RuntimeError("no XF86 system key mappings are available")
 
-    def wait_action(self, timeout_seconds: float) -> SystemControlAction | None:
-        if self._display is None:
-            return None
-        ready, _, _ = select.select([self._fd], [], [], max(0.0, timeout_seconds))
-        if not ready:
-            return None
+    def _pending_action(self) -> SystemControlAction | None:
         event = _XEvent()
         while self._x11.XPending(self._display) > 0:
             self._x11.XNextEvent(self._display, ctypes.byref(event))
@@ -240,6 +235,17 @@ class LegacyXMediaKeyListener:
             if action is not None:
                 return action
         return None
+
+    def wait_action(self, timeout_seconds: float) -> SystemControlAction | None:
+        if self._display is None:
+            return None
+        action = self._pending_action()
+        if action is not None:
+            return action
+        ready, _, _ = select.select([self._fd], [], [], max(0.0, timeout_seconds))
+        if not ready:
+            return None
+        return self._pending_action()
 
     def close(self) -> None:
         display = getattr(self, "_display", None)
