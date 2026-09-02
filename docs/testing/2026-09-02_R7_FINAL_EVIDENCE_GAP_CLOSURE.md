@@ -1,412 +1,364 @@
-# Greia R7 — Final Evidence-Gap Closure at 1edb22ce
+# Greia R7 — Exact-Candidate Final Evidence Gap Closure
 
-**Date:** 2026-09-02  
-**Runtime/source candidate under physical acceptance:** `1edb22cec7709aafe3f08519fabf69cb93cb8083`  
-**Parent App pinned/reviewed source:** `7db9a94ef652b491fc3b305936cce439bb978b8e`  
-**Current repository HEAD may be later documentation-only commits.**  
-**Scope:** close only the remaining exact physical evidence gaps for R7.2, R7.3 and the Parent usage-limit/visibility tranche.  
+**Updated:** 2026-09-02  
+**Scope:** close the remaining R7.2/R7.3 physical evidence and revalidate the post-physical system-control/hardware-session tranche.  
+**Candidate:** resolved dynamically from `origin/main` at execution time; never hard-code an old SHA.  
+
+This procedure replaces the earlier `1edb22ce`/34-Activity-specific version. The catalogue and Parent/system-control runtime have advanced since that candidate. Historical evidence remains useful only where the owning runtime seam is unchanged.
 
 ---
 
-## 1. Evidence already accepted — do not repeat
+## 1. Evidence boundary
 
-At exact runtime/source `1edb22ce`:
+The trusted Home regression itself was physically closed at `57626d3f65a8bf3ae074eee15b00ee32ba3277bd` on Writing, Painting, Shape Garden and Acquario, including the exhausted-usage-limit `no Starting…` behavior. Do not reopen that bug without contrary evidence.
+
+The important post-`57626d` platform delta is the system-control/hardware-session tranche. Two source defects found during review on 2026-09-02 were corrected:
 
 ```text
-focused R7.2 source gate: PASS
-focused R7.3 source gate: PASS
-usage-limit focused suites: PASS
-backend audit: PASS blockers=0
-system-chrome audit --strict: PASS blockers=0
-make verify: PASS 1561 tests
-project validation: PASS
-34 Activity validation: PASS
-Shell source gate: PASS
-Simulator Encyclopedia/Writing/Painting/Volo/hostile: PASS
-Simulator visual review: PASS
-physical Acer exact deployment: PASS
-Acer Shell boot/pointer: PASS
-Acer focus restarts: 5/5 PASS
-child-visible Linux: NO
-Activity direct /dev/dri required: NO
-Activity raw /dev/input required: NO
-physical libpng warnings: NO
+adec85c4fdf005ac473124dbf973405c37f3ddfa
+  relative volume/brightness key changes now compute inside the shared desired-state transaction
+
+e89e2e52d88f31b42c4faf6894bc25893435d362
+  Legacy-X media-key listener drains Xlib-buffered events before waiting on the X socket
+
+8610efc7dfb19ef9b82ace7b823a348f728a6f98
+  focused behavioral regressions for both contracts
 ```
 
-The owner additionally performed the real human-input lanes and reports all PASS:
+These commits are **source corrections awaiting execution**, not accepted evidence.
 
-```text
-Writing physical keyboard/editing: PASS
-Writing save/return/relaunch persistence: PASS
-Painting sustained physical touchpad drawing >=20 s: PASS
-Painting multiple strokes/direction changes: PASS
-Painting tool/color/brush change: PASS
-Painting save/return/relaunch persistence: PASS
-physical child keyboard/touchpad feel: PASS
-```
+The remaining final physical R7 evidence is still:
 
-Do **not** ask the owner to repeat these.
-
-The previous machine-only attempt also proved:
-
-```text
-Parent hide/show API + physical hot reload: PASS
-Parent policy restoration: PASS
-logs/negative authority sanity: PASS
-```
-
-The previous 20/20 and hostile batches are useful supporting evidence but do not close the canonical exact-pattern gates because the driver used fallback coordinates and did not prove the expected process identity per cycle.
+- Writing full real-input/save/relaunch lane;
+- Painting sustained real high-rate pointer/save/relaunch lane;
+- hostile fixture 10/10 forced returns;
+- abrupt Activity crash recovery;
+- 20/20 normal launch/return durability;
+- performance/log review;
+- current system-control/hardware-session physical acceptance.
 
 ---
 
-## 2. Why the previous machine run remained incomplete
+## 2. Rules
 
-All three unresolved machine lanes share one evidence defect:
-
-> a click/screenshot that looks Activity-like is not proof that the intended Activity actually launched.
-
-Observed consequences:
-
-- Shape Garden crash setup produced no proven Activity PID, so abrupt crash was correctly `NOT_RUN`;
-- the short-budget test waited 75 s while `profile_used_seconds` remained zero, proving the intended Activity lifecycle had not actually been entered;
-- the 20/20 and hostile batches did not verify the intended Activity/Bubblewrap identity per cycle.
-
-The final gate therefore uses **process identity as a hard launch precondition**.
-
----
-
-## 3. Hard rules
-
-1. Do not modify production/runtime source during this gate.
-2. Do not redeploy merely because current `main` contains documentation-only commits after `1edb22ce`.
-3. If any non-documentation source changed after `1edb22ce`, stop and request review before combining physical evidence.
-4. Do not count a launch until §5 process proof passes for the exact expected Activity ID.
-5. Do not count a return until the expected Activity process and its Bubblewrap wrappers are gone.
-6. Do not use direct `record_activity_time()` or edit `usage-limits.json` to manufacture expiry evidence.
-7. Do not run extra successful cycles to replace a failed numbered cycle.
-8. Do not use GitHub-hosted Actions.
-9. Do not use manual `windowfocus`, repair clicks or launcher restarts inside a durability/hostile cycle.
-10. Stop on the first genuine product/evidence failure and preserve it.
+1. Work on canonical `frozenpepper/Greia`, branch `main`.
+2. Do not use GitHub Actions for this acceptance.
+3. Do not edit source, tests, runtime policy, Activities, deployment tooling or acceptance scripts after freezing the candidate.
+4. Do not reset, stash, clean, delete or overwrite unknown owner work.
+5. Evidence goes under one project-local `./tmp/...` directory. Do not use filesystem-root `/tmp`.
+6. Pull exactly once before the gate. Never pull during the frozen run.
+7. If `origin/main` advances later, the evidence remains valid for the frozen SHA but is not automatically evidence for the newer source.
+8. Do not hard-code Activity count, launcher coordinates or catalogue indices.
+9. Launch physical Activities through the child-visible semantic Shell path. Remote coordinate injection may assist observation, but coordinate-only activation is not trusted-Home authority evidence.
+10. Trusted Home must be activated through the real protected child-facing control during final physical authority checks.
+11. Do not patch timeouts or add extra successful cycles to hide a failure.
+12. Stop on the first genuine invariant failure and preserve evidence.
+13. Do not advance R7.4 unless this procedure reaches an honest `ACCEPTED` verdict.
 
 ---
 
-## 4. Preflight: preserve the runtime candidate
-
-From the repository:
+## 3. Freeze exact candidate
 
 ```bash
-git fetch origin
+set -euo pipefail
+
+git fetch origin main
 git switch main
+git pull --ff-only origin main
 
-git rev-parse HEAD
-git rev-parse origin/main
-git status --short --untracked-files=all
-
-git diff --name-only 1edb22cec7709aafe3f08519fabf69cb93cb8083..HEAD \
-  | tee ./tmp/r7-final-gap-delta.txt
-```
-
-The delta from `1edb22ce` must contain only documentation files, currently expected under:
-
-```text
-HANDOVER.md
-docs/plans/
-docs/reviews/
-docs/testing/
-```
-
-If the delta contains any runtime/source/build/tool file, stop. Do not silently inherit the old physical candidate.
-
-Create evidence root:
-
-```bash
+git status --short
+SOURCE_SHA="$(git rev-parse HEAD)"
+ORIGIN_SHA="$(git rev-parse origin/main)"
 STAMP="$(date +%Y%m%d_%H%M%S)"
-E="./tmp/r7-final-gap-${STAMP}-1edb22ce"
-mkdir -p "$E"
-printf '%s\n' '1edb22cec7709aafe3f08519fabf69cb93cb8083' > "$E/runtime-candidate.txt"
-PY=/opt/homebrew/bin/python3.12
+EVIDENCE="./tmp/r7-final-${STAMP}-${SOURCE_SHA:0:8}"
+mkdir -p "$EVIDENCE"
+
+printf '%s\n' "$SOURCE_SHA" > "$EVIDENCE/source-sha.txt"
+printf '%s\n' "$ORIGIN_SHA" > "$EVIDENCE/origin-main-at-start.txt"
+git status --short > "$EVIDENCE/worktree-before.txt"
+git log -30 --oneline > "$EVIDENCE/recent-history.txt"
 ```
 
-Confirm the Acer remains reachable and on the accepted runtime bundle using the already-proven file/hash identity check:
+Hard requirements:
 
 ```bash
-"$PY" tools/greia_remote.py --password greia wait --timeout 180
-"$PY" tools/greia_remote.py --password greia status \
-  | tee "$E/acer-status-before.json"
-"$PY" tools/greia_remote.py --password greia snapshot \
-  "$E/acer-before" --service all --lines 1000
+test "$SOURCE_SHA" = "$ORIGIN_SHA"
+test ! -s "$EVIDENCE/worktree-before.txt"
 ```
 
-Do not redeploy if exact `1edb22ce` runtime identity is still proven.
-
----
-
-## 5. Canonical Activity-process proof
-
-### 5.1 Do not match host Activity paths with `pgrep`
-
-Inside Bubblewrap, the final Python child may not expose the host path expected by:
-
-```text
-pgrep -f 'python3.*activities/shape_garden/main.py'
-```
-
-That is why the previous crash probe could return zero even when a sandbox might exist.
-
-Greia already passes the authoritative semantic identity into the Activity environment:
-
-```text
-GREIA_ACTIVITY_ID=<activity id>
-```
-
-Bubblewrap wrapper processes can inherit that variable too, so environment identity **alone** is also insufficient. Filter by both:
-
-```text
-GREIA_ACTIVITY_ID == expected ID
-AND executable basename is python/python3/python3.*
-```
-
-### 5.2 Probe helper to run on the Acer maintenance shell
-
-Open:
+Verify the three new system-control commits are ancestors:
 
 ```bash
-"$PY" tools/greia_remote.py --password greia shell
-```
-
-Define this function exactly:
-
-```bash
-activity_probe() {
-  expected="$1"
-  echo greia | sudo -S -p '' sh -s -- "$expected" <<'EOS'
-expected="$1"
-python_count=0
-bwrap_count=0
-
-for proc in /proc/[0-9]*; do
-  pid="${proc##*/}"
-  [ -r "$proc/environ" ] || continue
-
-  if ! tr '\0' '\n' < "$proc/environ" 2>/dev/null \
-      | grep -Fxq "GREIA_ACTIVITY_ID=$expected"; then
-    continue
-  fi
-
-  exe="$(readlink -f "$proc/exe" 2>/dev/null || true)"
-  base="${exe##*/}"
-  user="$(ps -p "$pid" -o user= 2>/dev/null | xargs)"
-  args="$(tr '\0' ' ' < "$proc/cmdline" 2>/dev/null || true)"
-
-  case "$base" in
-    python|python3|python3.*)
-      python_count=$((python_count + 1))
-      printf 'PYTHON pid=%s user=%s exe=%s args=%s\n' "$pid" "$user" "$exe" "$args"
-      ;;
-    bwrap)
-      bwrap_count=$((bwrap_count + 1))
-      printf 'BWRAP pid=%s user=%s exe=%s args=%s\n' "$pid" "$user" "$exe" "$args"
-      ;;
-  esac
+for c in \
+  adec85c4fdf005ac473124dbf973405c37f3ddfa \
+  e89e2e52d88f31b42c4faf6894bc25893435d362 \
+  8610efc7dfb19ef9b82ace7b823a348f728a6f98
+do
+  git merge-base --is-ancestor "$c" "$SOURCE_SHA" || {
+    echo "required correction missing: $c" >&2
+    exit 20
+  }
 done
-
-printf 'SUMMARY expected=%s python_count=%s bwrap_count=%s\n' \
-  "$expected" "$python_count" "$bwrap_count"
-
-[ "$python_count" -eq 1 ] || exit 41
-[ "$bwrap_count" -ge 1 ] || exit 42
-EOS
-}
 ```
 
-Example:
+If the worktree is dirty or the frozen SHA does not equal `origin/main`, report `INCOMPLETE`; do not repair the checkout destructively.
+
+---
+
+## 4. Focused source gate
+
+Use unittest discovery rather than dotted `tests.*` imports because a third-party `tests` package has shadowed this repository before.
 
 ```bash
-activity_probe org.greia.shape-garden
-```
+patterns=(
+  test_system_control_transactions.py
+  test_hardware_session.py
+  test_activity_backend_policy.py
+  test_r7_activity_device_authority.py
+  test_display_session_legacy_x.py
+  test_supervisor_display_session.py
+  test_system_chrome.py
+  test_system_chrome_legacy_x.py
+  test_trusted_chrome_supervisor.py
+  test_r7_child_shell_trusted_chrome_composition.py
+  test_r7_noncooperative_chrome_fixture.py
+  test_activity_system_chrome_audit.py
+  test_usage_limits.py
+  test_usage_limited_supervisor.py
+  test_usage_limit_presentation.py
+  test_child_shell_usage_limit_launch.py
+)
 
-A launch is proven only when:
-
-```text
-python_count=1
-bwrap_count>=1
-Python process owner is greiakid
-```
-
-Record the exact PID output for every required cycle.
-
-### 5.3 Return/cleanup proof
-
-After Greia Home returns to Shell, wait up to 3 s and prove that no process still carries the Activity ID:
-
-```bash
-activity_absent() {
-  expected="$1"
-  echo greia | sudo -S -p '' sh -s -- "$expected" <<'EOS'
-expected="$1"
-count=0
-for proc in /proc/[0-9]*; do
-  [ -r "$proc/environ" ] || continue
-  if tr '\0' '\n' < "$proc/environ" 2>/dev/null \
-      | grep -Fxq "GREIA_ACTIVITY_ID=$expected"; then
-    exe="$(readlink -f "$proc/exe" 2>/dev/null || true)"
-    base="${exe##*/}"
-    case "$base" in
-      python|python3|python3.*|bwrap)
-        printf 'STALE pid=%s exe=%s\n' "${proc##*/}" "$exe"
-        count=$((count + 1))
-        ;;
-    esac
-  fi
+: > "$EVIDENCE/focused-source.log"
+for pattern in "${patterns[@]}"; do
+  test -f "tests/$pattern" || {
+    echo "missing focused test: tests/$pattern" | tee -a "$EVIDENCE/focused-source.log"
+    exit 21
+  }
+  echo "===== $pattern =====" | tee -a "$EVIDENCE/focused-source.log"
+  PYTHONPATH=src python3 -m unittest discover -s tests -p "$pattern" -v \
+    2>&1 | tee -a "$EVIDENCE/focused-source.log"
 done
-printf 'STALE_COUNT=%s\n' "$count"
-[ "$count" -eq 0 ]
-EOS
-}
 ```
 
-Do not count the return if `activity_absent` fails.
+Any failure stops the gate before deployment.
 
 ---
 
-## 6. Exact 1024×600 Activity-grid geometry
-
-The current Shell page controls at 1024×600 are generated from `main.py` with a 72 px side control at vertical center `324`.
-
-Use these centers:
-
-```text
-Previous page: (50, 324)
-Next page:     (974, 324)
-Trusted Home while Activity is running: (38, 38)
-```
-
-The exact target tile centers recorded from the accepted current catalogue are:
-
-```text
-Painting     page 1  (750, 350)  org.greia.painting
-Shape Garden page 1  (750, 450)  org.greia.shape-garden
-Volo         page 2  (150, 450)  org.greia.volo-draghetto
-Writing      page 2  (550, 450)  org.greia.writing
-```
-
-### Page normalization
-
-Before selecting a target inside the Create grid:
-
-1. click Previous `(50,324)` twice; on page 0 the absent control leaves this side margin inert;
-2. for page 1 click Next `(974,324)` once;
-3. for page 2 click Next `(974,324)` twice;
-4. click the exact target tile;
-5. **immediately prove expected process identity with §5.**
-
-If process proof fails, the cycle has not started. Capture the Shell screenshot and stop to diagnose navigation; do not wait and do not count it.
-
-### Returning to Create Home/grid when needed
-
-The already-observed physical route is:
-
-```text
-Create activity grid -> BackSpace -> Collection Home
-Collection Home -> clamp selection to first Collection (Create) with repeated Left/Up -> Return
-```
-
-Do not press BackSpace a second time after reaching Collection Home because Back at root may return to profile selection.
-
----
-
-## 7. Exact normal durability 20/20
-
-Use exactly this pattern:
-
-```text
-1  Writing
-2  Shape Garden
-3  Volo del Draghetto
-4  Painting
-5  Writing
-6  Shape Garden
-7  Volo del Draghetto
-8  Painting
-9  Writing
-10 Shape Garden
-11 Volo del Draghetto
-12 Painting
-13 Writing
-14 Shape Garden
-15 Volo del Draghetto
-16 Painting
-17 Writing
-18 Shape Garden
-19 Volo del Draghetto
-20 Painting
-```
-
-This gives five cycles each of:
-
-```text
-Writing high-value text path
-Painting high-value pointer path
-lightweight/static path
-continuously animated path
-```
-
-For each numbered cycle:
-
-1. normalize Create grid/page with §6;
-2. click the exact tile;
-3. within 3 s run `activity_probe EXPECTED_ID` and save output;
-4. capture at least a compact screenshot proof that the expected Activity is visible;
-5. let it run for at least 2 s;
-6. give one ordinary safe bounded input;
-7. activate trusted Home at `(38,38)`;
-8. wait for Shell;
-9. run `activity_absent EXPECTED_ID`;
-10. without any focus-repair click, send one Left and one Right Shell key and verify visual selection response;
-11. append the cycle result.
-
-Create:
-
-```text
-$E/normal-20.tsv
-```
-
-Columns:
-
-```text
-cycle	activity_id	python_pid	bwrap_count	visible	return	process_cleanup	focus	linux_visible	note
-```
-
-Capture full snapshots at cycles:
-
-```text
-1, 4, 5, 10, 15, 20, and first failure
-```
-
-Required final result:
-
-```text
-20/20 exact expected Activity identities
-20/20 usable visible frames
-20/20 trusted-Home returns
-20/20 process cleanup proofs
-20/20 automatic Shell focus proofs
-0 launcher/display restarts
-0 child-visible Linux
-```
-
-A failed numbered cycle ends the attempt.
-
----
-
-## 8. Exact hostile R7.3 10/10
-
-Deploy the canonical fixture if it is not already present:
+## 5. Canonical authority audits and full verify
 
 ```bash
-"$PY" tools/greia_remote.py --password greia deploy \
-  tests/fixtures/activities/r7_noncooperative_chrome \
-  2>&1 | tee "$E/hostile-deploy.log"
+PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities \
+  2>&1 | tee "$EVIDENCE/backend-audit.log"
+
+PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict \
+  2>&1 | tee "$EVIDENCE/chrome-audit.log"
+
+make verify 2>&1 | tee "$EVIDENCE/make-verify.log"
+```
+
+Required:
+
+```text
+backend audit blockers=0
+system-chrome audit blockers=0
+make verify exit=0
+project validation PASS
+all currently discovered Activities validate
+Shell/source/footprint checks PASS
+```
+
+Record the actual Activity and test counts from output. Never compare to historical `34`, `36` or any other hard-coded count.
+
+---
+
+## 6. Simulator smoke for changed authority seams
+
+Run the existing real-Shell/headless Simulator path on the frozen SHA for:
+
+1. Writing;
+2. Painting;
+3. one continuously animated first-party Activity;
+4. `tests/fixtures/activities/r7_noncooperative_chrome`.
+
+Use `tools/headless_greia_simulator.py` with fresh project-local workspaces and 1024×600. For each target require:
+
+- real Shell route;
+- first Activity frame;
+- meaningful interaction where applicable;
+- survival window;
+- protected Home return;
+- Shell restored;
+- no traceback/platform failure/READY timeout;
+- clean workspace teardown.
+
+For the hostile fixture, normal local exit may be ignored; trusted Home must still produce bounded platform termination and Shell return.
+
+Inspect the generated screenshots. If the executing agent cannot visually inspect them, report `visual_review: NOT_REVIEWED`; do not invent a pass.
+
+A Simulator failure stops deployment.
+
+---
+
+## 7. Recheck candidate before Acer
+
+```bash
+git status --short > "$EVIDENCE/worktree-before-acer.txt"
+test ! -s "$EVIDENCE/worktree-before-acer.txt"
+test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+
+git fetch origin main
+git rev-parse origin/main > "$EVIDENCE/origin-main-before-acer.txt"
+```
+
+Do not pull. If `origin/main` moved, continue only as frozen-SHA evidence and state that clearly in the final report.
+
+---
+
+## 8. Acer reachability and exact deployment
+
+```bash
+python3 tools/greia_remote.py --password greia wait --timeout 30 \
+  2>&1 | tee "$EVIDENCE/acer-wait.log"
+```
+
+If unreachable: verdict `INCOMPLETE`; return source/Simulator evidence.
+
+If reachable:
+
+```bash
+python3 tools/deploy_to_acer.py \
+  2>&1 | tee "$EVIDENCE/acer-deploy.log"
+
+python3 tools/greia_remote.py --password greia wait --timeout 180 \
+  2>&1 | tee "$EVIDENCE/acer-wait-after-deploy.log"
+
+python3 tools/greia_remote.py --password greia status \
+  2>&1 | tee "$EVIDENCE/acer-status-after-deploy.log"
+
+python3 tools/greia_remote.py --password greia snapshot \
+  "$EVIDENCE/acer-after-deploy" --service launcher --lines 500 \
+  2>&1 | tee "$EVIDENCE/acer-snapshot-after-deploy.log"
+```
+
+Do not modify the deployment helper or its accepted Atom extraction timeout.
+
+---
+
+## 9. Current system-control / hardware-session physical gate
+
+This lane is mandatory because it landed after the previously accepted trusted-Home candidate.
+
+### 9.1 Boot/input sanity
+
+After launcher/session restart, without clicking to repair focus:
+
+- Shell keyboard navigation works immediately;
+- touchpad/pointer works;
+- no Linux desktop/login/terminal is exposed;
+- 1024×600 presentation is correct on the reference Acer.
+
+### 9.2 Physical media keys
+
+With the Shell visible, exercise each available Greia-owned physical key:
+
+- volume up;
+- volume down;
+- mute/unmute;
+- brightness up;
+- brightness down.
+
+Require the real machine to change state and remain responsive. A missing physical key on this particular keyboard is `NOT_AVAILABLE`, not fabricated evidence; record exactly which keys exist.
+
+### 9.3 Buffered/burst media-key behavior
+
+Press a supported volume or brightness key rapidly several times in one burst. Required:
+
+- each intended step is observed or reflected in final state;
+- no first-key-only behavior;
+- no ~poll-interval stalls between already-buffered key presses;
+- launcher/session remains responsive.
+
+This physically exercises the source correction that drains Xlib events before waiting on the socket.
+
+### 9.4 Parent state + physical key composition
+
+Using the **normal authenticated Parent UI/API**, set a known non-default system-control value, then apply one physical relative key step.
+
+Example only (use a value exposed by the real client):
+
+```text
+Parent volume -> 35%
+physical Volume Up -> expected desired state 40%
+```
+
+Required:
+
+- the physical key applies relative to the latest Parent value;
+- it must not jump back toward a stale earlier value;
+- unrelated brightness/mute state is preserved;
+- Parent UI/API subsequently reports the committed result.
+
+Do not edit `system-controls.json` directly.
+
+### 9.5 Active-Activity ownership
+
+Launch Writing or Painting through the child Shell. While it is active, press the system media keys.
+
+Require:
+
+- volume/brightness still operate as platform controls;
+- the media keys do not become Activity gameplay/text input;
+- trusted Home remains functional;
+- Activity and Shell recover normally.
+
+Record system-control service/log diagnostics after the lane.
+
+---
+
+## 10. Writing real-input persistence lane
+
+From the real child Shell, semantically navigate to Writing; do not use a stored coordinate/index from an older catalogue.
+
+Required:
+
+1. first usable Writing frame;
+2. real physical keyboard editing for at least 15 seconds;
+3. real touchpad/pointer interaction;
+4. normal save/autosave path;
+5. physical trusted Home return;
+6. relaunch from the child Shell;
+7. saved state present;
+8. second clean trusted Home return;
+9. no focus repair, black frame, Linux UI or direct-device workaround.
+
+---
+
+## 11. Painting sustained high-rate pointer lane
+
+From the real child Shell:
+
+1. launch Painting semantically;
+2. confirm canvas/palette;
+3. draw continuously with the **real touchpad/pointer path for at least 20 seconds**;
+4. include direction changes and multiple strokes;
+5. change a normal tool/color/brush option;
+6. normal save path;
+7. physical trusted Home return with no stray stroke from Home activation;
+8. relaunch and verify saved creation/state;
+9. return cleanly.
+
+Remote single-click injection is not a substitute for this high-rate physical lane. Material pointer lag or frame hitching is a failure requiring investigation.
+
+---
+
+## 12. Hostile fixture 10/10
+
+Deploy the existing fixture:
+
+```bash
+python3 tools/greia_remote.py --password greia deploy \
+  tests/fixtures/activities/r7_noncooperative_chrome
 ```
 
 Identity:
@@ -415,242 +367,117 @@ Identity:
 org.greia.fixture.r7-noncooperative-chrome
 ```
 
-The fixture belongs to the `learn` Collection.
+First cycle must prove:
 
-From Collection Home:
+- hostile Activity surface visible;
+- trusted Greia Home visible above it;
+- Activity ignores its normal exit/STOP behavior as designed;
+- physical trusted Home requests return;
+- bounded platform force-termination occurs;
+- Shell returns cleanly;
+- no stale Activity/chrome process remains;
+- next normal Activity launches.
 
-1. clamp selection to Create with repeated Left/Up;
-2. press Right twice to select Learn;
-3. press Return;
-4. navigate to the fixture using the already-observed Learn-page route;
-5. **do not trust the tile click itself** — require `activity_probe org.greia.fixture.r7-noncooperative-chrome`.
+Then perform 10 consecutive launch → physical trusted Home → forced-return cycles **without restarting the launcher**.
 
-If the previously used page-2 `(750,450)` location does not produce the exact fixture process, stop and inspect the Learn screenshot/catalogue. Do not count a different Activity as hostile evidence.
-
-### First cycle
-
-Required before Home activation:
-
-```text
-hostile red surface visible
-activity_probe exact fixture: PASS
-trusted Greia Home visible in canonical protected corner
-```
-
-Then:
-
-1. give ordinary Activity input and verify fixture remains active;
-2. activate trusted Home at exactly `(38,38)`;
-3. verify the fixture ignores graceful stop and platform performs bounded force termination;
-4. verify `activity_absent` for the fixture;
-5. verify Shell focus with Left/Right without repair;
-6. launch and return from Writing once with exact process proof.
-
-Only if first cycle passes, repeat hostile launch -> Home -> forced return **10 consecutive times without launcher restart**.
-
-Create:
+Required exactly:
 
 ```text
-$E/hostile-10.tsv
-```
-
-Columns:
-
-```text
-cycle	python_pid	bwrap_count	red_visible	trusted_home	forced_return	cleanup	focus	stale_surface	linux_visible	note
-```
-
-Required:
-
-```text
-10/10 exact fixture process identities
-10/10 forced returns
-10/10 complete process cleanup
-10/10 focus recovery
-0 stale hostile surface/chrome
-0 launcher restart
+10/10 returns
+0 stale chrome windows
+0 stuck Activity processes
+0 launcher restarts
 0 Linux/Xorg/terminal exposure
-post-cycle Writing exact launch/return PASS
 ```
 
-Remove only the developer fixture after evidence if normal cleanup policy requires it.
+If cycle N fails, preserve it and stop. Do not run extra cycles to manufacture 10 green results.
 
 ---
 
-## 9. Abrupt crash recovery — use semantic process identity
+## 13. Abrupt Activity crash recovery
 
-Use `org.greia.shape-garden`.
+Use only an existing documented safe developer/test mechanism to terminate one running Activity process abruptly.
 
-1. launch Shape Garden through the exact Create page-1 `(750,450)` route;
-2. require `activity_probe org.greia.shape-garden`;
-3. capture its visible frame;
-4. from the probe output record the **one Python PID** only.
+Do not kill Xorg or the launcher.
 
-Do not kill a Bubblewrap wrapper, launcher, Xorg/xinit, SSH or any unrelated process.
+Require:
 
-Re-confirm immediately before kill:
+- Shell automatically recovers;
+- trusted chrome/session lease is cleaned;
+- keyboard and pointer work after recovery;
+- a second Activity launches normally;
+- no Linux UI or SSH repair is required.
 
-```text
-PID still exists
-process owner greiakid
-/proc/PID/environ contains GREIA_ACTIVITY_ID=org.greia.shape-garden
-/proc/PID/exe basename is python/python3/python3.*
-```
-
-Then abruptly kill only that exact Python child through the owner-approved maintenance shell:
-
-```bash
-echo greia | sudo -S kill -KILL "$PID"
-```
-
-Required afterward:
-
-```text
-Shell automatically returns
-activity_absent org.greia.shape-garden: PASS
-Shell keyboard focus works without click
-pointer remains usable
-no black screen
-no stale surface
-no child-visible Linux
-next Writing exact process launch/return PASS
-```
-
-If semantic PID proof is not exact, do not kill anything; return `NOT_RUN` and R7 remains incomplete.
+If no safe existing mechanism exists, mark this lane `NOT_RUN` and final verdict `INCOMPLETE`. Do not invent a dangerous process-kill path.
 
 ---
 
-## 10. Parent usage-limit lane — prove a real lifecycle before waiting
+## 14. 20/20 normal durability
 
-The previous run correctly rejected its own expiry evidence because `profile_used_seconds` remained zero. Do not repeat that mistake.
+Prepare the 20-cycle sequence **before** starting. Mix:
 
-Use only the authenticated versioned Parent API (`/api/v1`) and preserve the exact baseline before modifying policy.
+- Writing;
+- Painting;
+- one lightweight/static first-party Activity;
+- one continuously animated first-party Activity.
 
-### 10.1 Baseline and short budget
+At least five cycles must be Writing/Painting.
 
-Save:
-
-```text
-device limit
-profile limit
-profile activity policy
-profile used seconds
-```
-
-Temporarily make device limit unlimited and choose a valid whole-minute profile limit that leaves between 1 and 60 seconds based on current `profile_used_seconds`.
-
-Do **not** decrement or edit prior real usage history.
-
-### 10.2 Finite Home indicator must be captured on Collection Home
-
-The usage pill is rendered by `GreiaChildShell._render_collection_home()`, not the Activity grid.
-
-Before screenshot:
-
-1. make sure no Activity is running;
-2. from Create grid press BackSpace **once** to Collection Home;
-3. capture the top-right pill.
-
-Expected Italian wording:
+For the first 20 planned cycles record:
 
 ```text
-1 min rimasti oggi
+cycle	activity_id	launch	trusted_home_return	input_after_return	focus_repair	linux_visible
 ```
-
-or below one minute:
-
-```text
-Meno di 1 min per oggi
-```
-
-There must be no seconds ticker.
-
-If the screenshot is an Activity grid without the Collection portals, the Home-indicator evidence is invalid.
-
-### 10.3 Launch Shape Garden and prove accounting starts
-
-Return to Create and launch exact page-1 Shape Garden `(750,450)`.
-
-Immediately require:
-
-```text
-activity_probe org.greia.shape-garden: PASS
-```
-
-Then wait **at least one normal accounting checkpoint** (20 s is sufficient) and query the Parent API again.
-
-Hard precondition before waiting out the budget:
-
-```text
-profile_used_seconds AFTER > profile_used_seconds BEFORE
-```
-
-If usage has not increased while the exact Shape Garden process is proven active, STOP and report a product lifecycle/accounting failure. Do not wait the remaining minute and do not call `record_activity_time()` manually.
-
-### 10.4 Natural expiry
-
-Once real accounting increment is proven, allow the same Activity to remain active until the authoritative remaining budget reaches zero, plus bounded graceful-cleanup time.
 
 Required:
 
 ```text
-exact Shape Garden process disappears through lifecycle
-Shell Collection Home returns automatically
-Parent API exhausted=true
-effective_remaining_seconds=0
-Home says Finito per oggi
-Shell focus works without repair
+20/20 launches
+20/20 trusted Home returns
+0 focus repairs
+0 progressive pointer/keyboard loss
+0 launcher/X restarts
+0 child-visible Linux UI
 ```
 
-### 10.5 Exhausted relaunch UX
-
-The exhausted-return path intentionally returns to Collection Home. Therefore, to test relaunch:
-
-1. navigate back into Create;
-2. select Shape Garden exact page-1 `(750,450)`;
-3. press normal activation;
-4. capture at ~150 ms, ~500 ms and ~1250 ms.
-
-Required:
-
-```text
-no Shape Garden Python process appears
-no Bubblewrap wrapper appears
-no Starting… overlay is observed
-Shell stays/returns on Collection Home
-Finito per oggi remains available on Home
-```
-
-This behavior is expected because the Shell performs a friendly exhausted pre-check, while the supervisor remains authoritative enforcement.
-
-### 10.6 Restore policy exactly
-
-Restore the saved device/profile limits and Activity policy through Parent API.
-
-Do not erase the real usage accumulated by this acceptance run.
-
-After restoration, verify a normal Activity launch works again if the restored policy permits it.
-
-Never include pairing/device credentials in repository evidence.
+Do not substitute later successes for an earlier failed cycle.
 
 ---
 
-## 11. Final logs and performance sanity
+## 15. Performance and logs
 
-Collect a bounded final snapshot:
+Performance is correctness on the Acer floor. Separate `MEASURED`, `OBSERVED`, and `NOT_MEASURED`.
+
+Collect where practical:
+
+- Shell idle CPU and RSS/PSS;
+- system-control helper CPU/RSS;
+- Writing idle/typing responsiveness;
+- Painting sustained drawing responsiveness;
+- one animated Activity frame pacing;
+- launch → READY latency/feel;
+- Home → Shell latency/feel;
+- hostile fixture while waiting for forced termination.
+
+Reject evidence of:
+
+- Python framebuffer/full-frame proxying;
+- continuous avoidable full-screen composition;
+- high-rate pointer/text IPC;
+- a second Pygame chrome process;
+- material Writing/Painting responsiveness regression.
+
+Capture final logs:
 
 ```bash
-"$PY" tools/greia_remote.py --password greia snapshot \
-  "$E/final-snapshot" --service all --lines 5000
+python3 tools/greia_remote.py --password greia snapshot \
+  "$EVIDENCE/acer-final" --service launcher --lines 1000 \
+  2>&1 | tee "$EVIDENCE/acer-final-snapshot.log"
 ```
 
-Review for real failures involving:
+Review relevant launcher/session/system-control logs for:
 
 ```text
-Traceback
-platform_failure
-ready timeout
-restore failed
 Permission denied
 /dev/dri
 /dev/input
@@ -660,178 +487,108 @@ XOpenDisplay
 DISPLAY
 XAUTHORITY
 SDL_VIDEODRIVER
-libpng
+traceback
+platform_failure
+ready timeout
+restore failed
+system control state lock failed
 ```
 
-Required:
-
-```text
-child-visible Linux: NO
-Activity direct DRM required: NO
-Activity raw input required: NO
-display restore failures: 0
-unexplained platform_failure: 0
-physical libpng warning: NO
-material performance regression: NO
-```
-
-The owner's already-accepted Writing/Painting responsiveness evidence is retained; do not ask for it again.
+Interpret context. Literal diagnostic tokens are not automatically failures.
 
 ---
 
-## 12. Verdict rules
+## 16. Final repository check
 
-### R7.2 `ACCEPTED` only if
-
-```text
-all inherited source/Simulator evidence remains valid
-owner Writing/Painting physical evidence accepted
-exact normal durability 20/20 PASS
-abrupt crash recovery PASS
-focus/process cleanup PASS
-no Linux exposure
-no direct DRM/raw-input dependency
-no material performance regression
+```bash
+git status --short > "$EVIDENCE/worktree-after.txt"
+git fetch origin main
+git rev-parse origin/main > "$EVIDENCE/origin-main-at-end.txt"
 ```
 
-### R7.3 `ACCEPTED` only if
-
-```text
-compatible R7.2 evidence accepted
-exact hostile first cycle PASS
-hostile 10/10 PASS
-forced cleanup/process absence PASS
-focus recovery PASS
-no stale trusted/hostile surface
-no launcher restart
-no Linux exposure
-```
-
-### Parent usage-limit/visibility tranche `PHYSICALLY ACCEPTED` only if
-
-```text
-reviewed Parent App/pin evidence retained
-physical hide/show PASS retained
-finite Collection-Home indicator PASS
-real Activity usage accounting increment PASS
-automatic expiry/return PASS
-exhausted API state PASS
-Finito per oggi PASS
-exhausted relaunch blocked with no Starting flash PASS
-policy restored exactly PASS
-```
-
-A real invariant failure is `REJECTED`.
-A lane that genuinely cannot execute is `INCOMPLETE`.
-
-Do not start R7.4 until R7.2 and R7.3 are accepted.
+The acceptance must not dirty tracked files. Do not pull after the freeze.
 
 ---
 
-## 13. Documentation after final physical verdict
+## 17. Required report
 
-Only after this gate finishes:
-
-1. update `HANDOVER.md`;
-2. append exact evidence to `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
-3. update `docs/reviews/2026-09-01_R7_R72_R73_AND_PARENT_CONTROLS_PHYSICAL_ACCEPTANCE.md` or append a dated final correction review;
-4. update `docs/design/PARENT_CONTROLS_USAGE_LIMITS_AND_ACTIVITY_VISIBILITY.md` if the physical Parent tranche becomes accepted;
-5. clearly distinguish:
+Return one report:
 
 ```text
-accepted runtime/source SHA: 1edb22cec7709aafe3f08519fabf69cb93cb8083
-final documentation-only HEAD: <later SHA>
+GREIA_R7_FINAL_EXACT_CANDIDATE_REPORT
+
+source_sha: <40-char frozen SHA>
+origin_main_at_start: <SHA>
+origin_main_before_acer: <SHA>
+origin_main_at_end: <SHA>
+main_advanced_during_gate: YES|NO
+working_tree_clean_before: PASS|FAIL
+working_tree_clean_after: PASS|FAIL
+
+SOURCE
+system_control_transactions: PASS|FAIL
+focused_r7_gate: PASS|FAIL
+backend_audit_blockers: <n>
+chrome_audit_blockers: <n>
+make_verify: PASS|FAIL
+make_verify_test_count: <actual>
+activity_validation_count: <actual>
+project_validation: PASS|FAIL
+
+SIMULATOR
+writing: PASS|FAIL
+painting: PASS|FAIL
+animated: PASS|FAIL
+hostile_forced_home: PASS|FAIL
+visual_review: PASS|FAIL|NOT_REVIEWED
+runtime_warnings: <none or exact>
+
+SYSTEM_CONTROLS_PHYSICAL
+shell_boot_input: PASS|FAIL|INCOMPLETE
+available_media_keys: <list>
+volume_up_down: PASS|FAIL|NOT_AVAILABLE
+mute: PASS|FAIL|NOT_AVAILABLE
+brightness_up_down: PASS|FAIL|NOT_AVAILABLE
+rapid_key_burst: PASS|FAIL|NOT_AVAILABLE
+parent_then_relative_key: PASS|FAIL|INCOMPLETE
+media_keys_do_not_leak_to_activity: PASS|FAIL|INCOMPLETE
+
+R7_PHYSICAL
+writing_full_lane: PASS|FAIL|INCOMPLETE
+painting_high_rate_lane: PASS|FAIL|INCOMPLETE
+hostile_first_cycle: PASS|FAIL|INCOMPLETE
+hostile_cycles: <n>/10
+abrupt_crash_recovery: PASS|FAIL|NOT_RUN
+normal_cycles: <n>/20
+child_visible_linux: YES|NO
+activity_direct_drm_required: YES|NO
+activity_raw_input_required: YES|NO
+material_performance_regression: YES|NO|NOT_MEASURED
+logs_reviewed: YES|NO
+
+first_failure: <NONE or exact first failure>
+evidence_dir: <project-local path>
+verdict: ACCEPTED|REJECTED|INCOMPLETE
 ```
 
-Do not rewrite earlier failed/incomplete evidence to make history appear cleaner.
+Verdicts:
+
+- `ACCEPTED`: all required source, Simulator, current system-control physical, Writing/Painting, hostile 10/10, crash, 20/20, performance/log and no-Linux-exposure lanes pass.
+- `REJECTED`: a required product/security/performance invariant actually fails.
+- `INCOMPLETE`: a required lane cannot honestly execute.
+
+If `origin/main` advanced during the gate, state clearly that the verdict is for `source_sha`; do not silently promote it to the later source.
 
 ---
 
-## 14. Final report shape
+## 18. After the verdict
+
+Only after execution, append factual evidence to:
 
 ```text
-GREIA_R7_FINAL_EVIDENCE_GAP_CLOSURE_REPORT
-
-SOURCE_LINEAGE:
-  runtime_candidate_sha:
-  current_docs_head:
-  delta_from_runtime_candidate:
-  runtime_source_changed_since_candidate:
-  exact_runtime_still_deployed:
-
-INHERITED_OWNER_PHYSICAL:
-  writing:
-  painting:
-  input_feel:
-
-NORMAL_20:
-  result:
-  exact_pattern:
-  expected_process_proofs:
-  launch_passes:
-  return_passes:
-  cleanup_passes:
-  focus_passes:
-  launcher_restarts:
-  first_failure:
-
-HOSTILE_10:
-  fixture_id:
-  first_cycle:
-  expected_process_proofs:
-  cycles:
-  forced_returns:
-  cleanup_passes:
-  focus_passes:
-  stale_surfaces:
-  stuck_processes:
-  launcher_restarts:
-  post_writing:
-  first_failure:
-
-CRASH_RECOVERY:
-  target_activity:
-  semantic_pid_proof:
-  killed_pid:
-  shell_recovered:
-  process_cleanup:
-  focus_recovered:
-  next_writing:
-  result:
-
-PARENT_USAGE_LIMIT:
-  profile_id:
-  baseline_device_limit:
-  baseline_profile_limit:
-  starting_profile_used_seconds:
-  short_limit_minutes:
-  starting_remaining_seconds:
-  collection_home_indicator:
-  exact_activity_process_proof:
-  profile_used_increased_while_running:
-  automatic_expiry_return:
-  exhausted_api:
-  exhausted_home_wording:
-  exhausted_relaunch_process_absent:
-  starting_flash_seen:
-  policy_restored:
-  result:
-
-NEGATIVE_AUTHORITY:
-  child_visible_linux:
-  activity_direct_drm_required:
-  activity_raw_input_required:
-  display_restore_failure:
-  unexplained_platform_failure:
-  libpng_warning:
-  material_performance_regression:
-
-R72_VERDICT:
-R73_VERDICT:
-PARENT_USAGE_VISIBILITY_TRANCHE_VERDICT:
-
-EVIDENCE_DIR:
-DOCS_COMMIT_SHA:
-FINAL_HEAD:
-FINAL_GIT_STATUS:
+docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
 ```
+
+and update `HANDOVER.md` with the exact evidence boundary.
+
+Do not rewrite historical facts and do not mark R7.4 started unless this gate is genuinely `ACCEPTED`.
