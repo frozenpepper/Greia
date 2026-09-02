@@ -7,7 +7,6 @@ from pathlib import Path
 import pygame
 
 from greia_platform.activity_api import get_profile_locale, get_storage
-from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -57,13 +56,11 @@ def main() -> int:
 
     audio = BoscoAudio(Path(__file__).resolve().parent, resources)
     canvas = PygameReferenceCanvas(screen)
-    metrics = ChildUiMetrics.for_size(*screen.get_size())
     typography = GreiaTypography()
 
     app = BoscoApp(
         screen=screen,
         canvas=canvas,
-        metrics=metrics,
         typography=typography,
         resources=resources,
         audio=audio,
