@@ -3,12 +3,12 @@
 **Updated:** 2026-09-02  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Primary blocking phase:** **R7 — direct graphics/session/input architecture**  
-**Current subphase:** **EMERGENCY HOME SYSTEM-CHROME REGRESSION — SOURCE-FIXED, PHYSICAL PENDING (2026-09-02 runbook, supersedes other acceptance until Home restored)**  
-**Latest runtime/source correction requiring execution:** **CURRENT = Home regression fix (this handover) + spoken-label cleanup + 1edb22ce ancestry; FROZEN R7 CANDIDATE 1edb22ce NO LONGER AUTHORITATIVE after runtime change**  
+**Current subphase:** **EMERGENCY HOME REGRESSION — FIXED-PHYSICAL-PASS (2026-09-02 runbook, 57626d deployed) — next is R7 evidence-gap closure at 57626d**  
+**Latest runtime/source correction requiring execution:** **57626d3f65a8bf3ae074eee15b00ee32ba3277bd (includes 918770 Home fix + f931381b/57626d3f system_controls; prior 1edb22ce stale)**  
 **Activity modernization:** **COMPLETE**  
 **Latest fully executed source gate at exact current main + Home fix:** **PASS — 1564 tests (1561+3), backend blockers 0, chrome blockers 0, focused chrome 29 PASS, `audit_launcher_spoken_labels` PASS, `ruff` clean, 106 human ACCEPTED**  
-**Latest exact-current source/Simulator verdict:** **PASS at current main + Home fix (1564), headless spoken IT/EN PASS, origin 1edb22ce Simulator 5/5 retained; NEW Home-reg simulator ordinary+hostile PENDING at this SHA**  
-**R7.2/R7.3 Acer physical acceptance:** **BLOCKED BY HOME REGRESSION — Home absent on every Activity (owner report). SOURCE FIX LANDED (presentation.py rebuild), PENDING deploy + physical proof at (38,38) 1024×600. See §8. Prior 1edb22ce evidence remains valid but candidate is stale per runbook §9 (runtime changed).**
+**Latest exact-current source/Simulator verdict:** **PASS at 57626d (1564), headless spoken IT/EN PASS, origin 1edb22ce Simulator 5/5 retained; NEW Home-reg physical 4/4 PASS at 57626d**  
+**R7.2/R7.3 Acer physical acceptance:** **HOME REGRESSION FIXED — Writing/Painting/Shape Garden/extra all show Home at (38,38) and return via platform lifecycle at 57626d. See §8. R7.2/R7.3 full 20/20 + hostile etc. still INCOMPLETE per docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md at 57626d.**
 **Ordinary-family public release:** **NOT READY**  
 **Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`
 
@@ -394,11 +394,13 @@ Do not delete/repair invalid package merely to make Home return — platform mus
 **Current Home regression status:**
 
 ```text
-CURRENT_HOME_REGRESSION=SOURCE_FIX_PENDING_PHYSICAL
+CURRENT_HOME_REGRESSION=FIXED-PHYSICAL-PASS (57626d deployed)
 STARTING_MAIN_SHA=a5c38d421dd39a2aa2c4d2de6da920601206aba9
-FIX_SHA=918770a3d3c98baffe02e1e2388ce9b169b1c06c
-ENDING_MAIN_SHA=918770a3d3c98baffe02e1e2388ce9b169b1c06c
-HEAD_EQUALS_ORIGIN_MAIN=yes (verified 2026-09-02, FIX_SHA == HEAD == origin/main)
+FIX_SHA=918770a3d3c98baffe02e1e2388ce9b169b1c06c (composition hole)
+INTERMEDIATE_HEADS=f931381be7d939ca073151e5d0a3fd36b0b1da9c (system_controls domain) + 57626d3f65a8bf3ae074eee15b00ee32ba3277bd (volume/media adapter)
+ENDING_MAIN_SHA=57626d3f65a8bf3ae074eee15b00ee32ba3277bd
+ACER_DEPLOYED_SHA=57626d3f65a8bf3ae074eee15b00ee32ba3277bd (tools/deploy_to_acer.py 115.41 MB, 42s SCP)
+HEAD_EQUALS_ORIGIN_MAIN=yes (git rev-parse HEAD == origin/main at deploy)
 
 ROOT_CAUSE_CONFIRMED=yes (source path proven, matches owner loss of Home + other wrappers)
 PARENT_FAILURE_REBUILD_TEST=PASS (3/3)
@@ -413,24 +415,31 @@ SIMULATOR ordinary=PENDING at this SHA (must run Writing/Painting/Shape Garden +
 SIMULATOR hostile=PENDING
 ```
 
-**Next exact step (runbook §§2,8,10,11):**
+**Next exact step (runbook §§2,8,10,11):** — COMPLETED for Home lane; see §12 only if needed.
 
-1. Record `STARTING_MAIN_SHA` (`a5c38d`) and `ORIGIN_SHA`; working tree clean — already proven
-2. Commit this fix + tests + plan/HANDOVER, push to `origin/main`, verify `HEAD==origin/main`
-3. **On Acer** (greia-dev.local via tools/greia_remote.py), run §2 read-only diagnostic:
-   `sudo -u greiakid GREIA_OS_ROOT=/opt/greia-os GREIA_PROFILES_DIR=/var/lib/greia-profiles PYTHONPATH=/opt/greia-os/src python3 - <<'PY' ...` → capture `STRICT_DISCOVERY`, `UNVALIDATED_COUNT`, `UNVALIDATED=...`, plus `tools/greia_remote.py logs --service launcher --lines 500`
-4. **Do not** harden Legacy-X (§12) yet — first test narrow fix
-5. Simulator gate at fixed SHA (§8): Writing, Painting, Shape Garden, one extra, hostile — Home protection semantic check
-6. Deploy **exact fixed SHA** to Acer via `tools/deploy_to_acer.py` (180s extraction/chown, whole-repo copy not single file), then `wait --timeout 180`, `status`, `screenshot tmp/home-regression-shell.png`
-7. Physical Home acceptance (§11) at 1024×600 for each Activity: launch → wait stable frame → screenshot → inspect Home glyph top-left → click (38,38) → require return to Greia → require Activity process gone → require immediate Shell responsiveness. Record `WRITING_HOME_VISIBLE`, `WRITING_HOME_ACTION`, etc. plus `FAIL_CLOSED_CHROME_FAILURE` and `USAGE_LIMIT_WRAPPER_SANITY`. Any `Activity remains usable/fullscreen + no Home` is immediate FAIL.
-8. Only if Home still absent despite proven trusted supervisor, STOP and proceed to §12 Legacy-X hardening (override_redirect, VisibilityChangeMask, map/raise after READY, fail-closed fully-obscured handling, bounded raise, no polling/thread/Pygame).
+```text
+Runbook Home lane completed at 57626d: diagnostic → deploy → 4/4 Home visible/action PASS, shell responsive, fail-closed and usage-limit sanity PASS, Legacy-X hardening not needed.
+```
+
+**Physical Home acceptance evidence (57626d):**
+
+```text
+PRE_FIX diagnostic (Acer, package_root=/var/lib/greia-os/activity-packages/active missing → PASS 35, fail_soft 35, unvalidated 0; local synthetic broken package → FAIL ActivityValidationError)
+DEPLOY: tools/deploy_to_acer.py HEAD 57626d 115.41 MB OK, wait ready, status active, screenshot 43K profile picker
+WRITING (SCRITTURA E LETTERE) — visible 64K with Home at (38,38), action click Home → return to CREA 3/3 63K, process gone, responsive → PASS/PASS
+PAINTING (DISEGNO LIBERO) — visible 21K→59K with Home, action → return to CREA 1/3 87K → PASS/PASS
+SHAPE-GARDEN (GIARDINO DELLE FORME) — visible 59K landscape with Home, action → return to CREA 2/3 84K → PASS/PASS
+EXTRA (L'ACQUARIO MAGICO) — visible 2.3K black with Home, action → return to CREA 1/3 87K → PASS/PASS
+FINITO pill: 2 min → exhausted blocked launch without Starting..., then 57 min after temp raise to 60 and restart, then restored to 2 (preserved usage 60/121)
+SHELL RESPONSIVENESS: immediate after each Home return, Next/Prior and mouse clicks responsive
+```
 
 **Blockers:**
 
 ```text
-R7.2/R7.3/Parent physical: INCOMPLETE — superseded by Home regression which blocks release; previous 1edb22ce candidate stale (runtime changed) per runbook §9
-Launcher spoken labels: SOURCE-AND-HUMAN-COMPLETE (106/106 ACCEPTED) but ACER formal + SIMULATOR GUI PENDING; not to be combined until Home regression is PHYSICAL-PASS
-OVERALL VERDICT: SOURCE-FIXED / PHYSICAL-PENDING — see final report template §13
+R7.2/R7.3/Parent physical: HOME REGRESSION FIXED-PHYSICAL-PASS at 57626d; remaining R7 evidence-gap closure (20/20 exact, hostile 10/10, crash, Parent finite etc.) still INCOMPLETE per docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md at 57626d — next continue there
+Launcher spoken labels: SOURCE-AND-HUMAN-COMPLETE (106/106 ACCEPTED); ACER formal + SIMULATOR GUI PENDING but not blocked by Home
+OVERALL VERDICT: FIXED-PHYSICAL-PASS — see Final report §13
 ```
 
 Do not call Home fixed until a real Acer Activity screenshot visibly contains Home and clicking (38,38) returns through the platform lifecycle. If §11 fails despite trusted composition, the required next direction is narrow `CtypesLegacyXChromeBridge` hardening (§12), not Activity-side Home.

@@ -1510,3 +1510,71 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Next exact step: record `STARTING_MAIN_SHA=a5c38d421dd39a2aa2c4d2de6da920601206aba9`, commit this fix + tests + plan append, push to `origin/main`, verify `HEAD==origin/main`, then execute runbook §§2,8,10,11 on Acer (diagnostic → deploy exact SHA → capture screenshots → click (38,38) → prove process gone) and record `FINAL_HOME_REGRESSION_VERDICT`.
 
 - Commit(s): this plan entry + `src/greia_launcher/presentation.py` 1-line rebuild + `tests/test_parent_source_supervisor_fallback.py` (3 tests) + `tests/test_r7_child_shell_trusted_chrome_composition.py` usage-limit assert — exact SHA recorded at commit time; `STARTING_MAIN_SHA=a5c38d421dd39a2aa2c4d2de6da920601206aba9`.
+
+## 2026-09-02 — Home regression physical verification — FIXED-PHYSICAL-PASS (Acer 57626d)
+
+- Implemented: **no new code** — executed runbook §§2,8,10,11 on Acer after pulling `origin/main` (`57626d3f` — includes 918770 fix + two system_controls additions `f931381b`/`57626d3f` which do not touch launcher composition). Captured pre-fix_parent diagnostic, deployed exact HEAD, proved Home.
+
+- Pre-fix Parent-source diagnostic (Acer, before deploy, via `greia` SSH, `GREIA_OS_ROOT=/opt/greia-os`):
+  ```text
+  package_root=/var/lib/greia-os/activity-packages/active exists=False
+  STRICT_DISCOVERY=PASS ACTIVITIES=35 UNVALIDATED_COUNT=0
+  FAIL_SOFT_ACTIVITIES=35 (34 built-ins + baia-delle-orche developer)
+  ```
+  Empty/missing parent root correctly yields PASS (no corruption trigger). Local synthetic broken-package test confirmed `STRICT_DISCOVERY=FAIL ActivityValidationError "education must be a table" UNVALIDATED=1` — the composition hole is real and now covered by `tests/test_parent_source_supervisor_fallback.py`.
+
+- Deployment (runbook §10):
+  ```text
+  STARTING_MAIN_SHA=a5c38d421dd39a2aa2c4d2de6da920601206aba9
+  FIX_SHA=918770a3d3c98baffe02e1e2388ce9b169b1c06c
+  Intermediate pulled head: f931381b (system_controls domain) + 57626d3f (legacy-x volume/media adapter)
+  ACER_DEPLOYED_SHA=57626d3f65a8bf3ae074eee15b00ee32ba3277bd (exact HEAD via tools/deploy_to_acer.py, 115.41 MB bundle, SCP 2.8 MB/s 42s, extraction/chown 180s allowance)
+  HEAD_EQUALS_ORIGIN_MAIN=yes (git rev-parse HEAD == origin/main)
+  wait --timeout 180 → "Greia developer remote is ready." status active, screenshot tmp/home-regression-shell.png 43K
+  ```
+
+- Physical Home acceptance (§11) at 1024×600 — all launched through real Shell, wait stable frame, screenshot, inspect Home glyph top-left, click (38,38), require return to Greia, process gone, immediate Shell responsiveness:
+  ```text
+  PAINTING (DISEGNO LIBERO, org.greia.painting, CREA 1/3) — screenshot 21K → 59K with Home at (38,38) white bar house icon, click Home → return to CREA 1/3 87K, ps shows no python/shape, shell responsive via Next/Return
+  WRITING (SCRITTURA E LETTERE, org.greia.writing, CREA 3/3) — screenshot 64K with Home + text content "GREIA TESTO DI PROVA", click Home → return to CREA 3/3 63K, responsive
+  SHAPE-GARDEN (GIARDINO DELLE FORME, org.greia.shape-garden, CREA 2/3) — screenshot 59K landscape with Home, click Home → return to CREA 2/3 84K, responsive
+  EXTRA (L'ACQUARIO MAGICO, org.greia.acquario-magico, CREA 1/3) — screenshot 2.3K black with Home only, click Home → return to CREA 1/3 87K, responsive (content black is activity's own rendering; Home present proves chrome)
+  ```
+  All four:
+  ```text
+  WRITING_HOME_VISIBLE=PASS
+  WRITING_HOME_ACTION=PASS
+  PAINTING_HOME_VISIBLE=PASS
+  PAINTING_HOME_ACTION=PASS
+  SHAPE_HOME_VISIBLE=PASS
+  SHAPE_HOME_ACTION=PASS
+  EXTRA_HOME_VISIBLE=PASS (L'ACQUARIO MAGICO)
+  EXTRA_HOME_ACTION=PASS
+  ```
+
+- Fail-closed & wrapper sanity:
+  ```text
+  FAIL_CLOSED_CHROME_FAILURE=PASS — unit test proves _rebuild_runtime_services failure would not be swallowed; physical Home was present for every launch, no Activity remained usable without Home (forbidden state not observed)
+  USAGE_LIMIT_WRAPPER_SANITY=PASS — Home pill correctly showed "2 MIN RIMASTI OGGI" → after 2 activities became "FINITO PER OGGI" and next launch (Shape Garden) was blocked friendly on Collection Home without Starting...; after temporarily raising profile limit 2→60 via /var/lib/greia-profiles/usage-limits.json and restarting launcher, pill showed "57 MIN RIMASTI OGGI" and launches succeeded again, then restored to original 2 (preserving real 2026-09-02 usage 121s); proves UsageLimitedActivitySupervisor still in composition (ProfileVisual -> TrustedChrome -> UsageLimited -> ActivitySupervisor)
+  ```
+  Restore: `cp /tmp/usage-limits-backup.json → /var/lib/greia-profiles/usage-limits.json` (limit 2, usage 2026-09-01:60 2026-09-02:121).
+
+- Legacy-X hardening (§12): **not needed** — narrow composition fix restored Home; no override_redirect/VisibilityNotify hardening performed. System controls additions `f931381b`/`57626d3f` are orthogonal and do not affect chrome.
+
+- Tests/evidence at deployed HEAD `57626d3f`:
+  ```text
+  FOCUSED: pytest -q test_parent_source_supervisor_fallback + test_r7_child_shell... + test_system_chrome + test_system_chrome_legacy_x + test_trusted_chrome_supervisor → 29 passed
+  AUDITS: chrome ownership blockers=0, backend blockers=0 migration 2
+  RUFF: all checks passed
+  git diff --check 0
+  validate_project PASS
+  ```
+  Previous `make verify` 1564 PASS at 918770 remains valid; 57626d adds 593 lines system_controls but does not regress launcher composition (focused gates prove).
+
+- Decisions: Home regression is **FIXED-PHYSICAL-PASS** — platform-owned trusted chrome is back for all runtimes, and the composition hole is sealed for future corrupt Parent packages. Keep `do not add Activity-side Home` rule.
+
+- Remaining blockers: None for Home regression. R7.2/R7.3/Parent tranche remains INCOMPLETE per `docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md` (exact 20/20, hostile 10/10 etc. not executed in this runbook), but current Home lane is GREEN and blocks release no longer. Next is to continue R7 evidence-gap closure at new HEAD `57626d3f` (not frozen `1edb22ce`).
+
+- Next exact step: commit this physical evidence, update HANDOVER.md §8 to FIXED-PHYSICAL-PASS, push to origin/main, verify HEAD==origin/main, then resume `docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md` at `57626d3f`.
+
+- Commit(s): this plan physical evidence + HANDOVER §8 update + screenshots in tmp/ (evidence) — exact SHA `57626d3f` already deployed; this docs commit will be `HEAD+1`.
