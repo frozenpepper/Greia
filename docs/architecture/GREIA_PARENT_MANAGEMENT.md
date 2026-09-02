@@ -2,6 +2,7 @@
 
 **Status:** living design synthesis subordinate to ADR 0012 and ADR 0022  
 **Date:** 2026-08-17  
+**Reviewed:** 2026-09-02  
 **Implementation phase:** API/client foundation in progress; full privileged management remains R12
 
 ## 1. Architectural intent
@@ -51,6 +52,8 @@ This service owns:
 - typed requests to future privileged services.
 
 It does not own root authority.
+
+The installed composition is `src/greia_parent/production_api.py`. It must fail closed when a requested mutation cannot be completed under the service's actual authority. In particular, detecting a real IWD service is not by itself enough to advertise writable network management when the sandboxed process cannot persist the required IWD state.
 
 The future privileged parent broker should be a separate root-owned service reached over a private local IPC channel. Its command vocabulary is narrow and semantic.
 
@@ -147,7 +150,7 @@ The versioned API exposes semantic resources for:
 
 ### Capability negotiation
 
-The API index reports whether optional management families currently exist.
+The API index reports whether optional management families currently exist **and are usable under the active composition/authority**.
 
 This provides one forward-compatible client strategy:
 
@@ -159,6 +162,8 @@ client discovers API v1
 ```
 
 No architecture/model-specific branching is required in clients.
+
+A capability must not become `true` merely because a lower-level Linux service can be detected. If the current Greia process cannot safely complete the semantic operation, advertise it as unavailable until the proper backend/broker exists.
 
 ## 6. HTML client
 
@@ -202,21 +207,23 @@ This is required for:
 
 ## 8. Activity management boundary
 
-The current foundation lists installed Activities through the trusted Activity Registry.
+The current Parent source lists installed Activities through the trusted Activity Registry and includes bounded package install/remove composition behind explicit owner/developer capability enablement.
 
-It does not install them.
+That does not make the HTTP server a package authority. Package validation/activation remains owned by the Greia platform package service, and provisional Parent transport/capability policy remains fail closed by default.
 
-When R10 exists:
+The intended boundary is:
 
 ```text
 Parent API upload/import
 → bounded staging
-→ R10 package verifier/manager
-→ typed operation state
+→ Activity package verifier/manager
+→ typed operation/state boundary as the lifecycle matures
 → atomic activation/rollback
 ```
 
-The HTTP server does not unpack archives directly into `/opt/greia-os/activities`.
+The HTTP server does not unpack arbitrary archives directly into `/opt/greia-os/activities`.
+
+Full ecosystem/release acceptance remains tracked by the active architecture/release plans; presence of the source path is not itself closure evidence.
 
 ## 9. Settings boundary
 
@@ -303,25 +310,28 @@ Foundation now:
 ```text
 protocol constants/resource index
 per-device credential store
-API-v1 read/write facade over profile/hardware/network/ssh services
+API-v1 facade over profile/hardware/package/update/settings services
+explicit installed production composition with fail-closed capabilities
 on-device Parent Settings Panel via held key chord (s+t for 5s)
-Wi-Fi scanning and connection via shared platform iwd service
-SSH maintenance toggle via platform service
+real-IWD discovery/backend with management advertised only when current authority can use it
+bounded Activity package install/remove path behind explicit capability policy
+SSH maintenance API surface through current platform service boundary
 Activity inventory
 mDNS advertisement
 HTML API client
 ```
 
-Still required:
+Still required / not yet ordinary-family release complete:
 
 ```text
 Greia-screen pairing challenge + QR/code + Allow/Deny
 authenticated encrypted transport
-typed privileged broker
-Activity install/update/remove through R10
-backup/restore through R11
-audio management through HAL/services
-operation resources
+typed privileged broker for operations requiring Linux/root authority
+ordinary-family Wi-Fi mutation through that typed authority boundary where direct unprivileged IWD is insufficient
+full Activity ecosystem/package release acceptance
+backup/restore through the planned platform service
+complete privileged audio/maintenance operations through typed services
+operation resources for long-running mutations
 native client if/when justified
 ```
 
