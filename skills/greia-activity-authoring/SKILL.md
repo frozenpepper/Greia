@@ -23,7 +23,7 @@ For every new Activity request, follow this order:
 2. split the request into one or more coherent Activity concepts
 3. design the child experience and teaching/play loop
 4. design pre-reader communication and spoken cues
-5. choose presenter/character, locales, input and progression
+5. choose presenter/character, feedback/audio sequencing, input and progression/reward semantics
 6. plan implementation and Activity-local authoring tools
 7. implement in small vertical slices
 8. use the headless Greia Simulator repeatedly while building
@@ -42,11 +42,13 @@ Before coding a new Activity or materially redesigning its gameplay, load:
 ```text
 skills/greia-activity-authoring/DESIGN_AND_TEACHING.md
 skills/greia-activity-authoring/PRE_READER_UX.md
+skills/greia-activity-authoring/FEEDBACK_ORCHESTRATION.md
+skills/greia-activity-authoring/ACHIEVEMENTS.md
 skills/greia-activity-authoring/ENGINEERING.md
 skills/greia-activity-authoring/SIMULATOR_WORKFLOW.md
 ```
 
-These four are the normal creation core.
+These are the normal creation core. `FEEDBACK_ORCHESTRATION.md` is mandatory because routine feedback, terminal feedback, spoken cues, progression facts and performance frequently collide on the same child action. `ACHIEVEMENTS.md` is mandatory because every new Activity must explicitly decide its local score/progress/event/Greia-reward relationship even when the correct answer is `none`.
 
 The top-level skill already carries the essential speech architecture below. Load the deeper voice companion when the Activity needs actual spoken cue design/production:
 
@@ -60,7 +62,6 @@ Load other focused companions only when their subject is actually part of the Ac
 ```text
 PRESENTERS_AND_CURIOSITY.md  canonical presenter/facts design
 MICROPHONE_RECORDING.md      child microphone recording
-ACHIEVEMENTS.md              progress/events/Stars/achievements
 DISCOVERY.md                 age/difficulty/Collection/discovery metadata
 LAUNCHER_SPOKEN_LABELS.md    launcher title speech details
 TERMINAL_RENDERING.md        completion/results/replay presentation
@@ -118,6 +119,9 @@ which presenter/character is involved
 which commands must be spoken
 which locales are supported
 how completion/progress works
+what local score/progress/events exist, if any
+how routine feedback differs from terminal/final-action feedback
+which cue wins if speech/SFX/celebration collide
 ```
 
 If those answers are vague, continue designing instead of writing infrastructure.
@@ -214,9 +218,51 @@ Leo: "Quasi! Proviamo ancora!"         -> shared utterance when available, other
 Dani: "Metti tre mele nel cestino."    -> dani_system_speech
 ```
 
-The accepted shared v0.2 asset set contains 180 shared reactions + 12 character introductions. Runtime resolver availability is separate; inspect current source before assuming a shared family is callable.
+The accepted shared v0.2 asset set lives at:
+
+```text
+assets/audio/characters/shared/v0.2/
+```
+
+It contains 180 shared reactions + 12 canonical character introductions. The currently documented generic families are:
+
+```text
+ready.go
+praise.general
+celebrate.success
+encourage.retry
+encourage.progress
+```
+
+Do not assume a generic `hello`/`greeting` family exists. Canonical self-introductions are shared/OS material and should not be rerecorded per Activity. Activity-specific welcomes remain normal character dialogue.
+
+Accepted asset bytes and runtime resolver availability are separate. Inspect current source before assuming a shared family is callable. Do not copy shared WAV files into every Activity merely for convenience.
 
 When generating/replacing speech, load `VOICE_GENERATION.md` and `skills/greia-voice-production/SKILL.md`.
+
+### Runtime feedback orchestration is mandatory
+
+Correct audio files are not enough. One child action can produce routine SFX, teaching speech, completion, praise, score and a progression event at once.
+
+The Activity must resolve the semantic transition **before** deciding what to play.
+
+Example:
+
+```text
+collect ordinary item
+    -> ordinary collect feedback
+
+collect final item
+    -> terminal result
+    -> protect final pedagogical/required cue
+    -> suppress/sequence routine feedback deliberately
+    -> one concise local completion celebration
+    -> emit completion/score/milestone fact once
+```
+
+Do not allow an ordinary collect chime, final counted word, victory fanfare and congratulations speech to all fire independently.
+
+Use `FEEDBACK_ORCHESTRATION.md` for the mandatory sequence/suppress/replace/interrupt/coalesce rules, shared-character pooling, reward boundary and performance-sensitive timing contract.
 
 ## 8. Teaching happens through the play mechanic
 
@@ -262,9 +308,16 @@ For first-party Python Activities:
 - never implement the real Greia Home/Back inside the Activity;
 - preserve both Greia script-launch and repository/package import contexts;
 - keep caches bounded and rendering appropriate for the Acer-class performance floor;
+- preload/cache reusable images, fonts, transforms and short sounds instead of decoding/scaling/loading in frame or interaction hot paths;
+- use dirty/invalidation-driven rendering for static/turn-based presentation where practical;
+- keep audio/feedback queues bounded and never block the main loop waiting for playback;
+- avoid repeated filesystem/device/subprocess/config/storage work in hot paths;
+- keep terminal celebration rendering bounded rather than running expensive full-screen alpha work over a live game indefinitely;
 - use platform storage/events/progression/permissions rather than private substitutes.
 
-Load `ENGINEERING.md` for the detailed implementation rules before coding.
+Performance is a correctness requirement on Greia, not a polish pass. Slow hot paths create visible latency and can turn otherwise correct cue ordering into overlapping/stomped feedback on Acer-class hardware.
+
+Load `ENGINEERING.md` for the detailed implementation and performance rules before coding.
 
 ## 10. Project-specific tooling stays with the project
 
@@ -348,7 +401,8 @@ Headless Simulator checks mechanical integration. It cannot honestly decide whet
 - the challenge teaches what it intends;
 - controls are too small/confusing;
 - character/audio timing feels right;
-- the Activity is pleasant at 1024×600.
+- final-item/final-answer feedback collides with completion speech/fanfare;
+- the Activity is pleasant and responsive at 1024×600.
 
 Therefore a new Activity is not complete after headless PASS.
 
@@ -370,9 +424,11 @@ The user review covers:
 - visual composition and target sizes;
 - presenter/character fit;
 - spoken command timing/coverage;
+- ordinary-vs-terminal feedback sequencing, especially the last item/final answer/final piece;
 - retry/completion clarity;
-- responsiveness/layout where relevant;
-- protected Home and clean return.
+- score/progress presentation and correct separation from Greia-owned global rewards;
+- responsiveness/layout and obvious performance stalls where relevant;
+- protected Home and clean return, including while Activity audio is active.
 
 If the environment cannot launch/present the GUI Simulator, report:
 
@@ -405,12 +461,6 @@ skills/greia-voice-production/SKILL.md
 
 ```text
 MICROPHONE_RECORDING.md
-```
-
-### Progress / events / Stars / achievements
-
-```text
-ACHIEVEMENTS.md
 ```
 
 ### Manifest audience / Collection / age / challenge discovery
@@ -451,16 +501,21 @@ child/activity brief complete
 play loop coherent
 learning/development goal expressed through play
 pre-reader core flow passes
+mandatory score/progress/event/Greia-reward design pass recorded
+routine-vs-terminal feedback collision pass complete
 required commands have reviewed spoken coverage
+shared character reactions/intros reused where the implemented resolver contract supports them
 presenter decision deliberate
 locales complete
 technical implementation follows Greia runtime/platform contracts
+performance hot-path/cache/invalidation/audio-queue review complete
 Activity-local tooling cleaned up
 focused tests green
+terminal-action/rapid-input/replay/Home-during-audio cases exercised where applicable
 final headless Simulator green on exact runtime state
 protected Home/return green
 GUI Simulator launched on exact final state
-user visual/interaction review completed
+user visual/interaction/audio-timing review completed
 ```
 
-If actual voice production is pending, GUI review is pending, or final Simulator evidence is stale, say so explicitly instead of calling the Activity complete.
+If actual voice production is pending, GUI review is pending, performance evidence is stale, or final Simulator evidence is stale, say so explicitly instead of calling the Activity complete.
