@@ -11,16 +11,14 @@ from greia_platform.activity_api import activity_stop_requested, mark_activity_r
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
-from greia_platform.activity_ui import ChildUiMetrics
 
 if __package__:
     from .alfabeto_audio import AlfabetoAudio
     from .alfabeto_model import (
         LETTERS_CATALOGUE,
+        REFERENCE_WIDTH,
         AlfabetoModel,
         GameMode,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
     )
     from .alfabeto_renderer import AlfabetoRenderer
     from .alfabeto_services import AlfabetoServices, AlfabetoStorageState
@@ -28,10 +26,9 @@ else:
     from alfabeto_audio import AlfabetoAudio
     from alfabeto_model import (
         LETTERS_CATALOGUE,
+        REFERENCE_WIDTH,
         AlfabetoModel,
         GameMode,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
     )
     from alfabeto_renderer import AlfabetoRenderer
     from alfabeto_services import AlfabetoServices, AlfabetoStorageState
@@ -49,12 +46,10 @@ class AlfabetoApp:
     resources: LocalizedResources
     typography: GreiaTypography
     model: AlfabetoModel = field(default_factory=AlfabetoModel)
-    metrics: ChildUiMetrics = field(init=False)
     ready_published: bool = False
     anim_time: float = 0.0
 
     def __post_init__(self) -> None:
-        self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         saved = self.services.load_state()
         if saved.discovered_letters:
             self.model.discovered_letters.update(saved.discovered_letters)
@@ -83,27 +78,24 @@ class AlfabetoApp:
                     elif event.key == pygame.K_RIGHT:
                         self._handle_step(1)
                     elif pygame.K_a <= event.key <= pygame.K_z:
-                        # Physical keyboard direct letter key exploration!
                         char = chr(ord("A") + (event.key - pygame.K_a))
                         self._handle_key_letter(char)
-                elif event.type == pygame.VIDEORESIZE:
-                    self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    ref_pos = self._screen_to_reference(event.pos)
-                    self._handle_click(ref_pos)
+                    ref_pos = self.canvas.pointer(event.pos)
+                    if ref_pos is not None:
+                        self._handle_click(ref_pos)
 
             events = self.model.update(dt)
             for ev in events:
                 self.services.emit_event(ev)
                 if ev == "letter.discovered" and self.model.mode == GameMode.GUESS:
-                    # New target ready: ask question aloud for pre-readers!
                     self.audio.play_question(self.model.target_letter.char)
                 elif ev == "alphabet.parade_completed":
                     self.audio.play_celebration()
 
                 self.services.save_state(
                     AlfabetoStorageState(
-                        discovered_letters=sorted(list(self.model.discovered_letters)),
+                        discovered_letters=sorted(self.model.discovered_letters),
                         rounds_completed=len(self.model.discovered_letters),
                     )
                 )
@@ -121,31 +113,26 @@ class AlfabetoApp:
 
         self.services.save_state(
             AlfabetoStorageState(
-                discovered_letters=sorted(list(self.model.discovered_letters)),
+                discovered_letters=sorted(self.model.discovered_letters),
                 rounds_completed=len(self.model.discovered_letters),
             )
         )
         self.typography.clear()
         return 0
 
-    def _screen_to_reference(self, pos: tuple[int, int]) -> tuple[float, float]:
-        sw, sh = self.screen.get_size()
-        scale_x = REFERENCE_WIDTH / max(1, sw)
-        scale_y = REFERENCE_HEIGHT / max(1, sh)
-        return (pos[0] * scale_x, pos[1] * scale_y)
-
     def _handle_click(self, ref_pos: tuple[float, float]) -> None:
         rx, ry = ref_pos
-        # Protect top-left reserved system chrome area (80x80)
-        if rx <= 88 and ry <= 88:
-            return
+        # Greia consumes protected Home/Back input before Activity delivery.
 
-        # Check Mode switch button
         btn_w, btn_h = 175, 48
         btn_x = REFERENCE_WIDTH - btn_w - 30
         btn_y = 20
         if btn_x <= rx <= btn_x + btn_w and btn_y <= ry <= btn_y + btn_h:
-            new_mode = GameMode.GUESS if self.model.mode == GameMode.EXPLORE else GameMode.EXPLORE
+            new_mode = (
+                GameMode.GUESS
+                if self.model.mode == GameMode.EXPLORE
+                else GameMode.EXPLORE
+            )
             self.model.switch_mode(new_mode)
             if new_mode == GameMode.GUESS:
                 self.audio.play_question(self.model.target_letter.char)
@@ -159,7 +146,6 @@ class AlfabetoApp:
             self._handle_guess_click(rx, ry)
 
     def _handle_explore_click(self, rx: float, ry: float) -> None:
-        # Check Central Card
         cx, cy = REFERENCE_WIDTH // 2, 240
         if (cx - 160) <= rx <= (cx + 160) and (cy - 155) <= ry <= (cy + 155):
             self.model.revealed = True
@@ -167,13 +153,11 @@ class AlfabetoApp:
             self.audio.play_letter(self.model.active_letter.char)
             return
 
-        # Check Letter Strip buttons (y: 500 to 575)
         if 495 <= ry <= 580:
-            # Prev button
             if 130 <= rx <= 195:
                 self._handle_step(-1)
                 return
-            # Next button
+
             start_x = 205
             visible_count = 7
             btn_size = 64
@@ -183,7 +167,6 @@ class AlfabetoApp:
                 self._handle_step(1)
                 return
 
-            # Check each of the 7 buttons
             half = visible_count // 2
             total = len(LETTERS_CATALOGUE)
             for i in range(visible_count):
@@ -197,7 +180,6 @@ class AlfabetoApp:
                     return
 
     def _handle_guess_click(self, rx: float, ry: float) -> None:
-        # Check target question card: tapping it repeats the question aloud for the child!
         t_w, t_h = 240, 180
         tx = (REFERENCE_WIDTH - t_w) // 2
         ty = 110
@@ -205,7 +187,6 @@ class AlfabetoApp:
             self.audio.play_question(self.model.target_letter.char)
             return
 
-        # Check 3 Big Choice Cards
         card_w, card_h = 145, 165
         spacing = 40
         total_w = 3 * card_w + 2 * spacing
