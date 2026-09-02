@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from enum import StrEnum
 from pathlib import Path
-from typing import IO, Protocol
+from typing import Callable, IO, Protocol
 
 try:
     import fcntl
@@ -100,6 +100,23 @@ class SystemControlSettingsStore:
         except (SystemControlError, TypeError, ValueError):
             return SystemControlSettings()
 
+    def mutate(
+        self,
+        mutation: Callable[[SystemControlSettings], SystemControlSettings],
+    ) -> SystemControlSettings:
+        """Apply one desired-state mutation under the shared writer lock."""
+
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+        with self._open_lock() as lock_handle:
+            self._lock(lock_handle)
+            current = self.read()
+            updated = mutation(current)
+            if not isinstance(updated, SystemControlSettings):
+                raise TypeError("system control mutation must return SystemControlSettings")
+            self.validate(updated)
+            self._write(updated)
+            return updated
+
     def update(
         self,
         *,
@@ -107,11 +124,8 @@ class SystemControlSettingsStore:
         muted: object | None = None,
         brightness_percent: object | None = None,
     ) -> SystemControlSettings:
-        self.state_dir.mkdir(parents=True, exist_ok=True)
-        with self._open_lock() as lock_handle:
-            self._lock(lock_handle)
-            current = self.read()
-            updated = SystemControlSettings(
+        def mutation(current: SystemControlSettings) -> SystemControlSettings:
+            return SystemControlSettings(
                 schema_version=1,
                 volume_percent=(
                     current.volume_percent
@@ -127,9 +141,8 @@ class SystemControlSettingsStore:
                     else _brightness_percent(brightness_percent)
                 ),
             )
-            self.validate(updated)
-            self._write(updated)
-            return updated
+
+        return self.mutate(mutation)
 
     def reset(self) -> SystemControlSettings:
         self.state_dir.mkdir(parents=True, exist_ok=True)
@@ -219,33 +232,38 @@ class SystemControlService:
         return self.backend.apply(self.store.read())
 
     def handle_action(self, action: SystemControlAction) -> SystemControlApplyResult:
-        current = self.store.read()
-        if action is SystemControlAction.VOLUME_UP:
-            updated = self.store.update(
-                volume_percent=min(100, current.volume_percent + self.VOLUME_STEP),
-                muted=False,
-            )
-        elif action is SystemControlAction.VOLUME_DOWN:
-            updated = self.store.update(
-                volume_percent=max(0, current.volume_percent - self.VOLUME_STEP),
-                muted=False,
-            )
-        elif action is SystemControlAction.VOLUME_MUTE:
-            updated = self.store.update(muted=not current.muted)
-        elif action is SystemControlAction.BRIGHTNESS_UP:
-            updated = self.store.update(
-                brightness_percent=min(
-                    100, current.brightness_percent + self.BRIGHTNESS_STEP
+        def mutation(current: SystemControlSettings) -> SystemControlSettings:
+            if action is SystemControlAction.VOLUME_UP:
+                return replace(
+                    current,
+                    volume_percent=min(100, current.volume_percent + self.VOLUME_STEP),
+                    muted=False,
                 )
-            )
-        elif action is SystemControlAction.BRIGHTNESS_DOWN:
-            updated = self.store.update(
-                brightness_percent=max(
-                    5, current.brightness_percent - self.BRIGHTNESS_STEP
+            if action is SystemControlAction.VOLUME_DOWN:
+                return replace(
+                    current,
+                    volume_percent=max(0, current.volume_percent - self.VOLUME_STEP),
+                    muted=False,
                 )
-            )
-        else:  # pragma: no cover - exhaustive enum guard
+            if action is SystemControlAction.VOLUME_MUTE:
+                return replace(current, muted=not current.muted)
+            if action is SystemControlAction.BRIGHTNESS_UP:
+                return replace(
+                    current,
+                    brightness_percent=min(
+                        100, current.brightness_percent + self.BRIGHTNESS_STEP
+                    ),
+                )
+            if action is SystemControlAction.BRIGHTNESS_DOWN:
+                return replace(
+                    current,
+                    brightness_percent=max(
+                        5, current.brightness_percent - self.BRIGHTNESS_STEP
+                    ),
+                )
             raise SystemControlError(f"unsupported system control action: {action}")
+
+        updated = self.store.mutate(mutation)
         return self.backend.apply(updated)
 
 
