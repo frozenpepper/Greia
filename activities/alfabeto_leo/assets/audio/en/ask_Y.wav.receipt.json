@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:09:29.772145+00:00",
+  "created_utc": "2026-09-02T17:54:09.532856+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "Where is the letter Y?",
     "cue_id": "alfabeto_leo.ask_Y",
@@ -11,14 +11,14 @@
     "verification": "off",
     "max_attempts": 1
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
   "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "where is the letter y?"
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,8 +30,8 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/ask_Y.wav",
-    "bytes": 52388,
-    "sha256": "44e44dbb99f22dab0f67de794222bbd1c3a8eedaca16d46984b92f1fa81384ed"
+    "bytes": 108566,
+    "sha256": "26c273d3d50e568e4b6d6b684461bb8d6c07243fdd2c5e0dd7b8ef33299be3f9"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."

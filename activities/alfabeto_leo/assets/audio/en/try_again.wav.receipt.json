@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:07:51.315207+00:00",
+  "created_utc": "2026-09-02T17:49:55.300883+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "Almost! Try again!",
     "cue_id": "alfabeto_leo.try_again",
@@ -11,14 +11,14 @@
     "verification": "off",
     "max_attempts": 1
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
   "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "almost! try again!"
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,8 +30,8 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/try_again.wav",
-    "bytes": 53472,
-    "sha256": "6982a2711a5a523bc0432e7018f35ed6ab8dc74cde60843634a6156f49ac72f9"
+    "bytes": 69096,
+    "sha256": "c681b42c9093e044839458d8f7a16856db46306564acbc7cf65026b8e20a9217"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."

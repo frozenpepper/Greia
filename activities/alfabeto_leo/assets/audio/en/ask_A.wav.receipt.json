@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:08:40.989321+00:00",
+  "created_utc": "2026-09-02T17:50:03.975766+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "en",
     "text": "Where is the letter A?",
     "cue_id": "alfabeto_leo.ask_A",
@@ -11,14 +11,14 @@
     "verification": "off",
     "max_attempts": 1
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
   "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
   "generation_parameters": {
-    "voice": "Samantha",
-    "rate_wpm": 180,
-    "synthesis_text": "where is the letter a?"
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "en",
+    "model_load_count": 1
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,8 +30,8 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/ask_A.wav",
-    "bytes": 48804,
-    "sha256": "137d98360d305328ffd483c231270959891a44f276969d955165432f59ac127f"
+    "bytes": 83868,
+    "sha256": "0f2a0ecb001247d6323c5adab5d87fc4d27f31895485a4b9f16336f216e05a93"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."

@@ -38,6 +38,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DANI_ASSET_DIR = PROJECT_ROOT / "assets" / "visual" / "runtime" / "v1" / "characters"
 
 
+TITO_ASSET_DIR = PROJECT_ROOT / "assets" / "visual" / "runtime" / "v1" / "characters"
+
+
 class GiardinoRenderer:
     """Draws a warm, engaging, storybook toddler counting garden."""
 
@@ -215,9 +218,6 @@ class GiardinoRenderer:
             # Gentle breathing motion
             breath_y = 2.5 * math.sin(anim_time * 3.0)
             surf.blit(img, (dani_x - img.get_width() // 2, int(dani_y - img.get_height() // 2 + breath_y)))
-        else:
-            # Fallback procedural body
-            self._draw_procedural_dani(surf, dani_x, dani_y, mood, anim_time)
 
     def _draw_procedural_dani(
         self, surf: pygame.Surface, cx: float, cy: float, mood: str, anim_time: float

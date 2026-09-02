@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:07:17.387663+00:00",
+  "created_utc": "2026-09-02T17:46:35.121645+00:00",
   "request": {
-    "speaker": "pedagogical",
-    "kind": "pedagogical_speech",
+    "speaker": "leo",
+    "kind": "character_dialogue",
     "locale": "it",
     "text": "Dov'è la lettera L?",
     "cue_id": "alfabeto_leo.ask_L",
@@ -11,14 +11,14 @@
     "verification": "off",
     "max_attempts": 1
   },
-  "provider_id": "macos-native-say",
-  "voice_id": null,
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
   "voice_registry_version": "v0.1",
-  "reference_sha256": null,
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
   "generation_parameters": {
-    "voice": "Alice",
-    "rate_wpm": 175,
-    "synthesis_text": "dov'è la lettera l?"
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,8 +30,8 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/it/ask_L.wav",
-    "bytes": 52708,
-    "sha256": "8bae756244378dc7558035f6068caf6cc3dc44b6e2be933ae0060188c63a9420"
+    "bytes": 60054,
+    "sha256": "b0c3eaf19201fd94873992c6bf2dab286b80cc0dc3aa0e6ea71badbf38918f15"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."

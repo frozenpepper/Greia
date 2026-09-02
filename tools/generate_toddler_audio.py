@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Generate complete in-game spoken audio and child instructions for toddler activities."""
+"""Generate complete in-game spoken audio according to Greia voice contracts:
+- Pedagogical targets (letters, spelling, counting numbers): deterministic system TTS (pedagogical_speech)
+- Character dialogue (greetings, instructions, questions, praise): character's voice (character_dialogue / dani_system_speech)
+"""
 
 from __future__ import annotations
 
@@ -14,14 +17,9 @@ VOICE_CLI = PROJECT_ROOT / "tools" / "greia_voice.py"
 GIARDINO_ROOT = PROJECT_ROOT / "activities" / "il_giardino_dei_numeri"
 ALFABETO_ROOT = PROJECT_ROOT / "activities" / "alfabeto_leo"
 
-GIARDINO_PROMPTS = {
+GIARDINO_DANI_SPEECH = {
     "it": [
         ("intro", "Ciao! Tocca e conta con me!"),
-        ("count_1", "Uno!"),
-        ("count_2", "Due!"),
-        ("count_3", "Tre!"),
-        ("count_4", "Quattro!"),
-        ("count_5", "Cinque!"),
         ("prompt", "Tocca e conta!"),
         ("well_done", "Fantastico!"),
         ("praise_1", "Bravissimo!"),
@@ -30,11 +28,6 @@ GIARDINO_PROMPTS = {
     ],
     "en": [
         ("intro", "Hi! Touch and count with me!"),
-        ("count_1", "One!"),
-        ("count_2", "Two!"),
-        ("count_3", "Three!"),
-        ("count_4", "Four!"),
-        ("count_5", "Five!"),
         ("prompt", "Touch and count!"),
         ("well_done", "Great job!"),
         ("praise_1", "Awesome!"),
@@ -43,10 +36,24 @@ GIARDINO_PROMPTS = {
     ],
 }
 
-# Accurate educational matching:
-# In Italian: A is for Ape (Honeybee), M is for Mela (Apple)
-# In English: A is for Apple, B is for Boat, etc.
-ALFABETO_PHONICS_IT = [
+GIARDINO_COUNTING_TARGETS = {
+    "it": [
+        ("count_1", "Uno!"),
+        ("count_2", "Due!"),
+        ("count_3", "Tre!"),
+        ("count_4", "Quattro!"),
+        ("count_5", "Cinque!"),
+    ],
+    "en": [
+        ("count_1", "One!"),
+        ("count_2", "Two!"),
+        ("count_3", "Three!"),
+        ("count_4", "Four!"),
+        ("count_5", "Five!"),
+    ],
+}
+
+ALFABETO_PHONICS_TARGETS_IT = [
     ("A", "A come Ape"),
     ("B", "B come Barca"),
     ("C", "C come Cane"),
@@ -75,7 +82,7 @@ ALFABETO_PHONICS_IT = [
     ("Z", "Z come Zebra"),
 ]
 
-ALFABETO_PHONICS_EN = [
+ALFABETO_PHONICS_TARGETS_EN = [
     ("A", "A is for Apple"),
     ("B", "B is for Boat"),
     ("C", "C is for Cat"),
@@ -107,7 +114,29 @@ ALFABETO_PHONICS_EN = [
 
 def generate_giardino_audio() -> int:
     requests = []
-    for locale, items in GIARDINO_PROMPTS.items():
+
+    # 1. Pedagogical counting targets (deterministic computer TTS)
+    for locale, items in GIARDINO_COUNTING_TARGETS.items():
+        loc_dir = GIARDINO_ROOT / "assets" / "audio" / locale
+        loc_dir.mkdir(parents=True, exist_ok=True)
+        for key, text in items:
+            out_file = loc_dir / f"{key}.wav"
+            rel_out = str(out_file.relative_to(PROJECT_ROOT))
+            requests.append(
+                {
+                    "speaker": "pedagogical",
+                    "kind": "pedagogical_speech",
+                    "locale": locale,
+                    "text": text,
+                    "cue_id": f"il_giardino_dei_numeri.{key}",
+                    "output": rel_out,
+                    "verification": "off",
+                    "max_attempts": 1,
+                }
+            )
+
+    # 2. Dani character speech (robot instructions and praise)
+    for locale, items in GIARDINO_DANI_SPEECH.items():
         loc_dir = GIARDINO_ROOT / "assets" / "audio" / locale
         loc_dir.mkdir(parents=True, exist_ok=True)
         for key, text in items:
@@ -139,11 +168,28 @@ def generate_giardino_audio() -> int:
 def generate_alfabeto_audio() -> int:
     requests = []
 
-    for locale, phonics_list in [("it", ALFABETO_PHONICS_IT), ("en", ALFABETO_PHONICS_EN)]:
+    for locale, phonics_list in [("it", ALFABETO_PHONICS_TARGETS_IT), ("en", ALFABETO_PHONICS_TARGETS_EN)]:
         loc_dir = ALFABETO_ROOT / "assets" / "audio" / locale
         loc_dir.mkdir(parents=True, exist_ok=True)
 
-        # 1. Intro & instructions
+        # 1. Phonics pronunciation targets (deterministic computer TTS for precise educational reproduction)
+        for char, phrase in phonics_list:
+            out_file = loc_dir / f"letter_{char}.wav"
+            rel_out = str(out_file.relative_to(PROJECT_ROOT))
+            requests.append(
+                {
+                    "speaker": "pedagogical",
+                    "kind": "pedagogical_speech",
+                    "locale": locale,
+                    "text": phrase,
+                    "cue_id": f"alfabeto_leo.letter_{char}",
+                    "output": rel_out,
+                    "verification": "off",
+                    "max_attempts": 1,
+                }
+            )
+
+        # 2. Leo's character dialogue (Chatterbox cloned canonical Leo voice)
         intro_text = (
             "Ciao, sono Leo! Tocca una lettera per scoprire la sorpresa!"
             if locale == "it"
@@ -168,8 +214,8 @@ def generate_alfabeto_audio() -> int:
             rel_out = str(out_file.relative_to(PROJECT_ROOT))
             requests.append(
                 {
-                    "speaker": "pedagogical",
-                    "kind": "pedagogical_speech",
+                    "speaker": "leo",
+                    "kind": "character_dialogue",
                     "locale": locale,
                     "text": text,
                     "cue_id": f"alfabeto_leo.{key}",
@@ -179,32 +225,15 @@ def generate_alfabeto_audio() -> int:
                 }
             )
 
-        # 2. Letter pronunciation ("A come Ape" / "A is for Apple")
-        for char, phrase in phonics_list:
-            out_file = loc_dir / f"letter_{char}.wav"
-            rel_out = str(out_file.relative_to(PROJECT_ROOT))
-            requests.append(
-                {
-                    "speaker": "pedagogical",
-                    "kind": "pedagogical_speech",
-                    "locale": locale,
-                    "text": phrase,
-                    "cue_id": f"alfabeto_leo.letter_{char}",
-                    "output": rel_out,
-                    "verification": "off",
-                    "max_attempts": 1,
-                }
-            )
-
-        # 3. Spoken question prompts for guess mode ("Dov'è la lettera S?" / "Where is the letter S?")
+        # Spoken question prompts from Leo ("Dov'è la lettera S?" / "Where is the letter S?")
         for char, _ in phonics_list:
             question_text = f"Dov'è la lettera {char}?" if locale == "it" else f"Where is the letter {char}?"
             out_file = loc_dir / f"ask_{char}.wav"
             rel_out = str(out_file.relative_to(PROJECT_ROOT))
             requests.append(
                 {
-                    "speaker": "pedagogical",
-                    "kind": "pedagogical_speech",
+                    "speaker": "leo",
+                    "kind": "character_dialogue",
                     "locale": locale,
                     "text": question_text,
                     "cue_id": f"alfabeto_leo.ask_{char}",

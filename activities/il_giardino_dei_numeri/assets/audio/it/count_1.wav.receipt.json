@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:05:29.930718+00:00",
+  "created_utc": "2026-09-02T17:43:25.679014+00:00",
   "request": {
-    "speaker": "dani",
-    "kind": "dani_system_speech",
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
     "locale": "it",
     "text": "Uno!",
     "cue_id": "il_giardino_dei_numeri.count_1",
@@ -12,13 +12,13 @@
     "max_attempts": 1
   },
   "provider_id": "macos-native-say",
-  "voice_id": "greia.dani.system-v1",
+  "voice_id": null,
   "voice_registry_version": "v0.1",
   "reference_sha256": null,
   "generation_parameters": {
     "voice": "Alice",
-    "rate_wpm": 185,
-    "synthesis_text": "Uno!"
+    "rate_wpm": 175,
+    "synthesis_text": "uno!"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,8 +30,8 @@
   "attempts": 1,
   "output": {
     "path": "activities/il_giardino_dei_numeri/assets/audio/it/count_1.wav",
-    "bytes": 14344,
-    "sha256": "d9f23e40caf1b058a469b682314793b2100f5c10f5db3ca6275ea831d6287baf"
+    "bytes": 14838,
+    "sha256": "2c37b10ec6edab940102f398c2ccb52368939bf028d884c23b47a8a573d7fb5e"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
