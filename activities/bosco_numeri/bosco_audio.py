@@ -8,6 +8,7 @@ from pathlib import Path
 import pygame
 
 from greia_platform.localization import LocalizedResources
+from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
 
 VOICE_CHANNEL_ID = 0
 SFX_CHANNEL_ID = 1
@@ -129,12 +130,10 @@ class BoscoAudio:
 
     def _build_sfx(self) -> None:
         """Build bounded procedural clips once, never in the interaction hot path."""
-        spec = pygame.mixer.get_init()
+        spec = current_pcm16_mixer_spec()
         if spec is None:
             return
-        sample_rate, sample_format, channel_count = spec
-        if abs(sample_format) != 16 or channel_count < 1:
-            return
+        sample_rate, channel_count = spec
         try:
             self._sfx = {
                 "tap": self._synthesize_tone(
@@ -167,14 +166,7 @@ class BoscoAudio:
             self._sfx.clear()
 
     @staticmethod
-    def _append_sample(raw: bytearray, sample: int, channel_count: int) -> None:
-        encoded = sample.to_bytes(2, byteorder="little", signed=True)
-        for _ in range(channel_count):
-            raw.extend(encoded)
-
-    @classmethod
     def _synthesize_tone(
-        cls,
         sample_rate: int,
         channel_count: int,
         frequency: float,
@@ -196,12 +188,11 @@ class BoscoAudio:
             else:
                 value = math.sin(2.0 * math.pi * frequency * t)
             sample = int(max(-1.0, min(1.0, value * decay * volume)) * 32767)
-            cls._append_sample(raw, sample, channel_count)
+            append_mono_pcm16(raw, sample, channel_count)
         return pygame.mixer.Sound(buffer=bytes(raw))
 
-    @classmethod
+    @staticmethod
     def _synthesize_fanfare(
-        cls,
         sample_rate: int,
         channel_count: int,
     ) -> pygame.mixer.Sound:
@@ -224,5 +215,5 @@ class BoscoAudio:
                     envelope = math.exp(-3.5 * (local_t / duration))
                     value += math.sin(2.0 * math.pi * frequency * local_t) * envelope
             sample = int(max(-1.0, min(1.0, value * 0.55)) * 32767)
-            cls._append_sample(raw, sample, channel_count)
+            append_mono_pcm16(raw, sample, channel_count)
         return pygame.mixer.Sound(buffer=bytes(raw))
