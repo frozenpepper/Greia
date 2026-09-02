@@ -5,7 +5,7 @@ import os
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol
+from typing import IO, Protocol
 
 try:
     import fcntl
@@ -108,12 +108,8 @@ class SystemControlSettingsStore:
         brightness_percent: object | None = None,
     ) -> SystemControlSettings:
         self.state_dir.mkdir(parents=True, exist_ok=True)
-        with self.lock_path.open("a+", encoding="utf-8") as lock_handle:
-            if fcntl is not None:
-                try:
-                    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
-                except OSError as exc:
-                    raise SystemControlError("system control state lock failed") from exc
+        with self._open_lock() as lock_handle:
+            self._lock(lock_handle)
             current = self.read()
             updated = SystemControlSettings(
                 schema_version=1,
@@ -137,12 +133,8 @@ class SystemControlSettingsStore:
 
     def reset(self) -> SystemControlSettings:
         self.state_dir.mkdir(parents=True, exist_ok=True)
-        with self.lock_path.open("a+", encoding="utf-8") as lock_handle:
-            if fcntl is not None:
-                try:
-                    fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
-                except OSError as exc:
-                    raise SystemControlError("system control state lock failed") from exc
+        with self._open_lock() as lock_handle:
+            self._lock(lock_handle)
             try:
                 self.settings_path.unlink()
             except FileNotFoundError:
@@ -162,6 +154,31 @@ class SystemControlSettingsStore:
             return self.settings_path.stat().st_mtime_ns
         except FileNotFoundError:
             return 0
+
+    def _open_lock(self) -> IO[str]:
+        # The release image creates this file as greiapanel:pipsettings 0660.
+        # On developer/temp roots the first writer creates it; the setgid parent
+        # directory supplies the shared group on the real appliance.
+        fd = os.open(self.lock_path, os.O_RDWR | os.O_CREAT, 0o660)
+        try:
+            try:
+                os.fchmod(fd, 0o660)
+            except PermissionError:
+                # A secondary writer need not own the already-correct shared lock.
+                pass
+            return os.fdopen(fd, "a+", encoding="utf-8")
+        except Exception:
+            os.close(fd)
+            raise
+
+    @staticmethod
+    def _lock(lock_handle: IO[str]) -> None:
+        if fcntl is None:
+            return
+        try:
+            fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+        except OSError as exc:
+            raise SystemControlError("system control state lock failed") from exc
 
     def _write(self, settings: SystemControlSettings) -> None:
         payload = json.dumps(
