@@ -396,9 +396,9 @@ Do not delete/repair invalid package merely to make Home return — platform mus
 ```text
 CURRENT_HOME_REGRESSION=SOURCE_FIX_PENDING_PHYSICAL
 STARTING_MAIN_SHA=a5c38d421dd39a2aa2c4d2de6da920601206aba9
-FIX_SHA=PENDING (this commit)
-ENDING_MAIN_SHA=PENDING (after push)
-HEAD_EQUALS_ORIGIN_MAIN=PENDING (must be verified after push)
+FIX_SHA=918770a3d3c98baffe02e1e2388ce9b169b1c06c
+ENDING_MAIN_SHA=918770a3d3c98baffe02e1e2388ce9b169b1c06c
+HEAD_EQUALS_ORIGIN_MAIN=yes (verified 2026-09-02, FIX_SHA == HEAD == origin/main)
 
 ROOT_CAUSE_CONFIRMED=yes (source path proven, matches owner loss of Home + other wrappers)
 PARENT_FAILURE_REBUILD_TEST=PASS (3/3)
