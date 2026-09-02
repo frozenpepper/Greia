@@ -6,7 +6,7 @@ description: Canonical Greia authoring skill for producing prerecorded character
 # Greia Voice Production
 
 **Status:** canonical authoring-time voice-production contract  
-**Reviewed:** 2026-08-28
+**Reviewed:** 2026-09-02
 
 ## One rule
 
@@ -16,9 +16,9 @@ All new Greia prerecorded speech production goes through:
 tools/greia_voice.py
 ```
 
-Activity, OS/shared-library and Encyclopedia agents must not invoke Chatterbox, `mlx_audio`, `mlx_whisper`, macOS `say`, `afconvert`, FFmpeg trimming or canonical reference files directly. Those are implementation details owned by the Voice Production Engine.
+Activity, OS/shared-library and content-project agents must not invoke Chatterbox, `mlx_audio`, `mlx_whisper`, macOS `say`, `afconvert`, FFmpeg trimming or canonical reference files directly. Those are implementation details owned by the Voice Production Engine.
 
-If an older Activity generator, runbook or queue contains direct backend instructions, treat those **production mechanics as superseded** by this skill. Preserve its semantic text/cue/status/acceptance authority, but submit the speech through the engine.
+If an older project generator, runbook or queue contains direct backend instructions, treat those **production mechanics as superseded** by this skill. Preserve useful semantic cue/text/acceptance data, but submit speech through the engine.
 
 Read first:
 
@@ -62,7 +62,7 @@ pedagogical_speech
 dani_system_speech
 ```
 
-The caller chooses the semantic kind, never a backend/model.
+The caller chooses semantic purpose, never backend/model.
 
 Routing:
 
@@ -71,7 +71,7 @@ Lilli/Leo/Flash/Tito/Momo + character_dialogue
     -> canonical cloned-character provider
 
 shared_character_utterance
-    -> authoring production of Greia's central reviewed shared library
+    -> production of Greia's central reviewed shared library
     -> cloned provider for Lilli/Leo/Flash/Tito/Momo
     -> system provider for Dani
 
@@ -83,7 +83,7 @@ Dani + dani_system_speech
     -> deterministic native/system provider
 ```
 
-At **runtime**, Activities never synthesize `shared_character_utterance`; they resolve the reviewed Greia shared family. The semantic kind above exists so the central shared library itself is produced through the same authoring engine.
+At runtime, Activities never synthesize `shared_character_utterance`; they resolve reviewed static Greia shared assets through the current runtime resolver.
 
 Do not infer `pedagogical_speech` from short text. `Vai!` may be character dialogue; `ma` may be a teaching target.
 
@@ -91,7 +91,7 @@ Do not infer `pedagogical_speech` from short text. `Vai!` may be character dialo
 
 The engine source ships in the repository. The optional heavy MLX production environment lives outside Git.
 
-Start with the non-mutating probe:
+Start with:
 
 ```bash
 python3 tools/greia_voice.py doctor
@@ -109,7 +109,7 @@ The tested dependency set is:
 tools/greia_voice_requirements_mlx.txt
 ```
 
-Do not silently install/download a multi-GB production stack merely because an Activity could use optional speech. If actual production is requested and the environment is absent, install only with owner authorization using the canonical setup procedure.
+Do not silently install/download a multi-GB production stack merely because optional speech might be useful. If actual production is requested and the environment is absent, install only with owner authorization using the canonical setup procedure.
 
 ## Generate one line
 
@@ -120,7 +120,7 @@ python3 tools/greia_voice.py generate \
   --locale it \
   --text "Guardiamo con calma." \
   --cue-id presenter.hint \
-  --output ./tmp/voice-review/presenter-hint.ogg
+  --output /tmp/greia-voice-review/presenter-hint.wav
 ```
 
 Pedagogical example:
@@ -133,8 +133,10 @@ python3 tools/greia_voice.py generate \
   --text "ma" \
   --cue-id phonics.ma \
   --verification off \
-  --output ./tmp/voice-review/ma.wav
+  --output /tmp/greia-voice-review/ma.wav
 ```
+
+Generate into review staging, not directly into final runtime assets.
 
 ## Repeated generation
 
@@ -144,23 +146,24 @@ Prefer one warm worker:
 python3 tools/greia_voice.py serve
 ```
 
-Then use `request`, or use `batch` for JSONL queues. Never launch concurrent Chatterbox workers. The engine owns a cross-process generation lock and will reject competing workers.
+Then use `request`, or use `batch` for JSONL queues. Never launch concurrent Chatterbox workers. The engine owns the cross-process generation lock.
 
 ## Chatterbox output-length policy
 
-For `character_dialogue` and natural-character `shared_character_utterance`, Greia must **not derive `max_new_tokens` from text word count**. Chatterbox acoustic-token length is not predictable from a simple words→tokens formula, and the previous short-prompt caps caused ordinary phrases to be truncated.
+For `character_dialogue` and natural-character `shared_character_utterance`, Greia must **not derive `max_new_tokens` from text word count**. Chatterbox acoustic-token length is not predictable from a simple words→tokens formula, and earlier short-prompt caps caused truncation.
 
-Letters/syllables/phonics do not justify such a cap because they route through `pedagogical_speech`, not Chatterbox.
+Letters/syllables/phonics do not justify such a cap because they route through `pedagogical_speech`.
 
-Do not reintroduce a guessed word-count token table in callers or in the provider.
+Do not reintroduce a guessed word-count token table in callers or providers.
 
 ## Whisper
 
-Whisper is advisory for human acceptance, but its warnings are actionable production evidence. Suitable multi-word character/shared-library lines may be transcribed automatically. A mismatch triggers bounded regeneration.
+Whisper is advisory for human acceptance, but warnings are actionable production evidence.
 
-`PASS` means only that the transcript plausibly matches. `WARN` means the generated take remains unresolved and must be inspected/regenerated. Neither state accepts audio.
-
-For the shared-library producer specifically, a final `REVIEW_REQUIRED_ASR_WARNING` is **not counted as a clean successful candidate**; the audio/receipt remain available for diagnosis, and the batch remains non-green until that cue is resolved.
+```text
+PASS -> transcript plausibly matches; still needs human review
+WARN -> unresolved candidate; inspect/regenerate
+```
 
 Do not use Whisper as pronunciation authority for letters, syllables or phonics.
 
@@ -176,26 +179,59 @@ Listen before integrating. Verify exact words, locale, character identity when a
 
 A process exit, receipt, valid audio container or Whisper PASS is never final acceptance.
 
-The owning workflow keeps its final acceptance authority. For example, Encyclopedia audio is not packageable until the ledger says `OWNER_ACCEPTED`.
+## Project-specific producer rule
 
-## Activity-specific generator rule
+A project may need a thin helper that assembles many semantic VoiceEngine requests.
 
-Tracked `tools/generate_*_audio.py` Activity scripts are allowed only as **thin semantic request/batch producers** for `tools/greia_voice.py`. They may own Activity-specific cue IDs, exact reviewed localized text, semantic speaker/kind assignment and review-output naming.
+That helper belongs **inside the project that owns the cues**, not in repository root `tools/`.
 
-They must not own or reintroduce:
+Examples:
+
+```text
+activities/my_activity/tools/generate_voice_requests.py
+activities/my_activity/tools/build_voice_batch.py
+<other-project>/tools/generate_voice_requests.py
+```
+
+A project-local producer may own only:
+
+- semantic cue IDs;
+- exact reviewed localized text;
+- semantic speaker/kind assignment;
+- review-output naming;
+- thin JSONL/batch request assembly for `tools/greia_voice.py`.
+
+It must not own or reintroduce:
 
 - Chatterbox/MLX imports or model IDs;
 - canonical reference paths/hashes;
-- native host voice names, rates, `say` or `afconvert` calls;
+- native host voice names/rates or `say`/`afconvert` calls;
 - Whisper calls;
 - FFmpeg trimming/conversion policy;
-- token budgets, model retries or accelerator cache lifecycle;
+- token budgets/model retries/accelerator cache lifecycle;
 - silent/synthetic placeholder audio on generation failure.
 
-When an Activity needs ordinary neutral guidance rather than pronunciation-authoritative sound, choose an actual semantic speaker (for the current legacy neutral Activities this is Dani) rather than misclassifying the line as `pedagogical_speech` or inventing another speech kind.
+For an Activity, remember that `activities/<id>/` is also package content. Remove obsolete/one-shot voice producers, temporary JSONL queues, receipts and scratch files from the Activity tree before final package acceptance. Do not accidentally ship authoring machinery to the child runtime.
+
+Repository root `tools/` is reserved for genuinely Greia-wide reusable tooling such as the canonical VoiceEngine and central shared-library producers.
+
+If a project-local helper becomes genuinely useful across multiple independent projects, promote it deliberately to a stable shared tool instead of copying variants everywhere.
+
+## Semantic-speaker rule
+
+When an Activity needs ordinary guidance rather than pronunciation-authoritative sound, choose an actual semantic presenter route rather than misclassifying the line as `pedagogical_speech`.
+
+Examples:
+
+```text
+Leo welcome/instruction -> character_dialogue
+Dani instruction        -> dani_system_speech
+generic praise          -> shared_character_utterance when resolver supports it
+exact letter/syllable   -> pedagogical_speech
+```
 
 Existing owner-accepted audio does not need regeneration merely because its historical generator predates the engine. New/replacement takes must be generated into review staging and accepted before integration.
 
 ## Maintainer extension rule
 
-New synthesis systems implement the provider contract behind `VoiceEngine`. Never spread model/backend conditionals back into Activities, Encyclopedia tooling, OS/shared-library scripts or skills.
+New synthesis systems implement the provider contract behind `VoiceEngine`. Never spread model/backend conditionals back into Activities, content projects, OS/shared-library scripts or skills.
