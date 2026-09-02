@@ -47,7 +47,7 @@ Current `main` at this handover update is descended from:
 Enforce Greia voice contract: Chatterbox for Leo character dialogue, deterministic TTS for pedagogical targets
 ```
 
-That latest commit changes Activity audio/assets and receipts. It does not provide new R7 physical evidence.
+That latest runtime-affecting commit changes Activity audio/assets and receipts. It does not provide new R7 physical evidence.
 
 The trusted-Home regression itself was physically proven on the Acer at exact runtime candidate:
 
@@ -220,16 +220,16 @@ Completed/high-confidence cleanup already present in current history:
 - historical root `LOCAL_AGENT_RESULT.md` removed from the public front door;
 - README/SETUP/voice status refreshed;
 - `docs/DOCUMENTATION.md` now includes ADR 0034 and newer exact owners such as child text, launcher spoken labels and system controls;
-- `skills/greia-os-work/SKILL.md` now references the correct ADR 0013 filename and current R7/system-control routes.
+- `skills/greia-os-work/SKILL.md` references the correct ADR 0013 filename and current R7/system-control routes;
+- `docs/agents/GREIA_AGENT_OPERATIONS.md` was compacted into a living operating router with current `main` branch policy, current handover-selected R7 routing, evidence separation and local-agent failure-preservation rules (`17ab93218c24029a911c64a566a7fcf912eb4bbb`).
 
 Still pending for Threshold A public-source readiness:
 
-1. audit/refresh `docs/agents/GREIA_AGENT_OPERATIONS.md` against current `main`, especially branch policy and current R7 evidence routing;
-2. add a deterministic provider-free repository-relative documentation path/link audit for living navigation contracts;
-3. classify materially ambiguous stale one-off runbooks/reviews as historical/superseded without rewriting their evidence;
-4. complete licensing/provenance/history-secret/security/privacy/community-file review;
-5. add reviewed public legal/community entry points rather than generic placeholders;
-6. produce a public developer quick start and later ordinary-parent/user documentation appropriate to the release threshold.
+1. add a deterministic provider-free repository-relative documentation path/link audit for living navigation contracts;
+2. classify materially ambiguous stale one-off runbooks/reviews as historical/superseded without rewriting their evidence;
+3. complete licensing/provenance/history-secret/security/privacy/community-file review;
+4. add reviewed public legal/community entry points rather than generic placeholders;
+5. produce a public developer quick start and later ordinary-parent/user documentation appropriate to the release threshold.
 
 Authoritative release checklist:
 
@@ -253,9 +253,8 @@ docs/release/GREIA_PUBLIC_RELEASE_READINESS.md
 
 ### Public-source cleanup that may proceed in parallel
 
-1. refresh `docs/agents/GREIA_AGENT_OPERATIONS.md` as a derived manual, without embedding transient PASS counts;
-2. implement the deterministic living-document path/link audit;
-3. begin the licensing/provenance/security/community-file Threshold-A audit without unsupported legal claims.
+1. implement the deterministic living-document path/link audit;
+2. begin the licensing/provenance/security/community-file Threshold-A audit without unsupported legal claims.
 
 ---
 
