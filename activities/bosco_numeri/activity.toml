@@ -1,0 +1,44 @@
+[activity]
+id = "org.greia.bosco-numeri"
+legacy_ids = []
+title_key = "activity.bosco_numeri.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+discovery_tags = ["numbers", "nature"]
+
+[education]
+categories = ["early_math", "counting", "fine_motor"]
+difficulty = 1
+recommended_age_min = 3
+recommended_age_max = 5
+skills = [
+  { id = "math.counting.cardinality", weight = 3 },
+  { id = "math.number_recognition", weight = 3 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+]
+events = [
+  { id = "bosco.number_completed", kind = "milestone" },
+  { id = "bosco.challenge_completed", kind = "milestone" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

@@ -116,12 +116,16 @@ class GardenModel:
         if count is not None:
             self.target_count = max(1, min(5, count))
         else:
+            # Naturally progress difficulty as baskets are completed:
+            self.difficulty_level = min(3, 1 + self.baskets_filled // 2)
             if self.difficulty_level == 1:
                 # Early toddlers: 1, 2, or 3
                 choices = [1, 2, 3] if self.round_number > 1 else [2]
             elif self.difficulty_level == 2:
+                # Advancing toddlers: 2, 3, or 4
                 choices = [2, 3, 4]
             else:
+                # Confident toddlers: 3, 4, or 5
                 choices = [3, 4, 5]
             self.target_count = random.choice(choices)
 

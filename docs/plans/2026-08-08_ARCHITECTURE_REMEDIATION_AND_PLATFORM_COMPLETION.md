@@ -1619,3 +1619,26 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - Ran headless simulator survival & Home navigation tests for both activities: PASS (clean rc=0).
      - Relaunched interactive desktop simulator with updated code and assets.
 
+## 2026-09-02 — Voice Contract Enforcement, Acquario Magico Fix & Il Bosco dei Numeri di Tito (Counting 1–10)
+
+- Implemented:
+  1. **Strict Voice Contract Enforcement Across Activities:**
+     - Separated educational speech targets from character dialogue according to Greia voice policy:
+       - **Pedagogical Speech (`pedagogical_speech` via deterministic computer TTS):** letters/phonics pronunciation targets (`letter_A..Z.wav`) and counting numbers (`count_1..5.wav`, `count_1..10.wav`) use exact, reproducible, uncolored computer speech.
+       - **Character Dialogue (`character_dialogue` via Chatterbox Multilingual V3 on Apple Silicon MLX):** Leo dialogue in `alfabeto_leo` uses canonical voice anchor `leo-reference-v1.flac`; Tito dialogue in `bosco_numeri` uses canonical anchor `tito-reference-v1.flac`; Dani dialogue uses robotic system speech (`dani_system_speech`).
+  2. **Acquario Magico Display Fix:**
+     - Fixed `activities/acquario_magico/acquarium_app.py`: added missing `self.canvas.present()` before `pygame.display.flip()`.
+  3. **New Activity: Il Bosco dei Numeri di Tito (`org.greia.bosco-numeri`):**
+     - Created a dedicated 1-to-10 counting activity for 3–5 year old pre-readers, hosted by Tito the Explorer Bear.
+     - Features:
+       - Top number carousel (1 to 10) with anti-aliased geometric chevrons.
+       - Storybook woodland glade with floating animated items (☀️ Sole, 🍎 Mela, 🦋 Farfalla, 🍓 Fragola, 🐥 Pulcino, 🍄 Fungo, 🌰 Ghianda, 🍃 Foglia, 🌻 Girasole, ⭐ Stella).
+       - Visual Ten-Frame (2 rows of 5 wooden slots) teaching the structural quantity of 10.
+       - One-to-one correspondence tapping: items fly into the Ten-Frame while the computer voice counts deterministically.
+       - Mode toggle to "Indovina" (Find the number challenge) where Tito speaks the question (*"Dov'Ã¨ il numero 7?"*) with 3 large interactive cards.
+       - 1.0s celebration delay prevents audio overlap with Tito's cheerful milestone praise.
+  4. **Il Giardino dei Numeri Progression:**
+     - Unlocked dynamic difficulty scaling up to 5 as baskets are filled (`difficulty_level = min(3, 1 + baskets_filled // 2)`).
+- Tests & Verification:
+  - Unit tests: all 361 tests PASS (`test_activity_*.py` and `test_activity_contract.py`).
+  - Headless simulator verification: `org.greia.acquario-magico` and `org.greia.bosco-numeri` both survived interaction and returned cleanly to Shell via Home (`rc=0`).

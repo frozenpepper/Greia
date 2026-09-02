@@ -253,12 +253,134 @@ def generate_alfabeto_audio() -> int:
     return res.returncode
 
 
+BOSCO_ROOT = PROJECT_ROOT / "activities" / "bosco_numeri"
+
+BOSCO_COUNTING_NUMBERS = {
+    "it": [
+        ("count_1", "Uno!"),
+        ("count_2", "Due!"),
+        ("count_3", "Tre!"),
+        ("count_4", "Quattro!"),
+        ("count_5", "Cinque!"),
+        ("count_6", "Sei!"),
+        ("count_7", "Sette!"),
+        ("count_8", "Otto!"),
+        ("count_9", "Nove!"),
+        ("count_10", "Dieci!"),
+    ],
+    "en": [
+        ("count_1", "One!"),
+        ("count_2", "Two!"),
+        ("count_3", "Three!"),
+        ("count_4", "Four!"),
+        ("count_5", "Five!"),
+        ("count_6", "Six!"),
+        ("count_7", "Seven!"),
+        ("count_8", "Eight!"),
+        ("count_9", "Nine!"),
+        ("count_10", "Ten!"),
+    ],
+}
+
+BOSCO_TITO_SPEECH = {
+    "it": [
+        ("intro", "Ciao, sono Tito! Contiamo insieme fino a dieci nel bosco!"),
+        ("mode_count", "Tocca e conta con me!"),
+        ("mode_guess", "Indovina il numero giusto!"),
+        ("well_done", "Esatto! Bravissimo!"),
+        ("try_again", "Quasi! Prova ancora!"),
+        ("celebrate", "Fantastico! Li abbiamo contati tutti!"),
+    ],
+    "en": [
+        ("intro", "Hi, I'm Tito! Let's count to ten together in the forest!"),
+        ("mode_count", "Touch and count with me!"),
+        ("mode_guess", "Find the right number!"),
+        ("well_done", "That's it! Great job!"),
+        ("try_again", "Almost! Try again!"),
+        ("celebrate", "Fantastic! We counted them all!"),
+    ],
+}
+
+
+def generate_bosco_audio() -> int:
+    requests = []
+
+    for locale in ["it", "en"]:
+        loc_dir = BOSCO_ROOT / "assets" / "audio" / locale
+        loc_dir.mkdir(parents=True, exist_ok=True)
+
+        # 1. Deterministic pedagogical counting numbers 1 to 10
+        for key, text in BOSCO_COUNTING_NUMBERS[locale]:
+            out_file = loc_dir / f"{key}.wav"
+            rel_out = str(out_file.relative_to(PROJECT_ROOT))
+            requests.append(
+                {
+                    "speaker": "pedagogical",
+                    "kind": "pedagogical_speech",
+                    "locale": locale,
+                    "text": text,
+                    "cue_id": f"bosco_numeri.{key}",
+                    "output": rel_out,
+                    "verification": "off",
+                    "max_attempts": 1,
+                }
+            )
+
+        # 2. Tito character dialogue (greetings, instructions, praise)
+        for key, text in BOSCO_TITO_SPEECH[locale]:
+            out_file = loc_dir / f"{key}.wav"
+            rel_out = str(out_file.relative_to(PROJECT_ROOT))
+            requests.append(
+                {
+                    "speaker": "tito",
+                    "kind": "character_dialogue",
+                    "locale": locale,
+                    "text": text,
+                    "cue_id": f"bosco_numeri.{key}",
+                    "output": rel_out,
+                    "verification": "off",
+                    "max_attempts": 1,
+                }
+            )
+
+        # 3. Tito spoken questions: 'Dov'è il numero N?'
+        for n in range(1, 11):
+            q_text = f"Dov'è il numero {n}?" if locale == "it" else f"Where is number {n}?"
+            out_file = loc_dir / f"ask_{n}.wav"
+            rel_out = str(out_file.relative_to(PROJECT_ROOT))
+            requests.append(
+                {
+                    "speaker": "tito",
+                    "kind": "character_dialogue",
+                    "locale": locale,
+                    "text": q_text,
+                    "cue_id": f"bosco_numeri.ask_{n}",
+                    "output": rel_out,
+                    "verification": "off",
+                    "max_attempts": 1,
+                }
+            )
+
+    batch_path = PROJECT_ROOT / "tmp" / "voice_requests_bosco.jsonl"
+    batch_path.parent.mkdir(parents=True, exist_ok=True)
+    batch_path.write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in requests), encoding="utf-8"
+    )
+    print(f"Generating {len(requests)} audio clips for Il Bosco dei Numeri di Tito...")
+    res = subprocess.run([sys.executable, str(VOICE_CLI), "batch", "--input", str(batch_path)], cwd=PROJECT_ROOT)
+    return res.returncode
+
+
 def main() -> int:
-    rc1 = generate_giardino_audio()
-    if rc1 != 0:
-        return rc1
-    rc2 = generate_alfabeto_audio()
-    return rc2
+    # Only generate bosco audio when called directly, or all if requested
+    if len(sys.argv) > 1 and sys.argv[1] == "all":
+        rc1 = generate_giardino_audio()
+        if rc1 != 0:
+            return rc1
+        rc2 = generate_alfabeto_audio()
+        if rc2 != 0:
+            return rc2
+    return generate_bosco_audio()
 
 
 if __name__ == "__main__":

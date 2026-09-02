@@ -144,15 +144,16 @@ Do not restore retired Activity-side Home helpers.
 
 ## 5. Activity catalogue
 
-Current built-in Activity inventory: **36**.
+Current built-in Activity inventory: **37**.
 
 The catalogue-wide modernization/decomposition pass is **COMPLETE**. Do not restart a broad refactor sweep without a concrete defect.
 
-Current catalogue includes the two toddler Activities:
+Current catalogue includes the toddler Activities:
 
 ```text
 org.greia.il-giardino-dei-numeri
 org.greia.alfabeto-leo
+org.greia.bosco-numeri
 ```
 
 Recent source evidence recorded in current history includes:
