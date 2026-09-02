@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T16:42:53.418414+00:00",
+  "created_utc": "2026-09-02T17:07:51.315207+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "Try again!",
+    "text": "Almost! Try again!",
     "cue_id": "alfabeto_leo.try_again",
     "output": "activities/alfabeto_leo/assets/audio/en/try_again.wav",
     "verification": "off",
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "try again!"
+    "synthesis_text": "almost! try again!"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,8 +30,8 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/try_again.wav",
-    "bytes": 31832,
-    "sha256": "04a0122da679fae368110a52aa76e26915ca6593f0b2ce51cd8d91aee9f3efea"
+    "bytes": 53472,
+    "sha256": "6982a2711a5a523bc0432e7018f35ed6ab8dc74cde60843634a6156f49ac72f9"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."

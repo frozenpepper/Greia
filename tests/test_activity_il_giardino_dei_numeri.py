@@ -87,11 +87,12 @@ class GiardinoDeiNumeriTests(unittest.TestCase):
         self.assertEqual(outcome, "counted")
         self.assertEqual(order, 3)
         self.assertEqual(model.counted_count, 3)
-        self.assertTrue(model.celebrating)
+        self.assertTrue(model.pending_celebration)
         self.assertEqual(model.baskets_filled, 1)
 
-        # Model update triggers milestone event
-        events = model.update(0.1)
+        # Model update after spoken number delay triggers celebration and milestone event
+        events = model.update(1.1)
+        self.assertTrue(model.celebrating)
         self.assertIn("garden.set_counted", events)
 
     def test_services_state_and_safe_events(self) -> None:

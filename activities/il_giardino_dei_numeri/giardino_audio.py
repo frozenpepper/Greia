@@ -34,38 +34,47 @@ class GiardinoAudio:
         sound = self._sounds.get(sound_name)
         if sound is not None:
             try:
-                for i in range(MAX_SIMULTANEOUS_CHANNELS):
+                for i in range(2, MAX_SIMULTANEOUS_CHANNELS):
                     ch = pygame.mixer.Channel(i)
                     if not ch.get_busy():
                         ch.play(sound)
                         return
-                pygame.mixer.Channel(0).play(sound)
+                pygame.mixer.Channel(2).play(sound)
             except (pygame.error, RuntimeError):
                 pass
 
     def play_spoken(self, cue_name: str) -> None:
+        """Play voice on dedicated voice channel (channel 0)."""
         if not self._available:
             return
         sound = self._spoken_sounds.get(cue_name)
         if sound is not None:
             try:
-                # Dedicated voice channel (channel 1)
-                pygame.mixer.Channel(1).play(sound)
+                pygame.mixer.Channel(0).play(sound)
             except (pygame.error, RuntimeError):
                 pass
+
+    def play_intro(self) -> None:
+        """Play friendly opening prompt for pre-readers."""
+        self.play_spoken("intro")
 
     def play_count(self, count: int) -> None:
         """Play ascending musical chime and Dani's spoken voice for numbers 1 to 5."""
         clamped = max(1, min(5, count))
-        # 1. Play musical chime
+        # 1. Play musical chime on SFX channel
         self.play(f"count_{clamped}")
-        # 2. Play spoken number
+        # 2. Play spoken number on Voice channel
         self.play_spoken(f"count_{clamped}")
 
     def play_celebration(self) -> None:
         """Play celebration music and Dani's cheer."""
         self.play("celebrate")
         self.play_spoken("well_done")
+
+    def play_basket_full(self) -> None:
+        """Play praise when basket is full."""
+        self.play("rustle")
+        self.play_spoken("basket_full")
 
     def _load_spoken_assets(self) -> None:
         loc_dir = AUDIO_DIR / self.locale

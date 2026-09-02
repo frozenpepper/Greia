@@ -87,8 +87,8 @@ class AlfabetoLeoTests(unittest.TestCase):
         self.assertTrue(model.guess_solved)
         self.assertTrue(model.celebrating)
 
-        # Update triggers event
-        events = model.update(0.1)
+        # Update after guess celebration timer triggers event
+        events = model.update(1.9)
         self.assertIn("letter.discovered", events)
 
     def test_services_safe_fallback(self) -> None:

@@ -34,43 +34,55 @@ class AlfabetoAudio:
         sound = self._sounds.get(sound_name)
         if sound is not None:
             try:
-                for i in range(MAX_SIMULTANEOUS_CHANNELS):
+                for i in range(2, MAX_SIMULTANEOUS_CHANNELS):
                     ch = pygame.mixer.Channel(i)
                     if not ch.get_busy():
                         ch.play(sound)
                         return
-                pygame.mixer.Channel(0).play(sound)
+                pygame.mixer.Channel(2).play(sound)
             except (pygame.error, RuntimeError):
                 pass
 
     def play_spoken(self, cue_name: str) -> None:
+        """Play voice on dedicated voice channel (channel 0)."""
         if not self._available:
             return
         sound = self._spoken_sounds.get(cue_name)
         if sound is not None:
             try:
-                # Dedicated voice channel (channel 1)
-                pygame.mixer.Channel(1).play(sound)
+                pygame.mixer.Channel(0).play(sound)
             except (pygame.error, RuntimeError):
                 pass
+
+    def play_intro(self) -> None:
+        """Play friendly opening prompt for pre-readers."""
+        self.play_spoken("intro")
+
+    def play_guess_intro(self) -> None:
+        """Play opening prompt when switching to guess mode."""
+        self.play_spoken("mode_guess_intro")
+
+    def play_question(self, char: str) -> None:
+        """Play spoken question for pre-readers: 'Dov'è la lettera S?'."""
+        self.play_spoken(f"ask_{char.upper()}")
 
     def play_letter(self, char: str) -> None:
         """Play distinct marimba chime and spoken letter pronunciation."""
         char_upper = char.upper()
-        # 1. Play musical marimba note
+        # 1. Play musical marimba note on SFX channel
         idx = max(0, min(25, ord(char_upper) - ord("A")))
         freq = 261.63 * (2.0 ** (idx / 12.0))
         sound = self._synthesize_marimba(22050, 0.45, freq)
         try:
-            pygame.mixer.Channel(0).play(sound)
+            pygame.mixer.Channel(1).play(sound)
         except Exception:
             pass
 
-        # 2. Play spoken letter (e.g. "A come Ape" / "A is for Apple")
+        # 2. Play spoken letter pronunciation on Voice channel (channel 0)
         self.play_spoken(f"letter_{char_upper}")
 
     def play_wobble(self) -> None:
-        """Play gentle wobble sound and encouragement."""
+        """Play gentle wobble sound and gentle retry encouragement."""
         self.play("wobble")
         self.play_spoken("try_again")
 

@@ -16,40 +16,48 @@ class LetterItem:
     char: str
     word_it: str
     word_en: str
-    symbol: str
+    symbol_it: str
+    symbol_en: str
     color: tuple[int, int, int]
+
+    @property
+    def symbol(self) -> str:
+        return self.symbol_it
+
+    def symbol_for(self, locale: str) -> str:
+        return self.symbol_it if locale.startswith("it") else self.symbol_en
 
     def word_for(self, locale: str) -> str:
         return self.word_it if locale.startswith("it") else self.word_en
 
 
 LETTERS_CATALOGUE: Final[list[LetterItem]] = [
-    LetterItem("A", "APE", "APPLE", "🍎", (240, 70, 70)),
-    LetterItem("B", "BARCA", "BOAT", "⛵", (70, 150, 240)),
-    LetterItem("C", "CANE", "CAT", "🐶", (245, 150, 60)),
-    LetterItem("D", "DELFINO", "DUCK", "🐬", (60, 190, 220)),
-    LetterItem("E", "ELEFANTE", "ELEPHANT", "🐘", (160, 120, 200)),
-    LetterItem("F", "FARFALLA", "FISH", "🦋", (240, 100, 170)),
-    LetterItem("G", "GATTO", "GIRAFFE", "🐱", (250, 180, 50)),
-    LetterItem("H", "HOTEL", "HOUSE", "🏠", (100, 180, 130)),
-    LetterItem("I", "ISOLA", "IGLOO", "🏝️", (70, 190, 180)),
-    LetterItem("J", "JEEP", "JELLYFISH", "🚙", (60, 140, 210)),
-    LetterItem("K", "KOALA", "KITE", "🐨", (170, 140, 120)),
-    LetterItem("L", "LUNA", "LION", "🌙", (255, 215, 60)),
-    LetterItem("M", "MELA", "MOON", "🍎", (230, 60, 60)),
-    LetterItem("N", "NAVE", "NEST", "🚢", (80, 130, 200)),
-    LetterItem("O", "ORSO", "OWL", "🐻", (175, 110, 65)),
-    LetterItem("P", "PALLA", "PENGUIN", "⚽", (235, 90, 130)),
-    LetterItem("Q", "QUADRO", "QUEEN", "🖼️", (180, 130, 90)),
-    LetterItem("R", "RANA", "RAINBOW", "🐸", (110, 200, 70)),
-    LetterItem("S", "SOLE", "SUN", "☀️", (255, 190, 40)),
-    LetterItem("T", "TRENO", "TRAIN", "🚂", (210, 80, 60)),
-    LetterItem("U", "UVA", "UMBRELLA", "🍇", (150, 80, 190)),
-    LetterItem("V", "VULCANO", "VIOLIN", "🌋", (220, 100, 50)),
-    LetterItem("W", "WAFER", "WHALE", "🧇", (210, 160, 100)),
-    LetterItem("X", "XILOFONO", "XYLOPHONE", "🎵", (100, 170, 220)),
-    LetterItem("Y", "YOGURT", "YACHT", "🥣", (240, 140, 180)),
-    LetterItem("Z", "ZEBRA", "ZEBRA", "🦓", (70, 70, 80)),
+    LetterItem("A", "APE", "APPLE", "🐝", "🍎", (240, 70, 70)),
+    LetterItem("B", "BARCA", "BOAT", "⛵", "⛵", (70, 150, 240)),
+    LetterItem("C", "CANE", "CAT", "🐶", "🐱", (245, 150, 60)),
+    LetterItem("D", "DELFINO", "DUCK", "🐬", "🦆", (60, 190, 220)),
+    LetterItem("E", "ELEFANTE", "ELEPHANT", "🐘", "🐘", (160, 120, 200)),
+    LetterItem("F", "FARFALLA", "FISH", "🦋", "🐟", (240, 100, 170)),
+    LetterItem("G", "GATTO", "GIRAFFE", "🐱", "🦒", (250, 180, 50)),
+    LetterItem("H", "HOTEL", "HOUSE", "🏨", "🏠", (100, 180, 130)),
+    LetterItem("I", "ISOLA", "IGLOO", "🏝️", "🧊", (70, 190, 180)),
+    LetterItem("J", "JEEP", "JELLYFISH", "🚙", "🪼", (60, 140, 210)),
+    LetterItem("K", "KOALA", "KITE", "🐨", "🪁", (170, 140, 120)),
+    LetterItem("L", "LUNA", "LION", "🌙", "🦁", (255, 215, 60)),
+    LetterItem("M", "MELA", "MOON", "🍎", "🌙", (230, 60, 60)),
+    LetterItem("N", "NAVE", "NEST", "🚢", "🪺", (80, 130, 200)),
+    LetterItem("O", "ORSO", "OWL", "🐻", "🦉", (175, 110, 65)),
+    LetterItem("P", "PALLA", "PENGUIN", "⚽", "🐧", (235, 90, 130)),
+    LetterItem("Q", "QUADRO", "QUEEN", "🖼️", "👑", (180, 130, 90)),
+    LetterItem("R", "RANA", "RAINBOW", "🐸", "🌈", (110, 200, 70)),
+    LetterItem("S", "SOLE", "SUN", "☀️", "☀️", (255, 190, 40)),
+    LetterItem("T", "TRENO", "TRAIN", "🚂", "🚂", (210, 80, 60)),
+    LetterItem("U", "UVA", "UMBRELLA", "🍇", "☂️", (150, 80, 190)),
+    LetterItem("V", "VULCANO", "VIOLIN", "🌋", "🎻", (220, 100, 50)),
+    LetterItem("W", "WAFER", "WHALE", "🧇", "🐋", (210, 160, 100)),
+    LetterItem("X", "XILOFONO", "XYLOPHONE", "🎵", "🎵", (100, 170, 220)),
+    LetterItem("Y", "YOGURT", "YACHT", "🥣", "⛵", (240, 140, 180)),
+    LetterItem("Z", "ZEBRA", "ZEBRA", "🦓", "🦓", (70, 70, 80)),
 ]
 
 LETTER_BY_CHAR: Final[dict[str, LetterItem]] = {item.char: item for item in LETTERS_CATALOGUE}
@@ -62,89 +70,97 @@ class GameMode(StrEnum):
 
 @dataclass
 class AlfabetoModel:
-    """State machine for toddler letter exploration."""
+    """State management for toddler alphabet discovery."""
 
     locale: str = "it"
-    mode: GameMode = GameMode.EXPLORE
     current_index: int = 0
-    active_letter: LetterItem = field(default_factory=lambda: LETTERS_CATALOGUE[0])
-    revealed: bool = False
+    revealed: bool = True
     reveal_timer: float = 0.0
-    wobble_timer: float = 0.0
-    wobble_card: str | None = None
-    discovered_letters: set[str] = field(default_factory=set)
-    celebrating: bool = False
-    celebration_timer: float = 0.0
-    leo_mood: str = "neutral"
-    leo_jump: float = 0.0
-    # Guess mode state
+    discovered_letters: set[str] = field(default_factory=lambda: {"A"})
+    mode: GameMode = GameMode.EXPLORE
+
+    # Guess Mode State
     target_letter: LetterItem = field(default_factory=lambda: LETTERS_CATALOGUE[0])
     guess_choices: list[LetterItem] = field(default_factory=list)
     guess_solved: bool = False
+    guess_solved_timer: float = 0.0
+    wobble_card: str = ""
+    wobble_timer: float = 0.0
+    celebrating: bool = False
 
     def __post_init__(self) -> None:
         self.select_letter("A")
-        self.setup_guess_round()
 
-    def select_letter(self, char: str) -> bool:
-        """Select a letter by character (A-Z)."""
-        clean = char.upper()
-        item = LETTER_BY_CHAR.get(clean)
-        if item is None:
-            return False
+    @property
+    def active_letter(self) -> LetterItem:
+        return LETTERS_CATALOGUE[self.current_index]
 
-        self.active_letter = item
-        self.current_index = [it.char for it in LETTERS_CATALOGUE].index(clean)
+    def step(self, delta: int) -> LetterItem:
+        """Step previous (-1) or next (+1) in alphabet."""
+        self.current_index = (self.current_index + delta) % len(LETTERS_CATALOGUE)
+        item = self.active_letter
+        self.discovered_letters.add(item.char)
         self.revealed = True
         self.reveal_timer = 0.6
-        self.leo_mood = "happy"
-        self.leo_jump = 0.3
-        self.discovered_letters.add(clean)
-        return True
+        return item
 
-    def setup_guess_round(self) -> None:
-        """Prepare a peek-a-boo round: 1 target and 2 friendly distractors."""
+    def select_letter(self, char: str) -> bool:
+        """Jump directly to a specific letter."""
+        char_upper = char.upper()
+        for idx, item in enumerate(LETTERS_CATALOGUE):
+            if item.char == char_upper:
+                self.current_index = idx
+                self.discovered_letters.add(item.char)
+                self.revealed = True
+                self.reveal_timer = 0.6
+                return True
+        return False
+
+    def switch_mode(self, mode: GameMode) -> None:
+        self.mode = mode
+        self.celebrating = False
+        self.wobble_card = ""
+        self.wobble_timer = 0.0
+        if mode == GameMode.GUESS:
+            self.setup_new_guess()
+
+    def setup_new_guess(self) -> None:
+        """Set up a new 3-choice letter guessing challenge."""
+        self.guess_solved = False
+        self.guess_solved_timer = 0.0
+        self.celebrating = False
+        self.wobble_card = ""
+        self.wobble_timer = 0.0
+
+        # Choose target letter
         self.target_letter = random.choice(LETTERS_CATALOGUE)
-        pool = [it for it in LETTERS_CATALOGUE if it.char != self.target_letter.char]
-        distractors = random.sample(pool, 2)
-        choices = [self.target_letter] + distractors
+
+        # Pick 2 different distractors
+        other_letters = [item for item in LETTERS_CATALOGUE if item.char != self.target_letter.char]
+        distractors = random.sample(other_letters, 2)
+
+        choices = [self.target_letter, distractors[0], distractors[1]]
         random.shuffle(choices)
         self.guess_choices = choices
-        self.guess_solved = False
-        self.celebrating = False
-        self.celebration_timer = 0.0
-        self.leo_mood = "neutral"
 
-    def handle_guess_choice(self, char: str) -> tuple[str, LetterItem]:
-        """Process a guess selection."""
+    def handle_guess_choice(self, chosen_char: str) -> tuple[str, LetterItem]:
+        """Handle child tap on one of the 3 cards."""
         if self.guess_solved:
-            self.setup_guess_round()
             return ("next", self.target_letter)
 
-        if char.upper() == self.target_letter.char:
+        if chosen_char == self.target_letter.char:
             self.guess_solved = True
+            self.guess_solved_timer = 1.8
             self.celebrating = True
-            self.celebration_timer = 0.0
-            self.leo_mood = "surprised"
-            self.leo_jump = 0.4
-            self.discovered_letters.add(char.upper())
+            self.discovered_letters.add(self.target_letter.char)
             return ("correct", self.target_letter)
         else:
-            # Gentle wobble on the wrong choice, zero punishment
-            self.wobble_card = char.upper()
-            self.wobble_timer = 0.35
-            self.leo_mood = "blink"
+            self.wobble_card = chosen_char
+            self.wobble_timer = 0.5
             return ("wobble", self.target_letter)
 
-    def switch_mode(self, new_mode: GameMode) -> None:
-        self.mode = new_mode
-        self.celebrating = False
-        self.celebration_timer = 0.0
-        self.leo_mood = "neutral"
-        if new_mode == GameMode.GUESS:
-            self.setup_guess_round()
-
     def update(self, dt: float) -> list[str]:
+        """Update animation timers and state transitions."""
         events: list[str] = []
 
         if self.reveal_timer > 0.0:
@@ -153,20 +169,14 @@ class AlfabetoModel:
         if self.wobble_timer > 0.0:
             self.wobble_timer = max(0.0, self.wobble_timer - dt)
             if self.wobble_timer == 0.0:
-                self.wobble_card = None
+                self.wobble_card = ""
 
-        if self.leo_jump > 0.0:
-            self.leo_jump = max(0.0, self.leo_jump - dt)
-
-        if self.celebrating:
-            prev = self.celebration_timer
-            self.celebration_timer += dt
-            if prev == 0.0:
+        if self.guess_solved:
+            self.guess_solved_timer -= dt
+            if self.guess_solved_timer <= 0.0:
                 events.append("letter.discovered")
-                if len(self.discovered_letters) >= 10:
+                if len(self.discovered_letters) >= 26:
                     events.append("alphabet.parade_completed")
-            if self.celebration_timer >= 2.8:
-                if self.mode == GameMode.GUESS:
-                    self.setup_guess_round()
+                self.setup_new_guess()
 
         return events

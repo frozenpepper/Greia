@@ -1,15 +1,12 @@
-"""Renderer for Il Giardino dei Numeri."""
+"""Storybook visual renderer for Il Giardino dei Numeri."""
 
 from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Final
 
 import pygame
 
-from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.child_text import display_text
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import FontRole, GreiaTypography
@@ -42,7 +39,7 @@ DANI_ASSET_DIR = PROJECT_ROOT / "assets" / "visual" / "runtime" / "v1" / "charac
 
 
 class GiardinoRenderer:
-    """Draws the sunny toddler counting garden."""
+    """Draws a warm, engaging, storybook toddler counting garden."""
 
     def __init__(
         self,
@@ -62,374 +59,259 @@ class GiardinoRenderer:
             path = DANI_ASSET_DIR / f"dani_{mood}.png"
             if path.is_file():
                 try:
-                    img = pygame.image.load(str(path)).convert_alpha()
-                    # Scale Dani nicely for toddler view (~150x150)
-                    self._dani_images[mood] = pygame.transform.smoothscale(img, (150, 150))
+                    img = pygame.image.load(str(path))
+                    # Scale Dani to a friendly toddler-sized character (~170x170)
+                    self._dani_images[mood] = pygame.transform.smoothscale(img, (170, 170))
                 except Exception:
                     pass
 
     def render(self, model: GardenModel, anim_time: float) -> None:
         surf = self.canvas.surface
 
-        # 1. Background sky and sunny meadow
+        # 1. Background sky, hills, fence and sunny meadow
         self._draw_background(surf, anim_time)
 
-        # 2. Touch ripples
+        # 2. Touch ripples from empty taps
         self._draw_ripples(surf, model.ripple_effects)
 
-        # 3. Dani's basket
+        # 3. Dani's picnic basket (grounded on grass)
         self._draw_basket(surf, model)
 
-        # 4. Dani the Robot
+        # 4. Dani the Robot (standing on grass beside basket)
         self._draw_dani(surf, model, anim_time)
 
-        # 5. Countable garden items
+        # 5. Interactive countable items
         for item in model.items:
             self._draw_item(surf, item, anim_time)
 
-        # 6. Top status / prompt (visual and capital text)
+        # 6. Top status / title banner
         self._draw_status(surf, model)
 
-        # 7. Celebration overlay and sparkles
+        # 7. Celebration sparkles when complete
         if model.celebrating:
             self._draw_celebration(surf, model, anim_time)
 
     def _draw_background(self, surf: pygame.Surface, anim_time: float) -> None:
-        # Sky gradient / pastel sky
-        surf.fill((190, 230, 255))
+        # Sky: soft pleasant toddler blue
+        surf.fill((185, 225, 250))
 
-        # Drifting soft clouds
+        # Big warm smiling sun in top-right
+        sun_x, sun_y = 930, 75
+        pulse = 2.5 * math.sin(anim_time * 2.0)
+        # Sun rays
+        for i in range(12):
+            angle = i * (math.pi / 6.0) + anim_time * 0.15
+            rx1 = sun_x + math.cos(angle) * (52 + pulse)
+            ry1 = sun_y + math.sin(angle) * (52 + pulse)
+            rx2 = sun_x + math.cos(angle) * (66 + pulse)
+            ry2 = sun_y + math.sin(angle) * (66 + pulse)
+            pygame.draw.line(surf, (255, 230, 120), (int(rx1), int(ry1)), (int(rx2), int(ry2)), 4)
+        pygame.draw.circle(surf, (255, 225, 90), (sun_x, sun_y), int(46 + pulse))
+        pygame.draw.circle(surf, (255, 200, 50), (sun_x, sun_y), int(40 + pulse))
+
+        # Soft drifting storybook clouds
         cloud_offsets = [
-            (200.0 + (anim_time * 12.0) % 1100.0 - 100.0, 90.0),
-            (650.0 + (anim_time * 8.0) % 1100.0 - 100.0, 130.0),
+            (160.0 + (anim_time * 10.0) % 1150.0 - 120.0, 85.0, 1.0),
+            (560.0 + (anim_time * 7.0) % 1150.0 - 120.0, 120.0, 0.85),
+            (980.0 + (anim_time * 9.0) % 1150.0 - 120.0, 95.0, 0.75),
         ]
-        for cx, cy in cloud_offsets:
-            pygame.draw.circle(surf, (245, 250, 255), (int(cx), int(cy)), 36)
-            pygame.draw.circle(surf, (245, 250, 255), (int(cx - 24), int(cy + 6)), 26)
-            pygame.draw.circle(surf, (245, 250, 255), (int(cx + 26), int(cy + 6)), 28)
-            pygame.draw.circle(surf, (245, 250, 255), (int(cx), int(cy + 10)), 32)
+        for cx, cy, sc in cloud_offsets:
+            c_rad = int(32 * sc)
+            pygame.draw.circle(surf, (255, 255, 255), (int(cx), int(cy)), c_rad)
+            pygame.draw.circle(surf, (255, 255, 255), (int(cx - 22 * sc), int(cy + 6 * sc)), int(24 * sc))
+            pygame.draw.circle(surf, (255, 255, 255), (int(cx + 24 * sc), int(cy + 6 * sc)), int(26 * sc))
+            pygame.draw.circle(surf, (255, 255, 255), (int(cx), int(cy + 10 * sc)), int(28 * sc))
 
-        # Warm smiling sun in top-right
-        sun_x, sun_y = 940, 80
-        pulse = 2.0 * math.sin(anim_time * 2.5)
-        pygame.draw.circle(surf, (255, 230, 110), (sun_x, sun_y), int(48 + pulse))
-        pygame.draw.circle(surf, (255, 205, 70), (sun_x, sun_y), int(42 + pulse))
+        # Distant rolling hills (pastel sage green)
+        pygame.draw.ellipse(surf, (160, 215, 135), (-120, 260, 750, 360))
+        pygame.draw.ellipse(surf, (145, 205, 120), (320, 240, 850, 380))
 
-        # Soft rolling grassy hills
-        # Distant hill
-        pygame.draw.ellipse(surf, (150, 215, 120), (-100, 310, 800, 400))
-        # Foreground hill
-        pygame.draw.ellipse(surf, (130, 200, 95), (250, 280, 900, 440))
-        # Ground base
-        pygame.draw.rect(surf, (120, 195, 85), (0, 420, REFERENCE_WIDTH, 180))
+        # Wooden garden fence posts along the horizon
+        fence_y = 355
+        for fx in range(60, REFERENCE_WIDTH - 40, 55):
+            pygame.draw.rect(surf, (235, 210, 175), (fx, fence_y, 14, 55), border_radius=4)
+            pygame.draw.polygon(surf, (235, 210, 175), [(fx, fence_y), (fx + 7, fence_y - 10), (fx + 14, fence_y)])
+        pygame.draw.line(surf, (215, 190, 155), (40, fence_y + 18), (REFERENCE_WIDTH - 40, fence_y + 18), 5)
+        pygame.draw.line(surf, (215, 190, 155), (40, fence_y + 38), (REFERENCE_WIDTH - 40, fence_y + 38), 5)
 
-        # Gentle grass tufts
-        tufts = [(120, 520), (280, 490), (450, 530), (620, 480), (760, 540)]
-        for tx, ty in tufts:
-            pygame.draw.arc(surf, (95, 170, 65), (tx - 12, ty - 12, 24, 24), 0.5, 2.5, 3)
-            pygame.draw.arc(surf, (95, 170, 65), (tx - 4, ty - 16, 24, 24), 0.8, 2.8, 3)
+        # Foreground lush meadow ground
+        pygame.draw.rect(surf, (120, 195, 80), (0, 390, REFERENCE_WIDTH, 210))
+
+        # Gentle grass blades and daisies in foreground
+        daisies = [(100, 540), (220, 480), (380, 560), (520, 490), (660, 550)]
+        for dx, dy in daisies:
+            # Grass blades
+            pygame.draw.arc(surf, (90, 165, 55), (dx - 10, dy - 10, 20, 20), 0.5, 2.5, 3)
+            pygame.draw.arc(surf, (90, 165, 55), (dx - 3, dy - 14, 20, 20), 0.8, 2.8, 3)
+            # Daisy petals
+            pygame.draw.circle(surf, (255, 255, 255), (dx, dy - 12), 4)
+            pygame.draw.circle(surf, (255, 220, 60), (dx, dy - 12), 2)
 
     def _draw_ripples(self, surf: pygame.Surface, ripples: list[tuple[float, float, float]]) -> None:
         for rx, ry, age in ripples:
             alpha_ratio = max(0.0, 1.0 - (age / 0.6))
-            radius = int(12 + age * 65)
-            color = (255, 255, 255, int(160 * alpha_ratio))
-            # Draw anti-aliased expanding circle
+            radius = int(14 + age * 60)
+            color = (255, 255, 255, int(180 * alpha_ratio))
             circle_surf = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
-            pygame.draw.circle(
-                circle_surf,
-                (255, 255, 220, int(150 * alpha_ratio)),
-                (radius + 2, radius + 2),
-                radius,
-                width=3,
-            )
+            pygame.draw.circle(circle_surf, color, (radius + 2, radius + 2), radius, width=4)
             surf.blit(circle_surf, (int(rx - radius - 2), int(ry - radius - 2)))
 
     def _draw_basket(self, surf: pygame.Surface, model: GardenModel) -> None:
-        bx, by = int(BASKET_X), int(BASKET_Y)
-        # Basket shadow
-        pygame.draw.ellipse(surf, (80, 140, 55), (bx - 70, by + 45, 140, 30))
+        bx = int(BASKET_X)
+        by = int(BASKET_Y)
 
-        # Basket body (warm wicker basket)
-        basket_rect = pygame.Rect(bx - 60, by - 15, 120, 65)
-        pygame.draw.ellipse(surf, (210, 150, 85), basket_rect)
-        pygame.draw.rect(surf, (190, 130, 70), (bx - 55, by, 110, 45), border_radius=12)
+        # Basket shadow grounded firmly on grass
+        pygame.draw.ellipse(surf, (85, 145, 55), (bx - 65, by + 32, 130, 26))
 
-        # Wicker cross stripes
-        for ox in range(-40, 50, 20):
-            pygame.draw.line(surf, (165, 105, 50), (bx + ox, by), (bx + ox + 8, by + 42), 2)
-            pygame.draw.line(surf, (165, 105, 50), (bx + ox + 8, by), (bx + ox, by + 42), 2)
+        # Basket body (cozy warm woven basket)
+        basket_rect = pygame.Rect(bx - 55, by - 10, 110, 50)
+        pygame.draw.rect(surf, (215, 155, 90), basket_rect, border_radius=14)
+        pygame.draw.rect(surf, (180, 120, 60), basket_rect, width=3, border_radius=14)
+
+        # Cross weave pattern
+        for ox in range(-40, 45, 16):
+            pygame.draw.line(surf, (175, 115, 55), (bx + ox, by - 8), (bx + ox + 6, by + 36), 2)
+            pygame.draw.line(surf, (175, 115, 55), (bx + ox + 6, by - 8), (bx + ox, by + 36), 2)
+
+        # Red checkered cloth interior liner
+        pygame.draw.ellipse(surf, (235, 75, 75), (bx - 48, by - 22, 96, 26))
+        pygame.draw.ellipse(surf, (255, 255, 255), (bx - 42, by - 19, 84, 20), width=2)
 
         # Basket rim
-        pygame.draw.ellipse(surf, (230, 175, 105), (bx - 62, by - 18, 124, 28))
-        pygame.draw.ellipse(surf, (170, 110, 55), (bx - 62, by - 18, 124, 28), width=3)
+        pygame.draw.ellipse(surf, (235, 180, 115), (bx - 58, by - 26, 116, 24))
+        pygame.draw.ellipse(surf, (175, 115, 55), (bx - 58, by - 26, 116, 24), width=3)
 
-        # Checkered cloth rim
-        pygame.draw.ellipse(surf, (240, 80, 80), (bx - 45, by - 12, 90, 16))
-
-        # Count badge on basket
-        badge_rect = pygame.Rect(bx - 26, by + 18, 52, 28)
-        pygame.draw.rect(surf, (255, 255, 255), badge_rect, border_radius=14)
-        pygame.draw.rect(surf, (190, 130, 70), badge_rect, width=2, border_radius=14)
+        # Bright count badge on basket (e.g. 2/3)
+        badge_rect = pygame.Rect(bx - 28, by + 12, 56, 30)
+        pygame.draw.rect(surf, (255, 255, 255), badge_rect, border_radius=15)
+        pygame.draw.rect(surf, (180, 120, 60), badge_rect, width=3, border_radius=15)
         num_str = f"{model.counted_count}/{model.target_count}"
-        text_surf = self.typography.render(num_str, FontRole.SECONDARY, 18, (80, 50, 20))
+        text_surf = self.typography.render(num_str, FontRole.TITLE, 18, (80, 45, 15))
         surf.blit(text_surf, text_surf.get_rect(center=badge_rect.center))
 
     def _draw_dani(self, surf: pygame.Surface, model: GardenModel, anim_time: float) -> None:
-        # Dani position: right side, next to basket
-        dani_x = 880
-        jump_offset = -30.0 * math.sin(math.pi * min(1.0, (0.35 - model.dani_jump) / 0.35)) if model.dani_jump > 0.0 else 0.0
-        dani_y = 290 + jump_offset
+        # Dani stands on the meadow to the right of the basket
+        dani_x = 910
+        # When jumping with joy, offset vertically
+        jump_offset = (
+            -35.0 * math.sin(math.pi * min(1.0, (0.35 - model.dani_jump) / 0.35))
+            if model.dani_jump > 0.0
+            else 0.0
+        )
+        dani_y = 425 + jump_offset
 
-        # Check if runtime PNG is available
+        # Soft shadow under Dani on the ground
+        shadow_scale = 1.0 - abs(jump_offset) / 60.0
+        sw = int(90 * max(0.5, shadow_scale))
+        sh = int(22 * max(0.5, shadow_scale))
+        pygame.draw.ellipse(surf, (85, 145, 55), (dani_x - sw // 2, 495 - sh // 2, sw, sh))
+
         mood = model.dani_mood
         if mood not in self._dani_images:
-            mood = "neutral"
+            mood = "happy" if model.celebrating else "neutral"
 
         if mood in self._dani_images:
             img = self._dani_images[mood]
-            # Add gentle breathing wobble
-            wobble_y = 3.0 * math.sin(anim_time * 3.0)
-            surf.blit(img, (dani_x - 75, int(dani_y - 75 + wobble_y)))
+            # Gentle breathing motion
+            breath_y = 2.5 * math.sin(anim_time * 3.0)
+            surf.blit(img, (dani_x - img.get_width() // 2, int(dani_y - img.get_height() // 2 + breath_y)))
         else:
-            # Procedural fallback for Dani
-            self._draw_procedural_dani(surf, dani_x, dani_y + jump_offset, mood, anim_time)
+            # Fallback procedural body
+            self._draw_procedural_dani(surf, dani_x, dani_y, mood, anim_time)
 
     def _draw_procedural_dani(
         self, surf: pygame.Surface, cx: float, cy: float, mood: str, anim_time: float
     ) -> None:
-        # Head (rounded teal/mint rectangle)
-        head_rect = pygame.Rect(int(cx - 45), int(cy - 40), 90, 80)
-        pygame.draw.rect(surf, (70, 190, 190), head_rect, border_radius=20)
-        pygame.draw.rect(surf, (40, 140, 140), head_rect, width=3, border_radius=20)
-
-        # Antenna with glowing tip
-        antenna_glow = (255, 230, 80) if mood in ("happy", "surprised") else (255, 190, 60)
-        pygame.draw.line(surf, (40, 140, 140), (int(cx), int(cy - 40)), (int(cx), int(cy - 65)), 4)
-        pygame.draw.circle(surf, antenna_glow, (int(cx), int(cy - 68)), 10)
-
-        # Face screen (soft dark blue)
-        face_rect = pygame.Rect(int(cx - 35), int(cy - 28), 70, 56)
-        pygame.draw.rect(surf, (25, 45, 75), face_rect, border_radius=12)
-
-        # Eyes (digital light blue)
-        eye_color = (130, 230, 255)
-        if mood == "blink":
-            pygame.draw.line(surf, eye_color, (int(cx - 22), int(cy)), (int(cx - 8), int(cy)), 3)
-            pygame.draw.line(surf, eye_color, (int(cx + 8), int(cy)), (int(cx + 22), int(cy)), 3)
-        elif mood == "happy":
-            # Curved happy eyes
-            pygame.draw.arc(surf, eye_color, (int(cx - 24), int(cy - 12), 18, 18), 0.2, 2.9, 3)
-            pygame.draw.arc(surf, eye_color, (int(cx + 6), int(cy - 12), 18, 18), 0.2, 2.9, 3)
-        else:
-            # Round glowing eyes
-            pygame.draw.circle(surf, eye_color, (int(cx - 15), int(cy - 2)), 6)
-            pygame.draw.circle(surf, eye_color, (int(cx + 15), int(cy - 2)), 6)
-
-        # Smile
-        pygame.draw.arc(surf, eye_color, (int(cx - 10), int(cy + 6), 20, 12), 3.14, 6.28, 2)
+        head_rect = pygame.Rect(int(cx - 50), int(cy - 50), 100, 90)
+        pygame.draw.rect(surf, (70, 195, 195), head_rect, border_radius=24)
+        pygame.draw.rect(surf, (35, 145, 145), head_rect, width=4, border_radius=24)
+        # Antenna
+        pygame.draw.line(surf, (35, 145, 145), (int(cx), int(cy - 50)), (int(cx), int(cy - 78)), 5)
+        pygame.draw.circle(surf, (255, 210, 50), (int(cx), int(cy - 82)), 12)
+        # Screen
+        face_rect = pygame.Rect(int(cx - 38), int(cy - 36), 76, 62)
+        pygame.draw.rect(surf, (25, 45, 75), face_rect, border_radius=16)
+        # Glowing eyes
+        eye_col = (130, 235, 255)
+        pygame.draw.circle(surf, eye_col, (int(cx - 18), int(cy - 6)), 8)
+        pygame.draw.circle(surf, eye_col, (int(cx + 18), int(cy - 6)), 8)
+        pygame.draw.arc(surf, eye_col, (int(cx - 14), int(cy + 4), 28, 16), 3.14, 6.28, 3)
 
     def _draw_item(self, surf: pygame.Surface, item: GardenItem, anim_time: float) -> None:
         cx, cy = item.current_pos
 
-        # Wobble / pulse scaling
+        # Bounce & wobble scaling
         scale = 1.0
         if item.pulse_timer > 0.0:
-            # Big tactile bounce
-            scale = 1.0 + 0.35 * math.sin(math.pi * (item.pulse_timer / 0.5))
+            scale = 1.0 + 0.38 * math.sin(math.pi * (item.pulse_timer / 0.5))
         elif item.giggle_timer > 0.0:
-            scale = 1.0 + 0.15 * math.sin(math.pi * 4.0 * (item.giggle_timer / 0.3))
+            scale = 1.0 + 0.18 * math.sin(math.pi * 4.0 * (item.giggle_timer / 0.3))
         else:
-            # Soft idling float
             scale = 1.0 + 0.04 * math.sin(anim_time * 2.5 + item.item_id)
 
-        # Item shadow on ground
+        # Ground drop shadow while on the field
         if item.fly_progress <= 0.0:
-            shadow_w = int(item.radius * 1.5 * scale)
-            shadow_h = int(item.radius * 0.5 * scale)
-            pygame.draw.ellipse(
-                surf,
-                (90, 160, 65),
-                (int(cx - shadow_w * 0.5), int(cy + item.radius * 0.7), shadow_w, shadow_h),
-            )
+            sw = int(72 * scale)
+            sh = int(22 * scale)
+            pygame.draw.ellipse(surf, (85, 145, 55), (int(cx - sw // 2), int(cy + 36 * scale), sw, sh))
 
-        # Draw specific item shape
-        radius = item.radius * scale
-        if item.kind == ItemKind.APPLE:
-            self._draw_apple(surf, cx, cy, radius)
-        elif item.kind == ItemKind.STRAWBERRY:
-            self._draw_strawberry(surf, cx, cy, radius)
-        elif item.kind == ItemKind.FLOWER:
-            self._draw_flower(surf, cx, cy, radius, anim_time)
-        elif item.kind == ItemKind.BUTTERFLY:
-            self._draw_butterfly(surf, cx, cy, radius, anim_time)
-        elif item.kind == ItemKind.DUCKLING:
-            self._draw_duckling(surf, cx, cy, radius)
-        else:
-            self._draw_star(surf, cx, cy, radius, anim_time)
+        # Draw cute glowing backing circle
+        backing_radius = int(48 * scale)
+        backing_surf = pygame.Surface((backing_radius * 2 + 8, backing_radius * 2 + 8), pygame.SRCALPHA)
+        bg_col = (255, 255, 255, 210) if not item.counted else (255, 245, 180, 240)
+        border_col = (220, 200, 160) if not item.counted else (255, 180, 40)
+        pygame.draw.circle(backing_surf, bg_col, (backing_radius + 4, backing_radius + 4), backing_radius)
+        pygame.draw.circle(backing_surf, border_col, (backing_radius + 4, backing_radius + 4), backing_radius, width=3)
+        surf.blit(backing_surf, (int(cx - backing_radius - 4), int(cy - backing_radius - 4)))
 
-        # Number Badge (Appears when item is counted)
+        # Render cute item emoji
+        emoji_size = int(58 * scale)
+        emoji_surf = self.typography.render(item.symbol, FontRole.DISPLAY, emoji_size, (40, 40, 40))
+        surf.blit(emoji_surf, emoji_surf.get_rect(center=(int(cx), int(cy))))
+
+        # Glowing Number Badge (shown when counted: 1, 2, 3...)
         if item.counted:
-            self._draw_count_badge(surf, cx, cy - radius * 0.9, item.order_counted)
+            self._draw_count_badge(surf, cx, cy - 42 * scale, item.order_counted)
 
-    def _draw_apple(self, surf: pygame.Surface, cx: float, cy: float, r: float) -> None:
-        # Stem
-        pygame.draw.arc(surf, (110, 70, 30), (int(cx - 8), int(cy - r * 1.4), 16, int(r * 0.9)), 0.5, 2.2, 4)
-        # Leaf
-        pygame.draw.ellipse(surf, (70, 180, 50), (int(cx + 2), int(cy - r * 1.25), int(r * 0.6), int(r * 0.35)))
-        # Body (two slightly overlapping red spheres for cute apple dip)
-        pygame.draw.circle(surf, (235, 55, 55), (int(cx - r * 0.3), int(cy)), int(r * 0.8))
-        pygame.draw.circle(surf, (235, 55, 55), (int(cx + r * 0.3), int(cy)), int(r * 0.8))
-        # Specular shine
-        pygame.draw.ellipse(surf, (255, 150, 150), (int(cx - r * 0.6), int(cy - r * 0.5), int(r * 0.35), int(r * 0.2)))
-        # Cheerful face dots
-        pygame.draw.circle(surf, (70, 20, 20), (int(cx - r * 0.2), int(cy + 2)), 3)
-        pygame.draw.circle(surf, (70, 20, 20), (int(cx + r * 0.2), int(cy + 2)), 3)
-        pygame.draw.arc(surf, (70, 20, 20), (int(cx - r * 0.15), int(cy + 4), int(r * 0.3), int(r * 0.2)), 3.14, 6.28, 2)
-
-    def _draw_strawberry(self, surf: pygame.Surface, cx: float, cy: float, r: float) -> None:
-        # Berry body
-        pts = [
-            (cx, cy + r * 1.05),
-            (cx - r * 0.85, cy - r * 0.3),
-            (cx - r * 0.5, cy - r * 0.8),
-            (cx + r * 0.5, cy - r * 0.8),
-            (cx + r * 0.85, cy - r * 0.3),
-        ]
-        pygame.draw.polygon(surf, (240, 45, 65), [(int(x), int(y)) for x, y in pts])
-        pygame.draw.circle(surf, (240, 45, 65), (int(cx), int(cy - r * 0.3)), int(r * 0.75))
-
-        # Green leafy crown
-        crown_pts = [
-            (cx - r * 0.7, cy - r * 0.75),
-            (cx - r * 0.2, cy - r * 0.55),
-            (cx, cy - r * 0.95),
-            (cx + r * 0.2, cy - r * 0.55),
-            (cx + r * 0.7, cy - r * 0.75),
-            (cx, cy - r * 0.6),
-        ]
-        pygame.draw.polygon(surf, (65, 175, 55), [(int(x), int(y)) for x, y in crown_pts])
-
-        # Seeds
-        seeds = [(-0.3, 0.0), (0.3, 0.0), (0.0, 0.3), (-0.2, 0.5), (0.2, 0.5)]
-        for sx, sy in seeds:
-            pygame.draw.circle(surf, (255, 240, 140), (int(cx + sx * r), int(cy + sy * r)), 2)
-
-    def _draw_flower(self, surf: pygame.Surface, cx: float, cy: float, r: float, anim_time: float) -> None:
-        # Petals (soft sunny daisy)
-        petal_color = (255, 235, 100)
-        num_petals = 6
-        for i in range(num_petals):
-            ang = (i / num_petals) * 2 * math.pi
-            px = cx + math.cos(ang) * (r * 0.55)
-            py = cy + math.sin(ang) * (r * 0.55)
-            pygame.draw.circle(surf, petal_color, (int(px), int(py)), int(r * 0.42))
-        # Orange/yellow center
-        pygame.draw.circle(surf, (255, 160, 40), (int(cx), int(cy)), int(r * 0.46))
-        # Smiling center
-        pygame.draw.circle(surf, (80, 40, 10), (int(cx - r * 0.15), int(cy - 2)), 3)
-        pygame.draw.circle(surf, (80, 40, 10), (int(cx + r * 0.15), int(cy - 2)), 3)
-        pygame.draw.arc(surf, (80, 40, 10), (int(cx - r * 0.15), int(cy), int(r * 0.3), int(r * 0.2)), 3.14, 6.28, 2)
-
-    def _draw_butterfly(self, surf: pygame.Surface, cx: float, cy: float, r: float, anim_time: float) -> None:
-        # Flap angle
-        flap = 0.85 + 0.15 * math.sin(anim_time * 6.0)
-        wing_color = (130, 200, 255)
-        # Upper wings
-        pygame.draw.ellipse(surf, wing_color, (int(cx - r * 0.95 * flap), int(cy - r * 0.8), int(r * 0.9 * flap), int(r * 0.9)))
-        pygame.draw.ellipse(surf, wing_color, (int(cx + r * 0.05), int(cy - r * 0.8), int(r * 0.9 * flap), int(r * 0.9)))
-        # Lower wings
-        pygame.draw.ellipse(surf, (160, 220, 255), (int(cx - r * 0.75 * flap), int(cy - r * 0.1), int(r * 0.7 * flap), int(r * 0.7)))
-        pygame.draw.ellipse(surf, (160, 220, 255), (int(cx + r * 0.05), int(cy - r * 0.1), int(r * 0.7 * flap), int(r * 0.7)))
-        # Body
-        pygame.draw.ellipse(surf, (100, 70, 150), (int(cx - r * 0.15), int(cy - r * 0.7), int(r * 0.3), int(r * 1.2)))
-        # Antennae
-        pygame.draw.line(surf, (80, 50, 120), (int(cx - 3), int(cy - r * 0.6)), (int(cx - r * 0.4), int(cy - r * 0.95)), 2)
-        pygame.draw.line(surf, (80, 50, 120), (int(cx + 3), int(cy - r * 0.6)), (int(cx + r * 0.4), int(cy - r * 0.95)), 2)
-
-    def _draw_duckling(self, surf: pygame.Surface, cx: float, cy: float, r: float) -> None:
-        # Body
-        pygame.draw.ellipse(surf, (255, 220, 50), (int(cx - r * 0.8), int(cy - r * 0.2), int(r * 1.5), int(r * 1.0)))
-        # Head
-        pygame.draw.circle(surf, (255, 230, 60), (int(cx - r * 0.3), int(cy - r * 0.45)), int(r * 0.55))
-        # Beak
-        pygame.draw.polygon(surf, (255, 140, 30), [(int(cx - r * 0.75), int(cy - r * 0.45)), (int(cx - r * 1.15), int(cy - r * 0.4)), (int(cx - r * 0.75), int(cy - r * 0.25))])
-        # Eye
-        pygame.draw.circle(surf, (30, 30, 30), (int(cx - r * 0.4), int(cy - r * 0.5)), 4)
-        pygame.draw.circle(surf, (255, 255, 255), (int(cx - r * 0.42), int(cy - r * 0.52)), 1)
-        # Wing
-        pygame.draw.ellipse(surf, (245, 205, 30), (int(cx - r * 0.2), int(cy - r * 0.05), int(r * 0.75), int(r * 0.55)))
-
-    def _draw_star(self, surf: pygame.Surface, cx: float, cy: float, r: float, anim_time: float) -> None:
-        pts = []
-        outer_r = r * 1.0
-        inner_r = r * 0.45
-        rot = anim_time * 0.8
-        for i in range(10):
-            cur_r = outer_r if i % 2 == 0 else inner_r
-            ang = rot + (i / 10.0) * 2 * math.pi - math.pi * 0.5
-            pts.append((cx + math.cos(ang) * cur_r, cy + math.sin(ang) * cur_r))
-        pygame.draw.polygon(surf, (255, 225, 60), [(int(x), int(y)) for x, y in pts])
-        pygame.draw.polygon(surf, (245, 185, 30), [(int(x), int(y)) for x, y in pts], width=3)
-        # Face
-        pygame.draw.circle(surf, (60, 40, 10), (int(cx - r * 0.2), int(cy - 2)), 3)
-        pygame.draw.circle(surf, (60, 40, 10), (int(cx + r * 0.2), int(cy - 2)), 3)
-        pygame.draw.arc(surf, (60, 40, 10), (int(cx - r * 0.15), int(cy), int(r * 0.3), int(r * 0.2)), 3.14, 6.28, 2)
-
-    def _draw_count_badge(self, surf: pygame.Surface, bx: float, by: float, number: int) -> None:
-        badge_r = 24
-        # Glowing outer halo
-        pygame.draw.circle(surf, (255, 255, 255), (int(bx), int(by)), badge_r + 4)
-        pygame.draw.circle(surf, (255, 180, 50), (int(bx), int(by)), badge_r)
-        pygame.draw.circle(surf, (255, 245, 140), (int(bx), int(by)), badge_r - 3)
-
-        # Bold Capital Numeral
-        num_surf = self.typography.render(str(number), FontRole.TITLE, 28, (130, 40, 10))
-        surf.blit(num_surf, num_surf.get_rect(center=(int(bx), int(by))))
+    def _draw_count_badge(self, surf: pygame.Surface, cx: float, cy: float, count: int) -> None:
+        badge_radius = 24
+        # Glowing sunny badge
+        pygame.draw.circle(surf, (255, 200, 40), (int(cx), int(cy)), badge_radius)
+        pygame.draw.circle(surf, (255, 240, 120), (int(cx), int(cy)), badge_radius - 3)
+        pygame.draw.circle(surf, (210, 130, 20), (int(cx), int(cy)), badge_radius, width=2)
+        txt = self.typography.render(str(count), FontRole.DISPLAY, 26, (140, 50, 10))
+        surf.blit(txt, txt.get_rect(center=(int(cx), int(cy))))
 
     def _draw_status(self, surf: pygame.Surface, model: GardenModel) -> None:
-        # Central toddler banner: large, cheerful, capitals
-        # Positioned at top-center, safely away from top-left Home/Back area
-        bar_w = 420
-        bar_h = 56
-        bar_x = (REFERENCE_WIDTH - bar_w) // 2
-        bar_y = 20
+        # Title Banner in center (safe from top-left Home)
+        banner_w, banner_h = 420, 54
+        bx = (REFERENCE_WIDTH - banner_w) // 2
+        by = 18
 
-        pygame.draw.rect(surf, (255, 255, 255), (bar_x, bar_y, bar_w, bar_h), border_radius=28)
-        pygame.draw.rect(surf, (150, 210, 100), (bar_x, bar_y, bar_w, bar_h), width=3, border_radius=28)
+        pygame.draw.rect(surf, (255, 255, 255), (bx, by, banner_w, banner_h), border_radius=27)
+        pygame.draw.rect(surf, (130, 195, 100), (bx, by, banner_w, banner_h), width=3, border_radius=27)
 
-        # Spoken / display prompt
-        remaining = model.target_count - model.counted_count
         if model.celebrating:
-            msg = self.resources.text("ui.well_done")
-        elif model.counted_count == 0:
-            msg = self.resources.text("ui.touch_to_count")
+            title_text = self.resources.text("ui.well_done")
         else:
-            msg = self.resources.text("ui.keep_counting")
+            title_text = self.resources.text("ui.touch_to_count")
 
-        text_surf = self.typography.render(msg, FontRole.TITLE, 24, (45, 120, 35))
-        surf.blit(text_surf, text_surf.get_rect(center=(REFERENCE_WIDTH // 2, bar_y + bar_h // 2)))
+        txt = self.typography.render(title_text, FontRole.TITLE, 24, (50, 120, 40))
+        surf.blit(txt, txt.get_rect(center=(REFERENCE_WIDTH // 2, by + banner_h // 2)))
 
     def _draw_celebration(self, surf: pygame.Surface, model: GardenModel, anim_time: float) -> None:
-        # Celebration banner + gentle floating stars
-        for i in range(12):
-            ang = (i / 12.0) * 2 * math.pi + anim_time * 2.0
-            dist = 160 + 35 * math.sin(anim_time * 3.0 + i)
-            sx = int(BASKET_X + math.cos(ang) * dist)
-            sy = int(BASKET_Y + math.sin(ang) * dist * 0.7)
-            star_size = int(8 + 4 * math.sin(anim_time * 5.0 + i))
-            pygame.draw.circle(surf, (255, 240, 100), (sx, sy), star_size)
+        # Colorful celebration confetti & star bursts
+        t = model.celebration_timer
+        cx = int(BASKET_X)
+        cy = int(BASKET_Y - 40)
+        colors = [(255, 90, 90), (255, 210, 50), (90, 210, 120), (70, 170, 255), (220, 110, 240)]
 
-        # Large forward button for manual continue
-        btn_w, btn_h = 220, 64
-        btn_x = (REFERENCE_WIDTH - btn_w) // 2
-        btn_y = 510
-        pulse = 4.0 * math.sin(anim_time * 4.0)
-
-        btn_rect = pygame.Rect(int(btn_x - pulse), int(btn_y - pulse * 0.5), int(btn_w + pulse * 2), int(btn_h + pulse))
-        pygame.draw.rect(surf, (255, 200, 50), btn_rect, border_radius=32)
-        pygame.draw.rect(surf, (255, 255, 255), btn_rect, width=4, border_radius=32)
-
-        cont_msg = self.resources.text("ui.next")
-        txt = self.typography.render(cont_msg, FontRole.TITLE, 24, (110, 50, 10))
-        surf.blit(txt, txt.get_rect(center=btn_rect.center))
+        for i in range(24):
+            angle = i * (2.0 * math.pi / 24.0) + (i * 0.2)
+            speed = 80.0 + (i % 5) * 35.0
+            dist = min(220.0, t * speed)
+            px = cx + math.cos(angle) * dist
+            py = cy + math.sin(angle) * dist + (t * 40.0)  # Gravity
+            col = colors[i % len(colors)]
+            size = max(3, int(8 - t * 2.0))
+            pygame.draw.circle(surf, col, (int(px), int(py)), size)

@@ -1,26 +1,24 @@
-"""Main application loop and input handling for L'Alfabeto di Leo."""
+"""Application event loop for L'Alfabeto di Leo."""
 
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Final
 
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
-from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
+from greia_platform.activity_ui import ChildUiMetrics
 
 if __package__:
     from .alfabeto_audio import AlfabetoAudio
     from .alfabeto_model import (
+        LETTERS_CATALOGUE,
         AlfabetoModel,
         GameMode,
-        LETTERS_CATALOGUE,
-        LetterItem,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
     )
@@ -29,10 +27,9 @@ if __package__:
 else:
     from alfabeto_audio import AlfabetoAudio
     from alfabeto_model import (
+        LETTERS_CATALOGUE,
         AlfabetoModel,
         GameMode,
-        LETTERS_CATALOGUE,
-        LetterItem,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
     )
@@ -42,7 +39,7 @@ else:
 
 @dataclass
 class AlfabetoApp:
-    """Toddler alphabet exploration with Leo."""
+    """Toddler capital letter discovery and peek-a-boo guessing game."""
 
     screen: pygame.Surface
     canvas: PygameReferenceCanvas
@@ -59,7 +56,8 @@ class AlfabetoApp:
     def __post_init__(self) -> None:
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         saved = self.services.load_state()
-        self.model.discovered_letters = set(saved.discovered_letters)
+        if saved.discovered_letters:
+            self.model.discovered_letters.update(saved.discovered_letters)
 
     def run(self) -> int:
         clock = pygame.time.Clock()
@@ -78,15 +76,16 @@ class AlfabetoApp:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
-                    elif pygame.K_a <= event.key <= pygame.K_z:
-                        char = chr(event.key - pygame.K_a + ord("A"))
-                        self._handle_letter_key(char)
+                    elif event.key == pygame.K_SPACE:
+                        self._handle_space()
                     elif event.key == pygame.K_LEFT:
                         self._handle_step(-1)
                     elif event.key == pygame.K_RIGHT:
                         self._handle_step(1)
-                    elif event.key in (pygame.K_SPACE, pygame.K_RETURN):
-                        self._handle_space()
+                    elif pygame.K_a <= event.key <= pygame.K_z:
+                        # Physical keyboard direct letter key exploration!
+                        char = chr(ord("A") + (event.key - pygame.K_a))
+                        self._handle_key_letter(char)
                 elif event.type == pygame.VIDEORESIZE:
                     self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -96,8 +95,12 @@ class AlfabetoApp:
             events = self.model.update(dt)
             for ev in events:
                 self.services.emit_event(ev)
-                if ev == "alphabet.parade_completed":
-                    self.audio.play("celebrate")
+                if ev == "letter.discovered" and self.model.mode == GameMode.GUESS:
+                    # New target ready: ask question aloud for pre-readers!
+                    self.audio.play_question(self.model.target_letter.char)
+                elif ev == "alphabet.parade_completed":
+                    self.audio.play_celebration()
+
                 self.services.save_state(
                     AlfabetoStorageState(
                         discovered_letters=sorted(list(self.model.discovered_letters)),
@@ -112,6 +115,7 @@ class AlfabetoApp:
             if not self.ready_published:
                 mark_activity_ready()
                 self.ready_published = True
+                self.audio.play_intro()
 
             clock.tick(30)
 
@@ -137,13 +141,16 @@ class AlfabetoApp:
             return
 
         # Check Mode switch button
-        btn_w, btn_h = 170, 48
+        btn_w, btn_h = 175, 48
         btn_x = REFERENCE_WIDTH - btn_w - 30
-        btn_y = 22
+        btn_y = 20
         if btn_x <= rx <= btn_x + btn_w and btn_y <= ry <= btn_y + btn_h:
             new_mode = GameMode.GUESS if self.model.mode == GameMode.EXPLORE else GameMode.EXPLORE
             self.model.switch_mode(new_mode)
-            self.audio.play("pop")
+            if new_mode == GameMode.GUESS:
+                self.audio.play_question(self.model.target_letter.char)
+            else:
+                self.audio.play_letter(self.model.active_letter.char)
             return
 
         if self.model.mode == GameMode.EXPLORE:
@@ -160,19 +167,19 @@ class AlfabetoApp:
             self.audio.play_letter(self.model.active_letter.char)
             return
 
-        # Check Letter Strip buttons (y: 500 to 564)
-        if 490 <= ry <= 575:
+        # Check Letter Strip buttons (y: 500 to 575)
+        if 495 <= ry <= 580:
             # Prev button
-            if 135 <= rx <= 195:
+            if 130 <= rx <= 195:
                 self._handle_step(-1)
                 return
             # Next button
-            start_x = 210
+            start_x = 205
             visible_count = 7
             btn_size = 64
             spacing = 16
             next_x = start_x + visible_count * (btn_size + spacing)
-            if next_x <= rx <= next_x + 55:
+            if next_x <= rx <= next_x + 60:
                 self._handle_step(1)
                 return
 
@@ -190,12 +197,20 @@ class AlfabetoApp:
                     return
 
     def _handle_guess_click(self, rx: float, ry: float) -> None:
-        # Check 3 Big Choice Cards (y: 350 to 510)
-        card_w, card_h = 140, 160
+        # Check target question card: tapping it repeats the question aloud for the child!
+        t_w, t_h = 240, 180
+        tx = (REFERENCE_WIDTH - t_w) // 2
+        ty = 110
+        if tx <= rx <= tx + t_w and ty <= ry <= ty + t_h:
+            self.audio.play_question(self.model.target_letter.char)
+            return
+
+        # Check 3 Big Choice Cards
+        card_w, card_h = 145, 165
         spacing = 40
         total_w = 3 * card_w + 2 * spacing
         start_x = (REFERENCE_WIDTH - total_w) // 2
-        card_y = 350
+        card_y = 330
 
         if card_y <= ry <= card_y + card_h:
             for i, choice in enumerate(self.model.guess_choices):
@@ -203,36 +218,32 @@ class AlfabetoApp:
                 if cx <= rx <= cx + card_w:
                     res, letter = self.model.handle_guess_choice(choice.char)
                     if res == "correct":
-                        self.audio.play_celebration()
                         self.audio.play_letter(letter.char)
+                        self.audio.play_celebration()
                     elif res == "wobble":
                         self.audio.play_wobble()
                     elif res == "next":
                         self.audio.play("pop")
                     return
 
-    def _handle_letter_key(self, char: str) -> None:
+    def _handle_step(self, delta: int) -> None:
+        item = self.model.step(delta)
+        self.audio.play_letter(item.char)
+
+    def _handle_key_letter(self, char: str) -> None:
         if self.model.mode == GameMode.EXPLORE:
             if self.model.select_letter(char):
                 self.audio.play_letter(char)
         else:
             res, letter = self.model.handle_guess_choice(char)
             if res == "correct":
-                self.audio.play("celebrate")
                 self.audio.play_letter(letter.char)
+                self.audio.play_celebration()
             elif res == "wobble":
-                self.audio.play("wobble")
-
-    def _handle_step(self, direction: int) -> None:
-        total = len(LETTERS_CATALOGUE)
-        new_idx = (self.model.current_index + direction) % total
-        target_char = LETTERS_CATALOGUE[new_idx].char
-        self.model.select_letter(target_char)
-        self.audio.play_letter(target_char)
+                self.audio.play_wobble()
 
     def _handle_space(self) -> None:
         if self.model.mode == GameMode.EXPLORE:
             self.audio.play_letter(self.model.active_letter.char)
-        elif self.model.guess_solved:
-            self.model.setup_guess_round()
-            self.audio.play("pop")
+        else:
+            self.audio.play_question(self.model.target_letter.char)

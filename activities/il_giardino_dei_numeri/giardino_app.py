@@ -97,7 +97,7 @@ class GiardinoApp:
                 if ev == "garden.set_counted":
                     self.audio.play_celebration()
                 elif ev == "garden.basket_filled":
-                    self.audio.play("rustle")
+                    self.audio.play_basket_full()
                     self.services.save_state(
                         GiardinoStorageState(
                             total_counted=self.model.total_counted,
@@ -114,6 +114,7 @@ class GiardinoApp:
             if not self.ready_published:
                 mark_activity_ready()
                 self.ready_published = True
+                self.audio.play_intro()
 
             clock.tick(30)
 

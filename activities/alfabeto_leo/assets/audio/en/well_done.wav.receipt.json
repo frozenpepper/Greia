@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T16:42:52.141264+00:00",
+  "created_utc": "2026-09-02T17:07:49.120742+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "Well done!",
+    "text": "That's it! Great job!",
     "cue_id": "alfabeto_leo.well_done",
     "output": "activities/alfabeto_leo/assets/audio/en/well_done.wav",
     "verification": "off",
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "well done!"
+    "synthesis_text": "that's it! great job!"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,8 +30,8 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/well_done.wav",
-    "bytes": 29860,
-    "sha256": "95ea2f343b332d4af148fd2580cd3b1cedb7280af3d1e0755d6cf3165885495a"
+    "bytes": 46092,
+    "sha256": "45e99bb3681ae52d682208eb43710efbebac7b7cd32bcf4d6fba4d2446ba1e39"
   },
   "human_review": "PENDING",
   "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."

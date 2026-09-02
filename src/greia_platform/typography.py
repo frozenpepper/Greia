@@ -365,6 +365,16 @@ class GreiaTypography:
             canonical = Path("/opt/greia-os/assets/fonts/nunito-sans") / filename
             if canonical.is_file():
                 path = canonical
+            else:
+                repo_fallback = (
+                    Path(__file__).resolve().parents[2]
+                    / "assets"
+                    / "fonts"
+                    / "nunito-sans"
+                    / filename
+                )
+                if repo_fallback.is_file():
+                    path = repo_fallback
         if path is not None:
             try:
                 return pygame.font.Font(str(path), spec.size)

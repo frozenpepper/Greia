@@ -1597,8 +1597,25 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   - `python3 tools/audit_activity_backend_independence.py`: PASS (`activities=36 blockers=0`)
   - `python3 tools/audit_activity_system_chrome_ownership.py --strict`: PASS (`blockers=0`)
   - Audio asset loading & playback: PASS (GiardinoAudio 8 spoken + 9 synthesized, AlfabetoAudio 29 spoken + 3 synthesized in both IT and EN)
-  - `python3 -m unittest discover -s tests -p "test_activity_*.py"`: 355 tests PASS
-  - Headless Simulator Verification:
-    - `python3 tools/headless_greia_simulator.py --activity-dir activities/il_giardino_dei_numeri`: PASS (survived 2s, click (300, 300), home click at (38, 38), clean exit rc=0)
-    - `python3 tools/headless_greia_simulator.py --activity-dir activities/alfabeto_leo`: PASS (survived 2s, click (300, 300), home click at (38, 38), clean exit rc=0)
+
+## 2026-09-02 — Remediation: Toddler Activities Visuals, Fonts, Voice Instructions & Audio Sequencing
+
+- Remediated toddler activities (`org.greia.il-giardino-dei-numeri` and `org.greia.alfabeto-leo`) based on early playtest review:
+  1. **Font Degradation & Platform Typo Fallback:**
+     - Fixed `src/greia_platform/typography.py` to check repository font path `assets/fonts/nunito-sans/` when `/opt/greia-os/...` is not mounted. Prevents degrading to unstyled pixelated system fonts on development machines, macOS and simulator hosts.
+     - Replaced unicode carousel arrows (which produced tofu boxes `[]`) with crisp, antialiased geometric button triangles.
+  2. **Storybook Graphics & Real Character Art:**
+     - Fixed `convert_alpha()` failure in asset loaders when initialized before display mode.
+     - `Il Giardino dei Numeri`: grounded Dani (170x170 official character art) and the picnic basket on the meadow beside each other with drop shadows. Replaced geometric wireframes with rich, high-contrast 3D storybook item emojis (`🍎`, `🍓`, `🌻`, `🦋`, `🐥`, `⭐`) on glowing backing badges with bounce/pulse physics. Added rolling hills, wooden fence, flowers, and sunny sky.
+     - `L'Alfabeto di Leo`: placed Leo the Owl (180x180 official character art with turquoise glasses) on a cozy wooden treehouse branch with green leaves. Added cozy room wallpaper, bunting flags, and arched window with sun/clouds. Replaced mismatched symbols with accurate Italian and English educational associations (e.g. Italian `A` shows `🐝` for Ape and `M` shows `🍎` for Mela; English `A` shows `🍎` for Apple).
+  3. **Character Spoken Instructions for Pre-Readers:**
+     - Generated full spoken instructions and prompt questions via `tools/generate_toddler_audio.py` (22 audio clips for Giardino, 112 audio clips for Alfabeto across IT and EN).
+     - Both activities speak aloud on launch: Dani greets with *"Ciao! Tocca e conta con me!"* / *"Hi! Touch and count with me!"*; Leo greets with *"Ciao, sono Leo! Tocca una lettera per scoprire la sorpresa!"* / *"Hi, I'm Leo! Touch a letter to discover a surprise!"*.
+     - In Alfabeto's Guess mode, Leo speaks the question aloud (*"Dov'è la lettera S?"* / *"Where is the letter S?"*), allowing pre-readers who cannot read to play seamlessly. Tapping the target card repeats the question aloud.
+  4. **Audio Overlap & Sequencing Fix:**
+     - Added celebration sequencing delay (`pending_celebration`, `celebration_delay = 1.0s`) in `giardino_model.py`. The final counted number (e.g. "Cinque!") is spoken in full without being interrupted by the celebration fanfare. Celebration fanfare and praise cheer (*"Fantastico! Che meraviglia, il cesto è pieno!"*) trigger after the number finishes.
+  5. **Verification:**
+     - Ran unit tests: all 355 tests PASS.
+     - Ran headless simulator survival & Home navigation tests for both activities: PASS (clean rc=0).
+     - Relaunched interactive desktop simulator with updated code and assets.
 
