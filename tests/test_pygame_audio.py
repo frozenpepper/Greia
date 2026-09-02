@@ -12,7 +12,13 @@ class PygameAudioTests(unittest.TestCase):
             self.assertEqual(current_pcm16_mixer_spec(), (44100, 2))
 
     def test_current_pcm16_mixer_spec_rejects_unsupported_or_missing_format(self) -> None:
-        for spec in (None, (44100, -8, 2), (0, -16, 2), (44100, -16, 0)):
+        for spec in (
+            None,
+            (44100, -8, 2),
+            (44100, 16, 2),
+            (0, -16, 2),
+            (44100, -16, 0),
+        ):
             with self.subTest(spec=spec):
                 with mock.patch("pygame.mixer.get_init", return_value=spec):
                     self.assertIsNone(current_pcm16_mixer_spec())
