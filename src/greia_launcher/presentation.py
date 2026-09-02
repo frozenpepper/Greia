@@ -244,10 +244,19 @@ class GreiaLauncherPresentation(LauncherApplication):
         try:
             discovered = registry.discover()
         except ActivityValidationError:
-            # The immutable package service should make this rare, but boot must
-            # stay fail-soft if package storage is externally damaged. Keep the
-            # already validated built-in/developer registry from the base class.
+            # Parent package storage is optional catalogue input. A damaged
+            # package may be omitted without taking the child Shell down, but it
+            # must never leave this presentation subclass using the plain
+            # ActivitySupervisor created by LauncherApplication.__init__.
+            #
+            # Rebuild against the already validated built-in/developer registry
+            # so dynamic dispatch restores the complete installed lifecycle
+            # composition (trusted Home/Back, usage limits and profile-aware
+            # launch services). If that mandatory rebuild itself fails, let the
+            # initialization fail closed rather than launching an unprotected
+            # Activity.
             self._catalogue_error = True
+            self._rebuild_runtime_services()
             return
 
         self.registry = registry

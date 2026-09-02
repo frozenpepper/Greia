@@ -1481,3 +1481,32 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Next exact step: per unified gate §4, record `FINAL_RUNTIME_SHA` (current `main` 57cd5f1a if no new runtime diff, otherwise new commit), create detached worktree `WT` for candidate, run GUI Simulator (§5) IT then EN, then deploy that exact `WT` to Acer and execute unified §§7-8, then final report per §12.
 
 - Commit(s): this plan entry + `HANDOVER.md` §7 update to `ACCEPTED 68+38` (workshop + posta_di_leo accepted) + runtime `activities/posta_di_leo/locales/it/audio/activity-title.wav` regeneration (b2a458f5) merged via 57cd5f1a. Human-review stamping is in `tmp` (not committed) per protocol; runtime WAV is the committed artifact.
+
+## 2026-09-02 — Home system-chrome regression fix (R7.3 / Parent package composition) — SOURCE-FIXED, PHYSICAL PENDING
+
+- Implemented: narrow composition correction in `src/greia_launcher/presentation.py::_configure_parent_package_source` — the `except ActivityValidationError` branch now calls `self._rebuild_runtime_services()` before `return` instead of returning with the plain `ActivitySupervisor` left by `LauncherApplication.__init__`. Preserves `self.registry`/`self._activities` as the already validated built-in/developer set; does not assign partial discovery; does not swallow `_rebuild_runtime_services` failures (fail-closed). Fixes both `GreiaChildShell` and `TrustedGreiaLauncherPresentation` via dynamic dispatch (runbook `GREIA_HOME_SYSTEM_CHROME_REGRESSION_FIX_2026-09-02.md` §3). Strengthened `tests/test_r7_child_shell_trusted_chrome_composition.py` to assert `TrustedChromeActivitySupervisor -> UsageLimitedActivitySupervisor` inheritance. Created `tests/test_parent_source_supervisor_fallback.py` covering all three presentation types.
+
+- Tests/evidence at current `main` + fix (clean, `PYTHONPATH=src`):
+  - `PYTHONPATH=src python3 -m pytest -q tests/test_parent_source_supervisor_fallback.py tests/test_r7_child_shell_trusted_chrome_composition.py tests/test_system_chrome.py tests/test_system_chrome_legacy_x.py tests/test_trusted_chrome_supervisor.py` → **29 passed** (3 fallback + 1 composition dual-assert + 16 chrome + 6 legacy-x + 4 trusted supervisor)
+  - `PYTHONPATH=src python3 -m unittest discover -s tests` → **1564 tests PASS** (was 1561, +3 new fallback tests; 84s)
+  - `PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict` → **blockers=0**
+  - `PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities` → **blockers=0 migration_findings=2 migration_activities=2** (labirinto_magico + workshop_settings ActivitySystemChromeLayout migration)
+  - `ruff check src/greia_launcher/presentation.py tests/test_parent_source_supervisor_fallback.py tests/test_r7_child_shell_trusted_chrome_composition.py` → **All checks passed**
+  - `git diff --check` → **0**
+  - `PYTHONPATH=src python3 tools/validate_project.py` → **PASS runtime_api=0.1 activities=34**
+  - `build/footprint-source.sh` → runtime payload 3.1M src / 46M activities / 60K runtime (source tree 725M)
+  - Physical owner report: **Home absent on every Activity on Acer** plus loss of usage-limit/profile/achievement wrapper behaviors — matches plain `ActivitySupervisor` retention.
+  - Root cause: `ActivityValidationError` during Parent package discovery returned before `_rebuild_runtime_services`, leaving base supervisor.
+  - Effect: trusted Home/Back lifecycle + daily usage-limit wrapper + ProfileVisual launch-context/audio + achievement integration lost together.
+  - Narrow correction: always rebuild current specialized services around known-good registry; mandatory rebuild failure remains fail-closed.
+  - Pre-fix Parent-source diagnostic: **not executed on Acer** in this session (local dev machine only); Acer `strict discover FAIL` + `unvalidated_count` capture is PENDING and must be recorded before/after deploy per runbook §2.
+  - Simulator gate (hostile + ordinary Writing/Painting/Shape Garden): **PENDING** for this SHA — must prove Home protection still green after fix.
+  - Acer deploy / Physical Home acceptance (§§10-11): **PENDING** — Writing/Painting/Shape Garden + one extra Activity must show Home at (38,38) at 1024×600, click returns to Greia, process gone, immediate Shell responsiveness, plus fail-closed chrome-failure and usage-limit wrapper sanity. Legacy-X hardening (§12) **not yet needed** — first deploy the narrow fix.
+
+- Decisions: Do **not** put Home back into Activities (ADR 0019). Optional Parent package damage may be omitted without taking Shell down, but must never downgrade to unprotected supervisor. Keep X11 hardening (§12) separate and only if narrow fix proves trusted composition yet Home still absent on Acer. Previous frozen R7 candidate `1edb22ce` is no longer authoritative after this runtime/source change per runbook §9.
+
+- Remaining blockers: 1) capture pre-fix Parent-source diagnostic on Acer (strict vs fail-soft + unvalidated list + launcher logs 500 lines), 2) deploy exact fixed SHA to Acer via `tools/deploy_to_acer.py` (180s extraction/chown) and prove `HEAD==origin/main`, 3) Acer physical Home matrix 4 Activities + fail-closed + usage-limit sanity at 1024×600, 4) legacy-X hardening only if §11 fails despite proven trusted supervisor, 5) Simulator ordinary+hostile gate with screenshots at fixed SHA, 6) final `HANDOVER.md` §-level evidence update and unified final report.
+
+- Next exact step: record `STARTING_MAIN_SHA=a5c38d421dd39a2aa2c4d2de6da920601206aba9`, commit this fix + tests + plan append, push to `origin/main`, verify `HEAD==origin/main`, then execute runbook §§2,8,10,11 on Acer (diagnostic → deploy exact SHA → capture screenshots → click (38,38) → prove process gone) and record `FINAL_HOME_REGRESSION_VERDICT`.
+
+- Commit(s): this plan entry + `src/greia_launcher/presentation.py` 1-line rebuild + `tests/test_parent_source_supervisor_fallback.py` (3 tests) + `tests/test_r7_child_shell_trusted_chrome_composition.py` usage-limit assert — exact SHA recorded at commit time; `STARTING_MAIN_SHA=a5c38d421dd39a2aa2c4d2de6da920601206aba9`.

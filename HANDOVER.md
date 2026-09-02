@@ -3,12 +3,12 @@
 **Updated:** 2026-09-02  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Primary blocking phase:** **R7 — direct graphics/session/input architecture**  
-**Current subphase:** **R7.2/R7.3 + Parent usage-limit/visibility — exact physical evidence-gap closure at runtime candidate 1edb22ce (plus Launcher spoken labels 38+68, dwell 160ms, cache 48, already on 1edb22ce)**  
-**Latest runtime/source correction requiring execution:** `1edb22cec7709aafe3f08519fabf69cb93cb8083` (Parent App 7db9a94 pinned) + `aee9eea8` spoken-label runtime/assets (already in 1edb22ce ancestry)  
+**Current subphase:** **EMERGENCY HOME SYSTEM-CHROME REGRESSION — SOURCE-FIXED, PHYSICAL PENDING (2026-09-02 runbook, supersedes other acceptance until Home restored)**  
+**Latest runtime/source correction requiring execution:** **CURRENT = Home regression fix (this handover) + spoken-label cleanup + 1edb22ce ancestry; FROZEN R7 CANDIDATE 1edb22ce NO LONGER AUTHORITATIVE after runtime change**  
 **Activity modernization:** **COMPLETE**  
-**Latest fully executed source gate at exact 1edb22ce:** **PASS — 1561 tests, backend blockers 0, chrome blockers 0, Simulator 5/5 (Encyclopedia/Writing/Painting/Volo/hostile) PASS, plus spoken-label `audit_launcher_spoken_labels` 34/68/38 PASS, controller 13/5 spoken tests, `ruff` clean**  
-**Latest exact-current source/Simulator verdict:** **PASS at 1edb22ce + spoken-label controller IT/EN 19×2 collections + 34×2 activities dwell/rapid/launch, cache bounded**  
-**R7.2/R7.3 Acer physical acceptance:** **FINAL EVIDENCE GAPS PENDING — use `docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md`; owner Writing/Painting accepted, spoken-label Acer idle 8.4% VmRSS 153M uncached 0.0013s cached 0.0004s rapid only final (PHYSICAL-UNVERIFIED for formal §28 matrix screenshots)**
+**Latest fully executed source gate at exact current main + Home fix:** **PASS — 1564 tests (1561+3), backend blockers 0, chrome blockers 0, focused chrome 29 PASS, `audit_launcher_spoken_labels` PASS, `ruff` clean, 106 human ACCEPTED**  
+**Latest exact-current source/Simulator verdict:** **PASS at current main + Home fix (1564), headless spoken IT/EN PASS, origin 1edb22ce Simulator 5/5 retained; NEW Home-reg simulator ordinary+hostile PENDING at this SHA**  
+**R7.2/R7.3 Acer physical acceptance:** **BLOCKED BY HOME REGRESSION — Home absent on every Activity (owner report). SOURCE FIX LANDED (presentation.py rebuild), PENDING deploy + physical proof at (38,38) 1024×600. See §8. Prior 1edb22ce evidence remains valid but candidate is stale per runbook §9 (runtime changed).**
 **Ordinary-family public release:** **NOT READY**  
 **Public-release gate:** `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`
 
@@ -312,3 +312,125 @@ Launcher spoken-label tranche:
 **Next exact step for spoken labels:** 1) full `tools/greia_simulator.py` GUI matrix IT then EN (4+ Collections, boundary, TAB, pointer dwell/rapid, adaptive 3, grid 5+ PAGEUP/DOWN, launch during speech, stale-target) with screenshots, 2) freeze `FINAL_RUNTIME_SHA` per `docs/testing/2026-09-02_R7_PARENT_SPOKEN_LABEL_UNIFIED_PROMOTION_GATE.md` §4 (current main 57cd5f1a contains accepted audio; if no further runtime change, FINAL=57cd5f1a), 3) `tools/deploy_to_acer.py` exact candidate (180s) then `find ...|wc -l 19/19/34/34`, `pidstat`/`ps` idle >=10s, RSS before/after >48 clips + second traversal, dispatch UNCACHED/CACHED + PERCEIVED_ONSET, rapid >=10 pointer/keyboard, small-speaker intelligibility, 4) update plan/HANDOVER with simulator + Acer evidence + FINAL_RUNTIME_SHA, 5) commit docs-only after new exact candidate.
 
 Do not describe 1edb22ce as current main. Current main is 47e955d5 plus this additive 4-file cleanup (pre-commit). Do not rewrite earlier R7 progress entries.
+
+---
+
+## 8. Emergency Home system-chrome regression — SOURCE-FIXED, PHYSICAL PENDING (2026-09-02)
+
+**Runbook:** `/GREIA_HOME_SYSTEM_CHROME_REGRESSION_FIX_2026-09-02.md` (BLOCKING, supersedes spoken-label/other acceptance until Home restored)
+
+**Observed physical defect:** Acer runs every Activity with **no Greia Home in top-left**; owner also reports loss of other platform-owned wrapper behaviors (usage-limit/profile/achievement).
+
+**Root cause (source-confirmed):** `GreiaLauncherPresentation._configure_parent_package_source()` did:
+
+```python
+try:
+    discovered = registry.discover()
+except ActivityValidationError:
+    self._catalogue_error = True
+    return   # ← left plain ActivitySupervisor from LauncherApplication.__init__
+```
+
+If one Parent-installed package is invalid/corrupt, this returned **before `_rebuild_runtime_services()`**. The shell retained the plain `ActivitySupervisor`, losing together:
+
+```text
+trusted Greia Home/Back lifecycle
+daily usage-limit wrapper (UsageLimitedActivitySupervisor)
+ProfileVisual launch-context/audio + achievement integration (ProfileVisualActivitySupervisor)
+```
+
+An empty/missing Parent root does **not** trigger this (skipped by registry); only a validation failure does. Latent bug exposed by R7.3 migration that removed old Activity-drawn Home.
+
+**Central correction (this handover):**
+
+```python
+except ActivityValidationError:
+    self._catalogue_error = True
+    self._rebuild_runtime_services()  # dynamic dispatch restores full composition
+    return
+```
+
+- `src/greia_launcher/presentation.py:246` — 6-line rebuild with comment explaining optional Parent input vs mandatory rebuild
+- Does NOT assign `self.registry = registry` in error branch (keeps known-good built-in/developer registry)
+- Does NOT swallow `_rebuild_runtime_services()` failure (fail-closed)
+- Fixes both `GreiaChildShell` and `TrustedGreiaLauncherPresentation` via dynamic dispatch
+
+**Tests added:**
+
+```text
+tests/test_parent_source_supervisor_fallback.py — 3 tests (launcher, child_shell, trusted_fallback)
+  asserts _catalogue_error True + registry/_activities unchanged + _rebuild called once
+  (unittest, not pytest, so counted by make verify)
+
+tests/test_r7_child_shell_trusted_chrome_composition.py — dual assert:
+  ProfileVisualActivitySupervisor -> TrustedChromeActivitySupervisor
+  TrustedChromeActivitySupervisor -> UsageLimitedActivitySupervisor
+```
+
+**Source gates at this SHA (clean, PYTHONPATH=src):**
+
+```text
+FOCUSED: PYTHONPATH=src python3 -m pytest -q tests/test_parent_source_supervisor_fallback.py tests/test_r7_child_shell_trusted_chrome_composition.py tests/test_system_chrome.py tests/test_system_chrome_legacy_x.py tests/test_trusted_chrome_supervisor.py → 29 passed
+FULL: PYTHONPATH=src python3 -m unittest discover -s tests → 1564 tests PASS (was 1561, +3 new; 84s, resource warnings only)
+AUDITS: audit_activity_system_chrome_ownership --strict → blockers=0
+        audit_activity_backend_independence → blockers=0 migration 2 (labirinto_magico + workshop_settings)
+RUFF: ruff check src/greia_launcher/presentation.py tests/test_parent_source_supervisor_fallback.py tests/test_r7_child_shell_trusted_chrome_composition.py → All checks passed
+git diff --check → 0
+validate_project → PASS runtime_api=0.1 activities=34
+footprint-source → 725M tree, runtime 3.1M src / 46M activities
+```
+
+**Pre-fix Parent-source condition:**
+
+```text
+PRE_FIX_STRICT_PARENT_DISCOVERY=PENDING — not captured on Acer in this session (local dev only)
+PRE_FIX_UNVALIDATED_COUNT=PENDING
+PRE_FIX_UNVALIDATED_PACKAGES=PENDING
+Launcher logs 500 lines: PENDING
+→ Must run on Acer via sudo -u greiakid diagnostic (runbook §2) before concluding §11.
+Do not delete/repair invalid package merely to make Home return — platform must be correct even with damaged optional storage.
+```
+
+**Current Home regression status:**
+
+```text
+CURRENT_HOME_REGRESSION=SOURCE_FIX_PENDING_PHYSICAL
+STARTING_MAIN_SHA=a5c38d421dd39a2aa2c4d2de6da920601206aba9
+FIX_SHA=PENDING (this commit)
+ENDING_MAIN_SHA=PENDING (after push)
+HEAD_EQUALS_ORIGIN_MAIN=PENDING (must be verified after push)
+
+ROOT_CAUSE_CONFIRMED=yes (source path proven, matches owner loss of Home + other wrappers)
+PARENT_FAILURE_REBUILD_TEST=PASS (3/3)
+PRIMARY_TRUSTED_COMPOSITION=PASS (ProfileVisual -> TrustedChrome -> UsageLimited)
+FALLBACK_TRUSTED_COMPOSITION=PASS (TrustedGreiaLauncherPresentation -> same trusted chain)
+FOCUSED_CHROME_TESTS=PASS (29)
+CHROME_OWNERSHIP_AUDIT=PASS (0 blockers)
+BACKEND_AUDIT=PASS (0 blockers, 2 migration)
+RUFF=PASS
+MAKE_VERIFY=PASS (1564)
+SIMULATOR ordinary=PENDING at this SHA (must run Writing/Painting/Shape Garden + one extra + hostile fixture; Home must return through platform host even when Activity hostile)
+SIMULATOR hostile=PENDING
+```
+
+**Next exact step (runbook §§2,8,10,11):**
+
+1. Record `STARTING_MAIN_SHA` (`a5c38d`) and `ORIGIN_SHA`; working tree clean — already proven
+2. Commit this fix + tests + plan/HANDOVER, push to `origin/main`, verify `HEAD==origin/main`
+3. **On Acer** (greia-dev.local via tools/greia_remote.py), run §2 read-only diagnostic:
+   `sudo -u greiakid GREIA_OS_ROOT=/opt/greia-os GREIA_PROFILES_DIR=/var/lib/greia-profiles PYTHONPATH=/opt/greia-os/src python3 - <<'PY' ...` → capture `STRICT_DISCOVERY`, `UNVALIDATED_COUNT`, `UNVALIDATED=...`, plus `tools/greia_remote.py logs --service launcher --lines 500`
+4. **Do not** harden Legacy-X (§12) yet — first test narrow fix
+5. Simulator gate at fixed SHA (§8): Writing, Painting, Shape Garden, one extra, hostile — Home protection semantic check
+6. Deploy **exact fixed SHA** to Acer via `tools/deploy_to_acer.py` (180s extraction/chown, whole-repo copy not single file), then `wait --timeout 180`, `status`, `screenshot tmp/home-regression-shell.png`
+7. Physical Home acceptance (§11) at 1024×600 for each Activity: launch → wait stable frame → screenshot → inspect Home glyph top-left → click (38,38) → require return to Greia → require Activity process gone → require immediate Shell responsiveness. Record `WRITING_HOME_VISIBLE`, `WRITING_HOME_ACTION`, etc. plus `FAIL_CLOSED_CHROME_FAILURE` and `USAGE_LIMIT_WRAPPER_SANITY`. Any `Activity remains usable/fullscreen + no Home` is immediate FAIL.
+8. Only if Home still absent despite proven trusted supervisor, STOP and proceed to §12 Legacy-X hardening (override_redirect, VisibilityChangeMask, map/raise after READY, fail-closed fully-obscured handling, bounded raise, no polling/thread/Pygame).
+
+**Blockers:**
+
+```text
+R7.2/R7.3/Parent physical: INCOMPLETE — superseded by Home regression which blocks release; previous 1edb22ce candidate stale (runtime changed) per runbook §9
+Launcher spoken labels: SOURCE-AND-HUMAN-COMPLETE (106/106 ACCEPTED) but ACER formal + SIMULATOR GUI PENDING; not to be combined until Home regression is PHYSICAL-PASS
+OVERALL VERDICT: SOURCE-FIXED / PHYSICAL-PENDING — see final report template §13
+```
+
+Do not call Home fixed until a real Acer Activity screenshot visibly contains Home and clicking (38,38) returns through the platform lifecycle. If §11 fails despite trusted composition, the required next direction is narrow `CtypesLegacyXChromeBridge` hardening (§12), not Activity-side Home.

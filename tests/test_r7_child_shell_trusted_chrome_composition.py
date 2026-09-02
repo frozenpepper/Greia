@@ -4,6 +4,7 @@ import unittest
 
 from greia_launcher.child_shell import ProfileVisualActivitySupervisor
 from greia_launcher.trusted_chrome_supervisor import TrustedChromeActivitySupervisor
+from greia_launcher.usage_limited_supervisor import UsageLimitedActivitySupervisor
 
 
 class ChildShellTrustedChromeCompositionTests(unittest.TestCase):
@@ -12,6 +13,12 @@ class ChildShellTrustedChromeCompositionTests(unittest.TestCase):
             issubclass(
                 ProfileVisualActivitySupervisor,
                 TrustedChromeActivitySupervisor,
+            )
+        )
+        self.assertTrue(
+            issubclass(
+                TrustedChromeActivitySupervisor,
+                UsageLimitedActivitySupervisor,
             )
         )
 
