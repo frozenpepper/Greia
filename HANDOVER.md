@@ -240,3 +240,74 @@ Remaining closure order at exact runtime/source `1edb22ce`:
 7. only if all are green, mark R7.2/R7.3 accepted at `1edb22ce`, close the Parent usage/visibility physical tranche, append final docs evidence, and then move to R7.4.
 
 The owner's Writing/Painting physical keyboard/touchpad/sustained-draw evidence is already accepted. Do not request it again.
+
+---
+
+## 7. Launcher spoken-label tranche — current main (2026-09-02) — SOURCE-COMPLETE, HUMAN/FORMAL-PHYSICAL PENDING
+
+**Implementation ancestry:** `aee9eea8` (Launcher spoken labels: Collection + Activity titles, Leo, it/en, 68+38 clips, dwell 160ms, bounded cache 48) + `f82aea2b` (Leo fallback clarification) + `10203efc` docs-only machine final + `47e955d5` merge with R7 gap gate. Current main `47e955d5` already contains `aee9eea8`/`f82aea2b` runtime/assets; this tranche adds **focused cleanup §3-6** as a new runtime correction (not docs-only).
+
+**Focused cleanup §3-6 — committed on this main (not yet deployed to Acer):**
+```text
+src/greia_launcher/spoken_labels.py: added activity_focus(manifest,locale)->(identity,clip) + collection_focus(cid,locale)->(identity,clip) behind SpokenLabelController
+src/greia_launcher/presentation.py: removed dynamic from .spoken_labels import ... inside _speakable_for_target, removed self._spoken_labels._root reach-through, removed clip = self._spoken_labels.player noqa, narrowed except Exception to (ValueError,TypeError,AttributeError,KeyError); _target_at now for target in reversed(self._targets) with pos None guard
+tests/test_launcher_spoken_labels_controller.py: tautological assert ... is False or True -> is True via fresh SpokenLabelController(tmp_path) to avoid dedup, plus new test_controller_locale_fallback_missing_audio (it-only, fr -> False) and test_target_at_uses_current_frame_reversed_topmost (overlap topmost = reversed(_targets))
+tools/audit_launcher_spoken_labels.py: caption_key strict (bad caption_key -> missing_mapping), vocabulary fail-closed (raise RuntimeError not 19 hard-coded fallback, audit_collections returns VOCABULARY_ERROR), WAV sanity via wave.open (mono, 22050 Hz, 16-bit sampwidth 2, >0.1s) for both activity and system labels
+```
+**Integrity per §2 — human review:** `human_review: PENDING` for all 106 receipts; no human listened. Do not claim ACCEPTED.
+```text
+ACTIVITY_GENERATED=68, HUMAN_ACCEPTED=0, PENDING=68
+SYSTEM_GENERATED=38, HUMAN_ACCEPTED=0, PENDING=38
+WORKSHOP_SETTINGS_EN: WARN transcript "My grayer. My grayer." — only PASS if human confirms audio says "My Greia" (currently PENDING)
+SYSTEM verification disposition NOT_APPLICABLE where expected (no human_review field required for system NOT_APPLICABLE, but current system receipts do contain human_review:PENDING — acceptable)
+```
+**Source/audit gates at current main (after §3-6):**
+```text
+DYNAMIC_IMPORTS_REMOVED=yes (no from .spoken_labels import inside _speakable_for_target)
+PRIVATE_ROOT_REACH_THROUGH_REMOVED=yes (no self._spoken_labels._root)
+HIT_TARGET_AUTHORITY=reversed(_targets) (cached rendering republishes into _targets; no second authority)
+TAUTOLOGICAL_TEST_FIXED=yes (is True + missing_audio test)
+AUDIT_CAPTION_KEY_STRICT=yes
+AUDIT_VOCABULARY_FAIL_CLOSED=yes
+AUDIT_WAV_SANITY=yes (wave.open checks)
+FOCUSED_TESTS=20 passed (5 test_launcher_spoken_labels + 13 controller -> 20 after fix)
+LAUNCHER_REGRESSIONS: presentation still owns dwell/poll/stop, collection 5 + controller 13 etc.
+RUFF=All checks passed (spoken_labels.py presentation.py collection_home_presentation.py adaptive_discovery_presentation.py tests/... tools/audit...)
+SPOKEN_LABEL_AUDIT=PASS 68+38 (BUILT_IN_ACTIVITIES=34, ACTIVITY_TITLE_LOCALE_COMBINATIONS=68, COLLECTION_LABELS_REQUIRED=38)
+MAKE_VERIFY=1561 PASS (105s) at 47e955d5 + 4-file cleanup (clean-bytecode, unittest discover)
+```
+**Simulator — headless controller logic (current main):**
+```text
+SIMULATOR_IT_HEADLESS=PASS — Collection Home keyboard >=4 changes + boundary clamp -> no replay, pointer <160ms no speech / >dwell once / within-tile no replay / leave-reenter -> replay / rapid A->B->C only C speaks, adaptive 3 sub-Collections, Activity grid keyboard >=5 + boundary + PAGEUP/DOWN (via controller dedup), pointer >=5, launch during speech stops channel, stale-target Activity->Home->Collection = home_collection (reversed topmost)
+SIMULATOR_EN_HEADLESS=PASS — same matrix with en locale, en fallback, rapid, boundary PASS
+SIMULATOR_GUI_FULL=PENDING — real tools/greia_simulator.py Collection Home + adaptive + Activity grid matrix with real 1024×600 rendering not executed in this headless session; origin 1edb22ce Simulator 5/5 (Encyclopedia/Writing/Painting/Volo/hostile) remains PASS and is not re-asked
+```
+**Acer — current main vs frozen 1edb22ce:**
+```text
+FROZEN_R7_CANDIDATE=1edb22ce (exact runtime/source for R7.2/R7.3/Parent gaps; see §5 and docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md)
+CURRENT_MAIN=47e955d5 + spoken-label cleanup (not docs-only; delta from 1edb22ce contains runtime/assets + src/tools/tests — therefore R7 physical remains bound to 1edb22ce per §1 rule)
+ACER_REACHABLE=yes (greia-dev.local:22, Greia 0.12.0-phase0-dev, greia-launcher active)
+ACER_FILE_COUNTS_AT_1edb22ce_DEPLOYMENT (via _ssh_user_command bash -c ls/find):
+  SYSTEM_IT=19 /19 wav (ls /opt/greia-os/assets/audio/system/launcher-labels/it)
+  SYSTEM_EN=19 /19 wav
+  ACTIVITY_IT=34 /34 locales/it/audio/activity-title.wav
+  ACTIVITY_EN=34 /34 locales/en/audio/activity-title.wav
+ACER_IDLE_CPU=PENDING formal measurement (pidstat not available on image; ps shows no launcher CPU regression, but canonical pidstat 1 30 not executed)
+ACER_RSS_BEFORE/AFTER_BOUNDED=PENDING (bounded cache 48 proven via unit test; physical RSS before/after 48+ second traversal not measured; previous 1edb22ce informal ps showed VmRSS 153M uncached 0.0013s cached 0.0004s rapid only-final but marked PHYSICAL-UNVERIFIED)
+ACER_RAPID_POINTER/KEYBOARD=PENDING formal matrix (controller rapid/launch covered headless; physical rapid 10 pointer/keyboard + perceived onset not executed)
+ACER_LAUNCH_DURING_SPEECH=PENDING formal (unit stop() proven; physical immediate launch + no leak not executed)
+DEPLOY_STATUS=NOT_DEPLOYED current 4-file cleanup; Acer still at 1edb22ce + spoken-label assets (aee9eea8) deployment. A 180s deploy_to_acer.py is required to promote current cleanup to a new exact candidate before combining formal Acer spoken-label latency/RSS/rapid evidence.
+```
+**Blockers and verdict:**
+```text
+R7.2/R7.3/Parent physical: INCOMPLETE at frozen 1edb22ce per §5-6 (exact 20/20, hostile 10/10, crash, Parent finite pill + accounting remain per 2026-09-02 gate). Current main's R7 evidence is unchanged and remains at 1edb22ce.
+Launcher spoken-label tranche:
+  SOURCE=SOURCE-COMPLETE (audit 68+38 PASS, 1561 PASS, ruff PASS, 20 spoken tests, controller logic IT/EN headless PASS, _target_at reversed, private reach-through removed)
+  HUMAN_REVIEW=NOT PERFORMED (0/68, 0/38; workshop WARN pending)
+  SIMULATOR_GUI_FULL=PENDING (headless controller PASS, full desktop simulator matrix screenshots not captured this session)
+  ACER_FORMAL=PENDING (file counts 19/19/34/34 PASS; idle/RSS/latency/rapid/launch formal matrix requires deployed current main + 180s extraction + pidstat/ps + dispatch timing)
+  FINAL_SPOKEN_LABEL_TRANCHE_VERDICT=SOURCE-AND-SIMULATOR-COMPLETE (headless) / SOURCE-COMPLETE for formal GUI/physical; NOT COMPLETE per runbook requiring human audio + Simulator acceptance + formal Acer §28
+```
+**Next exact step for spoken labels:** 1) human listening review of 68+38 clips (workshop "My grayer" gate), 2) full `tools/greia_simulator.py` GUI matrix IT then EN (4+ Collections, boundary, TAB, pointer dwell/rapid, adaptive 3, grid 5+ PAGEUP/DOWN, launch during speech, stale-target), 3) `tools/deploy_to_acer.py` current main (180s) then `find ...|wc -l 19/19/34/34`, `pidstat 1 30` idle >=10s no speech, RSS before/after >48 clips + second traversal (bounded not linear), dispatch UNCACHED/CACHED + PERCEIVED_ONSET, rapid >=10 pointer/keyboard (no FIFO, dwell suppresses, final speaks), small-speaker intelligibility, 4) update plan/HANDOVER with human + simulator screenshots + Acer evidence, 5) commit docs-only after new exact candidate.
+
+Do not describe 1edb22ce as current main. Current main is 47e955d5 plus this additive 4-file cleanup (pre-commit). Do not rewrite earlier R7 progress entries.

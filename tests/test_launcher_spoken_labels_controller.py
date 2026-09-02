@@ -242,8 +242,27 @@ def test_controller_locale_fallback(tmp_path: Path) -> None:
     ctrl = SpokenLabelController(tmp_path)
     # request it-IT should fall back to it then en
     assert ctrl.announce_activity(manifest, "it-IT", pygame) is True
-    # missing locale entirely -> fail silent
-    assert ctrl.announce_activity(manifest, "fr", pygame) is False or True  # en fallback makes it true, so accept either
+    # fr with en fallback should also succeed because en exists — use fresh controller to avoid dedup
+    pygame2 = _FakePygame()
+    ctrl2 = SpokenLabelController(tmp_path)
+    assert ctrl2.announce_activity(manifest, "fr", pygame2) is True
+
+
+def test_controller_locale_fallback_missing_audio(tmp_path: Path) -> None:
+    act_root = tmp_path / "act2"
+    # only it bundle, no en
+    _bundle_activity(act_root, "org.greia.bar", "it", "Bar")
+    manifest = SimpleNamespace(activity_id="org.greia.bar", root=act_root)
+    pygame = _FakePygame()
+    ctrl = SpokenLabelController(tmp_path)
+    # fr with only it available should fail (no en to fall back to, and fr not present)
+    # it-IT should still succeed via it
+    assert ctrl.announce_activity(manifest, "it-IT", pygame) is True
+    # fr should fail (no fr, no en)
+    # Clear to allow same identity check
+    ctrl.clear_pointer_focus()
+    ctrl.stop()
+    assert ctrl.announce_activity(manifest, "fr", pygame) is False
 
 
 def test_controller_activity_launch_calls_stop(tmp_path: Path) -> None:
@@ -269,3 +288,43 @@ def test_pointer_dwell_does_not_require_redraw(tmp_path: Path) -> None:
     # poll multiple times before due should not speak or throw
     for i in range(5):
         assert ctrl.poll_pending_pointer_focus(now + i * 0.02, pygame) is False
+
+
+def test_target_at_uses_current_frame_reversed_topmost(tmp_path: Path) -> None:
+    # Activity grid -> Home -> hover Collection = home_collection (not stale Activity)
+    # Home -> Collection -> hover Activity = Activity
+    # Overlap resolution follows reversed/topmost click semantics
+    from types import SimpleNamespace
+
+    # Minimal fake targets
+    class FakeRect:
+        def __init__(self, x, y, w, h):
+            self.x, self.y, self.width, self.height = x, y, w, h
+            self._rect = (x, y, w, h)
+
+        def collidepoint(self, pos):
+            px, py = pos
+            return self.x <= px < self.x + self.width and self.y <= py < self.y + self.height
+
+    # Simulate _targets with overlapping rects: first is Activity, second is Home Collection on top
+    launcher = SimpleNamespace(_targets=[])
+    # Add Activity at (0,0,100,100) and Home Collection at (50,50,100,100) overlapping
+    launcher._targets.append(SimpleNamespace(action="presented_activity", value=0, rect=FakeRect(0, 0, 100, 100)))
+    launcher._targets.append(SimpleNamespace(action="home_collection", value="create", rect=FakeRect(50, 50, 100, 100)))
+    # _target_at should return topmost (last in reversed) i.e., home_collection for overlap point (75,75)
+    # Use the actual method
+    from greia_launcher.presentation import GreiaLauncherPresentation as GLP
+
+    # Bind the method
+    result = GLP._target_at(launcher, (75, 75))
+    assert result == ("home_collection", "create")
+    # Point only in first rect (25,25) should be presented_activity
+    assert GLP._target_at(launcher, (25, 25)) == ("presented_activity", 0)
+    # Point only in second rect (125,125) should be home_collection
+    assert GLP._target_at(launcher, (125, 125)) == ("home_collection", "create")
+    # None should return None
+    assert GLP._target_at(launcher, None) is None
+    # Test that cached targets are not used as fallback (should use _targets only)
+    launcher._cached_activities_targets = [SimpleNamespace(action="presented_activity", value=99, rect=FakeRect(75, 75, 10, 10))]
+    # Should still return home_collection for (75,75) from _targets, not the cached one
+    assert GLP._target_at(launcher, (75, 75)) == ("home_collection", "create")

@@ -145,38 +145,17 @@ class GreiaLauncherPresentation(LauncherApplication):
                 if not (0 <= idx < len(acts)):
                     return None
                 manifest = acts[idx]
-                clip = self._spoken_labels.player  # noqa: F841 - keep for linter
-                from .spoken_labels import activity_title_audio
-
-                clip_path = activity_title_audio(manifest, loc)
-                if clip_path is None:
-                    return None
-                return (f"activity:{manifest.activity_id}", clip_path)
+                return self._spoken_labels.activity_focus(manifest, loc)
             if action == "home_collection":
                 cid = str(value)
-                from .spoken_labels import collection_title_audio
-
-                clip_path = collection_title_audio(self._spoken_labels._root, cid, loc)
-                if clip_path is None:
-                    return None
-                return (f"collection:{cid}", clip_path)
+                return self._spoken_labels.collection_focus(cid, loc)
             if action == "activity_subcollection":
                 cid = str(value)
-                from .spoken_labels import collection_title_audio
-
-                clip_path = collection_title_audio(self._spoken_labels._root, cid, loc)
-                if clip_path is None:
-                    return None
-                return (f"collection:{cid}", clip_path)
+                return self._spoken_labels.collection_focus(cid, loc)
             if action == "activity_category":
                 cid = str(value)
-                from .spoken_labels import collection_title_audio
-
-                clip_path = collection_title_audio(self._spoken_labels._root, cid, loc)
-                if clip_path is None:
-                    return None
-                return (f"collection:{cid}", clip_path)
-        except Exception:
+                return self._spoken_labels.collection_focus(cid, loc)
+        except (ValueError, TypeError, AttributeError, KeyError):
             return None
         return None
 
@@ -779,8 +758,7 @@ class GreiaLauncherPresentation(LauncherApplication):
     def _target_at(self, pos: tuple[int, int] | None) -> tuple[str, Any] | None:
         if pos is None:
             return None
-        targets = getattr(self, "_cached_activities_targets", None) or self._targets
-        for target in targets:
+        for target in reversed(self._targets):
             if target.rect.collidepoint(pos):
                 return (target.action, target.value)
         return None

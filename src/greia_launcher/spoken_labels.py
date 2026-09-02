@@ -170,19 +170,33 @@ class SpokenLabelController:
     def player(self) -> SpokenLabelPlayer:
         return self._player
 
+    def activity_focus(
+        self, manifest: ActivityManifest, locale: str
+    ) -> tuple[str, Path | None]:
+        return (
+            f"activity:{manifest.activity_id}",
+            activity_title_audio(manifest, locale),
+        )
+
+    def collection_focus(
+        self, collection_id: str, locale: str
+    ) -> tuple[str, Path | None]:
+        return (
+            f"collection:{collection_id}",
+            collection_title_audio(self._root, collection_id, locale),
+        )
+
     def announce_activity(
         self, manifest: ActivityManifest, locale: str, pygame: Any
     ) -> bool:
-        clip = activity_title_audio(manifest, locale)
-        identity = f"activity:{manifest.activity_id}"
+        identity, clip = self.activity_focus(manifest, locale)
         self._pending = None
         return self._player.announce(identity, clip, pygame)
 
     def announce_collection(
         self, collection_id: str, locale: str, pygame: Any
     ) -> bool:
-        clip = collection_title_audio(self._root, collection_id, locale)
-        identity = f"collection:{collection_id}"
+        identity, clip = self.collection_focus(collection_id, locale)
         self._pending = None
         return self._player.announce(identity, clip, pygame)
 

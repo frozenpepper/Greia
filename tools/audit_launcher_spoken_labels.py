@@ -55,29 +55,8 @@ def _load_collection_ids() -> tuple[str, ...]:
                 seen.add(cid)
                 ordered.append(cid)
         return tuple(ordered)
-    except Exception:
-        # Fallback to the runbook's 19 IDs if import fails (should not happen in CI).
-        return (
-            "create",
-            "play",
-            "learn",
-            "explore",
-            "my_greia",
-            "browse",
-            "drawing",
-            "writing",
-            "music",
-            "building",
-            "numbers",
-            "words",
-            "puzzles",
-            "nature",
-            "stories",
-            "making",
-            "care",
-            "action",
-            "settings",
-        )
+    except Exception as exc:
+        raise RuntimeError(f"Collection vocabulary import failed: {exc}") from exc
 
 
 def _is_safe_relative(path_str: str, activity_root: Path) -> bool:
@@ -134,9 +113,9 @@ def audit_activities(required_locales: tuple[str, ...] = ("it", "en")) -> dict[s
             if not isinstance(path_str, str) or not path_str.strip():
                 missing_mapping.append(f"{act_root.name}/{locale}: missing path")
                 continue
-            if caption is not None and caption != "activity.title":
-                # Still allow but count as missing if caption is nonsensical?
-                pass
+            if caption != "activity.title":
+                missing_mapping.append(f"{act_root.name}/{locale}: bad caption_key {caption!r}")
+                continue
             if path_str not in (f"locales/{locale}/audio/activity-title.wav", f"locales/{locale}/audio/activity-title.ogg"):
                 # Path must be package-relative and use expected convention
                 if not _is_safe_relative(path_str, act_root):
@@ -153,6 +132,26 @@ def audit_activities(required_locales: tuple[str, ...] = ("it", "en")) -> dict[s
             if not resolved.is_file():
                 missing_file.append(f"{act_root.name}/{locale}:{path_str}")
                 continue
+            # WAV sanity: exists, non-zero, mono, 22050 Hz, 16-bit PCM, >0.1s
+            try:
+                import wave
+
+                with wave.open(str(resolved), "rb") as wf:
+                    if wf.getnchannels() != 1:
+                        missing_file.append(f"{act_root.name}/{locale}:{path_str} not mono")
+                        continue
+                    if wf.getframerate() != 22050:
+                        missing_file.append(f"{act_root.name}/{locale}:{path_str} not 22050 Hz")
+                        continue
+                    if wf.getsampwidth() != 2:
+                        missing_file.append(f"{act_root.name}/{locale}:{path_str} not 16-bit")
+                        continue
+                    if wf.getnframes() / float(wf.getframerate()) <= 0.1:
+                        missing_file.append(f"{act_root.name}/{locale}:{path_str} too short")
+                        continue
+            except Exception as exc:
+                missing_file.append(f"{act_root.name}/{locale}:{path_str} wav error {exc}")
+                continue
             complete += 1
 
     return {
@@ -167,22 +166,43 @@ def audit_activities(required_locales: tuple[str, ...] = ("it", "en")) -> dict[s
 
 
 def audit_collections(required_locales: tuple[str, ...] = ("it", "en")) -> dict[str, int | list[str]]:
-    cids = _load_collection_ids()
+    try:
+        cids = _load_collection_ids()
+    except RuntimeError as exc:
+        return {
+            "COLLECTION_LABELS_REQUIRED": 0,
+            "COLLECTION_LABELS_COMPLETE": 0,
+            "COLLECTION_MISSING": [f"vocabulary import failed: {exc}"],
+            "COLLECTION_IDS": [],
+            "VOCABULARY_ERROR": str(exc),
+        }
     required = len(cids) * len(required_locales)
     complete = 0
     missing: list[str] = []
     for cid in cids:
         for locale in required_locales:
             p = SYSTEM_LABEL_ROOT / locale / f"{cid}.wav"
+            alt = SYSTEM_LABEL_ROOT / locale / f"{cid}.ogg"
+            target: Path | None = None
             if p.is_file():
-                complete += 1
+                target = p
+            elif alt.is_file():
+                target = alt
             else:
-                # Also accept .ogg if wav not present? Runbook prefers wav.
-                alt = SYSTEM_LABEL_ROOT / locale / f"{cid}.ogg"
-                if alt.is_file():
-                    complete += 1
-                else:
-                    missing.append(f"{locale}/{cid}.wav")
+                missing.append(f"{locale}/{cid}.wav")
+                continue
+            # WAV sanity for system labels
+            try:
+                import wave
+
+                with wave.open(str(target), "rb") as wf:
+                    if wf.getnchannels() != 1 or wf.getframerate() != 22050 or wf.getsampwidth() != 2 or wf.getnframes() / float(wf.getframerate()) <= 0.1:
+                        missing.append(f"{locale}/{cid}.wav bad wav")
+                        continue
+            except Exception as exc:
+                missing.append(f"{locale}/{cid}.wav wav error {exc}")
+                continue
+            complete += 1
     return {
         "COLLECTION_LABELS_REQUIRED": required,
         "COLLECTION_LABELS_COMPLETE": complete,
