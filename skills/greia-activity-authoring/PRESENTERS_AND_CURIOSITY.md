@@ -1,330 +1,253 @@
-# Greia Activity Presenters, Character Voice and Curiosity Facts
+# Greia Activity Presenters and Curiosity
 
-**Status:** focused companion for new Activity concept/presentation work  
-**Audience:** Activity authors, coding agents, reviewers  
-**Reviewed:** 2026-08-24
+**Status:** focused companion for new Activity presentation/character/fact design  
+**Load when:** a new Activity chooses a presenter, uses character dialogue, or includes optional researched facts
 
-Use this companion when creating a new Activity or materially redesigning its child-facing presentation.
+This file owns **what the presenter does and why**. Voice production mechanics live in `VOICE_GENERATION.md` and `skills/greia-voice-production/SKILL.md`.
 
-It owns **when and why** an Activity should use Greia's recurring characters, spoken presentation, and small researched curiosity/fact moments. Voice production mechanics remain in:
+## 1. Every new Activity makes a presenter decision
 
-```text
-skills/greia-activity-authoring/VOICE_GENERATION.md
-docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
-```
-
-Canonical cast identity remains in:
-
-```text
-docs/design/GREIA_CANONICAL_CAST_SYSTEM.md
-```
-
-## 1. A presenter decision is mandatory for every new Activity
-
-Greia's recurring cast exists to give children recognizable social anchors across the OS and Activities. A new Activity design must therefore explicitly decide:
+Choose deliberately:
 
 ```text
 lead presenter/mascot
-supporting character(s), if any
-or a deliberate no-presenter decision with a product reason
+supporting character(s), if useful
+or deliberate no-presenter decision with a product reason
 ```
 
-Do not accidentally omit the cast merely because the gameplay can technically function without characters.
+Do not accidentally omit Greia's recurring cast merely because the Activity can technically run without them.
 
-A presenter is not mandatory in every single Activity. It is, however, a **mandatory design consideration**. The default should be to use a fitting recurring character when that adds warmth, orientation, personality, encouragement, curiosity or continuity without obstructing play.
+A presenter is not mandatory in every Activity, but the decision is mandatory.
 
-Useful default affinities:
+Useful affinities:
 
 ```text
 Lilli  -> creativity, stories, art, imagination, wonder
 Leo    -> reading, language, knowledge, calm explanation
 Flash  -> games, speed, action, playful challenge
 Dani   -> math, logic, patterns, sequencing
-Tito   -> exploration, nature, discovery, investigation
+Tito   -> exploration, nature, investigation, discovery
 Momo   -> music, emotion, silliness, experimentation, celebration
 ```
 
-These are affinities, not hard silos. A nature Activity may have Tito lead and Leo contribute a knowledge moment; a game may have Flash lead while Momo celebrates.
+These are affinities, not hard silos.
 
-## 2. What a presenter should actually do
+## 2. A presenter should have a real job
 
-A lead character should have a small, meaningful role rather than being decorative wallpaper.
+Good presenter roles include:
 
-Good presenter jobs include:
+- short welcome/orientation;
+- visual demonstration of the first action;
+- required spoken command when language is needed;
+- contextual hint;
+- progress/retry reaction;
+- completion celebration;
+- optional curiosity/fact moment.
 
-- brief welcome/orientation;
-- demonstrate or frame the first interaction visually;
-- give one short spoken instruction when language is useful;
-- react to progress through shared utterance families;
-- offer a contextual hint without solving the task;
-- celebrate completion;
-- introduce an optional curiosity/fact interaction;
-- narrate a tiny piece of relevant real-world knowledge.
-
-Avoid turning every Activity into a talking tutorial. Greia is child-driven and often language-light.
+Do not place a character portrait on screen as decoration while anonymous text or unrelated audio carries the actual interaction.
 
 Prefer:
 
 ```text
-short character moment -> child acts -> quiet play -> occasional meaningful reaction
+short character moment
+-> child acts
+-> quiet play
+-> occasional useful reaction
 ```
 
-over:
+over constant narration.
+
+## 3. Required presenter commands are not optional
+
+If the Activity relies on a presenter to communicate a required language instruction, that instruction must have accepted spoken coverage for the shipped locale.
+
+A missing local voice-production environment may delay production. It does **not** convert a required spoken command into an accepted text-only feature.
+
+Allowed interim status:
 
 ```text
-long speech -> more speech -> modal explanation -> child waits
+DESIGN/SOURCE READY — REQUIRED SPEECH PENDING
 ```
 
-Character presentation must never block the child from replaying, experimenting or understanding the core interaction visually.
-
-## 3. Speech is a design tool, not an afterthought
-
-For every new Activity, make an explicit **speech plan** during design. Ask:
+Not allowed:
 
 ```text
-Does a character welcome or frame the Activity?
-Does spoken feedback improve warmth or comprehension?
-Is any sound itself pedagogical truth?
-Would an optional curiosity/facts feature enrich the subject?
-Which lines should use shared utterances versus custom dialogue?
-Which locales must be covered?
+COMPLETE
 ```
 
-The **voice-generation toolchain is optional**; this design pass is not.
+until required speech has been produced/reviewed and exercised in the final GUI Simulator flow.
 
-Do not interpret a missing local Chatterbox installation as a reason to design an Activity with no semantic speech architecture. Keep cue IDs, localization and presenter ownership clean so reviewed audio can be produced when the toolchain is available.
+The screen must still visually reinforce the command; speech should not be the only clue to a confusing interaction.
 
-Then follow:
+## 4. Decide speech purpose during design
 
-```text
-skills/greia-activity-authoring/VOICE_GENERATION.md
-```
-
-for classification and production.
-
-## 4. Use the right speech path
-
-Classify every spoken cue by purpose:
+Classify planned cues before generation:
 
 ```text
-shared_character_utterance
-    generic praise, retry, progress, ready/go, celebration
-
 character_dialogue
-    presenter welcome, contextual narration, hints, curiosity facts,
-    Activity-specific explanation or story
+    welcome, Activity-specific command, contextual hint, narration, fact
+
+shared_character_utterance
+    generic praise/retry/progress/ready/celebration when the current runtime
+    resolver exposes the accepted family
 
 pedagogical_speech
-    the sound itself is what the child is learning: phonics, letters,
-    syllables, spelling/pronunciation targets
+    exact sound being taught: letter name/sound, syllable, phonics,
+    spelling/pronunciation target
 
 dani_system_speech
-    Dani's intentionally robotic system/logic voice
+    Dani's intentionally robotic presenter/logic speech
 ```
 
-A factual sentence about an orca is normally **character dialogue**, because the sentence communicates knowledge through the character. It is not pronunciation-authoritative pedagogical speech.
-
-Use Greia's shared utterance families before generating custom generic praise. Use custom character voice only when the wording itself is Activity-specific and valuable.
-
-## 5. Curiosity/fact moments
-
-Subject-rich Activities should actively consider a small optional **curiosity/facts interaction**.
+Do not route all speech through `pedagogical_speech` simply because the Activity is educational.
 
 Examples:
 
 ```text
-orca play Activity
-    -> small "curiosity" / info affordance
-    -> Tito or Leo says one short researched orca fact
+Leo: "Ciao! Scopriamo le lettere!"     -> character_dialogue
+Tito: "Trova l'orca con la pinna alta" -> character_dialogue
+Dani: "Metti tre mele nel cestino"     -> dani_system_speech
+exact "A" / "MA" teaching target       -> pedagogical_speech
+```
+
+Generic praise/retry should use shared semantics when the current resolver supports them instead of being rerecorded repeatedly.
+
+## 5. Accepted shared character material
+
+Current accepted shared asset set:
+
+```text
+assets/audio/characters/shared/v0.2/
+180 shared reactions
+12 canonical character introductions
+192 owner-accepted clips total
+```
+
+Do not call this asset set pending generation/listening.
+
+Runtime resolver availability is separate. Check current source before depending on a family from an Activity.
+
+Canonical character self-introductions are shared/OS presentation content. Do not duplicate them in each Activity.
+
+A short contextual welcome is fine when it tells the child something specific about the current Activity.
+
+## 6. Curiosity/fact moments are optional but valuable
+
+Subject-rich Activities should deliberately consider a small curiosity/facts interaction.
+
+Examples:
+
+```text
+orca Activity
+    -> Tito/Leo shares a short researched orca fact
 
 space Activity
-    -> telescope/info affordance
-    -> Leo says one short astronomy fact
+    -> Leo shares a short astronomy fact
 
 music Activity
     -> Momo shares a short instrument/sound fact
 
-bridge-building Activity
-    -> Dani or Leo shares a short engineering fact
+bridge Activity
+    -> Dani/Leo shares a short engineering fact
 ```
 
-This is not mandatory when the Activity subject has no useful real-world knowledge angle, when it would clutter the interaction, or when facts would distract from a very focused sensory/gameplay experience.
+Do not force a fact feature into a purely sensory/simple game where it distracts from play.
 
-When it fits, it is strongly encouraged because it turns play into a gateway for curiosity without turning the Activity into a lesson screen.
-
-### Voice-first rule for facts
-
-Greia targets children who may not read yet. Therefore, when a curiosity/facts feature is implemented, **spoken delivery is the normal child-facing contract**. The localized text is a caption/support layer, not the only way to consume the fact.
-
-Preferred pattern:
-
-```text
-child activates curiosity affordance
--> fitting canonical presenter becomes visibly active
--> reviewed localized character voice speaks one short fact
--> optional localized caption shows the same meaning
--> play continues immediately afterward
-```
-
-If the custom canonical voice toolchain is temporarily unavailable, an agent may scaffold the semantic fact IDs, researched source record, localized text, UI affordance and audio slots. But a voice-first curiosity feature must not be reported as fully accepted until the required spoken locale coverage has actually been produced/reviewed, unless the owner explicitly changes the product requirement to text-only.
-
-Do not substitute arbitrary host TTS for Lilli/Leo/Flash/Tito/Momo merely to make the button speak.
-
-### Fact interaction rules
-
-The fact feature should normally be:
+When facts fit, prefer them to be:
 
 - optional and child-invoked;
-- one tap/click/controller action away;
-- spoken by a fitting canonical presenter when voice is part of the accepted feature;
-- non-modal or very lightweight;
-- short enough to hear without interrupting play for long;
+- one action away;
+- short;
+- spoken by a fitting presenter;
 - repeatable;
-- presentation-only: never required for score/progression/completion;
+- non-modal/lightweight;
 - offline at runtime;
-- safe to ignore entirely.
+- unrelated to score/correctness/progression.
 
-Do not force a child to listen to facts before continuing the game.
+Do not force the child to listen before continuing play.
 
-## 6. Facts must be researched, not improvised
+## 7. Facts are researched, never improvised at child runtime
 
-Every shipped factual claim must have authoring-time provenance.
+Every shipped factual claim needs authoring-time provenance.
 
 Prefer authoritative sources such as:
 
-- government/scientific agencies;
-- museums and recognized scientific institutions;
+- scientific/government agencies;
+- museums;
 - universities;
-- peer-reviewed or expert-reviewed reference material;
-- established conservation/science organizations with clear editorial authority.
+- peer/expert-reviewed references;
+- established science/conservation institutions.
 
-For a stable, simple fact, one strong authoritative source may be enough. For surprising, quantitative, contested or easily misunderstood claims, corroborate with a second reliable source.
+Use one strong source for simple stable facts; corroborate surprising/quantitative/contested claims.
 
-Do not use an LLM's memory as the source of truth.
+Do not use an LLM's memory as the source of truth and do not fetch/generate facts on the child device.
 
-Do not generate facts dynamically at runtime.
+Keep research material in the Activity development area while authoring. Remove authoring-only research/scratch material from the final package tree unless it is intentionally runtime content.
 
-Do not make the child device require internet access to retrieve facts.
-
-### Provenance record
-
-Keep a source-only research record next to Activity development material. Preferred pattern:
+For each fact record:
 
 ```text
-activities/<activity>/research/facts.md
-```
-
-or, if that Activity already has an established source/research directory, use that existing location.
-
-For each fact record at least:
-
-```text
-fact semantic ID
+semantic fact ID
 canonical meaning
 source title / organization
-source URL or publication identifier
-retrieval/publication date when relevant
-notes about simplification for children
+source URL/publication identifier
+relevant date
+notes on child-safe simplification
 ```
 
-Do not package research notes as runtime content unless the package format/project policy explicitly wants them there.
+## 8. Write facts for young children
 
-## 7. Child-safe fact writing
+One compact idea per fact.
 
-Facts should be accurate **and** written for a young child.
-
-Prefer one compact idea per fact.
-
-Good:
+Prefer:
 
 ```text
 "Le orche vivono in famiglie molto unite chiamate pod."
 ```
 
+over mini-lectures.
+
 Avoid:
 
+- scary detail for drama;
+- false anthropomorphism;
 - dense statistics without meaning;
-- scary detail merely because it is dramatic;
-- anthropomorphic claims presented as scientific fact;
-- oversimplification that becomes false;
-- uncertain claims presented as settled;
-- conservation messaging that frightens or guilts the child;
-- long mini-lectures.
+- oversimplification that becomes wrong;
+- uncertain claims presented as certain;
+- guilt/fear-heavy conservation messaging.
 
-If simplifying a nuanced fact, preserve the scientific truth even if the wording becomes less flashy.
+## 9. Multilingual from the first design
 
-## 8. Multilingual-ready from the first implementation
-
-**Character presentation, custom dialogue and curiosity facts must never be designed as one-language hard-coded strings.**
-
-Every cue/fact should have a stable semantic ID independent of language:
+Use semantic IDs independent of language:
 
 ```text
 presenter.welcome
+instruction.find_orca
 presenter.hint.first
 curiosity.orca.family_pods
-curiosity.orca_unique_calls
 ```
 
-Runtime code selects semantic IDs. Localization owns the text.
+Runtime code chooses the semantic cue. Localization owns wording/audio.
 
-Example conceptual structure:
+For every shipped locale of a required presenter feature:
 
-```text
-curiosity.orca.family_pods
-    it -> reviewed Italian child-facing wording
-    en -> reviewed English child-facing wording
-```
+- localized wording exists;
+- required audio exists and is accepted;
+- same canonical character identity is preserved;
+- text/audio remain semantically aligned;
+- grammatical variants resolve consistently where used.
 
-Do not write:
+Do not ship a required presenter command that speaks only one language while the Activity claims another locale.
 
-```python
-if locale == "it":
-    fact = "..."
-else:
-    fact = "..."
-```
+## 10. Presenter visual and voice must agree
 
-inside gameplay logic.
+When practical, make it visually clear who is speaking.
 
-When the Activity declares multiple supported locales, the fact/presenter feature must be designed for all of them. Do not ship a curiosity button that speaks only Italian while the Activity claims English support.
+If Tito speaks, do not show Leo as the active speaker. If Dani owns the Activity, do not play an anonymous natural voice behind Dani art.
 
-### Spoken coverage
+Use canonical Greia character assets/expression/motion systems rather than redrawing identity ad hoc.
 
-For a voice-driven presenter/fact feature:
-
-- generate/review audio for every shipped locale when custom character audio is part of the accepted feature;
-- use the same canonical speaker identity across localized versions;
-- keep text and spoken wording semantically aligned;
-- if grammatical child-address variants are used, text/audio must resolve the same variant;
-- simulator acceptance must exercise materially supported presenter/fact locales when the feature changed;
-- if custom voice production is unavailable during development, keep semantic/localized cues ready and report the missing audio honestly rather than hard-coding one locale.
-
-A text-only fallback may keep the Activity functional where the product deliberately allows optional speech degradation, but it is **not evidence that multilingual voice production itself is complete**.
-
-## 9. Fact selection should not repeat badly
-
-If several facts are available, prefer a tiny bounded selector that avoids immediate repetition rather than unconstrained randomness.
-
-Good patterns:
-
-```text
-shuffle-bag of fact IDs
-or
-random selection excluding the just-played fact
-```
-
-Keep the fact pool finite and small enough to review fully.
-
-Selection is presentation-only. It must not change gameplay state, scoring, rewards or difficulty.
-
-## 10. Presenter visuals and voice should agree
-
-If Tito speaks, the presentation should make it visually clear that Tito is speaking when practical. If Leo owns the curiosity button, do not play Flash's voice behind a Leo portrait.
-
-Use canonical runtime character assets and semantic expression/motion states rather than Activity-local redraws of the cast.
-
-Read:
+Load:
 
 ```text
 docs/design/GREIA_CANONICAL_CAST_SYSTEM.md
@@ -332,36 +255,40 @@ docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md
 skills/greia-visual-authoring/SKILL.md
 ```
 
-when presenter visuals are being added or changed.
+when presenter visuals are created/changed.
 
-## 11. Acceptance checklist for new Activities
+## 11. Fact selection should avoid annoying repetition
 
-Before calling a new Activity presentation design complete, answer:
+For several facts use a tiny bounded selector such as:
+
+```text
+shuffle bag
+or
+random excluding the immediately previous fact
+```
+
+Keep the pool finite and fully reviewable.
+
+Fact selection is presentation-only and must not alter gameplay truth, scoring or difficulty.
+
+## 12. Final presenter review
+
+For a new Activity record:
 
 ```text
 PRESENTER_DECISION=
 LEAD_CHARACTER_OR_NONE=
-WHY=
+PRESENTER_JOB=
+REQUIRED_PRESENTER_COMMANDS=
 SHARED_UTTERANCE_PLAN=
 CUSTOM_DIALOGUE_PLAN=
-PEDAGOGICAL_SPEECH_PLAN=
-CURIOSITY_FACTS_APPROPRIATE=yes/no
-FACT_RESEARCH_PROVENANCE_PATH=
+PEDAGOGICAL_SOUND_PLAN=
 SUPPORTED_LOCALES=
-SPOKEN_LOCALE_COVERAGE=
-CURIOSITY_VOICE_ACCEPTED=yes/no/not-applicable
+REQUIRED_SPOKEN_COVERAGE=
+CURIOSITY_FACTS_APPROPRIATE=yes/no
+FACT_PROVENANCE_PATH=
 ```
 
-If the Activity is subject-rich and `CURIOSITY_FACTS_APPROPRIATE=no`, record a brief reason. The purpose is to force the design decision, not to force a fact button into every game.
+Final GUI Simulator review must verify that required presenter speech actually occurs at the right time and that the child can act without reading.
 
-Runtime changes still finish with:
-
-```text
-skills/greia-activity-authoring/LAUNCH_ACCEPTANCE.md
-```
-
-and voice/audio acceptance still follows:
-
-```text
-skills/greia-activity-authoring/VOICE_GENERATION.md
-```
+Voice-production acceptance remains governed by `VOICE_GENERATION.md`; mechanical launch evidence remains governed by `SIMULATOR_WORKFLOW.md` / `LAUNCH_ACCEPTANCE.md`.
