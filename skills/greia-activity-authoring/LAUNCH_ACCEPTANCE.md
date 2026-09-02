@@ -1,269 +1,232 @@
-# Greia Activity Simulator Launch Acceptance
+# Greia Activity Launch Acceptance
 
-**Status:** MANDATORY completion gate for Activity creation and substantive Activity work  
-**Audience:** Activity authors, coding agents, reviewers, local test agents  
-**Reviewed:** 2026-08-24
+**Status:** mandatory completion gate for new Activities and substantive runtime Activity work  
+**Audience:** Activity authors, coding agents, reviewers
 
-This is not an optional smoke-test recommendation. It is part of the definition of done for Greia Activity work.
-
-> **An Activity is NOT complete, working, fixed, refactored, ready, or accepted until the final runtime-relevant source state has actually been launched through the Greia Activity Simulator/launcher path and has survived that launch.**
-
-Repository validation, unit tests, import tests, AST/source checks, `python main.py`, a successful package build, or a clean `make verify` run do **not** substitute for this gate.
-
-The reason is empirical and architectural: Activity work repeatedly passes static/source gates while still failing on the first real Greia launch because of package-local import mistakes, script-vs-package import differences, runtime-adapter policy, lifecycle wiring, missing assets/resources, initialization order, or exceptions reached only once Greia actually starts the Activity.
-
-For every new Activity and every substantive child-facing flow/UI redesign, this runtime gate is paired with:
+This file defines the completion evidence. The working procedure lives in:
 
 ```text
-skills/greia-activity-authoring/PRE_READER_UX.md
+skills/greia-activity-authoring/SIMULATOR_WORKFLOW.md
 ```
 
-A runtime that launches but requires the target child to read instructions is technically alive but still **not accepted child-facing Greia UX**.
+## 1. One rule
 
----
+> **A new or substantively changed Activity is not complete until the exact final runtime-relevant state has passed Greia's real Simulator integration path. New/child-facing work also requires final GUI human review.**
 
-## 1. When this gate is mandatory
+Static validation, unit tests, imports, `python main.py`, package creation or `make verify` do not replace Simulator evidence.
 
-Run this gate after any substantive Activity change that can affect runtime behavior, including:
+## 2. Two evidence stages
 
-- creating a new Activity;
-- refactoring or decomposing an Activity;
-- moving/renaming Python modules or imports;
-- changing `main.py`, the manifest entrypoint, lifecycle code or READY/STOP behavior;
-- changing assets/resources/localization/audio loaded during startup or normal play;
-- changing platform API use, permissions, capabilities, storage, events or progression integration;
-- changing input, rendering, viewport/layout, terminal/victory or restart behavior;
-- performance work that changes runtime code paths;
-- bug fixes whose code executes at launch or during normal child interaction.
+### Stage A — headless integration
 
-Pure documentation-only edits with no runtime/package change may mark this gate **not applicable**. Do not use that exception for source, manifest, asset or package changes merely because they look small.
+Use during development and once more on the final state:
 
----
+```text
+tools/headless_greia_simulator.py
+```
 
-## 2. The final-source rule
+This proves mechanical Greia integration such as:
 
-Simulator evidence applies only to the exact runtime-relevant source state that was launched.
+- real child Shell/catalogue launch route;
+- Activity discovery/runtime validation;
+- script/package import compatibility;
+- first Activity frame;
+- startup survival;
+- optional simple meaningful interaction;
+- protected Greia Home return;
+- clean workspace/Shell lifecycle.
 
-If any runtime-relevant Activity file changes after a successful simulator run, the launch gate is invalidated and must be run again.
+Headless PASS does **not** prove visual quality, pedagogical quality or pre-reader comprehension.
+
+### Stage B — GUI human review
+
+For every new Activity and substantive child-facing redesign, launch:
+
+```text
+tools/greia_simulator.py
+```
+
+and present the exact final Activity to the user/reviewer.
+
+This proves the subjective child-experience contract that automation cannot honestly approve:
+
+- first action understandable without reading;
+- required spoken commands actually work in context;
+- gameplay/teaching loop makes sense;
+- visual hierarchy/target sizes are appropriate;
+- retry/completion are understandable;
+- presenter and audio timing feel coherent;
+- responsive behavior is acceptable where relevant.
+
+## 3. When headless final acceptance is mandatory
+
+Rerun the final headless gate after runtime-relevant changes including:
+
+- new Activity creation;
+- Python/module/refactor/import changes;
+- `activity.toml` changes;
+- startup/lifecycle/READY changes;
+- runtime-loaded asset changes;
+- localization/audio changes;
+- input/rendering/layout changes;
+- storage/events/progression changes;
+- completion/restart changes;
+- performance changes affecting runtime paths.
+
+Documentation-only edits may mark it not applicable.
+
+## 4. Final-source rule
+
+Simulator evidence belongs to the exact source state tested.
 
 Examples:
 
 ```text
-launch PASS -> edit renderer.py -> MUST relaunch
-launch PASS -> fix one import -> MUST relaunch
-launch PASS -> change activity.toml -> MUST relaunch
-launch PASS -> replace startup asset -> MUST relaunch
+headless PASS -> edit renderer.py -> headless evidence stale
+GUI review PASS -> replace required voice clip -> GUI evidence stale for changed experience
+headless PASS -> change activity.toml -> headless evidence stale
 ```
 
-Do not cite an earlier successful launch after changing the Activity.
+Rerun the applicable final checks after the final edit.
 
----
+## 5. Canonical headless command
 
-## 3. Required acceptance sequence
-
-Use the real Greia Activity Simulator over the real Greia runtime path. Read:
-
-```text
-docs/development/GREIA_ACTIVITY_SIMULATOR.md
-```
-
-Start the simulator using the repository's canonical launcher, currently:
+For a built-in Activity:
 
 ```bash
-python3 tools/greia_simulator.py
+PYTHONPATH=src python3 tools/headless_greia_simulator.py \
+  --activity-dir activities/<activity_dir> \
+  --workspace-dir /tmp/greia-sim-<activity_dir> \
+  --locale it \
+  --viewport 1024x600 \
+  --survival-seconds 12 \
+  --screenshot-prefix /tmp/greia-<activity_dir>-it
 ```
 
-For iterative source development, load the Activity with the simulator's **Load Activity Folder…** path. Do not bypass Greia by copying directly into simulator-managed storage.
+Use a meaningful `--press-key` or `--click-x/--click-y` when appropriate.
 
-For package/distribution validation, use **Install Activity Package…** so the canonical package transaction is exercised.
+For localized/spoken child behavior, exercise the relevant shipped locales.
 
-The mandatory sequence is:
+Do not replace this with direct Activity execution.
 
-```text
-1. simulator starts successfully
-2. Activity source/package is loaded through Greia
-3. Activity appears in the normal launcher/catalogue path
-4. launch the Activity from the Greia launcher/Shell path
-5. first usable child-facing frame is presented
-6. Activity remains alive after startup instead of immediately crashing/exiting
-7. leave it running for at least 10 seconds after the first usable frame
-8. perform at least one meaningful child interaction
-9. verify the Activity continues running after that interaction
-10. use Greia Home/Back or the Activity's normal completion/exit path as applicable
-11. confirm control returns cleanly to the Shell instead of leaving a dead/stuck runtime
+## 6. What counts as a mechanical failure
+
+Any of these is a failed headless/integration gate:
+
+- `ImportError` / `ModuleNotFoundError`;
+- Activity missing/rejected by the real catalogue/runtime path;
+- startup traceback/exception;
+- missing runtime resource/localization/audio file;
+- READY never reached when required;
+- blank/dead first frame;
+- Activity exits unexpectedly after startup;
+- first meaningful interaction crashes/kills it;
+- protected Home fails to return through Greia lifecycle;
+- Shell/runtime teardown remains stuck.
+
+Fix the root cause and rerun against the new source state.
+
+## 7. New Activity child-experience failure
+
+A mechanically alive Activity still fails final acceptance when ordinary child use has problems such as:
+
+- child must read instructions to know what to do;
+- required language command is text-only;
+- required spoken cue is missing in a shipped locale;
+- targets are too small/ambiguous;
+- wrong-action feedback gives no usable clue;
+- completion/replay requires reading prose;
+- learning goal is not expressed through the play mechanic;
+- Activity is visually incoherent or obviously placeholder quality;
+- critical spoken cues overlap/cut each other off;
+- target child cannot reasonably manage the cognitive/motor load.
+
+These require design/implementation correction and another final GUI review.
+
+## 8. GUI review procedure
+
+After final headless PASS, launch:
+
+```bash
+python3 tools/greia_simulator.py \
+  --state-dir ~/.greia-simulator-review-<activity_dir>
 ```
 
-The ten-second survival period is deliberately simple. It is not a performance benchmark; it exists to catch initialization/lifecycle failures that occur just after the first frame.
+Use normal Greia child navigation for built-ins. Use **Load Activity Folder…** for external source and **Install Activity Package…** when validating distribution/package behavior.
 
-For a stateful/game-like Activity, startup survival alone is not full product acceptance. If the work touches gameplay, completion, scoring, storage, events, victory, restart, or input semantics, continue through the applicable happy path described in `ENGINEERING.md` / `REFACTORING.md`, including completion and restart where relevant.
+Review at `1024×600` at minimum.
 
-### 3.1 New/child-facing work also requires a no-reading pass
+When responsive/layout work is relevant, use the additional matrix in `SIMULATOR_WORKFLOW.md` / `docs/development/GREIA_ACTIVITY_SIMULATOR.md`.
 
-For a new Activity, or whenever instructions/controls/feedback/completion UI changed, continue the same Simulator review as if the child **cannot read any written instruction or button label**.
+## 9. No-reading review is part of GUI acceptance
 
-Follow:
+For new/child-facing work load:
 
 ```text
 skills/greia-activity-authoring/PRE_READER_UX.md
 ```
 
-At minimum verify:
+Require:
 
 ```text
-first meaningful action is understandable without reading
-primary targets/icons/numbers/pictures are large and visually distinct
-spoken cue exists when language is genuinely necessary
-wrong action produces understandable non-text retry feedback
-start/replay/continue/completion can be understood without prose
+first action understandable without reading
+required language command spoken
+primary targets clear and large
+wrong action understandable without prose
+continue/replay/completion understandable without prose
 ```
 
-If the normal core flow depends on reading sentences or button labels, record the child-facing UX as FAIL even if the process remains alive.
+The human reviewer should hear actual required speech in context rather than approving cue tables on paper.
 
----
+## 10. If GUI presentation is impossible
 
-## 4. What counts as a failed launch
-
-Any of the following means the gate **FAILED**:
-
-- `ImportError` / `ModuleNotFoundError`;
-- package-local sibling imports fail under the real script/runtime context;
-- Activity disappears or is rejected by runtime validation;
-- startup traceback/exception;
-- missing asset/resource/localization file at runtime;
-- Activity process exits before or shortly after the first usable frame without an intentional child/system exit;
-- READY is never reached/published when required;
-- blank/dead/unusable first frame;
-- Activity starts but does not respond to the first meaningful child interaction;
-- first interaction crashes or kills the Activity;
-- Greia cannot cleanly return to the Shell.
-
-Do not downgrade these to "minor integration issues" while calling the Activity complete. They are failed acceptance.
-
-On failure:
-
-1. capture the concrete error/trace/log;
-2. identify and fix the root cause;
-3. rerun the relevant focused/source tests if the fix affects them;
-4. rerun the simulator launch gate from the beginning against the new final source state;
-5. only then consider the Activity launch-accepted.
-
----
-
-## 5. Import errors: explicit mandatory checks
-
-Modular Python Activities have multiple legitimate import contexts. A decomposition that works only in one is broken.
-
-Before the simulator gate, check as applicable:
+If the execution environment can perform headless checks but cannot launch/present the GUI Simulator, use status:
 
 ```text
-runtime/script context
-    Greia executes manifest.entrypoint as a file from the Activity root
-
-repository/package context
-    tests/tools may import activities.<activity>.* as package modules
+SOURCE-VERIFIED / HEADLESS-SIMULATOR-PASS / GUI-REVIEW-PENDING
 ```
 
-Use the real `PythonRuntimeAdapter`/project validation path so package-local modules are distinguished from forbidden or unknown external imports.
+Do not call the new Activity fully accepted.
 
-But these checks are PRECONDITIONS only.
-
-> **Even if every import/validator test passes, the Activity still must launch through the simulator.**
-
-Likewise:
-
-> **A direct `python main.py` success does not count as Greia launch acceptance.**
-
-The launcher/runtime path is the integration boundary we actually ship.
-
----
-
-## 6. Minimum evidence to record
-
-For every substantive Activity tranche, record at least:
-
-```text
-Activity ID/name
-exact repository/source SHA tested
-simulator launch path used
-source folder or package path used
-viewport/resolution (1024x600 minimum reference when applicable)
-profile/locale if materially relevant
-whether first usable frame appeared
-whether Activity survived >=10 seconds after first usable frame
-meaningful child interaction exercised
-whether Activity remained alive afterward
-whether return to Shell succeeded
-any additional full-session/completion/restart path exercised
-result: PASS or FAIL
-```
-
-For new Activities or child-facing UI/flow changes also record:
-
-```text
-PRE_READER_CORE_FLOW_PASS=yes/no
-TEXT_REQUIRED_FOR_GAMEPLAY=yes/no
-NO_READING_FIRST_ACTION_PASS=yes/no
-NO_READING_RETRY_PASS=yes/no
-NO_READING_COMPLETION_PASS=yes/no
-PRIMARY_INSTRUCTION_CHANNEL=visual/voice/combined
-```
-
-Do not write `PASS` from expected behavior or from tests that were authored but not executed.
-
----
-
-## 7. Completion language is strict
-
-If the simulator gate has not been run successfully on the final runtime-relevant source state, permitted status language is:
+Similarly, if headless Simulator cannot run:
 
 ```text
 SOURCE-VERIFIED / SIMULATOR-UNVERIFIED
-INTEGRATION-UNVERIFIED
-IMPLEMENTED, LAUNCH ACCEPTANCE PENDING
 ```
 
-Do **not** call the Activity:
+The environment limitation changes the status; it does not weaken the gate.
+
+## 11. Minimum evidence record
+
+Record:
 
 ```text
-done
-complete
-working
-fixed
-ready
-accepted
-launchable
-finished
+ACTIVITY_ID=
+SOURCE_SHA=
+HEADLESS_SIMULATOR_FINAL=PASS/FAIL
+HEADLESS_LOCALES=
+HEADLESS_VIEWPORTS=
+MEANINGFUL_INTERACTION=
+PROTECTED_HOME_RETURN=PASS/FAIL
+GUI_SIMULATOR_LAUNCHED=yes/no
+GUI_REVIEW_SHA=
+GUI_REVIEW_VIEWPORTS=
+USER_VISUAL_REVIEW=PASS/FAIL/PENDING
+PRE_READER_REVIEW=PASS/FAIL/PENDING
+GAMEPLAY_TEACHING_REVIEW=PASS/FAIL/PENDING
+FINAL_STATUS=
 ```
 
-unless the mandatory simulator launch/survival gate has actually passed.
+Do not invent PASS from expected behavior or authored tests that never executed.
 
-Likewise, for new/child-facing work, do not call the Activity child-UX accepted if its ordinary flow requires reading written instructions.
+## 12. Reviewer question
 
-If the current execution environment cannot run the simulator, save/commit the work if appropriate, but report the limitation explicitly and leave the Activity **integration-unverified**. Lack of simulator access changes the status; it does not weaken the gate.
+For a substantive Activity review, ask:
 
----
+> **What exact final SHA passed the headless Greia Simulator, and what exact final GUI state did the human reviewer inspect?**
 
-## 8. Reviewers must reject missing launch evidence
+For new/child-facing work also ask:
 
-A reviewer evaluating substantive Activity work must ask first:
+> **Could the target child understand and operate the normal flow without reading, with required commands actually spoken?**
 
-> **What exact final source SHA was launched in the Greia simulator, and did it survive launch plus a meaningful child interaction?**
-
-For new/child-facing work the reviewer must also ask:
-
-> **Could the target child complete the ordinary interaction without reading the instructions?**
-
-If there is no concrete answer/evidence, the work is not done regardless of source quality or unit-test count.
-
-This applies equally to:
-
-- new Activities;
-- "small" fixes;
-- visual refreshes that touch runtime assets/code;
-- architecture refactors;
-- import/module cleanup;
-- performance optimization;
-- localization/audio integration;
-- terminal/victory changes.
-
-The simulator gate exists specifically to stop the recurring pattern of handing the owner Activities that fail on first launch. The pre-reader gate exists to stop the equally serious pattern of handing young children technically working Activities whose instructions they cannot read.
+If those questions have no concrete evidence, the Activity is not finished.
