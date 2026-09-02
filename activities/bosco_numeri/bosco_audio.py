@@ -14,133 +14,215 @@ SFX_CHANNEL_ID = 1
 
 
 class BoscoAudio:
-    """Coordinates dedicated voice playback and synthesized SFX."""
+    """Coordinates cached voice playback and lightweight procedural SFX."""
 
     def __init__(self, root: Path, resources: LocalizedResources) -> None:
         self.root = root
         self.resources = resources
         self._voice_channel: pygame.mixer.Channel | None = None
         self._sfx_channel: pygame.mixer.Channel | None = None
-        self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._voice_clips: dict[str, pygame.mixer.Sound] = {}
+        self._sfx: dict[str, pygame.mixer.Sound] = {}
         self._init_mixer()
 
     def _init_mixer(self) -> None:
         if not pygame.mixer.get_init():
             try:
-                pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=1024)
-            except Exception:
+                pygame.mixer.init(
+                    frequency=44100,
+                    size=-16,
+                    channels=2,
+                    buffer=1024,
+                )
+            except pygame.error:
                 return
         pygame.mixer.set_num_channels(8)
         self._voice_channel = pygame.mixer.Channel(VOICE_CHANNEL_ID)
         self._sfx_channel = pygame.mixer.Channel(SFX_CHANNEL_ID)
+        self._build_sfx()
 
     def _get_clip(self, name: str) -> pygame.mixer.Sound | None:
-        if name in self._sounds:
-            return self._sounds[name]
+        cached = self._voice_clips.get(name)
+        if cached is not None:
+            return cached
 
         locale = self.resources.context.selected.language
         path = self.root / "assets" / "audio" / locale / f"{name}.wav"
         if not path.is_file():
-            # Fallback to IT
             path = self.root / "assets" / "audio" / "it" / f"{name}.wav"
 
-        if path.is_file():
-            try:
-                sound = pygame.mixer.Sound(str(path))
-                self._sounds[name] = sound
-                return sound
-            except Exception:
-                pass
-        return None
+        if not path.is_file():
+            return None
+        try:
+            sound = pygame.mixer.Sound(str(path))
+        except pygame.error:
+            return None
+        self._voice_clips[name] = sound
+        return sound
 
     def play_count_number(self, n: int) -> None:
-        """Pedagogical counting number (1..10) on voice channel."""
+        """Play one reviewed pedagogical counting clip and a cached tap cue."""
         sound = self._get_clip(f"count_{n}")
-        if sound and self._voice_channel:
+        if sound is not None and self._voice_channel is not None:
             self._voice_channel.play(sound)
         self.play_tap()
 
     def play_intro(self) -> None:
-        """Tito welcome on voice channel."""
         sound = self._get_clip("intro")
-        if sound and self._voice_channel:
+        if sound is not None and self._voice_channel is not None:
             self._voice_channel.play(sound)
 
     def play_ask_number(self, n: int) -> None:
-        """Tito spoken question: 'Dov'è il numero N?'"""
         sound = self._get_clip(f"ask_{n}")
-        if sound and self._voice_channel:
+        if sound is not None and self._voice_channel is not None:
             self._voice_channel.play(sound)
 
     def play_well_done(self) -> None:
-        """Tito congratulations."""
         sound = self._get_clip("well_done")
-        if sound and self._voice_channel:
+        if sound is not None and self._voice_channel is not None:
             self._voice_channel.play(sound)
         self.play_chime()
 
     def play_try_again(self) -> None:
-        """Tito encouraging retry."""
         sound = self._get_clip("try_again")
-        if sound and self._voice_channel:
+        if sound is not None and self._voice_channel is not None:
             self._voice_channel.play(sound)
         self.play_wobble()
 
     def play_celebration(self, n: int | None = None) -> None:
-        """Repeat final number loud and clear on voice channel, followed by Tito praise."""
+        """Repeat final cardinality, then queue Tito praise without overlap."""
         self.play_fanfare()
-        if not self._voice_channel:
+        if self._voice_channel is None:
             return
 
         final_num_clip = self._get_clip(f"count_{n}") if n is not None else None
         praise_clip = self._get_clip("celebrate")
 
-        if final_num_clip and praise_clip:
+        if final_num_clip is not None and praise_clip is not None:
             self._voice_channel.play(final_num_clip)
             self._voice_channel.queue(praise_clip)
-        elif final_num_clip:
+        elif final_num_clip is not None:
             self._voice_channel.play(final_num_clip)
-        elif praise_clip:
+        elif praise_clip is not None:
             self._voice_channel.play(praise_clip)
 
-    # Synthesized procedural SFX
     def play_tap(self) -> None:
-        self._play_tone(520, duration=0.08, wave="sine", volume=0.55)
+        self._play_sfx("tap")
 
     def play_chime(self) -> None:
-        self._play_tone(880, duration=0.18, wave="sine", volume=0.65)
+        self._play_sfx("chime")
 
     def play_wobble(self) -> None:
-        self._play_tone(240, duration=0.22, wave="triangle", volume=0.5)
+        self._play_sfx("wobble")
 
     def play_fanfare(self) -> None:
-        notes = [523, 659, 784, 1046]
-        for idx, freq in enumerate(notes):
-            self._play_tone(freq, duration=0.12 + idx * 0.05, wave="sine", volume=0.6)
+        self._play_sfx("fanfare")
 
-    def _play_tone(self, freq: int, duration: float = 0.1, wave: str = "sine", volume: float = 0.5) -> None:
-        if not pygame.mixer.get_init() or not self._sfx_channel:
+    def _play_sfx(self, name: str) -> None:
+        sound = self._sfx.get(name)
+        if sound is None or self._sfx_channel is None:
             return
-        sample_rate = 44100
-        n_samples = int(sample_rate * duration)
-        raw_bytes = bytearray()
-
-        for i in range(n_samples):
-            t = float(i) / sample_rate
-            decay = max(0.0, 1.0 - (float(i) / n_samples) ** 1.5)
-            if wave == "sine":
-                val = math.sin(2.0 * math.pi * freq * t)
-            elif wave == "triangle":
-                val = 2.0 * abs(2.0 * (t * freq - math.floor(t * freq + 0.5))) - 1.0
-            else:
-                val = math.sin(2.0 * math.pi * freq * t)
-
-            sample_int = int(val * decay * volume * 32767)
-            raw_bytes.extend(sample_int.to_bytes(2, byteorder="little", signed=True))
-            raw_bytes.extend(sample_int.to_bytes(2, byteorder="little", signed=True))
-
         try:
-            sound = pygame.mixer.Sound(buffer=bytes(raw_bytes))
             self._sfx_channel.play(sound)
-        except Exception:
+        except pygame.error:
             pass
+
+    def _build_sfx(self) -> None:
+        """Build bounded procedural clips once, never in the interaction hot path."""
+        spec = pygame.mixer.get_init()
+        if spec is None:
+            return
+        sample_rate, sample_format, channel_count = spec
+        if abs(sample_format) != 16 or channel_count < 1:
+            return
+        try:
+            self._sfx = {
+                "tap": self._synthesize_tone(
+                    sample_rate,
+                    channel_count,
+                    520.0,
+                    0.08,
+                    "sine",
+                    0.55,
+                ),
+                "chime": self._synthesize_tone(
+                    sample_rate,
+                    channel_count,
+                    880.0,
+                    0.18,
+                    "sine",
+                    0.65,
+                ),
+                "wobble": self._synthesize_tone(
+                    sample_rate,
+                    channel_count,
+                    240.0,
+                    0.22,
+                    "triangle",
+                    0.50,
+                ),
+                "fanfare": self._synthesize_fanfare(sample_rate, channel_count),
+            }
+        except pygame.error:
+            self._sfx.clear()
+
+    @staticmethod
+    def _append_sample(raw: bytearray, sample: int, channel_count: int) -> None:
+        encoded = sample.to_bytes(2, byteorder="little", signed=True)
+        for _ in range(channel_count):
+            raw.extend(encoded)
+
+    @classmethod
+    def _synthesize_tone(
+        cls,
+        sample_rate: int,
+        channel_count: int,
+        frequency: float,
+        duration: float,
+        wave: str,
+        volume: float,
+    ) -> pygame.mixer.Sound:
+        sample_count = max(1, int(sample_rate * duration))
+        raw = bytearray()
+        for index in range(sample_count):
+            t = index / sample_rate
+            decay = max(0.0, 1.0 - (index / sample_count) ** 1.5)
+            if wave == "triangle":
+                value = (
+                    2.0
+                    * abs(2.0 * (t * frequency - math.floor(t * frequency + 0.5)))
+                    - 1.0
+                )
+            else:
+                value = math.sin(2.0 * math.pi * frequency * t)
+            sample = int(max(-1.0, min(1.0, value * decay * volume)) * 32767)
+            cls._append_sample(raw, sample, channel_count)
+        return pygame.mixer.Sound(buffer=bytes(raw))
+
+    @classmethod
+    def _synthesize_fanfare(
+        cls,
+        sample_rate: int,
+        channel_count: int,
+    ) -> pygame.mixer.Sound:
+        """Render the four-note reward as one sequenced clip."""
+        notes = (
+            (0.00, 0.16, 523.25),
+            (0.14, 0.16, 659.25),
+            (0.28, 0.16, 783.99),
+            (0.42, 0.38, 1046.50),
+        )
+        total_duration = 0.82
+        sample_count = max(1, int(sample_rate * total_duration))
+        raw = bytearray()
+        for index in range(sample_count):
+            t = index / sample_rate
+            value = 0.0
+            for start, duration, frequency in notes:
+                if start <= t < start + duration:
+                    local_t = t - start
+                    envelope = math.exp(-3.5 * (local_t / duration))
+                    value += math.sin(2.0 * math.pi * frequency * local_t) * envelope
+            sample = int(max(-1.0, min(1.0, value * 0.55)) * 32767)
+            cls._append_sample(raw, sample, channel_count)
+        return pygame.mixer.Sound(buffer=bytes(raw))
