@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-09-02T16:42:17.208032+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "it",
+    "text": "Z come Zebra",
+    "cue_id": "alfabeto_leo.letter_Z",
+    "output": "activities/alfabeto_leo/assets/audio/it/letter_Z.wav",
+    "verification": "off",
+    "max_attempts": 1
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 175,
+    "synthesis_text": "z come zebra"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/alfabeto_leo/assets/audio/it/letter_Z.wav",
+    "bytes": 47954,
+    "sha256": "f373fcbc3d755489845360cc6e2261c34aba9fd08a7bd5d84f8e60b1fa3f3b52"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+}

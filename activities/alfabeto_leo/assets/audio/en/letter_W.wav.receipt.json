@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-09-02T16:42:47.608805+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "en",
+    "text": "W is for Whale",
+    "cue_id": "alfabeto_leo.letter_W",
+    "output": "activities/alfabeto_leo/assets/audio/en/letter_W.wav",
+    "verification": "off",
+    "max_attempts": 1
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 180,
+    "synthesis_text": "w is for whale"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/alfabeto_leo/assets/audio/en/letter_W.wav",
+    "bytes": 48974,
+    "sha256": "dcd5956e6c4c4fdc0eff85972c29974fba679b8411f4bc82e3ab4133d406320f"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+}

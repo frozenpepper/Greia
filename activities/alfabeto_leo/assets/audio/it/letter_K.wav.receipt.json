@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-09-02T16:42:03.168852+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "it",
+    "text": "K come Koala",
+    "cue_id": "alfabeto_leo.letter_K",
+    "output": "activities/alfabeto_leo/assets/audio/it/letter_K.wav",
+    "verification": "off",
+    "max_attempts": 1
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 175,
+    "synthesis_text": "k come koala"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/alfabeto_leo/assets/audio/it/letter_K.wav",
+    "bytes": 46830,
+    "sha256": "c825dd8d7fceccbb218c8c370ea7af0794ca07b6e436117d81bf9d005a76ea68"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+}

@@ -44,8 +44,8 @@ def main() -> int:
 
     canvas = PygameReferenceCanvas(screen)
     typography = GreiaTypography()
-    _, resources = _locale_and_resources()
-    audio = GiardinoAudio()
+    locale, resources = _locale_and_resources()
+    audio = GiardinoAudio(locale=locale)
     services = GiardinoServices()
     renderer = GiardinoRenderer(canvas, typography, resources)
     model = GardenModel()

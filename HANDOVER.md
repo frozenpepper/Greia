@@ -212,12 +212,16 @@ Both activities satisfy:
 - Pre-reader UX pass: `PRE_READER_CORE_FLOW_PASS=yes`, `TEXT_REQUIRED_FOR_GAMEPLAY=no` (`PRE_READER_UX.md`)
 - Capital letters default policy (`ADR 0034`)
 - Spoken title audio generated via Chatterbox MLX Multilingual v3 engine for both Italian and English (`locales/it/audio/activity-title.wav`, `locales/en/audio/activity-title.wav`)
+- 74 in-game spoken educational voice clips generated via Greia VoiceEngine (`tools/generate_toddler_audio.py`):
+  - 16 Dani clips in `il_giardino_dei_numeri/assets/audio/it|en/` for counting numbers 1–5, prompts, and praise
+  - 58 pedagogical clips in `alfabeto_leo/assets/audio/it|en/` for letter pronunciation A–Z ("A come Ape" / "A is for Apple"), prompts, and encouragement
+  - Dual-channel concurrent audio playback (procedural chime + spoken audio simultaneously)
 - 256x256 RGBA icons composed with character art
 - Dedicated unit tests: `test_activity_il_giardino_dei_numeri.py` (3 tests PASS), `test_activity_alfabeto_leo.py` (4 tests PASS)
 - `tools/audit_launcher_spoken_labels.py`: PASS (`BUILT_IN_ACTIVITIES=36 ACTIVITY_TITLE_COMPLETE=72`)
 - `tools/audit_activity_backend_independence.py`: PASS (`activities=36 blockers=0`)
 - `tools/audit_activity_system_chrome_ownership.py --strict`: PASS (`blockers=0`)
-- `tools/headless_greia_simulator.py`: PASS on both activities (survived >= 3s, click interaction, Home return to Shell, rc=0)
+- `tools/headless_greia_simulator.py`: PASS on both activities (survived >= 2s, click interaction, Home return to Shell, rc=0)
 
 ---
 

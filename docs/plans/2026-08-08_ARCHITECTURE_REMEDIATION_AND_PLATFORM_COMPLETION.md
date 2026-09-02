@@ -1587,12 +1587,18 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   5. Dedicated unit tests added: `tests/test_activity_il_giardino_dei_numeri.py` (3 tests) and `tests/test_activity_alfabeto_leo.py` (4 tests).
   6. Reconciled activity count and readiness coverage in `tests/test_activity_contract.py`, `tests/test_first_party_activity_audience_metadata.py`, and `tests/test_first_party_activity_readiness.py`. Fixed pre-existing tmpfiles test assertion in `tests/test_system_overlay_contract.py`.
 
+  7. Generated in-game spoken voice audio assets via Greia VoiceEngine (`tools/generate_toddler_audio.py`):
+     - `activities/il_giardino_dei_numeri/assets/audio/it|en/`: 16 clips (Dani counting numbers 1–5 "Uno!", "Due!" / "One!", "Two!"..., prompts and praise).
+     - `activities/alfabeto_leo/assets/audio/it|en/`: 58 clips (Pedagogical pronunciation for all 26 letters "A come Ape" / "A is for Apple"..., guess prompts and encouragement).
+     - Integrated dual-channel playback in both `giardino_audio.py` and `alfabeto_audio.py` (musical chimes + spoken pronunciation simultaneously).
+
 - Tests & Verification:
   - `python3 tools/audit_launcher_spoken_labels.py`: PASS (`BUILT_IN_ACTIVITIES=36 ACTIVITY_TITLE_LOCALE_COMBINATIONS=72 ACTIVITY_TITLE_COMPLETE=72`)
   - `python3 tools/audit_activity_backend_independence.py`: PASS (`activities=36 blockers=0`)
   - `python3 tools/audit_activity_system_chrome_ownership.py --strict`: PASS (`blockers=0`)
+  - Audio asset loading & playback: PASS (GiardinoAudio 8 spoken + 9 synthesized, AlfabetoAudio 29 spoken + 3 synthesized in both IT and EN)
   - `python3 -m unittest discover -s tests -p "test_activity_*.py"`: 355 tests PASS
   - Headless Simulator Verification:
-    - `python3 tools/headless_greia_simulator.py --activity-dir activities/il_giardino_dei_numeri`: PASS (survived 3s, click (300, 300), home click at (38, 38), clean exit rc=0)
-    - `python3 tools/headless_greia_simulator.py --activity-dir activities/alfabeto_leo`: PASS (survived 3s, click (300, 300), home click at (38, 38), clean exit rc=0)
+    - `python3 tools/headless_greia_simulator.py --activity-dir activities/il_giardino_dei_numeri`: PASS (survived 2s, click (300, 300), home click at (38, 38), clean exit rc=0)
+    - `python3 tools/headless_greia_simulator.py --activity-dir activities/alfabeto_leo`: PASS (survived 2s, click (300, 300), home click at (38, 38), clean exit rc=0)
 

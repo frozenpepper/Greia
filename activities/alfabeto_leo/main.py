@@ -45,7 +45,7 @@ def main() -> int:
     canvas = PygameReferenceCanvas(screen)
     typography = GreiaTypography()
     locale, resources = _locale_and_resources()
-    audio = AlfabetoAudio()
+    audio = AlfabetoAudio(locale=locale)
     services = AlfabetoServices()
     renderer = AlfabetoRenderer(canvas, typography, resources)
     model = AlfabetoModel(locale=locale)

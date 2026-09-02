@@ -1,24 +1,29 @@
-"""Procedural audio synthesis for Il Giardino dei Numeri."""
+"""Audio manager and synthesis for Il Giardino dei Numeri."""
 
 from __future__ import annotations
 
 import math
+from pathlib import Path
 from typing import Final
 
 import pygame
 
 MAX_SIMULTANEOUS_CHANNELS: Final[int] = 4
+AUDIO_DIR = Path(__file__).resolve().parent / "assets" / "audio"
 
 
 class GiardinoAudio:
-    """Soft, cheerful musical feedback for toddler counting."""
+    """Soft, cheerful musical and spoken feedback for toddler counting."""
 
-    def __init__(self) -> None:
+    def __init__(self, locale: str = "it") -> None:
+        self.locale = locale.split("-")[0]
         self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._spoken_sounds: dict[str, pygame.mixer.Sound] = {}
         self._available = False
         try:
             if pygame.mixer.get_init() is not None:
                 self._build_sounds()
+                self._load_spoken_assets()
                 self._available = True
         except (pygame.error, RuntimeError):
             self._available = False
@@ -38,10 +43,42 @@ class GiardinoAudio:
             except (pygame.error, RuntimeError):
                 pass
 
+    def play_spoken(self, cue_name: str) -> None:
+        if not self._available:
+            return
+        sound = self._spoken_sounds.get(cue_name)
+        if sound is not None:
+            try:
+                # Dedicated voice channel (channel 1)
+                pygame.mixer.Channel(1).play(sound)
+            except (pygame.error, RuntimeError):
+                pass
+
     def play_count(self, count: int) -> None:
-        """Play ascending chime for numbers 1 to 5."""
+        """Play ascending musical chime and Dani's spoken voice for numbers 1 to 5."""
         clamped = max(1, min(5, count))
+        # 1. Play musical chime
         self.play(f"count_{clamped}")
+        # 2. Play spoken number
+        self.play_spoken(f"count_{clamped}")
+
+    def play_celebration(self) -> None:
+        """Play celebration music and Dani's cheer."""
+        self.play("celebrate")
+        self.play_spoken("well_done")
+
+    def _load_spoken_assets(self) -> None:
+        loc_dir = AUDIO_DIR / self.locale
+        if not loc_dir.is_dir():
+            loc_dir = AUDIO_DIR / "it"
+        if not loc_dir.is_dir():
+            return
+
+        for wav_path in loc_dir.glob("*.wav"):
+            try:
+                self._spoken_sounds[wav_path.stem] = pygame.mixer.Sound(str(wav_path))
+            except Exception:
+                pass
 
     def _build_sounds(self) -> None:
         sample_rate = 22050
@@ -128,7 +165,6 @@ class GiardinoAudio:
 
     @staticmethod
     def _synthesize_fanfare(sample_rate: int) -> pygame.mixer.Sound:
-        # C5 - E5 - G5 - C6 rapid joyful arpeggio
         notes = [(0.0, 0.15, 523.25), (0.12, 0.15, 659.25), (0.24, 0.15, 783.99), (0.36, 0.45, 1046.5)]
         total_duration = 0.85
         num_samples = int(sample_rate * total_duration)

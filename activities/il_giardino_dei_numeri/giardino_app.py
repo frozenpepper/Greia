@@ -95,7 +95,7 @@ class GiardinoApp:
             for ev in events:
                 self.services.emit_event(ev)
                 if ev == "garden.set_counted":
-                    self.audio.play("celebrate")
+                    self.audio.play_celebration()
                 elif ev == "garden.basket_filled":
                     self.audio.play("rustle")
                     self.services.save_state(

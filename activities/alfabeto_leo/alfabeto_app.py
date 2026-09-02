@@ -203,10 +203,10 @@ class AlfabetoApp:
                 if cx <= rx <= cx + card_w:
                     res, letter = self.model.handle_guess_choice(choice.char)
                     if res == "correct":
-                        self.audio.play("celebrate")
+                        self.audio.play_celebration()
                         self.audio.play_letter(letter.char)
                     elif res == "wobble":
-                        self.audio.play("wobble")
+                        self.audio.play_wobble()
                     elif res == "next":
                         self.audio.play("pop")
                     return
