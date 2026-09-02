@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 import pygame
@@ -14,27 +12,20 @@ from greia_platform.activity_api import (
     emit_activity_event,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .bosco_audio import BoscoAudio
-    from .bosco_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY
+    from .bosco_content import STORAGE_KEY
     from .bosco_model import BoscoModel
     from .bosco_renderer import BoscoRenderer
 else:
     from bosco_audio import BoscoAudio
-    from bosco_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY
+    from bosco_content import STORAGE_KEY
     from bosco_model import BoscoModel
     from bosco_renderer import BoscoRenderer
-
-
-@dataclass
-class BoscoStorageState:
-    total_completed: int
-    highest_number: int
 
 
 class BoscoApp:
@@ -44,7 +35,6 @@ class BoscoApp:
         self,
         screen: pygame.Surface,
         canvas: PygameReferenceCanvas,
-        metrics: ChildUiMetrics,
         typography: GreiaTypography,
         resources: LocalizedResources,
         audio: BoscoAudio,
@@ -52,7 +42,6 @@ class BoscoApp:
     ) -> None:
         self.screen = screen
         self.canvas = canvas
-        self.metrics = metrics
         self.typography = typography
         self.resources = resources
         self.audio = audio
@@ -72,9 +61,11 @@ class BoscoApp:
             data = self.storage.kv_get(STORAGE_KEY)
             if isinstance(data, dict):
                 self.model.total_completed = int(data.get("total_completed", 0))
-                highest = int(data.get("highest_number", 1))
-                if 1 <= highest <= 10:
-                    self.model.setup_number(highest)
+                current = int(
+                    data.get("current_number", data.get("highest_number", 1))
+                )
+                if 1 <= current <= 10:
+                    self.model.setup_number(current)
         except Exception:
             pass
 
@@ -86,7 +77,7 @@ class BoscoApp:
                 STORAGE_KEY,
                 {
                     "total_completed": self.model.total_completed,
-                    "highest_number": self.model.current_number,
+                    "current_number": self.model.current_number,
                 },
             )
         except Exception:
@@ -117,33 +108,31 @@ class BoscoApp:
                         sw, sh = self.screen.get_size()
                         pos = (int(event.x * sw), int(event.y * sh))
                     if pos is not None:
-                        ref_pos = self._screen_to_reference(pos)
-                        self._handle_click(ref_pos)
+                        ref_pos = self.canvas.pointer(pos)
+                        if ref_pos is not None:
+                            self._handle_click(ref_pos)
 
-            # Advance model state
             was_pending = self.model.pending_celebration
             self.model.update(dt)
 
-            # Check if celebration just triggered
             if was_pending and self.model.celebrating:
-                # Repeat final number loud and clear, then celebrate!
                 self.audio.play_celebration(self.model.current_number)
                 emit_activity_event(
                     "bosco.number_completed",
-                    {"number": self.model.current_number, "total": self.model.total_completed},
+                    {
+                        "number": self.model.current_number,
+                        "total": self.model.total_completed,
+                    },
                 )
 
-            # Auto-advance to next number in count mode
             if self.model.auto_advanced:
                 self.model.auto_advanced = False
                 self.audio.play_tap()
 
-            # Next challenge question in guess mode
             if self.model.advance_guess_round:
                 self.model.advance_guess_round = False
                 self.audio.play_ask_number(self.model.guess_target)
 
-            # Render
             self.renderer.render(self.model, self.anim_time)
             self.canvas.present()
             pygame.display.flip()
@@ -153,7 +142,6 @@ class BoscoApp:
                 self.ready_published = True
                 self.audio.play_intro()
 
-            # Periodic autosave
             now = time.monotonic()
             if self.storage is not None and now - self.last_save_time > 15.0:
                 self.last_save_time = now
@@ -165,19 +153,12 @@ class BoscoApp:
         self.typography.clear()
         return 0
 
-    def _screen_to_reference(self, pos: tuple[int, int]) -> tuple[float, float]:
-        sw, sh = self.screen.get_size()
-        scale_x = REFERENCE_WIDTH / max(1, sw)
-        scale_y = REFERENCE_HEIGHT / max(1, sh)
-        return (pos[0] * scale_x, pos[1] * scale_y)
-
     def _handle_click(self, ref_pos: tuple[float, float]) -> None:
         rx, ry = ref_pos
-        # 1. Protect Greia Home area (88x88 at top-left)
-        if rx <= 88 and ry <= 88:
-            return
 
-        # 2. Mode toggle button at top-right (870..1005, 30..75)
+        # System Home/Back is consumed by Greia before Activity input. Activity
+        # code must not recreate or police the protected chrome hitbox here.
+
         if 870 <= rx <= 1005 and 30 <= ry <= 75:
             if self.model.mode == "count":
                 self.model.mode = "guess"
@@ -190,20 +171,16 @@ class BoscoApp:
             return
 
         if self.model.mode == "count":
-            # 3. Number carousel clicks
-            # Left arrow: circle at (100, 52), r=24
-            if (rx - 100) ** 2 + (ry - 52) ** 2 <= 28 ** 2:
+            if (rx - 100) ** 2 + (ry - 52) ** 2 <= 28**2:
                 self.model.prev_number()
                 self.audio.play_tap()
                 return
 
-            # Right arrow: circle at (825, 52), r=24
-            if (rx - 825) ** 2 + (ry - 52) ** 2 <= 28 ** 2:
+            if (rx - 825) ** 2 + (ry - 52) ** 2 <= 28**2:
                 self.model.next_number()
                 self.audio.play_tap()
                 return
 
-            # Number pills 1 to 10
             start_x = 150
             spacing = 65
             for idx in range(10):
@@ -214,7 +191,6 @@ class BoscoApp:
                     self.audio.play_tap()
                     return
 
-            # 4. Item taps in clearing
             outcome, count_num = self.model.handle_tap(rx, ry)
             if outcome == "counted":
                 self.audio.play_count_number(count_num)
@@ -222,16 +198,13 @@ class BoscoApp:
                 self.audio.play_tap()
 
         else:
-            # Guess mode: ignore clicks while winner card is celebrating transition
             if self.model.guess_solved:
                 return
 
-            # Question banner tap repeats the spoken prompt
             if 260 <= rx <= 720 and 80 <= ry <= 140:
                 self.audio.play_ask_number(self.model.guess_target)
                 return
 
-            # Guess mode card clicks
             card_xs = [280, 490, 700]
             for idx, num in enumerate(self.model.guess_options):
                 cx = card_xs[idx]
