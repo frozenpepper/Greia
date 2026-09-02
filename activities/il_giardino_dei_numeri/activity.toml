@@ -1,0 +1,47 @@
+[activity]
+id = "org.greia.il-giardino-dei-numeri"
+legacy_ids = []
+title_key = "activity.il_giardino_dei_numeri.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+discovery_tags = ["numbers", "nature"]
+
+[education]
+categories = ["early_math", "counting", "subitizing"]
+difficulty = 1
+recommended_age_min = 2
+recommended_age_max = 4
+difficulty_min = 1
+difficulty_max = 3
+adaptive_difficulty = true
+skills = [
+  { id = "math.counting.cardinality", weight = 3 },
+  { id = "math.quantity.subitizing", weight = 3 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+]
+events = [
+  { id = "garden.set_counted", kind = "milestone" },
+  { id = "garden.basket_filled", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["touch", "keyboard", "audio.basic"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

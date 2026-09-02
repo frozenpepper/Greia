@@ -1575,6 +1575,24 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 
 - Remaining blockers: None for Home regression. R7.2/R7.3/Parent tranche remains INCOMPLETE per `docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md` (exact 20/20, hostile 10/10 etc. not executed in this runbook), but current Home lane is GREEN and blocks release no longer. Next is to continue R7 evidence-gap closure at new HEAD `57626d3f` (not frozen `1edb22ce`).
 
-- Next exact step: commit this physical evidence, update HANDOVER.md §8 to FIXED-PHYSICAL-PASS, push to origin/main, verify HEAD==origin/main, then resume `docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md` at `57626d3f`.
-
 - Commit(s): this plan physical evidence + HANDOVER §8 update + screenshots in tmp/ (evidence) — exact SHA `57626d3f` already deployed; this docs commit will be `HEAD+1`.
+
+## 2026-09-02 — Toddler Activities (Ages 2–3) for Counting and Letters Added
+
+- Implemented two new first-party built-in Activities targeted at toddlers (ages 2–4, difficulty 1, pre-reader design):
+  1. `activities/il_giardino_dei_numeri/` (`org.greia.il-giardino-dei-numeri`): Early counting, subitizing, and one-to-one correspondence (quantities 1–5) guided by Dani with interactive countable objects (apples, strawberries, flowers, butterflies, ducklings, stars), basket filling mechanics, ascending pentatonic procedural audio chimes, pleasant ripple effects on empty ground taps, and milestone/completion platform events (`garden.set_counted`, `garden.basket_filled`).
+  2. `activities/alfabeto_leo/` (`org.greia.alfabeto-leo`): Capital letter discovery (A–Z) guided by Leo with tactile surprises, 26 bilingual object reveals (Italian/English), dual modes (Explore & Peek-a-boo Guess), physical keyboard letter key discovery (pressing A–Z triggers the letter immediately), procedural audio chimes/wobbles/fanfares, and milestone/completion platform events (`letter.discovered`, `alphabet.parade_completed`).
+  3. Spoken title audio generated via Chatterbox MLX Multilingual v3 engine for both Italian and English (`locales/it/audio/activity-title.wav`, `locales/en/audio/activity-title.wav`) with valid receipts.
+  4. 256x256 RGBA icons composed with character art and thematic props.
+  5. Dedicated unit tests added: `tests/test_activity_il_giardino_dei_numeri.py` (3 tests) and `tests/test_activity_alfabeto_leo.py` (4 tests).
+  6. Reconciled activity count and readiness coverage in `tests/test_activity_contract.py`, `tests/test_first_party_activity_audience_metadata.py`, and `tests/test_first_party_activity_readiness.py`. Fixed pre-existing tmpfiles test assertion in `tests/test_system_overlay_contract.py`.
+
+- Tests & Verification:
+  - `python3 tools/audit_launcher_spoken_labels.py`: PASS (`BUILT_IN_ACTIVITIES=36 ACTIVITY_TITLE_LOCALE_COMBINATIONS=72 ACTIVITY_TITLE_COMPLETE=72`)
+  - `python3 tools/audit_activity_backend_independence.py`: PASS (`activities=36 blockers=0`)
+  - `python3 tools/audit_activity_system_chrome_ownership.py --strict`: PASS (`blockers=0`)
+  - `python3 -m unittest discover -s tests -p "test_activity_*.py"`: 355 tests PASS
+  - Headless Simulator Verification:
+    - `python3 tools/headless_greia_simulator.py --activity-dir activities/il_giardino_dei_numeri`: PASS (survived 3s, click (300, 300), home click at (38, 38), clean exit rc=0)
+    - `python3 tools/headless_greia_simulator.py --activity-dir activities/alfabeto_leo`: PASS (survived 3s, click (300, 300), home click at (38, 38), clean exit rc=0)
+

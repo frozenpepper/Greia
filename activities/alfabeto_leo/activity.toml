@@ -1,0 +1,47 @@
+[activity]
+id = "org.greia.alfabeto-leo"
+legacy_ids = []
+title_key = "activity.alfabeto_leo.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+discovery_tags = ["words"]
+
+[education]
+categories = ["language", "phonics", "fine_motor"]
+difficulty = 1
+recommended_age_min = 2
+recommended_age_max = 4
+difficulty_min = 1
+difficulty_max = 3
+adaptive_difficulty = true
+skills = [
+  { id = "language.letter_recognition", weight = 3 },
+  { id = "language.phonological_awareness", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+]
+events = [
+  { id = "letter.discovered", kind = "milestone" },
+  { id = "alphabet.parade_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["keyboard", "touch", "audio.basic"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

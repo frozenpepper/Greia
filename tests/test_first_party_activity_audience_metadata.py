@@ -28,7 +28,7 @@ class FirstPartyActivityAudienceMetadataTests(unittest.TestCase):
         # future tranche changes the count, update this bound and
         # record why in HANDOVER.
         self.assertGreaterEqual(len(self.manifests), 31)
-        self.assertLessEqual(len(self.manifests), 34)
+        self.assertLessEqual(len(self.manifests), 36)
         allowed = set(DISCOVERY_GROUP_IDS)
         for manifest in self.manifests:
             with self.subTest(activity=manifest.activity_id):

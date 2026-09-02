@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.il_giardino_dei_numeri.title": "IL GIARDINO DEI NUMERI",
+    "activity.title": "IL GIARDINO DEI NUMERI",
+    "ui.touch_to_count": "TOCCA E CONTA!",
+    "ui.keep_counting": "CONTA CON DANI!",
+    "ui.well_done": "FANTASTICO!",
+    "ui.next": "ANCORA! ▶"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

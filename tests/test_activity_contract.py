@@ -27,6 +27,7 @@ class ActivityContractTests(unittest.TestCase):
             [activity.activity_id for activity in activities],
             [
                 "org.greia.acquario-magico",
+                "org.greia.alfabeto-leo",
                 "org.greia.baia-delle-orche",
                 "org.greia.bottega-delle-misure",
                 "org.greia.casa-del-dieci",
@@ -36,6 +37,7 @@ class ActivityContractTests(unittest.TestCase):
                 "org.greia.enciclopedia",
                 "org.greia.festa-delle-rime",
                 "org.greia.foresta-parole",
+                "org.greia.il-giardino-dei-numeri",
                 "org.greia.la-discesa-della-biglia",
                 "org.greia.labirinto-magico",
                 "org.greia.luci-di-momo",

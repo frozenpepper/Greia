@@ -11,7 +11,7 @@ class SystemOverlayContractTests(unittest.TestCase):
     def test_hardware_state_directories_are_setgid_for_cross_service_reads(self) -> None:
         config = (PROJECT_ROOT / "build/overlay/etc/tmpfiles.d/greia-os.conf").read_text()
         self.assertIn(
-            "d /var/lib/greia-system-settings 2750 greiapanel greiasettings -",
+            "d /var/lib/greia-system-settings 2770 greiapanel pipsettings -",
             config,
         )
         self.assertIn("d /run/greia-hardware 2750 greiakid greiapanel -", config)

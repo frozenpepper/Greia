@@ -150,6 +150,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
             set(checked),
             {
                 "acquario_magico",
+                "alfabeto_leo",
                 "baia_delle_orche",
                 "bottega_delle_misure",
                 "casa_del_dieci",
@@ -159,6 +160,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "enciclopedia_greia",
                 "festa_delle_rime",
                 "foresta_parole",
+                "il_giardino_dei_numeri",
                 "la_discesa_della_biglia",
                 "labirinto_magico",
                 "luci_di_momo",

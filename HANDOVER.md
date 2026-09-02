@@ -202,7 +202,26 @@ All new prerecorded speech continues through `tools/greia_voice.py` / VoiceEngin
 
 ---
 
-## 8. Parent/system controls
+## 8. Toddler Activities (Ages 2–3): Counting and Letters
+
+Two first-party built-in Activities targeted at toddlers (2–4yo, difficulty 1, pre-reader design) have been added:
+- `activities/il_giardino_dei_numeri/` (`org.greia.il-giardino-dei-numeri`): Early counting, subitizing, and one-to-one correspondence (quantities 1–5) guided by Dani with interactive objects (apples, strawberries, flowers, butterflies, ducklings, stars), basket filling mechanics, ascending pentatonic procedural audio chimes, pleasant ripple effects on empty ground taps, and milestone/completion platform events (`garden.set_counted`, `garden.basket_filled`).
+- `activities/alfabeto_leo/` (`org.greia.alfabeto-leo`): Capital letter discovery (A–Z) guided by Leo with tactile surprises, 26 bilingual object reveals (Italian/English), dual modes (Explore & Peek-a-boo Guess), physical keyboard letter key discovery (pressing A–Z triggers the letter immediately), procedural audio chimes/wobbles/fanfares, and milestone/completion platform events (`letter.discovered`, `alphabet.parade_completed`).
+
+Both activities satisfy:
+- Pre-reader UX pass: `PRE_READER_CORE_FLOW_PASS=yes`, `TEXT_REQUIRED_FOR_GAMEPLAY=no` (`PRE_READER_UX.md`)
+- Capital letters default policy (`ADR 0034`)
+- Spoken title audio generated via Chatterbox MLX Multilingual v3 engine for both Italian and English (`locales/it/audio/activity-title.wav`, `locales/en/audio/activity-title.wav`)
+- 256x256 RGBA icons composed with character art
+- Dedicated unit tests: `test_activity_il_giardino_dei_numeri.py` (3 tests PASS), `test_activity_alfabeto_leo.py` (4 tests PASS)
+- `tools/audit_launcher_spoken_labels.py`: PASS (`BUILT_IN_ACTIVITIES=36 ACTIVITY_TITLE_COMPLETE=72`)
+- `tools/audit_activity_backend_independence.py`: PASS (`activities=36 blockers=0`)
+- `tools/audit_activity_system_chrome_ownership.py --strict`: PASS (`blockers=0`)
+- `tools/headless_greia_simulator.py`: PASS on both activities (survived >= 3s, click interaction, Home return to Shell, rc=0)
+
+---
+
+## 9. Parent/system controls
 
 Current source after the Home physical candidate includes a platform-owned persistent system-control domain and later Parent API exposure for live output volume controls.
 

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.alfabeto_leo.title": "L'ALFABETO DI LEO",
+    "activity.title": "L'ALFABETO DI LEO",
+    "ui.mode_explore_title": "SCOPRI LE LETTERE!",
+    "ui.mode_guess_title": "CERCA LA LETTERA!",
+    "ui.switch_to_guess": "CERCA! 🔍",
+    "ui.switch_to_explore": "ALFABETO 🔤",
+    "ui.guess_prompt": "DOV'È LA $char?"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

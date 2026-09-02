@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.il_giardino_dei_numeri.title": "THE NUMBER GARDEN",
+    "activity.title": "THE NUMBER GARDEN",
+    "ui.touch_to_count": "TOUCH AND COUNT!",
+    "ui.keep_counting": "COUNT WITH DANI!",
+    "ui.well_done": "GREAT JOB!",
+    "ui.next": "MORE! ▶"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}
