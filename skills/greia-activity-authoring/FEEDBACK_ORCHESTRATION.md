@@ -84,7 +84,7 @@ else:
     present_ordinary_collection(transition)
 ```
 
-The exact class/function names are Activity-specific. The invariant is not:
+The exact class/function names are Activity-specific. The invariant is:
 
 > **model/state decides what happened before presentation/audio decides how to express it.**
 
