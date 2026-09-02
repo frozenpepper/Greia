@@ -418,6 +418,7 @@ class AquariumApp:
             self.session.glow_mode,
             self.session.spawn_selector_idx,
         )
+        self.canvas.present()
         pygame.display.flip()
 
 
