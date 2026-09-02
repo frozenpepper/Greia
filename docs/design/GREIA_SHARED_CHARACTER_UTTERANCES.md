@@ -1,7 +1,7 @@
 # Greia Shared Character Utterances
 
-**Status:** accepted design; Voice Production Engine ready; **shared audio generation and owner listening are still pending**  
-**Reviewed:** 2026-08-28  
+**Status:** accepted design + **owner-accepted v0.2 audio assets**; runtime resolver integration remains separate  
+**Reviewed:** 2026-09-02  
 **Scope:** small OS-owned multilingual character reactions shared across Activities  
 **Production authority:** `tools/greia_voice.py` / `tools/record_shared_character_utterances.py`
 
@@ -16,7 +16,7 @@ skills/greia-voice-production/SKILL.md
 
 ## 1. Decision
 
-Greia will ship a small, bounded library of **canonical prerecorded character reactions** that can be reused across Activities.
+Greia has a small bounded library of canonical prerecorded character reactions intended for reuse across Activities.
 
 Activities request meaning, not a sentence or filename:
 
@@ -26,20 +26,20 @@ utterance = praise.general
 locale = it
 ```
 
-The child device never synthesizes these lines. Greia resolves only already-reviewed static audio.
+The child device never synthesizes these lines. Runtime may resolve only versioned, human-accepted static audio.
 
 The library exists to:
 
 1. give recurring characters consistent personality across Activities;
-2. avoid duplicating generic praise/retry audio into many packages;
-3. give Activity authors useful spoken reactions without needing a voice model locally;
-4. keep random wording variation presentation-only and bounded.
+2. avoid duplicating generic praise/retry recordings in many packages;
+3. let Activity authors request useful spoken reactions without owning a voice model;
+4. keep wording variation presentation-only and bounded.
 
-It is **not** a general dialogue system and it is **not** pronunciation authority.
+It is **not** a dialogue generator and it is **not** pronunciation authority.
 
-## 2. Current v0.1 families
+## 2. Semantic families
 
-The semantic ID names the meaning. Every phrase inside one family must be interchangeable in every context where that family is requested.
+Every phrase inside one family must be interchangeable wherever that semantic family is requested.
 
 | Family | Italian variants | English variants | Expression | Motion |
 |---|---|---|---|---|
@@ -49,18 +49,18 @@ The semantic ID names the meaning. Every phrase inside one family must be interc
 | `encourage.progress` | `Continua così!` · `Ci sei quasi!` · `Vai avanti!` | `Keep going!` · `Almost there!` · `You're doing great!` | `happy` | `idle_bounce` |
 | `ready.go` | `Forza, andiamo!` · `Ci siamo? Via!` · `Si parte!` | `Come on, let's go!` · `Ready? Go!` · `Here we go!` | `happy` | `happy_hop` |
 
-The Italian phrases deliberately avoid child-gender agreement such as `bravo/brava`.
+Italian reaction copy deliberately avoids child-gender agreement such as `bravo/brava`.
 
-## 3. Production target — still pending
+## 3. Current production state
 
-The v0.1 target is:
+The intended shared reaction matrix is:
 
 ```text
 6 characters
 × 5 semantic families
 × 3 variants
 × 2 locales (it, en)
-= 180 review candidates
+= 180 shared clips
 ```
 
 Characters:
@@ -74,38 +74,43 @@ tito
 momo
 ```
 
-**Do not describe this library as generated, accepted, packaged or runtime-complete until the recording/review evidence exists.**
-
 Current authoritative state:
 
 ```text
 Voice Engine / producer: IMPLEMENTED
 phrase matrix:          DEFINED
-generation:             COMPLETE (192 candidates: 180 shared + 12 intros)
-owner listening:        COMPLETE (in-session 2026-08-28)
-accepted asset set:     assets/audio/characters/shared/v0.2/   (registry_version v0.2, 192 clips, OWNER_ACCEPTED)
-retired predecessor:    assets/audio/characters/shared/v0.1/   (RETIRED.md; preserved as historical evidence)
-runtime completeness:   PENDING (assets accepted; runtime resolver wiring to v0.2/ is a separate child-runtime task)
+shared generation:      COMPLETE (180)
+intro generation:       COMPLETE (12)
+owner listening:        COMPLETE (192 total, 2026-08-28)
+accepted asset set:     assets/audio/characters/shared/v0.2/
+registry version:       v0.2
+accepted state:         OWNER_ACCEPTED
+retired predecessor:    assets/audio/characters/shared/v0.1/
+runtime resolver:       SEPARATE / PENDING where not yet wired to v0.2
 ```
 
-A future partial accepted library is valid: one or two accepted variants may survive for a family. Zero accepted variants means that family is unavailable and must fail soft.
+The accepted set therefore contains **192 reviewed clips: 180 shared reactions + 12 character introductions**.
+
+Do not call v0.2 “pending generation/listening”. Conversely, accepted asset bytes do not by themselves prove that every child runtime/API consumer already resolves the library.
+
+The older `v0.1` set is historical/retired and must not silently become the runtime source of truth again.
 
 ## 4. Canonical production route
 
-All 180 candidates are produced through the Greia Voice Production Engine using:
+Shared reactions are produced through VoiceEngine with:
 
 ```text
 kind = shared_character_utterance
 ```
 
-Automatic routing:
+Provider routing remains an engine implementation detail:
 
 ```text
-Lilli/Leo/Flash/Tito/Momo -> canonical cloned-character provider
-Dani                       -> deterministic native/system Dani provider
+Lilli/Leo/Flash/Tito/Momo -> canonical natural-character provider
+Dani                       -> deterministic system Dani provider
 ```
 
-No shared-library script may own Chatterbox, MLX, Whisper, native TTS, trimming, token budgets or FFmpeg packaging directly.
+No shared-library producer may own Chatterbox, MLX, Whisper, native TTS, silence trimming, token budgets or FFmpeg packaging directly.
 
 Dani remains intentionally robotic/system-generated and uses `greia.dani.system-v1`.
 
@@ -118,7 +123,7 @@ docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 
 ## 5. Runtime contract
 
-Once accepted audio is integrated, each character + locale + family resolves to a non-empty reviewed array:
+When the runtime resolver consumes the accepted catalogue, each available character + locale + semantic family resolves to a non-empty reviewed variant set:
 
 ```text
 shared_utterances[character][locale][family] = [
@@ -128,7 +133,7 @@ shared_utterances[character][locale][family] = [
 ]
 ```
 
-Selection semantics:
+Selection semantics remain simple:
 
 ```python
 variants = resolved_family.variants
@@ -137,22 +142,22 @@ selected = variants[0] if len(variants) == 1 else rng.choice(variants)
 
 Rules:
 
-- one accepted recording is valid;
-- multiple accepted recordings add variety;
-- rejected/missing recordings are absent, never silent placeholders;
-- Activities never request a variant number, filename or array index;
-- randomness is presentation-only;
-- adding/removing a reviewed variant requires no Activity gameplay change;
-- visual feedback remains sufficient if the family is unavailable;
-- no speech variant may change correctness, score, reward, difficulty or progression.
+- one accepted variant is valid;
+- multiple accepted variants add presentation variety;
+- rejected/missing candidates are absent, never silent placeholders;
+- Activities request semantic family, never variant number/filename/index;
+- selection randomness is presentation-only;
+- changing the accepted variant set requires no gameplay rewrite;
+- unavailable family fails soft to visual/non-spoken feedback;
+- spoken variant may not change correctness, score, reward, difficulty or progression.
 
-Do not add shuffle histories, adaptive reinforcement or weighting until there is evidence they are useful.
+Do not add shuffle histories, adaptive reinforcement or weighting without evidence that they solve a real problem.
 
 ## 6. Scheduling and animation
 
-The utterance and its expression/motion are one presentation event. Do not pair cheerful praise with a conflicting expression.
+Speech and character expression/motion form one presentation event. Do not pair a cheerful line with conflicting character state.
 
-Use only established semantic states/motions, for example:
+Established examples include:
 
 ```text
 neutral
@@ -164,7 +169,7 @@ celebrate_pop
 surprised_wobble
 ```
 
-Speech must not interrupt:
+Shared reactions must not interrupt:
 
 - a pronunciation target;
 - a timed answer;
@@ -172,7 +177,7 @@ Speech must not interrupt:
 - another spoken instruction;
 - another character clip.
 
-Do not speak after every trivial interaction. Use bounded cooldown/repetition suppression where needed.
+Do not speak after every trivial interaction. Use bounded cooldown/repetition suppression where a consumer needs it.
 
 ## 7. Pedagogical speech remains separate
 
@@ -182,15 +187,20 @@ Shared reactions communicate emotion and feedback. They do not teach a sound.
 
 Letters, syllables, phonemes, spelling units and pronunciation exercises remain deterministic pedagogical audio even when a mascot is visually present.
 
-## 8. Character introductions are a different asset family
+## 8. Character introductions
 
-Greia also plans a small **OS-owned character introduction pack**: one fun self-introduction per character per locale for possible first-run/Home/character-gallery use.
-
-Those introductions are **not** a sixth shared-reaction family. They are character-specific content and therefore use:
+The accepted v0.2 asset set also contains one Italian and one English self-introduction for each canonical character:
 
 ```text
-Lilli/Leo/Flash/Tito/Momo -> kind = character_dialogue
-Dani                       -> kind = dani_system_speech
+6 characters × 2 locales = 12 accepted intro clips
+assets/audio/characters/shared/v0.2/_intros/
+```
+
+Introductions are **not** a sixth shared-reaction family. They are character-specific content and were produced as:
+
+```text
+Lilli/Leo/Flash/Tito/Momo -> character_dialogue
+Dani                       -> dani_system_speech
 ```
 
 Stable cue IDs:
@@ -204,60 +214,61 @@ character.intro.tito
 character.intro.momo
 ```
 
-Their final product placement is intentionally undecided. Candidate UX includes:
+Their final product placement is still deliberately undecided. Candidate uses include an optional meet-the-cast moment, tappable Home characters or a future gallery.
 
-- an optional first-run “meet the characters” moment;
-- characters wandering/appearing on Home and speaking when tapped/clicked;
-- a future character gallery/profile page;
-- occasional non-blocking discovery moments.
+Regardless of placement:
 
-Do **not** auto-play all six introductions in sequence at boot. At most one voice should play at a time, introductions must be interruptible/skippable, and core navigation must never depend on hearing them.
+- never auto-play all six in sequence at boot;
+- only one voice plays at a time;
+- introductions are interruptible/skippable;
+- core navigation never depends on hearing them;
+- playing an introduction cannot grant permission/progression/gameplay truth;
+- reuse the accepted platform asset rather than creating Activity-local copies.
 
-The exact v0.1 scripts live in `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md` and the production commands live in `docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md`.
+Exact scripts/voice policy live in `GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`.
 
-## 9. Acceptance gate
+## 9. Human acceptance rule
 
-Every candidate produced by the Voice Engine remains:
+Every **new** VoiceEngine candidate begins with human review pending. Human listening checks:
 
-```text
-human_review = PENDING
-```
-
-Human listening must verify:
-
-- exact locale and words;
-- recognizable canonical identity for Lilli/Leo/Flash/Tito/Momo;
-- clearly synthetic/fun robotic Dani identity;
+- exact locale and intended words;
+- recognizable canonical identity for natural characters;
+- deliberately synthetic/fun Dani identity;
 - no invented/repeated sounds;
-- no clipping or unwanted tails;
+- no clipping/unwanted tail;
 - acceptable pronunciation/stress;
 - lively but not exhausting delivery;
-- acceptable playback on small laptop speakers.
+- small-speaker intelligibility where relevant.
 
-Whisper is only an advisory warning/regeneration aid for suitable natural-character lines. It never accepts audio, and tiny reactions/Dani may legitimately be `NOT_APPLICABLE`.
+Whisper is advisory only. It never accepts audio, and tiny reactions/Dani may legitimately skip ASR.
 
-Accepted bytes must be versioned. Do not silently replace reviewed audio in place.
+The v0.2 set has already completed this human acceptance step. Future regeneration creates a new candidate/version; do not silently overwrite accepted bytes in place.
 
-## 10. Completion definition
+## 10. Completion boundaries
 
-The shared-utterance work is complete only when all of the following are true:
-
-```text
-Voice Engine readiness verified on the production workstation
-180 intended candidates attempted
-human listening recorded
-accepted/rejected set explicit
-accepted assets promoted into the shared runtime catalogue
-runtime resolver exposes only accepted variants
-missing-family fail-soft behavior tested
-Activities can request semantic families without package duplication
-```
-
-The character-introduction pack has a separate completion line:
+### Authoring/content production — COMPLETE for v0.2
 
 ```text
-12 intended intro candidates attempted (6 × 2 locales)
+180 shared candidates generated
+12 intro candidates generated
 human listening recorded
-accepted intro assets versioned
-runtime placement deliberately chosen and separately tested
+accepted set versioned
+v0.1 retired
+v0.2 owner-accepted assets committed
 ```
+
+### Runtime shared-library completion — SEPARATE
+
+Runtime work is complete only when applicable consumers also prove:
+
+```text
+resolver reads the accepted v0.2 catalogue
+only accepted variants are exposed
+missing family fails soft
+Activities request semantic families rather than package-local filenames
+duplicate per-Activity generic reactions are not required
+```
+
+### Introduction product completion — SEPARATE
+
+The 12 accepted clips exist, but product placement is complete only when a selected OS UX is implemented and tested under the one-voice/interruptible/non-blocking constraints above.

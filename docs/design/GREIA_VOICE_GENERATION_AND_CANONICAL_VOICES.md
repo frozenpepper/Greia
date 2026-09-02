@@ -1,7 +1,7 @@
 # Greia Voice Generation and Canonical Character Voices
 
-**Status:** accepted voice policy + canonical authoring Voice Production Engine; shared-library and character-intro audio still pending production/review  
-**Reviewed:** 2026-08-28  
+**Status:** accepted voice policy + canonical authoring Voice Production Engine + owner-accepted shared/introduction v0.2 assets  
+**Reviewed:** 2026-09-02  
 **Scope:** presenter speech, researched narration, shared reactions, pedagogical speech, Dani system speech, character introductions, multilingual static audio and human review  
 **Canonical production tool:** `tools/greia_voice.py`
 
@@ -16,9 +16,9 @@ docs/design/GREIA_CANONICAL_CAST_SYSTEM.md
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 ```
 
-## 1. “Voice Studio” means the authoring workflow, not child runtime
+## 1. Voice Studio is an authoring workflow
 
-In contributor conversation, “Voice Studio” may be used as shorthand for Greia's authoring voice workflow:
+“Voice Studio” is shorthand for Greia's authoring workflow around `VoiceEngine`:
 
 ```text
 semantic request
@@ -27,43 +27,37 @@ semantic request
 -> optional advisory verification
 -> review audio + receipt
 -> human listening
--> owning workflow promotion
+-> versioned accepted asset promotion
 ```
 
-It is currently a repository CLI/service workflow, not a child-runtime service and not a requirement for a GUI.
+It is not a child-runtime TTS service and does not require a GUI.
 
-No TTS model, Whisper model or provider stack runs on the Acer/child device. The child only receives already-reviewed static audio.
+No Chatterbox/Whisper model stack runs on the Acer/child device for normal narration. Child runtime consumes reviewed prerecorded assets.
 
-## 2. Speech has different semantic jobs
+## 2. Speech has semantic jobs
 
-Greia does not treat all speech as one TTS problem.
+Greia does not route every string through one generic TTS rule.
 
 ```text
-A. character_dialogue
-   presenter welcome, narration, researched facts, contextual hints,
-   story/dialogue, OS-owned character introductions
-   -> canonical Lilli/Leo/Flash/Tito/Momo identity
+character_dialogue
+  presenter welcome, narration, researched facts, contextual hints,
+  story/dialogue, natural-character introductions
 
-B. shared_character_utterance
-   generic praise, success, retry, progress and start reactions
-   -> central reviewed Greia shared library
-   -> production through VoiceEngine; runtime resolves accepted static assets
+shared_character_utterance
+  reusable praise/success/retry/progress/start reactions
 
-C. pedagogical_speech
-   letters, syllables, phonics, spelling/pronunciation targets
-   -> deterministic native/system provider
-   -> correctness and consistency outrank mascot identity
+pedagogical_speech
+  letters, syllables, phonics, spelling/pronunciation targets
 
-D. dani_system_speech
-   Dani-specific dialogue/introduction
-   -> deterministic system speech preserving Dani's robotic identity
+dani_system_speech
+  Dani-specific robotic dialogue/introduction
 ```
 
 Governing rule:
 
 > **If the sound itself is the educational truth being taught, use pedagogical speech. If speech communicates content through a character, use character speech.**
 
-Text length is not the selector. `Vai!` may be character dialogue; `ma` may be a teaching target.
+Text length is not the selector. A one-word character exclamation may be `character_dialogue`; a short syllable may be `pedagogical_speech`.
 
 ## 3. Canonical production boundary
 
@@ -73,7 +67,7 @@ All new prerecorded Greia speech production goes through:
 tools/greia_voice.py
 ```
 
-Callers provide only semantic intent:
+Callers provide semantic intent:
 
 ```text
 speaker
@@ -83,79 +77,71 @@ exact reviewed text
 cue/output identity
 ```
 
-Callers do not operate:
+Callers do not own:
 
 ```text
-Chatterbox model IDs
-MLX lifecycle/cache rules
+Chatterbox/MLX model selection or lifecycle
 canonical cloning references/hashes
 native host voice names/rates
 pedagogical pronunciation workarounds
 Whisper commands/models
-FFmpeg trim/packaging commands
-token budgets or silence-trim heuristics
+FFmpeg trim/packaging mechanics
+token budgets/silence heuristics
 ```
 
-Those mechanics belong behind `VoiceEngine` and its provider interfaces.
-
-Historical direct-backend Activity generators are not accepted extension points. Tracked Activity generators must stay thin semantic request/batch producers.
+Those mechanics belong behind `VoiceEngine` and provider interfaces. Historical direct-backend producers are not accepted extension points; new work should migrate them to thin semantic VoiceEngine clients.
 
 ## 4. Canonical character identities
 
 | Character | Voice ID | Speech personality |
 |---|---|---|
 | Lilli | `greia.lilli.v1` | warm wonder, creativity, stories, art and imagination |
-| Leo | `greia.leo.v1` | warm oldish savvy storyteller; thoughtful, curious, never young-teacher energy |
+| Leo | `greia.leo.v1` | warm oldish savvy storyteller; thoughtful and curious, not young-teacher energy |
 | Flash | `greia.flash.v1` | bright, quick, playful action and friendly challenge |
 | Tito | `greia.tito.v1` | warm adventurous discovery, nature, investigation and curiosity |
 | Momo | `greia.momo.v1` | musical, unusual, playful emotion, silliness and celebration |
 | Dani | `greia.dani.system-v1` | fun, concise, clearly robotic logic/pattern feedback |
 
-Canonical source masters:
+Canonical source masters/references:
 
 ```text
 assets/source/audio/character-voice-masters/v0.1/
-```
-
-Reviewed cloning references and registry:
-
-```text
 assets/audio/characters/canonical/v0.1/
 assets/audio/characters/canonical/v0.1/manifest.toml
 ```
 
-The engine verifies cloning-reference SHA-256 values before cloned generation. Dani intentionally has no cloned natural-voice reference.
+VoiceEngine verifies natural-character cloning-reference hashes before generation. Dani intentionally has no natural cloned reference.
 
-## 5. Current providers are implementation details
+## 5. Current provider implementation
 
-Current accepted implementation path:
+Current accepted authoring implementation path:
 
 ```text
 Lilli/Leo/Flash/Tito/Momo
-    -> Chatterbox Multilingual V3 on Apple-Silicon MLX
+  -> Chatterbox Multilingual V3 on Apple-Silicon MLX
 
 pedagogical_speech
-    -> macOS deterministic native/system provider
+  -> deterministic macOS native/system provider
 
 Dani
-    -> macOS deterministic native/system provider
+  -> deterministic macOS native/system provider
 
 optional semantic warning
-    -> mlx-whisper-tiny for suitable multi-word natural-character lines
+  -> mlx-whisper-tiny for suitable multi-word natural-character lines
 ```
 
-A future provider is added behind `VoiceEngine`; Activities do not learn a new backend command.
+Providers are implementation details below VoiceEngine. A future provider should not require Activities/OS content producers to learn another backend command.
 
 Rejected directions remain rejected:
 
-- cloned character speech as phonics/syllable authority;
+- cloned character speech as phonics/syllable correctness authority;
 - arbitrary host TTS impersonating a canonical character;
-- silent/synthetic placeholders reported as successful speech;
-- runtime voice models on the child device.
+- placeholder audio reported as successful speech;
+- normal narration model stacks on child devices.
 
-## 6. Presenter/speech design is part of Activity design
+## 6. Presenter/speech design belongs to Activity/content design
 
-Every new Activity explicitly decides:
+Every new Activity decides explicitly:
 
 ```text
 lead presenter/mascot or deliberate none
@@ -166,36 +152,38 @@ optional researched curiosity/fact narration
 supported locales and spoken coverage
 ```
 
-Use the shared library when generic praise/retry meaning is sufficient. Do not duplicate generic reaction recordings per Activity.
+Use the shared library when generic praise/retry meaning is sufficient. Do not create package-local copies of generic reactions just to vary wording.
 
-Detailed Activity rules:
+Detailed Activity guidance:
 
 ```text
 skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
+skills/greia-activity-authoring/LAUNCHER_SPOKEN_LABELS.md
 ```
 
 ## 7. Multilingual contract
 
-Speech uses stable semantic cue IDs independent of language:
+Speech uses stable semantic cue IDs independent of locale:
 
 ```text
 presenter.welcome
 curiosity.orca.family_pods
 phonics.ma
 character.intro.lilli
+activity.title
 ```
 
-Each supported locale owns reviewed wording. If speech is an accepted feature, each shipped locale needs reviewed audio with the correct semantic speaker.
+Each shipped spoken locale owns reviewed wording/audio. Displayed and spoken wording must remain semantically aligned.
 
 Do not:
 
 - hard-code locale-specific gameplay branches;
-- let displayed and spoken wording drift semantically;
-- impersonate a canonical character with arbitrary system TTS;
-- make scoring/correctness/difficulty depend on locale or spoken variant.
+- impersonate canonical characters with arbitrary system voices;
+- make correctness/score/reward/difficulty depend on locale or spoken variant;
+- claim a selectable locale is a fully supported spoken release language without the required content/evidence.
 
-If a provider is unavailable, retain the semantic cue/text plan and report audio pending. Do not erase or fake the feature.
+If a provider is unavailable during authoring, retain the cue/text plan and report audio pending. Do not fake completion.
 
 ## 8. Character dialogue and researched narration
 
@@ -206,11 +194,12 @@ brief welcome/orientation
 contextual hints
 short story/narration beats
 Activity-specific explanation
-researched curiosity facts
-OS-owned natural-character introductions
+finite reviewed curiosity/researched facts
+natural-character introductions
+launcher Activity title when that accepted presenter is the speaker
 ```
 
-Facts are finite reviewed authoring content with provenance. They are never generated by an LLM at child runtime and never require network access.
+Facts are finite reviewed authoring content with provenance. They are never generated by an LLM at child runtime and never require network access to be spoken.
 
 ## 9. Pedagogical speech
 
@@ -226,13 +215,13 @@ pronunciation exercises
 foreign-language pronunciation targets
 ```
 
-The exact educational target belongs to the semantic request. Provider-specific spellings/accent hints are private engine implementation details.
+Provider-specific spellings/accent workarounds are private engine details. A fluent speaker/educator must review pronunciation-critical output.
 
-A fluent speaker/educator must review pronunciation-critical output.
+Do not use pedagogical speech merely because a launcher label/title is short.
 
-## 10. Shared character reactions — designed, not yet produced
+## 10. Shared character reaction library — v0.2 accepted assets
 
-Current v0.1 families:
+Semantic families:
 
 ```text
 praise.general
@@ -242,28 +231,27 @@ encourage.progress
 ready.go
 ```
 
-Target:
+Matrix:
 
 ```text
-6 characters × 5 families × 3 variants × 2 locales = 180 clips
+6 characters × 5 families × 3 variants × 2 locales = 180 shared clips
 ```
 
-The producer and VoiceEngine route exist. The v0.1 content tranche (180 shared clips,
-generated 2026-08-23 under the older engine build) is **RETIRED**; see
-`assets/audio/characters/shared/v0.1/RETIRED.md`. The current authoritative state:
+Current authoritative state:
 
 ```text
-shared reaction library: assets/audio/characters/shared/v0.2/   (192 clips: 180 shared + 12 intros, OWNER_ACCEPTED 2026-08-28)
-180 shared candidates generated: COMPLETE (tmp/shared-character-utterances/)
-12 intro candidates generated:   COMPLETE (tmp/character-intros/)
-human listening:                 COMPLETE (in-session 2026-08-28)
-accepted runtime set:            assets/audio/characters/shared/v0.2/  (registry_version v0.2)
-runtime resolver wiring:         PENDING (separate child-runtime task)
+accepted library:       assets/audio/characters/shared/v0.2/
+shared reactions:       180 generated + owner-accepted
+character introductions:12 generated + owner-accepted
+accepted total:         192
+owner listening:        COMPLETE (2026-08-28)
+retired predecessor:    assets/audio/characters/shared/v0.1/
+runtime resolver wiring:separate/pending where not yet completed
 ```
 
-Do not claim the shared library is complete merely because `tools/record_shared_character_utterances.py` exists.
+The older v0.1 production tranche is retired historical material; see its retirement notice. Do not regress runtime/content authority back to it.
 
-Exact phrase/design authority:
+Exact semantic/status authority:
 
 ```text
 docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
@@ -275,14 +263,15 @@ Production/review authority:
 docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
 ```
 
-## 11. OS-owned character introduction pack
+Asset acceptance and runtime resolver completion are different gates. The v0.2 files are accepted; consumers still need to prove correct resolver/fail-soft behavior where integration remains open.
 
-Greia should also produce one fun self-introduction per character per initial locale. This is a reusable platform asset pack whose final UX placement remains deliberately undecided.
+## 11. Character introductions — accepted assets, UX placement separate
 
-Target:
+The accepted v0.2 set includes:
 
 ```text
 6 characters × 2 locales = 12 intro clips
+assets/audio/characters/shared/v0.2/_intros/
 ```
 
 Stable cue IDs:
@@ -296,108 +285,69 @@ character.intro.tito
 character.intro.momo
 ```
 
-### Lilli
-
-Italian:
-
-> Ciao! Io sono Lilli! Adoro inventare storie, disegnare cose colorate e trovare un po' di magia dappertutto. Hai un'idea buffa? Vieni con me!
-
-English:
-
-> Hi! I'm Lilli! I love making up stories, drawing colorful things, and finding a little magic everywhere. Got a silly idea? Come with me!
-
-### Leo
-
-Italian:
-
-> Oh, ciao! Io sono Leo. Mi piacciono le storie, le parole e tutte quelle domande che cominciano con “perché”. Se c'è qualcosa da scoprire, io sono pronto!
-
-English:
-
-> Oh, hello! I'm Leo. I like stories, words, and all those questions that start with “why”. If there's something to discover, I'm ready!
-
-### Flash
-
-Italian:
-
-> Ehi! Io sono Flash! Adoro correre, giocare e provare sfide velocissime. Se senti qualcuno gridare “via!”, probabilmente sono già partito!
-
-English:
-
-> Hey! I'm Flash! I love running, playing, and trying super-fast challenges. If you hear someone shout “go!”, I've probably already started!
-
-### Dani
-
-Italian:
-
-> Bip-bop! Io sono Dani! Mi piacciono numeri, schemi, puzzle e cose che fanno clic proprio al posto giusto. Modalità amicizia: attivata!
-
-English:
-
-> Beep-bop! I'm Dani! I like numbers, patterns, puzzles, and things that click into exactly the right place. Friendship mode: activated!
-
-### Tito
-
-Italian:
-
-> Ciao, esploratore! Io sono Tito! Mi piace curiosare tra boschi, mari, sentieri e piccoli misteri. Andiamo a vedere cosa c'è dietro l'angolo!
-
-English:
-
-> Hello, explorer! I'm Tito! I love poking around forests, seas, trails, and little mysteries. Let's see what's around the corner!
-
-### Momo
-
-Italian:
-
-> Buuu! ... Scherzavo! Io sono Momo! Adoro musica, rumori buffi, esperimenti strani e feste improvvise. Se qualcosa fa boing, voglio provarla!
-
-English:
-
-> Booo! ... Just kidding! I'm Momo! I love music, silly noises, strange experiments, and surprise parties. If something goes boing, I want to try it!
-
-Routing:
+Routing used for production:
 
 ```text
 Lilli/Leo/Flash/Tito/Momo -> character_dialogue
 Dani                       -> dani_system_speech
 ```
 
-These scripts are v0.1 **production candidates**, not accepted copy until owner listening. Small wording changes after listening are allowed, but update this authority and regenerate rather than silently changing spoken bytes.
+The reviewed scripts are the canonical character-introduction copy. The asset-production/listening gate is complete; **final product placement is not**.
 
-### Candidate product placement
+Candidate product uses include an optional first-run meet-the-cast moment, tappable/wandering Home characters or a future gallery.
 
-Possible later uses include:
+Constraints regardless of final placement:
 
-- optional first-run “meet the cast” moment;
-- characters walking/appearing on the first Home screen and introducing themselves when tapped/clicked;
-- a future character gallery;
-- occasional discoverable character moments.
+- never auto-play six introductions in sequence at boot;
+- one voice at a time;
+- speech is interruptible/skippable;
+- core navigation is obvious without hearing audio;
+- playing an intro cannot affect permission/progression/gameplay truth;
+- reuse accepted platform assets rather than re-recording per Activity.
 
-Product constraints regardless of placement:
+## 12. Launcher spoken labels
 
-- never auto-play six speeches back-to-back at boot;
-- one character voice at a time;
-- speech must be skippable/interruptible;
-- core navigation remains obvious without audio;
-- hearing an introduction must not unlock permissions, progression or gameplay truth;
-- the same reviewed asset should be reused instead of Activity-local re-recordings.
+Launcher spoken labels are Shell-owned prerecorded presentation, not Activity-owned hover logic and not runtime TTS.
 
-## 12. Whisper is advisory
+Current initial set:
 
-Suitable multi-word natural-character dialogue/shared speech may be transcribed by Whisper with the requested language explicitly set.
+```text
+34 Activities × it/en = 68 Activity-title clips
+19 Collection/sub-Collection IDs × it/en = 38 system clips
+106 total owner-accepted launcher-label clips
+```
+
+Policy:
+
+- platform Collections/sub-Collections use Leo;
+- Activity title uses an explicitly accepted lead presenter when established, otherwise Leo;
+- natural speakers route through `character_dialogue`;
+- Dani uses `dani_system_speech`;
+- never use `pedagogical_speech` merely for a launcher title;
+- runtime uses reviewed static assets and fails soft if a third-party clip is absent.
+
+Exact authoring/runtime authorities:
+
+```text
+skills/greia-activity-authoring/LAUNCHER_SPOKEN_LABELS.md
+src/greia_launcher/spoken_labels.py
+```
+
+## 13. Whisper is advisory
+
+Suitable multi-word natural-character speech may be transcribed by the configured verifier with the requested language explicitly set.
 
 ```text
 PASS -> plausible transcript match; human listening still required
-WARN -> likely mismatch; regenerate/inspect
-NOT_RUN / NOT_APPLICABLE -> no machine transcription gate
+WARN -> likely mismatch; inspect/regenerate as appropriate
+NOT_RUN / NOT_APPLICABLE -> no machine transcript gate
 ```
 
 Do not use Whisper to certify letters, syllables or phonics. Dani and very short reactions may legitimately skip ASR.
 
-## 13. Human acceptance
+## 14. Human acceptance
 
-Every engine result remains:
+Every **new** engine result starts with:
 
 ```text
 human_review = PENDING
@@ -405,17 +355,19 @@ human_review = PENDING
 
 Human listening verifies:
 
-- exact intended words and locale;
+- intended words and locale;
 - canonical character identity where applicable;
-- no invented/repeated words or sounds;
+- no invented/repeated words/sounds;
 - pronunciation/stress;
-- no clipping or unwanted tail;
+- no clipping/unwanted tail;
 - appropriate delivery;
-- small-speaker intelligibility.
+- small-speaker intelligibility where relevant.
 
-A receipt, valid container, process success or Whisper PASS is never acceptance.
+A receipt, valid container, provider return code or Whisper PASS is never acceptance.
 
-## 14. Installation/readiness
+Accepted sets are versioned. Regeneration creates a new review candidate; do not silently replace accepted bytes in place.
+
+## 15. Installation/readiness
 
 Start with:
 
@@ -435,9 +387,9 @@ Detailed workstation setup:
 docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
 ```
 
-The low-level Chatterbox field guide is engine-maintainer/troubleshooting material only.
+Low-level Chatterbox details are maintainer/troubleshooting material, not the ordinary production API.
 
-## 15. Package/runtime boundary
+## 16. Package/runtime boundary
 
 Never package authoring machinery into Activities/child runtime:
 
@@ -450,38 +402,38 @@ FFmpeg authoring binaries
 rejected/unreviewed scratch audio
 ```
 
-Runtime microphone capture is a separate Greia platform subsystem (`audio.basic`).
+Runtime microphone capture is a different platform subsystem (`audio.basic`) and must not be confused with build-time speech generation.
 
-## 16. Current implementation and content status
+## 17. Current status summary
 
 Implemented authoring infrastructure:
 
 - semantic `VoiceRequest` / `VoiceEngine` abstraction;
 - canonical voice registry + hash validation;
-- Apple-Silicon Chatterbox MLX character provider;
-- macOS pedagogical/Dani native provider;
+- Apple-Silicon Chatterbox MLX natural-character provider;
+- deterministic macOS pedagogical/Dani provider;
 - shared-library authoring kind;
-- optional advisory Whisper verifier;
+- optional advisory verifier;
 - bounded retries;
 - cross-process single-worker lock;
 - warm localhost service + batch mode;
 - WAV/OGG packaging;
-- receipts initially emitted with `human_review=PENDING` and re-stamped to `OWNER_ACCEPTED` on owner listening authorization;
+- review receipts and owner-acceptance stamping;
 - `doctor` readiness probe;
-- repository install/runbook documentation.
+- repository setup/production runbooks.
 
-Content status:
+Accepted content currently includes:
 
 ```text
-shared reaction library: 180 clips generated, 180 owner-accepted; published to assets/audio/characters/shared/v0.2/
-character intro pack:     12 clips generated,  12 owner-accepted; published to assets/audio/characters/shared/v0.2/_intros/
-runtime resolver wiring:  PENDING (separate child-runtime task; v0.2 assets are the source of truth)
+shared reactions:       180 v0.2 owner-accepted clips
+character introductions:12 v0.2 owner-accepted clips
+launcher labels:        106 owner-accepted it/en clips
 ```
 
-Future/host-specific engineering remains separate:
+Separate/future work includes:
 
-- accepted Windows/Linux native providers;
-- non-MLX cloned-character provider;
-- Activity Designer speech-kind UI/schema integration;
-- runtime shared-utterance catalogue/resolver completion where still missing;
-- final product UX for character introductions.
+- accepted Windows/Linux native authoring providers;
+- non-MLX natural-character provider where needed;
+- runtime shared-utterance resolver completion where still missing;
+- final character-introduction UX;
+- broader release-language spoken-content certification.

@@ -1,177 +1,176 @@
-# Greia — Local Agent Test/Fix Session: START HERE
+# Greia — Local Agent / Operator: Start Here
 
-**Status:** current operator entrypoint  
-**Date:** 2026-08-18  
-**Branch:** `main`  
+**Status:** LIVING routing document  
+**Reviewed:** 2026-09-02  
+**Branch policy:** current `main`  
 **Repository:** `frozenpepper/Greia`
 
-This file exists so the local coding/test agent cannot accidentally run an older partial protocol and miss later owner requirements.
+This file is a router, not a frozen test plan.
 
-## 1. Read these protocols in this exact order
+Greia has many dated acceptance procedures because evidence is intentionally tied to an exact source state and subsystem. A dated procedure does **not** remain the current global test plan merely because it still exists.
 
-```text
-1. docs/testing/2026-08-18_LOCAL_AGENT_FULL_TEST_AND_FIX_SESSION.md
-2. docs/testing/2026-08-18_RESPONSIVE_UI_ACCEPTANCE.md
-3. docs/testing/2026-08-18_MY_GREIA_ACCEPTANCE.md
-4. docs/testing/2026-08-18_EARLY_BOOT_VISUAL_AND_AUDIO_ACCEPTANCE.md
-5. HANDOVER.md
-```
+## 1. Resolve current authority first
 
-All four testing documents are mandatory parts of **one** current session. The addenda strengthen/extend the original full-session protocol; they do not replace its installation, SSH, Parent-App, package-install or hardware work.
-
-Before editing also obey the repository read order in `AGENTS.md` / `docs/DOCUMENTATION.md`.
-
-## 2. Agent role
-
-You are not a passive runner. You are expected to:
-
-- inspect failures deeply;
-- fix genuine source/test/build/runtime defects;
-- add regressions for root causes;
-- preserve architecture/security/project policies;
-- commit coherent repairs to `main` and push them;
-- rerun the smallest affected gate, then the broader gate;
-- continue after ordinary failures rather than stopping at the first red test.
-
-Do not make tests green by weakening invariants, deleting checks, encoding the Acer model into core behavior, adding per-resolution UI forks, broadening Activity/Parent authority, bypassing the typed platform architecture, or hiding boot diagnostics by deleting logging.
-
-Do not use/query/trigger GitHub-hosted Actions without a new explicit owner authorization.
-
-## 3. Current owner/product policies that must survive every repair
-
-- developer/test installs remain SSH-reachable as `greia / greia`; root SSH is disabled;
-- no random end-install password/recovery-code UX;
-- Parent main password starts `greia / greia` and is Parent-changeable through typed Greia authority;
-- optional child passwords are Greia profile credentials, not Linux users;
-- normal Greia boot is a **consoleless appliance experience**: no intentional child-visible kernel/service text, blinking VT cursor, getty/login prompt, shell or interactive boot menu;
-- Plymouth is migration debt and is **not** the accepted future Greia boot architecture; remove it coherently from target and installer only once the Greia-owned replacement is integrated and buildable;
-- current legacy BIOS profiles may keep minimal zero-timeout GRUB purely as their bootloader; do not turn GRUB into the animation engine;
-- the earliest Greia-owned visual is a clean white frame with the Greia logo/artwork using essentially the full vertical display height while preserving aspect ratio;
-- the early framebuffer renderer must query actual geometry/pixel layout, never wait for graphics and never encode Acer/1024x600 assumptions;
-- the real startup animation is launcher-owned, visibly present, monotonic-time driven and adds no more than 1.0 s of intentional delay before the profile picker;
-- an optional boot chime starts only after the first real graphical launcher frame, is one-shot/fail-silent, and can never be a boot prerequisite;
-- console suppression must preserve journal and authorized SSH diagnostics;
-- Greia UI is automatically responsive: designers/authors maintain **one semantic layout**, not one layout per resolution/device;
-- Activity authors can work in a 1024x600 logical reference canvas/world model while Greia automatically maps to the actual Activity viewport;
-- Activities may be fluid UI, fixed canvas, world-camera game, or hybrids; choose spatial semantics rather than physical pixels;
-- Activity controls/content must use platform-derived safe geometry rather than assuming the top-left surface belongs to the Activity; trusted Home/Back chrome owns that region;
-- localization is data/semantic-key driven; single-language Activities remain valid; launcher language presentation is platform-owned;
-- child-facing language cues use canonical flags when language distinction matters, not initials as the primary cue;
-- My Greia is a child-safe visual personalization Activity, not a general system administration panel;
-- ordinary Activities may receive read-only resolved child visual context, but never customization write paths merely to match colors/size;
-- an Activity may publish `READY` only after it has actually presented its first usable child-facing frame; Pygame initialization alone is not readiness;
-- R7 remains open and current Xorg is provisional compatibility, not the permanent architecture;
-- full R10 package lifecycle remains open even though bounded Parent new-install exists.
-
-## 4. Current focused source gate
-
-After synchronizing to the actual current `origin/main`, record the SHA and run:
-
-```bash
-set -o pipefail
-PYTHONPATH=src python3 -m unittest \
-  tests.test_installation_hardware_regressions \
-  tests.test_boot_experience_contract \
-  tests.test_ui_motion_scroll \
-  tests.test_responsive_layout \
-  tests.test_activity_viewport \
-  tests.test_ui_preferences \
-  tests.test_theme_snapshot \
-  tests.test_activity_theme_access \
-  tests.test_activity_ui_preferences \
-  tests.test_child_shell_visual_context \
-  tests.test_my_greia_settings_contract \
-  tests.test_my_greia_runtime \
-  tests.test_first_party_activity_readiness \
-  tests.test_shape_garden_contract \
-  tests.test_core_activity_system_safe_ui \
-  tests.test_customization \
-  tests.test_activity_ui \
-  tests.test_launcher_presentation \
-  tests.test_activity_packages \
-  tests.test_activity_contract \
-  tests.test_parent_api \
-  tests.test_localization \
-  tests.test_language_context \
-  tests.test_language_presentation \
-  -v 2>&1 | tee "$SESSION_ROOT/current-ui-platform-focused.log"
-```
-
-If a named test module has been legitimately renamed by newer committed source, inspect the current tree and use the current authoritative replacement; do not silently skip the subsystem.
-
-Then run the dedicated boot implementation/physical protocol in `docs/testing/2026-08-18_EARLY_BOOT_VISUAL_AND_AUDIO_ACCEPTANCE.md`, the other subsystem-specific focused gates from the full protocol, and finally:
-
-```bash
-make verify 2>&1 | tee "$SESSION_ROOT/final-make-verify.log"
-```
-
-### Exact evidence boundary
-
-The last complete owner-controlled source evidence currently recorded is:
+Before running or changing anything:
 
 ```text
-edda4e687d9d73fe69cef40cbbbcea7a7ff0db7d
-make verify: 679 PASS
-focused current-ui-platform gate: 131 PASS
-Parent-App npm test at pinned e30bcbc: 10 PASS
+1. AGENTS.md
+2. HANDOVER.md
+3. docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
+4. skills/greia-os-work/SKILL.md for OS/platform work
+   OR skills/greia-activity-authoring/SKILL.md for Activity work
+5. the exact testing procedure(s) named by HANDOVER.md / the active plan
 ```
 
-That evidence does **not** cover later source changes, including the final My Greia safe-area implementation/regression, the first-party first-frame readiness corrections, the Shape Garden logical-canvas migration, the new shared system-safe UI geometry consumed by Painting/Writing, or the new early-boot framebuffer/design/test scaffold. Do not copy the 679-PASS result onto the current SHA. The current checkout requires fresh execution of the focused gates and `make verify` before a new PASS can be recorded.
+Before installing/configuring dependencies, also read:
 
-## 5. Parent HTML
+```text
+SETUP.md
+docs/agents/GREIA_AGENT_OPERATIONS.md
+```
 
-Use the exact Parent-App revision pinned by:
+The current handover owns the **current exact evidence boundary and next legitimate gate**. Do not infer the current gate from the newest-looking filename or from an old result document.
+
+## 2. Current blocking R7 route
+
+As of this review, R7 remains the primary blocking architecture phase. The current continuation procedure is:
+
+```text
+docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
+```
+
+However, always re-read `HANDOVER.md` before execution. Source may have advanced after the last physical candidate, in which case old physical evidence stays scoped to its exact SHA and the procedure must execute against a newly frozen current candidate.
+
+The Home regression itself is physically green at the exact candidate recorded in `HANDOVER.md`; do not put Home back into Activity rendering to “help” R7.
+
+## 3. Dated procedures are scope-specific evidence contracts
+
+Older protocols under `docs/testing/` remain useful when the current handover/plan explicitly names them or when investigating their historical subsystem.
+
+Examples include:
+
+```text
+2026-08-18_*       earlier broad UI/boot/parent acceptance work
+2026-08-19_*       Activity Simulator acceptance
+2026-08-23_*       microphone processing acceptance
+2026-08-29_R7_*    R7.2/R7.3 focused backend/chrome contracts
+2026-09-02_R7_*    current R7/Parent/spoken-label closure gates
+```
+
+Do **not** run every dated test document as one giant ritual. Select the current gate from the handover and expand only where that gate tells you to.
+
+## 4. Agent role
+
+A coding/test agent is expected to:
+
+- inspect the first real failure rather than weakening the test;
+- fix genuine source/build/runtime defects at their owning layer;
+- add focused regression coverage for the root cause;
+- preserve Greia trust, lifecycle, resource and evidence boundaries;
+- work on current `main` and preserve concurrent changes;
+- rerun the smallest affected gate, then the required broader gate;
+- keep source/simulator/VM/physical/provider evidence clearly separated;
+- update the active plan/HANDOVER when implementation or continuation state materially changes.
+
+Never obtain a PASS by:
+
+- moving trusted Home/Back into Activities;
+- granting ordinary Activities raw `/dev/input` or `/dev/dri`;
+- exposing a Linux shell/desktop path to children;
+- bypassing PermissionBroker/lifecycle/package authority;
+- hard-coding one Acer resolution/device into shared semantics;
+- converting a Simulator result into a physical-backend claim;
+- deleting or suppressing useful failure evidence;
+- extending timeouts without evidence that the operation is legitimately slow.
+
+## 5. Baseline source verification
+
+The canonical repository-wide source gate remains:
+
+```bash
+make verify
+```
+
+Run it on the **exact current checkout** when the active procedure requires the full source gate.
+
+Do not copy a PASS count from this document, an old review or another SHA. Test counts evolve as Greia evolves; the retained evidence record owns the count that actually ran.
+
+Subsystem gates should come from the current named procedure or task router. For example, R7 currently includes the strict Activity backend/system-chrome audits:
+
+```bash
+PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities
+PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
+```
+
+Use exact expected summaries from the current R7 procedure.
+
+## 6. Evidence storage and result reporting
+
+Bulky screenshots, logs, captures, generated images and machine evidence belong in the procedure's `tmp/`/external evidence root, not permanently at repository root.
+
+Do **not** maintain a growing root `LOCAL_AGENT_RESULT.md` accumulator.
+
+For retained work:
+
+- detailed dated analysis/evidence -> `docs/reviews/` when it merits repository preservation;
+- append-only phase history -> active plan when implementation/phase state changed;
+- short current continuation/evidence boundary -> `HANDOVER.md`;
+- raw/bulky evidence -> outside Git unless a specific authority says otherwise.
+
+A final report should record at least:
+
+```text
+exact Greia SHA
+exact Parent-App revision when relevant
+commands/procedure sections actually executed
+evidence class (source / provider+human / simulator / VM-image / physical)
+PASS/FAIL/INCOMPLETE
+first failing invariant when not PASS
+what remains unverified
+```
+
+## 7. Parent App
+
+Use the exact Parent client revision pinned by:
 
 ```text
 runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 ```
 
-Run its `npm test`. If Parent-App source must change, commit/push the Parent-App repository first, then repin Greia to the exact new revision/integrity values.
+If Parent client source changes, update its own repository first, then repin Greia with exact revision/integrity metadata. Do not invent an SSH/shell fallback for a missing Parent API capability.
 
-The child launcher/profile picker must **not wait on Parent-App/network readiness during normal boot** unless source inspection proves an actual safety prerequisite. Parent functionality should become available when its service is ready without holding the first child-facing interactive frame hostage.
+## 8. Physical/developer-device work
 
-## 6. Build and hardware
+For owner-authorized developer hardware, use:
 
-Only after current source gates are green, build a fresh canonical developer/test installer for the actual target profile and follow the destructive-media safety rules in the full protocol.
+```text
+docs/agents/GREIA_AGENT_OPERATIONS.md
+```
 
-Physical acceptance must include, at minimum:
+and the exact named physical procedure.
 
-- graphical install and first boot;
-- no random recovery-code UX;
-- developer/test SSH `greia / greia` survives reboot, root rejected;
-- no Plymouth in the newly migrated target/installer package/initramfs path once the new boot backend is authoritative;
-- no child-visible console text, blinking cursor, getty/login prompt or interactive boot menu during successful normal boot;
-- white/full-height Greia static frame appears at the earliest attainable Greia-controlled boot stage and preserves aspect ratio;
-- no black/text flash deliberately introduced across bootloader → initramfs → X/launcher handoff;
-- launcher-owned startup animation is actually visible, plays once per machine boot and stays within the <=1.0 s intentional delay budget;
-- optional boot chime plays once only after the first graphical launcher frame, fails silently when audio is unavailable, and does not replay on a launcher-service restart;
-- `systemd-analyze`, launcher critical-chain and monotonic-journal evidence are captured, with before/after claims made only when comparable baseline evidence exists;
-- a second x86 machine/VM verifies the early renderer/visual path did not encode Acer-specific framebuffer/resolution behavior;
-- Parent HTML live connection and credential/profile management;
-- owner-enabled `.greiaactivity` install and hot discovery;
-- launcher names/categories/Back/scroll/effects/focus;
-- responsive UI matrix plus physical 1024x600 readability/performance;
-- My Greia colors/wallpaper/compact-normal-large/avatar with two-profile isolation;
-- physical removable-media ejection while My Greia wallpaper browser is open;
-- ordinary Activity visual snapshot present while `GREIA_CUSTOMIZATION_DIR` remains absent;
-- first-party Activities do not publish READY before their first visible frame;
-- Painting/Writing toolbars and content stay outside trusted Home/Back chrome;
-- Shape Garden maps physical input through the shared logical canvas and ignores pointer input inside protected system chrome;
-- Writing/Painting and representative game-like Activity behavior under the shared viewport/size contracts.
+General rules:
 
-## 7. Evidence discipline
+- record the deployed SHA;
+- deploy one coherent tree, not hand-copied source fragments;
+- inspect screenshots when visual state matters;
+- prove semantic Activity/process identity where the procedure requires it;
+- retain first failure;
+- restore temporary Parent/test policy exactly;
+- do not use physical navigation coordinates as proof that the intended Activity actually launched.
 
-Every PASS/FAIL must be tied to:
+## 9. GitHub-hosted execution
 
-- exact Greia SHA;
-- exact Parent-App revision when relevant;
-- exact command or physical procedure;
-- evidence path/result;
-- scope of what it proves.
+GitHub-hosted Actions are opt-in only. Do not trigger, rerun, query or download hosted workflow execution/evidence unless the owner explicitly authorizes that specific use.
 
-For boot/visual work also record which exact target/installer artifact was used, the profile ID, kernel/initramfs inspected, and whether observations came from logs, generated-artifact inspection or physical video. Those are different forms of evidence and must not be conflated.
+Reading workflow source as repository code is allowed when relevant.
 
-If source changes after an image was built/tested, the old image evidence belongs to the old SHA. Rebuild/retest the affected physical scope or label it honestly as stale/unproven.
+## 10. Maintenance rule
 
-The final result remains the `LOCAL_AGENT_RESULT.md` required by the full protocol. Do not ZIP evidence unless the owner specifically asks for packaging.
+Whenever a newer procedure supersedes the current global gate:
+
+1. update `HANDOVER.md`;
+2. update this router only if the routing rule or named current blocking gate changed;
+3. leave the older dated procedure intact as historical evidence unless it contains a dangerous instruction that must be explicitly marked superseded;
+4. never freeze current PASS counts in this router.
