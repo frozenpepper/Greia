@@ -68,6 +68,11 @@ RESOURCES = (
         ("GET", "PUT"),
     ),
     ParentApiResource(
+        "system_controls",
+        f"{API_BASE}/settings/system-controls",
+        ("GET", "PUT"),
+    ),
+    ParentApiResource(
         "audio_settings",
         f"{API_BASE}/settings/audio",
         ("GET", "PUT"),
@@ -106,6 +111,7 @@ CAPABILITIES = {
     "progress.read": True,
     "settings.input": True,
     "settings.display": True,
+    "settings.system_controls": False,
     "settings.language": True,
     "paired_devices.manage": True,
     "system.update.read": True,
