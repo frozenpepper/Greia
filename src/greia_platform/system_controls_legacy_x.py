@@ -4,7 +4,6 @@ import ctypes
 import ctypes.util
 import select
 import subprocess
-import time
 from pathlib import Path
 from threading import Event
 from typing import Protocol, Sequence
@@ -299,6 +298,7 @@ def run_legacy_x_system_controls(
     backend: LegacyXSystemControlBackend | None = None,
     stop_event: Event | None = None,
     poll_seconds: float = 0.25,
+    once: bool = False,
 ) -> int:
     """Apply Parent state and globally consume only the five system media keys."""
 
@@ -306,6 +306,8 @@ def run_legacy_x_system_controls(
     service = SystemControlService(store, controller)
     stopper = stop_event or Event()
     service.apply_current()
+    if once:
+        return 0
     last_token = store.version_token()
     try:
         listener: LegacyXMediaKeyListener | None = LegacyXMediaKeyListener()
