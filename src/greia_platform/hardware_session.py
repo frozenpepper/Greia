@@ -5,6 +5,7 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Event
 from typing import Protocol
 
 from .hardware import DisplayMode, HardwareSettings, HardwareSettingsStore
@@ -54,16 +55,23 @@ def run_watcher(
     controller: HardwareSessionController,
     interval_seconds: float = 0.5,
     once: bool = False,
+    stop_event: Event | None = None,
 ) -> int:
-    """Apply desired settings through the explicitly selected backend adapter."""
+    """Apply desired settings through the explicitly selected backend adapter.
+
+    ``stop_event`` lets a concrete session compose this watcher with other
+    platform-owned hardware services without creating an unowned background
+    process or a second hardware daemon.
+    """
 
     backend_id = _backend_id(controller)
+    stopper = stop_event or Event()
     last_settings_token: int | None = None
     last_topology_token: tuple[str, ...] | None = None
     next_topology_probe = 0.0
     retry_at = 0.0
     last_apply_succeeded = False
-    while True:
+    while not stopper.is_set():
         now = time.monotonic()
         settings_token = store.version_token()
         topology_token = last_topology_token
@@ -106,7 +114,8 @@ def run_watcher(
                 )
         if once:
             return 0
-        time.sleep(interval_seconds)
+        stopper.wait(interval_seconds)
+    return 0
 
 
 def _backend_id(controller: HardwareSessionController) -> str:
