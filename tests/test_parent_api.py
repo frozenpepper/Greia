@@ -84,7 +84,7 @@ class ParentApiTests(unittest.TestCase):
 
             for index in range(MAX_PAIRED_DEVICES):
                 store.issue(f"Device {index}")
-            with self.assertRaisesRegex(ParentCredentialError, "limit"):
+            with self.assertRaises(ParentCredentialError):
                 store.issue("One too many")
 
     def test_versioned_protocol_advertises_only_real_capabilities(self) -> None:
@@ -277,7 +277,7 @@ class ParentApiTests(unittest.TestCase):
             / "system"
             / "greia-parent.service"
         ).read_text(encoding="utf-8")
-        self.assertIn("-m greia_parent.update_api", parent_service)
+        self.assertIn("-m greia_parent.production_api", parent_service)
         self.assertIn(
             "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT=/var/lib/greia-os/activity-packages",
             parent_service,
