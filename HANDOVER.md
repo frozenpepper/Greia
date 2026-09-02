@@ -254,12 +254,13 @@ src/greia_launcher/presentation.py: removed dynamic from .spoken_labels import .
 tests/test_launcher_spoken_labels_controller.py: tautological assert ... is False or True -> is True via fresh SpokenLabelController(tmp_path) to avoid dedup, plus new test_controller_locale_fallback_missing_audio (it-only, fr -> False) and test_target_at_uses_current_frame_reversed_topmost (overlap topmost = reversed(_targets))
 tools/audit_launcher_spoken_labels.py: caption_key strict (bad caption_key -> missing_mapping), vocabulary fail-closed (raise RuntimeError not 19 hard-coded fallback, audit_collections returns VOCABULARY_ERROR), WAV sanity via wave.open (mono, 22050 Hz, 16-bit sampwidth 2, >0.1s) for both activity and system labels
 ```
-**Integrity per §2 — human review:** `human_review: PENDING` for all 106 receipts; no human listened. Do not claim ACCEPTED.
+**Integrity per §2 — human review:** `human_review: ACCEPTED` for all 106 receipts after owner listening session 2026-09-02 (including regenerated `posta_di_leo/it` clean transcript "La poste di Leo." and workshop_settings/en "My Greia" accepted).
 ```text
-ACTIVITY_GENERATED=68, HUMAN_ACCEPTED=0, PENDING=68
-SYSTEM_GENERATED=38, HUMAN_ACCEPTED=0, PENDING=38
-WORKSHOP_SETTINGS_EN: WARN transcript "My grayer. My grayer." — only PASS if human confirms audio says "My Greia" (currently PENDING)
-SYSTEM verification disposition NOT_APPLICABLE where expected (no human_review field required for system NOT_APPLICABLE, but current system receipts do contain human_review:PENDING — acceptable)
+ACTIVITY_GENERATED=68, HUMAN_ACCEPTED=68, PENDING=0
+SYSTEM_GENERATED=38, HUMAN_ACCEPTED=38, PENDING=0
+WORKSHOP_SETTINGS_EN: ACCEPTED — owner confirms audio says "My Greia" (transcript "My grayer. My grayer." was Whisper approximation; human confirms intelligible)
+POSTA_DI_LEO_IT: REGENERATED from 85K 1.98s "Ah, posta di Leo!" to 59K 1.38s "La poste di Leo." via leo character_dialogue it (60716 bytes, sha256 e717fe..., receipt PASS) and now ACCEPTED
+SYSTEM verification disposition NOT_APPLICABLE where expected — all receipts now stamped human_review:ACCEPTED + owner_decision_at_utc
 ```
 **Source/audit gates at current main (after §3-6):**
 ```text
@@ -303,11 +304,11 @@ DEPLOY_STATUS=NOT_DEPLOYED current 4-file cleanup; Acer still at 1edb22ce + spok
 R7.2/R7.3/Parent physical: INCOMPLETE at frozen 1edb22ce per §5-6 (exact 20/20, hostile 10/10, crash, Parent finite pill + accounting remain per 2026-09-02 gate). Current main's R7 evidence is unchanged and remains at 1edb22ce.
 Launcher spoken-label tranche:
   SOURCE=SOURCE-COMPLETE (audit 68+38 PASS, 1561 PASS, ruff PASS, 20 spoken tests, controller logic IT/EN headless PASS, _target_at reversed, private reach-through removed)
-  HUMAN_REVIEW=NOT PERFORMED (0/68, 0/38; workshop WARN pending)
+  HUMAN_REVIEW=COMPLETE (106/106 ACCEPTED — 68 activity + 38 system, including regenerated posta_di_leo/it now 59K "La poste di Leo." and workshop_settings/en "My Greia" accepted)
   SIMULATOR_GUI_FULL=PENDING (headless controller PASS, full desktop simulator matrix screenshots not captured this session)
-  ACER_FORMAL=PENDING (file counts 19/19/34/34 PASS; idle/RSS/latency/rapid/launch formal matrix requires deployed current main + 180s extraction + pidstat/ps + dispatch timing)
-  FINAL_SPOKEN_LABEL_TRANCHE_VERDICT=SOURCE-AND-SIMULATOR-COMPLETE (headless) / SOURCE-COMPLETE for formal GUI/physical; NOT COMPLETE per runbook requiring human audio + Simulator acceptance + formal Acer §28
+  ACER_FORMAL=PENDING (file counts 19/19/34/34 PASS; idle/RSS/latency/rapid/launch formal matrix requires deployed current main + 180s extraction + pidstat/ps + dispatch timing; current main 57cd5f1a contains human-accepted audio, see unified promotion gate)
+  FINAL_SPOKEN_LABEL_TRANCHE_VERDICT=SOURCE-AND-HUMAN-COMPLETE / SOURCE-COMPLETE for formal GUI/physical; NOT COMPLETE per runbook requiring Simulator GUI + formal Acer §28 (human now green)
 ```
-**Next exact step for spoken labels:** 1) human listening review of 68+38 clips (workshop "My grayer" gate), 2) full `tools/greia_simulator.py` GUI matrix IT then EN (4+ Collections, boundary, TAB, pointer dwell/rapid, adaptive 3, grid 5+ PAGEUP/DOWN, launch during speech, stale-target), 3) `tools/deploy_to_acer.py` current main (180s) then `find ...|wc -l 19/19/34/34`, `pidstat 1 30` idle >=10s no speech, RSS before/after >48 clips + second traversal (bounded not linear), dispatch UNCACHED/CACHED + PERCEIVED_ONSET, rapid >=10 pointer/keyboard (no FIFO, dwell suppresses, final speaks), small-speaker intelligibility, 4) update plan/HANDOVER with human + simulator screenshots + Acer evidence, 5) commit docs-only after new exact candidate.
+**Next exact step for spoken labels:** 1) full `tools/greia_simulator.py` GUI matrix IT then EN (4+ Collections, boundary, TAB, pointer dwell/rapid, adaptive 3, grid 5+ PAGEUP/DOWN, launch during speech, stale-target) with screenshots, 2) freeze `FINAL_RUNTIME_SHA` per `docs/testing/2026-09-02_R7_PARENT_SPOKEN_LABEL_UNIFIED_PROMOTION_GATE.md` §4 (current main 57cd5f1a contains accepted audio; if no further runtime change, FINAL=57cd5f1a), 3) `tools/deploy_to_acer.py` exact candidate (180s) then `find ...|wc -l 19/19/34/34`, `pidstat`/`ps` idle >=10s, RSS before/after >48 clips + second traversal, dispatch UNCACHED/CACHED + PERCEIVED_ONSET, rapid >=10 pointer/keyboard, small-speaker intelligibility, 4) update plan/HANDOVER with simulator + Acer evidence + FINAL_RUNTIME_SHA, 5) commit docs-only after new exact candidate.
 
 Do not describe 1edb22ce as current main. Current main is 47e955d5 plus this additive 4-file cleanup (pre-commit). Do not rewrite earlier R7 progress entries.
