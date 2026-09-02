@@ -67,18 +67,9 @@ class AlfabetoAudio:
         self.play_spoken(f"ask_{char.upper()}")
 
     def play_letter(self, char: str) -> None:
-        """Play distinct marimba chime and spoken letter pronunciation."""
+        """Play cached marimba feedback and the reviewed spoken letter clip."""
         char_upper = char.upper()
-        # 1. Play musical marimba note on SFX channel
-        idx = max(0, min(25, ord(char_upper) - ord("A")))
-        freq = 261.63 * (2.0 ** (idx / 12.0))
-        sound = self._synthesize_marimba(22050, 0.45, freq)
-        try:
-            pygame.mixer.Channel(1).play(sound)
-        except Exception:
-            pass
-
-        # 2. Play spoken letter pronunciation on Voice channel (channel 0)
+        self.play(f"letter_{char_upper}")
         self.play_spoken(f"letter_{char_upper}")
 
     def play_wobble(self) -> None:
@@ -101,23 +92,32 @@ class AlfabetoAudio:
         for wav_path in loc_dir.glob("*.wav"):
             try:
                 self._spoken_sounds[wav_path.stem] = pygame.mixer.Sound(str(wav_path))
-            except Exception:
+            except pygame.error:
                 pass
 
     def _build_sounds(self) -> None:
+        """Build the bounded procedural set once, outside interaction hot paths."""
         sample_rate = 22050
 
-        # Flip / Pop: bubble pop sound
+        for index in range(26):
+            char = chr(ord("A") + index)
+            frequency = 261.63 * (2.0 ** (index / 12.0))
+            self._sounds[f"letter_{char}"] = self._synthesize_marimba(
+                sample_rate,
+                0.45,
+                frequency,
+            )
+
         self._sounds["pop"] = self._synthesize_pop(sample_rate, 0.22)
-
-        # Wobble / Try again: soft woodblock boing
         self._sounds["wobble"] = self._synthesize_wobble(sample_rate, 0.35)
-
-        # Celebration fanfare
         self._sounds["celebrate"] = self._synthesize_fanfare(sample_rate)
 
     @staticmethod
-    def _synthesize_marimba(sample_rate: int, duration: float, freq: float) -> pygame.mixer.Sound:
+    def _synthesize_marimba(
+        sample_rate: int,
+        duration: float,
+        freq: float,
+    ) -> pygame.mixer.Sound:
         num_samples = int(sample_rate * duration)
         buf = bytearray()
         harmonics = (1.0, 0.35, 0.12)
@@ -162,7 +162,12 @@ class AlfabetoAudio:
 
     @staticmethod
     def _synthesize_fanfare(sample_rate: int) -> pygame.mixer.Sound:
-        notes = [(0.0, 0.14, 523.25), (0.12, 0.14, 659.25), (0.24, 0.14, 783.99), (0.36, 0.45, 1046.5)]
+        notes = [
+            (0.0, 0.14, 523.25),
+            (0.12, 0.14, 659.25),
+            (0.24, 0.14, 783.99),
+            (0.36, 0.45, 1046.5),
+        ]
         total_duration = 0.85
         num_samples = int(sample_rate * total_duration)
         buf = bytearray()
