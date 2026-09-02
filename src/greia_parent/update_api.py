@@ -20,6 +20,10 @@ from greia_platform.profile_presentation import (
     ProfilePresentationStore,
 )
 from greia_platform.profiles import ProfileError
+from greia_platform.system_controls import (
+    SystemControlError,
+    SystemControlSettingsStore,
+)
 from greia_platform.system_language import SystemLanguageError, SystemLanguageStore
 from greia_platform.system_updates import (
     BUNDLE_MEDIA_TYPE,
@@ -43,10 +47,10 @@ class UpdateParentApiApplication(PackageParentApiApplication):
     """Top-level Parent composition for typed settings and bounded delivery.
 
     The HTTP process can receive bounded update bytes and mutate only typed
-    Greia settings such as language, microphone processing and profile-scoped
-    presentation preferences. It is intentionally not a privileged updater/audio
-    daemon and cannot install DSP code, write OS slots, select boot targets or
-    reboot the machine.
+    Greia settings such as language, output volume, microphone processing and
+    profile-scoped presentation preferences. It is intentionally not a privileged
+    updater/audio daemon and cannot install DSP code, write OS slots, select boot
+    targets or directly own mixer/backlight devices.
     """
 
     def __init__(self, *args: object, **kwargs: object) -> None:
@@ -70,6 +74,7 @@ class UpdateParentApiApplication(PackageParentApiApplication):
             self.hardware_settings_dir,
             backend=audio_backend,
         )
+        self.system_controls = SystemControlSettingsStore(self.hardware_settings_dir)
 
     def index_payload(self) -> dict[str, object]:
         return api_index_payload(
@@ -81,6 +86,7 @@ class UpdateParentApiApplication(PackageParentApiApplication):
                 "system.update.activate": False,
                 # This concrete top-level composition owns the typed AudioService.
                 "settings.audio": True,
+                "settings.system_controls": True,
                 "profiles.presentation": True,
             }
         )
@@ -162,6 +168,24 @@ class UpdateParentApiApplication(PackageParentApiApplication):
     def reset_audio(self) -> dict[str, object]:
         return self.audio_service.reset()
 
+    def system_controls_payload(self) -> dict[str, object]:
+        """Return bounded desired state; host mixer/backlight details stay private."""
+
+        return self.system_controls.read().as_json_dict()
+
+    def update_system_controls(
+        self,
+        *,
+        volume_percent: object | None = None,
+        muted: object | None = None,
+    ) -> dict[str, object]:
+        """Update Parent-owned output controls consumed by greia-hardware."""
+
+        return self.system_controls.update(
+            volume_percent=volume_percent,
+            muted=muted,
+        ).as_json_dict()
+
 
 class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
     @property
@@ -208,6 +232,12 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                 return
             self._send_json(200, self.app.audio_payload())
             return
+        if parsed.path == f"{API_BASE}/settings/system-controls":
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            self._send_json(200, self.app.system_controls_payload())
+            return
         super().do_GET()
 
     def do_PUT(self) -> None:  # noqa: N802
@@ -232,6 +262,33 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
                 return
             except (ProfilePresentationError, OSError, ValueError) as exc:
                 self._send_api_error(400, "invalid_profile_presentation", str(exc))
+                return
+            self._send_json(200, payload)
+            return
+        if parsed.path == f"{API_BASE}/settings/system-controls":
+            query = parse_qs(parsed.query)
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                allowed = {"volume_percent", "muted"}
+                unknown = set(body) - allowed
+                if unknown:
+                    raise ValueError(
+                        "unsupported system control field: " + ", ".join(sorted(unknown))
+                    )
+                if not body:
+                    raise ValueError("at least one system control is required")
+                if "volume_percent" in body and body["volume_percent"] is None:
+                    raise ValueError("volume_percent cannot be null")
+                if "muted" in body and body["muted"] is None:
+                    raise ValueError("muted cannot be null")
+                payload = self.app.update_system_controls(
+                    volume_percent=body.get("volume_percent"),
+                    muted=body.get("muted"),
+                )
+            except (SystemControlError, OSError, TypeError, ValueError) as exc:
+                self._send_api_error(400, "invalid_system_controls", str(exc))
                 return
             self._send_json(200, payload)
             return
