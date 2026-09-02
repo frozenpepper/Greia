@@ -69,22 +69,3 @@ NUMBERS_1_TO_10: list[NumberDefinition] = [
     NumberDefinition(9, ForestItemKind.SUNFLOWER, "Nove", "Nine", "girasoli", "sunflowers"),
     NumberDefinition(10, ForestItemKind.STAR, "Dieci", "Ten", "stelle", "stars"),
 ]
-
-STRINGS = {
-    "it": {
-        "title": "Il Bosco dei Numeri di Tito",
-        "mode_count": "Conta",
-        "mode_guess": "Indovina",
-        "count_instruction": "Tocca gli elementi nel bosco!",
-        "guess_instruction": "Dov'è il numero?",
-        "all_counted": "Tutti contati! Bravissimo!",
-    },
-    "en": {
-        "title": "Tito's Number Forest",
-        "mode_count": "Count",
-        "mode_guess": "Find",
-        "count_instruction": "Touch items in the forest!",
-        "guess_instruction": "Where is the number?",
-        "all_counted": "All counted! Well done!",
-    },
-}
