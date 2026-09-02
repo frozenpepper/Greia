@@ -8,6 +8,8 @@ from typing import Final
 
 import pygame
 
+from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
+
 MAX_SIMULTANEOUS_CHANNELS: Final[int] = 4
 AUDIO_DIR = Path(__file__).resolve().parent / "assets" / "audio"
 
@@ -97,24 +99,33 @@ class AlfabetoAudio:
 
     def _build_sounds(self) -> None:
         """Build the bounded procedural set once, outside interaction hot paths."""
-        sample_rate = 22050
+        spec = current_pcm16_mixer_spec()
+        if spec is None:
+            return
+        sample_rate, channel_count = spec
 
         for index in range(26):
             char = chr(ord("A") + index)
             frequency = 261.63 * (2.0 ** (index / 12.0))
             self._sounds[f"letter_{char}"] = self._synthesize_marimba(
                 sample_rate,
+                channel_count,
                 0.45,
                 frequency,
             )
 
-        self._sounds["pop"] = self._synthesize_pop(sample_rate, 0.22)
-        self._sounds["wobble"] = self._synthesize_wobble(sample_rate, 0.35)
-        self._sounds["celebrate"] = self._synthesize_fanfare(sample_rate)
+        self._sounds["pop"] = self._synthesize_pop(sample_rate, channel_count, 0.22)
+        self._sounds["wobble"] = self._synthesize_wobble(
+            sample_rate,
+            channel_count,
+            0.35,
+        )
+        self._sounds["celebrate"] = self._synthesize_fanfare(sample_rate, channel_count)
 
     @staticmethod
     def _synthesize_marimba(
         sample_rate: int,
+        channel_count: int,
         duration: float,
         freq: float,
     ) -> pygame.mixer.Sound:
@@ -128,12 +139,15 @@ class AlfabetoAudio:
             for h_idx, amp in enumerate(harmonics):
                 val += amp * math.sin(2.0 * math.pi * freq * (h_idx + 1) * t)
             sample_val = int(val * env * 14000)
-            sample_val = max(-32767, min(32767, sample_val))
-            buf.extend(int(sample_val).to_bytes(2, byteorder="little", signed=True))
+            append_mono_pcm16(buf, sample_val, channel_count)
         return pygame.mixer.Sound(buffer=bytes(buf))
 
     @staticmethod
-    def _synthesize_pop(sample_rate: int, duration: float) -> pygame.mixer.Sound:
+    def _synthesize_pop(
+        sample_rate: int,
+        channel_count: int,
+        duration: float,
+    ) -> pygame.mixer.Sound:
         num_samples = int(sample_rate * duration)
         buf = bytearray()
         for i in range(num_samples):
@@ -142,12 +156,15 @@ class AlfabetoAudio:
             freq = 300.0 + 500.0 * math.sin(math.pi * (t / duration))
             val = math.sin(2.0 * math.pi * freq * t)
             sample_val = int(val * env * 12000)
-            sample_val = max(-32767, min(32767, sample_val))
-            buf.extend(int(sample_val).to_bytes(2, byteorder="little", signed=True))
+            append_mono_pcm16(buf, sample_val, channel_count)
         return pygame.mixer.Sound(buffer=bytes(buf))
 
     @staticmethod
-    def _synthesize_wobble(sample_rate: int, duration: float) -> pygame.mixer.Sound:
+    def _synthesize_wobble(
+        sample_rate: int,
+        channel_count: int,
+        duration: float,
+    ) -> pygame.mixer.Sound:
         num_samples = int(sample_rate * duration)
         buf = bytearray()
         for i in range(num_samples):
@@ -156,12 +173,14 @@ class AlfabetoAudio:
             freq = 240.0 + 35.0 * math.sin(24.0 * math.pi * t)
             val = math.sin(2.0 * math.pi * freq * t)
             sample_val = int(val * env * 11000)
-            sample_val = max(-32767, min(32767, sample_val))
-            buf.extend(int(sample_val).to_bytes(2, byteorder="little", signed=True))
+            append_mono_pcm16(buf, sample_val, channel_count)
         return pygame.mixer.Sound(buffer=bytes(buf))
 
     @staticmethod
-    def _synthesize_fanfare(sample_rate: int) -> pygame.mixer.Sound:
+    def _synthesize_fanfare(
+        sample_rate: int,
+        channel_count: int,
+    ) -> pygame.mixer.Sound:
         notes = [
             (0.0, 0.14, 523.25),
             (0.12, 0.14, 659.25),
@@ -180,6 +199,5 @@ class AlfabetoAudio:
                     env = math.exp(-3.5 * (local_t / dur))
                     sample_sum += math.sin(2.0 * math.pi * freq * local_t) * env
             sample_val = int(sample_sum * 12000)
-            sample_val = max(-32767, min(32767, sample_val))
-            buf.extend(int(sample_val).to_bytes(2, byteorder="little", signed=True))
+            append_mono_pcm16(buf, sample_val, channel_count)
         return pygame.mixer.Sound(buffer=bytes(buf))
