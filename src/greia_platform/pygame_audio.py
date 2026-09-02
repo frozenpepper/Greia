@@ -1,7 +1,7 @@
 """Small Pygame PCM helpers for bounded Activity-generated sound effects.
 
 Greia Activities may synthesize tiny feedback cues at startup, but raw PCM must
-match the mixer that Pygame actually opened.  These helpers deliberately cover
+match the mixer that Pygame actually opened. These helpers deliberately cover
 only that format boundary; prerecorded speech and broader audio policy remain
 owned by their existing services.
 """
@@ -18,7 +18,7 @@ def current_pcm16_mixer_spec() -> tuple[int, int] | None:
     if spec is None:
         return None
     sample_rate, sample_format, channel_count = spec
-    if sample_rate <= 0 or abs(sample_format) != 16 or not 1 <= channel_count <= 8:
+    if sample_rate <= 0 or sample_format != -16 or not 1 <= channel_count <= 8:
         return None
     return (sample_rate, channel_count)
 
