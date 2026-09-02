@@ -1,67 +1,81 @@
-# Voice Generation for Greia Activities
+# Voice and Spoken Cues for Greia Activities
 
-This is the focused Activity-facing companion to `SKILL.md`.
+**Status:** focused companion for Activity speech planning and production  
+**Load when:** a new Activity needs spoken instructions/presenter dialogue/pedagogical sounds, or existing speech is changed
 
-## Canonical production rule
-
-All new prerecorded Greia speech is produced through the repository-wide Voice Production Engine / authoring “Voice Studio” workflow:
+This document owns the Activity-facing speech rules. The canonical engine implementation is owned by:
 
 ```text
 skills/greia-voice-production/SKILL.md
-tools/greia_voice_core/README.md
 tools/greia_voice.py
+tools/greia_voice_core/
 ```
 
-Activity code and Activity-specific authoring scripts must **not** invoke Chatterbox, MLX, Whisper, macOS `say`, `afconvert`, FFmpeg trimming or canonical reference recordings directly. Those mechanics belong behind `VoiceEngine`.
+## 1. Core runtime rule
 
-Tracked `tools/generate_*_audio.py` Activity scripts are thin semantic request/batch producers only.
+Greia Activity narration/instructions are **prerecorded at authoring time**.
 
-The child runtime never contains the voice-production models/providers. It receives only already-reviewed static audio or uses Greia's reviewed shared runtime catalogue.
+The child runtime does not run Chatterbox, Whisper or ordinary live TTS for Activity narration.
 
-For presenter/fact design read first:
+Activity code receives reviewed static audio or uses an accepted Greia shared/runtime speech resolver.
 
-```text
-skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
-```
+Do not build a second speech engine inside an Activity.
 
-For actual production read:
+## 2. Required spoken instructions
 
-```text
-skills/greia-voice-production/SKILL.md
-```
+Greia children may not read.
 
-## 1. Classify speech by semantic purpose
-
-Every produced cue is one of:
-
-```text
-character_dialogue
-shared_character_utterance
-pedagogical_speech
-dani_system_speech
-```
-
-The semantic purpose selects the route, not text length.
+If the child needs language to understand a required action and visuals alone do not communicate it reliably, provide a spoken cue.
 
 Examples:
 
 ```text
-"Vai!"                                      -> character_dialogue
-"Le orche vivono in gruppi familiari..."   -> character_dialogue / curiosity fact
-"ma"                                        -> pedagogical_speech when the syllable itself is taught
-"Ottimo lavoro!"                            -> shared_character_utterance when generic praise is enough
-Dani Activity explanation                   -> dani_system_speech
+"Trova la lettera S."
+"Metti tre mele nel cestino."
+"Quale animale fa questo verso?"
 ```
 
-Governing rule:
+A text caption is not a substitute.
 
-> If the sound itself is the educational truth being taught, use `pedagogical_speech`. If speech communicates content through a character, use character speech.
+Required speech must:
 
-Do not ask Lilli, Leo, Flash, Tito or Momo to become pronunciation authority merely to preserve mascot identity.
+- use a stable semantic cue ID;
+- cover every shipped locale for that interaction;
+- be short and contain one idea at a time;
+- use the correct semantic speaker/kind;
+- play at the correct moment;
+- be repeatable when useful;
+- be human-reviewed before final acceptance.
 
-## 2. Shared utterances: design vs current availability
+Do not narrate every tap. Use speech where it improves orientation, comprehension, hints, feedback or personality.
 
-The designed shared families are:
+## 3. Choose semantic purpose before generating
+
+Every new cue belongs to one semantic route.
+
+### `character_dialogue`
+
+Use for natural-character communication:
+
+```text
+presenter welcome
+Activity-specific instruction
+contextual hint
+story/narration
+curiosity fact
+Activity-specific reaction
+```
+
+Examples:
+
+```text
+Leo: "Ciao! Scopriamo le lettere!"
+Tito: "Trova l'orca con la pinna alta!"
+```
+
+### `shared_character_utterance`
+
+Use for generic reusable meaning when the current runtime resolver exposes the accepted family:
 
 ```text
 praise.general
@@ -71,134 +85,119 @@ encourage.progress
 ready.go
 ```
 
-Normal Activities should eventually request only:
+Do not duplicate generic praise into every Activity merely because it is easy to generate.
+
+### `pedagogical_speech`
+
+Use only when **the sound itself is educational truth**:
 
 ```text
-character + semantic family + locale
+letter name/sound
+syllable
+phonics target
+spelling/pronunciation unit
+foreign-language target sound
 ```
 
-not a phrase filename/variant and not runtime synthesis.
+Correctness and consistency outrank natural character quality.
 
-However, **the v0.1 shared audio library is still pending generation and human acceptance**. Current design target:
+An Activity being educational does not make all its speech pedagogical.
+
+Examples:
 
 ```text
-6 characters × 5 families × 3 variants × 2 locales = 180 clips
+Leo welcome                         -> character_dialogue
+"A" taught as the target letter    -> pedagogical_speech
+"MA" taught as a syllable          -> pedagogical_speech
+generic "Ottimo lavoro!"            -> shared utterance when available
 ```
 
-Therefore:
+A phrase containing a pronunciation target may legitimately use pedagogical speech when exact pronunciation of that target is part of what is being taught. Do not use this as an excuse to route unrelated welcomes, praise or general instructions through the pedagogical voice.
 
-- do not claim a shared family is runtime-available merely because it is documented;
-- do not copy the 180 planned phrases into Activity packages as a substitute for completing the shared library;
-- while the shared catalogue is unavailable, keep visual feedback sufficient and report shared speech as pending;
-- if an Activity genuinely needs unique contextual speech now, use reviewed Activity-specific `character_dialogue`, not a fake generic shared-family implementation.
+### `dani_system_speech`
 
-Shared production/status authority:
+Use for Dani's intentionally robotic presenter/logic speech.
+
+Example:
 
 ```text
-docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
-docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+Dani: "Metti tre mele nel cestino."
 ```
 
-## 3. Character voices
+Dani is a character, but his canonical voice is the deterministic system route.
 
-Canonical identities:
-
-| Speaker | Voice ID | Typical role |
-|---|---|---|
-| Lilli | `greia.lilli.v1` | wonder, creativity, stories, art |
-| Leo | `greia.leo.v1` | warm older storyteller, reading, knowledge, thoughtful guidance |
-| Flash | `greia.flash.v1` | action, speed, lively challenge |
-| Tito | `greia.tito.v1` | exploration, nature, investigation, discovery |
-| Momo | `greia.momo.v1` | music, emotion, playful experimentation |
-| Dani | `greia.dani.system-v1` | robotic logic, patterns and concise feedback |
-
-Lilli/Leo/Flash/Tito/Momo character dialogue routes to the canonical cloned-character provider behind the engine.
-
-Dani routes to deterministic system speech. Never clone a natural voice to impersonate Dani.
-
-## 4. OS-owned character introductions
-
-Greia is defining a reusable character-introduction pack with stable cues:
+## 4. Canonical speakers
 
 ```text
-character.intro.lilli
-character.intro.leo
-character.intro.flash
-character.intro.dani
-character.intro.tito
-character.intro.momo
+Lilli -> creativity, stories, art, wonder
+Leo   -> language, reading, knowledge, calm guidance
+Flash -> action, speed, lively challenge
+Tito  -> nature, exploration, discovery
+Momo  -> music, emotion, playful experimentation
+Dani  -> logic, patterns, concise robotic guidance
 ```
 
-This is **platform/shared presentation content**, not something every Activity should re-record.
+These are affinities, not rigid silos.
 
-Possible future use includes first-run introduction, tappable characters on Home, a character gallery or another OS-owned discovery surface. Final placement is not decided yet.
-
-Activity rule:
-
-- do not duplicate the canonical “Hi, I'm Lilli/Leo/…” introduction in Activity packages;
-- use a short Activity-specific welcome only when the Activity context needs one;
-- a contextual welcome should not repeat the character biography unless genuinely useful.
-
-The current intro scripts and production status live in:
+For presenter choice and curiosity/facts design load:
 
 ```text
-docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
-docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md
+skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 ```
 
-## 5. Pedagogical speech
+## 5. Shared speech current state
 
-Use `pedagogical_speech` for:
+Current accepted shared asset state:
 
 ```text
-letters
-letter names
-syllables
-phonics
-spelling units
-pronunciation exercises
-foreign-language target sounds
+assets/audio/characters/shared/v0.2/
+180 shared reactions
+12 canonical character introductions
+192 owner-accepted clips total
 ```
 
-Correctness and consistency outrank natural voice quality.
+Do not call v0.2 pending generation/listening.
 
-The Activity owns the semantic educational target (`"to"`, `"ma"`, etc.). Provider-specific pronunciation hints, host voice names and synthesis commands belong inside the engine.
+However, accepted asset bytes do not prove that every Activity runtime path already resolves every family. Inspect the current shared resolver/source before depending on a family.
 
-A fluent speaker/educator must review pronunciation-critical output.
+Canonical character introductions are OS/shared presentation content. Do not rerecord "Hi, I'm Leo/Lilli/..." independently in every Activity.
 
-Ordinary instructions are not `pedagogical_speech` merely because the Activity is educational. Give them a real semantic speaker: canonical presenter, reviewed shared utterance once available, or Dani where the design deliberately uses Dani.
+## 6. Semantic cue IDs and localization
 
-## 6. Multilingual-ready from the beginning
+Gameplay code chooses semantic meaning, not filenames or sentences.
 
-Use stable semantic cue IDs independent of language:
+Prefer IDs such as:
 
 ```text
 presenter.welcome
-presenter.hint.first
+instruction.count_objects
+instruction.find_letter
+hint.first
+phonics.letter_a
 curiosity.orca.family_pods
-phonics.ma
 ```
 
-For every locale the Activity claims to support:
+For every shipped locale:
 
-- provide reviewed localized text;
-- preserve the same semantic meaning;
-- keep the same canonical character identity for character dialogue;
-- generate/review localized audio when speech is part of the accepted feature;
-- keep displayed and spoken wording aligned;
-- never make score/correctness/difficulty depend on locale or spoken variant.
+- provide reviewed localized wording;
+- preserve the same gameplay meaning;
+- keep character identity consistent;
+- provide accepted audio when speech is required by the interaction;
+- keep spoken and displayed wording semantically aligned.
 
-If a production provider is unavailable, preserve the semantic cue/text plan and report audio pending/unavailable. Do not substitute arbitrary host TTS for a canonical character.
+Do not hard-code locale branches into game rules.
 
-## 7. Producing Activity-specific audio
+## 7. Produce through VoiceEngine only
 
-First probe the workstation:
+Start with:
 
 ```bash
 python3 tools/greia_voice.py doctor
 ```
 
-Generate into a **review workspace**, not directly into the Activity package:
+Generate through `generate`, `batch`, or the warm `serve`/`request` workflow described by `skills/greia-voice-production/SKILL.md`.
+
+Example natural-character cue:
 
 ```bash
 python3 tools/greia_voice.py generate \
@@ -207,10 +206,10 @@ python3 tools/greia_voice.py generate \
   --locale it \
   --text "Guardiamo con calma." \
   --cue-id presenter.hint \
-  --output ./tmp/voice-review/my_activity/it/presenter-hint.ogg
+  --output /tmp/greia-voice-review/my_activity/it/presenter-hint.wav
 ```
 
-Pedagogical example:
+Example exact pedagogical target:
 
 ```bash
 python3 tools/greia_voice.py generate \
@@ -220,122 +219,116 @@ python3 tools/greia_voice.py generate \
   --text "ma" \
   --cue-id phonics.ma \
   --verification off \
-  --output ./tmp/voice-review/my_activity/it/phonics-ma.wav
+  --output /tmp/greia-voice-review/my_activity/it/phonics-ma.wav
 ```
 
-For several lines use `batch`, or use the warm localhost `serve` / `request` workflow.
+Generate review candidates outside the final runtime asset location. Integrate only accepted clips.
 
-Only after human listening may the owning Activity workflow copy accepted static audio into `activities/<activity>/assets/audio/...` and update mappings/manifests.
+## 8. Activity-specific voice tooling location
 
-Installation/setup:
+If an Activity needs a helper to assemble many semantic requests, it belongs under that Activity from the start:
 
 ```text
-tools/greia_voice_core/README.md
-docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md
+activities/<activity>/tools/generate_voice_requests.py
 ```
 
-Do not silently install the optional heavy MLX/model stack merely because speech might be useful.
+It may own:
 
-## 8. Whisper verification
+- cue IDs;
+- reviewed localized text;
+- semantic speaker/kind assignment;
+- expected output names;
+- request/batch assembly.
 
-Suitable multi-word natural-character/shared-library generation may be checked automatically.
+It must not own:
 
-```text
-PASS           -> transcript plausibly matches; still human-review
-WARN           -> likely mismatch; bounded regeneration/inspection
-NOT_RUN        -> verifier unavailable/optional
-NOT_APPLICABLE -> tiny, pedagogical or system utterance where ASR is inappropriate
-```
+- Chatterbox/MLX imports;
+- model IDs;
+- reference voice paths/hashes;
+- Whisper invocation;
+- macOS `say`/native voice choice;
+- FFmpeg/trim policy;
+- model token budgets/retry internals;
+- a parallel voice backend.
 
-Whisper is never pronunciation authority for letters/syllables/phonics and never accepts audio.
+Do **not** put one-Activity generators in repository root `tools/`.
 
-## 9. Human audio gate
+Before final Activity/package acceptance, remove obsolete/one-shot authoring helpers and scratch request files from the Activity package tree. The Activity directory is package content; development machinery must not accidentally ship to the child device.
 
-Every produced clip remains:
+Root `tools/` is for genuinely Greia-wide facilities such as the canonical VoiceEngine itself and shared-library producers.
+
+## 9. Human review is mandatory
+
+Every successful generated candidate remains:
 
 ```text
 human_review = PENDING
 ```
 
-Reject character/shared speech for:
+Machine success or Whisper success is not acceptance.
 
-- wrong/drifting character identity;
-- wrong language;
-- omitted/repeated/invented words or sounds;
-- bad stress/pronunciation;
-- clipped start/end;
-- unwanted tail;
-- noise/distortion;
+Reject natural-character speech for:
+
+- wrong words;
+- wrong locale;
+- character identity drift;
+- bad pronunciation/stress;
+- clipping/tails/noise;
 - inappropriate delivery.
 
-Reject pedagogical speech for any incorrect or ambiguous target sound even if it sounds pleasant.
+Reject pedagogical speech for any incorrect or ambiguous target sound.
 
-A successful process exit, valid container, receipt or Whisper PASS is never final acceptance.
+Whisper is advisory for suitable multi-word natural speech and never pronunciation authority for letters/syllables/phonics.
 
-## 10. Facts and curiosity narration
+## 10. Audio sequencing is part of child UX
 
-Subject-rich Activities should consider short optional researched facts when they genuinely enrich play.
+Plan when cues play.
 
-Facts are finite, reviewed `character_dialogue` with provenance. Never ask an LLM at child runtime to invent facts and never require network access.
+Avoid:
 
-Fact selection is presentation-only and must not affect score, correctness, rewards, difficulty or progression.
+- welcome and first instruction stomping each other;
+- number/letter pronunciation being cut off by celebration;
+- repeated taps starting overlapping copies of the same command;
+- long queues that keep talking after the child moved on.
 
-Research/source rules:
+Prefer one explicit Activity audio owner with bounded interruption/queue semantics appropriate to the experience.
 
-```text
-skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
-```
+Required instruction replay should be obvious when useful, for example tapping the speaking presenter or a large semantic replay affordance.
 
-## 11. Runtime boundary
+## 11. Launcher title speech is separate
 
-The child receives only reviewed static audio or resolves accepted Greia shared/platform-owned speech assets.
+Every built-in Activity also needs localized launcher-title speech for each completed catalogue locale.
 
-Never package:
+Runtime playback is Shell-owned. The Activity does not implement hover/focus speech.
 
-```text
-Chatterbox/Whisper model weights
-MLX/PyTorch environments
-model caches
-canonical cloning references
-FFmpeg binaries solely used for authoring
-rejected/unreviewed generations
-```
-
-Generated presenter speech and runtime child microphone recording are separate systems. Child voice capture uses the platform-owned `audio.basic` route described in `MICROPHONE_RECORDING.md`.
-
-## 12. Launcher spoken titles
-
-Launcher catalogue titles are a distinct first-party completeness requirement:
+Load:
 
 ```text
-semantic cue is activity.title
-runtime playback is Shell-owned (Activity does not listen for hover or play)
-production is through tools/greia_voice.py / VoiceEngine
-use explicit accepted lead presenter when defined in current design/source authority
-otherwise use Leo as the Greia launcher fallback narrator
-never pedagogical_speech (even for one-word titles)
-human review mandatory before copying to locales/<locale>/audio/activity-title.wav
+skills/greia-activity-authoring/LAUNCHER_SPOKEN_LABELS.md
 ```
 
-See `skills/greia-activity-authoring/LAUNCHER_SPOKEN_LABELS.md` for the full contract, inventory and promotion steps. Launcher titles are ordinary communicative speech; a one-word title is not a pronunciation exercise.
+Launcher titles are communicative speech, not `pedagogical_speech` merely because a title is one word.
 
-## 13. Completion check for Activity speech (including launcher titles)
+## 12. Final speech checklist
 
-Before calling an Activity's speech work complete, confirm:
+Before calling speech complete:
 
 ```text
-semantic cue IDs defined
-correct speech kind selected
-supported locales covered
-canonical speaker correct
-production performed through tools/greia_voice.py / VoiceEngine
-review candidates generated outside the runtime package
-receipts retained where appropriate
-human listening completed
-only accepted audio integrated into runtime package
-shared families are used only when actually available in the accepted shared catalogue
-canonical character introductions are not duplicated locally
-Activity still works when optional speech is unavailable where product policy permits degradation
+required spoken commands identified
+semantic cue IDs stable
+correct speaker/kind chosen
+all shipped locales covered
+VoiceEngine used for new/replacement generation
+Activity-local request tooling stayed in activities/<id>/tools/
+human review complete
+only accepted audio integrated
+required cues play at the correct time
+required cues can be repeated where useful
+audio does not stomp pedagogical targets/instructions
+shared families used only when current runtime resolver supports them
+canonical character introductions not duplicated
+final headless Simulator rerun after runtime audio integration
+final GUI Simulator review includes real speech timing/comprehension
 ```
 
-The low-level Chatterbox field guide is for Voice Engine maintainers/troubleshooting only.
+If required speech is missing, the Activity may be mechanically launchable but its pre-reader child UX is not accepted.
