@@ -5,12 +5,12 @@
       "sha256": "c5dad9b70f65ed4c160655383954cb77013c243333ae0eddc2ed1b03a4660c25"
     },
     "src/api.js": {
-      "bytes": 9486,
-      "sha256": "ae6e7e31694ef4a08ff8d225fb0d017b64fbb6024652e1bc1151e0dade680617"
+      "bytes": 10668,
+      "sha256": "ed9247ed9abdfbd9d31f109fb8b75fb2c2d931b3c72ba5a6b9421f08e7ad4acf"
     },
     "src/app.js": {
-      "bytes": 7467,
-      "sha256": "edffe27a05a9ec5b6d4d61bad649e9d530b6fb41faa1a6f4b92af16794ffbd81"
+      "bytes": 7590,
+      "sha256": "b9cd14183850b157f2808c64e600efba2a390ce5ac919690e191a9ce39f9cd4a"
     },
     "src/credential_store.js": {
       "bytes": 607,
@@ -21,12 +21,12 @@
       "sha256": "5eacdb7a938b5932510e70cdb0ad5d6fdc509376d6cdff63989c85b1550b9d7e"
     },
     "src/demo_management_api.js": {
-      "bytes": 11671,
-      "sha256": "6a0415435d695fad574eb6a7f9a3c494816feec48c4426f9ac3ff82731c9d8ab"
+      "bytes": 13104,
+      "sha256": "f43434a2db95f8bc835fce4887f3d6a67bb2c2e3452c3fb12d7d689770e206c8"
     },
     "src/state.js": {
-      "bytes": 8452,
-      "sha256": "b1396e18afc7095552a0d4c2dbb82cb43417f555597a3b08ded088d355cacf3e"
+      "bytes": 9161,
+      "sha256": "372de8c34e43c212409511f147cb9e9e213a0c0c84f2ffd447bf695f3f4e1485"
     },
     "src/ui.js": {
       "bytes": 7118,
@@ -41,8 +41,8 @@
       "sha256": "5d422a0832a806e3d52d65ca6ed4e77a44684f2680052f1ae1ea751b055fd1eb"
     },
     "src/views_device_layout.js": {
-      "bytes": 3224,
-      "sha256": "ce69c2b960f1233813fd4c2af2aec4281a38c09df9a72540a544ffd7f8f647a0"
+      "bytes": 3334,
+      "sha256": "826d390921bab77affb163fd936235de2442875d0bc10f2eb1fd56e9333dc6e3"
     },
     "src/views_helpers.js": {
       "bytes": 2830,
@@ -51,6 +51,10 @@
     "src/views_home_children.js": {
       "bytes": 15867,
       "sha256": "6f095b3a6bbebb70532fcce77134edd3aeb8e692fdf5921549d63fc14d8e7543"
+    },
+    "src/views_system_controls.js": {
+      "bytes": 2582,
+      "sha256": "a12fc6e67ae657e0f71f7e63ba2e0e4f4d0c5dbcafa66151b4096e0f2565a58f"
     },
     "styles/app.css": {
       "bytes": 19790,
@@ -62,6 +66,6 @@
     }
   },
   "repository": "frozenpepper/Greia-Parent-App-Html",
-  "revision": "7db9a94ef652b491fc3b305936cce439bb978b8e",
+  "revision": "d7273776e626ed934bebde5e4565424b213d9c06",
   "schema_version": 1
 }
