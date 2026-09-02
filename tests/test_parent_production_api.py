@@ -3,6 +3,7 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from greia_parent.production_api import ProductionParentApiApplication
 from greia_platform.wifi import IwdWifiBackend, WifiError
@@ -55,6 +56,23 @@ class ParentProductionApiTests(unittest.TestCase):
                 app.connect_wifi("Made Up Network", "password123")
             self.assertEqual(backend.scan_calls, 0)
             self.assertEqual(backend.connect_calls, 0)
+
+    def test_real_iwd_is_not_advertised_when_state_is_not_writable(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            state_dir = root / "iwd"
+            state_dir.mkdir()
+            backend = IwdWifiBackend(state_dir=state_dir)
+            app = self._app(root, wifi_backend=backend)
+            with (
+                mock.patch.object(backend, "available", return_value=True),
+                mock.patch("greia_parent.production_api.os.access", return_value=False),
+            ):
+                capabilities = app.index_payload()["capabilities"]
+                self.assertFalse(capabilities["network.manage"])
+                self.assertEqual(app.wifi_payload(), {"available": False, "networks": []})
+                with self.assertRaisesRegex(WifiError, "unavailable"):
+                    app.connect_wifi("Family Wi-Fi", "password123")
 
     def test_capability_index_preserves_composed_features(self) -> None:
         backend = _UnavailableWifiBackend()
