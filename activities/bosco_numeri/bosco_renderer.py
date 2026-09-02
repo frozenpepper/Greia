@@ -12,10 +12,10 @@ from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
-    from .bosco_content import NUMBERS_1_TO_10, STRINGS, ForestItemKind
+    from .bosco_content import NUMBERS_1_TO_10
     from .bosco_model import BoscoModel, CountableForestItem
 else:
-    from bosco_content import NUMBERS_1_TO_10, STRINGS, ForestItemKind
+    from bosco_content import NUMBERS_1_TO_10
     from bosco_model import BoscoModel, CountableForestItem
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -171,7 +171,7 @@ class BoscoRenderer:
         )
         surf.blit(c_surf, c_surf.get_rect(center=(badge_rect.centerx, badge_rect.centery - 12)))
         tot_surf = self.typography.render(
-            f"di {model.current_number}", FontRole.SECONDARY, 14, (100, 100, 100)
+            f"/ {model.current_number}", FontRole.SECONDARY, 14, (100, 100, 100)
         )
         surf.blit(tot_surf, tot_surf.get_rect(center=(badge_rect.centerx, badge_rect.centery + 16)))
 
@@ -230,7 +230,7 @@ class BoscoRenderer:
             num = idx + 1
             btn_x = start_x + idx * spacing
             btn_y = 52
-            is_active = (num == model.current_number)
+            is_active = num == model.current_number
 
             rect = pygame.Rect(btn_x - 26, btn_y - 26, 52, 52)
             bg_col = (255, 215, 60) if is_active else (255, 255, 255)
@@ -249,29 +249,19 @@ class BoscoRenderer:
         pygame.draw.polygon(surf, (100, 65, 30), [(819, 40), (835, 52), (819, 64)])
 
     def _draw_mode_toggle(self, surf: pygame.Surface, model: BoscoModel) -> None:
-        """Mode toggle button at top right: Conta / Indovina."""
+        """Draw the localized mode-switch control."""
         toggle_rect = pygame.Rect(870, 30, 135, 45)
         pygame.draw.rect(surf, (255, 255, 255), toggle_rect, border_radius=22)
         pygame.draw.rect(surf, (100, 160, 60), toggle_rect, width=3, border_radius=22)
 
-        loc = self.resources.context.selected.language
-        mode_text = (
-            STRINGS.get(loc, STRINGS["it"])["mode_guess"]
-            if model.mode == "count"
-            else STRINGS.get(loc, STRINGS["it"])["mode_count"]
-        )
+        key = "ui.mode_guess" if model.mode == "count" else "ui.mode_count"
+        mode_text = self.resources.text(key)
         txt = self.typography.render(mode_text, FontRole.CONTROL, 18, (50, 110, 30))
         surf.blit(txt, txt.get_rect(center=toggle_rect.center))
 
     def _draw_guess_challenge(self, surf: pygame.Surface, model: BoscoModel, anim_time: float) -> None:
         """Prompt and 3 large cards for the find-the-number game."""
-        # Top banner with question prompt
-        loc = self.resources.context.selected.language
-        instr = (
-            f"Dov'è il numero {model.guess_target}?"
-            if loc == "it"
-            else f"Where is number {model.guess_target}?"
-        )
+        instr = self.resources.text("ui.guess_prompt", {"num": model.guess_target})
         banner_rect = pygame.Rect(260, 80, 460, 60)
         pygame.draw.rect(surf, (255, 255, 255), banner_rect, border_radius=24)
         pygame.draw.rect(surf, (255, 175, 45), banner_rect, width=4, border_radius=24)
