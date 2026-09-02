@@ -1,172 +1,128 @@
 # Greia Activity Pre-Reader UX
 
-**Status:** mandatory focused companion for child-facing Activity design  
-**Audience:** Activity authors, coding agents, reviewers  
-**Reviewed:** 2026-08-25
+**Status:** mandatory focused companion for every new Activity and substantive child-facing redesign  
+**Audience:** Activity designers, coding agents, reviewers
 
-Greia targets young children, and **many intended users cannot read yet**. Therefore ordinary Activity gameplay must not depend on written instructions, labels, menus, or explanatory prose.
+Greia targets young children, including children who cannot read yet.
 
-This document owns the pre-reader interaction rule. Use it for every new Activity and every substantive child-facing UI/interaction redesign.
+> **A child must be able to understand what to do, act, recover from mistakes and continue without reading written instructions or button labels.**
 
-## 1. Core invariant
+This is a product requirement, not an accessibility enhancement added later.
 
-> **A child in the target age range who cannot read must still be able to understand what to do, act, recover from mistakes, and continue playing.**
+## 1. Communication order
 
-Text may exist as a secondary caption for parents, older children, localization review, accessibility support, or reinforcement. It must not be the only channel carrying the gameplay instruction.
-
-Bad:
+Design the experience in this order:
 
 ```text
-"Click the blue whale, then press Continue."
-"Choose the number of fish you saw."
-"Drag the triangle to the matching shape."
+clear scene hierarchy
+-> obvious interactive target
+-> visual demonstration / movement / highlighting where useful
+-> big picture, shape, icon or number
+-> short spoken cue when language is needed
+-> immediate visual/audio feedback
+-> optional written caption as secondary support
 ```
 
-if the child must read those sentences to proceed.
+Voice does not rescue a confusing screen. Visual clarity does not excuse a required language instruction existing only as text.
 
-Preferred communication stack:
+## 2. The first five seconds matter
 
-```text
-clear scene composition
-+ obvious visual target
-+ large icon / symbol / number
-+ motion or demonstration
-+ short reviewed spoken cue when language helps
-+ optional child voice recording when expression/replay adds value
-+ immediate visual/audio feedback
-```
+On the first usable frame, the child should quickly understand a reasonable next action.
 
-## 2. Design the screen so the action is obvious
-
-Do not use voice to rescue a confusing screen.
-
-The Activity should communicate through hierarchy and affordance first:
+Prefer:
 
 - one visually dominant current goal;
-- large interactive targets;
-- strong contrast between active and decorative elements;
-- familiar shapes/icons rather than abstract text labels;
-- animated pointing, pulsing, bouncing, highlighting or example motion when useful;
-- clear cause-and-effect after input;
-- minimal competing UI;
-- no dense toolbars or adult-style settings panels in the child play surface;
-- no hidden essential action available only through hover or reading.
+- few simultaneous choices;
+- large targets;
+- strong separation between interactive and decorative elements;
+- characters looking/pointing/moving toward the relevant action;
+- short visual demonstrations rather than tutorial prose;
+- familiar symbols and concrete objects.
 
-A good first frame should make a reasonable next action apparent even with the speakers muted.
+Avoid:
 
-## 3. Use large icons, symbols and numbers
+- adult-style menus;
+- dense toolbars;
+- long intro screens;
+- hidden essential actions;
+- instructions that say what to do while the screen itself gives no clue.
 
-For pre-reader Activities, prefer semantic visual language:
+A useful test is to mute the speakers temporarily: the child should still understand the *kind* of interaction even when exact language detail needs speech.
 
-```text
-▶ / large play symbol       -> start/replay
-🔊 or controlled Greia audio icon -> hear/replay sound
-🎙 / Greia microphone affordance  -> record child voice when appropriate
-large 1, 2, 3, 4            -> quantity/choice
-matching pictures/shapes     -> selection
-arrows / gesture animation   -> movement direction
-character demonstration      -> how to act
-```
+## 3. Required language commands must be spoken
 
-Use controlled Greia semantic assets for platform/system controls; do not replace trusted system Home/Back with arbitrary emoji.
-
-Numbers are acceptable when the Activity teaches or uses number recognition. Keep them large and visually dominant; do not bury them inside explanatory sentences.
-
-Touch/click targets should follow the current Greia child-size standards, normally at least 64×64 logical px and preferably larger for primary actions.
-
-## 4. Voice is often the right replacement for written instruction
-
-When language genuinely helps, use short spoken cues through the Greia speech architecture rather than text-only instructions.
+If exact language is needed to know the required action, provide reviewed spoken audio.
 
 Examples:
 
 ```text
-Tito: "Trova l'orca con la pinna alta!"
-Leo:  "Quale fa rima con gatto?"
-Dani: "Quanti ne hai visti?"
+"Trova la lettera S."
+"Metti tre mele nel cestino."
+"Quale animale fa questo verso?"
 ```
 
-Keep spoken instructions short. Prefer one idea at a time.
+These may have captions, but captions are secondary.
 
-### 4.1 Gender-Neutral Spoken & Written Praise (MANDATORY)
+For every required spoken command:
 
-**Never use gender-specific adjectives in Italian (or any other language)** such as *"Bravissimo!"*, *"Bravissima!"*, *"Bravo!"*, or *"Brava!"*. 
+- use a stable semantic cue ID;
+- cover every shipped locale for that interaction;
+- keep it short and one-idea-at-a-time;
+- use the correct Greia presenter/speech route;
+- play it at the right moment;
+- provide an obvious way to hear it again when repetition is useful;
+- human-review the final audio.
 
-Always use universal, inclusive gender-neutral praise:
-- `Ottimo lavoro!` ("Great job!")
-- `Ben fatto!` ("Well done!")
-- `Esatto!` ("Exactly right!")
-- `Fantastico!` ("Fantastic!")
-- `Evviva!` ("Hooray!")
-- `Perfetto!` ("Perfect!")
-- `Super!` ("Super!")
-- `Che meraviglia!` ("Wonderful!")
+If required speech is missing in a shipped locale, that locale's pre-reader flow is incomplete.
 
-Do not narrate every interaction. A good pattern is:
+Load:
 
 ```text
-brief spoken cue
--> child acts
--> quiet exploration/play
--> concise feedback only when useful
-```
-
-Read:
-
-```text
-skills/greia-activity-authoring/PRESENTERS_AND_CURIOSITY.md
 skills/greia-activity-authoring/VOICE_GENERATION.md
 ```
 
-for speaker selection, multilingual semantic cues, shared utterances, custom dialogue and pedagogical speech.
+for the canonical prerecorded speech system and semantic routing.
 
-### 4.2 Child voice recording is an available pre-reader input/creation tool
-
-Greia also has a platform-owned, lightweight-cleaned microphone path for Activities with `audio.basic`.
-
-When it genuinely helps the experience, **consider letting the child speak instead of requiring typing or written composition**. Good examples include narrating a puppet scene, recording a pretend radio segment, explaining a drawing, imitating an animal sound, or recording/replaying a phrase.
-
-This does not mean every Activity should record. The question is whether voice gives the child a meaningful expressive action that would otherwise be harder for a pre-reader.
-
-A pre-reader recording flow should be visually self-explanatory:
+Do not narrate every child action. A good rhythm is:
 
 ```text
-large mic button
--> obvious recording state / lightweight level animation
--> large stop button
--> large play button
--> clear re-record/delete option
+brief cue
+-> child acts/explores
+-> concise feedback/hint when needed
+-> quiet play
 ```
 
-Do not auto-record on launch. The child should deliberately start recording.
+## 4. Show the mechanic instead of explaining it
 
-Do not continuously capture ambient audio in the background.
+For a new mechanic, prefer one tiny demonstration:
 
-Do not claim speech recognition, pronunciation scoring or semantic understanding merely because the Activity can record audio.
+- one puzzle piece glides toward its silhouette;
+- a hand/pointer taps one countable object;
+- a character briefly drags an item to the right place;
+- a target pulses while irrelevant decoration stays quiet;
+- an example sequence runs once and stops.
 
-For the exact Activity microphone contract, processing behavior, storage/privacy rules and Parent-owned disable path, read:
+Demonstrations should be short and should not force the child through a long tutorial before play.
+
+## 5. Use large, forgiving interaction targets
+
+Normal primary child controls should be large and forgiving.
+
+Working guidance:
 
 ```text
-skills/greia-activity-authoring/MICROPHONE_RECORDING.md
+primary targets: normally >=64×64 logical px, preferably larger
+important entities: large enough to identify immediately
+numbers/learning symbols: visually dominant when they are the content
 ```
 
-## 5. Visual demonstration beats explanation
+Do not create difficulty through precision clicking, tiny arrows or tightly packed choices.
 
-For a new mechanic, prefer showing one tiny example over explaining it in prose.
+Use semantic Greia/system assets where Greia owns the control. Do not imitate protected Home/Back inside the Activity.
 
-Examples:
+## 6. Wrong actions must be understandable without text
 
-- animate one puzzle piece sliding toward its matching silhouette;
-- briefly pulse the three countable objects, then pulse the numeric choices;
-- show a character tapping the relevant control once;
-- ghost a drag path or show a hand/pointer motion;
-- highlight the current playable region while dimming unrelated decoration.
-
-Do not force a long tutorial sequence before play. Demonstrations should be short, interruptible where possible, and disappear once the child understands the loop.
-
-## 6. Failure/retry must also be pre-reader friendly
-
-A wrong answer must not produce only:
+Do not make the only feedback:
 
 ```text
 "Incorrect. Try again."
@@ -175,55 +131,48 @@ A wrong answer must not produce only:
 Prefer:
 
 ```text
-friendly wobble / bounce / shake
-+ retry sound or character reaction
-+ highlight/replay of the relevant clue
-+ same task remains available
+friendly wobble/bounce/funny miss
++ replay/highlight the relevant clue
++ optional short retry encouragement
++ task remains immediately available
 ```
 
-The child should understand both **that it did not work** and **what to try next** without reading an error message.
+The child should understand:
 
-Never use punitive red error dialogs, desktop-style alerts, or text-heavy explanations as the primary retry loop.
+1. that the action did not solve the task;
+2. where to look/what to try next.
 
-## 7. Multilingual-ready from the start
+Avoid punishment, shame, scary error screens and long delays after mistakes.
 
-Pre-reader design does not remove localization requirements.
+Italian praise/retry copy must avoid child-gender agreement such as `bravo/brava` or `bravissimo/bravissima`. Prefer neutral expressions such as `Ottimo lavoro!`, `Ben fatto!`, `Esatto!`, `Evviva!`, `Che meraviglia!`.
 
-Every spoken cue uses a stable semantic ID and localized wording/audio. Do not hard-code Italian sentences into gameplay.
+## 7. Continue, replay and completion are part of pre-reader UX
 
-Example:
+Do not design a wonderful play loop that ends in a text-heavy result panel.
 
-```text
-instruction.find_orca
-instruction.choose_number
-instruction.drag_match
-```
+At completion, the child must understand visually how to:
 
-If the Activity supports Italian and English, both must have a coherent spoken/visual path. A child must not lose the primary instruction because one locale lacks the voice asset.
+- continue;
+- replay;
+- choose the next obvious action;
+- return through Greia Home when desired.
 
-When spoken language is part of the accepted interaction contract, missing reviewed audio coverage is an acceptance gap, not a reason to fall back silently to text-only instructions.
+Use clear scene transitions, animation and large semantic controls. Text labels can reinforce but not carry the interaction alone.
 
-### 7.1 CAPITAL-letter presentation default (ADR 0034)
+## 8. Reading-focused Activities are not exempt
 
-Children learn CAPITAL letters first, so Greia presents child-facing UI words in capitals by default: Activity names, Collection/Category labels, instructions, buttons, feedback and achievement copy.
+An Activity may intentionally teach letters, words or reading.
 
-- Localized strings comply automatically: `LocalizedResources.text()` applies the profile letter-case policy.
-- Package-local literal strings must go through `greia_platform.child_text.display_text(...)`; do not hand-capitalize and do not leave child-facing literals mixed-case.
-- A parent may choose normal text per child; the policy is presentation-only and must never feed gameplay, difficulty, permissions or stored data.
-- Never case-transform child-authored content (for example what the child writes in the Writing Activity).
+The *learning material* may therefore be written language.
 
-## 8. Reading-focused Activities are the exception, not a loophole
+The operating instruction must still be pre-reader accessible.
 
-An Activity may intentionally teach reading, letters, spelling or words. That does not mean the **instructions about how to interact** may depend on reading.
-
-Example:
-
-Good reading Activity:
+Good:
 
 ```text
-spoken target word
-+ large letter/word choices
-+ visual demonstration of selection
+spoken target sound/word
++ big visual letter/word choices
++ demonstration of how to select
 ```
 
 Bad:
@@ -232,51 +181,95 @@ Bad:
 "Read the word below and click the matching answer."
 ```
 
-The learning content may be written language; the operating instructions must still be understandable to a pre-reader.
+when reading that sentence is necessary to know how to play.
 
-## 9. Acceptance: perform a no-reading pass
+## 9. Child voice recording is optional, not speech recognition
 
-Before a new or materially redesigned Activity is accepted in the Simulator, explicitly perform a **NO-READING UX PASS**.
+Where expressive voice adds real value, Greia offers platform-owned `audio.basic` capture.
 
-Review the Activity as if the child cannot read any instruction or button label.
+Good uses include:
+
+- narrating a drawing;
+- puppet/story voice;
+- animal sound imitation;
+- recording/replaying a phrase;
+- simple creative radio/play acting.
+
+A pre-reader recording flow should be visually obvious:
+
+```text
+large mic
+-> clear recording state
+-> large stop
+-> large play
+-> clear redo/delete
+```
+
+Do not auto-record on launch, continuously capture ambient audio, or claim speech recognition/pronunciation scoring just because recording exists.
+
+Load `MICROPHONE_RECORDING.md` only when the Activity actually records the child.
+
+## 10. Multilingual pre-reader rule
+
+Visual communication should stay semantically stable across locales.
+
+Required spoken cues use stable IDs and localized reviewed audio.
+
+Do not silently degrade a required spoken instruction to text-only because one locale's audio is missing.
+
+Child-facing display text goes through Greia localization/letter-case presentation. Do not hand-uppercase strings; never transform child-authored content.
+
+## 11. Perform two different pre-reader checks
+
+### Mechanical/headless check
+
+During implementation, use `SIMULATOR_WORKFLOW.md` and the headless Simulator to prove the Activity launches, responds and returns cleanly.
+
+This cannot decide subjective child comprehension.
+
+### Final human GUI check
+
+At the end, launch the normal GUI Simulator and present the exact final Activity to the user/reviewer.
+
+Review it as if the child cannot read any text.
 
 Required questions:
 
 ```text
 Can the first meaningful action be inferred without reading?
-Are primary choices large and visually distinct?
-Are icons/numbers/pictures sufficient where appropriate?
-Is spoken instruction available when language is necessary?
-If microphone recording is included, can start/stop/play/re-record be understood without reading?
-Can a wrong action be understood and retried without reading?
-Can the next round/start/replay action be found without reading?
-Does completion/continue/replay make sense without reading prose?
+Are primary targets large and visually distinct?
+If exact language is required, is the command spoken?
+Can required speech be repeated where useful?
+Can a wrong action be understood and retried without prose?
+Can completion/continue/replay be understood without prose?
+Does the gameplay remain calm enough to follow?
 ```
 
-If the answer to a core-flow question is no, the child-facing UX is not accepted even if unit tests, imports and Simulator launch all pass.
+If a core answer is no, the child-facing UX is not accepted even if every unit test passes.
 
-## 10. Completion evidence
+## 12. Completion record
 
-For new Activities and substantial UI redesigns, record:
+For every new Activity/substantive child-flow redesign record:
 
 ```text
 PRE_READER_CORE_FLOW_PASS=yes/no
 TEXT_REQUIRED_FOR_GAMEPLAY=yes/no
+FIRST_ACTION_NO_READING_PASS=yes/no
+REQUIRED_LANGUAGE_COMMANDS=
+REQUIRED_SPOKEN_COVERAGE=
+SPOKEN_REPLAY_AVAILABLE=yes/no/not-applicable
+RETRY_NO_READING_PASS=yes/no
+COMPLETION_NO_READING_PASS=yes/no
 PRIMARY_INSTRUCTION_CHANNEL=visual/voice/combined
-NO_READING_FIRST_ACTION_PASS=yes/no
-NO_READING_RETRY_PASS=yes/no
-NO_READING_COMPLETION_PASS=yes/no
-MICROPHONE_RECORDING_USED=yes/no
-MICROPHONE_RECORDING_NO_READING_FLOW_PASS=yes/no/not-applicable
-SUPPORTED_LOCALES=
-SPOKEN_INSTRUCTION_COVERAGE=
+GUI_USER_PRE_READER_REVIEW=PASS/FAIL/PENDING
 ```
 
-Required normal result:
+Normal accepted result:
 
 ```text
 PRE_READER_CORE_FLOW_PASS=yes
 TEXT_REQUIRED_FOR_GAMEPLAY=no
+GUI_USER_PRE_READER_REVIEW=PASS
 ```
 
-A technically functioning Activity that requires a 3–7-year-old child to read its instructions is a failed Greia Activity UX.
+A technically functioning Activity that requires a young child to read its instructions is a failed Greia Activity UX.
