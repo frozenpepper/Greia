@@ -1,7 +1,7 @@
 schema_version = 1
 api_version = 1
 repository = "frozenpepper/Greia-Parent-App-Html"
-revision = "7db9a94ef652b491fc3b305936cce439bb978b8e"
+revision = "d7273776e626ed934bebde5e4565424b213d9c06"
 runtime_root = "/usr/share/greia-parent-app"
 integration_state = "source-pinned-not-yet-vendored"
 
