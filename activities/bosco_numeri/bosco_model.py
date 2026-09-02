@@ -66,6 +66,8 @@ class BoscoModel:
     guess_wobble_timer: float = 0.0
     guess_solved: bool = False
     guess_solved_timer: float = 0.0
+    advance_guess_round: bool = False
+    auto_advanced: bool = False
 
     ripple_effects: list[tuple[float, float, float]] = field(default_factory=list)
 
@@ -140,10 +142,12 @@ class BoscoModel:
 
     def setup_guess_round(self, target: int | None = None) -> None:
         """Prepare a number recognition challenge."""
+        prev_target = getattr(self, "guess_target", None)
         if target is not None:
             self.guess_target = max(1, min(10, target))
         else:
-            self.guess_target = random.randint(1, 10)
+            candidates = [n for n in range(1, 11) if n != prev_target]
+            self.guess_target = random.choice(candidates) if candidates else random.randint(1, 10)
 
         # 3 options including target
         pool = [n for n in range(1, 11) if n != self.guess_target]
@@ -155,7 +159,9 @@ class BoscoModel:
         self.guess_wobble_timer = 0.0
         self.guess_solved = False
         self.guess_solved_timer = 0.0
+        self.advance_guess_round = False
         self.tito_mood = "neutral"
+        self.mode = "guess"
 
     def handle_tap(self, x: float, y: float) -> tuple[str, int]:
         """Process tap on an item in count mode.
@@ -236,17 +242,20 @@ class BoscoModel:
             if self.celebration_delay <= 0.0:
                 self.pending_celebration = False
                 self.celebrating = True
-                self.celebration_timer = 2.4
+                self.celebration_timer = 3.2
                 self.tito_mood = "happy"
                 self.tito_jump = 0.6
                 self.total_completed += 1
 
-        # Celebration timer
+        # Celebration timer (auto-advances to next number when finished)
         if self.celebrating:
             self.celebration_timer -= dt
             if self.celebration_timer <= 0.0:
                 self.celebrating = False
                 self.tito_mood = "neutral"
+                if self.mode == "count":
+                    self.next_number()
+                    self.auto_advanced = True
 
         # Guess mode timers
         if self.guess_wobble_timer > 0.0:
@@ -258,9 +267,9 @@ class BoscoModel:
         if self.guess_solved:
             self.guess_solved_timer = max(0.0, self.guess_solved_timer - dt)
             if self.guess_solved_timer == 0.0:
-                # Switch to counting the solved number!
-                self.mode = "count"
-                self.setup_number(self.guess_target)
+                # Advance to next challenge round in guess mode (no loop, no teleporting items!)
+                self.setup_guess_round()
+                self.advance_guess_round = True
 
         # Ripples
         new_ripples = []

@@ -86,12 +86,22 @@ class BoscoAudio:
             self._voice_channel.play(sound)
         self.play_wobble()
 
-    def play_celebration(self) -> None:
-        """Tito final milestone celebration."""
-        sound = self._get_clip("celebrate")
-        if sound and self._voice_channel:
-            self._voice_channel.play(sound)
+    def play_celebration(self, n: int | None = None) -> None:
+        """Repeat final number loud and clear on voice channel, followed by Tito praise."""
         self.play_fanfare()
+        if not self._voice_channel:
+            return
+
+        final_num_clip = self._get_clip(f"count_{n}") if n is not None else None
+        praise_clip = self._get_clip("celebrate")
+
+        if final_num_clip and praise_clip:
+            self._voice_channel.play(final_num_clip)
+            self._voice_channel.queue(praise_clip)
+        elif final_num_clip:
+            self._voice_channel.play(final_num_clip)
+        elif praise_clip:
+            self._voice_channel.play(praise_clip)
 
     # Synthesized procedural SFX
     def play_tap(self) -> None:

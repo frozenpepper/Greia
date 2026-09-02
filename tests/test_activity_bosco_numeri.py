@@ -100,6 +100,33 @@ class TestBoscoNumeri(unittest.TestCase):
         self.assertTrue(model.guess_solved)
         self.assertEqual(model.tito_mood, "happy")
 
+        # After guess_solved_timer (1.8s), it stays in guess mode and prepares next round!
+        model.update(2.0)
+        self.assertFalse(model.guess_solved)
+        self.assertTrue(model.advance_guess_round)
+        self.assertEqual(model.mode, "guess")
+        self.assertIn(model.guess_target, model.guess_options)
+
+    def test_auto_advance_after_celebration(self) -> None:
+        model = BoscoModel(current_number=3)
+        # Count all 3 items
+        for item in model.items:
+            model.handle_tap(item.x, item.y)
+        self.assertTrue(model.pending_celebration)
+
+        # Trigger celebration (after 1.0s)
+        model.update(1.1)
+        self.assertTrue(model.celebrating)
+        self.assertFalse(model.auto_advanced)
+
+        # Update through celebration_timer (3.2s)
+        model.update(3.3)
+        self.assertFalse(model.celebrating)
+        self.assertTrue(model.auto_advanced)
+        # Should auto-advance from 3 to 4!
+        self.assertEqual(model.current_number, 4)
+        self.assertEqual(len(model.items), 4)
+
     def test_next_prev_number_wrap(self) -> None:
         model = BoscoModel(current_number=10)
         model.next_number()

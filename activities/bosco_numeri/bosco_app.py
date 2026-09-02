@@ -126,11 +126,22 @@ class BoscoApp:
 
             # Check if celebration just triggered
             if was_pending and self.model.celebrating:
-                self.audio.play_celebration()
+                # Repeat final number loud and clear, then celebrate!
+                self.audio.play_celebration(self.model.current_number)
                 emit_activity_event(
                     "bosco.number_completed",
                     {"number": self.model.current_number, "total": self.model.total_completed},
                 )
+
+            # Auto-advance to next number in count mode
+            if self.model.auto_advanced:
+                self.model.auto_advanced = False
+                self.audio.play_tap()
+
+            # Next challenge question in guess mode
+            if self.model.advance_guess_round:
+                self.model.advance_guess_round = False
+                self.audio.play_ask_number(self.model.guess_target)
 
             # Render
             self.renderer.render(self.model, self.anim_time)
@@ -174,6 +185,7 @@ class BoscoApp:
                 self.audio.play_ask_number(self.model.guess_target)
             else:
                 self.model.mode = "count"
+                self.model.setup_number(self.model.current_number)
                 self.audio.play_intro()
             return
 
@@ -210,6 +222,15 @@ class BoscoApp:
                 self.audio.play_tap()
 
         else:
+            # Guess mode: ignore clicks while winner card is celebrating transition
+            if self.model.guess_solved:
+                return
+
+            # Question banner tap repeats the spoken prompt
+            if 260 <= rx <= 720 and 80 <= ry <= 140:
+                self.audio.play_ask_number(self.model.guess_target)
+                return
+
             # Guess mode card clicks
             card_xs = [280, 490, 700]
             for idx, num in enumerate(self.model.guess_options):

@@ -161,7 +161,7 @@ Recent source evidence recorded in current history includes:
 - launcher spoken-label audit: `BUILT_IN_ACTIVITIES=36`, `ACTIVITY_TITLE_COMPLETE=72`;
 - backend-independence audit: `activities=36 blockers=0`;
 - strict system-chrome audit: `blockers=0`;
-- headless Simulator smoke PASS for both toddler Activities.
+- headless Simulator smoke PASS for toddler Activities (il-giardino-dei-numeri, alfabeto-leo, and bosco-numeri auto-advance, cardinality and guess mode).
 
 Those recorded results do not replace the current exact R7 gate where that gate requires a freshly frozen candidate.
 

@@ -1642,3 +1642,19 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Tests & Verification:
   - Unit tests: all 361 tests PASS (`test_activity_*.py` and `test_activity_contract.py`).
   - Headless simulator verification: `org.greia.acquario-magico` and `org.greia.bosco-numeri` both survived interaction and returned cleanly to Shell via Home (`rc=0`).
+
+## 2026-09-02 — Remediation: Bosco dei Numeri Auto-Advance, Final Number Cardinality & Guess Mode Flow
+
+- Implemented:
+  1. **Auto-Advance in Count Mode:**
+     - In `activities/bosco_numeri/bosco_model.py`, when `celebration_timer` expires (after praise finishes), the model automatically calls `self.next_number()` (1 -> 2 -> ... -> 10 -> 1) and flags `auto_advanced = True`.
+     - In `bosco_app.py`, transitions to the next number smoothly with audio tap cue, populating the new quantity in the clearing.
+  2. **Loud & Clear Final Number Cardinality:**
+     - In `activities/bosco_numeri/bosco_audio.py`, updated `play_celebration(n)` to repeat the total counted number loud and clear on the voice channel (`count_{n}`), simultaneously triggering musical fanfare on SFX channel, and queuing Tito's celebration voice line (`celebrate`) to play seamlessly without cut-offs.
+  3. **Guess Mode Flow & Item Teleportation Fix:**
+     - Identified root cause of items moving erratically after guess: `guess_solved_timer == 0.0` was never resetting `guess_solved = False` and was switching `mode = "count"` while repeatedly calling `setup_number()` 30 times per second on every tick.
+     - Fixed `bosco_model.py`: guess mode now stays in guess mode across continuous rounds, calls `setup_guess_round()` once upon timer expiry, resets `guess_solved = False`, and signals `advance_guess_round = True`.
+     - In `bosco_app.py`, Tito speaks the new question (*"Dov'Ã¨ il numero N?"*) when the new round begins. Tapping the question banner repeats the audio prompt. Input is guarded against mis-clicks during celebration transition.
+- Tests & Verification:
+  - Unit tests: all 362 tests PASS (`python3 -m unittest discover -s tests -p "test_activity_*.py"`).
+  - Headless simulator verification: PASS (rc=0).
