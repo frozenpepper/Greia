@@ -16,6 +16,7 @@ That skill now owns the parent-request workflow and routes deliberately to focus
 ```text
 DESIGN_AND_TEACHING.md
 PRE_READER_UX.md
+FEEDBACK_ORCHESTRATION.md
 ENGINEERING.md
 SIMULATOR_WORKFLOW.md
 VOICE_GENERATION.md
