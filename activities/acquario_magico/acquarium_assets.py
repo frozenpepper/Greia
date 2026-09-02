@@ -12,7 +12,10 @@ from typing import Optional
 
 import pygame
 
-from .acquarium_content import ASSETS_DIR, REFERENCE_HEIGHT, REFERENCE_WIDTH
+if __package__:
+    from .acquarium_content import ASSETS_DIR, REFERENCE_HEIGHT, REFERENCE_WIDTH
+else:
+    from acquarium_content import ASSETS_DIR, REFERENCE_HEIGHT, REFERENCE_WIDTH
 
 
 def _convert_surface(image: pygame.Surface) -> pygame.Surface:

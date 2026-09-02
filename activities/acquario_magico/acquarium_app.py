@@ -35,18 +35,32 @@ from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 
-from .acquarium_assets import AquariumAssetCache
-from .acquarium_audio import AquariumAudio
-from .acquarium_content import (
-    AUTOSAVE_INTERVAL_SECONDS,
+if __package__:
+    from .acquarium_assets import AquariumAssetCache
+    from .acquarium_audio import AquariumAudio
+    from .acquarium_content import (
+        AUTOSAVE_INTERVAL_SECONDS,
     MAX_PERSISTED_CREATURES,
     REFERENCE_HEIGHT,
     REFERENCE_WIDTH,
     STORAGE_KEY,
-    ToolIndex,
-)
-from .acquarium_model import AquariumSession
-from .acquarium_renderer import AquariumRenderer, now_seconds
+        ToolIndex,
+    )
+    from .acquarium_model import AquariumSession
+    from .acquarium_renderer import AquariumRenderer, now_seconds
+else:
+    from acquarium_assets import AquariumAssetCache
+    from acquarium_audio import AquariumAudio
+    from acquarium_content import (
+        AUTOSAVE_INTERVAL_SECONDS,
+        MAX_PERSISTED_CREATURES,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        STORAGE_KEY,
+        ToolIndex,
+    )
+    from acquarium_model import AquariumSession
+    from acquarium_renderer import AquariumRenderer, now_seconds
 
 
 # Treasure chest is a static layout element; expose as a constant

@@ -31,8 +31,12 @@ import pygame
 
 from greia_platform.typography import FontRole, GreiaTypography
 
-from .acquarium_assets import AquariumAssetCache
-from .acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, ToolIndex
+if __package__:
+    from .acquarium_assets import AquariumAssetCache
+    from .acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, ToolIndex
+else:
+    from acquarium_assets import AquariumAssetCache
+    from acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, ToolIndex
 
 
 @dataclass
@@ -260,7 +264,10 @@ class AquariumRenderer:
             surface.blit(label, (cx - label.get_width() // 2, button_rect.bottom - 24))
 
     def _draw_spawn_button(self, surface: pygame.Surface, cx: int, cy: int, spawn_selector_idx: int) -> None:
-        from .acquarium_content import SPECIES
+        if __package__:
+            from .acquarium_content import SPECIES
+        else:
+            from acquarium_content import SPECIES
 
         current_species = SPECIES[spawn_selector_idx % len(SPECIES)]
         icon = self._assets.scaled(f"{current_species['id']}.png", 36, 28)

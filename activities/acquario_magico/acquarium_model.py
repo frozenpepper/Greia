@@ -23,13 +23,22 @@ import random
 from dataclasses import dataclass, field
 from typing import Any
 
-from .acquarium_content import (
-    MAX_CREATURES,
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    SPECIES,
-    ToolIndex,
-)
+if __package__:
+    from .acquarium_content import (
+        MAX_CREATURES,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        SPECIES,
+        ToolIndex,
+    )
+else:
+    from acquarium_content import (
+        MAX_CREATURES,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        SPECIES,
+        ToolIndex,
+    )
 
 
 def default_creature_factory() -> list[dict[str, Any]]:

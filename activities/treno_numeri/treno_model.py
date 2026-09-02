@@ -37,6 +37,7 @@ class TrainModel:
     loaded_count: int = 0
     current_fruit: dict[str, Any] = field(default_factory=lambda: FRUITS[0])
     total_stars: int = 0
+    train_state: str = "arriving"
 
     def __post_init__(self) -> None:
         if self.total_stars < 0:
