@@ -168,6 +168,7 @@ This is a navigation map, not a substitute for reading source.
 | Python Activity SDK helpers | `src/greia_platform/activity_api.py` |
 | Runtime-neutral Activity input | `src/greia_platform/input_core.py` |
 | Current Pygame input bridge | `src/greia_platform/pygame_input.py` |
+| Pygame Activity procedural PCM format | `src/greia_platform/pygame_audio.py` |
 | HAL/device capabilities | `src/greia_platform/hal.py`, `src/greia_platform/device_capabilities.py` |
 | Legacy-X HAL compatibility | `src/greia_platform/hal_legacy_x.py` |
 | UI semantics/bounded cache | `src/greia_platform/ui_core.py` |
@@ -203,6 +204,7 @@ This is a navigation map, not a substitute for reading source.
 | Parent API base routing | `src/greia_parent/api_server.py` |
 | Parent package upload | `src/greia_parent/package_api.py` |
 | Parent update/language/audio/system-control composition | `src/greia_parent/update_api.py` |
+| Installed Parent production composition | `src/greia_parent/production_api.py` |
 | Parent credentials | `src/greia_parent/credentials.py` |
 | Main Parent credential | `src/greia_platform/main_credential.py` |
 | External Parent HTML client pin | `runtime/parent-app-client.toml`, `runtime/parent-app-client.manifest.json` |
