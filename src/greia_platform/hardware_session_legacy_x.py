@@ -3,10 +3,16 @@ from __future__ import annotations
 import argparse
 import os
 from pathlib import Path
+from threading import Event, Thread
 
 from .hal_legacy_x import LegacyXHardwareSessionController
 from .hardware import HardwareSettingsStore
 from .hardware_session import run_watcher
+from .system_controls import SystemControlSettingsStore
+from .system_controls_legacy_x import (
+    LegacyXSystemControlBackend,
+    run_legacy_x_system_controls,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,19 +39,57 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
-    """Run Greia hardware settings through the provisional Legacy-X adapter."""
+    """Run all current Legacy-X hardware/session controls in one owner process.
+
+    Generic pointer/display preferences and live system controls intentionally
+    share the existing ``greia-hardware`` lifecycle. This avoids a parallel
+    privileged daemon while keeping mixer/backlight/XF86 details below the
+    backend-neutral platform domains.
+    """
 
     args = parse_args()
-    store = HardwareSettingsStore.load(
+    hardware_store = HardwareSettingsStore.load(
         args.root / "runtime" / "hardware-settings.toml",
         args.state_dir,
     )
-    return run_watcher(
-        store,
-        args.status_path,
-        controller=LegacyXHardwareSessionController(),
-        once=args.once,
+    system_store = SystemControlSettingsStore(args.state_dir)
+    hardware_controller = LegacyXHardwareSessionController()
+    system_backend = LegacyXSystemControlBackend()
+
+    if args.once:
+        run_watcher(
+            hardware_store,
+            args.status_path,
+            controller=hardware_controller,
+            once=True,
+        )
+        return run_legacy_x_system_controls(
+            system_store,
+            backend=system_backend,
+            once=True,
+        )
+
+    stop_event = Event()
+    settings_thread = Thread(
+        name="greia-hardware-settings",
+        target=run_watcher,
+        kwargs={
+            "store": hardware_store,
+            "status_path": args.status_path,
+            "controller": hardware_controller,
+            "stop_event": stop_event,
+        },
     )
+    settings_thread.start()
+    try:
+        return run_legacy_x_system_controls(
+            system_store,
+            backend=system_backend,
+            stop_event=stop_event,
+        )
+    finally:
+        stop_event.set()
+        settings_thread.join(timeout=2.0)
 
 
 if __name__ == "__main__":
