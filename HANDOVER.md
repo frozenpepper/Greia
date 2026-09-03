@@ -1,6 +1,6 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-03  
+**Updated:** 2026-09-04  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Version:** `0.13.0-phase0-dev`  
 **Primary blocking phase:** **R7 — display/session/input architecture and exact-current physical closure**  
@@ -31,6 +31,7 @@ Do not use GitHub-hosted Actions without explicit owner authorization.
 These documents remain active because their work remains open:
 
 ```text
+docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md
 docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
 docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
@@ -100,6 +101,8 @@ Compatible third-party/legacy packages may omit age metadata. Greia does not inv
 
 If the profile has no `approximate_age`, age-specific filtering is inactive and the Parent client disables those preset choices.
 
+Parent visibility policy is now a mandatory child-launcher boundary rather than an optional adaptive-presentation feature. The normal `GreiaChildShell` applies the policy before adaptive Collection grouping, while `TrustedGreiaLauncherPresentation` applies the same policy to a direct/non-adaptive catalogue. A genuinely missing policy file retains the normal default. A malformed, unreadable, unsupported-schema or symlink policy fails closed to zero launchable Activities until repaired; it is never reinterpreted as `show_all`.
+
 Living authorities:
 
 ```text
@@ -107,6 +110,9 @@ docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
 skills/greia-activity-authoring/DISCOVERY.md
 skills/greia-activity-authoring/DESIGN_AND_TEACHING.md
 src/greia_platform/activity_discovery.py
+src/greia_launcher/activity_policy_presentation.py
+src/greia_launcher/child_shell.py
+src/greia_launcher/trusted_presentation.py
 ```
 
 ## 4. Catalogue consistency caught during age review
@@ -175,6 +181,8 @@ Parent source now includes:
 - unknown-age restrictive-preset handling;
 - explicit Activity override precedence;
 - catalogue-wide first-party age metadata enforcement;
+- mandatory normal-Shell and trusted-fallback projection of Parent Activity visibility policy;
+- fail-closed zero-Activity behavior for invalid existing discovery-policy state, distinct from a legitimate missing-policy default;
 - integrated real API client and production runtime manifest;
 - deterministic Greia image installation of the reviewed browser bundle;
 - installed-runtime integrity preflight;
@@ -186,6 +194,7 @@ Current production Parent status is:
 
 ```text
 SOURCE/IMAGE-INTEGRATION IMPLEMENTED
+CHILD POLICY FALLBACK SOURCE FIX IMPLEMENTED / EXACT-CURRENT ACCEPTANCE PENDING
 PHYSICAL ACER REAL-RUNTIME ACCEPTANCE PENDING
 ```
 
@@ -281,6 +290,9 @@ src/greia_parent/package_api.py
 src/greia_parent/update_api.py
 src/greia_parent/production_api.py
 src/greia_platform/activity_discovery.py
+src/greia_launcher/activity_policy_presentation.py
+src/greia_launcher/child_shell.py
+src/greia_launcher/trusted_presentation.py
 src/greia_platform/system_controls.py
 src/greia_platform/system_controls_legacy_x.py
 src/greia_platform/hardware_session.py
@@ -351,10 +363,48 @@ Do not copy a physical PASS from an earlier candidate onto this one; execute all
 
 ## 15. Bootstrap docs close-out — C02 source candidate (2026-09-03)
 
-C02 finishes the close-out on the C01-integrated tree. The reviewer-verified T10-R2 5-path docs delta (ADR 0035, os-work skill `display_metrics.py` entry point + live-catalogue-discovery sentence, responsive pointer-setup seams, HANDOVER §14 candidate/`NOT EXECUTED` markers, append-only plan entry + fixer-1 RED disclosure) is carried onto this tree byte-identically (no re-authoring, no history rewrite; base files were byte-identical so the carry is merge-clean). C01's repair — deletion of the three dead `import sys` lines (`faccine_momo`, `mondo_contrari`, `quattro_stagioni`; accepted C01 reviewer-1 PASS) — is the sole behaviour-adjacent change and predates this task. No `src/`/`activities/`/`runtime/`/`build/`/`tests/` change in C02 itself (docs-only: carried delta + this section + plan entry).
+C02 finishes the close-out on the C01-integrated tree. The reviewer-verified T10-R2 5-path docs delta (ADR 0035, os-work skill `display_metrics.py` entry point + live-catalogue-discovery sentence, responsive seams, HANDOVER §14 candidate/`NOT EXECUTED` markers, append-only plan entry + fixer-1 RED disclosure) is carried onto this tree byte-identically (no re-authoring, no history rewrite; base files were byte-identical so the carry is merge-clean). C01's repair — deletion of the three dead `import sys` lines (`faccine_momo`, `mondo_contrari`, `quattro_stagioni`; accepted C01 reviewer-1 PASS) — is the sole behaviour-adjacent change and predates this task. No `src/`/`activities/`/`runtime/`/`build/`/`tests/` change in C02 itself (docs-only: carried delta + this section + plan entry).
 
 Green evidence on the frozen candidate: `make verify` exit 0 — unit stage `Ran 1768 tests OK` (includes `tests/test_typography.py` 6 ok and `tests/test_parent_system_updates.py` 5 ok, retiring F03/F04 with no dangling planned state); `validate` PASS `activities=41`; `tools/audit_activity_backend_independence.py activities` exit 0 (`activities=41 blockers=0`, 2 pre-existing non-blocking migration notes); `audit_activity_system_chrome_ownership.py --strict` exit 0 (`blockers=0`). Exact `SOURCE_CANDIDATE_SHA`, counts, and audit output in the C02 implementer-1 attempt report.
 
 Catalogue state: **41 Activities**, with `org.greia.sottomarino-giramondo` accepted. `ACTIVITY_INPUT_STANDARDS.md` remains intentionally untouched (pointer interaction semantics unchanged — settings UX only).
 
 **NOT EXECUTED (human/hardware-owned, runnable on the frozen candidate):** the four §14 lanes (Acer panel, USB mouse, second display, resolution change). Do not copy a physical PASS from an earlier candidate onto this one; execute all four lanes on the exact frozen SHA before hardware claims.
+
+## 16. Child Activity policy fallback safety closure — source implemented (2026-09-04)
+
+Source commit `28c58e06018c735f185ca2e6e674b1f695938222` closes two policy-authority defects found during the Parent production review:
+
+1. the normal rich child Shell consumed Parent Activity visibility/age/difficulty policy, but the emergency `greia_launcher.trusted_presentation` fallback could present the raw catalogue if the richer Shell exited;
+2. malformed stored discovery-policy data was caught in presentation code and replaced with `ActivityDiscoveryPolicy()`, which meant corruption could become the permissive `show_all` default even though the policy store already classified malformed state as invalid.
+
+The correction introduces `src/greia_launcher/activity_policy_presentation.py` as one mandatory safety boundary. `GreiaChildShell` uses `PolicyEnforcedAdaptiveActivityDiscoveryMixin`: it applies Parent policy first, then retains the existing optional one-level adaptive Collection presentation. `TrustedGreiaLauncherPresentation` uses `DirectActivityPolicyDiscoveryMixin`: it deliberately remains a simple direct catalogue but consumes the same Parent visibility, age and difficulty authority before exposing any Activity.
+
+Stored-policy states are now distinct:
+
+```text
+missing policy file
+  -> legitimate normal default
+
+valid policy file
+  -> apply Parent intent
+
+malformed / unreadable / unsupported-schema / symlink policy
+  -> empty launchable catalogue until repaired
+  -> keep launcher/profile recovery process alive
+  -> never reinterpret as show_all
+```
+
+Repair is observed through the normal bounded rescan token using `lstat` state plus mtime/size/inode/mode, so replacing a rejected symlink or atomically repairing a corrupt policy can restore the catalogue without a permissive interval.
+
+Regression source is in `tests/test_launcher_activity_policy_safety.py`; it covers shared boundary inheritance, explicit hide in both paths, restrictive age filtering in the trusted fallback, missing-file defaults, malformed JSON, unsupported schema, symlink rejection, repair detection, and the fallback remaining non-adaptive.
+
+Exact-current acceptance authority:
+
+```text
+docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md
+```
+
+Evidence actually produced in the remote authoring environment for the source commit: Python syntax compilation of the exact new/modified launcher and test files passed. The focused unit suite and `make verify` were **NOT RUN** here because this environment has no writable Greia checkout/network path to execute the repository; GitHub-hosted Actions were deliberately not used. The previous C02 `1768 tests OK` evidence predates this source change and does **not** certify `28c58e...` or later docs commits. Physical Acer trusted-fallback policy evidence is also **NOT RUN**.
+
+Next exact step: execute `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md` from a clean exact-current local checkout. If source/local acceptance is green, carry its Parent-hide assertion into the already-active exact-current R7 physical fallback lane, then run the existing Parent real-runtime/Acer gate. Do not claim physical acceptance from the committed regressions.
