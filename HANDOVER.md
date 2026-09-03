@@ -2,18 +2,16 @@
 
 **Updated:** 2026-09-03  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
-**Version file:** `0.13.0-phase0-dev`  
+**Version:** `0.13.0-phase0-dev`  
 **Primary blocking phase:** **R7 — display/session/input architecture and exact-current physical closure**  
-**Public source readiness:** **IN PROGRESS**  
+**Public-source readiness:** **IN PROGRESS**  
 **Ordinary-family release:** **NOT READY**
 
-This is the short continuation contract. Historical implementation detail belongs in the append-only active plan, dated reviews and Git history.
-
----
+This file is current state only. Historical implementation detail belongs in Git history.
 
 ## 1. Start here
 
-Before substantive work read:
+Read:
 
 ```text
 AGENTS.md
@@ -26,89 +24,55 @@ skills/greia-os-work/SKILL.md
 
 Before installing/configuring tools read `SETUP.md`.
 
-Current focused procedures include:
+Do not use GitHub-hosted Actions without explicit owner authorization.
+
+## 2. Active acceptance procedures
+
+These documents remain active because their work remains open:
 
 ```text
 docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
 docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
+docs/testing/2026-09-02_R7_PARENT_SPOKEN_LABEL_UNIFIED_PROMOTION_GATE.md
 ```
 
-For public-source/release preparation also read:
+The maintained Parent client is the separate repository:
 
 ```text
-docs/release/GREIA_PUBLIC_RELEASE_READINESS.md
-docs/governance/LICENSING_AND_TRADEMARK.md
-docs/reviews/2026-09-02_PUBLIC_REPOSITORY_DOCUMENTATION_DEEP_DIVE.md
+frozenpepper/Greia-Parent-App-Html
 ```
 
-Do not use GitHub-hosted Actions without explicit owner authorization.
-
----
-
-## 2. Current source/evidence boundary
-
-Always freeze actual clean `origin/main` before an acceptance claim. Do not copy a historical SHA forward as evidence.
-
-The latest runtime-affecting Greia change in the Activity-age tranche is:
+Its still-active system-output-control browser gate is:
 
 ```text
-508e0a946f3093caf3eb4e43ec7883bb10f5f63c
-Activities: make parent age mixes educationally bounded
+docs/PARENT_SYSTEM_OUTPUT_CONTROLS_ACCEPTANCE_2026-09-02.md
 ```
 
-Later commits in this tranche add/strengthen tests and documentation. The age-policy tranche is **SOURCE-only until `docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md` is executed on exact-current heads**.
+Do not classify any of these as historical while the corresponding issue/workstream is open.
 
-The earlier trusted-Home physical evidence remains scoped to:
+## 3. Activity catalogue + Parent age policy
 
-```text
-57626d3f65a8bf3ae074eee15b00ee32ba3277bd
-```
+Current first-party catalogue: **41 Activities**.
 
-At that candidate Writing, Painting, Shape Garden and Acquario physically showed/actioned trusted Home and returned to a responsive Shell. That PASS does not certify later toddler, system-control, Parent or Activity-age source.
-
----
-
-## 3. Activity catalogue age contract
-
-The first-party catalogue has expanded since the old 37-Activity handover and now includes the three additional age-3 Activities:
+Recent age-3 additions include:
 
 ```text
 org.greia.quattro-stagioni
 org.greia.faccine-momo
 org.greia.mondo-contrari
+org.greia.sottomarino-giramondo
 ```
 
-alongside the earlier toddler set:
+The catalogue-wide invariant is structural:
 
-```text
-org.greia.il-giardino-dei-numeri
-org.greia.alfabeto-leo
-org.greia.bosco-numeri
-```
+> Every first-party Greia Activity declares a defensible `recommended_age_min`.
 
-The important catalogue-wide rule is now structural rather than count-pinned:
+`tests/test_first_party_activity_audience_metadata.py` discovers the complete first-party catalogue and enforces the rule without hard-coding a maximum Activity count.
 
-> Every first-party Greia Activity must declare a defensible `recommended_age_min`.
+`recommended_age_max` remains optional for genuinely open-ended experiences. Age suitability and difficulty are separate dimensions.
 
-`tests/test_first_party_activity_audience_metadata.py` enforces that rule over the complete discovered first-party catalogue and no longer contains a stale maximum catalogue count.
-
-`recommended_age_max` remains optional. Open-ended creative/sensory/imaginative Activities must not receive fake upper-age limits merely for symmetry.
-
-The parser still tolerates missing audience metadata for compatible legacy/external packages. Such metadata fails open and must be shown as unknown, not silently invented.
-
-Authoring guidance is current in:
-
-```text
-skills/greia-activity-authoring/DISCOVERY.md
-docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
-```
-
----
-
-## 4. Parent Activity age presets
-
-Greia now owns four canonical per-profile visibility modes:
+### Canonical Parent modes
 
 ```text
 show_all
@@ -117,49 +81,68 @@ age_and_easier
 custom
 ```
 
-### `recommended_only` — “Age N only”
-
-The Activity's declared age range must contain the child's approximate age:
+For child age `N`:
 
 ```text
-recommended_age_min <= age <= recommended_age_max
+recommended_only  = “Age N only”
+                    declared audience range contains N
+
+age_and_easier    = “Age N + easier”
+                    declared minimum age is not above N
 ```
 
-A missing max is open-ended.
+Old persisted/API value `hide_too_simple` is compatibility input only and normalizes immediately to `age_and_easier`.
 
-### `age_and_easier` — “Age N + easier”
+### Unknown-age compatible packages
 
-The Activity's declared minimum age must not be above the child:
+Compatible third-party/legacy packages may omit age metadata. Greia does not invent an age.
 
 ```text
-recommended_age_min <= age
+show_all / custom
+    unknown-age Activity may remain available
+
+recommended_only / age_and_easier
+    wholly unknown age metadata is NOT automatically included
+
+always_show
+    parent may deliberately expose it
 ```
 
-For a three-year-old this may include `2–4`, `3–6`, `3+` and simpler material, but it does not automatically admit `4+`, `4–8`, `5+` or `5–9`.
+Explicit `always_show` / `always_hide` is evaluated before automatic age/difficulty policy.
 
-The old persisted/API value:
+If the profile has no `approximate_age`, age-specific filtering is inactive and the Parent client disables those preset choices.
+
+Living authorities:
 
 ```text
-hide_too_simple
+docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
+skills/greia-activity-authoring/DISCOVERY.md
+skills/greia-activity-authoring/DESIGN_AND_TEACHING.md
+src/greia_platform/activity_discovery.py
 ```
 
-remains accepted as compatibility input and normalizes immediately to canonical `age_and_easier`; new stored/API output uses the canonical value.
+## 4. Catalogue consistency caught during age review
 
-Difficulty remains an independent `1..10` dimension. Explicit `always_show` / `always_hide` overrides remain authoritative before automatic age/difficulty filtering.
+`org.greia.sottomarino-giramondo` landed concurrently with correct age metadata:
 
-If a child has no `approximate_age`, automatic age filtering stays inactive/fail-open.
-
----
-
-## 5. Maintained Parent HTML app
-
-The maintained browser client is the separate repository:
-
-```text
-frozenpepper/Greia-Parent-App-Html
+```toml
+recommended_age_min = 3
+recommended_age_max = 8
 ```
 
-Its current source now presents, for a child aged 3:
+Its initial discovery tags were outside the platform-owned vocabulary. They were reconciled to:
+
+```toml
+discovery_tags = ["nature", "action"]
+```
+
+rather than expanding global navigation vocabulary for one Activity.
+
+Sottomarino also has prior headless Simulator evidence recorded by its authoring tranche. That evidence remains scoped to the exact revision that produced it; the later metadata-only correction does not create new runtime evidence.
+
+## 5. Parent client state
+
+The maintained HTML Parent client now presents, for a child aged 3:
 
 ```text
 All age ranges
@@ -170,54 +153,61 @@ Custom choices
 
 It also:
 
-- displays honest Activity audience labels such as `Age 3+` and `3–6 years`;
-- displays wholly missing metadata as `Age not specified`, not `All ages`;
-- disables age-specific presets when no approximate age exists;
-- explains the exact preset meaning to the parent;
-- keeps difficulty separate;
-- preserves explicit per-Activity show/hide choices;
-- keeps the localhost demo aligned with production policy semantics.
+- displays `Age 3+`, bounded ranges, or `Age not specified` honestly;
+- keeps difficulty as a separate control;
+- disables age-specific choices when no approximate age exists;
+- preserves explicit per-Activity overrides;
+- mirrors production age semantics in localhost demo mode;
+- regression-tests an unknown-age demo Activity, including explicit `Always show` recovery.
 
-Greia does **not** serve moving Parent `main`. After exact-current browser acceptance succeeds, the accepted Parent revision must be deliberately pinned into Greia using the canonical `tools/update_parent_client_pin.py` workflow and integrity manifest, followed by Greia static-client/integration checks.
+### Parent pin intentionally remains unchanged
 
-**Do not advance the Greia Parent pin before browser acceptance.**
+Greia does not serve moving Parent `main`. The existing accepted Parent revision remains pinned in:
 
----
+```text
+runtime/parent-app-client.toml
+```
 
-## 6. Age-policy acceptance procedure
+Required order before advancing it:
 
-Use exactly:
+```text
+1. execute exact-current age-policy acceptance on both repositories
+2. obtain browser/source ACCEPTED verdict
+3. use tools/update_parent_client_pin.py on that exact accepted Parent checkout
+4. regenerate the integrity manifest
+5. run Greia static-client/integration checks
+```
+
+Do not advance the pin before browser acceptance.
+
+## 6. Age-policy evidence boundary
+
+Source now includes:
+
+- exact-age range filtering;
+- bounded `Age N + easier` filtering;
+- legacy-mode migration;
+- unknown-age exclusion from restrictive presets;
+- explicit override precedence;
+- catalogue-wide first-party minimum-age enforcement;
+- Parent UI/demo semantics;
+- regression tests for the above.
+
+Current status remains:
+
+```text
+SOURCE-IMPLEMENTED / ACCEPTANCE-PENDING
+```
+
+Use:
 
 ```text
 docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
 ```
 
-It requires clean exact-current heads of both repositories and covers:
+It requires exact-current clean heads of both repositories, focused Greia tests, `make verify`, Parent `npm test`, localhost browser review at desktop/1024×600/mobile, override/no-age/unknown-age checks and zero feature-caused console errors.
 
-```text
-Greia activity audience manifest tests
-Greia discovery-policy tests
-first-party catalogue minimum-age gate
-Parent API age-policy tests
-Greia make verify
-Parent npm test
-localhost demo Age 3 only
-localhost demo Age 3 + easier
-explicit override precedence
-no-age profile UX
-1024×600 + mobile smoke review
-zero feature-caused console errors
-```
-
-The required verdict is:
-
-```text
-FINAL_ACTIVITY_AGE_POLICY_VERDICT=ACCEPTED|REJECTED|STALE|INCOMPLETE
-```
-
-No Simulator/Acer claim follows merely from this browser/source gate.
-
----
+No such execution was performed from the current remote editing environment because no clean checkout is mounted and its shell environment cannot resolve GitHub. Static source review is not PASS evidence.
 
 ## 7. R7 remains blocking
 
@@ -227,51 +217,34 @@ Core invariants remain:
 - `DisplaySessionCoordinator` owns Shell/Activity display-session transitions;
 - `SystemChromeCoordinator` owns trusted navigation semantics;
 - `TrustedChromeActivitySupervisor` binds Home to authoritative Activity lifecycle;
-- Activities remain display-backend neutral and retain direct safe SDL/Pygame rendering/input paths;
+- Activities remain display/input-backend neutral;
 - ordinary Activities receive no raw `/dev/input` or `/dev/dri` authority;
-- Legacy X is migration/compatibility plumbing, not the final architecture;
+- Legacy X is compatibility/migration plumbing, not final architecture;
 - Simulator evidence never substitutes for production backend/hardware evidence.
 
-Authoritative exact-current R7 procedure:
+Earlier trusted-Home physical proof remains scoped to:
+
+```text
+57626d3f65a8bf3ae074eee15b00ee32ba3277bd
+```
+
+It does not automatically certify later Activity-age, toddler, Parent or system-control source.
+
+Use:
 
 ```text
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
 ```
 
-Recent system-control source corrections still await exact-current physical execution, including normal media keys, rapid key bursts, Parent-setting→physical-relative-key composition and media-key isolation while an Activity is active.
+for exact-current R7 closure.
 
-**Do not begin R7.4 implementation before required R7.2/R7.3 exact-current physical closure is accepted.**
+## 8. Recent toddler/runtime cleanup
 
----
+The catalogue-wide modernization/decomposition pass remains complete. Do not restart a broad refactor sweep without a concrete defect.
 
-## 8. Recent toddler/runtime cleanup still needs its gate
+Recent Giardino/Alfabeto/Bosco cleanup corrected pointer mapping, Activity-owned Home residue, feedback hot-path synthesis, fanfare sequencing, PCM format and localization issues.
 
-The catalogue-wide modernization/decomposition pass remains complete; do not restart a broad refactor sweep without a concrete defect. Current built-in Activity inventory: **41**.
-
-Toddler & Discovery Activities in recent authoring:
-
-```text
-org.greia.il-giardino-dei-numeri
-org.greia.alfabeto-leo
-org.greia.bosco-numeri
-org.greia.sottomarino-giramondo
-```
-
-Sottomarino Giramondo (`org.greia.sottomarino-giramondo`) adds a submarine simulator and cockpit busy-board with pseudo-3D porthole projection, 3 distinct depth biomes, tactile instrument controls with high-contrast pre-reader vector icons (Light, Sonar, Bubbles, Horn, Emergency Beacon) and balanced 23 px symmetrical spacing, phosphor radar, depth meter, non-scary animal encounters, signed PCM16 audio cues, and bilingual localization (`it`/`en`). Verified via Headless Simulator in both `it` and `en` with clean Home return.
-
-The latest cleanup preserved Bosco's owner-authored educational-flow remediation: count completion auto-advance, final-cardinality reinforcement and continuing guess rounds.
-
-Recent source cleanup then corrected concrete runtime/architecture residue:
-
-- Bosco, Giardino and Alfabeto use `PygameReferenceCanvas.pointer()` instead of copied physical→logical transforms;
-- Activity-local attempts to protect/own the Greia Home region were removed;
-- Bosco and Alfabeto no longer synthesize full feedback waveforms in the click hot path;
-- Bosco fanfare is one sequenced clip instead of repeated same-channel replacement calls;
-- bounded generated PCM in all three toddler Activities now uses the actual signed-PCM16 mixer rate/channel layout through `src/greia_platform/pygame_audio.py`;
-- Bosco renderer now resolves child-facing strings through `LocalizedResources`; its duplicate hard-coded localization table and Italian-only progress word were removed;
-- obsolete project-specific root `tools/generate_toddler_audio.py` was removed. Reusable voice production remains `tools/greia_voice.py` / VoiceEngine.
-
-Important open measurement: Alfabeto now prebuilds 26 marimba cues outside interaction. This removes click-time synthesis but may increase startup cost on the Atom floor. **Measure first-frame/READY latency on the Acer; do not assume desktop behavior.** If materially slow, prefer pre-generated bounded SFX or another startup-safe strategy rather than moving synthesis back into the interaction hot path.
+Alfabeto still needs Acer first-frame/READY measurement because prepared audio cues may trade interaction latency for startup cost.
 
 Use:
 
@@ -279,29 +252,47 @@ Use:
 docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
 ```
 
-Historical toddler Simulator evidence predates parts of this cleanup and does not replace a fresh exact-current run.
+before claiming that cleanup accepted.
 
----
+## 9. Voice/audio boundary
 
-## 9. Voice/audio evidence boundary
-
-Launcher spoken labels remain Shell-owned prerecorded audio; no child-runtime normal narration TTS is introduced.
+Launcher spoken labels remain Shell-owned prerecorded audio; no normal child-runtime narration TTS is introduced.
 
 Shared accepted character speech remains:
 
 ```text
-180 shared reactions: OWNER-ACCEPTED
-12 character introductions: OWNER-ACCEPTED
-accepted set: assets/audio/characters/shared/v0.2/
+180 shared reactions
+12 canonical character introductions
+assets/audio/characters/shared/v0.2/
 ```
 
-Pedagogical letters/syllables remain on the deterministic prerecorded path; character dialogue uses the canonical character voice path. Voice receipts/provider or Whisper success never replaces human listening acceptance.
+Pedagogical letters/syllables remain on the deterministic prerecorded path; character dialogue uses the canonical character voice path. Generation receipts/Whisper never replace human listening acceptance.
 
-`src/greia_platform/pygame_audio.py` is only a small format boundary for bounded Activity-generated SFX, not a replacement audio engine.
+## 10. Activity authoring contract
 
----
+For every new first-party Activity, the mandatory design pass requires:
 
-## 10. Parent production path
+```text
+RECOMMENDED_AGE_MIN_DEFINED=yes
+DISCOVERY_METADATA_PLAN_DEFINED=yes
+PROGRESSION_REWARD_RELATIONSHIP_DEFINED=yes
+```
+
+The minimum age is chosen from the shipped cognitive, language, motor and interaction demands—not copied from `difficulty`.
+
+The authoring skill also requires:
+
+- parent-request decomposition;
+- pre-reader/no-text-only command design;
+- prerecorded VoiceEngine speech architecture;
+- semantic feedback/audio conflict resolution;
+- Greia progression/reward separation;
+- Acer-class performance discipline;
+- project-local authoring tools;
+- repeated headless Simulator integration;
+- final GUI Simulator user review.
+
+## 11. Parent production path
 
 Current exact owners include:
 
@@ -318,39 +309,25 @@ src/greia_platform/hardware_session.py
 src/greia_platform/hardware_session_legacy_x.py
 ```
 
-The installed Parent composition remains explicit and fail-closed. The HTTP process stays unprivileged `greiapanel`; unavailable privileged mutations must remain unavailable rather than being faked or solved by broadening HTTP-server authority.
+The Parent HTTP process remains unprivileged. Unavailable privileged mutations must remain unavailable rather than being faked or solved by broadening HTTP-server authority.
 
-`network.manage=false` may be correct current appliance truth until the planned typed privileged broker exists.
+## 12. Public-source work
 
----
+Public-source publication and ordinary-family release remain separate thresholds.
 
-## 11. Public-source cleanup
+Still-open public-source work includes documentation/path cleanup, licensing/provenance, full-history secret/security review, legal/community entry points and contributor quick-start work.
 
-Authoritative release checklist:
+Use:
 
 ```text
 docs/release/GREIA_PUBLIC_RELEASE_READINESS.md
 ```
 
-Still pending for Threshold A includes documentation-path auditing, historical-doc classification, licensing/provenance/history-secret/security/privacy/community-file review, reviewed legal/community entry points and a public developer quick start.
-
-Do not confuse public-source publication, technical preview and ordinary-family release.
-
----
-
-## 12. Next exact work
-
-1. Execute `docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md` on exact-current Greia + Parent heads.
-2. If green, advance the Greia Parent pin deliberately and run Greia static-client/integration checks on the resulting new exact Greia SHA.
-3. Execute the still-pending recent toddler/runtime cleanup gate as required by its runbook.
-4. Continue exact-current R7 physical evidence-gap closure; do not infer it from age-policy/browser acceptance.
-5. Public-source cleanup may continue in parallel where it does not invalidate runtime evidence.
-
----
+as release-readiness authority.
 
 ## 13. Evidence discipline
 
-Always preserve these distinctions:
+Always preserve:
 
 ```text
 SOURCE
@@ -361,4 +338,4 @@ VM / IMAGE
 PHYSICAL DEVICE
 ```
 
-A committed test is not a PASS. A later source commit does not inherit an earlier physical PASS. A valid audio receipt/Whisper result does not replace human listening. Browser/demo review does not prove the Greia staged pin or Acer behavior. Historical reviews remain evidence for their exact state, not current truth by default.
+A committed test is not a PASS. A later source revision does not inherit earlier physical evidence. A Simulator screenshot does not prove production trusted chrome. An audio receipt does not replace human listening.
