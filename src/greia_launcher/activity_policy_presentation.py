@@ -13,6 +13,14 @@ from .adaptive_discovery_presentation import AdaptiveActivityDiscoveryMixin
 from .catalogue_view import ActivityCatalogue
 
 
+PolicyFileToken = tuple[str, int, int, int, int]
+_POLICY_RETRY_TOKEN: PolicyFileToken = ("retry", 0, 0, 0, 0)
+
+
+class _PolicyChangedDuringRead(ActivityDiscoveryError):
+    """The atomic policy file was replaced while one snapshot was being read."""
+
+
 class ActivityPolicyEnforcementMixin:
     """Shared safety boundary for child-visible Activity policy.
 
@@ -30,17 +38,12 @@ class ActivityPolicyEnforcementMixin:
         super().__init__(*args, **kwargs)
         self._discovery_policy = ActivityDiscoveryPolicy()
         self._discovery_policy_store: ActivityDiscoveryPolicyStore | None = None
-        self._discovery_policy_token: tuple[str, int, int, int, int] | None = None
+        self._discovery_policy_token: PolicyFileToken | None = None
         self._discovery_service = ActivityDiscoveryService()
+        self._activity_policy_error = False
 
-    def _policy_file_token(self) -> tuple[str, int, int, int, int] | None:
-        store = self._discovery_policy_store
-        if store is None and self._active_profile is not None:
-            store = ActivityDiscoveryPolicyStore(
-                self._active_profile.activity_discovery_policy_path
-            )
-        if store is None:
-            return None
+    @staticmethod
+    def _policy_file_token_for(store: ActivityDiscoveryPolicyStore) -> PolicyFileToken:
         try:
             stat = store.path.lstat()
         except FileNotFoundError:
@@ -60,13 +63,61 @@ class ActivityPolicyEnforcementMixin:
             stat.st_mode,
         )
 
+    def _policy_file_token(self) -> PolicyFileToken | None:
+        store = self._discovery_policy_store
+        if store is None and self._active_profile is not None:
+            store = ActivityDiscoveryPolicyStore(
+                self._active_profile.activity_discovery_policy_path
+            )
+        if store is None:
+            return None
+        return self._policy_file_token_for(store)
+
+    def _read_policy_snapshot(
+        self, store: ActivityDiscoveryPolicyStore
+    ) -> tuple[ActivityDiscoveryPolicy, PolicyFileToken]:
+        """Read one policy version without acknowledging a different replacement.
+
+        Parent writes replace the JSON atomically. The launcher brackets the
+        read with lstat-derived identity tokens so a replacement that lands
+        during the read is retried instead of applying old policy while storing
+        the newer file's token. Two bounded attempts avoid an unbounded UI-path
+        loop; repeated churn fails closed and is retried on the next normal
+        rescan.
+        """
+
+        for _ in range(2):
+            before = self._policy_file_token_for(store)
+            try:
+                policy = store.read()
+            except ActivityDiscoveryError:
+                after = self._policy_file_token_for(store)
+                if before != after:
+                    continue
+                raise
+            after = self._policy_file_token_for(store)
+            if before == after:
+                return policy, after
+        raise _PolicyChangedDuringRead(
+            "Activity discovery policy changed repeatedly while being read"
+        )
+
     def _apply_policy_catalogue(
         self,
         *,
         store: ActivityDiscoveryPolicyStore,
         policy: ActivityDiscoveryPolicy,
         catalogue: ActivityCatalogue,
+        token: PolicyFileToken | None = None,
+        clear_policy_error: bool = True,
     ) -> None:
+        if clear_policy_error:
+            if self._activity_policy_error:
+                # Do not leave a stale error badge after the rejected Parent
+                # policy has been repaired and a valid snapshot is active.
+                self._catalogue_error = False
+            self._activity_policy_error = False
+
         self._discovery_policy_store = store
         self._discovery_policy = policy
         self._catalogue = catalogue
@@ -94,14 +145,20 @@ class ActivityPolicyEnforcementMixin:
             cache = getattr(self, name, None)
             if cache is not None:
                 cache.clear()
-        self._discovery_policy_token = self._policy_file_token()
+        self._discovery_policy_token = (
+            token if token is not None else self._policy_file_token_for(store)
+        )
 
     def _fail_closed_policy_catalogue(
-        self, store: ActivityDiscoveryPolicyStore
+        self,
+        store: ActivityDiscoveryPolicyStore,
+        *,
+        token: PolicyFileToken | None = None,
     ) -> None:
         # The default policy object below is only an inert in-memory placeholder;
         # it is never evaluated against Activities on this error path. An invalid
         # Parent authority yields an empty launchable catalogue until repaired.
+        self._activity_policy_error = True
         self._catalogue_error = True
         self._apply_policy_catalogue(
             store=store,
@@ -111,7 +168,25 @@ class ActivityPolicyEnforcementMixin:
                 locale=self._active_locale,
                 adaptive=False,
             ),
+            token=token,
+            clear_policy_error=False,
         )
+
+    def _load_policy_or_fail_closed(
+        self, store: ActivityDiscoveryPolicyStore
+    ) -> tuple[ActivityDiscoveryPolicy, PolicyFileToken] | None:
+        try:
+            return self._read_policy_snapshot(store)
+        except _PolicyChangedDuringRead:
+            # Force the next normal rescan to retry even if the last replacement
+            # has already settled by the time this failure is presented.
+            self._fail_closed_policy_catalogue(store, token=_POLICY_RETRY_TOKEN)
+        except ActivityDiscoveryError:
+            self._fail_closed_policy_catalogue(
+                store,
+                token=self._policy_file_token_for(store),
+            )
+        return None
 
 
 class PolicyEnforcedAdaptiveActivityDiscoveryMixin(
@@ -124,14 +199,14 @@ class PolicyEnforcedAdaptiveActivityDiscoveryMixin(
         context = self._active_profile
         if context is None:
             self._catalogue = ActivityCatalogue.from_activities(self._activities)
+            self._activity_policy_error = False
             return
 
         store = ActivityDiscoveryPolicyStore(context.activity_discovery_policy_path)
-        try:
-            policy = store.read()
-        except ActivityDiscoveryError:
-            self._fail_closed_policy_catalogue(store)
+        snapshot = self._load_policy_or_fail_closed(store)
+        if snapshot is None:
             return
+        policy, policy_token = snapshot
 
         effective = self._discovery_service.effective_activities(
             self._activities,
@@ -159,6 +234,7 @@ class PolicyEnforcedAdaptiveActivityDiscoveryMixin(
             try:
                 store.write(updated)
                 policy = updated
+                policy_token = self._policy_file_token_for(store)
             except (ActivityDiscoveryError, OSError):
                 self._catalogue_error = True
 
@@ -166,6 +242,7 @@ class PolicyEnforcedAdaptiveActivityDiscoveryMixin(
             store=store,
             policy=policy,
             catalogue=catalogue,
+            token=policy_token,
         )
 
 
@@ -190,6 +267,7 @@ class DirectActivityPolicyDiscoveryMixin(ActivityPolicyEnforcementMixin):
         self._discovery_policy = ActivityDiscoveryPolicy()
         self._discovery_policy_store = None
         self._discovery_policy_token = None
+        self._activity_policy_error = False
         super()._logout(pygame)
 
     def _rescan_if_due(self) -> bool:
@@ -229,14 +307,14 @@ class DirectActivityPolicyDiscoveryMixin(ActivityPolicyEnforcementMixin):
                 locale=self._active_locale,
                 adaptive=False,
             )
+            self._activity_policy_error = False
             return
 
         store = ActivityDiscoveryPolicyStore(context.activity_discovery_policy_path)
-        try:
-            policy = store.read()
-        except ActivityDiscoveryError:
-            self._fail_closed_policy_catalogue(store)
+        snapshot = self._load_policy_or_fail_closed(store)
+        if snapshot is None:
             return
+        policy, policy_token = snapshot
 
         effective = self._discovery_service.effective_activities(
             self._activities,
@@ -252,4 +330,5 @@ class DirectActivityPolicyDiscoveryMixin(ActivityPolicyEnforcementMixin):
                 locale=self._active_locale,
                 adaptive=False,
             ),
+            token=policy_token,
         )
