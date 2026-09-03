@@ -74,17 +74,40 @@ class SubmarineAudio:
             samples.append(val)
         self._register("bubbles", _synth_wav(samples, rate, channels))
 
-        # 3. Ship Horn (deep, warm acoustic foghorn chord)
-        duration_s = 0.9
+        # 3. Ship Horn / Whistle (cheerful two-tone acoustic brass whistle)
+        duration_s = 1.1
         n_samples = int(rate * duration_s)
         samples = []
         for i in range(n_samples):
             t = i / rate
-            env = min(1.0, t * 10.0) * max(0.0, 1.0 - (t / duration_s))
-            wave1 = math.sin(2.0 * math.pi * 140.0 * t)
-            wave2 = 0.6 * math.sin(2.0 * math.pi * 210.0 * t)
-            wave3 = 0.3 * math.sin(2.0 * math.pi * 280.0 * t)
-            val = int(18000.0 * (wave1 + wave2 + wave3) * env)
+            if t < 0.42:
+                # First whistle note (260 Hz)
+                env = math.sin(math.pi * (t / 0.42)) ** 0.5
+                f0 = 260.0
+                vib = 1.0 + 0.012 * math.sin(2.0 * math.pi * 6.0 * t)
+                w = (
+                    math.sin(2.0 * math.pi * f0 * vib * t) +
+                    0.45 * math.sin(2.0 * math.pi * f0 * 2.0 * vib * t) +
+                    0.25 * math.sin(2.0 * math.pi * f0 * 3.0 * vib * t) +
+                    0.10 * math.sin(2.0 * math.pi * f0 * 4.0 * vib * t)
+                ) / 1.8
+                val = int(22000.0 * w * env)
+            elif t < 0.48:
+                val = 0
+            else:
+                # Second higher, cheerful whistle note (330 Hz - toot toot!)
+                t2 = t - 0.48
+                dur2 = duration_s - 0.48
+                env = math.sin(math.pi * (t2 / dur2)) ** 0.5
+                f0 = 329.6
+                vib = 1.0 + 0.012 * math.sin(2.0 * math.pi * 6.0 * t)
+                w = (
+                    math.sin(2.0 * math.pi * f0 * vib * t) +
+                    0.45 * math.sin(2.0 * math.pi * f0 * 2.0 * vib * t) +
+                    0.25 * math.sin(2.0 * math.pi * f0 * 3.0 * vib * t) +
+                    0.10 * math.sin(2.0 * math.pi * f0 * 4.0 * vib * t)
+                ) / 1.8
+                val = int(22000.0 * w * env)
             samples.append(val)
         self._register("horn", _synth_wav(samples, rate, channels))
 
