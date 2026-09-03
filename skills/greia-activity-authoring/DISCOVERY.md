@@ -1,10 +1,10 @@
 # Greia Activity Discovery and Audience Authoring
 
 **Status:** current source-aligned Activity-authoring contract  
-**Reviewed:** 2026-08-23  
+**Reviewed:** 2026-09-03  
 **Source authorities:** `src/greia_platform/activities.py`, `src/greia_platform/activity_discovery.py`, `src/greia_launcher/catalogue_view.py`
 
-This file exists because older product/authoring prose described the discovery fields as a future migration. That migration is now implemented. Where an older Greia document still says the fields below are “conceptual”, “future”, or “not parsed”, **current source plus this source-aligned authoring file wins for implementation facts**. Product intent remains owned by `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`.
+This file exists because discovery metadata directly affects what a parent can make visible to a child. Product intent remains owned by `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`; exact parser/filter behavior remains source-owned.
 
 ## 1. Keep three concepts separate
 
@@ -37,11 +37,21 @@ adaptive_difficulty = true
 
 All of those fields are currently parsed by `src/greia_platform/activities.py`.
 
-### Optional fields
+### First-party age requirement
 
-`recommended_age_min`, `recommended_age_max`, `difficulty_min`, `difficulty_max`, `adaptive_difficulty` and `presentation.discovery_tags` are optional.
+Every first-party Greia Activity must declare a defensible:
 
-Do not add data just to fill fields. Honest unknown/open-ended metadata is better than invented precision.
+```toml
+recommended_age_min = N
+```
+
+This is not decorative metadata. Parent age presets depend on it. `tests/test_first_party_activity_audience_metadata.py` enforces the catalogue-wide rule without pinning a maximum catalogue size, so future Activities are automatically covered.
+
+`recommended_age_max` remains optional. Open-ended creative, sensory or imaginative Activities should normally omit a fake maximum if there is no meaningful developmental upper limit.
+
+The parser still tolerates missing age metadata for compatibility with incomplete/legacy/external material. Such unknown metadata fails open in automatic discovery and must be displayed as unknown rather than silently invented. New first-party work must not rely on that compatibility path.
+
+`difficulty_min`, `difficulty_max`, `adaptive_difficulty` and `presentation.discovery_tags` remain optional when they are not truthful/useful.
 
 ## 3. Primary launcher Collections
 
@@ -141,7 +151,7 @@ Omitting the upper bound is appropriate when an Activity does not meaningfully b
 
 Do **not** invent an upper age merely to make filtering look complete.
 
-Missing age metadata means unknown/general for ordinary discovery and fails open. It is not a hidden/unsuitable marker.
+For first-party Activities, do not omit the minimum. Pick the youngest age for whom the shipped interaction, instructions, concepts and motor demands are genuinely appropriate without assuming exceptional prior skill.
 
 ### `difficulty`
 
@@ -155,7 +165,65 @@ It does not encode age.
 
 A preschool Activity can be challenging for preschoolers and still be developmentally elementary for an older child. Conversely, an open-ended creative Activity can be easy to enter while remaining valuable for many ages.
 
-## 6. Adaptive challenge ranges
+## 6. Parent age presets — source contract
+
+Greia computes the active child's effective Activity set; Activity code never performs this filtering itself.
+
+Canonical Parent visibility modes are:
+
+```text
+show_all
+recommended_only
+age_and_easier
+custom
+```
+
+Their age semantics are deliberately simple and explainable.
+
+### `recommended_only` — “Age N only”
+
+An Activity qualifies when the child's age is inside its declared recommended range:
+
+```text
+recommended_age_min <= age <= recommended_age_max
+```
+
+A missing upper bound means open-ended, so `recommended_age_min = 3` qualifies for ages 3 and above.
+
+### `age_and_easier` — “Age N + easier”
+
+An Activity qualifies when its declared minimum age is not above the child:
+
+```text
+recommended_age_min <= age
+```
+
+This includes age-fit and simpler/younger material but **never** admits an Activity designed to start above the child's age. For a three-year-old, an Activity marked `4+` or `5–8` is therefore excluded.
+
+### Compatibility
+
+Older stored/API policy value:
+
+```text
+hide_too_simple
+```
+
+is accepted as compatibility input and immediately normalized to `age_and_easier`. New writes use only the canonical value.
+
+### No child age
+
+If a profile has no approximate age, automatic age filtering is inactive and fails open. The Parent client explicitly tells the parent to set an approximate age before using age presets.
+
+Explicit per-Activity overrides remain:
+
+```text
+always_show
+always_hide
+```
+
+and win over automatic age policy.
+
+## 7. Adaptive challenge ranges
 
 Only use an adaptive range if the Activity genuinely supports varying challenge.
 
@@ -180,29 +248,9 @@ Current validation rules:
 
 Do not mark an Activity adaptive merely because future code *could* add levels. Metadata describes the Activity that actually ships.
 
-## 7. Greia owns per-child visibility
+## 8. Challenge preference is separate
 
-Activity code must not privately hide itself or another Activity based on age/difficulty.
-
-Greia computes the active child's effective visible set from platform/profile/Parent policy. Current Parent visibility modes are:
-
-```text
-show_all
-hide_too_simple
-recommended_only
-custom
-```
-
-Current explicit per-Activity overrides are:
-
-```text
-always_show
-always_hide
-```
-
-Explicit Parent overrides win over automatic age policy.
-
-Approximate age is optional and Greia does not require a date of birth for this discovery feature.
+Approximate age is optional and Greia does not require a date of birth for discovery.
 
 Challenge preference is profile-level presentation/discovery preference:
 
@@ -213,9 +261,11 @@ standard
 harder
 ```
 
-An Activity must not treat that preference as permission to rewrite its saved progression or infer mastery.
+It influences ordering/challenge presentation within the effective catalogue; it is not the same thing as an age visibility preset.
 
-## 8. Adaptive Collection depth is platform-owned
+An Activity must not treat challenge preference as permission to rewrite saved progression or infer mastery.
+
+## 9. Adaptive Collection depth is platform-owned
 
 Grouping is computed **after** Greia has determined the effective visible Activity set for the active child.
 
@@ -239,7 +289,7 @@ Home → primary Collection → optional sub-Collection → Activity
 
 Activity authors must not design deeper launcher trees.
 
-## 9. Authoring examples
+## 10. Authoring examples
 
 ### Open-ended drawing tool
 
@@ -287,10 +337,11 @@ difficulty_max = 8
 adaptive_difficulty = true
 ```
 
-## 10. Review checklist
+## 11. Review checklist
 
 Before accepting discovery metadata, verify:
 
+- every first-party Activity has a defensible `recommended_age_min`;
 - launcher categories use only genuine primary destinations;
 - education taxonomy remains separate;
 - discovery tags are few, semantic and from the platform-owned grouping vocabulary where child grouping is desired;
@@ -300,19 +351,22 @@ Before accepting discovery metadata, verify:
 - adaptive range exists only when the shipped Activity genuinely adapts;
 - adaptive range validation is satisfied;
 - Activity code contains no private per-child visibility policy;
-- missing metadata remains safe/usable;
+- unknown external/legacy age metadata remains explicitly unknown and safe/usable;
 - package remains launchable independently of whether Greia ever chooses to subdivide a Collection.
 
-## 11. Evidence boundary
+For a target-age review, explicitly ask: “Would I intentionally offer this shipped Activity to an ordinary child at the minimum age without relying on unusual reading, motor or conceptual ability?” If not, raise the minimum instead of compensating with difficulty metadata.
+
+## 12. Evidence boundary
 
 Source support and committed tests are not the same as executed acceptance.
 
 When changing these contracts, validate at least:
 
-1. manifest parser/validation tests;
-2. profile/discovery policy tests;
-3. Parent API contract tests where affected;
-4. launcher/catalogue tests;
-5. Activity Simulator scenarios for direct/subdivided/hysteresis navigation where presentation changes.
+1. manifest/parser audience tests;
+2. first-party catalogue metadata test;
+3. profile/discovery policy tests;
+4. Parent API policy tests;
+5. Parent client tests where labels/modes changed;
+6. launcher/catalogue tests if presentation changes.
 
 Do not claim PASS until the relevant tests were actually executed at the exact revision under review.
