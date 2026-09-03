@@ -35,11 +35,12 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         if not self.wifi_backend.available():
             return False
         if isinstance(self.wifi_backend, IwdWifiBackend):
-            state_dir = Path(self.wifi_backend.state_dir)
             # R12 owns the future typed privileged broker. Until that exists,
             # the unprivileged HTTP process must not advertise a write path it
-            # cannot actually complete against root-owned iwd state.
-            return state_dir.is_dir() and os.access(state_dir, os.W_OK)
+            # cannot actually complete against root-owned iwd state. Check the
+            # effective mount namespace as well as Unix permission bits because
+            # ProtectSystem=strict can make an otherwise writable path read-only.
+            return _directory_is_effectively_writable(Path(self.wifi_backend.state_dir))
         return True
 
     def index_payload(self) -> dict[str, object]:
@@ -58,7 +59,28 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
     def connect_wifi(self, ssid: str, passphrase: str = "") -> dict[str, object]:
         if not self._wifi_management_available():
             raise WifiError("Wi-Fi management is unavailable on this Greia")
-        return super().connect_wifi(ssid, passphrase)
+        candidates = tuple(network for network in self.wifi_backend.scan() if network.ssid == ssid)
+        if not candidates:
+            raise WifiError("Selected Wi-Fi network is no longer available; scan again")
+        connection = self.wifi_backend.connect(candidates[0], passphrase)
+        return {
+            "connected": True,
+            "ssid": connection.network.ssid,
+        }
+
+
+def _directory_is_effectively_writable(path: Path) -> bool:
+    """Return whether *path* is writable in the service's effective namespace."""
+
+    try:
+        if not path.is_dir():
+            return False
+        flags = os.statvfs(path).f_flag
+        if hasattr(os, "ST_RDONLY") and flags & os.ST_RDONLY:
+            return False
+        return os.access(path, os.W_OK | os.X_OK)
+    except OSError:
+        return False
 
 
 def main() -> int:
