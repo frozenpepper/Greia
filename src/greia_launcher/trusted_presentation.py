@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .activity_policy_presentation import DirectActivityPolicyDiscoveryMixin
 from .composition import (
     build_launcher_runtime_services,
     provisional_installed_display_session,
@@ -10,13 +11,17 @@ from .presentation import GreiaLauncherPresentation, parse_args
 from .trusted_chrome_supervisor import TrustedChromeActivitySupervisor
 
 
-class TrustedGreiaLauncherPresentation(GreiaLauncherPresentation):
+class TrustedGreiaLauncherPresentation(
+    DirectActivityPolicyDiscoveryMixin,
+    GreiaLauncherPresentation,
+):
     """Installed fallback presentation with the same mandatory Home authority.
 
     `greia-x-session` uses this only if the richer child-shell composition exits.
     It deliberately reuses all presentation/rendering code and replaces only the
     trusted Activity lifecycle composition, so fallback never becomes a second
-    graphics architecture or an unprotected Activity path.
+    graphics architecture or an unprotected Activity path. Parent Activity
+    visibility policy is still mandatory through DirectActivityPolicyDiscoveryMixin.
     """
 
     def _rebuild_runtime_services(self) -> None:

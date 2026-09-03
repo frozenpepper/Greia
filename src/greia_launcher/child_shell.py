@@ -24,7 +24,7 @@ from greia_platform.theme_snapshot import ThemeSnapshotError, encode_theme_snaps
 from greia_platform.ui_preferences import UiPreferencesStore
 from greia_platform.usage_limits import UsageLimitError, UsageLimitService, UsageLimitStore
 
-from .adaptive_discovery_presentation import AdaptiveActivityDiscoveryMixin
+from .activity_policy_presentation import PolicyEnforcedAdaptiveActivityDiscoveryMixin
 from .achievement_presentation import AchievementLibraryMixin
 from .catalogue_view import ALL_ACTIVITIES_ID
 from .collection_home_presentation import CollectionFirstHomeMixin
@@ -133,7 +133,7 @@ class ProfileVisualActivitySupervisor(TrustedChromeActivitySupervisor):
 
 
 class GreiaChildShell(
-    AdaptiveActivityDiscoveryMixin,
+    PolicyEnforcedAdaptiveActivityDiscoveryMixin,
     AchievementLibraryMixin,
     CollectionFirstHomeMixin,
     SharedUiNavigationChromeMixin,
