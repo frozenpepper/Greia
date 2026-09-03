@@ -61,7 +61,7 @@ def _activity(
 
 
 class ActivityDiscoveryPolicyTests(unittest.TestCase):
-    def test_missing_age_metadata_fails_open_and_parent_override_wins(self) -> None:
+    def test_unknown_age_is_excluded_by_restrictive_mode_and_parent_override_wins(self) -> None:
         unknown = _activity(1)
         too_simple = _activity(2, age_min=3, age_max=5)
         recommended = _activity(3, age_min=6, age_max=9)
@@ -78,19 +78,24 @@ class ActivityDiscoveryPolicyTests(unittest.TestCase):
         )
         self.assertEqual(
             {item.activity_id for item in result},
-            {unknown.activity_id, too_simple.activity_id, recommended.activity_id},
+            {too_simple.activity_id, recommended.activity_id},
         )
 
-        hidden = policy.with_override(
+        explicit = policy.with_override(
             recommended.activity_id, ActivityVisibilityOverride.ALWAYS_HIDE
+        ).with_override(
+            unknown.activity_id, ActivityVisibilityOverride.ALWAYS_SHOW
         )
         result = service.effective_activities(
             (unknown, too_simple, recommended),
             approximate_age=7,
             challenge_preference=ChallengePreference.AUTOMATIC,
-            policy=hidden,
+            policy=explicit,
         )
-        self.assertNotIn(recommended.activity_id, {item.activity_id for item in result})
+        self.assertEqual(
+            {item.activity_id for item in result},
+            {unknown.activity_id, too_simple.activity_id},
+        )
 
     def test_recommended_only_means_declared_range_contains_child_age(self) -> None:
         younger_only = _activity(1, age_min=1, age_max=2)
@@ -109,10 +114,10 @@ class ActivityDiscoveryPolicyTests(unittest.TestCase):
         )
         self.assertEqual(
             {item.activity_id for item in result},
-            {exact.activity_id, spanning.activity_id, open_ended.activity_id, unknown.activity_id},
+            {exact.activity_id, spanning.activity_id, open_ended.activity_id},
         )
 
-    def test_age_and_easier_never_includes_activity_designed_to_start_older(self) -> None:
+    def test_age_and_easier_never_includes_older_or_unknown_activity(self) -> None:
         younger = _activity(1, age_min=1, age_max=2)
         exact = _activity(2, age_min=3, age_max=3)
         spanning = _activity(3, age_min=2, age_max=5)
@@ -129,9 +134,11 @@ class ActivityDiscoveryPolicyTests(unittest.TestCase):
         )
         self.assertEqual(
             {item.activity_id for item in result},
-            {younger.activity_id, exact.activity_id, spanning.activity_id, open_ended.activity_id, unknown.activity_id},
+            {younger.activity_id, exact.activity_id, spanning.activity_id, open_ended.activity_id},
         )
-        self.assertNotIn(older.activity_id, {item.activity_id for item in result})
+        visible_ids = {item.activity_id for item in result}
+        self.assertNotIn(older.activity_id, visible_ids)
+        self.assertNotIn(unknown.activity_id, visible_ids)
 
     def test_challenge_preference_ranks_without_hiding(self) -> None:
         easy = _activity(1, difficulty=1, age_min=4, age_max=8)
