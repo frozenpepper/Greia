@@ -251,24 +251,32 @@ class CockpitPresenter:
         resources: LocalizedResources,
         hot_button: Optional[str] = None
     ) -> None:
+        enc = model.encounter
+        is_encounter = (enc.active_type != EncounterType.NONE and not enc.solved)
+
+        # Highlight recommended action buttons during encounters
+        pulse = (math.sin(pygame.time.get_ticks() * 0.012) + 1.0) * 0.5
+        pulse_flash = pulse > 0.4
+
         button_configs = [
-            ("light", "btn.light", (245, 210, 60), model.lights_on, "light"),
-            ("sonar", "btn.sonar", (80, 190, 225), model.sonar_active, "sonar"),
-            ("bubbles", "btn.bubbles", (100, 220, 160), model.bubble_release_timer > 0, "bubbles"),
-            ("horn", "btn.horn", (240, 120, 70), False, "horn"),
+            ("light", "btn.light", (245, 210, 60), model.lights_on, "light", is_encounter and enc.active_type == EncounterType.SHARK_WAVE),
+            ("sonar", "btn.sonar", (80, 190, 225), model.sonar_active, "sonar", False),
+            ("bubbles", "btn.bubbles", (100, 220, 160), model.bubble_release_timer > 0, "bubbles", is_encounter and enc.active_type == EncounterType.OCTOPUS_HUG),
+            ("horn", "btn.horn", (240, 120, 70), False, "horn", is_encounter and enc.active_type == EncounterType.OCTOPUS_HUG),
         ]
 
-        for name, key, color, active, icon_type in button_configs:
+        for name, key, color, active, icon_type, is_hinted in button_configs:
             rect = BUTTON_RECTS[name]
             is_hover = (hot_button == name)
-            self._draw_tactile_button(surface, rect, color, active, is_hover, resources.text(key), icon_type)
+            flash = is_hinted and pulse_flash
+            self._draw_tactile_button(
+                surface, rect, color, active, is_hover, resources.text(key), icon_type, flash
+            )
 
         action_rect = BUTTON_RECTS["action"]
-        is_encounter = (model.encounter.active_type != EncounterType.NONE and not model.encounter.solved)
         action_hover = (hot_button == "action")
 
         if is_encounter:
-            pulse = (math.sin(pygame.time.get_ticks() * 0.01) + 1.0) * 0.5
             action_color = (int(255), int(60 + pulse * 140), int(40))
         else:
             action_color = (220, 55, 55)
@@ -284,23 +292,33 @@ class CockpitPresenter:
         hover: bool,
         label: str,
         icon_type: str,
+        flashing: bool = False,
     ) -> None:
         shadow_rect = rect.copy()
         shadow_rect.y += 4
         pygame.draw.rect(surface, (15, 20, 28), shadow_rect, border_radius=14)
 
+        if flashing:
+            aura = pygame.Surface((rect.width + 20, rect.height + 20), pygame.SRCALPHA)
+            pygame.draw.rect(aura, (255, 240, 100, 150), (0, 0, rect.width + 20, rect.height + 20), border_radius=18)
+            surface.blit(aura, (rect.x - 10, rect.y - 10))
+
         btn_rect = rect.copy()
         if active or hover:
             btn_rect.y += 2
 
-        col = (
-            min(255, base_color[0] + 30),
-            min(255, base_color[1] + 30),
-            min(255, base_color[2] + 30)
-        ) if (active or hover) else base_color
+        if flashing:
+            col = (min(255, base_color[0] + 45), min(255, base_color[1] + 45), min(255, base_color[2] + 45))
+        else:
+            col = (
+                min(255, base_color[0] + 30),
+                min(255, base_color[1] + 30),
+                min(255, base_color[2] + 30)
+            ) if (active or hover) else base_color
 
         pygame.draw.rect(surface, col, btn_rect, border_radius=14)
-        pygame.draw.rect(surface, (255, 255, 255, 110), btn_rect, width=2, border_radius=14)
+        border_col = (255, 255, 255, 220) if flashing else (255, 255, 255, 110)
+        pygame.draw.rect(surface, border_col, btn_rect, width=3 if flashing else 2, border_radius=14)
 
         # Draw crisp, bold vector icon in upper portion of button
         icon_cy = btn_rect.top + 32

@@ -22,5 +22,48 @@
     "encounter.octopus.hint": "Il polpo fa il solletico al vetro! Suona la sirena o fai le bolle!",
     "encounter.shark.hint": "Lo squalo saluta con la pinna! Accendi le luci!"
   },
-  "audio": {}
+  "audio": {
+    "voice.btn.light": {
+      "path": "audio/it/sub_btn_light.wav"
+    },
+    "voice.btn.sonar": {
+      "path": "audio/it/sub_btn_sonar.wav"
+    },
+    "voice.btn.bubbles": {
+      "path": "audio/it/sub_btn_bubbles.wav"
+    },
+    "voice.btn.horn": {
+      "path": "audio/it/sub_btn_horn.wav"
+    },
+    "voice.btn.action": {
+      "path": "audio/it/sub_btn_action.wav"
+    },
+    "voice.encounter.octopus": {
+      "path": "audio/it/sub_enc_octopus.wav"
+    },
+    "voice.encounter.shark": {
+      "path": "audio/it/sub_enc_shark.wav"
+    },
+    "voice.encounter.solved": {
+      "path": "audio/it/sub_enc_solved.wav"
+    },
+    "voice.creature.clownfish": {
+      "path": "audio/it/sub_creature_clownfish.wav"
+    },
+    "voice.creature.turtle": {
+      "path": "audio/it/sub_creature_turtle.wav"
+    },
+    "voice.creature.dolphin": {
+      "path": "audio/it/sub_creature_dolphin.wav"
+    },
+    "voice.creature.manta": {
+      "path": "audio/it/sub_creature_manta.wav"
+    },
+    "voice.creature.angler": {
+      "path": "audio/it/sub_creature_angler.wav"
+    },
+    "voice.creature.whale": {
+      "path": "audio/it/sub_creature_whale.wav"
+    }
+  }
 }

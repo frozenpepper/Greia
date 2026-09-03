@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import io
 import math
+from pathlib import Path
 import random
 import struct
 import wave
@@ -152,3 +153,13 @@ class SubmarineAudio:
                 snd.play()
             except Exception:
                 pass
+
+    def play_voice(self, cue_path: Path | str) -> None:
+        """Play a localized voice line safely."""
+        try:
+            p = Path(cue_path)
+            if p.is_file():
+                snd = pygame.mixer.Sound(str(p))
+                snd.play()
+        except Exception:
+            pass

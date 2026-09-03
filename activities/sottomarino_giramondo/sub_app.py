@@ -71,6 +71,8 @@ class SubmarineApp:
             screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.FULLSCREEN)
         self.screen = screen
         self.canvas = PygameReferenceCanvas(screen)
+        # Ensure 24-bit depth without alpha channel so blitted masks and porthole render solidly
+        self.canvas.surface = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), 0, 24)
 
         self.model = SubmarineModel()
         self.art = SubmarineArt()
@@ -82,6 +84,7 @@ class SubmarineApp:
         self._ready_published = False
         self._clock = pygame.time.Clock()
         self._hot_button: Optional[str] = None
+        self._last_encounter_type: str = "none"
 
     def _init_localization(self) -> None:
         pkg_root = Path(__file__).parent
@@ -93,33 +96,48 @@ class SubmarineApp:
         context = resolve_activity_locale(requested, support)
         self.resources = LocalizedResources(pkg_root, context)
 
+    def _speak_cue(self, cue_key: str) -> None:
+        """Safely speak a localized audio cue."""
+        try:
+            cue = self.resources.audio_cue(cue_key)
+            self.audio.play_voice(cue.path)
+        except Exception:
+            pass
+
     def _handle_button_press(self, btn_name: str) -> None:
         self.audio.play("click")
         if btn_name == "light":
             self.model.toggle_lights()
             self.audio.play("light")
+            self._speak_cue("voice.btn.light")
             emit_activity_event("submarine.instrument_used", payload={"instrument": "light"})
         elif btn_name == "sonar":
             self.model.trigger_sonar()
             self.audio.play("sonar")
+            self._speak_cue("voice.btn.sonar")
             emit_activity_event("submarine.instrument_used", payload={"instrument": "sonar"})
         elif btn_name == "bubbles":
             self.model.trigger_bubbles()
             self.audio.play("bubbles")
+            self._speak_cue("voice.btn.bubbles")
             emit_activity_event("submarine.instrument_used", payload={"instrument": "bubbles"})
         elif btn_name == "horn":
             self.model.trigger_horn()
             self.audio.play("horn")
+            self._speak_cue("voice.btn.horn")
             if self.model.resolve_encounter():
                 self.audio.play("celebrate")
+                self._speak_cue("voice.encounter.solved")
                 emit_activity_event("submarine.encounter_resolved", payload={"creature": "encounter"})
             emit_activity_event("submarine.instrument_used", payload={"instrument": "horn"})
         elif btn_name == "action":
             if self.model.resolve_encounter():
                 self.audio.play("celebrate")
+                self._speak_cue("voice.encounter.solved")
                 emit_activity_event("submarine.encounter_resolved", payload={"creature": "encounter"})
             else:
                 self.audio.play("alert")
+                self._speak_cue("voice.btn.action")
 
     def run(self) -> int:
         running = True
@@ -181,7 +199,18 @@ class SubmarineApp:
             # Advance model state
             discovered, completed_ev = self.model.update(dt)
             for d in discovered:
+                self._speak_cue(f"voice.creature.{d}")
                 emit_activity_event("submarine.creature_discovered", payload={"creature": d})
+
+            # Check if a new encounter has just appeared
+            curr_enc = self.model.encounter.active_type.value
+            if curr_enc != self._last_encounter_type:
+                if curr_enc == "octopus_hug":
+                    self._speak_cue("voice.encounter.octopus")
+                elif curr_enc == "shark_wave":
+                    self._speak_cue("voice.encounter.shark")
+                self._last_encounter_type = curr_enc
+
             if completed_ev:
                 emit_activity_event(completed_ev)
 
