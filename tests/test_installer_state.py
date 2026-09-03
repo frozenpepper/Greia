@@ -50,7 +50,7 @@ class InstallerStateTests(unittest.TestCase):
     def test_demo_starts_safe_without_touchpad_tapping(self) -> None:
         app = self.make_app()
         self.assertEqual(app.state.page, InstallerPage.WELCOME)
-        self.assertTrue(app.state.settings.touchpad_tap)
+        self.assertFalse(app.state.settings.touchpad_tap)
         self.assertEqual(app.state.target.path, Path("/dev/sda"))
         self.assertIn("1024x600", app.available_resolutions)
 
@@ -65,7 +65,7 @@ class InstallerStateTests(unittest.TestCase):
         app = self.make_app()
         app.state.page = InstallerPage.WIFI
         app._back()
-        self.assertEqual(app.state.page, InstallerPage.SETTINGS)
+        self.assertEqual(app.state.page, InstallerPage.DISPLAY)
         app.state.page = InstallerPage.CONFIRM
         app._back()
         self.assertEqual(app.state.page, InstallerPage.WIFI)
