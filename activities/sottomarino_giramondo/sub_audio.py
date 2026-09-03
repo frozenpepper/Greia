@@ -160,7 +160,23 @@ class SubmarineAudio:
             ) / 3.0
             val = int(22000.0 * chord * env)
             samples.append(val)
-        self._register("celebrate", _synth_wav(samples, rate, channels))
+        # 8. Gentle Engine Telegraph Chug (tactile gear click when moving throttle)
+        duration_s = 0.25
+        n_samples = int(rate * duration_s)
+        samples = []
+        for i in range(n_samples):
+            t = i / rate
+            env = math.sin(math.pi * (t / duration_s))
+            f = 110.0 + 30.0 * math.sin(20.0 * math.pi * t)
+            val = int(17000.0 * math.sin(2.0 * math.pi * f * t) * env)
+            samples.append(val)
+        self._register("engine_shift", _synth_wav(samples, rate, channels))
+
+        # Dedicated voice playback channel to prevent speech overlap
+        try:
+            self._voice_channel = pygame.mixer.Channel(1)
+        except Exception:
+            self._voice_channel = None
 
     def _register(self, name: str, wav_bytes: bytes) -> None:
         try:
@@ -177,12 +193,26 @@ class SubmarineAudio:
             except Exception:
                 pass
 
-    def play_voice(self, cue_path: Path | str) -> None:
-        """Play a localized voice line safely."""
+    def is_voice_busy(self) -> bool:
+        """Check if a voice cue is currently speaking."""
+        try:
+            if self._voice_channel is not None:
+                return self._voice_channel.get_busy()
+        except Exception:
+            pass
+        return False
+
+    def play_voice(self, cue_path: Path | str) -> bool:
+        """Play a localized voice line on the dedicated voice channel."""
         try:
             p = Path(cue_path)
             if p.is_file():
                 snd = pygame.mixer.Sound(str(p))
-                snd.play()
+                if self._voice_channel is not None:
+                    self._voice_channel.play(snd)
+                else:
+                    snd.play()
+                return True
         except Exception:
             pass
+        return False

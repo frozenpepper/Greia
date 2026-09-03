@@ -85,6 +85,8 @@ class SubmarineApp:
         self._clock = pygame.time.Clock()
         self._hot_button: Optional[str] = None
         self._last_encounter_type: str = "none"
+        self._voice_queue: list[str] = []
+        self._voice_cooldown: float = 0.0
 
     def _init_localization(self) -> None:
         pkg_root = Path(__file__).parent
@@ -97,12 +99,30 @@ class SubmarineApp:
         self.resources = LocalizedResources(pkg_root, context)
 
     def _speak_cue(self, cue_key: str) -> None:
-        """Safely speak a localized audio cue."""
-        try:
-            cue = self.resources.audio_cue(cue_key)
-            self.audio.play_voice(cue.path)
-        except Exception:
-            pass
+        """Enqueue or safely speak a localized audio cue sequentially."""
+        if not cue_key:
+            return
+        if cue_key not in self._voice_queue:
+            self._voice_queue.append(cue_key)
+
+    def _update_speech_queue(self, dt: float) -> None:
+        """Process queued speech clips sequentially so sentences never speak over each other."""
+        if self._voice_cooldown > 0:
+            self._voice_cooldown -= dt
+            return
+
+        if self.audio.is_voice_busy():
+            return
+
+        if self._voice_queue:
+            next_cue = self._voice_queue.pop(0)
+            try:
+                cue = self.resources.audio_cue(next_cue)
+                if self.audio.play_voice(cue.path):
+                    # Minimum pause after each sentence before next cue
+                    self._voice_cooldown = 0.4
+            except Exception:
+                pass
 
     def _handle_button_press(self, btn_name: str) -> None:
         self.audio.play("click")
@@ -119,10 +139,12 @@ class SubmarineApp:
             emit_activity_event("submarine.maneuver", payload={"action": "steer_right"})
         elif btn_name in ("ahead", "forward"):
             self.model.set_speed(0.8)
+            self.audio.play("engine_shift")
             order_solved = self.model.check_action("ahead")
             emit_activity_event("submarine.maneuver", payload={"action": "ahead"})
         elif btn_name in ("stop", "halt"):
             self.model.set_speed(0.0)
+            self.audio.play("engine_shift")
             order_solved = self.model.check_action("stop")
             emit_activity_event("submarine.maneuver", payload={"action": "stop"})
         elif btn_name == "light":
@@ -215,6 +237,7 @@ class SubmarineApp:
 
                         # Direct click/tap on Ship Rudder Wheel (cx=135, cy=235, radius=72)
                         if not clicked_btn and (pt[0] - 135)**2 + (pt[1] - 235)**2 <= 72**2:
+                            self._dragging_wheel = True
                             if pt[0] < 135:
                                 self._handle_button_press("steer_left")
                             else:
@@ -223,6 +246,7 @@ class SubmarineApp:
 
                         # Direct click/tap on Throttle Lever (tcx=890, tcy=215, box w=90, h=150)
                         if not clicked_btn and (845 <= pt[0] <= 935 and 140 <= pt[1] <= 290):
+                            self._dragging_lever = True
                             if pt[1] < 215:
                                 self._handle_button_press("ahead")
                             else:
@@ -234,6 +258,10 @@ class SubmarineApp:
                             self.model.trigger_bubbles()
                             self.audio.play("bubbles")
 
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    self._dragging_wheel = False
+                    self._dragging_lever = False
+
                 elif event.type == pygame.MOUSEMOTION:
                     pt = self.canvas.pointer(event.pos)
                     self._hot_button = None
@@ -242,6 +270,27 @@ class SubmarineApp:
                             if rect.collidepoint(pt[0], pt[1]):
                                 self._hot_button = name
                                 break
+
+                        # Dragging rudder wheel
+                        if getattr(self, "_dragging_wheel", False):
+                            # Steer relative to wheel center (cx=135)
+                            dx = (pt[0] - 135) / 60.0
+                            self.model.heading = max(-1.0, min(1.0, dx))
+                            if dx < -0.3:
+                                self.model.check_action("left")
+                            elif dx > 0.3:
+                                self.model.check_action("right")
+
+                        # Dragging throttle lever
+                        if getattr(self, "_dragging_lever", False):
+                            # Speed based on lever Y position (top = 1.0 ahead, bottom = 0.0 stop)
+                            # Box goes from y=150 to y=270
+                            frac = 1.0 - max(0.0, min(1.0, (pt[1] - 150) / 120.0))
+                            self.model.set_speed(frac)
+                            if frac > 0.4:
+                                self.model.check_action("ahead")
+                            elif frac <= 0.2:
+                                self.model.check_action("stop")
 
             # Advance model state
             discovered, completed_ev = self.model.update(dt)
@@ -272,6 +321,9 @@ class SubmarineApp:
 
             if completed_ev:
                 emit_activity_event(completed_ev)
+
+            # Update voice speech queue sequentially
+            self._update_speech_queue(dt)
 
             # Render frame
             self.canvas.surface.fill((0, 0, 0))
