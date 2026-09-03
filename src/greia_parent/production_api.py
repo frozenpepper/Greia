@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import os
+from http.server import HTTPServer
 from pathlib import Path
+from urllib.parse import urlparse
 
 from greia_parent.server import parse_args
+from greia_parent.static_client import ParentStaticClient
 from greia_parent.update_api import (
     UpdateParentApiApplication,
-    UpdateParentApiHTTPServer,
+    UpdateParentApiRequestHandler,
 )
+from greia_parent.web_client import render_parent_web_app
 from greia_platform.wifi import IwdWifiBackend, WifiBackend, WifiError
 
 
@@ -69,6 +73,31 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         }
 
 
+class ProductionParentApiRequestHandler(UpdateParentApiRequestHandler):
+    """Installed HTTP surface with explicit fail-closed static-client failure."""
+
+    def do_GET(self) -> None:  # noqa: N802
+        if urlparse(self.path).path == "/" and self.static_client.read("/") is None:
+            self._send_html(503, render_parent_web_app())
+            return
+        super().do_GET()
+
+
+class ProductionParentApiHTTPServer(HTTPServer):
+    """Bind the production request policy without changing reusable API servers."""
+
+    def __init__(
+        self,
+        address: tuple[str, int],
+        app: ProductionParentApiApplication,
+        *,
+        static_client: ParentStaticClient | None = None,
+    ) -> None:
+        self.app = app
+        self.static_client = static_client or ParentStaticClient.from_environment()
+        HTTPServer.__init__(self, address, ProductionParentApiRequestHandler)
+
+
 def _directory_is_effectively_writable(path: Path) -> bool:
     """Return whether *path* is writable in the service's effective namespace."""
 
@@ -93,7 +122,7 @@ def main() -> int:
         profiles_dir=args.profiles_dir,
         active_profile_status_path=args.active_profile_status_path,
     )
-    UpdateParentApiHTTPServer((args.bind, args.port), app).serve_forever()
+    ProductionParentApiHTTPServer((args.bind, args.port), app).serve_forever()
     return 0
 
 

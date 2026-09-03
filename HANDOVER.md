@@ -35,6 +35,7 @@ docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
 docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
 docs/testing/2026-09-02_R7_PARENT_SPOKEN_LABEL_UNIFIED_PROMOTION_GATE.md
+docs/testing/2026-09-02_PARENT_REAL_RUNTIME_FINAL_ACCEPTANCE.md
 ```
 
 The maintained Parent client is the separate repository:
@@ -43,13 +44,15 @@ The maintained Parent client is the separate repository:
 frozenpepper/Greia-Parent-App-Html
 ```
 
-Its still-active system-output-control browser gate is:
+Its current production revision integrated into Greia is:
 
 ```text
-docs/PARENT_SYSTEM_OUTPUT_CONTROLS_ACCEPTANCE_2026-09-02.md
+75ee275771c495dc187efb5275732ea10c10af4b
 ```
 
-Do not classify any of these as historical while the corresponding issue/workstream is open.
+The Parent real-runtime/Acer gate is the Greia-side authority for final production-browser/system-control evidence. `?demo=1` is never acceptance evidence.
+
+Do not classify any active procedure as historical while the corresponding issue/workstream is open.
 
 ## 3. Activity catalogue + Parent age policy
 
@@ -61,7 +64,7 @@ Recent age-3 additions include:
 org.greia.quattro-stagioni
 org.greia.faccine-momo
 org.greia.mondo-contrari
-org.greia.sottomarino-giramondo (interactive wooden rudder wheel, cast-iron & brass rough throttle lever, 8-species educational random facts, spoken Captain's orders, and two-tone acoustic whistle)
+org.greia.sottomarino-giramondo
 ```
 
 The catalogue-wide invariant is structural:
@@ -93,22 +96,7 @@ age_and_easier    = “Age N + easier”
 
 Old persisted/API value `hide_too_simple` is compatibility input only and normalizes immediately to `age_and_easier`.
 
-### Unknown-age compatible packages
-
-Compatible third-party/legacy packages may omit age metadata. Greia does not invent an age.
-
-```text
-show_all / custom
-    unknown-age Activity may remain available
-
-recommended_only / age_and_easier
-    wholly unknown age metadata is NOT automatically included
-
-always_show
-    parent may deliberately expose it
-```
-
-Explicit `always_show` / `always_hide` is evaluated before automatic age/difficulty policy.
+Compatible third-party/legacy packages may omit age metadata. Greia does not invent an age. Unknown-age Activities are not automatically included by restrictive age presets; explicit `always_show` / `always_hide` is evaluated before automatic age/difficulty policy.
 
 If the profile has no `approximate_age`, age-specific filtering is inactive and the Parent client disables those preset choices.
 
@@ -123,91 +111,85 @@ src/greia_platform/activity_discovery.py
 
 ## 4. Catalogue consistency caught during age review
 
-`org.greia.sottomarino-giramondo` landed concurrently with correct age metadata:
+`org.greia.sottomarino-giramondo` landed with correct age metadata:
 
 ```toml
 recommended_age_min = 3
 recommended_age_max = 8
 ```
 
-Its initial discovery tags were outside the platform-owned vocabulary. They were reconciled to:
+Its discovery tags were reconciled to the platform-owned vocabulary rather than expanding global navigation vocabulary for one Activity.
 
-```toml
-discovery_tags = ["nature", "action"]
-```
+Prior headless Simulator evidence remains scoped to the exact revision that produced it. Later metadata/audio changes do not automatically inherit that runtime evidence.
 
-rather than expanding global navigation vocabulary for one Activity.
+## 5. Parent production client state
 
-Sottomarino also has prior headless Simulator evidence recorded by its authoring tranche. That evidence remains scoped to the exact revision that produced it; the later metadata-only correction does not create new runtime evidence.
-
-## 5. Parent client state
-
-The maintained HTML Parent client now presents, for a child aged 3:
+Greia now has one production browser implementation with an explicit source/integration chain:
 
 ```text
-All age ranges
-Age 3 only
-Age 3 + easier
-Custom choices
+Greia-Parent-App-Html accepted revision
+  -> runtime/parent-app-client.toml pin
+  -> runtime/parent-app-client.manifest.json exact file hashes
+  -> vendor/parent-app exact reviewed runtime
+  -> build/overlay/usr/share/greia-parent-app exact image payload
+  -> /usr/share/greia-parent-app installed runtime
 ```
 
-It also:
-
-- displays `Age 3+`, bounded ranges, or `Age not specified` honestly;
-- keeps difficulty as a separate control;
-- disables age-specific choices when no approximate age exists;
-- preserves explicit per-Activity overrides;
-- mirrors production age semantics in localhost demo mode;
-- regression-tests an unknown-age demo Activity, including explicit `Always show` recovery.
-
-### Parent pin intentionally remains unchanged
-
-Greia does not serve moving Parent `main`. The existing accepted Parent revision remains pinned in:
+Current pin:
 
 ```text
-runtime/parent-app-client.toml
+revision = 75ee275771c495dc187efb5275732ea10c10af4b
+integration_state = vendored-image-integrity-enforced
 ```
 
-Required order before advancing it:
+The production manifest excludes localhost demo adapters. The accepted Parent source lazy-loads demo code only on loopback when explicitly requested; the Acer image does not contain those demo modules.
+
+`greia_parent.parent_client_integrity` verifies exact installed files, byte counts and SHA-256 digests. `greia-parent.service` executes it in `ExecStartPre`; missing, changed, symlinked, unexpected or substituted runtime files prevent Parent service startup.
+
+The lower-level error page is not a second management UI: it contains no controls or sample state. Production HTTP routing returns service-unavailable semantics when the real static shell is absent.
+
+Architecture/update authority:
 
 ```text
-1. execute exact-current age-policy acceptance on both repositories
-2. obtain browser/source ACCEPTED verdict
-3. use tools/update_parent_client_pin.py on that exact accepted Parent checkout
-4. regenerate the integrity manifest
-5. run Greia static-client/integration checks
+docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md
 ```
 
-Do not advance the pin before browser acceptance.
+Final physical/browser authority:
 
-## 6. Age-policy evidence boundary
+```text
+docs/testing/2026-09-02_PARENT_REAL_RUNTIME_FINAL_ACCEPTANCE.md
+```
 
-Source now includes:
+### Parent UI behavior
 
-- exact-age range filtering;
-- bounded `Age N + easier` filtering;
+The maintained client presents child age presets, separate difficulty controls, real usage-limit controls, real Activity policy/install/remove surfaces when capabilities allow them, grouped device management, speaker volume/mute controls and a truthful Wi-Fi unavailable card when `network.manage=false`.
+
+No browser visual state is sufficient evidence of mutation. Real device/child/system state must change.
+
+## 6. Parent evidence boundary
+
+Parent source now includes:
+
+- exact-age and `Age N + easier` filtering;
 - legacy-mode migration;
-- unknown-age exclusion from restrictive presets;
-- explicit override precedence;
-- catalogue-wide first-party minimum-age enforcement;
-- Parent UI/demo semantics;
-- regression tests for the above.
+- unknown-age restrictive-preset handling;
+- explicit Activity override precedence;
+- catalogue-wide first-party age metadata enforcement;
+- integrated real API client and production runtime manifest;
+- deterministic Greia image installation of the reviewed browser bundle;
+- installed-runtime integrity preflight;
+- fail-closed production Wi-Fi composition;
+- typed speaker volume/mute desired-state API;
+- Parent client responsive and unavailable states.
 
-Current status remains:
-
-```text
-SOURCE-IMPLEMENTED / ACCEPTANCE-PENDING
-```
-
-Use:
+Current production Parent status is:
 
 ```text
-docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
+SOURCE/IMAGE-INTEGRATION IMPLEMENTED
+PHYSICAL ACER REAL-RUNTIME ACCEPTANCE PENDING
 ```
 
-It requires exact-current clean heads of both repositories, focused Greia tests, `make verify`, Parent `npm test`, localhost browser review at desktop/1024×600/mobile, override/no-age/unknown-age checks and zero feature-caused console errors.
-
-No such execution was performed from the current remote editing environment because no clean checkout is mounted and its shell environment cannot resolve GitHub. Static source review is not PASS evidence.
+No physical Acer acceptance was executed from the remote editing environment. Source review is not physical PASS evidence.
 
 ## 7. R7 remains blocking
 
@@ -278,25 +260,21 @@ DISCOVERY_METADATA_PLAN_DEFINED=yes
 PROGRESSION_REWARD_RELATIONSHIP_DEFINED=yes
 ```
 
-The minimum age is chosen from the shipped cognitive, language, motor and interaction demands—not copied from `difficulty`.
+The minimum age is chosen from shipped cognitive, language, motor and interaction demands—not copied from `difficulty`.
 
-The authoring skill also requires:
+The authoring skill also requires parent-request decomposition, pre-reader command design, prerecorded VoiceEngine speech architecture, semantic feedback/audio conflict resolution, Greia progression/reward separation, Acer-class performance discipline, project-local authoring tools, repeated headless Simulator integration and final GUI Simulator user review.
 
-- parent-request decomposition;
-- pre-reader/no-text-only command design;
-- prerecorded VoiceEngine speech architecture;
-- semantic feedback/audio conflict resolution;
-- Greia progression/reward separation;
-- Acer-class performance discipline;
-- project-local authoring tools;
-- repeated headless Simulator integration;
-- final GUI Simulator user review.
-
-## 11. Parent production path
+## 11. Parent production/API ownership
 
 Current exact owners include:
 
 ```text
+runtime/parent-app-client.toml
+runtime/parent-app-client.manifest.json
+vendor/parent-app/
+build/overlay/usr/share/greia-parent-app/
+src/greia_parent/static_client.py
+src/greia_parent/parent_client_integrity.py
 src/greia_parent/protocol.py
 src/greia_parent/api_server.py
 src/greia_parent/package_api.py
@@ -309,7 +287,15 @@ src/greia_platform/hardware_session.py
 src/greia_platform/hardware_session_legacy_x.py
 ```
 
-The Parent HTTP process remains unprivileged. Unavailable privileged mutations must remain unavailable rather than being faked or solved by broadening HTTP-server authority.
+The Parent HTTP process remains unprivileged. Unavailable privileged mutations remain unavailable rather than being faked or solved by broadening HTTP-server authority.
+
+### Wi-Fi
+
+The installed production composition always starts from real `IwdWifiBackend`. `network.manage` becomes false when iwd is unavailable or its state is not effectively writable in the service namespace. Production connect rejects an SSID not returned by the real scan. Demo Wi-Fi remains lower-level developer/test fixture material only.
+
+### Speaker output
+
+Parent volume/mute does not own ALSA. The browser writes typed desired state through `/api/v1/settings/system-controls`; the child Legacy-X hardware session consumes shared state and applies `Master`, `Speaker`, then `PCM` through ALSA. Hardware media keys update the same authority. Do not “fix” Parent output by giving `greiapanel` mixer privileges.
 
 ## 12. Public-source work
 
@@ -338,4 +324,4 @@ VM / IMAGE
 PHYSICAL DEVICE
 ```
 
-A committed test is not a PASS. A later source revision does not inherit earlier physical evidence. A Simulator screenshot does not prove production trusted chrome. An audio receipt does not replace human listening.
+A committed test is not a PASS. A later source revision does not inherit earlier physical evidence. A Simulator screenshot does not prove production trusted chrome. An audio receipt does not replace human listening. A successful Parent PUT does not prove physical hardware changed.

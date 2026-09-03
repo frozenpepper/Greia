@@ -5,7 +5,7 @@ def render_parent_web_app() -> str:
     """Render a fail-closed page when the pinned Parent client is unavailable.
 
     Production Parent management has exactly one browser implementation: the
-    integrity-pinned static client under ``/usr/share/greia-parent``. This
+    integrity-pinned static client under ``/usr/share/greia-parent-app``. This
     fallback deliberately contains no management controls and no sample data;
     silently serving a second embedded application would make a broken or stale
     deployment look healthy and can expose behavior different from the reviewed

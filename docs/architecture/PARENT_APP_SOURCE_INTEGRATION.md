@@ -1,79 +1,156 @@
 # Greia Parent App source integration
 
-**Status:** implementation foundation in progress  
-**Date:** 2026-08-17  
+**Status:** production runtime integration implemented; physical Acer acceptance pending  
+**Updated:** 2026-09-03  
 **Normative parent architecture:** ADR 0022
 
 ## Separate client repository
 
-The canonical HTML client source lives in:
+The canonical HTML/CSS/JavaScript client source lives in:
 
 ```text
 frozenpepper/Greia-Parent-App-Html
 ```
 
-Greia OS remains authoritative for the Parent API, authentication, platform services, privileged operations and release integration. The client repository owns only the HTML/CSS/JavaScript client.
+Greia OS remains authoritative for the Parent API, authentication, platform services, privileged operations, image composition and release integration. The client repository owns only the browser client.
 
-`runtime/parent-app-client.toml` pins the reviewed client revision expected by this Greia source tree. `runtime/parent-app-client.manifest.json` independently freezes the exact runtime-file sizes and SHA-256 digests for that revision.
+Greia never serves moving Parent `main`. `runtime/parent-app-client.toml` pins one reviewed Parent commit, and `runtime/parent-app-client.manifest.json` freezes the exact production runtime files, byte counts and SHA-256 digests for that commit.
 
-## Runtime shape
+The currently integrated Parent revision is:
 
-Release images will serve the pinned static client from:
+```text
+75ee275771c495dc187efb5275732ea10c10af4b
+```
+
+## Production runtime shape
+
+The installed Parent client is served from:
 
 ```text
 /usr/share/greia-parent-app
 ```
 
-through the same Greia Parent HTTP service that owns `/api/v1`.
-
-This same-origin shape is deliberate:
+by the same Greia Parent HTTP service that owns `/api/v1`.
 
 ```text
 GET /                  public static client shell
 GET /src/*             public static client code
 GET /styles/*          public static client styles
-GET /assets/*          public static client assets
+GET /assets/*          public static client assets when present in the manifest
 
 GET /api/v1/meta       public discovery metadata
 /api/v1/*              authenticated management API except explicit pairing endpoints
 ```
 
-The public static shell contains no management data or credential. It must be reachable before pairing so an unpaired browser can display the pairing flow. Authentication remains on the API resources, not on the inert application shell.
+The static shell contains no management state or credential. It is public so an unpaired browser can render the pairing flow; authorization remains on management API resources.
+
+## Production files are not demo files
+
+The production manifest contains only assets reachable by the Acer production client. Localhost demo adapters are source/test fixtures in the Parent repository and are deliberately excluded from the Greia production manifest and image payload.
+
+`?demo=1` is therefore not a production feature. The Parent source only lazy-loads the demo adapter on loopback hosts, and a normal Acer-served client does not ship the demo modules at all.
 
 ## Static serving boundary
 
-`greia_parent.static_client.ParentStaticClient` provides a bounded read-only loader:
+`greia_parent.static_client.ParentStaticClient` is a bounded read-only loader:
 
 - only `index.html` and assets beneath `src/`, `styles/`, or `assets/`;
 - no directory listing;
-- no `docs/`, tests, package metadata or arbitrary repository files;
+- no repository docs, tests, package metadata or arbitrary files;
 - no traversal, hidden files or symlink escape;
 - explicit content-type allowlist;
 - 512 KiB per-file ceiling;
 - no runtime network fetch.
 
-The API server adds CSP, `nosniff`, no-referrer and no-cache response policy for served client assets.
+The HTTP layer adds the Parent static response security policy. If a lower-level development server cannot load `/`, `greia_parent.web_client` renders only an explicit installation-error page: it contains no management controls and no sample state. The installed production service normally never reaches that path because its integrity preflight fails first.
 
-## Build-time source verification
+## Source-to-Greia trust boundary
 
-`tools/stage_parent_app.py` is the source-to-image trust boundary. A build supplies a checkout/export of the separately maintained Parent App; the stager:
+`tools/stage_parent_app.py` remains the review/update tool for importing an accepted Parent source export. It verifies the repository/revision pin and exact manifest bytes, rejects symlinks/traversal/unexpected runtime locations, and stages only frozen runtime files.
 
-1. loads the repository/revision pin;
-2. requires the hash manifest to name that exact pin;
-3. accepts only bounded static runtime paths/types;
-4. verifies every runtime file's byte count and SHA-256 before creating the target;
-5. rejects symlink assets, traversal and unexpected runtime locations;
-6. stages only the frozen runtime files, not repository docs/tests/tooling;
-7. writes through a fresh temporary directory before publishing the target directory.
+After a Parent revision is accepted, the verified production bytes are committed under:
 
-The content manifest, rather than mutable Git metadata on the build host, is sufficient to validate an exported source tree. The revision remains recorded for provenance and review.
+```text
+vendor/parent-app/
+```
 
-## Current integration state
+That directory is provenance, not a second editable Parent application. Changes originate in `Greia-Parent-App-Html`, are accepted there, then the exact accepted bytes and manifest are advanced together in Greia.
 
-The standalone client is implemented and its current reviewed revision is pinned. The server-side static loader, API shell/public-pairing boundary, frozen runtime manifest and integrity-checked stager exist.
+## Canonical image integration
 
-The canonical image builder does **not yet invoke the stager**, so the release image does not yet populate `/usr/share/greia-parent-app` from the separate repository. Until that final build wiring lands, the old embedded prototype remains a transitional root fallback.
+The same frozen runtime bytes are committed directly into the canonical image overlay:
 
-The remaining build integration must not fetch mutable GitHub content at Greia boot/runtime. The owner-controlled image build should receive a local checkout/export of the exact Parent App revision (for example through a declared `GREIA_PARENT_APP_SOURCE` build input), invoke the stager before image closure, and record the pinned revision/digest in build evidence.
+```text
+build/overlay/usr/share/greia-parent-app/
+```
 
-Do not maintain two independently edited Parent Apps. Once the external client is staged by the canonical image build and source-verified, remove the embedded prototype.
+For the current integration the vendor tree and image-overlay tree use the same Git blobs. The normal image builder already installs `build/overlay/` into the target root with root ownership:
+
+```text
+rsync -a --chown=root:root "$PROJECT_ROOT/build/overlay/" "$ROOTFS/"
+```
+
+Therefore the Parent browser bundle is now a deterministic, offline image input. A release/developer image does not fetch Parent JavaScript from GitHub or any other network location during build, boot or runtime, and operators must not manually copy a browser bundle into `/usr/share/greia-parent-app`.
+
+## Installed-runtime integrity enforcement
+
+`greia_parent.parent_client_integrity` verifies an installed runtime against both Greia authorities:
+
+```text
+runtime/parent-app-client.toml
+runtime/parent-app-client.manifest.json
+```
+
+It rejects:
+
+- missing runtime root;
+- symlinked root or assets;
+- missing manifest files;
+- unexpected/unmanifested files;
+- demo files in the production manifest;
+- byte-count mismatch;
+- SHA-256 mismatch;
+- pin/manifest repository or revision mismatch.
+
+`greia-parent.service` runs this verifier as an unprivileged `ExecStartPre` before the Parent API starts. A corrupt, incomplete or substituted browser bundle therefore makes the installed Parent service fail closed instead of serving a second UI or fabricated state.
+
+Current pin state is:
+
+```text
+integration_state = "vendored-image-integrity-enforced"
+```
+
+## Parent/API truthfulness
+
+The browser is capability-driven and the installed API remains authoritative. Unsupported features are shown as unavailable; they are not emulated.
+
+In particular, installed production Wi-Fi composition uses the real iwd backend only. `network.manage` is false when the unprivileged Parent service cannot genuinely manage iwd state, scan/connect is fail-closed, and a connection request must name a network returned by a real scan. No production path may synthesize demo SSIDs or manufacture a network object for an unscanned SSID.
+
+System output controls keep their existing privilege separation: Parent mutates typed desired state; the child hardware session owns ALSA/backlight/media-key application. Do not grant the HTTP process direct mixer/backlight authority to make browser controls appear functional.
+
+## Verification and remaining evidence
+
+Source-level authority is covered by the Parent pin/manifest, `tools/stage_parent_app.py`, `tests/test_parent_app_staging.py`, `greia_parent.parent_client_integrity`, and `tests/test_parent_client_image_integration.py`.
+
+This does **not** prove the physical Acer path. Final real-runtime acceptance is defined in:
+
+```text
+docs/testing/2026-09-02_PARENT_REAL_RUNTIME_FINAL_ACCEPTANCE.md
+```
+
+That gate must use an officially built image and a normal paired production URL. It forbids demo mode, manual runtime copying, fabricated state and visual-only mutation acceptance. In particular it must prove browser volume/mute changes reach actual Acer ALSA state and converge with hardware-key changes.
+
+## Updating the Parent client later
+
+Use this order:
+
+1. implement/review/test the browser change in `Greia-Parent-App-Html`;
+2. freeze the exact accepted Parent commit;
+3. generate/obtain its production manifest with demo fixtures excluded;
+4. advance Greia's pin and manifest together;
+5. stage the exact accepted bytes into `vendor/parent-app/`;
+6. replace the image-overlay runtime with those same exact bytes;
+7. run Parent staging/image-integrity focused tests and full `make verify` locally;
+8. repeat any browser/image/physical acceptance made stale by the runtime change.
+
+Never hand-edit the vendored or image copy as an independent Parent implementation.
