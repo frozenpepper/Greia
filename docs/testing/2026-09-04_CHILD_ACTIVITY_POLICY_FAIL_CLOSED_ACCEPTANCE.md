@@ -23,6 +23,8 @@ A missing policy file is a legitimate default and may produce the normal `show_a
 
 A policy path that exists but is malformed, unreadable, an unsupported schema, or a symlink is **not** equivalent to `show_all`. Until repaired it must expose **zero launchable Activities** while leaving the Shell/fallback process able to render recovery/profile UI.
 
+Parent policy writes use atomic replacement. A launcher policy read must therefore identify one stable file version: if replacement occurs while a snapshot is being read, the launcher retries rather than applying one version while acknowledging another version's file token. Repeated churn fails closed and is retried through the ordinary bounded rescan path.
+
 ## 1. Hard prohibitions
 
 During this gate do not:
@@ -86,7 +88,8 @@ The suite must prove all of the following:
 - malformed JSON exposes zero Activities in both paths;
 - unsupported policy schema exposes zero Activities;
 - a symlink policy exposes zero Activities;
-- repairing rejected policy state is detected and restores the effective catalogue;
+- repairing rejected policy state is detected, clears the policy-specific error state, and restores the effective catalogue;
+- atomic replacement during a read cannot make either launcher acknowledge a newer file token while applying an older policy snapshot;
 - the trusted fallback remains deliberately direct/non-adaptive rather than inheriting rich sub-Collection UI merely to obtain policy enforcement.
 
 Any failure: STOP and return the full traceback/output.
@@ -146,7 +149,9 @@ symlink
 repaired valid policy
 ```
 
-For each rejected state, confirm that the effective catalogue contains zero launchable Activities and that the process itself remains alive/recoverable. For the repaired state, confirm normal policy projection resumes without restarting into a more-permissive emergency catalogue.
+For each rejected state, confirm that the effective catalogue contains zero launchable Activities and that the process itself remains alive/recoverable. For the repaired state, confirm normal policy projection resumes without restarting into a more-permissive emergency catalogue and that the policy-specific error indication clears.
+
+The deterministic unit regression in §3 owns the atomic-replacement-during-read race. Do not attempt to manufacture timing-sensitive filesystem races manually as a substitute for that test.
 
 If no current project-local runtime fixture can exercise this without touching real profile data, mark this section `NOT_RUN` rather than improvising. The automated source suite in §3 remains mandatory regardless.
 
