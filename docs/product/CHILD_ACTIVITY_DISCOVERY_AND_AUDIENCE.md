@@ -2,6 +2,7 @@
 
 **Status:** accepted product requirement; foundational manifest/profile/discovery/adaptive-Collection implementation active  
 **Date:** 2026-08-23  
+**Reviewed:** 2026-09-03  
 **Scope:** child Shell/Home, Activity catalogue projection, Activity educational/presentation metadata, child-profile discovery preferences, Parent per-child Activity visibility policy  
 **Related:** `docs/adr/0018-lightweight-ui-foundation.md`, `docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md`, `docs/product/PARENT_MANAGEMENT.md`, `docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md`, `skills/greia-activity-authoring/SKILL.md`
 
@@ -188,7 +189,7 @@ difficulty = 3
 
 ## 8. Audience and adaptive-difficulty metadata — implemented
 
-Current Activity manifests support optional audience fields:
+Current Activity manifests support audience fields:
 
 ```toml
 [education]
@@ -199,17 +200,29 @@ recommended_age_max = 8
 
 Bounds:
 
-- `recommended_age_min`: optional integer 1–18;
-- `recommended_age_max`: optional integer 1–18;
+- `recommended_age_min`: integer 1–18 when declared;
+- `recommended_age_max`: integer 1–18 when declared;
 - when both are present, min must not exceed max.
 
-Open-ended Activities may omit one bound, for example:
+### 8.1 First-party minimum age is required by catalogue policy
+
+Every first-party Greia Activity must declare a defensible `recommended_age_min`.
+
+This is a catalogue/product requirement enforced by the first-party metadata test, rather than a global parser requirement. The parser deliberately continues to tolerate missing audience metadata for incomplete legacy/external packages so Greia can fail open instead of silently inventing an age classification.
+
+The minimum should describe the youngest ordinary child for whom the shipped interaction, instructions, concepts and motor demands are genuinely appropriate. It must not be lowered merely to increase catalogue visibility.
+
+### 8.2 Upper age remains optional
+
+Open-ended Activities may omit the upper bound, for example:
 
 ```toml
 [education]
 difficulty = 1
 recommended_age_min = 3
 ```
+
+This means `3+`, not “unknown maximum.” Creative, sensory and imaginative Activities must not receive an arbitrary maximum merely to make the metadata symmetrical.
 
 Current source also supports a true adaptive challenge span:
 
@@ -272,7 +285,7 @@ It does not rewrite Activity save data and is not a mastery assessment.
 
 ## 11. Recommendation is not restriction
 
-Audience metadata primarily improves emphasis/order. It is deliberately forgiving of incomplete metadata.
+Audience metadata primarily improves emphasis/order until a Parent deliberately enables a restrictive age policy.
 
 Potential child-facing discovery views may later use neutral equivalents of:
 
@@ -289,31 +302,84 @@ Such labels are views, not grades. Greia avoids messages describing a child as t
 
 Parent authority may apply stronger rules through a profile-scoped `ActivityDiscoveryPolicy`.
 
-Implemented modes:
+Canonical modes are:
 
 ```text
 show_all
-hide_too_simple
 recommended_only
+age_and_easier
 custom
 ```
 
-Implemented individual overrides:
+The Parent client presents these in plain language using the selected child's approximate age, for example:
+
+```text
+All age ranges
+Age 3 only
+Age 3 + easier
+Custom choices
+```
+
+### 12.1 `recommended_only` — “Age N only”
+
+An Activity is automatically visible when the child's age lies inside its declared recommended range:
+
+```text
+recommended_age_min <= age <= recommended_age_max
+```
+
+A missing upper bound is open-ended. Therefore an Activity declared `recommended_age_min = 3` remains age-fit at 3, 4, 5 and later ages unless another policy or explicit Parent choice hides it.
+
+Unknown/missing age metadata remains visible rather than being guessed.
+
+### 12.2 `age_and_easier` — “Age N + easier”
+
+An Activity is automatically visible when its declared minimum age is not above the child:
+
+```text
+recommended_age_min <= age
+```
+
+This intentionally includes age-fit Activities plus material designed for younger children. It does **not** include material whose declared minimum age is above the child's age.
+
+For a three-year-old:
+
+- `2–4`, `3–6`, `3+` and younger/easier Activities may qualify;
+- `4+`, `4–8`, `5+` and `5–9` do not qualify automatically.
+
+This bounded rule replaces the old ambiguous “hide things that are too simple” behavior, which could admit material designed for older children.
+
+### 12.3 Legacy policy compatibility
+
+The older persisted/API value:
+
+```text
+hide_too_simple
+```
+
+is accepted as compatibility input and normalized immediately to canonical `age_and_easier`. New stored/API output uses `age_and_easier`.
+
+### 12.4 No approximate age
+
+If the profile has no approximate age, age filtering is inactive and fails open. The Parent client disables the age-specific preset choices and directs the parent to set an approximate age under Children. Difficulty bounds and explicit per-Activity choices remain usable.
+
+### 12.5 Explicit overrides
+
+Implemented individual overrides remain:
 
 ```text
 always_show
 always_hide
 ```
 
-An explicit Activity override is evaluated before automatic age-based policy:
+An explicit Activity override is evaluated before automatic age/difficulty policy:
 
 - `always_hide` hides;
 - `always_show` shows;
-- missing age or missing audience metadata fails open in automatic policy;
-- `hide_too_simple` only hides when a declared upper recommended age is below the child's approximate age;
-- `recommended_only` respects declared min/max while unknown/general metadata remains visible.
+- unknown age metadata fails open in automatic policy;
+- difficulty filtering remains a separate dimension.
 
-The Parent API exposes `GET/PUT /api/v1/profiles/{profile_id}/activity-policy`, and the rebuilt HTML Parent client renders and mutates this typed policy.
+The Parent API exposes `GET/PUT /api/v1/profiles/{profile_id}/activity-policy`, and the HTML Parent client renders and mutates this typed policy.
 
 Visibility policy affects catalogue presentation only; it does not mutate package trust, installation, permissions, saves or Activity identity.
 
@@ -321,15 +387,16 @@ Visibility policy affects catalogue presentation only; it does not mutate packag
 
 Rules:
 
+- first-party Greia Activities must declare `recommended_age_min`;
 - no `recommended_age_max` means no declared upper age bound;
-- no age metadata means **unknown/general**, not automatically unsuitable;
+- missing age metadata from compatible legacy/external material means **unknown/general**, not automatically unsuitable;
 - creative/open-ended tools may intentionally have no meaningful upper bound;
 - no adaptive difficulty range means ordinary baseline difficulty behavior;
 - unknown/unrecognized primary presentation metadata does not hide a valid Activity; it is recoverable through Browse/More;
 - Parent explicit hide remains authoritative;
 - invalid declared schema fields remain package validation errors according to source policy.
 
-Greia prefers transparent unknown state to invented classification.
+Greia prefers transparent unknown state to invented classification. Parent surfaces should label wholly missing age metadata as unknown/not specified rather than `All ages`.
 
 ## 14. Age metadata is not a content-safety rating
 
@@ -381,22 +448,26 @@ Current source implements the foundational contract described above:
 - bounded Activity scrolling;
 - baseline `education.difficulty` 1–10;
 - `recommended_age_min/max` audience fields;
+- first-party catalogue enforcement of a declared minimum age;
+- open-ended first-party age ranges without fabricated maxima;
 - `difficulty_min/max` plus `adaptive_difficulty` validation;
 - `presentation.discovery_tags`;
 - optional profile `approximate_age` and `challenge_preference`;
 - profile-scoped atomic Activity discovery policy storage;
-- fail-open audience filtering and challenge-aware ordering;
+- canonical `recommended_only` exact-age and `age_and_easier` bounded easier policies;
+- compatibility normalization of legacy `hide_too_simple` policies;
+- fail-open unknown audience behavior and challenge-aware ordering;
 - explicit Parent visibility overrides with override precedence;
 - effective per-child catalogue computation before launcher projection;
 - adaptive optional sub-Collections with bounded platform-owned discovery vocabulary;
 - 10/8 enter/collapse hysteresis model and stored subdivision state;
 - Parent API resources for Activity inventory and per-child policy;
-- rebuilt responsive Parent HTML controls for child age/challenge and Activity policy;
-- Collection-first, bounded-vocabulary and adaptive catalogue simulator acceptance recorded in the repository testing documentation.
+- responsive Parent controls that show each Activity's age range and age-specific presets;
+- no-age Parent UX that does not pretend age filtering is active.
 
 The Activity Card Titles and Unique Icons contract also remains active: two-line title wrapping, defensive title cap/full-title disclosure, contain-fit icon padding and unique first-party package icons are separate presentation requirements and are not changed by adaptive discovery.
 
-Still-open/future work includes product calibration/user testing of thresholds and metadata quality, optional richer bounded recent/favorite discovery surfaces, and any future expansion of the recognized semantic group vocabulary. Those extensions must preserve the authority/depth/fail-open rules in this document.
+Still-open/future work includes educational calibration/user testing of individual Activity minimum/range choices, optional richer bounded recent/favorite discovery surfaces, and any future expansion of the recognized semantic group vocabulary. Those extensions must preserve the authority/depth/fail-open rules in this document.
 
 ## 19. Acceptance requirements
 
@@ -413,11 +484,16 @@ Focused acceptance for this architecture covers:
 9. **per-child count:** adaptive depth uses the effective visible set after Parent policy;
 10. **hysteresis:** minor catalogue changes do not repeatedly reshape navigation;
 11. **age/difficulty independence:** age is never treated as difficulty;
-12. **missing metadata:** valid Activities fail open unless Parent policy explicitly hides them;
-13. **Parent override:** explicit always-show/always-hide wins over automatic recommendation;
-14. **profile privacy:** exact DOB is not required;
-15. **responsive matrix:** hierarchy remains usable at required Greia viewports;
-16. **input parity:** pointer, keyboard and controller/touch share hierarchy and Back semantics;
-17. **authority:** presentation filtering never bypasses registry/runtime/trust/permission authority.
+12. **first-party age metadata:** every first-party Activity declares a defensible minimum age;
+13. **exact-age preset:** `recommended_only` includes declared ranges containing the child's age and excludes declared future-age Activities;
+14. **age-plus-easier preset:** `age_and_easier` never admits an Activity whose declared minimum is above the child's age;
+15. **legacy migration:** `hide_too_simple` remains readable but canonical output becomes `age_and_easier`;
+16. **missing metadata:** compatible legacy/external Activities fail open rather than receiving invented ages;
+17. **Parent override:** explicit always-show/always-hide wins over automatic recommendation;
+18. **profile privacy:** exact DOB is not required;
+19. **no-age UX:** the Parent surface does not imply that age filtering is active when no approximate age exists;
+20. **responsive matrix:** hierarchy remains usable at required Greia viewports;
+21. **input parity:** pointer, keyboard and controller/touch share hierarchy and Back semantics;
+22. **authority:** presentation filtering never bypasses registry/runtime/trust/permission authority.
 
 Do not infer completion of unrelated package-management, pairing-security or education-assessment work merely because this discovery architecture is implemented.
