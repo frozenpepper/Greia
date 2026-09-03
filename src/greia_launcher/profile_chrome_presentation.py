@@ -12,6 +12,8 @@ from typing import Any
 from greia_platform.assets import AssetCatalogueError
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
+from .system_chrome import resolve_trusted_action_minimum_px
+
 
 _SHARED_PROFILE_VISUAL_ERRORS = (
     VisualSurfaceCacheError,
@@ -29,7 +31,21 @@ class SharedUiProfileChromeMixin:
     The base presentation is drawn first. The shared frame then replaces only
     the visual avatar treatment while retaining the exact profile-card and
     active-profile hit rectangles already owned by the launcher.
+
+    Essential profile targets (picker frames, active-profile badge) enforce
+    the shared physical floor from :mod:`greia_launcher.system_chrome`.
+    Display metrics arrive only via the injected ``_display_metrics``
+    attribute owned by the composition layer (``None`` means unknown:
+    existing conservative pixels apply). Nothing here probes hardware, parses
+    configuration, or scales decoration, gaps, or typography.
     """
+
+    _FRAME_SOURCE_SIZE = 260
+    _FRAME_INNER_CENTER_Y = 123 / 260
+
+    def _chrome_metrics(self) -> Any:
+        """Return injected display metrics, or ``None`` when unknown."""
+        return getattr(self, "_display_metrics", None)
 
     _FRAME_SOURCE_SIZE = 260
     _FRAME_INNER_CENTER_Y = 123 / 260
@@ -67,7 +83,10 @@ class SharedUiProfileChromeMixin:
             return
 
         height = screen.get_height()
-        badge_size = max(62, min(86, height // 7))
+        base_badge = max(62, min(86, height // 7))
+        badge_size = resolve_trusted_action_minimum_px(
+            self._chrome_metrics(), fallback_px=base_badge
+        )
         badge = pygame.Rect(14, 10, badge_size, badge_size)
         self._overlay_active_profile_frame(
             screen,
@@ -109,6 +128,14 @@ class SharedUiProfileChromeMixin:
                 int(round(rect.height * 0.78)),
             ),
         )
+        frame_size = resolve_trusted_action_minimum_px(
+            self._chrome_metrics(), fallback_px=frame_size
+        )
+        # The profile card itself stays the authoritative target: the frame is
+        # artwork inside it, so the physical floor never grows the frame past
+        # the card that owns the hit rectangle. Enlarging the card geometry
+        # belongs to the base launcher layout, not this presentation overlay.
+        frame_size = min(frame_size, int(rect.width), int(rect.height))
         frame_surface = self._avatar_frame_surface(frame_size, pygame)
         if frame_surface is None:
             return

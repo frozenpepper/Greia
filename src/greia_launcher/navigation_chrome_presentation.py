@@ -13,6 +13,8 @@ from typing import Any
 from greia_platform.assets import AssetCatalogueError
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
+from .system_chrome import resolve_trusted_action_minimum_px
+
 
 _SHARED_NAVIGATION_ERRORS = (
     VisualSurfaceCacheError,
@@ -25,7 +27,19 @@ _SHARED_NAVIGATION_ERRORS = (
 
 
 class SharedUiNavigationChromeMixin:
-    """Use one reviewed icon-button frame for Shell-local navigation controls."""
+    """Use one reviewed icon-button frame for Shell-local navigation controls.
+
+    Essential navigation targets (page arrows, category back/chips) enforce
+    the shared physical floor from :mod:`greia_launcher.system_chrome` through
+    :func:`resolve_trusted_action_minimum_px`. Display metrics arrive only via
+    the injected ``_display_metrics`` attribute owned by the composition layer
+    (``None`` means unknown: existing conservative pixels apply). Nothing here
+    probes hardware, parses configuration, or scales decoration and gaps.
+    """
+
+    def _chrome_metrics(self) -> Any:
+        """Return injected display metrics, or ``None`` when unknown."""
+        return getattr(self, "_display_metrics", None)
 
     def _icon_button_surface(self, size: int, pygame: Any) -> Any | None:
         if getattr(self, "_shared_icon_buttons_disabled", False):
@@ -60,7 +74,10 @@ class SharedUiNavigationChromeMixin:
         if page.page_count <= 1:
             return
 
-        size = max(54, min(72, screen.get_height() // 8))
+        base_size = max(54, min(72, screen.get_height() // 8))
+        size = resolve_trusted_action_minimum_px(
+            self._chrome_metrics(), fallback_px=base_size
+        )
         frame = self._icon_button_surface(size, pygame)
         if frame is None:
             super()._draw_page_controls(
@@ -152,7 +169,10 @@ class SharedUiNavigationChromeMixin:
             if item.collection_id != ALL_ACTIVITIES_ID
         )
         left = 112 if self._active_profile is not None else 20
-        height = max(46, min(56, screen.get_height() // 10))
+        base_height = max(46, min(56, screen.get_height() // 10))
+        height = resolve_trusted_action_minimum_px(
+            self._chrome_metrics(), fallback_px=base_height
+        )
         frame = self._icon_button_surface(height, pygame)
 
         back_rect = pygame.Rect(left, 16, height, height)

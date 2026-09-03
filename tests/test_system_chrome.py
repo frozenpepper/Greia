@@ -1,16 +1,29 @@
 from __future__ import annotations
 
+import pathlib
 import unittest
 
-from greia_platform.system_chrome import (
-    ActivitySystemChromeLayout,
-    SystemNavigationAction,
-)
 from greia_launcher.system_chrome import (
+    TRUSTED_ACTION_MINIMUM_MM,
     SystemChromeCoordinator,
     SystemChromeError,
     SystemChromeNavigationBridge,
     SystemChromePhase,
+    collection_policy_for_metrics,
+    resolve_trusted_action_minimum_px,
+)
+from greia_launcher.system_chrome_legacy_x import (
+    LegacyXSystemChromeBackend,
+    layout_for_surface_with_metrics,
+)
+from greia_platform.display_metrics import (
+    DisplayMetrics,
+    DisplayMetricsSource,
+    sanitize_display_metrics,
+)
+from greia_platform.system_chrome import (
+    ActivitySystemChromeLayout,
+    SystemNavigationAction,
 )
 
 
@@ -53,6 +66,262 @@ class RecordingStopController:
 class FakeSession:
     def __init__(self, session_id: str) -> None:
         self.session_id = session_id
+
+
+def _dense_metrics() -> DisplayMetrics:
+    # 2048x1200 on the 222x130mm reference panel: ~234 DPI, so the shared
+    # 10mm floor converts to floor(10 * 9.225) = 92px.
+    metrics = sanitize_display_metrics(
+        2048, 1200, 222.0, 130.0, DisplayMetricsSource.MANUAL_OVERRIDE
+    )
+    assert metrics is not None
+    return metrics
+
+
+def _reference_known_metrics() -> DisplayMetrics:
+    # 1024x600 on the same panel: the 10mm floor is 46px, below every
+    # existing conservative fallback, so existing geometry must be kept.
+    metrics = sanitize_display_metrics(
+        1024, 600, 222.0, 130.0, DisplayMetricsSource.MANUAL_OVERRIDE
+    )
+    assert metrics is not None
+    return metrics
+
+
+def _unknown_metrics() -> DisplayMetrics:
+    metrics = sanitize_display_metrics(1024, 600)
+    assert metrics is not None
+    return metrics
+
+
+class TrustedPhysicalFloorTests(unittest.TestCase):
+    def test_shared_floor_is_single_sourced(self) -> None:
+        self.assertEqual(TRUSTED_ACTION_MINIMUM_MM, 10.0)
+        import greia_launcher.navigation_chrome_presentation as nav
+        import greia_launcher.profile_chrome_presentation as profile
+
+        self.assertIs(
+            nav.resolve_trusted_action_minimum_px,
+            resolve_trusted_action_minimum_px,
+        )
+        self.assertIs(
+            profile.resolve_trusted_action_minimum_px,
+            resolve_trusted_action_minimum_px,
+        )
+
+    def test_high_density_raises_minimum(self) -> None:
+        self.assertEqual(
+            resolve_trusted_action_minimum_px(_dense_metrics(), fallback_px=60),
+            92,
+        )
+
+    def test_reference_density_keeps_existing_conservative_pixels(self) -> None:
+        self.assertEqual(
+            resolve_trusted_action_minimum_px(
+                _reference_known_metrics(), fallback_px=60
+            ),
+            60,
+        )
+
+    def test_unknown_metrics_fall_back(self) -> None:
+        self.assertEqual(
+            resolve_trusted_action_minimum_px(_unknown_metrics(), fallback_px=60),
+            60,
+        )
+        self.assertEqual(
+            resolve_trusted_action_minimum_px(None, fallback_px=60),
+            60,
+        )
+
+    def test_malformed_metrics_fail_soft_to_fallback(self) -> None:
+        for bad in ("huge", 123, 45.6, object(), {"width": 1}, ["x"]):
+            with self.subTest(bad=repr(bad)):
+                self.assertEqual(
+                    resolve_trusted_action_minimum_px(bad, fallback_px=60),
+                    60,
+                )
+
+    def test_malformed_fallback_stays_bounded(self) -> None:
+        for bad_fallback in ("huge", None, -5, 0, 100000, float("nan")):
+            with self.subTest(bad_fallback=repr(bad_fallback)):
+                result = resolve_trusted_action_minimum_px(
+                    _dense_metrics(), fallback_px=bad_fallback
+                )
+                self.assertIsInstance(result, int)
+                self.assertGreaterEqual(result, 8)
+                self.assertLessEqual(result, 320)
+
+    def test_result_never_shrinks_or_escapes_bounds(self) -> None:
+        result = resolve_trusted_action_minimum_px(
+            _reference_known_metrics(), fallback_px=64
+        )
+        self.assertEqual(result, 64)
+        result = resolve_trusted_action_minimum_px(
+            _dense_metrics(), fallback_px=320
+        )
+        self.assertEqual(result, 320)
+
+
+class MetricsAwareChromeLayoutTests(unittest.TestCase):
+    def test_unknown_metrics_match_base_geometry(self) -> None:
+        for metrics in (None, _unknown_metrics()):
+            with self.subTest(metrics=repr(metrics)):
+                self.assertEqual(
+                    layout_for_surface_with_metrics(1024, 600, metrics=metrics),
+                    ActivitySystemChromeLayout.for_surface(1024, 600),
+                )
+                self.assertEqual(
+                    layout_for_surface_with_metrics(
+                        1024, 600, back_available=True, metrics=metrics
+                    ),
+                    ActivitySystemChromeLayout.for_surface(
+                        1024, 600, back_available=True
+                    ),
+                )
+
+    def test_reference_density_matches_base_geometry(self) -> None:
+        self.assertEqual(
+            layout_for_surface_with_metrics(
+                1024, 600, metrics=_reference_known_metrics()
+            ),
+            ActivitySystemChromeLayout.for_surface(1024, 600),
+        )
+
+    def test_dense_metrics_grow_hitboxes_without_moving_home(self) -> None:
+        base = ActivitySystemChromeLayout.for_surface(
+            1024, 600, back_available=True
+        )
+        grown = layout_for_surface_with_metrics(
+            1024, 600, back_available=True, metrics=_dense_metrics()
+        )
+        self.assertEqual(grown.home_hitbox.width, 92)
+        self.assertEqual(grown.home_hitbox.height, 92)
+        self.assertEqual(grown.back_hitbox.width, 92)
+        # Home never moves for high DPI: origin, margin, and gap are stable.
+        self.assertEqual(
+            (grown.home_hitbox.x, grown.home_hitbox.y),
+            (base.home_hitbox.x, base.home_hitbox.y),
+        )
+        self.assertEqual(
+            grown.back_hitbox.x - grown.home_hitbox.right,
+            base.back_hitbox.x - base.home_hitbox.right,
+        )
+        # The protected region still covers both hitboxes.
+        self.assertTrue(
+            grown.protected_region.contains(
+                grown.home_hitbox.x, grown.home_hitbox.y
+            )
+        )
+        self.assertTrue(
+            grown.protected_region.contains(
+                grown.back_hitbox.x, grown.back_hitbox.y
+            )
+        )
+        # Decoration is not scaled: visual size is untouched.
+        self.assertEqual(grown.visual_size, base.visual_size)
+        self.assertTrue(grown.back_available)
+        self.assertIs(
+            grown.action_at(grown.home_hitbox.x, grown.home_hitbox.y),
+            SystemNavigationAction.HOME,
+        )
+        self.assertIs(
+            grown.action_at(grown.back_hitbox.x, grown.back_hitbox.y),
+            SystemNavigationAction.BACK,
+        )
+
+    def test_surface_too_small_for_growth_fails_soft_to_base(self) -> None:
+        base = ActivitySystemChromeLayout.for_surface(1024, 600)
+        margin = base.home_hitbox.x
+        gap = base.back_hitbox.x - base.home_hitbox.right
+        hit = base.home_hitbox.width
+        # Fits the base chrome exactly but cannot host the 92px grown chrome.
+        width = margin * 2 + hit * 2 + gap
+        height = margin * 2 + hit
+        probe = ActivitySystemChromeLayout.for_surface(width, height)
+        self.assertEqual(
+            layout_for_surface_with_metrics(
+                width, height, metrics=_dense_metrics()
+            ),
+            probe,
+        )
+
+    def test_collection_policy_applies_floor_only_to_minimum(self) -> None:
+        base = collection_policy_for_metrics(None)
+        self.assertEqual(base.minimum_item_px, 72)
+        grown = collection_policy_for_metrics(_dense_metrics())
+        self.assertGreater(grown.minimum_item_px, 72)
+        self.assertEqual(grown.preferred_item_px, base.preferred_item_px)
+        self.assertEqual(grown.maximum_item_px, base.maximum_item_px)
+        self.assertEqual(grown.minimum_gap_px, base.minimum_gap_px)
+        self.assertEqual(grown.maximum_gap_px, base.maximum_gap_px)
+        fallback = collection_policy_for_metrics("bogus")
+        self.assertEqual(fallback, base)
+
+    def test_backend_prepare_threads_metrics(self) -> None:
+        seen: dict[str, object] = {}
+
+        class StubBridge:
+            def prepare(self, *, back_available: bool, metrics=None):  # type: ignore[no-untyped-def]
+                seen["back_available"] = back_available
+                seen["metrics"] = metrics
+                return layout_for_surface_with_metrics(
+                    1024, 600,
+                    back_available=back_available,
+                    metrics=metrics,
+                )
+
+            def show(self) -> None:
+                return None
+
+            def poll_pointer_release(self):  # type: ignore[no-untyped-def]
+                return None
+
+            def hide(self) -> None:
+                return None
+
+        dense = _dense_metrics()
+        backend = LegacyXSystemChromeBackend(bridge=StubBridge())  # type: ignore[arg-type]
+        backend.prepare("session-m", back_available=True, metrics=dense)
+        self.assertIs(seen["metrics"], dense)
+        self.assertTrue(seen["back_available"])
+        backend.hide("session-m")
+
+        backend_plain = LegacyXSystemChromeBackend(bridge=StubBridge())  # type: ignore[arg-type]
+        backend_plain.prepare("session-p", back_available=False)
+        self.assertIsNone(seen["metrics"])
+        backend_plain.hide("session-p")
+
+    def test_touched_ui_code_has_no_hardware_identity_or_probing(self) -> None:
+        root = pathlib.Path(__file__).resolve().parent.parent
+        touched = [
+            root / "src/greia_launcher/system_chrome.py",
+            root / "src/greia_launcher/system_chrome_legacy_x.py",
+            root / "src/greia_launcher/navigation_chrome_presentation.py",
+            root / "src/greia_launcher/profile_chrome_presentation.py",
+        ]
+        for path in touched:
+            with self.subTest(path=path.name):
+                source = path.read_text(encoding="utf-8").lower()
+                for token in ("xrandr", "xinput", "libinput", "edid", "toml"):
+                    self.assertNotIn(token, source)
+        for name in (
+            "navigation_chrome_presentation.py",
+            "profile_chrome_presentation.py",
+        ):
+            with self.subTest(consumer=name):
+                source = (
+                    root / "src/greia_launcher" / name
+                ).read_text(encoding="utf-8")
+                for token in ("XOpenDisplay", "XDisplayWidth", "ctypes"):
+                    self.assertNotIn(token, source)
+                # Metrics are injected by composition; render paths never
+                # build or probe them.
+                for token in (
+                    "sanitize_display_metrics",
+                    "metrics_from_mode",
+                    "metrics_for_output",
+                ):
+                    self.assertNotIn(token, source)
 
 
 class ActivitySystemChromeLayoutTests(unittest.TestCase):

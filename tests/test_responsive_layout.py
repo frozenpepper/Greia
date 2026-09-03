@@ -3,6 +3,11 @@ from __future__ import annotations
 import random
 import unittest
 
+from greia_launcher.system_chrome import collection_policy_for_metrics
+from greia_platform.display_metrics import (
+    DisplayMetricsSource,
+    sanitize_display_metrics,
+)
 from greia_platform.responsive_layout import AdaptiveGridPolicy, UiRect, Viewport
 
 
@@ -112,6 +117,69 @@ class AdaptiveGridTests(unittest.TestCase):
     def test_invalid_policy_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
             AdaptiveGridPolicy(minimum_item_px=200, preferred_item_px=100)
+
+
+class PhysicalCollectionMinimumTests(unittest.TestCase):
+    """DisplayMetrics → PhysicalUiPolicy → pixel minimum → AdaptiveGridPolicy."""
+
+    def _dense(self):  # ~234 DPI panel: 10mm floor is 92px.
+        metrics = sanitize_display_metrics(
+            2048, 1200, 222.0, 130.0, DisplayMetricsSource.MANUAL_OVERRIDE
+        )
+        assert metrics is not None
+        return metrics
+
+    def test_unknown_metrics_keep_base_minimum(self) -> None:
+        for metrics in (None, sanitize_display_metrics(1024, 600)):
+            with self.subTest(metrics=repr(metrics)):
+                policy = collection_policy_for_metrics(metrics)
+                self.assertEqual(policy.minimum_item_px, 72)
+                self.assertEqual(policy.preferred_item_px, 160)
+                self.assertEqual(policy.maximum_item_px, 220)
+
+    def test_high_density_raises_only_the_minimum(self) -> None:
+        grown = collection_policy_for_metrics(self._dense())
+        self.assertEqual(grown.minimum_item_px, 92)
+        self.assertEqual(grown.preferred_item_px, 160)
+        self.assertEqual(grown.maximum_item_px, 220)
+        self.assertEqual(grown.minimum_gap_px, 6)
+        self.assertEqual(grown.maximum_gap_px, 24)
+        self.assertEqual(grown.maximum_columns, 6)
+        self.assertEqual(grown.maximum_rows, 3)
+
+    def test_malformed_metrics_yield_base_policy(self) -> None:
+        self.assertEqual(
+            collection_policy_for_metrics("bogus"),
+            collection_policy_for_metrics(None),
+        )
+
+    def test_extreme_density_caps_floor_at_preferred(self) -> None:
+        # ~690 DPI: the raw 10mm floor (~270px) exceeds the preferred tile, so
+        # the policy stays valid and the grid degrades through its own path.
+        metrics = sanitize_display_metrics(
+            1920, 1080, 70.0, 40.0, DisplayMetricsSource.MANUAL_OVERRIDE
+        )
+        assert metrics is not None
+        policy = collection_policy_for_metrics(metrics)
+        self.assertEqual(policy.minimum_item_px, policy.preferred_item_px)
+
+    def test_floored_policy_preserves_containment_and_stress(self) -> None:
+        policy = collection_policy_for_metrics(self._dense())
+        for width, height in REPRESENTATIVE_VIEWPORTS:
+            with self.subTest(width=width, height=height):
+                content = UiRect(8, 86, max(1, width - 16), max(1, height - 94))
+                layout = policy.layout(content, 50)
+                self.assertGreaterEqual(layout.capacity, 1)
+                for index in range(layout.capacity):
+                    self.assertTrue(content.contains(layout.cell(index)))
+        rng = random.Random(0x6A7E1A)
+        for _ in range(500):
+            width = rng.randint(240, 4096)
+            height = rng.randint(200, 2160)
+            content = UiRect(0, 0, width, height)
+            layout = policy.layout(content, rng.randint(1, 80))
+            for index in range(layout.capacity):
+                self.assertTrue(content.contains(layout.cell(index)))
 
 
 if __name__ == "__main__":

@@ -2,11 +2,104 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
+from typing import Any, Protocol
 
+from greia_platform.display_metrics import DisplayMetrics, PhysicalUiPolicy
+from greia_platform.responsive_layout import AdaptiveGridPolicy
 from greia_platform.system_chrome import SystemNavigationAction
 
 from .lifecycle import ActivityResult, ActivitySession
+
+
+TRUSTED_ACTION_MINIMUM_MM = 10.0
+"""One shared physical-size floor for semantic action targets (millimetres).
+
+Trusted Home/Back geometry, launcher/profile essential controls, shared
+collection minimums — and later the installer (T07) and on-device Parent (T08)
+seams — all convert this single value through
+: meth:`PhysicalUiPolicy.minimum_pixels`. T07/T08 must import this constant and
+:func:`resolve_trusted_action_minimum_px` unchanged; do not fork a second floor
+helper. The value is a physical minimum only: it never scales a layout
+globally and never moves Home/Back by itself.
+"""
+
+
+def resolve_trusted_action_minimum_px(
+    metrics: Any,
+    *,
+    fallback_px: Any,
+) -> int:
+    """Return the pixel minimum for one semantic action target.
+
+    ``fallback_px`` is the existing conservative pixel size for the target; it
+    is returned unchanged when ``metrics`` is missing, unknown, or malformed.
+    Trustworthy high-density metrics raise the result via the shared
+    :data:`TRUSTED_ACTION_MINIMUM_MM` floor; trustworthy low-density metrics
+    never shrink it below ``fallback_px``. The result is always a bounded
+    integer, so malformed input fails soft instead of producing absurd
+    geometry. ``metrics`` is injected by the composition owner; this helper
+    never probes hardware and never parses configuration.
+    """
+    try:
+        sanitized_fallback = PhysicalUiPolicy.minimum_pixels(
+            TRUSTED_ACTION_MINIMUM_MM,
+            fallback_px=fallback_px,
+            metrics=None,
+        )
+    except Exception:
+        sanitized_fallback = 8
+    if not isinstance(metrics, DisplayMetrics):
+        return sanitized_fallback
+    try:
+        physical = PhysicalUiPolicy.minimum_pixels(
+            TRUSTED_ACTION_MINIMUM_MM,
+            fallback_px=sanitized_fallback,
+            metrics=metrics,
+        )
+    except Exception:
+        return sanitized_fallback
+    return max(sanitized_fallback, physical)
+
+
+def collection_policy_for_metrics(
+    metrics: Any,
+    *,
+    minimum_item_px: int = 72,
+    preferred_item_px: int = 160,
+    maximum_item_px: int = 220,
+    minimum_gap_px: int = 6,
+    maximum_gap_px: int = 24,
+    maximum_columns: int = 6,
+    maximum_rows: int = 3,
+) -> AdaptiveGridPolicy:
+    """Build a collection grid policy with the shared physical floor applied.
+
+    This is the ``DisplayMetrics → PhysicalUiPolicy → pixel minimum →
+    AdaptiveGridPolicy(...)`` composition seam: only ``minimum_item_px`` is
+    raised by :func:`resolve_trusted_action_minimum_px`. Preferred/maximum
+    sizes, gap bounds, and grid bounds pass through untouched, so decoration
+    and layout structure are never globally scaled. When the physical floor
+    would exceed ``preferred_item_px`` it is capped there to keep the policy
+    valid; the grid's own constrained-degradation path then handles the rest.
+    Malformed ``metrics`` yields the base policy unchanged.
+    """
+    floored = resolve_trusted_action_minimum_px(
+        metrics, fallback_px=minimum_item_px
+    )
+    try:
+        preferred = int(preferred_item_px)
+    except (TypeError, ValueError):
+        preferred = 160
+    minimum = min(floored, max(1, preferred))
+    return AdaptiveGridPolicy(
+        minimum_item_px=minimum,
+        preferred_item_px=preferred_item_px,
+        maximum_item_px=maximum_item_px,
+        minimum_gap_px=minimum_gap_px,
+        maximum_gap_px=maximum_gap_px,
+        maximum_columns=maximum_columns,
+        maximum_rows=maximum_rows,
+    )
 
 
 class SystemChromeError(RuntimeError):

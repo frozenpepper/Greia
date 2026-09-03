@@ -2,18 +2,76 @@ from __future__ import annotations
 
 import ctypes
 import ctypes.util
-from typing import Protocol
+from typing import Any, Protocol
 
+from greia_platform.display_metrics import DisplayMetrics
 from greia_platform.system_chrome import (
     ActivitySystemChromeLayout,
     SystemNavigationAction,
+    UiRect,
 )
+
+from .system_chrome import resolve_trusted_action_minimum_px
+
+
+def layout_for_surface_with_metrics(
+    width: int,
+    height: int,
+    *,
+    back_available: bool = False,
+    metrics: Any = None,
+) -> ActivitySystemChromeLayout:
+    """Build trusted chrome geometry enforcing the shared physical floor.
+
+    The base geometry comes from :meth:`ActivitySystemChromeLayout.for_surface`
+    and is returned unchanged when ``metrics`` is missing, unknown, or
+    low-density. Trustworthy high-density metrics grow the Home/Back hitboxes
+    in place: Home keeps its exact origin (it never moves for high DPI), the
+    Back hitbox keeps its gap, and the protected region expands to cover both.
+    Visual size, margins, and gaps are decorative and never scaled. When the
+    surface cannot host the enlarged chrome, the base layout is returned so
+    geometry fails soft instead of escaping the surface. ``metrics`` is
+    injected by the composition owner; nothing here probes hardware.
+    """
+    base = ActivitySystemChromeLayout.for_surface(
+        width,
+        height,
+        back_available=back_available,
+    )
+    floor_px = resolve_trusted_action_minimum_px(
+        metrics, fallback_px=base.home_hitbox.width
+    )
+    if floor_px <= base.home_hitbox.width:
+        return base
+    margin = base.home_hitbox.x
+    gap = base.back_hitbox.x - base.home_hitbox.right
+    if width < margin * 2 + floor_px * 2 + gap:
+        return base
+    if height < margin * 2 + floor_px:
+        return base
+    home = UiRect(margin, margin, floor_px, floor_px)
+    back = UiRect(home.right + gap, margin, floor_px, floor_px)
+    protected = UiRect(0, 0, back.right + margin, floor_px + margin * 2)
+    return ActivitySystemChromeLayout(
+        surface_width=base.surface_width,
+        surface_height=base.surface_height,
+        home_hitbox=home,
+        back_hitbox=back,
+        protected_region=protected,
+        visual_size=base.visual_size,
+        back_available=base.back_available,
+    )
 
 
 class LegacyXChromeBridge(Protocol):
     """Native X11 mechanics required by the provisional trusted chrome host."""
 
-    def prepare(self, *, back_available: bool) -> ActivitySystemChromeLayout: ...
+    def prepare(
+        self,
+        *,
+        back_available: bool,
+        metrics: DisplayMetrics | None = None,
+    ) -> ActivitySystemChromeLayout: ...
 
     def show(self) -> None: ...
 
@@ -83,7 +141,12 @@ class CtypesLegacyXChromeBridge:
         self._black_pixel: int = 0
         self._layout: ActivitySystemChromeLayout | None = None
 
-    def prepare(self, *, back_available: bool) -> ActivitySystemChromeLayout:
+    def prepare(
+        self,
+        *,
+        back_available: bool,
+        metrics: Any = None,
+    ) -> ActivitySystemChromeLayout:
         if self._display is not None:
             raise RuntimeError("Legacy-X system chrome is already prepared")
 
@@ -102,10 +165,11 @@ class CtypesLegacyXChromeBridge:
             screen = int(x11.XDefaultScreen(display))
             width = int(x11.XDisplayWidth(display, screen))
             height = int(x11.XDisplayHeight(display, screen))
-            layout = ActivitySystemChromeLayout.for_surface(
+            layout = layout_for_surface_with_metrics(
                 width,
                 height,
                 back_available=back_available,
+                metrics=metrics,
             )
             root = int(x11.XDefaultRootWindow(display))
             black = int(x11.XBlackPixel(display, screen))
@@ -351,10 +415,24 @@ class LegacyXSystemChromeBackend:
         self._layout: ActivitySystemChromeLayout | None = None
         self._visible = False
 
-    def prepare(self, session_id: str, *, back_available: bool) -> None:
+    def prepare(
+        self,
+        session_id: str,
+        *,
+        back_available: bool,
+        metrics: Any = None,
+    ) -> None:
         if self._session_id is not None:
             raise RuntimeError("Legacy-X system chrome already owns a session")
-        layout = self._bridge.prepare(back_available=bool(back_available))
+        # Bridges predating the metrics seam keep working unchanged: the
+        # metrics keyword crosses the bridge boundary only when the
+        # composition owner actually injected metrics.
+        if metrics is None:
+            layout = self._bridge.prepare(back_available=bool(back_available))
+        else:
+            layout = self._bridge.prepare(
+                back_available=bool(back_available), metrics=metrics
+            )
         self._session_id = session_id
         self._layout = layout
         self._visible = False
@@ -401,4 +479,5 @@ __all__ = [
     "CtypesLegacyXChromeBridge",
     "LegacyXChromeBridge",
     "LegacyXSystemChromeBackend",
+    "layout_for_surface_with_metrics",
 ]
