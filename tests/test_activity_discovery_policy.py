@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -91,20 +92,46 @@ class ActivityDiscoveryPolicyTests(unittest.TestCase):
         )
         self.assertNotIn(recommended.activity_id, {item.activity_id for item in result})
 
-    def test_hide_too_simple_only_uses_declared_upper_age_bound(self) -> None:
-        general = _activity(1, difficulty=1)
-        young = _activity(2, difficulty=8, age_min=3, age_max=5)
-        service = ActivityDiscoveryService()
-        policy = ActivityDiscoveryPolicy(
-            visibility_mode=ActivityVisibilityMode.HIDE_TOO_SIMPLE
+    def test_recommended_only_means_declared_range_contains_child_age(self) -> None:
+        younger_only = _activity(1, age_min=1, age_max=2)
+        exact = _activity(2, age_min=3, age_max=3)
+        spanning = _activity(3, age_min=2, age_max=5)
+        open_ended = _activity(4, age_min=3)
+        older = _activity(5, age_min=4, age_max=8)
+        unknown = _activity(6)
+        result = ActivityDiscoveryService().effective_activities(
+            (younger_only, exact, spanning, open_ended, older, unknown),
+            approximate_age=3,
+            challenge_preference=ChallengePreference.AUTOMATIC,
+            policy=ActivityDiscoveryPolicy(
+                visibility_mode=ActivityVisibilityMode.RECOMMENDED_ONLY
+            ),
         )
-        result = service.effective_activities(
-            (general, young),
-            approximate_age=8,
-            challenge_preference=ChallengePreference.STANDARD,
-            policy=policy,
+        self.assertEqual(
+            {item.activity_id for item in result},
+            {exact.activity_id, spanning.activity_id, open_ended.activity_id, unknown.activity_id},
         )
-        self.assertEqual(tuple(item.activity_id for item in result), (general.activity_id,))
+
+    def test_age_and_easier_never_includes_activity_designed_to_start_older(self) -> None:
+        younger = _activity(1, age_min=1, age_max=2)
+        exact = _activity(2, age_min=3, age_max=3)
+        spanning = _activity(3, age_min=2, age_max=5)
+        open_ended = _activity(4, age_min=3)
+        older = _activity(5, age_min=4, age_max=8)
+        unknown = _activity(6)
+        result = ActivityDiscoveryService().effective_activities(
+            (younger, exact, spanning, open_ended, older, unknown),
+            approximate_age=3,
+            challenge_preference=ChallengePreference.AUTOMATIC,
+            policy=ActivityDiscoveryPolicy(
+                visibility_mode=ActivityVisibilityMode.AGE_AND_EASIER
+            ),
+        )
+        self.assertEqual(
+            {item.activity_id for item in result},
+            {younger.activity_id, exact.activity_id, spanning.activity_id, open_ended.activity_id, unknown.activity_id},
+        )
+        self.assertNotIn(older.activity_id, {item.activity_id for item in result})
 
     def test_challenge_preference_ranks_without_hiding(self) -> None:
         easy = _activity(1, difficulty=1, age_min=4, age_max=8)
@@ -215,6 +242,20 @@ class ActivityDiscoveryPolicyTests(unittest.TestCase):
             policy = ActivityDiscoveryPolicyStore(path).read()
             self.assertIsNone(policy.difficulty_min)
             self.assertIsNone(policy.difficulty_max)
+
+    def test_legacy_hide_too_simple_policy_migrates_to_age_and_easier(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "policy.json"
+            path.write_text(
+                '{"schema_version":1,"visibility_mode":"hide_too_simple","overrides":{},"subdivided_collections":[]}',
+                encoding="utf-8",
+            )
+            store = ActivityDiscoveryPolicyStore(path)
+            policy = store.read()
+            self.assertIs(policy.visibility_mode, ActivityVisibilityMode.AGE_AND_EASIER)
+            store.write(policy)
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["visibility_mode"], "age_and_easier")
 
     def test_adaptive_thresholds_and_hysteresis(self) -> None:
         planner = AdaptiveCollectionPlanner()
