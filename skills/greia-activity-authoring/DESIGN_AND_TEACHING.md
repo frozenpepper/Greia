@@ -34,6 +34,7 @@ Before implementing a new Activity, write a compact brief for each Activity:
 ```text
 ACTIVITY:
 TARGET CHILD / AGE RANGE:
+MINIMUM RECOMMENDED AGE (manifest recommended_age_min):
 CHILD FANTASY:
 PRIMARY PLAY LOOP:
 PRIMARY LEARNING / DEVELOPMENT GOAL:
@@ -55,6 +56,18 @@ TOOLS NEEDED DURING AUTHORING:
 ```
 
 This is a design checkpoint, not paperwork. If the brief cannot explain the child's first action, play loop and learning purpose in a few clear lines, the Activity is not ready to code.
+
+Every first-party Greia Activity must choose a **defensible minimum recommended age** before implementation. That value becomes `education.recommended_age_min` in `activity.toml` and is consumed by Parent age filtering. Do not guess from `difficulty`; age suitability and challenge are separate decisions.
+
+Choose the youngest ordinary child for whom the shipped interaction, motor demands, language assumptions and educational concept are genuinely appropriate. Do not rely on unusually advanced reading, coordination or prior knowledge. `recommended_age_max` remains optional for genuinely open-ended creative/sensory/imaginative Activities; do not invent an upper limit merely for symmetry.
+
+Before writing or changing the manifest for a new first-party Activity, load:
+
+```text
+skills/greia-activity-authoring/DISCOVERY.md
+```
+
+That companion owns the exact age/difficulty/Collection/discovery metadata contract and Parent preset semantics.
 
 ## 3. Design for a child who cannot read
 
@@ -229,6 +242,8 @@ For younger children especially:
 
 An Activity can become richer through stages without making every screen busy.
 
+If the interaction becomes appropriate only after adding reading, fine motor precision, long working-memory chains or abstract prerequisite concepts, raise `recommended_age_min` rather than hiding that mismatch inside a difficulty number.
+
 ## 10. Presenter and character use is part of design
 
 Every new Activity must deliberately choose a lead presenter/character or explicitly choose none.
@@ -317,7 +332,7 @@ Do not add points, streaks, timers or reward spam merely because games often hav
 
 Activities report facts/events; Greia owns global Stars/achievements/progression authority.
 
-Load `ACHIEVEMENTS.md` only when progress/events/rewards are actually part of the Activity.
+For every new Activity, load `ACHIEVEMENTS.md` and explicitly decide the Activity's local score/progress/event relationship to Greia progression. `none` is a valid deliberate answer; silently skipping the decision is not.
 
 ## 14. Multi-Activity requests need a set-level plan
 
@@ -347,6 +362,8 @@ PARENT_REQUEST_DECOMPOSED=yes
 ACTIVITY_SET_PLAN_COMPLETE=yes/not-applicable
 PRIMARY_PLAY_LOOP_CLEAR=yes
 PRIMARY_LEARNING_GOAL_CLEAR=yes
+RECOMMENDED_AGE_MIN_DEFINED=yes
+DISCOVERY_METADATA_PLAN_DEFINED=yes
 FIRST_ACTION_CLEAR_WITHOUT_READING=yes
 REQUIRED_LANGUAGE_INSTRUCTIONS_IDENTIFIED=yes
 SPOKEN_CUE_PLAN_DEFINED=yes
@@ -355,6 +372,7 @@ DIFFICULTY_SCAFFOLD_DEFINED=yes
 RETRY_FEEDBACK_DEFINED=yes
 VARIATION_DEFINED=yes
 SUPPORTED_LOCALES_DEFINED=yes
+PROGRESSION_REWARD_RELATIONSHIP_DEFINED=yes
 ```
 
 If the core child flow is still vague, continue designing. Do not compensate by writing more infrastructure.
