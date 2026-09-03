@@ -40,6 +40,11 @@ class LanguageFirstInstallerApplication(InstallerApplication):
         target = self.state.target
         if target is None or self._worker is not None:
             return
+        display_block = self.display_install_block_reason()
+        if display_block:
+            self.state.error = display_block
+            self.state.page = InstallerPage.ERROR
+            return
         power_problem = self.power_probe.installation_block_reason()
         if power_problem:
             self.state.error = power_problem
