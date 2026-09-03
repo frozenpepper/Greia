@@ -9,40 +9,32 @@
       "sha256": "ed9247ed9abdfbd9d31f109fb8b75fb2c2d931b3c72ba5a6b9421f08e7ad4acf"
     },
     "src/app.js": {
-      "bytes": 7590,
-      "sha256": "b9cd14183850b157f2808c64e600efba2a390ce5ac919690e191a9ce39f9cd4a"
+      "bytes": 7699,
+      "sha256": "be68346381f93f63fed3689ee9da69cbdd0d643f37f9b3bd944ea5621b43c00a"
     },
     "src/credential_store.js": {
       "bytes": 607,
       "sha256": "4970efc33e50523e0698a182990a5bbd38d3f20bc1fcfa2c5dd62a3b1a466adc"
-    },
-    "src/demo_api.js": {
-      "bytes": 16218,
-      "sha256": "5eacdb7a938b5932510e70cdb0ad5d6fdc509376d6cdff63989c85b1550b9d7e"
-    },
-    "src/demo_management_api.js": {
-      "bytes": 13104,
-      "sha256": "f43434a2db95f8bc835fce4887f3d6a67bb2c2e3452c3fb12d7d689770e206c8"
     },
     "src/state.js": {
       "bytes": 9161,
       "sha256": "372de8c34e43c212409511f147cb9e9e213a0c0c84f2ffd447bf695f3f4e1485"
     },
     "src/ui.js": {
-      "bytes": 7118,
-      "sha256": "0a4aa0654ed32888c6ba27decd1429fc85b9df5ae72ca49a9f7571155718d9e6"
+      "bytes": 7234,
+      "sha256": "5a0e683d6b65b450a6988ff2be14f713098547c143831e9f8d1e79b5d479a136"
     },
     "src/views_activities.js": {
-      "bytes": 12380,
-      "sha256": "854ddf9c9bb8ff20805822fd857159fdc05ceb674e3378eb22fba4066a0641d3"
+      "bytes": 13096,
+      "sha256": "9b2251b18159c15843f5fba31f75f4f8e078eb8c8792894f7335c95efa213dc2"
     },
     "src/views_device.js": {
       "bytes": 20808,
       "sha256": "5d422a0832a806e3d52d65ca6ed4e77a44684f2680052f1ae1ea751b055fd1eb"
     },
     "src/views_device_layout.js": {
-      "bytes": 3334,
-      "sha256": "826d390921bab77affb163fd936235de2442875d0bc10f2eb1fd56e9333dc6e3"
+      "bytes": 3807,
+      "sha256": "22609e7a1a81ece83e4aa882c25921b2c40765241c32c71de8dfaa0b9eb889d4"
     },
     "src/views_helpers.js": {
       "bytes": 2830,
@@ -66,6 +58,6 @@
     }
   },
   "repository": "frozenpepper/Greia-Parent-App-Html",
-  "revision": "d7273776e626ed934bebde5e4565424b213d9c06",
+  "revision": "75ee275771c495dc187efb5275732ea10c10af4b",
   "schema_version": 1
 }
