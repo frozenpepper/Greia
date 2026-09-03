@@ -24,9 +24,13 @@ class ChallengePreference(str, Enum):
 
 class ActivityVisibilityMode(str, Enum):
     SHOW_ALL = "show_all"
-    HIDE_TOO_SIMPLE = "hide_too_simple"
+    AGE_AND_EASIER = "age_and_easier"
     RECOMMENDED_ONLY = "recommended_only"
     CUSTOM = "custom"
+
+    # Compatibility input only. ActivityDiscoveryPolicy normalizes this old
+    # persisted/API value immediately so all new writes use AGE_AND_EASIER.
+    HIDE_TOO_SIMPLE = "hide_too_simple"
 
 
 class ActivityVisibilityOverride(str, Enum):
@@ -58,6 +62,12 @@ class ActivityDiscoveryPolicy:
     subdivided_collections: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
+        if self.visibility_mode is ActivityVisibilityMode.HIDE_TOO_SIMPLE:
+            object.__setattr__(
+                self,
+                "visibility_mode",
+                ActivityVisibilityMode.AGE_AND_EASIER,
+            )
         _validate_difficulty_range(self.difficulty_min, self.difficulty_max)
 
     def override_for(self, activity_id: str) -> ActivityVisibilityOverride | None:
@@ -369,9 +379,9 @@ class ActivityDiscoveryService:
             ActivityVisibilityMode.SHOW_ALL,
             ActivityVisibilityMode.CUSTOM,
         } and approximate_age is not None:
-            if policy.visibility_mode is ActivityVisibilityMode.HIDE_TOO_SIMPLE:
-                maximum = activity.recommended_age_max
-                age_visible = maximum is None or approximate_age <= maximum
+            if policy.visibility_mode is ActivityVisibilityMode.AGE_AND_EASIER:
+                minimum = activity.recommended_age_min
+                age_visible = minimum is None or minimum <= approximate_age
             elif policy.visibility_mode is ActivityVisibilityMode.RECOMMENDED_ONLY:
                 age_visible = _age_within_declared_range(activity, approximate_age)
 
