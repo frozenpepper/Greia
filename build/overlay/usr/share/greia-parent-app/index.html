@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f7f4">
+  <meta name="color-scheme" content="light">
+  <title>Greia Parents</title>
+  <link rel="stylesheet" href="./styles/app.css">
+  <link rel="stylesheet" href="./styles/management.css">
+</head>
+<body>
+  <div class="app-shell" id="app-shell">
+    <aside class="sidebar" aria-label="Greia Parents">
+      <a class="brand" href="#home" aria-label="Greia Parents home">
+        <span class="brand-mark" aria-hidden="true">G</span>
+        <span class="brand-copy"><strong>Greia</strong><small>Parents</small></span>
+      </a>
+      <nav class="primary-nav" id="desktop-nav" aria-label="Parent sections"></nav>
+      <div class="sidebar-status">
+        <div class="connection-chip">
+          <span class="connection-dot" id="connection-dot"></span>
+          <span id="connection-label">Connecting…</span>
+        </div>
+        <button class="refresh-button" id="refresh-button" type="button" aria-label="Refresh Greia" title="Refresh Greia">Refresh</button>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="workspace-header">
+        <div class="workspace-heading">
+          <p class="eyebrow" id="page-eyebrow">Greia Parents</p>
+          <h1 id="page-title">Home</h1>
+          <p class="page-subtitle" id="page-subtitle"></p>
+        </div>
+        <div class="page-actions" id="page-actions"></div>
+      </header>
+
+      <main class="content" id="content">
+        <div id="flash" class="flash" role="status" aria-live="polite" hidden></div>
+        <div id="view" class="view" aria-live="polite"></div>
+      </main>
+    </div>
+
+    <nav class="bottom-nav" id="mobile-nav" aria-label="Parent sections"></nav>
+  </div>
+
+  <dialog id="confirm-dialog" class="dialog">
+    <form method="dialog">
+      <div class="dialog-icon danger-soft" id="confirm-icon" aria-hidden="true">!</div>
+      <h2 id="confirm-title">Are you sure?</h2>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button class="button secondary" value="cancel">Cancel</button>
+        <button class="button danger" id="confirm-accept" value="confirm">Confirm</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>

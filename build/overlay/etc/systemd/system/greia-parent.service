@@ -23,6 +23,10 @@ StateDirectory=greia-os
 # state is secured by tighter child-directory/file modes. StateDirectoryMode
 # also migrates an existing 0750 state root on upgraded developer machines.
 StateDirectoryMode=0755
+# The reviewed browser runtime is a committed image payload. Refuse to start the
+# management service if the installed bytes differ from the pinned manifest or
+# if an unmanifested/demo file appears in the production web root.
+ExecStartPre=/usr/bin/python3 -m greia_parent.parent_client_integrity --root /usr/share/greia-parent-app --manifest /opt/greia-os/runtime/parent-app-client.manifest.json --pin /opt/greia-os/runtime/parent-app-client.toml
 # production_api is the explicit installed composition: real fail-closed hardware
 # policy over package delivery, update inbox/status, language, system controls and
 # bounded AudioService preferences. It remains unprivileged: no processor
