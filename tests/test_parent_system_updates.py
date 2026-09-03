@@ -87,7 +87,7 @@ class ParentSystemUpdateTests(unittest.TestCase):
             / "system"
             / "greia-parent.service"
         ).read_text(encoding="utf-8")
-        self.assertIn("-m greia_parent.update_api", service)
+        self.assertIn("-m greia_parent.production_api", service)
         self.assertIn("User=greiapanel", service)
         self.assertIn("NoNewPrivileges=yes", service)
         self.assertIn("ProtectSystem=strict", service)

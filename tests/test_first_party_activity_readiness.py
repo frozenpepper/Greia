@@ -177,6 +177,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "posta_di_leo",
                 "shape_garden",
                 "sillabe_magiche",
+                "sottomarino_giramondo",
                 "specchi_magici",
                 "stelle_incantate",
                 "storie_della_mia_voce",

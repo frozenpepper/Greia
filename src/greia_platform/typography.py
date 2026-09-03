@@ -361,7 +361,9 @@ class GreiaTypography:
             candidate = self._font_dir / filename
             if candidate.is_file():
                 path = candidate
-        if path is None and self._degraded is not True:
+            else:
+                self._degraded = True
+        elif self._degraded is not True:
             canonical = Path("/opt/greia-os/assets/fonts/nunito-sans") / filename
             if canonical.is_file():
                 path = canonical
