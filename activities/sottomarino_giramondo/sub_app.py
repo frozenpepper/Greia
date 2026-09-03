@@ -106,25 +106,48 @@ class SubmarineApp:
 
     def _handle_button_press(self, btn_name: str) -> None:
         self.audio.play("click")
-        if btn_name == "light":
+
+        # Check if this button action fulfills the Captain's order
+        order_solved = False
+        if btn_name in ("steer_left", "left"):
+            self.model.steer(-1.0, 0.0)
+            order_solved = self.model.check_action("left")
+            emit_activity_event("submarine.maneuver", payload={"action": "steer_left"})
+        elif btn_name in ("steer_right", "right"):
+            self.model.steer(1.0, 0.0)
+            order_solved = self.model.check_action("right")
+            emit_activity_event("submarine.maneuver", payload={"action": "steer_right"})
+        elif btn_name in ("ahead", "forward"):
+            self.model.set_speed(0.8)
+            order_solved = self.model.check_action("ahead")
+            emit_activity_event("submarine.maneuver", payload={"action": "ahead"})
+        elif btn_name in ("stop", "halt"):
+            self.model.set_speed(0.0)
+            order_solved = self.model.check_action("stop")
+            emit_activity_event("submarine.maneuver", payload={"action": "stop"})
+        elif btn_name == "light":
             self.model.toggle_lights()
             self.audio.play("light")
             self._speak_cue("voice.btn.light")
+            order_solved = self.model.check_action("light")
             emit_activity_event("submarine.instrument_used", payload={"instrument": "light"})
         elif btn_name == "sonar":
             self.model.trigger_sonar()
             self.audio.play("sonar")
             self._speak_cue("voice.btn.sonar")
+            order_solved = self.model.check_action("sonar")
             emit_activity_event("submarine.instrument_used", payload={"instrument": "sonar"})
         elif btn_name == "bubbles":
             self.model.trigger_bubbles()
             self.audio.play("bubbles")
             self._speak_cue("voice.btn.bubbles")
+            order_solved = self.model.check_action("bubbles")
             emit_activity_event("submarine.instrument_used", payload={"instrument": "bubbles"})
         elif btn_name == "horn":
             self.model.trigger_horn()
             self.audio.play("horn")
             self._speak_cue("voice.btn.horn")
+            order_solved = self.model.check_action("horn")
             if self.model.resolve_encounter():
                 self.audio.play("celebrate")
                 self._speak_cue("voice.encounter.solved")
@@ -138,6 +161,11 @@ class SubmarineApp:
             else:
                 self.audio.play("alert")
                 self._speak_cue("voice.btn.action")
+
+        if order_solved:
+            self.audio.play("celebrate")
+            self._speak_cue("voice.order.compliment")
+            emit_activity_event("submarine.order_completed", payload={"order": self.model.current_order.order_id})
 
     def run(self) -> int:
         running = True
@@ -157,13 +185,13 @@ class SubmarineApp:
                         running = False
                         break
                     elif event.key == pygame.K_UP:
-                        self.model.steer(0.0, -1.0)
+                        self._handle_button_press("ahead")
                     elif event.key == pygame.K_DOWN:
-                        self.model.steer(0.0, 1.0)
+                        self._handle_button_press("stop")
                     elif event.key == pygame.K_LEFT:
-                        self.model.steer(-1.0, 0.0)
+                        self._handle_button_press("steer_left")
                     elif event.key == pygame.K_RIGHT:
-                        self.model.steer(1.0, 0.0)
+                        self._handle_button_press("steer_right")
                     elif event.key == pygame.K_SPACE:
                         self._handle_button_press("action")
                     elif event.key == pygame.K_l:
@@ -178,12 +206,31 @@ class SubmarineApp:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     pt = self.canvas.pointer(event.pos)
                     if pt is not None:
+                        clicked_btn = False
                         for name, rect in BUTTON_RECTS.items():
                             if rect.collidepoint(pt[0], pt[1]):
                                 self._handle_button_press(name)
+                                clicked_btn = True
                                 break
+
+                        # Direct click/tap on Ship Rudder Wheel (cx=135, cy=235, radius=72)
+                        if not clicked_btn and (pt[0] - 135)**2 + (pt[1] - 235)**2 <= 72**2:
+                            if pt[0] < 135:
+                                self._handle_button_press("steer_left")
+                            else:
+                                self._handle_button_press("steer_right")
+                            clicked_btn = True
+
+                        # Direct click/tap on Throttle Lever (tcx=890, tcy=215, box w=90, h=150)
+                        if not clicked_btn and (845 <= pt[0] <= 935 and 140 <= pt[1] <= 290):
+                            if pt[1] < 215:
+                                self._handle_button_press("ahead")
+                            else:
+                                self._handle_button_press("stop")
+                            clicked_btn = True
+
                         # Tap inside porthole generates bubbles at tap location
-                        if (pt[0] - PORTHOLE_CENTER_X)**2 + (pt[1] - PORTHOLE_CENTER_Y)**2 <= PORTHOLE_RADIUS**2:
+                        if not clicked_btn and (pt[0] - PORTHOLE_CENTER_X)**2 + (pt[1] - PORTHOLE_CENTER_Y)**2 <= PORTHOLE_RADIUS**2:
                             self.model.trigger_bubbles()
                             self.audio.play("bubbles")
 
@@ -200,7 +247,19 @@ class SubmarineApp:
             discovered, completed_ev = self.model.update(dt)
             for d in discovered:
                 self._speak_cue(f"voice.creature.{d}")
+                # Also speak an educational fact about this species
+                if self.model.active_fact.cue_key:
+                    self._speak_cue(self.model.active_fact.cue_key)
                 emit_activity_event("submarine.creature_discovered", payload={"creature": d})
+
+            # Check if a new Captain order has arrived
+            ord_state = self.model.current_order
+            if ord_state.active and not ord_state.solved and ord_state.timer == 0.0:
+                # First frame of new order
+                if not hasattr(self, "_last_order_id") or self._last_order_id != ord_state.order_id:
+                    self._last_order_id = ord_state.order_id
+                    if ord_state.cue_key:
+                        self._speak_cue(ord_state.cue_key)
 
             # Check if a new encounter has just appeared
             curr_enc = self.model.encounter.active_type.value

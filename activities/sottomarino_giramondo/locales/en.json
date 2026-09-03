@@ -20,7 +20,63 @@
     "creature.angler": "Lanternfish",
     "creature.whale": "Gentle Whale",
     "encounter.octopus.hint": "The octopus is tickling the glass! Honk the horn or release bubbles!",
-    "encounter.shark.hint": "The shark is waving its fin! Turn on the lights!"
+    "encounter.shark.hint": "The shark is waving its fin! Turn on the lights!",
+    "creature.coral": "Coral Reef",
+    "creature.kelp": "Giant Kelp Forest",
+    "creature.krill": "Bioluminescent Krill Swarm",
+    "btn.steer_left": "Port",
+    "btn.steer_right": "Starboard",
+    "btn.ahead": "Ahead",
+    "btn.stop": "Stop",
+    "order.ahead": "Full ahead! Turn on the engines!",
+    "order.stop": "All stop! Stop the engines!",
+    "order.left": "Turn to port! Steer to the left!",
+    "order.right": "Turn to starboard! Steer to the right!",
+    "order.light": "Turn on searchlights! Press LIGHTS!",
+    "order.sonar": "Listen to the deep! Press SONAR!",
+    "order.bubbles": "Release the bubbles! Press BUBBLES!",
+    "order.horn": "Sound the horn! Press HORN!",
+    "order.compliment": "Great maneuver, Captain! Course is set!",
+    "voice.order.ahead": "Full ahead! Turn on the engines!",
+    "voice.order.stop": "All stop! Stop the engines!",
+    "voice.order.left": "Turn to port! Steer to the left!",
+    "voice.order.right": "Turn to starboard! Steer to the right!",
+    "voice.order.compliment": "Great maneuver, Captain! Course is set!",
+    "voice.creature_coral": "Coral reef!",
+    "voice.creature_kelp": "Kelp forest!",
+    "voice.creature_krill": "Glowing krill swarm!",
+    "voice.fact.whale.1": "The blue whale is the largest animal that has ever lived on Earth!",
+    "voice.fact.whale.2": "Whale songs can travel for hundreds of kilometers underwater!",
+    "voice.fact.whale.3": "Whales breathe air through the blowhole on top of their head!",
+    "voice.fact.whale.4": "A big whale's heart is as large as a small car!",
+    "voice.fact.turtle.1": "Sea turtles can hold their breath underwater for many hours!",
+    "voice.fact.turtle.2": "Sea turtles travel for thousands of kilometers across the open ocean!",
+    "voice.fact.turtle.3": "A sea turtle lays her eggs on the very same beach where she was born!",
+    "voice.fact.turtle.4": "A turtle shell is made of more than fifty bones fused together!",
+    "voice.fact.dolphin.1": "Dolphins use clicks and whistles to call each other by name!",
+    "voice.fact.dolphin.2": "Dolphins sleep with one eye open and half their brain awake to breathe!",
+    "voice.fact.dolphin.3": "Dolphins love to leap and play in the bow waves of ships!",
+    "voice.fact.dolphin.4": "Dolphins use natural sonar called echolocation to find fish!",
+    "voice.fact.manta.1": "The giant manta ray glides through water as if flying with huge wings!",
+    "voice.fact.manta.2": "Mantas are gentle and curious creatures that eat microscopic plankton!",
+    "voice.fact.manta.3": "Every manta has a unique pattern of spots on its belly, like a fingerprint!",
+    "voice.fact.manta.4": "Mantas sometimes leap out of the water in spectacular jumps!",
+    "voice.fact.clownfish.1": "Clownfish live safely among the stinging tentacles of sea anemones!",
+    "voice.fact.clownfish.2": "A clownfish has special mucus on its skin that protects it from stings!",
+    "voice.fact.clownfish.3": "Clownfish communicate with each other by making popping sounds!",
+    "voice.fact.clownfish.4": "All clownfish are born male and can change into females!",
+    "voice.fact.coral.1": "Corals look like rocks or plants, but they are colonies of tiny animals!",
+    "voice.fact.coral.2": "Coral reefs protect shorelines from big waves and storms!",
+    "voice.fact.coral.3": "Thousands of colorful sea animals find home and food among the corals!",
+    "voice.fact.coral.4": "Corals build magnificent underwater reefs visible from space!",
+    "voice.fact.kelp.1": "Giant kelp can grow up to half a meter in a single day!",
+    "voice.fact.kelp.2": "Giant kelp plants have air bulbs that float their fronds up toward the sun!",
+    "voice.fact.kelp.3": "Many sea creatures shelter safely inside underwater kelp forests!",
+    "voice.fact.kelp.4": "Underwater kelp forests produce lots of fresh oxygen for the oceans!",
+    "voice.fact.krill.1": "Krill are tiny swimming shrimp-like creatures that travel in massive clouds!",
+    "voice.fact.krill.2": "Krill are the favorite food of giant whales and many ocean fish!",
+    "voice.fact.krill.3": "Some krill can glow in the dark ocean with brilliant bioluminescent light!",
+    "voice.fact.krill.4": "Altogether, all the krill on Earth weigh more than all humans combined!"
   },
   "audio": {
     "voice.btn.light": {
@@ -64,6 +120,126 @@
     },
     "voice.creature.whale": {
       "path": "audio/en/sub_creature_whale.wav"
+    },
+    "voice.order.ahead": {
+      "path": "audio/en/sub_order_ahead.wav"
+    },
+    "voice.order.stop": {
+      "path": "audio/en/sub_order_stop.wav"
+    },
+    "voice.order.left": {
+      "path": "audio/en/sub_order_left.wav"
+    },
+    "voice.order.right": {
+      "path": "audio/en/sub_order_right.wav"
+    },
+    "voice.order.compliment": {
+      "path": "audio/en/sub_order_compliment.wav"
+    },
+    "voice.creature_coral": {
+      "path": "audio/en/sub_creature_coral.wav"
+    },
+    "voice.creature_kelp": {
+      "path": "audio/en/sub_creature_kelp.wav"
+    },
+    "voice.creature_krill": {
+      "path": "audio/en/sub_creature_krill.wav"
+    },
+    "voice.fact.whale.1": {
+      "path": "audio/en/sub_fact_whale_1.wav"
+    },
+    "voice.fact.whale.2": {
+      "path": "audio/en/sub_fact_whale_2.wav"
+    },
+    "voice.fact.whale.3": {
+      "path": "audio/en/sub_fact_whale_3.wav"
+    },
+    "voice.fact.whale.4": {
+      "path": "audio/en/sub_fact_whale_4.wav"
+    },
+    "voice.fact.turtle.1": {
+      "path": "audio/en/sub_fact_turtle_1.wav"
+    },
+    "voice.fact.turtle.2": {
+      "path": "audio/en/sub_fact_turtle_2.wav"
+    },
+    "voice.fact.turtle.3": {
+      "path": "audio/en/sub_fact_turtle_3.wav"
+    },
+    "voice.fact.turtle.4": {
+      "path": "audio/en/sub_fact_turtle_4.wav"
+    },
+    "voice.fact.dolphin.1": {
+      "path": "audio/en/sub_fact_dolphin_1.wav"
+    },
+    "voice.fact.dolphin.2": {
+      "path": "audio/en/sub_fact_dolphin_2.wav"
+    },
+    "voice.fact.dolphin.3": {
+      "path": "audio/en/sub_fact_dolphin_3.wav"
+    },
+    "voice.fact.dolphin.4": {
+      "path": "audio/en/sub_fact_dolphin_4.wav"
+    },
+    "voice.fact.manta.1": {
+      "path": "audio/en/sub_fact_manta_1.wav"
+    },
+    "voice.fact.manta.2": {
+      "path": "audio/en/sub_fact_manta_2.wav"
+    },
+    "voice.fact.manta.3": {
+      "path": "audio/en/sub_fact_manta_3.wav"
+    },
+    "voice.fact.manta.4": {
+      "path": "audio/en/sub_fact_manta_4.wav"
+    },
+    "voice.fact.clownfish.1": {
+      "path": "audio/en/sub_fact_clownfish_1.wav"
+    },
+    "voice.fact.clownfish.2": {
+      "path": "audio/en/sub_fact_clownfish_2.wav"
+    },
+    "voice.fact.clownfish.3": {
+      "path": "audio/en/sub_fact_clownfish_3.wav"
+    },
+    "voice.fact.clownfish.4": {
+      "path": "audio/en/sub_fact_clownfish_4.wav"
+    },
+    "voice.fact.coral.1": {
+      "path": "audio/en/sub_fact_coral_1.wav"
+    },
+    "voice.fact.coral.2": {
+      "path": "audio/en/sub_fact_coral_2.wav"
+    },
+    "voice.fact.coral.3": {
+      "path": "audio/en/sub_fact_coral_3.wav"
+    },
+    "voice.fact.coral.4": {
+      "path": "audio/en/sub_fact_coral_4.wav"
+    },
+    "voice.fact.kelp.1": {
+      "path": "audio/en/sub_fact_kelp_1.wav"
+    },
+    "voice.fact.kelp.2": {
+      "path": "audio/en/sub_fact_kelp_2.wav"
+    },
+    "voice.fact.kelp.3": {
+      "path": "audio/en/sub_fact_kelp_3.wav"
+    },
+    "voice.fact.kelp.4": {
+      "path": "audio/en/sub_fact_kelp_4.wav"
+    },
+    "voice.fact.krill.1": {
+      "path": "audio/en/sub_fact_krill_1.wav"
+    },
+    "voice.fact.krill.2": {
+      "path": "audio/en/sub_fact_krill_2.wav"
+    },
+    "voice.fact.krill.3": {
+      "path": "audio/en/sub_fact_krill_3.wav"
+    },
+    "voice.fact.krill.4": {
+      "path": "audio/en/sub_fact_krill_4.wav"
     }
   }
 }

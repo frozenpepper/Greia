@@ -20,7 +20,63 @@
     "creature.angler": "Pesce Lanterna",
     "creature.whale": "Balena Gentile",
     "encounter.octopus.hint": "Il polpo fa il solletico al vetro! Suona la sirena o fai le bolle!",
-    "encounter.shark.hint": "Lo squalo saluta con la pinna! Accendi le luci!"
+    "encounter.shark.hint": "Lo squalo saluta con la pinna! Accendi le luci!",
+    "creature.coral": "Barriera Corallina",
+    "creature.kelp": "Foresta di Alghe Kelp",
+    "creature.krill": "Banco di Krill Luminoso",
+    "btn.steer_left": "Sinistra",
+    "btn.steer_right": "Destra",
+    "btn.ahead": "Avanti",
+    "btn.stop": "Stop",
+    "order.ahead": "Avanti tutta! Accendiamo i motori!",
+    "order.stop": "Tutti fermi! Rallentiamo e stop ai motori!",
+    "order.left": "Vira a sinistra! Attenzione al timone!",
+    "order.right": "Vira a destra! Seguiamo la corrente marina!",
+    "order.light": "Accendiamo i fari! Premi LUCI!",
+    "order.sonar": "Ascoltiamo il fondo! Premi SONAR!",
+    "order.bubbles": "Rilasciamo le bolle! Premi BOLLE!",
+    "order.horn": "Saluta con la sirena! Premi SIRENA!",
+    "order.compliment": "Ottima manovra, capitano! Rotta perfetta!",
+    "voice.order.ahead": "Avanti tutta! Accendiamo i motori!",
+    "voice.order.stop": "Tutti fermi! Rallentiamo e stop ai motori!",
+    "voice.order.left": "Vira a sinistra! Attenzione al timone!",
+    "voice.order.right": "Vira a destra! Seguiamo la corrente marina!",
+    "voice.order.compliment": "Ottima manovra, capitano! Rotta perfetta!",
+    "voice.creature_coral": "Barriera corallina!",
+    "voice.creature_kelp": "Foresta sottomarina di alghe kelp!",
+    "voice.creature_krill": "Banco di krill luminoso!",
+    "voice.fact.whale.1": "La balenottera azzurra è l'animale più grande mai esistito sulla Terra!",
+    "voice.fact.whale.2": "Il canto delle balene può viaggiare per centinaia di chilometri sott'acqua!",
+    "voice.fact.whale.3": "Le balene respirano aria attraverso lo sfiatatoio in cima alla testa!",
+    "voice.fact.whale.4": "Il cuore di una grande balena è grande come una piccola automobile!",
+    "voice.fact.turtle.1": "Le tartarughe marine possono trattenere il respiro per molte ore!",
+    "voice.fact.turtle.2": "Le tartarughe marine viaggiano per migliaia di chilometri nell'oceano!",
+    "voice.fact.turtle.3": "La tartaruga marina depone le uova sulla stessa spiaggia dove è nata!",
+    "voice.fact.turtle.4": "Il guscio della tartaruga è formato da oltre cinquanta ossa unite insieme!",
+    "voice.fact.dolphin.1": "I delfini usano suoni e fischi per chiamarsi per nome!",
+    "voice.fact.dolphin.2": "I delfini dormono con un occhio aperto e metà cervello sveglio per respirare!",
+    "voice.fact.dolphin.3": "I delfini saltano sulle onde della prua delle navi per giocare!",
+    "voice.fact.dolphin.4": "I delfini usano il sonar naturale chiamato ecolocalizzazione per trovare i pesci!",
+    "voice.fact.manta.1": "La manta gigante plana nell'acqua come se stesse volando con grandi ali!",
+    "voice.fact.manta.2": "Le mante sono animali pacifici e curiosi che mangiano plancton!",
+    "voice.fact.manta.3": "Ogni manta ha un disegno di macchie unico sulla pancia, come un'impronta!",
+    "voice.fact.manta.4": "Le mante a volte saltano fuori dall'acqua facendo grandi tuffi spettacolari!",
+    "voice.fact.clownfish.1": "Il pesce pagliaccio vive al sicuro tra i tentacoli dell'anemone!",
+    "voice.fact.clownfish.2": "La pelle del pesce pagliaccio ha un muco speciale che lo protegge dalle punture!",
+    "voice.fact.clownfish.3": "I pesci pagliaccio comunicano tra loro facendo piccoli schiocchi con le fauci!",
+    "voice.fact.clownfish.4": "Tutti i pesci pagliaccio nascono maschi e possono trasformarsi in femmine!",
+    "voice.fact.coral.1": "I coralli sembrano rocce o piante, ma sono colonie di piccoli animali!",
+    "voice.fact.coral.2": "Le barriere coralline proteggono le coste dalle onde forti del mare!",
+    "voice.fact.coral.3": "Migliaia di pesci colorati trovano casa e cibo tra i rami dei coralli!",
+    "voice.fact.coral.4": "I coralli creano magnifiche scogliere sottomarine visibili dallo spazio!",
+    "voice.fact.kelp.1": "La foresta di alghe kelp può crescere fino a mezzo metro al giorno!",
+    "voice.fact.kelp.2": "Le alghe giganti kelp hanno vesciche d'aria che le fanno galleggiare verso il sole!",
+    "voice.fact.kelp.3": "Molti animali marini si nascondono nella foresta di alghe per riposare al sicuro!",
+    "voice.fact.kelp.4": "Le foreste sottomarine di kelp producono tanto ossigeno per il pianeta!",
+    "voice.fact.krill.1": "Il krill è formato da piccolissimi gamberetti che nuotano in enormi banchi luminosi!",
+    "voice.fact.krill.2": "Il krill è il cibo preferito delle balene e di tanti pesci dell'oceano!",
+    "voice.fact.krill.3": "Alcune specie di krill brillano al buio nell'abisso con una luce azzurra!",
+    "voice.fact.krill.4": "Tutti insieme, i banchi di krill pesano più di tutti gli umani del mondo!"
   },
   "audio": {
     "voice.btn.light": {
@@ -64,6 +120,126 @@
     },
     "voice.creature.whale": {
       "path": "audio/it/sub_creature_whale.wav"
+    },
+    "voice.order.ahead": {
+      "path": "audio/it/sub_order_ahead.wav"
+    },
+    "voice.order.stop": {
+      "path": "audio/it/sub_order_stop.wav"
+    },
+    "voice.order.left": {
+      "path": "audio/it/sub_order_left.wav"
+    },
+    "voice.order.right": {
+      "path": "audio/it/sub_order_right.wav"
+    },
+    "voice.order.compliment": {
+      "path": "audio/it/sub_order_compliment.wav"
+    },
+    "voice.creature_coral": {
+      "path": "audio/it/sub_creature_coral.wav"
+    },
+    "voice.creature_kelp": {
+      "path": "audio/it/sub_creature_kelp.wav"
+    },
+    "voice.creature_krill": {
+      "path": "audio/it/sub_creature_krill.wav"
+    },
+    "voice.fact.whale.1": {
+      "path": "audio/it/sub_fact_whale_1.wav"
+    },
+    "voice.fact.whale.2": {
+      "path": "audio/it/sub_fact_whale_2.wav"
+    },
+    "voice.fact.whale.3": {
+      "path": "audio/it/sub_fact_whale_3.wav"
+    },
+    "voice.fact.whale.4": {
+      "path": "audio/it/sub_fact_whale_4.wav"
+    },
+    "voice.fact.turtle.1": {
+      "path": "audio/it/sub_fact_turtle_1.wav"
+    },
+    "voice.fact.turtle.2": {
+      "path": "audio/it/sub_fact_turtle_2.wav"
+    },
+    "voice.fact.turtle.3": {
+      "path": "audio/it/sub_fact_turtle_3.wav"
+    },
+    "voice.fact.turtle.4": {
+      "path": "audio/it/sub_fact_turtle_4.wav"
+    },
+    "voice.fact.dolphin.1": {
+      "path": "audio/it/sub_fact_dolphin_1.wav"
+    },
+    "voice.fact.dolphin.2": {
+      "path": "audio/it/sub_fact_dolphin_2.wav"
+    },
+    "voice.fact.dolphin.3": {
+      "path": "audio/it/sub_fact_dolphin_3.wav"
+    },
+    "voice.fact.dolphin.4": {
+      "path": "audio/it/sub_fact_dolphin_4.wav"
+    },
+    "voice.fact.manta.1": {
+      "path": "audio/it/sub_fact_manta_1.wav"
+    },
+    "voice.fact.manta.2": {
+      "path": "audio/it/sub_fact_manta_2.wav"
+    },
+    "voice.fact.manta.3": {
+      "path": "audio/it/sub_fact_manta_3.wav"
+    },
+    "voice.fact.manta.4": {
+      "path": "audio/it/sub_fact_manta_4.wav"
+    },
+    "voice.fact.clownfish.1": {
+      "path": "audio/it/sub_fact_clownfish_1.wav"
+    },
+    "voice.fact.clownfish.2": {
+      "path": "audio/it/sub_fact_clownfish_2.wav"
+    },
+    "voice.fact.clownfish.3": {
+      "path": "audio/it/sub_fact_clownfish_3.wav"
+    },
+    "voice.fact.clownfish.4": {
+      "path": "audio/it/sub_fact_clownfish_4.wav"
+    },
+    "voice.fact.coral.1": {
+      "path": "audio/it/sub_fact_coral_1.wav"
+    },
+    "voice.fact.coral.2": {
+      "path": "audio/it/sub_fact_coral_2.wav"
+    },
+    "voice.fact.coral.3": {
+      "path": "audio/it/sub_fact_coral_3.wav"
+    },
+    "voice.fact.coral.4": {
+      "path": "audio/it/sub_fact_coral_4.wav"
+    },
+    "voice.fact.kelp.1": {
+      "path": "audio/it/sub_fact_kelp_1.wav"
+    },
+    "voice.fact.kelp.2": {
+      "path": "audio/it/sub_fact_kelp_2.wav"
+    },
+    "voice.fact.kelp.3": {
+      "path": "audio/it/sub_fact_kelp_3.wav"
+    },
+    "voice.fact.kelp.4": {
+      "path": "audio/it/sub_fact_kelp_4.wav"
+    },
+    "voice.fact.krill.1": {
+      "path": "audio/it/sub_fact_krill_1.wav"
+    },
+    "voice.fact.krill.2": {
+      "path": "audio/it/sub_fact_krill_2.wav"
+    },
+    "voice.fact.krill.3": {
+      "path": "audio/it/sub_fact_krill_3.wav"
+    },
+    "voice.fact.krill.4": {
+      "path": "audio/it/sub_fact_krill_4.wav"
     }
   }
 }

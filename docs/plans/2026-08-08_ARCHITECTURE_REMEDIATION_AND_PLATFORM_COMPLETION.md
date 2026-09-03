@@ -1707,4 +1707,27 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   - Headless simulator in Italian (`it`): survived 8.0s, tested key SPACE interaction, verified Home return to Shell (`rc=0`).
   - Headless simulator in English (`en`): survived 8.0s, tested key SPACE interaction, verified Home return to Shell (`rc=0`).
 
+## 2026-09-03 — Sottomarino Giramondo: Realistic Rudder Wheel, Engine Throttle Lever & Educational Encounters
+
+- Remediated and expanded `org.greia.sottomarino-giramondo` with full interactive nautical controls, educational facts, and spoken Captain's orders:
+  1. **Nautical Steering & Throttle Controls:**
+     - Added an authentic 8-spoke wooden ship rudder wheel with a heavy brass hub, handles, and gold accents on the left console ($x=135, y=235, r=58$), rotating smoothly with submarine heading and interactive via touch/click or Left/Right arrows.
+     - Added chunky port/starboard directional helper buttons (`[ ◀ SINISTRA ]`, `[ DESTRA ▶ ]`) directly under the wheel.
+     - Added an industrial cast-iron & brass engine telegraph on the right console ($x=890, y=215$) with speed quadrant notches and a heavy rough lever with a weighted red knob grip that tilts with engine speed (Stop to Full Ahead).
+     - Added chunky throttle helper buttons (`[ ▲ AVANTI ]`, `[ ■ STOP ]`) directly under the telegraph lever.
+     - Preserved all 5 tactile cockpit instrument buttons (`Luci`, `Sonar`, `Emergenza`, `Bolle`, `Sirena`) with high-contrast pre-reader symbols.
+  2. **Spoken Captain's Orders & Active Hinting:**
+     - Added a mission state machine issuing spoken navigation and instrument orders (e.g. *"Avanti tutta!"*, *"Vira a sinistra!"*, *"Accendiamo i fari!"*).
+     - High-contrast HUD banner on top displays orders and glowing auras highlight target controls.
+     - Checks compliance across keyboard, touch, and button clicks, delivering celebration fanfares and spoken praise (*"Ottima manovra, capitano!"*).
+  3. **Marine Ecosystems & Educational Random Facts:**
+     - Added procedural vector art for Coral Reefs (`coral`), Kelp Forests (`kelp`), and Bioluminescent Krill Swarms (`krill`).
+     - Added a randomized pool of 4 educational spoken facts for each of the 8 marine species and ecosystems in Italian and English (whales, turtles, dolphins, mantas, clownfish, corals, kelp, krill), spoken aloud upon discovery and displayed in the top banner.
+     - Generated 40 Italian and 40 English voice audio files via `tools/greia_voice.py`.
+  4. **Acoustic Whistle Sound Design:**
+     - Replaced synthetic buzz horn with an authentic two-tone acoustic brass ship whistle (*toot-toot!* at 260 Hz then 330 Hz with natural harmonics).
+- Tests & Verification:
+  - Unit tests: all 398 activity tests PASS (`pytest tests/test_activity_*.py tests/test_first_party_activity_*.py`).
+  - Headless simulator survival & Home return verification: PASS (`rc=0`) with interactive screenshots captured.
+
 

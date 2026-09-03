@@ -80,6 +80,9 @@ class SubmarineArt:
         self._sprite_cache["bubble"] = self._render_bubble()
         self._sprite_cache["octopus"] = self._render_octopus()
         self._sprite_cache["shark"] = self._render_shark()
+        self._sprite_cache["coral"] = self._render_coral()
+        self._sprite_cache["kelp"] = self._render_kelp()
+        self._sprite_cache["krill"] = self._render_krill()
 
     def get_sprite(self, name: str) -> Optional[pygame.Surface]:
         return self._sprite_cache.get(name)
@@ -227,4 +230,72 @@ class SubmarineArt:
         pygame.draw.circle(surf, (255, 255, 255), (210, 75), 10)
         pygame.draw.circle(surf, (20, 20, 20), (212, 75), 5)
         pygame.draw.circle(surf, (255, 255, 255), (213, 73), 2)
+        return surf
+
+    def _render_coral(self) -> pygame.Surface:
+        """Colorful branching coral reef formation."""
+        surf = pygame.Surface((180, 160), pygame.SRCALPHA)
+        # Base rock shelf
+        pygame.draw.ellipse(surf, (60, 55, 70), (20, 120, 140, 35))
+        # Orange/Pink staghorn branches
+        coral_col = (255, 105, 120)
+        branches = [
+            [(45, 130), (50, 80), (35, 45), (45, 20)],
+            [(50, 80), (70, 50), (75, 25)],
+            [(90, 130), (90, 70), (85, 30), (100, 15)],
+            [(90, 70), (115, 50), (120, 25)],
+            [(135, 130), (130, 80), (145, 50), (140, 25)],
+        ]
+        for b in branches:
+            pygame.draw.lines(surf, coral_col, False, b, 14)
+            for pt in b:
+                pygame.draw.circle(surf, coral_col, pt, 7)
+        # Brain coral dome on side
+        pygame.draw.circle(surf, (110, 210, 160), (140, 115), 24)
+        pygame.draw.circle(surf, (80, 175, 130), (140, 115), 20, 3)
+        return surf
+
+    def _render_kelp(self) -> pygame.Surface:
+        """Tall undulating kelp stalk with golden-green fronds."""
+        surf = pygame.Surface((140, 260), pygame.SRCALPHA)
+        kelp_stem = (40, 130, 60)
+        kelp_leaf = (70, 175, 80)
+        kelp_light = (110, 210, 110)
+        # Stem wave
+        stem_pts = [(70, 255), (65, 200), (75, 140), (60, 80), (70, 15)]
+        pygame.draw.lines(surf, kelp_stem, False, stem_pts, 8)
+        # Fronds branching out with air bladders
+        leaf_data = [
+            (65, 200, -35, 18),
+            (70, 170, 40, -15),
+            (75, 135, -45, 12),
+            (65, 100, 42, -10),
+            (60, 65, -40, 8),
+            (68, 30, 35, -8),
+        ]
+        for lx, ly, dx, dy in leaf_data:
+            # Gas bladder
+            pygame.draw.circle(surf, (130, 210, 90), (lx, ly), 5)
+            # Long flowing leaf blade
+            pygame.draw.ellipse(surf, kelp_leaf, (min(lx, lx + dx), min(ly, ly + dy), abs(dx) + 15, 22))
+            pygame.draw.ellipse(surf, kelp_light, (min(lx, lx + dx) + 3, min(ly, ly + dy) + 3, abs(dx) + 8, 12))
+        return surf
+
+    def _render_krill(self) -> pygame.Surface:
+        """Sparkling cluster of translucent bioluminescent krill."""
+        surf = pygame.Surface((150, 100), pygame.SRCALPHA)
+        krill_positions = [
+            (25, 30), (45, 20), (70, 35), (95, 25), (120, 40),
+            (35, 60), (60, 55), (85, 70), (110, 65), (75, 85)
+        ]
+        for kx, ky in krill_positions:
+            # Glowing aura
+            pygame.draw.circle(surf, (80, 200, 255, 60), (kx, ky), 10)
+            # Translucent shrimp body
+            pygame.draw.ellipse(surf, (255, 140, 100, 220), (kx - 8, ky - 3, 16, 7))
+            # Bioluminescent blue photophore light
+            pygame.draw.circle(surf, (140, 240, 255), (kx + 2, ky + 1), 3)
+            pygame.draw.circle(surf, (255, 255, 255), (kx + 2, ky + 1), 1)
+            # Tiny tail
+            pygame.draw.line(surf, (255, 120, 80, 200), (kx - 8, ky), (kx - 12, ky - 2), 2)
         return surf

@@ -95,7 +95,7 @@ class WhisperVerifier:
     def probe(self) -> tuple[bool, str]:
         try:
             import mlx_whisper  # noqa: F401
-        except Exception as exc:
+        except BaseException as exc:
             return False, f"mlx_whisper unavailable: {exc}"
         return True, self.model_id
 

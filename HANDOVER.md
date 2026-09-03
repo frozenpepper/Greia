@@ -61,7 +61,7 @@ Recent age-3 additions include:
 org.greia.quattro-stagioni
 org.greia.faccine-momo
 org.greia.mondo-contrari
-org.greia.sottomarino-giramondo
+org.greia.sottomarino-giramondo (interactive wooden rudder wheel, cast-iron & brass rough throttle lever, 8-species educational random facts, spoken Captain's orders, and two-tone acoustic whistle)
 ```
 
 The catalogue-wide invariant is structural:

@@ -62,6 +62,25 @@ class EncounterType(enum.Enum):
 
 
 @dataclass
+class OrderState:
+    order_id: str = "none"       # "ahead", "stop", "left", "right", "light", "sonar", "bubbles", "horn"
+    prompt_text_key: str = ""
+    cue_key: str = ""
+    active: bool = False
+    solved: bool = False
+    timer: float = 0.0
+
+
+@dataclass
+class FactState:
+    species: str = ""
+    fact_index: int = 1
+    text_key: str = ""
+    cue_key: str = ""
+    display_timer: float = 0.0
+
+
+@dataclass
 class EncounterState:
     active_type: EncounterType = EncounterType.NONE
     progress: float = 0.0        # 0.0 to 1.0 (fade-in / active)
@@ -78,6 +97,7 @@ class SubmarineModel:
         self.depth: float = 5.0          # Current depth in meters
         self.target_depth: float = 5.0
         self.heading: float = 0.0        # Horizontal turn offset [-1.0, 1.0]
+        self.wheel_angle: float = 0.0   # Ship rudder wheel rotation in degrees
         self.speed: float = 0.5          # Forward engine speed [0.0, 1.0]
 
         # Cockpit instrument toggles
@@ -91,9 +111,15 @@ class SubmarineModel:
         self.entities: List[MarineEntity3D] = []
         self._spawn_ambient_entities()
 
-        # Encounter state
+        # Encounter & Order state
         self.encounter = EncounterState()
-        self._encounter_cooldown: float = 12.0  # seconds until next possible encounter
+        self._encounter_cooldown: float = 12.0  # seconds until next possible creature encounter
+
+        self.current_order = OrderState()
+        self._order_cooldown: float = 4.0      # seconds until next navigation/action order
+
+        # Active educational fact
+        self.active_fact = FactState()
 
         # Discovered species tracking for milestone events
         self.discovered_species: set[str] = set()
@@ -101,7 +127,7 @@ class SubmarineModel:
     def _spawn_ambient_entities(self) -> None:
         self.entities.clear()
         # Spawn initial batch of marine creatures and floating particles
-        for i in range(12):
+        for i in range(14):
             self._spawn_random_entity(initial_z=random.uniform(0.2, 1.4))
 
     def _spawn_random_entity(self, initial_z: Optional[float] = None) -> None:
@@ -110,13 +136,13 @@ class SubmarineModel:
         x = random.uniform(-1.2, 1.2)
         y = random.uniform(-0.5, 0.5)
 
-        # Species matching current biome
+        # Species matching current biome, including corals, kelp, krill
         if biome == BiomeType.SHALLOW_REEF:
-            kinds = ["clownfish", "turtle", "bubble", "bubble"]
+            kinds = ["clownfish", "turtle", "coral", "bubble", "bubble"]
         elif biome == BiomeType.TWILIGHT_KELP:
-            kinds = ["dolphin", "manta", "turtle", "bubble"]
+            kinds = ["dolphin", "manta", "kelp", "turtle", "bubble"]
         else:
-            kinds = ["angler", "whale", "manta", "bubble"]
+            kinds = ["angler", "whale", "krill", "manta", "bubble"]
 
         kind = random.choice(kinds)
         size = 1.0
@@ -132,6 +158,14 @@ class SubmarineModel:
             size = 1.2
         elif kind == "whale":
             size = 3.0
+        elif kind == "coral":
+            size = 1.6
+            y = random.uniform(0.1, 0.5)  # sits near reef floor
+        elif kind == "kelp":
+            size = 2.2
+            y = random.uniform(0.0, 0.4)
+        elif kind == "krill":
+            size = 1.5
         elif kind == "bubble":
             size = 0.4
 
@@ -189,6 +223,41 @@ class SubmarineModel:
     def set_speed(self, speed: float) -> None:
         self.speed = max(0.0, min(1.0, speed))
 
+    def check_action(self, action_name: str) -> bool:
+        """Check if child performed an action corresponding to the current Captain's order."""
+        if not self.current_order.active or self.current_order.solved:
+            return False
+
+        target = self.current_order.order_id
+        is_match = False
+        if target == "ahead" and action_name == "ahead":
+            is_match = True
+        elif target == "stop" and action_name == "stop":
+            is_match = True
+        elif target == "left" and action_name == "left":
+            is_match = True
+        elif target == "right" and action_name == "right":
+            is_match = True
+        elif target in ("light", "sonar", "bubbles", "horn") and action_name == target:
+            is_match = True
+
+        if is_match:
+            self.current_order.solved = True
+            self.current_order.timer = 2.0
+            return True
+        return False
+
+    def trigger_species_fact(self, species: str) -> None:
+        """Select a random educational fact (1 to 4) for the encountered species."""
+        if species in ("bubble",):
+            return
+        idx = random.randint(1, 4)
+        self.active_fact.species = species
+        self.active_fact.fact_index = idx
+        self.active_fact.text_key = f"voice.fact.{species}.{idx}"
+        self.active_fact.cue_key = f"voice.fact.{species}.{idx}"
+        self.active_fact.display_timer = 8.0
+
     def resolve_encounter(self) -> bool:
         """Called when the child presses the active action / siren button during an encounter."""
         if self.encounter.active_type != EncounterType.NONE and not self.encounter.solved:
@@ -212,6 +281,10 @@ class SubmarineModel:
         # Smooth heading decay toward center when not actively steered
         self.heading *= max(0.0, 1.0 - dt * 0.8)
 
+        # Smooth wheel rotation to reflect current rudder heading
+        target_wheel = self.heading * 75.0
+        self.wheel_angle += (target_wheel - self.wheel_angle) * min(1.0, dt * 5.0)
+
         # Radar sweep animation
         self.radar_angle = (self.radar_angle + dt * 180.0) % 360.0
 
@@ -222,6 +295,41 @@ class SubmarineModel:
 
         if self.bubble_release_timer > 0:
             self.bubble_release_timer -= dt
+
+        # Update educational fact display timer
+        if self.active_fact.display_timer > 0:
+            self.active_fact.display_timer -= dt
+
+        # Update Captain's orders state machine
+        if self.current_order.active:
+            if self.current_order.solved:
+                self.current_order.timer -= dt
+                if self.current_order.timer <= 0:
+                    self.current_order.active = False
+                    self.current_order.solved = False
+                    self._order_cooldown = random.uniform(8.0, 14.0)
+        else:
+            # Only issue orders when no encounter is blocking
+            if self.encounter.active_type == EncounterType.NONE:
+                self._order_cooldown -= dt
+                if self._order_cooldown <= 0:
+                    available_orders = [
+                        ("ahead", "order.ahead", "voice.order.ahead"),
+                        ("stop", "order.stop", "voice.order.stop"),
+                        ("left", "order.left", "voice.order.left"),
+                        ("right", "order.right", "voice.order.right"),
+                        ("light", "order.light", "voice.btn.light"),
+                        ("sonar", "order.sonar", "voice.btn.sonar"),
+                        ("bubbles", "order.bubbles", "voice.btn.bubbles"),
+                        ("horn", "order.horn", "voice.btn.horn"),
+                    ]
+                    chosen = random.choice(available_orders)
+                    self.current_order.order_id = chosen[0]
+                    self.current_order.prompt_text_key = chosen[1]
+                    self.current_order.cue_key = chosen[2]
+                    self.current_order.active = True
+                    self.current_order.solved = False
+                    self.current_order.timer = 0.0
 
         # Update entities in 3D space
         forward_advance = self.speed * dt * 0.4
@@ -239,9 +347,10 @@ class SubmarineModel:
             # Gentle bobbing
             ent.y += math.sin(ent.phase) * dt * 0.05
 
-            # Creature discovery when close to porthole (z < 0.4) and not yet discovered
+            # Creature discovery when close to porthole (z < 0.45)
             if ent.z < 0.45 and not ent.discovered and ent.kind != "bubble":
                 ent.discovered = True
+                self.trigger_species_fact(ent.kind)
                 if ent.kind not in self.discovered_species:
                     self.discovered_species.add(ent.kind)
                     discovered.append(ent.kind)

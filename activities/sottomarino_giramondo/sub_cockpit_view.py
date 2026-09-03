@@ -59,11 +59,18 @@ DEPTH_RADIUS = 65
 
 # Chunky Cockpit Buttons Geometry: (x, y, w, h)
 BUTTON_RECTS = {
+    # Lower console primary instrument buttons (tactile action buttons)
     "light": pygame.Rect(228, 446, 100, 88),
     "sonar": pygame.Rect(351, 446, 100, 88),
     "action": pygame.Rect(472, 447, 80, 86),  # Central emergency beacon button
     "bubbles": pygame.Rect(573, 446, 100, 88),
     "horn": pygame.Rect(696, 446, 100, 88),
+    # Left steering controls (chunky turn arrow buttons under the ship wheel)
+    "steer_left": pygame.Rect(45, 335, 80, 56),
+    "steer_right": pygame.Rect(145, 335, 80, 56),
+    # Right throttle engine controls (chunky propulsion buttons under the lever)
+    "ahead": pygame.Rect(795, 335, 85, 56),
+    "stop": pygame.Rect(895, 335, 85, 56),
 }
 
 
@@ -96,10 +103,14 @@ class CockpitPresenter:
         # 5. Render Analog Depth Meter
         self._render_depth_gauge(surface, model, resources)
 
-        # 6. Render Chunky Push-Buttons
+        # 6. Render Ship Rudder Wheel & Throttle Telegraph Lever
+        self._render_helm_wheel(surface, model)
+        self._render_throttle_lever(surface, model)
+
+        # 7. Render Chunky Push-Buttons
         self._render_buttons(surface, model, resources, hot_button)
 
-        # 7. Render Marine Discovery Banner / Creature Name when recently discovered
+        # 8. Render Marine Discovery Banner / Creature Name when recently discovered
         self._render_discovery_hud(surface, model, resources)
 
     def _render_ocean_viewport(self, surface: pygame.Surface, model: SubmarineModel) -> None:
@@ -244,6 +255,91 @@ class CockpitPresenter:
         txt_surf = self.typography.render(depth_txt, FontRole.BODY, 16, (30, 30, 30))
         surface.blit(txt_surf, (cx - txt_surf.get_width() // 2, cy + 20))
 
+    def _render_helm_wheel(self, surface: pygame.Surface, model: SubmarineModel) -> None:
+        """Render realistic nautical wooden ship rudder wheel with brass hub and handles."""
+        cx, cy = 135, 235
+        hradius = 58
+
+        # Glowing aura if steering order is active
+        ord_state = model.current_order
+        is_order_steering = (ord_state.active and not ord_state.solved and ord_state.order_id in ("left", "right"))
+        if is_order_steering:
+            pulse = (math.sin(pygame.time.get_ticks() * 0.012) + 1.0) * 0.5
+            if pulse > 0.3:
+                aura_surf = pygame.Surface((hradius * 2 + 50, hradius * 2 + 50), pygame.SRCALPHA)
+                pygame.draw.circle(aura_surf, (255, 235, 90, 90), (hradius + 25, hradius + 25), hradius + 18)
+                surface.blit(aura_surf, (cx - hradius - 25, cy - hradius - 25))
+
+        # Wooden outer rim
+        pygame.draw.circle(surface, (120, 75, 35), (cx, cy), hradius, 9)
+        pygame.draw.circle(surface, (180, 130, 70), (cx, cy), hradius - 4, 3)
+
+        # 8 Spokes with turned wooden handles extending past the rim
+        wheel_angle = model.wheel_angle
+        for i in range(8):
+            a = math.radians(wheel_angle + i * 45.0)
+            # Spoke from hub to rim
+            sx1 = cx + int(16 * math.cos(a))
+            sy1 = cy + int(16 * math.sin(a))
+            sx2 = cx + int((hradius - 5) * math.cos(a))
+            sy2 = cy + int((hradius - 5) * math.sin(a))
+            pygame.draw.line(surface, (150, 95, 45), (sx1, sy1), (sx2, sy2), 6)
+            # Turned peg handle extending past rim
+            hx1 = cx + int(hradius * math.cos(a))
+            hy1 = cy + int(hradius * math.sin(a))
+            hx2 = cx + int((hradius + 16) * math.cos(a))
+            hy2 = cy + int((hradius + 16) * math.sin(a))
+            pygame.draw.line(surface, (110, 65, 30), (hx1, hy1), (hx2, hy2), 8)
+            pygame.draw.circle(surface, (215, 175, 55), (hx2, hy2), 6)
+
+        # Central Heavy Brass Hub
+        pygame.draw.circle(surface, (215, 175, 55), (cx, cy), 22)
+        pygame.draw.circle(surface, (150, 110, 25), (cx, cy), 22, 3)
+        pygame.draw.circle(surface, (60, 45, 20), (cx, cy), 8)
+
+    def _render_throttle_lever(self, surface: pygame.Surface, model: SubmarineModel) -> None:
+        """Render heavy industrial cast-iron & brass engine telegraph throttle lever."""
+        tcx, tcy = 890, 215
+
+        # Glowing aura if throttle order is active
+        ord_state = model.current_order
+        is_order_throttle = (ord_state.active and not ord_state.solved and ord_state.order_id in ("ahead", "stop"))
+        if is_order_throttle:
+            pulse = (math.sin(pygame.time.get_ticks() * 0.012) + 1.0) * 0.5
+            if pulse > 0.3:
+                aura_surf = pygame.Surface((140, 190), pygame.SRCALPHA)
+                pygame.draw.rect(aura_surf, (255, 235, 90, 90), (0, 0, 140, 190), border_radius=22)
+                surface.blit(aura_surf, (tcx - 70, tcy - 95))
+
+        # Heavy cast-iron and brass base plate
+        pygame.draw.rect(surface, (24, 30, 40), (tcx - 45, tcy - 75, 90, 150), border_radius=16)
+        pygame.draw.rect(surface, (180, 140, 60), (tcx - 45, tcy - 75, 90, 150), width=3, border_radius=16)
+        # Corner rivets
+        for rx, ry in [(tcx - 36, tcy - 66), (tcx + 36, tcy - 66), (tcx - 36, tcy + 66), (tcx + 36, tcy + 66)]:
+            pygame.draw.circle(surface, (215, 175, 55), (rx, ry), 4)
+
+        # Arc slot with speed notches
+        pygame.draw.rect(surface, (10, 14, 20), (tcx - 8, tcy - 58, 16, 115), border_radius=8)
+        for ny in [tcy - 45, tcy - 18, tcy + 10, tcy + 40]:
+            pygame.draw.line(surface, (180, 140, 60), (tcx - 18, ny), (tcx - 10, ny), 2)
+            pygame.draw.line(surface, (180, 140, 60), (tcx + 10, ny), (tcx + 18, ny), 2)
+
+        # Heavy throttle lever arm pivoted at bottom
+        pivot_x, pivot_y = tcx, tcy + 42
+        # Speed 0.0 -> -30 deg (back/stop), Speed 1.0 -> +30 deg (forward/ahead)
+        norm_speed = min(1.0, max(0.0, model.speed))
+        lever_angle = math.radians(-32.0 + norm_speed * 64.0)
+        tip_x = pivot_x + int(82 * math.sin(lever_angle))
+        tip_y = pivot_y - int(82 * math.cos(lever_angle))
+
+        # Sturdy brass shaft
+        pygame.draw.line(surface, (215, 180, 65), (pivot_x, pivot_y), (tip_x, tip_y), 9)
+        pygame.draw.circle(surface, (150, 110, 30), (pivot_x, pivot_y), 16)
+        pygame.draw.circle(surface, (50, 40, 20), (pivot_x, pivot_y), 7)
+        # Chunky weighted rough red knob grip
+        pygame.draw.circle(surface, (210, 45, 45), (tip_x, tip_y), 17)
+        pygame.draw.circle(surface, (255, 120, 120), (tip_x - 4, tip_y - 4), 5)
+
     def _render_buttons(
         self,
         surface: pygame.Surface,
@@ -258,11 +354,22 @@ class CockpitPresenter:
         pulse = (math.sin(pygame.time.get_ticks() * 0.012) + 1.0) * 0.5
         pulse_flash = pulse > 0.4
 
+        ord_state = model.current_order
+        is_order_active = (ord_state.active and not ord_state.solved)
+        target_ord = ord_state.order_id if is_order_active else ""
+
         button_configs = [
-            ("light", "btn.light", (245, 210, 60), model.lights_on, "light", is_encounter and enc.active_type == EncounterType.SHARK_WAVE),
-            ("sonar", "btn.sonar", (80, 190, 225), model.sonar_active, "sonar", False),
-            ("bubbles", "btn.bubbles", (100, 220, 160), model.bubble_release_timer > 0, "bubbles", is_encounter and enc.active_type == EncounterType.OCTOPUS_HUG),
-            ("horn", "btn.horn", (240, 120, 70), False, "horn", is_encounter and enc.active_type == EncounterType.OCTOPUS_HUG),
+            # Primary tactical cockpit instrument buttons
+            ("light", "btn.light", (245, 210, 60), model.lights_on, "light", (is_encounter and enc.active_type == EncounterType.SHARK_WAVE) or (target_ord == "light")),
+            ("sonar", "btn.sonar", (80, 190, 225), model.sonar_active, "sonar", target_ord == "sonar"),
+            ("bubbles", "btn.bubbles", (100, 220, 160), model.bubble_release_timer > 0, "bubbles", (is_encounter and enc.active_type == EncounterType.OCTOPUS_HUG) or (target_ord == "bubbles")),
+            ("horn", "btn.horn", (240, 120, 70), False, "horn", (is_encounter and enc.active_type == EncounterType.OCTOPUS_HUG) or (target_ord == "horn")),
+            # Left steering controls
+            ("steer_left", "btn.steer_left", (60, 150, 220), model.heading < -0.15, "steer_left", target_ord == "left"),
+            ("steer_right", "btn.steer_right", (60, 150, 220), model.heading > 0.15, "steer_right", target_ord == "right"),
+            # Right engine throttle controls
+            ("ahead", "btn.ahead", (65, 185, 120), model.speed > 0.4, "ahead", target_ord == "ahead"),
+            ("stop", "btn.stop", (220, 80, 80), model.speed <= 0.1, "stop", target_ord == "stop"),
         ]
 
         for name, key, color, active, icon_type, is_hinted in button_configs:
@@ -320,15 +427,24 @@ class CockpitPresenter:
         border_col = (255, 255, 255, 220) if flashing else (255, 255, 255, 110)
         pygame.draw.rect(surface, border_col, btn_rect, width=3 if flashing else 2, border_radius=14)
 
-        # Draw crisp, bold vector icon in upper portion of button
-        icon_cy = btn_rect.top + 32
-        icon_cx = btn_rect.centerx
-        icon_col = (20, 24, 32)
-        self._draw_button_icon(surface, icon_type, icon_cx, icon_cy, icon_col, active or hover)
+        # If button height is compact (e.g. 56px for helm/engine helper buttons), adjust icon and label
+        if btn_rect.height <= 60:
+            icon_cy = btn_rect.top + 20
+            icon_cx = btn_rect.centerx
+            icon_col = (20, 24, 32)
+            self._draw_button_icon(surface, icon_type, icon_cx, icon_cy, icon_col, active or hover)
+            txt_surf = self.typography.render(label, FontRole.CONTROL, 9, (25, 30, 38))
+            surface.blit(txt_surf, (btn_rect.centerx - txt_surf.get_width() // 2, btn_rect.bottom - txt_surf.get_height() - 4))
+        else:
+            # Draw crisp, bold vector icon in upper portion of button
+            icon_cy = btn_rect.top + 32
+            icon_cx = btn_rect.centerx
+            icon_col = (20, 24, 32)
+            self._draw_button_icon(surface, icon_type, icon_cx, icon_cy, icon_col, active or hover)
 
-        # Draw clear child-friendly label in lower portion of button
-        txt_surf = self.typography.render(label, FontRole.CONTROL, 13, (25, 30, 38))
-        surface.blit(txt_surf, (btn_rect.centerx - txt_surf.get_width() // 2, btn_rect.bottom - txt_surf.get_height() - 6))
+            # Draw clear child-friendly label in lower portion of button
+            txt_surf = self.typography.render(label, FontRole.CONTROL, 13, (25, 30, 38))
+            surface.blit(txt_surf, (btn_rect.centerx - txt_surf.get_width() // 2, btn_rect.bottom - txt_surf.get_height() - 6))
 
     def _draw_button_icon(
         self,
@@ -393,6 +509,31 @@ class CockpitPresenter:
             pygame.draw.arc(surface, color, (cx + 3, cy - 9, 12, 18), -1.1, 1.1, 3)
             pygame.draw.arc(surface, color, (cx + 9, cy - 15, 18, 30), -1.1, 1.1, 3)
 
+        elif icon_type == "steer_left":
+            # Bold port rudder turn arrow
+            pygame.draw.polygon(surface, color, [
+                (cx - 13, cy), (cx + 3, cy - 11), (cx + 3, cy - 4),
+                (cx + 12, cy - 4), (cx + 12, cy + 4), (cx + 3, cy + 4), (cx + 3, cy + 11)
+            ])
+
+        elif icon_type == "steer_right":
+            # Bold starboard rudder turn arrow
+            pygame.draw.polygon(surface, color, [
+                (cx + 13, cy), (cx - 3, cy - 11), (cx - 3, cy - 4),
+                (cx - 12, cy - 4), (cx - 12, cy + 4), (cx - 3, cy + 4), (cx - 3, cy + 11)
+            ])
+
+        elif icon_type == "ahead":
+            # Engine telegraph Ahead upward chevron arrow
+            pygame.draw.polygon(surface, color, [
+                (cx, cy - 12), (cx + 11, cy + 3), (cx + 4, cy + 3),
+                (cx + 4, cy + 11), (cx - 4, cy + 11), (cx - 4, cy + 3), (cx - 11, cy + 3)
+            ])
+
+        elif icon_type == "stop":
+            # Engine telegraph Stop square
+            pygame.draw.rect(surface, color, (cx - 9, cy - 9, 18, 18), border_radius=3)
+
     def _draw_beacon_button(
         self,
         surface: pygame.Surface,
@@ -450,7 +591,7 @@ class CockpitPresenter:
         badge_txt = self.typography.render(b_name, FontRole.TITLE, 18, (240, 240, 240))
         surface.blit(badge_txt, (REFERENCE_WIDTH - badge_txt.get_width() - 30, 25))
 
-        # Encounter prompt banner on top-center if encounter active
+        # 1. Encounter prompt banner on top-center if encounter active
         if model.encounter.active_type != EncounterType.NONE and not model.encounter.solved:
             enc = model.encounter
             if enc.active_type == EncounterType.OCTOPUS_HUG:
@@ -463,3 +604,32 @@ class CockpitPresenter:
             bg_rect = pygame.Rect(bx - 12, 18, banner_surf.get_width() + 24, banner_surf.get_height() + 8)
             pygame.draw.rect(surface, (15, 20, 25, 220), bg_rect, border_radius=8)
             surface.blit(banner_surf, (bx, 22))
+
+        # 2. Captain's Order banner if active and no creature encounter
+        elif model.current_order.active:
+            ord_state = model.current_order
+            if ord_state.solved:
+                order_txt = resources.text("order.compliment")
+                txt_col = (110, 255, 140)
+            else:
+                order_txt = resources.text(ord_state.prompt_text_key)
+                txt_col = (255, 245, 120)
+
+            banner_surf = self.typography.render(order_txt, FontRole.TITLE, 16, txt_col)
+            bx = REFERENCE_WIDTH // 2 - banner_surf.get_width() // 2
+            bg_rect = pygame.Rect(bx - 14, 18, banner_surf.get_width() + 28, banner_surf.get_height() + 8)
+            pygame.draw.rect(surface, (20, 28, 38, 230), bg_rect, border_radius=8)
+            pygame.draw.rect(surface, (70, 140, 200, 180), bg_rect, width=2, border_radius=8)
+            surface.blit(banner_surf, (bx, 22))
+
+        # 3. Educational Fact banner when a marine species fact is active
+        elif model.active_fact.display_timer > 0:
+            fact_key = model.active_fact.text_key
+            fact_txt = resources.text(fact_key)
+            if fact_txt != fact_key:
+                banner_surf = self.typography.render(fact_txt, FontRole.TITLE, 15, (230, 245, 255))
+                bx = REFERENCE_WIDTH // 2 - banner_surf.get_width() // 2
+                bg_rect = pygame.Rect(bx - 14, 18, banner_surf.get_width() + 28, banner_surf.get_height() + 8)
+                pygame.draw.rect(surface, (15, 30, 45, 230), bg_rect, border_radius=8)
+                pygame.draw.rect(surface, (60, 170, 220, 180), bg_rect, width=2, border_radius=8)
+                surface.blit(banner_surf, (bx, 22))
