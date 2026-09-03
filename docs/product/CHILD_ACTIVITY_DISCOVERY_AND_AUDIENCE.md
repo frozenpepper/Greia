@@ -1,9 +1,9 @@
 # Greia Child Activity Discovery and Audience Requirements
 
 **Status:** accepted product requirement  
-**Reviewed:** 2026-09-03  
+**Reviewed:** 2026-09-04  
 **Scope:** child Shell/Home, Activity catalogue projection, audience/challenge metadata, child-profile discovery preferences, Parent per-child Activity visibility policy  
-**Source owners:** `src/greia_platform/activities.py`, `src/greia_platform/activity_discovery.py`, `src/greia_launcher/catalogue_view.py`, `src/greia_parent/api_server.py`
+**Source owners:** `src/greia_platform/activities.py`, `src/greia_platform/activity_discovery.py`, `src/greia_launcher/activity_policy_presentation.py`, `src/greia_launcher/child_shell.py`, `src/greia_launcher/trusted_presentation.py`, `src/greia_launcher/catalogue_view.py`, `src/greia_parent/api_server.py`
 
 ## 1. Product intent
 
@@ -57,6 +57,12 @@ validated installed registry
   -> effective visible Activities
   -> Collection projection / optional semantic subdivision
 ```
+
+The per-child policy projection is mandatory launcher authority. Every installed child launcher composition that can expose an Activity for launch must consume it, including the emergency trusted presentation used when the richer child Shell exits.
+
+The normal rich Shell may add adaptive sub-Collections only **after** visibility projection. The trusted emergency fallback intentionally stays direct/non-adaptive, but it receives the same Parent visibility, age and difficulty projection before presenting any Activity. A fallback path must never reconstruct a raw unfiltered catalogue merely because richer presentation failed.
+
+Launcher selection is also constrained by this projected catalogue: presentation chooses an Activity from the effective set, then resolves that Activity identity back to the validated registry for launch. Visibility filtering therefore does not replace registry/runtime/trust authority, but a hidden Activity cannot be selected merely by entering a different launcher composition.
 
 Visibility filtering never changes package trust, installation, permissions, saves or Activity identity.
 
@@ -228,6 +234,27 @@ This distinction is important: an Activity being valid/installable is not eviden
 
 If the child profile itself has no approximate age, automatic age filtering is inactive. The Parent UI must make that clear rather than pretending a specific-age preset is meaningful.
 
+### Invalid stored policy is different from a missing policy
+
+The absence of a per-child discovery-policy file is a legitimate state. `ActivityDiscoveryPolicyStore.read()` resolves that absence to the normal default policy.
+
+A policy path that exists but cannot be trusted is not the same state. Malformed JSON, an unsupported schema, an unreadable policy file, or a symlink policy is invalid Parent authority and must fail closed:
+
+```text
+missing policy
+    -> legitimate default policy
+
+valid policy
+    -> apply Parent visibility / age / difficulty intent
+
+invalid existing policy
+    -> zero launchable Activities until repaired
+    -> keep Shell/profile/recovery presentation alive
+    -> never reinterpret corruption as SHOW_ALL
+```
+
+Both the normal child Shell and the trusted emergency fallback use this rule. When the policy is repaired through the supported authority path, normal rescan/reload must detect the replacement and restore the effective catalogue without widening policy during the broken interval.
+
 ## 9. Compatibility with old saved policy
 
 Older persisted/API value:
@@ -289,6 +316,8 @@ Age metadata is developmental/product suitability inside Greia's curated ecosyst
 
 Package trust, permissions, child safety, installation authority and age suitability remain separate concerns.
 
+Parent Activity visibility is nevertheless a child-facing safety/authority boundary once configured. A degraded presentation path may simplify layout, but it may not become more permissive than the Parent-owned policy because another launcher composition is running.
+
 ## 13. Acceptance requirements
 
 The living implementation must prove at least:
@@ -305,12 +334,15 @@ The living implementation must prove at least:
 10. Parent UI exposes understandable age labels and presets;
 11. effective per-child filtering occurs before adaptive Collection projection;
 12. presentation filtering never bypasses registry/runtime/trust/permission authority;
-13. responsive and input behavior remains usable on supported Greia viewports.
+13. responsive and input behavior remains usable on supported Greia viewports;
+14. the normal rich child Shell and trusted emergency fallback enforce the same Parent visibility/age/difficulty authority before exposing Activities;
+15. invalid existing policy data exposes zero launchable Activities in both paths and a supported repair is detected without a permissive fallback interval.
 
-The exact current local/browser procedure is:
+The exact current local/browser procedures are:
 
 ```text
 docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
+docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md
 ```
 
 Committed source/tests do not by themselves constitute acceptance evidence.
