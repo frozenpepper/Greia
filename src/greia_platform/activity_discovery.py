@@ -313,8 +313,10 @@ class ActivityDiscoveryService:
     """Compute the effective child-visible Activity set without package authority.
 
     This service never changes registry trust, permissions, Activity identity or
-    save state. Missing audience metadata fails open. Parent explicit overrides
-    are evaluated before automatic age/difficulty policy.
+    save state. Unknown audience metadata remains usable in unrestricted views,
+    but restrictive Parent age presets only auto-include Activities with declared
+    audience metadata. Parent explicit overrides are evaluated before automatic
+    age/difficulty policy.
     """
 
     def effective_activities(
@@ -381,7 +383,10 @@ class ActivityDiscoveryService:
         } and approximate_age is not None:
             if policy.visibility_mode is ActivityVisibilityMode.AGE_AND_EASIER:
                 minimum = activity.recommended_age_min
-                age_visible = minimum is None or minimum <= approximate_age
+                maximum = activity.recommended_age_max
+                age_visible = (minimum is not None or maximum is not None) and (
+                    minimum is None or minimum <= approximate_age
+                )
             elif policy.visibility_mode is ActivityVisibilityMode.RECOMMENDED_ONLY:
                 age_visible = _age_within_declared_range(activity, approximate_age)
 
@@ -513,7 +518,7 @@ def _age_within_declared_range(activity: ActivityManifest, age: int) -> bool:
     minimum = activity.recommended_age_min
     maximum = activity.recommended_age_max
     if minimum is None and maximum is None:
-        return True
+        return False
     return (minimum is None or age >= minimum) and (maximum is None or age <= maximum)
 
 
