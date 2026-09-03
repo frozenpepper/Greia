@@ -128,6 +128,10 @@ class ParentSettingsOverlayTests(unittest.TestCase):
         self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
         self.assertEqual(self.overlay.active_tab, ParentPanelTab.INFO)
 
+        # Tab -> POINTER
+        self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
+        self.assertEqual(self.overlay.active_tab, ParentPanelTab.POINTER)
+
         # Tab -> LANGUAGE
         self.overlay.handle_key(DummyPygame.K_TAB, DummyPygame)
         self.assertEqual(self.overlay.active_tab, ParentPanelTab.LANGUAGE)

@@ -7,7 +7,13 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any, Callable
 
+from greia_platform.display_metrics import PhysicalUiPolicy
 from greia_platform.hardware import HardwareSettingsStore
+from greia_platform.hardware_session import (
+    preset_to_speed,
+    speed_preset_names,
+    speed_to_preset,
+)
 from greia_platform.main_credential import MainCredentialStore
 from greia_platform.ssh_maintenance import SshMaintenanceService, SshStatus
 from greia_platform.system_language import (
@@ -39,6 +45,7 @@ class ParentPanelTab(StrEnum):
     WIFI = "wifi"
     SSH = "ssh"
     INFO = "info"
+    POINTER = "pointer"
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +72,7 @@ class ParentSettingsOverlay:
         ssh_service: SshMaintenanceService | None = None,
         language_service: SystemLanguageService | None = None,
         hardware_store: HardwareSettingsStore | None = None,
+        pointer_controller: Any | None = None,
     ) -> None:
         self.credential_store = credential_store
         try:
@@ -139,6 +147,20 @@ class ParentSettingsOverlay:
         self._panel_base_key: Any = None
         self._text_surface_cache: dict[tuple[Any, ...], Any] = {}
         self._sync_language_selection()
+        # Pointer tab state. The settings store parses a JSON file on read
+        # and the preview seam may run device subprocesses, so both are
+        # served from small time-bounded caches (same style as mic gain /
+        # SSH status) and never re-read per frame.
+        self._pointer_controller = pointer_controller
+        self._cached_pointer_settings: Any = None
+        self._pointer_settings_read_at = 0.0
+        self._pointer_probe_cache: tuple[Any, ...] = ()
+        self._pointer_probe_at = 0.0
+        self._pointer_probe_known = False
+        self._pointer_message = ""
+        self._pointer_focus = 0
+        self._pointer_test_flash: int | None = None
+        self._pointer_test_flash_at = 0.0
 
     def auth_card_rect(self, size: tuple[int, int]) -> Any:
         """Return the centered Parent-password card rectangle."""
@@ -212,6 +234,9 @@ class ParentSettingsOverlay:
         self.password_text = ""
         self.password_error_until = 0.0
         self._language_message = ""
+        self._pointer_message = ""
+        self._pointer_focus = 0
+        self._pointer_test_flash = None
         self._sync_language_selection()
         self._targets.clear()
         self.wifi_controller.begin()
@@ -317,6 +342,7 @@ class ParentSettingsOverlay:
                     ParentPanelTab.WIFI,
                     ParentPanelTab.SSH,
                     ParentPanelTab.INFO,
+                    ParentPanelTab.POINTER,
                 ]
                 idx = (tabs.index(self.active_tab) + 1) % len(tabs)
                 self.active_tab = tabs[idx]
@@ -340,6 +366,10 @@ class ParentSettingsOverlay:
                     self._adjust_mic_gain(-0.25)
                 elif key in {pygame.K_RIGHT, pygame.K_UP}:
                     self._adjust_mic_gain(0.25)
+                return True
+
+            if self.active_tab == ParentPanelTab.POINTER:
+                self._pointer_handle_key(key, pygame)
                 return True
 
             if self.active_tab == ParentPanelTab.WIFI:
@@ -392,6 +422,21 @@ class ParentSettingsOverlay:
                     return True
                 elif target.action == "mic_gain_adjust":
                     self._adjust_mic_gain(float(target.value))
+                    return True
+                elif target.action == "pointer_touchpad_preset":
+                    self._set_pointer_preset("touchpad", str(target.value))
+                    return True
+                elif target.action == "pointer_mouse_preset":
+                    self._set_pointer_preset("mouse", str(target.value))
+                    return True
+                elif target.action == "pointer_toggle":
+                    self._toggle_pointer_setting(str(target.value))
+                    return True
+                elif target.action == "pointer_reset":
+                    self._reset_pointer_defaults()
+                    return True
+                elif target.action == "pointer_test":
+                    self._flash_pointer_test_target(int(target.value))
                     return True
                 elif target.action == "wifi_refresh":
                     self.wifi_controller.refresh()
@@ -447,6 +492,264 @@ class ParentSettingsOverlay:
     def _adjust_mic_gain(self, delta: float) -> None:
         current = self._current_mic_gain()
         self._set_mic_gain(current + delta)
+
+    # --- Pointer tab: semantic settings through HardwareSettingsStore -------
+    # Same preset helper and same semantics as the installer (T03
+    # SPEED_PRESETS via speed_preset_names/preset_to_speed/speed_to_preset);
+    # no forked float mapping lives here. Capability gating mirrors the
+    # installer: touchpad-only controls are shown dimmed and inactive when
+    # the preview seam reports no touchpad.
+
+    _POINTER_TOGGLE_FIELDS = ("touchpad_tap", "natural_scrolling", "disable_while_typing")
+    _POINTER_TEST_TARGETS = 4
+
+    def _pointer_settings(self) -> Any:
+        """Return cached pointer settings (bounded reads, 1 s throttle)."""
+        now = time.monotonic()
+        if (
+            self._cached_pointer_settings is None
+            or now - self._pointer_settings_read_at > 1.0
+        ):
+            value = None
+            if self.hardware_store is not None:
+                try:
+                    value = self.hardware_store.read()
+                except Exception:
+                    value = None
+            if value is None and self.hardware_store is not None:
+                try:
+                    value = self.hardware_store.default_settings()
+                except Exception:
+                    value = None
+            self._cached_pointer_settings = value
+            self._pointer_settings_read_at = now
+        return self._cached_pointer_settings
+
+    def _pointer_probe(self) -> tuple[Any, ...]:
+        """Return cached pointer capability facts (2 s throttle, soft-fail)."""
+        now = time.monotonic()
+        if self._pointer_probe_known and now - self._pointer_probe_at < 2.0:
+            return self._pointer_probe_cache
+        infos: tuple[Any, ...] = ()
+        known = False
+        controller = self._pointer_controller
+        if controller is not None:
+            probe = getattr(controller, "probe_pointers", None)
+            if callable(probe):
+                try:
+                    result = probe()
+                except Exception:
+                    result = ()
+                if isinstance(result, (tuple, list)):
+                    infos = tuple(result)
+                    known = True
+        self._pointer_probe_cache = infos
+        self._pointer_probe_at = now
+        self._pointer_probe_known = known
+        return infos
+
+    @staticmethod
+    def _pointer_kind_token(info: Any) -> str:
+        kind = getattr(info, "kind", "")
+        value = getattr(kind, "value", kind)
+        try:
+            return str(value).strip().lower()
+        except Exception:
+            return ""
+
+    def _pointer_has_touchpad(self) -> bool:
+        self._pointer_probe()
+        if not self._pointer_probe_known:
+            return True
+        return any(
+            self._pointer_kind_token(info) == "touchpad"
+            for info in self._pointer_probe_cache
+        )
+
+    def _pointer_has_relative(self) -> bool:
+        self._pointer_probe()
+        if not self._pointer_probe_known:
+            return True
+        return any(
+            self._pointer_kind_token(info) in ("mouse", "other_relative")
+            for info in self._pointer_probe_cache
+        )
+
+    @staticmethod
+    def _pointer_min_touch_px() -> int:
+        """Shared physical floor for essential pointer controls (T01)."""
+        try:
+            return int(
+                PhysicalUiPolicy.minimum_pixels(
+                    9, fallback_px=48, metrics=None
+                )
+            )
+        except Exception:
+            return 48
+
+    def _pointer_speed_value(self, which: str) -> float:
+        settings = self._pointer_settings()
+        try:
+            raw = getattr(settings, "touchpad_speed" if which == "touchpad" else "mouse_speed", 0.0)
+            value = float(raw)
+        except Exception:
+            return 0.0
+        if value != value or value in (float("inf"), float("-inf")):
+            return 0.0
+        return max(-1.0, min(1.0, value))
+
+    def _pointer_current_preset(self, which: str) -> str:
+        try:
+            return speed_to_preset(self._pointer_speed_value(which))
+        except Exception:
+            names = speed_preset_names()
+            return names[len(names) // 2]
+
+    def _set_pointer_preset(self, which: str, name: str) -> None:
+        names = speed_preset_names()
+        if name not in names:
+            return
+        if which == "touchpad" and not self._pointer_has_touchpad():
+            self._pointer_message = "No touchpad detected — touchpad speed is not active."
+            return
+        if which == "mouse" and not self._pointer_has_relative():
+            self._pointer_message = "No mouse detected — mouse speed is not active."
+            return
+        if self.hardware_store is None:
+            return
+        try:
+            speed = float(preset_to_speed(name))
+        except (KeyError, TypeError, ValueError):
+            return
+        try:
+            if which == "touchpad":
+                updated = self.hardware_store.update(touchpad_speed=speed)
+            else:
+                updated = self.hardware_store.update(mouse_speed=speed)
+        except Exception as exc:
+            self._pointer_message = f"Could not update pointer speed: {exc}"
+            return
+        self._cached_pointer_settings = updated
+        self._pointer_settings_read_at = time.monotonic()
+        label = "Touchpad" if which == "touchpad" else "Mouse"
+        self._pointer_message = f"{label} feel set to {name}."
+
+    def _step_pointer_preset(self, which: str, delta: int) -> None:
+        names = list(speed_preset_names())
+        if not names:
+            return
+        try:
+            current = self._pointer_current_preset(which)
+            index = names.index(current)
+        except ValueError:
+            index = len(names) // 2
+        index = max(0, min(len(names) - 1, index + (1 if delta > 0 else -1)))
+        self._set_pointer_preset(which, names[index])
+
+    def _toggle_pointer_setting(self, field: str) -> None:
+        if field not in self._POINTER_TOGGLE_FIELDS:
+            return
+        if field in ("touchpad_tap", "disable_while_typing") and not self._pointer_has_touchpad():
+            self._pointer_message = "No touchpad detected — this switch is not active."
+            return
+        if self.hardware_store is None:
+            return
+        settings = self._pointer_settings()
+        try:
+            current = bool(getattr(settings, field, False))
+        except Exception:
+            current = False
+        try:
+            updated = self.hardware_store.update(**{field: (not current)})
+        except Exception as exc:
+            self._pointer_message = f"Could not update pointer setting: {exc}"
+            return
+        self._cached_pointer_settings = updated
+        self._pointer_settings_read_at = time.monotonic()
+        self._pointer_message = f"{'On' if not current else 'Off'}: {field.replace('_', ' ')}."
+
+    def _reset_pointer_defaults(self) -> None:
+        if self.hardware_store is None:
+            return
+        try:
+            updated = self.hardware_store.reset()
+        except Exception as exc:
+            self._pointer_message = f"Could not reset pointer settings: {exc}"
+            return
+        self._cached_pointer_settings = updated
+        self._pointer_settings_read_at = time.monotonic()
+        self._pointer_focus = 0
+        self._pointer_message = "Pointer settings reset to defaults."
+
+    def _flash_pointer_test_target(self, index: int) -> None:
+        try:
+            index = int(index)
+        except (TypeError, ValueError):
+            return
+        if 0 <= index < self._POINTER_TEST_TARGETS:
+            self._pointer_test_flash = index
+            self._pointer_test_flash_at = time.monotonic()
+            self._pointer_message = "Tapped — try moving across the test area."
+
+    def _pointer_focus_items(self) -> list[str]:
+        items = [
+            "touchpad_speed",
+            "mouse_speed",
+            "touchpad_tap",
+            "natural_scrolling",
+            "disable_while_typing",
+            "reset",
+        ]
+        items.extend(f"test{i}" for i in range(self._POINTER_TEST_TARGETS))
+        return items
+
+    def _pointer_handle_key(self, key: int, pygame: Any) -> None:
+        items = self._pointer_focus_items()
+        if not items:
+            return
+        try:
+            self._pointer_focus = int(self._pointer_focus)
+        except (TypeError, ValueError):
+            self._pointer_focus = 0
+        self._pointer_focus = max(0, min(len(items) - 1, self._pointer_focus))
+        focused = items[self._pointer_focus]
+        if key in {pygame.K_DOWN, pygame.K_TAB}:
+            self._pointer_focus = (self._pointer_focus + 1) % len(items)
+            return
+        if key == pygame.K_UP:
+            self._pointer_focus = (self._pointer_focus - 1) % len(items)
+            return
+        if key == pygame.K_LEFT:
+            if focused == "touchpad_speed":
+                self._step_pointer_preset("touchpad", -1)
+            elif focused == "mouse_speed":
+                self._step_pointer_preset("mouse", -1)
+            elif focused in self._POINTER_TOGGLE_FIELDS:
+                self._toggle_pointer_setting(focused)
+            return
+        if key == pygame.K_RIGHT:
+            if focused == "touchpad_speed":
+                self._step_pointer_preset("touchpad", 1)
+            elif focused == "mouse_speed":
+                self._step_pointer_preset("mouse", 1)
+            elif focused in self._POINTER_TOGGLE_FIELDS:
+                self._toggle_pointer_setting(focused)
+            return
+        if key in {pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE}:
+            if focused == "touchpad_speed":
+                self._step_pointer_preset("touchpad", 1)
+            elif focused == "mouse_speed":
+                self._step_pointer_preset("mouse", 1)
+            elif focused in self._POINTER_TOGGLE_FIELDS:
+                self._toggle_pointer_setting(focused)
+            elif focused == "reset":
+                self._reset_pointer_defaults()
+            elif focused.startswith("test"):
+                try:
+                    self._flash_pointer_test_target(int(focused[4:]))
+                except ValueError:
+                    pass
+            return
 
     def _attempt_auth(self, pygame: Any) -> None:
         if time.monotonic() < self.password_error_until:
@@ -728,12 +1031,15 @@ class ParentSettingsOverlay:
             (ParentPanelTab.WIFI, "Wi-Fi"),
             (ParentPanelTab.SSH, "SSH"),
             (ParentPanelTab.INFO, "Remote & Pairing"),
+            (ParentPanelTab.POINTER, "Pointer"),
         ]
+        tab_gap = 10
+        tab_w = min(145, (panel_rect.width - 48 - tab_gap * (len(tabs) - 1)) // len(tabs))
+        tab_w = max(80, tab_w)
         tab_x = panel_rect.left + 24
 
         for tab_id, label in tabs:
             is_active = self.active_tab == tab_id
-            tab_w = 145
             tab_rect = pygame.Rect(tab_x, tab_y, tab_w, 38)
             bg = (241, 185, 35) if is_active else (246, 236, 209)
             self._blit_rounded_card(
@@ -763,6 +1069,8 @@ class ParentSettingsOverlay:
             self._draw_ssh_tab(screen, content_rect, typography, pygame, load_icon_fn)
         elif self.active_tab == ParentPanelTab.INFO:
             self._draw_info_tab(screen, content_rect, typography, pygame, load_icon_fn)
+        elif self.active_tab == ParentPanelTab.POINTER:
+            self._draw_pointer_tab(screen, content_rect, typography, pygame)
 
     def _draw_language_tab(
         self,
@@ -915,6 +1223,169 @@ class ParentSettingsOverlay:
         if self._audio_message:
             msg = self._get_text(self._audio_message, FontRole.BODY, 16, (47, 117, 81), typography)
             screen.blit(msg, (card.left + 24, card.bottom - 26))
+
+    def _draw_pointer_tab(
+        self,
+        screen: Any,
+        rect: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+    ) -> None:
+        """Draw the dedicated pointer-feel tab (semantic settings only)."""
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
+
+        title = self._get_text("Pointer feel", FontRole.TITLE, 22, (61, 44, 31), typography)
+        screen.blit(title, (card.left + 20, card.top + 12))
+        note = self._get_text(
+            "Comfort is preference — try the test area. Arrows move, Space selects, Esc closes.",
+            FontRole.BODY, 14, (118, 104, 93), typography,
+        )
+        screen.blit(note, (card.left + 20, card.top + 40))
+
+        settings = self._pointer_settings()
+        min_touch = self._pointer_min_touch_px()
+        has_touchpad = self._pointer_has_touchpad()
+        has_relative = self._pointer_has_relative()
+        presets = list(speed_preset_names())
+        touch_preset = self._pointer_current_preset("touchpad")
+        mouse_preset = self._pointer_current_preset("mouse")
+        try:
+            tap_on = bool(getattr(settings, "touchpad_tap", False))
+            natural_on = bool(getattr(settings, "natural_scrolling", False))
+            dwt_on = bool(getattr(settings, "disable_while_typing", False))
+        except Exception:
+            tap_on = natural_on = dwt_on = False
+
+        focus_items = self._pointer_focus_items()
+        try:
+            focus = int(self._pointer_focus)
+        except (TypeError, ValueError):
+            focus = 0
+        focus = max(0, min(len(focus_items) - 1, focus))
+
+        left_w = int(card.width * 0.58)
+        left = card.left + 16
+        right = card.left + 16 + left_w + 12
+        test_w = card.width - (left_w + 12 + 32)
+        row_h = max(34, min(44, min_touch - 4))
+
+        # --- Touchpad speed presets ---
+        y = card.top + 62
+        lbl = self._get_text("Touchpad speed", FontRole.CONTROL, 15, (61, 44, 31), typography)
+        screen.blit(lbl, (left, y))
+        if not has_touchpad:
+            hint = self._get_text("(no touchpad detected)", FontRole.BODY, 13, (118, 104, 93), typography)
+            screen.blit(hint, (left + lbl.get_width() + 8, y + 2))
+        y += 20
+        chip_w = max(40, (left_w - 8 * (len(presets) - 1)) // max(1, len(presets)))
+        for idx, name in enumerate(presets):
+            chip = pygame.Rect(left + idx * (chip_w + 8), y, chip_w, row_h)
+            active = name == touch_preset and has_touchpad
+            focused = focus_items[focus] == "touchpad_speed" and idx == presets.index(touch_preset)
+            self._blit_rounded_card(
+                screen, chip, (246, 236, 209),
+                (241, 185, 35) if active else ((235, 228, 214) if not has_touchpad else (255, 250, 240)),
+                pygame, (61, 44, 31), 3 if (active or focused) else 1, radius=10,
+            )
+            short = name.split()[0][:5]
+            txt = self._get_text(short, FontRole.BODY, 13, (61, 44, 31), typography)
+            screen.blit(txt, txt.get_rect(center=chip.center))
+            self._targets.append(PanelHitTarget("pointer_touchpad_preset", name, chip))
+
+        # --- Mouse speed presets ---
+        y += row_h + 10
+        lbl = self._get_text("Mouse speed", FontRole.CONTROL, 15, (61, 44, 31), typography)
+        screen.blit(lbl, (left, y))
+        if not has_relative:
+            hint = self._get_text("(no mouse detected)", FontRole.BODY, 13, (118, 104, 93), typography)
+            screen.blit(hint, (left + lbl.get_width() + 8, y + 2))
+        y += 20
+        for idx, name in enumerate(presets):
+            chip = pygame.Rect(left + idx * (chip_w + 8), y, chip_w, row_h)
+            active = name == mouse_preset and has_relative
+            focused = focus_items[focus] == "mouse_speed" and idx == presets.index(mouse_preset)
+            self._blit_rounded_card(
+                screen, chip, (246, 236, 209),
+                (241, 185, 35) if active else ((235, 228, 214) if not has_relative else (255, 250, 240)),
+                pygame, (61, 44, 31), 3 if (active or focused) else 1, radius=10,
+            )
+            short = name.split()[0][:5]
+            txt = self._get_text(short, FontRole.BODY, 13, (61, 44, 31), typography)
+            screen.blit(txt, txt.get_rect(center=chip.center))
+            self._targets.append(PanelHitTarget("pointer_mouse_preset", name, chip))
+
+        # --- Toggles ---
+        y += row_h + 10
+        toggles = [
+            ("touchpad_tap", "Tap to click", tap_on, has_touchpad),
+            ("natural_scrolling", "Natural scroll", natural_on, True),
+            ("disable_while_typing", "Calm while typing", dwt_on, has_touchpad),
+        ]
+        tog_w = max(60, (left_w - 2 * 8) // 3)
+        tog_h = max(40, min(52, min_touch))
+        for idx, (field, label, is_on, enabled) in enumerate(toggles):
+            tog = pygame.Rect(left + idx * (tog_w + 8), y, tog_w, tog_h)
+            focused = focus_items[focus] == field
+            self._blit_rounded_card(
+                screen, tog, (246, 236, 209),
+                (241, 185, 35) if (is_on and enabled) else ((235, 228, 214) if not enabled else (255, 250, 240)),
+                pygame, (61, 44, 31), 3 if (focused or (is_on and enabled)) else 1, radius=10,
+            )
+            state = "On" if (is_on and enabled) else "Off"
+            t1 = self._get_text(label, FontRole.BODY, 12, (61, 44, 31), typography)
+            screen.blit(t1, t1.get_rect(center=(tog.centerx, tog.top + 14)))
+            t2 = self._get_text(state, FontRole.CONTROL, 13, (61, 44, 31), typography)
+            screen.blit(t2, t2.get_rect(center=(tog.centerx, tog.top + 30)))
+            self._targets.append(PanelHitTarget("pointer_toggle", field, tog))
+
+        # --- Reset + message ---
+        y += tog_h + 8
+        reset_rect = pygame.Rect(left, y, min(220, left_w), 34)
+        focused = focus_items[focus] == "reset"
+        self._blit_rounded_card(
+            screen, reset_rect, (246, 236, 209), (255, 250, 240),
+            pygame, (61, 44, 31), 3 if focused else 1, radius=10,
+        )
+        lbl = self._get_text("Reset to defaults", FontRole.CONTROL, 14, (61, 44, 31), typography)
+        screen.blit(lbl, lbl.get_rect(center=reset_rect.center))
+        self._targets.append(PanelHitTarget("pointer_reset", None, reset_rect))
+        if self._pointer_message:
+            msg = self._get_text(self._pointer_message[:80], FontRole.BODY, 13, (47, 117, 81), typography)
+            screen.blit(msg, (reset_rect.right + 10, reset_rect.top + 9))
+
+        # --- Bounded test region (right column) ---
+        test_top = card.top + 62
+        test_h = card.bottom - test_top - 12
+        test_rect = pygame.Rect(right, test_top, max(120, test_w), max(80, test_h))
+        self._blit_rounded_card(screen, test_rect, (246, 236, 209), (255, 250, 240), pygame, (220, 210, 190), 1, radius=12)
+        cap = self._get_text("Test area", FontRole.CONTROL, 14, (61, 44, 31), typography)
+        screen.blit(cap, (test_rect.left + 10, test_rect.top + 6))
+        margin = 10
+        cell = max(min_touch, 56)
+        positions = [
+            (test_rect.left + margin, test_rect.top + 30),
+            (test_rect.right - margin - cell, test_rect.top + 30),
+            (test_rect.left + margin, test_rect.bottom - margin - cell),
+            (test_rect.right - margin - cell, test_rect.bottom - margin - cell),
+        ]
+        now = time.monotonic()
+        for idx, (tx, ty) in enumerate(positions):
+            if tx < test_rect.left or ty < test_rect.top:
+                continue
+            if tx + cell > test_rect.right or ty + cell > test_rect.bottom:
+                continue
+            target = pygame.Rect(int(tx), int(ty), int(cell), int(cell))
+            flashed = self._pointer_test_flash == idx and now - self._pointer_test_flash_at < 0.6
+            focused = focus_items[focus] == f"test{idx}"
+            self._blit_rounded_card(
+                screen, target, (255, 250, 240),
+                (47, 117, 81) if flashed else (241, 185, 35),
+                pygame, (61, 44, 31), 3 if (flashed or focused) else 2, radius=12,
+            )
+            glyph = self._get_text("●", FontRole.CONTROL, 20, (255, 255, 255) if flashed else (61, 44, 31), typography)
+            screen.blit(glyph, glyph.get_rect(center=target.center))
+            self._targets.append(PanelHitTarget("pointer_test", idx, target))
 
     def _draw_wifi_tab(
         self,
