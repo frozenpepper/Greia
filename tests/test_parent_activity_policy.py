@@ -73,6 +73,71 @@ class ParentActivityPolicyTests(unittest.TestCase):
                 len(all_ids) - 1,
             )
 
+    def test_age_three_presets_are_derived_from_manifest_suitability(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = self._app(Path(temporary))
+            profile = app.profile_store.list_profiles()[0]
+            profile = app.profile_store.update(profile.profile_id, approximate_age=3)
+            activities = app.activities_payload()
+
+            exact = app.update_activity_policy(
+                profile.profile_id,
+                visibility_mode=ActivityVisibilityMode.RECOMMENDED_ONLY.value,
+                difficulty_min=None,
+                difficulty_max=None,
+                overrides={},
+            )
+            exact_expected = {
+                item["activity_id"]
+                for item in activities
+                if (
+                    item["recommended_age_min"] is None
+                    or item["recommended_age_min"] <= 3
+                )
+                and (
+                    item["recommended_age_max"] is None
+                    or item["recommended_age_max"] >= 3
+                )
+            }
+            self.assertEqual(set(exact["effective_activity_ids"]), exact_expected)
+
+            easier = app.update_activity_policy(
+                profile.profile_id,
+                visibility_mode=ActivityVisibilityMode.AGE_AND_EASIER.value,
+                difficulty_min=None,
+                difficulty_max=None,
+                overrides={},
+            )
+            easier_expected = {
+                item["activity_id"]
+                for item in activities
+                if item["recommended_age_min"] is None
+                or item["recommended_age_min"] <= 3
+            }
+            self.assertEqual(set(easier["effective_activity_ids"]), easier_expected)
+            self.assertTrue(
+                all(
+                    item["recommended_age_min"] is None
+                    or item["recommended_age_min"] <= 3
+                    for item in activities
+                    if item["activity_id"] in easier["effective_activity_ids"]
+                )
+            )
+
+    def test_legacy_parent_mode_is_accepted_but_returns_canonical_mode(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = self._app(Path(temporary))
+            profile = app.profile_store.list_profiles()[0]
+            app.profile_store.update(profile.profile_id, approximate_age=3)
+            updated = app.update_activity_policy(
+                profile.profile_id,
+                visibility_mode="hide_too_simple",
+                difficulty_min=None,
+                difficulty_max=None,
+                overrides={},
+            )
+            self.assertEqual(updated["visibility_mode"], "age_and_easier")
+
     def test_profile_discovery_preferences_are_parent_visible(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             app = self._app(Path(temporary))
