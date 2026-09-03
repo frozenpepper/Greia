@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import unittest
 from pathlib import Path
 
@@ -177,6 +178,85 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 self.assertIn("DenyUsers root", floor)
         first_boot = self.read("build/overlay/usr/local/lib/greia-os/first-boot")
         self.assertIn("passwd --lock root", first_boot)
+
+    def test_installed_generic_session_leaves_single_pointer_authority(self) -> None:
+        """Installed X session must not carry direct pointer-preference authority.
+
+        Single authority is settings store -> watcher/backend. The generic
+        wrapper may export the session environment and launch the Greia
+        hardware watcher + Shell/fallback, but must not issue direct
+        preference commands (tap, accel, CTM, disable-while-typing) against a
+        hard-coded device name.
+        """
+
+        def strip_inline_comment(raw: str) -> str:
+            code: list[str] = []
+            quote: str | None = None
+            for ch in raw:
+                if quote is not None:
+                    code.append(ch)
+                    if ch == quote:
+                        quote = None
+                elif ch in ("'", '"'):
+                    quote = ch
+                    code.append(ch)
+                elif ch == "#":
+                    break
+                else:
+                    code.append(ch)
+            return "".join(code)
+
+        def effective_lines(text: str) -> list[str]:
+            effective: list[str] = []
+            for raw in text.splitlines():
+                stripped = raw.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                code = strip_inline_comment(raw).strip()
+                if code:
+                    effective.append(code)
+            return effective
+
+        session = self.read("build/overlay/usr/local/lib/greia-os/greia-x-session")
+        effective = effective_lines(session)
+        effective_text = "\n".join(effective)
+
+        # Session contract still intact: env + watcher launch + Shell/fallback.
+        for token in (
+            "GREIA_OS_ROOT",
+            "GREIA_SYSTEM_SETTINGS_DIR",
+            "hardware_session_legacy_x",
+            "hardware_pid",
+            "trap cleanup",
+            "greia_launcher.child_shell",
+        ):
+            self.assertIn(token, session, f"session contract lost: {token!r}")
+
+        # No hard-coded device identity anywhere (comment or code).
+        self.assertNotIn("SynPS/2 Synaptics TouchPad", session)
+
+        # No hard-coded CTM anywhere (property name or matrix values).
+        self.assertNotIn("Coordinate Transformation Matrix", session)
+        self.assertIsNone(
+            re.search(r"2\.4\s+0\s+0\s+0\s+2\.4", session),
+            "hard-coded CTM matrix values remain in session wrapper",
+        )
+
+        # Parsing/behavioral: no effective direct preference-setting command.
+        direct = [
+            line
+            for line in effective
+            if re.search(r"\bxinput\b.*\bset-prop\b", line) is not None
+        ]
+        self.assertEqual(
+            [],
+            direct,
+            f"direct xinput preference commands remain: {direct!r}",
+        )
+        self.assertNotRegex(
+            effective_text,
+            r"\bxinput\b.*\bset-prop\b",
+        )
 
 
 if __name__ == "__main__":
