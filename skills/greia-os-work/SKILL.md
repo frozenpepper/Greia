@@ -6,7 +6,7 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 # Greia OS Work — task router
 
 **Status:** LIVING derived contributor router  
-**Reviewed:** 2026-09-03
+**Reviewed:** 2026-09-04
 
 This file tells an agent **what to read for the task**. It is deliberately not a second architecture manual.
 
@@ -239,11 +239,17 @@ docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
 skills/greia-activity-authoring/DISCOVERY.md
 src/greia_platform/activity_discovery.py
 src/greia_platform/activities.py
+src/greia_launcher/activity_policy_presentation.py
+src/greia_launcher/child_shell.py
+src/greia_launcher/trusted_presentation.py
 src/greia_parent/api_server.py
 docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
+docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md
 ```
 
-The platform owns the effective catalogue. Do not create a second browser/Activity age engine.
+The platform owns the effective catalogue. Do not create a second browser/Activity age engine. Parent Activity visibility/age/difficulty policy is mandatory launcher authority, not an optional adaptive-presentation feature: both the normal rich Shell and the trusted emergency fallback must project it before exposing any Activity. The normal Shell may add adaptive sub-Collections after filtering; the trusted fallback remains direct/non-adaptive rather than bypassing policy.
+
+A genuinely missing discovery-policy file is the legitimate default. A policy path that exists but is malformed, unreadable, an unsupported schema, or a symlink must fail closed to zero launchable Activities until repaired; never coerce invalid policy state to `ActivityDiscoveryPolicy()`/`show_all` as a recovery shortcut. Repair must be detected through the bounded reload/rescan path without a permissive interval.
 
 Canonical Parent modes are:
 
