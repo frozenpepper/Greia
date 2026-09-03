@@ -1,183 +1,202 @@
 ---
 name: greia-activity-authoring
-description: Design and build one or more Greia Activities from a parent's request. Starts with child/play/teaching design, then implementation, prerecorded speech, iterative headless Simulator checks and final GUI user review.
+description: Design and build one or more Greia Activities from a parent's request. Child/play/teaching design comes first, followed by clean implementation, prerecorded speech, repeated headless Simulator integration and final GUI user review.
 ---
 
 # Greia Activity Authoring
 
-**Status:** living Activity authoring contract  
-**Reviewed:** 2026-09-02
+**Status:** living Activity-authoring contract  
+**Reviewed:** 2026-09-03
 
-This skill assumes the normal entry point is:
+The normal entry point is simple:
 
 > **A parent asks for one or more Activities.**
 
-The job is not to jump immediately into Pygame or manifests. The job is to turn that request into a coherent child experience, plan it, implement it cleanly, and prove the final result through Greia.
+Act as a small Activity designer/producer, not merely a coder. Turn the request into coherent child experiences, plan the set, implement each Activity cleanly, and prove the final result through Greia.
 
-## 1. The authoring loop
+## 1. Mandatory authoring loop
 
-For every new Activity request, follow this order:
-
-```text
-1. understand the parent's intent
-2. split the request into one or more coherent Activity concepts
-3. design the child experience and teaching/play loop
-4. design pre-reader communication and spoken cues
-5. choose presenter/character, feedback/audio sequencing, input and progression/reward semantics
-6. plan implementation and Activity-local authoring tools
-7. implement in small vertical slices
-8. use the headless Greia Simulator repeatedly while building
-9. produce/review required static voice/assets
-10. rerun final headless integration on the exact final state
-11. launch the GUI Greia Simulator for user visual/interaction review
-12. only then call the Activity accepted
-```
-
-Do not invert this into “build first, make it child-friendly later.”
-
-## 2. Mandatory context for a new Activity
-
-Before coding a new Activity or materially redesigning its gameplay, load:
+For every new Activity request:
 
 ```text
-skills/greia-activity-authoring/DESIGN_AND_TEACHING.md
-skills/greia-activity-authoring/PRE_READER_UX.md
-skills/greia-activity-authoring/FEEDBACK_ORCHESTRATION.md
-skills/greia-activity-authoring/ACHIEVEMENTS.md
-skills/greia-activity-authoring/ENGINEERING.md
-skills/greia-activity-authoring/SIMULATOR_WORKFLOW.md
+parent request
+-> decompose into one or more coherent Activity concepts
+-> design child fantasy + play/teaching loop
+-> choose defensible minimum age + challenge model
+-> design no-reading communication + required speech
+-> choose presenter, feedback/audio sequencing and progression semantics
+-> plan implementation + Activity-local authoring tools
+-> implement one small vertical slice
+-> headless Greia Simulator
+-> iterate with focused tests + headless Simulator
+-> produce/review required prerecorded voice/assets
+-> final exact-state headless Simulator
+-> launch GUI Greia Simulator
+-> user reviews actual child experience
+-> accepted only after applicable evidence is complete
 ```
 
-These are the normal creation core. `FEEDBACK_ORCHESTRATION.md` is mandatory because routine feedback, terminal feedback, spoken cues, progression facts and performance frequently collide on the same child action. `ACHIEVEMENTS.md` is mandatory because every new Activity must explicitly decide its local score/progress/event/Greia-reward relationship even when the correct answer is `none`.
+Do not build first and try to make it child-friendly afterward.
 
-The top-level skill already carries the essential speech architecture below. Load the deeper voice companion when the Activity needs actual spoken cue design/production:
+## 2. Creation core — load these every time
+
+Before coding a new first-party Activity or materially redesigning gameplay, load:
 
 ```text
-skills/greia-activity-authoring/VOICE_GENERATION.md
-skills/greia-voice-production/SKILL.md
+DESIGN_AND_TEACHING.md
+PRE_READER_UX.md
+DISCOVERY.md
+FEEDBACK_ORCHESTRATION.md
+ACHIEVEMENTS.md
+ENGINEERING.md
+SIMULATOR_WORKFLOW.md
 ```
 
-Load other focused companions only when their subject is actually part of the Activity:
+These seven companions are the normal creation core:
 
-```text
-PRESENTERS_AND_CURIOSITY.md  canonical presenter/facts design
-MICROPHONE_RECORDING.md      child microphone recording
-DISCOVERY.md                 age/difficulty/Collection/discovery metadata
-LAUNCHER_SPOKEN_LABELS.md    launcher title speech details
-TERMINAL_RENDERING.md        completion/results/replay presentation
-REFACTORING.md               substantive existing-Activity refactor
-LAUNCH_ACCEPTANCE.md         detailed final launch evidence contract
-```
+- `DESIGN_AND_TEACHING.md` — parent-request decomposition, gameplay and learning design;
+- `PRE_READER_UX.md` — operation without reading and spoken-command requirements;
+- `DISCOVERY.md` — mandatory minimum age, difficulty and Collection/discovery metadata;
+- `FEEDBACK_ORCHESTRATION.md` — audio/event conflicts, shared reactions and terminal transitions;
+- `ACHIEVEMENTS.md` — local score/progress/events versus Greia-owned rewards;
+- `ENGINEERING.md` — clean architecture, runtime rules and performance;
+- `SIMULATOR_WORKFLOW.md` — repeated headless integration and final GUI review.
 
-For actual visual asset creation/adaptation load:
-
-```text
-skills/greia-visual-authoring/SKILL.md
-```
-
-Do **not** load every companion merely because it exists.
+Do not load every specialist companion merely because it exists.
 
 ## 3. First action: decompose the parent's request
 
-When a parent asks for several Activities, plan the set before coding.
+If several Activities are requested, plan the set before coding.
 
-Decide whether the request describes:
+Decide whether the request is best represented as:
 
 - several distinct Activities;
 - one Activity with progressive stages;
 - or one coherent Activity with multiple modes.
 
-Prefer distinct Activities when the child fantasy, primary learning goal or core interaction is materially different.
+Prefer separate Activities when the child fantasy, primary learning goal or core interaction is materially different.
 
-For a multi-Activity request, make a compact matrix:
+For multiple Activities, first make a compact matrix:
 
 ```text
-Activity | child fantasy | learning/development goal | core mechanic | presenter | target age/challenge | why distinct
+Activity | child fantasy | learning/development goal | core mechanic | presenter | age/challenge | why distinct
 ```
 
-Avoid five Activities that are the same multiple-choice quiz with different nouns.
+Avoid producing several copies of the same quiz with different nouns/art.
 
-Do not ask the parent to specify ordinary implementation details the skill can infer. Ask only when a missing decision genuinely changes the product direction; otherwise record a sensible assumption and proceed.
+Infer ordinary design details from the request and Greia's existing product language. Ask only when a missing choice genuinely changes product direction.
 
 ## 4. No code before the child loop is clear
 
-Every new Activity gets the compact brief defined in `DESIGN_AND_TEACHING.md` before implementation.
+Every Activity gets the compact brief in `DESIGN_AND_TEACHING.md` first.
 
-At minimum the agent must know:
+At minimum know:
 
 ```text
-what fantasy/world the child is entering
-what the child actually does repeatedly
+what world/fantasy the child enters
+what the child repeatedly does
 what the child learns/practices/creates
-what the first meaningful action is
+what happens in the first five seconds
 how a non-reader knows what to do
-how difficulty/scaffolding changes
-what makes repetition varied and fun
-what happens on success
-what happens on a mistake
-which presenter/character is involved
-which commands must be spoken
-which locales are supported
+recommended_age_min and why it is defensible
+how challenge/scaffolding changes
+what keeps repetition varied
+what success and mistakes look/sound like
+which presenter/character is used
+which commands require spoken language
+which locales ship
 how completion/progress works
-what local score/progress/events exist, if any
-how routine feedback differs from terminal/final-action feedback
-which cue wins if speech/SFX/celebration collide
+what score/events exist, if any
+what happens on the final item/final answer
+which cue wins when speech/SFX/celebration collide
 ```
 
-If those answers are vague, continue designing instead of writing infrastructure.
+If these are vague, keep designing instead of writing infrastructure.
 
-## 5. The child cannot be assumed to read
+## 5. Design for children who cannot read instructions
 
-This is a hard Greia design rule.
+Normal Greia operation must not depend on reading button labels, prose or instructions.
 
-A child must not need written instructions, button labels or explanatory prose to operate the normal Activity flow.
-
-Use:
+Prefer:
 
 ```text
 obvious scene composition
-+ large interactive targets
++ large child-sized targets
 + pictures / shapes / numbers / icons
-+ short visual demonstrations and motion cues
++ short visual demonstration or motion cue
 + spoken instruction when language is necessary
-+ immediate visual/audio feedback
++ immediate visual/audio cause-and-effect
 ```
 
 Text is secondary support.
 
-Even reading/phonics Activities are not exempt: the *learning content* may be letters/words, but the instructions for how to play must still be understandable to a pre-reader.
+Even a reading/phonics Activity is not exempt: letters/words may be learning content, but the instruction for how to play must still be understandable to a pre-reader.
 
-For new Activities and substantive child-facing redesigns, the no-reading pass in `PRE_READER_UX.md` is mandatory.
+### Required language commands are spoken
 
-## 6. Required commands are spoken
+If exact language is needed to know what to do, it must be spoken.
 
-If a child needs language to understand a required action and the meaning cannot be communicated reliably through visuals alone, that instruction must be spoken.
-
-Do not ship:
+Examples:
 
 ```text
-"Find the blue whale"
-"Put three apples in the basket"
-"Choose the letter S"
+“Trova la lettera S.”
+“Metti tre mele nel cestino.”
+“Quale animale fa questo verso?”
 ```
 
-as text-only commands.
+Do not ship these as text-only commands.
 
-Required spoken cues must be:
+Required speech is short, localized, semantically identified, repeatable when useful, produced through Greia's prerecorded voice system and human-reviewed before final acceptance.
 
-- short;
-- one idea at a time;
-- localized for every shipped locale of that interaction;
-- backed by stable semantic cue IDs;
-- repeatable when repetition is useful;
-- produced through Greia's canonical prerecorded speech system;
-- human-reviewed before final acceptance.
+## 6. Age metadata is part of design
 
-Do not narrate every tap. Speech should orient, instruct, hint and reinforce; the child still needs room for quiet play.
+Every first-party Activity must declare a defensible:
 
-## 7. Greia already has a voice-production system
+```toml
+[education]
+recommended_age_min = N
+```
 
-New Activity speech is **authoring-time prerecorded audio**.
+Choose the youngest ordinary child for whom the **actual shipped interaction** is appropriate considering concepts, language/reading assumptions, working-memory load and motor demands.
+
+Do not copy `difficulty` into age. Difficulty and developmental suitability are independent.
+
+`recommended_age_max` is optional. Open-ended creative/sensory/imaginative Activities should not receive fake upper limits merely for symmetry.
+
+Parent restrictive age presets depend on truthful metadata. See `DISCOVERY.md` for exact semantics, including unknown-age compatible packages and explicit Parent overrides.
+
+## 7. Teaching happens through play
+
+Do not put a worksheet on a cute background.
+
+Prefer mechanics where the educational idea is what the child actually does:
+
+```text
+count visible objects by touching/moving them
+fit shapes into meaningful silhouettes
+hear a phoneme and manipulate/choose its symbol
+arrange a sequence and watch the consequence
+build/experiment and see cause-and-effect
+```
+
+Useful default progression:
+
+```text
+tiny demonstration
+-> guided first attempt
+-> independent repetition
+-> gentle variation
+-> slightly harder variation
+-> natural completion/continuation
+```
+
+Increase challenge through the learning mechanic, not through tiny targets, dense screens, reading requirements, punitive timers or confusing layout.
+
+Mistakes should reorient and encourage, not shame or punish.
+
+## 8. Greia already owns voice production
+
+Normal Activity narration/instructions are **authoring-time prerecorded audio**.
 
 Canonical production entry point:
 
@@ -185,46 +204,51 @@ Canonical production entry point:
 tools/greia_voice.py
 ```
 
-The child device does not run Chatterbox/Whisper or ordinary runtime TTS for Activity narration.
+The child device does not run Chatterbox/Whisper or normal narration TTS.
 
-Activity code and Activity-specific tools must never implement their own Chatterbox, MLX, Whisper, native `say`, FFmpeg trimming or model-routing stack.
+Activity code and Activity-local tooling must not create a parallel Chatterbox/MLX/Whisper/native-TTS/FFmpeg routing stack.
 
 Speech kinds are semantic:
 
 ```text
 character_dialogue
-    presenter welcome/instructions/hints/narration/facts
+    presenter welcome, instruction, hint, narration, fact
 
 shared_character_utterance
-    generic praise/retry/progress/ready/celebration when the accepted runtime
-    resolver exposes the required family
+    generic ready/praise/retry/progress/celebration when the shared resolver exposes it
 
 pedagogical_speech
-    the sound itself is educational truth: letter name/sound, syllable,
-    phonics, spelling/pronunciation target
+    the exact sound itself is educational truth: letter/syllable/phonics/pronunciation
 
 dani_system_speech
-    Dani's deliberately robotic presenter/logic speech
+    Dani's intentionally robotic presenter/logic speech
 ```
 
 Do not classify all speech in an educational Activity as `pedagogical_speech`.
 
-Examples:
+When actual speech needs producing/replacing, load:
 
 ```text
-Leo: "Ciao! Scopriamo le lettere!"     -> character_dialogue
-Leo: "Quasi! Proviamo ancora!"         -> shared utterance when available, otherwise character dialogue
-"A" / "MA" taught as exact sound       -> pedagogical_speech
-Dani: "Metti tre mele nel cestino."    -> dani_system_speech
+VOICE_GENERATION.md
+skills/greia-voice-production/SKILL.md
 ```
 
-The accepted shared v0.2 asset set lives at:
+### Shared character speech
+
+Accepted shared v0.2 assets live at:
 
 ```text
 assets/audio/characters/shared/v0.2/
 ```
 
-It contains 180 shared reactions + 12 canonical character introductions. The currently documented generic families are:
+Current accepted set:
+
+```text
+180 shared reactions
+12 canonical character introductions
+```
+
+Documented generic families include:
 
 ```text
 ready.go
@@ -234,139 +258,154 @@ encourage.retry
 encourage.progress
 ```
 
-Do not assume a generic `hello`/`greeting` family exists. Canonical self-introductions are shared/OS material and should not be rerecorded per Activity. Activity-specific welcomes remain normal character dialogue.
+Reuse shared reactions instead of generating duplicate generic praise when the current runtime resolver exposes the needed family.
 
-Accepted asset bytes and runtime resolver availability are separate. Inspect current source before assuming a shared family is callable. Do not copy shared WAV files into every Activity merely for convenience.
+Do not assume a generic greeting family exists, and do not copy the shared WAV catalogue into individual Activities.
 
-When generating/replacing speech, load `VOICE_GENERATION.md` and `skills/greia-voice-production/SKILL.md`.
+## 9. Resolve semantic feedback before playing sound
 
-### Runtime feedback orchestration is mandatory
-
-Correct audio files are not enough. One child action can produce routine SFX, teaching speech, completion, praise, score and a progression event at once.
-
-The Activity must resolve the semantic transition **before** deciding what to play.
-
-Example:
+One child action can simultaneously mean:
 
 ```text
-collect ordinary item
-    -> ordinary collect feedback
+ordinary item collected
+teaching target completed
+score changed
+milestone emitted
+round finished
+victory reached
+```
 
+These events must not independently fire competing sounds.
+
+Classic failure:
+
+```text
 collect final item
-    -> terminal result
-    -> protect final pedagogical/required cue
-    -> suppress/sequence routine feedback deliberately
-    -> one concise local completion celebration
-    -> emit completion/score/milestone fact once
+-> ordinary collect SFX starts
+-> final-word speech starts
+-> victory fanfare replaces it
+-> character congratulations overlaps everything
 ```
 
-Do not allow an ordinary collect chime, final counted word, victory fanfare and congratulations speech to all fire independently.
-
-Use `FEEDBACK_ORCHESTRATION.md` for the mandatory sequence/suppress/replace/interrupt/coalesce rules, shared-character pooling, reward boundary and performance-sensitive timing contract.
-
-## 8. Teaching happens through the play mechanic
-
-Do not build a cute wrapper around a worksheet.
-
-Prefer learning through visible action and cause/effect:
+Instead resolve the state transition first, then deliberately choose one of:
 
 ```text
-count visible objects by touching/moving them
-fit shapes into meaningful silhouettes
-hear a target phoneme and manipulate/choose its symbol
-arrange a sequence and watch the result happen
-build/experiment and see the physical consequence
+SEQUENCE
+SUPPRESS
+REPLACE
+INTERRUPT
+COALESCE
 ```
 
-A useful default progression is:
+The final item/final answer/final piece is normally a **terminal transition**, not merely an ordinary success plus another victory callback.
+
+Protect pedagogical/required speech, keep queues bounded, and emit completion/score/milestone facts once.
+
+`FEEDBACK_ORCHESTRATION.md` owns the detailed rules.
+
+## 10. Score, Stars, medals and achievements
+
+Every Activity must explicitly decide its progression relationship, even if the correct answer is `none`.
+
+Keep these separate:
 
 ```text
-show one tiny example
--> guided attempt
--> independent repetition
--> gentle variation
--> slightly harder variation
--> natural celebration/continuation
+local Activity score/progress
+    Activity-owned presentation/state where appropriate
+
+normalized completion/milestone/score facts
+    emitted by Activity through Greia contracts
+
+Greia Stars / medals / trophies / global progression
+    platform-owned policy and ledger
 ```
 
-Increase challenge through the learning mechanic, not through tiny controls, confusing layouts, excessive reading or punitive time pressure.
+Activities report facts. They do not directly grant or mutate global rewards.
 
-Wrong answers should produce friendly, informative retry feedback, not punishment.
+Do not add streaks, points or reward spam simply because games often have them.
 
-## 9. Technical implementation standard
+`ACHIEVEMENTS.md` owns the exact event/reward contract.
 
-Once the child design is coherent, implement cleanly.
+## 11. Technical implementation standard
 
 For first-party Python Activities:
 
-- keep `main.py` a thin composition/bootstrap root;
-- use cohesive modules/classes around real state and responsibilities;
+- keep `main.py` a thin bootstrap/composition root;
+- use cohesive modules/classes around real responsibilities;
 - prefer composition over deep inheritance;
-- use polymorphism only at genuine variation points;
-- reuse Greia platform services/primitives instead of cloning platform infrastructure;
-- keep Activity code display/input-backend neutral;
-- never implement the real Greia Home/Back inside the Activity;
+- use polymorphism at genuine variation points;
+- reuse Greia platform services/primitives rather than cloning them;
 - preserve both Greia script-launch and repository/package import contexts;
-- keep caches bounded and rendering appropriate for the Acer-class performance floor;
-- preload/cache reusable images, fonts, transforms and short sounds instead of decoding/scaling/loading in frame or interaction hot paths;
-- use dirty/invalidation-driven rendering for static/turn-based presentation where practical;
-- keep audio/feedback queues bounded and never block the main loop waiting for playback;
-- avoid repeated filesystem/device/subprocess/config/storage work in hot paths;
-- keep terminal celebration rendering bounded rather than running expensive full-screen alpha work over a live game indefinitely;
-- use platform storage/events/progression/permissions rather than private substitutes.
+- use Greia storage/events/progression/permissions rather than private substitutes;
+- keep Activity code display/input-backend neutral;
+- never draw or own the real Greia Home/Back system controls.
 
-Performance is a correctness requirement on Greia, not a polish pass. Slow hot paths create visible latency and can turn otherwise correct cue ordering into overlapping/stomped feedback on Acer-class hardware.
+### Performance is correctness
 
-Load `ENGINEERING.md` for the detailed implementation and performance rules before coding.
+The Acer-class floor is part of the design target, not a later optimization pass.
 
-## 10. Project-specific tooling stays with the project
-
-Do not throw one-off Activity authoring/generation/migration scripts into repository root `tools/`.
-
-For an Activity, project-specific tooling is created under:
+Avoid hot-path work such as:
 
 ```text
-activities/<activity_id_or_dir>/tools/
+filesystem scans
+asset decoding/loading
+image scaling/transforms
+font recreation
+subprocess/device discovery
+storage/config reads
+large allocation churn
+unbounded audio/event queues
+full-screen expensive alpha work that never settles
+```
+
+Prefer preloaded/cached immutable assets, bounded caches/queues, event-driven/invalidation rendering where appropriate, and cheap static states.
+
+A performance stall can become an audio/timing bug by delaying feedback until semantic events collide.
+
+Load `ENGINEERING.md` before implementation.
+
+## 12. Project-specific tools stay with the project
+
+Activity-specific authoring/generation/migration tooling belongs under:
+
+```text
+activities/<activity_dir>/tools/
 ```
 
 Examples:
 
 ```text
-activities/my_activity/tools/generate_audio_requests.py
+activities/my_activity/tools/generate_voice_requests.py
 activities/my_activity/tools/build_local_assets.py
 activities/my_activity/tools/migrate_content.py
 ```
 
 Rules:
 
-1. Put the tool in the Activity's `tools/` directory **from the start**.
-2. Keep runtime code out of `tools/`; if the child runtime needs it, it is Activity implementation, not authoring tooling.
-3. Root `tools/` is reserved for genuinely repository-wide/platform tooling used across projects.
-4. Before final Activity/package acceptance, remove temporary/obsolete authoring tools and generated scratch files.
-5. Because the Activity directory is also the package root, do not accidentally ship one-off development machinery. If a local tool has served its purpose, delete it before final package validation.
-6. Promote a tool to root `tools/` only when it has become a genuinely reusable Greia-wide facility with a stable contract.
+1. place project-specific tools there from the start;
+2. runtime code does not belong in `tools/`;
+3. repository root `tools/` is only for genuinely Greia-wide tooling;
+4. remove obsolete/one-shot tools and scratch output when work closes;
+5. remember the Activity directory is also package input—do not ship development machinery accidentally;
+6. promote a local tool to root only when it genuinely becomes a reusable Greia-wide facility with a stable contract.
 
-The same principle applies to other Greia subprojects: project-specific tooling belongs in that project's own `tools/` area and is cleaned up when no longer needed.
+## 13. Use the headless Simulator throughout development
 
-## 11. Implement in vertical slices and use the headless Simulator early
+Do not wait for the Activity to be finished.
 
-The headless Greia Simulator is the normal mechanical integration loop.
-
-Do not wait until the Activity is “finished.”
-
-Typical rhythm:
+Typical loop:
 
 ```text
 minimal valid skeleton
 -> headless Simulator
 
-first real child interaction
+first meaningful child interaction
 -> focused tests + headless Simulator
 
-major refactor/import/resource change
+major runtime/resource/refactor change
 -> focused tests + headless Simulator
 
-completion/restart added
+completion/restart/audio integration
 -> headless Simulator
 
 final runtime edit
@@ -385,99 +424,59 @@ PYTHONPATH=src python3 tools/headless_greia_simulator.py \
   --screenshot-prefix /tmp/greia-<activity_dir>-it
 ```
 
-Use `--press-key` or `--click-x/--click-y` when a simple meaningful interaction can be exercised mechanically.
+Use `--press-key` or `--click-x/--click-y` for meaningful mechanical interaction where practical, and test relevant shipped locales.
 
-For localized/spoken behavior, run the relevant shipped locales.
+`SIMULATOR_WORKFLOW.md` owns the detailed loop.
 
-The detailed workflow is in `SIMULATOR_WORKFLOW.md`.
+## 14. Final GUI Simulator review is mandatory
 
-## 12. Headless PASS is not child-experience acceptance
+Headless integration cannot decide whether:
 
-Headless Simulator checks mechanical integration. It cannot honestly decide whether:
-
-- the game is fun;
-- the scene is visually coherent;
 - a toddler understands the first action;
-- the challenge teaches what it intends;
-- controls are too small/confusing;
-- character/audio timing feels right;
-- final-item/final-answer feedback collides with completion speech/fanfare;
-- the Activity is pleasant and responsive at 1024×600.
+- the game is fun/coherent;
+- targets are large enough;
+- the teaching mechanic works;
+- presenter/audio timing feels right;
+- final-item feedback collides;
+- 1024×600 presentation is pleasant;
+- obvious performance stalls exist.
 
-Therefore a new Activity is not complete after headless PASS.
-
-## 13. Final step: launch the GUI Simulator for user review
-
-After the final runtime state passes headless integration, launch:
+After final headless integration launch:
 
 ```bash
 python3 tools/greia_simulator.py \
   --state-dir ~/.greia-simulator-review-<activity_dir>
 ```
 
-Present that exact final Activity to the user/reviewer.
+Present that exact final state to the user/reviewer.
 
-The user review covers:
-
-- first-action clarity with no reading;
-- gameplay/teaching quality;
-- visual composition and target sizes;
-- presenter/character fit;
-- spoken command timing/coverage;
-- ordinary-vs-terminal feedback sequencing, especially the last item/final answer/final piece;
-- retry/completion clarity;
-- score/progress presentation and correct separation from Greia-owned global rewards;
-- responsiveness/layout and obvious performance stalls where relevant;
-- protected Home and clean return, including while Activity audio is active.
-
-If the environment cannot launch/present the GUI Simulator, report:
+If GUI review cannot be performed, the strongest honest result is:
 
 ```text
 SOURCE-VERIFIED / HEADLESS-SIMULATOR-PASS / GUI-REVIEW-PENDING
 ```
 
-Do not self-promote that to fully accepted.
+Any runtime-relevant edit after evidence requires rerunning the applicable final checks.
 
-Any runtime-relevant edit after final headless/GUI evidence invalidates that evidence and requires rerunning the applicable final checks.
-
-## 14. Conditional companions
-
-Load these only when relevant:
-
-### Presenter / curiosity / facts
+## 15. Load specialist companions only when relevant
 
 ```text
-PRESENTERS_AND_CURIOSITY.md
+PRESENTERS_AND_CURIOSITY.md   presenter/factual-curiosity design
+VOICE_GENERATION.md           actual speech production/replacement
+MICROPHONE_RECORDING.md       child microphone recording
+LAUNCHER_SPOKEN_LABELS.md     launcher title speech
+TERMINAL_RENDERING.md         completion/Continue/Replay presentation
+REFACTORING.md                substantive existing-Activity refactor
+LAUNCH_ACCEPTANCE.md          detailed final launch/evidence procedure
 ```
 
-### Actual speech production or replacement
+For actual visual asset creation/adaptation load:
 
 ```text
-VOICE_GENERATION.md
-skills/greia-voice-production/SKILL.md
+skills/greia-visual-authoring/SKILL.md
 ```
 
-### Microphone / child recording
-
-```text
-MICROPHONE_RECORDING.md
-```
-
-### Manifest audience / Collection / age / challenge discovery
-
-```text
-DISCOVERY.md
-```
-
-### Completion / Continue / Replay UI
-
-```text
-TERMINAL_RENDERING.md
-```
-
-### Packaging / `.greiaactivity`
-
-Read the current package authority:
+For `.greiaactivity` packaging use current package authority:
 
 ```text
 docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md
@@ -485,37 +484,30 @@ src/greia_platform/activity_packages.py
 src/greia_platform/activity_package_format.py
 ```
 
-### Refactoring an existing Activity
-
-```text
-REFACTORING.md
-```
-
-## 15. Definition of done for a new Activity
+## 16. Definition of done
 
 A new first-party Activity is not done until all applicable items are true:
 
 ```text
-parent request decomposed
-child/activity brief complete
-play loop coherent
-learning/development goal expressed through play
-pre-reader core flow passes
-mandatory score/progress/event/Greia-reward design pass recorded
-routine-vs-terminal feedback collision pass complete
-required commands have reviewed spoken coverage
-shared character reactions/intros reused where the implemented resolver contract supports them
-presenter decision deliberate
-locales complete
-technical implementation follows Greia runtime/platform contracts
-performance hot-path/cache/invalidation/audio-queue review complete
-Activity-local tooling cleaned up
-focused tests green
-terminal-action/rapid-input/replay/Home-during-audio cases exercised where applicable
-final headless Simulator green on exact runtime state
-protected Home/return green
-GUI Simulator launched on exact final state
-user visual/interaction/audio-timing review completed
+PARENT_REQUEST_DECOMPOSED=yes
+ACTIVITY_SET_PLAN_COMPLETE=yes/not-applicable
+CHILD_PLAY_LOOP_CLEAR=yes
+LEARNING_OR_CREATIVE_PURPOSE_CLEAR=yes
+RECOMMENDED_AGE_MIN_DEFINED=yes
+DISCOVERY_METADATA_VALID=yes
+FIRST_ACTION_CLEAR_WITHOUT_READING=yes
+REQUIRED_SPOKEN_COMMANDS_COMPLETE=yes/not-applicable
+VOICE_KIND_SEMANTICS_CORRECT=yes/not-applicable
+HUMAN_AUDIO_REVIEW_COMPLETE=yes/not-applicable
+FINAL_ACTION_FEEDBACK_CONFLICT_RESOLVED=yes
+PROGRESSION_REWARD_RELATIONSHIP_DEFINED=yes
+PROJECT_LOCAL_TOOLS_CLEAN=yes
+PERFORMANCE_HOT_PATHS_BOUNDED=yes
+FOCUSED_TESTS_PASS=yes
+FINAL_HEADLESS_SIMULATOR_PASS=yes
+GUI_SIMULATOR_USER_REVIEW=PASS
 ```
 
-If actual voice production is pending, GUI review is pending, performance evidence is stale, or final Simulator evidence is stale, say so explicitly instead of calling the Activity complete.
+Physical/Acer evidence is additionally required for claims that depend on physical performance, hardware behavior or production display/input paths.
+
+Never upgrade source or Simulator evidence into a stronger evidence class that did not actually run.
