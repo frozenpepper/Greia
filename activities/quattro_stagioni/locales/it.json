@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.quattro_stagioni.title": "Il Grande Albero delle Stagioni",
+    "activity.title": "Il Grande Albero delle Stagioni",
+    "btn.day": "Giorno",
+    "btn.night": "Notte",
+    "btn.sun": "Sole",
+    "btn.rain": "Pioggia",
+    "btn.wind": "Vento",
+    "btn.snow": "Neve",
+    "season.spring": "Primavera",
+    "season.summer": "Estate",
+    "season.autumn": "Autunno",
+    "season.winter": "Inverno"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

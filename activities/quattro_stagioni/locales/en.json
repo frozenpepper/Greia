@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.quattro_stagioni.title": "The Big Seasons Tree",
+    "activity.title": "The Big Seasons Tree",
+    "btn.day": "Day",
+    "btn.night": "Night",
+    "btn.sun": "Sun",
+    "btn.rain": "Rain",
+    "btn.wind": "Wind",
+    "btn.snow": "Snow",
+    "season.spring": "Spring",
+    "season.summer": "Summer",
+    "season.autumn": "Autumn",
+    "season.winter": "Winter"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

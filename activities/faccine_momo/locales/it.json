@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.faccine_momo.title": "Le Faccine di Momo",
+    "activity.title": "Le Faccine di Momo",
+    "emotion.happy": "Felice",
+    "emotion.sad": "Triste",
+    "emotion.surprised": "Sorpreso",
+    "emotion.silly": "Buffo",
+    "emotion.angry": "Arrabbiato",
+    "emotion.sleepy": "Sonno"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

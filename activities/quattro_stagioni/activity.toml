@@ -1,0 +1,44 @@
+[activity]
+id = "org.greia.quattro-stagioni"
+legacy_ids = ["quattro_stagioni"]
+title_key = "activity.quattro_stagioni.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["explore", "play", "learn"]
+discovery_tags = ["nature"]
+
+[education]
+categories = ["nature_cycles", "weather", "early_learning"]
+difficulty = 1
+recommended_age_min = 3
+skills = [
+  { id = "nature.cycles.day_night", weight = 3 },
+  { id = "nature.weather.recognition", weight = 3 },
+  { id = "nature.seasons.awareness", weight = 3 },
+  { id = "motor.pointer.exploration", weight = 2 },
+]
+events = [
+  { id = "quattro_stagioni.cycle_explored", kind = "milestone" },
+  { id = "quattro_stagioni.all_seasons_discovered", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

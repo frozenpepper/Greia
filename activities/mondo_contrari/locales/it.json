@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.mondo_contrari.title": "Mondo Contrari",
+    "activity.title": "Mondo Contrari",
+    "opposite.up": "Su",
+    "opposite.down": "Giù",
+    "opposite.big": "Grande",
+    "opposite.small": "Piccolo",
+    "opposite.in": "Dentro",
+    "opposite.out": "Fuori",
+    "opposite.open": "Aperto",
+    "opposite.closed": "Chiuso",
+    "opposite.fast": "Veloce",
+    "opposite.slow": "Lento"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

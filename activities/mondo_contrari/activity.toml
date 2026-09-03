@@ -1,0 +1,43 @@
+[activity]
+id = "org.greia.mondo-contrari"
+legacy_ids = ["mondo_contrari"]
+title_key = "activity.mondo_contrari.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["play", "learn"]
+discovery_tags = ["puzzles"]
+
+[education]
+categories = ["spatial_reasoning", "language_concepts", "early_learning"]
+difficulty = 1
+recommended_age_min = 3
+skills = [
+  { id = "cognition.spatial.opposites", weight = 3 },
+  { id = "cognition.dimensions.comparison", weight = 3 },
+  { id = "motor.pointer.selection", weight = 2 },
+]
+events = [
+  { id = "mondo_contrari.opposite_explored", kind = "milestone" },
+  { id = "mondo_contrari.all_opposites_completed", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

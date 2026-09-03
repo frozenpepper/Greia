@@ -1,0 +1,43 @@
+[activity]
+id = "org.greia.faccine-momo"
+legacy_ids = ["faccine_momo"]
+title_key = "activity.faccine_momo.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["play", "learn"]
+discovery_tags = ["care"]
+
+[education]
+categories = ["emotional_awareness", "social_learning", "expression"]
+difficulty = 1
+recommended_age_min = 3
+skills = [
+  { id = "emotional.recognition.faces", weight = 3 },
+  { id = "emotional.self_expression", weight = 3 },
+  { id = "motor.pointer.selection", weight = 2 },
+]
+events = [
+  { id = "faccine_momo.emotion_discovered", kind = "milestone" },
+  { id = "faccine_momo.all_emotions_explored", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1
