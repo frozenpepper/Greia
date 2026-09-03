@@ -38,14 +38,14 @@ class DeploymentSafetyAndFaultToleranceTests(unittest.TestCase):
             empty_file = Path(temporary) / "hardware-settings.toml"
             empty_file.touch()
             defaults = HardwareDefaults.load(empty_file)
-            self.assertEqual(defaults.schema_version, 1)
+            self.assertEqual(defaults.schema_version, 2)
             self.assertEqual(defaults.keyboard_layout, "us")
             self.assertEqual(defaults.mic_gain, 2.0)
 
             corrupt_file = Path(temporary) / "bad.toml"
             corrupt_file.write_text("invalid [[ toml :::", encoding="utf-8")
             corrupt_defaults = HardwareDefaults.load(corrupt_file)
-            self.assertEqual(corrupt_defaults.schema_version, 1)
+            self.assertEqual(corrupt_defaults.schema_version, 2)
 
     def test_theme_palette_falls_back_to_default_safe_on_corrupt_file(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
