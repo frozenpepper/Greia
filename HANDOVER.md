@@ -103,6 +103,8 @@ If the profile has no `approximate_age`, age-specific filtering is inactive and 
 
 Parent visibility policy is now a mandatory child-launcher boundary rather than an optional adaptive-presentation feature. The normal `GreiaChildShell` applies the policy before adaptive Collection grouping, while `TrustedGreiaLauncherPresentation` applies the same policy to a direct/non-adaptive catalogue. A genuinely missing policy file retains the normal default. A malformed, unreadable, unsupported-schema or symlink policy fails closed to zero launchable Activities until repaired; it is never reinterpreted as `show_all`.
 
+The launcher also treats the policy file as a versioned atomic snapshot: the file identity is sampled before and after each read. A replacement that lands during the read is retried instead of allowing one policy version to be applied while a different version's token is acknowledged. Repeated churn fails closed and the ordinary bounded rescan retries later. Repair of a rejected policy clears the policy-specific error state when a valid snapshot becomes active.
+
 Living authorities:
 
 ```text
@@ -183,6 +185,7 @@ Parent source now includes:
 - catalogue-wide first-party age metadata enforcement;
 - mandatory normal-Shell and trusted-fallback projection of Parent Activity visibility policy;
 - fail-closed zero-Activity behavior for invalid existing discovery-policy state, distinct from a legitimate missing-policy default;
+- stable atomic policy-snapshot reads that do not acknowledge a different replacement than the policy applied;
 - integrated real API client and production runtime manifest;
 - deterministic Greia image installation of the reviewed browser bundle;
 - installed-runtime integrity preflight;
@@ -194,7 +197,7 @@ Current production Parent status is:
 
 ```text
 SOURCE/IMAGE-INTEGRATION IMPLEMENTED
-CHILD POLICY FALLBACK SOURCE FIX IMPLEMENTED / EXACT-CURRENT ACCEPTANCE PENDING
+CHILD POLICY FALLBACK SOURCE FIX + SNAPSHOT HARDENING IMPLEMENTED / EXACT-CURRENT ACCEPTANCE PENDING
 PHYSICAL ACER REAL-RUNTIME ACCEPTANCE PENDING
 ```
 
@@ -395,7 +398,7 @@ malformed / unreadable / unsupported-schema / symlink policy
   -> never reinterpret as show_all
 ```
 
-Repair is observed through the normal bounded rescan token using `lstat` state plus mtime/size/inode/mode, so replacing a rejected symlink or atomically repairing a corrupt policy can restore the catalogue without a permissive interval.
+Repair is observed through the normal bounded rescan token using `lstat` state plus mtime/size/inode/mode, so replacing a rejected symlink or atomically repairing a corrupt policy can restore the catalogue without a permissive default.
 
 Regression source is in `tests/test_launcher_activity_policy_safety.py`; it covers shared boundary inheritance, explicit hide in both paths, restrictive age filtering in the trusted fallback, missing-file defaults, malformed JSON, unsupported schema, symlink rejection, repair detection, and the fallback remaining non-adaptive.
 
@@ -405,6 +408,28 @@ Exact-current acceptance authority:
 docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md
 ```
 
-Evidence actually produced in the remote authoring environment for the source commit: Python syntax compilation of the exact new/modified launcher and test files passed. The focused unit suite and `make verify` were **NOT RUN** here because this environment has no writable Greia checkout/network path to execute the repository; GitHub-hosted Actions were deliberately not used. The previous C02 `1768 tests OK` evidence predates this source change and does **not** certify `28c58e...` or later docs commits. Physical Acer trusted-fallback policy evidence is also **NOT RUN**.
+Evidence actually produced in the remote authoring environment for the initial source commit: Python syntax compilation of the exact new/modified launcher and test files passed. The focused unit suite and `make verify` were **NOT RUN** here because this environment has no executable Greia checkout/network path to execute the repository; GitHub-hosted Actions were deliberately not used. The previous C02 `1768 tests OK` evidence predates this source change and does **not** certify `28c58e...` or later commits. Physical Acer trusted-fallback policy evidence is also **NOT RUN**.
 
-Next exact step: execute `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md` from a clean exact-current local checkout. If source/local acceptance is green, carry its Parent-hide assertion into the already-active exact-current R7 physical fallback lane, then run the existing Parent real-runtime/Acer gate. Do not claim physical acceptance from the committed regressions.
+## 17. Child Activity policy snapshot race hardening — source implemented, verification pending (2026-09-04)
+
+Adversarial review after §16 found a second-order atomic-replacement race: the launcher could read policy version A, Parent could atomically replace it with version B immediately after the read, and the launcher could then record B's file token while still applying A. That would suppress the normal rescan until another file change.
+
+`src/greia_launcher/activity_policy_presentation.py` now brackets each policy read with the same `lstat`-derived identity token. If the identity changes during the read, the snapshot is retried. The retry count is bounded; repeated churn fails closed with a deliberate retry token so the next ordinary rescan tries again. A valid repaired snapshot also clears the policy-specific error state instead of leaving a stale catalogue-error badge.
+
+`tests/test_launcher_activity_policy_safety.py` now includes a deterministic atomic-replacement regression for both adaptive and direct launcher paths, plus explicit repair/error-clearing assertions. `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md` requires these cases.
+
+Current implementation/test/doc commits in this closure chain include:
+
+```text
+28c58e06018c735f185ca2e6e674b1f695938222  mandatory policy boundary + initial regressions
+3172b36f041fd086cfcb9ef3ebf9e270a211d744  product authority
+51541074d98789a1946becc3d09809e0b7286ba5  initial handover reconciliation
+dbf7d94e1ec8cebb90fab6d0434fa2794fd8a5b8  OS-work router reconciliation
+2e2d9f10316bb570e77d433a2e5779dd87af4e5b  stable policy snapshot hardening
+52358aa892b5b1630fdedefbb2f43dd0eb4d3c94  race + repair regressions
+4beaf81b79d744a6b68b4a2dc74b863a418f7775  acceptance-gate hardening
+```
+
+Verification status remains deliberately **PENDING**: neither the focused current suite nor current-head `make verify` has executed after the snapshot-hardening source changes. The historical C02 1768-test green predates them and cannot be inherited. No current physical Acer fallback-policy PASS is claimed.
+
+Next exact step: freeze current `main`, run the focused policy safety suite, the existing discovery/Parent regressions and `make verify` exactly as specified by `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md`. Only after that source/local gate is green should the sanctioned R7 physical fallback lane hide one harmless Activity through Parent and prove it remains hidden in both normal and emergency launcher paths.
