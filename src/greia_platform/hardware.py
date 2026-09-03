@@ -49,13 +49,14 @@ class HardwareDefaults:
     mic_gain: float = 2.0
     minimum_mic_gain: float = 0.5
     maximum_mic_gain: float = 4.0
+    disable_while_typing: bool = False
 
     @classmethod
     def default_safe(cls) -> "HardwareDefaults":
         """Built-in immutable fallback policy for hardware settings."""
         return cls(
-            schema_version=1,
-            touchpad_tap=True,
+            schema_version=2,
+            touchpad_tap=False,
             touchpad_speed=0.35,
             mouse_speed=0.0,
             natural_scrolling=False,
@@ -66,6 +67,7 @@ class HardwareDefaults:
             mic_gain=2.0,
             minimum_mic_gain=0.5,
             maximum_mic_gain=4.0,
+            disable_while_typing=False,
         )
 
     @classmethod
@@ -82,8 +84,8 @@ class HardwareDefaults:
             return cls.default_safe()
         try:
             loaded = cls(
-                schema_version=int(data.get("schema_version", 1)),
-                touchpad_tap=_strict_bool(defaults.get("touchpad_tap", True), "touchpad_tap"),
+                schema_version=int(data.get("schema_version", 2)),
+                touchpad_tap=_strict_bool(defaults.get("touchpad_tap", False), "touchpad_tap"),
                 touchpad_speed=float(defaults.get("touchpad_speed", 0.35)),
                 mouse_speed=float(defaults.get("mouse_speed", 0.0)),
                 natural_scrolling=_strict_bool(
@@ -98,11 +100,34 @@ class HardwareDefaults:
                 mic_gain=float(defaults.get("mic_gain", 2.0)),
                 minimum_mic_gain=float(limits.get("minimum_mic_gain", 0.5)),
                 maximum_mic_gain=float(limits.get("maximum_mic_gain", 4.0)),
+                disable_while_typing=_strict_bool(
+                    defaults.get("disable_while_typing", False),
+                    "disable_while_typing",
+                ),
             )
         except (KeyError, TypeError, ValueError):
             return cls.default_safe()
-        if loaded.schema_version != 1:
+        if loaded.schema_version not in (1, 2):
             return cls.default_safe()
+        if loaded.schema_version == 1:
+            # Migrate v1 platform defaults: preserve all valid values,
+            # upgrade the version marker and default the new field to False
+            # (pre-tranche hard-coded backend behavior).
+            loaded = cls(
+                schema_version=2,
+                touchpad_tap=loaded.touchpad_tap,
+                touchpad_speed=loaded.touchpad_speed,
+                mouse_speed=loaded.mouse_speed,
+                natural_scrolling=loaded.natural_scrolling,
+                resolution=loaded.resolution,
+                keyboard_layout=loaded.keyboard_layout,
+                minimum_speed=loaded.minimum_speed,
+                maximum_speed=loaded.maximum_speed,
+                mic_gain=loaded.mic_gain,
+                minimum_mic_gain=loaded.minimum_mic_gain,
+                maximum_mic_gain=loaded.maximum_mic_gain,
+                disable_while_typing=False,
+            )
         try:
             loaded.validate_keyboard_layout(loaded.keyboard_layout)
         except HardwareSettingsError:
@@ -119,6 +144,7 @@ class HardwareDefaults:
                 mic_gain=loaded.mic_gain,
                 minimum_mic_gain=loaded.minimum_mic_gain,
                 maximum_mic_gain=loaded.maximum_mic_gain,
+                disable_while_typing=loaded.disable_while_typing,
             )
         if loaded.minimum_speed < -1.0 or loaded.maximum_speed > 1.0 or loaded.minimum_speed >= loaded.maximum_speed:
             return cls.default_safe()
@@ -162,6 +188,7 @@ class HardwareSettings:
     resolution: str
     keyboard_layout: str
     mic_gain: float = 2.0
+    disable_while_typing: bool = False
 
     def as_json_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -212,6 +239,7 @@ class HardwareSettingsStore:
             resolution=self.defaults.resolution,
             keyboard_layout=self.defaults.keyboard_layout,
             mic_gain=self.defaults.mic_gain,
+            disable_while_typing=self.defaults.disable_while_typing,
         )
 
     def read(self) -> HardwareSettings:
@@ -225,33 +253,78 @@ class HardwareSettingsStore:
         if not isinstance(raw, dict):
             return default
         try:
-            settings = HardwareSettings(
-                schema_version=_strict_int(
-                    raw.get("schema_version", self.defaults.schema_version),
-                    "schema_version",
-                ),
-                touchpad_tap=_strict_bool(
-                    raw.get("touchpad_tap", default.touchpad_tap), "touchpad_tap"
-                ),
-                touchpad_speed=self.defaults.validate_speed(
-                    float(raw.get("touchpad_speed", default.touchpad_speed)),
-                    "touchpad_speed",
-                ),
-                mouse_speed=self.defaults.validate_speed(
-                    float(raw.get("mouse_speed", default.mouse_speed)), "mouse_speed"
-                ),
-                natural_scrolling=_strict_bool(
-                    raw.get("natural_scrolling", default.natural_scrolling),
-                    "natural_scrolling",
-                ),
-                resolution=str(raw.get("resolution", default.resolution)),
-                keyboard_layout=str(
-                    raw.get("keyboard_layout", default.keyboard_layout)
-                ),
-                mic_gain=self.defaults.validate_mic_gain(
-                    float(raw.get("mic_gain", default.mic_gain))
-                ),
+            version = _strict_int(
+                raw.get("schema_version", self.defaults.schema_version),
+                "schema_version",
             )
+        except (HardwareSettingsError, TypeError, ValueError):
+            return default
+        try:
+            if version == 1 and self.defaults.schema_version == 2:
+                # Explicit v1 → v2 migration: preserve every valid stored
+                # value; only the version marker changes and the new field
+                # defaults to False (pre-tranche backend behavior).
+                settings = HardwareSettings(
+                    schema_version=2,
+                    touchpad_tap=_strict_bool(
+                        raw.get("touchpad_tap", default.touchpad_tap),
+                        "touchpad_tap",
+                    ),
+                    touchpad_speed=self.defaults.validate_speed(
+                        float(raw.get("touchpad_speed", default.touchpad_speed)),
+                        "touchpad_speed",
+                    ),
+                    mouse_speed=self.defaults.validate_speed(
+                        float(raw.get("mouse_speed", default.mouse_speed)),
+                        "mouse_speed",
+                    ),
+                    natural_scrolling=_strict_bool(
+                        raw.get("natural_scrolling", default.natural_scrolling),
+                        "natural_scrolling",
+                    ),
+                    resolution=str(raw.get("resolution", default.resolution)),
+                    keyboard_layout=str(
+                        raw.get("keyboard_layout", default.keyboard_layout)
+                    ),
+                    mic_gain=self.defaults.validate_mic_gain(
+                        float(raw.get("mic_gain", default.mic_gain))
+                    ),
+                    disable_while_typing=False,
+                )
+            elif version == self.defaults.schema_version:
+                settings = HardwareSettings(
+                    schema_version=version,
+                    touchpad_tap=_strict_bool(
+                        raw.get("touchpad_tap", default.touchpad_tap), "touchpad_tap"
+                    ),
+                    touchpad_speed=self.defaults.validate_speed(
+                        float(raw.get("touchpad_speed", default.touchpad_speed)),
+                        "touchpad_speed",
+                    ),
+                    mouse_speed=self.defaults.validate_speed(
+                        float(raw.get("mouse_speed", default.mouse_speed)), "mouse_speed"
+                    ),
+                    natural_scrolling=_strict_bool(
+                        raw.get("natural_scrolling", default.natural_scrolling),
+                        "natural_scrolling",
+                    ),
+                    resolution=str(raw.get("resolution", default.resolution)),
+                    keyboard_layout=str(
+                        raw.get("keyboard_layout", default.keyboard_layout)
+                    ),
+                    mic_gain=self.defaults.validate_mic_gain(
+                        float(raw.get("mic_gain", default.mic_gain))
+                    ),
+                    disable_while_typing=_strict_bool(
+                        raw.get(
+                            "disable_while_typing",
+                            default.disable_while_typing,
+                        ),
+                        "disable_while_typing",
+                    ),
+                )
+            else:
+                return default
             self.validate(settings)
             return settings
         except (HardwareSettingsError, TypeError, ValueError):
@@ -267,6 +340,7 @@ class HardwareSettingsStore:
         resolution: str | None = None,
         keyboard_layout: str | None = None,
         mic_gain: float | None = None,
+        disable_while_typing: bool | None = None,
         allowed_resolutions: Iterable[str] | None = None,
     ) -> HardwareSettings:
         current = self.read()
@@ -298,6 +372,11 @@ class HardwareSettingsStore:
                 current.mic_gain
                 if mic_gain is None
                 else self.defaults.validate_mic_gain(mic_gain)
+            ),
+            disable_while_typing=(
+                current.disable_while_typing
+                if disable_while_typing is None
+                else disable_while_typing
             ),
         )
         self.validate(updated, allowed_resolutions=allowed_resolutions)
@@ -333,6 +412,8 @@ class HardwareSettingsStore:
             raise HardwareSettingsError("touchpad_tap must be boolean")
         if not isinstance(settings.natural_scrolling, bool):
             raise HardwareSettingsError("natural_scrolling must be boolean")
+        if not isinstance(settings.disable_while_typing, bool):
+            raise HardwareSettingsError("disable_while_typing must be boolean")
         self.defaults.validate_speed(settings.touchpad_speed, "touchpad_speed")
         self.defaults.validate_speed(settings.mouse_speed, "mouse_speed")
         _validate_resolution_id(settings.resolution)

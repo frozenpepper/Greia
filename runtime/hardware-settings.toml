@@ -1,8 +1,9 @@
-schema_version = 1
+schema_version = 2
 
 [defaults]
-# Tap-to-click is enabled for responsive navigation.
-touchpad_tap = true
+# Tap-to-click stays off by default per platform policy.
+touchpad_tap = false
+disable_while_typing = false
 touchpad_speed = 0.5
 mouse_speed = 0.5
 natural_scrolling = false
