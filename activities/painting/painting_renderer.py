@@ -105,7 +105,7 @@ class PaintingRenderer:
                 self._scaled_tool_icons_disabled[name] = disabled
 
         # Pre-scale color dish (single)
-        dish_sz = self.metrics.px(38) + self.metrics.px(6)
+        dish_sz = self.metrics.px(46) + self.metrics.px(6)
         well_dish = self.assets.get("color_well_dish")
         if well_dish is not None:
             self._scaled_dish = pygame.transform.smoothscale(well_dish, (dish_sz, dish_sz))
@@ -184,7 +184,7 @@ class PaintingRenderer:
         safe = self.metrics.activity_safe_rect()
         left = safe.left + self.metrics.margin + self.metrics.px(10)
         y = safe.bottom - self.metrics.margin - self.palette_height // 2
-        diameter = self.metrics.px(38)
+        diameter = self.metrics.px(46)
         gap = self.metrics.px(8)
         return [
             (pygame.Rect(left + i * (diameter + gap), y - diameter // 2, diameter, diameter), i)

@@ -90,5 +90,78 @@ class PaintingContractTests(unittest.TestCase):
         self.assertEqual(mod.MAX_PAINTINGS, 48, "Painting must support up to 48 paintings")
 
 
+class PaintingSwatchGeometryTests(unittest.TestCase):
+    """Pin 46px swatch hit targets through the real renderer geometry."""
+
+    def test_swatches_measure_46px_with_no_palette_overlap_at_reference(self) -> None:
+        import os
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+
+        try:
+            pygame.init()
+        except Exception:
+            pass
+        try:
+            from greia_platform.activity_ui import ChildUiMetrics
+
+            mod = _load_painting_module()
+            metrics = ChildUiMetrics.for_size(1024, 600)
+            pygame.display.set_mode((1024, 600))
+            screen = pygame.Surface((1024, 600))
+            renderer = mod.PaintingRenderer(metrics, None, screen)
+
+            swatches = renderer._color_buttons()
+            self.assertEqual(len(swatches), 10, "Palette must expose 10 swatches")
+            for rect, _index in swatches:
+                self.assertGreaterEqual(rect.width, 46, f"Swatch too narrow: {rect}")
+                self.assertGreaterEqual(rect.height, 46, f"Swatch too short: {rect}")
+
+            sizes = renderer._size_buttons()
+            self.assertEqual(len(sizes), 3, "Palette must expose 3 brush size buttons")
+
+            # No pairwise overlap between swatches.
+            rects = [rect for rect, _index in swatches]
+            for i in range(len(rects)):
+                for j in range(i + 1, len(rects)):
+                    self.assertFalse(
+                        rects[i].colliderect(rects[j]),
+                        f"Swatches {i} and {j} overlap: {rects[i]} vs {rects[j]}",
+                    )
+
+            # No overlap between swatches and brush size buttons.
+            size_rects = [rect for rect, _index in sizes]
+            for i, swatch in enumerate(rects):
+                for j, size_rect in enumerate(size_rects):
+                    self.assertFalse(
+                        swatch.colliderect(size_rect),
+                        f"Swatch {i} overlaps size button {j}",
+                    )
+
+            # Separator sits in the gap between the swatch row and size buttons.
+            first_size_left = min(rect.left for rect in size_rects)
+            last_swatch_right = max(rect.right for rect in rects)
+            sep_x = sizes[-1][0].left - metrics.px(14)
+            self.assertGreater(sep_x, last_swatch_right, "Separator must clear the swatch row")
+            self.assertLess(sep_x, first_size_left, "Separator must clear the size buttons")
+            for rect in rects + size_rects:
+                self.assertFalse(
+                    rect.left < sep_x < rect.right,
+                    f"Separator x={sep_x} clips palette button {rect}",
+                )
+
+            # Dish blit stays keyed to the 46px swatch diameter.
+            if renderer._scaled_dish is not None:
+                expected = metrics.px(46) + metrics.px(6)
+                self.assertEqual(renderer._scaled_dish.get_size(), (expected, expected))
+        finally:
+            try:
+                pygame.quit()
+            except Exception:
+                pass
+
+
 if __name__ == "__main__":
     unittest.main()
