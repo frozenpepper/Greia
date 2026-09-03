@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 from greia_parent.production_api import ProductionParentApiApplication
-from greia_platform.wifi import IwdWifiBackend, WifiError
+from greia_platform.wifi import IwdWifiBackend, WifiError, WifiNetwork, WifiSecurity
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +29,22 @@ class _UnavailableWifiBackend:
     def connect(self, network, passphrase=""):
         self.connect_calls += 1
         raise AssertionError("unavailable production Wi-Fi must not connect")
+
+
+class _AvailableWifiBackend:
+    def __init__(self, networks: tuple[WifiNetwork, ...]) -> None:
+        self.networks = networks
+        self.connected: list[WifiNetwork] = []
+
+    def available(self) -> bool:
+        return True
+
+    def scan(self) -> tuple[WifiNetwork, ...]:
+        return self.networks
+
+    def connect(self, network: WifiNetwork, passphrase: str = ""):
+        self.connected.append(network)
+        return SimpleNamespace(network=network)
 
 
 class ParentProductionApiTests(unittest.TestCase):
@@ -73,6 +91,43 @@ class ParentProductionApiTests(unittest.TestCase):
                 self.assertEqual(app.wifi_payload(), {"available": False, "networks": []})
                 with self.assertRaisesRegex(WifiError, "unavailable"):
                     app.connect_wifi("Family Wi-Fi", "password123")
+
+    @unittest.skipUnless(hasattr(os, "ST_RDONLY"), "platform has no ST_RDONLY flag")
+    def test_real_iwd_is_not_advertised_on_read_only_mount(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            state_dir = root / "iwd"
+            state_dir.mkdir()
+            backend = IwdWifiBackend(state_dir=state_dir)
+            app = self._app(root, wifi_backend=backend)
+            statvfs = SimpleNamespace(f_flag=os.ST_RDONLY)
+            with (
+                mock.patch.object(backend, "available", return_value=True),
+                mock.patch("greia_parent.production_api.os.statvfs", return_value=statvfs),
+                mock.patch("greia_parent.production_api.os.access", return_value=True),
+            ):
+                self.assertFalse(app.index_payload()["capabilities"]["network.manage"])
+                self.assertEqual(app.wifi_payload(), {"available": False, "networks": []})
+
+    def test_production_rejects_unscanned_network_without_synthesizing_it(self) -> None:
+        real = WifiNetwork("Family Wi-Fi", WifiSecurity.OPEN, -42.0, "/real/family")
+        backend = _AvailableWifiBackend((real,))
+        with tempfile.TemporaryDirectory() as temporary:
+            app = self._app(Path(temporary), wifi_backend=backend)
+            with self.assertRaisesRegex(WifiError, "scan again"):
+                app.connect_wifi("Invented Wi-Fi", "password123")
+            self.assertEqual(backend.connected, [])
+
+    def test_production_connects_the_exact_scanned_network(self) -> None:
+        real = WifiNetwork("Family Wi-Fi", WifiSecurity.OPEN, -42.0, "/real/family")
+        backend = _AvailableWifiBackend((real,))
+        with tempfile.TemporaryDirectory() as temporary:
+            app = self._app(Path(temporary), wifi_backend=backend)
+            self.assertEqual(
+                app.connect_wifi("Family Wi-Fi"),
+                {"connected": True, "ssid": "Family Wi-Fi"},
+            )
+            self.assertEqual(backend.connected, [real])
 
     def test_capability_index_preserves_composed_features(self) -> None:
         backend = _UnavailableWifiBackend()
