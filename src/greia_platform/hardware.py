@@ -5,7 +5,10 @@ import os
 import tomllib
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
+
+if TYPE_CHECKING:  # Avoid a runtime cycle: display_metrics imports DisplayMode.
+    from .display_metrics import DisplayMetrics
 
 
 class HardwareSettingsError(ValueError):
@@ -195,20 +198,74 @@ class HardwareSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class PointerDeviceStatus:
+    """Bounded backend-neutral description of one pointer in status output.
+
+    ``kind`` is a short semantic token (``touchpad``/``mouse``/
+    ``other_relative``/``touchscreen``); ``label`` is a generic kind-derived
+    display label, never a backend device name. Numeric backend ids never
+    persist here. Bounds: at most ``MAX_STATUS_POINTER_DEVICES`` entries per
+    status payload, each string truncated to ``MAX_STATUS_LABEL_CHARS``.
+    """
+
+    kind: str
+    label: str
+    supports_tap: bool = False
+    supports_natural_scrolling: bool = False
+    supports_disable_while_typing: bool = False
+    supports_speed: bool = False
+
+    def as_json_dict(self) -> dict[str, object]:
+        return {
+            "kind": self.kind,
+            "label": self.label,
+            "supports_tap": self.supports_tap,
+            "supports_natural_scrolling": self.supports_natural_scrolling,
+            "supports_disable_while_typing": self.supports_disable_while_typing,
+            "supports_speed": self.supports_speed,
+        }
+
+
+# Bounds for the pointer-capability summary in status output. Small enough
+# for the Acer reference floor; no per-device or per-metric caches exist.
+MAX_STATUS_POINTER_DEVICES = 8
+MAX_STATUS_LABEL_CHARS = 32
+
+# Reader-side sanity bounds mirroring the T01 ``sanitize_display_metrics``
+# gate (pixels 1..16384, physical 20..3000mm). The reader re-checks them so
+# a hand-edited status file cannot inject absurd dimensions; it never
+# invents dimensions (out-of-range physical becomes unknown, bad pixels
+# become "no metrics").
+_STATUS_MAX_PIXEL_DIMENSION = 16384
+_STATUS_MIN_PHYSICAL_MM = 20.0
+_STATUS_MAX_PHYSICAL_MM = 3000.0
+
+
+@dataclass(frozen=True, slots=True)
 class HardwareApplyStatus:
     settings: HardwareSettings
     applied: bool
     display_output: str | None
     display_modes: tuple[DisplayMode, ...]
     message: str
+    display_metrics: DisplayMetrics | None = None
+    pointer_devices: tuple[PointerDeviceStatus, ...] = ()
 
     def as_json_dict(self) -> dict[str, object]:
+        from .display_metrics import DisplayMetrics as _Metrics
+
+        metrics_payload: dict[str, object] | None = None
+        metrics = self.display_metrics
+        if isinstance(metrics, _Metrics):
+            metrics_payload = _metrics_to_json_dict(metrics)
         return {
             "settings": self.settings.as_json_dict(),
             "applied": self.applied,
             "display_output": self.display_output,
             "display_modes": [mode.as_json_dict() for mode in self.display_modes],
             "message": self.message,
+            "display_metrics": metrics_payload,
+            "pointer_devices": [device.as_json_dict() for device in self.pointer_devices],
         }
 
 
@@ -439,6 +496,16 @@ class HardwareSettingsStore:
 
 
 def read_apply_status(path: Path, fallback: HardwareSettings) -> HardwareApplyStatus:
+    """Read the watcher status file with backward tolerance.
+
+    Old payloads without ``display_metrics``/``pointer_devices`` parse with
+    those fields defaulted (``None``/``()``). Missing, unreadable, corrupt,
+    or old-format (non-object) payloads fail soft to the existing
+    "not reported yet" status so the Parent health path keeps working.
+    Malformed new-field entries degrade to ``None``/``()`` individually and
+    never break the rest of the payload. No suitability verdict is read or
+    stored here: product policy stays above this layer.
+    """
     try:
         raw = json.loads(path.read_text(encoding="utf-8"))
     except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError):
@@ -450,7 +517,13 @@ def read_apply_status(path: Path, fallback: HardwareSettings) -> HardwareApplySt
             message="Hardware session has not reported yet.",
         )
     if not isinstance(raw, dict):
-        raise HardwareSettingsError("hardware status must be an object")
+        return HardwareApplyStatus(
+            settings=fallback,
+            applied=False,
+            display_output=None,
+            display_modes=(),
+            message="Hardware session has not reported yet.",
+        )
     modes: list[DisplayMode] = []
     raw_modes = raw.get("display_modes", [])
     if isinstance(raw_modes, list):
@@ -481,7 +554,155 @@ def read_apply_status(path: Path, fallback: HardwareSettings) -> HardwareApplySt
         ),
         display_modes=tuple(modes),
         message=str(raw.get("message", "")),
+        display_metrics=_metrics_from_json_dict(raw.get("display_metrics")),
+        pointer_devices=_pointer_devices_from_json(raw.get("pointer_devices")),
     )
+
+
+def _metrics_to_json_dict(metrics: object) -> dict[str, object] | None:
+    """Serialize display metrics to the bounded status shape (T09 contract).
+
+    Shape: ``{"pixel_width": int, "pixel_height": int,
+    "physical_size_known": bool, "orientation": str, "source": str,
+    "physical_width_mm": float | omitted, "physical_height_mm": float |
+    omitted}``. Physical mm appear only when ``physical_size_known`` is
+    true. Returns ``None`` when given a non-metrics object.
+    """
+    pixel_width = getattr(metrics, "pixel_width", None)
+    pixel_height = getattr(metrics, "pixel_height", None)
+    if (
+        isinstance(pixel_width, bool)
+        or isinstance(pixel_height, bool)
+        or not isinstance(pixel_width, int)
+        or not isinstance(pixel_height, int)
+    ):
+        return None
+    known = bool(getattr(metrics, "physical_size_known", False))
+    orientation = getattr(metrics, "orientation", "landscape")
+    source = getattr(getattr(metrics, "source", None), "value", "unknown")
+    payload: dict[str, object] = {
+        "pixel_width": pixel_width,
+        "pixel_height": pixel_height,
+        "physical_size_known": known,
+        "orientation": str(orientation),
+        "source": str(source),
+    }
+    if known:
+        width_mm = getattr(metrics, "physical_width_mm", None)
+        height_mm = getattr(metrics, "physical_height_mm", None)
+        if isinstance(width_mm, (int, float)) and isinstance(height_mm, (int, float)):
+            payload["physical_width_mm"] = float(width_mm)
+            payload["physical_height_mm"] = float(height_mm)
+    return payload
+
+
+def _metrics_from_json_dict(raw: object) -> DisplayMetrics | None:
+    """Parse ``display_metrics`` tolerantly; ``None`` when absent/malformed."""
+    if not isinstance(raw, dict):
+        return None
+    pixel_width = raw.get("pixel_width")
+    pixel_height = raw.get("pixel_height")
+    if (
+        isinstance(pixel_width, bool)
+        or isinstance(pixel_height, bool)
+        or not isinstance(pixel_width, int)
+        or not isinstance(pixel_height, int)
+        or not 1 <= pixel_width <= _STATUS_MAX_PIXEL_DIMENSION
+        or not 1 <= pixel_height <= _STATUS_MAX_PIXEL_DIMENSION
+    ):
+        return None
+    try:
+        from .display_metrics import DisplayMetrics, DisplayMetricsSource
+    except ImportError:
+        return None
+    source = DisplayMetricsSource.UNKNOWN
+    raw_source = raw.get("source")
+    if isinstance(raw_source, str):
+        for candidate in DisplayMetricsSource:
+            if candidate.value == raw_source:
+                source = candidate
+                break
+    width_mm: float | None = None
+    height_mm: float | None = None
+    raw_width = raw.get("physical_width_mm")
+    raw_height = raw.get("physical_height_mm")
+    if isinstance(raw_width, (int, float)) and isinstance(raw_height, (int, float)):
+        candidate_width = float(raw_width)
+        candidate_height = float(raw_height)
+        if (
+            _STATUS_MIN_PHYSICAL_MM <= candidate_width <= _STATUS_MAX_PHYSICAL_MM
+            and _STATUS_MIN_PHYSICAL_MM <= candidate_height <= _STATUS_MAX_PHYSICAL_MM
+        ):
+            width_mm = candidate_width
+            height_mm = candidate_height
+    if width_mm is None or height_mm is None:
+        # Never invent dimensions: partial/out-of-range physical degrades
+        # to unknown physical size instead of failing the whole payload.
+        try:
+            return DisplayMetrics(pixel_width, pixel_height)
+        except (TypeError, ValueError):
+            return None
+    try:
+        metrics = DisplayMetrics(
+            pixel_width,
+            pixel_height,
+            physical_width_mm=width_mm,
+            physical_height_mm=height_mm,
+            source=source,
+        )
+    except (TypeError, ValueError):
+        try:
+            return DisplayMetrics(pixel_width, pixel_height)
+        except (TypeError, ValueError):
+            return None
+    if not metrics.physical_size_known:
+        # A stored UNKNOWN source with physical mm is inconsistent; keep
+        # the pixel facts and drop the physical size rather than failing.
+        try:
+            return DisplayMetrics(pixel_width, pixel_height)
+        except (TypeError, ValueError):
+            return None
+    return metrics
+
+
+def _pointer_devices_from_json(raw: object) -> tuple[PointerDeviceStatus, ...]:
+    """Parse ``pointer_devices`` tolerantly; ``()`` when absent/malformed."""
+    if not isinstance(raw, list):
+        return ()
+    devices: list[PointerDeviceStatus] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        kind = entry.get("kind")
+        label = entry.get("label")
+        if not isinstance(kind, str) or not isinstance(label, str):
+            continue
+        kind = kind.strip()[:MAX_STATUS_LABEL_CHARS] or "unknown"
+        label = label.strip()[:MAX_STATUS_LABEL_CHARS] or kind.title()
+        capabilities = entry.get("capabilities")
+        if isinstance(capabilities, dict):
+            supports_tap = bool(capabilities.get("supports_tap", False))
+            supports_natural = bool(capabilities.get("supports_natural_scrolling", False))
+            supports_dwt = bool(capabilities.get("supports_disable_while_typing", False))
+            supports_speed = bool(capabilities.get("supports_speed", False))
+        else:
+            supports_tap = bool(entry.get("supports_tap", False))
+            supports_natural = bool(entry.get("supports_natural_scrolling", False))
+            supports_dwt = bool(entry.get("supports_disable_while_typing", False))
+            supports_speed = bool(entry.get("supports_speed", False))
+        devices.append(
+            PointerDeviceStatus(
+                kind=kind,
+                label=label,
+                supports_tap=supports_tap,
+                supports_natural_scrolling=supports_natural,
+                supports_disable_while_typing=supports_dwt,
+                supports_speed=supports_speed,
+            )
+        )
+        if len(devices) >= MAX_STATUS_POINTER_DEVICES:
+            break
+    return tuple(devices)
 
 
 def _strict_bool(value: object, name: str) -> bool:

@@ -4,14 +4,30 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from .display_metrics import DisplayMetrics
 from .hardware import DisplayMode
 
 
 @dataclass(frozen=True, slots=True)
 class DisplayState:
+    """Backend-neutral display presence plus bounded physical facts.
+
+    ``metrics`` carries the current-mode pixel/physical facts (or ``None``
+    when there is nothing to describe). Product suitability
+    (:class:`DisplayPolicy` / ``DisplaySuitability``) is deliberately *not*
+    part of this state: policy thresholds live above HAL so product floors
+    can vary without changing the hardware boundary. Likewise, detailed
+    pointer capabilities live in the status layer via
+    ``PointerSettingsController``; :class:`InputState` stays presence-only.
+    ``metrics`` defaults to ``None`` so older constructors and backends
+    that have not been migrated (e.g. the provisional legacy-X adapter,
+    owned by another task) keep working unchanged.
+    """
+
     available: bool
     modes: tuple[DisplayMode, ...] = ()
     backend: str = "unknown"
+    metrics: DisplayMetrics | None = None
 
 
 @dataclass(frozen=True, slots=True)

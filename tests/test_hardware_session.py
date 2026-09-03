@@ -10,11 +10,19 @@ import unittest
 from pathlib import Path
 from threading import Event
 
+from greia_platform.display_metrics import DisplayMetrics, DisplayMetricsSource
+from greia_platform.hal import DisplayState
 from greia_platform.hal_legacy_x import LegacyXHardwareSessionController
-from greia_platform.hardware import DisplayMode, HardwareSettings
+from greia_platform.hardware import (
+    DisplayMode,
+    HardwareSettings,
+    read_apply_status,
+)
 from greia_platform.hardware_session import (
     ApplyResult,
     DisplayProbe,
+    PointerCapabilities,
+    PointerDeviceInfo,
     PointerKind,
     preset_to_speed,
     speed_preset_names,
@@ -443,6 +451,313 @@ class LegacyXContractTests(unittest.TestCase):
             self.assertNotIn("libinput Tapping Enabled", source)
             self.assertNotIn("libinput Accel Speed", source)
             self.assertNotIn("libinput Disable While Typing Enabled", source)
+
+
+class DisplayMetricsStatusTests(unittest.TestCase):
+    """T05: bounded display/pointer facts in status + backward tolerance."""
+
+    def _settings(self, **overrides) -> HardwareSettings:
+        values: dict = {
+            "schema_version": 2,
+            "touchpad_tap": False,
+            "touchpad_speed": 0.0,
+            "mouse_speed": 0.0,
+            "natural_scrolling": False,
+            "resolution": "auto",
+            "keyboard_layout": "us",
+            "mic_gain": 2.0,
+            "disable_while_typing": False,
+        }
+        values.update(overrides)
+        return HardwareSettings(**values)
+
+    def _metrics_known(self) -> DisplayMetrics:
+        return DisplayMetrics(
+            1024,
+            600,
+            physical_width_mm=220.0,
+            physical_height_mm=130.0,
+            source=DisplayMetricsSource.XRANDR_PHYSICAL_SIZE,
+        )
+
+    def _controller_with_facts(
+        self, metrics: DisplayMetrics | None, with_pointers: bool = True
+    ):
+        metrics_value = metrics
+        pointer_infos = (
+            (
+                PointerDeviceInfo(
+                    PointerKind.TOUCHPAD,
+                    "Touchpad",
+                    PointerCapabilities(
+                        supports_tap=True,
+                        supports_natural_scrolling=True,
+                        supports_disable_while_typing=True,
+                        supports_speed=True,
+                    ),
+                ),
+                PointerDeviceInfo(
+                    PointerKind.MOUSE,
+                    "Mouse",
+                    PointerCapabilities(
+                        supports_natural_scrolling=True,
+                        supports_speed=True,
+                    ),
+                ),
+            )
+            if with_pointers
+            else ()
+        )
+
+        class _FactsController:
+            backend_id = "fake-facts"
+
+            def __init__(self) -> None:
+                mode = DisplayMode(
+                    width=1024, height=600, refresh_hz=60.0,
+                    preferred=True, current=True,
+                )
+                self.display = DisplayProbe("panel-0", (mode,), metrics_value)
+                self._infos = pointer_infos
+
+            def topology_token(self):
+                return ("panel-0:1024x600", "pointer-0")
+
+            def probe_display(self):
+                return self.display
+
+            def apply(self, _settings):
+                return ApplyResult(True, self.display, ("ok",))
+
+            if with_pointers:
+
+                def probe_pointers(self):  # noqa: N802
+                    return self._infos
+
+        return _FactsController()
+
+    def test_old_payload_without_new_fields_still_reads(self) -> None:
+        fallback = self._settings()
+        with tempfile.TemporaryDirectory() as temporary:
+            status = Path(temporary) / "status.json"
+            old_payload = {
+                "settings": fallback.as_json_dict(),
+                "applied": True,
+                "backend": "legacy-x11",
+                "display_output": "LVDS1",
+                "display_modes": [
+                    {
+                        "id": "1024x600",
+                        "width": 1024,
+                        "height": 600,
+                        "refresh_hz": 60.0,
+                        "preferred": True,
+                        "current": True,
+                    }
+                ],
+                "message": "ok",
+            }
+            status.write_text(json.dumps(old_payload), encoding="utf-8")
+            result = read_apply_status(status, fallback)
+        self.assertTrue(result.applied)
+        self.assertEqual(result.display_output, "LVDS1")
+        self.assertEqual(len(result.display_modes), 1)
+        self.assertIsNone(result.display_metrics)
+        self.assertEqual(result.pointer_devices, ())
+        self.assertEqual(result.message, "ok")
+
+    def test_new_payload_carries_metrics_and_caps_within_bounds(self) -> None:
+        fallback = self._settings()
+        store = _Store(fallback)
+        controller = self._controller_with_facts(self._metrics_known())
+        with tempfile.TemporaryDirectory() as temporary:
+            status = Path(temporary) / "status.json"
+            self.assertEqual(
+                run_watcher(
+                    store,  # type: ignore[arg-type]
+                    status,
+                    controller=controller,  # type: ignore[arg-type]
+                    once=True,
+                ),
+                0,
+            )
+            payload = json.loads(status.read_text(encoding="utf-8"))
+            metrics_payload = payload.get("display_metrics")
+            self.assertIsInstance(metrics_payload, dict)
+            assert isinstance(metrics_payload, dict)
+            self.assertEqual(
+                (metrics_payload["pixel_width"], metrics_payload["pixel_height"]),
+                (1024, 600),
+            )
+            self.assertTrue(metrics_payload["physical_size_known"])
+            self.assertIn(
+                metrics_payload["orientation"], ("landscape", "portrait", "square")
+            )
+            self.assertNotIn("suitability", payload)
+            self.assertNotIn("suitability", metrics_payload)
+            encoded = json.dumps(payload)
+            self.assertNotIn("xrandr", encoded)
+            self.assertNotIn("xinput", encoded)
+            self.assertNotIn("Coordinate Transformation Matrix", encoded)
+            devices = payload.get("pointer_devices")
+            self.assertIsInstance(devices, list)
+            assert isinstance(devices, list)
+            self.assertLessEqual(len(devices), 8)
+            kinds = {entry["kind"] for entry in devices}
+            self.assertEqual(kinds, {"touchpad", "mouse"})
+            for entry in devices:
+                self.assertNotIn("id=", json.dumps(entry))
+                self.assertLessEqual(len(entry["label"]), 32)
+                for flag in (
+                    "supports_tap",
+                    "supports_natural_scrolling",
+                    "supports_disable_while_typing",
+                    "supports_speed",
+                ):
+                    self.assertIsInstance(entry[flag], bool)
+            reread = read_apply_status(status, fallback)
+        self.assertIsNotNone(reread.display_metrics)
+        assert reread.display_metrics is not None
+        self.assertEqual(
+            (reread.display_metrics.pixel_width, reread.display_metrics.pixel_height),
+            (1024, 600),
+        )
+        self.assertTrue(reread.display_metrics.physical_size_known)
+        self.assertEqual(
+            {device.kind for device in reread.pointer_devices},
+            {"touchpad", "mouse"},
+        )
+
+    def test_unknown_physical_omits_mm_and_controller_without_seam_stays_operable(
+        self,
+    ) -> None:
+        fallback = self._settings()
+        unknown = DisplayMetrics(1024, 600)
+        store = _Store(fallback)
+        controller = self._controller_with_facts(unknown, with_pointers=False)
+        self.assertFalse(hasattr(controller, "probe_pointers"))
+        with tempfile.TemporaryDirectory() as temporary:
+            status = Path(temporary) / "status.json"
+            self.assertEqual(
+                run_watcher(
+                    store,  # type: ignore[arg-type]
+                    status,
+                    controller=controller,  # type: ignore[arg-type]
+                    once=True,
+                ),
+                0,
+            )
+            payload = json.loads(status.read_text(encoding="utf-8"))
+            self.assertEqual(payload["pointer_devices"], [])
+            metrics_payload = payload["display_metrics"]
+            assert isinstance(metrics_payload, dict)
+            self.assertFalse(metrics_payload["physical_size_known"])
+            self.assertNotIn("physical_width_mm", metrics_payload)
+            self.assertNotIn("physical_height_mm", metrics_payload)
+            reread = read_apply_status(status, fallback)
+        assert reread.display_metrics is not None
+        self.assertFalse(reread.display_metrics.physical_size_known)
+
+    def test_failure_cases_fail_soft_and_remain_operable(self) -> None:
+        fallback = self._settings()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            missing = root / "missing.json"
+            result = read_apply_status(missing, fallback)
+            self.assertFalse(result.applied)
+            self.assertIn("not reported", result.message)
+            self.assertIsNone(result.display_metrics)
+            self.assertEqual(result.pointer_devices, ())
+
+            old_format = root / "old-format.json"
+            old_format.write_text('["not", "an", "object"]\n', encoding="utf-8")
+            result = read_apply_status(old_format, fallback)
+            self.assertFalse(result.applied)
+            self.assertIn("not reported", result.message)
+
+            corrupt = root / "corrupt.json"
+            corrupt.write_text("{not json", encoding="utf-8")
+            result = read_apply_status(corrupt, fallback)
+            self.assertFalse(result.applied)
+            self.assertIn("not reported", result.message)
+
+            bad_new_fields = root / "bad-new-fields.json"
+            bad_new_fields.write_text(
+                json.dumps(
+                    {
+                        "applied": True,
+                        "display_output": "LVDS1",
+                        "display_modes": [{"width": 1024, "height": 600}],
+                        "message": "ok",
+                        "display_metrics": "raw-xrandr-dump",
+                        "pointer_devices": {"id": "12", "name": "backend-name"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result = read_apply_status(bad_new_fields, fallback)
+            self.assertTrue(result.applied)
+            self.assertEqual(result.display_output, "LVDS1")
+            self.assertIsNone(result.display_metrics)
+            self.assertEqual(result.pointer_devices, ())
+
+            absurd_metrics = root / "absurd.json"
+            absurd_metrics.write_text(
+                json.dumps(
+                    {
+                        "applied": True,
+                        "display_output": "LVDS1",
+                        "display_modes": [],
+                        "message": "ok",
+                        "display_metrics": {
+                            "pixel_width": 999999,
+                            "pixel_height": 600,
+                            "physical_size_known": True,
+                            "orientation": "landscape",
+                            "source": "panel_physical_size",
+                            "physical_width_mm": 0.5,
+                            "physical_height_mm": 0.5,
+                        },
+                        "pointer_devices": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result = read_apply_status(absurd_metrics, fallback)
+            self.assertIsNone(result.display_metrics)
+
+    def test_display_state_defaults_to_no_metrics_and_no_suitability(self) -> None:
+        state = DisplayState(True)
+        self.assertIsNone(state.metrics)
+        state_with_facts = DisplayState(True, (), "test", self._metrics_known())
+        self.assertIsNotNone(state_with_facts.metrics)
+        import greia_platform.hardware_session as session_module
+        import greia_platform.hardware as hardware_module
+
+        # Suitability verdicts are documented as out of scope; they must not
+        # appear as stored payload keys (prose mentions are fine).
+        session_source = Path(session_module.__file__).read_text(encoding="utf-8")
+        hardware_source = Path(hardware_module.__file__).read_text(encoding="utf-8")
+        self.assertNotIn('"suitability"', session_source)
+        self.assertNotIn("'suitability'", session_source)
+        self.assertNotIn('"suitability"', hardware_source)
+
+    def test_no_unbounded_cache_daemon_or_extra_subprocess(self) -> None:
+        import greia_platform.hardware as hardware_module
+        import greia_platform.hardware_session as session_module
+
+        session_source = Path(session_module.__file__).read_text(encoding="utf-8")
+        hardware_source = Path(hardware_module.__file__).read_text(encoding="utf-8")
+        for source in (session_source, hardware_source):
+            self.assertNotIn("import subprocess", source)
+            self.assertNotIn("Popen(", source)
+            self.assertNotIn("subprocess.run", source)
+            self.assertNotIn("subprocess.Popen", source)
+            self.assertNotIn("lru_cache", source)
+            self.assertNotIn("Coordinate Transformation Matrix", source)
+        self.assertNotIn("Thread(", session_source)
+        self.assertNotIn('"xrandr"', session_source)
+        self.assertNotIn('"xinput"', session_source)
 
 
 if __name__ == "__main__":

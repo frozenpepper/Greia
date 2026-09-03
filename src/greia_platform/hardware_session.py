@@ -10,7 +10,13 @@ from threading import Event
 from typing import Protocol
 
 from .display_metrics import DisplayMetrics
-from .hardware import DisplayMode, HardwareSettings, HardwareSettingsStore
+from .hardware import (
+    MAX_STATUS_LABEL_CHARS,
+    MAX_STATUS_POINTER_DEVICES,
+    DisplayMode,
+    HardwareSettings,
+    HardwareSettingsStore,
+)
 
 
 class PointerKind(Enum):
@@ -172,6 +178,13 @@ def run_watcher(
     ``stop_event`` lets a concrete session compose this watcher with other
     platform-owned hardware services without creating an unowned background
     process or a second hardware daemon.
+
+    Cadence is unchanged: topology is probed at most every 2 s and settings
+    are reapplied only on settings/topology/retry transitions. Display
+    metrics are never recomputed here; the status writer reuses the
+    ``DisplayProbe.metrics`` facts already produced for the apply cycle.
+    Pointer facts come from the optional ``probe_pointers`` seam at most
+    once per status write (same apply cadence) and degrade to ``()``.
     """
 
     backend_id = _backend_id(controller)
@@ -210,6 +223,7 @@ def run_watcher(
                     result,
                     message,
                     backend_id=backend_id,
+                    pointer_infos=_probe_pointer_infos(controller),
                 )
             except Exception as exc:  # keep the child session alive on driver errors
                 last_apply_succeeded = False
@@ -221,6 +235,7 @@ def run_watcher(
                     failed,
                     _bounded_error(exc),
                     backend_id=backend_id,
+                    pointer_infos=_probe_pointer_infos(controller),
                 )
         if once:
             return 0
@@ -248,13 +263,52 @@ def _write_status(
     message: str,
     *,
     backend_id: str,
+    pointer_infos: tuple[PointerDeviceInfo, ...] = (),
 ) -> None:
+    """Write the atomic watcher status file (T09 consumer contract).
+
+    JSON shape (keys stable; new keys are additive and optional on read)::
+
+        {
+          "settings": {...HardwareSettings...},
+          "applied": bool,
+          "backend": str,                      # 1..64 chars, backend id
+          "display_output": str | null,
+          "display_modes": [{"id","width","height","refresh_hz",
+                             "preferred","current"}],
+          "display_metrics": null | {"pixel_width": int,
+            "pixel_height": int, "physical_size_known": bool,
+            "orientation": "landscape"|"portrait"|"square",
+            "source": str, "physical_width_mm": float (only when known),
+            "physical_height_mm": float (only when known)},
+          "pointer_devices": [{"kind": str, "label": str,
+            "supports_tap": bool, "supports_natural_scrolling": bool,
+            "supports_disable_while_typing": bool, "supports_speed": bool}],
+          "message": str                       # bounded to 240 chars per entry
+        }
+
+    The ``pointer_devices`` entry shape matches
+    ``PointerDeviceStatus.as_json_dict`` exactly so the file shape and the
+    ``read_apply_status(...).as_json_dict()`` shape consumed by T09 are the
+    same. Bounds: ``display_metrics`` reuses the ``DisplayProbe.metrics`` facts
+    already produced by the controller for this apply cycle (no recompute,
+    no per-frame polling, no new subprocess). ``pointer_devices`` holds at
+    most ``MAX_STATUS_POINTER_DEVICES`` generic entries with labels
+    truncated to ``MAX_STATUS_LABEL_CHARS``; numeric backend ids and raw
+    ``xrandr``/``xinput`` output never persist. No suitability verdict is
+    stored: ``DisplayPolicy`` evaluation stays above this layer. Writes stay
+    atomic (temp file + rename, mode 0o640). Readers (``read_apply_status``)
+    treat ``display_metrics``/``pointer_devices`` as optional so old payloads
+    parse unchanged.
+    """
     payload = {
         "settings": settings.as_json_dict(),
         "applied": result.applied,
         "backend": backend_id,
         "display_output": result.display.output_name,
         "display_modes": [mode.as_json_dict() for mode in result.display.modes],
+        "display_metrics": _display_metrics_payload(result.display.metrics),
+        "pointer_devices": _pointer_devices_payload(pointer_infos),
         "message": message,
     }
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -265,6 +319,87 @@ def _write_status(
     )
     os.chmod(temporary, 0o640)
     temporary.replace(path)
+
+
+def _display_metrics_payload(metrics: DisplayMetrics | None) -> dict[str, object] | None:
+    """Serialize probe metrics to the bounded status shape (or ``None``)."""
+    if metrics is None or not isinstance(metrics, DisplayMetrics):
+        return None
+    payload: dict[str, object] = {
+        "pixel_width": metrics.pixel_width,
+        "pixel_height": metrics.pixel_height,
+        "physical_size_known": metrics.physical_size_known,
+        "orientation": metrics.orientation,
+        "source": metrics.source.value,
+    }
+    if metrics.physical_size_known:
+        assert metrics.physical_width_mm is not None
+        assert metrics.physical_height_mm is not None
+        payload["physical_width_mm"] = float(metrics.physical_width_mm)
+        payload["physical_height_mm"] = float(metrics.physical_height_mm)
+    return payload
+
+
+def _pointer_devices_payload(
+    infos: tuple[PointerDeviceInfo, ...] | list[PointerDeviceInfo] | object,
+) -> list[dict[str, object]]:
+    """Serialize pointer infos to the bounded generic summary shape.
+
+    Entry shape matches ``PointerDeviceStatus.as_json_dict`` (flat
+    ``supports_*`` flags) so the file and the reader output agree.
+    """
+    if not isinstance(infos, (tuple, list)):
+        return []
+    payload: list[dict[str, object]] = []
+    for info in infos:
+        if not isinstance(info, PointerDeviceInfo):
+            continue
+        kind = info.kind.value if isinstance(info.kind, PointerKind) else str(info.kind)
+        label = str(getattr(info, "label", kind))[:MAX_STATUS_LABEL_CHARS] or kind
+        capabilities = getattr(info, "capabilities", None)
+        payload.append(
+            {
+                "kind": str(kind)[:MAX_STATUS_LABEL_CHARS],
+                "label": label,
+                "supports_tap": bool(getattr(capabilities, "supports_tap", False)),
+                "supports_natural_scrolling": bool(
+                    getattr(capabilities, "supports_natural_scrolling", False)
+                ),
+                "supports_disable_while_typing": bool(
+                    getattr(capabilities, "supports_disable_while_typing", False)
+                ),
+                "supports_speed": bool(getattr(capabilities, "supports_speed", False)),
+            }
+        )
+        if len(payload) >= MAX_STATUS_POINTER_DEVICES:
+            break
+    return payload
+
+
+def _probe_pointer_infos(
+    controller: HardwareSessionController,
+) -> tuple[PointerDeviceInfo, ...]:
+    """Best-effort pointer summary for one status write (same apply cadence).
+
+    Calls the optional ``probe_pointers`` preview seam when the controller
+    provides it; controllers without it simply contribute ``()``. Runs at
+    most once per status write (which happens only on settings/topology/
+    retry apply), so it adds no new polling loop, daemon, or per-frame
+    subprocess. Any probe failure degrades to ``()`` and never breaks the
+    watcher or the status write.
+    """
+    probe = getattr(controller, "probe_pointers", None)
+    if not callable(probe):
+        return ()
+    try:
+        infos = probe()
+    except Exception:
+        return ()
+    if not isinstance(infos, (tuple, list)):
+        return ()
+    return tuple(info for info in infos if isinstance(info, PointerDeviceInfo))[
+        :MAX_STATUS_POINTER_DEVICES
+    ]
 
 
 def _bounded_error(exc: Exception, maximum: int = 240) -> str:
