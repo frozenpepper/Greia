@@ -6,7 +6,7 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 # Greia OS Work — task router
 
 **Status:** LIVING derived contributor router  
-**Reviewed:** 2026-09-02
+**Reviewed:** 2026-09-03
 
 This file tells an agent **what to read for the task**. It is deliberately not a second architecture manual.
 
@@ -18,7 +18,7 @@ This file tells an agent **what to read for the task**. It is deliberately not a
 4. Platform authority stays platform-owned: profiles/sessions, trust/packages, permissions, Home/Back, physical input, system controls, microphone routing/processing, storage/history, progression/rewards, install/update authority and hardware facts.
 5. Low-resource behavior is correctness. The Acer reference floor is not a later optimization target.
 6. GitHub-hosted Actions/execution are opt-in only and require explicit owner authorization.
-7. Claim only evidence that actually ran. Source, authoring-provider+human, Simulator, VM/image and physical evidence are distinct.
+7. Claim only evidence that actually ran. Source, authoring-provider+human, browser, Simulator, VM/image and physical evidence are distinct.
 8. After substantive implementation, update the active plan/HANDOVER and affected living manuals/skills as required by `AGENTS.md`.
 9. New prerecorded Greia speech is authoring-time work through `tools/greia_voice.py`; OS/Activity/shared-library code must not grow a parallel TTS/ASR backend.
 10. Launcher spoken labels are Shell-owned prerecorded assets; no child-runtime TTS and no Activity-owned hover/focus speech.
@@ -211,6 +211,34 @@ src/greia_platform/activity_backend_policy.py
 
 For Activity implementation itself, use `skills/greia-activity-authoring/SKILL.md`.
 
+## Activity discovery, age guidance or Parent catalogue filtering
+
+Read:
+
+```text
+docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
+skills/greia-activity-authoring/DISCOVERY.md
+src/greia_platform/activity_discovery.py
+src/greia_platform/activities.py
+src/greia_parent/api_server.py
+docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
+```
+
+The platform owns the effective catalogue. Do not create a second browser/Activity age engine.
+
+Canonical Parent modes are:
+
+```text
+show_all
+recommended_only   # Age N only: declared range contains N
+age_and_easier     # Age N + easier: declared minimum <= N
+custom
+```
+
+`hide_too_simple` is compatibility input only and normalizes to `age_and_easier`; do not use it for new UI or stored output. Every first-party Activity declares a defensible `recommended_age_min`; `recommended_age_max` remains optional for genuinely open-ended experiences. Age suitability and difficulty are independent, and explicit Parent `always_show` / `always_hide` wins over automatic filtering.
+
+The maintained browser client lives in `frozenpepper/Greia-Parent-App-Html` and is revision/integrity pinned before Greia serves it. Browser source acceptance comes before pin advancement.
+
 ## Activity Simulator
 
 Read:
@@ -234,7 +262,7 @@ docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md
 docs/product/PARENT_MANAGEMENT.md
 ```
 
-Inspect the current Parent client pin/integrity manifest before changing either repository. Parent/browser code must not gain generic shell/root authority.
+For per-child Activity age/catalogue policy also read the dedicated Activity-discovery route above. Inspect the current Parent client pin/integrity manifest before changing either repository. Parent/browser code must not gain generic shell/root authority.
 
 ## System output controls (volume / mute / brightness / media keys)
 
