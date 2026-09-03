@@ -4,19 +4,75 @@ import json
 import os
 import time
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from threading import Event
 from typing import Protocol
 
+from .display_metrics import DisplayMetrics
 from .hardware import DisplayMode, HardwareSettings, HardwareSettingsStore
+
+
+class PointerKind(Enum):
+    """Semantic pointer classification shared by backends and UI.
+
+    Values describe Greia interaction semantics, never backend device
+    names or numeric device ids. ``OTHER_RELATIVE`` covers relative
+    pointers that are neither touchpad nor mouse (e.g. trackballs and
+    other relative locators); ``TOUCHSCREEN`` covers direct-touch
+    panels, which expose no tap-to-click/speed semantics.
+    """
+
+    TOUCHPAD = "touchpad"
+    MOUSE = "mouse"
+    OTHER_RELATIVE = "other_relative"
+    TOUCHSCREEN = "touchscreen"
+
+
+@dataclass(frozen=True, slots=True)
+class PointerCapabilities:
+    """Semantic per-pointer controls a backend actually supports.
+
+    Every flag defaults to ``False``: a missing optional backend
+    property means unsupported/not-applicable, never fatal.
+    """
+
+    supports_tap: bool = False
+    supports_natural_scrolling: bool = False
+    supports_disable_while_typing: bool = False
+    supports_speed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class PointerDeviceInfo:
+    """Backend-neutral description of one pointer for preview/UI.
+
+    Contains no backend device names and no numeric device ids; ids
+    never persist and never leave the owning adapter. ``label`` is a
+    generic kind-derived display label (e.g. ``"Touchpad"``), never an
+    exact backend device name, so classification never requires one.
+    """
+
+    kind: PointerKind
+    label: str
+    capabilities: PointerCapabilities
 
 
 @dataclass(frozen=True, slots=True)
 class DisplayProbe:
-    """Semantic display facts used to validate bounded parent settings."""
+    """Semantic display facts used to validate bounded parent settings.
+
+    ``metrics`` contract (single consistent rule): ``None`` means there
+    is nothing to describe — no connected output or no mode flagged
+    current. A non-``None`` value always carries the current-mode pixel
+    size; when physical panel data was absent/malformed the metrics
+    report unknown physical size (``physical_size_known`` is ``False``,
+    densities are ``None``) and no fallback density is ever assumed.
+    """
 
     output_name: str | None
     modes: tuple[DisplayMode, ...]
+    metrics: DisplayMetrics | None = None
 
     @property
     def allowed_mode_ids(self) -> tuple[str, ...]:
@@ -46,6 +102,60 @@ class HardwareSessionController(Protocol):
     def probe_display(self) -> DisplayProbe: ...
 
     def apply(self, settings: HardwareSettings) -> ApplyResult: ...
+
+
+class PointerSettingsController(Protocol):
+    """Pointer-only preview seam for installer/parent settings UI.
+
+    ``probe_pointers`` lists the currently attached pointers in
+    backend-neutral terms; ``apply_pointer_settings`` applies only the
+    pointer subset of ``settings`` (no display/keyboard/audio commands)
+    so a preview step never changes the screen mode. The generic
+    ``HardwareSessionController.apply`` stays the watcher entry point.
+    """
+
+    def probe_pointers(self) -> tuple[PointerDeviceInfo, ...]: ...
+
+    def apply_pointer_settings(
+        self, settings: HardwareSettings
+    ) -> ApplyResult: ...
+
+
+# --- Shared pointer-speed presets -------------------------------------------
+# Single location mapping UI-friendly preset names to libinput-style
+# ``-1.0..1.0`` speeds. Installer/parent UI (T07/T08) consume these names
+# and never formats raw floats itself.
+
+SPEED_PRESETS: tuple[tuple[str, float], ...] = (
+    ("very slow", -0.8),
+    ("slow", -0.4),
+    ("medium", 0.0),
+    ("fast", 0.4),
+    ("very fast", 0.8),
+)
+
+
+def speed_preset_names() -> tuple[str, ...]:
+    """Return the friendly speed preset names in display order."""
+    return tuple(name for name, _ in SPEED_PRESETS)
+
+
+def preset_to_speed(name: str) -> float:
+    """Map a friendly preset name to its ``-1.0..1.0`` speed value."""
+    for preset_name, value in SPEED_PRESETS:
+        if preset_name == name:
+            return value
+    raise KeyError(f"unknown pointer speed preset: {name!r}")
+
+
+def speed_to_preset(value: float) -> str:
+    """Map a ``-1.0..1.0`` speed to the nearest friendly preset name."""
+    candidate = float(value)
+    best_name, best_value = SPEED_PRESETS[0]
+    for preset_name, preset_value in SPEED_PRESETS:
+        if abs(preset_value - candidate) < abs(best_value - candidate):
+            best_name, best_value = preset_name, preset_value
+    return best_name
 
 
 def run_watcher(
