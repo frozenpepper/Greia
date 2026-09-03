@@ -1,0 +1,47 @@
+[activity]
+id = "org.greia.sottomarino-giramondo"
+legacy_ids = []
+title_key = "activity.sottomarino_giramondo.title"
+version = "0.1.0"
+icon = "package:assets/icon.png"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["create", "explore"]
+discovery_tags = ["ocean", "vehicles", "animals", "simulation"]
+
+[education]
+categories = ["marine_life", "sensory_calm", "spatial_awareness", "cause_and_effect"]
+difficulty = 1
+recommended_age_min = 3
+recommended_age_max = 8
+skills = [
+  { id = "sensory.visual_tracking.motion", weight = 3 },
+  { id = "lexicon.nature.marine", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "cognition.cause_and_effect", weight = 2 },
+]
+events = [
+  { id = "submarine.instrument_used", kind = "milestone" },
+  { id = "submarine.depth_milestone", kind = "milestone" },
+  { id = "submarine.creature_discovered", kind = "milestone" },
+  { id = "submarine.encounter_resolved", kind = "completion" },
+]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = ["display", "pointer", "audio.basic"]
+optional_capabilities = ["keyboard", "touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Sottomarino Giramondo",
+    "activity.description": "Pilota il sottomarino ed esplora i fondali marini!",
+    "biome.shallow": "Barriera Corallina",
+    "biome.twilight": "Foresta di Alghe",
+    "biome.abyss": "Abisso Luminoso",
+    "btn.light": "Luci",
+    "btn.sonar": "Sonar",
+    "btn.bubbles": "Bolle",
+    "btn.horn": "Sirena",
+    "btn.action": "Azione",
+    "creature.clownfish": "Pesce Pagliaccio",
+    "creature.turtle": "Tartaruga Marina",
+    "creature.dolphin": "Delfino Curioso",
+    "creature.manta": "Manta Gigante",
+    "creature.angler": "Pesce Lanterna",
+    "creature.whale": "Balena Gentile",
+    "encounter.octopus.hint": "Il polpo fa il solletico al vetro! Suona la sirena o fai le bolle!",
+    "encounter.shark.hint": "Lo squalo saluta con la pinna! Accendi le luci!"
+  },
+  "audio": {}
+}

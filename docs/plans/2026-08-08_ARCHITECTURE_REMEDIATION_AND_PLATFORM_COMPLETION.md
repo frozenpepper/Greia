@@ -1658,3 +1658,53 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Tests & Verification:
   - Unit tests: all 362 tests PASS (`python3 -m unittest discover -s tests -p "test_activity_*.py"`).
   - Headless simulator verification: PASS (rc=0).
+
+## 2026-09-03 — New Activity: Sottomarino Giramondo (Busy-Board & Pseudo-3D Submarine Exploration)
+
+- Implemented:
+  1. **Submarine Simulator & Cockpit Busy-Board Activity (`org.greia.sottomarino-giramondo`):**
+     - Authored child-sized submarine exploration experience designed for ages 3–8.
+     - **Cockpit Busy-Board:**
+       - Chunky tactile interactive buttons ($\ge 64\times 64$ px):
+         - **Luci / Lights:** toggles powerful forward floodlights illuminating twilight & abyssal waters.
+         - **Sonar:** sends ping sweep revealing creatures on phosphor radar screen.
+         - **Bolle / Bubbles:** exhausts stream of rising bubbles from submarine hull with tactile audio.
+         - **Sirena / Horn:** friendly submarine acoustic horn that gently signals marine animals.
+         - **Emergenza / Emergency Beacon (Space / Red button):** flashes beacon, sound alarm, and resolves encounters.
+       - **Radar Display:** 360-degree rotating phosphor beam displaying blips of creatures ahead.
+       - **Depth Meter:** analog gauge dynamically measuring depth from 0 to 100 meters.
+     - **Pseudo-3D Porthole Projection:**
+       - Brass-riveted porthole window with forward motion perspective $(X, Y, Z)$ scaling for marine fauna:
+         - Shallow Coral Reef ($0–25$ m): Clownfish, sea turtles, playful dolphins.
+         - Twilight Kelp Forest ($25–65$ m): Manta rays, graceful blue whales, kelp strands.
+         - Glowing Abyss ($65–100$ m): Bioluminescent anglerfish with glowing lures, deep-sea bubbles.
+       - Interactive friendly encounters: curious octopus porthole hug and smiling waving shark resolved with Horn or Beacon.
+     - **Greia Platform Compliance:**
+       - Full runtime neutrality, OOP architecture (`sub_model.py`, `sub_cockpit_view.py`, `sub_art.py`, `sub_audio.py`, `sub_app.py`, `main.py`).
+       - Complete localization support (`it` / `en`) via `LocalizedResources` schema version 1.
+       - Synthesized PCM16 audio cues (`sonar`, `bubbles`, `horn`, `click`, `light`, `alert`, `celebrate`) matching audio mixer specification.
+       - Protected system navigation compliance with `PygameReferenceCanvas` and `mark_activity_ready()`.
+       - Emits platform progression events (`submarine.instrument_used`, `submarine.depth_milestone`, `submarine.creature_discovered`, `submarine.encounter_resolved`).
+  2. **Cockpit UI Refinement (Vector Icons & Symmetrical Spacing):**
+     - Completely redesigned bottom cockpit button bar layout:
+       - Balanced symmetrical geometry with uniform 23 px gaps across the 1024 px control deck:
+         - Radar ($x=75..205$) $\rightarrow$ gap 23 px $\rightarrow$ **Luci** ($x=228..328$) $\rightarrow$ gap 23 px $\rightarrow$ **Sonar** ($x=351..451$) $\rightarrow$ gap 21 px $\rightarrow$ **Emergenza** ($x=472..552$) $\rightarrow$ gap 21 px $\rightarrow$ **Bolle** ($x=573..673$) $\rightarrow$ gap 23 px $\rightarrow$ **Sirena** ($x=696..796$) $\rightarrow$ gap 23 px $\rightarrow$ Depth Gauge ($x=819..949$).
+       - Replaced text-only button surfaces with high-contrast pre-reader vector symbols:
+         - **Luci / Lights:** Stylized electric bulb with radiating illumination rays.
+         - **Sonar:** Acoustic transmission dish on pedestal emitting concentric arc pulses.
+         - **Bolle / Bubbles:** Three buoyant ascending bubbles with glossy highlight glints.
+         - **Sirena / Horn:** Submarine acoustic loudspeaker horn broadcasting soundwaves.
+         - **Emergenza / Beacon:** Metallic bezel ring with 3D red dome, highlight sheen, and central emergency alert star.
+       - Integrated bilingual typography labels positioned cleanly below icons.
+     - **Porthole Geometry & Bulkhead Clearance:**
+       - Re-centered porthole vertically from $y=240$ to $y=218$ with radius $r=175$ px, completely eliminating clipping against the dashboard at $y=435$ and providing clean bulkhead metal margins all around.
+  3. **Simulator & Contract Test Alignment:**
+     - Aligned presentation categories to `["create", "explore"]` for optimal launcher grid navigation.
+     - Added explicit `pygame.display.flip()` in activity frame loop for remote bridge frame capture.
+     - Updated `tests/test_activity_contract.py` to recognize all 41 current built-in activities.
+- Tests & Verification:
+  - Unit tests: all 392 tests PASS (`python3 -m unittest discover -s tests -p "test_activity_*.py"`).
+  - Headless simulator in Italian (`it`): survived 8.0s, tested key SPACE interaction, verified Home return to Shell (`rc=0`).
+  - Headless simulator in English (`en`): survived 8.0s, tested key SPACE interaction, verified Home return to Shell (`rc=0`).
+
+

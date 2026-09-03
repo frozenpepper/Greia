@@ -41,12 +41,15 @@ class LauncherTitleAndIconContractTests(unittest.TestCase):
 
     def test_medium_title_wraps_to_two_lines_rather_than_premature_ellipsis(self) -> None:
         title = "Costruiamo Ponti"
-        lines = split_title_two_lines(title, self.font, max_width=80)
+        max_width = 100
+        lines = split_title_two_lines(title, self.font, max_width=max_width)
         self.assertEqual(len(lines), 2)
         self.assertEqual(" ".join(lines), title)
         self.assertEqual(lines, ("Costruiamo", "Ponti"))
         self.assertNotIn("…", lines[0])
         self.assertNotIn("…", lines[1])
+        for line in lines:
+            self.assertLessEqual(self.font.size(line)[0], max_width)
 
     def test_memory_meraviglie_wraps_into_balanced_lines(self) -> None:
         title = "Memory delle Meraviglie"

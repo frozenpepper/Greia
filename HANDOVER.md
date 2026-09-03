@@ -246,11 +246,32 @@ Recent system-control source corrections still await exact-current physical exec
 
 ## 8. Recent toddler/runtime cleanup still needs its gate
 
-The catalogue-wide modernization/decomposition pass remains complete; do not restart a broad refactor sweep without a concrete defect.
+The catalogue-wide modernization/decomposition pass remains complete; do not restart a broad refactor sweep without a concrete defect. Current built-in Activity inventory: **41**.
 
-Recent cleanup of Giardino/Alfabeto/Bosco corrected pointer mapping, Activity-local Home ownership residue, feedback hot-path synthesis, fanfare sequencing, PCM mixer format and Bosco localization. Reusable voice production remains `tools/greia_voice.py` / VoiceEngine.
+Toddler & Discovery Activities in recent authoring:
 
-Important open measurement: Alfabeto prebuilds 26 marimba cues outside interaction. Measure first-frame/READY latency on the Acer rather than assuming desktop behavior.
+```text
+org.greia.il-giardino-dei-numeri
+org.greia.alfabeto-leo
+org.greia.bosco-numeri
+org.greia.sottomarino-giramondo
+```
+
+Sottomarino Giramondo (`org.greia.sottomarino-giramondo`) adds a submarine simulator and cockpit busy-board with pseudo-3D porthole projection, 3 distinct depth biomes, tactile instrument controls with high-contrast pre-reader vector icons (Light, Sonar, Bubbles, Horn, Emergency Beacon) and balanced 23 px symmetrical spacing, phosphor radar, depth meter, non-scary animal encounters, signed PCM16 audio cues, and bilingual localization (`it`/`en`). Verified via Headless Simulator in both `it` and `en` with clean Home return.
+
+The latest cleanup preserved Bosco's owner-authored educational-flow remediation: count completion auto-advance, final-cardinality reinforcement and continuing guess rounds.
+
+Recent source cleanup then corrected concrete runtime/architecture residue:
+
+- Bosco, Giardino and Alfabeto use `PygameReferenceCanvas.pointer()` instead of copied physical→logical transforms;
+- Activity-local attempts to protect/own the Greia Home region were removed;
+- Bosco and Alfabeto no longer synthesize full feedback waveforms in the click hot path;
+- Bosco fanfare is one sequenced clip instead of repeated same-channel replacement calls;
+- bounded generated PCM in all three toddler Activities now uses the actual signed-PCM16 mixer rate/channel layout through `src/greia_platform/pygame_audio.py`;
+- Bosco renderer now resolves child-facing strings through `LocalizedResources`; its duplicate hard-coded localization table and Italian-only progress word were removed;
+- obsolete project-specific root `tools/generate_toddler_audio.py` was removed. Reusable voice production remains `tools/greia_voice.py` / VoiceEngine.
+
+Important open measurement: Alfabeto now prebuilds 26 marimba cues outside interaction. This removes click-time synthesis but may increase startup cost on the Atom floor. **Measure first-frame/READY latency on the Acer; do not assume desktop behavior.** If materially slow, prefer pre-generated bounded SFX or another startup-safe strategy rather than moving synthesis back into the interaction hot path.
 
 Use:
 
@@ -258,7 +279,7 @@ Use:
 docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
 ```
 
-Historical toddler Simulator evidence does not replace fresh exact-current execution.
+Historical toddler Simulator evidence predates parts of this cleanup and does not replace a fresh exact-current run.
 
 ---
 

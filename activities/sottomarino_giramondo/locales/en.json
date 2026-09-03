@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Submarine Explorer",
+    "activity.description": "Pilot your submarine and explore the deep ocean!",
+    "biome.shallow": "Coral Reef",
+    "biome.twilight": "Kelp Forest",
+    "biome.abyss": "Glowing Abyss",
+    "btn.light": "Lights",
+    "btn.sonar": "Sonar",
+    "btn.bubbles": "Bubbles",
+    "btn.horn": "Horn",
+    "btn.action": "Action",
+    "creature.clownfish": "Clownfish",
+    "creature.turtle": "Sea Turtle",
+    "creature.dolphin": "Curious Dolphin",
+    "creature.manta": "Giant Manta",
+    "creature.angler": "Lanternfish",
+    "creature.whale": "Gentle Whale",
+    "encounter.octopus.hint": "The octopus is tickling the glass! Honk the horn or release bubbles!",
+    "encounter.shark.hint": "The shark is waving its fin! Turn on the lights!"
+  },
+  "audio": {}
+}
