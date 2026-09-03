@@ -325,3 +325,36 @@ PHYSICAL DEVICE
 ```
 
 A committed test is not a PASS. A later source revision does not inherit earlier physical evidence. A Simulator screenshot does not prove production trusted chrome. An audio receipt does not replace human listening. A successful Parent PUT does not prove physical hardware changed.
+
+## 14. Display/input settings tranche — T10-R2 source candidate (2026-09-03)
+
+T10-R2 re-authors the T10 close-out docs delta additively on the current tree (replaces T10-R, which never launched; retires F03/F04 as overtaken by events). No `src/`/`activities/`/`runtime/`/`build/`/`tests/` behaviour change in this task.
+
+(This section is appended as §14 rather than §10 so the parallel agent's §§10–13 edits stay intact; it carries the candidate/NOT EXECUTED markers the T10-R2 brief assigns to the close-out section.)
+
+T01–T09 implemented physical display facts, schema-v2 pointer settings, Legacy-X isolation, status/HAL exposure, shared touch-target floors, installer pointer/display pages, Parent pointer tab, and typed Parent hardware API. T10 closed the tranche at source level (ADR 0035 extends ADR 0020 + ADR 0026, neither replaced). The T10 forbidden-outcome sweep and 17 review answers are preserved by reference and not silently re-authored.
+
+Normative pointers: `src/greia_platform/display_metrics.py` (facts/suitability/minimums), `HardwareSettingsStore` schema v2 tap-OFF, the Legacy-X hardware-session controller as the only pointer/display translation seam, `docs/adr/0035-physical-display-facts-and-shared-pointer-display-semantics.md`.
+
+Catalogue state: **41 Activities**, with `org.greia.sottomarino-giramondo` accepted (T10-R's inventory-40 line is stale and was not carried over). Activity/catalogue pins follow live catalogue discovery, per the standing owner rule accepting Sottomarino and any new activity.
+
+`SOURCE_CANDIDATE_SHA`, `make verify` test count, and both audit results are recorded in the T10-R2 implementer attempt report; `ACTIVITY_INPUT_STANDARDS.md` is intentionally untouched (pointer interaction semantics did not change — settings UX only).
+
+**NOT EXECUTED (human/hardware-owned, runnable on the frozen candidate):**
+
+1. Acer panel lane — boot the frozen candidate on the Acer Aspire One reference, confirm installer DISPLAY page reports detected size, complete install, confirm Shell/launcher readable and Home/Back reachable.
+2. USB mouse lane — attach a USB mouse, confirm pointer tab lists a generic Mouse entry (no backend id), preset change applies, Escape/keyboard recovery works.
+3. Second-display lane — attach a second display, confirm mode list offers only supported/reflow modes and unknown-physical fails open.
+4. Resolution-change lane — change mode at runtime, confirm geometry recomputes with no stale hit rectangles and no unbounded log/cache growth.
+
+Do not copy a physical PASS from an earlier candidate onto this one; execute all four lanes on the exact frozen SHA before hardware claims.
+
+## 15. Bootstrap docs close-out — C02 source candidate (2026-09-03)
+
+C02 finishes the close-out on the C01-integrated tree. The reviewer-verified T10-R2 5-path docs delta (ADR 0035, os-work skill `display_metrics.py` entry point + live-catalogue-discovery sentence, responsive pointer-setup seams, HANDOVER §14 candidate/`NOT EXECUTED` markers, append-only plan entry + fixer-1 RED disclosure) is carried onto this tree byte-identically (no re-authoring, no history rewrite; base files were byte-identical so the carry is merge-clean). C01's repair — deletion of the three dead `import sys` lines (`faccine_momo`, `mondo_contrari`, `quattro_stagioni`; accepted C01 reviewer-1 PASS) — is the sole behaviour-adjacent change and predates this task. No `src/`/`activities/`/`runtime/`/`build/`/`tests/` change in C02 itself (docs-only: carried delta + this section + plan entry).
+
+Green evidence on the frozen candidate: `make verify` exit 0 — unit stage `Ran 1768 tests OK` (includes `tests/test_typography.py` 6 ok and `tests/test_parent_system_updates.py` 5 ok, retiring F03/F04 with no dangling planned state); `validate` PASS `activities=41`; `tools/audit_activity_backend_independence.py activities` exit 0 (`activities=41 blockers=0`, 2 pre-existing non-blocking migration notes); `audit_activity_system_chrome_ownership.py --strict` exit 0 (`blockers=0`). Exact `SOURCE_CANDIDATE_SHA`, counts, and audit output in the C02 implementer-1 attempt report.
+
+Catalogue state: **41 Activities**, with `org.greia.sottomarino-giramondo` accepted. `ACTIVITY_INPUT_STANDARDS.md` remains intentionally untouched (pointer interaction semantics unchanged — settings UX only).
+
+**NOT EXECUTED (human/hardware-owned, runnable on the frozen candidate):** the four §14 lanes (Acer panel, USB mouse, second display, resolution change). Do not copy a physical PASS from an earlier candidate onto this one; execute all four lanes on the exact frozen SHA before hardware claims.

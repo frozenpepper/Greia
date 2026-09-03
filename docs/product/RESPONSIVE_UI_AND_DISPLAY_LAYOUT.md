@@ -213,3 +213,15 @@ A source unit test is not proof of physical readability.
 A physical Acer PASS is not proof of arbitrary-resolution behavior.
 
 Closure requires the combination of platform-owned automatic layout architecture, automated multi-size invariants, representative rendered interaction checks, and physical acceptance at the low-resource reference floor.
+
+## 16. Implemented platform seams (2026-09-03 tranche)
+
+The following source seams implement this requirement; normative architecture remains with ADR 0026 and ADR 0035:
+
+- physical display facts via `DisplayMetrics` (raw facts only; unknown size explicit, never invented);
+- suitability via `DisplayPolicy.phase0()` envelope comparison (no resolution whitelist; unknown fails open, provably-unsupported blocks destructive install);
+- shared interactive minimums via `PhysicalUiPolicy.minimum_pixels` (bounded 8–320 px; floors minimums, never global scaling);
+- single trusted-action floor (`TRUSTED_ACTION_MINIMUM_MM = 10.0`, defined once in `src/greia_launcher/system_chrome.py`) shared by navigation and profile chrome;
+- pointer setup via `HardwareSettingsStore` (schema v2, tap-OFF) applied through the Legacy-X hardware-session controller; installer pointer preview and the Parent pointer tab share `SPEED_PRESETS` and go only through the `PointerSettingsController.apply_pointer_settings` seam with semantic settings (generic kind labels, never backend ids);
+- metrics-vs-scaling rule: density may raise shared touch-target minimums only; it must not rescale layout, typography, or artwork globally.
+- tap-default correction: platform policy (AGENTS.md) owns tap-to-click OFF; runtime/source had drifted and this tranche reconciled TOML, store defaults, installer copy, and Parent copy to OFF.

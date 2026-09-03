@@ -189,6 +189,25 @@ docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
 docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
 ```
 
+## Display facts, suitability, and pointer/display settings (ADR 0035)
+
+Entry point for physical display facts and suitability policy:
+
+```text
+src/greia_platform/display_metrics.py
+```
+
+- `DisplayMetrics` holds raw facts only; unknown physical size is explicit, never invented, never assumed 96 DPI.
+- `DisplayPolicy.phase0()` decides suitability by envelope comparison; `1024×600` is a preferred default, not a whitelist branch.
+- `PhysicalUiPolicy.minimum_pixels` floors shared interactive minimums (8–320 px); it never scales a layout globally.
+- `responsive_layout.py` stays geometry-only: no subprocess, no `xrandr`/`xinput`, no model or resolution-equality branches.
+- Legacy-X translation lives only in `hal_legacy_x.py` (hardware-session controller, `probe_display`, `probe_pointers`); UI layers never call backend commands.
+- `HardwareSettingsStore` (schema v2, tap-OFF) owns desired pointer state; the watcher applies it; installer preview and Parent controls use only the `PointerSettingsController` seam with semantic settings.
+- Unknown metrics fail open (full controls, no install block); provably-unsupported modes block destructive install with a clear message.
+- No CTM command in any ordinary apply path; no hard-coded device names in generic startup. CTM or model-specific handling requires physical evidence plus architecture review.
+- Trusted-action floor (`TRUSTED_ACTION_MINIMUM_MM`, `resolve_trusted_action_minimum_px`) is defined once in `src/greia_launcher/system_chrome.py`; import it, do not duplicate it.
+- Activity/catalogue pins follow live catalogue discovery, per the standing owner rule accepting Sottomarino and any new activity.
+
 ## Activity runtime, package, permissions, trust or lifecycle
 
 Read:

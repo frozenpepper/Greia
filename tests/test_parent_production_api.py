@@ -110,7 +110,7 @@ class ParentProductionApiTests(unittest.TestCase):
                 self.assertEqual(app.wifi_payload(), {"available": False, "networks": []})
 
     def test_production_rejects_unscanned_network_without_synthesizing_it(self) -> None:
-        real = WifiNetwork("Family Wi-Fi", WifiSecurity.OPEN, -42.0, "/real/family")
+        real = WifiNetwork("Family Wi-Fi", WifiSecurity.OPEN, -42.0, "/net/connman/iwd/station/wlan0/family")
         backend = _AvailableWifiBackend((real,))
         with tempfile.TemporaryDirectory() as temporary:
             app = self._app(Path(temporary), wifi_backend=backend)
@@ -119,7 +119,7 @@ class ParentProductionApiTests(unittest.TestCase):
             self.assertEqual(backend.connected, [])
 
     def test_production_connects_the_exact_scanned_network(self) -> None:
-        real = WifiNetwork("Family Wi-Fi", WifiSecurity.OPEN, -42.0, "/real/family")
+        real = WifiNetwork("Family Wi-Fi", WifiSecurity.OPEN, -42.0, "/net/connman/iwd/station/wlan0/family")
         backend = _AvailableWifiBackend((real,))
         with tempfile.TemporaryDirectory() as temporary:
             app = self._app(Path(temporary), wifi_backend=backend)
