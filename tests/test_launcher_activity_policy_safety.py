@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from greia_launcher.activity_policy_presentation import (
     ActivityPolicyEnforcementMixin,
@@ -211,6 +212,7 @@ class LauncherActivityPolicySafetyTests(unittest.TestCase):
                     harness._activate_profile(context, None)
                     self.assertEqual(_visible_ids(harness), ())
                     self.assertTrue(harness._catalogue_error)
+                    self.assertTrue(harness._activity_policy_error)
 
     def test_unsupported_policy_schema_exposes_no_activities(self) -> None:
         activities = (_activity(1, age_min=3, age_max=8),)
@@ -245,7 +247,7 @@ class LauncherActivityPolicySafetyTests(unittest.TestCase):
                     harness._activate_profile(context, None)
                     self.assertEqual(_visible_ids(harness), ())
 
-    def test_repair_after_corruption_is_detected_and_restores_policy_projection(self) -> None:
+    def test_repair_after_corruption_clears_policy_error_and_restores_projection(self) -> None:
         activities = (
             _activity(1, age_min=3, age_max=8),
             _activity(2, age_min=3, age_max=8),
@@ -259,6 +261,7 @@ class LauncherActivityPolicySafetyTests(unittest.TestCase):
                     harness = harness_type(activities)
                     harness._activate_profile(context, None)
                     self.assertEqual(_visible_ids(harness), ())
+                    self.assertTrue(harness._activity_policy_error)
                     rejected_token = harness._discovery_policy_token
 
                     ActivityDiscoveryPolicyStore(policy_path).write(
@@ -272,6 +275,52 @@ class LauncherActivityPolicySafetyTests(unittest.TestCase):
                     self.assertEqual(
                         set(_visible_ids(harness)),
                         {item.activity_id for item in activities},
+                    )
+                    self.assertFalse(harness._activity_policy_error)
+                    self.assertFalse(harness._catalogue_error)
+
+    def test_atomic_replacement_during_read_cannot_acknowledge_stale_policy(self) -> None:
+        first = _activity(1, age_min=3, age_max=8)
+        hidden = _activity(2, age_min=3, age_max=8)
+        activities = (first, hidden)
+        original_read = ActivityDiscoveryPolicyStore.read
+
+        with tempfile.TemporaryDirectory() as temporary:
+            policy_path = Path(temporary) / "activity-discovery.json"
+            store = ActivityDiscoveryPolicyStore(policy_path)
+            store.write(ActivityDiscoveryPolicy())
+            replacement = ActivityDiscoveryPolicy(
+                overrides=(
+                    (hidden.activity_id, ActivityVisibilityOverride.ALWAYS_HIDE),
+                )
+            )
+            calls = 0
+
+            def racing_read(candidate_store: ActivityDiscoveryPolicyStore):
+                nonlocal calls
+                policy = original_read(candidate_store)
+                calls += 1
+                if calls == 1:
+                    candidate_store.write(replacement)
+                return policy
+
+            for harness_type in (_AdaptiveHarness, _DirectHarness):
+                with self.subTest(harness=harness_type.__name__):
+                    calls = 0
+                    store.write(ActivityDiscoveryPolicy())
+                    harness = harness_type(activities)
+                    with patch.object(
+                        ActivityDiscoveryPolicyStore,
+                        "read",
+                        autospec=True,
+                        side_effect=racing_read,
+                    ):
+                        harness._activate_profile(_profile_context(policy_path), None)
+                    self.assertGreaterEqual(calls, 2)
+                    self.assertEqual(_visible_ids(harness), (first.activity_id,))
+                    self.assertEqual(
+                        harness._discovery_policy_token,
+                        harness._policy_file_token(),
                     )
 
     def test_trusted_fallback_keeps_catalogue_direct_not_adaptive(self) -> None:
