@@ -16,6 +16,25 @@ _ITALIAN: dict[str, str] = {
     "Choose the internal disk": "Scegli il disco interno",
     "No safe internal disk was found.": "Non è stato trovato un disco interno sicuro.",
     "Input and screen": "Input e schermo",
+    "Pointer setup": "Configurazione del puntatore",
+    "Pointer feel": "Sensazione del puntatore",
+    "Touchpad feel": "Sensazione del touchpad",
+    "Mouse feel": "Sensazione del mouse",
+    "Mouse feel (when a mouse is attached)": "Sensazione del mouse (quando è collegato un mouse)",
+    "Disable while typing": "Disattiva durante la digitazione",
+    "Reset pointer feel": "Ripristina la sensazione del puntatore",
+    "Pointer feel reset": "Sensazione del puntatore ripristinata",
+    "Try it here": "Provalo qui",
+    "Click a circle, or press 1 2 3": "Fai clic su un cerchio, oppure premi 1 2 3",
+    "Nice click!": "Bel clic!",
+    "Pointer preview unavailable": "Anteprima del puntatore non disponibile",
+    "Display": "Schermo",
+    "Resolution: Automatic": "Risoluzione: automatica",
+    "Greia screens: Automatic": "Schermi Greia: automatico",
+    "Screen size detected automatically": "Dimensioni dello schermo rilevate automaticamente",
+    "Safe display: installer uses safe pixels (1024x600)": "Schermo sicuro: il programma usa pixel sicuri (1024x600)",
+    "This screen is not fully supported — safe pixels are used": "Questo schermo non è pienamente supportato — vengono usati pixel sicuri",
+    "This screen is not fully supported — install is paused.": "Questo schermo non è pienamente supportato — installazione in pausa.",
     "Tap touchpad to click": "Tocca il touchpad per fare clic",
     "Natural scrolling": "Scorrimento naturale",
     "Mouse speed": "Velocità del mouse",
@@ -155,6 +174,16 @@ class InstallerTranslator:
             percent = value[len("Connect the power adapter before installing (battery is ") : -3]
             if percent.isdigit():
                 return f"Collega l'alimentatore prima di installare (batteria al {percent}%)."
+        if value.startswith("Nice click!"):
+            tail = value[len("Nice click!") :]
+            return f"Bel clic!{tail}"
+        if value.startswith("Greia screens: "):
+            return f"Schermi Greia: {value[len('Greia screens: ') :]}"
+        if value.startswith("Resolution: ") and value != "Resolution: Automatic":
+            return f"Risoluzione: {value[len('Resolution: ') :]}"
+        if value.startswith("Pointer preview unavailable"):
+            tail = value[len("Pointer preview unavailable") :]
+            return f"Anteprima del puntatore non disponibile{tail}"
         return value
 
 

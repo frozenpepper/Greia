@@ -11,8 +11,21 @@ from pathlib import Path
 from typing import Any
 
 from greia_platform.boot_logo import canonical_boot_logo as _canonical_boot_logo
+from greia_platform.display_metrics import (
+    DisplayPolicy,
+    DisplaySuitability,
+    PhysicalUiPolicy,
+    filter_supported_modes,
+)
 from greia_platform.hardware import HardwareDefaults, HardwareSettings
-from greia_platform.hardware_session import HardwareSessionController
+from greia_platform.hardware_session import (
+    HardwareSessionController,
+    PointerDeviceInfo,
+    PointerKind,
+    preset_to_speed,
+    speed_preset_names,
+    speed_to_preset,
+)
 
 from greia_platform.keyboard_layout import (
     PROBES,
@@ -41,6 +54,8 @@ class InstallerPage(Enum):
     WELCOME = auto()
     LAYOUT = auto()
     TARGET = auto()
+    POINTER = auto()
+    DISPLAY = auto()
     SETTINGS = auto()
     WIFI = auto()
     CONFIRM = auto()
@@ -118,6 +133,8 @@ class InstallerApplication:
             natural_scrolling=defaults.natural_scrolling,
             resolution=defaults.resolution,
             keyboard_layout=defaults.keyboard_layout,
+            mic_gain=defaults.mic_gain,
+            disable_while_typing=defaults.disable_while_typing,
         )
         targets = self._load_targets()
         self.state = InstallerState(
@@ -128,6 +145,13 @@ class InstallerApplication:
             progress=InstallProgress(0.0, "ready", "Ready"),
         )
         self.available_resolutions = self._available_resolutions()
+        self._pointer_focus = 0
+        self._pointer_test_hits = 0
+        self._pointer_test_feedback = ""
+        self._pointer_preview_error = ""
+        self._display_probe_cache: Any = None
+        self._display_probe_failed = False
+        self._refresh_display_cache()
         self.wifi = WifiSetupController(
             DemoWifiBackend() if self.demo else IwdWifiBackend()
         )
@@ -176,11 +200,379 @@ class InstallerApplication:
     def _available_resolutions(self) -> tuple[str, ...]:
         if self.demo:
             return ("auto", "800x600", "1024x600", "1024x768")
+        probe = getattr(self, "_display_probe_cache", None)
+        if probe is None and not getattr(self, "_display_probe_failed", False):
+            self._refresh_display_cache()
+            probe = getattr(self, "_display_probe_cache", None)
+        if probe is None:
+            return ("auto",)
+        return ("auto", *self._supported_mode_ids(probe))
+
+    @staticmethod
+    def _supported_mode_ids(probe: Any) -> tuple[str, ...]:
+        """Greia-supported mode ids only, via the shared T01 mode filter."""
+        modes = tuple(getattr(probe, "modes", ()) or ())
+        if not modes:
+            return ()
+        metrics = getattr(probe, "metrics", None)
+        try:
+            if metrics is not None and bool(
+                getattr(metrics, "physical_size_known", False)
+            ):
+                kept = filter_supported_modes(
+                    modes,
+                    physical_width_mm=metrics.physical_width_mm,
+                    physical_height_mm=metrics.physical_height_mm,
+                    source=metrics.source,
+                    policy=DisplayPolicy.phase0(),
+                )
+            else:
+                kept = filter_supported_modes(
+                    modes, policy=DisplayPolicy.phase0()
+                )
+        except Exception:
+            return tuple(dict.fromkeys(mode.mode_id for mode in modes))
+        return tuple(dict.fromkeys(mode.mode_id for mode in kept))
+
+    def _probe_display_uncached(self) -> Any | None:
+        if self.demo:
+            return None
         controller = (
             self.hardware_controller or provisional_installer_hardware_controller()
         )
-        display = controller.probe_display()
-        return ("auto", *display.allowed_mode_ids)
+        try:
+            return controller.probe_display()
+        except Exception:
+            return None
+
+    def _refresh_display_cache(self) -> None:
+        probe = self._probe_display_uncached()
+        if probe is None:
+            if not self.demo:
+                self._display_probe_failed = True
+            self._display_probe_cache = None
+            return
+        self._display_probe_cache = probe
+        self._display_probe_failed = False
+
+    # --- Pointer setup (T07): capability gating, presets, live preview ------
+    # All pointer state lives in ``self.state.settings`` (profile-scoped
+    # parent choices). Preview goes through the narrow
+    # ``PointerSettingsController.apply_pointer_settings`` seam with semantic
+    # settings only and never persists: ``Continue`` carries the values into
+    # ``InstallRequest`` through the normal commit path.
+
+    def _pointer_infos(self) -> tuple[PointerDeviceInfo, ...] | None:
+        """Backend-neutral pointer facts, or ``None`` when unknown.
+
+        ``None`` means the controller has no pointer seam or probing failed;
+        callers fail open (show every control) rather than trapping the
+        parent. An empty tuple from a working seam is also treated as
+        unknown: no attached pointer was described.
+        """
+        controller = self.hardware_controller
+        if controller is None:
+            if self.demo:
+                return None
+            controller = provisional_installer_hardware_controller()
+        probe = getattr(controller, "probe_pointers", None)
+        if not callable(probe):
+            return None
+        try:
+            infos = probe()
+        except Exception:
+            return None
+        if not isinstance(infos, (tuple, list)):
+            return None
+        cleaned = tuple(
+            info for info in infos if isinstance(info, PointerDeviceInfo)
+        )
+        return cleaned if cleaned else None
+
+    def _has_touchpad(self) -> bool:
+        infos = self._pointer_infos()
+        if infos is None:
+            return True
+        return any(info.kind is PointerKind.TOUCHPAD for info in infos)
+
+    def _has_relative_mouse(self) -> bool:
+        infos = self._pointer_infos()
+        if infos is None:
+            return True
+        return any(
+            info.kind is PointerKind.MOUSE or info.kind is PointerKind.OTHER_RELATIVE
+            for info in infos
+        )
+
+    def pointer_rows(self) -> tuple[str, ...]:
+        """Visible pointer-page rows after capability gating (state, not pixels)."""
+        rows: list[str] = []
+        if self._has_touchpad():
+            rows.extend(["tap", "disable-while-typing"])
+        rows.append("natural")
+        if self._has_touchpad():
+            rows.append("touchpad-preset")
+        if self._has_relative_mouse():
+            rows.append("mouse-preset")
+        elif self._has_touchpad():
+            # A touchpad-only station still needs one clearly labeled
+            # fallback so an attached mouse later behaves sanely.
+            rows.append("mouse-preset-labeled")
+        rows.extend(["reset", "test-1", "test-2", "test-3"])
+        return tuple(rows)
+
+    def _pointer_focus_rows(self) -> tuple[str, ...]:
+        """Keyboard focus order: visible rows plus the Continue step."""
+        return (*self.pointer_rows(), "continue")
+
+    def _clamp_pointer_focus(self) -> None:
+        rows = self._pointer_focus_rows()
+        if self._pointer_focus >= len(rows):
+            self._pointer_focus = max(0, len(rows) - 1)
+        if self._pointer_focus < 0:
+            self._pointer_focus = 0
+
+    def move_pointer_focus(self, delta: int) -> str:
+        """Move keyboard focus across visible pointer rows; return the row."""
+        self._clamp_pointer_focus()
+        rows = self._pointer_focus_rows()
+        if rows:
+            self._pointer_focus = (self._pointer_focus + delta) % len(rows)
+        return rows[self._pointer_focus] if rows else ""
+
+    def focused_pointer_row(self) -> str:
+        self._clamp_pointer_focus()
+        rows = self._pointer_focus_rows()
+        return rows[self._pointer_focus] if rows else ""
+
+    def _preview_pointer_settings(self) -> None:
+        """Best-effort live preview through the narrow pointer seam.
+
+        Sends semantic settings only (never display/audio/resolution
+        commands — that is the seam's contract). Any failure renders as
+        status text; keyboard navigation always keeps working.
+        """
+        controller: Any = self.hardware_controller
+        if controller is None:
+            if self.demo:
+                self._pointer_preview_error = ""
+                return
+            controller = provisional_installer_hardware_controller()
+        apply = getattr(controller, "apply_pointer_settings", None)
+        if not callable(apply):
+            self._pointer_preview_error = ""
+            return
+        try:
+            apply(self.state.settings)
+        except Exception as exc:
+            message = " ".join(str(exc).split()) or exc.__class__.__name__
+            self._pointer_preview_error = (
+                f"Pointer preview unavailable ({message[:120]})"
+            )
+            return
+        self._pointer_preview_error = ""
+
+    def set_pointer_preset(self, kind: str, preset_name: str) -> float:
+        """Apply a friendly T03 speed preset; return the stored speed."""
+        speed = preset_to_speed(preset_name)
+        if kind == "touchpad":
+            self.state.settings = replace(
+                self.state.settings, touchpad_speed=speed
+            )
+        elif kind == "mouse":
+            self.state.settings = replace(self.state.settings, mouse_speed=speed)
+        else:
+            raise KeyError(f"unknown pointer kind: {kind!r}")
+        self._preview_pointer_settings()
+        return speed
+
+    def cycle_pointer_preset(self, kind: str, delta: int) -> str:
+        """Step one preset up/down from the nearest preset; return its name."""
+        names = speed_preset_names()
+        if kind == "touchpad":
+            current = self.state.settings.touchpad_speed
+        elif kind == "mouse":
+            current = self.state.settings.mouse_speed
+        else:
+            raise KeyError(f"unknown pointer kind: {kind!r}")
+        nearest = speed_to_preset(current)
+        index = names.index(nearest)
+        chosen = names[(index + delta) % len(names)]
+        self.set_pointer_preset(kind, chosen)
+        return chosen
+
+    def toggle_pointer_flag(self, name: str) -> bool:
+        """Flip one pointer boolean; return the stored value."""
+        settings = self.state.settings
+        if name == "tap":
+            settings = replace(settings, touchpad_tap=not settings.touchpad_tap)
+            value = settings.touchpad_tap
+        elif name == "natural":
+            settings = replace(
+                settings, natural_scrolling=not settings.natural_scrolling
+            )
+            value = settings.natural_scrolling
+        elif name == "disable-while-typing":
+            settings = replace(
+                settings,
+                disable_while_typing=not settings.disable_while_typing,
+            )
+            value = settings.disable_while_typing
+        else:
+            raise KeyError(f"unknown pointer flag: {name!r}")
+        self.state.settings = settings
+        self._preview_pointer_settings()
+        return value
+
+    def reset_pointer_to_defaults(self) -> None:
+        """Restore the pointer subset from the central v2 defaults."""
+        defaults = HardwareDefaults.load(
+            self.root / "runtime" / "hardware-settings.toml"
+        )
+        self.state.settings = replace(
+            self.state.settings,
+            schema_version=defaults.schema_version,
+            touchpad_tap=defaults.touchpad_tap,
+            touchpad_speed=defaults.touchpad_speed,
+            mouse_speed=defaults.mouse_speed,
+            natural_scrolling=defaults.natural_scrolling,
+            disable_while_typing=defaults.disable_while_typing,
+        )
+        self._pointer_test_feedback = "Pointer feel reset"
+        self._preview_pointer_settings()
+
+    def hit_pointer_test_target(self, target: str) -> int:
+        """Record one test-target hit with click feedback; return the count."""
+        if target not in {"test-1", "test-2", "test-3"}:
+            raise KeyError(f"unknown pointer test target: {target!r}")
+        self._pointer_test_hits += 1
+        self._pointer_test_feedback = (
+            f"Nice click! ({self._pointer_test_hits})"
+        )
+        return self._pointer_test_hits
+
+    def activate_pointer_focus(self) -> str:
+        """Activate the focused pointer row for keyboard-only completion."""
+        row = self.focused_pointer_row()
+        if row in {"tap", "natural", "disable-while-typing"}:
+            self.toggle_pointer_flag(row)
+        elif row == "touchpad-preset":
+            self.cycle_pointer_preset("touchpad", 1)
+        elif row in {"mouse-preset", "mouse-preset-labeled"}:
+            self.cycle_pointer_preset("mouse", 1)
+        elif row == "reset":
+            self.reset_pointer_to_defaults()
+        elif row in {"test-1", "test-2", "test-3"}:
+            self.hit_pointer_test_target(row)
+        elif row == "continue":
+            self._activate_primary()
+        return row
+
+    # --- Display page (T07): supported modes, physical facts, gating --------
+
+    def display_facts(self) -> dict[str, Any]:
+        """Semantic display facts for the Display page (state, not pixels)."""
+        probe = self._display_probe_cache
+        modes = tuple(getattr(probe, "modes", ()) or ()) if probe is not None else ()
+        supported_ids = self._supported_mode_ids(probe) if probe is not None else ()
+        metrics = getattr(probe, "metrics", None) if probe is not None else None
+        current_id = self.state.settings.resolution
+        described = metrics
+        if described is None and modes:
+            from greia_platform.display_metrics import (
+                current_mode,
+                sanitize_display_metrics,
+            )
+
+            if current_id != "auto":
+                chosen = next(
+                    (mode for mode in modes if mode.mode_id == current_id), None
+                )
+            else:
+                chosen = None
+            if chosen is None:
+                chosen = current_mode(modes)
+            if chosen is not None:
+                described = sanitize_display_metrics(chosen.width, chosen.height)
+        verdict: DisplaySuitability | None = None
+        if described is not None:
+            try:
+                verdict = DisplayPolicy.phase0().evaluate(described)
+            except (TypeError, ValueError):
+                verdict = None
+        return {
+            "current_resolution": current_id,
+            "supported_mode_ids": supported_ids,
+            "metrics": metrics,
+            "described_metrics": described,
+            "verdict": verdict,
+            "probe_failed": self._display_probe_failed and probe is None,
+        }
+
+    def display_status_copy(self) -> str:
+        """Parent-friendly suitability line for the current display."""
+        facts = self.display_facts()
+        verdict = facts["verdict"]
+        metrics = facts["metrics"]
+        if verdict in {
+            DisplaySuitability.UNSUPPORTED_PIXEL_ENVELOPE,
+            DisplaySuitability.UNSUPPORTED_ORIENTATION,
+            DisplaySuitability.UNSUPPORTED_PHYSICAL_SIZE,
+        }:
+            return "This screen is not fully supported — safe pixels are used"
+        if verdict is None or facts["probe_failed"] or metrics is None:
+            return "Safe display: installer uses safe pixels (1024x600)"
+        if verdict in {
+            DisplaySuitability.SUPPORTED,
+            DisplaySuitability.SUPPORTED_WITH_REFLOW,
+        }:
+            if bool(getattr(metrics, "physical_size_known", False)):
+                return "Screen size detected automatically"
+            return "Safe display: installer uses safe pixels (1024x600)"
+        if verdict is DisplaySuitability.UNKNOWN_PHYSICAL_SIZE:
+            return "Safe display: installer uses safe pixels (1024x600)"
+        return "This screen is not fully supported — safe pixels are used"
+
+    def display_install_block_reason(self) -> str | None:
+        """Destructive-install gate for a provably unsupported display."""
+        facts = self.display_facts()
+        verdict = facts["verdict"]
+        if verdict in {
+            DisplaySuitability.UNSUPPORTED_PIXEL_ENVELOPE,
+            DisplaySuitability.UNSUPPORTED_ORIENTATION,
+            DisplaySuitability.UNSUPPORTED_PHYSICAL_SIZE,
+        }:
+            return (
+                "This screen is not fully supported — "
+                "installation to the internal disk is paused. "
+                "Ask a grown-up to try a supported screen."
+            )
+        return None
+
+    def essential_control_px(self, fallback_px: int) -> int:
+        """T01 physical floor for essential installer controls.
+
+        Uses a 9 mm touch minimum against trustworthy probe metrics and
+        falls back to the caller-supplied pixel value otherwise; always
+        within 8..320 px. This never scales a layout.
+        """
+        metrics = getattr(self._display_probe_cache, "metrics", None)
+        try:
+            return PhysicalUiPolicy.minimum_pixels(
+                9.0, fallback_px=fallback_px, metrics=metrics
+            )
+        except Exception:
+            return max(8, min(320, int(fallback_px)))
+
+    def build_install_request(self, target: Any, wifi_profile: Any = None) -> Any:
+        """Single commit path: carry live settings into ``InstallRequest``."""
+        return InstallRequest(
+            target=target,
+            payload=self.payload,
+            payload_digest=self.payload_digest,
+            hardware_settings=self.state.settings,
+            wifi_profile=wifi_profile if wifi_profile is not None else self.wifi.profile,
+        )
 
     def run(self) -> int:
         import pygame
@@ -351,6 +743,38 @@ class InstallerApplication:
             elif key == pygame.K_RETURN:
                 self._activate_primary()
             return True
+        if self.state.page == InstallerPage.POINTER:
+            if key == pygame.K_ESCAPE:
+                self._back()
+            elif key == pygame.K_UP:
+                self.move_pointer_focus(-1)
+            elif key == pygame.K_DOWN:
+                self.move_pointer_focus(1)
+            elif key in {pygame.K_LEFT, pygame.K_RIGHT}:
+                row = self.focused_pointer_row()
+                delta = -1 if key == pygame.K_LEFT else 1
+                if row == "touchpad-preset":
+                    self.cycle_pointer_preset("touchpad", delta)
+                elif row in {"mouse-preset", "mouse-preset-labeled"}:
+                    self.cycle_pointer_preset("mouse", delta)
+                else:
+                    self.move_pointer_focus(delta)
+            elif key in {pygame.K_1, pygame.K_2, pygame.K_3}:
+                index = {pygame.K_1: 1, pygame.K_2: 2, pygame.K_3: 3}[key]
+                self.hit_pointer_test_target(f"test-{index}")
+            elif key == pygame.K_r:
+                self.reset_pointer_to_defaults()
+            elif key in {pygame.K_RETURN, pygame.K_SPACE}:
+                self.activate_pointer_focus()
+            return True
+        if self.state.page == InstallerPage.DISPLAY:
+            if key == pygame.K_ESCAPE:
+                self._back()
+            elif key in {pygame.K_RETURN, pygame.K_SPACE}:
+                self._activate_primary()
+            elif key == pygame.K_r:
+                self._cycle_resolution()
+            return True
         if key in {pygame.K_RETURN, pygame.K_SPACE}:
             self._activate_primary()
         elif key == pygame.K_ESCAPE and self.state.page not in {
@@ -369,8 +793,18 @@ class InstallerApplication:
         elif self.state.page == InstallerPage.LAYOUT:
             self._confirm_layout()
         elif self.state.page == InstallerPage.TARGET and self.state.target:
-            self.state.page = InstallerPage.SETTINGS
+            self.state.page = InstallerPage.POINTER
+            self._pointer_focus = 0
+            self._pointer_test_feedback = ""
+            self._preview_pointer_settings()
+        elif self.state.page == InstallerPage.POINTER:
+            self._refresh_display_cache()
+            self.state.page = InstallerPage.DISPLAY
+        elif self.state.page == InstallerPage.DISPLAY:
+            self.state.page = InstallerPage.WIFI
+            self.wifi.begin()
         elif self.state.page == InstallerPage.SETTINGS:
+            # Legacy combined page (superseded by POINTER + DISPLAY).
             self.state.page = InstallerPage.WIFI
             self.wifi.begin()
         elif self.state.page == InstallerPage.WIFI:
@@ -405,12 +839,18 @@ class InstallerApplication:
         elif page == InstallerPage.LAYOUT:
             self.state.page = InstallerPage.WELCOME
         elif page == InstallerPage.SETTINGS:
+            # Legacy combined page (superseded by POINTER + DISPLAY).
             self.state.page = InstallerPage.TARGET
+        elif page == InstallerPage.POINTER:
+            self.state.page = InstallerPage.TARGET
+        elif page == InstallerPage.DISPLAY:
+            self.state.page = InstallerPage.POINTER
+            self._pointer_focus = 0
         elif page == InstallerPage.WIFI:
             # Leaving this stage means no in-flight scan/connection may later
             # become the parent's chosen installation profile.
             self.wifi.skip()
-            self.state.page = InstallerPage.SETTINGS
+            self.state.page = InstallerPage.DISPLAY
         elif page == InstallerPage.CONFIRM:
             # Back from final confirmation means the parent wants to reconsider
             # Wi-Fi, so discard the accepted profile and present a fresh scan.
@@ -454,6 +894,11 @@ class InstallerApplication:
                 if self._inside(f"wifi-{index}", position):
                     self.wifi.select(index)
                     return
+        if self.state.page == InstallerPage.POINTER:
+            self._handle_pointer_click(position)
+        elif self.state.page == InstallerPage.DISPLAY:
+            if self._inside("resolution", position):
+                self._cycle_resolution()
         if self._inside("primary", position):
             self._activate_primary()
             return
@@ -481,43 +926,78 @@ class InstallerApplication:
             self._hold_started = None
             self._start_installation()
 
+    def _cycle_resolution(self) -> None:
+        if not self.available_resolutions:
+            return
+        try:
+            current = self.available_resolutions.index(self.state.settings.resolution)
+        except ValueError:
+            current = 0
+        self.state.settings = replace(
+            self.state.settings,
+            resolution=self.available_resolutions[
+                (current + 1) % len(self.available_resolutions)
+            ],
+        )
+
+    def _handle_pointer_click(self, position: tuple[int, int]) -> None:
+        if self._inside("tap", position):
+            self.toggle_pointer_flag("tap")
+            return
+        if self._inside("natural", position):
+            self.toggle_pointer_flag("natural")
+            return
+        if self._inside("disable-while-typing", position):
+            self.toggle_pointer_flag("disable-while-typing")
+            return
+        if self._inside("touch-minus", position):
+            self.cycle_pointer_preset("touchpad", -1)
+            return
+        if self._inside("touch-plus", position):
+            self.cycle_pointer_preset("touchpad", 1)
+            return
+        if self._inside("mouse-minus", position):
+            self.cycle_pointer_preset("mouse", -1)
+            return
+        if self._inside("mouse-plus", position):
+            self.cycle_pointer_preset("mouse", 1)
+            return
+        if self._inside("pointer-reset", position):
+            self.reset_pointer_to_defaults()
+            return
+        for target in ("test-1", "test-2", "test-3"):
+            if self._inside(target, position):
+                self.hit_pointer_test_target(target)
+                return
+
     def _handle_settings_click(self, position: tuple[int, int]) -> None:
+        # Legacy combined page (superseded by POINTER + DISPLAY).
         settings = self.state.settings
         if self._inside("tap", position):
-            settings = replace(settings, touchpad_tap=not settings.touchpad_tap)
+            self.toggle_pointer_flag("tap")
         elif self._inside("natural", position):
-            settings = replace(
-                settings, natural_scrolling=not settings.natural_scrolling
-            )
+            self.toggle_pointer_flag("natural")
         elif self._inside("mouse-minus", position):
-            settings = replace(
-                settings, mouse_speed=max(-1.0, settings.mouse_speed - 0.25)
-            )
+            self.cycle_pointer_preset("mouse", -1)
         elif self._inside("mouse-plus", position):
-            settings = replace(
-                settings, mouse_speed=min(1.0, settings.mouse_speed + 0.25)
-            )
+            self.cycle_pointer_preset("mouse", 1)
         elif self._inside("touch-minus", position):
-            settings = replace(
-                settings, touchpad_speed=max(-1.0, settings.touchpad_speed - 0.25)
-            )
+            self.cycle_pointer_preset("touchpad", -1)
         elif self._inside("touch-plus", position):
-            settings = replace(
-                settings, touchpad_speed=min(1.0, settings.touchpad_speed + 0.25)
-            )
+            self.cycle_pointer_preset("touchpad", 1)
         elif self._inside("resolution", position):
-            current = self.available_resolutions.index(settings.resolution)
-            settings = replace(
-                settings,
-                resolution=self.available_resolutions[
-                    (current + 1) % len(self.available_resolutions)
-                ],
-            )
-        self.state.settings = settings
+            self._cycle_resolution()
+        else:
+            self.state.settings = settings
 
     def _start_installation(self) -> None:
         target = self.state.target
         if target is None or self._worker is not None:
+            return
+        display_block = self.display_install_block_reason()
+        if display_block:
+            self.state.error = display_block
+            self.state.page = InstallerPage.ERROR
             return
         power_problem = self.power_probe.installation_block_reason()
         if power_problem:
@@ -532,13 +1012,7 @@ class InstallerApplication:
             engine = DemoInstallationEngine()
         else:
             engine = InstallationEngine(project_root=self.root)
-        request = InstallRequest(
-            target=target,
-            payload=self.payload,
-            payload_digest=self.payload_digest,
-            hardware_settings=self.state.settings,
-            wifi_profile=self.wifi.profile,
-        )
+        request = self.build_install_request(target)
 
         def worker() -> None:
             try:
@@ -659,7 +1133,16 @@ class InstallerApplication:
                 text,
                 enabled=self.state.target is not None,
             )
+        elif page == InstallerPage.POINTER:
+            self._draw_pointer_page(
+                screen, pygame, main, font, title_font, small_font, text, accent
+            )
+        elif page == InstallerPage.DISPLAY:
+            self._draw_display_page(
+                screen, pygame, main, font, title_font, small_font, text, accent, danger
+            )
         elif page == InstallerPage.SETTINGS:
+            # Legacy combined page (superseded by POINTER + DISPLAY).
             self._center_title(
                 screen, "Input and screen", title_font, text, main.top + 26
             )
@@ -685,23 +1168,23 @@ class InstallerApplication:
                 accent,
                 main.top + 178,
             )
-            self._stepper_row(
+            self._preset_row(
                 screen,
                 pygame,
                 "mouse",
-                "Mouse speed",
-                self.state.settings.mouse_speed,
+                "Mouse feel",
+                speed_to_preset(self.state.settings.mouse_speed),
                 font,
                 text,
                 accent,
                 main.top + 246,
             )
-            self._stepper_row(
+            self._preset_row(
                 screen,
                 pygame,
                 "touch",
-                "Touchpad speed",
-                self.state.settings.touchpad_speed,
+                "Touchpad feel",
+                speed_to_preset(self.state.settings.touchpad_speed),
                 font,
                 text,
                 accent,
@@ -760,6 +1243,14 @@ class InstallerApplication:
                 text,
                 main.top + 265,
             )
+            if self.display_install_block_reason() is not None:
+                self._center_text(
+                    screen,
+                    "This screen is not fully supported — install is paused.",
+                    small_font,
+                    danger,
+                    main.top + 300,
+                )
             rect = self._button(
                 screen,
                 pygame,
@@ -884,6 +1375,167 @@ class InstallerApplication:
                 pygame.Rect(main.left + 100, main.top + 300, main.width - 200, 150),
             )
             self._back_button(screen, pygame, font, accent, text, main)
+
+    def _draw_pointer_page(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        font: Any,
+        title_font: Any,
+        small_font: Any,
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+    ) -> None:
+        """Deliberate Pointer Setup page: presets, gated toggles, test area."""
+        self._clamp_pointer_focus()
+        rows = self.pointer_rows()
+        self._center_title(screen, "Pointer setup", title_font, text, main.top + 18)
+        self._center_text(
+            screen, "Pointer feel", small_font, text, main.top + 18 + 52
+        )
+        y = main.top + 108
+        step = 56
+        if "tap" in rows:
+            self._toggle_row(
+                screen, pygame, "tap", "Tap touchpad to click",
+                self.state.settings.touchpad_tap, font, text, accent, y,
+            )
+            y += step
+        if "disable-while-typing" in rows:
+            self._toggle_row(
+                screen, pygame, "disable-while-typing", "Disable while typing",
+                self.state.settings.disable_while_typing, font, text, accent, y,
+            )
+            y += step
+        if "natural" in rows:
+            self._toggle_row(
+                screen, pygame, "natural", "Natural scrolling",
+                self.state.settings.natural_scrolling, font, text, accent, y,
+            )
+            y += step
+        if "touchpad-preset" in rows:
+            self._preset_row(
+                screen, pygame, "touch", "Touchpad feel",
+                speed_to_preset(self.state.settings.touchpad_speed),
+                font, text, accent, y,
+            )
+            y += step
+        if "mouse-preset" in rows:
+            self._preset_row(
+                screen, pygame, "mouse", "Mouse feel",
+                speed_to_preset(self.state.settings.mouse_speed),
+                font, text, accent, y,
+            )
+            y += step
+        elif "mouse-preset-labeled" in rows:
+            self._preset_row(
+                screen, pygame, "mouse", "Mouse feel (when a mouse is attached)",
+                speed_to_preset(self.state.settings.mouse_speed),
+                font, text, accent, y,
+            )
+            y += step
+        # Test strip: three large dispersed targets with click feedback.
+        width = screen.get_size()[0]
+        target_size = self.essential_control_px(64)
+        centers = (
+            (int(width * 0.24), y + 34),
+            (int(width * 0.50), y + 34),
+            (int(width * 0.76), y + 34),
+        )
+        self._center_text(screen, "Try it here", small_font, text, y + 2)
+        for index, center in enumerate(centers):
+            key = f"test-{index + 1}"
+            rect = pygame.Rect(0, 0, target_size, target_size)
+            rect.center = center
+            focused = self.focused_pointer_row() == key
+            pygame.draw.rect(
+                screen, accent if focused else (247, 235, 203), rect, border_radius=16
+            )
+            pygame.draw.rect(
+                screen, text, rect, width=3 if focused else 1, border_radius=16
+            )
+            label = font.render(str(index + 1), True, text)
+            screen.blit(label, label.get_rect(center=rect.center))
+            self._buttons[key] = rect
+        feedback = self._pointer_test_feedback or "Click a circle, or press 1 2 3"
+        status = feedback
+        if self._pointer_preview_error:
+            status = f"{feedback} · {self._pointer_preview_error}"
+        self._center_text(screen, status[:80], small_font, text, y + 34 + target_size // 2 + 14)
+        reset_rect = pygame.Rect(0, 0, 200, 40)
+        reset_rect.midtop = (screen.get_size()[0] // 2, y + 34 + target_size // 2 + 32)
+        pygame.draw.rect(screen, accent, reset_rect, border_radius=14)
+        reset_label = small_font.render("Reset pointer feel", True, text)
+        screen.blit(reset_label, reset_label.get_rect(center=reset_rect.center))
+        self._buttons["pointer-reset"] = reset_rect
+        self._navigation(screen, pygame, main, font, accent, text, enabled=True)
+
+    def _draw_display_page(
+        self,
+        screen: Any,
+        pygame: Any,
+        main: Any,
+        font: Any,
+        title_font: Any,
+        small_font: Any,
+        text: tuple[int, int, int],
+        accent: tuple[int, int, int],
+        danger: tuple[int, int, int],
+    ) -> None:
+        """Display page: supported modes, physical facts, suitability copy."""
+        facts = self.display_facts()
+        self._center_title(screen, "Display", title_font, text, main.top + 22)
+        if self.state.settings.resolution == "auto":
+            resolution_line = "Resolution: Automatic"
+        else:
+            resolution_line = f"Resolution: {self.state.settings.resolution}"
+        self._center_text(screen, resolution_line, font, text, main.top + 110)
+        supported = facts["supported_mode_ids"]
+        if supported:
+            shown = ", ".join(supported[:4])
+            self._center_text(
+                screen, f"Greia screens: {shown}", small_font, text, main.top + 155
+            )
+        else:
+            self._center_text(
+                screen, "Greia screens: Automatic", small_font, text, main.top + 155
+            )
+        metrics = facts["metrics"]
+        if metrics is not None and bool(
+            getattr(metrics, "physical_size_known", False)
+        ):
+            self._center_text(
+                screen,
+                "Screen size detected automatically",
+                small_font,
+                text,
+                main.top + 190,
+            )
+        else:
+            self._center_text(
+                screen,
+                "Safe display: installer uses safe pixels (1024x600)",
+                small_font,
+                text,
+                main.top + 190,
+            )
+        self._center_text(
+            screen, self.display_status_copy()[:90], font, text, main.top + 235
+        )
+        if self.display_install_block_reason() is not None:
+            self._center_text(
+                screen,
+                "This screen is not fully supported — install is paused.",
+                small_font,
+                danger,
+                main.top + 275,
+            )
+        self._value_row(
+            screen, pygame, "resolution", "Screen resolution",
+            self.state.settings.resolution, font, text, accent, main.top + 310,
+        )
+        self._navigation(screen, pygame, main, font, accent, text, enabled=True)
 
     def _draw_layout(
         self,
@@ -1365,13 +2017,13 @@ class InstallerApplication:
         pygame.draw.circle(screen, (255, 255, 255), (knob_x, state_rect.centery), 15)
         self._buttons[key] = rect
 
-    def _stepper_row(
+    def _preset_row(
         self,
         screen: Any,
         pygame: Any,
         key: str,
         label: str,
-        value: float,
+        preset_name: str,
         font: Any,
         text: tuple[int, int, int],
         accent: tuple[int, int, int],
@@ -1382,15 +2034,15 @@ class InstallerApplication:
         )
         pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
         screen.blit(font.render(label, True, text), (rect.left + 18, rect.top + 13))
-        minus = pygame.Rect(rect.right - 210, rect.top + 6, 46, 42)
+        minus = pygame.Rect(rect.right - 268, rect.top + 6, 46, 42)
         plus = pygame.Rect(rect.right - 58, rect.top + 6, 46, 42)
         for button_rect, glyph in ((minus, "−"), (plus, "+")):
             pygame.draw.rect(screen, accent, button_rect, border_radius=14)
             glyph_image = font.render(glyph, True, text)
             screen.blit(glyph_image, glyph_image.get_rect(center=button_rect.center))
-        value_image = font.render(f"{value:+.2f}", True, text)
+        value_image = font.render(preset_name, True, text)
         screen.blit(
-            value_image, value_image.get_rect(center=(rect.right - 111, rect.centery))
+            value_image, value_image.get_rect(center=(rect.right - 140, rect.centery))
         )
         self._buttons[f"{key}-minus"] = minus
         self._buttons[f"{key}-plus"] = plus
