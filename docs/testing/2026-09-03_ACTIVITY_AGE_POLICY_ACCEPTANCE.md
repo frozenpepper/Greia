@@ -13,10 +13,12 @@ Required product behavior:
 ```text
 Age N only
   -> only Activities whose declared recommended range contains N
+  -> wholly unknown age metadata is not automatically included
 
 Age N + easier
-  -> Activities whose declared minimum age is <= N
+  -> Activities with declared audience metadata whose declared minimum age is <= N
   -> must never automatically include an Activity whose minimum age is > N
+  -> wholly unknown age metadata is not automatically included
 
 All age ranges
   -> no automatic age restriction
@@ -26,6 +28,8 @@ Custom choices
 ```
 
 Every first-party Activity must declare `recommended_age_min`. `recommended_age_max` remains optional for genuinely open-ended Activities.
+
+Compatible third-party/legacy Activities may still have missing age metadata. They remain installable and visible under unrestricted policy, but a restrictive age preset must not silently classify them as age-suitable. A parent may deliberately expose one with `Always show`.
 
 Legacy persisted/API value `hide_too_simple` must remain readable but normalize to canonical `age_and_easier`.
 
@@ -115,10 +119,12 @@ Required: exit 0, no failures/errors.
 This must prove at least:
 
 - first-party minimum-age metadata gate applies to the complete current catalogue;
-- `recommended_only` means range contains child age;
+- `recommended_only` means declared range contains child age;
 - `age_and_easier` excludes future-minimum-age Activities;
+- wholly unknown age metadata is excluded from both restrictive automatic presets;
+- explicit `always_show` can deliberately expose an unknown-age Activity and `always_hide` remains authoritative;
 - old `hide_too_simple` storage/API input migrates to `age_and_easier`;
-- explicit Parent overrides and difficulty bounds retain precedence/independence.
+- difficulty bounds remain independent from age suitability.
 
 On any failure: STOP. Preserve the complete failure text. Do not edit code in this gate.
 
@@ -153,6 +159,8 @@ tests/demo_management.test.js
 tests/product_surface.test.js
 ```
 
+The demo-management test must include an Activity with both age bounds missing and prove that restrictive age presets exclude it until `Always show` is applied.
+
 On failure: STOP and preserve the first failure.
 
 ## 6. Parent visual/interaction review on localhost demo
@@ -185,14 +193,23 @@ Verify Activity rows display honest audience labels such as:
 ```text
 Age 3+
 3–8 years
-Age not specified   (only if an unknown-metadata fixture is present)
+Age not specified   (when the unknown-metadata fixture is present)
 ```
 
-Select `Age 3 only`, save, and verify the visible/hidden badges update after refresh without browser-console errors.
+Select `Age 3 only`, save, and verify:
 
-Select `Age 3 + easier`, save, and verify no Activity with a displayed minimum age above 3 becomes automatically visible unless that Activity has an explicit `Always show` override.
+- the visible/hidden badges update after refresh;
+- no Activity with wholly unknown age metadata is automatically visible;
+- no Activity whose displayed range excludes age 3 is automatically visible;
+- there are no browser-console errors.
 
-Set one Activity to `Always show` and another to `Hide from child`; verify those explicit choices win over the selected age preset.
+Select `Age 3 + easier`, save, and verify:
+
+- no Activity with a displayed minimum age above 3 becomes automatically visible;
+- an Activity with wholly unknown age metadata remains hidden automatically;
+- an explicit `Always show` can deliberately expose that Activity.
+
+Set one known-age Activity to `Always show` and another to `Hide from child`; verify those explicit choices win over the selected age preset.
 
 ## 7. No-age UX
 
@@ -252,6 +269,7 @@ GREIA_MAKE_VERIFY_TEST_COUNT=
 PARENT_NPM_TEST=PASS|FAIL
 PARENT_AGE3_ONLY_UI=PASS|FAIL
 PARENT_AGE3_EASIER_UI=PASS|FAIL
+PARENT_UNKNOWN_AGE_EXCLUSION=PASS|FAIL
 PARENT_OVERRIDE_PRECEDENCE=PASS|FAIL
 PARENT_NO_AGE_UI=PASS|FAIL
 PARENT_1024X600=PASS|FAIL
