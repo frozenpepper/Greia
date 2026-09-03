@@ -68,6 +68,11 @@ RESOURCES = (
         ("GET", "PUT"),
     ),
     ParentApiResource(
+        "hardware_settings_reset",
+        f"{API_BASE}/settings/hardware/reset",
+        ("POST",),
+    ),
+    ParentApiResource(
         "system_controls",
         f"{API_BASE}/settings/system-controls",
         ("GET", "PUT"),

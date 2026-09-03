@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hmac
 import json
+import math
 import socket
 from http import cookies
 from http.server import HTTPServer
@@ -56,6 +57,87 @@ from greia_platform.wifi import (
 MAX_JSON_BODY_BYTES = 16 * 1024
 DEVICE_COOKIE = "greia_parent_device"
 _STATIC_PREFIXES = ("/src/", "/styles/", "/assets/")
+
+# Mutable hardware fields accepted via PUT /settings/hardware (schema v2).
+# Anything else — including backend property names, device ids, matrices,
+# or shell text — is fail-closed rejected. This allowlist is the single
+# API-side contract; value bounds stay in HardwareSettingsStore.validate.
+_HARDWARE_PUT_FIELDS = frozenset(
+    {
+        "touchpad_tap",
+        "touchpad_speed",
+        "mouse_speed",
+        "natural_scrolling",
+        "disable_while_typing",
+        "resolution",
+        "keyboard_layout",
+        "mic_gain",
+    }
+)
+_HARDWARE_BOOL_FIELDS = frozenset(
+    {"touchpad_tap", "natural_scrolling", "disable_while_typing"}
+)
+_HARDWARE_NUMERIC_FIELDS = frozenset(
+    {"touchpad_speed", "mouse_speed", "mic_gain"}
+)
+_HARDWARE_TEXT_FIELDS = frozenset({"resolution", "keyboard_layout"})
+
+
+def hardware_form_from_json(
+    body: dict[str, object], current: dict[str, object]
+) -> dict[str, list[str]]:
+    """Convert a PUT hardware JSON object to the legacy form bridge.
+
+    Strict contract: boolean fields must be real JSON booleans, numeric
+    fields must be finite JSON numbers (bool rejected), text fields must
+    be text. Unknown fields — including any raw backend control vocabulary
+    — raise ``HardwareSettingsError`` (mapped to HTTP 400 by the handler)
+    and are never applied. Missing fields fall back to ``current`` so PUT
+    is a partial update with the same checkbox semantics as the legacy
+    form (present ``True`` → ``["on"]``, otherwise omitted → ``False``).
+    """
+    unknown = set(body) - _HARDWARE_PUT_FIELDS
+    if unknown:
+        raise HardwareSettingsError(
+            "unknown hardware field: " + ", ".join(sorted(unknown))
+        )
+    for key in _HARDWARE_BOOL_FIELDS & set(body):
+        if not isinstance(body[key], bool):
+            raise HardwareSettingsError(f"{key} must be boolean")
+    for key in _HARDWARE_NUMERIC_FIELDS & set(body):
+        value = body[key]
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise HardwareSettingsError(f"{key} must be a number")
+        if not math.isfinite(float(value)):
+            raise HardwareSettingsError(f"{key} must be a finite number")
+    for key in _HARDWARE_TEXT_FIELDS & set(body):
+        if not isinstance(body[key], str):
+            raise HardwareSettingsError(f"{key} must be text")
+
+    def _current_bool(key: str) -> bool:
+        return bool(current.get(key, False))
+
+    def _effective_bool(key: str) -> bool:
+        return bool(body[key]) if key in body else _current_bool(key)
+
+    def _effective_text(key: str) -> str:
+        return str(body[key]) if key in body else str(current.get(key, ""))
+
+    form: dict[str, list[str]] = {
+        "mouse_speed": [_effective_text("mouse_speed")],
+        "touchpad_speed": [_effective_text("touchpad_speed")],
+        "resolution": [_effective_text("resolution")],
+        "mic_gain": [_effective_text("mic_gain")],
+    }
+    if "keyboard_layout" in body:
+        form["keyboard_layout"] = [str(body["keyboard_layout"])]
+    if _effective_bool("touchpad_tap"):
+        form["touchpad_tap"] = ["on"]
+    if _effective_bool("natural_scrolling"):
+        form["natural_scrolling"] = ["on"]
+    if _effective_bool("disable_while_typing"):
+        form["disable_while_typing"] = ["on"]
+    return form
 
 
 class ParentApiApplication(ParentStatusApplication):
@@ -599,18 +681,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
         try:
             body = self._read_json_object()
             current = self.app.hardware_store.read().as_json_dict()
-            form = {
-                "mouse_speed": [str(body.get("mouse_speed", current["mouse_speed"]))],
-                "touchpad_speed": [
-                    str(body.get("touchpad_speed", current["touchpad_speed"]))
-                ],
-                "resolution": [str(body.get("resolution", current["resolution"]))],
-                "mic_gain": [str(body.get("mic_gain", current["mic_gain"]))],
-            }
-            if bool(body.get("touchpad_tap", current["touchpad_tap"])):
-                form["touchpad_tap"] = ["on"]
-            if bool(body.get("natural_scrolling", current["natural_scrolling"])):
-                form["natural_scrolling"] = ["on"]
+            form = hardware_form_from_json(body, current)
             payload = self.app.update_hardware(form)
         except (HardwareSettingsError, KeyError, TypeError, ValueError) as exc:
             self._send_api_error(400, "invalid_hardware_settings", str(exc))

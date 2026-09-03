@@ -200,10 +200,61 @@ class ParentStatusApplication:
         return self.progress_reader.payload(profile_id)
 
     def hardware_payload(self) -> dict[str, object]:
+        """Parent hardware resource: desired v2 settings + applied facts.
+
+        Shape (keys stable; additive only)::
+
+            {
+              "desired": {...HardwareSettings v2...},
+              "settings": {...fallback snapshot...},
+              "applied": bool,
+              "backend": str | None,          # watcher backend id, None when unknown
+              "display_output": str | null,
+              "display_modes": [...<=32...],
+              "display_metrics": null | {pixel_width, pixel_height,
+                physical_size_known, orientation, source,
+                physical_width_mm?, physical_height_mm?},
+              "pointer_devices": [...<=8, flat supports_*...],
+              "pointer_capabilities": [...same as pointer_devices...],
+              "message": str
+            }
+
+        ``display_metrics``/``pointer_devices`` reuse the T05 status shape
+        (``read_apply_status(...).as_json_dict()``); ``pointer_capabilities``
+        is the same list under the protocol-style alias so v1 clients and
+        new clients agree. ``backend`` is read tolerantly from the raw
+        status file because the typed reader drops it; old files without
+        the new keys still parse (``None``/``()``/``None``). Payloads stay
+        bounded for the Acer reference floor (modes <=32, devices <=8,
+        message <=500 chars). No backend command vocabulary is stored or
+        returned here.
+        """
         desired = self.hardware_store.read()
         status = read_apply_status(self.hardware_status_path, desired).as_json_dict()
-        status["desired"] = desired.as_json_dict()
-        return status
+        raw_modes = status.get("display_modes")
+        display_modes = (
+            list(raw_modes[:32]) if isinstance(raw_modes, list) else []
+        )
+        raw_devices = status.get("pointer_devices")
+        pointer_devices = (
+            list(raw_devices[:8]) if isinstance(raw_devices, list) else []
+        )
+        message = status.get("message", "")
+        if not isinstance(message, str):
+            message = str(message)
+        message = message[:500]
+        return {
+            "desired": desired.as_json_dict(),
+            "settings": status.get("settings"),
+            "applied": bool(status.get("applied", False)),
+            "backend": _read_hardware_backend(self.hardware_status_path),
+            "display_output": status.get("display_output"),
+            "display_modes": display_modes,
+            "display_metrics": status.get("display_metrics"),
+            "pointer_devices": pointer_devices,
+            "pointer_capabilities": list(pointer_devices),
+            "message": message,
+        }
 
     def health_payload(self) -> dict[str, object]:
         try:
@@ -291,6 +342,7 @@ class ParentStatusApplication:
             touchpad_speed=_form_float(form, "touchpad_speed"),
             mouse_speed=_form_float(form, "mouse_speed"),
             natural_scrolling=_form_checked(form, "natural_scrolling"),
+            disable_while_typing=_form_checked(form, "disable_while_typing"),
             resolution=resolution,
             keyboard_layout=(
                 _form_text(form, "keyboard_layout")
@@ -515,6 +567,7 @@ def render_status_page(payload: dict[str, object]) -> str:
 
     touchpad_tap = " checked" if desired.get("touchpad_tap") else ""
     natural_scrolling = " checked" if desired.get("natural_scrolling") else ""
+    disable_while_typing = " checked" if desired.get("disable_while_typing") else ""
     mouse_speed = _safe_speed(desired.get("mouse_speed"))
     touchpad_speed = _safe_speed(desired.get("touchpad_speed"))
     resolution = str(desired.get("resolution", "auto"))
@@ -592,7 +645,7 @@ button.danger{{background:var(--danger);color:white}} .actions{{display:flex;gap
 <section><h2>Child accounts</h2><p>Reset child appearance is available separately for every account.</p><div class="grid">{profile_cards}</div>
 <h3>Add child</h3><form method="post" action="/api/profiles/create"><label>Name<input name="display_name" maxlength="24" required></label><label>Avatar<select name="avatar_id">{avatar_options}</select></label><label>Optional simple password — shown while typing by default<input name="secret" maxlength="32" autocomplete="new-password"></label><label><input type="checkbox" name="mask_secret"> Hide password on the child screen</label><label><input type="checkbox" name="uppercase_text" checked> CAPITAL-letter text (recommended for young children)</label><button type="submit">Add child</button></form></section>
 <section><h2>Progress</h2>{progress_html}</section>
-<section><h2>Mouse, touchpad, and screen</h2><form method="post" action="/api/hardware"><label><input type="checkbox" name="touchpad_tap"{touchpad_tap}> Tap touchpad to click</label><small>Disabled by default. Physical touchpad buttons continue to work.</small><label><input type="checkbox" name="natural_scrolling"{natural_scrolling}> Natural scrolling</label><div class="grid"><label>Keyboard layout<select name="keyboard_layout">{keyboard_layout_options}</select></label><label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step="0.25" value="{mouse_speed}"></label><label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step="0.25" value="{touchpad_speed}"></label><label>Screen resolution<select name="resolution">{resolution_options}</select></label></div><p><small>{apply_status}</small></p><button type="submit">Apply hardware settings</button></form><form method="post" action="/api/hardware/reset"><div class="actions"><button class="danger" type="submit">Restore hardware defaults</button></div></form></section>
+<section><h2>Mouse, touchpad, and screen</h2><form method="post" action="/api/hardware"><label><input type="checkbox" name="touchpad_tap"{touchpad_tap}> Tap touchpad to click</label><small>Disabled by default. Physical touchpad buttons continue to work.</small><label><input type="checkbox" name="disable_while_typing"{disable_while_typing}> Ignore touchpad while typing</label><small>Disabled by default.</small><label><input type="checkbox" name="natural_scrolling"{natural_scrolling}> Natural scrolling</label><div class="grid"><label>Keyboard layout<select name="keyboard_layout">{keyboard_layout_options}</select></label><label>Mouse speed<input type="range" name="mouse_speed" min="-1" max="1" step="0.25" value="{mouse_speed}"></label><label>Touchpad speed<input type="range" name="touchpad_speed" min="-1" max="1" step="0.25" value="{touchpad_speed}"></label><label>Screen resolution<select name="resolution">{resolution_options}</select></label></div><p><small>{apply_status}</small></p><button type="submit">Apply hardware settings</button></form><form method="post" action="/api/hardware/reset"><div class="actions"><button class="danger" type="submit">Restore hardware defaults</button></div></form></section>
 <section><h2>Installed activities</h2><ul>{activity_items}</ul></section></main>"""
 
 
@@ -649,6 +702,36 @@ def _safe_speed(value: object) -> str:
     except (TypeError, ValueError):
         numeric = 0.0
     return f"{numeric:.2f}"
+
+
+_BACKEND_ID_ALLOWED = frozenset(
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-"
+)
+
+
+def _read_hardware_backend(status_path: Path) -> str | None:
+    """Return the watcher backend id tolerantly; None when absent/invalid.
+
+    Old status files without the ``backend`` key stay readable. Values
+    longer than 64 chars, empty, non-text, or with characters outside the
+    platform backend-id alphabet degrade to None rather than breaking the
+    Parent payload. No subprocess or filesystem probing happens here.
+    """
+    try:
+        raw = json.loads(status_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, OSError, UnicodeDecodeError, ValueError):
+        return None
+    if not isinstance(raw, dict):
+        return None
+    backend = raw.get("backend")
+    if not isinstance(backend, str):
+        return None
+    backend = backend.strip()
+    if not backend or len(backend) > 64:
+        return None
+    if any(character not in _BACKEND_ID_ALLOWED for character in backend):
+        return None
+    return backend
 
 
 def parse_args() -> argparse.Namespace:

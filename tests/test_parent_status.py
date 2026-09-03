@@ -83,7 +83,8 @@ class ParentStatusTests(unittest.TestCase):
             self.assertTrue(updated["touchpad_tap"])
             self.assertEqual(updated["mouse_speed"], 0.5)
             reset = app.reset_hardware()
-            self.assertTrue(reset["touchpad_tap"])
+            # T02 accepted tap-OFF default: canonical reset is False.
+            self.assertFalse(reset["touchpad_tap"])
             self.assertEqual(reset["resolution"], "auto")
 
     def test_parent_profile_lifecycle_is_typed_and_never_returns_password_material(self) -> None:
@@ -304,6 +305,39 @@ class ParentStatusTests(unittest.TestCase):
     def test_parent_server_is_single_threaded_and_has_socket_timeout(self) -> None:
         self.assertTrue(issubclass(ParentHTTPServer, HTTPServer))
         self.assertEqual(ParentHTTPServer.request_timeout_seconds, 10.0)
+
+    def test_parent_legacy_form_threads_disable_while_typing(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = ParentStatusApplication(
+                PROJECT_ROOT,
+                root / "parent",
+                root / "customization",
+                root / "hardware",
+                root / "hardware-status.json",
+            )
+            enabled = app.update_hardware(
+                {
+                    "touchpad_tap": ["on"],
+                    "disable_while_typing": ["on"],
+                    "mouse_speed": ["0.0"],
+                    "touchpad_speed": ["0.0"],
+                    "resolution": ["auto"],
+                }
+            )
+            self.assertTrue(enabled["disable_while_typing"])
+            # Same checkbox semantics as tap: omitted means False, never None.
+            disabled = app.update_hardware(
+                {
+                    "mouse_speed": ["0.0"],
+                    "touchpad_speed": ["0.0"],
+                    "resolution": ["auto"],
+                }
+            )
+            self.assertFalse(disabled["disable_while_typing"])
+            self.assertFalse(disabled["touchpad_tap"])
+            page = render_status_page(app.health_payload())
+            self.assertIn('name="disable_while_typing"', page)
 
 
 

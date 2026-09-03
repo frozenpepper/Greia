@@ -3,11 +3,18 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import threading
 import unittest
+import urllib.error
+import urllib.request
 from pathlib import Path
 from unittest import mock
 
-from greia_parent.api_server import ParentApiApplication
+from greia_parent.api_server import (
+    ParentApiApplication,
+    ParentApiHTTPServer,
+    hardware_form_from_json,
+)
 from greia_parent.credentials import (
     MAX_PAIRED_DEVICES,
     ParentCredentialError,
@@ -22,6 +29,7 @@ from greia_parent.protocol import (
     api_index_payload,
 )
 from greia_parent.web_client import render_parent_web_app
+from greia_platform.hardware import HardwareSettingsError
 from greia_platform.usage_limits import UsageLimitError
 
 
@@ -246,10 +254,13 @@ class ParentApiTests(unittest.TestCase):
                         app.update_profile_usage_limit(profile.profile_id, invalid)
 
     def test_html_parent_client_uses_versioned_api_not_legacy_mutation_paths(self) -> None:
+        # 155dbc74 removed the legacy embedded Parent app: the fallback is
+        # fail-closed with no management controls and no sample data. The
+        # versioned API remains the only management surface (covered by the
+        # hardware/usage/policy tests); the pinned static client lives in the
+        # separate Greia-Parent-App-Html repo (out of scope per T09 brief).
         page = render_parent_web_app()
-        self.assertIn('const API="/api/v1"', page)
-        self.assertIn('request("/profiles"', page)
-        self.assertIn('request("/settings/hardware"', page)
+        self.assertIn("not installed correctly", page)
         self.assertNotIn('action="/api/profiles', page)
         self.assertNotIn('action="/api/hardware', page)
 
@@ -313,6 +324,345 @@ class ParentApiTests(unittest.TestCase):
             disabled = app.update_ssh(False)
             self.assertFalse(disabled["active"])
             self.assertFalse(disabled["enabled"])
+
+    def test_hardware_get_shape_desired_applied_and_facts(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = _app(root)
+            status_path = root / "hardware-status.json"
+            status_path.write_text(
+                json.dumps(
+                    {
+                        "applied": True,
+                        "backend": "legacy_x",
+                        "display_output": "LVDS-1",
+                        "display_modes": [
+                            {
+                                "width": 1024,
+                                "height": 600,
+                                "refresh_hz": 60.0,
+                                "preferred": True,
+                                "current": True,
+                            }
+                        ],
+                        "display_metrics": {
+                            "pixel_width": 1024,
+                            "pixel_height": 600,
+                            "physical_size_known": False,
+                            "orientation": "landscape",
+                            "source": "unknown",
+                        },
+                        "pointer_devices": [
+                            {
+                                "kind": "touchpad",
+                                "label": "Touchpad",
+                                "supports_tap": True,
+                                "supports_natural_scrolling": True,
+                                "supports_disable_while_typing": True,
+                                "supports_speed": True,
+                            }
+                        ],
+                        "message": "ok",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            payload = app.hardware_payload()
+            self.assertIn("desired", payload)
+            self.assertIn("applied", payload)
+            self.assertTrue(payload["applied"])
+            self.assertEqual(payload["backend"], "legacy_x")
+            desired = payload["desired"]
+            assert isinstance(desired, dict)
+            self.assertIn("disable_while_typing", desired)
+            self.assertIn("touchpad_tap", desired)
+            metrics = payload["display_metrics"]
+            assert isinstance(metrics, dict)
+            self.assertEqual(metrics["pixel_width"], 1024)
+            devices = payload["pointer_devices"]
+            assert isinstance(devices, list)
+            self.assertEqual(len(devices), 1)
+            self.assertEqual(devices[0]["kind"], "touchpad")
+            # Protocol-style alias mirrors the T05 device list.
+            self.assertEqual(payload["pointer_capabilities"], devices)
+            self.assertLessEqual(len(devices), 8)
+            self.assertLessEqual(len(payload["display_modes"]), 32)
+
+    def test_hardware_get_bounds_pointer_and_mode_lists(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = _app(root)
+            status_path = root / "hardware-status.json"
+            status_path.write_text(
+                json.dumps(
+                    {
+                        "applied": True,
+                        "backend": "legacy_x",
+                        "display_output": "LVDS-1",
+                        "display_modes": [
+                            {
+                                "width": 800 + index,
+                                "height": 600,
+                                "refresh_hz": 60.0,
+                                "preferred": False,
+                                "current": index == 0,
+                            }
+                            for index in range(40)
+                        ],
+                        "display_metrics": None,
+                        "pointer_devices": [
+                            {
+                                "kind": "mouse",
+                                "label": f"Mouse {index}",
+                                "supports_tap": False,
+                                "supports_natural_scrolling": False,
+                                "supports_disable_while_typing": False,
+                                "supports_speed": True,
+                            }
+                            for index in range(20)
+                        ],
+                        "message": "x" * 900,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            payload = app.hardware_payload()
+            assert isinstance(payload["pointer_devices"], list)
+            assert isinstance(payload["display_modes"], list)
+            assert isinstance(payload["message"], str)
+            self.assertLessEqual(len(payload["pointer_devices"]), 8)
+            self.assertLessEqual(len(payload["display_modes"]), 32)
+            self.assertLessEqual(len(payload["message"]), 500)
+
+    def test_hardware_put_updates_pointer_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = _app(Path(temporary))
+            current = app.hardware_store.read().as_json_dict()
+            form = hardware_form_from_json(
+                {
+                    "touchpad_tap": True,
+                    "disable_while_typing": True,
+                    "natural_scrolling": True,
+                    "touchpad_speed": 0.25,
+                    "mouse_speed": -0.25,
+                },
+                current,
+            )
+            updated = app.update_hardware(form)
+            self.assertTrue(updated["touchpad_tap"])
+            self.assertTrue(updated["disable_while_typing"])
+            self.assertTrue(updated["natural_scrolling"])
+            self.assertEqual(updated["touchpad_speed"], 0.25)
+            self.assertEqual(updated["mouse_speed"], -0.25)
+
+    def test_hardware_put_rejects_non_boolean_pointer_flags(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = _app(Path(temporary))
+            current = app.hardware_store.read().as_json_dict()
+            for key in (
+                "touchpad_tap",
+                "natural_scrolling",
+                "disable_while_typing",
+            ):
+                for bad in ("on", "true", 1, 0, None, []):
+                    with self.subTest(field=key, value=bad):
+                        with self.assertRaises(HardwareSettingsError):
+                            hardware_form_from_json({key: bad}, current)
+
+    def test_hardware_put_rejects_out_of_range_and_nonfinite_speeds(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = _app(Path(temporary))
+            current = app.hardware_store.read().as_json_dict()
+            # Non-finite never reaches the store.
+            for bad in (float("inf"), float("-inf"), float("nan")):
+                with self.subTest(value=bad):
+                    with self.assertRaises(HardwareSettingsError):
+                        hardware_form_from_json({"mouse_speed": bad}, current)
+            # Wrong JSON types never reach the store.
+            for bad in ("0.5", True, None, []):
+                with self.subTest(value=bad):
+                    with self.assertRaises(HardwareSettingsError):
+                        hardware_form_from_json({"mouse_speed": bad}, current)
+            # Finite but outside platform bounds fails at the store.
+            form = hardware_form_from_json({"mouse_speed": 5.0}, current)
+            with self.assertRaises(HardwareSettingsError):
+                app.update_hardware(form)
+
+    def test_hardware_put_rejects_unknown_and_backend_controls(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = _app(Path(temporary))
+            current = app.hardware_store.read().as_json_dict()
+            for bad_key in (
+                "xinput_id",
+                "property",
+                "matrix",
+                "command",
+                "shell",
+                "backend",
+                "device_id",
+                "coordinate_matrix",
+                "libinput_prop",
+                "invented_field",
+            ):
+                with self.subTest(field=bad_key):
+                    with self.assertRaises(HardwareSettingsError):
+                        hardware_form_from_json({bad_key: True}, current)
+
+    def test_hardware_reset_returns_canonical_v2_defaults(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            app = _app(Path(temporary))
+            current = app.hardware_store.read().as_json_dict()
+            app.update_hardware(
+                hardware_form_from_json(
+                    {"touchpad_tap": True, "disable_while_typing": True},
+                    current,
+                )
+            )
+            reset = app.reset_hardware()
+            self.assertEqual(reset["schema_version"], 2)
+            self.assertFalse(reset["touchpad_tap"])
+            self.assertFalse(reset["disable_while_typing"])
+            self.assertFalse(reset["natural_scrolling"])
+            self.assertEqual(reset["resolution"], "auto")
+
+    def test_hardware_old_status_file_without_new_fields_still_readable(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = _app(root)
+            (root / "hardware-status.json").write_text(
+                json.dumps(
+                    {
+                        "applied": False,
+                        "display_output": None,
+                        "display_modes": [],
+                        "message": "Hardware session has not reported yet.",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            payload = app.hardware_payload()
+            self.assertIn("desired", payload)
+            self.assertIn("applied", payload)
+            self.assertFalse(payload["applied"])
+            self.assertIsNone(payload["backend"])
+            self.assertIsNone(payload["display_metrics"])
+            self.assertEqual(payload["pointer_devices"], [])
+            self.assertEqual(payload["pointer_capabilities"], [])
+
+    def test_hardware_api_surface_has_no_backend_command_vocabulary(self) -> None:
+        for name in ("api_server.py", "server.py", "protocol.py"):
+            text = (PROJECT_ROOT / "src" / "greia_parent" / name).read_text(
+                encoding="utf-8"
+            )
+            lowered = text.lower()
+            for token in ("xinput", "xrandr", "coordinate transformation"):
+                self.assertNotIn(token, lowered, f"{name} leaks {token}")
+
+    def test_hardware_endpoints_require_authorization_and_validate(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            app = _app(root)
+            server = ParentApiHTTPServer(("127.0.0.1", 0), app)
+            port = server.server_address[1]
+            thread = threading.Thread(
+                target=server.serve_forever,
+                kwargs={"poll_interval": 0.05},
+                daemon=True,
+            )
+            thread.start()
+            try:
+                base = f"http://127.0.0.1:{port}{API_BASE}/settings/hardware"
+
+                def _request(
+                    method: str,
+                    url: str,
+                    token: str | None = None,
+                    body: dict[str, object] | None = None,
+                ) -> tuple[int, dict[str, object]]:
+                    data = (
+                        json.dumps(body).encode("utf-8")
+                        if body is not None
+                        else None
+                    )
+                    request = urllib.request.Request(
+                        url, data=data, method=method
+                    )
+                    if token is not None:
+                        request.add_header("X-Pip-Token", token)
+                    if body is not None:
+                        request.add_header("Content-Type", "application/json")
+                    try:
+                        with urllib.request.urlopen(
+                            request, timeout=5
+                        ) as response:
+                            return (
+                                response.status,
+                                json.loads(response.read().decode("utf-8")),
+                            )
+                    except urllib.error.HTTPError as exc:
+                        raw = exc.read().decode("utf-8", "replace")
+                        try:
+                            parsed: dict[str, object] = json.loads(raw)
+                        except ValueError:
+                            parsed = {"raw": raw}
+                        return exc.code, parsed
+
+                status, _ = _request("GET", base)
+                self.assertEqual(status, 401)
+                status, payload = _request("GET", base, token=app.token)
+                self.assertEqual(status, 200)
+                self.assertIn("desired", payload)
+                self.assertIn("pointer_devices", payload)
+
+                status, _ = _request(
+                    "PUT", base, body={"touchpad_tap": True}
+                )
+                self.assertEqual(status, 401)
+                status, _ = _request(
+                    "PUT",
+                    base,
+                    token=app.token,
+                    body={"touchpad_tap": "on"},
+                )
+                self.assertEqual(status, 400)
+                status, _ = _request(
+                    "PUT",
+                    base,
+                    token=app.token,
+                    body={"mouse_speed": 5.0},
+                )
+                self.assertEqual(status, 400)
+                status, _ = _request(
+                    "PUT",
+                    base,
+                    token=app.token,
+                    body={"xinput_id": 12},
+                )
+                self.assertEqual(status, 400)
+                status, payload = _request(
+                    "PUT",
+                    base,
+                    token=app.token,
+                    body={"disable_while_typing": True},
+                )
+                self.assertEqual(status, 200)
+                assert isinstance(payload, dict)
+                self.assertTrue(payload["disable_while_typing"])
+
+                reset_url = base + "/reset"
+                status, _ = _request("POST", reset_url)
+                self.assertEqual(status, 401)
+                status, payload = _request(
+                    "POST", reset_url, token=app.token, body={}
+                )
+                self.assertEqual(status, 200)
+                assert isinstance(payload, dict)
+                self.assertFalse(payload["touchpad_tap"])
+                self.assertFalse(payload["disable_while_typing"])
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+                server.server_close()
 
 
 if __name__ == "__main__":
