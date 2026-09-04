@@ -271,6 +271,8 @@ age_and_easier
 
 New writes and new UI use only the canonical mode.
 
+The schema also still accepts historical `subdivided_collections` values produced by older launcher versions. Those values are **presentation compatibility state, not Parent visibility authority**. The current rich child Shell may use them once as an in-memory hysteresis seed when a profile activates, but it must not write adaptive grouping state back into the Parent policy file. Parent visibility/age/difficulty updates must never be overwritten by stale launcher presentation state.
+
 ## 10. Discovery tags and adaptive depth
 
 Presentation metadata may provide semantic grouping hints:
@@ -292,6 +294,8 @@ Current adaptive Collection policy is:
 ```
 
 Subdivision occurs only when a coherent platform-owned grouping covers the Collection usefully. Crossing the numeric threshold alone does not force it.
+
+Adaptive subdivision hysteresis for the active child session is launcher-owned in-memory presentation state. It is deliberately downstream of the stable Parent policy snapshot. The Shell must not perform a read-modify-write of Parent policy merely to remember grouping shape; otherwise a concurrent Parent `always_hide`, age mode, or difficulty update could be lost.
 
 Maximum normal depth remains:
 
@@ -336,7 +340,9 @@ The living implementation must prove at least:
 12. presentation filtering never bypasses registry/runtime/trust/permission authority;
 13. responsive and input behavior remains usable on supported Greia viewports;
 14. the normal rich child Shell and trusted emergency fallback enforce the same Parent visibility/age/difficulty authority before exposing Activities;
-15. invalid existing policy data exposes zero launchable Activities in both paths and a supported repair is detected without a permissive fallback interval.
+15. invalid existing policy data exposes zero launchable Activities in both paths and a supported repair is detected without a permissive fallback interval;
+16. an atomic policy replacement during a launcher read cannot be acknowledged under the wrong snapshot;
+17. adaptive subdivision hysteresis does not write Parent policy or clobber a concurrent Parent visibility/age/difficulty update.
 
 The exact current local/browser procedures are:
 
