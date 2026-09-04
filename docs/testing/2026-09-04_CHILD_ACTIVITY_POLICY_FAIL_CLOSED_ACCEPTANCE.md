@@ -29,6 +29,8 @@ Parent policy writes use atomic replacement. A launcher policy read must therefo
 
 Adaptive sub-Collection hysteresis is launcher-owned presentation state. Historical `subdivided_collections` values may seed the active Shell once for compatibility, but the Shell must not write grouping state back into the Parent policy file. Presentation must never overwrite a concurrent Parent visibility, age or difficulty change.
 
+`AdaptiveActivityDiscoveryMixin` is presentation-only by construction. It must not import or own Parent policy stores/services, policy reload/token logic, or policy lifecycle polling. `ActivityPolicyEnforcementMixin` owns profile activation/logout/rescan policy lifecycle for both rich and direct child-launcher compositions.
+
 ## 1. Hard prohibitions
 
 During this gate do not:
@@ -38,6 +40,7 @@ During this gate do not:
 - bypass `ActivityDiscoveryPolicyStore`;
 - weaken the regular-file/no-follow/size-bound policy-store read merely to make a fixture pass;
 - persist adaptive grouping by writing Parent policy from the child Shell;
+- reintroduce Parent-policy I/O/reload authority into `AdaptiveActivityDiscoveryMixin`;
 - remove the trusted fallback from the installed X-session path;
 - use `?demo=1` as device evidence;
 - use GitHub-hosted Actions;
@@ -88,6 +91,9 @@ The suite must prove all of the following:
 
 - `GreiaChildShell` inherits the shared `ActivityPolicyEnforcementMixin` boundary through the policy-enforced adaptive composition;
 - `TrustedGreiaLauncherPresentation` inherits the same boundary through the direct policy composition;
+- `AdaptiveActivityDiscoveryMixin` contains presentation/navigation behavior only: it imports no Parent policy authority and defines no policy reload/token/rescan ownership;
+- `ActivityPolicyEnforcementMixin` structurally owns activation/logout/activity-rescan/profile-rescan/policy-poll lifecycle for both installed launcher compositions;
+- the direct trusted-fallback mixin does not duplicate that common lifecycle;
 - an explicit Parent `always_hide` applies in both paths;
 - restrictive age policy also applies in the trusted fallback;
 - a genuinely missing policy file retains normal default behavior;
@@ -166,7 +172,7 @@ repaired valid policy
 
 For each rejected state, confirm that the effective catalogue contains zero launchable Activities and that the process itself remains alive/recoverable. For the repaired state, confirm normal policy projection resumes without restarting into a more-permissive emergency catalogue and that the policy-specific error indication clears.
 
-The deterministic unit regressions in §§3–4 own the pathname-swap/store race, atomic-replacement-during-launcher-read race, and adaptive-writeback authority boundary. Do not attempt to manufacture timing-sensitive filesystem races manually as a substitute for those tests.
+The deterministic unit regressions in §§3–4 own the pathname-swap/store race, atomic-replacement-during-launcher-read race, adaptive-writeback authority boundary, and presentation-only adaptive-layer structure. Do not attempt to manufacture timing-sensitive filesystem races manually as a substitute for those tests.
 
 If no current project-local runtime fixture can exercise this without touching real profile data, mark this section `NOT_RUN` rather than improvising. The automated source suites in §§3–4 remain mandatory regardless.
 
