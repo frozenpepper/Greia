@@ -23,6 +23,8 @@ A missing policy file is a legitimate default and may produce the normal `show_a
 
 A policy path that exists but is malformed, unreadable, an unsupported schema, or a symlink is **not** equivalent to `show_all`. Until repaired it must expose **zero launchable Activities** while leaving the Shell/fallback process able to render recovery/profile UI.
 
+`ActivityDiscoveryPolicyStore` owns the file boundary: policy reads accept only one bounded regular-file snapshot, never follow symlinks, reject a pathname replacement between `lstat` and `open`, reject mutation during the open-file read, and read at most the configured size limit plus one byte before rejecting an oversized file.
+
 Parent policy writes use atomic replacement. A launcher policy read must therefore identify one stable file version: if replacement occurs while a snapshot is being read, the launcher retries rather than applying one version while acknowledging another version's file token. Repeated churn fails closed and is retried through the ordinary bounded rescan path.
 
 Adaptive sub-Collection hysteresis is launcher-owned presentation state. Historical `subdivided_collections` values may seed the active Shell once for compatibility, but the Shell must not write grouping state back into the Parent policy file. Presentation must never overwrite a concurrent Parent visibility, age or difficulty change.
@@ -34,6 +36,7 @@ During this gate do not:
 - edit source after freezing the candidate;
 - replace a malformed-policy failure with a default policy by hand;
 - bypass `ActivityDiscoveryPolicyStore`;
+- weaken the regular-file/no-follow/size-bound policy-store read merely to make a fixture pass;
 - persist adaptive grouping by writing Parent policy from the child Shell;
 - remove the trusted fallback from the installed X-session path;
 - use `?demo=1` as device evidence;
@@ -70,7 +73,7 @@ GREIA_CHILD_POLICY_SHA=<full SHA>
 
 If `origin/main` advances during the run, finish only the current command, mark the attempt `STALE`, and restart from this section on the new head.
 
-## 3. Structural source gate
+## 3. Structural launcher safety gate
 
 Run:
 
@@ -99,7 +102,7 @@ The suite must prove all of the following:
 
 Any failure: STOP and return the full traceback/output.
 
-## 4. Existing discovery/Parent regressions
+## 4. Policy-store + existing discovery/Parent regressions
 
 Run:
 
@@ -113,7 +116,14 @@ PYTHONPATH=src python3 -m unittest \
 
 Required: exit 0.
 
-This protects the existing age/difficulty/override contract while closing the launcher-composition hole.
+In addition to the existing age/difficulty/override contract, `tests.test_activity_discovery_policy` must prove the file boundary itself:
+
+- direct symlink policy reads are rejected;
+- a regular policy file swapped between `lstat` and `open` is rejected as changed rather than followed/accepted;
+- non-regular policy paths are rejected;
+- an oversized policy is rejected after a bounded `MAX_BYTES + 1` read rather than an unbounded `read_bytes()`.
+
+Any failure: STOP and return the full traceback/output.
 
 ## 5. Installed fallback wiring guard
 
@@ -156,9 +166,9 @@ repaired valid policy
 
 For each rejected state, confirm that the effective catalogue contains zero launchable Activities and that the process itself remains alive/recoverable. For the repaired state, confirm normal policy projection resumes without restarting into a more-permissive emergency catalogue and that the policy-specific error indication clears.
 
-The deterministic unit regressions in §3 own both the atomic-replacement-during-read race and the adaptive-writeback authority boundary. Do not attempt to manufacture timing-sensitive filesystem races manually as a substitute for those tests.
+The deterministic unit regressions in §§3–4 own the pathname-swap/store race, atomic-replacement-during-launcher-read race, and adaptive-writeback authority boundary. Do not attempt to manufacture timing-sensitive filesystem races manually as a substitute for those tests.
 
-If no current project-local runtime fixture can exercise this without touching real profile data, mark this section `NOT_RUN` rather than improvising. The automated source suite in §3 remains mandatory regardless.
+If no current project-local runtime fixture can exercise this without touching real profile data, mark this section `NOT_RUN` rather than improvising. The automated source suites in §§3–4 remain mandatory regardless.
 
 ## 8. Physical R7 evidence boundary
 
