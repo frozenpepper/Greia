@@ -377,7 +377,6 @@ Catalogue state: **41 Activities**, with `org.greia.sottomarino-giramondo` accep
 
 **NOT EXECUTED (human/hardware-owned, runnable on the frozen candidate):** the four §14 lanes (Acer panel, USB mouse, second display, resolution change). Do not copy a physical PASS from an earlier candidate onto this one; execute all four lanes on the exact frozen SHA before hardware claims.
 
-<<<<<<< HEAD
 ## 16. Child Activity policy fallback safety closure — source implemented (2026-09-04)
 
 Source commit `28c58e06018c735f185ca2e6e674b1f695938222` closes two policy-authority defects found during the Parent production review:
@@ -473,4 +472,20 @@ Remediated visual and interaction flaws identified during simulator visual inspe
 - Added direct canvas touch handling on key subjects (Lion mane/roar, Octopus ink squirt, Volcano eruption).
 - Verification: 97/97 encyclopedia tests pass, 401/401 activity tests pass, and headless simulator 19-stage inspection tour verified visually with clean frames and zero collisions.
 
+## 21. Activity discovery policy-store file-boundary hardening — source implemented, verification pending (2026-09-04)
 
+A final adversarial pass moved the remaining pathname-race protection below the launcher into `ActivityDiscoveryPolicyStore`, so every consumer shares the same file-boundary guarantees. The store now opens only a regular-file snapshot, uses no-follow semantics where the host exposes them, verifies `lstat`/open-file identity, rejects replacement between lookup and open, rejects non-regular files, bounds the read to `MAX_BYTES + 1`, and verifies the opened file did not mutate while being read. Oversized content is rejected without first loading an unbounded file into memory.
+
+Deterministic regressions in `tests/test_activity_discovery_policy.py` cover symlink rejection, a regular-file replacement between `lstat` and `open`, non-regular path rejection, and oversized-file rejection. The exact-current acceptance procedure was updated so these store-level invariants are part of the same fail-closed source gate.
+
+Core store-hardening commits:
+
+```text
+82a64d9b596e81937fac9b996f7e89b2291010af  harden Activity discovery policy file reads
+b754d970e5bb70f07eb1be5fbed5d5850c0aebba  deterministic bounded/no-follow store regressions
+f5f4d9a5cd456dfc93e55d3e9a5c498c25645f64  acceptance procedure includes file-boundary cases
+```
+
+Verification is still **PENDING** for this policy-safety chain. No focused exact-current unit run, aggregate `make verify`, or physical Acer fallback-policy run is claimed from this connector-only work. Concurrent Enciclopedia/system-graphics work is a separate lane and is intentionally not modified by this policy tranche.
+
+Next exact step remains `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md` on a clean exact-current checkout; if `main` advances because of the independent Enciclopedia/system-graphics lane, freeze and test the new descendant rather than inheriting older evidence.
