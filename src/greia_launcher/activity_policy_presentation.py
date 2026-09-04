@@ -22,12 +22,17 @@ class _PolicyChangedDuringRead(ActivityDiscoveryError):
 
 
 class ActivityPolicyEnforcementMixin:
-    """Shared safety boundary for child-visible Activity policy.
+    """Shared safety boundary for every child-visible Activity catalogue.
 
     A missing per-child policy file is a legitimate default and is handled by
     ``ActivityDiscoveryPolicyStore.read()``. A policy file that exists but is
     malformed, unreadable, an unsupported schema, or a symlink is different:
     it is invalid Parent authority and must never be reinterpreted as SHOW_ALL.
+
+    This class deliberately owns the profile-activation and bounded-rescan
+    lifecycle for policy projection. Presentation mixins downstream may choose
+    direct or adaptive catalogue layout, but they do not read, write, recover,
+    or poll Parent policy themselves.
 
     Installed child launcher compositions inherit this boundary either through
     ``PolicyEnforcedAdaptiveActivityDiscoveryMixin`` (the normal rich Shell) or
@@ -41,6 +46,52 @@ class ActivityPolicyEnforcementMixin:
         self._discovery_policy_token: PolicyFileToken | None = None
         self._discovery_service = ActivityDiscoveryService()
         self._activity_policy_error = False
+
+    def _activate_profile(self, profile: Any, pygame: Any) -> None:
+        super()._activate_profile(profile, pygame)
+        self._reload_effective_catalogue()
+
+    def _logout(self, pygame: Any) -> None:
+        self._discovery_policy = ActivityDiscoveryPolicy()
+        self._discovery_policy_store = None
+        self._discovery_policy_token = None
+        if self._activity_policy_error:
+            self._catalogue_error = False
+        self._activity_policy_error = False
+        super()._logout(pygame)
+
+    def _rescan_if_due(self) -> bool:
+        changed = super()._rescan_if_due()
+        if self._active_profile is None:
+            return changed
+        token = self._policy_file_token()
+        if token != self._discovery_policy_token:
+            self._reload_effective_catalogue()
+            return True
+        return changed
+
+    def _rescan_activities(self) -> bool:
+        changed = super()._rescan_activities()
+        if changed and self._active_profile is not None:
+            self._reload_effective_catalogue()
+        return changed
+
+    def _rescan_profiles(self) -> bool:
+        active_id = (
+            self._active_profile.profile.profile_id
+            if self._active_profile is not None
+            else None
+        )
+        changed = super()._rescan_profiles()
+        if not changed or self._active_profile is None:
+            return changed
+        if self._active_profile.profile.profile_id == active_id:
+            self._reload_effective_catalogue()
+        return changed
+
+    def _reload_effective_catalogue(self) -> None:
+        """Project the active Parent policy into the presentation catalogue."""
+        raise NotImplementedError
 
     @staticmethod
     def _policy_file_token_for(store: ActivityDiscoveryPolicyStore) -> PolicyFileToken:
@@ -271,46 +322,6 @@ class DirectActivityPolicyDiscoveryMixin(ActivityPolicyEnforcementMixin):
     def _presented_activities(self):
         self._category_id = self._catalogue.nearest_category(self._category_id)
         return self._catalogue.collection(self._category_id).items
-
-    def _activate_profile(self, profile: Any, pygame: Any) -> None:
-        super()._activate_profile(profile, pygame)
-        self._reload_effective_catalogue()
-
-    def _logout(self, pygame: Any) -> None:
-        self._discovery_policy = ActivityDiscoveryPolicy()
-        self._discovery_policy_store = None
-        self._discovery_policy_token = None
-        self._activity_policy_error = False
-        super()._logout(pygame)
-
-    def _rescan_if_due(self) -> bool:
-        changed = super()._rescan_if_due()
-        if self._active_profile is None:
-            return changed
-        token = self._policy_file_token()
-        if token != self._discovery_policy_token:
-            self._reload_effective_catalogue()
-            return True
-        return changed
-
-    def _rescan_activities(self) -> bool:
-        changed = super()._rescan_activities()
-        if changed and self._active_profile is not None:
-            self._reload_effective_catalogue()
-        return changed
-
-    def _rescan_profiles(self) -> bool:
-        active_id = (
-            self._active_profile.profile.profile_id
-            if self._active_profile is not None
-            else None
-        )
-        changed = super()._rescan_profiles()
-        if not changed or self._active_profile is None:
-            return changed
-        if self._active_profile.profile.profile_id == active_id:
-            self._reload_effective_catalogue()
-        return changed
 
     def _reload_effective_catalogue(self) -> None:
         context = self._active_profile
