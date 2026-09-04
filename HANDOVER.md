@@ -504,6 +504,25 @@ On-device closure (B05 PASS): target corrected to `greia-dev.local`/`192.168.68.
 
 Next exact step: Phase 2 (2A–2D: scrub-to-trust-boundary, account migration, ALSA owner, VT minimal) Analyst decomposition. No Acer action needed until the next R1/R2 tranche is accepted.
 
+## 23. Pre-intro boot optimization — R2 Phase 2 COMPLETE on-device (2026-09-04)
+
+Phase boot-02 fully terminal (A1/B1/C1/D1 przyjęte; A2F/B2/C2F/D2 integrated; A3/B3/C3/D3 accepted PASS; A2/C2 superseded by their F-successors). Commits on `main`:
+
+```text
+0d63f979 boot: relocate recurring Activity scrubbing to trust boundaries (2A)
+cfbd96be boot: move account/group repair off launcher start into versioned migration (2B)
+d6c956f5 boot: remove competing pre-hook ALSA resets, single watcher owns volume (2C)
+4e4434c5 boot: minimize VT pre-hook to native asserts, keep only dynamic setup (2D)
+```
+
+Each tranche proven on the Acer as one R1-class change (validation reboot + 3 timed boots, parser exit 0 throughout, initramfs `7c78167f…` unchanged end-to-end, machine healthy). Evidence: `out/boot-optimization/phase-02{a,b,c,d}/` (+ B05/A3 precedent), secret-scanned clean, gitignored.
+
+Measured end-of-Phase-2 medians: kernel ~10.37s, userspace ~11.0s, VT pre-hook wall 0.255s (structural minimality per D1, not a speedup claim), `activity_discover` ~18.8s (still dominant — the Phase 3 target), first frame ~68ms, intro ~7.86s wall. Credentials strictly in-memory both ends, cleared after each tranche.
+
+Process lessons recorded in-run: commit each integrated delta before its Acer tranche (A3/B3 pattern); verification reservation clarification pre-attached from C3 on (killed the wasted first cycle); cache-deletion recovery (worktree restored from retained branch, ghost analysis views removed).
+
+Next exact step: Phase 3 (trusted Activity indexes + one-pass source composition) Analyst decomposition.
+
 ## 23. Enciclopedia di Greia & Sottomarino Giramondo Visual & Interaction Remediation (2026-09-04)
 
 Addressed user feedback across both activities following strict order of operations (local headless simulator -> test suite -> physical Acer Aspire One deployment & verification):
