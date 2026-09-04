@@ -72,10 +72,12 @@ class LaunchPathAccountMutationTests(unittest.TestCase):
         self.assertNotIn("777", text)
 
     def test_amixer_block_preserved_byte_for_byte(self) -> None:
+        # PLAN 2C single-owner authority: the serial amixer block was deleted
+        # from the pre-hook; AMIXER_LINES is now the forbidden set.
         text = PREPARE.read_text(encoding="utf-8")
         for line in AMIXER_LINES:
             with self.subTest(line=line):
-                self.assertIn(line, text)
+                self.assertNotIn(line, text)
 
 
 class FreshImageMembershipTests(unittest.TestCase):

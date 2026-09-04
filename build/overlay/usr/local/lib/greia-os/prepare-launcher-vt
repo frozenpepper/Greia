@@ -17,11 +17,10 @@ for runtime_root in /run/greia-os /run/greia-hardware; do
   fi
 done
 
-# Unmute ALSA channels (platform audio ownership pending C1 verdict).
-amixer sset Master 100% unmute 2>/dev/null || true
-amixer sset Speaker 100% unmute 2>/dev/null || true
-amixer sset Headphone 100% unmute 2>/dev/null || true
-amixer sset PCM 100% unmute 2>/dev/null || true
+# Audio state is owned exclusively by the hardware watcher
+# (SystemControlService over the shared system-controls store, applied through
+# the LegacyX backend). This pre-hook issues no mixer commands, so a launcher
+# restart can never clobber stored volume/mute with a hardcoded policy.
 
 # Remove only a proven-stale X lock. Deleting a live server's lock/socket can
 # permit a duplicate Xorg instance and destroy the graphical handoff. Malformed
