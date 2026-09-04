@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 import tempfile
 from dataclasses import dataclass
 from enum import Enum
@@ -40,7 +41,7 @@ class ActivityVisibilityOverride(str, Enum):
 
 @dataclass(frozen=True, slots=True)
 class ActivityDiscoveryPolicy:
-    """Parent-owned visibility policy plus platform-owned adaptive UI state.
+    """Parent-owned visibility policy with legacy presentation compatibility.
 
     ``difficulty_min`` and ``difficulty_max`` are optional inclusive bounds on
     Activities the child can discover. Fixed-difficulty Activities are compared
@@ -51,8 +52,8 @@ class ActivityDiscoveryPolicy:
     ``overrides`` is stored as an ordered tuple rather than a mutable mapping so
     one policy value can be compared, cached and passed across presentation
     boundaries safely. ``subdivided_collections`` is not Parent intent: it is a
-    bounded platform-owned hysteresis memory used to keep child navigation from
-    changing shape after one small catalogue fluctuation.
+    compatibility field written by older launchers. Current child Shells may
+    consume it once as an adaptive-presentation seed but do not write it back.
     """
 
     visibility_mode: ActivityVisibilityMode = ActivityVisibilityMode.SHOW_ALL
@@ -160,14 +161,70 @@ class ActivityDiscoveryPolicyStore:
         self.path = path
 
     def read(self) -> ActivityDiscoveryPolicy:
+        """Read one bounded regular-file snapshot without following symlinks.
+
+        The lstat/open/fstat identity check closes the pathname race between a
+        symlink check and a later open. ``O_NOFOLLOW`` is used where available,
+        while the inode/device comparison keeps the same fail-closed invariant
+        on platforms without it. Reading only ``MAX_BYTES + 1`` also enforces
+        the size bound before an untrusted oversized file can be loaded fully.
+        """
+
         try:
-            if self.path.is_symlink():
-                raise ActivityDiscoveryError("Activity discovery policy may not be a symlink")
-            raw_bytes = self.path.read_bytes()
+            path_stat = self.path.lstat()
         except FileNotFoundError:
             return ActivityDiscoveryPolicy()
         except OSError as exc:
-            raise ActivityDiscoveryError(f"cannot read Activity discovery policy: {exc}") from exc
+            raise ActivityDiscoveryError(
+                f"cannot read Activity discovery policy: {exc}"
+            ) from exc
+
+        if stat.S_ISLNK(path_stat.st_mode):
+            raise ActivityDiscoveryError("Activity discovery policy may not be a symlink")
+        if not stat.S_ISREG(path_stat.st_mode):
+            raise ActivityDiscoveryError("Activity discovery policy must be a regular file")
+
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(self.path, flags)
+        except FileNotFoundError as exc:
+            # The file existed at lstat time. Disappearing here is a replacement
+            # race, not the legitimate persistent-missing default state.
+            raise ActivityDiscoveryError(
+                "Activity discovery policy changed while being read"
+            ) from exc
+        except OSError as exc:
+            raise ActivityDiscoveryError(
+                f"cannot read Activity discovery policy: {exc}"
+            ) from exc
+
+        try:
+            with os.fdopen(descriptor, "rb") as handle:
+                opened_before = os.fstat(handle.fileno())
+                if (
+                    not os.path.samestat(path_stat, opened_before)
+                    or opened_before.st_mode != path_stat.st_mode
+                ):
+                    raise ActivityDiscoveryError(
+                        "Activity discovery policy changed while being read"
+                    )
+                raw_bytes = handle.read(self.MAX_BYTES + 1)
+                opened_after = os.fstat(handle.fileno())
+        except ActivityDiscoveryError:
+            raise
+        except OSError as exc:
+            raise ActivityDiscoveryError(
+                f"cannot read Activity discovery policy: {exc}"
+            ) from exc
+
+        if (
+            not os.path.samestat(opened_before, opened_after)
+            or opened_before.st_size != opened_after.st_size
+            or opened_before.st_mtime_ns != opened_after.st_mtime_ns
+        ):
+            raise ActivityDiscoveryError(
+                "Activity discovery policy changed while being read"
+            )
         if len(raw_bytes) > self.MAX_BYTES:
             raise ActivityDiscoveryError("Activity discovery policy exceeds its size bound")
         try:
