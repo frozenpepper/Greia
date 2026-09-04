@@ -323,6 +323,64 @@ class LauncherActivityPolicySafetyTests(unittest.TestCase):
                         harness._policy_file_token(),
                     )
 
+    def test_adaptive_hysteresis_never_writes_parent_policy(self) -> None:
+        activities = tuple(
+            _activity(
+                index,
+                age_min=3,
+                age_max=8,
+                tags=("drawing",) if index < 6 else ("writing",),
+            )
+            for index in range(12)
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            policy_path = Path(temporary) / "activity-discovery.json"
+            store = ActivityDiscoveryPolicyStore(policy_path)
+            store.write(ActivityDiscoveryPolicy())
+            harness = _AdaptiveHarness(activities)
+
+            with patch.object(
+                ActivityDiscoveryPolicyStore,
+                "write",
+                autospec=True,
+                side_effect=AssertionError(
+                    "child Shell must not write presentation state into Parent policy"
+                ),
+            ) as policy_write:
+                harness._activate_profile(_profile_context(policy_path), None)
+
+            policy_write.assert_not_called()
+            self.assertTrue(harness._catalogue.subdivided_collection_ids)
+            self.assertTrue(harness._adaptive_subdivision_state)
+            self.assertEqual(store.read().subdivided_collections, ())
+
+    def test_parent_change_after_adaptive_projection_is_not_clobbered(self) -> None:
+        first = _activity(1, age_min=3, age_max=8)
+        hidden = _activity(2, age_min=3, age_max=8)
+        activities = (first, hidden)
+        with tempfile.TemporaryDirectory() as temporary:
+            policy_path = Path(temporary) / "activity-discovery.json"
+            store = ActivityDiscoveryPolicyStore(policy_path)
+            store.write(ActivityDiscoveryPolicy())
+            harness = _AdaptiveHarness(activities)
+            harness._activate_profile(_profile_context(policy_path), None)
+            original_token = harness._discovery_policy_token
+
+            store.write(
+                ActivityDiscoveryPolicy(
+                    overrides=(
+                        (hidden.activity_id, ActivityVisibilityOverride.ALWAYS_HIDE),
+                    )
+                )
+            )
+            self.assertNotEqual(harness._policy_file_token(), original_token)
+            self.assertTrue(harness._rescan_if_due())
+            self.assertEqual(_visible_ids(harness), (first.activity_id,))
+            self.assertEqual(
+                store.read().override_for(hidden.activity_id),
+                ActivityVisibilityOverride.ALWAYS_HIDE,
+            )
+
     def test_trusted_fallback_keeps_catalogue_direct_not_adaptive(self) -> None:
         activities = tuple(
             _activity(
