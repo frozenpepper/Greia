@@ -1795,3 +1795,25 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - Deployed both activities to target Acer Aspire One (`192.168.68.104`) with `--replace-system`.
      - Live on-device screenshots verified visual appearance, aligned submarine console, cute elephant, populated ocean, ADR 0019 system navigation pill, and clean return to Shell.
 
+
+## 2026-09-04 — Enciclopedia di Greia: Bridge & Airplane 4-5yo Storybook Overhaul
+
+- Addressed user feedback regarding broken/technical Machine gallery drawings and concepts:
+  1. **Machines Gallery Workbench (machines_gallery_workbench.svg / runtime PNG):**
+     - Replaced broken bridge diorama with a vibrant red suspension/arch bridge over sparkling blue river water, complete with terracotta brick towers, golden cables, dashed road markings, and a red toy car.
+     - Replaced dull gray missile airplane with a cheerful red-and-blue toy plane on a fluffy cloud pedestal, featuring yellow spinning propeller, portholes, and starry tailfin.
+     - Removed murky <filter id="grain"> and dark overlay. Rebuilt runtime PNG via build_encyclopedia_visual_assets.py.
+  2. **Child Concepts & Locales (it.json, en.json):**
+     - Completely eliminated academic engineering/physics jargon (Bernoulli vs. Newton lift myths, compression/tension vectors, truss shear, load paths).
+     - Replaced with delightful, age-appropriate concepts for 4-5 year olds:
+       - Bridge: connecting shores and animal friends, little red car crossing with beep-beep, rainbow arch shape, and sturdy underwater pillars.
+       - Airplane: soaring on soft air like birds, visiting fluffy whipped-cream clouds, miniature toy towns seen through round portholes, and spinning propellers with engine hum.
+  3. **Page Implementations (pages/bridge.py, pages/airplane.py):**
+     - Created full interactive storybook pages with soft pastel landscapes, smiling mascots (rubber ducky, bunny with heart, happy sun), animated vehicle movements, and child-sized discovery hotspots.
+     - Standardized caption ribbon rendering via draw_caption_ribbon from enciclopedia_presentation.py for auto-wrapping within (270, 507, 470, 72).
+     - Custom toy action buttons with arched bridge and toy airplane icons.
+  4. **Verification & Physical Acer Evidence:**
+     - Local unit tests: 22/22 tests pass in tests/test_activity_enciclopedia*.py.
+     - Headless simulator: 5-second survival and clean Home return (rc=0).
+     - Deployed to Acer Aspire One (192.168.68.104) via greia_remote.py deploy activities/enciclopedia_greia --replace-system.
+     - On-device live verification: captured screenshots on Acer display :0 confirming workbench diorama models, 'IL PONTE' page with duck and driving car, 'L'AEROPLANO' page with smiling sun and cloud bunny, ADR 0019 system navigation pill [Home] [<], and clean return to Greia Shell.

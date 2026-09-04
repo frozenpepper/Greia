@@ -45,20 +45,117 @@
   <path d="M770 229l17 13" stroke="#5b4431" stroke-width="5"/>
 </g>
 <g data-target="airplane" data-center="335,415" filter="url(#shadow)">
-  <ellipse cx="335" cy="480" rx="94" ry="14" fill="#251812" opacity=".25"/>
-  <rect x="328" y="431" width="14" height="47" rx="6" fill="url(#brass)" stroke="#654726" stroke-width="3"/>
-  <g transform="translate(335 397) rotate(-8)" fill="url(#steel)" stroke="#5d6b72" stroke-width="4" stroke-linejoin="round"><path d="M-88 0 Q0 -25 90 0 Q0 25 -88 0Z"/><path d="M-12 -4 L-50 -52 L5 -14 L42 -9Z"/><path d="M-12 4 L-50 52 L5 14 L42 9Z"/><path d="M58 -3 L82 -31 L77 -2Z"/></g>
-  <circle cx="409" cy="390" r="5" fill="#d1a24c"/>
+  <!-- Shadow and cloud display stand -->
+  <ellipse cx="335" cy="482" rx="75" ry="12" fill="#251812" opacity=".24"/>
+  <ellipse cx="335" cy="466" rx="42" ry="12" fill="#f5f0e6" stroke="#c8bead" stroke-width="2.5"/>
+  <ellipse cx="312" cy="464" rx="24" ry="10" fill="#ffffff"/>
+  <ellipse cx="358" cy="464" rx="24" ry="10" fill="#ffffff"/>
+  <ellipse cx="335" cy="460" rx="28" ry="11" fill="#ffffff"/>
+  <rect x="331" y="420" width="8" height="42" rx="4" fill="url(#brass)" stroke="#684a22" stroke-width="2"/>
+
+  <!-- Cute Storybook Toy Airplane (centered at 335, 400) -->
+  <g transform="translate(335 395) rotate(-4)">
+    <!-- Back wing -->
+    <path d="M-15 -14 L-2 -38 L16 -34 L5 -12 Z" fill="#296cb3" stroke="#1c4879" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M-1 -36 L14 -33 L9 -22 L-3 -24 Z" fill="#4d8fd9"/>
+    
+    <!-- Tail fin -->
+    <path d="M42 -10 L68 -42 L82 -42 L70 -8 Z" fill="#e84438" stroke="#a62820" stroke-width="3" stroke-linejoin="round"/>
+    <polygon points="73,-35 76,-28 83,-28 77,-24 79,-17 73,-21 67,-17 69,-24 63,-28 70,-28" fill="#ffea75"/>
+    <path d="M50 -2 L74 -12 L77 -5 L52 2 Z" fill="#296cb3" stroke="#1c4879" stroke-width="2.5"/>
+
+    <!-- Main Fuselage -->
+    <path d="M-62 2 Q-60 -22 -15 -22 L35 -20 Q70 -16 75 -3 Q75 14 35 18 L-20 18 Q-62 18 -62 2 Z" fill="#e84438" stroke="#a62820" stroke-width="3.5" stroke-linejoin="round"/>
+    <!-- Upper cream cabin stripe -->
+    <path d="M-56 -3 Q-54 -18 -15 -18 L32 -16 Q60 -13 68 -3 Q40 -6 -5 -6 Q-35 -6 -56 -3 Z" fill="#fff9ea"/>
+
+    <!-- Cockpit Windshield -->
+    <path d="M-48 -3 Q-42 -15 -25 -15 L-15 -3 Q-30 -2 -48 -3 Z" fill="#60bcf4" stroke="#256896" stroke-width="2.5"/>
+    <path d="M-44 -6 Q-38 -12 -28 -12 L-24 -6 Z" fill="#ffffff" opacity=".7"/>
+
+    <!-- Round passenger windows -->
+    <circle cx="2" cy="-4" r="5" fill="#60bcf4" stroke="#256896" stroke-width="2"/>
+    <circle cx="1" cy="-5" r="2" fill="#ffffff"/>
+    <circle cx="18" cy="-4" r="5" fill="#60bcf4" stroke="#256896" stroke-width="2"/>
+    <circle cx="17" cy="-5" r="2" fill="#ffffff"/>
+    <circle cx="34" cy="-4" r="5" fill="#60bcf4" stroke="#256896" stroke-width="2"/>
+    <circle cx="33" cy="-5" r="2" fill="#ffffff"/>
+
+    <!-- Front main wing -->
+    <path d="M-22 4 L-5 38 L25 34 L12 4 Z" fill="#296cb3" stroke="#1c4879" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M-14 12 L-3 34 L19 31 L8 12 Z" fill="#4d8fd9"/>
+    <!-- Red wingtip -->
+    <path d="M-5 38 L6 40 L25 34 L18 29 L-3 34 Z" fill="#e84438" stroke="#a62820" stroke-width="2"/>
+
+    <!-- Nose cone & Propeller -->
+    <path d="M-62 -8 Q-72 0 -62 10 Z" fill="#ffc73b" stroke="#ab7e12" stroke-width="2.5"/>
+    <!-- Spinning propeller blades -->
+    <ellipse cx="-72" cy="-14" rx="6" ry="16" fill="#fff5d0" stroke="#ab7e12" stroke-width="2" transform="rotate(-15 -72 -14)"/>
+    <ellipse cx="-72" cy="16" rx="6" ry="16" fill="#fff5d0" stroke="#ab7e12" stroke-width="2" transform="rotate(-15 -72 16)"/>
+    <circle cx="-72" cy="1" r="5" fill="#e84438" stroke="#a62820" stroke-width="2"/>
+  </g>
 </g>
-<g data-target="bridge" data-center="665,415" filter="url(#shadow)" fill="none" stroke-linecap="round">
-  <ellipse cx="665" cy="489" rx="112" ry="14" fill="#251812" opacity=".24"/>
-  <rect x="556" y="454" width="218" height="26" rx="8" fill="#5c6770" stroke="#343a3e" stroke-width="4"/>
-  <path d="M578 456V358 M752 456V358" stroke="#65717a" stroke-width="14"/>
-  <path d="M578 369 Q665 294 752 369" stroke="#d19a49" stroke-width="10"/>
-  <path d="M578 369 Q620 412 665 456 M752 369 Q710 412 665 456" stroke="#d19a49" stroke-width="6"/>
-  <path d="M604 346V452 M628 327V452 M653 313V452 M677 313V452 M702 327V452 M726 346V452" stroke="#d19a49" stroke-width="5"/>
-  <path d="M570 455H760" stroke="#dde2df" stroke-width="5" opacity=".5"/>
+<g data-target="bridge" data-center="665,415" filter="url(#shadow)">
+  <!-- Shadow on workbench -->
+  <ellipse cx="665" cy="486" rx="115" ry="14" fill="#251812" opacity=".24"/>
+
+  <!-- Sparkling River Water Base -->
+  <rect x="552" y="464" width="226" height="22" rx="10" fill="#3290cc" stroke="#1a5a85" stroke-width="3"/>
+  <path d="M568 471 Q590 467 612 471 T656 471 T700 471 T744 471" fill="none" stroke="#a6e6ff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M580 479 Q602 475 624 479 T668 479 T712 479 T754 479" fill="none" stroke="#68bde8" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Left Stone Tower -->
+  <rect x="580" y="348" width="34" height="118" rx="6" fill="#d95a3f" stroke="#872915" stroke-width="3"/>
+  <!-- Stone tower cap & roof -->
+  <rect x="576" y="340" width="42" height="12" rx="3" fill="#f5ede0" stroke="#872915" stroke-width="2.5"/>
+  <polygon points="597,322 584,340 610,340" fill="#d95a3f" stroke="#872915" stroke-width="2.5"/>
+  <circle cx="597" cy="320" r="4" fill="#ffc73b" stroke="#a67b11" stroke-width="1.5"/>
+  <!-- Arch cutout in left tower -->
+  <path d="M589 452 V426 Q597 416 605 426 V452 Z" fill="#872915"/>
+
+  <!-- Right Stone Tower -->
+  <rect x="716" y="348" width="34" height="118" rx="6" fill="#d95a3f" stroke="#872915" stroke-width="3"/>
+  <!-- Stone tower cap & roof -->
+  <rect x="712" y="340" width="42" height="12" rx="3" fill="#f5ede0" stroke="#872915" stroke-width="2.5"/>
+  <polygon points="733,322 720,340 746,340" fill="#d95a3f" stroke="#872915" stroke-width="2.5"/>
+  <circle cx="733" cy="320" r="4" fill="#ffc73b" stroke="#a67b11" stroke-width="1.5"/>
+  <!-- Arch cutout in right tower -->
+  <path d="M725 452 V426 Q733 416 741 426 V452 Z" fill="#872915"/>
+
+  <!-- Golden Suspension Cables -->
+  <!-- Main swooping cables -->
+  <path d="M555 435 Q570 380 597 348 Q665 432 733 348 Q760 380 775 435" fill="none" stroke="#f5b327" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- Vertical suspender strings -->
+  <line x1="620" y1="384" x2="620" y2="433" stroke="#f5b327" stroke-width="2.5"/>
+  <line x1="638" y1="410" x2="638" y2="432" stroke="#f5b327" stroke-width="2.5"/>
+  <line x1="656" y1="422" x2="656" y2="431" stroke="#f5b327" stroke-width="2.5"/>
+  <line x1="674" y1="422" x2="674" y2="431" stroke="#f5b327" stroke-width="2.5"/>
+  <line x1="692" y1="410" x2="692" y2="432" stroke="#f5b327" stroke-width="2.5"/>
+  <line x1="710" y1="384" x2="710" y2="433" stroke="#f5b327" stroke-width="2.5"/>
+
+  <!-- The Bridge Road Deck (gentle arch) -->
+  <path d="M552 444 Q665 433 778 444 L778 454 Q665 443 552 454 Z" fill="#444c52" stroke="#252b30" stroke-width="3"/>
+  <!-- White road dashes -->
+  <path d="M565 448 Q665 437 765 448" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="8 6"/>
+
+  <!-- Picket safety railing -->
+  <path d="M552 439 Q665 428 778 439" fill="none" stroke="#f5ede0" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Tiny Cute Toy Car Crossing the Bridge! -->
+  <g transform="translate(665 424)">
+    <ellipse cx="0" cy="11" rx="14" ry="4" fill="#251812" opacity=".3"/>
+    <!-- Car body -->
+    <path d="M-12 5 Q-12 0 -7 -2 L-3 -8 Q0 -9 7 -9 L11 -2 Q14 0 14 5 Z" fill="#e84438" stroke="#9e231b" stroke-width="2" stroke-linejoin="round"/>
+    <!-- Window -->
+    <path d="M-5 -2 L-1 -7 Q2 -7 6 -7 L9 -2 Z" fill="#fff7b0" stroke="#9e231b" stroke-width="1.5"/>
+    <!-- Wheels -->
+    <circle cx="-7" cy="6" r="3.5" fill="#2a2e33"/>
+    <circle cx="-7" cy="6" r="1.5" fill="#ffffff"/>
+    <circle cx="7" cy="6" r="3.5" fill="#2a2e33"/>
+    <circle cx="7" cy="6" r="1.5" fill="#ffffff"/>
+    <!-- Headlight -->
+    <circle cx="-11" cy="2" r="1.5" fill="#ffec3d"/>
+  </g>
 </g>
 <g opacity=".75"><path d="M87 176V338" stroke="#c4b8a5" stroke-width="7"/><rect x="69" y="322" width="36" height="54" rx="5" fill="#68767b"/><path d="M885 164L915 203 M915 164L885 203" stroke="#d0b26c" stroke-width="7" stroke-linecap="round"/><rect x="856" y="327" width="92" height="69" rx="5" fill="#dbc991" stroke="#5d4937" stroke-width="4"/><path d="M870 382L900 346L934 382" fill="none" stroke="#55738a" stroke-width="4"/><rect x="99" y="486" width="70" height="20" rx="8" fill="#5a3926"/><circle cx="119" cy="496" r="7" fill="#d3a04d"/><circle cx="145" cy="496" r="7" fill="#839c71"/></g>
-<rect width="1024" height="600" filter="url(#grain)" opacity=".5" pointer-events="none"/>
 </svg>

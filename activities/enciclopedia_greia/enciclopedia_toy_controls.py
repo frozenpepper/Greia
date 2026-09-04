@@ -358,14 +358,22 @@ def draw_machine_action_button(
         pygame.draw.line(surface, (76, 135, 181), (cx, cy - 12), (cx + 14, cy + 6), 4)
         pygame.draw.line(surface, (76, 135, 181), (cx, cy - 12), (cx, cy + 6), 3)
     elif machine == "airplane":
-        pygame.draw.ellipse(surface, (220, 224, 221), (cx - 20, cy - 4, 40, 12))
-        pygame.draw.polygon(surface, (180, 190, 195), [(cx - 8, cy), (cx - 2, cy - 12), (cx + 6, cy)])
-        pygame.draw.polygon(surface, (160, 170, 175), [(cx - 4, cy + 2), (cx + 10, cy - 6), (cx + 14, cy + 2)])
+        # Cute colorful toy airplane icon
+        pygame.draw.ellipse(surface, (232, 68, 56), (cx - 16, cy - 6, 32, 12))
+        pygame.draw.ellipse(surface, (255, 248, 235), (cx - 12, cy - 8, 16, 5))
+        pygame.draw.polygon(surface, (41, 108, 179), [(cx - 4, cy - 2), (cx + 4, cy - 12), (cx + 12, cy - 12), (cx + 4, cy - 2)])
+        pygame.draw.polygon(surface, (41, 108, 179), [(cx - 4, cy + 2), (cx + 4, cy + 12), (cx + 10, cy + 12), (cx + 2, cy + 2)])
+        pygame.draw.circle(surface, (255, 199, 59), (cx - 16, cy), 3)
+        pygame.draw.line(surface, (255, 245, 208), (cx - 18, cy - 6), (cx - 18, cy + 6), 2)
     elif machine == "bridge":
-        pygame.draw.line(surface, (120, 130, 145), (cx - 22, cy + 8), (cx + 22, cy + 8), 4)
-        pygame.draw.line(surface, (120, 130, 145), (cx - 18, cy + 8), (cx - 8, cy - 10), 3)
-        pygame.draw.line(surface, (120, 130, 145), (cx + 8, cy - 10), (cx + 18, cy + 8), 3)
-        pygame.draw.circle(surface, (240, 180, 60), (cx, cy - 2), 6)
+        # Cute arched bridge with little car icon
+        pygame.draw.arc(surface, (50, 144, 204), (cx - 20, cy + 6, 40, 10), 0, math.pi, 3)
+        pygame.draw.arc(surface, (217, 90, 63), (cx - 18, cy - 4, 36, 18), 0, math.pi, 4)
+        pygame.draw.line(surface, (55, 65, 72), (cx - 22, cy + 4), (cx + 22, cy + 4), 3)
+        # Little red car
+        pygame.draw.rect(surface, (232, 68, 56), (cx - 6, cy - 3, 12, 7), border_radius=2)
+        pygame.draw.circle(surface, (40, 44, 48), (cx - 4, cy + 4), 2)
+        pygame.draw.circle(surface, (40, 44, 48), (cx + 4, cy + 4), 2)
     elif machine == "gears":
         pygame.draw.circle(surface, (83, 145, 181), (cx, cy), 16)
         pygame.draw.circle(surface, edge, (cx, cy), 16, 2)

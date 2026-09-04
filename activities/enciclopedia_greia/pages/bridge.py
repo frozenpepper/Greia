@@ -1,4 +1,4 @@
-"""Bridge entry: load paths, bridge forms, tension and compression."""
+"""Bridge entry: child-friendly storybook bridge over water connecting friends."""
 
 from __future__ import annotations
 
@@ -12,8 +12,7 @@ from greia_platform.typography import FontRole
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
-        announce_focus_name,
-        draw_focus_patch,
+        draw_caption_ribbon,
         draw_machine_action_button,
         draw_navigation_arrows,
         encyclopedia_focus_cue,
@@ -23,8 +22,7 @@ if __package__ and "." in __package__:
 else:
     from enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from enciclopedia_presentation import (
-        announce_focus_name,
-        draw_focus_patch,
+        draw_caption_ribbon,
         draw_machine_action_button,
         draw_navigation_arrows,
         encyclopedia_focus_cue,
@@ -42,49 +40,84 @@ class BridgeDiscovery:
 
 
 DISCOVERIES = (
-    BridgeDiscovery("load", "bridge.load", "encyclopedia.machines.bridge.load", (250, 190)),
-    BridgeDiscovery("shapes", "bridge.shapes", "encyclopedia.machines.bridge.shapes", (755, 190)),
-    BridgeDiscovery("forces", "bridge.forces", "encyclopedia.machines.bridge.forces", (250, 420)),
-    BridgeDiscovery("path", "bridge.path", "encyclopedia.machines.bridge.path", (755, 420)),
+    BridgeDiscovery("load", "bridge.load", "encyclopedia.machines.bridge.load", (240, 185)),
+    BridgeDiscovery("shapes", "bridge.shapes", "encyclopedia.machines.bridge.shapes", (765, 185)),
+    BridgeDiscovery("forces", "bridge.forces", "encyclopedia.machines.bridge.forces", (240, 420)),
+    BridgeDiscovery("path", "bridge.path", "encyclopedia.machines.bridge.path", (765, 420)),
 )
 
 
 class BridgeLoadModel:
-    """Own finite structure choice and load/path teaching state."""
+    """Owns bridge interaction state: little car driving, rainbow arch, sturdy pillars, and friends."""
 
-    SHAPES = ("beam", "arch", "truss")
+    SHAPES = ("arch", "beam", "truss")
 
     def __init__(self) -> None:
         self.shape_index = 0
-        self.load_position = 0.5
-        self.load_age = 0.0
-        self.forces_age = 0.0
-        self.path_age = 0.0
+        # Car dynamics
+        self.car_progress = 0.50     # 0.15 (left bank) to 0.85 (right bank)
+        self.car_target = 0.50
+        self.car_driving = False
+        self.car_beep_age = 0.0
+
+        # Feature ages
+        self.load_age = 0.0          # little car focus
+        self.shapes_age = 0.0        # rainbow arch glow
+        self.forces_age = 0.0        # sturdy pillars water splash
+        self.path_age = 0.0          # connecting friends
 
     @property
     def shape(self) -> str:
         return self.SHAPES[self.shape_index]
 
+    @property
+    def load_position(self) -> float:
+        return self.car_progress
+
     def update(self, dt: float) -> None:
         self.load_age = max(0.0, self.load_age - dt)
+        self.shapes_age = max(0.0, self.shapes_age - dt)
         self.forces_age = max(0.0, self.forces_age - dt)
         self.path_age = max(0.0, self.path_age - dt)
+        self.car_beep_age = max(0.0, self.car_beep_age - dt)
+
+        # Smooth car driving animation across the bridge
+        if self.car_driving:
+            diff = self.car_target - self.car_progress
+            if abs(diff) > 0.01:
+                direction = 1.0 if diff > 0 else -1.0
+                step = direction * dt * 0.40
+                if abs(step) >= abs(diff):
+                    self.car_progress = self.car_target
+                    self.car_driving = False
+                else:
+                    self.car_progress += step
+            else:
+                self.car_progress = self.car_target
+                self.car_driving = False
 
     def place_load(self) -> None:
-        self.load_position += 0.22
-        if self.load_position > 0.82:
-            self.load_position = 0.18
-        self.load_age = 4.5
+        """Called when the child activates the little car."""
+        self.load_age = 6.0
+        self.car_beep_age = 2.5
+        if self.car_progress > 0.75:
+            self.car_target = 0.20
+        else:
+            self.car_target = min(0.82, self.car_progress + 0.32)
+        self.car_driving = True
 
     def next_shape(self) -> None:
+        """Called when child activates the rainbow arch shape."""
         self.shape_index = (self.shape_index + 1) % len(self.SHAPES)
-        self.load_age = 4.0
+        self.shapes_age = 6.0
 
     def reveal_forces(self) -> None:
-        self.forces_age = 4.5
+        """Called when child activates the sturdy pillars."""
+        self.forces_age = 6.0
 
     def reveal_path(self) -> None:
-        self.path_age = 4.5
+        """Called when child activates the connecting path for friends."""
+        self.path_age = 6.0
 
 
 class BridgePage(EncyclopediaPage):
@@ -102,10 +135,11 @@ class BridgePage(EncyclopediaPage):
             pygame.Rect(cx - 43, cy - 43, 86, 86)
             for cx, cy in (item.center for item in DISCOVERIES)
         )
-        self._time = getattr(self, '_time', 0.0)
+        self._time = 0.0
         self._arrow_left_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
         self._arrow_right_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
         self._action_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
+        self._bridge_rect = pygame.Rect(310, 310, 400, 150)
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.machines.bridge.intro")
@@ -113,10 +147,8 @@ class BridgePage(EncyclopediaPage):
 
     def _announce_selected(self) -> None:
         disc = DISCOVERIES[self._selected]
-        cue = encyclopedia_focus_cue(disc.discovery_id, "name")
-        # Use deduped announce for focus changes
+        cue = encyclopedia_focus_cue("machines", disc.discovery_id, "name")
         if not self._focus_audio.announce_once(self.context.audio, cue):
-            # Fallback to disc.cue_id if focus cue not yet integrated (will fail silently until audio exists)
             self._focus_audio.announce_once(self.context.audio, disc.cue_id)
 
     def _set_selected(self, index: int) -> None:
@@ -127,11 +159,11 @@ class BridgePage(EncyclopediaPage):
         self._announce_selected()
 
     def _trigger_main(self) -> None:
-        # Action button now correctly activates the currently selected discovery
-        self._activate(self._selected)
+        self._model.place_load()
+        self._activate(0)
 
     def update(self, dt: float) -> None:
-        self._time = getattr(self, '_time', 0.0) + dt
+        self._time += dt
         self._model.update(dt)
 
     def handle_input(self, event: PageInput) -> None:
@@ -150,6 +182,11 @@ class BridgePage(EncyclopediaPage):
                 if self._arrow_right_hit.collidepoint(point):
                     self._set_selected(self._selected + 1)
                     return
+                if self._bridge_rect.collidepoint(point):
+                    self._model.place_load()
+                    self._activate(0)
+                    return
+
             hit = next(
                 (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
                 None,
@@ -163,14 +200,14 @@ class BridgePage(EncyclopediaPage):
                 self._set_selected(hit)
                 self._activate(hit)
             return
+
         if event.kind is not PageInputKind.COMMAND or event.command is None:
             return
+
         if event.command is PageCommand.ACTIVATE:
-            if DISCOVERIES[self._selected].discovery_id == DISCOVERIES[0].discovery_id:
-                self._trigger_main()
-                return
             self._activate(self._selected)
             return
+
         prev = self._selected
         self._selected = grid_step(
             self._selected,
@@ -180,7 +217,6 @@ class BridgePage(EncyclopediaPage):
         )
         if self._selected != prev:
             self._announce_selected()
-
 
     def _activate(self, index: int) -> None:
         item = DISCOVERIES[index]
@@ -196,27 +232,51 @@ class BridgePage(EncyclopediaPage):
         self.context.audio.play(item.cue_id)
 
     def draw(self, surface: pygame.Surface) -> None:
-        surface.fill((234, 242, 246))
+        # 1. Warm, soft sunny sky
+        surface.fill((230, 244, 252))
+
+        # Distant soft rolling hills
+        pygame.draw.ellipse(surface, (196, 226, 185), (40, 230, 480, 160))
+        pygame.draw.ellipse(surface, (180, 216, 168), (480, 220, 520, 180))
+
+        # Drifting fluffy white clouds
+        t = self._time
+        cloud1_x = int((120 + t * 6) % 1100) - 80
+        cloud2_x = int((650 + t * 4) % 1100) - 80
+        self._draw_cloud(surface, cloud1_x, 110, 65)
+        self._draw_cloud(surface, cloud2_x, 135, 52)
+
+        # Title at the top
         draw_centered_text(
             surface,
             self.context.typography,
             self.context.resources.text("bridge.title"),
-            center=(500, 92),
-            size=40,
-            color=self.context.palette.ink,
+            center=(512, 68),
+            size=36,
+            color=(61, 44, 31),
             role=FontRole.DISPLAY,
         )
-        self._draw_bridge(surface)
+
+        # 2. Draw river, riverbanks, bridge, and cute vehicle
+        self._draw_bridge_scene(surface)
+
+        # 3. Discovery Tokens
         self._draw_hotspots(surface)
+
+        # 4. Navigation controls and action button
         can_left = self._selected > 0
         can_right = self._selected < len(DISCOVERIES) - 1
         self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
-            surface, time=getattr(self, '_time', 0.0), can_go_left=can_left, can_go_right=can_right
+            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
         )
         self._action_hit = draw_machine_action_button(
-            surface, (512, 460), machine="bridge", time=getattr(self, '_time', 0.0), active=True
+            surface, (512, 460), machine="bridge", time=self._time, active=True
         )
+
+        # 5. Caption Ribbon
         self._draw_caption(surface)
+
+        # 6. Presenter Dani (smiling and happy)
         draw_presenter(
             surface,
             self.context.visuals,
@@ -227,104 +287,253 @@ class BridgePage(EncyclopediaPage):
             fallback_color=(101, 171, 211),
         )
 
-    def _draw_bridge(self, surface: pygame.Surface) -> None:
-        left_x, right_x = 350, 665
+    def _draw_cloud(self, surface: pygame.Surface, cx: int, cy: int, size: int) -> None:
+        s = pygame.Surface((size * 2, size), pygame.SRCALPHA)
+        pygame.draw.circle(s, (255, 255, 255, 220), (size // 2, size // 2), size // 3)
+        pygame.draw.circle(s, (255, 255, 255, 240), (size, size // 2 - 4), size // 2)
+        pygame.draw.circle(s, (255, 255, 255, 220), (size + size // 2, size // 2), size // 3)
+        surface.blit(s, (cx - size, cy - size // 2))
+
+    def _draw_bridge_scene(self, surface: pygame.Surface) -> None:
+        t = self._time
+
+        # River Water Base (flowing all the way down across the center)
+        river_points = [(260, 340), (764, 340), (780, 600), (244, 600)]
+        pygame.draw.polygon(surface, (68, 155, 208), river_points)
+        # Deep water stripe
+        pygame.draw.polygon(surface, (52, 138, 192), [(270, 380), (754, 380), (770, 600), (254, 600)])
+
+        # Animated sparkling water waves
+        for row in range(5):
+            y_base = 358 + row * 26
+            offset_x = math.sin(t * 1.5 + row * 1.2) * 16
+            for col in range(5):
+                wx = 300 + col * 90 + offset_x
+                pygame.draw.arc(surface, (150, 220, 255), (wx, y_base, 36, 12), math.pi, math.tau, 3)
+
+        # Cheerful yellow rubber duck swimming in the river!
+        duck_x = int(430 + math.sin(t * 0.9) * 45)
+        duck_y = int(418 + math.cos(t * 2.2) * 3)
+        pygame.draw.circle(surface, (255, 214, 46), (duck_x, duck_y), 11)
+        pygame.draw.circle(surface, (255, 214, 46), (duck_x + 9, duck_y - 7), 7)
+        pygame.draw.polygon(surface, (247, 132, 32), [(duck_x + 15, duck_y - 8), (duck_x + 21, duck_y - 6), (duck_x + 15, duck_y - 4)])
+        pygame.draw.circle(surface, (40, 30, 25), (duck_x + 11, duck_y - 8), 1.5)
+        pygame.draw.ellipse(surface, (170, 230, 255), (duck_x - 14, duck_y + 6, 28, 6), 2)
+
+        # Grassy Riverbanks on left and right
+        left_bank_points = [(0, 600), (0, 340), (140, 335), (280, 350), (290, 420), (270, 520), (250, 600)]
+        pygame.draw.polygon(surface, (116, 182, 86), left_bank_points)
+        pygame.draw.polygon(surface, (142, 208, 108), [(0, 340), (140, 335), (280, 350), (285, 365), (140, 350), (0, 355)])
+
+        right_bank_points = [(1024, 600), (1024, 340), (880, 335), (744, 350), (734, 420), (754, 520), (774, 600)]
+        pygame.draw.polygon(surface, (116, 182, 86), right_bank_points)
+        pygame.draw.polygon(surface, (142, 208, 108), [(1024, 340), (880, 335), (744, 350), (739, 365), (880, 350), (1024, 355)])
+
+        # Flowers on grassy banks
+        for fx, fy, col in ((100, 370, (248, 86, 114)), (180, 385, (255, 222, 60)), (240, 375, (255, 255, 255)),
+                            (780, 375, (255, 255, 255)), (840, 385, (255, 222, 60)), (920, 370, (248, 86, 114))):
+            pygame.draw.circle(surface, col, (fx, fy), 4)
+            pygame.draw.circle(surface, (255, 200, 40), (fx, fy), 2)
+
+        left_x, right_x = 310, 714
         deck_y = 350
-        # Towers with highlight and shadow
-        for tx in (left_x - 30, right_x - 15):
-            pygame.draw.rect(surface, (120, 95, 72), (tx + 2, deck_y + 12, 45, 100))
-            pygame.draw.rect(surface, (142, 115, 89), (tx, deck_y + 10, 45, 100))
-            pygame.draw.rect(surface, (165, 138, 110), (tx + 4, deck_y + 14, 14, 92))
-        pygame.draw.line(surface, (70, 73, 74), (left_x, deck_y + 2), (right_x, deck_y + 2), 12)
-        pygame.draw.line(surface, (83, 86, 86), (left_x, deck_y), (right_x, deck_y), 10)
-        pygame.draw.line(surface, (110, 112, 112), (left_x, deck_y - 2), (right_x, deck_y - 2), 2)
 
-        shape = self._model.shape
-        if shape == "beam":
-            pygame.draw.rect(surface, (91, 137, 173), (left_x, deck_y - 18, right_x - left_x, 22), border_radius=6)
-        elif shape == "arch":
-            pygame.draw.arc(surface, (91, 137, 173), (left_x, deck_y - 175, right_x - left_x, 210), math.pi, math.tau, 12)
-            for x in range(left_x + 35, right_x, 45):
-                rel = (x - left_x) / (right_x - left_x)
-                arch_y = deck_y - int(math.sin(rel * math.pi) * 100)
-                pygame.draw.line(surface, (91, 137, 173), (x, deck_y), (x, arch_y), 4)
-        else:
-            top_y = 245
-            pygame.draw.line(surface, (91, 137, 173), (left_x, deck_y), (right_x, deck_y), 8)
-            points = [(left_x + i * 52, top_y if i % 2 else deck_y) for i in range(7)]
-            points[-1] = (right_x, deck_y)
-            for a, b in zip(points, points[1:]):
-                pygame.draw.line(surface, (91, 137, 173), a, b, 7)
-            pygame.draw.line(surface, (91, 137, 173), (left_x + 52, top_y), (right_x - 52, top_y), 7)
+        # Two Sturdy Warm Brick/Stone Pillars
+        for tx in (left_x + 70, right_x - 110):
+            pygame.draw.ellipse(surface, (40, 105, 145), (tx - 6, deck_y + 68, 52, 16))
+            pygame.draw.rect(surface, (208, 92, 66), (tx, deck_y + 12, 40, 64), border_radius=4)
+            for my in (deck_y + 26, deck_y + 44, deck_y + 60):
+                pygame.draw.line(surface, (168, 64, 42), (tx + 2, my), (tx + 38, my), 2)
+            pygame.draw.rect(surface, (248, 240, 228), (tx - 4, deck_y + 8, 48, 10), border_radius=3)
+            pygame.draw.rect(surface, (168, 64, 42), (tx - 4, deck_y + 8, 48, 10), width=2, border_radius=3)
 
-        load_x = int(left_x + (right_x - left_x) * self._model.load_position)
-        pygame.draw.rect(surface, (230, 157, 68), (load_x - 24, deck_y - 58, 48, 43), border_radius=8)
-        pygame.draw.circle(surface, (70, 69, 67), (load_x - 14, deck_y - 12), 7)
-        pygame.draw.circle(surface, (70, 69, 67), (load_x + 14, deck_y - 12), 7)
+            # Pillar water splashes if "forces" active
+            if self._model.forces_age > 0.0:
+                sw = 56 + math.sin(t * 8.0) * 8
+                pygame.draw.ellipse(surface, (210, 245, 255), (tx - 8, deck_y + 66, int(sw), 14), 3)
 
-        if self._model.load_age > 0.0:
-            self._arrow(surface, (load_x, deck_y - 70), (load_x, deck_y - 18), (205, 92, 81))
-            # Teaching exaggeration: tiny deformation marker, not a scale prediction.
-            pygame.draw.arc(surface, (205, 92, 81), (left_x, deck_y - 3, right_x - left_x, 18), 0.1, math.pi - 0.1, 2)
+        # Bridge Arch Underneath
+        arch_rect = pygame.Rect(left_x + 50, deck_y - 10, (right_x - left_x) - 100, 90)
+        pygame.draw.arc(surface, (188, 76, 52), arch_rect, 0, math.pi, 14)
+        pygame.draw.arc(surface, (238, 228, 214), arch_rect, 0, math.pi, 3)
 
-        if self._model.forces_age > 0.0:
-            if shape == "truss":
-                for i in range(5):
-                    x1 = left_x + 25 + i * 55
-                    color = (204, 86, 88) if i % 2 else (75, 145, 185)
-                    pygame.draw.line(surface, color, (x1, deck_y - 4), (x1 + 45, 257 if i % 2 == 0 else 335), 6)
-            elif shape == "arch":
-                pygame.draw.arc(surface, (75, 145, 185), (left_x + 8, deck_y - 165, right_x - left_x - 16, 196), math.pi + 0.05, math.tau - 0.05, 7)
-            else:
-                pygame.draw.line(surface, (75, 145, 185), (left_x + 10, deck_y - 6), (load_x, deck_y - 6), 6)
-                pygame.draw.line(surface, (204, 86, 88), (load_x, deck_y - 6), (right_x - 10, deck_y - 6), 6)
+        # If "shapes" (Rainbow Arch) is active, draw glowing rainbow arch!
+        if self._model.shapes_age > 0.0:
+            rainbow_colors = [
+                (245, 75, 75),   # Red
+                (255, 158, 44),  # Orange
+                (255, 228, 54),  # Yellow
+                (92, 214, 110),  # Green
+                (74, 178, 245),  # Cyan
+                (175, 102, 238), # Violet
+            ]
+            for idx, rcol in enumerate(rainbow_colors):
+                offset_r = idx * 6
+                r_rect = pygame.Rect(
+                    arch_rect.x - offset_r,
+                    arch_rect.y - 12 - offset_r,
+                    arch_rect.width + offset_r * 2,
+                    arch_rect.height + offset_r * 2,
+                )
+                pygame.draw.arc(surface, rcol, r_rect, 0.05, math.pi - 0.05, 5)
 
+            for s_idx in range(6):
+                s_ang = math.pi * (0.15 + s_idx * 0.14)
+                sx = arch_rect.centerx + int(math.cos(s_ang) * (arch_rect.width // 2 + 15))
+                sy = arch_rect.centery - int(math.sin(s_ang) * (arch_rect.height // 2 + 15))
+                pygame.draw.circle(surface, (255, 255, 255), (sx, sy), 3)
+
+        # Bridge Road Deck
+        pygame.draw.line(surface, (178, 74, 52), (left_x, deck_y + 10), (right_x, deck_y + 10), 10)
+        pygame.draw.line(surface, (58, 65, 72), (left_x, deck_y), (right_x, deck_y), 12)
+        for rx in range(left_x + 10, right_x - 10, 24):
+            pygame.draw.line(surface, (255, 255, 255), (rx, deck_y), (rx + 14, deck_y), 2)
+
+        # White picket railing
+        pygame.draw.line(surface, (248, 244, 236), (left_x, deck_y - 10), (right_x, deck_y - 10), 4)
+        for rx in range(left_x + 8, right_x, 16):
+            pygame.draw.line(surface, (248, 244, 236), (rx, deck_y + 2), (rx, deck_y - 10), 3)
+
+        # Golden Lamp Posts on the pillars
+        for lx in (left_x + 88, right_x - 92):
+            pygame.draw.line(surface, (68, 52, 40), (lx, deck_y - 10), (lx, deck_y - 28), 3)
+            pygame.draw.circle(surface, (255, 235, 120), (lx, deck_y - 30), 6)
+            pygame.draw.circle(surface, (255, 255, 255), (lx - 1, deck_y - 32), 2)
+
+        # If "path" (Connecting Friends) is active, draw glowing heart path and friendly animals!
         if self._model.path_age > 0.0:
-            path_points = [(load_x, deck_y - 4), (load_x - 55, deck_y + 3), (left_x, deck_y + 8), (left_x - 5, deck_y + 85)]
-            for a, b in zip(path_points, path_points[1:]):
-                self._arrow(surface, a, b, (239, 190, 68))
-            path_points = [(load_x, deck_y - 4), (load_x + 55, deck_y + 3), (right_x, deck_y + 8), (right_x + 5, deck_y + 85)]
-            for a, b in zip(path_points, path_points[1:]):
-                self._arrow(surface, a, b, (239, 190, 68))
+            for dot_x in range(left_x + 12, right_x - 10, 16):
+                sparkle_y = deck_y - 4 + math.sin(t * 8.0 + dot_x * 0.1) * 3
+                pygame.draw.circle(surface, (255, 215, 0), (dot_x, int(sparkle_y)), 3)
 
-    @staticmethod
-    def _arrow(surface: pygame.Surface, start: tuple[int, int], end: tuple[int, int], color: tuple[int, int, int]) -> None:
-        pygame.draw.line(surface, color, start, end, 5)
-        angle = math.atan2(end[1] - start[1], end[0] - start[0])
-        left = (end[0] - int(math.cos(angle - 0.6) * 14), end[1] - int(math.sin(angle - 0.6) * 14))
-        right = (end[0] - int(math.cos(angle + 0.6) * 14), end[1] - int(math.sin(angle + 0.6) * 14))
-        pygame.draw.polygon(surface, color, [end, left, right])
+            # Left Bank Friend: Cute Bunny waving
+            bx, by = 265, 340
+            pygame.draw.ellipse(surface, (255, 255, 255), (bx - 6, by - 26, 6, 16))
+            pygame.draw.ellipse(surface, (255, 190, 205), (bx - 4, by - 24, 3, 12))
+            pygame.draw.ellipse(surface, (255, 255, 255), (bx + 2, by - 26, 6, 16))
+            pygame.draw.ellipse(surface, (255, 190, 205), (bx + 4, by - 24, 3, 12))
+            pygame.draw.circle(surface, (255, 255, 255), (bx, by - 10), 12)
+            pygame.draw.circle(surface, (50, 40, 40), (bx - 4, by - 12), 2)
+            pygame.draw.circle(surface, (50, 40, 40), (bx + 4, by - 12), 2)
+            pygame.draw.circle(surface, (255, 150, 170), (bx, by - 8), 2)
+            paw_wave = math.sin(t * 10.0) * 5
+            pygame.draw.circle(surface, (255, 255, 255), (bx + 14, int(by - 14 + paw_wave)), 4)
+
+            # Right Bank Friend: Cute Kitten waving
+            kx, ky = 755, 340
+            pygame.draw.polygon(surface, (245, 150, 60), [(kx - 10, ky - 18), (kx - 4, ky - 26), (kx - 1, ky - 17)])
+            pygame.draw.polygon(surface, (245, 150, 60), [(kx + 10, ky - 18), (kx + 4, ky - 26), (kx + 1, ky - 17)])
+            pygame.draw.circle(surface, (245, 150, 60), (kx, ky - 10), 12)
+            pygame.draw.circle(surface, (50, 40, 40), (kx - 4, ky - 12), 2)
+            pygame.draw.circle(surface, (50, 40, 40), (kx + 4, ky - 12), 2)
+            pygame.draw.polygon(surface, (255, 190, 205), [(kx - 2, ky - 8), (kx + 2, ky - 8), (kx, ky - 6)])
+            k_paw = math.sin(t * 10.0 + 1.5) * 5
+            pygame.draw.circle(surface, (245, 150, 60), (kx - 14, int(ky - 14 + k_paw)), 4)
+
+            heart_y = deck_y - 45 + math.sin(t * 5.0) * 4
+            self._draw_heart(surface, 512, int(heart_y), 9, (248, 86, 114))
+
+        # THE CUTE RED TOY CAR
+        car_x = int(left_x + (right_x - left_x) * self._model.car_progress)
+        car_bounce = math.sin(t * 14.0) * 2 if self._model.car_driving else 0
+        car_y = deck_y - 16 + int(car_bounce)
+
+        self._draw_cute_car(surface, car_x, car_y)
+
+        # Beep-beep speech bubble if car recently beeped
+        if self._model.car_beep_age > 0.0:
+            bubble_y = car_y - 32
+            pygame.draw.ellipse(surface, (255, 252, 235), (car_x - 24, bubble_y, 48, 22))
+            pygame.draw.ellipse(surface, (80, 65, 50), (car_x - 24, bubble_y, 48, 22), 2)
+            pygame.draw.circle(surface, (232, 68, 56), (car_x - 8, bubble_y + 11), 3)
+            pygame.draw.line(surface, (232, 68, 56), (car_x - 5, bubble_y + 11), (car_x - 5, bubble_y + 4), 2)
+            pygame.draw.circle(surface, (232, 68, 56), (car_x + 8, bubble_y + 9), 3)
+            pygame.draw.line(surface, (232, 68, 56), (car_x + 11, bubble_y + 9), (car_x + 11, bubble_y + 3), 2)
+            pygame.draw.line(surface, (232, 68, 56), (car_x - 5, bubble_y + 4), (car_x + 11, bubble_y + 3), 2)
+
+    def _draw_cute_car(self, surface: pygame.Surface, cx: int, cy: int) -> None:
+        pygame.draw.ellipse(surface, (30, 40, 48, 120), (cx - 24, cy + 12, 48, 8))
+        pygame.draw.rect(surface, (232, 68, 56), (cx - 22, cy, 44, 14), border_radius=5)
+        pygame.draw.rect(surface, (255, 250, 238), (cx - 14, cy - 12, 28, 14), border_radius=6)
+        pygame.draw.rect(surface, (180, 40, 32), (cx - 22, cy, 44, 14), width=2, border_radius=5)
+        pygame.draw.rect(surface, (180, 40, 32), (cx - 14, cy - 12, 28, 14), width=2, border_radius=6)
+
+        pygame.draw.rect(surface, (110, 205, 250), (cx + 1, cy - 10, 11, 8), border_radius=3)
+        pygame.draw.rect(surface, (110, 205, 250), (cx - 12, cy - 10, 11, 8), border_radius=3)
+        pygame.draw.line(surface, (255, 255, 255), (cx + 3, cy - 8), (cx + 9, cy - 8), 1)
+
+        pygame.draw.circle(surface, (50, 30, 30), (cx - 4, cy + 5), 1.5)
+        pygame.draw.circle(surface, (50, 30, 30), (cx + 4, cy + 5), 1.5)
+        pygame.draw.arc(surface, (50, 30, 30), (cx - 3, cy + 4, 6, 4), math.pi, math.tau, 1)
+
+        pygame.draw.circle(surface, (255, 225, 60), (cx + 21, cy + 6), 3.5)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + 20, cy + 5), 1.5)
+
+        for wx in (cx - 14, cx + 14):
+            pygame.draw.circle(surface, (36, 40, 44), (wx, cy + 13), 6)
+            pygame.draw.circle(surface, (240, 244, 248), (wx, cy + 13), 3)
+            pygame.draw.circle(surface, (36, 40, 44), (wx, cy + 13), 1)
+
+        if self._model.car_driving:
+            smoke_x = cx - 28 + int(math.sin(self._time * 20.0) * 3)
+            smoke_y = cy + 6
+            pygame.draw.circle(surface, (255, 255, 255, 180), (smoke_x, smoke_y), 4)
+            pygame.draw.circle(surface, (255, 255, 255, 120), (smoke_x - 7, smoke_y - 3), 3)
+
+    def _draw_heart(self, surface: pygame.Surface, cx: int, cy: int, size: int, color: tuple[int, int, int]) -> None:
+        left_circle = (cx - size // 2, cy - size // 2)
+        right_circle = (cx + size // 2, cy - size // 2)
+        pygame.draw.circle(surface, color, left_circle, size // 2 + 1)
+        pygame.draw.circle(surface, color, right_circle, size // 2 + 1)
+        triangle = [
+            (cx - size, cy - size // 4),
+            (cx + size, cy - size // 4),
+            (cx, cy + size),
+        ]
+        pygame.draw.polygon(surface, color, triangle)
 
     @staticmethod
     def _draw_hotspot_icon(surface: pygame.Surface, item: BridgeDiscovery) -> None:
         cx, cy = item.center
         if item.discovery_id == "load":
-            pygame.draw.line(surface, (91, 137, 173), (cx - 28, cy + 16), (cx + 28, cy + 16), 6)
-            pygame.draw.rect(surface, (230, 157, 68), (cx - 13, cy - 20, 26, 23), border_radius=5)
-            BridgePage._arrow(surface, (cx, cy - 28), (cx, cy + 8), (205, 92, 81))
+            pygame.draw.rect(surface, (232, 68, 56), (cx - 16, cy - 2, 32, 12), border_radius=4)
+            pygame.draw.rect(surface, (255, 250, 238), (cx - 10, cy - 12, 20, 11), border_radius=4)
+            pygame.draw.rect(surface, (110, 205, 250), (cx - 8, cy - 10, 16, 7), border_radius=2)
+            pygame.draw.circle(surface, (40, 44, 48), (cx - 10, cy + 10), 4)
+            pygame.draw.circle(surface, (40, 44, 48), (cx + 10, cy + 10), 4)
+            pygame.draw.circle(surface, (255, 225, 60), (cx + 15, cy + 3), 2.5)
         elif item.discovery_id == "shapes":
-            pygame.draw.line(surface, (91, 137, 173), (cx - 30, cy + 17), (cx + 30, cy + 17), 5)
-            pygame.draw.arc(surface, (91, 137, 173), (cx - 28, cy - 20, 56, 42), math.pi, math.tau, 4)
+            r_colors = [(245, 75, 75), (255, 158, 44), (255, 228, 54), (92, 214, 110), (74, 178, 245)]
+            for i, col in enumerate(r_colors):
+                rad = 24 - i * 4
+                pygame.draw.arc(surface, col, (cx - rad, cy - rad + 4, rad * 2, rad * 2), 0, math.pi, 3)
+            pygame.draw.circle(surface, (255, 255, 255), (cx - 20, cy + 6), 6)
+            pygame.draw.circle(surface, (255, 255, 255), (cx + 20, cy + 6), 6)
         elif item.discovery_id == "forces":
-            pygame.draw.line(surface, (75, 145, 185), (cx - 25, cy + 20), (cx + 4, cy - 20), 6)
-            pygame.draw.line(surface, (204, 86, 88), (cx + 4, cy - 20), (cx + 28, cy + 20), 6)
+            pygame.draw.rect(surface, (208, 92, 66), (cx - 16, cy - 14, 12, 24), border_radius=3)
+            pygame.draw.rect(surface, (208, 92, 66), (cx + 4, cy - 14, 12, 24), border_radius=3)
+            pygame.draw.rect(surface, (248, 240, 228), (cx - 18, cy - 16, 16, 4), border_radius=2)
+            pygame.draw.rect(surface, (248, 240, 228), (cx + 2, cy - 16, 16, 4), border_radius=2)
+            pygame.draw.arc(surface, (68, 155, 208), (cx - 24, cy + 4, 48, 14), math.pi, math.tau, 3)
+            pygame.draw.arc(surface, (140, 215, 255), (cx - 20, cy + 10, 40, 10), math.pi, math.tau, 2)
         else:
-            for off in (-12, 0, 12):
-                BridgePage._arrow(surface, (cx, cy - 25 + off), (cx, cy + 20 + off // 2), (239, 190, 68))
+            pygame.draw.circle(surface, (255, 255, 255), (cx - 14, cy - 4), 10)
+            pygame.draw.circle(surface, (245, 150, 60), (cx + 14, cy - 4), 10)
+            pygame.draw.line(surface, (255, 200, 40), (cx - 6, cy + 10), (cx + 6, cy + 10), 3)
+            pygame.draw.circle(surface, (248, 86, 114), (cx - 3, cy - 16), 4)
+            pygame.draw.circle(surface, (248, 86, 114), (cx + 3, cy - 16), 4)
+            pygame.draw.polygon(surface, (248, 86, 114), [(cx - 7, cy - 14), (cx + 7, cy - 14), (cx, cy - 7)])
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
         for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
-            pygame.draw.circle(surface, (252, 249, 234), item.center, 37)
-            pygame.draw.circle(surface, (75, 72, 67), item.center, 37, 3)
+            pygame.draw.circle(surface, (255, 250, 238), item.center, 38)
+            pygame.draw.circle(surface, (88, 68, 52), item.center, 38, 3)
             self._draw_hotspot_icon(surface, item)
             focus_ring(surface, rect, index == self._selected or index == self._hovered)
 
     def _draw_caption(self, surface: pygame.Surface) -> None:
-        panel = pygame.Rect(305, 510, 400, 68)
-        pygame.draw.rect(surface, (252, 249, 234), panel, border_radius=22)
-        pygame.draw.rect(surface, (75, 72, 67), panel, 3, border_radius=22)
-        text = self.context.resources.text(self._caption_key)
-        rendered = self.context.typography.render(text, FontRole.BODY, 18, (53, 52, 49))
-        if rendered.get_width() > panel.width - 26:
-            rendered = self.context.typography.render(text, FontRole.BODY, 15, (53, 52, 49))
-        surface.blit(rendered, rendered.get_rect(center=panel.center))
+        draw_caption_ribbon(
+            surface,
+            self.context.typography,
+            self.context.resources.text(self._caption_key),
+        )
