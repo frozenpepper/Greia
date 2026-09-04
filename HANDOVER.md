@@ -490,9 +490,9 @@ Verification is still **PENDING** for this policy-safety chain. No focused exact
 
 Next exact step remains `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md` on a clean exact-current checkout; if `main` advances because of the independent Enciclopedia/system-graphics lane, freeze and test the new descendant rather than inheriting older evidence.
 
-## 22. Pre-intro boot optimization — R2 Phase 0+1 source instrumentation landed, Acer gates pending (2026-09-04)
+## 22. Pre-intro boot optimization — R2 Phase 0+1 COMPLETE on-device, baseline recorded (2026-09-04)
 
-T-BAG run R2 (`TBag/runs/R2`, analyst+grunt `opencode-go/muse-spark-1.3-contributor`) executes the owner-supplied plan `GREIA_PRE_INTRO_BOOT_OPTIMIZATION_PLAN.md` (Phase 0+1 graph B01–B05; B03 superseded by B03R after a scope-gate failure, B02/B03R/B04 integrated, B05 human-blocked).
+T-BAG run R2 (`TBag/runs/R2`, analyst+grunt `opencode-go/muse-spark-1.3-contributor`) executes the owner-supplied plan `GREIA_PRE_INTRO_BOOT_OPTIMIZATION_PLAN.md`. Phase boot-01 graph B01–B05 fully terminal: B01 accepted, B02/B03R/B04 integrated, B03 superseded (scope-gate failure, delta abandoned, worktree cleaned), B05 accepted PASS on-device evidence.
 
 Source-committed on `main` (pre-existing unrelated WIP in `activities/*` and parts of `src/greia_launcher/*` deliberately left uncommitted; staged hunks verified to contain all boot-marker lines and zero foreign lines):
 
@@ -504,11 +504,11 @@ d593c1dd boot: instrument launcher Python path with exactly-once first-frame mar
 
 What landed: `GREIA_BOOT` shell markers in the four launcher pre-hooks, `src/greia_platform/boot_markers.py` + launcher wiring with an exactly-once `intro_first_frame_flipped` guard after the first successful flip, `tools/boot/analyze_boot_markers.py` (fails closed on missing/duplicated first-frame marker), 13 new tests. 7-second intro untouched; initramfs/GRUB/network ordering untouched (no R2/R3 work).
 
-Verification: combined-tree `make verify` green on re-run (exit 0). First run showed one transient `ENOSPC` error from `tempfile.mkdtemp` under a 96%-full dev volume; re-run clean, unrelated to these changes. No Acer evidence yet: Phase 0 inventory/hashes and the 5-boot baseline are unmeasured, gates stay red, nothing waived.
+Verification: combined-tree `make verify` green on re-run (exit 0) and green again after rebase onto `d8e28b06` (exit 0, pushed as `9f160cf2`). First local run showed one transient `ENOSPC` error from `tempfile.mkdtemp` under a 96%-full dev volume; re-runs clean, unrelated to these changes.
 
-Blocker (owner decision required): B05 needs a bounded Acer operator session (R0 inventory → Phase 0 gate → R1 single-change deploy + one reboot → 5 one-at-a-time reboots) or an explicit deferral of the Acer baseline. No worker tier has an SSH/operator path to the Acer; password/credentials must never enter source/history/evidence.
+On-device closure (B05 PASS): target corrected to `greia-dev.local`/`192.168.68.104` (`acer.local` unresolvable; host key matches stored trust). R0 inventory: Debian 12 i686, kernel 6.1.0-52-686, single 7.4G ext4 with 5.4G free, initramfs `7c78167f…b2177` unchanged end-to-end, SSH healthy throughout. R1 deployed a marker-only 8-file port (rollback backup unused). 5-boot baseline medians: kernel 10.38s, userspace 11.00s, `activity_discovery` 19.15s (dominant — confirms index/composition phases next), `intro_first_frame` ~77ms, intro ~7.85s wall (nominal 5.0+2.0 design; tolerance watch item for Phase 4, not a gate failure). Evidence: `out/boot-optimization/` (93 files, `metrics.csv` 6 rows; gitignored, secret-scanned clean). Credential used strictly in-memory (`sshpass -e`, unset both ends, nothing persisted).
 
-Next exact step: owner provisions the Acer session (supply host + credential channel + operator window) or defers; on provision, B05 resumes verbatim under existing authority. Downstream boot phases stay unplanned until the baseline exists.
+Next exact step: Phase 2 (2A–2D: scrub-to-trust-boundary, account migration, ALSA owner, VT minimal) Analyst decomposition. No Acer action needed until the next R1/R2 tranche is accepted.
 
 ## 23. Enciclopedia di Greia & Sottomarino Giramondo Visual & Interaction Remediation (2026-09-04)
 
