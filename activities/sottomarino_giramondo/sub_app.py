@@ -68,7 +68,7 @@ class SubmarineApp:
         screen = pygame.display.get_surface()
         if screen is None:
             pygame.init()
-            screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.FULLSCREEN)
+            screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.NOFRAME)
         self.screen = screen
         self.canvas = PygameReferenceCanvas(screen)
         # Ensure 24-bit depth without alpha channel so blitted masks and porthole render solidly
@@ -152,6 +152,11 @@ class SubmarineApp:
             self.audio.play("light")
             self._speak_cue("voice.btn.light")
             order_solved = self.model.check_action("light")
+            if self.model.encounter.active_type == EncounterType.SHARK_WAVE:
+                if self.model.resolve_encounter():
+                    self.audio.play("celebrate")
+                    self._speak_cue("voice.encounter.solved")
+                    emit_activity_event("submarine.encounter_resolved", payload={"creature": "shark"})
             emit_activity_event("submarine.instrument_used", payload={"instrument": "light"})
         elif btn_name == "sonar":
             self.model.trigger_sonar()
@@ -164,6 +169,11 @@ class SubmarineApp:
             self.audio.play("bubbles")
             self._speak_cue("voice.btn.bubbles")
             order_solved = self.model.check_action("bubbles")
+            if self.model.encounter.active_type == EncounterType.OCTOPUS_HUG:
+                if self.model.resolve_encounter():
+                    self.audio.play("celebrate")
+                    self._speak_cue("voice.encounter.solved")
+                    emit_activity_event("submarine.encounter_resolved", payload={"creature": "octopus"})
             emit_activity_event("submarine.instrument_used", payload={"instrument": "bubbles"})
         elif btn_name == "horn":
             self.model.trigger_horn()
@@ -175,14 +185,16 @@ class SubmarineApp:
                 self._speak_cue("voice.encounter.solved")
                 emit_activity_event("submarine.encounter_resolved", payload={"creature": "encounter"})
             emit_activity_event("submarine.instrument_used", payload={"instrument": "horn"})
-        elif btn_name == "action":
+        elif btn_name in ("action", "alarm"):
+            order_solved = self.model.check_action("horn")
             if self.model.resolve_encounter():
                 self.audio.play("celebrate")
                 self._speak_cue("voice.encounter.solved")
                 emit_activity_event("submarine.encounter_resolved", payload={"creature": "encounter"})
             else:
                 self.audio.play("alert")
-                self._speak_cue("voice.btn.action")
+                self._speak_cue("voice.btn.alarm")
+            emit_activity_event("submarine.instrument_used", payload={"instrument": "alarm"})
 
         if order_solved:
             self.audio.play("celebrate")
@@ -296,10 +308,14 @@ class SubmarineApp:
             discovered, completed_ev = self.model.update(dt)
             for d in discovered:
                 self._speak_cue(f"voice.creature.{d}")
-                # Also speak an educational fact about this species
-                if self.model.active_fact.cue_key:
-                    self._speak_cue(self.model.active_fact.cue_key)
                 emit_activity_event("submarine.creature_discovered", payload={"creature": d})
+
+            # When an educational species fact is active and newly displayed, speak it aloud
+            fact_cue = self.model.active_fact.cue_key
+            if fact_cue and self.model.active_fact.display_timer > 0:
+                if getattr(self, "_last_spoken_fact", None) != fact_cue:
+                    self._last_spoken_fact = fact_cue
+                    self._speak_cue(fact_cue)
 
             # Check if a new Captain order has arrived
             ord_state = self.model.current_order

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-09-04T08:50:26.460563+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "it",
+    "text": "La manta gigante vola nell'acqua muovendo le pinne come ali enormi!",
+    "cue_id": "sub_fact_manta_1",
+    "output": "activities/sottomarino_giramondo/audio/it/sub_fact_manta_1.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "it",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "NOT_RUN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "mlx_whisper unavailable: numpy.core.multiarray failed to import"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/sottomarino_giramondo/audio/it/sub_fact_manta_1.wav",
+    "bytes": 162808,
+    "sha256": "efbd8a833e5a9737ceb73f29fd28a7876463b4778b3a12709aae8f5fd03e3ee6"
+  },
+  "human_review": "PENDING",
+  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+}

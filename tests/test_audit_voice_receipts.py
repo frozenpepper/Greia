@@ -115,8 +115,9 @@ def test_audit_counts_warn_rows_correctly(tmp_path):
     s = transcript_similarity(expected, transcript)
     _write_receipt(shared, "lilli/it/lilli__it__encourage.retry__02.wav.receipt.json",
                    expected=expected, transcript=transcript, score=s, disposition="WARN")
+    s_pass = transcript_similarity("Great work!", "Great work.")
     _write_receipt(shared, "lilli/en/lilli__en__praise.general__01.wav.receipt.json",
-                   expected="Great work!", transcript="Great work.", score=0.99, disposition="PASS")
+                   expected="Great work!", transcript="Great work.", score=s_pass, disposition="PASS")
     _write_receipt(shared, "lilli/it/lilli__it__ready.go__01.wav.receipt.json",
                    expected="Forza, andiamo!", transcript=None, score=None, disposition="NOT_APPLICABLE")
 

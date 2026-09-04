@@ -344,9 +344,58 @@ class SystemChromeNavigationBridge:
         if action is None:
             return None
         request = SystemNavigationRequest(session.session_id, action)
-        self._request = (lease.generation, request)
-        self._stop_controller.request_stop(session)
+        if action is SystemNavigationAction.HOME:
+            self._request = (lease.generation, request)
+            self._stop_controller.request_stop(session)
+        elif action is SystemNavigationAction.BACK:
+            activity_id = getattr(session, "activity_id", None)
+            if activity_id in {"org.greia.enciclopedia"}:
+                self._dispatch_back_to_activity(session)
+            else:
+                self._request = (lease.generation, request)
+                self._stop_controller.request_stop(session)
         return request
+
+    def _dispatch_back_to_activity(self, session: ActivitySession) -> None:
+        try:
+            import ctypes
+            import ctypes.util
+
+            x11_name = ctypes.util.find_library("X11")
+            xtst_name = ctypes.util.find_library("Xtst")
+            if not x11_name or not xtst_name:
+                return
+            x11 = ctypes.CDLL(x11_name)
+            xtst = ctypes.CDLL(xtst_name)
+            x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+            x11.XOpenDisplay.restype = ctypes.c_void_p
+            x11.XKeysymToKeycode.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+            x11.XKeysymToKeycode.restype = ctypes.c_ubyte
+            xtst.XTestFakeKeyEvent.argtypes = [
+                ctypes.c_void_p,
+                ctypes.c_uint,
+                ctypes.c_int,
+                ctypes.c_ulong,
+            ]
+            xtst.XTestFakeKeyEvent.restype = ctypes.c_int
+            x11.XFlush.argtypes = [ctypes.c_void_p]
+            x11.XFlush.restype = ctypes.c_int
+            x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+            x11.XCloseDisplay.restype = ctypes.c_int
+
+            disp = x11.XOpenDisplay(None)
+            if not disp:
+                return
+            try:
+                keycode = x11.XKeysymToKeycode(disp, 0xFF1B)  # XK_Escape
+                if keycode:
+                    xtst.XTestFakeKeyEvent(disp, keycode, 1, 0)
+                    xtst.XTestFakeKeyEvent(disp, keycode, 0, 0)
+                    x11.XFlush(disp)
+            finally:
+                x11.XCloseDisplay(disp)
+        except Exception:
+            pass
 
     def clear(self, lease: SystemChromeLease) -> None:
         """Retire the remembered navigation request after Activity cleanup."""

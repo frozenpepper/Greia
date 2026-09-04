@@ -126,19 +126,29 @@ class SubmarineModel:
 
     def _spawn_ambient_entities(self) -> None:
         self.entities.clear()
-        # Spawn initial batch of marine creatures and floating particles
-        for i in range(14):
-            self._spawn_random_entity(initial_z=random.uniform(0.2, 1.4))
+        # Spawn initial populated batch of marine creatures and floating bubbles
+        for i in range(26):
+            self._spawn_random_entity(initial_z=random.uniform(0.15, 1.4))
 
     def _spawn_random_entity(self, initial_z: Optional[float] = None) -> None:
         biome = get_biome(self.depth)
         z = initial_z if initial_z is not None else random.uniform(1.2, 1.5)
-        x = random.uniform(-1.2, 1.2)
-        y = random.uniform(-0.5, 0.5)
+
+        # 75% spawn directly in porthole field of view; 25% spawn on flanks swimming inward
+        if random.random() < 0.75:
+            x = random.uniform(-0.45, 0.45)
+            vx = random.uniform(-0.03, 0.03)
+        else:
+            side = -1.0 if random.random() < 0.5 else 1.0
+            x = side * random.uniform(0.5, 0.85)
+            # Swim toward viewport center
+            vx = -side * random.uniform(0.04, 0.08)
+
+        y = random.uniform(-0.4, 0.4)
 
         # Species matching current biome, including corals, kelp, krill
         if biome == BiomeType.SHALLOW_REEF:
-            kinds = ["clownfish", "turtle", "coral", "bubble", "bubble"]
+            kinds = ["clownfish", "clownfish", "turtle", "coral", "bubble"]
         elif biome == BiomeType.TWILIGHT_KELP:
             kinds = ["dolphin", "manta", "kelp", "turtle", "bubble"]
         else:
@@ -147,7 +157,8 @@ class SubmarineModel:
         kind = random.choice(kinds)
         size = 1.0
         if kind == "clownfish":
-            size = 0.8
+            size = 0.9
+            y = random.uniform(-0.3, 0.3)
         elif kind == "turtle":
             size = 1.4
         elif kind == "dolphin":
@@ -158,20 +169,24 @@ class SubmarineModel:
             size = 1.2
         elif kind == "whale":
             size = 3.0
+            # Keep whale slightly deeper so it glides past majestically
+            z = max(0.4, z)
         elif kind == "coral":
             size = 1.6
-            y = random.uniform(0.1, 0.5)  # sits near reef floor
+            y = random.uniform(0.15, 0.45)  # sits near reef floor
+            vx = 0.0
         elif kind == "kelp":
             size = 2.2
-            y = random.uniform(0.0, 0.4)
+            y = random.uniform(0.05, 0.4)
+            vx = 0.0
         elif kind == "krill":
             size = 1.5
         elif kind == "bubble":
             size = 0.4
+            vx = random.uniform(-0.02, 0.02)
 
-        vx = random.uniform(-0.02, 0.02)
-        vy = random.uniform(-0.01, 0.01)
-        vz = -random.uniform(0.04, 0.1)
+        vy = random.uniform(-0.015, 0.015)
+        vz = -random.uniform(0.04, 0.1) if kind != "bubble" else -0.02
 
         ent = MarineEntity3D(
             id=f"ent_{random.randint(1000, 9999)}",
@@ -230,15 +245,21 @@ class SubmarineModel:
 
         target = self.current_order.order_id
         is_match = False
-        if target == "ahead" and action_name == "ahead":
+        if target == "ahead" and (action_name in ("ahead", "forward") or self.speed > 0.4):
             is_match = True
-        elif target == "stop" and action_name == "stop":
+        elif target == "stop" and (action_name in ("stop", "halt") or self.speed <= 0.1):
             is_match = True
-        elif target == "left" and action_name == "left":
+        elif target == "left" and (action_name in ("left", "steer_left") or self.heading < -0.15):
             is_match = True
-        elif target == "right" and action_name == "right":
+        elif target == "right" and (action_name in ("right", "steer_right") or self.heading > 0.15):
             is_match = True
-        elif target in ("light", "sonar", "bubbles", "horn") and action_name == target:
+        elif target == "light" and (action_name == "light" or self.lights_on):
+            is_match = True
+        elif target == "sonar" and (action_name == "sonar" or self.sonar_active):
+            is_match = True
+        elif target == "bubbles" and action_name == "bubbles":
+            is_match = True
+        elif target == "horn" and (action_name in ("horn", "action")):
             is_match = True
 
         if is_match:
@@ -248,18 +269,24 @@ class SubmarineModel:
         return False
 
     def trigger_species_fact(self, species: str) -> None:
-        """Select a random educational fact (1 to 4) for the encountered species."""
+        """Select an educational fact for the encountered species."""
         if species in ("bubble",):
             return
-        idx = random.randint(1, 4)
+        # If species has multiple recorded facts, choose between them
+        if species == "whale":
+            idx = random.randint(1, 4)
+        elif species == "turtle":
+            idx = random.randint(1, 2)
+        else:
+            idx = 1
         self.active_fact.species = species
         self.active_fact.fact_index = idx
         self.active_fact.text_key = f"voice.fact.{species}.{idx}"
         self.active_fact.cue_key = f"voice.fact.{species}.{idx}"
-        self.active_fact.display_timer = 8.0
+        self.active_fact.display_timer = 9.0
 
     def resolve_encounter(self) -> bool:
-        """Called when the child presses the active action / siren button during an encounter."""
+        """Called when the child presses any resolution instrument during an encounter."""
         if self.encounter.active_type != EncounterType.NONE and not self.encounter.solved:
             self.encounter.solved = True
             self.encounter.solve_timer = 2.0
@@ -313,17 +340,24 @@ class SubmarineModel:
             if self.encounter.active_type == EncounterType.NONE:
                 self._order_cooldown -= dt
                 if self._order_cooldown <= 0:
-                    available_orders = [
-                        ("ahead", "order.ahead", "voice.order.ahead"),
-                        ("stop", "order.stop", "voice.order.stop"),
-                        ("left", "order.left", "voice.order.left"),
-                        ("right", "order.right", "voice.order.right"),
-                        ("light", "order.light", "voice.btn.light"),
-                        ("sonar", "order.sonar", "voice.btn.sonar"),
-                        ("bubbles", "order.bubbles", "voice.btn.bubbles"),
-                        ("horn", "order.horn", "voice.btn.horn"),
-                    ]
-                    chosen = random.choice(available_orders)
+                    # Smart order filtering: only suggest actions that make sense in current state
+                    eligible_orders = []
+                    if self.speed <= 0.3:
+                        eligible_orders.append(("ahead", "order.ahead", "voice.order.ahead"))
+                    if self.speed >= 0.4:
+                        eligible_orders.append(("stop", "order.stop", "voice.order.stop"))
+                    if self.heading >= -0.15:
+                        eligible_orders.append(("left", "order.left", "voice.order.left"))
+                    if self.heading <= 0.15:
+                        eligible_orders.append(("right", "order.right", "voice.order.right"))
+                    if not self.lights_on:
+                        eligible_orders.append(("light", "order.light", "voice.btn.light"))
+                    if not self.sonar_active:
+                        eligible_orders.append(("sonar", "order.sonar", "voice.btn.sonar"))
+                    eligible_orders.append(("bubbles", "order.bubbles", "voice.btn.bubbles"))
+                    eligible_orders.append(("horn", "order.horn", "voice.btn.horn"))
+
+                    chosen = random.choice(eligible_orders)
                     self.current_order.order_id = chosen[0]
                     self.current_order.prompt_text_key = chosen[1]
                     self.current_order.cue_key = chosen[2]
@@ -347,8 +381,8 @@ class SubmarineModel:
             # Gentle bobbing
             ent.y += math.sin(ent.phase) * dt * 0.05
 
-            # Creature discovery when close to porthole (z < 0.45)
-            if ent.z < 0.45 and not ent.discovered and ent.kind != "bubble":
+            # Creature discovery when close to porthole (z < 0.45 and in porthole view)
+            if ent.z < 0.45 and not ent.discovered and ent.kind != "bubble" and abs(ent.x) < 0.45:
                 ent.discovered = True
                 self.trigger_species_fact(ent.kind)
                 if ent.kind not in self.discovered_species:
@@ -356,13 +390,13 @@ class SubmarineModel:
                     discovered.append(ent.kind)
 
             # Keep if still in front of sub (z > 0.05) and not too far behind
-            if 0.05 < ent.z < 1.6 and abs(ent.x) < 2.0:
+            if 0.05 < ent.z < 1.6 and abs(ent.x) < 1.5:
                 surviving_entities.append(ent)
 
         self.entities = surviving_entities
 
-        # Maintain population
-        while len(self.entities) < 14:
+        # Maintain population at 26 entities
+        while len(self.entities) < 26:
             self._spawn_random_entity()
 
         # Update Encounter State Machine

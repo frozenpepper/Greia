@@ -509,3 +509,29 @@ Verification: combined-tree `make verify` green on re-run (exit 0). First run sh
 Blocker (owner decision required): B05 needs a bounded Acer operator session (R0 inventory → Phase 0 gate → R1 single-change deploy + one reboot → 5 one-at-a-time reboots) or an explicit deferral of the Acer baseline. No worker tier has an SSH/operator path to the Acer; password/credentials must never enter source/history/evidence.
 
 Next exact step: owner provisions the Acer session (supply host + credential channel + operator window) or defers; on provision, B05 resumes verbatim under existing authority. Downstream boot phases stay unplanned until the baseline exists.
+
+## 23. Enciclopedia di Greia & Sottomarino Giramondo Visual & Interaction Remediation (2026-09-04)
+
+Addressed user feedback across both activities following strict order of operations (local headless simulator -> test suite -> physical Acer Aspire One deployment & verification):
+
+1. **Enciclopedia di Greia:**
+   - Intro screen dark murky overlay eliminated: removed `paperGrain` SVG filter that caused CairoSVG to render a dark gray tint over `home_discovery_book` and `animals_field_table`. Ivory book is now bright, warm, and inviting with vivid category icons.
+   - "Cosa vuoi scoprire?" title text moved upwards to $y=50$ in `enciclopedia_presentation.py`, clearing the top book edge.
+   - Redundant and confusing center-bottom lens button with persistent selection circle retired across all screens in `enciclopedia_controls.py`.
+   - Elephant page (`pages/elephant.py`) and animals field card completely redesigned from deformed gray blobs into a cuddly storybook elephant with pink inner ears, toenails, sweet eyes, and water pool.
+
+2. **Sottomarino Giramondo:**
+   - Bottom row of instrument buttons lowered by ~18px to $y=464$ (height 86) in `sub_cockpit_view.py`, aligning flush with the radar and depth gauge bezels.
+   - Viewport populated with 26 active marine entities with inward swimming velocities in `sub_model.py`, eliminating the empty window issue.
+   - Central red emergency button overhauled: replaced confusing starburst with a nautical Fresnel siren dome with brass cage and prominent "ALLARME" / "ALARM" label.
+   - Condition satisfaction / encounter resolution bug fixed in `sub_app.py`: `bubbles` (octopus), `light` (shark), `horn`, and `action` all reliably trigger encounter resolution and celebration cues.
+   - Octopus encounter upgraded in `sub_art.py` with 8 dynamic wrapping tentacles and suction cups pressed against the porthole glass.
+   - Educational facts voiced aloud via generated Leo TTS audio cues (`sub_fact_*_1.wav`) with receipts, and displayed in centered high-contrast HUD cards with vector accent dots (no missing font glyphs).
+   - Captain's orders filtered intelligently based on vehicle dynamics.
+
+3. **Verification & Device Evidence:**
+   - Unit tests: 87/87 enciclopedia tests, 6/6 sottomarino tests (`tests/test_activity_sottomarino.py`), 4/4 audit voice tests pass (`PYTHONPATH=src:tools pytest`).
+   - Headless simulator runs for both activities exit 0 with clean Home return.
+   - Deployed to physical Acer Aspire One (`192.168.68.104`) via `greia_remote.py deploy --replace-system`.
+   - On-device live verification: captured screenshots confirming bright intro book, cute elephant, aligned submarine console, populated ocean, emergency siren dome, intact ADR 0019 system navigation pill, and clean return to Shell upon pressing Home.
+

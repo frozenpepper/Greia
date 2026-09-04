@@ -12,7 +12,7 @@
     "btn.sonar": "Sonar",
     "btn.bubbles": "Bolle",
     "btn.horn": "Sirena",
-    "btn.action": "Azione",
+    "btn.action": "Allarme",
     "creature.clownfish": "Pesce Pagliaccio",
     "creature.turtle": "Tartaruga Marina",
     "creature.dolphin": "Delfino Curioso",
@@ -20,7 +20,7 @@
     "creature.angler": "Pesce Lanterna",
     "creature.whale": "Balena Gentile",
     "encounter.octopus.hint": "Il polpo fa il solletico al vetro! Suona la sirena o fai le bolle!",
-    "encounter.shark.hint": "Lo squalo saluta con la pinna! Accendi le luci!",
+    "encounter.shark.hint": "Lo squalo saluta con la pinna! Accendi le luci o suona la sirena!",
     "creature.coral": "Barriera Corallina",
     "creature.kelp": "Foresta di Alghe Kelp",
     "creature.krill": "Banco di Krill Luminoso",
@@ -42,6 +42,9 @@
     "voice.order.left": "Vira a sinistra! Attenzione al timone!",
     "voice.order.right": "Vira a destra! Seguiamo la corrente marina!",
     "voice.order.compliment": "Ottima manovra, capitano! Rotta perfetta!",
+    "voice.creature.coral": "Barriera corallina!",
+    "voice.creature.kelp": "Foresta sottomarina di alghe kelp!",
+    "voice.creature.krill": "Banco di krill luminoso!",
     "voice.creature_coral": "Barriera corallina!",
     "voice.creature_kelp": "Foresta sottomarina di alghe kelp!",
     "voice.creature_krill": "Banco di krill luminoso!",
@@ -79,6 +82,10 @@
     "voice.fact.krill.4": "Tutti insieme, i banchi di krill pesano più di tutti gli umani del mondo!"
   },
   "audio": {
+    "activity.title": {
+      "path": "audio/it/sub_title.wav",
+      "caption_key": "activity.title"
+    },
     "voice.btn.light": {
       "path": "audio/it/sub_btn_light.wav"
     },
@@ -92,7 +99,10 @@
       "path": "audio/it/sub_btn_horn.wav"
     },
     "voice.btn.action": {
-      "path": "audio/it/sub_btn_action.wav"
+      "path": "audio/it/sub_btn_alarm.wav"
+    },
+    "voice.btn.alarm": {
+      "path": "audio/it/sub_btn_alarm.wav"
     },
     "voice.encounter.octopus": {
       "path": "audio/it/sub_enc_octopus.wav"
@@ -120,6 +130,15 @@
     },
     "voice.creature.whale": {
       "path": "audio/it/sub_creature_whale.wav"
+    },
+    "voice.creature.coral": {
+      "path": "audio/it/sub_creature_coral.wav"
+    },
+    "voice.creature.kelp": {
+      "path": "audio/it/sub_creature_kelp.wav"
+    },
+    "voice.creature.krill": {
+      "path": "audio/it/sub_creature_krill.wav"
     },
     "voice.order.ahead": {
       "path": "audio/it/sub_order_ahead.wav"

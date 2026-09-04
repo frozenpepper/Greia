@@ -59,7 +59,7 @@ from .composition import (
     provisional_installed_shell_window_backend,
 )
 from .key_chord import KeyChordTracker
-from .lifecycle import ActivityResult
+from .lifecycle import ActivityResult, ActivitySessionState
 from .parent_panel import ParentSettingsOverlay
 from .supervisor import ActivitySupervisor
 from .theme import LauncherThemeController
@@ -611,12 +611,13 @@ class LauncherApplication:
                 pass
             self._last_result = self.supervisor.poll(activity_session)
             if self._last_result is None:
+                is_running = activity_session.state == ActivitySessionState.RUNNING
                 is_ready = (
                     activity_session.control.ready()
                     if activity_session.control is not None
                     else False
                 )
-                if not is_ready and time.monotonic() - _launch_feedback > 0.1:
+                if not is_running and not is_ready and time.monotonic() - _launch_feedback > 0.1:
                     self._draw_launch_overlay(pygame, text="Starting…")
                     pygame.display.flip()
                     self._on_frame_presented(pygame.display.get_surface(), pygame)

@@ -22,40 +22,71 @@ PORTHOLE_RADIUS = 175
 
 
 def _create_porthole_mask(width: int, height: int) -> pygame.Surface:
-    """Pre-bake a mask that punches out the round glass porthole with rivets."""
+    """Pre-bake a mask that punches out the round glass porthole with rivets and steel bulkhead."""
     mask = pygame.Surface((width, height), pygame.SRCALPHA)
-    # Fill cockpit surround
-    # Upper rim / bulkhead metal color
-    bulkhead_color = (45, 58, 72)
+    # Fill cockpit surround with industrial steel bulkhead color
+    bulkhead_color = (40, 52, 66)
     mask.fill(bulkhead_color)
+
+    # Bulkhead plate seams & structural rivets on the sides
+    seam_x_left = 240
+    seam_x_right = 784
+    for sx in (seam_x_left, seam_x_right):
+        pygame.draw.line(mask, (25, 33, 42), (sx, 0), (sx, 435), 3)
+        pygame.draw.line(mask, (65, 82, 102), (sx + 2, 0), (sx + 2, 435), 1)
+        for ry in range(40, 420, 50):
+            pygame.draw.circle(mask, (25, 33, 42), (sx - 15, ry + 2), 5)
+            pygame.draw.circle(mask, (75, 96, 120), (sx - 15, ry), 5)
+            pygame.draw.circle(mask, (130, 160, 195), (sx - 16, ry - 1), 2)
+            pygame.draw.circle(mask, (25, 33, 42), (sx + 15, ry + 2), 5)
+            pygame.draw.circle(mask, (75, 96, 120), (sx + 15, ry), 5)
+            pygame.draw.circle(mask, (130, 160, 195), (sx + 14, ry - 1), 2)
 
     # Cut out transparent circle for the ocean viewport
     pygame.draw.circle(mask, (0, 0, 0, 0), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), PORTHOLE_RADIUS)
 
-    # Heavy brass/steel rim ring
-    rim_outer = PORTHOLE_RADIUS + 24
+    # Heavy industrial brass & bronze porthole bezel ring
+    rim_outer = PORTHOLE_RADIUS + 26
     rim_inner = PORTHOLE_RADIUS - 4
-    pygame.draw.circle(mask, (212, 160, 48), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_outer, 24)
-    pygame.draw.circle(mask, (150, 105, 25), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_outer, 3)
-    pygame.draw.circle(mask, (245, 205, 90), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_inner, 3)
 
-    # Rivet bolts around the rim
-    for i in range(12):
-        angle = i * (math.pi * 2 / 12)
-        rx = PORTHOLE_CENTER_X + int((PORTHOLE_RADIUS + 12) * math.cos(angle))
-        ry = PORTHOLE_CENTER_Y + int((PORTHOLE_RADIUS + 12) * math.sin(angle))
-        pygame.draw.circle(mask, (100, 75, 20), (rx, ry), 6)
-        pygame.draw.circle(mask, (250, 220, 120), (rx - 1, ry - 1), 3)
+    # Dark bronze base ring
+    pygame.draw.circle(mask, (125, 85, 20), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_outer + 2, 28)
+    # Warm gleaming brass body
+    pygame.draw.circle(mask, (218, 168, 52), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_outer, 24)
+    # Outer dark shadow groove
+    pygame.draw.circle(mask, (140, 95, 22), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_outer + 1, 3)
+    # Inner bright gold bevel
+    pygame.draw.circle(mask, (255, 225, 110), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_inner + 2, 3)
 
-    # Soft glass reflection sheen arc across top-left of porthole
+    # 16 Heavy brass hex bolts around the rim with highlights
+    for i in range(16):
+        angle = i * (math.pi * 2 / 16)
+        rx = PORTHOLE_CENTER_X + int((PORTHOLE_RADIUS + 13) * math.cos(angle))
+        ry = PORTHOLE_CENTER_Y + int((PORTHOLE_RADIUS + 13) * math.sin(angle))
+        # Bolt shadow
+        pygame.draw.circle(mask, (90, 60, 15), (rx, ry + 1), 7)
+        # Bolt head
+        pygame.draw.circle(mask, (235, 190, 75), (rx, ry), 6)
+        # Glint highlight
+        pygame.draw.circle(mask, (255, 250, 210), (rx - 2, ry - 2), 2)
+
+    # Soft glass reflection sheen arcs across top-left of porthole
     glass_sheen = pygame.Surface((width, height), pygame.SRCALPHA)
     pygame.draw.arc(
         glass_sheen,
-        (255, 255, 255, 60),
-        (PORTHOLE_CENTER_X - PORTHOLE_RADIUS + 15, PORTHOLE_CENTER_Y - PORTHOLE_RADIUS + 15, (PORTHOLE_RADIUS - 15) * 2, (PORTHOLE_RADIUS - 15) * 2),
-        math.radians(100),
-        math.radians(170),
-        16
+        (255, 255, 255, 70),
+        (PORTHOLE_CENTER_X - PORTHOLE_RADIUS + 12, PORTHOLE_CENTER_Y - PORTHOLE_RADIUS + 12, (PORTHOLE_RADIUS - 12) * 2, (PORTHOLE_RADIUS - 12) * 2),
+        math.radians(105),
+        math.radians(165),
+        18
+    )
+    pygame.draw.arc(
+        glass_sheen,
+        (255, 255, 255, 40),
+        (PORTHOLE_CENTER_X - PORTHOLE_RADIUS + 25, PORTHOLE_CENTER_Y - PORTHOLE_RADIUS + 25, (PORTHOLE_RADIUS - 25) * 2, (PORTHOLE_RADIUS - 25) * 2),
+        math.radians(115),
+        math.radians(155),
+        8
     )
     mask.blit(glass_sheen, (0, 0))
     return mask
@@ -185,32 +216,89 @@ class SubmarineArt:
         return surf
 
     def _render_octopus(self) -> pygame.Surface:
-        """Encounter: Friendly orange octopus hugging porthole."""
-        surf = pygame.Surface((320, 320), pygame.SRCALPHA)
-        center = (160, 160)
-        # Bulbous cute head
-        pygame.draw.ellipse(surf, (245, 110, 70), (100, 60, 120, 110))
-        # Big friendly cartoon eyes
-        pygame.draw.circle(surf, (255, 255, 255), (135, 110), 16)
-        pygame.draw.circle(surf, (20, 20, 20), (137, 110), 9)
-        pygame.draw.circle(surf, (255, 255, 255), (139, 107), 4)
+        """Encounter: Friendly cuddly coral-orange octopus hugging porthole glass with 8 tentacles."""
+        surf = pygame.Surface((380, 380), pygame.SRCALPHA)
+        cx, cy = 190, 160
 
-        pygame.draw.circle(surf, (255, 255, 255), (185, 110), 16)
-        pygame.draw.circle(surf, (20, 20, 20), (183, 110), 9)
-        pygame.draw.circle(surf, (255, 255, 255), (185, 107), 4)
+        # Tentacle path definitions: list of (x, y, radius) nodes from body out to glass edge
+        tentacle_paths = [
+            # 0: Up-left curling around top glass rim
+            [(160, 185, 18), (125, 160, 16), (90, 125, 14), (65, 85, 12), (48, 52, 10), (40, 25, 8)],
+            # 1: Far left waving
+            [(150, 195, 18), (110, 205, 16), (72, 195, 14), (42, 175, 12), (20, 155, 9)],
+            # 2: Down-left wrapping bottom-left
+            [(155, 215, 18), (120, 255, 16), (90, 290, 14), (60, 325, 12), (42, 355, 9)],
+            # 3: Down-center-left pressing glass
+            [(170, 225, 18), (155, 270, 16), (140, 315, 14), (132, 355, 11), (130, 372, 8)],
+            # 4: Down-center-right pressing glass
+            [(210, 225, 18), (225, 270, 16), (240, 315, 14), (248, 355, 11), (250, 372, 8)],
+            # 5: Down-right wrapping bottom-right
+            [(225, 215, 18), (260, 255, 16), (290, 290, 14), (320, 325, 12), (338, 355, 9)],
+            # 6: Far right waving
+            [(230, 195, 18), (270, 205, 16), (308, 195, 14), (338, 175, 12), (360, 155, 9)],
+            # 7: Up-right curling around top glass rim
+            [(220, 185, 18), (255, 160, 16), (290, 125, 14), (315, 85, 12), (332, 52, 10), (340, 25, 8)],
+        ]
 
-        # Cheerful smile
-        pygame.draw.arc(surf, (150, 40, 20), (145, 125, 30, 20), math.pi, 0, 4)
+        main_col = (248, 115, 72)
+        shadow_col = (205, 80, 45)
+        suction_rim = (255, 215, 195)
+        suction_center = (240, 150, 130)
 
-        # Tentacles with suction cups hugging the edges
-        for i in range(6):
-            angle = math.radians(20 + i * 28)
-            tx = int(160 + 130 * math.cos(angle))
-            ty = int(160 + 130 * math.sin(angle))
-            pygame.draw.circle(surf, (245, 110, 70), (tx, ty), 22)
-            # Suction cup rings pressed against glass
-            pygame.draw.circle(surf, (255, 220, 200), (tx, ty), 14, 4)
-            pygame.draw.circle(surf, (255, 240, 230), (tx, ty), 7)
+        # 1. Draw 8 Tentacle Limbs (under-shadow + fleshy main tube)
+        for nodes in tentacle_paths:
+            # Under-shadow
+            for i in range(len(nodes) - 1):
+                p1, p2 = nodes[i], nodes[i + 1]
+                pygame.draw.line(surf, shadow_col, (p1[0], p1[1] + 2), (p2[0], p2[1] + 2), int(p1[2] * 2))
+                pygame.draw.circle(surf, shadow_col, (p1[0], p1[1] + 2), p1[2])
+            # Main tentacle flesh
+            for i in range(len(nodes) - 1):
+                p1, p2 = nodes[i], nodes[i + 1]
+                pygame.draw.line(surf, main_col, (p1[0], p1[1]), (p2[0], p2[1]), int(p1[2] * 2 - 2))
+                pygame.draw.circle(surf, main_col, (p1[0], p1[1]), p1[2] - 1)
+            last = nodes[-1]
+            pygame.draw.circle(surf, main_col, (last[0], last[1]), last[2])
+
+        # 2. Draw Suction Cups Pressed on the Glass along each tentacle
+        for nodes in tentacle_paths:
+            # Place suction cups at intermediate nodes
+            for node in nodes[1:]:
+                nx, ny, nr = node
+                s_rad = max(4, int(nr * 0.75))
+                # Outer ring pressed against glass
+                pygame.draw.circle(surf, suction_rim, (nx, ny), s_rad + 2)
+                # Concave center
+                pygame.draw.circle(surf, suction_center, (nx, ny), s_rad)
+                # White glass contact glint
+                pygame.draw.circle(surf, (255, 255, 255), (nx - 1, ny - 1), max(1, s_rad // 2))
+
+        # 3. Cute Bulbous Head / Mantle
+        # Mantle back shadow
+        pygame.draw.ellipse(surf, shadow_col, (cx - 72, cy - 88, 144, 132))
+        # Mantle main body
+        pygame.draw.ellipse(surf, main_col, (cx - 70, cy - 90, 140, 128))
+        # Top mantle highlight sheen
+        pygame.draw.ellipse(surf, (255, 160, 125), (cx - 50, cy - 84, 100, 48))
+
+        # Rosy blushing cheeks
+        pygame.draw.circle(surf, (255, 140, 140, 180), (cx - 44, cy + 8), 12)
+        pygame.draw.circle(surf, (255, 140, 140, 180), (cx + 44, cy + 8), 12)
+
+        # Big friendly cartoon eyes looking forward
+        # Left eye
+        pygame.draw.circle(surf, (255, 255, 255), (cx - 28, cy - 10), 18)
+        pygame.draw.circle(surf, (20, 24, 30), (cx - 26, cy - 10), 11)
+        pygame.draw.circle(surf, (255, 255, 255), (cx - 29, cy - 14), 5)
+        pygame.draw.circle(surf, (255, 255, 255), (cx - 23, cy - 7), 2)
+        # Right eye
+        pygame.draw.circle(surf, (255, 255, 255), (cx + 28, cy - 10), 18)
+        pygame.draw.circle(surf, (20, 24, 30), (cx + 26, cy - 10), 11)
+        pygame.draw.circle(surf, (255, 255, 255), (cx + 23, cy - 14), 5)
+        pygame.draw.circle(surf, (255, 255, 255), (cx + 29, cy - 7), 2)
+
+        # Cheerful sweet smile
+        pygame.draw.arc(surf, (150, 35, 20), (cx - 18, cy + 4, 36, 24), math.pi, 0, 4)
         return surf
 
     def _render_shark(self) -> pygame.Surface:

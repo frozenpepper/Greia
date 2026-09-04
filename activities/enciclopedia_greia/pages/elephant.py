@@ -174,7 +174,7 @@ class ElephantPage(EncyclopediaPage):
             surface,
             self.context.typography,
             self.context.resources.text("elephant.title"),
-            center=(500, 92),
+            center=(512, 50),
             size=40,
             color=self.context.palette.ink,
             role=FontRole.DISPLAY,
@@ -203,71 +203,187 @@ class ElephantPage(EncyclopediaPage):
         )
 
     def _draw_elephant(self, surface: pygame.Surface) -> None:
-        body = (143, 153, 160)
-        body_light = (168, 176, 182)
-        body_shadow = (115, 124, 131)
-        dark = (77, 79, 82)
-        cx, cy = 500, 330
-        # Soft ground shadow
-        pygame.draw.ellipse(surface, (0, 0, 0, 24), (405, 462, 190, 16))
-        pygame.draw.ellipse(surface, body_shadow, (405, 285, 190, 130))
-        pygame.draw.ellipse(surface, body, (405, 283, 190, 130))
-        pygame.draw.ellipse(surface, body_light, (418, 292, 60, 48))
-        pygame.draw.circle(surface, body_shadow, (548, 282), 62)
-        pygame.draw.circle(surface, body, (548, 280), 62)
-        pygame.draw.circle(surface, body_light, (532, 262), 22)
-        flap = math.sin(self._time * (5.0 if self._ear_age > 0 else 1.2))
-        ear_w = 58 + int(abs(flap) * (13 if self._ear_age > 0 else 4))
-        # Ears with inner pink and highlight
-        pygame.draw.ellipse(surface, (108, 122, 133), (500 - ear_w, 245, ear_w, 90))
-        pygame.draw.ellipse(surface, (126, 139, 149), (500 - ear_w + 4, 249, ear_w - 8, 82))
-        pygame.draw.ellipse(surface, (178, 145, 155), (500 - ear_w + 14, 265, ear_w - 28, 50))
-        pygame.draw.ellipse(surface, (108, 122, 133), (548, 245, ear_w, 90))
-        pygame.draw.ellipse(surface, (126, 139, 149), (548 + 4, 249, ear_w - 8, 82))
-        pygame.draw.ellipse(surface, (178, 145, 155), (548 + 14, 265, ear_w - 28, 50))
+        body = (148, 164, 178)
+        body_dark = (116, 130, 142)
+        body_light = (176, 192, 204)
+        pink = (255, 185, 198)
+        tusk_col = (255, 252, 240)
+        dark_ink = (40, 34, 30)
 
-        for x in (438, 482, 548, 580):
-            pygame.draw.line(surface, body, (x, 380), (x - 3, 465), 23)
-            pygame.draw.ellipse(surface, body, (x - 15, 450, 31, 19))
+        # Ground soft shadow
+        shadow_surf = pygame.Surface((280, 40), pygame.SRCALPHA)
+        pygame.draw.ellipse(shadow_surf, (30, 24, 18, 45), (0, 0, 280, 36))
+        surface.blit(shadow_surf, (370, 442))
 
-        pygame.draw.circle(surface, dark, (568, 270), 4)
-        pygame.draw.line(surface, (235, 234, 220), (588, 292), (605, 315), 6)
+        # 1. Back Legs (darker shade for depth)
+        for lx in (430, 520):
+            leg_rect = pygame.Rect(lx, 340, 42, 115)
+            pygame.draw.rect(surface, body_dark, leg_rect, border_radius=14)
+            # 3 cute white toenails
+            for ti in range(3):
+                pygame.draw.circle(surface, (240, 240, 235), (lx + 9 + ti * 12, 452), 6)
 
-        trunk_paths = (
-            ((575, 305), (602, 330), (611, 367), (593, 397)),
-            ((575, 305), (606, 320), (635, 335), (660, 326)),
-            ((575, 305), (603, 342), (618, 390), (642, 425)),
-        )
-        pygame.draw.lines(surface, body, False, trunk_paths[self._trunk_state], 19)
-        for point in trunk_paths[self._trunk_state][1:]:
-            pygame.draw.circle(surface, body, point, 9)
+        # 2. Cute wagging tail with tuft
+        tail_wag = math.sin(self._time * 2.5) * 6
+        tail_start = (395, 315)
+        tail_mid = (372, 345 + tail_wag * 0.5)
+        tail_end = (368 + tail_wag, 375)
+        pygame.draw.lines(surface, body_dark, False, [tail_start, tail_mid, tail_end], 6)
+        pygame.draw.circle(surface, (85, 75, 70), (int(tail_end[0]), int(tail_end[1])), 8)
 
+        # 3. Big cuddly round body
+        body_rect = pygame.Rect(388, 255, 195, 150)
+        pygame.draw.ellipse(surface, body, body_rect)
+        pygame.draw.ellipse(surface, body_dark, body_rect, 3)
+        # Soft top highlight on back
+        pygame.draw.arc(surface, body_light, pygame.Rect(398, 260, 160, 90), 0.5, 2.7, 6)
+
+        # 4. Front Legs (brighter, rounded sturdy pillars)
+        for lx in (465, 555):
+            leg_rect = pygame.Rect(lx, 335, 46, 120)
+            pygame.draw.rect(surface, body, leg_rect, border_radius=16)
+            pygame.draw.rect(surface, body_dark, leg_rect, width=3, border_radius=16)
+            # Top knee shadow
+            pygame.draw.arc(surface, body_dark, pygame.Rect(lx + 8, 385, 30, 20), 0.2, 2.9, 2)
+            # 3 cute rounded toenails
+            for ti in range(3):
+                pygame.draw.circle(surface, (255, 255, 250), (lx + 10 + ti * 13, 452), 7)
+                pygame.draw.circle(surface, (180, 175, 165), (lx + 10 + ti * 13, 452), 7, 1)
+
+        # 5. Back ear (behind head, flapping)
+        flap = math.sin(self._time * (6.5 if self._ear_age > 0 else 1.6))
+        back_ear_w = 46 + int(flap * (16 if self._ear_age > 0 else 5))
+        back_ear_rect = pygame.Rect(535 - back_ear_w // 2, 215, max(20, back_ear_w), 85)
+        pygame.draw.ellipse(surface, body_dark, back_ear_rect)
+        pygame.draw.ellipse(surface, (140, 110, 120), back_ear_rect.inflate(-8, -14))
+
+        # 6. Big friendly round head
+        head_cx, head_cy = 575, 275
+        head_r = 58
+        pygame.draw.circle(surface, body, (head_cx, head_cy), head_r)
+        pygame.draw.circle(surface, body_dark, (head_cx, head_cy), head_r, 3)
+        # Soft cheek blush
+        blush_surf = pygame.Surface((36, 24), pygame.SRCALPHA)
+        pygame.draw.ellipse(blush_surf, (255, 150, 170, 75), (0, 0, 36, 24))
+        surface.blit(blush_surf, (head_cx + 12, head_cy + 12))
+
+        # 7. Front Floppy Ear (expressive, with animated flapping and cute pink interior)
+        ear_w = 68 + int(abs(flap) * (20 if self._ear_age > 0 else 6))
+        ear_rect = pygame.Rect(520 - ear_w // 2, 222, ear_w, 98)
+        pygame.draw.ellipse(surface, body, ear_rect)
+        pygame.draw.ellipse(surface, body_dark, ear_rect, 3)
+        inner_ear_rect = ear_rect.inflate(-18, -26)
+        if inner_ear_rect.width > 6 and inner_ear_rect.height > 6:
+            pygame.draw.ellipse(surface, pink, inner_ear_rect)
+            # Soft ear highlight
+            pygame.draw.arc(surface, (255, 255, 255, 180), inner_ear_rect, 0.6, 2.5, 3)
+
+        # 8. Charming curved creamy tusk
+        tusk_poly = [
+            (head_cx + 34, head_cy + 26),
+            (head_cx + 62, head_cy + 42),
+            (head_cx + 58, head_cy + 48),
+            (head_cx + 28, head_cy + 34),
+        ]
+        pygame.draw.polygon(surface, tusk_col, tusk_poly)
+        pygame.draw.polygon(surface, (180, 160, 130), tusk_poly, 2)
+        pygame.draw.circle(surface, tusk_col, (head_cx + 60, head_cy + 45), 3)
+
+        # 9. Big, lovable, expressive cartoon eye
+        eye_cx, eye_cy = head_cx + 22, head_cy - 12
+        # White sclera
+        pygame.draw.ellipse(surface, (255, 255, 255), (eye_cx - 10, eye_cy - 12, 20, 24))
+        pygame.draw.ellipse(surface, dark_ink, (eye_cx - 10, eye_cy - 12, 20, 24), 2)
+        # Deep dark warm iris
+        pygame.draw.circle(surface, (32, 42, 54), (eye_cx + 2, eye_cy), 7)
+        # Bright sparkly white catchlights
+        pygame.draw.circle(surface, (255, 255, 255), (eye_cx + 4, eye_cy - 3), 3)
+        pygame.draw.circle(surface, (255, 255, 255), (eye_cx, eye_cy + 3), 1)
+        # Cute curved eyebrow
+        pygame.draw.arc(surface, dark_ink, pygame.Rect(eye_cx - 8, eye_cy - 22, 18, 12), 0.4, 2.8, 3)
+        # Sweet smile near base of trunk
+        pygame.draw.arc(surface, (140, 45, 60), pygame.Rect(head_cx + 26, head_cy + 18, 16, 12), math.pi * 0.9, 0, 3)
+
+        # 10. Expressive, smooth, segmented trunk
+        trunk_base = (head_cx + 42, head_cy + 16)
+        if self._trunk_state == 0:
+            # Friendly resting curl up
+            p1 = trunk_base
+            p2 = (head_cx + 64, head_cy + 38)
+            p3 = (head_cx + 74, head_cy + 74)
+            p4 = (head_cx + 60, head_cy + 102)
+            p5 = (head_cx + 72, head_cy + 108)  # tip curled up
+            trunk_pts = [p1, p2, p3, p4, p5]
+            trunk_widths = [24, 21, 18, 15, 13]
+        elif self._trunk_state == 1:
+            # Joyous high trumpet salute!
+            p1 = trunk_base
+            p2 = (head_cx + 68, head_cy + 18)
+            p3 = (head_cx + 94, head_cy - 10)
+            p4 = (head_cx + 108, head_cy - 45)
+            p5 = (head_cx + 98, head_cy - 65)  # tip curling back
+            trunk_pts = [p1, p2, p3, p4, p5]
+            trunk_widths = [24, 22, 18, 15, 12]
+        else:
+            # Water spraying pose: trunk curled forward toward pond
+            p1 = trunk_base
+            p2 = (head_cx + 68, head_cy + 35)
+            p3 = (head_cx + 86, head_cy + 65)
+            p4 = (head_cx + 108, head_cy + 82)
+            p5 = (head_cx + 124, head_cy + 76)
+            trunk_pts = [p1, p2, p3, p4, p5]
+            trunk_widths = [24, 21, 18, 15, 13]
+
+        for i in range(len(trunk_pts) - 1):
+            pt_a = trunk_pts[i]
+            pt_b = trunk_pts[i + 1]
+            w = trunk_widths[i]
+            pygame.draw.line(surface, body, pt_a, pt_b, w)
+            pygame.draw.circle(surface, body, pt_a, w // 2)
+            pygame.draw.circle(surface, body, pt_b, w // 2)
+            # Subtle trunk wrinkles
+            pygame.draw.circle(surface, body_dark, pt_a, w // 2, 1)
+
+        # 11. Water spray effects when trunk is active or water toy triggered
         if self._water_age > 0:
+            tip = trunk_pts[-1]
             progress = 1.0 - self._water_age / 3.0
-            for index in range(14):
-                t = index / 13
-                x = 610 + int(120 * t)
-                y = 375 - int(100 * math.sin(t * math.pi)) + int(progress * 5)
-                pygame.draw.circle(surface, (91, 176, 216), (x, y), 4 + index % 2)
+            for index in range(20):
+                t = index / 19.0
+                drop_x = tip[0] + int(140 * t) + int(math.sin(self._time * 10 + index) * 8)
+                drop_y = tip[1] - int(75 * math.sin(t * math.pi)) + int(t * 110) + int(progress * 10)
+                drop_r = 3 + (index % 4)
+                pygame.draw.circle(surface, (95, 195, 245), (drop_x, drop_y), drop_r)
+                pygame.draw.circle(surface, (220, 245, 255), (drop_x - 1, drop_y - 1), max(1, drop_r - 2))
 
+        # 12. Cooling ear wind ripples when ears flapping
         if self._ear_age > 0:
             for index in range(5):
-                y = 245 + index * 15
-                pygame.draw.line(surface, (111, 184, 211), (465, y), (425 - index * 5, y - 4), 3)
-                pygame.draw.line(surface, (111, 184, 211), (630, y), (670 + index * 5, y - 4), 3)
+                y = 230 + index * 16
+                wave_x = int(math.sin(self._time * 8 + index) * 6)
+                pygame.draw.arc(surface, (120, 205, 235), pygame.Rect(440 + wave_x, y, 40, 20), 0.5, 2.5, 3)
+                pygame.draw.arc(surface, (120, 205, 235), pygame.Rect(630 + wave_x, y, 40, 20), 0.5, 2.5, 3)
 
+        # 13. Social touch: cute little baby elephant greeting
         if self._social_age > 0:
-            second_x = 350
-            pygame.draw.ellipse(surface, (158, 167, 173), (second_x - 42, 365, 90, 62))
-            pygame.draw.circle(surface, (158, 167, 173), (second_x + 35, 365), 31)
+            second_x = 340
+            pygame.draw.ellipse(surface, (168, 180, 190), (second_x - 45, 360, 85, 60))
+            pygame.draw.circle(surface, (168, 180, 190), (second_x + 35, 360), 28)
+            pygame.draw.circle(surface, dark_ink, (second_x + 42, 354), 3)
+            # Intertwining baby trunk
             pygame.draw.lines(
                 surface,
-                (158, 167, 173),
+                (168, 180, 190),
                 False,
-                ((second_x + 53, 378), (second_x + 76, 370), (395, 350), (425, 344)),
-                12,
+                [(second_x + 50, 368), (second_x + 72, 362), (390, 345), (420, 340)],
+                10,
             )
-            pygame.draw.lines(surface, body, False, ((575, 305), (540, 330), (500, 340), (425, 344)), 11)
+            # Floating friendly hearts
+            heart_y = int(320 - (4.0 - self._social_age) * 15)
+            pygame.draw.circle(surface, (255, 110, 135), (380, heart_y), 6)
+            pygame.draw.circle(surface, (255, 110, 135), (388, heart_y), 6)
+            pygame.draw.polygon(surface, (255, 110, 135), [(374, heart_y + 2), (394, heart_y + 2), (384, heart_y + 12)])
+
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
         for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):

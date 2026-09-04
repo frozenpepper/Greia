@@ -7,6 +7,16 @@ import math
 
 import pygame
 
+from greia_platform.typography import FontRole
+
+
+def _shade(color: tuple[int, int, int], factor: float) -> tuple[int, int, int]:
+    return (
+        max(0, min(255, int(color[0] * factor))),
+        max(0, min(255, int(color[1] * factor))),
+        max(0, min(255, int(color[2] * factor))),
+    )
+
 if __package__ and "." in __package__:
     from ..enciclopedia_engine import EncyclopediaPage, PageCommand, PageInput, PageInputKind
     from ..enciclopedia_presentation import (
@@ -130,9 +140,9 @@ class GearsPage(EncyclopediaPage):
 
     # Live gear geometry — must match authored workbench positions used in reveals
     GEAR_SPECS = (
-        ((385, 318), 72, 18),
-        ((500, 318), 58, 14),
-        ((592, 318), 47, 12),
+        ((385, 318), 64, 16),
+        ((500, 318), 51, 13),
+        ((592, 318), 41, 10),
     )
 
     def __init__(self, context) -> None:
@@ -159,7 +169,9 @@ class GearsPage(EncyclopediaPage):
         self._pause_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
         self._direction_hit: pygame.Rect = pygame.Rect(0, 0, 0, 0)
         self._dragging = False
-        self._last_drag_x: int | None = None
+        self._drag_center: tuple[int, int] | None = None
+        self._drag_gear_idx: int = 0
+        self._last_drag_angle: float | None = None
 
     def on_enter(self) -> None:
         self.context.audio.play("encyclopedia.machines.gears.intro")
@@ -193,27 +205,25 @@ class GearsPage(EncyclopediaPage):
             # Toy controls first — large hit areas, reliable
             if event.kind is PageInputKind.POINTER_PRESS:
                 if self._turn_hit.collidepoint(point):
-                    # Big turn gives a visible burst
-                    self._model.paused = False
-                    self._model.driver_angle += 0.9 * self._model.direction
-                    return
-                for lvl, hit in enumerate(self._speed_hits):
-                    if hit.collidepoint(point):
-                        self._model.set_speed_level(lvl)
-                        return
-                if self._pause_hit.collidepoint(point):
                     self._model.toggle_pause()
+                    if not self._model.paused:
+                        self._model.driver_angle += 0.8 * self._model.direction
                     return
                 if self._direction_hit.collidepoint(point):
                     self._model.reverse()
                     return
-                # Direct gear drag — check if press is on any gear
-                for center, radius, _teeth in self.GEAR_SPECS:
+                # Direct gear touch/drag — check if press is on any gear
+                for idx, (center, radius, _teeth) in enumerate(self.GEAR_SPECS):
                     dx = point[0] - center[0]
                     dy = point[1] - center[1]
-                    if dx * dx + dy * dy <= (radius + 10) * (radius + 10):
+                    if dx * dx + dy * dy <= (radius + 15) * (radius + 15):
                         self._dragging = True
-                        self._last_drag_x = point[0]
+                        self._drag_center = center
+                        self._drag_gear_idx = idx
+                        self._last_drag_angle = math.atan2(dy, dx)
+                        self._model.paused = False
+                        # Direct tap gives an impulse
+                        self._model.nudge(0.3 * self._model.direction)
                         return
                 if self._arrow_left_hit.collidepoint(point):
                     self._set_selected(self._selected - 1)
@@ -222,20 +232,18 @@ class GearsPage(EncyclopediaPage):
                     self._set_selected(self._selected + 1)
                     return
             if event.kind is PageInputKind.POINTER_MOVE:
-                if self._dragging and self._last_drag_x is not None:
-                    delta = point[0] - self._last_drag_x
-                    self._model.nudge(delta * 0.04)
-                    self._last_drag_x = point[0]
-                    # Hover still for discovery
-                    hit = next(
-                        (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
-                        None,
-                    )
-                    if hit is not None and hit != self._selected:
-                        disc = DISCOVERIES[hit]
-                        cue = encyclopedia_focus_cue("machines", "gears", disc.discovery_id, "name")
-                        announce_focus_name(self.context.audio, cue)
-                    self._hovered = hit
+                if self._dragging and self._drag_center is not None and self._last_drag_angle is not None:
+                    cx, cy = self._drag_center
+                    cur_angle = math.atan2(point[1] - cy, point[0] - cx)
+                    delta = (cur_angle - self._last_drag_angle)
+                    # Normalize to [-pi, pi]
+                    delta = (delta + math.pi) % math.tau - math.pi
+                    if self._drag_gear_idx == 1:
+                        delta = -delta * (13 / 16)
+                    elif self._drag_gear_idx == 2:
+                        delta = delta * (10 / 16)
+                    self._model.nudge(delta)
+                    self._last_drag_angle = cur_angle
                     return
                 hit = next(
                     (index for index, rect in enumerate(self._hotspots) if rect.collidepoint(point)),
@@ -248,9 +256,9 @@ class GearsPage(EncyclopediaPage):
                 self._hovered = hit
                 if hit is not None:
                     return
-                # End drag when pointer moves off gear without press? Keep dragging until press release — here move without press ends drag
                 self._dragging = False
-                self._last_drag_x = None
+                self._drag_center = None
+                self._last_drag_angle = None
                 return
             # POINTER_PRESS already handled toy hits above; now check discovery tokens
             hit = next(
@@ -325,19 +333,8 @@ class GearsPage(EncyclopediaPage):
         self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
             surface, time=self._time, can_go_left=can_left, can_go_right=can_right
         )
-        # Main toy chrome — turn + speed + pause/direction
-        _, self._speed_hits = draw_speed_slider(
-            surface, (185, 485), time=self._time, level=self._model.speed_level, paused=self._model.paused
-        )
-        self._turn_hit = draw_turn_button(
-            surface, (512, 460), time=self._time, enabled=True, spinning=not self._model.paused
-        )
-        self._pause_hit = draw_pause_button(
-            surface, (380, 485), time=self._time, paused=self._model.paused
-        )
-        self._direction_hit = draw_direction_toggle(
-            surface, (700, 485), time=self._time, direction=self._model.direction
-        )
+        # Intuitive tactile mechanism controls
+        self._draw_controls(surface)
         draw_caption_ribbon(
             surface,
             self.context.typography,
@@ -353,61 +350,232 @@ class GearsPage(EncyclopediaPage):
             fallback_color=(101, 171, 211),
         )
 
-    def _draw_live_gears(self, surface: pygame.Surface) -> None:
-        # Three meshed gears — live, not static PNG
-        # Ratios based on authored radii: 72 -> 58 -> 47
-        base_angle = self._model.driver_angle
-        # Second gear opposite, scaled
-        angle1 = base_angle
-        angle2 = -base_angle * (72 / 58) + 0.12  # phase offset so teeth mesh visually
-        angle3 = base_angle * (72 / 47) - 0.07
-        specs = [
-            ((385, 318), 72, 18, angle1, (83, 145, 181)),
-            ((500, 318), 58, 14, angle2, (200, 170, 90)),
-            ((592, 318), 47, 12, angle3, (160, 140, 110)),
-        ]
-        for center, radius, teeth, angle, color in specs:
-            self._draw_gear(surface, center, radius, teeth, angle, color)
+    def _draw_controls(self, surface: pygame.Surface) -> None:
+        """Draw intuitive, child-friendly tactile workbench controls."""
+        edge_dark = (61, 44, 31)
 
-    @staticmethod
+        # Dock background strip on workbench
+        dock_rect = pygame.Rect(340, 442, 344, 48)
+        pygame.draw.rect(surface, (0, 0, 0, 30), dock_rect.move(0, 3), border_radius=24)
+        pygame.draw.rect(surface, (246, 238, 218), dock_rect, border_radius=24)
+        pygame.draw.rect(surface, (140, 115, 85), dock_rect, width=2, border_radius=24)
+
+        # Button 1: GIRA / PAUSA (Toggle play/pause)
+        btn_play_rect = pygame.Rect(346, 446, 160, 40)
+        self._turn_hit = btn_play_rect
+        is_paused = self._model.paused
+        play_fill = (225, 248, 225) if is_paused else (255, 242, 220)
+        play_edge = (60, 150, 75) if is_paused else (190, 120, 45)
+        pygame.draw.rect(surface, play_fill, btn_play_rect, border_radius=20)
+        pygame.draw.rect(surface, play_edge, btn_play_rect, width=2, border_radius=20)
+
+        # Play/Pause icon + label
+        if is_paused:
+            tri_pts = [
+                (btn_play_rect.x + 22, btn_play_rect.centery - 10),
+                (btn_play_rect.x + 36, btn_play_rect.centery),
+                (btn_play_rect.x + 22, btn_play_rect.centery + 10),
+            ]
+            pygame.draw.polygon(surface, (50, 150, 65), tri_pts)
+            label = self.context.typography.font(FontRole.CONTROL, 18).render(
+                "GIRA", True, edge_dark
+            )
+        else:
+            bx = btn_play_rect.x + 22
+            by = btn_play_rect.centery - 9
+            pygame.draw.rect(surface, (190, 110, 35), (bx, by, 5, 18), border_radius=2)
+            pygame.draw.rect(surface, (190, 110, 35), (bx + 8, by, 5, 18), border_radius=2)
+            label = self.context.typography.font(FontRole.CONTROL, 18).render(
+                "PAUSA", True, edge_dark
+            )
+        surface.blit(label, (btn_play_rect.x + 50, btn_play_rect.centery - label.get_height() // 2))
+
+        # Button 2: INVERTI (Reverse direction)
+        btn_rev_rect = pygame.Rect(518, 446, 160, 40)
+        self._direction_hit = btn_rev_rect
+        pygame.draw.rect(surface, (255, 252, 245), btn_rev_rect, border_radius=20)
+        pygame.draw.rect(surface, (120, 95, 70), btn_rev_rect, width=2, border_radius=20)
+
+        # Circular curved arrow icon
+        rev_cx = btn_rev_rect.x + 28
+        rev_cy = btn_rev_rect.centery
+        arc_rect = pygame.Rect(rev_cx - 11, rev_cy - 11, 22, 22)
+        if self._model.direction > 0:
+            pygame.draw.arc(surface, (180, 100, 35), arc_rect, 0.4, 5.4, 3)
+            pygame.draw.polygon(
+                surface,
+                (180, 100, 35),
+                [
+                    (rev_cx + 10, rev_cy - 2),
+                    (rev_cx + 16, rev_cy + 5),
+                    (rev_cx + 6, rev_cy + 5),
+                ],
+            )
+        else:
+            pygame.draw.arc(surface, (180, 100, 35), arc_rect, 1.0, 6.0, 3)
+            pygame.draw.polygon(
+                surface,
+                (180, 100, 35),
+                [
+                    (rev_cx - 10, rev_cy - 2),
+                    (rev_cx - 16, rev_cy + 5),
+                    (rev_cx - 6, rev_cy + 5),
+                ],
+            )
+
+        rev_label = self.context.typography.font(FontRole.CONTROL, 18).render(
+            "INVERTI", True, edge_dark
+        )
+        surface.blit(rev_label, (btn_rev_rect.x + 50, btn_rev_rect.centery - rev_label.get_height() // 2))
+
+    def _draw_live_gears(self, surface: pygame.Surface) -> None:
+        # Three meshed gears with mathematical mesh alignment
+        base_angle = self._model.driver_angle
+        n1, n2, n3 = 16, 13, 10
+        angle1 = base_angle
+        angle2 = -base_angle * (n1 / n2) + (math.pi / n2)
+        angle3 = -angle2 * (n2 / n3) + (math.pi / n3)
+        specs = [
+            ((385, 318), 64, n1, angle1, (83, 145, 181), True),
+            ((500, 318), 51, n2, angle2, (210, 175, 80), False),
+            ((592, 318), 41, n3, angle3, (180, 130, 95), False),
+        ]
+        for center, radius, teeth, angle, color, has_crank in specs:
+            self._draw_gear(surface, center, radius, teeth, angle, color, has_crank=has_crank)
+
+    @classmethod
     def _draw_gear(
+        cls,
         surface: pygame.Surface,
         center: tuple[int, int],
         radius: int,
         teeth: int,
         angle: float,
         color: tuple[int, int, int],
+        has_crank: bool = False,
     ) -> None:
         cx, cy = center
-        # Soft drop shadow
-        shadow = pygame.Surface((radius * 2 + 12, radius * 2 + 12), pygame.SRCALPHA)
-        pygame.draw.circle(shadow, (0, 0, 0, 28), (radius + 6, radius + 8), radius)
-        surface.blit(shadow, (cx - radius - 6, cy - radius - 6))
-        # Body with radial highlight
-        pygame.draw.circle(surface, (75, 70, 67), center, radius + 1)
-        pygame.draw.circle(surface, color, center, radius)
-        # Highlight quadrant
-        hl = pygame.Surface((radius * 2, radius * 2), pygame.SRCALPHA)
-        pygame.draw.circle(hl, (255, 255, 255, 38), (radius - 12, radius - 14), radius // 2)
-        pygame.draw.circle(hl, (255, 255, 255, 18), (radius - 8, radius - 10), radius // 3)
-        surface.blit(hl, (cx - radius, cy - radius))
-        pygame.draw.circle(surface, (65, 60, 57), center, radius, 3)
-        # Hub
-        hub_r = max(8, radius // 4)
-        pygame.draw.circle(surface, (52, 48, 45), center, hub_r + 2)
-        pygame.draw.circle(surface, (239, 231, 205), center, hub_r)
-        pygame.draw.circle(surface, (75, 70, 67), center, hub_r, 2)
-        # Teeth with bevel
+        d_th = math.tau / teeth
+        ha = max(4.0, radius * 0.11)
+        hf = max(5.0, radius * 0.12)
+        r_tip = radius + ha
+        r_root = radius - hf
+        w_root = d_th * 0.28
+        w_tip = d_th * 0.14
+        edge_dark = (48, 42, 38)
+
+        poly_points: list[tuple[int, int]] = []
+        shadow_points: list[tuple[int, int]] = []
+        shadow_ox, shadow_oy = 3, 5
+
         for i in range(teeth):
-            theta = angle + i * math.tau / teeth
-            x1 = cx + int(math.cos(theta) * radius)
-            y1 = cy + int(math.sin(theta) * radius)
-            x2 = cx + int(math.cos(theta) * (radius + 9))
-            y2 = cy + int(math.sin(theta) * (radius + 9))
-            pygame.draw.line(surface, (65, 60, 57), (x1, y1), (x2, y2), 4)
-            pygame.draw.line(surface, (75, 70, 67), (x1, y1), (x2, y2), 3)
-            pygame.draw.circle(surface, color, (x2, y2), 4)
-            pygame.draw.circle(surface, (255, 255, 255, 30), (x2 - 1, y2 - 1), 2)
+            th = angle + i * d_th
+            # Valley bottom before tooth
+            th_v1 = th - d_th * 0.5
+            th_v2 = th - w_root
+            x_v1 = cx + math.cos(th_v1) * r_root
+            y_v1 = cy + math.sin(th_v1) * r_root
+            poly_points.append((int(round(x_v1)), int(round(y_v1))))
+            shadow_points.append((int(round(x_v1 + shadow_ox)), int(round(y_v1 + shadow_oy))))
+
+            x_v2 = cx + math.cos(th_v2) * r_root
+            y_v2 = cy + math.sin(th_v2) * r_root
+            poly_points.append((int(round(x_v2)), int(round(y_v2))))
+            shadow_points.append((int(round(x_v2 + shadow_ox)), int(round(y_v2 + shadow_oy))))
+
+            # Rising flank to crest
+            th_t1 = th - w_tip
+            x_t1 = cx + math.cos(th_t1) * r_tip
+            y_t1 = cy + math.sin(th_t1) * r_tip
+            poly_points.append((int(round(x_t1)), int(round(y_t1))))
+            shadow_points.append((int(round(x_t1 + shadow_ox)), int(round(y_t1 + shadow_oy))))
+
+            # Crest right corner
+            th_t2 = th + w_tip
+            x_t2 = cx + math.cos(th_t2) * r_tip
+            y_t2 = cy + math.sin(th_t2) * r_tip
+            poly_points.append((int(round(x_t2)), int(round(y_t2))))
+            shadow_points.append((int(round(x_t2 + shadow_ox)), int(round(y_t2 + shadow_oy))))
+
+            # Falling flank back to root
+            th_v3 = th + w_root
+            x_v3 = cx + math.cos(th_v3) * r_root
+            y_v3 = cy + math.sin(th_v3) * r_root
+            poly_points.append((int(round(x_v3)), int(round(y_v3))))
+            shadow_points.append((int(round(x_v3 + shadow_ox)), int(round(y_v3 + shadow_oy))))
+
+        # 1. Soft Drop Shadow
+        if len(shadow_points) >= 3:
+            shadow_surf = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
+            pygame.draw.polygon(shadow_surf, (0, 0, 0, 35), shadow_points)
+            surface.blit(shadow_surf, (0, 0))
+
+        # 2. Solid Cogwheel Body
+        pygame.draw.polygon(surface, color, poly_points)
+        pygame.draw.polygon(surface, edge_dark, poly_points, 2)
+
+        # 3. Tooth bevel / highlights
+        highlight_color = (255, 255, 255, 60)
+        for i in range(teeth):
+            th = angle + i * d_th
+            th_t1 = th - w_tip
+            th_t2 = th + w_tip
+            x_t1 = int(round(cx + math.cos(th_t1) * r_tip))
+            y_t1 = int(round(cy + math.sin(th_t1) * r_tip))
+            x_t2 = int(round(cx + math.cos(th_t2) * r_tip))
+            y_t2 = int(round(cy + math.sin(th_t2) * r_tip))
+            pygame.draw.line(surface, highlight_color, (x_t1, y_t1), (x_t2, y_t2), 2)
+
+        # 4. Outer Rim Bevel
+        r_rim = int(r_root * 0.94)
+        pygame.draw.circle(surface, _shade(color, 1.15), center, r_rim, 2)
+        pygame.draw.circle(surface, edge_dark, center, r_rim - 2, 2)
+
+        # 5. Recessed Web Face
+        r_web = r_rim - 4
+        web_color = _shade(color, 0.88)
+        pygame.draw.circle(surface, web_color, center, r_web)
+
+        # 6. Spoke Cutout Holes
+        spoke_count = 5 if radius >= 60 else (4 if radius >= 50 else 3)
+        hole_r = max(5, int(radius * 0.16))
+        hole_dist = int(radius * 0.52)
+        board_color = (239, 231, 205)
+        for j in range(spoke_count):
+            h_th = angle + j * (math.tau / spoke_count)
+            hx = cx + int(math.cos(h_th) * hole_dist)
+            hy = cy + int(math.sin(h_th) * hole_dist)
+            pygame.draw.circle(surface, board_color, (hx, hy), hole_r)
+            pygame.draw.circle(surface, edge_dark, (hx, hy), hole_r, 2)
+            pygame.draw.circle(surface, (255, 255, 255, 50), (hx, hy + 1), hole_r - 1, 1)
+
+        # 7. Center Axle Hub & Brass Ring
+        hub_r = max(11, int(radius * 0.28))
+        pygame.draw.circle(surface, (205, 170, 95), center, hub_r + 2)
+        pygame.draw.circle(surface, edge_dark, center, hub_r + 2, 2)
+        pygame.draw.circle(surface, (245, 220, 140), center, hub_r - 2)
+        pin_r = max(4, hub_r // 2)
+        pygame.draw.circle(surface, (50, 45, 40), center, pin_r)
+        pygame.draw.circle(surface, (80, 75, 70), center, max(2, pin_r - 2))
+        pygame.draw.circle(surface, (255, 255, 255), (center[0] - 2, center[1] - 2), 2)
+
+        # 8. Tactile Hand-Crank Knob on Driver Gear
+        if has_crank:
+            crank_dist = int(radius * 0.65)
+            kx = cx + int(math.cos(angle + 0.35) * crank_dist)
+            ky = cy + int(math.sin(angle + 0.35) * crank_dist)
+            # Arm
+            pygame.draw.line(surface, edge_dark, center, (kx, ky), 10)
+            pygame.draw.line(surface, (190, 155, 80), center, (kx, ky), 6)
+            pygame.draw.line(surface, (235, 210, 130), center, (kx, ky), 2)
+            # Knob
+            pygame.draw.circle(surface, (0, 0, 0, 45), (kx + 2, ky + 3), 14)
+            pygame.draw.circle(surface, (180, 140, 70), (kx, ky), 14)
+            pygame.draw.circle(surface, edge_dark, (kx, ky), 14, 2)
+            pygame.draw.circle(surface, (220, 125, 55), (kx, ky), 11)
+            pygame.draw.circle(surface, (255, 185, 110), (kx - 3, ky - 3), 5)
+            pygame.draw.circle(surface, (255, 255, 255), (kx - 4, ky - 4), 2)
+
 
     def _recent(self, discovery_id: str) -> bool:
         ages = {
@@ -499,26 +667,60 @@ class GearsPage(EncyclopediaPage):
         discovery_id: str,
     ) -> None:
         cx, cy = center
+        edge_dark = (48, 42, 38)
         if discovery_id == "teeth":
-            for offset in (-15, 0, 15):
-                pygame.draw.rect(
-                    surface,
-                    (83, 145, 181),
-                    (cx + offset - 6, cy - 20, 12, 40),
-                    border_radius=3,
-                )
-        elif discovery_id == "direction":
-            pygame.draw.arc(
+            # Two interlocking cogs with yellow star sparkle
+            pygame.draw.polygon(
                 surface,
-                (231, 157, 71),
-                (cx - 23, cy - 23, 46, 46),
-                0.2,
-                math.pi * 1.6,
-                6,
+                (83, 145, 181),
+                [(cx - 20, cy - 14), (cx - 4, cy - 8), (cx - 4, cy + 8), (cx - 20, cy + 14)],
             )
+            pygame.draw.polygon(
+                surface,
+                edge_dark,
+                [(cx - 20, cy - 14), (cx - 4, cy - 8), (cx - 4, cy + 8), (cx - 20, cy + 14)],
+                2,
+            )
+            pygame.draw.polygon(
+                surface,
+                (210, 175, 80),
+                [(cx + 20, cy - 14), (cx + 4, cy - 8), (cx + 4, cy + 8), (cx + 20, cy + 14)],
+            )
+            pygame.draw.polygon(
+                surface,
+                edge_dark,
+                [(cx + 20, cy - 14), (cx + 4, cy - 8), (cx + 4, cy + 8), (cx + 20, cy + 14)],
+                2,
+            )
+            pygame.draw.circle(surface, (255, 235, 90), (cx, cy), 6)
+            pygame.draw.circle(surface, (255, 255, 255), (cx, cy), 3)
+
+        elif discovery_id == "direction":
+            # Two rotating gears with arrows
+            pygame.draw.circle(surface, (83, 145, 181), (cx - 12, cy), 13)
+            pygame.draw.circle(surface, edge_dark, (cx - 12, cy), 13, 2)
+            pygame.draw.circle(surface, (210, 175, 80), (cx + 12, cy), 13)
+            pygame.draw.circle(surface, edge_dark, (cx + 12, cy), 13, 2)
+            pygame.draw.arc(surface, (225, 120, 40), (cx - 23, cy - 18, 20, 20), 0.5, 3.5, 3)
+            pygame.draw.arc(surface, (225, 120, 40), (cx + 3, cy - 2, 20, 20), 3.6, 6.6, 3)
+
         elif discovery_id == "ratio":
-            pygame.draw.circle(surface, (83, 145, 181), (cx - 13, cy), 18)
-            pygame.draw.circle(surface, (231, 157, 71), (cx + 19, cy), 10)
-        else:
-            pygame.draw.circle(surface, (155, 117, 183), (cx - 11, cy - 6), 13, 5)
-            pygame.draw.rect(surface, (102, 84, 67), (cx, cy + 4, 27, 8))
+            # Big gear and small gear meshed together
+            pygame.draw.circle(surface, (83, 145, 181), (cx - 10, cy), 18)
+            pygame.draw.circle(surface, edge_dark, (cx - 10, cy), 18, 2)
+            pygame.draw.circle(surface, (210, 175, 80), (cx + 16, cy), 9)
+            pygame.draw.circle(surface, edge_dark, (cx + 16, cy), 9, 2)
+            pygame.draw.circle(surface, (245, 220, 140), (cx - 10, cy), 5)
+            pygame.draw.circle(surface, (245, 220, 140), (cx + 16, cy), 3)
+
+        else:  # rack
+            # Pinion gear meshed with horizontal toothed rack
+            pygame.draw.circle(surface, (155, 117, 183), (cx, cy - 8), 14)
+            pygame.draw.circle(surface, edge_dark, (cx, cy - 8), 14, 2)
+            pygame.draw.circle(surface, (245, 220, 140), (cx, cy - 8), 4)
+            pygame.draw.rect(surface, (102, 84, 67), (cx - 22, cy + 9, 44, 7), border_radius=2)
+            pygame.draw.rect(surface, edge_dark, (cx - 22, cy + 9, 44, 7), 2, border_radius=2)
+            for tx in (-16, -8, 0, 8, 16):
+                pygame.draw.rect(surface, (102, 84, 67), (cx + tx - 2, cy + 5, 4, 5))
+                pygame.draw.rect(surface, edge_dark, (cx + tx - 2, cy + 5, 4, 5), 1)
+

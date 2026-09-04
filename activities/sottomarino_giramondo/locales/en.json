@@ -12,15 +12,15 @@
     "btn.sonar": "Sonar",
     "btn.bubbles": "Bubbles",
     "btn.horn": "Horn",
-    "btn.action": "Action",
+    "btn.action": "Alarm",
     "creature.clownfish": "Clownfish",
     "creature.turtle": "Sea Turtle",
     "creature.dolphin": "Curious Dolphin",
     "creature.manta": "Giant Manta",
     "creature.angler": "Lanternfish",
     "creature.whale": "Gentle Whale",
-    "encounter.octopus.hint": "The octopus is tickling the glass! Honk the horn or release bubbles!",
-    "encounter.shark.hint": "The shark is waving its fin! Turn on the lights!",
+    "encounter.octopus.hint": "The octopus is tickling the glass! Honk the horn, release bubbles, or sound the alarm!",
+    "encounter.shark.hint": "The shark is waving its fin! Turn on the lights or sound the alarm!",
     "creature.coral": "Coral Reef",
     "creature.kelp": "Giant Kelp Forest",
     "creature.krill": "Bioluminescent Krill Swarm",
@@ -42,6 +42,9 @@
     "voice.order.left": "Turn to port! Steer to the left!",
     "voice.order.right": "Turn to starboard! Steer to the right!",
     "voice.order.compliment": "Great maneuver, Captain! Course is set!",
+    "voice.creature.coral": "Coral reef!",
+    "voice.creature.kelp": "Kelp forest!",
+    "voice.creature.krill": "Glowing krill swarm!",
     "voice.creature_coral": "Coral reef!",
     "voice.creature_kelp": "Kelp forest!",
     "voice.creature_krill": "Glowing krill swarm!",
@@ -79,6 +82,10 @@
     "voice.fact.krill.4": "Altogether, all the krill on Earth weigh more than all humans combined!"
   },
   "audio": {
+    "activity.title": {
+      "path": "audio/en/sub_title.wav",
+      "caption_key": "activity.title"
+    },
     "voice.btn.light": {
       "path": "audio/en/sub_btn_light.wav"
     },

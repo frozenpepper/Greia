@@ -15,3 +15,5 @@ Lunacy/
 # Encyclopedia voice-production staging is local/reviewable working state.
 # Only OWNER_ACCEPTED narration is packaged/committed under the Activity tree.
 encyclopedia/pages/**/assets/audio/
+out/
+TBag/

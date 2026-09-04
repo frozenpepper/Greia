@@ -102,10 +102,18 @@ def _selected_names(group: str) -> tuple[str, ...]:
     return NAMES
 
 
+SPRITE_NAMES = {"earth_planet_sprite.png"}
+
+
 def _runtime_png_names() -> set[str]:
     if not RUNTIME.exists():
         return set()
-    return {path.name for path in RUNTIME.glob("*.png") if path.is_file()}
+    return {
+        path.name
+        for path in RUNTIME.glob("*.png")
+        if path.is_file() and path.name not in SPRITE_NAMES
+    }
+
 
 
 def build(names: tuple[str, ...]) -> int:

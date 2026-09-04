@@ -59,10 +59,12 @@ class TrustedChromeActivitySupervisor(UsageLimitedActivitySupervisor):
         if coordinator is None or session.result is not None:
             return session
         try:
-            # R7.3 first closes mandatory Home. Optional Greia Back is added
-            # once launch-origin context is passed through the same trusted
-            # boundary; keeping it false here cannot weaken Home authority.
-            lease = coordinator.prepare(session.session_id, back_available=False)
+            # Mandatory Home is always enabled. Back is enabled when the activity
+            # supports/requires back navigation (e.g. hierarchical browsing).
+            back_needed = manifest.activity_id in {
+                "org.greia.enciclopedia",
+            }
+            lease = coordinator.prepare(session.session_id, back_available=back_needed)
         except SystemChromeError:
             result = self.force_stop(session, ActivityExitReason.PLATFORM_FAILURE)
             if result is not None:

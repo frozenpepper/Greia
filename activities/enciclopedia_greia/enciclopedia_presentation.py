@@ -268,9 +268,10 @@ def draw_authored_scene(surface: pygame.Surface, visuals: object, asset_id: str)
 
 
 def draw_title(surface: pygame.Surface, typography: object, text: str, color: tuple[int, int, int]) -> None:
-    rendered = typography.render(text, FontRole.DISPLAY, 40, color)
-    rect = rendered.get_rect(center=SHELL.title.center)
+    rendered = typography.render(text, FontRole.DISPLAY, 38, color)
+    rect = rendered.get_rect(center=(512, 50))
     surface.blit(rendered, rect)
+
 
 
 def draw_discovery_token(

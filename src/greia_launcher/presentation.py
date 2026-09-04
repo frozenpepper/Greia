@@ -405,19 +405,19 @@ class GreiaLauncherPresentation(LauncherApplication):
                             new_target = self._target_at(event.pos)
                             if prev_target != new_target:
                                 _needs_redraw = True
-                            try:
-                                now = time.monotonic()
-                                prev_sp = self._speakable_for_target(prev_target)
-                                new_sp = self._speakable_for_target(new_target)
-                                if new_sp is None:
-                                    self._spoken_labels.pointer_focus_changed(None, None, now)
-                                    self._spoken_labels.clear_pointer_focus()
-                                elif prev_sp is None or new_sp[0] != prev_sp[0]:
-                                    self._spoken_labels.pointer_focus_changed(
-                                        new_sp[0], new_sp[1], now
-                                    )
-                            except Exception:
-                                pass
+                                try:
+                                    now = time.monotonic()
+                                    prev_sp = self._speakable_for_target(prev_target)
+                                    new_sp = self._speakable_for_target(new_target)
+                                    if new_sp is None:
+                                        self._spoken_labels.pointer_focus_changed(None, None, now)
+                                        self._spoken_labels.clear_pointer_focus()
+                                    elif prev_sp is None or new_sp[0] != prev_sp[0]:
+                                        self._spoken_labels.pointer_focus_changed(
+                                            new_sp[0], new_sp[1], now
+                                        )
+                                except Exception:
+                                    pass
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         _needs_redraw = True
                         if self._mode == "parent_panel":

@@ -158,52 +158,9 @@ def draw_discover_button(
     time: float = 0.0,
     enabled: bool = True,
 ) -> pygame.Rect:
-    """Large lens/magnifier button for 'discover more' and return its hit rect. Direct draw."""
+    """Discover button is retired from standard page presentation."""
+    return pygame.Rect(0, 0, 0, 0)
 
-    cx, cy = center
-    bucket = _bucket(time * 0.95, enabled and active)
-    base_r = DISCOVER_RADIUS + (bucket // 2 if enabled and active else 0)
-    hit_r = DISCOVER_HIT_RADIUS
-    hit = pygame.Rect(cx - hit_r, cy - hit_r, hit_r * 2, hit_r * 2)
-
-    if active and enabled:
-        pygame.draw.circle(
-            surface,
-            (255, 220, 95, 42 + bucket * 9),
-            (cx, cy),
-            base_r + 11,
-            width=5,
-        )
-
-    # Shadow as direct ellipse (no extra surface)
-    pygame.draw.circle(surface, (40, 28, 20, 46), (cx + 2, cy + 4), base_r)
-
-    fill = (255, 248, 232) if enabled else (232, 230, 222)
-    edge = (104, 78, 57) if enabled else (148, 146, 152)
-    pygame.draw.circle(surface, fill, center, base_r)
-    pygame.draw.circle(surface, edge, center, base_r, 4)
-    pygame.draw.circle(surface, edge, center, base_r - 8, 2)
-    pygame.draw.arc(
-        surface,
-        (255, 255, 250),
-        pygame.Rect(cx - base_r + 7, cy - base_r + 7, (base_r - 7) * 2, (base_r - 7) * 2),
-        0.6,
-        2.5,
-        3,
-    )
-    if active and enabled and bucket == 3:
-        pygame.draw.circle(surface, (255, 236, 150), (cx + 8, cy - 8), 3)
-    handle_start = (cx + int(base_r * 0.62), cy + int(base_r * 0.62))
-    handle_end = (cx + int(base_r * 0.98), cy + int(base_r * 0.98))
-    pygame.draw.line(surface, edge, handle_start, handle_end, 6)
-    pygame.draw.circle(surface, edge, handle_end, 4)
-
-    if not enabled:
-        s = pygame.Surface((base_r * 2, base_r * 2), pygame.SRCALPHA)
-        pygame.draw.circle(s, (255, 255, 255, 92), (base_r, base_r), base_r)
-        surface.blit(s, (cx - base_r, cy - base_r))
-
-    return hit
 
 
 # ---------------------------------------------------------------------------

@@ -41,9 +41,17 @@ def locale_candidates(locale: str) -> tuple[LocaleTag, ...]:
     return tuple(candidates)
 
 
+_TITLE_AUDIO_CACHE: BoundedCache[tuple[str, str], Path | None] = BoundedCache(128)
+
+
 def activity_title_audio(manifest: ActivityManifest, locale: str) -> Path | None:
     """Resolve one Activity's localized launcher-title audio cue, if supplied."""
 
+    cache_key = (str(manifest.root.resolve()), locale)
+    if cache_key in _TITLE_AUDIO_CACHE:
+        return _TITLE_AUDIO_CACHE[cache_key]
+
+    resolved: Path | None = None
     for candidate in locale_candidates(locale):
         bundle_path = manifest.root / "locales" / f"{candidate.value}.json"
         if not bundle_path.is_file():
@@ -55,8 +63,11 @@ def activity_title_audio(manifest: ActivityManifest, locale: str) -> Path | None
         except (LocalizationError, OSError):
             continue
         if cue is not None and cue.path.is_file():
-            return cue.path
-    return None
+            resolved = cue.path
+            break
+
+    _TITLE_AUDIO_CACHE[cache_key] = resolved
+    return resolved
 
 
 def collection_title_audio(root: Path, collection_id: str, locale: str) -> Path | None:

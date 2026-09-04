@@ -59,12 +59,12 @@ DEPTH_RADIUS = 65
 
 # Chunky Cockpit Buttons Geometry: (x, y, w, h)
 BUTTON_RECTS = {
-    # Lower console primary instrument buttons (tactile action buttons)
-    "light": pygame.Rect(228, 446, 100, 88),
-    "sonar": pygame.Rect(351, 446, 100, 88),
-    "action": pygame.Rect(472, 447, 80, 86),  # Central emergency beacon button
-    "bubbles": pygame.Rect(573, 446, 100, 88),
-    "horn": pygame.Rect(696, 446, 100, 88),
+    # Lower console primary instrument buttons (tactile action buttons lowered into console)
+    "light": pygame.Rect(222, 464, 102, 86),
+    "sonar": pygame.Rect(344, 464, 102, 86),
+    "action": pygame.Rect(466, 464, 92, 86),  # Central emergency siren / alarm
+    "bubbles": pygame.Rect(578, 464, 102, 86),
+    "horn": pygame.Rect(700, 464, 102, 86),
     # Left steering controls (chunky turn arrow buttons under the ship wheel)
     "steer_left": pygame.Rect(45, 335, 80, 56),
     "steer_right": pygame.Rect(145, 335, 80, 56),
@@ -386,9 +386,10 @@ class CockpitPresenter:
         if is_encounter:
             action_color = (int(255), int(60 + pulse * 140), int(40))
         else:
-            action_color = (220, 55, 55)
+            action_color = (220, 50, 50)
 
-        self._draw_beacon_button(surface, action_rect, action_color, is_encounter, action_hover)
+        action_label = resources.text("btn.action")
+        self._draw_beacon_button(surface, action_rect, action_color, is_encounter, action_hover, action_label)
 
     def _draw_tactile_button(
         self,
@@ -540,39 +541,59 @@ class CockpitPresenter:
         rect: pygame.Rect,
         color: Tuple[int, int, int],
         flashing: bool,
-        hover: bool
+        hover: bool,
+        label: str = "Allarme"
     ) -> None:
-        cx, cy = rect.centerx, rect.centery
-        radius = rect.width // 2
+        cx = rect.centerx
+        cy = rect.top + 34
+        radius = 26
 
-        # Sturdy metallic bezel ring
-        pygame.draw.circle(surface, (18, 24, 32), (cx, cy + 4), radius + 5)
-        pygame.draw.circle(surface, (100, 105, 115), (cx, cy), radius + 4, 3)
+        # Shadow
+        shadow_rect = rect.copy()
+        shadow_rect.y += 4
+        pygame.draw.rect(surface, (15, 20, 28), shadow_rect, border_radius=14)
 
         if flashing:
-            aura_surf = pygame.Surface((rect.width + 50, rect.height + 50), pygame.SRCALPHA)
-            pygame.draw.circle(aura_surf, (color[0], color[1], color[2], 100), (radius + 25, radius + 25), radius + 20)
-            surface.blit(aura_surf, (rect.x - 25, rect.y - 25))
+            aura_surf = pygame.Surface((rect.width + 24, rect.height + 24), pygame.SRCALPHA)
+            pygame.draw.rect(aura_surf, (color[0], color[1], color[2], 120), (0, 0, rect.width + 24, rect.height + 24), border_radius=18)
+            surface.blit(aura_surf, (rect.x - 12, rect.y - 12))
 
-        btn_y = cy + (2 if hover else 0)
+        btn_rect = rect.copy()
+        if hover:
+            btn_rect.y += 2
+            cy += 2
+
+        # Industrial dark plate base
+        pygame.draw.rect(surface, (45, 25, 28), btn_rect, border_radius=14)
+        pygame.draw.rect(surface, (200, 70, 70) if flashing else (130, 60, 60), btn_rect, width=2, border_radius=14)
+
+        # Heavy metallic bezel ring around dome
+        pygame.draw.circle(surface, (20, 24, 30), (cx, cy + 2), radius + 4)
+        pygame.draw.circle(surface, (180, 140, 60), (cx, cy), radius + 3, 2)
+
         # Deep red base ring
-        pygame.draw.circle(surface, (140, 25, 25), (cx, btn_y), radius)
-        # Red dome
-        pygame.draw.circle(surface, color, (cx, btn_y), radius - 3)
+        pygame.draw.circle(surface, (150, 25, 25), (cx, cy), radius)
+        # Red beacon dome
+        pygame.draw.circle(surface, color, (cx, cy), radius - 3)
         # Inner glossy rim
-        pygame.draw.circle(surface, (255, 130, 130), (cx, btn_y), radius - 3, 2)
-        # Subtle top crescent highlight
-        pygame.draw.arc(surface, (255, 255, 255, 200), (cx - radius + 8, btn_y - radius + 6, (radius - 8) * 2, (radius - 8) * 2), 0.7, 2.44, 3)
+        pygame.draw.circle(surface, (255, 140, 140), (cx, cy), radius - 3, 2)
 
-        # Bold white alert star & exclamation in beacon center
-        star_col = (255, 255, 255)
-        s = 11
-        pygame.draw.line(surface, star_col, (cx - s, btn_y), (cx + s, btn_y), 4)
-        pygame.draw.line(surface, star_col, (cx, btn_y - s), (cx, btn_y + s), 4)
-        s_diag = 7
-        pygame.draw.line(surface, star_col, (cx - s_diag, btn_y - s_diag), (cx + s_diag, btn_y + s_diag), 3)
-        pygame.draw.line(surface, star_col, (cx - s_diag, btn_y + s_diag), (cx + s_diag, btn_y - s_diag), 3)
-        pygame.draw.circle(surface, star_col, (cx, btn_y), 5)
+        # 3 Vertical Fresnel prism ridges on siren dome
+        pygame.draw.line(surface, (255, 210, 210), (cx - 9, cy - radius + 7), (cx - 9, cy + radius - 7), 2)
+        pygame.draw.line(surface, (255, 255, 255), (cx, cy - radius + 4), (cx, cy + radius - 4), 2)
+        pygame.draw.line(surface, (255, 210, 210), (cx + 9, cy - radius + 7), (cx + 9, cy + radius - 7), 2)
+
+        # Brass cage / guard ribs over dome
+        pygame.draw.arc(surface, (220, 180, 80), (cx - radius + 3, cy - radius + 3, (radius - 3) * 2, (radius - 3) * 2), 0.5, 2.64, 2)
+        pygame.draw.line(surface, (220, 180, 80), (cx, cy - radius + 2), (cx, cy + radius - 2), 2)
+
+        # Top glass specular glint
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 8, cy - 8), 3)
+
+        # Bold label at bottom of button
+        txt_col = (255, 245, 245) if flashing else (230, 215, 215)
+        txt_surf = self.typography.render(label, FontRole.CONTROL, 11, txt_col)
+        surface.blit(txt_surf, (btn_rect.centerx - txt_surf.get_width() // 2, btn_rect.bottom - txt_surf.get_height() - 5))
 
     def _render_discovery_hud(
         self,
@@ -588,8 +609,8 @@ class CockpitPresenter:
         else:
             b_name = resources.text("biome.abyss")
 
-        badge_txt = self.typography.render(b_name, FontRole.TITLE, 18, (240, 240, 240))
-        surface.blit(badge_txt, (REFERENCE_WIDTH - badge_txt.get_width() - 30, 25))
+        badge_txt = self.typography.render(b_name, FontRole.TITLE, 17, (240, 240, 240))
+        surface.blit(badge_txt, (REFERENCE_WIDTH - badge_txt.get_width() - 30, 22))
 
         # 1. Encounter prompt banner on top-center if encounter active
         if model.encounter.active_type != EncounterType.NONE and not model.encounter.solved:
@@ -599,37 +620,100 @@ class CockpitPresenter:
             else:
                 prompt_txt = resources.text("encounter.shark.hint")
 
-            banner_surf = self.typography.render(prompt_txt, FontRole.TITLE, 16, (255, 235, 100))
-            bx = REFERENCE_WIDTH // 2 - banner_surf.get_width() // 2
-            bg_rect = pygame.Rect(bx - 12, 18, banner_surf.get_width() + 24, banner_surf.get_height() + 8)
-            pygame.draw.rect(surface, (15, 20, 25, 220), bg_rect, border_radius=8)
-            surface.blit(banner_surf, (bx, 22))
+            self._draw_hud_banner(
+                surface,
+                header="INCONTRO RAVVICINATO",
+                body=prompt_txt,
+                border_color=(255, 180, 50, 220),
+                bg_color=(35, 20, 10, 235),
+                text_color=(255, 235, 110),
+            )
 
         # 2. Captain's Order banner if active and no creature encounter
         elif model.current_order.active:
             ord_state = model.current_order
             if ord_state.solved:
                 order_txt = resources.text("order.compliment")
-                txt_col = (110, 255, 140)
+                txt_col = (120, 255, 150)
+                hdr = "ORDINE COMPLETATO!"
             else:
                 order_txt = resources.text(ord_state.prompt_text_key)
-                txt_col = (255, 245, 120)
+                txt_col = (255, 245, 130)
+                hdr = "ORDINE DEL CAPITANO"
 
-            banner_surf = self.typography.render(order_txt, FontRole.TITLE, 16, txt_col)
-            bx = REFERENCE_WIDTH // 2 - banner_surf.get_width() // 2
-            bg_rect = pygame.Rect(bx - 14, 18, banner_surf.get_width() + 28, banner_surf.get_height() + 8)
-            pygame.draw.rect(surface, (20, 28, 38, 230), bg_rect, border_radius=8)
-            pygame.draw.rect(surface, (70, 140, 200, 180), bg_rect, width=2, border_radius=8)
-            surface.blit(banner_surf, (bx, 22))
+            self._draw_hud_banner(
+                surface,
+                header=hdr,
+                body=order_txt,
+                border_color=(240, 200, 60, 220),
+                bg_color=(18, 28, 42, 235),
+                text_color=txt_col,
+            )
 
         # 3. Educational Fact banner when a marine species fact is active
         elif model.active_fact.display_timer > 0:
             fact_key = model.active_fact.text_key
             fact_txt = resources.text(fact_key)
             if fact_txt != fact_key:
-                banner_surf = self.typography.render(fact_txt, FontRole.TITLE, 15, (230, 245, 255))
-                bx = REFERENCE_WIDTH // 2 - banner_surf.get_width() // 2
-                bg_rect = pygame.Rect(bx - 14, 18, banner_surf.get_width() + 28, banner_surf.get_height() + 8)
-                pygame.draw.rect(surface, (15, 30, 45, 230), bg_rect, border_radius=8)
-                pygame.draw.rect(surface, (60, 170, 220, 180), bg_rect, width=2, border_radius=8)
-                surface.blit(banner_surf, (bx, 22))
+                species_name = resources.text(f"creature.{model.active_fact.species}")
+                hdr = f"CURIOSITA: {species_name.upper()}" if species_name != f"creature.{model.active_fact.species}" else "CURIOSITA MARINA"
+                self._draw_hud_banner(
+                    surface,
+                    header=hdr,
+                    body=fact_txt,
+                    border_color=(80, 200, 245, 220),
+                    bg_color=(12, 26, 44, 235),
+                    text_color=(240, 250, 255),
+                )
+
+    def _draw_hud_banner(
+        self,
+        surface: pygame.Surface,
+        header: str,
+        body: str,
+        border_color: Tuple[int, int, int, int],
+        bg_color: Tuple[int, int, int, int],
+        text_color: Tuple[int, int, int]
+    ) -> None:
+        hdr_surf = self.typography.render(header, FontRole.SECONDARY, 11, (border_color[0], border_color[1], border_color[2]))
+
+        # Wrap body text cleanly if long (max ~48 chars per line)
+        words = body.split()
+        lines: List[str] = []
+        cur_line: List[str] = []
+        cur_len = 0
+        for w in words:
+            if cur_len + len(w) + 1 > 48 and cur_line:
+                lines.append(" ".join(cur_line))
+                cur_line = [w]
+                cur_len = len(w)
+            else:
+                cur_line.append(w)
+                cur_len += len(w) + 1
+        if cur_line:
+            lines.append(" ".join(cur_line))
+
+        body_surfs = [self.typography.render(line, FontRole.TITLE, 14, text_color) for line in lines[:2]]
+        max_body_w = max((bs.get_width() for bs in body_surfs), default=200)
+        card_w = min(600, max(hdr_surf.get_width() + 40, max_body_w + 36))
+        card_h = 16 + sum(bs.get_height() + 2 for bs in body_surfs) + hdr_surf.get_height()
+
+        bx = REFERENCE_WIDTH // 2 - card_w // 2
+        by = 12
+
+        card_surf = pygame.Surface((card_w, card_h), pygame.SRCALPHA)
+        pygame.draw.rect(card_surf, bg_color, (0, 0, card_w, card_h), border_radius=14)
+        pygame.draw.rect(card_surf, border_color, (0, 0, card_w, card_h), width=2, border_radius=14)
+        surface.blit(card_surf, (bx, by))
+
+        hx = REFERENCE_WIDTH // 2 - hdr_surf.get_width() // 2
+        hy = by + 5
+        surface.blit(hdr_surf, (hx, hy))
+        accent_col = (border_color[0], border_color[1], border_color[2])
+        pygame.draw.circle(surface, accent_col, (hx - 10, hy + hdr_surf.get_height() // 2), 3)
+        pygame.draw.circle(surface, accent_col, (hx + hdr_surf.get_width() + 10, hy + hdr_surf.get_height() // 2), 3)
+
+        y_offset = by + 5 + hdr_surf.get_height() + 3
+        for bs in body_surfs:
+            surface.blit(bs, (REFERENCE_WIDTH // 2 - bs.get_width() // 2, y_offset))
+            y_offset += bs.get_height() + 2

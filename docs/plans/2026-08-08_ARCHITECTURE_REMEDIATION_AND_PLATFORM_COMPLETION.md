@@ -1772,3 +1772,26 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Verification:
   - Unit tests: 97/97 encyclopedia tests and 401/401 activity tests PASS.
   - Headless simulator 19-stage inspection tour verified visually with clean frames and zero collisions.
+
+## 2026-09-04 — Enciclopedia & Sottomarino Giramondo: Visual & Interaction Remediation
+
+- Addressed urgent user feedback on Enciclopedia and Sottomarino Giramondo following the strict local simulator -> test verification -> Acer deployment workflow:
+  1. **Enciclopedia di Greia:**
+     - Removed `paperGrain` SVG filter that caused CairoSVG to render a murky dark tint over `home_discovery_book` and `animals_field_table`. Rebuilt bright, warm, ivory storybook visual assets.
+     - Elevated the title text "Cosa vuoi scoprire?" in `enciclopedia_presentation.py` to `(512, 50)`, removing awkward collisions with the top book border.
+     - Retired the redundant, ugly center-bottom lens button from all screens in `enciclopedia_controls.py`.
+     - Completely redesigned the elephant in `pages/elephant.py` and on the animals field card from a deformed shape into a cute, cuddly storybook elephant with pink inner ears, toenails, and water pool.
+  2. **Sottomarino Giramondo:**
+     - Lowered bottom instrument controls by ~18px to `y=464` in `sub_cockpit_view.py`, aligning them flush with the radar and depth gauge bezels.
+     - Populated the viewport with 26 active marine entities with inward velocities in `sub_model.py`, ensuring an active and lively porthole scene.
+     - Overhauled the central red emergency button into a maritime Fresnel siren dome with a brass cage and prominent "ALLARME" / "ALARM" label.
+     - Fixed encounter resolution bug in `sub_app.py`: `bubbles` (octopus), `light` (shark), `horn`, and `action` now all reliably resolve creature encounters.
+     - Overhauled octopus encounter in `sub_art.py` with 8 thick, dynamic tentacles wrapping the porthole frame with suction cups pressed on the glass.
+     - Voiced educational facts aloud using generated Leo TTS audio cues (`sub_fact_*_1.wav`) with audio receipts, rendered in centered high-contrast HUD cards.
+     - Implemented intelligent Captain's orders filtering to prevent illogical commands (e.g. "ahead" when already full forward).
+  3. **Verification & Device Evidence:**
+     - Unit tests: 87/87 enciclopedia tests, 6/6 sottomarino tests (`tests/test_activity_sottomarino.py`), 4/4 audit tests pass.
+     - Headless simulator verified clean lifecycle and Home navigation return (`rc=0`).
+     - Deployed both activities to target Acer Aspire One (`192.168.68.104`) with `--replace-system`.
+     - Live on-device screenshots verified visual appearance, aligned submarine console, cute elephant, populated ocean, ADR 0019 system navigation pill, and clean return to Shell.
+

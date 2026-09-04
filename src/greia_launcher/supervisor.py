@@ -110,7 +110,7 @@ class ActivitySupervisor:
         *,
         sandbox_executable: Path | None = None,
         require_sandbox: bool | None = None,
-        ready_timeout_seconds: float = 10.0,
+        ready_timeout_seconds: float = 15.0,
         graceful_stop_seconds: float = 2.0,
         runtime_manager: RuntimeManager | None = None,
         runtime_adapters: Mapping[str, RuntimeLaunchAdapter] | None = None,
