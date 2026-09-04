@@ -193,11 +193,32 @@ class PolicyEnforcedAdaptiveActivityDiscoveryMixin(
     ActivityPolicyEnforcementMixin,
     AdaptiveActivityDiscoveryMixin,
 ):
-    """Rich child discovery UI with mandatory fail-closed Parent policy."""
+    """Rich child discovery UI with mandatory fail-closed Parent policy.
+
+    Adaptive sub-Collection hysteresis is launcher-owned presentation state. An
+    older persisted ``subdivided_collections`` value is accepted once as a
+    compatibility seed when a profile becomes active, but the child Shell never
+    writes presentation state back into the Parent policy file. This keeps a
+    concurrent Parent visibility/age/difficulty mutation from being overwritten
+    by a stale Shell policy snapshot.
+    """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._adaptive_subdivision_state: frozenset[str] | None = None
+
+    def _activate_profile(self, profile: Any, pygame: Any) -> None:
+        self._adaptive_subdivision_state = None
+        super()._activate_profile(profile, pygame)
+
+    def _logout(self, pygame: Any) -> None:
+        self._adaptive_subdivision_state = None
+        super()._logout(pygame)
 
     def _reload_effective_catalogue(self) -> None:
         context = self._active_profile
         if context is None:
+            self._adaptive_subdivision_state = None
             self._catalogue = ActivityCatalogue.from_activities(self._activities)
             self._activity_policy_error = False
             return
@@ -214,29 +235,21 @@ class PolicyEnforcedAdaptiveActivityDiscoveryMixin(
             challenge_preference=context.profile.challenge_preference,
             policy=policy,
         )
+        if self._adaptive_subdivision_state is None:
+            # Compatibility only: older launcher versions stored presentation
+            # hysteresis in the Parent policy object. Seed from it once, then
+            # keep ownership in-memory for the active Shell/profile lifetime.
+            self._adaptive_subdivision_state = frozenset(
+                policy.subdivided_collections
+            )
         catalogue = ActivityCatalogue.from_activities(
             effective,
             locale=self._active_locale,
-            previously_subdivided=policy.subdivided_collections,
+            previously_subdivided=self._adaptive_subdivision_state,
         )
-
-        # Preserve the existing adaptive-navigation hysteresis, but keep it
-        # explicitly below the Parent visibility authority. Failure to persist
-        # this presentation-only state may degrade grouping, never visibility.
-        desired_state = frozenset(catalogue.subdivided_collection_ids)
-        current_state = frozenset(policy.subdivided_collections)
-        if desired_state != current_state:
-            updated = policy
-            for collection_id in current_state - desired_state:
-                updated = updated.with_subdivision_state(collection_id, False)
-            for collection_id in desired_state - current_state:
-                updated = updated.with_subdivision_state(collection_id, True)
-            try:
-                store.write(updated)
-                policy = updated
-                policy_token = self._policy_file_token_for(store)
-            except (ActivityDiscoveryError, OSError):
-                self._catalogue_error = True
+        self._adaptive_subdivision_state = frozenset(
+            catalogue.subdivided_collection_ids
+        )
 
         self._apply_policy_catalogue(
             store=store,
