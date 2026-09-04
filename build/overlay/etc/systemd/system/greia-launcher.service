@@ -4,6 +4,12 @@ After=local-fs.target systemd-tmpfiles-setup.service systemd-logind.service grei
 Requires=greia-first-boot.service
 Wants=greia-parent.service
 Conflicts=getty@tty1.service
+# Fail-closed existence gate for the volatile runtime roots (D2/P1): PID 1
+# evaluates these natively without a fork. Assert (not Condition) so a missing
+# root fails the job behind the branded cover instead of silently skipping
+# into an X launch. systemd-tmpfiles owns creation every boot.
+AssertPathIsDirectory=/run/greia-os
+AssertPathIsDirectory=/run/greia-hardware
 StartLimitIntervalSec=30
 StartLimitBurst=8
 

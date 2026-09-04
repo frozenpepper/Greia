@@ -10,12 +10,9 @@ greia_boot_marker launcher_execstartpre_vt_begin || true
 # cannot race ownership. Persistent state (child home, account/group
 # membership) is image-static plus the versioned first-boot migration — the
 # launcher performs no account mutation on the start path.
-for runtime_root in /run/greia-os /run/greia-hardware; do
-  if [ ! -d "$runtime_root" ]; then
-    echo "Missing Greia runtime root: $runtime_root (systemd-tmpfiles setup failed)" >&2
-    exit 1
-  fi
-done
+# Existence is asserted natively by the unit (AssertPathIsDirectory=...):
+# the former shell loop ("Missing Greia runtime root: ...", "[ ! -d ... ]")
+# was removed here so PID 1 fails the job closed without a fork.
 
 # Audio state is owned exclusively by the hardware watcher
 # (SystemControlService over the shared system-controls store, applied through
