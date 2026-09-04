@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +12,7 @@ from greia_launcher.activity_policy_presentation import (
     DirectActivityPolicyDiscoveryMixin,
     PolicyEnforcedAdaptiveActivityDiscoveryMixin,
 )
+from greia_launcher.adaptive_discovery_presentation import AdaptiveActivityDiscoveryMixin
 from greia_launcher.catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue
 from greia_launcher.child_shell import GreiaChildShell
 from greia_launcher.trusted_presentation import TrustedGreiaLauncherPresentation
@@ -140,6 +142,49 @@ class LauncherActivityPolicySafetyTests(unittest.TestCase):
                 DirectActivityPolicyDiscoveryMixin,
             )
         )
+
+    def test_adaptive_presentation_owns_no_parent_policy_authority(self) -> None:
+        module = inspect.getmodule(AdaptiveActivityDiscoveryMixin)
+        self.assertIsNotNone(module)
+        assert module is not None
+        for name in (
+            "ActivityDiscoveryError",
+            "ActivityDiscoveryPolicy",
+            "ActivityDiscoveryPolicyStore",
+            "ActivityDiscoveryService",
+        ):
+            with self.subTest(imported_authority=name):
+                self.assertNotIn(name, vars(module))
+
+        for method in (
+            "_reload_effective_catalogue",
+            "_policy_file_token",
+            "_rescan_if_due",
+            "_rescan_activities",
+            "_rescan_profiles",
+        ):
+            with self.subTest(adaptive_method=method):
+                self.assertNotIn(method, AdaptiveActivityDiscoveryMixin.__dict__)
+
+        for method in (
+            "_activate_profile",
+            "_logout",
+            "_rescan_if_due",
+            "_rescan_activities",
+            "_rescan_profiles",
+        ):
+            with self.subTest(policy_lifecycle=method):
+                self.assertIn(method, ActivityPolicyEnforcementMixin.__dict__)
+
+        for method in (
+            "_activate_profile",
+            "_logout",
+            "_rescan_if_due",
+            "_rescan_activities",
+            "_rescan_profiles",
+        ):
+            with self.subTest(direct_duplicate=method):
+                self.assertNotIn(method, DirectActivityPolicyDiscoveryMixin.__dict__)
 
     def test_parent_always_hide_filters_both_launcher_paths(self) -> None:
         first = _activity(1, age_min=3, age_max=8)
