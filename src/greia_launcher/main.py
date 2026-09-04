@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from greia_platform.activity_tree_cleanup import scrub_activity_tree
 from greia_platform.boot_logo import canonical_boot_logo as _canonical_boot_logo
 from greia_platform.boot_markers import emit_boot_marker
 from greia_platform.activities import (
@@ -162,7 +161,10 @@ class LauncherApplication:
         emit_boot_marker("launcher_construct_begin")
         try:
             self.paths = LauncherPaths.from_environment()
-            scrub_activity_tree(self.paths.activities)
+            # 2A: no in-process Activity-tree scrub on the boot path. Built-in
+            # hygiene is owned by the image build and parent/developer hygiene
+            # by their activation transactions; the scrub module remains only
+            # as the maintenance/recovery command (see scrub-activity-trees).
             self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
             emit_boot_marker("activity_sources_begin")
             try:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import stat
 import tempfile
 import threading
 import time
@@ -245,6 +246,194 @@ class ActivityPackageServiceTests(unittest.TestCase):
             with self.assertRaisesRegex(ActivityPackageError, "archive root"):
                 service.install_archive(archive)
             self.assertFalse(any(service.active_root.iterdir()))
+
+
+def _copy_with_extra_files(
+    source: Path, destination: Path, extra: dict[str, bytes]
+) -> None:
+    import shutil
+
+    shutil.copytree(source, destination, symlinks=True)
+    for relative, content in extra.items():
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+
+
+class ActivityPackageActivationBoundaryTests(unittest.TestCase):
+    """2A relocated checks: staged hygiene + validation inside activation."""
+
+    def test_staged_host_noise_is_sanitized_before_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            staged_source = root / "noisy-painting"
+            _copy_with_extra_files(
+                PAINTING,
+                staged_source,
+                {
+                    # Registry-forbidden, scrub-curated: fails validation
+                    # unless the in-transaction scrub runs first.
+                    "Thumbs.db": b"",
+                    # Registry-allowed noise: must not ship into the
+                    # installed tree even though validation would pass it.
+                    "notes.txt~": b"draft",
+                    "assets/draft.swp": b"swap",
+                },
+            )
+            archive = root / "noisy.greiaactivity"
+            write_activity_archive(staged_source, archive)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            receipt = service.install_archive(archive)
+            active = service.active_root / receipt.activity_id
+            self.assertFalse((active / "Thumbs.db").exists())
+            self.assertFalse((active / "notes.txt~").exists())
+            self.assertFalse((active / "assets" / "draft.swp").exists())
+            self.assertTrue((active / "activity.toml").is_file())
+
+    def test_staged_scrub_is_load_bearing_positive_control(self) -> None:
+        """Break -> RED -> restore -> GREEN for the in-transaction scrub.
+
+        With the scrub disabled the same noisy package must fail validation
+        (Thumbs.db is forbidden); with it enabled the install succeeds. This
+        proves the GREEN above comes from the relocated scrub, not from an
+        insensitive validator.
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            staged_source = root / "noisy-painting"
+            _copy_with_extra_files(
+                PAINTING, staged_source, {"Thumbs.db": b""}
+            )
+            archive = root / "noisy.greiaactivity"
+            write_activity_archive(staged_source, archive)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            from greia_platform.activity_tree_cleanup import ScrubResult
+
+            with mock.patch(
+                "greia_platform.activity_packages.scrub_activity_tree",
+                return_value=ScrubResult(0, 0, 0, 0),
+            ):
+                with self.assertRaisesRegex(ActivityPackageError, "Thumbs.db"):
+                    service.install_archive(archive)
+            self.assertFalse(any(service.active_root.iterdir()))
+            receipt = service.install_archive(archive)
+            self.assertTrue(
+                (service.active_root / receipt.activity_id / "activity.toml").is_file()
+            )
+
+    def test_symlink_entry_is_rejected_at_activation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "link.greiaactivity"
+            write_activity_archive(PAINTING, archive)
+            with zipfile.ZipFile(archive, "a") as package:
+                info = zipfile.ZipInfo("evil-link")
+                info.create_system = 3
+                info.external_attr = (stat.S_IFLNK | 0o777) << 16
+                package.writestr(info, "nowhere-target")
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            with self.assertRaisesRegex(ActivityPackageError, "symlink"):
+                service.install_archive(archive)
+            self.assertFalse(any(service.active_root.iterdir()))
+
+    def test_forbidden_suffix_is_rejected_at_activation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            staged_source = root / "native-painting"
+            _copy_with_extra_files(
+                PAINTING, staged_source, {"payload/native.so": b"\x7fELF"}
+            )
+            archive = root / "native.greiaactivity"
+            write_activity_archive(staged_source, archive)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            with self.assertRaisesRegex(
+                ActivityPackageError, "forbidden package suffix"
+            ):
+                service.install_archive(archive)
+            self.assertFalse(any(service.active_root.iterdir()))
+
+    def test_executable_file_is_rejected_by_activation_validation(self) -> None:
+        import shutil
+
+        from greia_platform.activities import ActivityValidationError
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            service._ensure_roots()
+            stage_parent = root / "manual-stage"
+            package_root = stage_parent / "package"
+            shutil.copytree(PAINTING, package_root, symlinks=True)
+            # Archive extraction normalizes modes to 0o644 by design, so an
+            # executable bit can only reach the validator through a staged
+            # tree such as this one; the activation validator must refuse it.
+            target = package_root / "main.py"
+            target.chmod(0o755)
+            with self.assertRaisesRegex(
+                ActivityValidationError, "executable activity files are forbidden"
+            ):
+                service._validate_staged(stage_parent, package_root)
+
+    def test_failed_package_preserves_the_active_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            archive = root / "painting.greiaactivity"
+            write_activity_archive(PAINTING, archive)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            good = service.install_archive(archive)
+            active = service.active_root / good.activity_id
+            before = {
+                path.relative_to(active): path.read_bytes()
+                for path in sorted(active.rglob("*"))
+                if path.is_file()
+            }
+            receipt_before = service._receipt_path(good.activity_id).read_bytes()
+
+            bad = root / "bad.greiaactivity"
+            write_activity_archive(
+                PAINTING,
+                bad,
+                manifest_transform=lambda text: text.replace(
+                    'icon = "package:assets/icon.png"',
+                    'icon = "package:assets/missing.png"',
+                ),
+            )
+            with self.assertRaises(ActivityPackageError):
+                service.install_archive(bad)
+
+            after = {
+                path.relative_to(active): path.read_bytes()
+                for path in sorted(active.rglob("*"))
+                if path.is_file()
+            }
+            self.assertEqual(before, after)
+            self.assertEqual(
+                service._receipt_path(good.activity_id).read_bytes(), receipt_before
+            )
 
 
 if __name__ == "__main__":

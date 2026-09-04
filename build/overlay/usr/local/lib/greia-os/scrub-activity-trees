@@ -1,30 +1,43 @@
 #!/bin/sh
-# Privileged installed-OS resilience boundary for Activity trees.
+# Manual maintenance/recovery command for Activity trees (NOT part of normal boot).
 #
-# systemd runs this helper with the "+" ExecStartPre prefix before dropping to
-# greiakid for the launcher. The Python scrub removes only curated regenerable
-# host/editor/cache noise. Any helper failure is deliberately fail-open: Activity
-# discovery and runtime enrichment isolation remain the authoritative fallback,
-# so cleanup itself can never create a launcher restart loop.
+# 2A trust boundary: recurring launcher-start scrubbing was relocated to its
+# owning boundaries (image build for built-ins, the Parent activation
+# transaction for parent packages, deploy-time validation for developer
+# packages), so no systemd unit runs this helper on the normal boot path.
+# Run it explicitly as root only when recovering a machine whose Activity
+# roots are suspected to carry regenerable host/editor/cache noise:
+#
+#   sudo /usr/local/lib/greia-os/scrub-activity-trees [ROOT...]
+#
+# With no arguments every installed Activity root is sanitized; with
+# arguments only the listed roots are. The Python scrub removes only curated
+# regenerable noise and never repairs validation: broken packages stay broken
+# and remain isolated by Activity discovery. Detailed per-root results go to
+# the system log; this wrapper stays fail-open (exit 0) so a manual recovery
+# attempt itself never becomes a new failure.
+#
+# Location note: this file lives at
+# /usr/local/lib/greia-os/scrub-activity-trees on installed images.
 
 set -u
 
 greia_boot_marker() { printf 'GREIA_BOOT event=%s\n' "$1" >&2; }
 
-greia_boot_marker launcher_execstartpre_scrub_begin || true
+greia_boot_marker launcher_maintenance_scrub_begin || true
 
 /usr/bin/env \
   PYTHONPATH=/opt/greia-os/src \
   PYTHONNOUSERSITE=1 \
   PYTHONDONTWRITEBYTECODE=1 \
-  /usr/bin/python3 -m greia_platform.activity_tree_cleanup
+  /usr/bin/python3 -m greia_platform.activity_tree_cleanup "$@"
 status=$?
 
-greia_boot_marker launcher_execstartpre_scrub_end || true
+greia_boot_marker launcher_maintenance_scrub_end || true
 
 if [ "$status" -ne 0 ]; then
   /usr/bin/logger -t greia-activity-tree-cleanup \
-    "pre-launch Activity cleanup failed with status $status; continuing launcher startup" \
+    "manual Activity maintenance scrub failed with status $status" \
     2>/dev/null || true
 fi
 

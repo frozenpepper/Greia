@@ -166,9 +166,11 @@ class InstalledActivityResilienceTests(unittest.TestCase):
         scrub = "ExecStartPre=+/usr/local/lib/greia-os/scrub-activity-trees"
         prepare = "ExecStartPre=+/usr/local/lib/greia-os/prepare-launcher-vt"
         self.assertIn("User=greiakid", service)
-        self.assertIn(scrub, service)
+        # 2A relocation authority: recurring launcher-start scrub relocated to
+        # owning boundaries (build-time R1 proof, in-transaction R3 staged
+        # scrub, mode-gated R2); normal launcher path must not scrub.
+        self.assertNotIn(scrub, service)
         self.assertIn(prepare, service)
-        self.assertLess(service.index(scrub), service.index(prepare))
 
     def test_installed_scrub_wrapper_is_explicitly_fail_open(self) -> None:
         wrapper = (

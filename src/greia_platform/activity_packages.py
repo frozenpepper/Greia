@@ -21,6 +21,7 @@ from .activities import (
     package_digest,
 )
 from .activity_assets import package_icon_path
+from .activity_tree_cleanup import scrub_activity_tree
 from .trust import ActivitySource, PackageTrust
 
 
@@ -212,6 +213,17 @@ class ActivityPackageService:
         activation: Path | None = None
         try:
             self._extract_bounded_archive(archive_path, package_root)
+            # 2A trust boundary: staged-tree hygiene lives inside this
+            # activation transaction, not in a recurring boot scrub. Remove
+            # only curated regenerable host/editor noise before registry
+            # validation so noisy-but-valid packages install while symlinks,
+            # executable bits and forbidden content still fail validation
+            # below and the previous active set stays untouched.
+            staged_scrub = scrub_activity_tree(package_root)
+            if staged_scrub.failed_removals:
+                raise ActivityPackageError(
+                    "staged Activity package could not be sanitized"
+                )
             if not (package_root / "activity.toml").is_file():
                 raise ActivityPackageError(
                     "Activity package must contain activity.toml at archive root"

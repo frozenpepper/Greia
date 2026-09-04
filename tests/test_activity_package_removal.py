@@ -77,6 +77,61 @@ class ActivityPackageRemovalTests(unittest.TestCase):
         self.assertFalse(disabled["activities.install"])
         self.assertFalse(disabled["activities.remove"])
 
+    def test_failed_install_leaves_no_orphan_publish_state(self) -> None:
+        """2A atomic publish: a failed package leaves no residue behind.
+
+        After a same-id install that fails validation, the previous active
+        set is intact, no new immutable version directory appears, and no
+        staging residue survives the transaction cleanup.
+        """
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            archive = root / "painting.greiaactivity"
+            write_activity_archive(PAINTING, archive)
+            service = ActivityPackageService(
+                state_root=root / "packages",
+                runtime_catalogue=RUNTIME,
+                built_in_root=root / "empty-builtins",
+            )
+            installed = service.install_archive(archive)
+            versions_before = {
+                path.relative_to(service.versions_root)
+                for path in service.versions_root.rglob("*")
+            }
+
+            bad_source = root / "bad-painting"
+            import shutil
+
+            shutil.copytree(PAINTING, bad_source, symlinks=True)
+            (bad_source / "payload.run").write_bytes(b"#!/bin/sh\n")
+            bad = root / "bad.greiaactivity"
+            with zipfile.ZipFile(bad, "w", compression=zipfile.ZIP_DEFLATED) as package:
+                for path in sorted(bad_source.rglob("*")):
+                    if path.is_file():
+                        package.write(path, path.relative_to(bad_source).as_posix())
+            with self.assertRaisesRegex(
+                ActivityPackageError, "forbidden package suffix"
+            ):
+                service.install_archive(bad)
+
+            self.assertTrue(
+                (service.active_root / installed.activity_id / "activity.toml").is_file()
+            )
+            self.assertTrue(service._receipt_path(installed.activity_id).is_file())
+            self.assertEqual(
+                {
+                    path.relative_to(service.versions_root)
+                    for path in service.versions_root.rglob("*")
+                },
+                versions_before,
+            )
+            leftovers = [
+                path
+                for path in service.staging_root.iterdir()
+                if path.name.startswith("install-") or path.name.startswith("remove-")
+            ]
+            self.assertEqual(leftovers, [])
+
 
 if __name__ == "__main__":
     unittest.main()

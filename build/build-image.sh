@@ -228,6 +228,50 @@ chroot "$ROOTFS" useradd --create-home --home-dir /var/lib/greia \
   --shell /bin/bash --groups sudo greia
 chroot "$ROOTFS" passwd --lock greia
 
+# 2A built-in trust boundary: the image build owns built-in Activity hygiene
+# and validation. Fail closed here — curated host/editor noise or a registry
+# validation error aborts the build — so installed content is already
+# sanitized and validated and normal boot never re-sanitizes the built-in
+# root. __pycache__ stays excluded by the rsync below (not a violation).
+PYTHONPATH="$PROJECT_ROOT/src" python3 - "$PROJECT_ROOT" <<'GREIA_BUILTIN_GATE_EOF'
+import sys
+from pathlib import Path
+
+project = Path(sys.argv[1])
+sys.path.insert(0, str(project / "src"))
+
+from greia_platform.activities import (
+    ActivityRegistry,
+    ActivityValidationError,
+    RuntimeCatalogue,
+)
+from greia_platform.activity_tree_cleanup import _is_junk_name
+from greia_platform.trust import ActivitySource, PackageTrust
+
+source_root = project / "activities"
+junk_hits = []
+for path in sorted(source_root.rglob("*")):
+    name = path.name
+    if name == "__pycache__" or "__pycache__" in path.parts:
+        continue
+    if _is_junk_name(name):
+        junk_hits.append(str(path.relative_to(project)))
+if junk_hits:
+    print("Built-in Activity tree carries curated host/editor noise:", file=sys.stderr)
+    for hit in junk_hits:
+        print(f"  {hit}", file=sys.stderr)
+    sys.exit(1)
+
+runtime = RuntimeCatalogue.load(project / "runtime" / "child-runtime.toml")
+source = ActivitySource(source_root, PackageTrust.BUILT_IN, "greia-system")
+try:
+    registry = ActivityRegistry((source,), runtime)
+    registry.discover_registrations()
+except ActivityValidationError as exc:
+    print(f"Built-in Activity validation failed: {exc}", file=sys.stderr)
+    sys.exit(1)
+GREIA_BUILTIN_GATE_EOF
+
 install -d -m 0755 "$ROOTFS/opt/greia-os"
 rsync -a --delete --exclude '__pycache__' \
   "$PROJECT_ROOT/src" "$PROJECT_ROOT/activities" "$PROJECT_ROOT/runtime" \

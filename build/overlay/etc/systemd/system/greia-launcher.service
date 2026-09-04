@@ -27,7 +27,6 @@ Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
 # and sealed read-only. Clean only the curated regenerable host/cache noise in a
 # privileged pre-start helper before any Activity registry is constructed.
 # The helper is deliberately fail-open so cleanup can never become boot authority.
-ExecStartPre=+/usr/local/lib/greia-os/scrub-activity-trees
 # Volatile Greia runtime roots are created on every boot by
 # /etc/tmpfiles.d/greia-runtime.conf. Do not let an application service chown a
 # shared /run path according to whichever service happens to start first.
