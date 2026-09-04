@@ -1742,6 +1742,16 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 
 ## 2026-09-03 — C02 — Re-proved docs close-out green on the import-fixed tree (carries T10-R3 acceptance)
 
-- Carried the reviewer-verified T10-R2 5-path docs delta onto the C01-integrated tree byte-identically (ADR 0035, skill `display_metrics.py` entry point + live-catalogue-discovery sentence, responsive seams, HANDOVER §14/§15, this append-only entry; base files byte-identical to the delta parent, so no merge drift; history never rewritten). The T10-R2 RED cause (`activities/faccine_momo/main.py` `import sys` curated-runtime violation, plus identical dead imports in `mondo_contrari`/`quattro_stagioni`) was repaired by C01 (three deletion-only lines, accepted reviewer-1 PASS) before this task; no `src/`/`activities/`/`runtime/`/`build/`/`tests/` change in C02 itself.
-- Verification on the frozen candidate: `make verify` exit 0 — unit `Ran 1768 tests OK` (includes `tests/test_typography.py` 6 ok and `tests/test_parent_system_updates.py` 5 ok, retiring F03/F04 with no dangling planned state); `validate` PASS `activities=41`; `tools/audit_activity_backend_independence.py activities` exit 0 (`activities=41 blockers=0`, 2 pre-existing non-blocking migration notes); `audit_activity_system_chrome_ownership.py --strict` exit 0 (`blockers=0`) — exact SHA, counts, and audit output in the C02 implementer-1 attempt report. Positive control: temporarily re-adding `import sys` to `faccine_momo` reproduces the curated-runtime RED, exact restore returns PASS (detector sensitivity holds).
-- Catalogue state: 41 Activities with `org.greia.sottomarino-giramondo` accepted; T10 sweep/17 answers by reference only. Physical lanes (Acer panel, USB mouse, second display, resolution change) NOT EXECUTED — human/hardware-owned on the frozen SHA.
+## 2026-09-04 — Encyclopedia: Integration of Staged Audio into Runtime Activity
+
+- Integrated the complete owner-accepted voice package into `org.greia.enciclopedia`:
+  1. **Packaged Runtime Voice Assets:**
+     - Reorganized and packaged all 398 recorded voice clips (199 Italian, 199 English) from `encyclopedia/pages/**/assets/audio/` into the activity asset hierarchy under `activities/enciclopedia_greia/assets/audio/{it,en}/{group}/`.
+     - Registered all 398 audio cues in `activities/enciclopedia_greia/locales/it.json` and `activities/enciclopedia_greia/locales/en.json` conforming to `PurePosixPath` source contracts (`assets/audio/<locale>/<group>/<file>.ogg`).
+  2. **End-to-End Spoken Pre-Reader Playback:**
+     - Home portal welcomes and section introductions are now spoken aloud by Leo, Tito, Lilli, and Dani.
+     - Entry pages announce subject names and speak full audio explanations upon token activation (e.g., Lion mane, Lion roar, Saturn rings, Octopus arms, etc.).
+  3. **Verification:**
+     - Unit tests: all 97 encyclopedia tests and all 398 activity tests PASS.
+     - Automated audio playback test suite (`/tmp/test_enciclopedia_audio_playback.py`): 100% PASS across Home, Animals, Lion, Space, Saturn, and English locale.
+     - Headless Greia simulator ran clean lifecycle and Home exit (`rc=0`).

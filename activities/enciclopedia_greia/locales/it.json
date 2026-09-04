@@ -254,6 +254,802 @@
     "activity.title": {
       "path": "locales/it/audio/activity-title.wav",
       "caption_key": "activity.title"
+    },
+    "encyclopedia.home.welcome": {
+      "path": "assets/audio/it/home/welcome.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.intro": {
+      "path": "assets/audio/it/animals/intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.intro": {
+      "path": "assets/audio/it/space/intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.intro": {
+      "path": "assets/audio/it/earth/intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.intro": {
+      "path": "assets/audio/it/body/intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.intro": {
+      "path": "assets/audio/it/machines/intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.intro": {
+      "path": "assets/audio/it/history/intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.lion.intro": {
+      "path": "assets/audio/it/animals/lion_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.lion.mane": {
+      "path": "assets/audio/it/animals/lion_mane.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.lion.pride": {
+      "path": "assets/audio/it/animals/lion_pride.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.lion.roar": {
+      "path": "assets/audio/it/animals/lion_roar.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.lion.forelegs": {
+      "path": "assets/audio/it/animals/lion_forelegs.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.elephant.intro": {
+      "path": "assets/audio/it/animals/elephant_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.elephant.trunk": {
+      "path": "assets/audio/it/animals/elephant_trunk.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.elephant.water": {
+      "path": "assets/audio/it/animals/elephant_water.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.elephant.ears": {
+      "path": "assets/audio/it/animals/elephant_ears.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.elephant.social": {
+      "path": "assets/audio/it/animals/elephant_social.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.octopus.intro": {
+      "path": "assets/audio/it/animals/octopus_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.octopus.arms": {
+      "path": "assets/audio/it/animals/octopus_arms.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.octopus.camouflage": {
+      "path": "assets/audio/it/animals/octopus_camouflage.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.octopus.ink": {
+      "path": "assets/audio/it/animals/octopus_ink.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.octopus.hearts": {
+      "path": "assets/audio/it/animals/octopus_hearts.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.bee.intro": {
+      "path": "assets/audio/it/animals/bee_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.bee.food": {
+      "path": "assets/audio/it/animals/bee_food.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.bee.pollen": {
+      "path": "assets/audio/it/animals/bee_pollen.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.bee.pollination": {
+      "path": "assets/audio/it/animals/bee_pollination.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.bee.homes": {
+      "path": "assets/audio/it/animals/bee_homes.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.penguin.intro": {
+      "path": "assets/audio/it/animals/penguin_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.penguin.swim": {
+      "path": "assets/audio/it/animals/penguin_swim.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.penguin.feathers": {
+      "path": "assets/audio/it/animals/penguin_feathers.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.penguin.world": {
+      "path": "assets/audio/it/animals/penguin_world.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.penguin.breeding": {
+      "path": "assets/audio/it/animals/penguin_breeding.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.frog.intro": {
+      "path": "assets/audio/it/animals/frog_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.frog.cycle": {
+      "path": "assets/audio/it/animals/frog_cycle.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.frog.metamorphosis": {
+      "path": "assets/audio/it/animals/frog_metamorphosis.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.frog.skin": {
+      "path": "assets/audio/it/animals/frog_skin.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.animals.frog.variety": {
+      "path": "assets/audio/it/animals/frog_variety.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.sun.intro": {
+      "path": "assets/audio/it/space/sun_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.sun.plasma": {
+      "path": "assets/audio/it/space/sun_plasma.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.sun.scale": {
+      "path": "assets/audio/it/space/sun_scale.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.sun.fusion": {
+      "path": "assets/audio/it/space/sun_fusion.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.sun.rotation": {
+      "path": "assets/audio/it/space/sun_rotation.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mercury.intro": {
+      "path": "assets/audio/it/space/mercury_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mercury.place": {
+      "path": "assets/audio/it/space/mercury_place.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mercury.orbit": {
+      "path": "assets/audio/it/space/mercury_orbit.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mercury.temperature": {
+      "path": "assets/audio/it/space/mercury_temperature.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mercury.craters": {
+      "path": "assets/audio/it/space/mercury_craters.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.venus.intro": {
+      "path": "assets/audio/it/space/venus_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.venus.compare": {
+      "path": "assets/audio/it/space/venus_compare.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.venus.heat": {
+      "path": "assets/audio/it/space/venus_heat.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.venus.clouds": {
+      "path": "assets/audio/it/space/venus_clouds.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.venus.rotation": {
+      "path": "assets/audio/it/space/venus_rotation.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.earth.intro": {
+      "path": "assets/audio/it/space/earth_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.earth.rotation": {
+      "path": "assets/audio/it/space/earth_rotation.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.earth.water": {
+      "path": "assets/audio/it/space/earth_water.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.earth.seasons": {
+      "path": "assets/audio/it/space/earth_seasons.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.earth.life": {
+      "path": "assets/audio/it/space/earth_life.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.moon.intro": {
+      "path": "assets/audio/it/space/moon_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.moon.phases": {
+      "path": "assets/audio/it/space/moon_phases.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.moon.rotation": {
+      "path": "assets/audio/it/space/moon_rotation.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.moon.surface": {
+      "path": "assets/audio/it/space/moon_surface.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.moon.gravity": {
+      "path": "assets/audio/it/space/moon_gravity.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mars.intro": {
+      "path": "assets/audio/it/space/mars_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mars.red": {
+      "path": "assets/audio/it/space/mars_red.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mars.day": {
+      "path": "assets/audio/it/space/mars_day.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mars.water": {
+      "path": "assets/audio/it/space/mars_water.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mars.olympus": {
+      "path": "assets/audio/it/space/mars_olympus.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.jupiter.intro": {
+      "path": "assets/audio/it/space/jupiter_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.jupiter.scale": {
+      "path": "assets/audio/it/space/jupiter_scale.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.jupiter.day": {
+      "path": "assets/audio/it/space/jupiter_day.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.jupiter.storm": {
+      "path": "assets/audio/it/space/jupiter_storm.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.jupiter.gas": {
+      "path": "assets/audio/it/space/jupiter_gas.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.saturn.intro": {
+      "path": "assets/audio/it/space/saturn_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.saturn.place": {
+      "path": "assets/audio/it/space/saturn_place.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.saturn.gas": {
+      "path": "assets/audio/it/space/saturn_gas.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.saturn.rings": {
+      "path": "assets/audio/it/space/saturn_rings.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.saturn.tilt": {
+      "path": "assets/audio/it/space/saturn_tilt.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.uranus.intro": {
+      "path": "assets/audio/it/space/uranus_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.uranus.tilt": {
+      "path": "assets/audio/it/space/uranus_tilt.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.uranus.seasons": {
+      "path": "assets/audio/it/space/uranus_seasons.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.uranus.color": {
+      "path": "assets/audio/it/space/uranus_color.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.uranus.rings": {
+      "path": "assets/audio/it/space/uranus_rings.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.neptune.intro": {
+      "path": "assets/audio/it/space/neptune_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.neptune.distance": {
+      "path": "assets/audio/it/space/neptune_distance.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.neptune.year": {
+      "path": "assets/audio/it/space/neptune_year.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.neptune.winds": {
+      "path": "assets/audio/it/space/neptune_winds.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.neptune.blue": {
+      "path": "assets/audio/it/space/neptune_blue.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.volcano.intro": {
+      "path": "assets/audio/it/earth/volcano_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.volcano.magma": {
+      "path": "assets/audio/it/earth/volcano_magma.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.volcano.vent": {
+      "path": "assets/audio/it/earth/volcano_vent.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.volcano.style": {
+      "path": "assets/audio/it/earth/volcano_style.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.volcano.ash": {
+      "path": "assets/audio/it/earth/volcano_ash.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rain.intro": {
+      "path": "assets/audio/it/earth/rain_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rain.evaporation": {
+      "path": "assets/audio/it/earth/rain_evaporation.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rain.condensation": {
+      "path": "assets/audio/it/earth/rain_condensation.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rain.precipitation": {
+      "path": "assets/audio/it/earth/rain_precipitation.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rain.ground": {
+      "path": "assets/audio/it/earth/rain_ground.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.ocean.intro": {
+      "path": "assets/audio/it/earth/ocean_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.ocean.salt": {
+      "path": "assets/audio/it/earth/ocean_salt.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.ocean.light": {
+      "path": "assets/audio/it/earth/ocean_light.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.ocean.deep": {
+      "path": "assets/audio/it/earth/ocean_deep.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.ocean.water": {
+      "path": "assets/audio/it/earth/ocean_water.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.tree.intro": {
+      "path": "assets/audio/it/earth/tree_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.tree.roots": {
+      "path": "assets/audio/it/earth/tree_roots.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.tree.water": {
+      "path": "assets/audio/it/earth/tree_water.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.tree.photosynthesis": {
+      "path": "assets/audio/it/earth/tree_photosynthesis.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.tree.transpiration": {
+      "path": "assets/audio/it/earth/tree_transpiration.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.tree.seasons": {
+      "path": "assets/audio/it/earth/tree_seasons.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rainbow.intro": {
+      "path": "assets/audio/it/earth/rainbow_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rainbow.position": {
+      "path": "assets/audio/it/earth/rainbow_position.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rainbow.droplet": {
+      "path": "assets/audio/it/earth/rainbow_droplet.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rainbow.colors": {
+      "path": "assets/audio/it/earth/rainbow_colors.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.earth.rainbow.circle": {
+      "path": "assets/audio/it/earth/rainbow_circle.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.heart.intro": {
+      "path": "assets/audio/it/body/heart_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.heart.chambers": {
+      "path": "assets/audio/it/body/heart_chambers.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.heart.circulation": {
+      "path": "assets/audio/it/body/heart_circulation.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.heart.beat": {
+      "path": "assets/audio/it/body/heart_beat.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.heart.exercise": {
+      "path": "assets/audio/it/body/heart_exercise.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.lungs.intro": {
+      "path": "assets/audio/it/body/lungs_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.lungs.breath": {
+      "path": "assets/audio/it/body/lungs_breath.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.lungs.airways": {
+      "path": "assets/audio/it/body/lungs_airways.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.lungs.exchange": {
+      "path": "assets/audio/it/body/lungs_exchange.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.lungs.exercise": {
+      "path": "assets/audio/it/body/lungs_exercise.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.bones.intro": {
+      "path": "assets/audio/it/body/bones_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.bones.joints": {
+      "path": "assets/audio/it/body/bones_joints.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.bones.protect": {
+      "path": "assets/audio/it/body/bones_protect.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.bones.living": {
+      "path": "assets/audio/it/body/bones_living.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.bones.marrow": {
+      "path": "assets/audio/it/body/bones_marrow.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.teeth.intro": {
+      "path": "assets/audio/it/body/teeth_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.teeth.jobs": {
+      "path": "assets/audio/it/body/teeth_jobs.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.teeth.sets": {
+      "path": "assets/audio/it/body/teeth_sets.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.teeth.layers": {
+      "path": "assets/audio/it/body/teeth_layers.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.teeth.care": {
+      "path": "assets/audio/it/body/teeth_care.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.senses.intro": {
+      "path": "assets/audio/it/body/senses_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.senses.sight": {
+      "path": "assets/audio/it/body/senses_sight.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.senses.hearing": {
+      "path": "assets/audio/it/body/senses_hearing.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.senses.flavor": {
+      "path": "assets/audio/it/body/senses_flavor.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.body.senses.touch": {
+      "path": "assets/audio/it/body/senses_touch.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.gears.intro": {
+      "path": "assets/audio/it/machines/gears_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.gears.teeth": {
+      "path": "assets/audio/it/machines/gears_teeth.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.gears.direction": {
+      "path": "assets/audio/it/machines/gears_direction.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.gears.ratio": {
+      "path": "assets/audio/it/machines/gears_ratio.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.gears.rack": {
+      "path": "assets/audio/it/machines/gears_rack.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.magnet.intro": {
+      "path": "assets/audio/it/machines/magnet_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.magnet.poles": {
+      "path": "assets/audio/it/machines/magnet_poles.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.magnet.materials": {
+      "path": "assets/audio/it/machines/magnet_materials.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.magnet.distance": {
+      "path": "assets/audio/it/machines/magnet_distance.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.magnet.field": {
+      "path": "assets/audio/it/machines/magnet_field.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bicycle.intro": {
+      "path": "assets/audio/it/machines/bicycle_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bicycle.drive": {
+      "path": "assets/audio/it/machines/bicycle_drive.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bicycle.ratio": {
+      "path": "assets/audio/it/machines/bicycle_ratio.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bicycle.travel": {
+      "path": "assets/audio/it/machines/bicycle_travel.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bicycle.energy": {
+      "path": "assets/audio/it/machines/bicycle_energy.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.airplane.intro": {
+      "path": "assets/audio/it/machines/airplane_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.airplane.lift": {
+      "path": "assets/audio/it/machines/airplane_lift.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.airplane.myth": {
+      "path": "assets/audio/it/machines/airplane_myth.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.airplane.forces": {
+      "path": "assets/audio/it/machines/airplane_forces.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.airplane.thrust": {
+      "path": "assets/audio/it/machines/airplane_thrust.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bridge.intro": {
+      "path": "assets/audio/it/machines/bridge_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bridge.load": {
+      "path": "assets/audio/it/machines/bridge_load.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bridge.shapes": {
+      "path": "assets/audio/it/machines/bridge_shapes.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bridge.forces": {
+      "path": "assets/audio/it/machines/bridge_forces.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.machines.bridge.path": {
+      "path": "assets/audio/it/machines/bridge_path.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.dinosaurs.intro": {
+      "path": "assets/audio/it/history/dinosaurs_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.dinosaurs.diversity": {
+      "path": "assets/audio/it/history/dinosaurs_diversity.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.dinosaurs.time": {
+      "path": "assets/audio/it/history/dinosaurs_time.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.dinosaurs.birds": {
+      "path": "assets/audio/it/history/dinosaurs_birds.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.dinosaurs.evidence": {
+      "path": "assets/audio/it/history/dinosaurs_evidence.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.fossils.intro": {
+      "path": "assets/audio/it/history/fossils_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.fossils.definition": {
+      "path": "assets/audio/it/history/fossils_definition.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.fossils.types": {
+      "path": "assets/audio/it/history/fossils_types.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.fossils.burial": {
+      "path": "assets/audio/it/history/fossils_burial.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.fossils.rare": {
+      "path": "assets/audio/it/history/fossils_rare.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.fossils.clues": {
+      "path": "assets/audio/it/history/fossils_clues.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.mammoth.intro": {
+      "path": "assets/audio/it/history/mammoth_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.mammoth.coat": {
+      "path": "assets/audio/it/history/mammoth_coat.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.mammoth.ears": {
+      "path": "assets/audio/it/history/mammoth_ears.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.mammoth.elephants": {
+      "path": "assets/audio/it/history/mammoth_elephants.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.mammoth.time": {
+      "path": "assets/audio/it/history/mammoth_time.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.cave_paintings.intro": {
+      "path": "assets/audio/it/history/cave_paintings_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.cave_paintings.images": {
+      "path": "assets/audio/it/history/cave_paintings_images.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.cave_paintings.pigments": {
+      "path": "assets/audio/it/history/cave_paintings_pigments.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.cave_paintings.hands": {
+      "path": "assets/audio/it/history/cave_paintings_hands.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.cave_paintings.uncertainty": {
+      "path": "assets/audio/it/history/cave_paintings_uncertainty.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.pyramids.intro": {
+      "path": "assets/audio/it/history/pyramids_intro.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.pyramids.blocks": {
+      "path": "assets/audio/it/history/pyramids_blocks.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.pyramids.workers": {
+      "path": "assets/audio/it/history/pyramids_workers.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.pyramids.inside": {
+      "path": "assets/audio/it/history/pyramids_inside.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.history.pyramids.engineering": {
+      "path": "assets/audio/it/history/pyramids_engineering.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.sun.name": {
+      "path": "assets/audio/it/space/sun_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mercury.name": {
+      "path": "assets/audio/it/space/mercury_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.venus.name": {
+      "path": "assets/audio/it/space/venus_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.earth.name": {
+      "path": "assets/audio/it/space/earth_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.moon.name": {
+      "path": "assets/audio/it/space/moon_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.mars.name": {
+      "path": "assets/audio/it/space/mars_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.jupiter.name": {
+      "path": "assets/audio/it/space/jupiter_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.saturn.name": {
+      "path": "assets/audio/it/space/saturn_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.uranus.name": {
+      "path": "assets/audio/it/space/uranus_name.ogg",
+      "caption_key": null
+    },
+    "encyclopedia.space.neptune.name": {
+      "path": "assets/audio/it/space/neptune_name.ogg",
+      "caption_key": null
     }
   }
 }
