@@ -105,6 +105,8 @@ Parent visibility policy is now a mandatory child-launcher boundary rather than 
 
 The launcher also treats the policy file as a versioned atomic snapshot: the file identity is sampled before and after each read. A replacement that lands during the read is retried instead of allowing one policy version to be applied while a different version's token is acknowledged. Repeated churn fails closed and the ordinary bounded rescan retries later. Repair of a rejected policy clears the policy-specific error state when a valid snapshot becomes active.
 
+Adaptive sub-Collection hysteresis is launcher-owned presentation state, not Parent authority. Historical `subdivided_collections` may seed the active rich Shell once for compatibility, but current launcher code keeps subsequent hysteresis in memory and does not write it back to the Parent policy file. This prevents stale Shell presentation state from clobbering a concurrent Parent `always_hide`, age-mode or difficulty change.
+
 Living authorities:
 
 ```text
@@ -186,6 +188,7 @@ Parent source now includes:
 - mandatory normal-Shell and trusted-fallback projection of Parent Activity visibility policy;
 - fail-closed zero-Activity behavior for invalid existing discovery-policy state, distinct from a legitimate missing-policy default;
 - stable atomic policy-snapshot reads that do not acknowledge a different replacement than the policy applied;
+- launcher-owned adaptive subdivision hysteresis that cannot write back and clobber Parent policy;
 - integrated real API client and production runtime manifest;
 - deterministic Greia image installation of the reviewed browser bundle;
 - installed-runtime integrity preflight;
@@ -197,7 +200,7 @@ Current production Parent status is:
 
 ```text
 SOURCE/IMAGE-INTEGRATION IMPLEMENTED
-CHILD POLICY FALLBACK SOURCE FIX + SNAPSHOT HARDENING IMPLEMENTED / EXACT-CURRENT ACCEPTANCE PENDING
+CHILD POLICY FALLBACK + SNAPSHOT + NO-WRITEBACK SOURCE HARDENING IMPLEMENTED / EXACT-CURRENT ACCEPTANCE PENDING
 PHYSICAL ACER REAL-RUNTIME ACCEPTANCE PENDING
 ```
 
@@ -418,18 +421,33 @@ Adversarial review after §16 found a second-order atomic-replacement race: the 
 
 `tests/test_launcher_activity_policy_safety.py` now includes a deterministic atomic-replacement regression for both adaptive and direct launcher paths, plus explicit repair/error-clearing assertions. `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md` requires these cases.
 
-Current implementation/test/doc commits in this closure chain include:
-
-```text
-28c58e06018c735f185ca2e6e674b1f695938222  mandatory policy boundary + initial regressions
-3172b36f041fd086cfcb9ef3ebf9e270a211d744  product authority
-51541074d98789a1946becc3d09809e0b7286ba5  initial handover reconciliation
-dbf7d94e1ec8cebb90fab6d0434fa2794fd8a5b8  OS-work router reconciliation
-2e2d9f10316bb570e77d433a2e5779dd87af4e5b  stable policy snapshot hardening
-52358aa892b5b1630fdedefbb2f43dd0eb4d3c94  race + repair regressions
-4beaf81b79d744a6b68b4a2dc74b863a418f7775  acceptance-gate hardening
-```
-
 Verification status remains deliberately **PENDING**: neither the focused current suite nor current-head `make verify` has executed after the snapshot-hardening source changes. The historical C02 1768-test green predates them and cannot be inherited. No current physical Acer fallback-policy PASS is claimed.
 
-Next exact step: freeze current `main`, run the focused policy safety suite, the existing discovery/Parent regressions and `make verify` exactly as specified by `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md`. Only after that source/local gate is green should the sanctioned R7 physical fallback lane hide one harmless Activity through Parent and prove it remains hidden in both normal and emergency launcher paths.
+## 18. Adaptive discovery policy writeback removed — source implemented, verification pending (2026-09-04)
+
+A further end-to-end review found that adaptive Collection hysteresis was still being written into the same Parent policy file. Because that write was a read-modify-write based on an earlier snapshot, a concurrent Parent `always_hide`, age-mode or difficulty update could be overwritten by presentation-only state and potentially re-expose content.
+
+That writeback is now removed from the installed rich child Shell. `PolicyEnforcedAdaptiveActivityDiscoveryMixin` owns `_adaptive_subdivision_state` in memory for the active profile/session. Historical `subdivided_collections` remains readable as a one-time compatibility seed, but the Shell no longer calls `ActivityDiscoveryPolicyStore.write()` to persist adaptive grouping. The trusted emergency fallback remains direct/non-adaptive and never writes policy.
+
+Regression coverage now additionally requires:
+
+- adaptive grouping can subdivide without any Shell policy write;
+- a post-projection Parent `always_hide` changes the policy token, is observed by the next bounded rescan, remains stored, and removes the Activity from the child catalogue;
+- stale presentation state cannot clobber Parent visibility/age/difficulty authority.
+
+Current core commits for the complete policy-safety chain are:
+
+```text
+28c58e06018c735f185ca2e6e674b1f695938222  mandatory normal/fallback policy boundary
+2e2d9f10316bb570e77d433a2e5779dd87af4e5b  stable policy snapshot hardening
+52358aa892b5b1630fdedefbb2f43dd0eb4d3c94  snapshot-race + repair regressions
+8cc7816f80ff79cfadd979e744ffdd02c02952f2  remove adaptive Shell Parent-policy writeback
+daf14863273fd33ffabb6d5fc9278f382019f936  no-writeback + Parent-update regressions
+a087c9664d0ef48e5082cc8b0b63b9535fc766f5  product authority reconciliation
+fdcbb68d1a10ff9c6f5414c27d5beace293b327a  acceptance gate reconciliation
+2265c5c456e173e2b670d5d5d42776d5526f0aa6  OS-work router reconciliation
+```
+
+Verification remains **PENDING** for the current chain: no focused exact-current unit run, no current `make verify`, and no current physical Acer trusted-fallback policy run has executed in this connector-only environment. The previous C02 `1768 tests OK` evidence predates every source change above and does not certify them.
+
+Next exact step: freeze current `main`, run the focused policy safety suite, existing discovery/Parent regressions, and `make verify` exactly as specified by `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md`. Only after the source/local gate is green should the sanctioned R7 physical fallback lane hide one harmless Activity through Parent and prove it remains hidden in both normal and emergency launcher paths.
