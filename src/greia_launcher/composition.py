@@ -39,6 +39,7 @@ from .runtime_adapter import (
     PythonRuntimePolicy,
     RuntimeLaunchAdapter,
     RuntimeManager,
+    WebRuntimeAdapter,
 )
 from .shell_window import NoopShellWindowController, ShellWindowController
 from .shell_window_legacy_x import LegacyXShellWindowController
@@ -123,6 +124,7 @@ def default_runtime_adapters(
     runtime_policy_path: Path,
     *,
     python_executable: Path | None = None,
+    browser_executable: Path | None = None,
 ) -> tuple[RuntimeLaunchAdapter, ...]:
     """Return the canonical runtime-adapter set for ordinary Greia composition.
 
@@ -136,6 +138,7 @@ def default_runtime_adapters(
             python_executable,
             policy=PythonRuntimePolicy.load(runtime_policy_path),
         ),
+        WebRuntimeAdapter(browser_executable),
     )
 
 
@@ -176,6 +179,7 @@ def build_launcher_runtime_services(
     achievement_policy_path: Path | None = None,
     hal: GreiaHAL | None = None,
     python_executable: Path | None = None,
+    browser_executable: Path | None = None,
     runtime_adapters: (
         Sequence[RuntimeLaunchAdapter] | Mapping[str, RuntimeLaunchAdapter] | None
     ) = None,
@@ -205,6 +209,7 @@ def build_launcher_runtime_services(
         else default_runtime_adapters(
             runtime_policy_path,
             python_executable=python_executable,
+            browser_executable=browser_executable,
         )
     )
     runtime_manager = RuntimeManager(adapters, device_capabilities)

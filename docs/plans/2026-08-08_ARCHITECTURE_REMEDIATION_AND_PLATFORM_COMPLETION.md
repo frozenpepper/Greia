@@ -1883,5 +1883,26 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - Confirmed `LegacyXMediaKeyListener` active on keycodes `121` (Mute), `122` (Volume Down), `123` (Volume Up), `232` (Brightness Down), and `233` (Brightness Up).
   3. **Live Hardware Verification:**
      - Injected key events on display `:0`: confirmed Volume Up stepped ALSA `Master` mixer by +5% (70% → 75%), Mute toggled playback to `[off]`, second Mute toggled playback to `[on]`.
-     - User physically tested and confirmed physical volume keys and lanes passed on device.
+      - User physically tested and confirmed physical volume keys and lanes passed on device.
 
+## 2026-09-04 — Web Runtime Adapter & Kiosk Execution Implementation
+
+- Implemented `WebRuntimeAdapter` (`src/greia_launcher/web_runtime.py`) providing natural, platform-governed execution of HTML/Web-based Activities in full appliance kiosk mode:
+  1. **Architecture & Boundaries (ADR 0012 §33, ADR 0014 §6, ADR 0019, ADR 0020):**
+     - Subordinate to `RuntimeLaunchAdapter` contract for `runtime_type = "web"`.
+     - Kiosk mode enforcement: `--kiosk`, `--no-first-run`, `--no-default-browser-check`, `--disable-default-apps`, `--disable-sync`, `--disable-features=Translate,OptimizationHints`, `--incognito`, with `--disable-background-networking` when network capability is ungranted.
+     - Zero browser chrome: no address bar, tabs, dev tools, or navigation UI exposed to the child.
+     - Entrypoint verification: requires local `index.html` (or `.htm`), rejecting directory traversal, absolute paths, or non-HTML targets.
+     - Static package tree inspection: rejects dangerous binaries (`.exe`, `.sh`, `.bin`, `.so`, etc.), symlinks pointing outside the activity root, and forbidden names (`.git`, `node_modules`).
+     - Process lifecycle: managed via `RuntimeInvocation` with bounded timeout collection, force-stop (`SIGTERM`/`SIGKILL`), and cleanup.
+  2. **Browser Discovery & Multi-Platform Support:**
+     - Checks `GREIA_WEB_BROWSER` environment override.
+     - Auto-detects `chromium-shell` (minimal kiosk package on Debian/Ubuntu), `chromium`, `cog` (WPE WebKit), `google-chrome`, `firefox-esr` (with `--kiosk`), and macOS Google Chrome for development.
+     - Added `build/package-sets/runtime-web.txt` defining `chromium-shell` for build profile package resolution.
+  3. **Platform & Launcher Composition:**
+     - Registered `WebRuntimeAdapter` in `src/greia_launcher/runtime_adapter.py` and `src/greia_launcher/composition.py` (`default_runtime_adapters()`).
+     - Added `WebRuntimeAdapter` to static project validation in `tools/validate_project.py`.
+  4. **Verification:**
+     - 17/17 dedicated unit tests passing in `tests/test_web_runtime_adapter.py`.
+     - Full regression suites passing: `tests/test_runtime_manager.py` (14/14 PASS), `tests/test_supervisor.py` (14/14 PASS), `tests/test_r7*composition.py` (5/5 PASS).
+     - `PYTHONPATH=src python3 tools/validate_project.py` PASS (`activities=41`, `image_profiles=10`).

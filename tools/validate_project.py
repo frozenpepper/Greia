@@ -3,7 +3,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from greia_launcher.runtime_adapter import PythonRuntimeAdapter, PythonRuntimePolicy, RuntimeManager
+from greia_launcher.runtime_adapter import (
+    PythonRuntimeAdapter,
+    PythonRuntimePolicy,
+    RuntimeManager,
+    WebRuntimeAdapter,
+)
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
 from greia_platform.activity_backend_policy import (
     assert_python_activity_backend_independent,
@@ -24,7 +29,10 @@ def main() -> int:
     runtime_path = root / "runtime" / "child-runtime.toml"
     runtime = RuntimeCatalogue.load(runtime_path)
     runtime_manager = RuntimeManager(
-        [PythonRuntimeAdapter(policy=PythonRuntimePolicy.load(runtime_path))],
+        [
+            PythonRuntimeAdapter(policy=PythonRuntimePolicy.load(runtime_path)),
+            WebRuntimeAdapter(),
+        ],
         # Project validation proves static/package compatibility, not physical
         # hardware. Installed launch composition injects the real HAL-backed
         # DeviceCapabilityService instead of this deterministic source-test view.

@@ -654,3 +654,6 @@ def _runtime_type(value: object) -> bool:
         return False
     allowed = set("abcdefghijklmnopqrstuvwxyz0123456789._-")
     return value[0].isalnum() and value[-1].isalnum() and all(c in allowed for c in value)
+
+
+from .web_runtime import WebRuntimeAdapter, WebRuntimePolicy
