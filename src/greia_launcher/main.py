@@ -10,6 +10,7 @@ from typing import Any
 
 from greia_platform.activity_tree_cleanup import scrub_activity_tree
 from greia_platform.boot_logo import canonical_boot_logo as _canonical_boot_logo
+from greia_platform.boot_markers import emit_boot_marker
 from greia_platform.activities import (
     ActivityManifest,
     ActivityRegistry,
@@ -158,108 +159,129 @@ class LauncherApplication:
     RESCAN_SECONDS = 2.0
 
     def __init__(self, *, windowed: bool = False, allow_exit: bool = False):
-        self.paths = LauncherPaths.from_environment()
-        scrub_activity_tree(self.paths.activities)
-        self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
-        self.registry = ActivityRegistry(
-            _activity_sources(self.paths), self.runtime, fail_closed=False
-        )
-        self._asset_set = load_launcher_assets(
-            self.paths.asset_catalogue,
-            self.paths.shared_visual_catalogue,
-        )
-        self.assets = self._asset_set.catalogue
-        self.shared_visuals_available = self._asset_set.shared_visuals_available
-        self._visual_cache = (
-            PygameVisualSurfaceCache.for_pygame(
-                self.assets,
-                max_entries=96,
-                # Convert decoded PNG renditions to display-native surfaces once
-                # so every later frame blit uses pygame's fast paths instead of
-                # the generic per-pixel fallback on low-resource devices.
-                display_converter=pygame_display_converter(),
-            )
-            if self._asset_set.shared_visuals_available
-            else None
-        )
-        self.profile_store = ProfileStore.load(
-            self.paths.profile_defaults, self.paths.profiles_dir
-        )
-        self.profiles = self.profile_store.ensure_initialized()
-        self.session = ActiveProfileSession(self.paths.active_profile_status)
-        self.session.clear()
-        self.selector_theme = LauncherThemeController(
-            ThemeStore.load(
-                self.paths.theme_defaults,
-                self.paths.profiles_dir / ".selector-theme",
-            )
-        )
-        self.theme_controller = self.selector_theme
-        self.windowed = windowed
-        self._activities = self.registry.discover()
-        self._activity_discovery_token = self.registry.discovery_token()
-        installed_root = self._installed_root()
-        development_hal = None if installed_root else _development_hal()
-        self.runtime_services = build_launcher_runtime_services(
-            self.runtime,
-            self._activities,
-            runtime_policy_path=self.paths.runtime_catalogue,
-            permission_policy_path=self.paths.permission_policy,
-            storage_policy_path=self.paths.storage_policy,
-            history_policy_path=self.paths.history_policy,
-            progression_policy_path=self.paths.progression_policy,
-            hal=development_hal,
-        )
-        self._history_recovery_failures: set[str] = set()
-        for child in self.profiles:
+        emit_boot_marker("launcher_construct_begin")
+        try:
+            self.paths = LauncherPaths.from_environment()
+            scrub_activity_tree(self.paths.activities)
+            self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
+            emit_boot_marker("activity_sources_begin")
             try:
-                self.runtime_services.history_service.recover_unfinished(
-                    self.profile_store.context(child.profile_id)
+                sources = _activity_sources(self.paths)
+            finally:
+                emit_boot_marker("activity_sources_end")
+            self.registry = ActivityRegistry(
+                sources, self.runtime, fail_closed=False
+            )
+            self._asset_set = load_launcher_assets(
+                self.paths.asset_catalogue,
+                self.paths.shared_visual_catalogue,
+            )
+            self.assets = self._asset_set.catalogue
+            self.shared_visuals_available = self._asset_set.shared_visuals_available
+            self._visual_cache = (
+                PygameVisualSurfaceCache.for_pygame(
+                    self.assets,
+                    max_entries=96,
+                    # Convert decoded PNG renditions to display-native surfaces once
+                    # so every later frame blit uses pygame's fast paths instead of
+                    # the generic per-pixel fallback on low-resource devices.
+                    display_converter=pygame_display_converter(),
                 )
-            except HistoryError:
-                self._history_recovery_failures.add(child.profile_id)
-        display_coordinator = (
-            provisional_installed_display_session() if installed_root else None
-        )
-        self._shell_window_backend = (
-            provisional_installed_shell_window_backend()
-            if installed_root
-            else development_shell_window_backend()
-        )
-        self.supervisor = ActivitySupervisor(
-            runtime_manager=self.runtime_services.runtime_manager,
-            storage_service=self.runtime_services.storage_service,
-            history_service=self.runtime_services.history_service,
-            display_coordinator=display_coordinator,
-        )
-        self.allow_exit = allow_exit
-        self._selected = 0
-        self._profile_selected = 0
-        self._active_profile: ProfileContext | None = None
-        self._pending_profile: ChildProfile | None = None
-        self._mode = "profiles"
-        self._secret_text = ""
-        self._secret_error_until = 0.0
-        self._last_result: ActivityResult | None = None
-        self._first_frame_released = False
-        self._next_boot_handoff_attempt = 0.0
-        self._icon_cache: dict[tuple[str, int], Any] = {}
-        self._font_cache: dict[int, Any] = {}
-        self._profile_name_cache: dict[tuple[str, int, int, tuple[int, int, int]], Any] = {}
-        self._typography = GreiaTypography(
-            self.paths.root / "assets" / "fonts" / "nunito-sans"
-        )
-        self._next_rescan = 0.0
-        self._catalogue_error = False
-        self._targets: list[HitTarget] = []
-        self._cached_profiles_surface: Any = None
-        self._cached_profiles_key: Any = None
-        self._cached_profiles_targets: list[HitTarget] = []
-        self._parent_chord = KeyChordTracker({ord("s"), ord("t")}, hold_duration_seconds=5.0)
-        self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
-        self._dimmed_underlay: Any = None
-        self._dimmed_underlay_key: Any = None
-        self._parent_panel_opened_monotonic = 0.0
+                if self._asset_set.shared_visuals_available
+                else None
+            )
+            self.profile_store = ProfileStore.load(
+                self.paths.profile_defaults, self.paths.profiles_dir
+            )
+            self.profiles = self.profile_store.ensure_initialized()
+            self.session = ActiveProfileSession(self.paths.active_profile_status)
+            self.session.clear()
+            self.selector_theme = LauncherThemeController(
+                ThemeStore.load(
+                    self.paths.theme_defaults,
+                    self.paths.profiles_dir / ".selector-theme",
+                )
+            )
+            self.theme_controller = self.selector_theme
+            self.windowed = windowed
+            emit_boot_marker("activity_discover_begin")
+            try:
+                self._activities = self.registry.discover()
+            finally:
+                emit_boot_marker("activity_discover_end")
+            self._activity_discovery_token = self.registry.discovery_token()
+            installed_root = self._installed_root()
+            development_hal = None if installed_root else _development_hal()
+            emit_boot_marker("activity_runtime_build_begin")
+            try:
+                self.runtime_services = build_launcher_runtime_services(
+                    self.runtime,
+                    self._activities,
+                    runtime_policy_path=self.paths.runtime_catalogue,
+                    permission_policy_path=self.paths.permission_policy,
+                    storage_policy_path=self.paths.storage_policy,
+                    history_policy_path=self.paths.history_policy,
+                    progression_policy_path=self.paths.progression_policy,
+                    hal=development_hal,
+                )
+            finally:
+                emit_boot_marker("activity_runtime_build_end")
+            self._history_recovery_failures: set[str] = set()
+            emit_boot_marker("history_prepare_begin")
+            try:
+                for child in self.profiles:
+                    try:
+                        self.runtime_services.history_service.recover_unfinished(
+                            self.profile_store.context(child.profile_id)
+                        )
+                    except HistoryError:
+                        self._history_recovery_failures.add(child.profile_id)
+            finally:
+                emit_boot_marker("history_prepare_end")
+            display_coordinator = (
+                provisional_installed_display_session() if installed_root else None
+            )
+            self._shell_window_backend = (
+                provisional_installed_shell_window_backend()
+                if installed_root
+                else development_shell_window_backend()
+            )
+            self.supervisor = ActivitySupervisor(
+                runtime_manager=self.runtime_services.runtime_manager,
+                storage_service=self.runtime_services.storage_service,
+                history_service=self.runtime_services.history_service,
+                display_coordinator=display_coordinator,
+            )
+            self.allow_exit = allow_exit
+            self._selected = 0
+            self._profile_selected = 0
+            self._active_profile: ProfileContext | None = None
+            self._pending_profile: ChildProfile | None = None
+            self._mode = "profiles"
+            self._secret_text = ""
+            self._secret_error_until = 0.0
+            self._last_result: ActivityResult | None = None
+            self._first_frame_released = False
+            self._next_boot_handoff_attempt = 0.0
+            self._icon_cache: dict[tuple[str, int], Any] = {}
+            self._font_cache: dict[int, Any] = {}
+            self._profile_name_cache: dict[tuple[str, int, int, tuple[int, int, int]], Any] = {}
+            self._typography = GreiaTypography(
+                self.paths.root / "assets" / "fonts" / "nunito-sans"
+            )
+            self._next_rescan = 0.0
+            self._catalogue_error = False
+            self._targets: list[HitTarget] = []
+            self._cached_profiles_surface: Any = None
+            self._cached_profiles_key: Any = None
+            self._cached_profiles_targets: list[HitTarget] = []
+            self._parent_chord = KeyChordTracker({ord("s"), ord("t")}, hold_duration_seconds=5.0)
+            self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
+            self._dimmed_underlay: Any = None
+            self._dimmed_underlay_key: Any = None
+            self._parent_panel_opened_monotonic = 0.0
+        finally:
+            emit_boot_marker("launcher_construct_end")
 
     def _enter_parent_panel(self, pygame: Any) -> None:
         """Open the hidden Parent Settings overlay with active text input.
@@ -324,11 +346,19 @@ class LauncherApplication:
         import pygame
 
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
-        pygame.init()
-        pygame.font.init()
+        emit_boot_marker("pygame_display_init_begin")
+        try:
+            pygame.init()
+            pygame.font.init()
+        finally:
+            emit_boot_marker("pygame_display_init_end")
         display_flags = pygame.RESIZABLE if self.windowed else pygame.FULLSCREEN
         default_size = (960, 540) if self.windowed else (0, 0)
-        screen = pygame.display.set_mode(default_size, display_flags)
+        emit_boot_marker("display_set_mode_begin")
+        try:
+            screen = pygame.display.set_mode(default_size, display_flags)
+        finally:
+            emit_boot_marker("display_set_mode_end")
         pygame.display.set_caption("Greia OS")
         pygame.mouse.set_visible(False)
         self._shell_window_backend.after_window_created(pygame)
@@ -1217,6 +1247,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    emit_boot_marker("launcher_python_enter")
     args = parse_args()
     return LauncherApplication(windowed=args.windowed, allow_exit=args.allow_exit).run()
 

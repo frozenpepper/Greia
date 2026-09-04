@@ -14,6 +14,7 @@ from greia_platform.activities import (
     ActivityValidationError,
 )
 from greia_platform.assets import AssetCatalogueError
+from greia_platform.boot_markers import emit_boot_marker
 from greia_platform.child_text import ChildTextCase, child_text_case_from_environment
 from greia_platform.pygame_effects import (
     PygameDepthStyle,
@@ -323,10 +324,18 @@ class GreiaLauncherPresentation(LauncherApplication):
         import pygame
 
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
-        pygame.init()
-        pygame.font.init()
+        emit_boot_marker("pygame_display_init_begin")
+        try:
+            pygame.init()
+            pygame.font.init()
+        finally:
+            emit_boot_marker("pygame_display_init_end")
         default_size, display_flags = self._initial_display_request(pygame)
-        screen = pygame.display.set_mode(default_size, display_flags)
+        emit_boot_marker("display_set_mode_begin")
+        try:
+            screen = pygame.display.set_mode(default_size, display_flags)
+        finally:
+            emit_boot_marker("display_set_mode_end")
         pygame.display.set_caption(self._display_caption())
         pygame.mouse.set_visible(False)
         self._shell_window_backend.after_window_created(pygame)

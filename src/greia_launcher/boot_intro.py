@@ -23,6 +23,8 @@ import time
 from pathlib import Path
 from typing import Any
 
+from greia_platform.boot_markers import emit_boot_marker
+
 
 ANIMATION_SECONDS = 5.0
 FINAL_FRAME_HOLD_SECONDS = 2.0
@@ -220,10 +222,38 @@ def _pump_display(pygame: Any) -> None:
     pygame.time.wait(max(1, int(_RENDER_INTERVAL_SECONDS * 1000)))
 
 
+_FIRST_FRAME_FLIPPED_EMITTED = False
+
+
+def _emit_first_frame_flipped_once() -> None:
+    """Emit the first-frame KPI exactly once per process.
+
+    Called immediately after the first successful ``flip()`` that makes the
+    intro frame visible. Later flips never call this function, so the flag
+    only suppresses repeats across separate ``run_intro()`` calls; a failed
+    flip raises before reaching this call and therefore emits nothing.
+    """
+    global _FIRST_FRAME_FLIPPED_EMITTED
+    if _FIRST_FRAME_FLIPPED_EMITTED:
+        return
+    _FIRST_FRAME_FLIPPED_EMITTED = True
+    emit_boot_marker("intro_first_frame_flipped")
+
+
 def run_intro(screen: Any, pygame: Any, *, marker: Path | None = None) -> None:
     """Publish the X handoff, animate for 5s, then hold the last frame for 2s."""
+    emit_boot_marker("intro_enter")
+    try:
+        _run_intro_guarded(screen, pygame, marker=marker)
+    finally:
+        emit_boot_marker("intro_end")
+
+
+def _run_intro_guarded(screen: Any, pygame: Any, *, marker: Path | None = None) -> None:
+    """Existing intro sequence; first-frame KPI is guarded exactly-once below."""
     draw_boot_handoff_frame(screen, pygame, progress=92)
     pygame.display.flip()
+    _emit_first_frame_flipped_once()
 
     if skip_intro():
         return

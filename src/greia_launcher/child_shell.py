@@ -17,6 +17,7 @@ from typing import Any
 
 from greia_platform.achievements import ProfileAchievementService
 from greia_platform.audio import AudioService, MicrophoneProcessingMode
+from greia_platform.boot_markers import emit_boot_marker
 from greia_platform.customization import CustomizationError, ThemeStore
 from greia_platform.hal import GreiaHAL
 from greia_platform.profile_presentation import ProfilePresentationStore
@@ -403,6 +404,7 @@ class GreiaChildShell(
 
 
 def main() -> int:
+    emit_boot_marker("launcher_python_enter")
     args = parse_args()
     return GreiaChildShell(
         windowed=args.windowed,
