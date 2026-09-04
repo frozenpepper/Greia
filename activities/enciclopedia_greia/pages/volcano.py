@@ -172,7 +172,10 @@ class VolcanoPage(EncyclopediaPage):
         if event.position is not None and event.kind in {PageInputKind.POINTER_MOVE, PageInputKind.POINTER_PRESS}:
             point = (int(event.position[0]), int(event.position[1]))
             if event.kind is PageInputKind.POINTER_PRESS:
-                if self._erupt_hit.collidepoint(point):
+                if (
+                    self._erupt_hit.collidepoint(point)
+                    or (380 <= point[0] <= 644 and 160 <= point[1] <= 360)
+                ):
                     self._trigger_eruption()
                     return
                 for lvl, hit in enumerate(self._strength_hits):
@@ -265,7 +268,7 @@ class VolcanoPage(EncyclopediaPage):
         # Re-label slider notches visually as strength via subtle size pulse already; keep generic
         self._erupt_hit = draw_erupt_button(
             base,
-            (512, 485),
+            (512, 460),
             time=self._time,
             enabled=True,
             erupting=self._model.eruption_age > 0,

@@ -330,7 +330,7 @@ class GearsPage(EncyclopediaPage):
             surface, (185, 485), time=self._time, level=self._model.speed_level, paused=self._model.paused
         )
         self._turn_hit = draw_turn_button(
-            surface, (512, 485), time=self._time, enabled=True, spinning=not self._model.paused
+            surface, (512, 460), time=self._time, enabled=True, spinning=not self._model.paused
         )
         self._pause_hit = draw_pause_button(
             surface, (380, 485), time=self._time, paused=self._model.paused

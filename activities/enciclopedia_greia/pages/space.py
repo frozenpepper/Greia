@@ -242,7 +242,12 @@ class SpacePage(EncyclopediaPage):
         can_left = self._selected > 0
         can_right = self._selected < len(_TARGET_IDS) - 1
         self._arrow_left_hit, self._arrow_right_hit = draw_navigation_arrows(
-            surface, time=self._time, can_go_left=can_left, can_go_right=can_right
+            surface,
+            time=self._time,
+            can_go_left=can_left,
+            can_go_right=can_right,
+            left_center=(48, 270),
+            right_center=(976, 270),
         )
         # Orbit toy controls — low-cost, large hit areas, consistent grammar.
         _, self._slider_hits = draw_speed_slider(

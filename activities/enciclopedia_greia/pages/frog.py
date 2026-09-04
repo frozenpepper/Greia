@@ -226,7 +226,7 @@ class FrogPage(EncyclopediaPage):
             surface, time=self._time, can_go_left=can_left, can_go_right=can_right
         )
         self._action_hit = draw_animal_action_button(
-            surface, (512, 485), animal="frog", time=self._time, active=True
+            surface, (512, 460), animal="frog", time=self._time, active=True
         )
         self._draw_caption(surface)
         draw_presenter(

@@ -461,3 +461,16 @@ Packaged and registered all 398 pre-recorded owner-accepted voice assets (199 It
 - Conforms strictly to the Greia audio mapping contract (`assets/audio/<locale>/<group>/...`).
 - Verification: 97/97 encyclopedia unit tests pass (`pytest tests/test_activity_enciclopedia*.py tests/test_encyclopedia_*.py`), 398/398 activity tests pass, automated audio playback verification script 100% PASS, headless simulator lifecycle & Home exit PASS (`rc=0`).
 
+## 20. Enciclopedia Greia — Navigation Chevrons & Layout Collision Remediation (2026-09-04)
+
+Remediated visual and interaction flaws identified during simulator visual inspection:
+- Corrected chevron drawing coordinates in `enciclopedia_controls.py` so Left points `<` and Right points `>` (reversed drawing bug resolved).
+- Uncovered discover lens in `animals.py` by relocating Tito the Fox to `(905, 560)` (bottom right corner).
+- Lowered discover button in `body.py` to `(505, 560)` to clear the X-ray skeleton exhibit.
+- Elevated navigation arrows in `space.py` to $y=270$ to clear the star chart easel and telescope.
+- Resized action buttons to 76px with 86px hit areas and centered them at `(512, 460)` across 32 entry pages, providing clean vertical margins above the `(270, 507, 470, 72)` caption ribbon.
+- Relocated Leo in `saturn.py` to `(130, 575)` to eliminate token overlap.
+- Added direct canvas touch handling on key subjects (Lion mane/roar, Octopus ink squirt, Volcano eruption).
+- Verification: 97/97 encyclopedia tests pass, 401/401 activity tests pass, and headless simulator 19-stage inspection tour verified visually with clean frames and zero collisions.
+
+

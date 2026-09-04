@@ -188,7 +188,7 @@ class TreePage(EncyclopediaPage):
             surface, time=getattr(self, '_time', 0.0), can_go_left=can_left, can_go_right=can_right
         )
         self._action_hit = draw_entry_action_button(
-            surface, (512, 485), entry="tree", time=getattr(self, '_time', 0.0), active=True
+            surface, (512, 460), entry="tree", time=getattr(self, '_time', 0.0), active=True
         )
         self._draw_caption(surface)
         draw_presenter(

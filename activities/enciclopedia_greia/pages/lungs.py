@@ -223,7 +223,7 @@ class LungsPage(EncyclopediaPage):
         inhaling = self._model.manual_inhale and self._model.breath_demo_age > 0
         exercising = self._model.exercise_age > 0
         self._breathe_hit = draw_breathe_button(
-            surface, (512, 485), time=self._time, inhaling=inhaling, exercise=exercising
+            surface, (512, 460), time=self._time, inhaling=inhaling, exercise=exercising
         )
         self._draw_caption(surface)
         draw_presenter(

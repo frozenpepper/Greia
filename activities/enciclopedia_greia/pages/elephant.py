@@ -189,7 +189,7 @@ class ElephantPage(EncyclopediaPage):
         )
         # Main toy — big trunk button
         self._trunk_hit = draw_animal_action_button(
-            surface, (512, 485), animal="elephant", time=self._time, active=True
+            surface, (512, 460), animal="elephant", time=self._time, active=True
         )
         self._draw_caption(surface)
         draw_presenter(

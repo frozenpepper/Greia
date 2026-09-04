@@ -203,7 +203,7 @@ class AnimalsPage(EncyclopediaPage):
             surface,
             self.context.visuals,
             "tito",
-            position=(478 + sway, 555),
+            position=(905 + sway, 560),
             height=170,
             variant="happy",
             fallback_color=(247, 151, 77),

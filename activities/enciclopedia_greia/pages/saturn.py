@@ -206,7 +206,7 @@ class SaturnPage(EncyclopediaPage):
             surface, time=getattr(self, '_time', 0.0), can_go_left=can_left, can_go_right=can_right
         )
         self._action_hit = draw_entry_action_button(
-            surface, (512, 485), entry="saturn", time=getattr(self, '_time', 0.0), active=True
+            surface, (512, 460), entry="saturn", time=getattr(self, '_time', 0.0), active=True
         )
         draw_caption_ribbon(
             surface,
@@ -218,8 +218,8 @@ class SaturnPage(EncyclopediaPage):
             surface,
             self.context.visuals,
             "leo",
-            position=(228, 575),
-            height=190,
+            position=(130, 575),
+            height=170,
             variant="surprised",
         )
 

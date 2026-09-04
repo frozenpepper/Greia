@@ -125,13 +125,13 @@ def draw_navigation_arrows(
         chev_color = (61, 44, 31) if enabled else (125, 120, 115)
         thickness = 5
         if direction < 0:
-            p1 = (cx + 10, cy)
-            p2 = (cx - 6, cy - 14)
-            p3 = (cx - 6, cy + 14)
-        else:
-            p1 = (cx - 10, cy)
+            p1 = (cx - 8, cy)
             p2 = (cx + 6, cy - 14)
             p3 = (cx + 6, cy + 14)
+        else:
+            p1 = (cx + 8, cy)
+            p2 = (cx - 6, cy - 14)
+            p3 = (cx - 6, cy + 14)
         pygame.draw.line(surface, chev_color, p1, p2, thickness)
         pygame.draw.line(surface, chev_color, p1, p3, thickness)
         if not enabled:

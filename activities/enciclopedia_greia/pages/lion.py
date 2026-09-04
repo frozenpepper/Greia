@@ -117,7 +117,10 @@ class LionPage(EncyclopediaPage):
         }:
             point = (int(event.position[0]), int(event.position[1]))
             if event.kind is PageInputKind.POINTER_PRESS:
-                if self._roar_hit.collidepoint(point):
+                if (
+                    self._roar_hit.collidepoint(point)
+                    or math.hypot(point[0] - 446, point[1] - 336) <= 100
+                ):
                     self._trigger_roar()
                     return
                 if self._arrow_left_hit.collidepoint(point):
@@ -213,7 +216,7 @@ class LionPage(EncyclopediaPage):
         )
         # Main toy — big lion roar button at bottom center (above caption)
         self._roar_hit = draw_animal_action_button(
-            surface, (512, 485), animal="lion", time=self._time, active=True
+            surface, (512, 460), animal="lion", time=self._time, active=True
         )
         draw_caption_ribbon(
             surface,

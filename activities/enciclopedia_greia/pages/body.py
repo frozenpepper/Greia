@@ -173,7 +173,7 @@ class BodyPage(EncyclopediaPage):
             surface, time=self._time, can_go_left=can_left, can_go_right=can_right
         )
         self._discover_hit = draw_discover_button(
-            surface, active=True, time=self._time, enabled=True
+            surface, (505, 560), active=True, time=self._time, enabled=True
         )
 
         draw_presenter(

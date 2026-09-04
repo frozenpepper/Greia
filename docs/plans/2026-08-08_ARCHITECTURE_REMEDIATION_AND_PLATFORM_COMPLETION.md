@@ -1755,3 +1755,20 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - Unit tests: all 97 encyclopedia tests and all 398 activity tests PASS.
      - Automated audio playback test suite (`/tmp/test_enciclopedia_audio_playback.py`): 100% PASS across Home, Animals, Lion, Space, Saturn, and English locale.
      - Headless Greia simulator ran clean lifecycle and Home exit (`rc=0`).
+
+## 2026-09-04 — Encyclopedia: Navigation Chevron Correction & Layout Overlap Remediation
+
+- Remediated visual/interaction bugs identified during simulator visual inspection:
+  1. **Navigation Chevrons Fixed:**
+     - Corrected apex and wing drawing coordinates in `enciclopedia_controls.py` so Left points `<` and Right points `>` (previously pointing in reverse).
+  2. **Layout Overlap & Breathing Room:**
+     - Repositioned Tito the Fox in `pages/animals.py` to `(905, 560)` (bottom-right corner), completely uncovering the central magnifying glass discover lens.
+     - Lowered the discover lens in `pages/body.py` to `(505, 560)`, eliminating the overlap onto the X-ray skeleton exhibit.
+     - Elevated navigation arrows in `pages/space.py` to $y=270$, clearing the star chart easel and telescope.
+     - Standardized toy action button sizes to 76px (86px hit area) and centered them at `(512, 460)` across 32 entry pages, completely resolving the 22px collision with the caption ribbon at $y=507$.
+     - Repositioned Leo in `pages/saturn.py` to `(130, 575)`, eliminating overlap with the bottom-left discovery token.
+  3. **Direct Canvas Touch Play:**
+     - Added direct canvas touch handling: tapping the Lion shakes his mane and triggers a roar; tapping the Octopus squirts ink; tapping the Volcano triggers an eruption.
+- Verification:
+  - Unit tests: 97/97 encyclopedia tests and 401/401 activity tests PASS.
+  - Headless simulator 19-stage inspection tour verified visually with clean frames and zero collisions.

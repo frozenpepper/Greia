@@ -222,7 +222,7 @@ class HeartPage(EncyclopediaPage):
         # Main toy — big heart beat button at bottom center (above caption)
         beating = self._model.beat_age > 0 or self._model.exercise_age > 0
         self._heart_hit = draw_heart_button(
-            surface, (512, 485), time=self._time, beating=beating
+            surface, (512, 460), time=self._time, beating=beating
         )
         self._draw_caption(surface)
         draw_presenter(
