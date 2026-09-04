@@ -1870,3 +1870,18 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
        - Tested lights toggle resolving encounter (`/tmp/acer_sub_solved.png`).
        - Pressed ADR 0019 Home button: returned cleanly to Shell CREA category (`/tmp/acer_home_return.png`).
 
+## 2026-09-04 — Acer Physical Hardware Session & Media Key Continuity Resolution
+
+- Addressed user feedback regarding physical volume controls on Acer Aspire One (`192.168.68.104`):
+  1. **Diagnosis & Root Cause:**
+     - Discovered that deployed `/usr/local/lib/greia-os/greia-x-session` on the physical Acer was invoking `/usr/bin/python3 -m greia_platform.hardware_session` instead of `hardware_session_legacy_x`.
+     - Because the entrypoint had moved to `hardware_session_legacy_x` in the August 29 containment refactor, `hardware_session` exited immediately with code 0. No `LegacyXMediaKeyListener` was running on display `:0`.
+     - While brightness hotkeys (`Fn+Left`/`Fn+Right`) functioned because ACPI firmware/`video.ko` directly adjusted the GMA950 backlight PWM, volume keys (`Fn+Up`/`Fn+Down`/`Fn+F8`) require a user-space listener to drive ALSA `amixer`.
+  2. **Live Device Remediation:**
+     - Started background `greia_platform.hardware_session_legacy_x` as `greiakid` on display `:0`.
+     - Patched `/usr/local/lib/greia-os/greia-x-session` on the Acer to ensure `hardware_session_legacy_x` runs on every session startup.
+     - Confirmed `LegacyXMediaKeyListener` active on keycodes `121` (Mute), `122` (Volume Down), `123` (Volume Up), `232` (Brightness Down), and `233` (Brightness Up).
+  3. **Live Hardware Verification:**
+     - Injected key events on display `:0`: confirmed Volume Up stepped ALSA `Master` mixer by +5% (70% → 75%), Mute toggled playback to `[off]`, second Mute toggled playback to `[on]`.
+     - User physically tested and confirmed physical volume keys and lanes passed on device.
+

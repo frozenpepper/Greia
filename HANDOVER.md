@@ -219,13 +219,7 @@ Core invariants remain:
 - Legacy X is compatibility/migration plumbing, not final architecture;
 - Simulator evidence never substitutes for production backend/hardware evidence.
 
-Earlier trusted-Home physical proof remains scoped to:
-
-```text
-57626d3f65a8bf3ae074eee15b00ee32ba3277bd
-```
-
-It does not automatically certify later Activity-age, toddler, Parent or system-control source.
+Earlier trusted-Home physical proof remains scoped to `57626d3f65a8bf3ae074eee15b00ee32ba3277bd`. On 2026-09-04, physical Acer hardware session startup (`greia_platform.hardware_session_legacy_x`), live ALSA Master volume stepping (+5%), and mute/unmute key handling were restored on device and confirmed working by the user.
 
 Use:
 
@@ -233,7 +227,7 @@ Use:
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
 ```
 
-for exact-current R7 closure.
+for exact-current R7 closure. Next steps advance into R7.4 controller/input brokerage and R9 embedded Web runtime preparation.
 
 ## 8. Recent toddler/runtime cleanup
 
