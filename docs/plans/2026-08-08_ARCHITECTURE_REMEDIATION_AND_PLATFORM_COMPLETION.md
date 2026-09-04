@@ -1906,3 +1906,23 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - 17/17 dedicated unit tests passing in `tests/test_web_runtime_adapter.py`.
      - Full regression suites passing: `tests/test_runtime_manager.py` (14/14 PASS), `tests/test_supervisor.py` (14/14 PASS), `tests/test_r7*composition.py` (5/5 PASS).
      - `PYTHONPATH=src python3 tools/validate_project.py` PASS (`activities=41`, `image_profiles=10`).
+
+## 2026-09-04 — Controller Navigation & Reserved System Input Integration (ADR 0019, ADR 0020, R7)
+
+- Completed physical controller and reserved Guide button system input integration across Shell and Activity supervisor:
+  1. **Reserved Guide Button Platform Interception (ADR 0019, ADR 0020 §7):**
+     - Added `poll_guide_button() -> bool` to `PygameControllerSet` (`src/greia_platform/pygame_input.py`).
+     - Added typed `ControllerGuideSource` protocol and injected `controller_set: ControllerGuideSource | None` into `TrustedChromeActivitySupervisor` (`src/greia_launcher/trusted_chrome_supervisor.py`).
+     - In `TrustedChromeActivitySupervisor.poll()`, active sessions poll `controller_set.poll_guide_button()`: Guide immediately invokes `request_stop()`, gracefully terminating the Activity and returning to Greia Home without exposing raw `/dev/input` to the Activity.
+     - Forwarded `controller_set` from `ProfileVisualActivitySupervisor` (`child_shell.py`) and `TrustedGreiaLauncherPresentation` (`trusted_presentation.py`).
+  2. **Shell Controller Navigation & Analog Stick Integration:**
+     - Exposed `controllers` property on `ShellInputController` (`src/greia_launcher/shell_input.py`).
+     - Wired `self._shell_input` into `LauncherApplication.__init__`, `run()`, and `_launch_selected()` (`src/greia_launcher/main.py`), and forwarded kwargs in `GreiaLauncherPresentation.__init__` (`presentation.py`).
+     - Main event loop dispatches controller digital buttons (`CONTROLLERBUTTONDOWN`) to `self._shell_input.handle_event()` and analog stick polling to `self._shell_input.poll_analog(monotonic_now)`.
+     - Implemented `_handle_semantic_action()` routing `NAV_*`, `ACTIVATE`, and `CANCEL` through polymorphic `self._handle_key()` across profiles, categories, activities, and overlays.
+  3. **Verification & Contracts:**
+     - `tests/test_launcher_controller.py`: 3/3 tests PASS (semantic action mapping, controller D-pad & reserved Guide event denial in Shell, analog stick repeat).
+     - `tests/test_trusted_chrome_supervisor.py`: verified Guide stop request without Activity event delivery.
+     - `tests/test_r7_child_shell_trusted_chrome_composition.py`: verified `controller_set` forwarding.
+     - `make verify`: 1864/1864 tests PASS.
+     - `validate_project.py` and activity audits: PASS (`blockers=0`).

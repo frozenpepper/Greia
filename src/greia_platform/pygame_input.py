@@ -212,6 +212,21 @@ class PygameControllerSet:
             return _signed_axis(raw_x), _signed_axis(raw_y)
         return 0.0, 0.0
 
+    def poll_guide_button(self) -> bool:
+        """Return True if the reserved system Guide button is pressed on any controller."""
+
+        if sdl_controller is None:
+            return False
+        for controller in self._controllers:
+            try:
+                if not controller.attached():
+                    continue
+                if controller.get_button(CONTROLLER_BUTTON_GUIDE):
+                    return True
+            except (pygame.error, RuntimeError):
+                continue
+        return False
+
     def close(self) -> None:
         for controller in reversed(self._controllers):
             try:

@@ -51,6 +51,7 @@ from greia_platform.profiles import (
     ProfileStore,
 )
 
+from greia_platform.input_core import SemanticAction
 from .composition import (
     build_launcher_runtime_services,
     development_shell_window_backend,
@@ -60,6 +61,7 @@ from .composition import (
 from .key_chord import KeyChordTracker
 from .lifecycle import ActivityResult, ActivitySessionState
 from .parent_panel import ParentSettingsOverlay
+from .shell_input import ShellInputController
 from .supervisor import ActivitySupervisor
 from .theme import LauncherThemeController
 from .visual_assets import load_launcher_assets
@@ -157,9 +159,16 @@ class LauncherApplication:
     ERROR = (177, 44, 44)
     RESCAN_SECONDS = 2.0
 
-    def __init__(self, *, windowed: bool = False, allow_exit: bool = False):
+    def __init__(
+        self,
+        *,
+        windowed: bool = False,
+        allow_exit: bool = False,
+        shell_input: ShellInputController | None = None,
+    ):
         emit_boot_marker("launcher_construct_begin")
         try:
+            self._shell_input = shell_input or ShellInputController()
             self.paths = LauncherPaths.from_environment()
             # 2A: no in-process Activity-tree scrub on the boot path. Built-in
             # hygiene is owned by the image build and parent/developer hygiene
@@ -368,6 +377,7 @@ class LauncherApplication:
         running = True
         last_display_size = screen.get_size()
 
+        self._shell_input.start()
         try:
             while running:
                 for event in pygame.event.get():
@@ -396,6 +406,10 @@ class LauncherApplication:
                         self._handle_click(event.pos, pygame)
                     elif event.type == pygame.VIDEORESIZE and self.windowed:
                         screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
+                    else:
+                        action = self._shell_input.handle_event(event)
+                        if action is not None:
+                            running = self._handle_semantic_action(action, pygame)
 
                 current_surface = pygame.display.get_surface()
                 if current_surface is not None:
@@ -417,6 +431,10 @@ class LauncherApplication:
                         # Drain chord auto-repeat while the keys are down.
                         pygame.event.clear(pygame.TEXTINPUT)
                     self._parent_panel.drain()
+                if running and self._mode != "parent_panel":
+                    stick_action = self._shell_input.poll_analog(time.monotonic())
+                    if stick_action is not None:
+                        running = self._handle_semantic_action(stick_action, pygame)
                 self._rescan_if_due()
                 self._draw(screen, pygame)
                 pygame.display.flip()
@@ -424,10 +442,25 @@ class LauncherApplication:
                     self._release_boot_cover()
                 clock.tick(60)
         finally:
+            self._shell_input.close()
             self.session.clear()
             pygame.key.stop_text_input()
             pygame.quit()
         return 0
+
+    def _handle_semantic_action(self, action: SemanticAction, pygame: Any) -> bool:
+        key_map = {
+            SemanticAction.NAV_LEFT: pygame.K_LEFT,
+            SemanticAction.NAV_RIGHT: pygame.K_RIGHT,
+            SemanticAction.NAV_UP: pygame.K_UP,
+            SemanticAction.NAV_DOWN: pygame.K_DOWN,
+            SemanticAction.ACTIVATE: pygame.K_RETURN,
+            SemanticAction.CANCEL: pygame.K_ESCAPE,
+        }
+        key = key_map.get(action)
+        if key is not None:
+            return self._handle_key(key, pygame)
+        return True
 
     def _handle_key(self, key: int, pygame: Any) -> bool:
         if self._mode == "parent_panel":
@@ -627,6 +660,7 @@ class LauncherApplication:
                 time.sleep(0.02)
         pygame.mouse.set_visible(False)
         pygame.event.clear()
+        self._shell_input.start()
         try:
             self.profile_store.consume_avatar_request(profile_id)
             refreshed = self.session.activate(self.profile_store, profile_id)

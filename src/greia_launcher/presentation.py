@@ -80,8 +80,14 @@ class GreiaLauncherPresentation(LauncherApplication):
     _HOVER = HoverMotion(scale=1.025, lift_pixels=3.0)
     _LAUNCH = LaunchMotion(duration_seconds=0.42, wiggle_pixels=7, bounce_pixels=10)
 
-    def __init__(self, *, windowed: bool = False, allow_exit: bool = False):
-        super().__init__(windowed=windowed, allow_exit=allow_exit)
+    def __init__(
+        self,
+        *,
+        windowed: bool = False,
+        allow_exit: bool = False,
+        **kwargs: object,
+    ):
+        super().__init__(windowed=windowed, allow_exit=allow_exit, **kwargs)
         self._configure_parent_package_source()
         # Replace the old unbounded presentation dictionaries with explicit LRU
         # bounds while preserving the mapping surface used by the base class.

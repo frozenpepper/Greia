@@ -210,6 +210,11 @@ class GreiaChildShell(
             system_chrome_coordinator=self._system_chrome_coordinator(),
             audio_service=audio_service,
             usage_limit_guard=ActivityUsageLimitGuard(self._usage_limit_service()),
+            controller_set=(
+                self._shell_input.controllers
+                if getattr(self, "_shell_input", None) is not None
+                else None
+            ),
         )
         self.runtime_services = runtime_services
         self.supervisor = supervisor

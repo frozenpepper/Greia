@@ -235,6 +235,35 @@ class TrustedChromeActivitySupervisorTests(unittest.TestCase):
         self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.HIDDEN)
         self.assertIn(("hide", session.session_id), backend.calls)
 
+    def test_controller_guide_button_requests_platform_stop_without_activity_event(self) -> None:
+        class _FakeControllerSource:
+            def __init__(self) -> None:
+                self.guide_pressed = False
+
+            def poll_guide_button(self) -> bool:
+                return self.guide_pressed
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(manifest.activity_id)
+            process = _Process()
+            backend = _ChromeBackend()
+            controller_source = _FakeControllerSource()
+            supervisor, _coordinator = _supervisor(process, backend)
+            supervisor._controller_set = controller_source
+
+            session = supervisor.start(manifest, profile, authority)
+            with mock.patch.object(type(session.control), "ready", return_value=True):
+                self.assertIsNone(supervisor.poll(session))
+
+            controller_source.guide_pressed = True
+            self.assertIsNone(supervisor.poll(session))
+
+        self.assertEqual(session.state, ActivitySessionState.STOPPING)
+        self.assertIsNotNone(session.stop_requested_at)
+
 
 if __name__ == "__main__":
     unittest.main()

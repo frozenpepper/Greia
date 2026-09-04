@@ -1,8 +1,13 @@
-from __future__ import annotations
+from typing import Protocol
 
 from greia_platform.activities import ActivityManifest
 from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext
+
+
+class ControllerGuideSource(Protocol):
+    def poll_guide_button(self) -> bool: ...
+
 
 from .lifecycle import ActivityExitReason, ActivityResult, ActivitySession, ActivitySessionState
 from .system_chrome import (
@@ -37,10 +42,12 @@ class TrustedChromeActivitySupervisor(UsageLimitedActivitySupervisor):
         self,
         *args: object,
         system_chrome_coordinator: SystemChromeCoordinator | None = None,
+        controller_set: ControllerGuideSource | None = None,
         **kwargs: object,
     ) -> None:
         super().__init__(*args, **kwargs)
         self._system_chrome_coordinator = system_chrome_coordinator
+        self._controller_set = controller_set
         self._system_chrome_leases: dict[str, SystemChromeLease] = {}
         self._system_navigation_bridge = (
             None
@@ -79,6 +86,14 @@ class TrustedChromeActivitySupervisor(UsageLimitedActivitySupervisor):
             return result
         if session.state not in {ActivitySessionState.RUNNING, ActivitySessionState.STOPPING}:
             return None
+        controller_set = self._controller_set
+        if (
+            controller_set is not None
+            and session.state is not ActivitySessionState.STOPPING
+            and controller_set.poll_guide_button()
+        ):
+            self.request_stop(session)
+            return session.result
         lease = self._system_chrome_leases.get(session.session_id)
         bridge = self._system_navigation_bridge
         if lease is None or bridge is None:

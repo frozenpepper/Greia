@@ -51,6 +51,10 @@ class ShellInputController:
         self._next_repeat_at = 0.0
 
     @property
+    def controllers(self) -> PygameControllerSet:
+        return self._controllers
+
+    @property
     def snapshot(self) -> ShellInputSnapshot:
         return ShellInputSnapshot(
             controller_supported=self._controllers.supported,

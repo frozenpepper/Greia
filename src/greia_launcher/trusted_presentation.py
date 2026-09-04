@@ -47,6 +47,11 @@ class TrustedGreiaLauncherPresentation(
             system_chrome_coordinator=(
                 provisional_installed_system_chrome() if installed else None
             ),
+            controller_set=(
+                self._shell_input.controllers
+                if getattr(self, "_shell_input", None) is not None
+                else None
+            ),
         )
         self.runtime_services = runtime_services
         self.supervisor = supervisor
