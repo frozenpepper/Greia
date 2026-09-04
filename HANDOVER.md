@@ -592,3 +592,31 @@ Refined concepts to achieve the requested intuitive, instructive "middle ground"
      - `/tmp/acer_bridge_page.png` and `/tmp/acer_bridge_arch_active.png`: "IL PONTE" with load distribution vectors, arch chevrons, and bedrock anchors.
      - `/tmp/acer_airplane_page.png` and `/tmp/acer_airplane_lift.png`: "L'AEROPLANO" with lift forces, thrust, control surfaces, and cloud altitude ladder.
      - `/tmp/acer_final_shell.png`: ADR 0019 protected Home button returns cleanly to Greia Shell.
+
+## 25. Submarine Octopus Resolution & Mongolfiera Launch Remediation (2026-09-04)
+
+Addressed urgent user feedback on `sottomarino_giramondo` crash during octopus encounters and the "mongolfiera" activity launch failure:
+
+1. **Submarine Bubbles + Octopus Crash Fix (`activities/sottomarino_giramondo/`):**
+   - **Root cause:** `EncounterType` was referenced in `sub_app.py` lines 155 and 172 (`EncounterType.SHARK_WAVE`, `EncounterType.OCTOPUS_HUG`) without being imported, raising `NameError: name 'EncounterType' is not defined` when pressing `bubbles` or `light` during an encounter.
+   - **Fix:** Imported `EncounterType` in both package and standalone import branches of `sub_app.py`.
+   - Added direct encounter resolution when tapping inside the porthole glass where the octopus is hugging the glass.
+   - Registered missing `"celebrate"` audio sample in `sub_audio.py` for celebration chimes.
+   - Added regression test `test_octopus_bubbles_resolution_no_crash` in `tests/test_activity_sottomarino.py`.
+
+2. **"Mongolfiera" (`mondo_contrari`) & Package Import Audit:**
+   - **Root cause:** `activities/mondo_contrari/contrari_app.py` and `contrari_renderer.py` had unconditional `from .contrari_*` relative imports without `if __package__:` fallbacks, raising `ImportError: attempted relative import with no known parent package` when executed by the Python runtime adapter.
+   - **Identity:** `mondo_contrari` features the hot-air balloon ("mongolfiera") with Flash the rabbit as its prominent gameplay and launcher card icon.
+   - **Comprehensive audit:** Detected and corrected identical relative-import issues in `activities/faccine_momo` (`momo_app.py`, `momo_renderer.py`) and `activities/quattro_stagioni` (`tree_app.py`, `tree_renderer.py`).
+   - Verified all 41 activities now import and launch cleanly (41/41 PASSED).
+
+3. **Verification & Hardware Evidence:**
+   - Unit tests: 404/404 tests PASS across all activities (`pytest tests/test_activity_*.py`).
+   - Headless simulator: 5-second survival and clean Home return for both `org.greia.mondo-contrari` and `org.greia.sottomarino-giramondo` (`rc=0`).
+   - Physical deployment to Acer Aspire One (`192.168.68.104`) via `greia_remote.py deploy --replace-system` for `sottomarino_giramondo`, `mondo_contrari`, `faccine_momo`, and `quattro_stagioni`.
+   - On-device live verification:
+     - `mondo_contrari` executed without import errors on hardware (`RC: 0`).
+     - Captured screenshots on Acer display `:0` of `sottomarino_giramondo` (`/tmp/acer_sub_live.png`).
+     - Pressed `BOLLE` (bubbles) button during close creature encounter: bubbles floated up smoothly with zero crash (`/tmp/acer_sub_bubbles.png`).
+     - Toggled lights to resolve encounter (`/tmp/acer_sub_solved.png`).
+     - Pressed ADR 0019 Home button: returned cleanly to Shell CREA category (`/tmp/acer_home_return.png`).

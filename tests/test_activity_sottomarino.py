@@ -4,6 +4,9 @@ import sys
 from pathlib import Path
 import pytest
 
+SRC_DIR = Path(__file__).parent.parent / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 ACTIVITY_DIR = Path(__file__).parent.parent / "activities" / "sottomarino_giramondo"
 if str(ACTIVITY_DIR) not in sys.path:
     sys.path.insert(0, str(ACTIVITY_DIR))
@@ -97,3 +100,23 @@ def test_species_fact_triggering():
     assert model.active_fact.text_key == "voice.fact.dolphin.1"
     assert model.active_fact.cue_key == "voice.fact.dolphin.1"
     assert model.active_fact.display_timer > 0.0
+
+
+def test_octopus_bubbles_resolution_no_crash():
+    import os
+    os.environ["SDL_VIDEODRIVER"] = "dummy"
+    os.environ["SDL_AUDIODRIVER"] = "dummy"
+    from sub_app import SubmarineApp
+
+    app = SubmarineApp()
+    app.model.encounter.active_type = EncounterType.OCTOPUS_HUG
+    app.model.encounter.progress = 1.0
+
+    # Pressing bubbles during octopus encounter should resolve it cleanly without NameError or crash
+    app._handle_button_press("bubbles")
+    assert app.model.encounter.solved is True
+
+    # Render frame with active/resolving encounter
+    app.canvas.surface.fill((0, 0, 0))
+    app.presenter.render(app.canvas.surface, app.model, app.resources, None)
+

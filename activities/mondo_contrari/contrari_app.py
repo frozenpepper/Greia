@@ -7,14 +7,24 @@ import time
 
 import pygame
 
-from .contrari_audio import ContrariAudio, ContrariSpeechQueue
-from .contrari_model import (
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    ContrariModel,
-    OppositeCategory,
-)
-from .contrari_renderer import ContrariRenderer
+if __package__:
+    from .contrari_audio import ContrariAudio, ContrariSpeechQueue
+    from .contrari_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        ContrariModel,
+        OppositeCategory,
+    )
+    from .contrari_renderer import ContrariRenderer
+else:
+    from contrari_audio import ContrariAudio, ContrariSpeechQueue
+    from contrari_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        ContrariModel,
+        OppositeCategory,
+    )
+    from contrari_renderer import ContrariRenderer
 
 
 class ContrariActivity:

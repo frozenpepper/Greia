@@ -7,14 +7,24 @@ from typing import Final
 
 import pygame
 
-from .momo_model import (
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    Emotion,
-    GameMode,
-    MomoModel,
-    MomoParticle,
-)
+if __package__:
+    from .momo_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        Emotion,
+        GameMode,
+        MomoModel,
+        MomoParticle,
+    )
+else:
+    from momo_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        Emotion,
+        GameMode,
+        MomoModel,
+        MomoParticle,
+    )
 
 # Palette
 COLOR_WALLPAPER_TOP: Final = (255, 243, 224)

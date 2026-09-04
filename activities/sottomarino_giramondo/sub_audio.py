@@ -160,6 +160,8 @@ class SubmarineAudio:
             ) / 3.0
             val = int(22000.0 * chord * env)
             samples.append(val)
+        self._register("celebrate", _synth_wav(samples, rate, channels))
+
         # 8. Gentle Engine Telegraph Chug (tactile gear click when moving throttle)
         duration_s = 0.25
         n_samples = int(rate * duration_s)

@@ -7,13 +7,22 @@ from typing import Final
 
 import pygame
 
-from .contrari_model import (
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    ContrariModel,
-    ContrariParticle,
-    OppositeCategory,
-)
+if __package__:
+    from .contrari_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        ContrariModel,
+        ContrariParticle,
+        OppositeCategory,
+    )
+else:
+    from contrari_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        ContrariModel,
+        ContrariParticle,
+        OppositeCategory,
+    )
 
 # Colors
 COLOR_SKY_TOP: Final = (144, 202, 249)

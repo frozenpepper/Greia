@@ -7,16 +7,28 @@ import time
 
 import pygame
 
-from .momo_audio import MomoAudio, MomoSpeechQueue
-from .momo_model import (
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    Emotion,
-    GameMode,
-    MomoModel,
-    MomoParticle,
-)
-from .momo_renderer import MomoRenderer
+if __package__:
+    from .momo_audio import MomoAudio, MomoSpeechQueue
+    from .momo_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        Emotion,
+        GameMode,
+        MomoModel,
+        MomoParticle,
+    )
+    from .momo_renderer import MomoRenderer
+else:
+    from momo_audio import MomoAudio, MomoSpeechQueue
+    from momo_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        Emotion,
+        GameMode,
+        MomoModel,
+        MomoParticle,
+    )
+    from momo_renderer import MomoRenderer
 
 
 class MomoActivity:

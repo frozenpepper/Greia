@@ -43,6 +43,7 @@ if __package__:
     from .sub_model import (
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
+        EncounterType,
         SubmarineModel,
     )
 else:
@@ -57,6 +58,7 @@ else:
     from sub_model import (
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
+        EncounterType,
         SubmarineModel,
     )
 
@@ -269,6 +271,11 @@ class SubmarineApp:
                         if not clicked_btn and (pt[0] - PORTHOLE_CENTER_X)**2 + (pt[1] - PORTHOLE_CENTER_Y)**2 <= PORTHOLE_RADIUS**2:
                             self.model.trigger_bubbles()
                             self.audio.play("bubbles")
+                            if self.model.encounter.active_type == EncounterType.OCTOPUS_HUG:
+                                if self.model.resolve_encounter():
+                                    self.audio.play("celebrate")
+                                    self._speak_cue("voice.encounter.solved")
+                                    emit_activity_event("submarine.encounter_resolved", payload={"creature": "octopus"})
 
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     self._dragging_wheel = False

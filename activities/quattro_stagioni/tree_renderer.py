@@ -7,15 +7,26 @@ from typing import Final
 
 import pygame
 
-from .tree_model import (
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    Apple,
-    Particle,
-    Season,
-    TreeModel,
-    WeatherMode,
-)
+if __package__:
+    from .tree_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        Apple,
+        Particle,
+        Season,
+        TreeModel,
+        WeatherMode,
+    )
+else:
+    from tree_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        Apple,
+        Particle,
+        Season,
+        TreeModel,
+        WeatherMode,
+    )
 
 # Colors
 COLOR_DAY_SKY_TOP: Final = (110, 190, 245)

@@ -7,16 +7,28 @@ import time
 
 import pygame
 
-from .tree_audio import SpeechQueue, TreeAudio
-from .tree_model import (
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    Particle,
-    Season,
-    TreeModel,
-    WeatherMode,
-)
-from .tree_renderer import TreeRenderer
+if __package__:
+    from .tree_audio import SpeechQueue, TreeAudio
+    from .tree_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        Particle,
+        Season,
+        TreeModel,
+        WeatherMode,
+    )
+    from .tree_renderer import TreeRenderer
+else:
+    from tree_audio import SpeechQueue, TreeAudio
+    from tree_model import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        Particle,
+        Season,
+        TreeModel,
+        WeatherMode,
+    )
+    from tree_renderer import TreeRenderer
 
 
 class TreeActivity:
