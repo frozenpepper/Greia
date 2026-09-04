@@ -25,6 +25,8 @@ A policy path that exists but is malformed, unreadable, an unsupported schema, o
 
 Parent policy writes use atomic replacement. A launcher policy read must therefore identify one stable file version: if replacement occurs while a snapshot is being read, the launcher retries rather than applying one version while acknowledging another version's file token. Repeated churn fails closed and is retried through the ordinary bounded rescan path.
 
+Adaptive sub-Collection hysteresis is launcher-owned presentation state. Historical `subdivided_collections` values may seed the active Shell once for compatibility, but the Shell must not write grouping state back into the Parent policy file. Presentation must never overwrite a concurrent Parent visibility, age or difficulty change.
+
 ## 1. Hard prohibitions
 
 During this gate do not:
@@ -32,6 +34,7 @@ During this gate do not:
 - edit source after freezing the candidate;
 - replace a malformed-policy failure with a default policy by hand;
 - bypass `ActivityDiscoveryPolicyStore`;
+- persist adaptive grouping by writing Parent policy from the child Shell;
 - remove the trusted fallback from the installed X-session path;
 - use `?demo=1` as device evidence;
 - use GitHub-hosted Actions;
@@ -90,6 +93,8 @@ The suite must prove all of the following:
 - a symlink policy exposes zero Activities;
 - repairing rejected policy state is detected, clears the policy-specific error state, and restores the effective catalogue;
 - atomic replacement during a read cannot make either launcher acknowledge a newer file token while applying an older policy snapshot;
+- adaptive hysteresis produces sub-Collections without calling `ActivityDiscoveryPolicyStore.write()` from the child Shell;
+- a later Parent `always_hide` remains stored and is picked up by the next bounded rescan rather than being clobbered by presentation state;
 - the trusted fallback remains deliberately direct/non-adaptive rather than inheriting rich sub-Collection UI merely to obtain policy enforcement.
 
 Any failure: STOP and return the full traceback/output.
@@ -151,7 +156,7 @@ repaired valid policy
 
 For each rejected state, confirm that the effective catalogue contains zero launchable Activities and that the process itself remains alive/recoverable. For the repaired state, confirm normal policy projection resumes without restarting into a more-permissive emergency catalogue and that the policy-specific error indication clears.
 
-The deterministic unit regression in §3 owns the atomic-replacement-during-read race. Do not attempt to manufacture timing-sensitive filesystem races manually as a substitute for that test.
+The deterministic unit regressions in §3 own both the atomic-replacement-during-read race and the adaptive-writeback authority boundary. Do not attempt to manufacture timing-sensitive filesystem races manually as a substitute for those tests.
 
 If no current project-local runtime fixture can exercise this without touching real profile data, mark this section `NOT_RUN` rather than improvising. The automated source suite in §3 remains mandatory regardless.
 
