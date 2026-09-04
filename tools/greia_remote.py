@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import stat
 import subprocess
 import sys
@@ -122,9 +123,12 @@ class GreiaRemote:
         check: bool = False,
     ) -> subprocess.CompletedProcess[bytes] | subprocess.CompletedProcess[str]:
         env, askpass_script = self._get_env()
+        cmd = list(argv)
+        if self.password is not None and shutil.which("sshpass"):
+            cmd = ["sshpass", "-p", self.password, *cmd]
         try:
             return subprocess.run(
-                argv,
+                cmd,
                 env=env,
                 capture_output=capture_output,
                 text=text,

@@ -357,31 +357,23 @@ class BridgePage(EncyclopediaPage):
         pygame.draw.arc(surface, (188, 76, 52), arch_rect, 0, math.pi, 14)
         pygame.draw.arc(surface, (238, 228, 214), arch_rect, 0, math.pi, 3)
 
-        # If "shapes" (Rainbow Arch) is active, draw glowing rainbow arch!
+        # If "shapes" (Arch Load Distribution) is active, show force spreading along the arch to banks!
         if self._model.shapes_age > 0.0:
-            rainbow_colors = [
-                (245, 75, 75),   # Red
-                (255, 158, 44),  # Orange
-                (255, 228, 54),  # Yellow
-                (92, 214, 110),  # Green
-                (74, 178, 245),  # Cyan
-                (175, 102, 238), # Violet
-            ]
-            for idx, rcol in enumerate(rainbow_colors):
-                offset_r = idx * 6
-                r_rect = pygame.Rect(
-                    arch_rect.x - offset_r,
-                    arch_rect.y - 12 - offset_r,
-                    arch_rect.width + offset_r * 2,
-                    arch_rect.height + offset_r * 2,
-                )
-                pygame.draw.arc(surface, rcol, r_rect, 0.05, math.pi - 0.05, 5)
+            # Glowing arch path
+            pygame.draw.arc(surface, (255, 205, 60), arch_rect.inflate(8, 8), 0.05, math.pi - 0.05, 6)
+            # Animated force flow chevrons flowing outward from center towards the abutments
+            for s_idx in range(9):
+                ang = math.pi * (0.12 + s_idx * 0.095)
+                sx = arch_rect.centerx + int(math.cos(ang) * (arch_rect.width // 2))
+                sy = arch_rect.centery - int(math.sin(ang) * (arch_rect.height // 2))
+                # Pulse offset along curve
+                flow_pulse = math.sin(t * 8.0 + (s_idx if ang > math.pi/2 else -s_idx)) * 3
+                pygame.draw.circle(surface, (255, 245, 180), (sx, int(sy + flow_pulse)), 4)
+                pygame.draw.circle(surface, (238, 120, 34), (sx, int(sy + flow_pulse)), 2)
 
-            for s_idx in range(6):
-                s_ang = math.pi * (0.15 + s_idx * 0.14)
-                sx = arch_rect.centerx + int(math.cos(s_ang) * (arch_rect.width // 2 + 15))
-                sy = arch_rect.centery - int(math.sin(s_ang) * (arch_rect.height // 2 + 15))
-                pygame.draw.circle(surface, (255, 255, 255), (sx, sy), 3)
+            # Force distribution arrows pointing outward to riverbanks
+            pygame.draw.polygon(surface, (238, 120, 34), [(left_x + 54, deck_y + 36), (left_x + 40, deck_y + 44), (left_x + 56, deck_y + 48)])
+            pygame.draw.polygon(surface, (238, 120, 34), [(right_x - 54, deck_y + 36), (right_x - 40, deck_y + 44), (right_x - 56, deck_y + 48)])
 
         # Bridge Road Deck
         pygame.draw.line(surface, (178, 74, 52), (left_x, deck_y + 10), (right_x, deck_y + 10), 10)
@@ -400,43 +392,44 @@ class BridgePage(EncyclopediaPage):
             pygame.draw.circle(surface, (255, 235, 120), (lx, deck_y - 30), 6)
             pygame.draw.circle(surface, (255, 255, 255), (lx - 1, deck_y - 32), 2)
 
-        # If "path" (Connecting Friends) is active, draw glowing heart path and friendly animals!
+        # If "forces" (Pillars & Bedrock) active, reveal underground bedrock anchors and downward load arrows!
+        if self._model.forces_age > 0.0:
+            for tx in (left_x + 88, right_x - 92):
+                # Subterranean bedrock anchor block
+                pygame.draw.rect(surface, (135, 115, 95), (tx - 26, deck_y + 78, 52, 28), border_radius=4)
+                pygame.draw.rect(surface, (95, 78, 65), (tx - 26, deck_y + 78, 52, 28), width=2, border_radius=4)
+                for rx in range(tx - 20, tx + 20, 10):
+                    pygame.draw.line(surface, (160, 140, 120), (rx, deck_y + 82), (rx + 6, deck_y + 102), 2)
+                # Downward force arrows discharging weight to rock
+                pulse_y = int((math.sin(t * 8.0) * 0.5 + 0.5) * 8)
+                pygame.draw.line(surface, (255, 220, 60), (tx, deck_y + 20), (tx, deck_y + 70 + pulse_y), 4)
+                pygame.draw.polygon(surface, (255, 220, 60), [(tx - 6, deck_y + 64 + pulse_y), (tx + 6, deck_y + 64 + pulse_y), (tx, deck_y + 74 + pulse_y)])
+
+        # If "path" (Steel Cables & Tension) is active, draw glowing tension cables pulling upward!
         if self._model.path_age > 0.0:
-            for dot_x in range(left_x + 12, right_x - 10, 16):
-                sparkle_y = deck_y - 4 + math.sin(t * 8.0 + dot_x * 0.1) * 3
-                pygame.draw.circle(surface, (255, 215, 0), (dot_x, int(sparkle_y)), 3)
+            # Main suspension cable catenary curves
+            for tower_x in (left_x + 88, right_x - 92):
+                pygame.draw.line(surface, (255, 215, 60), (tower_x, deck_y - 28), (tower_x - 80, deck_y), 3)
+                pygame.draw.line(surface, (255, 215, 60), (tower_x, deck_y - 28), (512, deck_y - 4), 3)
+            # Vertical tension hanger cables with upward chevrons
+            for hx in range(left_x + 30, right_x - 20, 32):
+                pygame.draw.line(surface, (255, 235, 140), (hx, deck_y - 2), (hx, deck_y - 18), 2)
+                # Upward tension chevron ^
+                pygame.draw.lines(surface, (255, 215, 60), False, [(hx - 4, deck_y - 10), (hx, deck_y - 15), (hx + 4, deck_y - 10)], 2)
 
-            # Left Bank Friend: Cute Bunny waving
-            bx, by = 265, 340
-            pygame.draw.ellipse(surface, (255, 255, 255), (bx - 6, by - 26, 6, 16))
-            pygame.draw.ellipse(surface, (255, 190, 205), (bx - 4, by - 24, 3, 12))
-            pygame.draw.ellipse(surface, (255, 255, 255), (bx + 2, by - 26, 6, 16))
-            pygame.draw.ellipse(surface, (255, 190, 205), (bx + 4, by - 24, 3, 12))
-            pygame.draw.circle(surface, (255, 255, 255), (bx, by - 10), 12)
-            pygame.draw.circle(surface, (50, 40, 40), (bx - 4, by - 12), 2)
-            pygame.draw.circle(surface, (50, 40, 40), (bx + 4, by - 12), 2)
-            pygame.draw.circle(surface, (255, 150, 170), (bx, by - 8), 2)
-            paw_wave = math.sin(t * 10.0) * 5
-            pygame.draw.circle(surface, (255, 255, 255), (bx + 14, int(by - 14 + paw_wave)), 4)
-
-            # Right Bank Friend: Cute Kitten waving
-            kx, ky = 755, 340
-            pygame.draw.polygon(surface, (245, 150, 60), [(kx - 10, ky - 18), (kx - 4, ky - 26), (kx - 1, ky - 17)])
-            pygame.draw.polygon(surface, (245, 150, 60), [(kx + 10, ky - 18), (kx + 4, ky - 26), (kx + 1, ky - 17)])
-            pygame.draw.circle(surface, (245, 150, 60), (kx, ky - 10), 12)
-            pygame.draw.circle(surface, (50, 40, 40), (kx - 4, ky - 12), 2)
-            pygame.draw.circle(surface, (50, 40, 40), (kx + 4, ky - 12), 2)
-            pygame.draw.polygon(surface, (255, 190, 205), [(kx - 2, ky - 8), (kx + 2, ky - 8), (kx, ky - 6)])
-            k_paw = math.sin(t * 10.0 + 1.5) * 5
-            pygame.draw.circle(surface, (245, 150, 60), (kx - 14, int(ky - 14 + k_paw)), 4)
-
-            heart_y = deck_y - 45 + math.sin(t * 5.0) * 4
-            self._draw_heart(surface, 512, int(heart_y), 9, (248, 86, 114))
-
-        # THE CUTE RED TOY CAR
+        # THE CUTE TOY VEHICLE (Car / Load)
         car_x = int(left_x + (right_x - left_x) * self._model.car_progress)
         car_bounce = math.sin(t * 14.0) * 2 if self._model.car_driving else 0
         car_y = deck_y - 16 + int(car_bounce)
+
+        self._draw_cute_car(surface, car_x, car_y)
+
+        # Downward load / weight vector pressing on the bridge
+        if self._model.load_age > 0.0 or self._model.car_driving:
+            arrow_pulse = int(math.sin(t * 10.0) * 3)
+            # Downward bold arrow
+            pygame.draw.line(surface, (235, 75, 55), (car_x, car_y - 32 + arrow_pulse), (car_x, car_y - 10 + arrow_pulse), 4)
+            pygame.draw.polygon(surface, (235, 75, 55), [(car_x - 6, car_y - 14 + arrow_pulse), (car_x + 6, car_y - 14 + arrow_pulse), (car_x, car_y - 6 + arrow_pulse)])
 
         self._draw_cute_car(surface, car_x, car_y)
 
@@ -496,33 +489,41 @@ class BridgePage(EncyclopediaPage):
     def _draw_hotspot_icon(surface: pygame.Surface, item: BridgeDiscovery) -> None:
         cx, cy = item.center
         if item.discovery_id == "load":
-            pygame.draw.rect(surface, (232, 68, 56), (cx - 16, cy - 2, 32, 12), border_radius=4)
-            pygame.draw.rect(surface, (255, 250, 238), (cx - 10, cy - 12, 20, 11), border_radius=4)
-            pygame.draw.rect(surface, (110, 205, 250), (cx - 8, cy - 10, 16, 7), border_radius=2)
-            pygame.draw.circle(surface, (40, 44, 48), (cx - 10, cy + 10), 4)
-            pygame.draw.circle(surface, (40, 44, 48), (cx + 10, cy + 10), 4)
-            pygame.draw.circle(surface, (255, 225, 60), (cx + 15, cy + 3), 2.5)
+            # Car with downward weight arrow
+            pygame.draw.rect(surface, (232, 68, 56), (cx - 14, cy, 28, 10), border_radius=3)
+            pygame.draw.rect(surface, (255, 250, 238), (cx - 9, cy - 8, 18, 9), border_radius=3)
+            pygame.draw.circle(surface, (40, 44, 48), (cx - 8, cy + 10), 3)
+            pygame.draw.circle(surface, (40, 44, 48), (cx + 8, cy + 10), 3)
+            # Downward weight arrow
+            pygame.draw.line(surface, (255, 195, 45), (cx, cy - 22), (cx, cy - 10), 3)
+            pygame.draw.polygon(surface, (255, 195, 45), [(cx - 4, cy - 13), (cx + 4, cy - 13), (cx, cy - 8)])
         elif item.discovery_id == "shapes":
-            r_colors = [(245, 75, 75), (255, 158, 44), (255, 228, 54), (92, 214, 110), (74, 178, 245)]
-            for i, col in enumerate(r_colors):
-                rad = 24 - i * 4
-                pygame.draw.arc(surface, col, (cx - rad, cy - rad + 4, rad * 2, rad * 2), 0, math.pi, 3)
-            pygame.draw.circle(surface, (255, 255, 255), (cx - 20, cy + 6), 6)
-            pygame.draw.circle(surface, (255, 255, 255), (cx + 20, cy + 6), 6)
+            # Arch with outward curved load distribution arrows
+            pygame.draw.arc(surface, (217, 90, 63), (cx - 18, cy - 10, 36, 22), 0, math.pi, 4)
+            pygame.draw.line(surface, (60, 65, 70), (cx - 20, cy + 4), (cx + 20, cy + 4), 2)
+            # Outward distribution chevrons
+            pygame.draw.line(surface, (255, 195, 45), (cx - 16, cy + 12), (cx - 6, cy + 12), 2)
+            pygame.draw.polygon(surface, (255, 195, 45), [(cx - 13, cy + 9), (cx - 13, cy + 15), (cx - 18, cy + 12)])
+            pygame.draw.line(surface, (255, 195, 45), (cx + 6, cy + 12), (cx + 16, cy + 12), 2)
+            pygame.draw.polygon(surface, (255, 195, 45), [(cx + 13, cy + 9), (cx + 13, cy + 15), (cx + 18, cy + 12)])
         elif item.discovery_id == "forces":
-            pygame.draw.rect(surface, (208, 92, 66), (cx - 16, cy - 14, 12, 24), border_radius=3)
-            pygame.draw.rect(surface, (208, 92, 66), (cx + 4, cy - 14, 12, 24), border_radius=3)
-            pygame.draw.rect(surface, (248, 240, 228), (cx - 18, cy - 16, 16, 4), border_radius=2)
-            pygame.draw.rect(surface, (248, 240, 228), (cx + 2, cy - 16, 16, 4), border_radius=2)
-            pygame.draw.arc(surface, (68, 155, 208), (cx - 24, cy + 4, 48, 14), math.pi, math.tau, 3)
-            pygame.draw.arc(surface, (140, 215, 255), (cx - 20, cy + 10, 40, 10), math.pi, math.tau, 2)
+            # Pillar column rooted in bedrock
+            pygame.draw.rect(surface, (190, 80, 56), (cx - 10, cy - 16, 20, 22), border_radius=2)
+            pygame.draw.rect(surface, (248, 240, 228), (cx - 12, cy - 18, 24, 4), border_radius=2)
+            # Bedrock foundation block
+            pygame.draw.rect(surface, (120, 105, 90), (cx - 16, cy + 6, 32, 12), border_radius=3)
+            # Downward force arrow
+            pygame.draw.line(surface, (255, 215, 60), (cx, cy - 8), (cx, cy + 4), 3)
+            pygame.draw.polygon(surface, (255, 215, 60), [(cx - 4, cy + 1), (cx + 4, cy + 1), (cx, cy + 6)])
         else:
-            pygame.draw.circle(surface, (255, 255, 255), (cx - 14, cy - 4), 10)
-            pygame.draw.circle(surface, (245, 150, 60), (cx + 14, cy - 4), 10)
-            pygame.draw.line(surface, (255, 200, 40), (cx - 6, cy + 10), (cx + 6, cy + 10), 3)
-            pygame.draw.circle(surface, (248, 86, 114), (cx - 3, cy - 16), 4)
-            pygame.draw.circle(surface, (248, 86, 114), (cx + 3, cy - 16), 4)
-            pygame.draw.polygon(surface, (248, 86, 114), [(cx - 7, cy - 14), (cx + 7, cy - 14), (cx, cy - 7)])
+            # Suspension cables pulling upward in tension
+            pygame.draw.line(surface, (60, 65, 70), (cx - 20, cy + 8), (cx + 20, cy + 8), 3)
+            pygame.draw.line(surface, (255, 195, 45), (cx - 18, cy - 16), (cx, cy + 4), 2)
+            pygame.draw.line(surface, (255, 195, 45), (cx + 18, cy - 16), (cx, cy + 4), 2)
+            pygame.draw.line(surface, (255, 215, 80), (cx - 9, cy - 6), (cx - 9, cy + 8), 2)
+            pygame.draw.line(surface, (255, 215, 80), (cx + 9, cy - 6), (cx + 9, cy + 8), 2)
+            # Upward tension chevron
+            pygame.draw.lines(surface, (255, 195, 45), False, [(cx - 5, cy - 10), (cx, cy - 16), (cx + 5, cy - 10)], 2)
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
         for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):

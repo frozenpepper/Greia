@@ -559,3 +559,36 @@ Addressed user feedback regarding broken/overly complex Machine gallery card dra
    - Headless simulator: 5-second survival and clean Home return (`rc=0`).
    - Deployed to Acer Aspire One (`192.168.68.104`) via `greia_remote.py deploy activities/enciclopedia_greia --replace-system`.
    - On-device live verification: captured screenshots on Acer display `:0` confirming workbench diorama models, 'IL PONTE' page with duck and driving car, 'L\'AEROPLANO' page with smiling sun and cloud bunny, ADR 0019 system navigation pill `[Home] [<]`, and clean return to Greia Shell.
+
+### Educational Depth Calibration (Magnets, Bridge, Airplane) & Acer Physical Verification
+
+Refined concepts to achieve the requested intuitive, instructive "middle ground" (clear physical concepts for 4-5yo kids without babyish fluff or university equations):
+
+1. **Locales (it.json & en.json):**
+   - Calibrated explanations across `bridge.*`, `airplane.*`, and `magnet.*` to physical fundamentals: deck load distribution into banks and bedrock, wing shape generating upward lift, engine thrust, control surfaces (ailerons/rudder), cloud altitude scale (Cumuli vs. Cirri), magnetic attraction/repulsion, material testing, and Earth compass orientation.
+
+2. **Interactive Science Lab Table (pages/magnet.py):**
+   - Modern tactile bar magnets with bold "N" and "S" polarity markers (FontRole.CONTROL typography).
+   - Draggable right magnet with realistic physics: snaps with golden sparkles when opposite poles face (N vs S), repels and pushes away with red repulsion waves when like poles face (S vs S).
+   - "GIRA POLI" button to flip polarity and demonstrate attraction vs repulsion.
+   - Materials testing tray with steel nail, wooden block, and aluminum coin.
+   - Earth dipole globe with brass compass needle oscillating toward magnetic North.
+
+3. **Bridge Mechanics (pages/bridge.py):**
+   - Visualized downward vehicle weight on deck, arch curves redirecting weight outward to riverbanks, columns transferring weight into bedrock anchor blocks, and upward tension chevrons along suspension cables.
+
+4. **Airplane Flight Dynamics (pages/airplane.py):**
+   - Visualized curved wings generating upward lift (PORTANZA), propeller engine producing forward thrust (SPINTA), movable ailerons and tail rudder for flight control (COMANDI), and cloud altitude scale (QUOTA).
+
+5. **Remote Tooling (tools/greia_remote.py):**
+   - Hardened password deployments by utilizing `sshpass` if available, eliminating interactive terminal hangs during SFTP transfers.
+
+6. **Verification & Physical Device Evidence:**
+   - Unit tests: 22/22 tests pass in `tests/test_activity_enciclopedia*.py`.
+   - Headless simulator: 5s survival and clean Home return (`rc=0`).
+   - Physical deployment to Acer Aspire One (`192.168.68.104`) with `--replace-system`.
+   - On-device screenshots on display `:0` verified:
+     - `/tmp/acer_magnet_page_real.png`: "I MAGNETI" page with N/S magnets, field lines, "GIRA POLI" button, Dani mascot, caption ribbon.
+     - `/tmp/acer_bridge_page.png` and `/tmp/acer_bridge_arch_active.png`: "IL PONTE" with load distribution vectors, arch chevrons, and bedrock anchors.
+     - `/tmp/acer_airplane_page.png` and `/tmp/acer_airplane_lift.png`: "L'AEROPLANO" with lift forces, thrust, control surfaces, and cloud altitude ladder.
+     - `/tmp/acer_final_shell.png`: ADR 0019 protected Home button returns cleanly to Greia Shell.

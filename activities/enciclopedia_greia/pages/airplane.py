@@ -295,7 +295,7 @@ class AirplanePage(EncyclopediaPage):
                 pygame.draw.circle(surface, (82, 155, 68), (tx, ty - 6), 6)
                 pygame.draw.line(surface, (95, 65, 40), (tx, ty), (tx, ty + 4), 2)
 
-        # Feature 1: Wings like birds (lift) -> Playful white breeze streams
+        # Feature 1: Airflow over wings & upward Lift vector
         if self._airflow_age > 0.0:
             for offset in (-45, -20, 15, 40):
                 stream_pts = []
@@ -304,17 +304,41 @@ class AirplanePage(EncyclopediaPage):
                     sy = center_y + offset + math.sin(t * 10.0 + seg * 0.5) * 5
                     stream_pts.append((sx, int(sy)))
                 pygame.draw.lines(surface, (255, 255, 255), False, stream_pts, 3)
+            # Upward Green Lift vector (PORTANZA)
+            lift_pulse = int(math.sin(t * 12.0) * 4)
+            pygame.draw.line(surface, (60, 205, 105), (center_x, center_y + 10), (center_x, center_y - 75 + lift_pulse), 4)
+            pygame.draw.polygon(surface, (60, 205, 105), [(center_x - 7, center_y - 65 + lift_pulse), (center_x + 7, center_y - 65 + lift_pulse), (center_x, center_y - 82 + lift_pulse)])
 
         # THE CUTE STORYBOOK AIRPLANE
         self._draw_cute_airplane(surface, center_x, center_y, climb_angle)
 
-        # Feature 4: Fast propeller (thrust) -> Speed streaks and puffs
+        # Feature 4: Fast propeller (thrust) -> Forward yellow thrust vector & speed lines
         if self._thrust_age > 0.0:
             for sy in (center_y - 12, center_y, center_y + 12):
                 streak_len = int(45 + math.sin(t * 25.0 + sy) * 15)
                 streak_x = center_x - 130
                 pygame.draw.line(surface, (255, 225, 80), (streak_x, sy), (streak_x - streak_len, sy), 3)
                 pygame.draw.circle(surface, (255, 255, 255), (center_x + 105, sy + int(math.sin(t * 15.0) * 4)), 3)
+            # Forward yellow thrust arrow (SPINTA)
+            prop_x = center_x - 115
+            t_pulse = int(math.sin(t * 14.0) * 4)
+            pygame.draw.line(surface, (255, 195, 45), (prop_x, center_y), (prop_x - 55 + t_pulse, center_y), 4)
+            pygame.draw.polygon(surface, (255, 195, 45), [(prop_x - 45 + t_pulse, center_y - 6), (prop_x - 45 + t_pulse, center_y + 6), (prop_x - 60 + t_pulse, center_y)])
+
+        # Feature 3: Altitude & Clouds display (Cumuli vs Cirri)
+        if self._forces_age > 0.0:
+            # Altitude ladder on the left
+            ladder_x = 120
+            pygame.draw.line(surface, (120, 160, 190), (ladder_x, 220), (ladder_x, 440), 3)
+            # High altitude marker: Cirri (8000m)
+            pygame.draw.line(surface, (120, 160, 190), (ladder_x - 8, 230), (ladder_x + 8, 230), 2)
+            for cx in range(ladder_x + 15, ladder_x + 85, 18):
+                pygame.draw.line(surface, (255, 255, 255, 200), (cx, 226), (cx + 12, 232), 2)
+            # Low altitude marker: Cumuli (2000m)
+            pygame.draw.line(surface, (120, 160, 190), (ladder_x - 8, 410), (ladder_x + 8, 410), 2)
+            pygame.draw.circle(surface, (255, 255, 255), (ladder_x + 35, 410), 12)
+            pygame.draw.circle(surface, (255, 255, 255), (ladder_x + 50, 406), 16)
+            pygame.draw.circle(surface, (255, 255, 255), (ladder_x + 65, 410), 11)
 
     def _draw_cute_airplane(self, surface: pygame.Surface, cx: int, cy: int, angle: float) -> None:
         t = self._time
@@ -331,7 +355,7 @@ class AirplanePage(EncyclopediaPage):
         # Red tip on back wing
         pygame.draw.polygon(surface, (220, 55, 45), [(cx - 2, cy - 65), (cx + 14, cy - 68), (cx + 28, cy - 60), (cx + 18, cy - 52)])
 
-        # Tailfin
+        # Tailfin with Rudder (Control surface)
         tail_poly = [
             (cx + 62, cy - 10),
             (cx + 96, cy - 58),
@@ -340,9 +364,20 @@ class AirplanePage(EncyclopediaPage):
         ]
         pygame.draw.polygon(surface, (232, 68, 56), tail_poly)
         pygame.draw.polygon(surface, (168, 38, 28), tail_poly, 3)
+
+        # Movable Rudder on the tail trailing edge
+        rudder_deflection = int(math.sin(t * 8.0) * 4) if self._myth_age > 0.0 else 0
+        rudder_poly = [
+            (cx + 114, cy - 56),
+            (cx + 124 + rudder_deflection, cy - 56),
+            (cx + 108 + rudder_deflection, cy - 8),
+            (cx + 100, cy - 8),
+        ]
+        pygame.draw.polygon(surface, (255, 205, 60) if self._myth_age > 0.0 else (205, 55, 45), rudder_poly)
+
         # Golden star on tailfin
-        self._draw_star(surface, cx + 106, cy - 44, 7, (255, 225, 60))
-        # Horizontal stabilizer
+        self._draw_star(surface, cx + 92, cy - 38, 6, (255, 225, 60))
+        # Horizontal stabilizer with movable elevator
         pygame.draw.polygon(surface, (41, 108, 179), [(cx + 78, cy + 2), (cx + 114, cy - 8), (cx + 118, cy + 2), (cx + 84, cy + 7)])
 
         # Main Fuselage Body
@@ -381,7 +416,7 @@ class AirplanePage(EncyclopediaPage):
                 pygame.draw.circle(surface, (40, 30, 20), (wx + 1, cy - 9), 1)
                 pygame.draw.circle(surface, (255, 255, 255), (wx + 4, cy - 10), 2)
 
-        # Front Main Wing
+        # Front Main Wing with Flap/Aileron
         front_wing = [
             (cx - 32, cy + 4),
             (cx - 10, cy + 62),
@@ -390,8 +425,20 @@ class AirplanePage(EncyclopediaPage):
         ]
         pygame.draw.polygon(surface, (41, 108, 179), front_wing)
         pygame.draw.polygon(surface, (22, 65, 115), front_wing, 3)
+
+        # Movable Flap/Aileron on the wing trailing edge
+        flap_deflection = int(math.sin(t * 8.0) * 5) if self._myth_age > 0.0 else 0
+        flap_poly = [
+            (cx + 6, cy + 30),
+            (cx + 20, cy + 56),
+            (cx + 34 + flap_deflection, cy + 52 + flap_deflection),
+            (cx + 18 + flap_deflection, cy + 28),
+        ]
+        pygame.draw.polygon(surface, (255, 205, 60) if self._myth_age > 0.0 else (32, 90, 155), flap_poly)
+        pygame.draw.polygon(surface, (22, 65, 115), flap_poly, 2)
+
         # Red tip on front wing
-        pygame.draw.polygon(surface, (232, 68, 56), [(cx - 10, cy + 62), (cx + 8, cy + 65), (cx + 36, cy + 54), (cx + 22, cy + 46)])
+        pygame.draw.polygon(surface, (232, 68, 56), [(cx - 10, cy + 62), (cx + 8, cy + 65), (cx + 20, cy + 56), (cx + 6, cy + 52)])
         # Green navigation light on wingtip
         pygame.draw.circle(surface, (80, 225, 120), (cx - 6, cy + 62), 3)
 
@@ -424,36 +471,35 @@ class AirplanePage(EncyclopediaPage):
     def _draw_hotspot_icon(surface: pygame.Surface, item: AirplaneDiscovery) -> None:
         cx, cy = item.center
         if item.discovery_id == "lift":
-            # Cute bird-like wing soaring upward on breeze
-            wing = [(cx - 18, cy + 10), (cx - 6, cy - 16), (cx + 18, cy - 14), (cx + 4, cy + 8)]
+            # Wing with upward Lift arrow
+            wing = [(cx - 18, cy + 10), (cx - 6, cy - 8), (cx + 18, cy - 6), (cx + 4, cy + 8)]
             pygame.draw.polygon(surface, (41, 108, 179), wing)
-            pygame.draw.polygon(surface, (232, 68, 56), [(cx - 6, cy - 16), (cx + 6, cy - 18), (cx + 18, cy - 14), (cx + 10, cy - 10)])
-            # Breeze stream
-            pygame.draw.arc(surface, (95, 205, 250), (cx - 24, cy + 2, 48, 16), math.pi, math.tau, 3)
+            pygame.draw.line(surface, (60, 205, 105), (cx, cy + 14), (cx, cy - 18), 3)
+            pygame.draw.polygon(surface, (60, 205, 105), [(cx - 4, cy - 14), (cx + 4, cy - 14), (cx, cy - 20)])
         elif item.discovery_id == "myth":
-            # Fluffy cartoon cloud with little golden star
-            pygame.draw.circle(surface, (255, 255, 255), (cx - 10, cy + 2), 10)
-            pygame.draw.circle(surface, (255, 255, 255), (cx + 2, cy - 4), 13)
-            pygame.draw.circle(surface, (255, 255, 255), (cx + 14, cy + 2), 9)
-            # Smiling eye dots on cloud
-            pygame.draw.circle(surface, (60, 50, 45), (cx - 1, cy - 2), 1.5)
-            pygame.draw.circle(surface, (60, 50, 45), (cx + 5, cy - 2), 1.5)
-            # Little star
-            pygame.draw.circle(surface, (255, 220, 50), (cx + 18, cy - 12), 4)
+            # Control surfaces: wing/tail flap with steering angle
+            pygame.draw.polygon(surface, (232, 68, 56), [(cx - 10, cy + 10), (cx + 2, cy - 14), (cx + 16, cy - 14), (cx + 8, cy + 10)])
+            # Flap tilting
+            pygame.draw.polygon(surface, (255, 195, 45), [(cx + 2, cy - 14), (cx + 16, cy - 14), (cx + 18, cy - 2), (cx + 4, cy - 2)])
+            pygame.draw.arc(surface, (255, 255, 255), (cx - 8, cy - 18, 24, 24), 0.2, 1.4, 2)
         elif item.discovery_id == "forces":
-            # Round airplane window looking down at a cute toy cottage
-            pygame.draw.circle(surface, (255, 238, 120), (cx, cy), 16)
-            pygame.draw.circle(surface, (41, 108, 179), (cx, cy), 16, 3)
-            # Tiny toy cottage
-            pygame.draw.rect(surface, (255, 250, 240), (cx - 6, cy + 2, 12, 8))
-            pygame.draw.polygon(surface, (232, 68, 56), [(cx - 8, cy + 2), (cx, cy - 5), (cx + 8, cy + 2)])
+            # Cloud types: Cumulus down low, Cirrus up high
+            # Lower cumulus
+            pygame.draw.circle(surface, (255, 255, 255), (cx - 8, cy + 6), 8)
+            pygame.draw.circle(surface, (255, 255, 255), (cx + 4, cy + 4), 10)
+            # Upper cirrus wisps
+            pygame.draw.line(surface, (210, 235, 255), (cx - 12, cy - 12), (cx + 14, cy - 8), 2)
+            pygame.draw.line(surface, (210, 235, 255), (cx - 6, cy - 6), (cx + 16, cy - 2), 2)
+            # Altitude arrow
+            pygame.draw.line(surface, (255, 195, 45), (cx - 14, cy + 12), (cx - 14, cy - 14), 2)
+            pygame.draw.polygon(surface, (255, 195, 45), [(cx - 17, cy - 11), (cx - 11, cy - 11), (cx - 14, cy - 16)])
         else:
-            # Bright yellow spinning propeller with motion swirls
-            pygame.draw.circle(surface, (255, 225, 80), (cx, cy), 6)
-            pygame.draw.circle(surface, (232, 68, 56), (cx, cy), 3)
-            pygame.draw.ellipse(surface, (255, 245, 205), (cx - 20, cy - 4, 40, 8))
-            pygame.draw.arc(surface, (255, 199, 59), (cx - 22, cy - 22, 44, 44), 0.2, 1.4, 2)
-            pygame.draw.arc(surface, (255, 199, 59), (cx - 22, cy - 22, 44, 44), 3.3, 4.5, 2)
+            # Engine & propeller thrust forward
+            pygame.draw.circle(surface, (255, 199, 59), (cx + 8, cy), 8)
+            pygame.draw.line(surface, (255, 245, 205), (cx + 8, cy - 14), (cx + 8, cy + 14), 4)
+            # Forward thrust arrow
+            pygame.draw.line(surface, (255, 195, 45), (cx + 6, cy), (cx - 14, cy), 3)
+            pygame.draw.polygon(surface, (255, 195, 45), [(cx - 10, cy - 4), (cx - 10, cy + 4), (cx - 16, cy)])
 
     def _draw_hotspots(self, surface: pygame.Surface) -> None:
         for index, (item, rect) in enumerate(zip(DISCOVERIES, self._hotspots)):
