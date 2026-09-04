@@ -2,16 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from greia_platform.activity_discovery import (
-    ActivityDiscoveryError,
-    ActivityDiscoveryPolicy,
-    ActivityDiscoveryPolicyStore,
-    ActivityDiscoveryService,
-)
 from greia_platform.assets import AssetCatalogueError
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
-from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue
+from .catalogue_view import ALL_ACTIVITIES_ID
 from .main import HitTarget
 
 
@@ -26,21 +20,19 @@ _ADAPTIVE_VISUAL_ERRORS = (
 
 
 class AdaptiveActivityDiscoveryMixin:
-    """Apply per-child discovery policy and one optional sub-Collection layer.
+    """Render one optional adaptive sub-Collection presentation layer.
 
-    Package/registry authority remains in the launcher core. This mixin only
-    projects the already validated registry through child/profile policy and
-    presentation metadata, then renders the optional semantic grouping layer.
+    This mixin owns child-facing grouping/navigation only. It deliberately has
+    no Parent discovery-policy store, filtering service, reload token, or policy
+    write path. Installed child compositions that expose Activities must project
+    Parent visibility/age/difficulty authority before this presentation layer;
+    ``PolicyEnforcedAdaptiveActivityDiscoveryMixin`` provides that composition.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._subcollection_id: str | None = None
         self._subcollection_selected = 0
-        self._discovery_policy = ActivityDiscoveryPolicy()
-        self._discovery_policy_store: ActivityDiscoveryPolicyStore | None = None
-        self._discovery_policy_token: tuple[int, int] | None = None
-        self._discovery_service = ActivityDiscoveryService()
 
     @property
     def _presented_activities(self):
@@ -60,117 +52,16 @@ class AdaptiveActivityDiscoveryMixin:
         super()._activate_profile(profile, pygame)
         self._subcollection_id = None
         self._subcollection_selected = 0
-        self._reload_effective_catalogue()
 
     def _logout(self, pygame: Any) -> None:
         self._subcollection_id = None
         self._subcollection_selected = 0
-        self._discovery_policy = ActivityDiscoveryPolicy()
-        self._discovery_policy_store = None
-        self._discovery_policy_token = None
         super()._logout(pygame)
 
     def _set_category(self, category_id: str) -> None:
         self._subcollection_id = None
         self._subcollection_selected = 0
         super()._set_category(category_id)
-
-    def _rescan_if_due(self) -> bool:
-        changed = super()._rescan_if_due()
-        if self._active_profile is None:
-            return changed
-        token = self._policy_file_token()
-        if token != self._discovery_policy_token:
-            self._reload_effective_catalogue()
-            return True
-        return changed
-
-    def _rescan_activities(self) -> bool:
-        changed = super()._rescan_activities()
-        if changed and self._active_profile is not None:
-            self._reload_effective_catalogue()
-        return changed
-
-    def _rescan_profiles(self) -> bool:
-        active_id = (
-            self._active_profile.profile.profile_id
-            if self._active_profile is not None
-            else None
-        )
-        changed = super()._rescan_profiles()
-        if not changed or self._active_profile is None:
-            return changed
-        if self._active_profile.profile.profile_id == active_id:
-            self._reload_effective_catalogue()
-        return changed
-
-    def _reload_effective_catalogue(self) -> None:
-        context = self._active_profile
-        if context is None:
-            self._catalogue = ActivityCatalogue.from_activities(self._activities)
-            return
-        store = ActivityDiscoveryPolicyStore(context.activity_discovery_policy_path)
-        try:
-            policy = store.read()
-        except ActivityDiscoveryError:
-            # Corrupt preference data must never make Activities disappear.
-            policy = ActivityDiscoveryPolicy()
-            self._catalogue_error = True
-        effective = self._discovery_service.effective_activities(
-            self._activities,
-            approximate_age=context.profile.approximate_age,
-            challenge_preference=context.profile.challenge_preference,
-            policy=policy,
-        )
-        catalogue = ActivityCatalogue.from_activities(
-            effective,
-            locale=self._active_locale,
-            previously_subdivided=policy.subdivided_collections,
-        )
-        desired_state = frozenset(catalogue.subdivided_collection_ids)
-        current_state = frozenset(policy.subdivided_collections)
-        if desired_state != current_state:
-            updated = policy
-            for collection_id in current_state - desired_state:
-                updated = updated.with_subdivision_state(collection_id, False)
-            for collection_id in desired_state - current_state:
-                updated = updated.with_subdivision_state(collection_id, True)
-            try:
-                store.write(updated)
-                policy = updated
-            except (ActivityDiscoveryError, OSError):
-                self._catalogue_error = True
-        self._discovery_policy_store = store
-        self._discovery_policy = policy
-        self._catalogue = catalogue
-        self._category_id = self._catalogue.nearest_category(self._category_id)
-        if self._subcollection_id is not None and self._catalogue.subcollection(
-            self._category_id, self._subcollection_id
-        ) is None:
-            self._subcollection_id = None
-        self._selected = 0
-        self._subcollection_selected = 0
-        self._activity_scroll_start = 0
-        self._cached_activities_key = None
-        self._cached_activities_surface = None
-        self._cached_activities_targets.clear()
-        self._tile_surface_cache.clear()
-        self._backdrop_cache.clear()
-        self._discovery_policy_token = self._policy_file_token()
-
-    def _policy_file_token(self) -> tuple[int, int] | None:
-        store = self._discovery_policy_store
-        if store is None and self._active_profile is not None:
-            store = ActivityDiscoveryPolicyStore(
-                self._active_profile.activity_discovery_policy_path
-            )
-        if store is None:
-            return None
-        try:
-            stat = store.path.stat()
-        except OSError:
-            return None
-        return (stat.st_mtime_ns, stat.st_size)
 
     def _adaptive_groups(self):
         if self._category_id == ALL_ACTIVITIES_ID:
