@@ -1,6 +1,10 @@
 #!/bin/sh
 set -eu
 
+greia_boot_marker() { printf 'GREIA_BOOT event=%s\n' "$1" >&2; }
+
+greia_boot_marker launcher_execstartpre_vt_begin || true
+
 # Persistent child home may be repaired idempotently here. Volatile shared
 # runtime roots are NOT created/chowned by the launcher: systemd-tmpfiles owns
 # them every boot so launcher/parent/hardware services cannot race ownership.
@@ -64,3 +68,5 @@ fi
 # the branded frame remains visible until the launcher presents its first real
 # frame. Neither request is a mathematical guarantee across drivers:
 # frame-by-frame Acer and QEMU recordings remain a mandatory acceptance gate.
+
+greia_boot_marker launcher_execstartpre_vt_end || true

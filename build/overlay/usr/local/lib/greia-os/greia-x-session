@@ -7,11 +7,16 @@ export GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 export GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
 export PYTHONPATH=/opt/greia-os/src
 
+greia_boot_marker() { printf 'GREIA_BOOT event=%s\n' "$1" >&2; }
+
+greia_boot_marker x_session_enter || true
+
 /usr/bin/python3 -m greia_platform.hardware_session_legacy_x \
   --root "$GREIA_OS_ROOT" \
   --state-dir "$GREIA_SYSTEM_SETTINGS_DIR" \
   --status-path "$GREIA_HARDWARE_STATUS" &
 hardware_pid=$!
+greia_boot_marker hardware_watcher_spawned || true
 cleanup() {
   kill "$hardware_pid" >/dev/null 2>&1 || true
   wait "$hardware_pid" >/dev/null 2>&1 || true
@@ -19,6 +24,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 set +e
+greia_boot_marker child_shell_exec || true
 /usr/bin/python3 -m greia_launcher.child_shell
 launcher_status=$?
 if [ "$launcher_status" -ne 0 ]; then

@@ -9,12 +9,18 @@
 
 set -u
 
+greia_boot_marker() { printf 'GREIA_BOOT event=%s\n' "$1" >&2; }
+
+greia_boot_marker launcher_execstartpre_scrub_begin || true
+
 /usr/bin/env \
   PYTHONPATH=/opt/greia-os/src \
   PYTHONNOUSERSITE=1 \
   PYTHONDONTWRITEBYTECODE=1 \
   /usr/bin/python3 -m greia_platform.activity_tree_cleanup
 status=$?
+
+greia_boot_marker launcher_execstartpre_scrub_end || true
 
 if [ "$status" -ne 0 ]; then
   /usr/bin/logger -t greia-activity-tree-cleanup \

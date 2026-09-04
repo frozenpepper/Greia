@@ -1,8 +1,17 @@
 #!/bin/sh
 set -eu
 
+greia_boot_marker() { printf 'GREIA_BOOT event=%s\n' "$1" >&2; }
+
+greia_boot_marker first_boot_enter || true
+
 marker=/var/lib/greia-os/initialized
+# Scoped EXIT trap so the idempotent early exit below still closes the
+# boot-marker pair without touching the pinned idempotency line. Removed
+# immediately after; the full-run exit marker is emitted explicitly at the end.
+trap 'greia_boot_marker first_boot_marker_exit || true' EXIT
 [ ! -e "$marker" ] || exit 0
+trap - EXIT
 
 boot_progress() {
     value="$1"
@@ -46,3 +55,5 @@ chown greiapanel:greiapanel "$marker"
 # Persistent Greia state is now ready. The next visible milestone is owned by
 # the launcher VT/X preflight; retries must not fabricate more progress.
 boot_progress 65
+
+greia_boot_marker first_boot_marker_exit || true
