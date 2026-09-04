@@ -489,3 +489,23 @@ f5f4d9a5cd456dfc93e55d3e9a5c498c25645f64  acceptance procedure includes file-bou
 Verification is still **PENDING** for this policy-safety chain. No focused exact-current unit run, aggregate `make verify`, or physical Acer fallback-policy run is claimed from this connector-only work. Concurrent Enciclopedia/system-graphics work is a separate lane and is intentionally not modified by this policy tranche.
 
 Next exact step remains `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md` on a clean exact-current checkout; if `main` advances because of the independent Enciclopedia/system-graphics lane, freeze and test the new descendant rather than inheriting older evidence.
+
+## 22. Pre-intro boot optimization — R2 Phase 0+1 source instrumentation landed, Acer gates pending (2026-09-04)
+
+T-BAG run R2 (`TBag/runs/R2`, analyst+grunt `opencode-go/muse-spark-1.3-contributor`) executes the owner-supplied plan `GREIA_PRE_INTRO_BOOT_OPTIMIZATION_PLAN.md` (Phase 0+1 graph B01–B05; B03 superseded by B03R after a scope-gate failure, B02/B03R/B04 integrated, B05 human-blocked).
+
+Source-committed on `main` (pre-existing unrelated WIP in `activities/*` and parts of `src/greia_launcher/*` deliberately left uncommitted; staged hunks verified to contain all boot-marker lines and zero foreign lines):
+
+```text
+22461d1d boot: add pre-frame shell timing markers (GREIA_BOOT)
+d593c1dd boot: instrument launcher Python path with exactly-once first-frame marker
+4a68aced boot: add boot-marker analyzer and marker contract tests
+```
+
+What landed: `GREIA_BOOT` shell markers in the four launcher pre-hooks, `src/greia_platform/boot_markers.py` + launcher wiring with an exactly-once `intro_first_frame_flipped` guard after the first successful flip, `tools/boot/analyze_boot_markers.py` (fails closed on missing/duplicated first-frame marker), 13 new tests. 7-second intro untouched; initramfs/GRUB/network ordering untouched (no R2/R3 work).
+
+Verification: combined-tree `make verify` green on re-run (exit 0). First run showed one transient `ENOSPC` error from `tempfile.mkdtemp` under a 96%-full dev volume; re-run clean, unrelated to these changes. No Acer evidence yet: Phase 0 inventory/hashes and the 5-boot baseline are unmeasured, gates stay red, nothing waived.
+
+Blocker (owner decision required): B05 needs a bounded Acer operator session (R0 inventory → Phase 0 gate → R1 single-change deploy + one reboot → 5 one-at-a-time reboots) or an explicit deferral of the Acer baseline. No worker tier has an SSH/operator path to the Acer; password/credentials must never enter source/history/evidence.
+
+Next exact step: owner provisions the Acer session (supply host + credential channel + operator window) or defers; on provision, B05 resumes verbatim under existing authority. Downstream boot phases stay unplanned until the baseline exists.
