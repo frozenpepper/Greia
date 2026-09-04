@@ -10,6 +10,24 @@ marker=/var/lib/greia-os/initialized
 # boot-marker pair without touching the pinned idempotency line. Removed
 # immediately after; the full-run exit marker is emitted explicitly at the end.
 trap 'greia_boot_marker first_boot_marker_exit || true' EXIT
+# B2 one-time field repair: the launcher no longer mutates account membership
+# on the start path, so systems installed before the static audio membership
+# need exactly one repair here. Runs even when the initialized marker above
+# already exists (existing field machines); gated by its own versioned marker
+# so a second run mutates nothing. The marker is written only after the repair
+# succeeds; a failed repair exits non-zero before the write and retries via
+# the unit's Restart=on-failure. Repairs audio membership only — no
+# video/render additions.
+audio_groups_marker=/var/lib/greia-os/migrations/b2-audio-groups-v1.done
+if [ ! -e "$audio_groups_marker" ]; then
+  install -d -m 0755 /var/lib/greia-os/migrations
+  if id -nG greiakid 2>/dev/null | tr ' ' '\n' | grep -qx audio; then
+    : "greiakid audio membership already present"
+  else
+    usermod -a -G audio greiakid
+  fi
+  printf '%s\n' "b2-audio-groups-v1" > "$audio_groups_marker"
+fi
 [ ! -e "$marker" ] || exit 0
 trap - EXIT
 

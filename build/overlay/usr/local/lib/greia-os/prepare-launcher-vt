@@ -5,11 +5,11 @@ greia_boot_marker() { printf 'GREIA_BOOT event=%s\n' "$1" >&2; }
 
 greia_boot_marker launcher_execstartpre_vt_begin || true
 
-# Persistent child home may be repaired idempotently here. Volatile shared
-# runtime roots are NOT created/chowned by the launcher: systemd-tmpfiles owns
-# them every boot so launcher/parent/hardware services cannot race ownership.
-mkdir -p /var/lib/greia-kid
-chown greiakid:greiakid /var/lib/greia-kid
+# Volatile shared runtime roots are NOT created/chowned by the launcher:
+# systemd-tmpfiles owns them every boot so launcher/parent/hardware services
+# cannot race ownership. Persistent state (child home, account/group
+# membership) is image-static plus the versioned first-boot migration — the
+# launcher performs no account mutation on the start path.
 for runtime_root in /run/greia-os /run/greia-hardware; do
   if [ ! -d "$runtime_root" ]; then
     echo "Missing Greia runtime root: $runtime_root (systemd-tmpfiles setup failed)" >&2
@@ -17,8 +17,7 @@ for runtime_root in /run/greia-os /run/greia-hardware; do
   fi
 done
 
-# Ensure greiakid is in audio group and ALSA channels are unmuted
-usermod -a -G audio greiakid 2>/dev/null || true
+# Unmute ALSA channels (platform audio ownership pending C1 verdict).
 amixer sset Master 100% unmute 2>/dev/null || true
 amixer sset Speaker 100% unmute 2>/dev/null || true
 amixer sset Headphone 100% unmute 2>/dev/null || true

@@ -11,6 +11,10 @@ StartLimitBurst=8
 Type=simple
 User=greiakid
 Group=greiakid
+# Deterministic audio credentials at exec without per-boot account mutation:
+# image construction plus the versioned first-boot migration own /etc/group
+# truth; this directive resolves the launcher process groups at start.
+SupplementaryGroups=audio
 PAMName=login
 WorkingDirectory=/opt/greia-os
 Environment=GREIA_OS_ROOT=/opt/greia-os
