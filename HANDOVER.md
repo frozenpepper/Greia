@@ -377,6 +377,7 @@ Catalogue state: **41 Activities**, with `org.greia.sottomarino-giramondo` accep
 
 **NOT EXECUTED (human/hardware-owned, runnable on the frozen candidate):** the four §14 lanes (Acer panel, USB mouse, second display, resolution change). Do not copy a physical PASS from an earlier candidate onto this one; execute all four lanes on the exact frozen SHA before hardware claims.
 
+<<<<<<< HEAD
 ## 16. Child Activity policy fallback safety closure — source implemented (2026-09-04)
 
 Source commit `28c58e06018c735f185ca2e6e674b1f695938222` closes two policy-authority defects found during the Parent production review:
@@ -451,3 +452,12 @@ fdcbb68d1a10ff9c6f5414c27d5beace293b327a  acceptance gate reconciliation
 Verification remains **PENDING** for the current chain: no focused exact-current unit run, no current `make verify`, and no current physical Acer trusted-fallback policy run has executed in this connector-only environment. The previous C02 `1768 tests OK` evidence predates every source change above and does not certify them.
 
 Next exact step: freeze current `main`, run the focused policy safety suite, existing discovery/Parent regressions, and `make verify` exactly as specified by `docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md`. Only after the source/local gate is green should the sanctioned R7 physical fallback lane hide one harmless Activity through Parent and prove it remains hidden in both normal and emergency launcher paths.
+
+## 19. Enciclopedia Greia — 398 Owner-Accepted Voice Lines Packaging (2026-09-04)
+
+Packaged and registered all 398 pre-recorded owner-accepted voice assets (199 Italian, 199 English) into `activities/enciclopedia_greia/assets/audio/{it,en}/{group}/` and wired them through `locales/it.json` and `locales/en.json`:
+- Home portal welcome (`encyclopedia.home.welcome`), 6 section introductions (`animals`, `body`, `earth`, `history`, `machines`, `space`), and 36 topic entry intros.
+- All discovery tokens across all 36 topic pages speak full narrations by Leo, Tito, Lilli, and Dani upon activation.
+- Conforms strictly to the Greia audio mapping contract (`assets/audio/<locale>/<group>/...`).
+- Verification: 97/97 encyclopedia unit tests pass (`pytest tests/test_activity_enciclopedia*.py tests/test_encyclopedia_*.py`), 398/398 activity tests pass, automated audio playback verification script 100% PASS, headless simulator lifecycle & Home exit PASS (`rc=0`).
+
