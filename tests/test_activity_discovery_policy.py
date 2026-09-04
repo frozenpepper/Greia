@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from greia_launcher.catalogue_view import ActivityCatalogue
 from greia_platform.activities import ActivityManifest
@@ -238,6 +240,60 @@ class ActivityDiscoveryPolicyTests(unittest.TestCase):
             )
             store.write(policy)
             self.assertEqual(store.read(), policy)
+
+    def test_policy_store_rejects_symlink_at_open_boundary(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / "real-policy.json"
+            ActivityDiscoveryPolicyStore(target).write(ActivityDiscoveryPolicy())
+            link = root / "policy.json"
+            try:
+                link.symlink_to(target)
+            except (OSError, NotImplementedError):
+                self.skipTest("symlinks unavailable on this platform")
+            with self.assertRaisesRegex(ActivityDiscoveryError, "symlink"):
+                ActivityDiscoveryPolicyStore(link).read()
+
+    def test_policy_store_rejects_regular_file_replacement_between_lstat_and_open(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path = root / "policy.json"
+            store = ActivityDiscoveryPolicyStore(path)
+            store.write(ActivityDiscoveryPolicy())
+            replacement = root / "replacement.json"
+            ActivityDiscoveryPolicyStore(replacement).write(
+                ActivityDiscoveryPolicy(
+                    visibility_mode=ActivityVisibilityMode.CUSTOM
+                )
+            )
+            original_open = os.open
+            swapped = False
+
+            def swapping_open(candidate, flags, *args, **kwargs):
+                nonlocal swapped
+                if not swapped and Path(candidate) == path:
+                    os.replace(replacement, path)
+                    swapped = True
+                return original_open(candidate, flags, *args, **kwargs)
+
+            with patch(
+                "greia_platform.activity_discovery.os.open",
+                side_effect=swapping_open,
+            ):
+                with self.assertRaisesRegex(ActivityDiscoveryError, "changed while being read"):
+                    store.read()
+            self.assertTrue(swapped)
+
+    def test_policy_store_rejects_non_regular_file_and_oversized_file(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with self.assertRaisesRegex(ActivityDiscoveryError, "regular file"):
+                ActivityDiscoveryPolicyStore(root).read()
+
+            oversized = root / "oversized.json"
+            oversized.write_bytes(b"x" * (ActivityDiscoveryPolicyStore.MAX_BYTES + 1))
+            with self.assertRaisesRegex(ActivityDiscoveryError, "size bound"):
+                ActivityDiscoveryPolicyStore(oversized).read()
 
     def test_old_policy_without_difficulty_fields_remains_compatible(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
