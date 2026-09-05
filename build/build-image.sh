@@ -287,6 +287,30 @@ printf '%s\n' '/opt/greia-os/src' > "$ROOTFS/usr/lib/python3/dist-packages/pip_o
 chown -R root:root "$ROOTFS/opt/greia-os"
 chmod -R a-w "$ROOTFS/opt/greia-os"
 
+# T33 built-in index: ship the deterministic built-in Activity index from the
+# same build transaction as the built-in Activity content installed above.
+# The generator (tools/build_activity_index.py) re-validates through the
+# authoritative ActivityRegistry and serializes via the accepted
+# activity_index model; it reads the same "$PROJECT_ROOT/activities" source
+# root that was just installed to "$ROOTFS/opt/greia-os/activities", so index
+# and content always resolve from one source transaction. Any generation
+# failure aborts the build with no half-installed index. Developer images
+# delegate to this script and installer images build their target payload
+# through it, so both paths inherit this transaction unchanged; the live
+# installer root carries no Activity content and needs no index.
+GREIA_INDEX_STAGING="$(mktemp "$BUILD_DIR/activity-index.XXXXXX")"
+GREIA_IMAGE_INDEX="$ROOTFS/usr/share/greia/activity-index-v1.json"
+if ! PYTHONPATH="$PROJECT_ROOT/src" python3 "$PROJECT_ROOT/tools/build_activity_index.py" \
+  --activities "$PROJECT_ROOT/activities" \
+  --runtime "$PROJECT_ROOT/runtime/child-runtime.toml" \
+  --output "$GREIA_INDEX_STAGING"; then
+  echo "Built-in Activity index generation failed; refusing image." >&2
+  rm -f "$GREIA_INDEX_STAGING" "$GREIA_INDEX_STAGING.tmp" "$GREIA_IMAGE_INDEX"
+  exit 1
+fi
+install -D -m 0644 "$GREIA_INDEX_STAGING" "$GREIA_IMAGE_INDEX"
+rm -f "$GREIA_INDEX_STAGING" "$GREIA_INDEX_STAGING.tmp"
+
 # Root filesystem and volatile working storage.
 cat > "$ROOTFS/etc/fstab" <<FSTAB
 UUID=$root_uuid / ext4 defaults,noatime,errors=remount-ro 0 1

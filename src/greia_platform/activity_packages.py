@@ -15,12 +15,19 @@ from pathlib import Path, PurePosixPath
 
 from .activities import (
     ActivityManifest,
+    ActivityRegistration,
     ActivityRegistry,
     ActivityValidationError,
     RuntimeCatalogue,
     package_digest,
 )
 from .activity_assets import package_icon_path
+from .activity_index import (
+    ActivityIndex,
+    ActivityIndexLoader,
+    build_index,
+    runtime_policy_fingerprint,
+)
 from .activity_tree_cleanup import scrub_activity_tree
 from .trust import ActivitySource, PackageTrust
 
@@ -30,6 +37,20 @@ MAX_ARCHIVE_BYTES = 32 * 1024 * 1024
 MAX_PATH_CHARACTERS = 220
 MAX_COMPRESSION_RATIO = 200
 _INSTALL_LOCK_NAME = ".install.lock"
+
+# T34 active-set generation layout (consumed by T36 launcher composition).
+# Each generation is a complete versioned active set:
+#   generations/<generation-id>/activities/<activity-id>/...
+#   generations/<generation-id>/index.json
+# The platform-owned `active` path is an indirection file whose entire
+# content is "<generation-id>\n", swapped atomically via tmp+replace so a
+# normal boot never observes a mixed generation. No symlinks are used
+# anywhere in this layout, and in particular never inside Activity packages.
+GENERATIONS_DIRNAME = "generations"
+ACTIVE_POINTER_NAME = "active"
+ACTIVITIES_DIRNAME = "activities"
+ACTIVE_INDEX_FILENAME = "index.json"
+_INITIAL_GENERATION_ID = "gen-000001"
 
 
 class ActivityPackageError(RuntimeError):
@@ -104,13 +125,29 @@ class ActivityPackageService:
         built_in_root: Path | None = None,
     ) -> None:
         self.state_root = state_root.resolve()
-        self.active_root = self.state_root / "active"
+        self.generations_root = self.state_root / GENERATIONS_DIRNAME
+        self._active_pointer = self.state_root / ACTIVE_POINTER_NAME
         self.versions_root = self.state_root / "versions"
         self.staging_root = self.state_root / "staging"
         self.receipts_root = self.state_root / "receipts"
         self.runtime = RuntimeCatalogue.load(runtime_catalogue)
         self.built_in_root = built_in_root.resolve() if built_in_root else None
         self._install_lock = threading.Lock()
+
+    @property
+    def active_root(self) -> Path:
+        """Resolved activities directory of the current active generation.
+
+        This stays a directory of active packages so existing callers keep
+        working; the atomic publish boundary is the generation directory
+        plus the platform-owned ``active`` pointer file beneath it.
+        """
+        return self._resolve_active_activities_root()
+
+    @property
+    def active_pointer(self) -> Path:
+        """Platform-owned indirection file naming the active generation."""
+        return self._active_pointer
 
     @classmethod
     def from_environment(cls) -> "ActivityPackageService":
@@ -140,6 +177,10 @@ class ActivityPackageService:
             self._ensure_roots()
             with self._install_lock:
                 with self._process_install_lock():
+                    # A legacy `active` directory (pre-generation layout) is
+                    # migrated under the same exclusive lock before the
+                    # install builds its new generation on top.
+                    self._migrate_legacy_active_dir_locked()
                     return self._install_archive_serialized(archive_path)
         except ActivityPackageError:
             raise
@@ -162,6 +203,7 @@ class ActivityPackageService:
             self._ensure_roots()
             with self._install_lock:
                 with self._process_install_lock():
+                    self._migrate_legacy_active_dir_locked()
                     return self._uninstall_serialized(activity_id.strip())
         except ActivityPackageError:
             raise
@@ -194,6 +236,361 @@ class ActivityPackageService:
         finally:
             os.close(descriptor)
 
+    # -- T34 active-set generation boundary --------------------------------
+
+    def active_generation_id(self) -> str | None:
+        """Return the active generation id, or None when no generation exists yet.
+
+        A legacy pre-generation ``active`` directory reports None so callers
+        can distinguish the unmigrated layout from a versioned generation.
+        """
+        try:
+            return self._read_pointer_id()
+        except FileNotFoundError:
+            return None
+
+    def active_index_path(self) -> Path | None:
+        """Return the active generation index file, or None for legacy/missing."""
+        generation_id = self.active_generation_id()
+        if generation_id is None:
+            return None
+        return self._generation_index_path(generation_id)
+
+    def active_source(self) -> ActivitySource:
+        """Return the configured parent-package source bound to the active set."""
+        return ActivitySource(
+            self._resolve_active_activities_root(),
+            PackageTrust.PARENT_TRUSTED_UNSIGNED,
+            self.SOURCE_ID,
+        )
+
+    def load_active_registrations(self) -> tuple[ActivityRegistration, ...]:
+        """Load the active set through its versioned index when available.
+
+        The index path never re-reads package trees and never recomputes
+        digests; it reconstructs the already-validated registrations recorded
+        at publish time. A legacy layout (or a missing index) falls back to
+        a fail-closed validated registry scan so hygiene is never bypassed.
+        A corrupt index raises rather than serving an unvalidated set.
+        """
+        activities_root = self._resolve_active_activities_root()
+        index_path = self.active_index_path()
+        if index_path is not None and index_path.is_file():
+            loader = ActivityIndexLoader.from_runtime(
+                ActivitySource(
+                    activities_root,
+                    PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                    self.SOURCE_ID,
+                ),
+                self.runtime,
+            )
+            return loader.load_file(index_path)
+        registry = ActivityRegistry(
+            (
+                ActivitySource(
+                    activities_root,
+                    PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                    self.SOURCE_ID,
+                ),
+            ),
+            self.runtime,
+        )
+        return registry.discover_registrations()
+
+    def _generation_dir(self, generation_id: str) -> Path:
+        return self.generations_root / generation_id
+
+    def _generation_activities_path(self, generation_id: str) -> Path:
+        return self._generation_dir(generation_id) / ACTIVITIES_DIRNAME
+
+    def _generation_index_path(self, generation_id: str) -> Path:
+        return self._generation_dir(generation_id) / ACTIVE_INDEX_FILENAME
+
+    @staticmethod
+    def _require_safe_generation_id(generation_id: str) -> None:
+        if (
+            not isinstance(generation_id, str)
+            or not generation_id
+            or "/" in generation_id
+            or "\\" in generation_id
+            or generation_id in {".", ".."}
+            or generation_id.startswith(".")
+            or any(part in {".", ".."} for part in PurePosixPath(generation_id).parts)
+        ):
+            raise ActivityPackageError(
+                f"Activity generation id is not a safe portable name: {generation_id!r}"
+            )
+
+    def _read_pointer_id(self) -> str | None:
+        pointer = self._active_pointer
+        if pointer.is_dir():
+            return None
+        try:
+            text = pointer.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            raise
+        except OSError as exc:
+            raise ActivityPackageError(
+                f"cannot read the active Activity generation: {exc}"
+            ) from exc
+        generation_id = text.strip()
+        if not generation_id:
+            raise ActivityPackageError("the active Activity generation is empty")
+        self._require_safe_generation_id(generation_id)
+        return generation_id
+
+    def _resolve_active_activities_root(self) -> Path:
+        try:
+            generation_id = self._read_pointer_id()
+        except FileNotFoundError:
+            generation_id = None
+        if generation_id is not None:
+            return self._generation_activities_path(generation_id)
+        legacy = self._active_pointer
+        if legacy.is_dir():
+            return legacy
+        # Fresh or crash-window state without a pointer: serve the latest
+        # complete generation when one exists so boot never observes a mix.
+        latest = self._latest_generation_id()
+        if latest is not None:
+            return self._generation_activities_path(latest)
+        return self._generation_activities_path(_INITIAL_GENERATION_ID)
+
+    def _latest_generation_id(self) -> str | None:
+        if not self.generations_root.is_dir():
+            return None
+        candidates: list[str] = []
+        try:
+            entries = list(self.generations_root.iterdir())
+        except OSError:
+            return None
+        for entry in entries:
+            if not entry.is_dir() or entry.name.startswith("."):
+                continue
+            try:
+                self._require_safe_generation_id(entry.name)
+            except ActivityPackageError:
+                continue
+            if (entry / ACTIVITIES_DIRNAME).is_dir():
+                candidates.append(entry.name)
+        if not candidates:
+            return None
+        return sorted(candidates)[-1]
+
+    def _next_generation_id(self) -> str:
+        latest = self._latest_generation_id()
+        if latest is None:
+            return _INITIAL_GENERATION_ID
+        suffix = latest.rsplit("-", 1)[-1] if "-" in latest else ""
+        try:
+            number = int(suffix)
+            width = len(suffix)
+        except ValueError:
+            number = 0
+            width = 6
+        return f"gen-{number + 1:0{max(width, 6)}d}"
+
+    def _write_active_pointer(self, generation_id: str) -> None:
+        self._require_safe_generation_id(generation_id)
+        pointer = self._active_pointer
+        if pointer.is_dir():
+            raise ActivityPackageError(
+                "the active Activity path is still a legacy directory"
+            )
+        temporary_handle, temporary_name = tempfile.mkstemp(
+            prefix=pointer.name + ".", dir=str(pointer.parent)
+        )
+        temporary = Path(temporary_name)
+        try:
+            with open(temporary_handle, "w", encoding="utf-8") as handle:
+                handle.write(generation_id + "\n")
+            os.chmod(temporary, 0o644)
+            os.replace(temporary, pointer)
+        except BaseException:
+            temporary.unlink(missing_ok=True)
+            raise
+
+    def _publish_generation(self, generation_id: str) -> None:
+        """Swap the platform-owned pointer to a fully staged generation.
+
+        The generation directory (activities plus index) is complete before
+        this single atomic file replace, so a fault anywhere earlier still
+        exposes the previous complete generation.
+        """
+        target = self._generation_dir(generation_id)
+        if not (target / ACTIVITIES_DIRNAME).is_dir():
+            raise ActivityPackageError(
+                f"Activity generation {generation_id!r} is not staged"
+            )
+        if not (target / ACTIVE_INDEX_FILENAME).is_file():
+            raise ActivityPackageError(
+                f"Activity generation {generation_id!r} has no index"
+            )
+        self._write_active_pointer(generation_id)
+
+    def _list_generation_package_ids(self, activities_root: Path) -> list[str]:
+        if not activities_root.is_dir():
+            return []
+        names: list[str] = []
+        for entry in sorted(activities_root.iterdir(), key=lambda item: item.name):
+            if entry.name.startswith("."):
+                continue
+            if entry.is_dir():
+                names.append(entry.name)
+        return names
+
+    def _hardlink_tree(self, source: Path, destination: Path) -> None:
+        shutil.copytree(source, destination, copy_function=os.link)
+        self._make_tree_read_only(destination)
+
+    def _stage_generation(
+        self,
+        generation_id: str,
+        *,
+        carry_ids: list[str],
+        extra_trees: dict[str, Path],
+    ) -> Path:
+        """Stage a complete new generation directory (not yet published)."""
+        self._require_safe_generation_id(generation_id)
+        current_activities = self._resolve_active_activities_root()
+        staging = Path(
+            tempfile.mkdtemp(
+                prefix=f".staging-{generation_id}-",
+                dir=str(self.generations_root),
+            )
+        )
+        staging_activities = staging / ACTIVITIES_DIRNAME
+        staging_activities.mkdir(parents=True, exist_ok=True)
+        os.chmod(staging_activities, 0o755)
+        try:
+            for activity_id in carry_ids:
+                if activity_id in extra_trees:
+                    continue
+                source = current_activities / activity_id
+                if not source.is_dir():
+                    raise ActivityPackageError(
+                        f"previously active Activity {activity_id!r} is missing"
+                    )
+                self._hardlink_tree(source, staging_activities / activity_id)
+            for activity_id, source in extra_trees.items():
+                destination = staging_activities / activity_id
+                if destination.exists():
+                    raise ActivityPackageError(
+                        f"Activity {activity_id} is already installed; update is not enabled yet"
+                    )
+                self._hardlink_tree(source, destination)
+            registrations = self._validate_generation_activities(staging_activities)
+            parent_source = ActivitySource(
+                staging_activities,
+                PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                self.SOURCE_ID,
+            )
+            parent_registrations = tuple(
+                item for item in registrations if item.source_id == self.SOURCE_ID
+            )
+            index = build_index(
+                parent_registrations, source=parent_source, runtime=self.runtime
+            )
+            index.write_file(staging / ACTIVE_INDEX_FILENAME)
+            os.replace(staging, self._generation_dir(generation_id))
+            return self._generation_dir(generation_id)
+        except BaseException:
+            self._discard_private_tree(staging)
+            raise
+
+    def _validate_generation_activities(
+        self, activities_root: Path
+    ) -> tuple[ActivityRegistration, ...]:
+        sources: list[ActivitySource] = []
+        if self.built_in_root is not None:
+            sources.append(
+                ActivitySource(
+                    self.built_in_root,
+                    PackageTrust.BUILT_IN,
+                    "greia-system",
+                )
+            )
+        sources.append(
+            ActivitySource(
+                activities_root,
+                PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                self.SOURCE_ID,
+            )
+        )
+        registry = ActivityRegistry(tuple(sources), self.runtime)
+        try:
+            return registry.discover_registrations()
+        except ActivityValidationError as exc:
+            raise ActivityPackageError(str(exc)) from exc
+
+    def _discard_old_generations(self, keep_id: str) -> None:
+        if not self.generations_root.is_dir():
+            return
+        for entry in list(self.generations_root.iterdir()):
+            if entry.name.startswith("."):
+                continue
+            if entry.name == keep_id or not entry.is_dir():
+                continue
+            try:
+                self._require_safe_generation_id(entry.name)
+            except ActivityPackageError:
+                continue
+            self._discard_private_tree(entry)
+
+    def _migrate_legacy_active_dir_locked(self) -> None:
+        legacy = self._active_pointer
+        if not legacy.is_dir():
+            return
+        if self._latest_generation_id() is not None:
+            # Generations already exist; a stray legacy directory must not
+            # shadow the pointer. This state should not occur in normal
+            # operation; fail closed rather than guessing which set is live.
+            raise ActivityPackageError(
+                "legacy Activity active directory shadows versioned generations"
+            )
+        generation_id = _INITIAL_GENERATION_ID
+        staging = Path(
+            tempfile.mkdtemp(
+                prefix=f".staging-{generation_id}-",
+                dir=str(self.generations_root),
+            )
+        )
+        staging_activities = staging / ACTIVITIES_DIRNAME
+        staging_activities.mkdir(parents=True, exist_ok=True)
+        os.chmod(staging_activities, 0o755)
+        try:
+            for activity_id in self._list_generation_package_ids(legacy):
+                self._hardlink_tree(
+                    legacy / activity_id, staging_activities / activity_id
+                )
+            registrations = self._validate_generation_activities(staging_activities)
+            parent_source = ActivitySource(
+                staging_activities,
+                PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                self.SOURCE_ID,
+            )
+            parent_registrations = tuple(
+                item for item in registrations if item.source_id == self.SOURCE_ID
+            )
+            index = build_index(
+                parent_registrations, source=parent_source, runtime=self.runtime
+            )
+            index.write_file(staging / ACTIVE_INDEX_FILENAME)
+            os.replace(staging, self._generation_dir(generation_id))
+        except BaseException:
+            self._discard_private_tree(staging)
+            raise
+        backup = self.state_root / ".active-legacy-backup"
+        if backup.exists():
+            self._discard_private_tree(backup)
+        os.rename(legacy, backup)
+        try:
+            self._write_active_pointer(generation_id)
+        except BaseException:
+            os.rename(backup, legacy)
+            raise
+        self._discard_private_tree(backup)
+
     def _install_archive_serialized(
         self, archive_path: Path
     ) -> ActivityInstallReceipt:
@@ -210,7 +607,6 @@ class ActivityPackageService:
         )
         package_root = stage_parent / "package"
         package_root.mkdir(mode=0o700)
-        activation: Path | None = None
         try:
             self._extract_bounded_archive(archive_path, package_root)
             # 2A trust boundary: staged-tree hygiene lives inside this
@@ -248,11 +644,20 @@ class ActivityPackageService:
                 os.replace(package_root, immutable)
                 self._make_tree_read_only(immutable)
 
-            activation = self.active_root / f".{manifest.activity_id}.activating-{digest[:12]}"
-            if activation.exists():
-                shutil.rmtree(activation)
-            shutil.copytree(immutable, activation, copy_function=os.link)
-            self._make_tree_read_only(activation)
+            # T34 atomic generation publish: the complete new active set
+            # (previous packages carried by hardlink plus the new immutable
+            # package) is staged, validated and indexed in a new generation
+            # directory. The single atomic pointer swap below publishes the
+            # set and its index together; any fault before it leaves the
+            # previous complete generation untouched.
+            current_activities = self._resolve_active_activities_root()
+            carry_ids = self._list_generation_package_ids(current_activities)
+            if manifest.activity_id in carry_ids:
+                raise ActivityPackageError(
+                    f"Activity {manifest.activity_id} is already installed; update is not enabled yet"
+                )
+            generation_id = self._next_generation_id()
+            staged_generation: Path | None = None
             receipt = ActivityInstallReceipt(
                 activity_id=manifest.activity_id,
                 version=manifest.version,
@@ -260,17 +665,31 @@ class ActivityPackageService:
                 package_trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
                 source_id=self.SOURCE_ID,
             )
-
-            self._write_receipt(receipt)
             try:
-                os.rename(activation, final_active)
-            except (FileExistsError, OSError) as exc:
+                staged_generation = self._stage_generation(
+                    generation_id,
+                    carry_ids=carry_ids,
+                    extra_trees={manifest.activity_id: immutable},
+                )
+                self._write_receipt(receipt)
+            except BaseException:
+                if staged_generation is not None:
+                    self._discard_private_tree(staged_generation)
+                else:
+                    candidate = self._generation_dir(generation_id)
+                    if candidate.exists():
+                        self._discard_private_tree(candidate)
                 self._receipt_path(manifest.activity_id).unlink(missing_ok=True)
-                if isinstance(exc, FileExistsError):
-                    raise ActivityPackageError(
-                        f"Activity {manifest.activity_id} became installed concurrently"
-                    ) from exc
                 raise
+            try:
+                self._publish_generation(generation_id)
+            except BaseException as exc:
+                self._discard_private_tree(self._generation_dir(generation_id))
+                self._receipt_path(manifest.activity_id).unlink(missing_ok=True)
+                raise ActivityPackageError(
+                    f"could not publish Activity generation {generation_id!r}: {exc}"
+                ) from exc
+            self._discard_old_generations(generation_id)
             return receipt
         except ActivityPackageError:
             raise
@@ -283,14 +702,13 @@ class ActivityPackageService:
             raise ActivityPackageError(str(exc)) from exc
         finally:
             self._discard_private_tree(stage_parent)
-            if activation is not None:
-                self._discard_private_tree(activation)
 
     def _uninstall_serialized(self, activity_id: str) -> ActivityUninstallReceipt:
+        current_activities = self._resolve_active_activities_root()
         registry = ActivityRegistry(
             (
                 ActivitySource(
-                    self.active_root,
+                    current_activities,
                     PackageTrust.PARENT_TRUSTED_UNSIGNED,
                     self.SOURCE_ID,
                 ),
@@ -311,46 +729,112 @@ class ActivityPackageService:
             raise ActivityPackageError(str(exc)) from exc
 
         active = registration.manifest.root.resolve()
-        if active.parent != self.active_root.resolve():
+        if active.parent != current_activities.resolve():
             raise ActivityPackageError("installed Activity path is outside the package source")
         digest = registration.package_digest
-        tombstone = self.staging_root / f"remove-{activity_id}-{digest[:12]}"
-        if tombstone.exists():
-            self._discard_private_tree(tombstone)
+        version = registration.manifest.version
 
-        # Moving the active directory is the uninstall commit point. Child saves
-        # live under profile-scoped storage elsewhere and are never part of this
-        # transaction. After this rename the launcher can no longer discover the
-        # package even if best-effort cleanup is interrupted.
-        if active.is_dir() and not os.access(active, os.W_OK):
-            os.chmod(active, 0o700)
+        # T34 atomic generation publish for removal: stage the complete
+        # remaining set plus its new index, then swap the pointer. The swap
+        # is the commit point; child saves live under profile-scoped storage
+        # elsewhere and are never part of this transaction.
+        carry_ids = [
+            name
+            for name in self._list_generation_package_ids(current_activities)
+            if name != activity_id
+        ]
+        generation_id = self._next_generation_id()
         try:
-            os.rename(active, tombstone)
-        except FileNotFoundError as exc:
+            self._stage_generation(
+                generation_id, carry_ids=carry_ids, extra_trees={}
+            )
+        except BaseException:
+            candidate = self._generation_dir(generation_id)
+            if candidate.exists():
+                self._discard_private_tree(candidate)
+            raise
+        try:
+            self._publish_generation(generation_id)
+        except BaseException as exc:
+            self._discard_private_tree(self._generation_dir(generation_id))
             raise ActivityPackageError(
-                f"Activity {activity_id} is no longer installed"
+                f"could not publish Activity generation {generation_id!r}: {exc}"
             ) from exc
 
         self._receipt_path(activity_id).unlink(missing_ok=True)
-        self._discard_private_tree(tombstone)
         self._discard_private_tree(self.versions_root / activity_id)
+        self._discard_old_generations(generation_id)
         return ActivityUninstallReceipt(
             activity_id=activity_id,
-            version=registration.manifest.version,
+            version=version,
             package_digest=digest,
             source_id=self.SOURCE_ID,
         )
 
     def _ensure_roots(self) -> None:
         self.state_root.mkdir(parents=True, exist_ok=True)
+        self.generations_root.mkdir(parents=True, exist_ok=True)
+        os.chmod(self.generations_root, 0o755)
         for path, mode in (
-            (self.active_root, 0o755),
             (self.versions_root, 0o700),
             (self.staging_root, 0o700),
             (self.receipts_root, 0o700),
         ):
             path.mkdir(parents=True, exist_ok=True)
             os.chmod(path, mode)
+        # An existing legacy `active` directory is left for the locked
+        # migration step; a missing pointer with no generations gets an
+        # initial empty generation so readers always resolve a directory.
+        # This runs outside the install locks, so concurrent first-time
+        # callers must converge: a lost creation race is success, not error.
+        if self._active_pointer.is_dir() or self._active_pointer.is_file():
+            return
+        if self._latest_generation_id() is not None:
+            return
+        staging = Path(
+            tempfile.mkdtemp(
+                prefix=f".staging-{_INITIAL_GENERATION_ID}-",
+                dir=str(self.generations_root),
+            )
+        )
+        staging_activities = staging / ACTIVITIES_DIRNAME
+        staging_activities.mkdir(parents=True, exist_ok=True)
+        os.chmod(staging_activities, 0o755)
+        try:
+            ActivityIndex(
+                platform_activity_api_version=self.runtime.api_version,
+                source_id=self.SOURCE_ID,
+                package_trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
+                generated_from_policy_version=self.runtime.api_version,
+                generated_from_policy_hash=runtime_policy_fingerprint(self.runtime),
+                registrations=(),
+            ).write_file(staging / ACTIVE_INDEX_FILENAME)
+            try:
+                os.replace(staging, self._generation_dir(_INITIAL_GENERATION_ID))
+            except OSError:
+                # A concurrent first-time caller published the initial
+                # generation first; our staging is residue, their set is live.
+                self._discard_private_tree(staging)
+                if self._latest_generation_id() is None:
+                    raise
+                if not self._active_pointer.exists():
+                    try:
+                        latest = self._latest_generation_id()
+                        if latest is not None:
+                            self._write_active_pointer(latest)
+                    except OSError:
+                        pass
+                return
+            try:
+                self._write_active_pointer(_INITIAL_GENERATION_ID)
+            except OSError:
+                # The generation directory is already published; a pointer
+                # written concurrently names the same initial generation.
+                if self.active_generation_id() != _INITIAL_GENERATION_ID:
+                    raise
+        except BaseException:
+            self._discard_private_tree(staging)
+            raise
 
     def _extract_bounded_archive(self, archive_path: Path, destination: Path) -> None:
         seen: set[str] = set()

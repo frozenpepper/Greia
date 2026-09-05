@@ -54,6 +54,7 @@ from greia_platform.profiles import (
 from greia_platform.input_core import SemanticAction
 from .composition import (
     build_launcher_runtime_services,
+    compose_boot_content,
     development_shell_window_backend,
     provisional_installed_display_session,
     provisional_installed_shell_window_backend,
@@ -165,11 +166,104 @@ class LauncherApplication:
         windowed: bool = False,
         allow_exit: bool = False,
         shell_input: ShellInputController | None = None,
+        bootstrap: bool = True,
     ):
+        # Lightweight construction only: no Activity discovery, no registry
+        # composition, no runtime build, no history recovery. The explicit
+        # bootstrap step (see bootstrap()/bootstrap_launcher()) owns the
+        # one-pass composition. The base constructor never calls the
+        # overridable _rebuild_runtime_services(); subclasses bootstrap
+        # explicitly after this constructor has fully returned.
+        self._shell_input = shell_input or ShellInputController()
+        self.paths = LauncherPaths.from_environment()
+        self.windowed = windowed
+        self.allow_exit = allow_exit
+        self._bootstrapped = False
+        # Bootstrap-owned state starts as explicit placeholders so an
+        # unbootstrapped instance is observable but performs no discovery.
+        self.runtime: RuntimeCatalogue | None = None
+        self.registry: ActivityRegistry | None = None
+        self._activities: tuple[ActivityManifest, ...] = ()
+        self._asset_set: Any = None
+        self.assets: Any = None
+        self.shared_visuals_available = False
+        self._visual_cache: Any = None
+        self.profile_store: Any = None
+        self.profiles: tuple[ChildProfile, ...] = ()
+        self.session: Any = None
+        self.selector_theme: Any = None
+        self.theme_controller: Any = None
+        self._activity_discovery_token: Any = ()
+        self.runtime_services: Any = None
+        self.supervisor: Any = None
+        self._history_recovery_failures: set[str] = set()
+        self._shell_window_backend: Any = None
+        self._selected = 0
+        self._profile_selected = 0
+        self._active_profile: ProfileContext | None = None
+        self._pending_profile: ChildProfile | None = None
+        self._mode = "profiles"
+        self._secret_text = ""
+        self._secret_error_until = 0.0
+        self._last_result: ActivityResult | None = None
+        self._first_frame_released = False
+        self._next_boot_handoff_attempt = 0.0
+        self._icon_cache: dict[tuple[str, int], Any] = {}
+        self._font_cache: dict[int, Any] = {}
+        self._profile_name_cache: dict[tuple[str, int, int, tuple[int, int, int]], Any] = {}
+        self._typography = GreiaTypography(
+            self.paths.root / "assets" / "fonts" / "nunito-sans"
+        )
+        self._next_rescan = 0.0
+        self._catalogue_error = False
+        self._targets: list[HitTarget] = []
+        self._cached_profiles_surface: Any = None
+        self._cached_profiles_key: Any = None
+        self._cached_profiles_targets: list[HitTarget] = []
+        self._parent_chord = KeyChordTracker({ord("s"), ord("t")}, hold_duration_seconds=5.0)
+        self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
+        self._dimmed_underlay: Any = None
+        self._dimmed_underlay_key: Any = None
+        self._parent_panel_opened_monotonic = 0.0
+        # Auto-bootstrap only the exact base type. Subclass instances must
+        # let their own explicit bootstrap run after this constructor has
+        # returned, so the base constructor never dispatches to a subclass
+        # override while state is half-initialized.
+        if bootstrap and type(self) is LauncherApplication:
+            self.bootstrap()
+
+    @classmethod
+    def create_bootstrapped(
+        cls,
+        *,
+        windowed: bool = False,
+        allow_exit: bool = False,
+        shell_input: ShellInputController | None = None,
+    ) -> "LauncherApplication":
+        """Construct and explicitly bootstrap one launcher in boot order."""
+
+        app = cls(
+            windowed=windowed,
+            allow_exit=allow_exit,
+            shell_input=shell_input,
+            bootstrap=False,
+        )
+        return app.bootstrap()
+
+    def bootstrap(self) -> "LauncherApplication":
+        """Run the explicit one-pass boot composition exactly once.
+
+        Emits the established boot markers in their historical order. A
+        present-but-corrupt built-in index raises its controlled failure
+        (never a silent full rescan); a damaged Parent set degrades to the
+        displayable catalogue-error state instead of taking the Shell down.
+        The polymorphic runtime build runs here, never in the constructor.
+        """
+
+        if self._bootstrapped:
+            return self
         emit_boot_marker("launcher_construct_begin")
         try:
-            self._shell_input = shell_input or ShellInputController()
-            self.paths = LauncherPaths.from_environment()
             # 2A: no in-process Activity-tree scrub on the boot path. Built-in
             # hygiene is owned by the image build and parent/developer hygiene
             # by their activation transactions; the scrub module remains only
@@ -177,12 +271,16 @@ class LauncherApplication:
             self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
             emit_boot_marker("activity_sources_begin")
             try:
-                sources = _activity_sources(self.paths)
+                # One-pass composition: the gated boot set plus the Parent
+                # active set are resolved and loaded exactly once here. No
+                # later boot step may rebuild the registry per source.
+                composed = compose_boot_content(
+                    self.runtime,
+                    boot_activity_sources(self.paths),
+                )
             finally:
                 emit_boot_marker("activity_sources_end")
-            self.registry = ActivityRegistry(
-                sources, self.runtime, fail_closed=False
-            )
+            self.registry = composed.registry
             self._asset_set = load_launcher_assets(
                 self.paths.asset_catalogue,
                 self.paths.shared_visual_catalogue,
@@ -214,30 +312,22 @@ class LauncherApplication:
                 )
             )
             self.theme_controller = self.selector_theme
-            self.windowed = windowed
             emit_boot_marker("activity_discover_begin")
             try:
-                self._activities = self.registry.discover()
+                self._activities = composed.activities
             finally:
                 emit_boot_marker("activity_discover_end")
             self._activity_discovery_token = self.registry.discovery_token()
             installed_root = self._installed_root()
-            development_hal = None if installed_root else _development_hal()
             emit_boot_marker("activity_runtime_build_begin")
             try:
-                self.runtime_services = build_launcher_runtime_services(
-                    self.runtime,
-                    self._activities,
-                    runtime_policy_path=self.paths.runtime_catalogue,
-                    permission_policy_path=self.paths.permission_policy,
-                    storage_policy_path=self.paths.storage_policy,
-                    history_policy_path=self.paths.history_policy,
-                    progression_policy_path=self.paths.progression_policy,
-                    hal=development_hal,
-                )
+                # Explicit polymorphic runtime construction: subclasses build
+                # their own supervisor type here, after construction has fully
+                # completed, instead of during the base constructor.
+                self._rebuild_runtime_services()
             finally:
                 emit_boot_marker("activity_runtime_build_end")
-            self._history_recovery_failures: set[str] = set()
+            self._history_recovery_failures = set()
             emit_boot_marker("history_prepare_begin")
             try:
                 for child in self.profiles:
@@ -249,50 +339,50 @@ class LauncherApplication:
                         self._history_recovery_failures.add(child.profile_id)
             finally:
                 emit_boot_marker("history_prepare_end")
-            display_coordinator = (
-                provisional_installed_display_session() if installed_root else None
-            )
             self._shell_window_backend = (
                 provisional_installed_shell_window_backend()
                 if installed_root
                 else development_shell_window_backend()
             )
-            self.supervisor = ActivitySupervisor(
-                runtime_manager=self.runtime_services.runtime_manager,
-                storage_service=self.runtime_services.storage_service,
-                history_service=self.runtime_services.history_service,
-                display_coordinator=display_coordinator,
-            )
-            self.allow_exit = allow_exit
-            self._selected = 0
-            self._profile_selected = 0
-            self._active_profile: ProfileContext | None = None
-            self._pending_profile: ChildProfile | None = None
-            self._mode = "profiles"
-            self._secret_text = ""
-            self._secret_error_until = 0.0
-            self._last_result: ActivityResult | None = None
-            self._first_frame_released = False
-            self._next_boot_handoff_attempt = 0.0
-            self._icon_cache: dict[tuple[str, int], Any] = {}
-            self._font_cache: dict[int, Any] = {}
-            self._profile_name_cache: dict[tuple[str, int, int, tuple[int, int, int]], Any] = {}
-            self._typography = GreiaTypography(
-                self.paths.root / "assets" / "fonts" / "nunito-sans"
-            )
-            self._next_rescan = 0.0
-            self._catalogue_error = False
-            self._targets: list[HitTarget] = []
-            self._cached_profiles_surface: Any = None
-            self._cached_profiles_key: Any = None
-            self._cached_profiles_targets: list[HitTarget] = []
-            self._parent_chord = KeyChordTracker({ord("s"), ord("t")}, hold_duration_seconds=5.0)
-            self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
-            self._dimmed_underlay: Any = None
-            self._dimmed_underlay_key: Any = None
-            self._parent_panel_opened_monotonic = 0.0
+            self._catalogue_error = composed.parent_degraded
+            self._bootstrapped = True
+            return self
         finally:
             emit_boot_marker("launcher_construct_end")
+
+    def _rebuild_runtime_services(self) -> None:
+        """Bind runtime/permission/history authority to the composed set.
+
+        This is the single boot construction point for the shared services
+        and the supervisor. Richer launcher subclasses override it to build
+        their own supervisor type the first time, so boot never constructs
+        one supervisor only to replace it afterwards.
+        """
+
+        development_hal = None if self._installed_root() else _development_hal()
+        runtime_services = build_launcher_runtime_services(
+            self.runtime,
+            self._activities,
+            runtime_policy_path=self.paths.runtime_catalogue,
+            permission_policy_path=self.paths.permission_policy,
+            storage_policy_path=self.paths.storage_policy,
+            history_policy_path=self.paths.history_policy,
+            progression_policy_path=self.paths.progression_policy,
+            hal=development_hal,
+        )
+        display_coordinator = (
+            provisional_installed_display_session() if self._installed_root() else None
+        )
+        supervisor = ActivitySupervisor(
+            runtime_manager=runtime_services.runtime_manager,
+            storage_service=runtime_services.storage_service,
+            history_service=runtime_services.history_service,
+            display_coordinator=display_coordinator,
+        )
+        # Publish the pair only after both objects are completely built. The
+        # launch path therefore never observes a supervisor/runtime mismatch.
+        self.runtime_services = runtime_services
+        self.supervisor = supervisor
 
     def _enter_parent_panel(self, pygame: Any) -> None:
         """Open the hidden Parent Settings overlay with active text input.
@@ -1210,6 +1300,65 @@ class LauncherApplication:
             self._first_frame_released = completed.returncode == 0
 
 
+DEVELOPER_SOURCE_ID = "greia-developer-remote"
+BUILT_IN_SOURCE_ID = "greia-system"
+DEVELOPER_MARKER_PATH = Path("/etc/greia-os/developer-remote")
+DEVELOPER_MARKER_ENV_VAR = "GREIA_DEVELOPER_REMOTE_MARKER"
+
+
+def developer_marker_path() -> Path:
+    """Return the explicit developer-image marker path (env-overridable for tests).
+
+    The default matches the platform developer-remote contract
+    (``/etc/greia-os/developer-remote``); ``GREIA_DEVELOPER_REMOTE_MARKER``
+    overrides it the same way the Parent package API already does.
+    """
+
+    override = os.environ.get(DEVELOPER_MARKER_ENV_VAR)
+    if override is not None and override.strip():
+        return Path(override.strip())
+    return DEVELOPER_MARKER_PATH
+
+
+def is_developer_mode() -> bool:
+    """Whether the explicit developer-mode path is enabled on this machine.
+
+    Developer mode requires the developer-image marker file. The mere
+    presence of ``GREIA_DEVELOPER_ACTIVITY_ROOT`` is not sufficient: production
+    child boot must not pay developer-mode discovery cost because an
+    environment variable happens to be set.
+    """
+
+    try:
+        return developer_marker_path().is_file()
+    except (OSError, ValueError):
+        return False
+
+
+def developer_activity_source(
+    developer_root: Path | None,
+) -> ActivitySource | None:
+    """Return the explicit live-discovery developer source, or ``None``.
+
+    Returns ``None`` when developer mode is off or no developer root is
+    configured. The returned source always carries
+    ``DEVELOPER_UNSIGNED``/``greia-developer-remote`` trust: developer packages
+    are validated live by ``ActivityRegistry`` on this path and are never
+    promoted to built-in trust, nor is any developer index consumed as a
+    built-in index (the launcher consumes no index on this path).
+    """
+
+    if developer_root is None:
+        return None
+    if not is_developer_mode():
+        return None
+    return ActivitySource(
+        developer_root,
+        trust=PackageTrust.DEVELOPER_UNSIGNED,
+        source_id=DEVELOPER_SOURCE_ID,
+    )
+
+
 def _optional_absolute_path_from_environment(name: str) -> Path | None:
     value = os.environ.get(name)
     if value is None or not value.strip():
@@ -1221,6 +1370,14 @@ def _optional_absolute_path_from_environment(name: str) -> Path | None:
 
 
 def _activity_sources(paths: LauncherPaths) -> tuple[ActivitySource, ...]:
+    """Compose the configured sources including the developer root when set.
+
+    This helper preserves the historical environment-gated composition and its
+    trust/overlap rules. Production child boot must not call it directly;
+    use :func:`boot_activity_sources`, which suppresses the developer source
+    unless explicit developer mode is enabled.
+    """
+
     sources = [
         ActivitySource(
             paths.activities,
@@ -1246,6 +1403,30 @@ def _activity_sources(paths: LauncherPaths) -> tuple[ActivitySource, ...]:
             )
         )
     return tuple(sources)
+
+
+def boot_activity_sources(paths: LauncherPaths) -> tuple[ActivitySource, ...]:
+    """Compose the production boot source set with explicit developer gating.
+
+    Developer mode off: returns only the built-in source and performs no
+    developer-root filesystem scan (the registry built from this set never
+    observes the developer root, so ``discover()``/``discovery_token()`` touch
+    only the built-in tree). Developer mode on: delegates to
+    :func:`_activity_sources` so the developer tree keeps live
+    ``ActivityRegistry`` validation semantics with ``DEVELOPER_UNSIGNED`` trust
+    that is never promoted to built-in trust.
+    """
+
+    builtin = ActivitySource(
+        paths.activities,
+        trust=PackageTrust.BUILT_IN,
+        source_id=BUILT_IN_SOURCE_ID,
+    )
+    developer_root = getattr(paths, "developer_activities", None)
+    developer = developer_activity_source(developer_root)
+    if developer is None:
+        return (builtin,)
+    return _activity_sources(paths)
 
 
 def _development_hal() -> GreiaHAL:
@@ -1283,10 +1464,24 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def bootstrap_launcher(app: LauncherApplication) -> LauncherApplication:
+    """Run the explicit one-pass boot composition for an unbootstrapped app.
+
+    Module-level owner of the T37 bootstrap step so production entry points
+    never rely on constructor side effects: construct with
+    ``bootstrap=False``, then pass the instance through here.
+    """
+
+    return app.bootstrap()
+
+
 def main() -> int:
     emit_boot_marker("launcher_python_enter")
     args = parse_args()
-    return LauncherApplication(windowed=args.windowed, allow_exit=args.allow_exit).run()
+    app = LauncherApplication(
+        windowed=args.windowed, allow_exit=args.allow_exit, bootstrap=False
+    )
+    return bootstrap_launcher(app).run()
 
 
 if __name__ == "__main__":

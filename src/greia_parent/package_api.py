@@ -59,19 +59,24 @@ class PackageParentApiApplication(ParentApiApplication):
     def activities_payload(self) -> list[dict[str, object]]:
         # Parent-installed Activities are a distinct trust source. Never fold
         # them into the immutable built-in root merely for discovery convenience.
-        sources = (
-            ActivitySource(
-                self.root / "activities",
-                PackageTrust.BUILT_IN,
-                "greia-system",
-            ),
-            ActivitySource(
-                self.package_service.active_root,
-                PackageTrust.PARENT_TRUSTED_UNSIGNED,
-                self.package_service.SOURCE_ID,
-            ),
+        # The parent active set is consumed through its versioned generation
+        # index when available (published atomically with the set); a legacy
+        # layout falls back to a fail-closed validated scan so hygiene is
+        # never bypassed. Built-ins are always discovered from the immutable
+        # root; the two validated lists are only concatenated for display.
+        built_in_source = ActivitySource(
+            self.root / "activities",
+            PackageTrust.BUILT_IN,
+            "greia-system",
         )
-        registry = ActivityRegistry(sources, self.package_service.runtime)
+        built_in_registry = ActivityRegistry(
+            (built_in_source,), self.package_service.runtime
+        )
+        parent_registrations = self.package_service.load_active_registrations()
+        registrations = (
+            *built_in_registry.discover_registrations(),
+            *parent_registrations,
+        )
         return [
             {
                 "activity_id": registration.manifest.activity_id,
@@ -99,7 +104,7 @@ class PackageParentApiApplication(ParentApiApplication):
                     and registration.source_id == self.package_service.SOURCE_ID
                 ),
             }
-            for registration in registry.discover_registrations()
+            for registration in registrations
         ]
 
 

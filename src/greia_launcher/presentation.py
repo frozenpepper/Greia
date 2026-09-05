@@ -41,8 +41,9 @@ from .title_presentation import (
 from .main import (
     HitTarget,
     LauncherApplication,
-    _activity_sources,
+    _activity_sources,  # noqa: F401 -- legacy reconfiguration seam (see below).
     _development_hal,
+    boot_activity_sources,
 )
 from .supervisor import ActivitySupervisor
 
@@ -85,10 +86,17 @@ class GreiaLauncherPresentation(LauncherApplication):
         *,
         windowed: bool = False,
         allow_exit: bool = False,
+        bootstrap: bool = True,
         **kwargs: object,
     ):
-        super().__init__(windowed=windowed, allow_exit=allow_exit, **kwargs)
-        self._configure_parent_package_source()
+        # Lightweight construction: the base constructor is always invoked
+        # with bootstrap=False so it never dispatches to this subclass's
+        # runtime override while base state is half-initialized. The explicit
+        # bootstrap below runs after both base and presentation placeholders
+        # are fully assigned.
+        super().__init__(
+            windowed=windowed, allow_exit=allow_exit, bootstrap=False, **kwargs
+        )
         # Replace the old unbounded presentation dictionaries with explicit LRU
         # bounds while preserving the mapping surface used by the base class.
         self._icon_cache = BoundedCache(96)
@@ -104,7 +112,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._category_icon_cache: BoundedCache[
             tuple[str, int, int, int], Any
         ] = BoundedCache(32)
-        self._catalogue = ActivityCatalogue.from_activities(self._activities)
+        self._catalogue: ActivityCatalogue | None = None
         self._category_id = ALL_ACTIVITIES_ID
         self._activity_scroll_start = 0
         self._launching_activity_id: str | None = None
@@ -131,6 +139,24 @@ class GreiaLauncherPresentation(LauncherApplication):
         except Exception:
             spoken_root = Path(__file__).resolve().parents[2]
         self._spoken_labels = SpokenLabelController(spoken_root)
+        if bootstrap:
+            self.bootstrap()
+
+    def bootstrap(self) -> "GreiaLauncherPresentation":
+        """Explicitly bootstrap base composition plus the presentation catalogue.
+
+        One-pass boot: the base bootstrap composes the complete built-in
+        plus Parent plus developer set exactly once (see
+        composition.compose_boot_content). This override only builds the
+        presentation catalogue afterwards; it never rebuilds the registry
+        or runtime services per source here.
+        """
+
+        if getattr(self, "_bootstrapped", False) and self._catalogue is not None:
+            return self
+        super().bootstrap()
+        self._catalogue = ActivityCatalogue.from_activities(self._activities)
+        return self
 
     def _spoken_locale(self) -> str:
         try:
@@ -223,7 +249,14 @@ class GreiaLauncherPresentation(LauncherApplication):
             pass
 
     def _configure_parent_package_source(self) -> None:
-        """Compose parent-installed packages into the same launch authority path."""
+        """Compose parent-installed packages into the same launch authority path.
+
+        Boot no longer routes through here: the base constructor composes all
+        sources exactly once via ``composition.compose_boot_content``. This
+        method remains for explicit reconfiguration only. It still routes the
+        developer content through the gated boot set, so developer mode off
+        never scans the developer root here either.
+        """
 
         package_root = Path(
             os.environ.get(
@@ -240,7 +273,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                 "parent Activity root must be separate from the built-in Activity root"
             )
         sources = (
-            *_activity_sources(self.paths),
+            *boot_activity_sources(self.paths),
             ActivitySource(
                 package_root,
                 trust=PackageTrust.PARENT_TRUSTED_UNSIGNED,
@@ -1934,10 +1967,14 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    return GreiaLauncherPresentation(
+    from .main import bootstrap_launcher as _bootstrap_launcher
+
+    app = GreiaLauncherPresentation(
         windowed=args.windowed,
         allow_exit=args.allow_exit,
-    ).run()
+        bootstrap=False,
+    )
+    return _bootstrap_launcher(app).run()
 
 
 if __name__ == "__main__":

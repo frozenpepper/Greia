@@ -1,11 +1,20 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from greia_platform.activities import ActivityManifest, RuntimeCatalogue
+from greia_platform.activities import (
+    ActivityManifest,
+    ActivityRegistration,
+    ActivityRegistry,
+    ActivityValidationError,
+    RuntimeCatalogue,
+)
+from greia_platform.activity_index import ActivityIndexLoader
+from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.achievements import ProfileAchievementService
 from greia_platform.device_capabilities import (
     DeviceCapabilityService,
@@ -243,4 +252,277 @@ def build_launcher_runtime_services(
         storage_service=storage_service,
         history_service=history_service,
         achievement_service=achievement_service,
+    )
+
+
+# -- T36 one-pass Activity source composition ------------------------------
+#
+# Boot composes Activity sources exactly once. The seam is explicit:
+#
+#   1. index loading ends here: each source's trusted index is read without
+#      re-running package-tree validation or digest recomputation
+#      (``load_built_in_registrations`` / ``load_parent_registrations``), the
+#      developer source keeps its explicit live-validation path, and the
+#      complete set is collision-checked once fail-closed
+#      (``enforce_composed_collision``);
+#   2. runtime construction begins in the caller: one seeded
+#      ``ComposedActivityRegistry`` (activation-time proof reused, never
+#      recomputed), one ``build_launcher_runtime_services`` set, and one
+#      presentation ``ActivityCatalogue``.
+#
+# Callers must not rebuild the registry or runtime services per source
+# afterwards. The "built-ins first, Parent later, rebuild" two-pass flow is
+# gone: ``compose_boot_content`` already contains the Parent set.
+
+BUILT_IN_INDEX_ENV_VAR = "GREIA_BUILT_IN_ACTIVITY_INDEX"
+BUILT_IN_INDEX_PATH = Path("/usr/share/greia/activity-index-v1.json")
+PARENT_ACTIVITY_ROOT_ENV_VAR = "GREIA_PARENT_ACTIVITY_ROOT"
+PARENT_ACTIVITY_ROOT_DEFAULT = Path("/var/lib/greia-os/activity-packages/active")
+
+
+def built_in_index_path() -> Path:
+    """Return the built-in Activity index file path (env-overridable).
+
+    The default is the image path shipped by the T33 build transaction
+    (``build/build-image.sh`` writes ``/usr/share/greia/activity-index-v1.json``
+    from the same source tree installed under ``/opt/greia-os/activities``).
+    ``GREIA_BUILT_IN_ACTIVITY_INDEX`` overrides it the same way other Greia
+    paths are overridable, which is also how tests pin a fixture index.
+    """
+
+    override = os.environ.get(BUILT_IN_INDEX_ENV_VAR)
+    if override is not None and override.strip():
+        return Path(override.strip())
+    return BUILT_IN_INDEX_PATH
+
+
+@dataclass(frozen=True, slots=True)
+class ParentActiveSet:
+    """Parent package source bound to its T34 active-set location."""
+
+    source: ActivitySource
+    index_path: Path | None
+
+
+def resolve_parent_active_set() -> ParentActiveSet:
+    """Resolve the Parent package source against the T34 active generation.
+
+    An explicit ``GREIA_PARENT_ACTIVITY_ROOT`` keeps its historical meaning
+    (a directly scanned package directory with no versioned index). Otherwise
+    the source binds to the atomic active generation exposed by
+    ``ActivityPackageService`` (``generations/<gen>/activities`` plus its
+    ``index.json``), so boot observes exactly the published Parent set.
+    """
+
+    explicit = os.environ.get(PARENT_ACTIVITY_ROOT_ENV_VAR)
+    if explicit is not None and explicit.strip():
+        root = Path(explicit.strip()).resolve()
+        return ParentActiveSet(
+            source=_parent_source_for_root(root),
+            index_path=None,
+        )
+    try:
+        from greia_platform.activity_packages import (
+            ActivityPackageError,
+            ActivityPackageService,
+        )
+
+        service = ActivityPackageService.from_environment()
+        root = service.active_source().root.resolve()
+        index_path = service.active_index_path()
+        return ParentActiveSet(
+            source=_parent_source_for_root(root),
+            index_path=index_path if index_path is not None else None,
+        )
+    except (ActivityPackageError, OSError, ValueError, RuntimeError):
+        root = PARENT_ACTIVITY_ROOT_DEFAULT
+        return ParentActiveSet(
+            source=_parent_source_for_root(root),
+            index_path=None,
+        )
+
+
+def _parent_source_for_root(root: Path) -> ActivitySource:
+    from greia_platform.activity_packages import ActivityPackageService
+
+    return ActivitySource(
+        root,
+        PackageTrust.PARENT_TRUSTED_UNSIGNED,
+        ActivityPackageService.SOURCE_ID,
+    )
+
+
+def load_built_in_registrations(
+    source: ActivitySource,
+    runtime: RuntimeCatalogue,
+) -> tuple[ActivityRegistration, ...]:
+    """Load built-in image content from its trusted index without re-validation.
+
+    When the image index is present the loader reconstructs the already
+    validated registrations: no package tree is re-read and no digest is
+    recomputed. A missing index (source checkout or legacy image) falls back
+    to one validated scan. A present-but-corrupt index raises instead of
+    serving an unvalidated set.
+    """
+
+    index = built_in_index_path()
+    if index.is_file():
+        return ActivityIndexLoader.from_runtime(source, runtime).load_file(index)
+    fallback = ActivityRegistry((source,), runtime, fail_closed=False)
+    return fallback.discover_registrations()
+
+
+def load_parent_registrations(
+    parent: ParentActiveSet,
+    runtime: RuntimeCatalogue,
+) -> tuple[ActivityRegistration, ...]:
+    """Load the T34 atomic active Parent set without re-validation when indexed.
+
+    A missing Parent root contributes no registrations and is not an error
+    (Parent content is optional catalogue input). A missing versioned index
+    falls back to one strict validated scan; any other load failure raises so
+    the caller can omit the Parent set explicitly instead of serving a mix.
+    """
+
+    if not parent.source.root.exists():
+        return ()
+    if parent.index_path is not None and parent.index_path.is_file():
+        loader = ActivityIndexLoader.from_runtime(parent.source, runtime)
+        return loader.load_file(parent.index_path)
+    strict = ActivityRegistry((parent.source,), runtime)
+    return strict.discover_registrations()
+
+
+def load_developer_registrations(
+    source: ActivitySource | None,
+    runtime: RuntimeCatalogue,
+) -> tuple[ActivityRegistration, ...]:
+    """Load developer content through the explicit live-validation path.
+
+    Developer packages keep ``DEVELOPER_UNSIGNED`` trust and are validated
+    live by ``ActivityRegistry``; no developer index is ever consumed.
+    """
+
+    if source is None:
+        return ()
+    live = ActivityRegistry((source,), runtime, fail_closed=False)
+    return live.discover_registrations()
+
+
+def enforce_composed_collision(
+    registrations: Sequence[ActivityRegistration],
+) -> None:
+    """Enforce cross-source Activity identity/alias uniqueness once, fail-closed.
+
+    Mirrors the registry's own collision rule across the complete composed set:
+    a canonical id or legacy alias claimed by one source can never be shadowed
+    by another source's package.
+    """
+
+    identities: dict[str, str] = {}
+    for registration in registrations:
+        manifest = registration.manifest
+        for identity in (manifest.activity_id, *manifest.legacy_ids):
+            if identity in identities:
+                raise ActivityValidationError(
+                    f"Activity identity/alias collision {identity!r}: "
+                    f"{identities[identity]} and {manifest.activity_id}"
+                )
+            identities[identity] = manifest.activity_id
+
+
+class ComposedActivityRegistry(ActivityRegistry):
+    """Registry pre-seeded with the one-pass composed registration set.
+
+    The boot path never calls ``discover`` on this registry: activation-time
+    ``registration_for`` reuses the index-loaded proof carried in each
+    ``ActivityRegistration`` instead of recomputing digests or revalidating
+    trees. ``discovery_token`` stays filesystem-based so later change detection
+    keeps working; a later rescan revalidates live by design.
+    """
+
+    def __init__(
+        self,
+        sources: Sequence[ActivitySource],
+        runtime: RuntimeCatalogue,
+        registrations: Sequence[ActivityRegistration],
+    ) -> None:
+        super().__init__(sources, runtime, fail_closed=False)
+        self._issued.update(
+            {id(registration.manifest): registration for registration in registrations}
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ComposedLauncherContent:
+    """Single composed Activity set plus its seeded registry."""
+
+    sources: tuple[ActivitySource, ...]
+    registrations: tuple[ActivityRegistration, ...]
+    activities: tuple[ActivityManifest, ...]
+    registry: ComposedActivityRegistry
+    parent_degraded: bool = False
+    parent_error: str | None = None
+
+
+def compose_boot_content(
+    runtime: RuntimeCatalogue,
+    boot_sources: Sequence[ActivitySource],
+) -> ComposedLauncherContent:
+    """Compose the complete boot Activity set exactly once.
+
+    ``boot_sources`` is the T35-gated built-in/developer set (see
+    ``boot_activity_sources``); the Parent active set is resolved here, so
+    callers receive built-in plus Parent plus developer registrations with one
+    collision check and one seeded registry. A damaged Parent set is omitted
+    with ``parent_degraded`` set instead of taking the Shell down; every other
+    failure (including cross-source collision) raises fail-closed. The Parent
+    root must stay separate from the built-in root.
+    """
+
+    sources = tuple(boot_sources)
+    if not sources or sources[0].trust is not PackageTrust.BUILT_IN:
+        raise ActivityValidationError(
+            "composed boot sources must start with the built-in source"
+        )
+    built_in_source = sources[0]
+    developer_sources = tuple(sources[1:])
+    parent_set = resolve_parent_active_set()
+    built_in_root = built_in_source.root.resolve()
+    parent_root = parent_set.source.root.resolve()
+    if (
+        parent_root == built_in_root
+        or parent_root in built_in_root.parents
+        or built_in_root in parent_root.parents
+    ):
+        raise ActivityValidationError(
+            "parent Activity root must be separate from the built-in Activity root"
+        )
+    built_in = load_built_in_registrations(built_in_source, runtime)
+    developer: list[ActivityRegistration] = []
+    for source in developer_sources:
+        developer.extend(load_developer_registrations(source, runtime))
+    parent_degraded = False
+    parent_error: str | None = None
+    try:
+        parent = load_parent_registrations(parent_set, runtime)
+    except (ActivityValidationError, ValueError, OSError, RuntimeError) as exc:
+        parent = ()
+        parent_degraded = True
+        parent_error = str(exc)
+    registrations = (*built_in, *parent, *developer)
+    enforce_composed_collision(registrations)
+    ordered_sources = (
+        built_in_source,
+        parent_set.source,
+        *developer_sources,
+    )
+    registry = ComposedActivityRegistry(ordered_sources, runtime, registrations)
+    return ComposedLauncherContent(
+        sources=ordered_sources,
+        registrations=tuple(registrations),
+        activities=tuple(item.manifest for item in registrations),
+        registry=registry,
+        parent_degraded=parent_degraded,
+        parent_error=parent_error,
     )
