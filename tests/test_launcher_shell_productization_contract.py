@@ -121,9 +121,9 @@ class LauncherShellProductizationContractTests(unittest.TestCase):
         next_targets = [t for t in shell._targets if t.action == "presented_activity_page_next"]
         self.assertEqual(len(next_targets), 1)
 
+        # Dots are pure visual indicators, not click targets
         page_targets = [t for t in shell._targets if t.action == "presented_activity_page"]
-        self.assertEqual(len(page_targets), 2)
-        self.assertEqual([t.value for t in page_targets], [0, 1])
+        self.assertEqual(len(page_targets), 0)
 
     def test_pagination_disappears_when_all_activities_fit_on_single_page(self) -> None:
         activities = self._sample_activities(count=5, category="create")
@@ -219,14 +219,13 @@ class LauncherShellProductizationContractTests(unittest.TestCase):
         page_targets = [t for t in shell._targets if t.action == "profile_page"]
         # At 1024x600, page_size is 8 (columns=4, max_rows=2). 10 profiles => 2 pages.
         # Next arrow target has value 8 (first profile on page 1).
-        # Dot 0 target has value 0 (first profile on page 0).
-        # Dot 1 target has value 8 (first profile on page 1).
-        self.assertEqual(len(page_targets), 3)
-        self.assertEqual([t.value for t in page_targets], [8, 0, 8])
+        # Dots are visual indicators, so only the arrow navigation target is registered.
+        self.assertEqual(len(page_targets), 1)
+        self.assertEqual([t.value for t in page_targets], [8])
 
-        # Clicking Dot 1 sets selection to profile 8 on page 1
-        dot_1_target = page_targets[2]
-        shell._handle_click(dot_1_target.rect.center, pygame)
+        # Clicking the next arrow sets selection to profile 8 on page 1
+        next_target = page_targets[0]
+        shell._handle_click(next_target.rect.center, pygame)
         self.assertEqual(shell._profile_selected, 8)
 
 

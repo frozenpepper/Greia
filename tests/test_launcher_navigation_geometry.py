@@ -16,8 +16,10 @@ from greia_launcher.navigation_layout import (
     PageControlsLayout,
     PageControlsPlacement,
     PageControlsState,
+    compute_navigation_safe_content_bounds,
     resolve_page_controls_layout,
 )
+from greia_launcher.shared_ui_presentation import SharedUiShellPanelMixin
 from greia_platform.responsive_layout import UiRect, Viewport
 
 
@@ -281,6 +283,104 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
         # Verify gap is at least 16px
         self.assertGreaterEqual(erase.rect.left - cancel.rect.right, 16)
         self.assertGreaterEqual(unlock.rect.left - erase.rect.right, 16)
+
+    def test_derived_panel_layout_and_safe_content_across_resolutions(self) -> None:
+        state = PageControlsState(
+            page_index=1,
+            page_count=3,
+            previous_value=0,
+            next_value=2,
+            can_go_previous=True,
+            can_go_next=True,
+        )
+        for width, height in ((800, 600), (1024, 600), (1366, 768)):
+            viewport = Viewport(width, height)
+            raw_rect, panel_layout = SharedUiShellPanelMixin.compute_shell_panel_layout(
+                width, height
+            )
+            self.assertGreater(panel_layout.outer_rect.width, 0)
+            self.assertGreater(panel_layout.content_rect.width, 0)
+            self.assertTrue(panel_layout.outer_rect.contains(panel_layout.content_rect))
+
+            for button_size in (52, 64, 80):
+                safe_content = compute_navigation_safe_content_bounds(
+                    viewport,
+                    panel_outer_rect=panel_layout.outer_rect,
+                    available_content_rect=panel_layout.content_rect,
+                    button_size=button_size,
+                )
+                self.assertGreater(safe_content.width, 0)
+                self.assertGreaterEqual(safe_content.x, panel_layout.content_rect.x)
+                self.assertLessEqual(safe_content.right, panel_layout.content_rect.right)
+
+                layout = resolve_page_controls_layout(
+                    viewport,
+                    state,
+                    panel_outer_rect=panel_layout.outer_rect,
+                    panel_content_rect=safe_content,
+                    button_size=button_size,
+                )
+                # Invariant: navigation controls NEVER intersect safe card content!
+                self.assertFalse(
+                    layout.previous_rect.intersects(safe_content),
+                    f"Previous button overlaps safe content at {width}x{height} with button_size={button_size}",
+                )
+                self.assertFalse(
+                    layout.next_rect.intersects(safe_content),
+                    f"Next button overlaps safe content at {width}x{height} with button_size={button_size}",
+                )
+
+    def test_indicators_contract(self) -> None:
+        viewport = Viewport(1024, 600)
+        # 18 pages, currently on page 10 (window centers active dot)
+        state = PageControlsState(
+            page_index=10,
+            page_count=18,
+            previous_value=9,
+            next_value=11,
+            can_go_previous=True,
+            can_go_next=True,
+        )
+        layout = resolve_page_controls_layout(
+            viewport, state, button_size=52, max_visible_dots=5
+        )
+        self.assertEqual(len(layout.indicators), 5)
+        active_items = [item for item in layout.indicators if item.active]
+        self.assertEqual(len(active_items), 1)
+        self.assertEqual(active_items[0].page_index, 10)
+        # Verify monotonically increasing page indices
+        indices = [item.page_index for item in layout.indicators]
+        self.assertEqual(indices, [8, 9, 10, 11, 12])
+
+    def test_dots_have_zero_click_hit_targets(self) -> None:
+        import pygame
+        pygame.init()
+        from greia_launcher.child_shell import GreiaChildShell
+
+        shell = GreiaChildShell(windowed=True)
+        screen = pygame.display.set_mode((1024, 600))
+        state = PageControlsState(
+            page_index=1,
+            page_count=4,
+            previous_value=0,
+            next_value=2,
+            can_go_previous=True,
+            can_go_next=True,
+        )
+        theme = shell.theme_controller.theme
+        shell._targets.clear()
+        shell._draw_page_controls(
+            screen,
+            theme,
+            pygame,
+            state,
+            previous_action="test_prev",
+            next_action="test_next",
+            total=4,
+        )
+        # Exactly 2 targets: prev arrow and next arrow. ZERO dot targets.
+        actions = [t.action for t in shell._targets]
+        self.assertEqual(actions, ["test_prev", "test_next"])
 
 
 if __name__ == "__main__":

@@ -84,19 +84,15 @@ class SharedUiNavigationChromeMixin:
         if isinstance(page, PageControlsState):
             page_state = page
         else:
-            page_state = PageControlsState.from_grid_page(page, total=total)
+            page_state = PageControlsState.from_grid_page(
+                page,
+                total=total,
+                previous_action=previous_action,
+                next_action=next_action,
+            )
 
         if page_state.page_count <= 1:
             return
-
-        resolved_page_action = page_action
-        if resolved_page_action is None:
-            if previous_action == "profile_page":
-                resolved_page_action = "profile_page"
-            elif previous_action == "presented_activity_page_prev":
-                resolved_page_action = "presented_activity_page"
-            else:
-                resolved_page_action = previous_action.replace("_prev", "")
 
         viewport = Viewport(screen.get_width(), screen.get_height())
         panel_layout = getattr(self, "_shell_panel_layout", None)
@@ -156,7 +152,7 @@ class SharedUiNavigationChromeMixin:
                     layout.previous_rect.width,
                     layout.previous_rect.height,
                 ),
-                previous_action,
+                page_state.previous_action or previous_action,
                 page_state.previous_value,
                 page_state.can_go_previous,
             ),
@@ -168,7 +164,7 @@ class SharedUiNavigationChromeMixin:
                     layout.next_rect.width,
                     layout.next_rect.height,
                 ),
-                next_action,
+                page_state.next_action or next_action,
                 page_state.next_value,
                 page_state.can_go_next,
             ),
@@ -181,9 +177,10 @@ class SharedUiNavigationChromeMixin:
             self._draw_page_arrow_button(
                 screen, theme, pygame, direction, rect, hovered
             )
-            self._targets.append(HitTarget(action, target_val, rect))
+            if action:
+                self._targets.append(HitTarget(action, target_val, rect))
 
-        # 2. Bottom Pagination Capsule Pill
+        # 2. Bottom Pagination Capsule Pill (Visual Indicator)
         if layout.visible_dot_count > 0 and layout.indicator_rect.width > 0:
             pill_rect = pygame.Rect(
                 layout.indicator_rect.x,
@@ -215,26 +212,11 @@ class SharedUiNavigationChromeMixin:
                 border_radius=pill_rect.height // 2,
             )
 
-            # Dots
-            total_pages = page_state.page_count
-            if total_pages <= len(layout.dot_rects):
-                window_start = 0
-            else:
-                half = len(layout.dot_rects) // 2
-                window_start = max(
-                    0,
-                    min(
-                        page_state.page_index - half,
-                        total_pages - len(layout.dot_rects),
-                    ),
-                )
-
-            for i, dot_ui in enumerate(layout.dot_rects):
-                target_p = window_start + i
-                is_active = i == layout.active_dot_index
-                cx = dot_ui.x + dot_ui.width // 2
-                cy = dot_ui.y + dot_ui.height // 2
-                if is_active:
+            # Dots from layout indicators (pure visual, zero click targets)
+            for dot in layout.indicators:
+                cx = dot.rect.x + dot.rect.width // 2
+                cy = dot.rect.y + dot.rect.height // 2
+                if dot.active:
                     dot_r = pygame.Rect(cx - 8, cy - 4, 16, 8)
                     pygame.draw.rect(screen, theme.accent, dot_r, border_radius=4)
                 else:
@@ -244,17 +226,6 @@ class SharedUiNavigationChromeMixin:
                         (cx, cy),
                         4,
                     )
-                dot_hit = pygame.Rect(
-                    dot_ui.x - 4, dot_ui.y - 6, dot_ui.width + 8, dot_ui.height + 12
-                )
-                dot_target_value = (
-                    target_p * page_state.page_size
-                    if resolved_page_action in ("profile_page", "activity_page")
-                    else target_p
-                )
-                self._targets.append(
-                    HitTarget(resolved_page_action, dot_target_value, dot_hit)
-                )
 
             # Counter text
             label_text = f"{page_state.page_index + 1} / {page_state.page_count}"
@@ -262,7 +233,7 @@ class SharedUiNavigationChromeMixin:
             label_surf = font.render(
                 label_text, True, _mix(theme.text, theme.panel, 0.4)
             )
-            last_dot = layout.dot_rects[-1]
+            last_dot = layout.dot_rects[-1] if layout.dot_rects else layout.indicator_rect
             screen.blit(
                 label_surf,
                 label_surf.get_rect(
@@ -279,90 +250,20 @@ class SharedUiNavigationChromeMixin:
         rect: Any,
         hovered: bool,
     ) -> None:
-        from .presentation import _mix
-
         drawn = rect.move(0, -2 if hovered else 0)
 
         # Try semantic asset with hover fallback chain
         frame = self._icon_button_surface(
             drawn.width, pygame, variant="hover" if hovered else "default"
         )
-        if frame is not None:
-            screen.blit(frame, drawn)
-        else:
-            # Procedural circular tactile button fallback
-            cx, cy = drawn.center
-            radius = drawn.width // 2
-            shadow_cy = cy + 3
-            pygame.draw.circle(screen, (61, 44, 31, 40), (cx, shadow_cy), radius)
-            fill = (255, 255, 255) if hovered else (255, 253, 248)
-            pygame.draw.circle(screen, fill, (cx, cy), radius)
-            ring_color = (255, 214, 110) if hovered else (242, 230, 212)
-            pygame.draw.circle(screen, ring_color, (cx, cy), radius - 3, width=2)
-            border_color = (
-                theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
+        if frame is None:
+            super()._draw_page_arrow_button(
+                screen, theme, pygame, direction, rect, hovered
             )
-            pygame.draw.circle(
-                screen,
-                border_color,
-                (cx, cy),
-                radius,
-                width=3 if hovered else 2,
-            )
-            sheen = (255, 255, 255)
-            pygame.draw.line(
-                screen,
-                sheen,
-                (cx - int(radius * 0.55), cy - radius + 4),
-                (cx + int(radius * 0.55), cy - radius + 4),
-                width=2,
-            )
+            return
 
-        # Chunky Greia directional arrow glyph (shaft + rounded arrowhead)
-        cx, cy = drawn.center
-        scale = drawn.width / 52.0
-        optical_shift = max(1, int(round(1.5 * scale)))
-        if direction == "previous":
-            cx += optical_shift
-        else:
-            cx -= optical_shift
-        shaft_len = max(8, int(15 * scale))
-        shaft_h = max(6, int(10 * scale))
-        head_len = max(8, int(13 * scale))
-        head_half_h = max(7, int(13 * scale))
-        corner_r = max(2, int(2.5 * scale))
-
-        glyph_color = (
-            _mix(theme.accent, (40, 20, 10), 0.30) if hovered else theme.text
-        )
-
-        if direction == "previous":
-            tip_x = cx - int(13 * scale)
-            base_x = tip_x + head_len
-            shaft_x = base_x - int(2 * scale)
-            shaft_rect = pygame.Rect(shaft_x, cy - shaft_h // 2, shaft_len, shaft_h)
-            head_pts = ((tip_x, cy), (base_x, cy - head_half_h), (base_x, cy + head_half_h))
-        else:
-            tip_x = cx + int(13 * scale)
-            base_x = tip_x - head_len
-            shaft_x = base_x - shaft_len + int(2 * scale)
-            shaft_rect = pygame.Rect(shaft_x, cy - shaft_h // 2, shaft_len, shaft_h)
-            head_pts = ((tip_x, cy), (base_x, cy - head_half_h), (base_x, cy + head_half_h))
-
-        # Soft optical drop shadow
-        shadow_shaft = shaft_rect.move(0, 1)
-        shadow_pts = tuple((p[0], p[1] + 1) for p in head_pts)
-        shadow_color = _mix(theme.background, (0, 0, 0), 0.16)
-        pygame.draw.rect(screen, shadow_color, shadow_shaft, border_radius=corner_r)
-        pygame.draw.polygon(screen, shadow_color, shadow_pts)
-        for p in shadow_pts:
-            pygame.draw.circle(screen, shadow_color, p, corner_r)
-
-        # Foreground glyph
-        pygame.draw.rect(screen, glyph_color, shaft_rect, border_radius=corner_r)
-        pygame.draw.polygon(screen, glyph_color, head_pts)
-        for p in head_pts:
-            pygame.draw.circle(screen, glyph_color, p, corner_r)
+        screen.blit(frame, drawn)
+        self._draw_arrow_glyph(screen, theme, pygame, direction, drawn, hovered)
 
     def _draw_scroll_controls(
         self,

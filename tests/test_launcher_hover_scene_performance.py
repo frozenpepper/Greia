@@ -251,6 +251,103 @@ class HoverRepairSceneEquivalenceTests(unittest.TestCase):
         repaired = _surface_pixels(shell._cached_activities_surface)
         self.assertEqual(repaired, baseline)
 
+    def test_root_category_bar_hover_repair_matches_full_rebuild(self) -> None:
+        from greia_launcher.child_shell import GreiaChildShell
+
+        shell = GreiaChildShell(windowed=True)
+        shell.profiles = shell.profile_store.ensure_initialized()
+        shell._activate_profile(shell.profiles[0], pygame)
+        shell._synthetic_pointer_active = True
+        shell._set_category("all")
+        screen = pygame.display.set_mode((1024, 600))
+
+        shell._pointer_position = (2, 2)
+        self._rebuild_and_draw(shell, screen)
+        baseline = _surface_pixels(shell._cached_activities_surface)
+
+        cat_targets = [
+            target
+            for target in shell._cached_activities_targets
+            if target.action == "activity_category"
+        ]
+        if not cat_targets:
+            self.skipTest("no category targets at root view")
+
+        # Spy on full scene rebuilds
+        render_calls = 0
+        real_render = shell._render_activities_content
+
+        def spy_render(*args, **kwargs):
+            nonlocal render_calls
+            render_calls += 1
+            return real_render(*args, **kwargs)
+
+        shell._render_activities_content = spy_render
+
+        for target in cat_targets:
+            render_calls = 0
+            self._hover(shell, screen, target.rect.center)
+            self.assertEqual(
+                render_calls,
+                0,
+                f"hover on root category {target.value} triggered full scene rebuild",
+            )
+            repaired = _surface_pixels(shell._cached_activities_surface)
+
+            self._rebuild_and_draw(shell, screen)
+            rebuilt = _surface_pixels(shell._cached_activities_surface)
+            self.assertEqual(
+                repaired,
+                rebuilt,
+                f"root category hover repair diverged from full rebuild for {target.value}",
+            )
+
+        # Returning to no-hover
+        render_calls = 0
+        self._hover(shell, screen, (2, 2))
+        self.assertEqual(render_calls, 0, "unhover triggered full scene rebuild")
+        repaired = _surface_pixels(shell._cached_activities_surface)
+        self.assertEqual(repaired, baseline)
+
+    def test_root_category_hover_preserves_error_badge(self) -> None:
+        from greia_launcher.child_shell import GreiaChildShell
+
+        shell = GreiaChildShell(windowed=True)
+        shell.profiles = shell.profile_store.ensure_initialized()
+        shell._activate_profile(shell.profiles[0], pygame)
+        shell._synthetic_pointer_active = True
+        shell._set_category("all")
+        shell._catalogue_error = "Test Catalogue Error"
+        screen = pygame.display.set_mode((1024, 600))
+
+        shell._pointer_position = (2, 2)
+        self._rebuild_and_draw(shell, screen)
+
+        # Check that error badge hit target is present in the top-right
+        error_targets = [
+            t for t in shell._targets if t.action == "error_badge_dismiss"
+        ]
+        self.assertEqual(len(error_targets), 1, "error badge target missing")
+
+        cat_targets = [
+            t for t in shell._cached_activities_targets if t.action == "activity_category"
+        ]
+        if not cat_targets:
+            self.skipTest("no category targets")
+
+        target = cat_targets[0]
+        self._hover(shell, screen, target.rect.center)
+        repaired = _surface_pixels(shell._cached_activities_surface)
+
+        self._rebuild_and_draw(shell, screen)
+        rebuilt = _surface_pixels(shell._cached_activities_surface)
+
+        self.assertEqual(
+            repaired,
+            rebuilt,
+            "repaired pixels with error badge diverged from rebuilt",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

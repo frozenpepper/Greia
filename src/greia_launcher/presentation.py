@@ -1137,17 +1137,27 @@ class GreiaLauncherPresentation(LauncherApplication):
                 else:
                     return False
 
-        # 3. Repair category header
+        # 3. Repair category bar (semantic region owner)
         if damage_header:
             left = 112 if self._active_profile is not None else 20
+            error_active = (
+                (self._last_result and not self._last_result.succeeded)
+                or self._catalogue_error
+            )
+            has_topright_badge = (
+                error_active
+                or getattr(self, "_achievement_service", None) is not None
+                or getattr(self, "_achievement_snapshot", None) is not None
+            )
+            right = screen.get_width() - (96 if has_topright_badge else 20)
             header_rect = pygame.Rect(
-                left - 4, 0, screen.get_width() - left + 4, 84
+                left - 4, 0, max(0, right - left + 8), 84
             ).clip(backdrop_rect)
             cached_surface.blit(backdrop, header_rect.topleft, header_rect)
             saved_targets = self._targets
             self._targets = []
             try:
-                self._draw_category_header(cached_surface, theme, pygame)
+                self._draw_category_bar(cached_surface, theme, pygame)
             finally:
                 self._targets = saved_targets
 
@@ -1299,12 +1309,32 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         has_pagination = (len(activities) > page_capacity)
 
+        from .navigation_layout import compute_navigation_safe_content_bounds
+        from greia_platform.responsive_layout import UiRect, Viewport
+
+        viewport = Viewport(width, height)
+        nav_button_size = max(54, min(72, height // 8))
+
         if inner_panel is not None:
             pad_x = max(14, inner_panel.width // 45)
             pad_y = max(8, inner_panel.height // 40)
             pagination_reserve = 38 if has_pagination else 0
             avail_w = max(240, inner_panel.width - pad_x * 2)
             avail_h = max(180, inner_panel.height - pad_y * 2 - pagination_reserve)
+            panel_layout = getattr(self, "_shell_panel_layout", None)
+            panel_outer = panel_layout.outer_rect if panel_layout is not None else UiRect(inner_panel.x, inner_panel.y, inner_panel.width, inner_panel.height)
+            if has_pagination:
+                safe_rect = compute_navigation_safe_content_bounds(
+                    viewport,
+                    panel_outer_rect=panel_outer,
+                    available_content_rect=UiRect(inner_panel.x + pad_x, inner_panel.y + pad_y, avail_w, avail_h),
+                    button_size=nav_button_size,
+                )
+                avail_w = safe_rect.width
+                safe_origin_x = safe_rect.x
+            else:
+                safe_origin_x = inner_panel.x + pad_x
+
             # 218 = 210 reference tile +4%: larger cards give two-line labels
             # breathing room while label font sizes stay unchanged.
             tile_size = min(
@@ -1315,14 +1345,26 @@ class GreiaLauncherPresentation(LauncherApplication):
             tile_size = max(120, tile_size)
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
-            origin_x = inner_panel.centerx - total_width // 2
+            origin_x = safe_origin_x + (avail_w - total_width) // 2
             origin_y = inner_panel.top + pad_y + max(0, (avail_h - total_height) // 2)
         else:
             top = max(116, height // 5)
             pagination_reserve = 38 if has_pagination else 0
             available_h = height - top - 28 - pagination_reserve
-            side_reserve = 86
-            usable_w = max(240, width - side_reserve)
+            raw_content = UiRect(0, top, width, available_h)
+            if has_pagination:
+                safe_rect = compute_navigation_safe_content_bounds(
+                    viewport,
+                    available_content_rect=raw_content,
+                    button_size=nav_button_size,
+                )
+                usable_w = safe_rect.width
+                safe_origin_x = safe_rect.x
+            else:
+                side_reserve = 86
+                usable_w = max(240, width - side_reserve)
+                safe_origin_x = (width - usable_w) // 2
+
             tile_size = min(
                 218,
                 (usable_w - gap * (columns - 1)) // columns,
@@ -1331,10 +1373,9 @@ class GreiaLauncherPresentation(LauncherApplication):
             tile_size = max(120, tile_size)
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
-            origin_x = (width - total_width) // 2
+            origin_x = safe_origin_x + max(0, (usable_w - total_width) // 2)
             origin_y = top + max(0, (available_h - total_height) // 2)
 
-        from greia_platform.responsive_layout import UiRect
         self._page_content_rect = UiRect(origin_x, origin_y, total_width, total_height)
 
         pointer = self._pointer_pos(pygame)

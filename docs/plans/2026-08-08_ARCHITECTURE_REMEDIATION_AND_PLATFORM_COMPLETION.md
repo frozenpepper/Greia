@@ -2022,7 +2022,46 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   6. **Bottom Pagination Capsule Clearance (`src/greia_launcher/navigation_layout.py`):**
      - Constrained bottom pagination pill `pill_y` to guarantee it never overlaps bottom-row cards while respecting viewport bottom bounds.
   7. **Verification & Testing:**
-     - Added unit tests `test_bottom_pill_never_overlaps_content_cards` and `test_secret_entry_button_geometry_no_overlap` in `tests/test_launcher_navigation_geometry.py` (10/10 PASS).
+     - Added unit tests in `tests/test_launcher_navigation_geometry.py` (`test_bottom_pill_never_overlaps_content_cards`, `test_secret_entry_button_geometry_no_overlap`).
      - All 129 launcher tests PASS (`pytest tests/test_launcher*.py`).
-     - `tools/validate_project.py`: PASS.
+     - Bit-for-bit hover damage repair pixel equivalence verified (7/7 PASS, 0 full-scene rebuilds).
+     - Project validation PASS (`tools/validate_project.py`).
      - Inspected rendered visual audit frames across all launcher states.
+
+## 2026-09-05 — Launcher Architecture Remediation: Damage Repair, High-DPI Bidirectional Invariant & Presentation Unification
+
+- Comprehensive architectural cleanup and regression fixes addressing 10 review findings:
+  1. **Root "All Activities" Category Bar Hover Repair (`src/greia_launcher/presentation.py`):**
+     - Fixed `_repair_dynamic_activities` to call `self._draw_category_bar(cached_surface, theme, pygame)` instead of assuming all category hover is in-category header repair.
+     - Properly restored root category tabs on hover without corrupting into in-category return buttons.
+  2. **Top-Right Corner Indicator Protection During Hover Repair (`src/greia_launcher/presentation.py`):**
+     - Bounded `header_rect` right edge to `screen.get_width() - 96` when error badges or achievement stars are active, preventing hover restoration blits from erasing badges in the top-right corner.
+  3. **Bidirectional Navigation-Safe Content Bounds Contract (`src/greia_launcher/navigation_layout.py` & `presentation.py`):**
+     - Implemented `compute_navigation_safe_content_bounds(viewport, panel_outer_rect=..., available_content_rect=..., button_size=..., min_gutter_margin=...) -> UiRect`.
+     - Integrated into `_render_activities_content` and `_render_profile_picker_content` before calculating tile dimensions and grid origins when pagination is active.
+     - Guaranteed zero intersection between navigation controls and card content across all resolutions and simulated high-DPI scaling (`button_size=72..96`).
+     - Added `intersects(self, other: UiRect) -> bool` to `UiRect` in `src/greia_platform/responsive_layout.py`.
+  4. **Eliminated Profile Picker Double-Pass Rendering (`src/greia_launcher/main.py` & `profile_chrome_presentation.py`):**
+     - Extracted `_draw_profile_card` presentation seam on base `LauncherApplication`.
+     - Overrode `_draw_profile_card` in `SharedUiProfileChromeMixin` to render the card and avatar frame in a single pass.
+     - Removed `_render_profile_picker_content` override and `_overlay_profile_frame` completely, eliminating redundant backdrop blits, card drawing, and duplicate constants.
+  5. **Clean Page Controls State Abstraction (`src/greia_launcher/navigation_layout.py` & `navigation_chrome_presentation.py`):**
+     - Added `previous_action` and `next_action` to `PageControlsState`, populated by `from_grid_page` and `from_scroll_window`.
+     - Removed `resolved_page_action` and action-string inspection from presentation code; renderers consume semantic actions directly.
+  6. **Unified Dot-Window Computation in Layout (`src/greia_launcher/navigation_layout.py`):**
+     - Added `PageIndicatorItem(page_index: int, rect: UiRect, active: bool)` and `indicators: tuple[PageIndicatorItem, ...]`.
+     - Layout computes window shifting and populates `indicators` directly. Presentation renderers consume `layout.indicators` without duplicated dot window math.
+  7. **Unified Navigation Arrow Button & Glyph Presentation (`src/greia_launcher/main.py` & `navigation_chrome_presentation.py`):**
+     - Extracted `_draw_page_arrow_button` and `_draw_arrow_glyph` on `LauncherApplication` with tactile circular button styling and drop-shadowed directional arrow glyphs.
+     - `SharedUiNavigationChromeMixin` delegates to `super()._draw_page_arrow_button` as its procedural fallback, eliminating duplicate arrow glyph code and primitive polygon triangles.
+  8. **Clarified Page Indicator Semantics:**
+     - Formalized pagination dots as pure visual indicators inside the capsule pill.
+     - Removed tiny click hit targets from dots, standardizing navigation exclusively onto large, accessible directional arrows.
+  9. **Realistic Panel Geometry Fixtures in Tests (`tests/test_launcher_navigation_geometry.py`):**
+     - Extracted `@classmethod compute_shell_panel_layout` on `SharedUiShellPanelMixin` and used it in tests to evaluate derived panel geometry across 800×600, 1024×600, and 1366×768.
+     - Added tests for `compute_navigation_safe_content_bounds` zero-intersection invariant and dot indicator window progression.
+  10. **Full Verification Suite:**
+      - Added tests in `test_launcher_hover_scene_performance.py` for root category bar hover repair and error badge preservation.
+      - Full pytest launcher suite: **154/154 PASS** (2 skipped).
+      - Project validation: **PASS** (`python3 tools/validate_project.py`).
+      - Full repository verification: **1,973/1,973 unittest PASS** (`make verify` exit 0).

@@ -41,6 +41,8 @@ class PageControlsState:
     can_go_previous: bool
     can_go_next: bool
     page_size: int = 1
+    previous_action: str = ""
+    next_action: str = ""
 
     def __post_init__(self) -> None:
         if self.page_count < 0:
@@ -56,6 +58,8 @@ class PageControlsState:
         page: Any,
         *,
         total: int,
+        previous_action: str = "",
+        next_action: str = "",
     ) -> "PageControlsState":
         """Adapt a GridPage or compatible paging object."""
         page_index = getattr(page, "page_index", 0)
@@ -76,6 +80,8 @@ class PageControlsState:
             can_go_previous=can_prev,
             can_go_next=can_next,
             page_size=page_size,
+            previous_action=previous_action,
+            next_action=next_action,
         )
 
     @classmethod
@@ -85,6 +91,8 @@ class PageControlsState:
         *,
         page_capacity: int,
         total_items: int,
+        previous_action: str = "presented_activity_page_prev",
+        next_action: str = "presented_activity_page_next",
     ) -> "PageControlsState":
         """Adapt a ScrollModel.window from the Activity catalogue."""
         capacity = max(1, page_capacity)
@@ -100,7 +108,18 @@ class PageControlsState:
             can_go_previous=can_prev,
             can_go_next=can_next,
             page_size=capacity,
+            previous_action=previous_action,
+            next_action=next_action,
         )
+
+
+@dataclass(frozen=True, slots=True)
+class PageIndicatorItem:
+    """A single page indicator in the windowed pagination capsule."""
+
+    page_index: int
+    rect: UiRect
+    active: bool
 
 
 @dataclass(frozen=True, slots=True)
@@ -114,6 +133,45 @@ class PageControlsLayout:
     visible_dot_count: int
     active_dot_index: int
     dot_rects: tuple[UiRect, ...]
+    indicators: tuple[PageIndicatorItem, ...] = ()
+
+
+def compute_navigation_safe_content_bounds(
+    viewport: Viewport,
+    *,
+    panel_outer_rect: UiRect | None = None,
+    available_content_rect: UiRect,
+    button_size: int = 52,
+    min_gutter_margin: int = 8,
+) -> UiRect:
+    """Compute the safe content bounds guaranteeing zero intersection with navigation controls.
+
+    Two-way contract:
+    - If outer gutters >= button_size + 2 * min_gutter_margin, buttons live outside
+      the panel in OUTER_GUTTER, so the entire available_content_rect is safe.
+    - If outer gutters are insufficient, buttons must live in the rails (PANEL_RAIL).
+      Content is inset horizontally so left >= rail_left and right <= rail_right.
+    """
+    button_size = max(1, int(button_size))
+    min_gutter_margin = max(0, int(min_gutter_margin))
+
+    if panel_outer_rect is not None:
+        left_gutter = panel_outer_rect.x
+        right_gutter = viewport.width - panel_outer_rect.right
+        required_gutter = button_size + 2 * min_gutter_margin
+        if left_gutter >= required_gutter and right_gutter >= required_gutter:
+            return available_content_rect
+
+        min_left = panel_outer_rect.x + button_size + min_gutter_margin
+        max_right = panel_outer_rect.right - (button_size + min_gutter_margin)
+    else:
+        min_left = button_size + 2 * min_gutter_margin
+        max_right = viewport.width - (button_size + 2 * min_gutter_margin)
+
+    safe_left = max(available_content_rect.x, min_left)
+    safe_right = min(available_content_rect.right, max_right)
+    safe_width = max(0, safe_right - safe_left)
+    return UiRect(safe_left, available_content_rect.y, safe_width, available_content_rect.height)
 
 
 def resolve_page_controls_layout(
@@ -268,10 +326,19 @@ def resolve_page_controls_layout(
     # Dot hit/presentation rects
     dots_start_x = indicator_rect.x + 14
     dot_rects_list: list[UiRect] = []
+    indicators_list: list[PageIndicatorItem] = []
     for i in range(visible_dot_count):
         dot_cx = dots_start_x + i * dot_spacing
         dot_cy = indicator_rect.y + indicator_rect.height // 2
-        dot_rects_list.append(UiRect(dot_cx - 6, dot_cy - 6, 12, 12))
+        dot_rect = UiRect(dot_cx - 6, dot_cy - 6, 12, 12)
+        dot_rects_list.append(dot_rect)
+        indicators_list.append(
+            PageIndicatorItem(
+                page_index=window_start + i,
+                rect=dot_rect,
+                active=(i == active_dot_index),
+            )
+        )
 
     return PageControlsLayout(
         placement=placement,
@@ -281,4 +348,5 @@ def resolve_page_controls_layout(
         visible_dot_count=visible_dot_count,
         active_dot_index=active_dot_index,
         dot_rects=tuple(dot_rects_list),
+        indicators=tuple(indicators_list),
     )

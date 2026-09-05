@@ -48,31 +48,6 @@ class SharedUiProfileChromeMixin:
         """Return injected display metrics, or ``None`` when unknown."""
         return getattr(self, "_display_metrics", None)
 
-    _FRAME_SOURCE_SIZE = 260
-    _FRAME_INNER_CENTER_Y = 123 / 260
-
-    def _render_profile_picker_content(
-        self, screen: Any, theme: Any, pygame: Any
-    ) -> None:
-        target_start = len(self._targets)
-        super()._render_profile_picker_content(screen, theme, pygame)
-
-        if getattr(self, "_shared_profile_frame_disabled", False):
-            return
-        if getattr(self, "_visual_cache", None) is None:
-            return
-
-        for target in self._targets[target_start:]:
-            if target.action != "profile":
-                continue
-            self._overlay_profile_frame(
-                screen,
-                target.rect,
-                target.value,
-                theme,
-                pygame,
-            )
-
     def _render_activities_content(self, screen: Any, theme: Any, pygame: Any) -> None:
         super()._render_activities_content(screen, theme, pygame)
 
@@ -114,14 +89,21 @@ class SharedUiProfileChromeMixin:
             self._shared_profile_frame_disabled = True
             return None
 
-    def _overlay_profile_frame(
+    def _draw_profile_card(
         self,
         screen: Any,
         rect: Any,
         profile: Any,
+        selected: bool,
+        hovered: bool,
         theme: Any,
         pygame: Any,
     ) -> None:
+        """Polymorphic profile card presentation with framed avatar artwork."""
+        if getattr(self, "_shared_profile_frame_disabled", False) or getattr(self, "_visual_cache", None) is None:
+            super()._draw_profile_card(screen, rect, profile, selected, hovered, theme, pygame)
+            return
+
         frame_size = max(
             56,
             min(
@@ -139,19 +121,10 @@ class SharedUiProfileChromeMixin:
         frame_size = min(frame_size, int(rect.width), int(rect.height))
         frame_surface = self._avatar_frame_surface(frame_size, pygame)
         if frame_surface is None:
+            super()._draw_profile_card(screen, rect, profile, selected, hovered, theme, pygame)
             return
 
-        frame_rect = pygame.Rect(0, 0, frame_size, frame_size)
-        pointer = pygame.mouse.get_pos()
-        pointer_active = pygame.mouse.get_focused()
-        hovered = pointer_active and rect.collidepoint(pointer)
-
-        selected_idx = getattr(self, "_profile_selected", None)
-        is_selected = False
-        if hasattr(self, "profiles") and selected_idx is not None and 0 <= selected_idx < len(self.profiles):
-            is_selected = self.profiles[selected_idx].profile_id == profile.profile_id
-
-        is_highlighted = is_selected or hovered
+        is_highlighted = selected or hovered
         drawn = rect.move(0, -2 if is_highlighted else 0)
 
         # Grounding drop shadow
@@ -175,7 +148,7 @@ class SharedUiProfileChromeMixin:
 
         # Outline
         outline_color = theme.accent if is_highlighted else _mix(theme.text, theme.panel, 0.72)
-        outline_width = 6 if is_selected else (3 if hovered else 2)
+        outline_width = 6 if selected else (3 if hovered else 2)
         pygame.draw.rect(
             screen,
             outline_color,
@@ -184,6 +157,7 @@ class SharedUiProfileChromeMixin:
             border_radius=26,
         )
 
+        frame_rect = pygame.Rect(0, 0, frame_size, frame_size)
         frame_rect.center = (
             drawn.centerx,
             int(round(drawn.top + drawn.height * 0.40)),

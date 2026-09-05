@@ -1200,37 +1200,64 @@ class LauncherApplication:
             if not getattr(self, "_shared_panel_disabled", False)
             else None
         )
+        from .navigation_layout import compute_navigation_safe_content_bounds
+        from greia_platform.responsive_layout import UiRect, Viewport
+
+        viewport = Viewport(width, height)
+        nav_button_size = max(54, min(72, height // 8))
         pagination_reserve = 38 if page.page_count > 1 else 0
         if inner_panel is not None:
             pad_x = max(14, inner_panel.width // 45)
             pad_y = max(8, inner_panel.height // 40)
             avail_w = max(240, inner_panel.width - pad_x * 2)
             avail_h = max(180, inner_panel.height - pad_y * 2 - pagination_reserve)
+            panel_layout = getattr(self, "_shell_panel_layout", None)
+            panel_outer = panel_layout.outer_rect if panel_layout is not None else UiRect(inner_panel.x, inner_panel.y, inner_panel.width, inner_panel.height)
+            if page.page_count > 1:
+                safe_rect = compute_navigation_safe_content_bounds(
+                    viewport,
+                    panel_outer_rect=panel_outer,
+                    available_content_rect=UiRect(inner_panel.x + pad_x, inner_panel.y + pad_y, avail_w, avail_h),
+                    button_size=nav_button_size,
+                )
+                avail_w = safe_rect.width
+                safe_origin_x = safe_rect.x
+            else:
+                safe_origin_x = inner_panel.x + pad_x
+
             tile_w = min(213, (avail_w - gap * (page.columns - 1)) // page.columns)
             tile_h = min(205, (avail_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
             tile_w = max(110, tile_w)
             tile_h = max(120, tile_h)
             total_w = page.columns * tile_w + (page.columns - 1) * gap
             total_h = page.rows * tile_h + max(0, page.rows - 1) * gap
-            origin_x = inner_panel.centerx - total_w // 2
+            origin_x = safe_origin_x + (avail_w - total_w) // 2
             origin_y = inner_panel.top + pad_y + max(0, (avail_h - total_h) // 2)
         else:
             top = header_size + 12
             available_h = height - top - 18 - pagination_reserve
+            raw_content = UiRect(0, top, width, available_h)
             if page.page_count > 1:
-                side_reserve = 200 if width >= 900 else 160
+                safe_rect = compute_navigation_safe_content_bounds(
+                    viewport,
+                    available_content_rect=raw_content,
+                    button_size=nav_button_size,
+                )
+                usable_w = safe_rect.width
+                safe_origin_x = safe_rect.x
             else:
                 side_reserve = 30
-            usable_w = max(240, width - side_reserve)
+                usable_w = max(240, width - side_reserve)
+                safe_origin_x = (width - usable_w) // 2
+
             tile_w = min(213, (usable_w - gap * (page.columns - 1)) // page.columns)
             tile_h = min(205, (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
             tile_w = max(110, tile_w)
             tile_h = max(120, tile_h)
             total_w = page.columns * tile_w + (page.columns - 1) * gap
             total_h = page.rows * tile_h + max(0, page.rows - 1) * gap
-            origin_x = (width - total_w) // 2
+            origin_x = safe_origin_x + max(0, (usable_w - total_w) // 2)
             origin_y = top + max(0, (available_h - total_h) // 2)
-        from greia_platform.responsive_layout import UiRect
         self._page_content_rect = UiRect(origin_x, origin_y, total_w, total_h)
 
         pointer = pygame.mouse.get_pos()
@@ -1248,54 +1275,7 @@ class LauncherApplication:
             )
             selected = global_index == self._profile_selected
             hovered = pointer_active and rect.collidepoint(pointer)
-            is_highlighted = selected or hovered
-            drawn = rect.move(0, -2 if is_highlighted else 0)
-
-            # Grounding drop shadow
-            shadow_rect = drawn.move(0, 4 if is_highlighted else 2)
-            shadow_color = _mix(theme.background, (0, 0, 0), 0.14 if is_highlighted else 0.08)
-            pygame.draw.rect(screen, shadow_color, shadow_rect, border_radius=26)
-
-            # Card fill
-            card_bg = _mix(theme.panel, (255, 255, 255), 0.35) if is_highlighted else theme.panel
-            pygame.draw.rect(screen, card_bg, drawn, border_radius=26)
-
-            # Subtle top sheen highlight line
-            sheen_color = _mix(card_bg, (255, 255, 255), 0.60)
-            pygame.draw.line(
-                screen,
-                sheen_color,
-                (drawn.left + 24, drawn.top + 2),
-                (drawn.right - 24, drawn.top + 2),
-                width=1,
-            )
-
-            # Outline
-            outline_color = theme.accent if is_highlighted else _mix(theme.text, theme.panel, 0.72)
-            outline_width = 6 if selected else (3 if hovered else 2)
-            pygame.draw.rect(
-                screen,
-                outline_color,
-                drawn,
-                width=outline_width,
-                border_radius=26,
-            )
-            icon_size = min(int(drawn.width * 0.58), int(drawn.height * 0.58))
-            icon = self._load_icon(profile.avatar_id, icon_size, pygame)
-            screen.blit(icon, icon.get_rect(center=(drawn.centerx, drawn.top + drawn.height * 0.40)))
-            font_size = max(23, min(38, drawn.height // 6))
-            max_name_width = drawn.width - 18
-            name = self._profile_name_surface(
-                self._child_display_text(profile.display_name),
-                font_size,
-                max_name_width,
-                theme.text,
-                pygame,
-            )
-            screen.blit(name, name.get_rect(center=(drawn.centerx, drawn.bottom - drawn.height * 0.15)))
-            if profile.has_secret:
-                lock = self._load_icon("yellow_star", max(26, drawn.width // 7), pygame)
-                screen.blit(lock, lock.get_rect(topright=(drawn.right - 8, drawn.top + 8)))
+            self._draw_profile_card(screen, rect, profile, selected, hovered, theme, pygame)
             self._targets.append(HitTarget("profile", profile, rect))
 
         self._draw_page_controls(
@@ -1307,6 +1287,66 @@ class LauncherApplication:
             next_action="profile_page",
             total=len(self.profiles),
         )
+
+    def _draw_profile_card(
+        self,
+        screen: Any,
+        rect: Any,
+        profile: Any,
+        selected: bool,
+        hovered: bool,
+        theme: Any,
+        pygame: Any,
+    ) -> None:
+        """Primitive / fallback profile card presentation."""
+        is_highlighted = selected or hovered
+        drawn = rect.move(0, -2 if is_highlighted else 0)
+
+        # Grounding drop shadow
+        shadow_rect = drawn.move(0, 4 if is_highlighted else 2)
+        shadow_color = _mix(theme.background, (0, 0, 0), 0.14 if is_highlighted else 0.08)
+        pygame.draw.rect(screen, shadow_color, shadow_rect, border_radius=26)
+
+        # Card fill
+        card_bg = _mix(theme.panel, (255, 255, 255), 0.35) if is_highlighted else theme.panel
+        pygame.draw.rect(screen, card_bg, drawn, border_radius=26)
+
+        # Subtle top sheen highlight line
+        sheen_color = _mix(card_bg, (255, 255, 255), 0.60)
+        pygame.draw.line(
+            screen,
+            sheen_color,
+            (drawn.left + 24, drawn.top + 2),
+            (drawn.right - 24, drawn.top + 2),
+            width=1,
+        )
+
+        # Outline
+        outline_color = theme.accent if is_highlighted else _mix(theme.text, theme.panel, 0.72)
+        outline_width = 6 if selected else (3 if hovered else 2)
+        pygame.draw.rect(
+            screen,
+            outline_color,
+            drawn,
+            width=outline_width,
+            border_radius=26,
+        )
+        icon_size = min(int(drawn.width * 0.58), int(drawn.height * 0.58))
+        icon = self._load_icon(profile.avatar_id, icon_size, pygame)
+        screen.blit(icon, icon.get_rect(center=(drawn.centerx, drawn.top + drawn.height * 0.40)))
+        font_size = max(23, min(38, drawn.height // 6))
+        max_name_width = drawn.width - 18
+        name = self._profile_name_surface(
+            self._child_display_text(profile.display_name),
+            font_size,
+            max_name_width,
+            theme.text,
+            pygame,
+        )
+        screen.blit(name, name.get_rect(center=(drawn.centerx, drawn.bottom - drawn.height * 0.15)))
+        if profile.has_secret:
+            lock = self._load_icon("yellow_star", max(26, drawn.width // 7), pygame)
+            screen.blit(lock, lock.get_rect(topright=(drawn.right - 8, drawn.top + 8)))
 
     def _draw_secret_entry(self, screen: Any, theme: Any, pygame: Any) -> None:
         width, height = screen.get_size()
@@ -1440,22 +1480,140 @@ class LauncherApplication:
             panel_content_rect=getattr(self, "_page_content_rect", None),
             button_size=size,
         )
+        pointer = pygame.mouse.get_pos()
+        pointer_active = pygame.mouse.get_focused()
         controls = (
-            ("previous", pygame.Rect(layout.previous_rect.x, layout.previous_rect.y, layout.previous_rect.width, layout.previous_rect.height), previous_action, page_state.previous_value, page_state.can_go_previous),
-            ("next", pygame.Rect(layout.next_rect.x, layout.next_rect.y, layout.next_rect.width, layout.next_rect.height), next_action, page_state.next_value, page_state.can_go_next),
+            (
+                "previous",
+                pygame.Rect(
+                    layout.previous_rect.x,
+                    layout.previous_rect.y,
+                    layout.previous_rect.width,
+                    layout.previous_rect.height,
+                ),
+                page_state.previous_action or previous_action,
+                page_state.previous_value,
+                page_state.can_go_previous,
+            ),
+            (
+                "next",
+                pygame.Rect(
+                    layout.next_rect.x,
+                    layout.next_rect.y,
+                    layout.next_rect.width,
+                    layout.next_rect.height,
+                ),
+                page_state.next_action or next_action,
+                page_state.next_value,
+                page_state.can_go_next,
+            ),
         )
         for direction, rect, action, target_val, enabled in controls:
             if not enabled:
                 continue
-            pygame.draw.rect(screen, theme.panel, rect, border_radius=20)
-            pygame.draw.rect(screen, theme.accent, rect, width=5, border_radius=20)
-            inset = max(13, rect.width // 4)
-            if direction == "previous":
-                points = ((rect.right - inset, rect.top + inset), (rect.left + inset, rect.centery), (rect.right - inset, rect.bottom - inset))
-            else:
-                points = ((rect.left + inset, rect.top + inset), (rect.right - inset, rect.centery), (rect.left + inset, rect.bottom - inset))
-            pygame.draw.polygon(screen, theme.text, points)
-            self._targets.append(HitTarget(action, target_val, rect))
+            hovered = pointer_active and rect.collidepoint(pointer)
+            self._draw_page_arrow_button(
+                screen, theme, pygame, direction, rect, hovered
+            )
+            if action:
+                self._targets.append(HitTarget(action, target_val, rect))
+
+    def _draw_arrow_glyph(
+        self,
+        screen: Any,
+        theme: Any,
+        pygame: Any,
+        direction: str,
+        drawn: Any,
+        hovered: bool,
+    ) -> None:
+        """Draw a chunky directional arrow glyph centered within a button."""
+        cx, cy = drawn.center
+        scale = drawn.width / 52.0
+        optical_shift = max(1, int(round(1.5 * scale)))
+        if direction == "previous":
+            cx += optical_shift
+        else:
+            cx -= optical_shift
+        shaft_len = max(8, int(15 * scale))
+        shaft_h = max(6, int(10 * scale))
+        head_len = max(8, int(13 * scale))
+        head_half_h = max(7, int(13 * scale))
+        corner_r = max(2, int(2.5 * scale))
+
+        glyph_color = (
+            _mix(theme.accent, (40, 20, 10), 0.30) if hovered else theme.text
+        )
+
+        if direction == "previous":
+            tip_x = cx - int(13 * scale)
+            base_x = tip_x + head_len
+            shaft_x = base_x - int(2 * scale)
+            shaft_rect = pygame.Rect(shaft_x, cy - shaft_h // 2, shaft_len, shaft_h)
+            head_pts = ((tip_x, cy), (base_x, cy - head_half_h), (base_x, cy + head_half_h))
+        else:
+            tip_x = cx + int(13 * scale)
+            base_x = tip_x - head_len
+            shaft_x = base_x - shaft_len + int(2 * scale)
+            shaft_rect = pygame.Rect(shaft_x, cy - shaft_h // 2, shaft_len, shaft_h)
+            head_pts = ((tip_x, cy), (base_x, cy - head_half_h), (base_x, cy + head_half_h))
+
+        # Soft optical drop shadow
+        shadow_shaft = shaft_rect.move(0, 1)
+        shadow_pts = tuple((p[0], p[1] + 1) for p in head_pts)
+        shadow_color = _mix(theme.background, (0, 0, 0), 0.16)
+        pygame.draw.rect(screen, shadow_color, shadow_shaft, border_radius=corner_r)
+        pygame.draw.polygon(screen, shadow_color, shadow_pts)
+        for p in shadow_pts:
+            pygame.draw.circle(screen, shadow_color, p, corner_r)
+
+        # Foreground glyph
+        pygame.draw.rect(screen, glyph_color, shaft_rect, border_radius=corner_r)
+        pygame.draw.polygon(screen, glyph_color, head_pts)
+        for p in head_pts:
+            pygame.draw.circle(screen, glyph_color, p, corner_r)
+
+    def _draw_page_arrow_button(
+        self,
+        screen: Any,
+        theme: Any,
+        pygame: Any,
+        direction: str,
+        rect: Any,
+        hovered: bool,
+    ) -> None:
+        """Procedural tactile circular navigation button with chunky arrow glyph."""
+        drawn = rect.move(0, -2 if hovered else 0)
+
+        # Procedural circular tactile button
+        cx, cy = drawn.center
+        radius = drawn.width // 2
+        shadow_cy = cy + 3
+        pygame.draw.circle(screen, (61, 44, 31, 40), (cx, shadow_cy), radius)
+        fill = (255, 255, 255) if hovered else (255, 253, 248)
+        pygame.draw.circle(screen, fill, (cx, cy), radius)
+        ring_color = (255, 214, 110) if hovered else (242, 230, 212)
+        pygame.draw.circle(screen, ring_color, (cx, cy), radius - 3, width=2)
+        border_color = (
+            theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
+        )
+        pygame.draw.circle(
+            screen,
+            border_color,
+            (cx, cy),
+            radius,
+            width=3 if hovered else 2,
+        )
+        sheen = (255, 255, 255)
+        pygame.draw.line(
+            screen,
+            sheen,
+            (cx - int(radius * 0.55), cy - radius + 4),
+            (cx + int(radius * 0.55), cy - radius + 4),
+            width=2,
+        )
+
+        self._draw_arrow_glyph(screen, theme, pygame, direction, drawn, hovered)
 
     def _draw_activity_tile(
         self,

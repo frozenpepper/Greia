@@ -207,26 +207,35 @@ class SharedUiShellPanelMixin:
         layout and hit targets remain owned by the base launcher.
         """
 
-        self._shared_panel_inner_rect = None
-        self._shell_panel_layout: ShellPanelLayout | None = None
-        self._last_scene_backdrop = None
-        if getattr(self, "_shared_panel_disabled", False):
-            return
-        visual_cache = getattr(self, "_visual_cache", None)
-        if visual_cache is None:
-            return
+        self._ensure_shared_panel_backdrop(
+            screen,
+            theme,
+            pygame,
+            top=top,
+            bottom_margin=bottom_margin,
+            max_width=max_width,
+        )
 
-        width, height = screen.get_size()
-        top = max(0, min(top, height - 1))
-        available_height = max(1, height - top - max(0, bottom_margin))
+    @classmethod
+    def compute_shell_panel_layout(
+        cls,
+        width: int,
+        height: int,
+        top: int = 72,
+        bottom_margin: int = 18,
+        max_width: int = 1180,
+    ) -> tuple[UiRect, ShellPanelLayout]:
+        """Compute the raw panel rect and visible ShellPanelLayout for a viewport."""
+        top_c = max(0, min(top, height - 1))
+        available_height = max(1, height - top_c - max(0, bottom_margin))
         available_width = max(1, min(width - 24, max_width))
 
         panel_height = available_height
         panel_width = int(
             round(
                 panel_height
-                * self._PANEL_SOURCE_WIDTH
-                / self._PANEL_SOURCE_HEIGHT
+                * cls._PANEL_SOURCE_WIDTH
+                / cls._PANEL_SOURCE_HEIGHT
             )
         )
         if panel_width > available_width:
@@ -234,14 +243,50 @@ class SharedUiShellPanelMixin:
             panel_height = int(
                 round(
                     panel_width
-                    * self._PANEL_SOURCE_HEIGHT
-                    / self._PANEL_SOURCE_WIDTH
+                    * cls._PANEL_SOURCE_HEIGHT
+                    / cls._PANEL_SOURCE_WIDTH
                 )
             )
 
-        panel_rect = pygame.Rect(0, 0, panel_width, panel_height)
-        panel_rect.centerx = width // 2
-        panel_rect.top = top + (available_height - panel_height) // 2
+        panel_x = (width - panel_width) // 2
+        panel_y = top_c + (available_height - panel_height) // 2
+        raw_rect = UiRect(panel_x, panel_y, panel_width, panel_height)
+
+        visible_left = panel_x + round(panel_width * 36 / cls._PANEL_SOURCE_WIDTH)
+        visible_top = panel_y + round(panel_height * 28 / cls._PANEL_SOURCE_HEIGHT)
+        visible_width = round(panel_width * 568 / cls._PANEL_SOURCE_WIDTH)
+        visible_height = round(panel_height * 336 / cls._PANEL_SOURCE_HEIGHT)
+
+        inner_left = panel_x + round(panel_width * 58 / cls._PANEL_SOURCE_WIDTH)
+        inner_top = panel_y + round(panel_height * 52 / cls._PANEL_SOURCE_HEIGHT)
+        inner_width = round(panel_width * 524 / cls._PANEL_SOURCE_WIDTH)
+        inner_height = round(panel_height * 288 / cls._PANEL_SOURCE_HEIGHT)
+
+        layout = ShellPanelLayout(
+            outer_rect=UiRect(visible_left, visible_top, visible_width, visible_height),
+            content_rect=UiRect(inner_left, inner_top, inner_width, inner_height),
+        )
+        return raw_rect, layout
+
+    def _ensure_shared_panel_backdrop(
+        self,
+        screen: Any,
+        theme: Any,
+        pygame: Any,
+        *,
+        top: int = 72,
+        bottom_margin: int = 18,
+        max_width: int = 1180,
+    ) -> None:
+        visual_cache = getattr(self, "_visual_cache", None)
+        if visual_cache is None:
+            return
+
+        width, height = screen.get_size()
+        raw_rect, layout = self.compute_shell_panel_layout(
+            width, height, top=top, bottom_margin=bottom_margin, max_width=max_width
+        )
+        panel_rect = pygame.Rect(raw_rect.x, raw_rect.y, raw_rect.width, raw_rect.height)
 
         if theme is None:
             theme = self.theme_controller.theme
@@ -293,20 +338,13 @@ class SharedUiShellPanelMixin:
         screen.blit(backdrop, (0, 0))
         self._last_scene_backdrop = backdrop
 
-        visible_left = panel_rect.left + round(panel_rect.width * 36 / self._PANEL_SOURCE_WIDTH)
-        visible_top = panel_rect.top + round(panel_rect.height * 28 / self._PANEL_SOURCE_HEIGHT)
-        visible_width = round(panel_rect.width * 568 / self._PANEL_SOURCE_WIDTH)
-        visible_height = round(panel_rect.height * 336 / self._PANEL_SOURCE_HEIGHT)
-
-        inner_left = panel_rect.left + round(panel_rect.width * 58 / self._PANEL_SOURCE_WIDTH)
-        inner_top = panel_rect.top + round(panel_rect.height * 52 / self._PANEL_SOURCE_HEIGHT)
-        inner_width = round(panel_rect.width * 524 / self._PANEL_SOURCE_WIDTH)
-        inner_height = round(panel_rect.height * 288 / self._PANEL_SOURCE_HEIGHT)
-        self._shared_panel_inner_rect = pygame.Rect(inner_left, inner_top, inner_width, inner_height)
-        self._shell_panel_layout = ShellPanelLayout(
-            outer_rect=UiRect(visible_left, visible_top, visible_width, visible_height),
-            content_rect=UiRect(inner_left, inner_top, inner_width, inner_height),
+        self._shared_panel_inner_rect = pygame.Rect(
+            layout.content_rect.x,
+            layout.content_rect.y,
+            layout.content_rect.width,
+            layout.content_rect.height,
         )
+        self._shell_panel_layout = layout
 
 
 class SharedUiActivityCardMixin:

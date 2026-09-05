@@ -41,6 +41,15 @@ class UiRect:
             and other.bottom <= self.bottom
         )
 
+    def intersects(self, other: "UiRect") -> bool:
+        """Return True if this rectangle overlaps other with non-zero area."""
+        return (
+            self.x < other.right
+            and self.right > other.x
+            and self.y < other.bottom
+            and self.bottom > other.y
+        )
+
     def inset(self, horizontal: int = 0, vertical: int | None = None) -> "UiRect":
         """Return a non-negative inset rectangle, collapsing safely if necessary."""
 

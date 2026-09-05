@@ -836,3 +836,39 @@ Completed rigorous review and resolved visual/mathematical discrepancies across 
 B04-PROOF-R3 PASS (2-file tranche onto fail-closed baseline: crash loop → degraded-safe boot, 5/5 first frames, NRestarts=0, mechanism observed). B04-DISP PASS (canonical discard of stale dev copy, intersection cleared; 5 pre-existing system-replacements out-of-scope). B04-REPROOF PASS (4 clean boots, parser-green, catalogue matches, picker screenshots identical). Evidence merged into `out/boot-optimization/phase-03/` (B04-REPROOF-* names; its own metrics schema kept separate after a canonical-schema mismatch was caught and reverted). Credentials cleared both ends.
 
 boot-04 fully terminal. boot-05 (Phase 4 lifecycle) gate now open: launching its mechanical transcription planner next.
+
+## 34. Launcher Architecture Remediation: Damage Repair, High-DPI Bidirectional Invariant & Presentation Unification (2026-09-05)
+
+Completed review findings remediation and eliminated duplication across the Greia launcher:
+
+1. **Root Category Bar Hover Repair (`src/greia_launcher/presentation.py`):**
+   - Fixed `_repair_dynamic_activities` to call `self._draw_category_bar` instead of `_draw_category_header`, ensuring root collection tabs are restored rather than corrupted into in-category return buttons.
+
+2. **Top-Right Status Badge Protection (`src/greia_launcher/presentation.py`):**
+   - Bounded category damage restore rectangle to `screen.get_width() - 96` when error badges or achievement stars are active, protecting top-right indicators from being erased during hover repair.
+
+3. **Bidirectional Navigation-Safe Content Bounds (`src/greia_launcher/navigation_layout.py` & `presentation.py`):**
+   - Added `compute_navigation_safe_content_bounds` and integrated it before grid calculation in `_render_activities_content` and `_render_profile_picker_content`.
+   - Guaranteed zero intersection between navigation buttons and card content across all viewports and simulated high-DPI scaling (`button_size=72..96`). Added `intersects` method to `UiRect` in `src/greia_platform/responsive_layout.py`.
+
+4. **Single-Pass Profile Card Rendering (`src/greia_launcher/main.py` & `profile_chrome_presentation.py`):**
+   - Extracted base polymorphic seam `_draw_profile_card` on `LauncherApplication`.
+   - Overrode `_draw_profile_card` in `SharedUiProfileChromeMixin` to render avatar framing in a single pass, removing double-pass drawing and `_overlay_profile_frame`.
+
+5. **Clean Page Controls State & Unified Dot Indicators (`src/greia_launcher/navigation_layout.py` & `navigation_chrome_presentation.py`):**
+   - Added explicit `previous_action` and `next_action` to `PageControlsState`, eliminating presentation action-string parsing.
+   - Layout now precomputes `indicators: tuple[PageIndicatorItem, ...]`. Presentation renders dots directly from layout without duplicated window math.
+   - Dots formalized as pure visual indicators inside capsule pill (no tiny click targets).
+
+6. **Unified Arrow Button & Glyph Presentation (`src/greia_launcher/main.py` & `navigation_chrome_presentation.py`):**
+   - Extracted `_draw_page_arrow_button` and `_draw_arrow_glyph` on `LauncherApplication` with tactile circular buttons and drop-shadowed glyphs.
+   - `SharedUiNavigationChromeMixin` delegates to `super()._draw_page_arrow_button` as procedural fallback, eliminating duplicate rendering code.
+
+7. **Realistic Panel Geometry Fixtures in Tests (`tests/test_launcher_navigation_geometry.py`):**
+   - Extracted `compute_shell_panel_layout` on `SharedUiShellPanelMixin` and used it in tests to evaluate derived panel geometry across 800×600, 1024×600, and 1366×768.
+
+8. **Verification & Testing:**
+   - Full launcher test suite: **154/154 PASS** (2 skipped).
+   - Bit-for-bit hover damage repair pixel equivalence verified (7/7 PASS, 0 full-scene rebuilds).
+   - Project validation: **PASS** (`python3 tools/validate_project.py`).
+   - Full repository verification: **1,973/1,973 unittest PASS** (`make verify` exit 0).
