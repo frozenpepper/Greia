@@ -80,6 +80,131 @@ class ActivityRegistration:
 
 
 @dataclass(frozen=True, slots=True)
+class ActivityCollisionConflict:
+    """Structured evidence for one rejected claimant of a colliding identity.
+
+    ``identity`` is the exact colliding canonical ID or legacy-alias string.
+    The remaining fields identify the rejected claimant: platform-assigned
+    ``source_id``/``package_trust`` (never manifest-claimed), the validated
+    ``package_root`` and the validation-time ``package_digest`` carried
+    through from index load or live validation (never recomputed here).
+    """
+
+    identity: str
+    activity_id: str
+    source_id: str
+    package_trust: PackageTrust
+    package_root: Path
+    package_digest: str
+
+
+@dataclass(frozen=True, slots=True)
+class ActivityCollisionResolution:
+    """Immutable result of the trust-aware degrade resolver.
+
+    ``accepted`` enters the authoritative catalogue/registry; ``rejected``
+    never becomes issuable via ``registration_for`` nor launchable.
+    ``conflicts`` carries one structured record per rejected claimant per
+    colliding identity; ``degraded`` is true when any conflict exists and
+    boot must continue degraded instead of crashing.
+    """
+
+    accepted: tuple[ActivityRegistration, ...]
+    rejected: tuple[ActivityRegistration, ...]
+    conflicts: tuple[ActivityCollisionConflict, ...]
+    degraded: bool
+
+
+def resolve_activity_collisions(
+    registrations: Sequence[ActivityRegistration],
+) -> ActivityCollisionResolution:
+    """Resolve cross-source identity/alias collisions without crashing.
+
+    Pure function shared by normal registry discovery, cold-boot indexed
+    composition and later rescans. It performs no validation, no digest
+    recomputation and no filesystem access; trust comes only from each
+    registration's platform-bound ``package_trust``.
+
+    Exact rule: an identity group with exactly one ``BUILT_IN`` claimant
+    and every other claimant ``DEVELOPER_UNSIGNED`` accepts the built-in
+    and rejects every developer claimant. Any other multi-claimant group
+    (parent/developer/developer, multiple built-ins, mixed trusts, ...) is
+    ambiguous: every member of that group is rejected and boot continues
+    with the remainder. Duplicate identities are never permitted even on
+    matching digests; no trust ordering, promotion or shadowing is applied.
+    A registration rejected in any identity group is rejected overall.
+    The decision never depends on input order.
+    """
+
+    claimants: dict[str, list[ActivityRegistration]] = {}
+    for registration in registrations:
+        manifest = registration.manifest
+        for identity in (manifest.activity_id, *manifest.legacy_ids):
+            claimants.setdefault(identity, []).append(registration)
+    rejected_by_key: dict[int, ActivityRegistration] = {}
+    conflicts: list[ActivityCollisionConflict] = []
+
+    def _conflict(
+        identity: str, claimant: ActivityRegistration
+    ) -> ActivityCollisionConflict:
+        return ActivityCollisionConflict(
+            identity=identity,
+            activity_id=claimant.manifest.activity_id,
+            source_id=claimant.source_id,
+            package_trust=claimant.package_trust,
+            package_root=claimant.manifest.root,
+            package_digest=claimant.package_digest,
+        )
+
+    for identity in sorted(claimants):
+        group_candidates = claimants[identity]
+        unique: dict[int, ActivityRegistration] = {}
+        for candidate in group_candidates:
+            unique.setdefault(id(candidate), candidate)
+        group = list(unique.values())
+        if len(group) <= 1:
+            continue
+        built_ins = [
+            item for item in group if item.package_trust is PackageTrust.BUILT_IN
+        ]
+        developers = [
+            item
+            for item in group
+            if item.package_trust is PackageTrust.DEVELOPER_UNSIGNED
+        ]
+        ordered = sorted(
+            group,
+            key=lambda item: (
+                item.manifest.activity_id,
+                item.source_id,
+                item.manifest.root.as_posix(),
+            ),
+        )
+        if (
+            len(built_ins) == 1
+            and len(developers) >= 1
+            and len(built_ins) + len(developers) == len(group)
+        ):
+            for loser in ordered:
+                if loser.package_trust is PackageTrust.BUILT_IN:
+                    continue
+                rejected_by_key.setdefault(id(loser), loser)
+                conflicts.append(_conflict(identity, loser))
+        else:
+            for loser in ordered:
+                rejected_by_key.setdefault(id(loser), loser)
+                conflicts.append(_conflict(identity, loser))
+    accepted = tuple(item for item in registrations if id(item) not in rejected_by_key)
+    rejected = tuple(item for item in registrations if id(item) in rejected_by_key)
+    return ActivityCollisionResolution(
+        accepted=accepted,
+        rejected=rejected,
+        conflicts=tuple(conflicts),
+        degraded=bool(conflicts),
+    )
+
+
+@dataclass(frozen=True, slots=True)
 class RuntimeCatalogue:
     api_version: str
     forbidden_file_names: frozenset[str]
@@ -199,11 +324,29 @@ class ActivityRegistry:
         self._fail_closed = fail_closed
         self._issued: dict[int, ActivityRegistration] = {}
         self._unvalidated_activities: dict[str, str] = {}
+        self._rejected_registrations: tuple[ActivityRegistration, ...] = ()
+        self._collision_conflicts: tuple[ActivityCollisionConflict, ...] = ()
+        self._collision_degraded: bool = False
 
     @property
     def unvalidated_activities(self) -> Mapping[str, str]:
         """Maps skipped activity root paths to their validation error message."""
         return dict(self._unvalidated_activities)
+
+    @property
+    def rejected_registrations(self) -> tuple[ActivityRegistration, ...]:
+        """Registrations rejected by the trust-aware collision resolver."""
+        return self._rejected_registrations
+
+    @property
+    def collision_conflicts(self) -> tuple[ActivityCollisionConflict, ...]:
+        """Structured conflict evidence from the last discovery."""
+        return self._collision_conflicts
+
+    @property
+    def collision_degraded(self) -> bool:
+        """Whether the last discovery resolved any identity collision."""
+        return self._collision_degraded
 
     def discover(self, *, fail_closed: bool | None = None) -> tuple[ActivityManifest, ...]:
         return tuple(item.manifest for item in self.discover_registrations(fail_closed=fail_closed))
@@ -212,26 +355,19 @@ class ActivityRegistry:
         self, *, fail_closed: bool | None = None
     ) -> tuple[ActivityRegistration, ...]:
         strict = self._fail_closed if fail_closed is None else bool(fail_closed)
-        registrations: list[ActivityRegistration] = []
-        identities: dict[str, str] = {}
+        collected: list[ActivityRegistration] = []
         self._issued.clear()
         self._unvalidated_activities.clear()
+        self._rejected_registrations = ()
+        self._collision_conflicts = ()
+        self._collision_degraded = False
         for source in self._sources:
             if not source.root.exists():
                 continue
             for path in sorted(source.root.glob("*/activity.toml")):
                 try:
                     registration = self.validate_registration(path.parent, source)
-                    manifest = registration.manifest
-                    for identity in (manifest.activity_id, *manifest.legacy_ids):
-                        if identity in identities:
-                            raise ActivityValidationError(
-                                f"Activity identity/alias collision {identity!r}: "
-                                f"{identities[identity]} and {manifest.activity_id}"
-                            )
-                        identities[identity] = manifest.activity_id
-                    registrations.append(registration)
-                    self._issued[id(manifest)] = registration
+                    collected.append(registration)
                 except Exception as exc:
                     if strict:
                         raise
@@ -242,7 +378,36 @@ class ActivityRegistry:
                     )
                     self._unvalidated_activities[str(path.parent.resolve())] = str(exc)
                     continue
-        return tuple(registrations)
+        # Degrade, don't crash (B04): non-strict discovery resolves
+        # identity/alias collisions through the shared pure resolver.
+        # Strict discovery preserves fail-closed collision errors so
+        # single-source validation, Parent strict loads and the
+        # developer-control resolution path keep their hard guarantees;
+        # composed boot handles cross-source collisions via the resolver
+        # directly (see compose_boot_content) and Parent load damage is
+        # still omitted as parent_degraded there.
+        if strict:
+            identities: dict[str, str] = {}
+            registrations: list[ActivityRegistration] = []
+            for registration in collected:
+                manifest = registration.manifest
+                for identity in (manifest.activity_id, *manifest.legacy_ids):
+                    if identity in identities:
+                        raise ActivityValidationError(
+                            f"Activity identity/alias collision {identity!r}: "
+                            f"{identities[identity]} and {manifest.activity_id}"
+                        )
+                    identities[identity] = manifest.activity_id
+                registrations.append(registration)
+                self._issued[id(manifest)] = registration
+            return tuple(registrations)
+        resolution = resolve_activity_collisions(tuple(collected))
+        for registration in resolution.accepted:
+            self._issued[id(registration.manifest)] = registration
+        self._rejected_registrations = resolution.rejected
+        self._collision_conflicts = resolution.conflicts
+        self._collision_degraded = resolution.degraded
+        return resolution.accepted
 
     def registration_for(self, manifest: ActivityManifest) -> ActivityRegistration:
         registration = self._issued.get(id(manifest))

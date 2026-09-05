@@ -1,8 +1,10 @@
-"""One-pass source composition for launcher startup (T36).
+"""One-pass source composition for launcher startup (T36, B04 degrade).
 
 Boot resolves configured sources once, loads each source's trusted index
-without re-running package validation, enforces cross-source identity/alias
-collision once fail-closed, and builds one seeded registry plus one
+without re-running package validation, resolves cross-source identity/alias
+collisions once through the trust-aware degrade resolver (built-in wins over
+developer duplicates; any other ambiguous group is rejected and boot
+continues degraded), and builds one seeded registry plus one
 runtime/catalogue set. Activation-time ``registration_for`` reuses the
 index-loaded proof instead of recomputing digests or revalidating trees.
 """
@@ -22,8 +24,9 @@ from greia_platform.activities import (
     ActivityRegistry,
     ActivityValidationError,
     RuntimeCatalogue,
+    resolve_activity_collisions,
 )
-from greia_platform.activity_index import build_index
+from greia_platform.activity_index import ActivityIndexError, build_index
 from greia_platform.trust import ActivitySource, PackageTrust
 
 
@@ -244,7 +247,12 @@ class OnePassCompositionTests(unittest.TestCase):
                 registration.source_id, "greia-parent-package-service"
             )
 
-    def test_cross_source_id_collision_fails_closed(self) -> None:
+    def test_cross_source_id_collision_degrades_rejecting_ambiguous_group(self) -> None:
+        # B04: the exception-only gate is replaced. A built-in × Parent
+        # canonical collision has a single built-in claimant but is NOT the
+        # authoritative built-in-wins pattern (other claimant is not
+        # DEVELOPER_UNSIGNED), so every member of the ambiguous group is
+        # rejected and boot continues degraded with the remainder.
         with tempfile.TemporaryDirectory() as tmp:
             builtin_root = Path(tmp) / "builtin"
             parent_root = Path(tmp) / "parent"
@@ -279,12 +287,25 @@ class OnePassCompositionTests(unittest.TestCase):
             ):
                 paths = self._paths(builtin_root, None)
                 boot_sources = launcher_main.boot_activity_sources(paths)
-                with self.assertRaises(ActivityValidationError):
-                    launcher_composition.compose_boot_content(
-                        runtime, boot_sources
-                    )
+                content = launcher_composition.compose_boot_content(
+                    runtime, boot_sources
+                )
+                # Boot continues degraded; the ambiguous identity contributes
+                # nothing to the catalogue.
+                self.assertTrue(content.degraded)
+                self.assertEqual([item.activity_id for item in content.activities], [])
+                self.assertEqual(len(content.rejected), 2)
+                identities = {item.identity for item in content.conflicts}
+                self.assertEqual(identities, {"org.greia.shared"})
+                # Neither ambiguous claimant is issuable.
+                self.assertEqual(len(content.registry._issued), 0)
+                self.assertEqual(content.registry.collision_degraded, True)
 
-    def test_cross_source_alias_collision_fails_closed(self) -> None:
+    def test_cross_source_alias_collision_degrades_rejecting_ambiguous_group(self) -> None:
+        # B04: same degrade rule for the alias direction. A Parent package
+        # can never carry legacy aliases itself, but its id shadowing a
+        # built-in alias is ambiguous (not built-in × developer), so both
+        # sides are rejected and boot continues degraded.
         with tempfile.TemporaryDirectory() as tmp:
             builtin_root = Path(tmp) / "builtin"
             parent_root = Path(tmp) / "parent"
@@ -293,8 +314,8 @@ class OnePassCompositionTests(unittest.TestCase):
                 activity_id="org.greia.renamed",
                 legacy_ids=("org.greia.old",),
             )
-            # A Parent package can never carry legacy aliases itself, but it
-            # must still fail closed when its id shadows a built-in alias.
+            # A Parent package can never carry legacy aliases itself; its id
+            # shadowing a built-in alias degrades (both sides rejected).
             _write_activity(
                 parent_root / "old.pkg", activity_id="org.greia.old"
             )
@@ -323,10 +344,14 @@ class OnePassCompositionTests(unittest.TestCase):
             ):
                 paths = self._paths(builtin_root, None)
                 boot_sources = launcher_main.boot_activity_sources(paths)
-                with self.assertRaises(ActivityValidationError):
-                    launcher_composition.compose_boot_content(
-                        runtime, boot_sources
-                    )
+                content = launcher_composition.compose_boot_content(
+                    runtime, boot_sources
+                )
+                self.assertTrue(content.degraded)
+                self.assertEqual([item.activity_id for item in content.activities], [])
+                self.assertEqual(len(content.rejected), 2)
+                identities = {item.identity for item in content.conflicts}
+                self.assertEqual(identities, {"org.greia.old"})
 
     def test_activation_proof_reused_not_recomputed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -385,6 +410,408 @@ class OnePassCompositionTests(unittest.TestCase):
                             registration.source_id,
                             launcher_main.BUILT_IN_SOURCE_ID,
                         )
+
+
+                        self.assertEqual(
+                            registration.source_id,
+                            launcher_main.BUILT_IN_SOURCE_ID,
+                        )
+
+
+class TrustAwareDegradeResolverTests(unittest.TestCase):
+    """B04: one developer duplicate of a built-in ID never bricks the shell."""
+
+    def _enable_developer(self, tmp: str) -> Path:
+        marker = Path(tmp) / "developer-marker"
+        marker.write_text("", encoding="utf-8")
+        return marker
+
+    def _compose(
+        self,
+        tmp: str,
+        builtin_root: Path,
+        dev_root: Path | None,
+        index_path: Path,
+        parent_root: Path,
+        marker: Path,
+        runtime: RuntimeCatalogue,
+    ):  # type: ignore[no-untyped-def]
+        with mock.patch.dict(
+            os.environ,
+            {
+                launcher_main.DEVELOPER_MARKER_ENV_VAR: str(marker),
+                launcher_composition.BUILT_IN_INDEX_ENV_VAR: str(index_path),
+                launcher_composition.PARENT_ACTIVITY_ROOT_ENV_VAR: str(parent_root),
+                "GREIA_DEVELOPER_ACTIVITY_ROOT": str(dev_root) if dev_root else "",
+            },
+            clear=False,
+        ):
+            paths = SimpleNamespace(
+                activities=builtin_root,
+                developer_activities=dev_root,
+            )
+            boot_sources = launcher_main.boot_activity_sources(paths)
+            return launcher_composition.compose_boot_content(runtime, boot_sources)
+
+    def test_builtin_developer_canonical_collision_builtin_wins(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            builtin_root = Path(tmp) / "builtin"
+            dev_root = Path(tmp) / "dev"
+            parent_root = Path(tmp) / "parent-missing"
+            _write_activity(
+                builtin_root / "baia.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            _write_activity(
+                dev_root / "baia.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            _write_activity(
+                dev_root / "other.pkg", activity_id="org.greia.dev-other"
+            )
+            runtime = RuntimeCatalogue.default_safe()
+            builtin_source = ActivitySource(
+                builtin_root, PackageTrust.BUILT_IN, "greia-system"
+            )
+            index_path = Path(tmp) / "builtin-index.json"
+            _write_index(
+                source_root=builtin_root,
+                source=builtin_source,
+                runtime=runtime,
+                dest=index_path,
+            )
+            expected_digest = build_index(
+                ActivityRegistry(
+                    (builtin_source,), runtime, fail_closed=False
+                ).discover_registrations(),
+                source=builtin_source,
+                runtime=runtime,
+            ).registrations[0].package_digest
+            marker = self._enable_developer(tmp)
+            content = self._compose(
+                tmp, builtin_root, dev_root, index_path, parent_root, marker, runtime
+            )
+            # Boot continues degraded with the built-in accepted.
+            self.assertTrue(content.degraded)
+            ids = [item.activity_id for item in content.activities]
+            self.assertIn("org.greia.baia-delle-orche", ids)
+            self.assertIn("org.greia.dev-other", ids)
+            self.assertEqual(ids.count("org.greia.baia-delle-orche"), 1)
+            # Built-in registration keeps built-in trust and index digest.
+            builtin_manifest = next(
+                item for item in content.activities
+                if item.activity_id == "org.greia.baia-delle-orche"
+            )
+            builtin_reg = content.registry.registration_for(builtin_manifest)
+            self.assertEqual(builtin_reg.package_trust, PackageTrust.BUILT_IN)
+            self.assertEqual(builtin_reg.package_digest, expected_digest)
+            self.assertEqual(builtin_reg.source_id, launcher_main.BUILT_IN_SOURCE_ID)
+            # Every developer claimant rejected with structured evidence.
+            self.assertEqual(len(content.rejected), 1)
+            self.assertEqual(content.rejected[0].manifest.activity_id,
+                             "org.greia.baia-delle-orche")
+            self.assertEqual(content.rejected[0].package_trust,
+                             PackageTrust.DEVELOPER_UNSIGNED)
+            self.assertEqual(len(content.conflicts), 1)
+            conflict = content.conflicts[0]
+            self.assertEqual(conflict.identity, "org.greia.baia-delle-orche")
+            self.assertEqual(conflict.activity_id, "org.greia.baia-delle-orche")
+            self.assertEqual(conflict.source_id, "greia-developer-remote")
+            self.assertEqual(conflict.package_trust, PackageTrust.DEVELOPER_UNSIGNED)
+            self.assertTrue(str(conflict.package_root).endswith("baia.pkg"))
+            self.assertTrue(len(conflict.package_digest) == 64)
+            # Rejected registration is not issuable.
+            with self.assertRaises(ActivityValidationError):
+                content.registry.registration_for(content.rejected[0].manifest)
+
+    def test_multiple_developer_duplicates_all_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            builtin_root = Path(tmp) / "builtin"
+            dev_root = Path(tmp) / "dev"
+            parent_root = Path(tmp) / "parent-missing"
+            _write_activity(
+                builtin_root / "baia.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            _write_activity(
+                dev_root / "dup-a.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            _write_activity(
+                dev_root / "dup-b.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            runtime = RuntimeCatalogue.default_safe()
+            builtin_source = ActivitySource(
+                builtin_root, PackageTrust.BUILT_IN, "greia-system"
+            )
+            index_path = Path(tmp) / "builtin-index.json"
+            _write_index(
+                source_root=builtin_root,
+                source=builtin_source,
+                runtime=runtime,
+                dest=index_path,
+            )
+            marker = self._enable_developer(tmp)
+            content = self._compose(
+                tmp, builtin_root, dev_root, index_path, parent_root, marker, runtime
+            )
+            self.assertTrue(content.degraded)
+            ids = [item.activity_id for item in content.activities]
+            self.assertEqual(ids, ["org.greia.baia-delle-orche"])
+            self.assertEqual(len(content.rejected), 2)
+            self.assertEqual(len(content.conflicts), 2)
+            for rejected in content.rejected:
+                with self.assertRaises(ActivityValidationError):
+                    content.registry.registration_for(rejected.manifest)
+
+    def test_alias_collision_builtin_wins(self) -> None:
+        # Developer canonical ID shadows a built-in legacy alias.
+        with tempfile.TemporaryDirectory() as tmp:
+            builtin_root = Path(tmp) / "builtin"
+            dev_root = Path(tmp) / "dev"
+            parent_root = Path(tmp) / "parent-missing"
+            _write_activity(
+                builtin_root / "renamed.pkg",
+                activity_id="org.greia.renamed",
+                legacy_ids=("org.greia.old",),
+            )
+            _write_activity(dev_root / "old.pkg", activity_id="org.greia.old")
+            runtime = RuntimeCatalogue.default_safe()
+            builtin_source = ActivitySource(
+                builtin_root, PackageTrust.BUILT_IN, "greia-system"
+            )
+            index_path = Path(tmp) / "builtin-index.json"
+            _write_index(
+                source_root=builtin_root,
+                source=builtin_source,
+                runtime=runtime,
+                dest=index_path,
+            )
+            marker = self._enable_developer(tmp)
+            content = self._compose(
+                tmp, builtin_root, dev_root, index_path, parent_root, marker, runtime
+            )
+            self.assertTrue(content.degraded)
+            ids = [item.activity_id for item in content.activities]
+            self.assertEqual(ids, ["org.greia.renamed"])
+            self.assertEqual(len(content.rejected), 1)
+            self.assertEqual(content.conflicts[0].identity, "org.greia.old")
+            self.assertEqual(
+                content.conflicts[0].package_trust, PackageTrust.DEVELOPER_UNSIGNED
+            )
+            with self.assertRaises(ActivityValidationError):
+                content.registry.registration_for(content.rejected[0].manifest)
+
+    def test_registration_order_cannot_reverse_decision(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            builtin_root = Path(tmp) / "builtin"
+            dev_root = Path(tmp) / "dev"
+            _write_activity(
+                builtin_root / "baia.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            _write_activity(
+                dev_root / "baia.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            runtime = RuntimeCatalogue.default_safe()
+            builtin_source = ActivitySource(
+                builtin_root, PackageTrust.BUILT_IN, "greia-system"
+            )
+            dev_source = ActivitySource(
+                dev_root, PackageTrust.DEVELOPER_UNSIGNED, "greia-developer-remote"
+            )
+            builtin_regs = ActivityRegistry(
+                (builtin_source,), runtime, fail_closed=False
+            ).discover_registrations()
+            dev_regs = ActivityRegistry(
+                (dev_source,), runtime, fail_closed=False
+            ).discover_registrations()
+            forward = resolve_activity_collisions((*builtin_regs, *dev_regs))
+            reverse = resolve_activity_collisions((*dev_regs, *builtin_regs))
+            self.assertEqual(
+                [item.manifest.activity_id for item in forward.accepted],
+                [item.manifest.activity_id for item in reverse.accepted],
+            )
+            self.assertEqual(forward.accepted[0].package_trust, PackageTrust.BUILT_IN)
+            self.assertEqual(reverse.accepted[0].package_trust, PackageTrust.BUILT_IN)
+            self.assertEqual(
+                {(item.identity, item.source_id) for item in forward.conflicts},
+                {(item.identity, item.source_id) for item in reverse.conflicts},
+            )
+            # Registry-level order check: sources swapped, same outcome.
+            first = ActivityRegistry(
+                (builtin_source, dev_source), runtime, fail_closed=False
+            ).discover_registrations()
+            second = ActivityRegistry(
+                (dev_source, builtin_source), runtime, fail_closed=False
+            ).discover_registrations()
+            self.assertEqual(
+                [item.manifest.activity_id for item in first],
+                [item.manifest.activity_id for item in second],
+            )
+            self.assertEqual(first[0].package_trust, PackageTrust.BUILT_IN)
+
+    def test_ambiguous_group_without_builtin_rejects_all(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            dev_root = Path(tmp) / "dev"
+            _write_activity(dev_root / "a.pkg", activity_id="org.greia.dupe")
+            _write_activity(dev_root / "b.pkg", activity_id="org.greia.dupe")
+            runtime = RuntimeCatalogue.default_safe()
+            dev_source = ActivitySource(
+                dev_root, PackageTrust.DEVELOPER_UNSIGNED, "greia-developer-remote"
+            )
+            registry = ActivityRegistry((dev_source,), runtime, fail_closed=False)
+            accepted = registry.discover_registrations()
+            # No single authoritative built-in claimant: boot with remainder.
+            self.assertEqual(accepted, ())
+            self.assertTrue(registry.collision_degraded)
+            self.assertEqual(len(registry.rejected_registrations), 2)
+            self.assertEqual(len(registry.collision_conflicts), 2)
+
+    def test_developer_cannot_forge_trust_via_index(self) -> None:
+        import json
+
+        with tempfile.TemporaryDirectory() as tmp:
+            builtin_root = Path(tmp) / "builtin"
+            dev_root = Path(tmp) / "dev"
+            _write_activity(
+                builtin_root / "real.pkg", activity_id="org.greia.real-probe"
+            )
+            _write_activity(
+                dev_root / "fake.pkg", activity_id="org.greia.fake-probe"
+            )
+            runtime = RuntimeCatalogue.default_safe()
+            dev_source = ActivitySource(
+                dev_root, PackageTrust.DEVELOPER_UNSIGNED, "greia-developer-remote"
+            )
+            dev_regs = ActivityRegistry(
+                (dev_source,), runtime, fail_closed=False
+            ).discover_registrations()
+            dev_index_path = Path(tmp) / "dev-index.json"
+            build_index(
+                dev_regs, source=dev_source, runtime=runtime
+            ).write_file(dev_index_path)
+            # Loading developer index data through the built-in source is a
+            # forged source/trust binding and must raise (never promote).
+            from greia_platform.activity_index import ActivityIndexLoader
+
+            builtin_source = ActivitySource(
+                builtin_root, PackageTrust.BUILT_IN, "greia-system"
+            )
+            with self.assertRaises(ActivityIndexError):
+                ActivityIndexLoader.from_runtime(
+                    builtin_source, runtime
+                ).load_file(dev_index_path)
+            # Tampering the stored trust field is also rejected.
+            raw = json.loads(dev_index_path.read_text(encoding="utf-8"))
+            raw["package_trust"] = "built_in"
+            tampered = Path(tmp) / "tampered-index.json"
+            tampered.write_text(json.dumps(raw), encoding="utf-8")
+            with self.assertRaises(ActivityIndexError):
+                ActivityIndexLoader.from_runtime(dev_source, runtime).load_file(
+                    tampered
+                )
+            # Developer packages cannot carry legacy aliases at validation.
+            alias_root = dev_root / "alias.pkg"
+            _write_activity(
+                alias_root, activity_id="org.greia.alias-probe",
+                legacy_ids=("org.greia.alias-old",),
+            )
+            dev_registry = ActivityRegistry((dev_source,), runtime, fail_closed=False)
+            accepted = dev_registry.discover_registrations()
+            self.assertNotIn(
+                "org.greia.alias-probe",
+                [item.manifest.activity_id for item in accepted],
+            )
+
+    def test_cold_boot_and_rescan_agree(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            builtin_root = Path(tmp) / "builtin"
+            dev_root = Path(tmp) / "dev"
+            parent_root = Path(tmp) / "parent-missing"
+            _write_activity(
+                builtin_root / "baia.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            _write_activity(
+                dev_root / "baia.pkg", activity_id="org.greia.baia-delle-orche"
+            )
+            _write_activity(dev_root / "other.pkg", activity_id="org.greia.dev-other")
+            runtime = RuntimeCatalogue.default_safe()
+            builtin_source = ActivitySource(
+                builtin_root, PackageTrust.BUILT_IN, "greia-system"
+            )
+            index_path = Path(tmp) / "builtin-index.json"
+            _write_index(
+                source_root=builtin_root,
+                source=builtin_source,
+                runtime=runtime,
+                dest=index_path,
+            )
+            marker = self._enable_developer(tmp)
+            content = self._compose(
+                tmp, builtin_root, dev_root, index_path, parent_root, marker, runtime
+            )
+            cold_ids = sorted(item.activity_id for item in content.activities)
+            cold_conflicts = sorted(
+                (item.identity, item.activity_id, item.source_id)
+                for item in content.conflicts
+            )
+            # Later rescan through the real registry (live validation path).
+            rescanned = content.registry.discover_registrations()
+            rescan_ids = sorted(item.manifest.activity_id for item in rescanned)
+            rescan_conflicts = sorted(
+                (item.identity, item.activity_id, item.source_id)
+                for item in content.registry.collision_conflicts
+            )
+            self.assertEqual(cold_ids, rescan_ids)
+            self.assertEqual(cold_conflicts, rescan_conflicts)
+            # Seeded evidence matches the cold-boot resolution.
+            self.assertEqual(
+                sorted(item.manifest.activity_id for item in content.rejected),
+                sorted(
+                    item.manifest.activity_id
+                    for item in content.registry.rejected_registrations
+                ),
+            )
+
+    def test_builtin_index_corruption_still_controlled_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            builtin_root = Path(tmp) / "builtin"
+            parent_root = Path(tmp) / "parent-missing"
+            _write_activity(
+                builtin_root / "real.pkg", activity_id="org.greia.real-probe"
+            )
+            runtime = RuntimeCatalogue.default_safe()
+            index_path = Path(tmp) / "builtin-index.json"
+            index_path.write_text("{ not valid json", encoding="utf-8")
+            marker = Path(tmp) / "no-marker"
+            with mock.patch.dict(
+                os.environ,
+                {
+                    launcher_main.DEVELOPER_MARKER_ENV_VAR: str(marker),
+                    launcher_composition.BUILT_IN_INDEX_ENV_VAR: str(index_path),
+                    launcher_composition.PARENT_ACTIVITY_ROOT_ENV_VAR: str(
+                        parent_root
+                    ),
+                },
+                clear=False,
+            ):
+                paths = SimpleNamespace(
+                    activities=builtin_root, developer_activities=None
+                )
+                boot_sources = launcher_main.boot_activity_sources(paths)
+                with self.assertRaises(ActivityIndexError):
+                    launcher_composition.compose_boot_content(runtime, boot_sources)
+
+    def test_developer_source_never_promoted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            dev_root = Path(tmp) / "dev"
+            dev_root.mkdir(parents=True)
+            marker = self._enable_developer(tmp)
+            with mock.patch.dict(
+                os.environ,
+                {launcher_main.DEVELOPER_MARKER_ENV_VAR: str(marker)},
+                clear=False,
+            ):
+                source = launcher_main.developer_activity_source(dev_root)
+                assert source is not None
+                self.assertEqual(source.trust, PackageTrust.DEVELOPER_UNSIGNED)
+                self.assertEqual(source.source_id, "greia-developer-remote")
 
 
 class BootSingleConstructionTests(unittest.TestCase):

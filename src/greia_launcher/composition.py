@@ -7,11 +7,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from greia_platform.activities import (
+    ActivityCollisionConflict,
+    ActivityCollisionResolution,
     ActivityManifest,
     ActivityRegistration,
     ActivityRegistry,
     ActivityValidationError,
     RuntimeCatalogue,
+    resolve_activity_collisions,
 )
 from greia_platform.activity_index import ActivityIndexLoader
 from greia_platform.trust import ActivitySource, PackageTrust
@@ -255,7 +258,7 @@ def build_launcher_runtime_services(
     )
 
 
-# -- T36 one-pass Activity source composition ------------------------------
+# -- T36 one-pass Activity source composition (B04 trust-aware degrade) ---
 #
 # Boot composes Activity sources exactly once. The seam is explicit:
 #
@@ -263,12 +266,27 @@ def build_launcher_runtime_services(
 #      re-running package-tree validation or digest recomputation
 #      (``load_built_in_registrations`` / ``load_parent_registrations``), the
 #      developer source keeps its explicit live-validation path, and the
-#      complete set is collision-checked once fail-closed
-#      (``enforce_composed_collision``);
+#      complete set is resolved once through the shared pure resolver
+#      (``resolve_activity_collisions`` in ``greia_platform.activities``);
 #   2. runtime construction begins in the caller: one seeded
 #      ``ComposedActivityRegistry`` (activation-time proof reused, never
-#      recomputed), one ``build_launcher_runtime_services`` set, and one
-#      presentation ``ActivityCatalogue``.
+#      recomputed, seeded with the same accepted/rejected/conflict evidence
+#      so cold boot and later rescans cannot diverge), one
+#      ``build_launcher_runtime_services`` set, and one presentation
+#      ``ActivityCatalogue``.
+#
+# Result shape handed to runtime/catalogue construction
+# (``ComposedLauncherContent``): ``registrations``/``activities`` are the
+# accepted authoritative set; ``rejected`` holds every degraded claimant
+# (never issuable via ``registration_for`` nor launchable); ``conflicts``
+# holds one structured record per rejected claimant per colliding identity
+# (identity/alias string, source ID, platform-assigned trust, package root,
+# validation-time digest); ``degraded`` is true when any conflict exists
+# (parent omission OR collision) and boot continues degraded;
+# ``parent_degraded``/``parent_error`` remain the parent-specific omission
+# signal consumed by the existing catalogue-error display. Collision
+# conflicts are logged once at composition (bounded); rescan logging only
+# reports newly appearing conflicts, never per-frame/per-rescan spam.
 #
 # Callers must not rebuild the registry or runtime services per source
 # afterwards. The "built-ins first, Parent later, rebuild" two-pass flow is
@@ -368,8 +386,10 @@ def load_built_in_registrations(
     index = built_in_index_path()
     if index.is_file():
         return ActivityIndexLoader.from_runtime(source, runtime).load_file(index)
-    fallback = ActivityRegistry((source,), runtime, fail_closed=False)
-    return fallback.discover_registrations()
+    # Fallback live scan collects every validated registration without
+    # resolving collisions here; the composed resolver owns the single
+    # cross-source decision so degraded evidence is never lost per-source.
+    return _collect_live_registrations(source, runtime)
 
 
 def load_parent_registrations(
@@ -401,22 +421,49 @@ def load_developer_registrations(
 
     Developer packages keep ``DEVELOPER_UNSIGNED`` trust and are validated
     live by ``ActivityRegistry``; no developer index is ever consumed.
+    Collisions are not resolved here; every validated claimant is returned
+    so the composed resolver makes the single trust-aware degrade decision.
     """
 
     if source is None:
         return ()
+    return _collect_live_registrations(source, runtime)
+
+
+def _collect_live_registrations(
+    source: ActivitySource,
+    runtime: RuntimeCatalogue,
+) -> tuple[ActivityRegistration, ...]:
+    """Validate every package of one source without resolving collisions."""
+
     live = ActivityRegistry((source,), runtime, fail_closed=False)
-    return live.discover_registrations()
+    root = source.root
+    if not root.exists():
+        return ()
+    collected: list[ActivityRegistration] = []
+    for path in sorted(root.glob("*/activity.toml")):
+        try:
+            collected.append(live.validate_registration(path.parent, source))
+        except Exception as exc:
+            logger.warning(
+                "Skipping invalid/corrupted activity package at %s: %s",
+                path.parent,
+                exc,
+            )
+            continue
+    return tuple(collected)
 
 
 def enforce_composed_collision(
     registrations: Sequence[ActivityRegistration],
 ) -> None:
-    """Enforce cross-source Activity identity/alias uniqueness once, fail-closed.
+    """Legacy fail-closed cross-source identity/alias gate (superseded by B04).
 
-    Mirrors the registry's own collision rule across the complete composed set:
-    a canonical id or legacy alias claimed by one source can never be shadowed
-    by another source's package.
+    Preserved for direct callers that still require exception semantics.
+    Boot composition (``compose_boot_content``) no longer uses this gate;
+    it resolves through the shared trust-aware degrade resolver
+    (``resolve_activity_collisions``) so one developer duplicate can never
+    brick the child shell.
     """
 
     identities: dict[str, str] = {}
@@ -431,6 +478,24 @@ def enforce_composed_collision(
             identities[identity] = manifest.activity_id
 
 
+def _log_collision_conflicts(
+    conflicts: Sequence[ActivityCollisionConflict],
+) -> None:
+    """Emit one bounded journal warning per rejected collision claimant."""
+
+    for conflict in conflicts:
+        logger.warning(
+            "Composed Activity collision degraded: identity %r rejected "
+            "activity %r source %r trust %r root %s digest %s",
+            conflict.identity,
+            conflict.activity_id,
+            conflict.source_id,
+            conflict.package_trust.value,
+            str(conflict.package_root),
+            conflict.package_digest[:16],
+        )
+
+
 class ComposedActivityRegistry(ActivityRegistry):
     """Registry pre-seeded with the one-pass composed registration set.
 
@@ -438,7 +503,10 @@ class ComposedActivityRegistry(ActivityRegistry):
     ``registration_for`` reuses the index-loaded proof carried in each
     ``ActivityRegistration`` instead of recomputing digests or revalidating
     trees. ``discovery_token`` stays filesystem-based so later change detection
-    keeps working; a later rescan revalidates live by design.
+    keeps working; a later rescan revalidates live by design through the same
+    shared degrade resolver, so cold boot and rescan cannot diverge on
+    collisions. Rejected registrations are never issuable. Rescan logging
+    reports only newly appearing conflicts (bounded, no per-rescan spam).
     """
 
     def __init__(
@@ -446,16 +514,48 @@ class ComposedActivityRegistry(ActivityRegistry):
         sources: Sequence[ActivitySource],
         runtime: RuntimeCatalogue,
         registrations: Sequence[ActivityRegistration],
+        *,
+        rejected: Sequence[ActivityRegistration] = (),
+        conflicts: Sequence[ActivityCollisionConflict] = (),
+        degraded: bool = False,
     ) -> None:
         super().__init__(sources, runtime, fail_closed=False)
         self._issued.update(
             {id(registration.manifest): registration for registration in registrations}
         )
+        self._rejected_registrations = tuple(rejected)
+        self._collision_conflicts = tuple(conflicts)
+        self._collision_degraded = bool(degraded or conflicts)
+
+    def discover_registrations(
+        self, *, fail_closed: bool | None = None
+    ) -> tuple[ActivityRegistration, ...]:
+        previous = {
+            (item.identity, item.activity_id, item.source_id)
+            for item in self._collision_conflicts
+        }
+        result = super().discover_registrations(fail_closed=fail_closed)
+        fresh = [
+            item
+            for item in self._collision_conflicts
+            if (item.identity, item.activity_id, item.source_id) not in previous
+        ]
+        if fresh:
+            _log_collision_conflicts(fresh)
+        return result
 
 
 @dataclass(frozen=True, slots=True)
 class ComposedLauncherContent:
-    """Single composed Activity set plus its seeded registry."""
+    """Single composed Activity set plus its seeded registry.
+
+    Handoff contract for runtime/catalogue construction and B04-PROOF
+    diagnostics: ``registrations``/``activities`` are the accepted set;
+    ``rejected`` are degraded claimants (never issuable/launchable);
+    ``conflicts`` are structured per-claimant records (identity, source ID,
+    trust, package root, validation-time digest); ``degraded`` marks any
+    catalogue degrade (parent omission or collision) while boot continues.
+    """
 
     sources: tuple[ActivitySource, ...]
     registrations: tuple[ActivityRegistration, ...]
@@ -463,6 +563,9 @@ class ComposedLauncherContent:
     registry: ComposedActivityRegistry
     parent_degraded: bool = False
     parent_error: str | None = None
+    rejected: tuple[ActivityRegistration, ...] = ()
+    conflicts: tuple[ActivityCollisionConflict, ...] = ()
+    degraded: bool = False
 
 
 def compose_boot_content(
@@ -474,10 +577,16 @@ def compose_boot_content(
     ``boot_sources`` is the T35-gated built-in/developer set (see
     ``boot_activity_sources``); the Parent active set is resolved here, so
     callers receive built-in plus Parent plus developer registrations with one
-    collision check and one seeded registry. A damaged Parent set is omitted
-    with ``parent_degraded`` set instead of taking the Shell down; every other
-    failure (including cross-source collision) raises fail-closed. The Parent
-    root must stay separate from the built-in root.
+    trust-aware degrade resolution and one seeded registry. A damaged Parent
+    set is omitted with ``parent_degraded`` set instead of taking the Shell
+    down. A built-in/developer identity collision degrades (accept built-in,
+    reject developer claimants, record structured conflicts, mark degraded)
+    and boot continues; any other ambiguous identity group rejects every
+    member and boot continues with the remainder. The following still raise
+    hard controlled failure (never degrade): built-in index
+    corruption/incompatibility, forged source/trust metadata, source-root
+    escape, and failure to construct mandatory runtime/sandbox/system-chrome
+    authority. The Parent root must stay separate from the built-in root.
     """
 
     sources = tuple(boot_sources)
@@ -510,19 +619,33 @@ def compose_boot_content(
         parent = ()
         parent_degraded = True
         parent_error = str(exc)
-    registrations = (*built_in, *parent, *developer)
-    enforce_composed_collision(registrations)
+    combined = (*built_in, *parent, *developer)
+    resolution: ActivityCollisionResolution = resolve_activity_collisions(combined)
+    if resolution.degraded:
+        _log_collision_conflicts(resolution.conflicts)
+    accepted = resolution.accepted
     ordered_sources = (
         built_in_source,
         parent_set.source,
         *developer_sources,
     )
-    registry = ComposedActivityRegistry(ordered_sources, runtime, registrations)
+    registry = ComposedActivityRegistry(
+        ordered_sources,
+        runtime,
+        accepted,
+        rejected=resolution.rejected,
+        conflicts=resolution.conflicts,
+        degraded=resolution.degraded,
+    )
+    degraded = bool(parent_degraded or resolution.degraded)
     return ComposedLauncherContent(
         sources=ordered_sources,
-        registrations=tuple(registrations),
-        activities=tuple(item.manifest for item in registrations),
+        registrations=tuple(accepted),
+        activities=tuple(item.manifest for item in accepted),
         registry=registry,
         parent_degraded=parent_degraded,
         parent_error=parent_error,
+        rejected=tuple(resolution.rejected),
+        conflicts=tuple(resolution.conflicts),
+        degraded=degraded,
     )
