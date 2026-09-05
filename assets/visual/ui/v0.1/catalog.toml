@@ -68,6 +68,11 @@ path = "icon_button.svg"
 family = "button"
 state = "default"
 [[assets]]
+id = "ui.button.icon.hover"
+path = "icon_button_hover.svg"
+family = "button"
+state = "hover_or_focus"
+[[assets]]
 id = "ui.tab.pill"
 path = "tab_pill.svg"
 family = "tab"

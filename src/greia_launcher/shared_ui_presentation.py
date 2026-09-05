@@ -7,12 +7,22 @@ source artwork, rasterize SVG, or own Activity/lifecycle authority.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import time
 from typing import Any
 
 from greia_platform.assets import AssetCatalogueError
 from greia_platform.pygame_effects import transformed_rect
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
+from greia_platform.responsive_layout import UiRect
+
+
+@dataclass(frozen=True, slots=True)
+class ShellPanelLayout:
+    """Formal layout seam exposing both outer panel framing and inner content bounds."""
+
+    outer_rect: UiRect
+    content_rect: UiRect
 
 
 _SHARED_VISUAL_ERRORS = (
@@ -198,6 +208,7 @@ class SharedUiShellPanelMixin:
         """
 
         self._shared_panel_inner_rect = None
+        self._shell_panel_layout: ShellPanelLayout | None = None
         self._last_scene_backdrop = None
         if getattr(self, "_shared_panel_disabled", False):
             return
@@ -287,6 +298,10 @@ class SharedUiShellPanelMixin:
         inner_width = round(panel_rect.width * 524 / self._PANEL_SOURCE_WIDTH)
         inner_height = round(panel_rect.height * 288 / self._PANEL_SOURCE_HEIGHT)
         self._shared_panel_inner_rect = pygame.Rect(inner_left, inner_top, inner_width, inner_height)
+        self._shell_panel_layout = ShellPanelLayout(
+            outer_rect=UiRect(panel_rect.left, panel_rect.top, panel_rect.width, panel_rect.height),
+            content_rect=UiRect(inner_left, inner_top, inner_width, inner_height),
+        )
 
 
 class SharedUiActivityCardMixin:

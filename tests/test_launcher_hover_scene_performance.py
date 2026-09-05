@@ -195,6 +195,62 @@ class HoverRepairSceneEquivalenceTests(unittest.TestCase):
             shell._launching_activity_id = None
         self.assertEqual(repaired, rebuilt)
 
+    def test_chrome_controls_hover_repair_matches_full_rebuild(self) -> None:
+        shell, screen = self._prepared_shell()
+        shell._pointer_position = (2, 2)
+        self._rebuild_and_draw(shell, screen)
+        baseline = _surface_pixels(shell._cached_activities_surface)
+
+        chrome_targets = [
+            target
+            for target in shell._cached_activities_targets
+            if target.action in (
+                "presented_activity_page_prev",
+                "presented_activity_page_next",
+                "activity_category",
+                "activity_category_back",
+            )
+        ]
+        if not chrome_targets:
+            self.skipTest("no chrome targets available")
+
+        # Spy on full scene rebuilds
+        render_calls = 0
+        real_render = shell._render_activities_content
+
+        def spy_render(*args, **kwargs):
+            nonlocal render_calls
+            render_calls += 1
+            return real_render(*args, **kwargs)
+
+        shell._render_activities_content = spy_render
+
+        for target in chrome_targets:
+            render_calls = 0
+            self._hover(shell, screen, target.rect.center)
+            self.assertEqual(
+                render_calls,
+                0,
+                f"hover on {target.action} triggered full scene rebuild",
+            )
+            repaired = _surface_pixels(shell._cached_activities_surface)
+
+            # Rebuild forces full render
+            self._rebuild_and_draw(shell, screen)
+            rebuilt = _surface_pixels(shell._cached_activities_surface)
+            self.assertEqual(
+                repaired,
+                rebuilt,
+                f"hover repair for {target.action} diverged from full rebuild",
+            )
+
+        # Returning to no-hover
+        render_calls = 0
+        self._hover(shell, screen, (2, 2))
+        self.assertEqual(render_calls, 0, "unhover triggered full scene rebuild")
+        repaired = _surface_pixels(shell._cached_activities_surface)
+        self.assertEqual(repaired, baseline)
+
 
 if __name__ == "__main__":
     unittest.main()

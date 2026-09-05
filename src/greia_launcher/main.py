@@ -1153,22 +1153,29 @@ class LauncherApplication:
         screen: Any,
         theme: Any,
         pygame: Any,
-        page: GridPage,
+        page: Any,
         *,
         previous_action: str,
         next_action: str,
         total: int,
+        page_action: str | None = None,
     ) -> None:
-        if page.page_count <= 1:
+        from .navigation_layout import PageControlsState
+
+        if isinstance(page, PageControlsState):
+            page_state = page
+        else:
+            page_state = PageControlsState.from_grid_page(page, total=total)
+
+        if page_state.page_count <= 1:
             return
         size = max(54, min(72, screen.get_height() // 8))
         center_y = screen.get_height() // 2 + 24
         controls = (
-            ("previous", pygame.Rect(14, center_y - size // 2, size, size), previous_action),
-            ("next", pygame.Rect(screen.get_width() - size - 14, center_y - size // 2, size, size), next_action),
+            ("previous", pygame.Rect(14, center_y - size // 2, size, size), previous_action, page_state.previous_value, page_state.can_go_previous),
+            ("next", pygame.Rect(screen.get_width() - size - 14, center_y - size // 2, size, size), next_action, page_state.next_value, page_state.can_go_next),
         )
-        for direction, rect, action in controls:
-            enabled = page.page_index > 0 if direction == "previous" else page.page_index + 1 < page.page_count
+        for direction, rect, action, target_val, enabled in controls:
             if not enabled:
                 continue
             pygame.draw.rect(screen, theme.panel, rect, border_radius=20)
@@ -1176,12 +1183,10 @@ class LauncherApplication:
             inset = max(13, rect.width // 4)
             if direction == "previous":
                 points = ((rect.right - inset, rect.top + inset), (rect.left + inset, rect.centery), (rect.right - inset, rect.bottom - inset))
-                target_index = max(0, page.start - page.page_size)
             else:
                 points = ((rect.left + inset, rect.top + inset), (rect.right - inset, rect.centery), (rect.left + inset, rect.bottom - inset))
-                target_index = min(total - 1, page.stop)
             pygame.draw.polygon(screen, theme.text, points)
-            self._targets.append(HitTarget(action, target_index, rect))
+            self._targets.append(HitTarget(action, target_val, rect))
 
     def _draw_activity_tile(
         self,

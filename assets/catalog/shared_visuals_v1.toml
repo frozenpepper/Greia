@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
 catalog_version = "0.3.0"
-source_sha256 = "4bcfee8b43540a6599d9b30de5a226b58de353fa8f3ecbae207bf36f18474d93"
+source_sha256 = "89037cf25c2a2eebdbca3f7b715ec4d70a6b2d4f6a88e47db7faef2b25382ec6"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -218,6 +218,7 @@ role = "icon_button"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/icon_button.png"
+hover = "visual/runtime/v1/ui/icon_button_hover.png"
 
 [[visuals]]
 id = "ui.button.primary"

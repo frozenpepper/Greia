@@ -87,6 +87,13 @@ output = "visual/runtime/v1/ui/icon_button.png"
 width = 180
 height = 180
 
+[[visuals.variants]]
+name = "hover"
+source = "visual/ui/v0.1/icon_button_hover.svg"
+output = "visual/runtime/v1/ui/icon_button_hover.png"
+width = 180
+height = 180
+
 [[visuals]]
 id = "ui.avatar.frame"
 kind = "ui"

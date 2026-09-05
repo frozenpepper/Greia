@@ -952,14 +952,18 @@ class GreiaLauncherPresentation(LauncherApplication):
         if backdrop is None or cached_surface is None:
             return False
 
-        def _is_tile(signature: tuple[str, Any] | None) -> bool:
-            return signature is not None and signature[0] == "presented_activity"
+        SUPPORTED_ACTIONS = {
+            "presented_activity",
+            "presented_activity_page_prev",
+            "presented_activity_page_next",
+            "activity_category",
+            "activity_category_back",
+        }
 
-        # Chrome controls (chips, arrows, badge) own their own hover artwork;
-        # repairing only tiles would leave them stale, so defer to full render.
-        if not (prev_hover is None or _is_tile(prev_hover)):
-            return False
-        if not (new_hover is None or _is_tile(new_hover)):
+        def _is_supported(signature: tuple[str, Any] | None) -> bool:
+            return signature is None or signature[0] in SUPPORTED_ACTIONS
+
+        if not _is_supported(prev_hover) or not _is_supported(new_hover):
             return False
 
         rects_by_index = {
@@ -968,14 +972,13 @@ class GreiaLauncherPresentation(LauncherApplication):
             if target.action == "presented_activity"
         }
 
-        damage: dict[int, Any] = {}
+        damage_tiles: dict[int, Any] = {}
         for signature in (prev_hover, new_hover):
-            if not _is_tile(signature):
-                continue
-            rect = rects_by_index.get(signature[1])
-            if rect is None:
-                return False
-            damage[int(signature[1])] = rect
+            if signature is not None and signature[0] == "presented_activity":
+                rect = rects_by_index.get(signature[1])
+                if rect is None:
+                    return False
+                damage_tiles[int(signature[1])] = rect
 
         launching_changed = new_tick != prev_tick and self._launching_activity_id
         if launching_changed:
@@ -986,31 +989,89 @@ class GreiaLauncherPresentation(LauncherApplication):
                 if 0 <= index < len(activities) and (
                     activities[index].activity_id == self._launching_activity_id
                 ):
-                    damage[index] = target.rect.copy()
+                    damage_tiles[index] = target.rect.copy()
                     break
 
-        if not damage:
+        arrow_targets = {
+            target.action: target
+            for target in self._cached_activities_targets
+            if target.action in ("presented_activity_page_prev", "presented_activity_page_next")
+        }
+        damage_arrows: dict[str, Any] = {}
+        for signature in (prev_hover, new_hover):
+            if signature is not None and signature[0] in (
+                "presented_activity_page_prev",
+                "presented_activity_page_next",
+            ):
+                target = arrow_targets.get(signature[0])
+                if target is None:
+                    return False
+                damage_arrows[signature[0]] = target
+
+        damage_header = False
+        for signature in (prev_hover, new_hover):
+            if signature is not None and signature[0] in (
+                "activity_category",
+                "activity_category_back",
+            ):
+                damage_header = True
+                break
+
+        if not damage_tiles and not damage_arrows and not damage_header:
             return False
 
         backdrop_rect = backdrop.get_rect()
-        for index, rect in sorted(damage.items()):
-            if not 0 <= index < len(activities):
-                return False
-            # Cover every extent the dynamic states can reach: the tile-surface
-            # padding plus hover lift/scale and the bounded launch wiggle/bounce
-            # amplitudes. The extra margin stays within inter-tile transparent
-            # padding, so neighbours' visible pixels are never touched.
-            restore = rect.inflate(34, 40).clip(backdrop_rect)
-            cached_surface.blit(backdrop, restore.topleft, restore)
 
-        for index, rect in sorted(damage.items()):
-            activity = activities[index]
-            state = InteractionVisualState(
-                hovered=pointer_active and rect.collidepoint(pointer),
-                selected=index == self._selected,
-                launching=activity.activity_id == self._launching_activity_id,
-            )
-            self._draw_activity_tile(cached_surface, rect, activity, state, theme, pygame)
+        # 1. Repair cards
+        if damage_tiles:
+            for index, rect in sorted(damage_tiles.items()):
+                if not 0 <= index < len(activities):
+                    return False
+                restore = rect.inflate(34, 40).clip(backdrop_rect)
+                cached_surface.blit(backdrop, restore.topleft, restore)
+
+            for index, rect in sorted(damage_tiles.items()):
+                activity = activities[index]
+                state = InteractionVisualState(
+                    hovered=pointer_active and rect.collidepoint(pointer),
+                    selected=index == self._selected,
+                    launching=activity.activity_id == self._launching_activity_id,
+                )
+                self._draw_activity_tile(
+                    cached_surface, rect, activity, state, theme, pygame
+                )
+
+        # 2. Repair navigation arrows
+        if damage_arrows:
+            for action, target in damage_arrows.items():
+                rect = target.rect
+                restore = rect.inflate(24, 24).clip(backdrop_rect)
+                cached_surface.blit(backdrop, restore.topleft, restore)
+                hovered = pointer_active and rect.collidepoint(pointer)
+                direction = (
+                    "previous" if action == "presented_activity_page_prev" else "next"
+                )
+                if hasattr(self, "_draw_page_arrow_button"):
+                    self._draw_page_arrow_button(
+                        cached_surface, theme, pygame, direction, rect, hovered
+                    )
+                else:
+                    return False
+
+        # 3. Repair category header
+        if damage_header:
+            left = 112 if self._active_profile is not None else 20
+            header_rect = pygame.Rect(
+                left - 4, 0, screen.get_width() - left + 4, 84
+            ).clip(backdrop_rect)
+            cached_surface.blit(backdrop, header_rect.topleft, header_rect)
+            saved_targets = self._targets
+            self._targets = []
+            try:
+                self._draw_category_header(cached_surface, theme, pygame)
+            finally:
+                self._targets = saved_targets
+
         return True
 
     def _draw_activity_title_disclosure(
@@ -1086,7 +1147,9 @@ class GreiaLauncherPresentation(LauncherApplication):
 
             # 1. Tactile shadow
             shadow_rect = pygame.Rect(px + 2, py + 3, pw, ph)
-            pygame.draw.rect(screen, (203, 213, 225), shadow_rect, border_radius=12)
+            pygame.draw.rect(
+                screen, _mix(theme.background, (0, 0, 0), 0.16), shadow_rect, border_radius=12
+            )
 
             # 2. Pill background
             pill_rect = pygame.Rect(px, py, pw, ph)
@@ -1215,7 +1278,6 @@ class GreiaLauncherPresentation(LauncherApplication):
             self._targets.append(
                 HitTarget("presented_activity", presented_index, rect)
             )
-
         self._draw_pagination_and_overflow(screen, theme, pygame, window, columns, inner_panel)
         if (self._last_result and not self._last_result.succeeded) or self._catalogue_error:
             self._draw_error_badge(screen, pygame)
@@ -1445,143 +1507,23 @@ class GreiaLauncherPresentation(LauncherApplication):
         activities = self._presented_activities
         if not activities:
             return
-        page_capacity = columns * 2
-        total_items = len(activities)
-        total_pages = (total_items + page_capacity - 1) // page_capacity
-        if total_pages <= 1:
-            return
+        page_capacity = max(1, columns * 2)
+        from .navigation_layout import PageControlsState
 
-        current_page = window.start // page_capacity
-        width, height = screen.get_size()
-        pointer = self._pointer_pos(pygame)
-        pointer_active = self._is_pointer_active(pygame)
-
-        # 1. Floating side arrows on left and right edges
-        arrow_size = max(44, min(54, height // 11))
-        center_y = inner_panel.centery if inner_panel else height // 2 + 20
-
-        if inner_panel:
-            left_arrow_rect = pygame.Rect(
-                inner_panel.left - arrow_size // 2 - 4,
-                center_y - arrow_size // 2,
-                arrow_size,
-                arrow_size,
-            )
-            right_arrow_rect = pygame.Rect(
-                inner_panel.right - arrow_size // 2 + 4,
-                center_y - arrow_size // 2,
-                arrow_size,
-                arrow_size,
-            )
-        else:
-            left_arrow_rect = pygame.Rect(16, center_y - arrow_size // 2, arrow_size, arrow_size)
-            right_arrow_rect = pygame.Rect(width - arrow_size - 16, center_y - arrow_size // 2, arrow_size, arrow_size)
-
-        # Left arrow button
-        if window.can_scroll_backward:
-            h_left = pointer_active and left_arrow_rect.collidepoint(pointer)
-            pygame.draw.rect(screen, theme.panel, left_arrow_rect, border_radius=arrow_size // 2)
-            pygame.draw.rect(
-                screen,
-                theme.accent if h_left else _mix(theme.text, theme.panel, 0.7),
-                left_arrow_rect,
-                width=3 if h_left else 2,
-                border_radius=arrow_size // 2,
-            )
-            inset = arrow_size // 3
-            pts = (
-                (left_arrow_rect.right - inset, left_arrow_rect.top + inset - 2),
-                (left_arrow_rect.left + inset, left_arrow_rect.centery),
-                (left_arrow_rect.right - inset, left_arrow_rect.bottom - inset + 2),
-            )
-            pygame.draw.lines(
-                screen,
-                theme.accent if h_left else theme.text,
-                False,
-                pts,
-                width=max(3, arrow_size // 12),
-            )
-            self._targets.append(
-                HitTarget("presented_activity_page_prev", -1, left_arrow_rect)
-            )
-
-        # Right arrow button
-        if window.can_scroll_forward:
-            h_right = pointer_active and right_arrow_rect.collidepoint(pointer)
-            pygame.draw.rect(screen, theme.panel, right_arrow_rect, border_radius=arrow_size // 2)
-            pygame.draw.rect(
-                screen,
-                theme.accent if h_right else _mix(theme.text, theme.panel, 0.7),
-                right_arrow_rect,
-                width=3 if h_right else 2,
-                border_radius=arrow_size // 2,
-            )
-            inset = arrow_size // 3
-            pts = (
-                (right_arrow_rect.left + inset, right_arrow_rect.top + inset - 2),
-                (right_arrow_rect.right - inset, right_arrow_rect.centery),
-                (right_arrow_rect.left + inset, right_arrow_rect.bottom - inset + 2),
-            )
-            pygame.draw.lines(
-                screen,
-                theme.accent if h_right else theme.text,
-                False,
-                pts,
-                width=max(3, arrow_size // 12),
-            )
-            self._targets.append(
-                HitTarget("presented_activity_page_next", 1, right_arrow_rect)
-            )
-
-        # 2. Bottom Pagination Capsule Pill (Page Dots + Counter)
-        pill_h = 30
-        dot_spacing = 14
-        dots_w = (total_pages - 1) * dot_spacing + 24
-        label_text = f"{current_page + 1} / {total_pages}"
-        font = self._font(14, pygame)
-        label_surf = font.render(label_text, True, _mix(theme.text, theme.panel, 0.4))
-        pill_w = dots_w + label_surf.get_width() + 28
-        pill_x = (inner_panel.centerx if inner_panel else width // 2) - pill_w // 2
-        pill_y = (inner_panel.bottom - pill_h - 4) if inner_panel else height - pill_h - 10
-        pill_rect = pygame.Rect(pill_x, pill_y, pill_w, pill_h)
-
-        pygame.draw.rect(
-            screen,
-            _mix(theme.panel, theme.accent, 0.08),
-            pill_rect,
-            border_radius=pill_h // 2,
+        page_state = PageControlsState.from_scroll_window(
+            window,
+            page_capacity=page_capacity,
+            total_items=len(activities),
         )
-        pygame.draw.rect(
+        self._draw_page_controls(
             screen,
-            _mix(theme.text, theme.panel, 0.8),
-            pill_rect,
-            width=1,
-            border_radius=pill_h // 2,
-        )
-
-        dots_start_x = pill_rect.left + 14
-        for p in range(total_pages):
-            dot_cx = dots_start_x + p * dot_spacing
-            dot_cy = pill_rect.centery
-            is_active = (p == current_page)
-            if is_active:
-                dot_r = pygame.Rect(dot_cx - 8, dot_cy - 4, 16, 8)
-                pygame.draw.rect(screen, theme.accent, dot_r, border_radius=4)
-            else:
-                pygame.draw.circle(
-                    screen,
-                    _mix(theme.text, theme.panel, 0.5),
-                    (dot_cx, dot_cy),
-                    4,
-                )
-            dot_hit = pygame.Rect(dot_cx - 8, dot_cy - 12, 16, 24)
-            self._targets.append(HitTarget("presented_activity_page", p, dot_hit))
-
-        screen.blit(
-            label_surf,
-            label_surf.get_rect(
-                midleft=(dots_start_x + total_pages * dot_spacing + 6, pill_rect.centery)
-            ),
+            theme,
+            pygame,
+            page_state,
+            previous_action="presented_activity_page_prev",
+            next_action="presented_activity_page_next",
+            total=len(activities),
+            page_action="presented_activity_page",
         )
 
     def _draw_scroll_controls(

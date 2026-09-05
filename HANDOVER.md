@@ -719,3 +719,34 @@ Executed the automated physical gap closure harness `tools/run_r7_final_gap_clos
    - Captured full snapshot and service journal at `tmp/r7-final-20260905_014915-8599faaf/` with `REPORT.txt` verdict: **`ACCEPTED`**.
    - Phase R7 is closed; primary blocking phase advances to **R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters**.
 
+
+## 30. Launcher Responsive Navigation, Semantic Visual Polish & Bounded Dynamic Compositor (2026-09-05)
+
+Implemented comprehensive enhancement of launcher navigation layout, visual polish, and dynamic compositor performance:
+
+1. **Renderer-Neutral Responsive Navigation Geometry (`src/greia_launcher/navigation_layout.py`):**
+   - Implemented pure geometric layout engine free of Pygame/HitTarget imports: `PageControlsPlacement(OUTER_GUTTER, PANEL_RAIL, CONTAINED_FALLBACK)`, immutable `PageControlsState`, `PageControlsLayout`, and `resolve_page_controls_layout()`.
+   - Adaptive placement dynamically evaluates available gutters vs compact panel rail (e.g. 104px outer gutter on 1024×600 -> `OUTER_GUTTER`; 12px outer gutter on 800×600 -> `PANEL_RAIL`), guaranteeing arrows never collide with cards or exceed viewport boundaries.
+   - Windowed visible dots pagination contract: caps displayed dots at 5–7 with centered sliding active dot window and counter string (`X / N`).
+   - Added dedicated geometry test suite `tests/test_launcher_navigation_geometry.py` (8/8 PASS).
+
+2. **Unified Presentation Seams & Delegation:**
+   - Formalized `ShellPanelLayout(outer_rect, content_rect)` on `SharedUiShellPanelMixin` in `src/greia_launcher/shared_ui_presentation.py`.
+   - Rewrote `_draw_page_controls` in `src/greia_launcher/navigation_chrome_presentation.py` to accept `PageControlsState` or `GridPage`, blitting semantic `ui.button.icon` with circular tactile fallback and rendering the bounded capsule pill.
+   - Extracted `_draw_page_arrow_button` helper for reuse by damage repair and normal drawing.
+   - Replaced duplicate procedural drawing in `_draw_pagination_and_overflow` (`presentation.py`) with delegation to `_draw_page_controls`.
+
+3. **Generalized Bounded Dynamic Scene Compositor (`src/greia_launcher/presentation.py`):**
+   - Upgraded `_repair_dynamic_activities` to repair damaged cards, navigation arrows, and the category header directly from the pre-composited `_last_scene_backdrop`.
+   - Hover transitions across cards, arrows, category chips, and back button now restore exact paint bounds without triggering full-scene rebuilds on Atom-class CPUs.
+   - Extended `tests/test_launcher_hover_scene_performance.py` with `test_chrome_controls_hover_repair_matches_full_rebuild` (7/7 PASS), proving exact bit-for-bit pixel equivalence and 0 full scene rebuilds.
+
+4. **Semantic Visual Assets & Pipeline:**
+   - Authored SVG master `assets/visual/ui/v0.1/icon_button_hover.svg` with elevated lift, softer drop shadow, and brighter milky sheen.
+   - Registered in `assets/visual/ui/v0.1/catalog.toml` and `assets/catalog/shared_visuals_v1_source.toml`.
+   - Built runtime PNG `assets/visual/runtime/v1/ui/icon_button_hover.png` and updated `assets/catalog/shared_visuals_v1.toml` via `tools/build_visual_renditions.py`.
+   - Replaced hardcoded shadow color `(203, 213, 225)` in `_draw_activity_title_disclosure` with theme-aware `_mix(theme.background, (0, 0, 0), 0.16)`.
+
+5. **Acceptance & Verification:**
+   - Full repository test suite: **1,972 passed, 0 failed in 178 seconds**.
+   - Rendered and verified visual acceptance across 1024×600 and 800×600 for Activity pagination, Category switcher, and Profile picker.

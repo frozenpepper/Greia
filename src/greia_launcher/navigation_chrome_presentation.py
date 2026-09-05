@@ -41,24 +41,28 @@ class SharedUiNavigationChromeMixin:
         """Return injected display metrics, or ``None`` when unknown."""
         return getattr(self, "_display_metrics", None)
 
-    def _icon_button_surface(self, size: int, pygame: Any) -> Any | None:
+    def _icon_button_surface(
+        self, size: int, pygame: Any, variant: str = "default"
+    ) -> Any | None:
         if getattr(self, "_shared_icon_buttons_disabled", False):
             return None
         visual_cache = getattr(self, "_visual_cache", None)
         if visual_cache is None:
             return None
-        try:
-            return visual_cache.get(
-                "ui.button.icon",
-                variant="default",
-                size=(size, size),
-            )
-        except _SHARED_NAVIGATION_ERRORS:
-            self._shared_icon_buttons_disabled = True
-            return None
-        except pygame.error:
-            self._shared_icon_buttons_disabled = True
-            return None
+        candidates = (variant, "default") if variant != "default" else ("default",)
+        for candidate in candidates:
+            try:
+                return visual_cache.get(
+                    "ui.button.icon",
+                    variant=candidate,
+                    size=(size, size),
+                )
+            except _SHARED_NAVIGATION_ERRORS:
+                continue
+            except pygame.error:
+                continue
+        self._shared_icon_buttons_disabled = True
+        return None
 
     def _draw_page_controls(
         self,
@@ -70,83 +74,225 @@ class SharedUiNavigationChromeMixin:
         previous_action: str,
         next_action: str,
         total: int,
+        page_action: str | None = None,
     ) -> None:
-        if page.page_count <= 1:
+        from .main import HitTarget
+        from .navigation_layout import PageControlsState, resolve_page_controls_layout
+        from .presentation import _mix
+        from greia_platform.responsive_layout import Viewport
+
+        if isinstance(page, PageControlsState):
+            page_state = page
+        else:
+            page_state = PageControlsState.from_grid_page(page, total=total)
+
+        if page_state.page_count <= 1:
             return
 
-        base_size = max(54, min(72, screen.get_height() // 8))
+        resolved_page_action = page_action
+        if resolved_page_action is None:
+            if previous_action == "profile_page":
+                resolved_page_action = "profile_page"
+            elif previous_action == "presented_activity_page_prev":
+                resolved_page_action = "presented_activity_page"
+            else:
+                resolved_page_action = previous_action.replace("_prev", "")
+
+        viewport = Viewport(screen.get_width(), screen.get_height())
+        panel_layout = getattr(self, "_shell_panel_layout", None)
+        panel_outer = panel_layout.outer_rect if panel_layout else None
+        panel_content = panel_layout.content_rect if panel_layout else None
+
+        base_size = max(50, min(64, screen.get_height() // 9))
         size = resolve_trusted_action_minimum_px(
             self._chrome_metrics(), fallback_px=base_size
         )
-        frame = self._icon_button_surface(size, pygame)
-        if frame is None:
-            super()._draw_page_controls(
-                screen,
-                theme,
-                pygame,
-                page,
-                previous_action=previous_action,
-                next_action=next_action,
-                total=total,
-            )
-            return
 
-        from .main import HitTarget
+        layout = resolve_page_controls_layout(
+            viewport,
+            page_state,
+            panel_outer_rect=panel_outer,
+            panel_content_rect=panel_content,
+            button_size=size,
+        )
 
-        center_y = screen.get_height() // 2 + 24
+        pointer = self._pointer_pos(pygame)
+        pointer_active = self._is_pointer_active(pygame)
+
+        # 1. Previous and Next buttons
         controls = (
             (
                 "previous",
-                pygame.Rect(14, center_y - size // 2, size, size),
+                pygame.Rect(
+                    layout.previous_rect.x,
+                    layout.previous_rect.y,
+                    layout.previous_rect.width,
+                    layout.previous_rect.height,
+                ),
                 previous_action,
+                page_state.previous_value,
+                page_state.can_go_previous,
             ),
             (
                 "next",
                 pygame.Rect(
-                    screen.get_width() - size - 14,
-                    center_y - size // 2,
-                    size,
-                    size,
+                    layout.next_rect.x,
+                    layout.next_rect.y,
+                    layout.next_rect.width,
+                    layout.next_rect.height,
                 ),
                 next_action,
+                page_state.next_value,
+                page_state.can_go_next,
             ),
         )
-        pointer = self._pointer_pos(pygame)
-        pointer_active = self._is_pointer_active(pygame)
 
-        for direction, rect, action in controls:
-            enabled = (
-                page.page_index > 0
-                if direction == "previous"
-                else page.page_index + 1 < page.page_count
-            )
+        for direction, rect, action, target_val, enabled in controls:
             if not enabled:
                 continue
             hovered = pointer_active and rect.collidepoint(pointer)
-            drawn = rect.move(0, -2 if hovered else 0)
-            screen.blit(frame, drawn)
-
-            inset = max(13, drawn.width // 4)
-            if direction == "previous":
-                points = (
-                    (drawn.right - inset, drawn.top + inset),
-                    (drawn.left + inset, drawn.centery),
-                    (drawn.right - inset, drawn.bottom - inset),
-                )
-                target_index = max(0, page.start - page.page_size)
-            else:
-                points = (
-                    (drawn.left + inset, drawn.top + inset),
-                    (drawn.right - inset, drawn.centery),
-                    (drawn.left + inset, drawn.bottom - inset),
-                )
-                target_index = min(total - 1, page.stop)
-            pygame.draw.polygon(
-                screen,
-                theme.accent if hovered else theme.text,
-                points,
+            self._draw_page_arrow_button(
+                screen, theme, pygame, direction, rect, hovered
             )
-            self._targets.append(HitTarget(action, target_index, rect))
+            self._targets.append(HitTarget(action, target_val, rect))
+
+        # 2. Bottom Pagination Capsule Pill
+        if layout.visible_dot_count > 0 and layout.indicator_rect.width > 0:
+            pill_rect = pygame.Rect(
+                layout.indicator_rect.x,
+                layout.indicator_rect.y,
+                layout.indicator_rect.width,
+                layout.indicator_rect.height,
+            )
+            # Soft shadow
+            shadow_rect = pill_rect.move(0, 2)
+            pygame.draw.rect(
+                screen,
+                _mix(theme.background, (0, 0, 0), 0.12),
+                shadow_rect,
+                border_radius=pill_rect.height // 2,
+            )
+            # Capsule fill
+            pygame.draw.rect(
+                screen,
+                _mix(theme.panel, theme.accent, 0.08),
+                pill_rect,
+                border_radius=pill_rect.height // 2,
+            )
+            # Capsule outline
+            pygame.draw.rect(
+                screen,
+                _mix(theme.text, theme.panel, 0.8),
+                pill_rect,
+                width=1,
+                border_radius=pill_rect.height // 2,
+            )
+
+            # Dots
+            total_pages = page_state.page_count
+            if total_pages <= len(layout.dot_rects):
+                window_start = 0
+            else:
+                half = len(layout.dot_rects) // 2
+                window_start = max(
+                    0,
+                    min(
+                        page_state.page_index - half,
+                        total_pages - len(layout.dot_rects),
+                    ),
+                )
+
+            for i, dot_ui in enumerate(layout.dot_rects):
+                target_p = window_start + i
+                is_active = i == layout.active_dot_index
+                cx = dot_ui.x + dot_ui.width // 2
+                cy = dot_ui.y + dot_ui.height // 2
+                if is_active:
+                    dot_r = pygame.Rect(cx - 8, cy - 4, 16, 8)
+                    pygame.draw.rect(screen, theme.accent, dot_r, border_radius=4)
+                else:
+                    pygame.draw.circle(
+                        screen,
+                        _mix(theme.text, theme.panel, 0.5),
+                        (cx, cy),
+                        4,
+                    )
+                dot_hit = pygame.Rect(
+                    dot_ui.x - 4, dot_ui.y - 6, dot_ui.width + 8, dot_ui.height + 12
+                )
+                self._targets.append(
+                    HitTarget(resolved_page_action, target_p, dot_hit)
+                )
+
+            # Counter text
+            label_text = f"{page_state.page_index + 1} / {page_state.page_count}"
+            font = self._font(14, pygame)
+            label_surf = font.render(
+                label_text, True, _mix(theme.text, theme.panel, 0.4)
+            )
+            last_dot = layout.dot_rects[-1]
+            screen.blit(
+                label_surf,
+                label_surf.get_rect(
+                    midleft=(last_dot.right + 10, pill_rect.centery)
+                ),
+            )
+
+    def _draw_page_arrow_button(
+        self,
+        screen: Any,
+        theme: Any,
+        pygame: Any,
+        direction: str,
+        rect: Any,
+        hovered: bool,
+    ) -> None:
+        from .presentation import _mix
+
+        drawn = rect.move(0, -2 if hovered else 0)
+
+        # Try semantic asset with hover fallback chain
+        frame = self._icon_button_surface(
+            drawn.width, pygame, variant="hover" if hovered else "default"
+        )
+        if frame is not None:
+            screen.blit(frame, drawn)
+        else:
+            # Procedural circular tactile button fallback
+            shadow_rect = drawn.move(0, 3)
+            pygame.draw.circle(
+                screen, (0, 0, 0, 35), shadow_rect.center, drawn.width // 2
+            )
+            pygame.draw.circle(screen, theme.panel, drawn.center, drawn.width // 2)
+            border_color = (
+                theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
+            )
+            pygame.draw.circle(
+                screen,
+                border_color,
+                drawn.center,
+                drawn.width // 2,
+                width=3 if hovered else 2,
+            )
+
+        inset = max(13, drawn.width // 4)
+        if direction == "previous":
+            points = (
+                (drawn.right - inset, drawn.top + inset),
+                (drawn.left + inset, drawn.centery),
+                (drawn.right - inset, drawn.bottom - inset),
+            )
+        else:
+            points = (
+                (drawn.left + inset, drawn.top + inset),
+                (drawn.right - inset, drawn.centery),
+                (drawn.left + inset, drawn.bottom - inset),
+            )
+        pygame.draw.polygon(
+            screen,
+            theme.accent if hovered else theme.text,
+            points,
+        )
 
     def _draw_scroll_controls(
         self,
