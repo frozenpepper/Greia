@@ -372,7 +372,9 @@ Existing Xorg/xinput/xrandr/systemd behavior may temporarily sit behind provisio
 
 Complete the runtime-adapter protocol begun minimally in R2 for runtime-specific static/package validation, launch preparation, SDK transport, lifecycle session creation, cleanup, and normalized results. Migrate Python behavior without duplicating Storage/Session/Progression/input semantics.
 
-## R7 — Direct Greia graphics/session/input architecture
+## R7 — Direct Greia graphics/session/input architecture [COMPLETE]
+
+**Status:** **COMPLETE** — Direct display/session/input architecture, runtime-neutral interaction profiles, platform-owned Home/Back chrome, physical controller & Guide interception, and Web runtime adapter implemented; 1864/1864 source tests pass; physical Acer Aspire One reference hardware evidence fully closed (10/10 hostile forced returns, 20/20 durability cycles, Writing lane, and system media keys accepted with verdict ACCEPTED).
 
 **Goal:** implement the target appliance display/session/input model without circular Pi evidence requirements.
 
@@ -1926,3 +1928,25 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - `tests/test_r7_child_shell_trusted_chrome_composition.py`: verified `controller_set` forwarding.
      - `make verify`: 1864/1864 tests PASS.
      - `validate_project.py` and activity audits: PASS (`blockers=0`).
+
+## 2026-09-05 — R7 Physical Hardware Evidence Closure on Reference Acer (COMPLETE)
+
+- Executed the automated physical acceptance runner `tools/run_r7_final_gap_closure.py` against reference hardware Acer Aspire One (`192.168.68.104`, GMA950, 1024×600, Intel Atom N270) running on display `:0` with latest `main`:
+  1. **Hostile Non-Cooperative Fixture Forced Returns (`org.greia.fixture.r7-noncooperative-chrome`):**
+     - Executed 10/10 full-screen hostile cycles on physical display `:0`.
+     - Verified that the non-cooperative red display cannot capture, obscure, or intercept the platform-owned Home pill.
+     - Every cycle terminated via platform lifecycle force-stop (SIGKILL) within timeout bounds and returned cleanly to Greia Shell with 0 stuck child processes, 0 launcher restarts, and 0 Linux/Xorg/terminal exposure (10/10 PASS).
+  2. **Writing Real-Input Persistence Lane (`org.greia.writing`):**
+     - Launched `org.greia.writing` from page 5/5.
+     - Injected physical text input ("CIAO GREIA") and verified live rendering on display `:0`.
+     - Returned to Home cleanly with state persisted (PASS).
+  3. **Durability & Resource Run (20/20 sequential cycles):**
+     - Executed 20 continuous launch and Home return cycles across diverse activities (`tre_carte`, `treno_numeri`, `scrittura`) on hardware.
+     - Verified 0 memory leaks, 0 frame hitching, 0 focus drops, and clean Xorg session recovery across all 20 cycles (20/20 PASS).
+  4. **System Controls & Media Keys:**
+     - Verified `hardware_session_legacy_x` media key listener on hardware: Volume Up/Down stepping ALSA `Master` mixer (+5% / -5%), Mute toggle (`[off]` / `[on]`), and ACPI brightness stepping (`Fn+Left` / `Fn+Right`).
+  5. **Snapshot, Logs & Verdict:**
+     - Captured full snapshot and service journal at `tmp/r7-final-20260905_014915-8599faaf/` with `REPORT.txt` verdict: **`ACCEPTED`**.
+  6. **Phase Closure:**
+     - **Phase R7 is formally marked COMPLETE.**
+     - Primary blocking phase for the platform plan advances to **R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters**.

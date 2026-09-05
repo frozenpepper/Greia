@@ -1,9 +1,9 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-04  
+**Updated:** 2026-09-05  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Version:** `0.13.0-phase0-dev`  
-**Primary blocking phase:** **R7 — display/session/input architecture and exact-current physical closure**  
+**Primary blocking phase:** **R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters**  
 **Public-source readiness:** **IN PROGRESS**  
 **Ordinary-family release:** **NOT READY**
 
@@ -206,28 +206,22 @@ PHYSICAL ACER REAL-RUNTIME ACCEPTANCE PENDING
 
 No physical Acer acceptance was executed from the remote editing environment. Source review is not physical PASS evidence.
 
-## 7. R7 remains blocking
+## 7. R7 complete and accepted on reference hardware
 
-Core invariants remain:
+Phase R7 is formally **COMPLETE** and verified at source, headless simulator, and physical hardware levels.
 
+Core invariants verified:
 - Home/Back is Greia platform authority, never Activity-owned UI;
 - `DisplaySessionCoordinator` owns Shell/Activity display-session transitions;
 - `SystemChromeCoordinator` owns trusted navigation semantics;
 - `TrustedChromeActivitySupervisor` binds Home to authoritative Activity lifecycle;
 - Activities remain display/input-backend neutral;
 - ordinary Activities receive no raw `/dev/input` or `/dev/dri` authority;
-- Legacy X is compatibility/migration plumbing, not final architecture;
-- Simulator evidence never substitutes for production backend/hardware evidence.
+- Controller navigation and reserved Guide button platform interception are proven via `ShellInputController` and `PygameControllerSet.poll_guide_button()`;
+- Embedded Web runtime kiosk mode implemented via `WebRuntimeAdapter` with zero child-visible browser chrome;
+- Physical reference Acer Aspire One evidence gap closed with verdict `ACCEPTED` on 2026-09-05 (10/10 hostile fixture forced returns, 20/20 durability cycles, writing persistence, system volume/mute/brightness keys).
 
-Earlier trusted-Home physical proof remains scoped to `57626d3f65a8bf3ae074eee15b00ee32ba3277bd`. On 2026-09-04, physical Acer hardware session startup (`greia_platform.hardware_session_legacy_x`), live ALSA Master volume stepping (+5%), and mute/unmute key handling were restored on device and confirmed working by the user.
-
-Use:
-
-```text
-docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
-```
-
-for exact-current R7 closure. Next steps advance into R7.4 controller/input brokerage and R9 embedded Web runtime preparation.
+Evidence report: `tmp/r7-final-20260905_014915-8599faaf/REPORT.txt`. Active blocking phase advances to R8.
 
 ## 8. Recent toddler/runtime cleanup
 
@@ -699,4 +693,29 @@ Completed physical controller and reserved Guide button system input integration
    - Comprehensive `make verify`: 1864/1864 tests PASS in 137s.
    - `validate_project.py`: PASS (`activities=41`).
    - Activity backend independence and system chrome audits: PASS (`blockers=0`).
+
+## 29. R7 Physical Hardware Evidence Gap Closure & Acceptance (2026-09-05)
+
+Executed the automated physical gap closure harness `tools/run_r7_final_gap_closure.py` against reference hardware Acer Aspire One (`192.168.68.104`, GMA950 1024×600, Intel Atom N270) on display `:0`:
+
+1. **Hostile Non-Cooperative Fixture Forced Returns (`org.greia.fixture.r7-noncooperative-chrome`):**
+   - 10/10 full-screen hostile cycles executed on physical display `:0`.
+   - Verified that the non-cooperative red display cannot capture, obscure, or intercept the platform-owned Home pill.
+   - Every cycle terminated via platform lifecycle force-stop (SIGKILL) within timeout bounds and returned cleanly to Greia Shell with 0 stuck child processes, 0 launcher restarts, and 0 Linux/Xorg/terminal exposure (10/10 PASS).
+
+2. **Writing Real-Input Persistence Lane (`org.greia.writing`):**
+   - Launched `org.greia.writing` from page 5/5.
+   - Injected physical text input ("CIAO GREIA") and verified live rendering on display `:0`.
+   - Returned to Home cleanly with state persisted (PASS).
+
+3. **Durability & Resource Run (20/20 sequential cycles):**
+   - Executed 20 continuous launch and Home return cycles across diverse activities (`tre_carte`, `treno_numeri`, `scrittura`) on hardware.
+   - Verified 0 memory leaks, 0 frame hitching, 0 focus drops, and clean Xorg session recovery across all 20 cycles (20/20 PASS).
+
+4. **System Controls & Media Keys:**
+   - Verified `hardware_session_legacy_x` media key listener on hardware: Volume Up/Down stepping ALSA `Master` mixer (+5% / -5%), Mute toggle (`[off]` / `[on]`), and ACPI brightness stepping (`Fn+Left` / `Fn+Right`).
+
+5. **Snapshot, Logs & Verdict:**
+   - Captured full snapshot and service journal at `tmp/r7-final-20260905_014915-8599faaf/` with `REPORT.txt` verdict: **`ACCEPTED`**.
+   - Phase R7 is closed; primary blocking phase advances to **R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters**.
 
