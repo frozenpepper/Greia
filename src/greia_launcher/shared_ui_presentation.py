@@ -293,13 +293,18 @@ class SharedUiShellPanelMixin:
         screen.blit(backdrop, (0, 0))
         self._last_scene_backdrop = backdrop
 
+        visible_left = panel_rect.left + round(panel_rect.width * 36 / self._PANEL_SOURCE_WIDTH)
+        visible_top = panel_rect.top + round(panel_rect.height * 28 / self._PANEL_SOURCE_HEIGHT)
+        visible_width = round(panel_rect.width * 568 / self._PANEL_SOURCE_WIDTH)
+        visible_height = round(panel_rect.height * 336 / self._PANEL_SOURCE_HEIGHT)
+
         inner_left = panel_rect.left + round(panel_rect.width * 58 / self._PANEL_SOURCE_WIDTH)
         inner_top = panel_rect.top + round(panel_rect.height * 52 / self._PANEL_SOURCE_HEIGHT)
         inner_width = round(panel_rect.width * 524 / self._PANEL_SOURCE_WIDTH)
         inner_height = round(panel_rect.height * 288 / self._PANEL_SOURCE_HEIGHT)
         self._shared_panel_inner_rect = pygame.Rect(inner_left, inner_top, inner_width, inner_height)
         self._shell_panel_layout = ShellPanelLayout(
-            outer_rect=UiRect(panel_rect.left, panel_rect.top, panel_rect.width, panel_rect.height),
+            outer_rect=UiRect(visible_left, visible_top, visible_width, visible_height),
             content_rect=UiRect(inner_left, inner_top, inner_width, inner_height),
         )
 

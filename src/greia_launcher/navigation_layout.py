@@ -165,7 +165,7 @@ def resolve_page_controls_layout(
                 placement = PageControlsPlacement.PANEL_RAIL
                 prev_x = panel_outer_rect.x + (left_rail - button_size) // 2
                 next_x = panel_content_rect.right + (right_rail - button_size) // 2
-                center_y = panel_outer_rect.y + panel_outer_rect.height // 2
+                center_y = panel_content_rect.y + panel_content_rect.height // 2
                 prev_y = next_y = max(
                     min_gutter_margin,
                     min(viewport.height - button_size - min_gutter_margin, center_y - button_size // 2),
@@ -175,7 +175,7 @@ def resolve_page_controls_layout(
                 placement = PageControlsPlacement.CONTAINED_FALLBACK
                 prev_x = min_gutter_margin
                 next_x = max(0, viewport.width - button_size - min_gutter_margin)
-                center_y = panel_outer_rect.y + panel_outer_rect.height // 2
+                center_y = panel_content_rect.y + panel_content_rect.height // 2
                 prev_y = next_y = max(
                     min_gutter_margin,
                     min(viewport.height - button_size - min_gutter_margin, center_y - button_size // 2),
@@ -249,13 +249,15 @@ def resolve_page_controls_layout(
     # Center horizontally relative to content rect if available, else outer rect, else viewport
     if panel_outer_rect is not None and panel_content_rect is not None:
         center_x = panel_content_rect.x + panel_content_rect.width // 2
-        pill_y = panel_content_rect.bottom - pill_h - 4
+        preferred_y = panel_outer_rect.bottom - pill_h - 8
+        pill_y = max(preferred_y, panel_content_rect.bottom + 6)
+        pill_y = min(pill_y, viewport.height - pill_h - 8)
     elif panel_outer_rect is not None:
         center_x = panel_outer_rect.x + panel_outer_rect.width // 2
         pill_y = panel_outer_rect.bottom - pill_h - 8
     elif panel_content_rect is not None:
         center_x = panel_content_rect.x + panel_content_rect.width // 2
-        pill_y = min(viewport.height - pill_h - 8, panel_content_rect.bottom + 8)
+        pill_y = min(viewport.height - pill_h - 8, panel_content_rect.bottom + 6)
     else:
         center_x = viewport.width // 2
         pill_y = viewport.height - pill_h - 10

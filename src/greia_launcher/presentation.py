@@ -1255,6 +1255,9 @@ class GreiaLauncherPresentation(LauncherApplication):
             origin_x = (width - total_width) // 2
             origin_y = top + max(0, (available_h - total_height) // 2)
 
+        from greia_platform.responsive_layout import UiRect
+        self._page_content_rect = UiRect(origin_x, origin_y, total_width, total_height)
+
         pointer = self._pointer_pos(pygame)
         pointer_active = self._is_pointer_active(pygame)
         for local_index, presented_index in enumerate(
@@ -1404,29 +1407,36 @@ class GreiaLauncherPresentation(LauncherApplication):
         hovered = back_rect.collidepoint(self._pointer_pos(pygame)) and self._is_pointer_active(pygame)
         drawn = back_rect.move(0, -2 if hovered else 0)
 
-        # Circular tactile button fallback
-        shadow_rect = drawn.move(0, 3)
-        pygame.draw.circle(
-            screen, (0, 0, 0, 35), shadow_rect.center, drawn.width // 2
-        )
-        pygame.draw.circle(screen, theme.panel, drawn.center, drawn.width // 2)
-        border_color = (
-            theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
-        )
-        pygame.draw.circle(
-            screen,
-            border_color,
-            drawn.center,
-            drawn.width // 2,
-            width=3 if hovered else 2,
-        )
+        icon_btn_fn = getattr(self, "_icon_button_surface", None)
+        frame = icon_btn_fn(height, pygame, variant="hover" if hovered else "default") if icon_btn_fn else None
+
+        if frame is not None:
+            screen.blit(frame, drawn)
+        else:
+            # Circular tactile button fallback
+            shadow_rect = drawn.move(0, 3)
+            pygame.draw.circle(
+                screen, (0, 0, 0, 35), shadow_rect.center, drawn.width // 2
+            )
+            pygame.draw.circle(screen, theme.panel, drawn.center, drawn.width // 2)
+            border_color = (
+                theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
+            )
+            pygame.draw.circle(
+                screen,
+                border_color,
+                drawn.center,
+                drawn.width // 2,
+                width=3 if hovered else 2,
+            )
 
         from greia_platform.activity_ui import draw_back_symbol
 
         arrow_color = (
             _mix(theme.accent, (40, 20, 10), 0.30) if hovered else theme.text
         )
-        draw_back_symbol(screen, drawn, arrow_color)
+        symbol_rect = drawn.move(0, -2 if frame is not None else 0)
+        draw_back_symbol(screen, symbol_rect, arrow_color)
         self._targets.append(
             HitTarget("activity_category_back", ALL_ACTIVITIES_ID, back_rect)
         )
@@ -1434,7 +1444,12 @@ class GreiaLauncherPresentation(LauncherApplication):
         # Category Switcher Strip
         x = back_rect.right + 14
         error_active = (self._last_result and not self._last_result.succeeded) or self._catalogue_error
-        right = screen.get_width() - (76 if error_active else 20)
+        has_topright_badge = (
+            error_active
+            or getattr(self, "_achievement_service", None) is not None
+            or getattr(self, "_achievement_snapshot", None) is not None
+        )
+        right = screen.get_width() - (96 if has_topright_badge else 20)
         gap = 8
         pointer = self._pointer_pos(pygame)
         pointer_active = self._is_pointer_active(pygame)

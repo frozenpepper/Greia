@@ -102,9 +102,8 @@ class SharedUiNavigationChromeMixin:
         panel_layout = getattr(self, "_shell_panel_layout", None)
         panel_outer = panel_layout.outer_rect if panel_layout else None
         panel_content = (
-            panel_layout.content_rect
-            if panel_layout
-            else getattr(self, "_page_content_rect", None)
+            getattr(self, "_page_content_rect", None)
+            or (panel_layout.content_rect if panel_layout else None)
         )
 
         if panel_outer is not None:
@@ -113,6 +112,9 @@ class SharedUiNavigationChromeMixin:
             if left_gutter >= 88 and right_gutter >= 88:
                 # Wide gutter mode (e.g. 1024x600): generous, prominent child-sized disc
                 preferred_size = min(72, min(left_gutter, right_gutter) - 20)
+            elif left_gutter >= 70 and right_gutter >= 70:
+                # Moderate gutter mode (e.g. 800x600 profile picker): clean outer gutter buttons
+                preferred_size = min(56, min(left_gutter, right_gutter) - 16)
             elif panel_content is not None:
                 left_rail = panel_content.x - panel_outer.x
                 right_rail = panel_outer.right - panel_content.right
@@ -319,6 +321,11 @@ class SharedUiNavigationChromeMixin:
         # Chunky Greia directional arrow glyph (shaft + rounded arrowhead)
         cx, cy = drawn.center
         scale = drawn.width / 52.0
+        optical_shift = max(1, int(round(1.5 * scale)))
+        if direction == "previous":
+            cx += optical_shift
+        else:
+            cx -= optical_shift
         shaft_len = max(8, int(15 * scale))
         shaft_h = max(6, int(10 * scale))
         head_len = max(8, int(13 * scale))
@@ -428,7 +435,12 @@ class SharedUiNavigationChromeMixin:
             (self._last_result and not self._last_result.succeeded)
             or self._catalogue_error
         )
-        right = screen.get_width() - (76 if error_active else 20)
+        has_topright_badge = (
+            error_active
+            or getattr(self, "_achievement_service", None) is not None
+            or getattr(self, "_achievement_snapshot", None) is not None
+        )
+        right = screen.get_width() - (96 if has_topright_badge else 20)
         gap = 8
         pointer = self._pointer_pos(pygame)
         pointer_active = self._is_pointer_active(pygame)

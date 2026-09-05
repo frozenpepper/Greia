@@ -1129,9 +1129,11 @@ class LauncherApplication:
         screen.blit(text_surface, text_surface.get_rect(midleft=(entry.left + 18, entry.centery)))
         button_size = max(68, min(92, height // 7))
         gap = 24
-        cancel = pygame.Rect(width // 2 - button_size - gap, entry.bottom + 22, button_size, button_size)
-        erase = pygame.Rect(width // 2 - button_size // 2, entry.bottom + 22, button_size, button_size)
-        accept = pygame.Rect(width // 2 + gap, entry.bottom + 22, button_size, button_size)
+        total_buttons_w = 3 * button_size + 2 * gap
+        buttons_start_x = width // 2 - total_buttons_w // 2
+        cancel = pygame.Rect(buttons_start_x, entry.bottom + 22, button_size, button_size)
+        erase = pygame.Rect(buttons_start_x + button_size + gap, entry.bottom + 22, button_size, button_size)
+        accept = pygame.Rect(buttons_start_x + 2 * (button_size + gap), entry.bottom + 22, button_size, button_size)
         for rect, icon_id, action in (
             (cancel, "close_button", "cancel_unlock"),
             (erase, "abc_board", "backspace"),

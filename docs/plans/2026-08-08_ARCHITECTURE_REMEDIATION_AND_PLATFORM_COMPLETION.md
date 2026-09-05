@@ -2002,3 +2002,27 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - `tools/validate_project.py`: PASS.
      - Rendered and visually inspected acceptance screenshots across 1024×600 and 800×600 for activities, category chips, and profile picker.
 
+## 2026-09-05 — Visual Audit, Visible Bezel Alignment, Optical Centering & Secret Entry Button Polish
+
+- Adversarial visual audit and polish across launcher resolutions (1024×600, 800×600), modes (Activities, Profile Picker, In-Category, Secret Entry), and low-resource constraints:
+  1. **Visible Panel Tray Bezel Alignment (`src/greia_launcher/shared_ui_presentation.py`):**
+     - Identified that `panel_base.png` (640×420 source) incorporates ~41px transparent drop-shadow margins, with the visible white rounded tray located at `rect(36, 28, 568, 336)`.
+     - Updated `ShellPanelLayout.outer_rect` to scale to the true visible rounded panel tray rather than the texture envelope, preventing outer gutter and rail calculations from miscalculating margins.
+  2. **Dynamic Content Bounds Integration (`src/greia_launcher/presentation.py` & `navigation_chrome_presentation.py`):**
+     - In `_render_activities_content`, recorded `self._page_content_rect = UiRect(origin_x, origin_y, total_width, total_height)`.
+     - In `navigation_chrome_presentation.py`, `panel_content` dynamically resolves actual card bounds over static layout content rectangles.
+     - At 800×600, eliminated bezel-straddling arrows: Left arrow sits at `x=88..144` and Right arrow sits at `x=655..713`, completely inside the white tray with ~30px clearance to bezel and cards.
+     - At 1024×600, outer gutter arrows are optically centered (39px margin to screen edge, 39px margin to visible panel bezel) instead of hugging the screen edge.
+  3. **Arrow Glyph Optical Centering (`src/greia_launcher/navigation_chrome_presentation.py`):**
+     - Added subtle optical offset (+1.5px toward shaft) to align the center of visual mass of the chunky directional arrow glyph with the geometric center of the circular disc.
+  4. **Secret Entry Button Overlap Fix (`src/greia_launcher/main.py`):**
+     - Replaced mismatched coordinate offsets for `cancel`, `erase`, and `accept` buttons with a unified centered button cluster (`buttons_start_x = width // 2 - total_buttons_w // 2`) with 24px clean gaps, resolving an 11px collision.
+  5. **Category Switcher Strip Right Margin:**
+     - Reserved 96px right margin on the category chip strip when error badges or achievement stars are active, preventing chip collision with top-right indicators.
+  6. **Bottom Pagination Capsule Clearance (`src/greia_launcher/navigation_layout.py`):**
+     - Constrained bottom pagination pill `pill_y` to guarantee it never overlaps bottom-row cards while respecting viewport bottom bounds.
+  7. **Verification & Testing:**
+     - Added unit tests `test_bottom_pill_never_overlaps_content_cards` and `test_secret_entry_button_geometry_no_overlap` in `tests/test_launcher_navigation_geometry.py` (10/10 PASS).
+     - All 129 launcher tests PASS (`pytest tests/test_launcher*.py`).
+     - `tools/validate_project.py`: PASS.
+     - Inspected rendered visual audit frames across all launcher states.

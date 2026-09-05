@@ -1,7 +1,16 @@
-from __future__ import annotations
-
+import os
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+TMP_DIR = tempfile.mkdtemp()
+os.environ.setdefault("GREIA_PROFILES_DIR", os.path.join(TMP_DIR, "profiles"))
+os.environ.setdefault("GREIA_SYSTEM_SETTINGS_DIR", os.path.join(TMP_DIR, "settings"))
+os.environ.setdefault("GREIA_MEDIA_ROOT", os.path.join(TMP_DIR, "media"))
+os.environ.setdefault("GREIA_OS_ROOT", str(REPO_ROOT))
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
 from greia_launcher.navigation_layout import (
     PageControlsLayout,
@@ -218,6 +227,60 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
         self.assertEqual(layout.visible_dot_count, 0)
         self.assertEqual(layout.indicator_rect.width, 0)
         self.assertEqual(len(layout.dot_rects), 0)
+
+    def test_bottom_pill_never_overlaps_content_cards(self) -> None:
+        viewport = Viewport(1024, 600)
+        state = PageControlsState(
+            page_index=0,
+            page_count=3,
+            previous_value=0,
+            next_value=1,
+            can_go_previous=False,
+            can_go_next=True,
+        )
+        panel_outer = UiRect(150, 60, 724, 480)
+        panel_content = UiRect(210, 140, 604, 298)
+
+        layout = resolve_page_controls_layout(
+            viewport,
+            state,
+            panel_outer_rect=panel_outer,
+            panel_content_rect=panel_content,
+            button_size=52,
+        )
+        # Pill top must be strictly below panel_content bottom
+        self.assertGreaterEqual(layout.indicator_rect.y, panel_content.bottom)
+        # Pill bottom must stay within viewport
+        self.assertLessEqual(layout.indicator_rect.bottom, viewport.height)
+
+    def test_secret_entry_button_geometry_no_overlap(self) -> None:
+        import pygame
+        pygame.init()
+        from greia_launcher.child_shell import GreiaChildShell
+        from greia_platform.profiles import ChildProfile
+
+        shell = GreiaChildShell(windowed=True)
+        profiles = list(shell.profile_store.ensure_initialized())
+        screen = pygame.display.set_mode((1024, 600))
+        shell.screen = screen
+        shell._mode = "secret"
+        shell._pending_profile = profiles[0]
+        shell._secret_text = "1234"
+        theme = shell.theme_controller.theme
+        shell._draw_secret_entry(screen, theme, pygame)
+
+        targets = [t for t in shell._targets if t.action in {"cancel_unlock", "backspace", "unlock"}]
+        self.assertEqual(len(targets), 3)
+        cancel = next(t for t in targets if t.action == "cancel_unlock")
+        erase = next(t for t in targets if t.action == "backspace")
+        unlock = next(t for t in targets if t.action == "unlock")
+
+        # Must be strictly ordered with positive separation
+        self.assertLess(cancel.rect.right, erase.rect.left)
+        self.assertLess(erase.rect.right, unlock.rect.left)
+        # Verify gap is at least 16px
+        self.assertGreaterEqual(erase.rect.left - cancel.rect.right, 16)
+        self.assertGreaterEqual(unlock.rect.left - erase.rect.right, 16)
 
 
 if __name__ == "__main__":
