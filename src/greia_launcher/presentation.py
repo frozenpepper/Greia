@@ -1311,14 +1311,17 @@ class GreiaLauncherPresentation(LauncherApplication):
 
             # 218 = 210 reference tile +4%: larger cards give two-line labels
             # breathing room while label font sizes stay unchanged.
-            tile_size = resolve_constrained_square_tile_size(
-                avail_w,
-                avail_h,
-                columns=columns,
-                rows=rows,
-                gap=gap,
-                preferred_max=218,
-                preferred_min=120,
+            tile_size = max(
+                1,
+                resolve_constrained_square_tile_size(
+                    avail_w,
+                    avail_h,
+                    columns=columns,
+                    rows=rows,
+                    gap=gap,
+                    preferred_max=218,
+                    preferred_min=120,
+                ),
             )
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
@@ -1342,14 +1345,17 @@ class GreiaLauncherPresentation(LauncherApplication):
                 usable_w = max(240, width - side_reserve)
                 safe_origin_x = (width - usable_w) // 2
 
-            tile_size = resolve_constrained_square_tile_size(
-                usable_w,
-                available_h,
-                columns=columns,
-                rows=rows,
-                gap=gap,
-                preferred_max=218,
-                preferred_min=120,
+            tile_size = max(
+                1,
+                resolve_constrained_square_tile_size(
+                    usable_w,
+                    available_h,
+                    columns=columns,
+                    rows=rows,
+                    gap=gap,
+                    preferred_max=218,
+                    preferred_min=120,
+                ),
             )
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap

@@ -529,33 +529,82 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
                 f"total height {tot_h} exceeds available height {avail_h} at {w}x{h}",
             )
 
-        # 3. Synthetic High-DPI
+        # 3. Synthetic High-DPI at 1024x600 (recompute layout fresh, zero leftover state)
+        dpi_w, dpi_h = 1024, 600
+        dpi_viewport = Viewport(dpi_w, dpi_h)
+        _, dpi_panel_layout = SharedUiShellPanelMixin.compute_shell_panel_layout(dpi_w, dpi_h)
+        dpi_inner = dpi_panel_layout.content_rect
+        dpi_pad_x = max(14, dpi_inner.width // 45)
+        dpi_pad_y = max(8, dpi_inner.height // 40)
+        dpi_avail_w = max(240, dpi_inner.width - dpi_pad_x * 2)
+        dpi_avail_h = max(180, dpi_inner.height - dpi_pad_y * 2 - 38)
+        dpi_gap = max(14, min(22, dpi_w // 48))
+
         from greia_platform.display_metrics import DisplayMetrics, DisplayMetricsSource
         high_dpi = DisplayMetrics(
-            pixel_width=1024,
-            pixel_height=600,
+            pixel_width=dpi_w,
+            pixel_height=dpi_h,
             physical_width_mm=100.0,
             physical_height_mm=58.6,
             source=DisplayMetricsSource.MANUAL_OVERRIDE,
         )
         high_dpi_btn = resolve_page_button_size(
-            Viewport(1024, 600), metrics=high_dpi, panel_outer_rect=panel_layout.outer_rect
+            dpi_viewport, metrics=high_dpi, panel_outer_rect=dpi_panel_layout.outer_rect
         )
         safe_high_dpi = compute_navigation_safe_content_bounds(
-            Viewport(1024, 600),
-            panel_outer_rect=panel_layout.outer_rect,
-            available_content_rect=UiRect(inner.x + pad_x, inner.y + pad_y, avail_w, avail_h),
+            dpi_viewport,
+            panel_outer_rect=dpi_panel_layout.outer_rect,
+            available_content_rect=UiRect(dpi_inner.x + dpi_pad_x, dpi_inner.y + dpi_pad_y, dpi_avail_w, dpi_avail_h),
             button_size=high_dpi_btn,
         )
         tile_high_dpi = resolve_constrained_square_tile_size(
             safe_high_dpi.width,
-            avail_h,
+            dpi_avail_h,
             columns=4,
             rows=2,
-            gap=gap,
+            gap=dpi_gap,
         )
-        self.assertLessEqual(4 * tile_high_dpi + 3 * gap, safe_high_dpi.width)
-        self.assertLessEqual(2 * tile_high_dpi + 1 * gap, avail_h)
+        self.assertLessEqual(4 * tile_high_dpi + 3 * dpi_gap, safe_high_dpi.width)
+        self.assertLessEqual(2 * tile_high_dpi + 1 * dpi_gap, dpi_avail_h)
+
+        # Invariant: high-DPI controls never intersect safe card content
+        dpi_state = PageControlsState(
+            page_index=0,
+            page_count=3,
+            previous_value=0,
+            next_value=1,
+            can_go_previous=False,
+            can_go_next=True,
+        )
+        dpi_layout = resolve_page_controls_layout(
+            dpi_viewport,
+            dpi_state,
+            panel_outer_rect=dpi_panel_layout.outer_rect,
+            panel_content_rect=safe_high_dpi,
+            button_size=high_dpi_btn,
+        )
+        self.assertFalse(dpi_layout.previous_rect.intersects(safe_high_dpi))
+        self.assertFalse(dpi_layout.next_rect.intersects(safe_high_dpi))
+
+        # 4. Impossible envelope contract: when available dimensions cannot fit
+        # even 1-pixel tiles alongside the inter-tile gaps, returns 0.
+        impossible_tile_w = resolve_constrained_square_tile_size(
+            available_width=10,  # 4 tiles + 3 * 12px gaps requires at least 40px
+            available_height=100,
+            columns=4,
+            rows=2,
+            gap=12,
+        )
+        self.assertEqual(impossible_tile_w, 0)
+
+        impossible_tile_h = resolve_constrained_square_tile_size(
+            available_width=100,
+            available_height=10,  # 2 tiles + 1 * 12px gap requires at least 14px
+            columns=4,
+            rows=2,
+            gap=12,
+        )
+        self.assertEqual(impossible_tile_h, 0)
 
 
 if __name__ == "__main__":

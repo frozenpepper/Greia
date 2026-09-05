@@ -2118,3 +2118,21 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - Pytest launcher suite: **162/162 PASS** (2 skipped).
      - Project validation: **PASS** (`python3 tools/validate_project.py`).
      - Full repository test suite: **1,984/1,984 unittest PASS** (`make verify` exit 0).
+
+## 2026-09-05 — Launcher Layout Test Isolation & Pure Sizing Helper Contract Tightening
+
+- Addressed review findings on synthetic high-DPI test isolation and pure layout helper contracts:
+  1. **Synthetic High-DPI Test Isolation (`tests/test_launcher_navigation_geometry.py`):**
+     - Fully isolated the 1024×600 synthetic high-DPI test from the preceding loop iteration (which previously leaked 1366×768 panel geometry variables `inner`, `pad_x`, `pad_y`, `avail_w`, `avail_h`, `gap`).
+     - Freshly recomputes `1024×600` geometry via `SharedUiShellPanelMixin.compute_shell_panel_layout` (`dpi_viewport`, `dpi_panel_layout`, `dpi_inner`, `dpi_pad_x`, `dpi_pad_y`, `dpi_avail_w`, `dpi_avail_h`, `dpi_gap`).
+     - Added explicit zero-intersection assertions proving high-DPI navigation controls (`dpi_layout.previous_rect` and `dpi_layout.next_rect`) never intersect `safe_high_dpi` content bounds.
+  2. **Pure Helper Contract for Impossible Envelopes (`src/greia_launcher/navigation_layout.py` & `presentation.py`):**
+     - Tightened `resolve_constrained_square_tile_size` contract: checks `min_required_w = columns + gap * (columns - 1)` and `min_required_h = rows + gap * (rows - 1)`.
+     - When available dimensions cannot fit even 1-pixel tiles alongside the inter-tile gaps (`available_width < min_required_w` or `available_height < min_required_h`), returns `0` to indicate that no positive integer tile solution exists.
+     - Preserved rendering safety in `presentation.py` by wrapping calls with `max(1, ...)` so Pygame surfaces are never allocated with zero dimensions.
+     - Added unit tests in `tests/test_launcher_navigation_geometry.py` asserting `resolve_constrained_square_tile_size` returns `0` for impossible widths and heights.
+  3. **Verification:**
+     - `PYTHONPATH=src pytest tests/test_launcher_navigation_geometry.py`: **16/16 PASS**.
+     - `PYTHONPATH=src pytest tests/test_launcher*.py`: **162/162 PASS** (2 skipped).
+     - `PYTHONPATH=src python3 tools/validate_project.py`: **PASS** (`activities=41`).
+     - Full repository test suite: **1,984/1,984 unittest PASS** (`make verify` exit 0).

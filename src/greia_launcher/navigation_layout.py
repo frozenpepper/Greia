@@ -212,14 +212,24 @@ def resolve_constrained_square_tile_size(
     """Resolve responsive square tile size under strict width and height constraints.
 
     Guarantees that `tile_size * columns + gap * (columns - 1) <= available_width`
-    and `tile_size * rows + gap * (rows - 1) <= available_height`, even under
-    extreme narrow or vertically tight envelopes where preferred_min cannot fit.
+    and `tile_size * rows + gap * (rows - 1) <= available_height`, provided the
+    available dimensions can accommodate at least 1-pixel tiles alongside the
+    inter-tile gaps (i.e. `available_width >= columns + gap * (columns - 1)` and
+    `available_height >= rows + gap * (rows - 1)`).
+
+    If the available envelope cannot fit even 1-pixel tiles alongside the gaps,
+    returns 0 to indicate that no positive integer tile solution exists.
     """
     columns = max(1, int(columns))
     rows = max(1, int(rows))
     gap = max(0, int(gap))
-    max_tile_w = max(1, (available_width - gap * (columns - 1)) // columns)
-    max_tile_h = max(1, (available_height - gap * (rows - 1)) // rows)
+    min_required_w = columns + gap * (columns - 1)
+    min_required_h = rows + gap * (rows - 1)
+    if available_width < min_required_w or available_height < min_required_h:
+        return 0
+
+    max_tile_w = (available_width - gap * (columns - 1)) // columns
+    max_tile_h = (available_height - gap * (rows - 1)) // rows
     tile_size = min(preferred_max, max_tile_w, max_tile_h)
     return max(1, min(max_tile_w, max_tile_h, max(preferred_min, tile_size)))
 

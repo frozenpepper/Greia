@@ -940,3 +940,23 @@ Completed architectural cleanup and responsive layout fixes:
 ## 33. Remote functional input proof deferred to on-site; boot-06 planning opens (2026-09-05)
 
 Two capture rounds proved the installed input path byte-identical to reviewed source, but the MRO dispatch owners were never captured and a third round had no end in sight. Owner decision (frozen `authority/decisions/boot-05--P4-INPUTREGATE--001.md`): stop remote button-press testing, defer launch/Home proof to on-site physical acceptance. P4-INPUTRUN6 retired unexecuted; interactive predicates stay red (deferred, not waived); intro-tolerance reading still open. Boot timing/stability stands (20+ parser-green boots). boot-06 (Phase 5) planning opens read-only; implementation waits on the normal gate.
+
+## 37. Launcher Layout Test Isolation & Pure Sizing Helper Contract Tightening (2026-09-05)
+
+Addressed review findings on synthetic high-DPI test isolation and pure layout helper contracts:
+
+1. **Synthetic High-DPI Test Isolation (`tests/test_launcher_navigation_geometry.py`):**
+   - Recomputed 1024×600 layout fresh (`dpi_viewport`, `dpi_panel_layout`, `dpi_inner`, `dpi_pad_x`, `dpi_pad_y`, `dpi_avail_w`, `dpi_avail_h`, `dpi_gap`), eliminating state leak from earlier 1366×768 loop iteration.
+   - Added explicit zero-intersection assertions proving high-DPI navigation controls (`dpi_layout.previous_rect` and `dpi_layout.next_rect`) never intersect `safe_high_dpi` content bounds.
+
+2. **Pure Helper Contract for Impossible Envelopes (`src/greia_launcher/navigation_layout.py` & `presentation.py`):**
+   - Tightened `resolve_constrained_square_tile_size` contract: checks `min_required_w = columns + gap * (columns - 1)` and `min_required_h = rows + gap * (rows - 1)`.
+   - When available dimensions cannot fit even 1-pixel tiles alongside the inter-tile gaps (`available_width < min_required_w` or `available_height < min_required_h`), returns `0` to signal no positive integer tile solution exists.
+   - Guarded presentation callers in `src/greia_launcher/presentation.py` with `max(1, ...)` so Pygame surfaces never receive zero dimensions.
+   - Added unit tests verifying `resolve_constrained_square_tile_size` returns `0` for impossible envelopes.
+
+3. **Verification:**
+   - Pytest launcher navigation geometry: **16/16 PASS**.
+   - Pytest launcher suite: **162/162 PASS** (2 skipped).
+   - Project validation: **PASS** (`python3 tools/validate_project.py`).
+   - Full repository test suite: **1,984/1,984 unittest PASS** (`make verify` exit 0).
