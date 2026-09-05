@@ -751,3 +751,13 @@ Implemented comprehensive enhancement of launcher navigation layout, visual poli
 5. **Acceptance & Verification:**
    - Full repository test suite: **1,972 passed, 0 failed in 178 seconds**.
    - Rendered and verified visual acceptance across 1024×600 and 800×600 for Activity pagination, Category switcher, and Profile picker.
+
+## 30. Boot plan integrated with lifecycle architecture — Phases 7–11 replaced, boot-05…18 planned (2026-09-05)
+
+Imported the integrating agent's return (`greia-boot-plan-handoff/`, manifest 47/47 hashes clean, input SHA matches our exact packed file). Verified before import: Phases 0–6 byte-identical (first diff hunk lands exactly on the Phase 7 header; earlier hunks pure additions), D1–D22 intact, D23–D50 added, all 14 task records schema-valid/planned/zero-attempt.
+
+Imported into live run R2 (no new run): adjusted governing plan replaced the plan file (original backed up as `.pre-phase7-replacement`), frozen ruling `authority/decisions/boot-lifecycle-integration--001.md`, 14 bootstrap briefs, `OWNER-PHASE-MAP.json`, 14 planned `BOOT-PLAN-05…18` task records, worker-rules revision r0002 frozen on the new plan (r0001 retained for boot-04 and earlier).
+
+What changed materially: boot/install/update/hardware/persist/health are now one lifecycle architecture (one signed release artifact, v2 five-member contract, shared SlotWriter/Finalizer, explicit PERSIST, typed targets, separate narrow install/update services, common BootTransactionBackend, Pi tryboot, trusted one-use BOOT_HEALTHY, R4 risk class). Phase 7 non-destructive contracts, 8A–8G ordered substrate, Phase 9 HOST_FAST optional, rewritten final guards. Later planners are mechanical transcribers; D23–D50 closed to reopening.
+
+Still open and unchanged: boot-04 (B04-IMPL reviewer PASS recorded, integration held for resume; B04-PROOF/DISP/REPROOF planned). boot-05 implementation is hard-gated on boot-04 terminal green — no phase skipped.
