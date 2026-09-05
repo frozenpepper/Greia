@@ -240,20 +240,43 @@ def _emit_first_frame_flipped_once() -> None:
     emit_boot_marker("intro_first_frame_flipped")
 
 
-def run_intro(screen: Any, pygame: Any, *, marker: Path | None = None) -> None:
-    """Publish the X handoff, animate for 5s, then hold the last frame for 2s."""
+def run_intro(
+    screen: Any,
+    pygame: Any,
+    *,
+    marker: Path | None = None,
+    on_first_frame: Any | None = None,
+) -> None:
+    """Publish the X handoff, animate for 5s, then hold the last frame for 2s.
+
+    ``on_first_frame`` is the explicit Phase 4 handoff: it is invoked exactly
+    once on the display thread immediately after the first successful
+    ``flip()`` (and its ``intro_first_frame_flipped`` marker), before the
+    skip/animation decision. The intro clock is never shortened by the
+    callback; preparation completion never ends the animation early. The
+    callback must not perform Pygame work or mutate UI state — it only
+    submits non-Pygame preparation onto the single bounded worker.
+    """
     emit_boot_marker("intro_enter")
     try:
-        _run_intro_guarded(screen, pygame, marker=marker)
+        _run_intro_guarded(screen, pygame, marker=marker, on_first_frame=on_first_frame)
     finally:
         emit_boot_marker("intro_end")
 
 
-def _run_intro_guarded(screen: Any, pygame: Any, *, marker: Path | None = None) -> None:
+def _run_intro_guarded(
+    screen: Any,
+    pygame: Any,
+    *,
+    marker: Path | None = None,
+    on_first_frame: Any | None = None,
+) -> None:
     """Existing intro sequence; first-frame KPI is guarded exactly-once below."""
     draw_boot_handoff_frame(screen, pygame, progress=92)
     pygame.display.flip()
     _emit_first_frame_flipped_once()
+    if on_first_frame is not None:
+        on_first_frame()
 
     if skip_intro():
         return

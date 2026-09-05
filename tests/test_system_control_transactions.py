@@ -257,11 +257,22 @@ class SingleAudioOwnerTests(unittest.TestCase):
         chime = (ROOT / "src/greia_launcher/boot_chime.py").read_text(
             encoding="utf-8"
         )
-        flip_index = presentation.index("pygame.display.flip()")
-        intro_index = presentation.index("run_intro(screen, pygame)")
+        # Phase 4 order: display is created, then the intro (whose first
+        # draw/flip lives in boot_intro.run_intro) runs with the post-frame
+        # worker submitted from its first-frame callback, then the chime.
+        set_mode_index = presentation.index("display_set_mode_end")
+        intro_index = presentation.index("run_intro(")
         chime_index = presentation.index("play_boot_chime()")
-        self.assertLess(flip_index, intro_index)
+        self.assertLess(set_mode_index, intro_index)
         self.assertLess(intro_index, chime_index)
+        # The production first flip precedes preparation inside boot_intro.
+        boot_intro = (ROOT / "src/greia_launcher/boot_intro.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertLess(
+            boot_intro.index("pygame.display.flip()"),
+            boot_intro.index("if on_first_frame is not None:"),
+        )
         self.assertNotIn("amixer", chime)
         self.assertNotIn("mixer", chime.lower())
         self.assertIn('"aplay"', chime)

@@ -45,6 +45,7 @@ from .main import (
     _development_hal,
     boot_activity_sources,
 )
+from .bootstrap import BootLifecycleError
 from .supervisor import ActivitySupervisor
 
 
@@ -147,16 +148,48 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         One-pass boot: the base bootstrap composes the complete built-in
         plus Parent plus developer set exactly once (see
-        composition.compose_boot_content). This override only builds the
-        presentation catalogue afterwards; it never rebuilds the registry
-        or runtime services per source here.
+        composition.compose_boot_content) through the coordinator, and the
+        apply step publishes the single presentation catalogue built inside
+        that same preparation; it never rebuilds the registry or runtime
+        services per source here.
         """
 
         if getattr(self, "_bootstrapped", False) and self._catalogue is not None:
             return self
         super().bootstrap()
-        self._catalogue = ActivityCatalogue.from_activities(self._activities)
         return self
+
+    def apply_prepared_state(self, state: Any) -> "GreiaLauncherPresentation":
+        """Publish the prepared base state plus the one presentation catalogue."""
+
+        super().apply_prepared_state(state)
+        self._catalogue = state.catalogue
+        return self
+
+    def _bootstrap_catalogue_builder(self) -> Any:
+        """Build the single presentation catalogue inside preparation."""
+
+        return ActivityCatalogue.from_activities
+
+    def _build_bootstrap_services(self, runtime: Any, activities: Any) -> Any:
+        """Build shared authorities through this module's composition binding.
+
+        The body matches the base implementation; the call must resolve
+        through the presentation namespace so boot accounting observes
+        exactly one runtime build here (and never a second per-source one).
+        """
+
+        development_hal = None if self._installed_root() else _development_hal()
+        return build_launcher_runtime_services(
+            runtime,
+            activities,
+            runtime_policy_path=self.paths.runtime_catalogue,
+            permission_policy_path=self.paths.permission_policy,
+            storage_policy_path=self.paths.storage_policy,
+            history_policy_path=self.paths.history_policy,
+            progression_policy_path=self.paths.progression_policy,
+            hal=development_hal,
+        )
 
     def _spoken_locale(self) -> str:
         try:
@@ -362,6 +395,8 @@ class GreiaLauncherPresentation(LauncherApplication):
     def run(self) -> int:
         import pygame
 
+        from .main import create_preparation_worker
+
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         emit_boot_marker("pygame_display_init_begin")
         try:
@@ -377,27 +412,70 @@ class GreiaLauncherPresentation(LauncherApplication):
             emit_boot_marker("display_set_mode_end")
         pygame.display.set_caption(self._display_caption())
         pygame.mouse.set_visible(False)
-        self._shell_window_backend.after_window_created(pygame)
+        if self._bootstrapped:
+            self._enter_running_state()
+            self._shell_window_backend.after_window_created(pygame)
+        else:
+            # Phase 4 order: minimal shell → display → first intro flip →
+            # single-worker preparation → intro-end apply. The first-frame
+            # callback below owns the display-thread → worker handoff; the
+            # 7-second intro clock is anchored to the first flip and never
+            # shortened by preparation.
+            self._boot_lifecycle.mark_display_ready()
+            executor = create_preparation_worker()
+            pending: dict[str, Any] = {}
+            intro_failed: list[BaseException] = []
+
+            def _on_first_frame() -> None:
+                pending["future"] = self._begin_post_frame_preparation(executor)
+                if not self._first_frame_released:
+                    self._release_boot_cover()
+
+            try:
+                if not self.windowed:
+                    try:
+                        from .boot_chime import play_boot_chime
+                        from .boot_intro import run_intro
+
+                        # The first draw/flip, its intro_first_frame_flipped
+                        # marker and the worker submission all happen inside
+                        # run_intro; the existing 5 s animation + 2 s hold
+                        # run unchanged while the worker prepares off-thread.
+                        run_intro(screen, pygame, on_first_frame=_on_first_frame)
+                        play_boot_chime()
+                    except Exception as exc:  # noqa: BLE001 - record, then fail at apply boundary
+                        intro_failed.append(exc)
+                else:
+                    from .boot_intro import (
+                        _emit_first_frame_flipped_once,
+                        draw_boot_handoff_frame,
+                    )
+
+                    # Windowed/dev path has no 7 s animation: publish the
+                    # same handoff first frame, then submit the worker.
+                    draw_boot_handoff_frame(screen, pygame, progress=92)
+                    pygame.display.flip()
+                    _emit_first_frame_flipped_once()
+                    _on_first_frame()
+                if intro_failed:
+                    raise intro_failed[0]
+                if "future" not in pending:
+                    raise BootLifecycleError(
+                        "first-frame callback never fired; "
+                        "preparation was not submitted"
+                    )
+                try:
+                    self._await_and_apply_preparation(pending["future"])
+                finally:
+                    executor.shutdown(wait=False)
+            except Exception:
+                executor.shutdown(wait=False)
+                raise
+            self._shell_window_backend.after_window_created(pygame)
+            self._enter_running_state()
         clock = pygame.time.Clock()
         running = True
         last_display_size = screen.get_size()
-
-        # Present the static white Greia frame immediately, then the short
-        # one-shot intro and the boot chime (which may only start after the
-        # first real frame is on screen). The intro is monotonic-time driven
-        # and bounded to <=1.0 s; the chime is fail-silent and asynchronous.
-        if not self.windowed:
-            try:
-                from .boot_chime import play_boot_chime
-                from .boot_intro import run_intro
-
-                pygame.display.flip()
-                if not self._first_frame_released:
-                    self._release_boot_cover()
-                run_intro(screen, pygame)
-                play_boot_chime()
-            except Exception:  # noqa: BLE001 - never fail boot for presentation
-                pass
 
         _needs_redraw = True
         try:
@@ -530,7 +608,8 @@ class GreiaLauncherPresentation(LauncherApplication):
                         idle_sleep_seconds(frame_start - self._last_input_monotonic)
                     )
         finally:
-            self.session.clear()
+            if self.session is not None:
+                self.session.clear()
             pygame.key.stop_text_input()
             pygame.quit()
         return 0
@@ -1978,14 +2057,14 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    from .main import bootstrap_launcher as _bootstrap_launcher
-
+    # Phase 4 order: minimal shell here; run() owns display, first flip,
+    # single-worker preparation and intro-end apply.
     app = GreiaLauncherPresentation(
         windowed=args.windowed,
         allow_exit=args.allow_exit,
         bootstrap=False,
     )
-    return _bootstrap_launcher(app).run()
+    return app.run()
 
 
 if __name__ == "__main__":

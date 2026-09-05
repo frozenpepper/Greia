@@ -39,25 +39,26 @@ from greia_platform.hal import (
     StaticPowerHAL,
     StaticRemovableMediaHAL,
 )
-from greia_platform.history import HistoryError
 from greia_platform.permissions import PermissionDecisionError
 from greia_platform.main_credential import MainCredentialStore
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.profiles import (
-    ActiveProfileSession,
     ChildProfile,
     ProfileContext,
     ProfileError,
-    ProfileStore,
 )
 
 from greia_platform.input_core import SemanticAction
+from .bootstrap import (
+    BootLifecycleError,
+    BootLifecycleGuard,
+    BootLifecycleState,
+    LauncherBootstrap,
+    PreparedLauncherState,
+)
 from .composition import (
     build_launcher_runtime_services,
-    compose_boot_content,
-    development_shell_window_backend,
     provisional_installed_display_session,
-    provisional_installed_shell_window_backend,
 )
 from .key_chord import KeyChordTracker
 from .lifecycle import ActivityResult, ActivitySessionState
@@ -65,7 +66,6 @@ from .parent_panel import ParentSettingsOverlay
 from .shell_input import ShellInputController
 from .supervisor import ActivitySupervisor
 from .theme import LauncherThemeController
-from .visual_assets import load_launcher_assets
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,6 +156,20 @@ def calculate_grid_page(
     return GridPage(start, stop, columns, rows, page_size, page_index, page_count)
 
 
+def create_preparation_worker():  # type: ignore[no-untyped-def]
+    """Return the single bounded post-frame preparation worker.
+
+    Phase 4 owns exactly one preparation worker: remaining work is small
+    after Phase 3 and a single worker avoids Atom-class contention and init
+    race sprawl. The literal ``max_workers=1`` below is the source assertion
+    point; do not add a second executor.
+    """
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    return ThreadPoolExecutor(max_workers=1)
+
+
 class LauncherApplication:
     ERROR = (177, 44, 44)
     RESCAN_SECONDS = 2.0
@@ -179,6 +193,7 @@ class LauncherApplication:
         self.windowed = windowed
         self.allow_exit = allow_exit
         self._bootstrapped = False
+        self._boot_lifecycle = BootLifecycleGuard()
         # Bootstrap-owned state starts as explicit placeholders so an
         # unbootstrapped instance is observable but performs no discovery.
         self.runtime: RuntimeCatalogue | None = None
@@ -226,6 +241,9 @@ class LauncherApplication:
         self._dimmed_underlay_key: Any = None
         self._parent_panel_opened_monotonic = 0.0
         self._page_content_rect: Any = None
+        # Post-intro wait: seconds the main thread blocked on the single
+        # preparation worker after the intro ended (near zero by design).
+        self._post_intro_wait_seconds = 0.0
         # Auto-bootstrap only the exact base type. Subclass instances must
         # let their own explicit bootstrap run after this constructor has
         # returned, so the base constructor never dispatches to a subclass
@@ -254,102 +272,266 @@ class LauncherApplication:
     def bootstrap(self) -> "LauncherApplication":
         """Run the explicit one-pass boot composition exactly once.
 
-        Emits the established boot markers in their historical order. A
-        present-but-corrupt built-in index raises its controlled failure
+        Preparation is delegated to :class:`LauncherBootstrap`, which seals
+        the composed set into one immutable :class:`PreparedLauncherState`;
+        publication happens atomically in :meth:`apply_prepared_state`.
+        A present-but-corrupt built-in index raises its controlled failure
         (never a silent full rescan); a damaged Parent set degrades to the
         displayable catalogue-error state instead of taking the Shell down.
         The polymorphic runtime build runs here, never in the constructor.
+        A failed bootstrap publishes nothing and resets the lifecycle guard
+        so a later retry on a fresh composition may run.
         """
 
         if self._bootstrapped:
             return self
         emit_boot_marker("launcher_construct_begin")
         try:
-            # 2A: no in-process Activity-tree scrub on the boot path. Built-in
-            # hygiene is owned by the image build and parent/developer hygiene
-            # by their activation transactions; the scrub module remains only
-            # as the maintenance/recovery command (see scrub-activity-trees).
-            self.runtime = RuntimeCatalogue.load(self.paths.runtime_catalogue)
-            emit_boot_marker("activity_sources_begin")
+            self._boot_lifecycle.begin_preparing_runtime()
+            coordinator = LauncherBootstrap(self.paths)
             try:
-                # One-pass composition: the gated boot set plus the Parent
-                # active set are resolved and loaded exactly once here. No
-                # later boot step may rebuild the registry per source.
-                composed = compose_boot_content(
-                    self.runtime,
-                    boot_activity_sources(self.paths),
+                state = coordinator.prepare_runtime(
+                    build_services=self._build_bootstrap_services,
+                    build_supervisor=self._build_bootstrap_supervisor,
+                    build_catalogue=self._bootstrap_catalogue_builder(),
                 )
-            finally:
-                emit_boot_marker("activity_sources_end")
-            self.registry = composed.registry
-            self._asset_set = load_launcher_assets(
-                self.paths.asset_catalogue,
-                self.paths.shared_visual_catalogue,
-            )
-            self.assets = self._asset_set.catalogue
-            self.shared_visuals_available = self._asset_set.shared_visuals_available
-            self._visual_cache = (
-                PygameVisualSurfaceCache.for_pygame(
-                    self.assets,
-                    max_entries=96,
-                    # Convert decoded PNG renditions to display-native surfaces once
-                    # so every later frame blit uses pygame's fast paths instead of
-                    # the generic per-pixel fallback on low-resource devices.
-                    display_converter=pygame_display_converter(),
-                )
-                if self._asset_set.shared_visuals_available
-                else None
-            )
-            self.profile_store = ProfileStore.load(
-                self.paths.profile_defaults, self.paths.profiles_dir
-            )
-            self.profiles = self.profile_store.ensure_initialized()
-            self.session = ActiveProfileSession(self.paths.active_profile_status)
-            self.session.clear()
-            self.selector_theme = LauncherThemeController(
-                ThemeStore.load(
-                    self.paths.theme_defaults,
-                    self.paths.profiles_dir / ".selector-theme",
-                )
-            )
-            self.theme_controller = self.selector_theme
-            emit_boot_marker("activity_discover_begin")
+            except Exception:
+                self._boot_lifecycle.reset_to_created()
+                raise
             try:
-                self._activities = composed.activities
-            finally:
-                emit_boot_marker("activity_discover_end")
-            self._activity_discovery_token = self.registry.discovery_token()
-            installed_root = self._installed_root()
-            emit_boot_marker("activity_runtime_build_begin")
-            try:
-                # Explicit polymorphic runtime construction: subclasses build
-                # their own supervisor type here, after construction has fully
-                # completed, instead of during the base constructor.
-                self._rebuild_runtime_services()
-            finally:
-                emit_boot_marker("activity_runtime_build_end")
-            self._history_recovery_failures = set()
-            emit_boot_marker("history_prepare_begin")
-            try:
-                for child in self.profiles:
-                    try:
-                        self.runtime_services.history_service.recover_unfinished(
-                            self.profile_store.context(child.profile_id)
-                        )
-                    except HistoryError:
-                        self._history_recovery_failures.add(child.profile_id)
-            finally:
-                emit_boot_marker("history_prepare_end")
-            self._shell_window_backend = (
-                provisional_installed_shell_window_backend()
-                if installed_root
-                else development_shell_window_backend()
-            )
-            self._catalogue_error = composed.parent_degraded
-            self._bootstrapped = True
+                self.apply_prepared_state(state)
+            except Exception:
+                self._boot_lifecycle.reset_to_created()
+                raise
             return self
         finally:
             emit_boot_marker("launcher_construct_end")
+
+    def apply_prepared_state(self, state: PreparedLauncherState) -> "LauncherApplication":
+        """Publish one prepared state exactly once into ``INTERACTIVE_READY``.
+
+        The main thread calls this at intro completion ( now: directly from
+        :meth:`bootstrap`). All fields are assigned together only after the
+        display-bound visual cache is built; any failure restores the
+        pre-apply placeholders so no half-populated launcher is observable.
+        Consuming a second state, or applying while not preparing, raises
+        :class:`BootLifecycleError`.
+        """
+
+        if self._bootstrapped:
+            raise BootLifecycleError(
+                "prepared launcher state was already consumed; "
+                "exactly one apply per launcher instance"
+            )
+        if not isinstance(state, PreparedLauncherState):
+            raise BootLifecycleError(
+                f"apply requires a PreparedLauncherState, not {type(state).__name__}"
+            )
+        if self._boot_lifecycle.state is BootLifecycleState.FIRST_FRAME_VISIBLE:
+            # Async post-frame path (P4-FIRSTFRAME): preparation ran after
+            # the first flip; record the preparation edge before publishing.
+            self._boot_lifecycle.begin_preparing_runtime()
+        if self._boot_lifecycle.state is not BootLifecycleState.PREPARING_RUNTIME:
+            raise BootLifecycleError(
+                "apply_prepared_state requires the preparing_runtime state, "
+                f"not {self._boot_lifecycle.state.value}"
+            )
+        # Display-bound construction happens before any publication, so its
+        # failure leaves the launcher untouched.
+        visual_cache = (
+            PygameVisualSurfaceCache.for_pygame(
+                state.asset_set.catalogue,
+                max_entries=96,
+                # Convert decoded PNG renditions to display-native surfaces once
+                # so every later frame blit uses pygame's fast paths instead of
+                # the generic per-pixel fallback on low-resource devices.
+                display_converter=pygame_display_converter(),
+            )
+            if state.asset_set.shared_visuals_available
+            else None
+        )
+        snapshot = {
+            "runtime": self.runtime,
+            "registry": self.registry,
+            "_asset_set": self._asset_set,
+            "assets": self.assets,
+            "shared_visuals_available": self.shared_visuals_available,
+            "_visual_cache": self._visual_cache,
+            "profile_store": self.profile_store,
+            "profiles": self.profiles,
+            "session": self.session,
+            "selector_theme": self.selector_theme,
+            "theme_controller": self.theme_controller,
+            "_activities": self._activities,
+            "_activity_discovery_token": self._activity_discovery_token,
+            "runtime_services": self.runtime_services,
+            "supervisor": self.supervisor,
+            "_history_recovery_failures": self._history_recovery_failures,
+            "_shell_window_backend": self._shell_window_backend,
+            "_catalogue_error": self._catalogue_error,
+            "_selected": self._selected,
+        }
+        try:
+            self.runtime = state.runtime
+            self.registry = state.registry
+            self._asset_set = state.asset_set
+            self.assets = state.asset_set.catalogue
+            self.shared_visuals_available = state.asset_set.shared_visuals_available
+            self._visual_cache = visual_cache
+            self.profile_store = state.profile_store
+            self.profiles = state.profiles
+            self.session = state.session
+            self.selector_theme = state.selector_theme
+            self.theme_controller = state.selector_theme
+            self._activities = state.activities
+            self._activity_discovery_token = state.activity_discovery_token
+            self.runtime_services = state.runtime_services
+            self.supervisor = state.supervisor
+            self._history_recovery_failures = set(state.history_recovery_failures)
+            self._shell_window_backend = state.shell_window_backend
+            self._selected = 0
+            self._catalogue_error = state.parent_degraded
+            self._bootstrapped = True
+        except Exception:
+            self.runtime = snapshot["runtime"]
+            self.registry = snapshot["registry"]
+            self._asset_set = snapshot["_asset_set"]
+            self.assets = snapshot["assets"]
+            self.shared_visuals_available = snapshot["shared_visuals_available"]
+            self._visual_cache = snapshot["_visual_cache"]
+            self.profile_store = snapshot["profile_store"]
+            self.profiles = snapshot["profiles"]
+            self.session = snapshot["session"]
+            self.selector_theme = snapshot["selector_theme"]
+            self.theme_controller = snapshot["theme_controller"]
+            self._activities = snapshot["_activities"]
+            self._activity_discovery_token = snapshot["_activity_discovery_token"]
+            self.runtime_services = snapshot["runtime_services"]
+            self.supervisor = snapshot["supervisor"]
+            self._history_recovery_failures = snapshot["_history_recovery_failures"]
+            self._shell_window_backend = snapshot["_shell_window_backend"]
+            self._catalogue_error = snapshot["_catalogue_error"]
+            self._selected = snapshot["_selected"]
+            self._bootstrapped = False
+            raise
+        self._boot_lifecycle.mark_interactive_ready()
+        return self
+
+    def _bootstrap_catalogue_builder(self) -> Any:
+        """Return the presentation-catalogue factory for prepare, if any.
+
+        The base launcher owns no presentation catalogue; the presentation
+        subclass overrides this to build exactly one catalogue inside the
+        one-pass preparation.
+        """
+
+        return None
+
+    def _prepare_runtime_state(self) -> Any:
+        """Compose the one-pass boot set on the single preparation worker.
+
+        Worker-thread entry: runs :meth:`LauncherBootstrap.prepare_runtime`
+        with this shell's injected builders. Performs only non-Pygame work
+        (Activity index reads/deserialization, history file reads/recovery,
+        pure-Python catalogue construction, filesystem reads). Never imports
+        Pygame, never touches a surface, never mutates live launcher state;
+        publication happens on the main thread in
+        :meth:`apply_prepared_state`.
+        """
+
+        from .bootstrap import LauncherBootstrap
+
+        coordinator = LauncherBootstrap(self.paths)
+        return coordinator.prepare_runtime(
+            build_services=self._build_bootstrap_services,
+            build_supervisor=self._build_bootstrap_supervisor,
+            build_catalogue=self._bootstrap_catalogue_builder(),
+        )
+
+    def _begin_post_frame_preparation(self, executor: Any) -> Any:
+        """First-frame callback: enter preparing state and submit the worker.
+
+        Runs on the display thread immediately after the first successful
+        flip (and its ``intro_first_frame_flipped`` marker). Advances the
+        guard ``FIRST_FRAME_VISIBLE → PREPARING_RUNTIME`` then submits
+        :meth:`_prepare_runtime_state` onto the single bounded worker. The
+        worker thread never calls Pygame; the display thread continues the
+        existing intro animation without pause.
+        """
+
+        self._boot_lifecycle.mark_first_frame_visible()
+        self._boot_lifecycle.begin_preparing_runtime()
+        return executor.submit(self._prepare_runtime_state)
+
+    def _await_and_apply_preparation(self, future: Any) -> Any:
+        """Intro-end boundary: wait for the worker, then apply exactly once.
+
+        Blocks only if the worker is still running (post-intro by design,
+        expected near zero after Phase 3) and records that wait in
+        ``_post_intro_wait_seconds``. Applies the one
+        :class:`PreparedLauncherState` in a single deterministic transition
+        into ``INTERACTIVE_READY``. Worker failure resets the guard to
+        ``CREATED`` and re-raises through the existing controlled Greia
+        error path: nothing half-populated is published and no hidden
+        rescan runs.
+        """
+
+        wait_start = time.monotonic()
+        try:
+            state = future.result()
+        except Exception:
+            try:
+                self._boot_lifecycle.reset_to_created()
+            except BootLifecycleError:
+                pass
+            raise
+        self._post_intro_wait_seconds = time.monotonic() - wait_start
+        self.apply_prepared_state(state)
+        return state
+
+    def _build_bootstrap_services(self, runtime: RuntimeCatalogue, activities: Any) -> Any:
+        """Build the shared device/runtime/permission/history authorities.
+
+        Pure construction for the bootstrap coordinator: no Pygame, no live
+        launcher mutation. The supervisor is built separately in
+        :meth:`_build_bootstrap_supervisor` so subclasses keep their own
+        supervisor type without a second service build.
+        """
+
+        development_hal = None if self._installed_root() else _development_hal()
+        return build_launcher_runtime_services(
+            runtime,
+            activities,
+            runtime_policy_path=self.paths.runtime_catalogue,
+            permission_policy_path=self.paths.permission_policy,
+            storage_policy_path=self.paths.storage_policy,
+            history_policy_path=self.paths.history_policy,
+            progression_policy_path=self.paths.progression_policy,
+            hal=development_hal,
+        )
+
+    def _build_bootstrap_supervisor(self, runtime_services: Any) -> Any:
+        """Build the Activity supervisor bound to prepared services.
+
+        Pure construction for the bootstrap coordinator: no Pygame, no live
+        launcher mutation. Richer shells override this to build their own
+        supervisor type the first time.
+        """
+
+        display_coordinator = (
+            provisional_installed_display_session() if self._installed_root() else None
+        )
+        return ActivitySupervisor(
+            runtime_manager=runtime_services.runtime_manager,
+            storage_service=runtime_services.storage_service,
+            history_service=runtime_services.history_service,
+            display_coordinator=display_coordinator,
+        )
+
+    def _enter_running_state(self) -> None:
+        """Record the interactive loop entry in the boot lifecycle guard."""
+
+        self._boot_lifecycle.mark_running()
 
     def _rebuild_runtime_services(self) -> None:
         """Bind runtime/permission/history authority to the composed set.
@@ -371,15 +553,7 @@ class LauncherApplication:
             progression_policy_path=self.paths.progression_policy,
             hal=development_hal,
         )
-        display_coordinator = (
-            provisional_installed_display_session() if self._installed_root() else None
-        )
-        supervisor = ActivitySupervisor(
-            runtime_manager=runtime_services.runtime_manager,
-            storage_service=runtime_services.storage_service,
-            history_service=runtime_services.history_service,
-            display_coordinator=display_coordinator,
-        )
+        supervisor = self._build_bootstrap_supervisor(runtime_services)
         # Publish the pair only after both objects are completely built. The
         # launch path therefore never observes a supervisor/runtime mismatch.
         self.runtime_services = runtime_services
@@ -463,7 +637,38 @@ class LauncherApplication:
             emit_boot_marker("display_set_mode_end")
         pygame.display.set_caption("Greia OS")
         pygame.mouse.set_visible(False)
-        self._shell_window_backend.after_window_created(pygame)
+        if self._bootstrapped:
+            self._enter_running_state()
+            self._shell_window_backend.after_window_created(pygame)
+        else:
+            # Phase 4 order: first flip before runtime preparation. The
+            # handoff frame is drawn and flipped first, then the single
+            # bounded worker prepares the runtime while the display thread
+            # stays responsive. The intro-end boundary below waits (near
+            # zero) and applies exactly once.
+            self._boot_lifecycle.mark_display_ready()
+            executor = create_preparation_worker()
+            try:
+                from .boot_intro import (
+                    _emit_first_frame_flipped_once,
+                    draw_boot_handoff_frame,
+                )
+
+                draw_boot_handoff_frame(screen, pygame, progress=92)
+                pygame.display.flip()
+                _emit_first_frame_flipped_once()
+                future = self._begin_post_frame_preparation(executor)
+                if not self._first_frame_released:
+                    self._release_boot_cover()
+                try:
+                    self._await_and_apply_preparation(future)
+                finally:
+                    executor.shutdown(wait=False)
+            except Exception:
+                executor.shutdown(wait=False)
+                raise
+            self._shell_window_backend.after_window_created(pygame)
+            self._enter_running_state()
         clock = pygame.time.Clock()
         running = True
         last_display_size = screen.get_size()
@@ -534,7 +739,8 @@ class LauncherApplication:
                 clock.tick(60)
         finally:
             self._shell_input.close()
-            self.session.clear()
+            if self.session is not None:
+                self.session.clear()
             pygame.key.stop_text_input()
             pygame.quit()
         return 0
@@ -1546,10 +1752,13 @@ def bootstrap_launcher(app: LauncherApplication) -> LauncherApplication:
 def main() -> int:
     emit_boot_marker("launcher_python_enter")
     args = parse_args()
+    # Phase 4 order: construct the minimal shell here; display init, first
+    # flip, single-worker preparation and intro-end apply all happen inside
+    # run(). Do not pre-bootstrap before display.
     app = LauncherApplication(
         windowed=args.windowed, allow_exit=args.allow_exit, bootstrap=False
     )
-    return bootstrap_launcher(app).run()
+    return app.run()
 
 
 if __name__ == "__main__":

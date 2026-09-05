@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from .activity_policy_presentation import DirectActivityPolicyDiscoveryMixin
 from .composition import (
     build_launcher_runtime_services,
@@ -24,20 +26,16 @@ class TrustedGreiaLauncherPresentation(
     visibility policy is still mandatory through DirectActivityPolicyDiscoveryMixin.
     """
 
-    def _rebuild_runtime_services(self) -> None:
-        development_hal = None if self._installed_root() else _development_hal()
-        runtime_services = build_launcher_runtime_services(
-            self.runtime,
-            self._activities,
-            runtime_policy_path=self.paths.runtime_catalogue,
-            permission_policy_path=self.paths.permission_policy,
-            storage_policy_path=self.paths.storage_policy,
-            history_policy_path=self.paths.history_policy,
-            progression_policy_path=self.paths.progression_policy,
-            hal=development_hal,
-        )
+    def _build_bootstrap_supervisor(self, runtime_services: Any) -> Any:
+        """Build the trusted-chrome supervisor bound to prepared services.
+
+        Pure construction for the bootstrap coordinator: no Pygame, no live
+        launcher mutation. The controller set is read by reference and never
+        mutated here.
+        """
+
         installed = self._installed_root()
-        supervisor = TrustedChromeActivitySupervisor(
+        return TrustedChromeActivitySupervisor(
             runtime_manager=runtime_services.runtime_manager,
             storage_service=runtime_services.storage_service,
             history_service=runtime_services.history_service,
@@ -53,15 +51,32 @@ class TrustedGreiaLauncherPresentation(
                 else None
             ),
         )
+
+    def _rebuild_runtime_services(self) -> None:
+        development_hal = None if self._installed_root() else _development_hal()
+        runtime_services = build_launcher_runtime_services(
+            self.runtime,
+            self._activities,
+            runtime_policy_path=self.paths.runtime_catalogue,
+            permission_policy_path=self.paths.permission_policy,
+            storage_policy_path=self.paths.storage_policy,
+            history_policy_path=self.paths.history_policy,
+            progression_policy_path=self.paths.progression_policy,
+            hal=development_hal,
+        )
+        supervisor = self._build_bootstrap_supervisor(runtime_services)
         self.runtime_services = runtime_services
         self.supervisor = supervisor
 
 
 def main() -> int:
     args = parse_args()
+    # Phase 4 order: minimal shell here; run() owns display, first flip,
+    # single-worker preparation and intro-end apply.
     return TrustedGreiaLauncherPresentation(
         windowed=args.windowed,
         allow_exit=args.allow_exit,
+        bootstrap=False,
     ).run()
 
 

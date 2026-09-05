@@ -179,18 +179,15 @@ class GreiaChildShell(
             self._usage_limits = service
         return service
 
-    def _rebuild_runtime_services(self) -> None:
-        runtime_services = build_launcher_runtime_services(
-            self.runtime,
-            self._activities,
-            runtime_policy_path=self.paths.runtime_catalogue,
-            permission_policy_path=self.paths.permission_policy,
-            storage_policy_path=self.paths.storage_policy,
-            history_policy_path=self.paths.history_policy,
-            progression_policy_path=self.paths.progression_policy,
-            hal=self._runtime_hal(),
-            runtime_adapters=self._runtime_adapters(),
-        )
+    def _build_bootstrap_supervisor(self, runtime_services: Any) -> Any:
+        """Build the profile-visual supervisor bound to prepared services.
+
+        Pure construction for the bootstrap coordinator: file-backed Audio
+        settings and usage-limit ledger reads only, no Pygame, no live
+        launcher mutation. The controller set is read by reference and never
+        mutated here.
+        """
+
         root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os")).resolve()
         audio_service = AudioService.load(
             root / "runtime" / "audio-settings.toml",
@@ -201,7 +198,7 @@ class GreiaChildShell(
                 )
             ),
         )
-        supervisor = ProfileVisualActivitySupervisor(
+        return ProfileVisualActivitySupervisor(
             runtime_manager=runtime_services.runtime_manager,
             storage_service=runtime_services.storage_service,
             history_service=runtime_services.history_service,
@@ -216,6 +213,20 @@ class GreiaChildShell(
                 else None
             ),
         )
+
+    def _rebuild_runtime_services(self) -> None:
+        runtime_services = build_launcher_runtime_services(
+            self.runtime,
+            self._activities,
+            runtime_policy_path=self.paths.runtime_catalogue,
+            permission_policy_path=self.paths.permission_policy,
+            storage_policy_path=self.paths.storage_policy,
+            history_policy_path=self.paths.history_policy,
+            progression_policy_path=self.paths.progression_policy,
+            hal=self._runtime_hal(),
+            runtime_adapters=self._runtime_adapters(),
+        )
+        supervisor = self._build_bootstrap_supervisor(runtime_services)
         self.runtime_services = runtime_services
         self.supervisor = supervisor
 
@@ -411,9 +422,12 @@ class GreiaChildShell(
 def main() -> int:
     emit_boot_marker("launcher_python_enter")
     args = parse_args()
+    # Phase 4 order: minimal shell here; run() owns display, first flip,
+    # single-worker preparation and intro-end apply.
     return GreiaChildShell(
         windowed=args.windowed,
         allow_exit=args.allow_exit,
+        bootstrap=False,
     ).run()
 
 
