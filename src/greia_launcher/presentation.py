@@ -1332,14 +1332,34 @@ class GreiaLauncherPresentation(LauncherApplication):
                 break
             rect = pygame.Rect(x, 18, width, height)
             hovered = pointer_active and rect.collidepoint(pointer)
+            drawn = rect.move(0, -1 if hovered else 0)
+
+            # Grounding drop shadow
+            shadow_rect = drawn.move(0, 2 if hovered else 1)
+            shadow_color = _mix(theme.background, (0, 0, 0), 0.10 if hovered else 0.06)
+            pygame.draw.rect(screen, shadow_color, shadow_rect, border_radius=height // 2)
+
+            # Pill background fill
+            bg_color = _mix(theme.panel, (255, 255, 255), 0.35) if hovered else theme.panel
+            pygame.draw.rect(screen, bg_color, drawn, border_radius=height // 2)
+
+            # Subtle top sheen highlight line
+            sheen_color = _mix(bg_color, (255, 255, 255), 0.55)
+            pygame.draw.line(
+                screen,
+                sheen_color,
+                (drawn.left + height // 3, drawn.top + 1),
+                (drawn.right - height // 3, drawn.top + 1),
+                width=1,
+            )
+
             outline = (
                 theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
             )
-            pygame.draw.rect(screen, theme.panel, rect, border_radius=height // 2)
             pygame.draw.rect(
                 screen,
                 outline,
-                rect,
+                drawn,
                 width=3 if hovered else 2,
                 border_radius=height // 2,
             )
@@ -1351,19 +1371,19 @@ class GreiaLauncherPresentation(LauncherApplication):
                 pygame=pygame,
             )
             if show_labels:
-                icon_center = (rect.left + 12 + icon_size // 2, rect.centery)
+                icon_center = (drawn.left + 12 + icon_size // 2, drawn.centery)
                 screen.blit(
                     category_icon,
                     category_icon.get_rect(center=icon_center),
                 )
                 label_rect = label.get_rect(
-                    midleft=(rect.left + 20 + icon_size, rect.centery)
+                    midleft=(drawn.left + 20 + icon_size, drawn.centery)
                 )
                 screen.blit(label, label_rect)
             else:
                 screen.blit(
                     category_icon,
-                    category_icon.get_rect(center=rect.center),
+                    category_icon.get_rect(center=drawn.center),
                 )
             self._targets.append(
                 HitTarget("activity_category", collection.collection_id, rect)
@@ -1382,21 +1402,31 @@ class GreiaLauncherPresentation(LauncherApplication):
         height = max(46, min(56, screen.get_height() // 10))
         back_rect = pygame.Rect(left, 16, height, height)
         hovered = back_rect.collidepoint(self._pointer_pos(pygame)) and self._is_pointer_active(pygame)
-        back_state = InteractionVisualState(hovered=hovered)
-        draw_raised_panel(
-            screen,
-            back_rect,
-            pygame,
-            fill=theme.panel,
-            outline=theme.accent if hovered else _mix(theme.text, theme.panel, 0.72),
-            state=back_state,
-            style=self._DEPTH,
-            cached_shadow=self._shadow_for(back_rect.size, pygame),
+        drawn = back_rect.move(0, -2 if hovered else 0)
+
+        # Circular tactile button fallback
+        shadow_rect = drawn.move(0, 3)
+        pygame.draw.circle(
+            screen, (0, 0, 0, 35), shadow_rect.center, drawn.width // 2
         )
+        pygame.draw.circle(screen, theme.panel, drawn.center, drawn.width // 2)
+        border_color = (
+            theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
+        )
+        pygame.draw.circle(
+            screen,
+            border_color,
+            drawn.center,
+            drawn.width // 2,
+            width=3 if hovered else 2,
+        )
+
         from greia_platform.activity_ui import draw_back_symbol
 
-        arrow_color = theme.accent if hovered else theme.text
-        draw_back_symbol(screen, back_rect, arrow_color)
+        arrow_color = (
+            _mix(theme.accent, (40, 20, 10), 0.30) if hovered else theme.text
+        )
+        draw_back_symbol(screen, drawn, arrow_color)
         self._targets.append(
             HitTarget("activity_category_back", ALL_ACTIVITIES_ID, back_rect)
         )
@@ -1428,13 +1458,37 @@ class GreiaLauncherPresentation(LauncherApplication):
 
             chip_rect = pygame.Rect(x, 16, chip_width, height)
             h_chip = pointer_active and chip_rect.collidepoint(pointer)
+            is_highlighted = is_active or h_chip
+            drawn_chip = chip_rect.move(0, -1 if is_highlighted else 0)
 
-            bg_color = _mix(theme.panel, theme.accent, 0.12) if is_active else theme.panel
+            # Grounding drop shadow
+            shadow_rect = drawn_chip.move(0, 2 if is_highlighted else 1)
+            shadow_color = _mix(theme.background, (0, 0, 0), 0.12 if is_active else 0.07)
+            pygame.draw.rect(screen, shadow_color, shadow_rect, border_radius=height // 2)
+
+            # Pill background fill
+            if is_active:
+                bg_color = _mix(theme.panel, theme.accent, 0.15)
+            elif h_chip:
+                bg_color = _mix(theme.panel, (255, 255, 255), 0.35)
+            else:
+                bg_color = theme.panel
+            pygame.draw.rect(screen, bg_color, drawn_chip, border_radius=height // 2)
+
+            # Subtle top sheen highlight line
+            sheen_color = _mix(bg_color, (255, 255, 255), 0.55)
+            pygame.draw.line(
+                screen,
+                sheen_color,
+                (drawn_chip.left + height // 3, drawn_chip.top + 1),
+                (drawn_chip.right - height // 3, drawn_chip.top + 1),
+                width=1,
+            )
+
+            # Outline
             outline_color = theme.accent if (is_active or h_chip) else _mix(theme.text, theme.panel, 0.75)
             outline_width = 3 if is_active else (2 if h_chip else 1)
-
-            pygame.draw.rect(screen, bg_color, chip_rect, border_radius=height // 2)
-            pygame.draw.rect(screen, outline_color, chip_rect, width=outline_width, border_radius=height // 2)
+            pygame.draw.rect(screen, outline_color, drawn_chip, width=outline_width, border_radius=height // 2)
 
             cat_icon = self._category_shadowed_icon(
                 col.icon_id or "backpack",
@@ -1445,12 +1499,12 @@ class GreiaLauncherPresentation(LauncherApplication):
             )
 
             if chip_width > height:
-                icon_center = (chip_rect.left + 12 + icon_size // 2, chip_rect.centery)
+                icon_center = (drawn_chip.left + 12 + icon_size // 2, drawn_chip.centery)
                 screen.blit(cat_icon, cat_icon.get_rect(center=icon_center))
-                label_rect = label.get_rect(midleft=(chip_rect.left + 16 + icon_size, chip_rect.centery))
+                label_rect = label.get_rect(midleft=(drawn_chip.left + 16 + icon_size, drawn_chip.centery))
                 screen.blit(label, label_rect)
             else:
-                screen.blit(cat_icon, cat_icon.get_rect(center=chip_rect.center))
+                screen.blit(cat_icon, cat_icon.get_rect(center=drawn_chip.center))
 
             if not is_active:
                 self._targets.append(

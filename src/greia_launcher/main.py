@@ -225,6 +225,7 @@ class LauncherApplication:
         self._dimmed_underlay: Any = None
         self._dimmed_underlay_key: Any = None
         self._parent_panel_opened_monotonic = 0.0
+        self._page_content_rect: Any = None
         # Auto-bootstrap only the exact base type. Subclass instances must
         # let their own explicit bootstrap run after this constructor has
         # returned, so the base constructor never dispatches to a subclass
@@ -987,19 +988,47 @@ class LauncherApplication:
         page = calculate_grid_page(
             len(self.profiles), self._profile_selected, columns=columns, max_rows=2
         )
-        top = header_size + 12
-        available_h = height - top - 18
-        side_reserve = 150 if page.page_count > 1 else 30
         gap = max(12, min(22, width // 48))
-        usable_w = max(240, width - side_reserve)
-        tile_w = min(213, (usable_w - gap * (page.columns - 1)) // page.columns)
-        tile_h = min(205, (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
-        tile_w = max(110, tile_w)
-        tile_h = max(120, tile_h)
-        total_w = page.columns * tile_w + (page.columns - 1) * gap
-        total_h = page.rows * tile_h + max(0, page.rows - 1) * gap
-        origin_x = (width - total_w) // 2
-        origin_y = top + max(0, (available_h - total_h) // 2)
+        inner_panel = (
+            getattr(self, "_shared_panel_inner_rect", None)
+            if not getattr(self, "_shared_panel_disabled", False)
+            else None
+        )
+        pagination_reserve = 38 if page.page_count > 1 else 0
+        if inner_panel is not None:
+            pad_x = max(14, inner_panel.width // 45)
+            pad_y = max(8, inner_panel.height // 40)
+            avail_w = max(240, inner_panel.width - pad_x * 2)
+            avail_h = max(180, inner_panel.height - pad_y * 2 - pagination_reserve)
+            tile_w = min(213, (avail_w - gap * (page.columns - 1)) // page.columns)
+            tile_h = min(205, (avail_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
+            tile_w = max(110, tile_w)
+            tile_h = max(120, tile_h)
+            total_w = page.columns * tile_w + (page.columns - 1) * gap
+            total_h = page.rows * tile_h + max(0, page.rows - 1) * gap
+            origin_x = inner_panel.centerx - total_w // 2
+            origin_y = inner_panel.top + pad_y + max(0, (avail_h - total_h) // 2)
+        else:
+            top = header_size + 12
+            available_h = height - top - 18 - pagination_reserve
+            if page.page_count > 1:
+                side_reserve = 200 if width >= 900 else 160
+            else:
+                side_reserve = 30
+            usable_w = max(240, width - side_reserve)
+            tile_w = min(213, (usable_w - gap * (page.columns - 1)) // page.columns)
+            tile_h = min(205, (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
+            tile_w = max(110, tile_w)
+            tile_h = max(120, tile_h)
+            total_w = page.columns * tile_w + (page.columns - 1) * gap
+            total_h = page.rows * tile_h + max(0, page.rows - 1) * gap
+            origin_x = (width - total_w) // 2
+            origin_y = top + max(0, (available_h - total_h) // 2)
+        from greia_platform.responsive_layout import UiRect
+        self._page_content_rect = UiRect(origin_x, origin_y, total_w, total_h)
+
+        pointer = pygame.mouse.get_pos()
+        pointer_active = pygame.mouse.get_focused()
 
         for local_index, global_index in enumerate(range(page.start, page.stop)):
             profile = self.profiles[global_index]
@@ -1012,19 +1041,44 @@ class LauncherApplication:
                 tile_h,
             )
             selected = global_index == self._profile_selected
-            pygame.draw.rect(screen, theme.panel, rect, border_radius=26)
+            hovered = pointer_active and rect.collidepoint(pointer)
+            is_highlighted = selected or hovered
+            drawn = rect.move(0, -2 if is_highlighted else 0)
+
+            # Grounding drop shadow
+            shadow_rect = drawn.move(0, 4 if is_highlighted else 2)
+            shadow_color = _mix(theme.background, (0, 0, 0), 0.14 if is_highlighted else 0.08)
+            pygame.draw.rect(screen, shadow_color, shadow_rect, border_radius=26)
+
+            # Card fill
+            card_bg = _mix(theme.panel, (255, 255, 255), 0.35) if is_highlighted else theme.panel
+            pygame.draw.rect(screen, card_bg, drawn, border_radius=26)
+
+            # Subtle top sheen highlight line
+            sheen_color = _mix(card_bg, (255, 255, 255), 0.60)
+            pygame.draw.line(
+                screen,
+                sheen_color,
+                (drawn.left + 24, drawn.top + 2),
+                (drawn.right - 24, drawn.top + 2),
+                width=1,
+            )
+
+            # Outline
+            outline_color = theme.accent if is_highlighted else _mix(theme.text, theme.panel, 0.72)
+            outline_width = 6 if selected else (3 if hovered else 2)
             pygame.draw.rect(
                 screen,
-                theme.accent if selected else _mix(theme.text, theme.panel, 0.72),
-                rect,
-                width=8 if selected else 3,
+                outline_color,
+                drawn,
+                width=outline_width,
                 border_radius=26,
             )
-            icon_size = min(int(rect.width * 0.58), int(rect.height * 0.58))
+            icon_size = min(int(drawn.width * 0.58), int(drawn.height * 0.58))
             icon = self._load_icon(profile.avatar_id, icon_size, pygame)
-            screen.blit(icon, icon.get_rect(center=(rect.centerx, rect.top + rect.height * 0.40)))
-            font_size = max(23, min(38, rect.height // 6))
-            max_name_width = rect.width - 18
+            screen.blit(icon, icon.get_rect(center=(drawn.centerx, drawn.top + drawn.height * 0.40)))
+            font_size = max(23, min(38, drawn.height // 6))
+            max_name_width = drawn.width - 18
             name = self._profile_name_surface(
                 self._child_display_text(profile.display_name),
                 font_size,
@@ -1032,10 +1086,10 @@ class LauncherApplication:
                 theme.text,
                 pygame,
             )
-            screen.blit(name, name.get_rect(center=(rect.centerx, rect.bottom - rect.height * 0.15)))
+            screen.blit(name, name.get_rect(center=(drawn.centerx, drawn.bottom - drawn.height * 0.15)))
             if profile.has_secret:
-                lock = self._load_icon("yellow_star", max(26, rect.width // 7), pygame)
-                screen.blit(lock, lock.get_rect(topright=(rect.right - 8, rect.top + 8)))
+                lock = self._load_icon("yellow_star", max(26, drawn.width // 7), pygame)
+                screen.blit(lock, lock.get_rect(topright=(drawn.right - 8, drawn.top + 8)))
             self._targets.append(HitTarget("profile", profile, rect))
 
         self._draw_page_controls(
@@ -1160,7 +1214,8 @@ class LauncherApplication:
         total: int,
         page_action: str | None = None,
     ) -> None:
-        from .navigation_layout import PageControlsState
+        from .navigation_layout import PageControlsState, resolve_page_controls_layout
+        from greia_platform.responsive_layout import Viewport
 
         if isinstance(page, PageControlsState):
             page_state = page
@@ -1169,11 +1224,17 @@ class LauncherApplication:
 
         if page_state.page_count <= 1:
             return
+        viewport = Viewport(screen.get_width(), screen.get_height())
         size = max(54, min(72, screen.get_height() // 8))
-        center_y = screen.get_height() // 2 + 24
+        layout = resolve_page_controls_layout(
+            viewport,
+            page_state,
+            panel_content_rect=getattr(self, "_page_content_rect", None),
+            button_size=size,
+        )
         controls = (
-            ("previous", pygame.Rect(14, center_y - size // 2, size, size), previous_action, page_state.previous_value, page_state.can_go_previous),
-            ("next", pygame.Rect(screen.get_width() - size - 14, center_y - size // 2, size, size), next_action, page_state.next_value, page_state.can_go_next),
+            ("previous", pygame.Rect(layout.previous_rect.x, layout.previous_rect.y, layout.previous_rect.width, layout.previous_rect.height), previous_action, page_state.previous_value, page_state.can_go_previous),
+            ("next", pygame.Rect(layout.next_rect.x, layout.next_rect.y, layout.next_rect.width, layout.next_rect.height), next_action, page_state.next_value, page_state.can_go_next),
         )
         for direction, rect, action, target_val, enabled in controls:
             if not enabled:

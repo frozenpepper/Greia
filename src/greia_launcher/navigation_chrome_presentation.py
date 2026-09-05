@@ -101,11 +101,36 @@ class SharedUiNavigationChromeMixin:
         viewport = Viewport(screen.get_width(), screen.get_height())
         panel_layout = getattr(self, "_shell_panel_layout", None)
         panel_outer = panel_layout.outer_rect if panel_layout else None
-        panel_content = panel_layout.content_rect if panel_layout else None
+        panel_content = (
+            panel_layout.content_rect
+            if panel_layout
+            else getattr(self, "_page_content_rect", None)
+        )
 
-        base_size = max(50, min(64, screen.get_height() // 9))
+        if panel_outer is not None:
+            left_gutter = panel_outer.x
+            right_gutter = screen.get_width() - panel_outer.right
+            if left_gutter >= 88 and right_gutter >= 88:
+                # Wide gutter mode (e.g. 1024x600): generous, prominent child-sized disc
+                preferred_size = min(72, min(left_gutter, right_gutter) - 20)
+            elif panel_content is not None:
+                left_rail = panel_content.x - panel_outer.x
+                right_rail = panel_outer.right - panel_content.right
+                preferred_size = max(50, min(58, min(left_rail, right_rail) - 10))
+            else:
+                preferred_size = 56
+        elif panel_content is not None:
+            left_gutter = panel_content.x
+            right_gutter = screen.get_width() - panel_content.right
+            if left_gutter >= 88 and right_gutter >= 88:
+                preferred_size = min(72, min(left_gutter, right_gutter) - 20)
+            else:
+                preferred_size = max(50, min(58, min(left_gutter, right_gutter) - 16))
+        else:
+            preferred_size = max(56, min(72, screen.get_height() // 8))
+
         size = resolve_trusted_action_minimum_px(
-            self._chrome_metrics(), fallback_px=base_size
+            self._chrome_metrics(), fallback_px=preferred_size
         )
 
         layout = resolve_page_controls_layout(
@@ -264,40 +289,73 @@ class SharedUiNavigationChromeMixin:
             screen.blit(frame, drawn)
         else:
             # Procedural circular tactile button fallback
-            shadow_rect = drawn.move(0, 3)
-            pygame.draw.circle(
-                screen, (0, 0, 0, 35), shadow_rect.center, drawn.width // 2
-            )
-            pygame.draw.circle(screen, theme.panel, drawn.center, drawn.width // 2)
+            cx, cy = drawn.center
+            radius = drawn.width // 2
+            shadow_cy = cy + 3
+            pygame.draw.circle(screen, (61, 44, 31, 40), (cx, shadow_cy), radius)
+            fill = (255, 255, 255) if hovered else (255, 253, 248)
+            pygame.draw.circle(screen, fill, (cx, cy), radius)
+            ring_color = (255, 214, 110) if hovered else (242, 230, 212)
+            pygame.draw.circle(screen, ring_color, (cx, cy), radius - 3, width=2)
             border_color = (
                 theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
             )
             pygame.draw.circle(
                 screen,
                 border_color,
-                drawn.center,
-                drawn.width // 2,
+                (cx, cy),
+                radius,
                 width=3 if hovered else 2,
             )
+            sheen = (255, 255, 255)
+            pygame.draw.line(
+                screen,
+                sheen,
+                (cx - int(radius * 0.55), cy - radius + 4),
+                (cx + int(radius * 0.55), cy - radius + 4),
+                width=2,
+            )
 
-        inset = max(13, drawn.width // 4)
-        if direction == "previous":
-            points = (
-                (drawn.right - inset, drawn.top + inset),
-                (drawn.left + inset, drawn.centery),
-                (drawn.right - inset, drawn.bottom - inset),
-            )
-        else:
-            points = (
-                (drawn.left + inset, drawn.top + inset),
-                (drawn.right - inset, drawn.centery),
-                (drawn.left + inset, drawn.bottom - inset),
-            )
-        pygame.draw.polygon(
-            screen,
-            theme.accent if hovered else theme.text,
-            points,
+        # Chunky Greia directional arrow glyph (shaft + rounded arrowhead)
+        cx, cy = drawn.center
+        scale = drawn.width / 52.0
+        shaft_len = max(8, int(15 * scale))
+        shaft_h = max(6, int(10 * scale))
+        head_len = max(8, int(13 * scale))
+        head_half_h = max(7, int(13 * scale))
+        corner_r = max(2, int(2.5 * scale))
+
+        glyph_color = (
+            _mix(theme.accent, (40, 20, 10), 0.30) if hovered else theme.text
         )
+
+        if direction == "previous":
+            tip_x = cx - int(13 * scale)
+            base_x = tip_x + head_len
+            shaft_x = base_x - int(2 * scale)
+            shaft_rect = pygame.Rect(shaft_x, cy - shaft_h // 2, shaft_len, shaft_h)
+            head_pts = ((tip_x, cy), (base_x, cy - head_half_h), (base_x, cy + head_half_h))
+        else:
+            tip_x = cx + int(13 * scale)
+            base_x = tip_x - head_len
+            shaft_x = base_x - shaft_len + int(2 * scale)
+            shaft_rect = pygame.Rect(shaft_x, cy - shaft_h // 2, shaft_len, shaft_h)
+            head_pts = ((tip_x, cy), (base_x, cy - head_half_h), (base_x, cy + head_half_h))
+
+        # Soft optical drop shadow
+        shadow_shaft = shaft_rect.move(0, 1)
+        shadow_pts = tuple((p[0], p[1] + 1) for p in head_pts)
+        shadow_color = _mix(theme.background, (0, 0, 0), 0.16)
+        pygame.draw.rect(screen, shadow_color, shadow_shaft, border_radius=corner_r)
+        pygame.draw.polygon(screen, shadow_color, shadow_pts)
+        for p in shadow_pts:
+            pygame.draw.circle(screen, shadow_color, p, corner_r)
+
+        # Foreground glyph
+        pygame.draw.rect(screen, glyph_color, shaft_rect, border_radius=corner_r)
+        pygame.draw.polygon(screen, glyph_color, head_pts)
+        for p in head_pts:
+            pygame.draw.circle(screen, glyph_color, p, corner_r)
 
     def _draw_scroll_controls(
         self,
@@ -324,30 +382,40 @@ class SharedUiNavigationChromeMixin:
         height = resolve_trusted_action_minimum_px(
             self._chrome_metrics(), fallback_px=base_height
         )
-        frame = self._icon_button_surface(height, pygame)
-
         back_rect = pygame.Rect(left, 16, height, height)
         hovered = (
             back_rect.collidepoint(self._pointer_pos(pygame))
             and self._is_pointer_active(pygame)
         )
         drawn = back_rect.move(0, -2 if hovered else 0)
+        frame = self._icon_button_surface(
+            height, pygame, variant="hover" if hovered else "default"
+        )
 
         if frame is not None:
             screen.blit(frame, drawn)
         else:
-            pygame.draw.rect(screen, theme.panel, drawn, border_radius=height // 2)
-            pygame.draw.rect(
+            shadow_rect = drawn.move(0, 3)
+            pygame.draw.circle(
+                screen, (0, 0, 0, 35), shadow_rect.center, drawn.width // 2
+            )
+            pygame.draw.circle(screen, theme.panel, drawn.center, drawn.width // 2)
+            border_color = (
+                theme.accent if hovered else _mix(theme.text, theme.panel, 0.72)
+            )
+            pygame.draw.circle(
                 screen,
-                theme.accent if hovered else _mix(theme.text, theme.panel, 0.72),
-                drawn,
+                border_color,
+                drawn.center,
+                drawn.width // 2,
                 width=3 if hovered else 2,
-                border_radius=height // 2,
             )
 
         from greia_platform.activity_ui import draw_back_symbol
 
-        arrow_color = theme.accent if hovered else theme.text
+        arrow_color = (
+            _mix(theme.accent, (40, 20, 10), 0.30) if hovered else theme.text
+        )
         symbol_rect = drawn.move(0, -2 if frame is not None else 0)
         draw_back_symbol(screen, symbol_rect, arrow_color)
         self._targets.append(
@@ -384,13 +452,37 @@ class SharedUiNavigationChromeMixin:
 
             chip_rect = pygame.Rect(x, 16, chip_width, height)
             h_chip = pointer_active and chip_rect.collidepoint(pointer)
+            is_highlighted = is_active or h_chip
+            drawn_chip = chip_rect.move(0, -1 if is_highlighted else 0)
 
-            bg_color = _mix(theme.panel, theme.accent, 0.12) if is_active else theme.panel
+            # Grounding drop shadow
+            shadow_rect = drawn_chip.move(0, 2 if is_highlighted else 1)
+            shadow_color = _mix(theme.background, (0, 0, 0), 0.12 if is_active else 0.07)
+            pygame.draw.rect(screen, shadow_color, shadow_rect, border_radius=height // 2)
+
+            # Pill background fill
+            if is_active:
+                bg_color = _mix(theme.panel, theme.accent, 0.15)
+            elif h_chip:
+                bg_color = _mix(theme.panel, (255, 255, 255), 0.35)
+            else:
+                bg_color = theme.panel
+            pygame.draw.rect(screen, bg_color, drawn_chip, border_radius=height // 2)
+
+            # Subtle top sheen highlight line
+            sheen_color = _mix(bg_color, (255, 255, 255), 0.55)
+            pygame.draw.line(
+                screen,
+                sheen_color,
+                (drawn_chip.left + height // 3, drawn_chip.top + 1),
+                (drawn_chip.right - height // 3, drawn_chip.top + 1),
+                width=1,
+            )
+
+            # Outline
             outline_color = theme.accent if (is_active or h_chip) else _mix(theme.text, theme.panel, 0.75)
             outline_width = 3 if is_active else (2 if h_chip else 1)
-
-            pygame.draw.rect(screen, bg_color, chip_rect, border_radius=height // 2)
-            pygame.draw.rect(screen, outline_color, chip_rect, width=outline_width, border_radius=height // 2)
+            pygame.draw.rect(screen, outline_color, drawn_chip, width=outline_width, border_radius=height // 2)
 
             cat_icon = self._category_shadowed_icon(
                 col.icon_id or "backpack",
@@ -401,12 +493,12 @@ class SharedUiNavigationChromeMixin:
             )
 
             if chip_width > height:
-                icon_center = (chip_rect.left + 12 + icon_size // 2, chip_rect.centery)
+                icon_center = (drawn_chip.left + 12 + icon_size // 2, drawn_chip.centery)
                 screen.blit(cat_icon, cat_icon.get_rect(center=icon_center))
-                label_rect = label.get_rect(midleft=(chip_rect.left + 16 + icon_size, chip_rect.centery))
+                label_rect = label.get_rect(midleft=(drawn_chip.left + 16 + icon_size, drawn_chip.centery))
                 screen.blit(label, label_rect)
             else:
-                screen.blit(cat_icon, cat_icon.get_rect(center=chip_rect.center))
+                screen.blit(cat_icon, cat_icon.get_rect(center=drawn_chip.center))
 
             if not is_active:
                 self._targets.append(

@@ -752,7 +752,7 @@ Implemented comprehensive enhancement of launcher navigation layout, visual poli
    - Full repository test suite: **1,972 passed, 0 failed in 178 seconds**.
    - Rendered and verified visual acceptance across 1024×600 and 800×600 for Activity pagination, Category switcher, and Profile picker.
 
-## 30. Boot plan integrated with lifecycle architecture — Phases 7–11 replaced, boot-05…18 planned (2026-09-05)
+## 31. Boot plan integrated with lifecycle architecture — Phases 7–11 replaced, boot-05…18 planned (2026-09-05)
 
 Imported the integrating agent's return (`greia-boot-plan-handoff/`, manifest 47/47 hashes clean, input SHA matches our exact packed file). Verified before import: Phases 0–6 byte-identical (first diff hunk lands exactly on the Phase 7 header; earlier hunks pure additions), D1–D22 intact, D23–D50 added, all 14 task records schema-valid/planned/zero-attempt.
 
@@ -761,3 +761,34 @@ Imported into live run R2 (no new run): adjusted governing plan replaced the pla
 What changed materially: boot/install/update/hardware/persist/health are now one lifecycle architecture (one signed release artifact, v2 five-member contract, shared SlotWriter/Finalizer, explicit PERSIST, typed targets, separate narrow install/update services, common BootTransactionBackend, Pi tryboot, trusted one-use BOOT_HEALTHY, R4 risk class). Phase 7 non-destructive contracts, 8A–8G ordered substrate, Phase 9 HOST_FAST optional, rewritten final guards. Later planners are mechanical transcribers; D23–D50 closed to reopening.
 
 Still open and unchanged: boot-04 (B04-IMPL reviewer PASS recorded, integration held for resume; B04-PROOF/DISP/REPROOF planned). boot-05 implementation is hard-gated on boot-04 terminal green — no phase skipped.
+
+## 32. Launcher Navigation Buttons Sizing, Tactile Overhaul & Profile Panel Harmony (2026-09-05)
+
+Completed visual and interaction overhaul of launcher navigation buttons, depth styling, and profile picker geometry:
+
+1. **Enlarged, Tactile Button Disc:**
+   - Vector masters `assets/visual/ui/v0.1/icon_button.svg` and `icon_button_hover.svg`: enlarged circle radius from 62 to 78 (diameter 156/180 = 87% fill vs 68% previously), switched palette from cold lavender to warm cream (`#FFFFFF` to `#FDF4E2`) with golden inner ring, top sheen arc, and rich gold hover border (`#FFC234`).
+   - Recompiled runtime PNGs via `tools/build_visual_renditions.py` (`assets/visual/runtime/v1/ui/icon_button.png` and `icon_button_hover.png`).
+   - Procedural fallback button in `_draw_page_arrow_button` updated to match tactile cream disc styling.
+
+2. **Chunky Greia Directional Arrow Glyph:**
+   - Replaced crude sharp isosceles triangles with canonical chunky Greia directional arrow glyph (chunky rounded shaft + rounded arrowhead with optical drop shadow), fully harmonized with `draw_back_symbol`.
+   - Button size scaled responsively to available gutter: 72px disc with ~16px clearance in wide mode (1024×600) and 58px disc in compact rail mode (800×600).
+
+3. **Profile Picker Panel & Pagination Harmony:**
+   - Integrated `_shared_panel_inner_rect` into `_render_profile_picker_content` in `src/greia_launcher/main.py`: profile cards are now cleanly contained within the panel inner area with `pagination_reserve = 38` when multiple pages exist.
+   - Resolved card and arrow collisions at 800×600: profile cards stop before the panel bezel, and navigation arrows center cleanly in the panel rails with generous clearance.
+   - Centered bottom pagination capsule pill with proper vertical separation from cards.
+   - Connected `self._page_content_rect` to `navigation_layout.py` when running without a tray panel, ensuring arrow buttons always center in the outer gutters outside the card content.
+
+4. **Visual Cleanup & Polish:**
+   - Removed redundant procedural polygon star from `SharedUiActivityCardMixin._draw_activity_tile_content` in `src/greia_launcher/shared_ui_presentation.py` (focused SVG master card already carries the badge).
+   - Added grounding drop shadows, hover lift (-1px), subtle top sheen highlight line, and tactile circular Back button to category switcher chips in `presentation.py` and `navigation_chrome_presentation.py`.
+   - Added grounding drop shadows, hover lift (-2px), and subtle top sheen lines to profile picker cards in `main.py` and `profile_chrome_presentation.py`.
+
+5. **Verification & Performance:**
+   - All 127 launcher tests PASS (`pytest tests/test_launcher*.py`).
+   - `tests/test_launcher_hover_scene_performance.py`: verified bit-for-bit pixel equivalence and 0 full-scene rebuilds on hover.
+   - `tools/validate_project.py`: PASS.
+   - Rendered and visually inspected acceptance screenshots across 1024×600 and 800×600 for activities, category chips, and profile picker.
+

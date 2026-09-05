@@ -402,20 +402,6 @@ class SharedUiActivityCardMixin:
         )
         screen.blit(title, title.get_rect(center=label_rect.center))
 
-        if state.selected:
-            star_size = max(22, min(30, card_rect.width // 6))
-            star_rect = pygame.Rect(card_rect.right - star_size - 6, card_rect.top + 6, star_size, star_size)
-            cx, cy = star_rect.center
-            r_out = star_size // 2
-            r_in = r_out * 0.45
-            star_pts = []
-            import math
-            for i in range(10):
-                angle = i * math.pi / 5 - math.pi / 2
-                r = r_out if i % 2 == 0 else r_in
-                star_pts.append((cx + r * math.cos(angle), cy + r * math.sin(angle)))
-            pygame.draw.polygon(screen, (255, 193, 7), star_pts)
-            pygame.draw.polygon(screen, (255, 160, 0), star_pts, width=2)
 
         if state.launching:
             badge_h = max(24, min(32, card_rect.height // 5))

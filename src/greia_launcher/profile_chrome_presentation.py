@@ -12,6 +12,7 @@ from typing import Any
 from greia_platform.assets import AssetCatalogueError
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 
+from .presentation import _mix
 from .system_chrome import resolve_trusted_action_minimum_px
 
 
@@ -141,28 +142,52 @@ class SharedUiProfileChromeMixin:
             return
 
         frame_rect = pygame.Rect(0, 0, frame_size, frame_size)
-        frame_rect.center = (
-            rect.centerx,
-            int(round(rect.top + rect.height * 0.40)),
-        )
+        pointer = pygame.mouse.get_pos()
+        pointer_active = pygame.mouse.get_focused()
+        hovered = pointer_active and rect.collidepoint(pointer)
 
         selected_idx = getattr(self, "_profile_selected", None)
         is_selected = False
         if hasattr(self, "profiles") and selected_idx is not None and 0 <= selected_idx < len(self.profiles):
             is_selected = self.profiles[selected_idx].profile_id == profile.profile_id
 
-        pygame.draw.rect(screen, theme.panel, rect, border_radius=26)
-        outline_color = theme.accent if is_selected else tuple(
-            int(c1 * 0.72 + c2 * 0.28) for c1, c2 in zip(theme.text[:3], theme.panel[:3])
+        is_highlighted = is_selected or hovered
+        drawn = rect.move(0, -2 if is_highlighted else 0)
+
+        # Grounding drop shadow
+        shadow_rect = drawn.move(0, 4 if is_highlighted else 2)
+        shadow_color = _mix(theme.background, (0, 0, 0), 0.14 if is_highlighted else 0.08)
+        pygame.draw.rect(screen, shadow_color, shadow_rect, border_radius=26)
+
+        # Card fill
+        card_bg = _mix(theme.panel, (255, 255, 255), 0.35) if is_highlighted else theme.panel
+        pygame.draw.rect(screen, card_bg, drawn, border_radius=26)
+
+        # Subtle top sheen highlight line
+        sheen_color = _mix(card_bg, (255, 255, 255), 0.60)
+        pygame.draw.line(
+            screen,
+            sheen_color,
+            (drawn.left + 24, drawn.top + 2),
+            (drawn.right - 24, drawn.top + 2),
+            width=1,
         )
+
+        # Outline
+        outline_color = theme.accent if is_highlighted else _mix(theme.text, theme.panel, 0.72)
+        outline_width = 6 if is_selected else (3 if hovered else 2)
         pygame.draw.rect(
             screen,
             outline_color,
-            rect,
-            width=8 if is_selected else 3,
+            drawn,
+            width=outline_width,
             border_radius=26,
         )
 
+        frame_rect.center = (
+            drawn.centerx,
+            int(round(drawn.top + drawn.height * 0.40)),
+        )
         screen.blit(frame_surface, frame_rect)
 
         avatar_size = max(30, int(round(frame_size * 0.53)))
@@ -174,8 +199,8 @@ class SharedUiProfileChromeMixin:
         )
         screen.blit(avatar, avatar.get_rect(center=avatar_center))
 
-        font_size = max(23, min(38, rect.height // 6))
-        max_name_width = rect.width - 18
+        font_size = max(23, min(38, drawn.height // 6))
+        max_name_width = drawn.width - 18
         name = self._profile_name_surface(
             self._child_display_text(profile.display_name),
             font_size,
@@ -183,11 +208,11 @@ class SharedUiProfileChromeMixin:
             theme.text,
             pygame,
         )
-        screen.blit(name, name.get_rect(center=(rect.centerx, rect.bottom - rect.height * 0.15)))
+        screen.blit(name, name.get_rect(center=(drawn.centerx, drawn.bottom - drawn.height * 0.15)))
 
         if profile.has_secret:
-            lock = self._load_icon("yellow_star", max(26, rect.width // 7), pygame)
-            screen.blit(lock, lock.get_rect(topright=(rect.right - 8, rect.top + 8)))
+            lock = self._load_icon("yellow_star", max(26, drawn.width // 7), pygame)
+            screen.blit(lock, lock.get_rect(topright=(drawn.right - 8, drawn.top + 8)))
 
     def _overlay_active_profile_frame(
         self,
