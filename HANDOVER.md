@@ -960,3 +960,11 @@ Addressed review findings on synthetic high-DPI test isolation and pure layout h
    - Pytest launcher suite: **162/162 PASS** (2 skipped).
    - Project validation: **PASS** (`python3 tools/validate_project.py`).
    - Full repository test suite: **1,984/1,984 unittest PASS** (`make verify` exit 0).
+
+## 34. Lifecycle phases transcribed — all 14 graphs staged, execution chain-gated (2026-09-05)
+
+All BOOT-PLAN-05…18 planners executed read-only and registered preflight-clean graphs (Phase 4 P4-*, Phase 5 P5-*, Phase 7 L7-*, 8A A8-*, 8B X8-*, 8C U8-*, 8D PI8-*, 8E M8-*, 8F D8-*, 8G G8-*, 9 H9-*, 10 R10-*, 11 F11-*). Every planner honored its hard precondition: implementation chain-wide waits on prior gates, starting with P4-PROOF terminal green.
+
+Gap found and fixed by the last transcription: the frozen ruling `boot-lifecycle-integration--001.md` was never in worker-rules authority (r0002 carried only PLAN.md). Created r0003 freezing both PLAN.md and the ruling, so all future workers receive D23–D50 as authority, not by reference.
+
+Still open: P4-PROOF reds (intro-tolerance ruling + deferred on-site interactive proof). Nothing runs implementation until gates clear. Backlog is now almost entirely staged future work.
