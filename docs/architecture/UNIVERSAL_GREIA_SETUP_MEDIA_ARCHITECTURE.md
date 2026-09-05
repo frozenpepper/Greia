@@ -17,15 +17,18 @@ The setup image is universal at the **product and application-contract level**. 
 
 The single artifact may contain multiple boot adapters, architecture-specific live roots, signed release artifacts and architecture/suite hardware-support pools beneath one installer application and one common transaction model.
 
-Three decisions are locked by this revision:
+Four decisions are locked by this revision:
 
 1. **Every new release-capable installation creates the final update-capable A/B storage contract from day one.** The old single-root PC and simple Pi `boot + root` layouts are not the target architecture.
 2. **Installation and system update consume the same signed Greia release authority.** The installer must not create a second `shared assets + target tar` image factory that can drift from `.greiaupdate` releases.
 3. **Boot transactions are polymorphic.** x86 uses a GRUB backend; Raspberry Pi uses the EEPROM firmware's native `tryboot` / `autoboot.txt` A/B mechanism. Common Greia code sees one semantic candidate/health/rollback contract.
+4. **The universal removable Setup medium starts from Greia's physically proven legacy-BIOS primitive, not from an aesthetically cleaner but unproven GPT/GRUB design.** The current reference Acer has already proven active-FAT32 + SYSLINUX removable boot and has already rejected GRUB-on-USB on the tested firmware/media combination.
+
+The last rule applies to the **removable Setup medium only**. It does not change the modern installed-target decision to use GPT/UEFI where appropriate.
 
 ---
 
-# 1. Corrections to the previous draft
+# 1. Corrections and non-negotiable design constraints
 
 ## 1.1 A/B layout is mandatory for new release installations
 
@@ -175,6 +178,103 @@ layout / slot / boot writes
 
 The privileged request schema cannot accept arbitrary commands, paths, URLs, mount locations, block devices or bootloader arguments supplied by the UI.
 
+## 1.13 Universal removable media must preserve the proven Acer BIOS path
+
+Greia already has accepted physical evidence in:
+
+```text
+docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
+build/live-syslinux/syslinux.cfg.in
+```
+
+That evidence established, on the reference Acer class:
+
+```text
+GRUB MBR on removable USB -> not a reliable boot path
+plain MBR + active FAT32 + SYSLINUX -> boots
+```
+
+Therefore R8 must not begin by replacing the known-good removable-media path with GPT + BIOS GRUB and asking the weakest reference machine to prove it again.
+
+The first universal-media candidate MUST preserve:
+
+```text
+MBR partition table
+active FAT32 first partition
+SYSLINUX MBR/VBR legacy-BIOS path
+explicit kernel/initramfs locations
+Greia live-media identity
+```
+
+UEFI and Raspberry Pi boot assets are layered onto that same artifact. GPT removable media may be reconsidered later only if it provides a material benefit and the exact candidate physically passes every reference platform.
+
+This constraint is about the Setup USB. The installed legacy x86 target may still use GRUB because internal-disk GRUB is a separately proven firmware path.
+
+## 1.14 Low-memory live-boot behavior is part of correctness
+
+The Acer-class floor makes live-environment memory policy an architectural constraint.
+
+For C0/legacy live installer profiles:
+
+- `toram` is forbidden;
+- the compressed live root remains on the Setup medium and is read through the live filesystem/loop path;
+- writable copy-on-write state is a bounded tmpfs overlay;
+- the overlay limit is explicit rather than inheriting an unbounded/default fraction of physical RAM;
+- actual overlay use, process RSS/anonymous memory and `MemAvailable` are measured during the full installer transaction, not only at idle;
+- Python/Pygame/hardware-probe peaks are part of the acceptance measurement.
+
+Current Greia media already uses an explicit `overlay-size=128M` and no `toram`. Treat that as the starting evidence-backed ceiling, not as a permanent optimum.
+
+Do **not** encode speculative `64 MiB overlay` or `120 MiB idle RAM` limits as architecture constants before measurement. R8 must establish release budgets from the exact image and the physical reference machine, then tighten them if evidence supports it.
+
+## 1.15 Pi microSD hot insertion is a product gate, not an assumed kernel feature
+
+The preferred Pi parent flow depends on inserting the target microSD after the Setup USB has already booted. Therefore Pi 400 and Pi 500 must each prove, with the exact Greia ARM64 live kernel:
+
+```text
+boot without target microSD
+-> begin bounded block/udev/kernel observation
+-> insert card
+-> kernel observes insertion
+-> a block device appears
+-> durable MMC identity is readable
+-> Refresh Drives discovers it
+-> target policy classifies it correctly
+```
+
+The acceptance test is backend-neutral. Do not hardcode a guessed kernel driver name or “enable polling” workaround into architecture before evidence identifies the failure layer.
+
+If hot insertion fails, the ordinary product flow remains unresolved. Evaluate an already-configured USB-first boot order, a physically proven firmware boot-selection flow, or an explicit external microSD-reader recovery path. Do not silently rewrite EEPROM to preserve the one-image claim.
+
+## 1.16 FAT32 boot-control durability is layered, not atomic
+
+`autoboot.txt` lives on FAT. A successful rename does not make the operation crash-atomic and FAT is not a transactional database.
+
+The Pi boot backend should use the strongest practical write discipline:
+
+```text
+write autoboot.new
+-> fsync the new file
+-> rename over autoboot.txt
+-> fsync the containing directory where supported
+-> syncfs the boot-control filesystem
+-> re-read and verify exact expected bytes
+```
+
+This is a durability layer, not the rollback mechanism.
+
+Rollback safety comes from the combination of:
+
+- independently bootable A and B boot partitions;
+- independently bootable A and B system slots;
+- one-shot `tryboot`;
+- known-good `tryboot_a_b` / `autoboot` behavior;
+- proven firmware partition-walk/recovery behavior;
+- Greia persistent accepted-slot state;
+- power-cut/fault tests at every boot-control commit boundary.
+
+If the required firmware capabilities or recovery behavior are unavailable, unknown or not proven on the exact Pi generation, do not arm an update candidate. Routine Greia installation/update must not silently update EEPROM to obtain them.
+
 ---
 
 # 2. Core architecture
@@ -224,21 +324,30 @@ Common code owns UI, localization, hardware inventory, target identity, power po
 
 Platform adapters own only firmware/boot mechanics, physical layout and storage eligibility.
 
+The removable-media composer and the installed-target layout adapters are intentionally separate concepts. The Setup USB may use an MBR/FAT compatibility layout while a modern installed target uses GPT.
+
 ---
 
-# 3. Universal setup-media boot candidate
+# 3. Universal Setup-media boot candidate
 
-The first media-layout candidate is standards-based GPT:
+## 3.1 Preferred R8 candidate: MBR + active FAT32 compatibility foundation
+
+The first R8 universal-media candidate is:
 
 ```text
-protective MBR + BIOS GRUB boot code
+sector 0
+  SYSLINUX-compatible MBR code + DOS/MBR partition table
 
-P1 GREIA_BIOS_BOOT     GPT BIOS Boot partition
-P2 GREIA_SETUP_BOOT    FAT32 / ESP
-   |-- signed amd64 UEFI removable boot path
+P1 GREIA_SETUP_BOOT    FAT32, active
+   |-- SYSLINUX BIOS loader + modules/config
+   |-- i386 live kernel/initramfs needed by the BIOS path
+   |-- signed amd64 UEFI removable path under EFI/BOOT
+   |-- amd64 live kernel/initramfs as required by the UEFI path
    |-- Pi 400 boot assets
-   `-- Pi 500 boot assets
-P3 GREIA_SETUP         setup data
+   |-- Pi 500 boot assets
+   `-- media-identity/bootstrap metadata
+
+P2 GREIA_SETUP_DATA    data filesystem selected by measured compatibility
    |-- live/i386/rootfs.squashfs
    |-- live/amd64/rootfs.squashfs
    |-- live/arm64/rootfs.squashfs
@@ -247,23 +356,48 @@ P3 GREIA_SETUP         setup data
    `-- signed setup-media manifest
 ```
 
-Reasons:
+The exact P2 filesystem is an implementation decision to prove, not a label-only mount contract. The initramfs must resolve the correct Setup-data partition from the Greia media identity and its physical ancestry; it must not trust `LABEL=GREIA_SETUP_DATA` as destructive or identity authority.
 
-- native modern UEFI/GPT fit;
-- GRUB BIOS can use a dedicated BIOS Boot partition;
-- current Raspberry Pi firmware can read GPT storage.
+Reasons for this baseline:
 
-This is a **candidate**, not an accepted universal-media claim. The exact same image hash must physically boot Acer BIOS, modern amd64 UEFI with Secure Boot ON/OFF, Pi 400 and Pi 500.
+- it preserves the physically proven Acer removable-boot primitive;
+- it keeps one FAT boot partition that UEFI and Pi firmware can both consume;
+- it separates boot-critical FAT content from larger live/release payloads;
+- it does not force legacy BIOS to execute GRUB from removable media;
+- it keeps modern installed disks free to use GPT independently.
 
-If a supported firmware exposes a real GPT compatibility defect, evaluate an MBR media fallback with BIOS embedding space + FAT boot + setup-data partition. Do not publish separate “universal” downloads to hide adapter failure.
+The exact same image hash must physically boot:
+
+```text
+Acer legacy BIOS
+modern amd64 UEFI / Secure Boot OFF
+modern amd64 UEFI / Secure Boot ON
+Pi 400 EEPROM USB
+Pi 500 EEPROM USB
+```
+
+No platform-specific rebuild may be substituted during acceptance.
+
+## 3.2 GPT removable media is no longer the primary candidate
+
+A GPT universal Setup image is not forbidden, but it is **demoted to an evidence-gated alternative**.
+
+Do not spend R8 replacing a known-good Acer path merely because GPT is cleaner for modern firmware. Reconsider GPT only if:
+
+1. it solves a concrete measured problem the MBR/FAT candidate cannot solve;
+2. the exact GPT artifact still boots the physical Acer reference;
+3. UEFI Secure Boot and both Pi generations also pass;
+4. no new bootloader-specific recovery regression is introduced.
+
+Do not publish separate “legacy” and “modern” Setup downloads to hide universal-media failure.
 
 `BOOTIA32.EFI` is not part of current release claims unless an actual 32-bit-UEFI hardware class is adopted and certified.
 
 ---
 
-# 4. Pi setup-USB boot-order constraint
+# 4. Pi Setup-USB boot order and target-card insertion
 
-Pi 4-generation and later firmware commonly checks a bootable SD card before USB. Therefore “USB inserted + existing bootable microSD inserted” does not guarantee that the Setup USB starts.
+Pi 4-generation and later firmware may select a bootable SD card before USB depending on EEPROM boot order. Therefore “USB inserted + existing bootable microSD inserted” does not guarantee that the Setup USB starts.
 
 The first parent-safe workflow to prove is:
 
@@ -279,13 +413,27 @@ install
 
 This becomes product guidance only after Pi 400 and Pi 500 physical evidence proves hot insertion/enumeration reliably with the exact Greia live kernel.
 
-If it is not reliable, evaluate, in order:
+The R8.5 hotplug gate records, at minimum:
+
+```text
+udev/block events
+kernel log around insertion
+/sys/class/mmc_host state
+/sys/block state
+lsblk before/after
+resolved durable MMC identity
+installer inventory generation before/after
+```
+
+Do not prescribe driver-specific polling from prose alone.
+
+If hot insertion is not reliable, evaluate, in order:
 
 1. already-configured USB-first EEPROM boot order;
 2. a simple, physically proven firmware boot-selection interaction;
-3. an external microSD reader as an explicit recovery workflow.
+3. an external microSD reader as an explicit recovery/install workflow.
 
-The installer must not silently rewrite Raspberry Pi EEPROM boot order or firmware merely to preserve the one-image marketing claim.
+The installer must not silently rewrite Raspberry Pi EEPROM boot order or firmware merely to preserve the one-image product goal.
 
 ---
 
@@ -298,7 +446,7 @@ build profile = what an image contains
 hardware inventory = what the current machine actually is/can do
 ```
 
-A bounded `InstallerHostContext` should expose trusted facts such as architecture, relevant CPU ABI/features, BIOS/UEFI/Pi boot family, Secure Boot state when observable, device-tree compatible values, RAM, display suitability, storage controllers, setup-media identity, hardware-inventory token and Pi tryboot capability facts.
+A bounded `InstallerHostContext` should expose trusted facts such as architecture, relevant CPU ABI/features, BIOS/UEFI/Pi boot family, Secure Boot state when observable, device-tree compatible values, RAM, display suitability, storage controllers, setup-media identity, hardware-inventory token and Pi boot capability facts.
 
 The setup image contains a signed catalogue of installable release profiles. Compatibility intersects host facts with that catalogue.
 
@@ -310,6 +458,8 @@ N matches -> choose highest-priority stable compatible profile;
 ```
 
 Unknown ARM boards never default to a known Pi.
+
+For Pi update-capable profiles, compatibility must also expose whether the required one-shot and recovery semantics are actually available/proven. A board being “Pi 400” or “Pi 500” is not by itself sufficient update authority.
 
 ---
 
@@ -402,7 +552,7 @@ Updater and boot services never guess writable partitions by partition number or
 
 # 9. Legacy BIOS x86 target layout
 
-For the legacy reference where MBR remains the physically proven boot format:
+For the legacy reference where MBR remains the physically proven installed-disk format:
 
 ```text
 MBR + >=1 MiB GRUB embedding space
@@ -413,6 +563,8 @@ P4 GREIA_PERSIST        ext4 remainder
 ```
 
 `BOOT_CONTROL` owns stable GRUB configuration/environment outside both replaceable system slots. Each system slot carries its own kernel and generic initramfs under `/boot`.
+
+The fact that removable USB GRUB failed on the reference Acer does **not** imply internal-disk GRUB is invalid; the accepted postmortem explicitly distinguishes those paths.
 
 Candidate update:
 
@@ -425,7 +577,7 @@ GRUB next_entry  = B
 
 Before promotion, prove on Acer:
 
-- the exact layout boots;
+- the exact A/B target layout boots;
 - GRUB environment writes are reliable;
 - kernel/root-mount failure returns to A;
 - the measured minimum storage still leaves an acceptable PERSIST budget.
@@ -465,11 +617,11 @@ Do not infer target boot policy solely from CPU architecture; record whether the
 
 ---
 
-# 11. Raspberry Pi 400 / Pi 500 target layout
+# 11. Raspberry Pi 400 / Pi 500 target layout and boot transaction
 
 Use Raspberry Pi native firmware A/B semantics rather than GRUB.
 
-Because Pi `tryboot` / `autoboot` has had real GPT-related edge cases, the first installed Pi A/B candidate deliberately uses an MBR/DOS table until Pi 400 + Pi 500 physical evidence justifies changing it:
+Because Pi `tryboot` / `autoboot` has had real partition-table/boot-control edge cases, the first installed Pi A/B candidate deliberately uses an MBR/DOS table until Pi 400 + Pi 500 physical evidence justifies changing it:
 
 ```text
 P1 GREIA_PI_BOOT_CONTROL   FAT32
@@ -499,14 +651,52 @@ Candidate update:
 ```text
 write/finalize SYSTEM_B
 -> stage and verify BOOT_B
+-> arm one-shot tryboot
 -> reboot in tryboot mode
 ```
 
-If B fails before `BOOT_HEALTHY`, the one-shot tryboot flag clears and normal reboot returns to accepted A. If B becomes healthy, atomically commit Greia's persistent accepted state and `autoboot.txt` so B becomes default and A becomes the next rollback candidate.
+If B fails before `BOOT_HEALTHY`, the one-shot state must clear so normal boot returns to accepted A.
 
-FAT boot-control updates are not assumed transactional merely because rename succeeds. Fault-test missing/truncated/corrupt `autoboot.txt`, power loss during commit, corrupt BOOT_B, corrupt SYSTEM_B, kernel failure and userspace failure. Prove firmware recovery/partition-walk behavior physically on both Pi 400 and Pi 500.
+If B becomes healthy:
 
-Before erasing a Pi target, prove required EEPROM/bootloader tryboot capabilities. Missing/unknown capability blocks installation before erase. Routine install/update does not silently rewrite EEPROM.
+```text
+persist Greia accepted-slot state
+-> durable-write new autoboot mapping
+-> verify boot-control bytes
+-> B becomes default
+-> A becomes rollback candidate
+```
+
+The `autoboot.txt` commit is **not** described as atomic merely because a rename succeeded.
+
+The implementation must use a bounded durable-write primitive equivalent to:
+
+```text
+write temporary file
+fsync(file)
+rename
+fsync(directory where supported)
+syncfs(boot-control filesystem)
+re-read
+verify exact content
+```
+
+Then fault-test at every boundary.
+
+Required Pi recovery evidence includes:
+
+- missing `autoboot.txt`;
+- zero-length/truncated `autoboot.txt`;
+- syntactically corrupt boot control;
+- power loss before rename;
+- power loss after rename but before final sync/verification;
+- corrupt BOOT_B;
+- corrupt SYSTEM_B;
+- candidate kernel failure;
+- candidate userspace failure;
+- partition-walk/recovery behavior with the exact EEPROM/firmware state.
+
+Before erasing a Pi target, prove required one-shot A/B and recovery capabilities. Missing/unknown capability blocks the update-capable installation profile before erase. Routine installation/update does not silently rewrite EEPROM.
 
 ---
 
@@ -560,6 +750,7 @@ persistent_minimum_bytes = 0
 
 [installer]
 target_policy = "pc-internal-v1"
+live_memory_class = "c0-bounded-overlay-v1"
 
 [updates]
 backend = "grub-ab-v1"
@@ -570,9 +761,57 @@ Pi selects a Pi layout/target/tryboot backend. `tools/build_profile.py` remains 
 
 Minimum target bytes are calculated from complete layout overhead + two slots + persistent minimum + reserve/alignment. There is no universal `4 GiB` target constant.
 
+Live-memory limits are likewise profile/build facts derived from measurement, not model-name conditionals buried in Python.
+
 ---
 
-# 15. Setup-media size and deduplication
+# 15. Live installer RAM and writable-overlay budget
+
+The live installer is an appliance, not a general Debian live desktop.
+
+For the lowest supported class:
+
+```text
+toram = forbidden
+persistent overlay = forbidden for ordinary Setup flow
+compressed root = read from Setup medium
+writable overlay = bounded tmpfs
+```
+
+The current legacy boot contract's explicit `overlay-size=128M` is the starting point for measurement.
+
+R8 must produce an exact-image resource report on the physical reference during:
+
+1. boot to first installer frame;
+2. idle installer;
+3. hardware inventory/refresh;
+4. settings pages;
+5. release verification;
+6. target planning;
+7. write/finalization/verification;
+8. completion page.
+
+Record at least:
+
+```text
+MemTotal
+MemAvailable minimum
+swap state
+tmpfs/overlay configured ceiling
+tmpfs/overlay peak actual use
+installer process RSS peak
+installer process anonymous peak
+largest child/helper RSS peak
+OOM/pressure events
+```
+
+A release budget is accepted only after measurement. Do not hard-code an arbitrary 64 MiB overlay or 120 MiB idle threshold merely because it sounds conservative.
+
+If the exact universal image regresses materially versus the already-working installer path, stop and fix the live composition before adding more platform payloads.
+
+---
+
+# 16. Setup-media size and deduplication
 
 Do not promise `~2.1 GB` or `4 GB USB` from estimates.
 
@@ -583,7 +822,8 @@ The release builder reports measured:
 - each live root;
 - each release bundle;
 - each hardware-support pool;
-- boot data;
+- FAT boot partition use/free headroom;
+- Setup-data partition use/free headroom;
 - duplicate-content estimate.
 
 The product's minimum flash-device capacity is derived from the actual raw image plus explicit margin.
@@ -592,7 +832,7 @@ Correctness and one signed release authority come before deduplication. Initial 
 
 ---
 
-# 16. Setup-media manifest
+# 17. Setup-media manifest and identity
 
 The setup image has its own bounded signed/verified manifest binding:
 
@@ -610,20 +850,24 @@ Verify it before enabling installation.
 
 This detects corruption/partial copies and creates the installable profile catalogue, but it does not replace independent `.greiaupdate` release signatures.
 
+For the two-partition Setup-media candidate, boot-partition metadata and Setup-data identity must resolve to the same physical medium and signed media identity. Labels are hints only.
+
+The existing `greia.live_media_id` mechanism should be preserved/evolved rather than replaced by a plain `LABEL=` lookup.
+
 ---
 
-# 17. Privilege-separated transaction service
+# 18. Privilege-separated transaction service
 
 Target services conceptually become:
 
 ```text
-greia-installer-ui.service       User=unprivileged installer identity
+greia-installer-ui.service          User=unprivileged installer identity
         |
         v
 greia-install-transaction.socket
         |
         v
-greia-install-transaction.service  User=root, one-shot/socket-activated
+greia-install-transaction.service   User=root, one-shot/socket-activated
 ```
 
 The UI sends only semantic data such as expected target identity, chosen eligible profile ID, approved settings and confirmation-plan digest.
@@ -644,7 +888,7 @@ Any failure returns to UI without disk mutation.
 
 ---
 
-# 18. Common installer transaction stages
+# 19. Common installer transaction stages
 
 Refactor the current BIOS-specific engine around semantic stages rather than a giant platform switch:
 
@@ -675,7 +919,7 @@ Platform adapters implement only the mechanics that genuinely differ.
 
 ---
 
-# 19. Existing single-root installations
+# 20. Existing single-root installations
 
 Do not remotely repartition them through ordinary system update.
 
@@ -696,7 +940,7 @@ Any future in-place repartitioner is a separate recovery/installer project with 
 
 ---
 
-# 20. Recovery direction
+# 21. Recovery direction
 
 The same setup image is the first recovery medium. Its architecture must permit later explicit transactions such as:
 
@@ -712,7 +956,7 @@ Those are not all required in the first R8 implementation, but A/B roots, separa
 
 ---
 
-# 21. Implementation sequence
+# 22. Implementation sequence
 
 ## R8.0 — Reconcile authorities
 
@@ -720,9 +964,10 @@ Before destructive code:
 
 1. reconcile ADR 0021 + ADR 0030 around shared `SlotFinalizer`;
 2. define `.greiaupdate` v2 hardware-support binding alongside the planned release-sequence/anti-rollback work;
-3. extend profile schema for storage layout and update backend;
+3. extend profile schema for storage layout, update backend and live-memory class;
 4. define typed layout, slot, target-policy and boot-transaction interfaces;
-5. preserve current installer safety tests.
+5. preserve current installer safety tests;
+6. preserve the accepted removable Acer SYSLINUX path as a regression authority.
 
 Gate: documentation/schema/source contracts only; `make verify` green before destructive behavior changes.
 
@@ -734,27 +979,51 @@ Implement durable identity, live-media ancestry self-exclusion, target-policy ad
 
 Implement storage roles/layout authority, slot writer, shared SlotFinalizer, receipts and loopback fault injection.
 
-## R8.3 — Legacy BIOS A/B
+## R8.3 — Legacy BIOS A/B installed target
 
 Implement MBR boot-control + A + B + PERSIST and GRUB one-shot candidate behavior. QEMU first, then physical Acer with boot-tested recovery media.
+
+Do not conflate this internal-disk GRUB work with the removable Setup-media SYSLINUX requirement.
 
 ## R8.4 — Modern amd64 A/B
 
 Implement GPT/ESP/boot-control/A/B/PERSIST and Secure-Boot-compatible UEFI chain. Test OVMF, Secure Boot, SATA and NVMe before physical modern reference evidence.
 
-## R8.5 — Pi ARM64 board/live adapters
+## R8.5 — Pi ARM64 board/live adapters + hotplug gate
 
 Implement arm64 live root, typed BCM2711/Pi400 and BCM2712/Pi500 boot assets, exact device-tree compatibility, EEPROM capability probe and Pi microSD target policy.
 
+Before accepting the preferred parent workflow, physically prove on **both** Pi 400 and Pi 500:
+
+```text
+USB boot with target card absent
+-> hot insert target card
+-> kernel/udev block event
+-> /dev block device
+-> durable MMC identity
+-> Refresh Drives inventory update
+-> correct target-policy classification
+```
+
+If this fails, stop and resolve the product boot/insert workflow before destructive Pi implementation.
+
 ## R8.6 — Pi tryboot A/B
 
-Implement candidate MBR Pi layout, inactive boot+root pair staging, verification, `reboot '0 tryboot'`, health commit and rollback/fault tests. Physical Pi 400 + Pi 500 required.
+Implement candidate MBR Pi layout, inactive boot+root pair staging, verification, one-shot tryboot, health commit and rollback/fault tests.
+
+Required source/physical work includes a dedicated boot-control durability primitive and power-cut injection around `autoboot.txt`.
+
+Physical Pi 400 + Pi 500 evidence is mandatory, including proven partition-walk/recovery behavior.
 
 ## R8.7 — Universal media composer
 
-Only after individual adapters work independently, compose one media image containing i386/amd64/arm64 live environments, signed releases, support pools, BIOS boot, signed UEFI path, Pi boot assets and signed setup-media manifest.
+Only after individual adapters work independently, compose one exact MBR-based media image whose first boot partition preserves the accepted active-FAT32 + SYSLINUX legacy path while also carrying signed UEFI removable boot and Pi boot assets.
 
-## R8.8 — Exact-image boot matrix
+The data partition carries live roots, signed releases, support pools and the signed setup-media manifest.
+
+Do not switch the Acer lane back to GRUB merely to make the media layout look uniform.
+
+## R8.8 — Exact-image boot + low-memory matrix
 
 One exact setup-image hash must boot:
 
@@ -767,6 +1036,10 @@ Pi 500 EEPROM USB
 ```
 
 No per-test rebuilds.
+
+On the exact same image, execute the C0 live-memory measurement lane. `toram` must remain absent. A low-memory regression blocks acceptance even if boot succeeds.
+
+The Acer firmware/bootloader lane requires direct physical observation. A pre-kernel firmware hang cannot be accepted or diagnosed merely because SSH later works on a different boot path.
 
 ## R8.9 — Install + update/rollback matrix
 
@@ -783,13 +1056,32 @@ Then execute one successful update and one deliberately failed candidate rollbac
 
 ## R8.10 — Interruption/fault testing
 
-Inject faults during payload verification, target confirmation, partitioning, SYSTEM_A write, finalization, boot-control creation, final sync, later SYSTEM_B update, candidate selection and pre-`BOOT_HEALTHY` boot.
+Inject faults during:
 
-Fresh-install failure may leave the selected target uninstalled; it must never damage setup media or another disk. Update failure must retain the previously accepted system.
+```text
+payload verification
+target confirmation
+partitioning
+SYSTEM_A write
+finalization
+boot-control creation
+final sync
+later SYSTEM_B update
+candidate selection
+pre-BOOT_HEALTHY boot
+Pi autoboot temporary write
+Pi autoboot fsync/rename/syncfs/verify boundaries
+```
+
+Fresh-install failure may leave the selected target uninstalled; it must never damage setup media or another disk.
+
+Update failure must retain the previously accepted system.
+
+On Pi, FAT boot-control write discipline by itself is not sufficient evidence; prove recovery from malformed/missing/truncated control state and abrupt power removal.
 
 ---
 
-# 22. Permanent regression guards
+# 23. Permanent regression guards
 
 Source validation should reject:
 
@@ -810,11 +1102,17 @@ Source validation should reject:
 - modern-amd64 release claims without Secure Boot evidence;
 - activation on existing `bios-single-ext4` layouts;
 - hardware finalization mutating the active/accepted slot;
-- candidate acceptance before `BOOT_HEALTHY`.
+- candidate acceptance before `BOOT_HEALTHY`;
+- `toram` in the low-memory release Setup profile;
+- an unbounded/default live writable-overlay policy on the C0 profile;
+- the universal-media composer replacing the accepted legacy removable SYSLINUX path with GRUB without new physical acceptance;
+- Pi parent-flow documentation claiming hot insertion before Pi 400 and Pi 500 evidence exists;
+- Pi boot-control code treating FAT rename as transactional/atomic rollback authority;
+- Pi update activation without proven required one-shot/recovery capability.
 
 ---
 
-# 23. Local-agent stop conditions
+# 24. Local-agent stop conditions
 
 STOP before destructive work if any occurs:
 
@@ -825,7 +1123,7 @@ STOP before destructive work if any occurs:
 5. ordinary UI can force an incompatible profile;
 6. target does not fit complete A/B + persistent layout;
 7. platform boot backend cannot prove rollback;
-8. required Pi tryboot capability is unavailable/unknown;
+8. required Pi tryboot/recovery capability is unavailable, unknown or unproven;
 9. Secure Boot is being disabled merely to make a modern release claim;
 10. active/accepted system slot would be overwritten;
 11. a single-root existing machine is about to be repartitioned as ordinary update;
@@ -837,11 +1135,16 @@ STOP before destructive work if any occurs:
 17. removable USB storage is selected in ordinary PC policy;
 18. ordinary Pi 500 is offered Pi-500+-style internal NVMe;
 19. media-size requirements are still estimates;
-20. physical evidence comes from a different image SHA.
+20. physical evidence comes from a different image SHA;
+21. low-memory live profile uses `toram`;
+22. the universal Setup candidate abandons active-FAT32/SYSLINUX on the Acer without explicit replacement physical evidence;
+23. the Pi ordinary flow assumes microSD hotplug but either Pi 400 or Pi 500 has not passed the exact-image hotplug gate;
+24. a FAT32 rename is being described as power-loss atomic;
+25. Pi recovery depends on partition-walk/tryboot behavior that has not been physically proven on the exact firmware state.
 
 ---
 
-# 24. Product flow
+# 25. Product flow
 
 ## PC
 
@@ -857,6 +1160,15 @@ Download one Greia Setup image
 -> remove USB
 -> boot Greia
 ```
+
+The same image reaches the installer through different low-level boot adapters:
+
+```text
+legacy BIOS removable -> MBR + active FAT32 + SYSLINUX
+modern UEFI removable -> signed removable UEFI path on the FAT partition
+```
+
+Parents do not see that distinction.
 
 ## Pi 400 / Pi 500
 
@@ -875,52 +1187,36 @@ Download the same Greia Setup image
 -> boot Greia
 ```
 
-No `dd`, partition editor, shell, `raspi-config`, GRUB or raw firmware vocabulary belongs in the ordinary parent flow.
+No `dd`, partition editor, shell, `raspi-config`, GRUB, EEPROM or raw firmware vocabulary belongs in the ordinary parent flow.
 
 ---
 
-# 25. Definition of complete
+# 26. Definition of complete
 
 Universal setup is complete only when all are simultaneously true:
 
 ```text
 one exact setup-image hash boots every supported reference
+AND the removable legacy-BIOS path preserves or supersedes the physically
+    accepted active-FAT32/SYSLINUX behavior with explicit physical evidence
+AND the C0 live installer does not use toram
+AND exact-image C0 memory/overlay budgets are measured and accepted
 AND setup media can never be selected as target
 AND target identity survives refresh/re-probe safely
 AND profile selection has no unsafe fallback
+AND Pi 400 and Pi 500 hot-insertion behavior is either physically proven
+    for the product flow or replaced by another proven parent-safe flow
 AND every new release installation is A/B-capable
 AND persistent child/Parent data is outside replaceable slots
 AND installer and updater share release/slot authority
 AND x86 one-shot rollback is physically proven
-AND Pi tryboot rollback is physically proven
+AND Pi one-shot rollback is physically proven
+AND Pi FAT boot-control power-cut recovery is physically proven
+AND Pi partition-walk/recovery behavior is physically proven
 AND modern Secure Boot is physically proven
 AND machine-specific hardware support survives future slot updates
 AND install + successful update + forced rollback are proven on
     physical Acer + modern amd64 + Pi 400 + Pi 500
 ```
 
-Anything less is a development candidate, not the Universal Greia Setup release.
-
----
-
-# 26. Current source properties that must be preserved
-
-The existing implementation already has valuable safety mechanisms. Refactoring must preserve or strengthen them:
-
-- `BlockDevice` records model, serial, WWN, major:minor, mount state and identity digest;
-- `LsblkDiskProbe` provides structured bounded discovery;
-- current generic eligibility rejects removable/hotplug/external/MMC by default;
-- `InstallationEngine` repeatedly rechecks target identity;
-- payload SHA-256 is checked before erase;
-- power is rechecked immediately before irreversible work;
-- hardware support is resolved before erase;
-- the frozen support pool is verified before package use;
-- installed GRUB config is validated;
-- target identity is rechecked before whole-disk GRUB writes;
-- live media already carries a per-image identifier in initramfs;
-- image profiles are declarative TOML;
-- ARM is currently rejected by the x86-only builder rather than falsely claimed;
-- signed `.greiaupdate` primitives and bounded unprivileged inbox already exist;
-- current single-root profiles correctly advertise update activation unavailable.
-
-The task is to replace the prototype single-root/BIOS-only mechanics below these safety properties, not to discard the properties themselves.
+The architecture is not complete merely because all source tests pass. Boot firmware, removable-media behavior, low-memory live operation, Pi card insertion and power-loss recovery are physical acceptance lanes.
