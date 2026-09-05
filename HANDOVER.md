@@ -830,3 +830,9 @@ Completed rigorous review and resolved visual/mathematical discrepancies across 
    - All 129 launcher tests PASS (`pytest tests/test_launcher*.py`).
    - Bit-for-bit hover damage repair pixel equivalence verified (7/7 PASS, 0 full-scene rebuilds).
    - Project validation PASS (`tools/validate_project.py`).
+
+## 32. boot-04 green — degrade rule proven, dev copy gone, clean re-proof accepted (2026-09-05)
+
+B04-PROOF-R3 PASS (2-file tranche onto fail-closed baseline: crash loop → degraded-safe boot, 5/5 first frames, NRestarts=0, mechanism observed). B04-DISP PASS (canonical discard of stale dev copy, intersection cleared; 5 pre-existing system-replacements out-of-scope). B04-REPROOF PASS (4 clean boots, parser-green, catalogue matches, picker screenshots identical). Evidence merged into `out/boot-optimization/phase-03/` (B04-REPROOF-* names; its own metrics schema kept separate after a canonical-schema mismatch was caught and reverted). Credentials cleared both ends.
+
+boot-04 fully terminal. boot-05 (Phase 4 lifecycle) gate now open: launching its mechanical transcription planner next.
