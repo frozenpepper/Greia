@@ -165,6 +165,26 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertIn('"password_authentication": True', live_provisioner)
         self.assertIn('"root_login": False', live_provisioner)
 
+    def test_canonical_builder_passwordless_surface_is_only_greia_devctl(self) -> None:
+        builder = self.read("build/build-image.sh")
+        nopasswd_lines = [
+            line.strip()
+            for line in builder.splitlines()
+            if "NOPASSWD:" in line
+        ]
+        self.assertEqual(len(nopasswd_lines), 1)
+        self.assertEqual(
+            nopasswd_lines[0],
+            "greia ALL=(root) NOPASSWD: /usr/local/sbin/greia-devctl",
+        )
+        # The single rule is emitted only on the developer-remote path; the
+        # shared overlay gains no new sudo surface for release profiles.
+        self.assertIn("provision_developer_ssh", builder)
+        self.assertIn("developer-remote", builder)
+        self.assertFalse(
+            (PROJECT_ROOT / "build/overlay/etc/sudoers.d/greia-developer-remote").exists()
+        )
+
     def test_ssh_security_floor_and_first_boot_lock_historical_identities(self) -> None:
         for prefix in ("build/overlay", "build/installer-overlay"):
             with self.subTest(prefix=prefix):

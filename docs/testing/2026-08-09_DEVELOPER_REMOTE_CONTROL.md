@@ -149,10 +149,10 @@ and `tools/provision_developer_installer.py` rewrite the shared security floor s
 the `greia` / `greia` development login works (password + the operator key), while
 `PermitRootLogin no` is always preserved.
 
-Passwordless sudo is deliberately restricted to exactly:
+Passwordless sudo is deliberately restricted to exactly one rule for the `greia` principal (development images only):
 
 ```text
-/usr/local/sbin/greia-devctl
+greia ALL=(root) NOPASSWD: /usr/local/sbin/greia-devctl
 ```
 
 The Mac/client helper does not use `sudo sh`, `sudo bash`, unrestricted `sudo`, or a generic privileged command API.

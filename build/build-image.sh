@@ -443,6 +443,17 @@ DEVSSH
   install -d -m 0755 "$rootfs/etc/greia-os"
   printf '%s\n' "profile=$PROFILE_ID" > "$rootfs/etc/greia-os/developer-remote"
   chmod 0644 "$rootfs/etc/greia-os/developer-remote"
+  # Bounded developer privilege: the SSH-reachable greia identity may run only
+  # greia-devctl as root without a password. Development images only; the base
+  # path writes no sudoers file. Validated below with visudo -cf semantics.
+  install -d -m 0755 "$rootfs/etc/sudoers.d"
+  cat > "$rootfs/etc/sudoers.d/greia-developer-remote" <<'SUDOERS'
+# Development-image only: privileged operations stay inside greia-devctl.
+greia ALL=(root) NOPASSWD: /usr/local/sbin/greia-devctl
+SUDOERS
+  chown root:root "$rootfs/etc/sudoers.d/greia-developer-remote"
+  chmod 0440 "$rootfs/etc/sudoers.d/greia-developer-remote"
+  chroot "$rootfs" /usr/sbin/visudo -cf /etc/sudoers.d/greia-developer-remote
 }
 
 target_sets="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" package-sets "$PROFILE_PATH" --scope target 2>/dev/null)"

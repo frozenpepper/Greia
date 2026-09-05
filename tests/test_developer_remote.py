@@ -440,6 +440,86 @@ class DeveloperRemoteTests(unittest.TestCase):
         self.assertNotIn("tools/provision_developer_image.py", wrapper)
         self.assertNotIn("debootstrap", wrapper)
 
+    def test_canonical_builder_emits_bounded_greia_devctl_sudoers(self):
+        builder = (PROJECT_ROOT / "build/build-image.sh").read_text(
+            encoding="utf-8"
+        )
+        expected = (
+            "# Development-image only: privileged operations stay inside"
+            " greia-devctl.\n"
+            "greia ALL=(root) NOPASSWD: /usr/local/sbin/greia-devctl\n"
+        )
+        self.assertIn(expected, builder)
+        self.assertIn("etc/sudoers.d/greia-developer-remote", builder)
+        self.assertIn("0440", builder)
+        self.assertIn("visudo", builder)
+        self.assertIn("-cf", builder)
+        # The rule lives inside the developer-remote provisioner, whose only
+        # caller is guarded by the developer-remote package-set conditional.
+        func_start = builder.index("provision_developer_ssh()")
+        func_body = builder[func_start:]
+        self.assertIn("greia ALL=(root) NOPASSWD:", func_body)
+        self.assertIn(
+            'if [[ "$target_sets" == *developer-remote* ]]',
+            builder[builder.index("provision_developer_ssh \"$ROOTFS\"") - 400:],
+        )
+        # Bounded: no wildcards, no second principal, no second binary.
+        rule_lines = [
+            line
+            for line in builder.splitlines()
+            if "NOPASSWD:" in line and "greia-devctl" in line
+        ]
+        self.assertEqual(len(rule_lines), 1)
+        rule = rule_lines[0].strip()
+        self.assertEqual(
+            rule, "greia ALL=(root) NOPASSWD: /usr/local/sbin/greia-devctl"
+        )
+        self.assertNotIn("*", rule)
+        self.assertNotIn("greiaadmin", rule)
+        self.assertNotIn("provision_developer_image.py", builder)
+        # Release surface: no common-overlay sudoers file gains this rule.
+        self.assertFalse(
+            (
+                PROJECT_ROOT
+                / "build/overlay/etc/sudoers.d/greia-developer-remote"
+            ).exists()
+        )
+
+    def test_canonical_builder_sudoers_bytes_are_visudo_clean(self):
+        builder = (PROJECT_ROOT / "build/build-image.sh").read_text(
+            encoding="utf-8"
+        )
+        marker = (
+            "cat > \"$rootfs/etc/sudoers.d/greia-developer-remote\""
+            " <<'SUDOERS'\n"
+        )
+        start = builder.index(marker) + len(marker)
+        end = builder.index("\nSUDOERS", start)
+        body = builder[start:end] + "\n"
+        expected = (
+            "# Development-image only: privileged operations stay inside"
+            " greia-devctl.\n"
+            "greia ALL=(root) NOPASSWD: /usr/local/sbin/greia-devctl\n"
+        )
+        self.assertEqual(body, expected)
+        with tempfile.TemporaryDirectory() as tmp:
+            candidate = Path(tmp) / "greia-developer-remote"
+            candidate.write_text(body, encoding="utf-8")
+            os.chmod(candidate, 0o440)
+            self.assertEqual(stat.S_IMODE(candidate.stat().st_mode), 0o440)
+            visudo = Path("/usr/sbin/visudo")
+            if visudo.exists():
+                completed = subprocess.run(
+                    [str(visudo), "-cf", str(candidate)],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(
+                    completed.returncode,
+                    0,
+                    msg=completed.stderr or completed.stdout,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
