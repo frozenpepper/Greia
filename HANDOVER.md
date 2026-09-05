@@ -936,3 +936,7 @@ Completed architectural cleanup and responsive layout fixes:
    - Pytest launcher suite: **162/162 PASS** (2 skipped).
    - Project validation: **PASS** (`python3 tools/validate_project.py`).
    - Full repository test suite: **1,984/1,984 unittest PASS** (`make verify` exit 0).
+
+## 33. Remote functional input proof deferred to on-site; boot-06 planning opens (2026-09-05)
+
+Two capture rounds proved the installed input path byte-identical to reviewed source, but the MRO dispatch owners were never captured and a third round had no end in sight. Owner decision (frozen `authority/decisions/boot-05--P4-INPUTREGATE--001.md`): stop remote button-press testing, defer launch/Home proof to on-site physical acceptance. P4-INPUTRUN6 retired unexecuted; interactive predicates stay red (deferred, not waived); intro-tolerance reading still open. Boot timing/stability stands (20+ parser-green boots). boot-06 (Phase 5) planning opens read-only; implementation waits on the normal gate.
