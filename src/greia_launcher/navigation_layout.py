@@ -130,9 +130,6 @@ class PageControlsLayout:
     previous_rect: UiRect
     next_rect: UiRect
     indicator_rect: UiRect
-    visible_dot_count: int
-    active_dot_index: int
-    dot_rects: tuple[UiRect, ...]
     indicators: tuple[PageIndicatorItem, ...] = ()
 
 
@@ -200,6 +197,31 @@ def compute_navigation_safe_content_bounds(
     safe_right = min(available_content_rect.right, max_right)
     safe_width = max(0, safe_right - safe_left)
     return UiRect(safe_left, available_content_rect.y, safe_width, available_content_rect.height)
+
+
+def resolve_constrained_square_tile_size(
+    available_width: int,
+    available_height: int,
+    *,
+    columns: int,
+    rows: int,
+    gap: int,
+    preferred_max: int = 218,
+    preferred_min: int = 120,
+) -> int:
+    """Resolve responsive square tile size under strict width and height constraints.
+
+    Guarantees that `tile_size * columns + gap * (columns - 1) <= available_width`
+    and `tile_size * rows + gap * (rows - 1) <= available_height`, even under
+    extreme narrow or vertically tight envelopes where preferred_min cannot fit.
+    """
+    columns = max(1, int(columns))
+    rows = max(1, int(rows))
+    gap = max(0, int(gap))
+    max_tile_w = max(1, (available_width - gap * (columns - 1)) // columns)
+    max_tile_h = max(1, (available_height - gap * (rows - 1)) // rows)
+    tile_size = min(preferred_max, max_tile_w, max_tile_h)
+    return max(1, min(max_tile_w, max_tile_h, max(preferred_min, tile_size)))
 
 
 def resolve_page_controls_layout(
@@ -309,9 +331,7 @@ def resolve_page_controls_layout(
             previous_rect=previous_rect,
             next_rect=next_rect,
             indicator_rect=UiRect(0, 0, 0, 0),
-            visible_dot_count=0,
-            active_dot_index=0,
-            dot_rects=(),
+            indicators=(),
         )
 
     total_pages = state.page_count
@@ -353,13 +373,11 @@ def resolve_page_controls_layout(
 
     # Dot hit/presentation rects
     dots_start_x = indicator_rect.x + 14
-    dot_rects_list: list[UiRect] = []
     indicators_list: list[PageIndicatorItem] = []
     for i in range(visible_dot_count):
         dot_cx = dots_start_x + i * dot_spacing
         dot_cy = indicator_rect.y + indicator_rect.height // 2
         dot_rect = UiRect(dot_cx - 6, dot_cy - 6, 12, 12)
-        dot_rects_list.append(dot_rect)
         indicators_list.append(
             PageIndicatorItem(
                 page_index=window_start + i,
@@ -373,8 +391,5 @@ def resolve_page_controls_layout(
         previous_rect=previous_rect,
         next_rect=next_rect,
         indicator_rect=indicator_rect,
-        visible_dot_count=visible_dot_count,
-        active_dot_index=active_dot_index,
-        dot_rects=tuple(dot_rects_list),
         indicators=tuple(indicators_list),
     )

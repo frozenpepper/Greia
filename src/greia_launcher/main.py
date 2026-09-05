@@ -1479,7 +1479,6 @@ class LauncherApplication:
         previous_action: str = "",
         next_action: str = "",
         total: int = 0,
-        **_ignored: Any,
     ) -> None:
         from .navigation_layout import (
             PageControlsState,

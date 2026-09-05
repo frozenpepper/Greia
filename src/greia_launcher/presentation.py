@@ -33,7 +33,6 @@ from greia_platform.ui_scroll import ScrollModel
 from .activity_icon import ActivityIconError, package_icon_path
 from .spoken_labels import SpokenLabelController
 from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue, _category_title
-from .composition import build_launcher_runtime_services, provisional_installed_display_session
 from .title_presentation import (
     contain_fit_icon_surface,
     render_activity_card_label,
@@ -175,26 +174,6 @@ class GreiaLauncherPresentation(LauncherApplication):
         """Build the single presentation catalogue inside preparation."""
 
         return ActivityCatalogue.from_activities
-
-    def _build_bootstrap_services(self, runtime: Any, activities: Any) -> Any:
-        """Build shared authorities through this module's composition binding.
-
-        The body matches the base implementation; the call must resolve
-        through the presentation namespace so boot accounting observes
-        exactly one runtime build here (and never a second per-source one).
-        """
-
-        return build_launcher_runtime_services(
-            runtime,
-            activities,
-            runtime_policy_path=self.paths.runtime_catalogue,
-            permission_policy_path=self.paths.permission_policy,
-            storage_policy_path=self.paths.storage_policy,
-            history_policy_path=self.paths.history_policy,
-            progression_policy_path=self.paths.progression_policy,
-            hal=self._runtime_hal(),
-            runtime_adapters=self._runtime_adapters(),
-        )
 
     def _spoken_locale(self) -> str:
         try:
@@ -1294,6 +1273,7 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         from .navigation_layout import (
             compute_navigation_safe_content_bounds,
+            resolve_constrained_square_tile_size,
             resolve_page_button_size,
         )
         from greia_platform.responsive_layout import UiRect, Viewport
@@ -1331,10 +1311,15 @@ class GreiaLauncherPresentation(LauncherApplication):
 
             # 218 = 210 reference tile +4%: larger cards give two-line labels
             # breathing room while label font sizes stay unchanged.
-            max_tile_w = max(1, (avail_w - gap * (columns - 1)) // columns)
-            max_tile_h = max(1, (avail_h - gap * (rows - 1)) // rows)
-            tile_size = min(218, max_tile_w, max_tile_h)
-            tile_size = max(1, min(max_tile_w, max(120, tile_size)))
+            tile_size = resolve_constrained_square_tile_size(
+                avail_w,
+                avail_h,
+                columns=columns,
+                rows=rows,
+                gap=gap,
+                preferred_max=218,
+                preferred_min=120,
+            )
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
             origin_x = safe_origin_x + (avail_w - total_width) // 2
@@ -1357,10 +1342,15 @@ class GreiaLauncherPresentation(LauncherApplication):
                 usable_w = max(240, width - side_reserve)
                 safe_origin_x = (width - usable_w) // 2
 
-            max_tile_w = max(1, (usable_w - gap * (columns - 1)) // columns)
-            max_tile_h = max(1, (available_h - gap * (rows - 1)) // rows)
-            tile_size = min(218, max_tile_w, max_tile_h)
-            tile_size = max(1, min(max_tile_w, max(120, tile_size)))
+            tile_size = resolve_constrained_square_tile_size(
+                usable_w,
+                available_h,
+                columns=columns,
+                rows=rows,
+                gap=gap,
+                preferred_max=218,
+                preferred_min=120,
+            )
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
             origin_x = safe_origin_x + max(0, (usable_w - total_width) // 2)

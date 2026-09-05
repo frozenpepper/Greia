@@ -257,9 +257,6 @@ class LauncherBootstrapTests(unittest.TestCase):
                 import greia_launcher.presentation as presentation_module
 
                 real_main_build = main_module.build_launcher_runtime_services
-                real_presentation_build = (
-                    presentation_module.build_launcher_runtime_services
-                )
                 real_from_activities = (
                     presentation_module.ActivityCatalogue.from_activities
                 )
@@ -270,10 +267,6 @@ class LauncherBootstrapTests(unittest.TestCase):
                     runtime_builds.append("main")
                     return real_main_build(*args, **kwargs)  # type: ignore[arg-type]
 
-                def _counting_presentation_build(*args: object, **kwargs: object):  # type: ignore[no-untyped-def]
-                    runtime_builds.append("presentation")
-                    return real_presentation_build(*args, **kwargs)  # type: ignore[arg-type]
-
                 def _counting_catalogue(*args: object, **kwargs: object):  # type: ignore[no-untyped-def]
                     catalogue_builds.append("catalogue")
                     return real_from_activities(*args, **kwargs)  # type: ignore[arg-type]
@@ -283,11 +276,6 @@ class LauncherBootstrapTests(unittest.TestCase):
                         main_module,
                         "build_launcher_runtime_services",
                         _counting_main_build,
-                    ),
-                    mock.patch.object(
-                        presentation_module,
-                        "build_launcher_runtime_services",
-                        _counting_presentation_build,
                     ),
                     mock.patch.object(
                         presentation_module.ActivityCatalogue,
@@ -305,7 +293,7 @@ class LauncherBootstrapTests(unittest.TestCase):
                     self.assertEqual(runtime_builds, [])
                     self.assertEqual(catalogue_builds, [])
                     app.bootstrap()
-                self.assertEqual(runtime_builds, ["presentation"])
+                self.assertEqual(runtime_builds, ["main"])
                 self.assertEqual(catalogue_builds, ["catalogue"])
                 self.assertEqual(configure_spy.call_count, 0)
                 source_ids = [

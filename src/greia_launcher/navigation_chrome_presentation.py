@@ -74,7 +74,6 @@ class SharedUiNavigationChromeMixin:
         previous_action: str = "",
         next_action: str = "",
         total: int = 0,
-        **_ignored: Any,
     ) -> None:
         from .main import HitTarget
         from .navigation_layout import (
@@ -162,7 +161,7 @@ class SharedUiNavigationChromeMixin:
                 self._targets.append(HitTarget(action, target_val, rect))
 
         # 2. Bottom Pagination Capsule Pill (Visual Indicator)
-        if layout.visible_dot_count > 0 and layout.indicator_rect.width > 0:
+        if bool(layout.indicators) and layout.indicator_rect.width > 0:
             pill_rect = pygame.Rect(
                 layout.indicator_rect.x,
                 layout.indicator_rect.y,
@@ -214,7 +213,7 @@ class SharedUiNavigationChromeMixin:
             label_surf = font.render(
                 label_text, True, _mix(theme.text, theme.panel, 0.4)
             )
-            last_dot = layout.dot_rects[-1] if layout.dot_rects else layout.indicator_rect
+            last_dot = layout.indicators[-1].rect if layout.indicators else layout.indicator_rect
             screen.blit(
                 label_surf,
                 label_surf.get_rect(

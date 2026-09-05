@@ -17,6 +17,7 @@ from greia_launcher.navigation_layout import (
     PageControlsPlacement,
     PageControlsState,
     compute_navigation_safe_content_bounds,
+    resolve_constrained_square_tile_size,
     resolve_page_button_size,
     resolve_page_controls_layout,
 )
@@ -193,9 +194,9 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
         layout_3 = resolve_page_controls_layout(
             viewport, state_3, button_size=52, max_visible_dots=5
         )
-        self.assertEqual(layout_3.visible_dot_count, 3)
-        self.assertEqual(layout_3.active_dot_index, 1)
-        self.assertEqual(len(layout_3.dot_rects), 3)
+        self.assertEqual(len(layout_3.indicators), 3)
+        self.assertEqual([item.page_index for item in layout_3.indicators], [0, 1, 2])
+        self.assertTrue(layout_3.indicators[1].active)
 
         # Large count (18 pages) bounds dots to max_visible_dots (5)
         state_18 = PageControlsState(
@@ -209,10 +210,11 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
         layout_18 = resolve_page_controls_layout(
             viewport, state_18, button_size=52, max_visible_dots=5
         )
-        self.assertEqual(layout_18.visible_dot_count, 5)
-        self.assertEqual(len(layout_18.dot_rects), 5)
-        # Active dot is centered within the 5 visible dots (index 2)
-        self.assertEqual(layout_18.active_dot_index, 2)
+        self.assertEqual(len(layout_18.indicators), 5)
+        self.assertEqual([item.page_index for item in layout_18.indicators], [8, 9, 10, 11, 12])
+        # Active dot is centered within the 5 visible dots (index 2 in the window, page_index 10)
+        self.assertTrue(layout_18.indicators[2].active)
+        self.assertEqual(layout_18.indicators[2].page_index, 10)
         # Pill width is strictly bounded, not 18 times wider than 3 dots
         self.assertLess(layout_18.indicator_rect.width, 220)
 
@@ -227,9 +229,8 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
             can_go_next=False,
         )
         layout = resolve_page_controls_layout(viewport, state_1, button_size=52)
-        self.assertEqual(layout.visible_dot_count, 0)
+        self.assertEqual(len(layout.indicators), 0)
         self.assertEqual(layout.indicator_rect.width, 0)
-        self.assertEqual(len(layout.dot_rects), 0)
 
     def test_bottom_pill_never_overlaps_content_cards(self) -> None:
         viewport = Viewport(1024, 600)
@@ -456,6 +457,105 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
                     avail_w,
                     f"total_w {total_w} exceeds avail_w {avail_w} for columns={columns}",
                 )
+
+    def test_resolve_constrained_square_tile_size_vertical_boundary_invariants(self) -> None:
+        """Square activity card sizing must strictly satisfy both horizontal and vertical bounds."""
+        # 1. Deliberately vertically constrained content: max_tile_h < 120 and max_tile_w >= 120
+        # In this exact scenario, tile_size must NOT expand to 120!
+        avail_w = 400
+        avail_h = 100  # 2 rows with gap=10 -> max_tile_h = (100 - 10) // 2 = 45 < 120
+        tile = resolve_constrained_square_tile_size(
+            avail_w, avail_h, columns=3, rows=2, gap=10, preferred_max=218, preferred_min=120
+        )
+        self.assertLessEqual(tile, 45)
+        self.assertLessEqual(tile * 3 + 10 * 2, avail_w)
+        self.assertLessEqual(tile * 2 + 10 * 1, avail_h)
+
+        # Another case: max_tile_h = 108, max_tile_w = 140
+        # (avail_h = 226 with gap=10 -> (226 - 10) // 2 = 108)
+        tile_108 = resolve_constrained_square_tile_size(
+            440, 226, columns=3, rows=2, gap=10, preferred_max=218, preferred_min=120
+        )
+        self.assertEqual(tile_108, 108)
+        self.assertLessEqual(tile_108 * 3 + 10 * 2, 440)
+        self.assertLessEqual(tile_108 * 2 + 10 * 1, 226)
+
+        # 2. Key supported resolutions: 800x480, 800x600, 1024x600, 1366x768
+        resolutions = [
+            (800, 480),
+            (800, 600),
+            (1024, 600),
+            (1366, 768),
+        ]
+        for w, h in resolutions:
+            viewport = Viewport(w, h)
+            raw_rect, panel_layout = SharedUiShellPanelMixin.compute_shell_panel_layout(w, h)
+            columns = 4 if w >= 900 else 3 if w >= 700 else 2
+            rows = 2
+            gap = max(14, min(22, w // 48))
+            inner = panel_layout.content_rect
+            pad_x = max(14, inner.width // 45)
+            pad_y = max(8, inner.height // 40)
+            avail_w = max(240, inner.width - pad_x * 2)
+            avail_h = max(180, inner.height - pad_y * 2 - 38)
+            nav_button_size = resolve_page_button_size(
+                viewport, metrics=None, panel_outer_rect=panel_layout.outer_rect
+            )
+            safe_rect = compute_navigation_safe_content_bounds(
+                viewport,
+                panel_outer_rect=panel_layout.outer_rect,
+                available_content_rect=UiRect(inner.x + pad_x, inner.y + pad_y, avail_w, avail_h),
+                button_size=nav_button_size,
+            )
+            tile_size = resolve_constrained_square_tile_size(
+                safe_rect.width,
+                avail_h,
+                columns=columns,
+                rows=rows,
+                gap=gap,
+                preferred_max=218,
+                preferred_min=120,
+            )
+            tot_w = columns * tile_size + (columns - 1) * gap
+            tot_h = rows * tile_size + (rows - 1) * gap
+            self.assertLessEqual(
+                tot_w,
+                safe_rect.width,
+                f"total width {tot_w} exceeds safe width {safe_rect.width} at {w}x{h}",
+            )
+            self.assertLessEqual(
+                tot_h,
+                avail_h,
+                f"total height {tot_h} exceeds available height {avail_h} at {w}x{h}",
+            )
+
+        # 3. Synthetic High-DPI
+        from greia_platform.display_metrics import DisplayMetrics, DisplayMetricsSource
+        high_dpi = DisplayMetrics(
+            pixel_width=1024,
+            pixel_height=600,
+            physical_width_mm=100.0,
+            physical_height_mm=58.6,
+            source=DisplayMetricsSource.MANUAL_OVERRIDE,
+        )
+        high_dpi_btn = resolve_page_button_size(
+            Viewport(1024, 600), metrics=high_dpi, panel_outer_rect=panel_layout.outer_rect
+        )
+        safe_high_dpi = compute_navigation_safe_content_bounds(
+            Viewport(1024, 600),
+            panel_outer_rect=panel_layout.outer_rect,
+            available_content_rect=UiRect(inner.x + pad_x, inner.y + pad_y, avail_w, avail_h),
+            button_size=high_dpi_btn,
+        )
+        tile_high_dpi = resolve_constrained_square_tile_size(
+            safe_high_dpi.width,
+            avail_h,
+            columns=4,
+            rows=2,
+            gap=gap,
+        )
+        self.assertLessEqual(4 * tile_high_dpi + 3 * gap, safe_high_dpi.width)
+        self.assertLessEqual(2 * tile_high_dpi + 1 * gap, avail_h)
 
 
 if __name__ == "__main__":

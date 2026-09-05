@@ -2096,3 +2096,25 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
      - Simulator tests: **38/38 PASS**.
      - Project validation: **PASS** (`python3 tools/validate_project.py`).
      - Full repository test suite: **1,983/1,983 unittest PASS** (`make verify` exit 0).
+
+## 2026-09-05 — Launcher Responsive Layout & Architecture Polish: Vertical Card Clamping, Pager Contract & Canonical Builders
+
+- Completed architectural and responsive cleanup resolving all review findings:
+  1. **Vertical Activity-Card Constraint Clamping (`src/greia_launcher/navigation_layout.py` & `presentation.py`):**
+     - Extracted `resolve_constrained_square_tile_size(available_width, available_height, *, columns, rows, gap, preferred_max=218, preferred_min=120) -> int` in `navigation_layout.py`.
+     - Applied symmetric clamping `tile_size = max(1, min(max_tile_w, max_tile_h, max(preferred_min, tile_size)))`, ensuring square cards strictly fit both width and height bounds (`total_w <= avail_w` and `total_h <= avail_h`).
+     - Integrated across panelled and unpanelled branches of `_render_activities_content` in `presentation.py`, eliminating the bug where vertically constrained cards (`max_tile_h < 120`) expanded back to 120.
+     - Added comprehensive regression tests in `tests/test_launcher_navigation_geometry.py` across 800×480, 800×600, 1024×600, 1366×768, synthetic high-DPI, and deliberate tight vertical constraints.
+  2. **Eliminated Duplicated Service Builder in `GreiaLauncherPresentation` (`src/greia_launcher/presentation.py`):**
+     - Removed redundant `_build_bootstrap_services` from `GreiaLauncherPresentation`, delegating cleanly to the canonical implementation on `LauncherApplication`.
+     - Removed dead imports (`build_launcher_runtime_services`, `provisional_installed_display_session`) from `presentation.py`.
+     - Adapted tests in `test_launcher_bootstrap_coordinator.py`, `test_launcher_one_pass_composition.py`, and `test_launcher_bootstrap.py` to observe the single canonical build call on `main_module`.
+  3. **Removed Dead Imports in `trusted_presentation.py`:**
+     - Cleaned up unused `build_launcher_runtime_services` and `_development_hal`.
+  4. **Pager Contract Cleanup & Strict Signatures (`src/greia_launcher/navigation_layout.py`, `navigation_chrome_presentation.py`, `main.py`):**
+     - Removed redundant legacy fields `visible_dot_count`, `active_dot_index`, and `dot_rects` from `PageControlsLayout`, standardizing on `indicators: tuple[PageIndicatorItem, ...]`.
+     - Removed `**_ignored: Any` from `_draw_page_controls` signatures in `main.py` and `navigation_chrome_presentation.py`, ensuring stale/unsupported arguments fail loudly.
+  5. **Verification:**
+     - Pytest launcher suite: **162/162 PASS** (2 skipped).
+     - Project validation: **PASS** (`python3 tools/validate_project.py`).
+     - Full repository test suite: **1,984/1,984 unittest PASS** (`make verify` exit 0).

@@ -884,9 +884,6 @@ class BootSingleConstructionTests(unittest.TestCase):
                 from greia_platform.activities import RuntimeCatalogue as _RC
 
                 real_main_build = main_module.build_launcher_runtime_services
-                real_presentation_build = (
-                    presentation_module.build_launcher_runtime_services
-                )
                 real_from_activities = (
                     presentation_module.ActivityCatalogue.from_activities
                 )
@@ -894,10 +891,6 @@ class BootSingleConstructionTests(unittest.TestCase):
                 def _counting_main_build(*args: object, **kwargs: object):  # type: ignore[no-untyped-def]
                     runtime_builds.append("main")
                     return real_main_build(*args, **kwargs)  # type: ignore[arg-type]
-
-                def _counting_presentation_build(*args: object, **kwargs: object):  # type: ignore[no-untyped-def]
-                    runtime_builds.append("presentation")
-                    return real_presentation_build(*args, **kwargs)  # type: ignore[arg-type]
 
                 catalogue_builds: list[str] = []
 
@@ -915,11 +908,6 @@ class BootSingleConstructionTests(unittest.TestCase):
                         _counting_main_build,
                     ),
                     mock.patch.object(
-                        presentation_module,
-                        "build_launcher_runtime_services",
-                        _counting_presentation_build,
-                    ),
-                    mock.patch.object(
                         presentation_module.ActivityCatalogue,
                         "from_activities",
                         _counting_catalogue,
@@ -934,7 +922,7 @@ class BootSingleConstructionTests(unittest.TestCase):
                     )
             # Exactly one runtime/catalogue construction on the composed path
             # and no second-pass per-source rebuild.
-            self.assertEqual(runtime_builds, ["presentation"])
+            self.assertEqual(runtime_builds, ["main"])
             self.assertEqual(catalogue_builds, ["catalogue"])
             self.assertEqual(configure_spy.call_count, 0)
             # The Parent source is part of the single composed set, not added

@@ -197,9 +197,10 @@ class BootstrapCoordinatorTests(unittest.TestCase):
             env = self._boot_env(tmp_path, index_path)
             with mock.patch.dict(os.environ, env, clear=False):
                 import greia_launcher.bootstrap as bootstrap_module
+                import greia_launcher.main as main_module
                 import greia_launcher.presentation as presentation_module
 
-                real_build = presentation_module.build_launcher_runtime_services
+                real_build = main_module.build_launcher_runtime_services
                 real_catalogue = (
                     presentation_module.ActivityCatalogue.from_activities
                 )
@@ -222,7 +223,7 @@ class BootstrapCoordinatorTests(unittest.TestCase):
 
                 with (
                     mock.patch.object(
-                        presentation_module,
+                        main_module,
                         "build_launcher_runtime_services",
                         _counting_build,
                     ),
