@@ -792,3 +792,11 @@ Completed visual and interaction overhaul of launcher navigation buttons, depth 
    - `tools/validate_project.py`: PASS.
    - Rendered and visually inspected acceptance screenshots across 1024×600 and 800×600 for activities, category chips, and profile picker.
 
+
+## 31. Collision degrade proven on-device — boot-04 proof green, dev-copy disposition due (2026-09-05)
+
+B04-PROOF-R3 PASS accepted: the 2-file degrade tranche (`15e4249d`) onto the fail-closed Phase-3 baseline converts the deterministic crash loop into degraded-but-safe boot — 5/5 timed boots reach first frame, `NRestarts=0`, parser exit 0, initramfs unchanged, dev copy untouched, exact mechanism observed (built-in wins, dev claimant rejected + unissuable, structured conflict in journald). Evidence: `out/boot-optimization/phase-03/` (24 files, secret-clean). Two honest non-claims preserved: on-site visual/interactive picker proof (no display tooling over SSH) and the intro-tolerance reading (measured `first_frame→intro_end` median 7.853s, stable ±0.1s — systematic across all phases, needs authority interpretation, not drift).
+
+Intermediate path: B04-BASE deploy proven but health predicate amended as unsatisfiable-by-design (disposition recorded, rollback explicitly not ordered); dead briefs B04-PROOF/R/R2 retired. Credentials in-memory only, cleared both ends.
+
+Next exact step: OWNER dev-copy disposition decision (discard via canonical developer-control operation / preserve outside active root / continue via explicit replacement workflow), then B04-DISP executes it and B04-REPROOF proves clean. Only then may boot-05 planning begin.
