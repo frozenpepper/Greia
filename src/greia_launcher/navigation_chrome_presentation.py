@@ -71,13 +71,17 @@ class SharedUiNavigationChromeMixin:
         pygame: Any,
         page: Any,
         *,
-        previous_action: str,
-        next_action: str,
-        total: int,
-        page_action: str | None = None,
+        previous_action: str = "",
+        next_action: str = "",
+        total: int = 0,
+        **_ignored: Any,
     ) -> None:
         from .main import HitTarget
-        from .navigation_layout import PageControlsState, resolve_page_controls_layout
+        from .navigation_layout import (
+            PageControlsState,
+            resolve_page_button_size,
+            resolve_page_controls_layout,
+        )
         from .presentation import _mix
         from greia_platform.responsive_layout import Viewport
 
@@ -102,33 +106,10 @@ class SharedUiNavigationChromeMixin:
             or (panel_layout.content_rect if panel_layout else None)
         )
 
-        if panel_outer is not None:
-            left_gutter = panel_outer.x
-            right_gutter = screen.get_width() - panel_outer.right
-            if left_gutter >= 88 and right_gutter >= 88:
-                # Wide gutter mode (e.g. 1024x600): generous, prominent child-sized disc
-                preferred_size = min(72, min(left_gutter, right_gutter) - 20)
-            elif left_gutter >= 70 and right_gutter >= 70:
-                # Moderate gutter mode (e.g. 800x600 profile picker): clean outer gutter buttons
-                preferred_size = min(56, min(left_gutter, right_gutter) - 16)
-            elif panel_content is not None:
-                left_rail = panel_content.x - panel_outer.x
-                right_rail = panel_outer.right - panel_content.right
-                preferred_size = max(50, min(58, min(left_rail, right_rail) - 10))
-            else:
-                preferred_size = 56
-        elif panel_content is not None:
-            left_gutter = panel_content.x
-            right_gutter = screen.get_width() - panel_content.right
-            if left_gutter >= 88 and right_gutter >= 88:
-                preferred_size = min(72, min(left_gutter, right_gutter) - 20)
-            else:
-                preferred_size = max(50, min(58, min(left_gutter, right_gutter) - 16))
-        else:
-            preferred_size = max(56, min(72, screen.get_height() // 8))
-
-        size = resolve_trusted_action_minimum_px(
-            self._chrome_metrics(), fallback_px=preferred_size
+        size = resolve_page_button_size(
+            viewport,
+            self._chrome_metrics(),
+            panel_outer_rect=panel_outer,
         )
 
         layout = resolve_page_controls_layout(

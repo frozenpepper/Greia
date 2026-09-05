@@ -2065,3 +2065,34 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
       - Full pytest launcher suite: **154/154 PASS** (2 skipped).
       - Project validation: **PASS** (`python3 tools/validate_project.py`).
       - Full repository verification: **1,973/1,973 unittest PASS** (`make verify` exit 0).
+
+## 2026-09-05 — Launcher & Boot Architecture Remediation: High-DPI Sizing Authority, Fail-Soft Boot Intro, Worker Purity & Polymorphic Seams
+
+- Resolved architectural, invariant, and safety issues identified in deep launcher & Phase-4 boot review:
+  1. **High-DPI Sizing Authority & No-Overlap Guarantee (`src/greia_launcher/navigation_layout.py`):**
+     - Implemented `resolve_page_button_size(viewport, metrics=None, *, panel_outer_rect=None) -> int` as the single authoritative sizing helper.
+     - Content reservation (`compute_navigation_safe_content_bounds`) and chrome rendering (`_draw_page_controls`) consume the exact same sizing authority across `main.py`, `presentation.py`, and `navigation_chrome_presentation.py`.
+     - High-density/physical touch targets (e.g. 10mm = 96px) scale pager buttons cleanly while strictly preserving the zero-intersection invariant with safe card content.
+     - Clamped extreme constraint tile widths: `tile_w <= max_tile_w` and `tile_size <= max_tile_w`, guaranteeing cards never exceed `avail_w` or `usable_w`.
+     - Removed obsolete `page_action` argument in `_draw_pagination_and_overflow`.
+  2. **Fail-Soft Presentation Contract on Boot (`src/greia_launcher/presentation.py`):**
+     - Presentation exceptions during intro frames or chime playback after the first display flip are caught and treated as non-fatal polish, allowing boot to proceed into interactive ready while the preparation worker completes off-thread.
+     - Re-raises fail-closed only if the first frame never flipped (`"future" not in pending`).
+  3. **Worker Purity & State Isolation (`src/greia_launcher/child_shell.py`):**
+     - Extracted `_build_usage_limit_service(self) -> UsageLimitService` on `GreiaChildShell` and used it in `_build_bootstrap_supervisor()`.
+     - Ensured worker thread constructs a preparation-local instance and never accesses or mutates the live launcher's `self._usage_limits`.
+  4. **Polymorphic Variation Seams Unification (`_runtime_hal`, `_runtime_adapters`):**
+     - Added `_runtime_hal()` and `_runtime_adapters()` polymorphic hooks on `LauncherApplication`.
+     - `_build_bootstrap_services()` passes these to `build_launcher_runtime_services()`.
+     - `_rebuild_runtime_services()` on `LauncherApplication` delegates to `_build_bootstrap_services` and `_build_bootstrap_supervisor`.
+     - Subclasses (`GreiaLauncherPresentation`, `GreiaTrustedPresentationShell`, `GreiaChildShell`) delegate directly to `super()._rebuild_runtime_services()`, maintaining structural contracts and eliminating duplicate rebuild code.
+  5. **Async Apply Failure Lifecycle Rollback (`src/greia_launcher/main.py` & `presentation.py`):**
+     - Moved `apply_prepared_state()` inside the error-handling block of `_await_and_apply_preparation()`, ensuring `self._boot_lifecycle.reset_to_created()` is called on apply failure.
+     - Added rollback of `self._catalogue` and `self._bootstrapped` in `GreiaLauncherPresentation.apply_prepared_state()` if catalogue assignment fails.
+  6. **Comprehensive Verification:**
+     - Added 5 new regression tests in `tests/test_launcher_firstframe.py` (lifecycle rollback, worker purity, polymorphic seams, fail-soft intro after first frame, fatal intro before first frame).
+     - Added 2 new regression tests in `tests/test_launcher_navigation_geometry.py` (`test_resolve_page_button_size_authority_high_dpi` and `test_extreme_constraint_tile_clamping_never_exceeds_available_width`).
+     - Pytest launcher suite: **161/161 PASS** (2 skipped).
+     - Simulator tests: **38/38 PASS**.
+     - Project validation: **PASS** (`python3 tools/validate_project.py`).
+     - Full repository test suite: **1,983/1,983 unittest PASS** (`make verify` exit 0).

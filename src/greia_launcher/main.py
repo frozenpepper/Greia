@@ -479,15 +479,29 @@ class LauncherApplication:
         wait_start = time.monotonic()
         try:
             state = future.result()
+            self._post_intro_wait_seconds = time.monotonic() - wait_start
+            self.apply_prepared_state(state)
         except Exception:
             try:
                 self._boot_lifecycle.reset_to_created()
             except BootLifecycleError:
                 pass
             raise
-        self._post_intro_wait_seconds = time.monotonic() - wait_start
-        self.apply_prepared_state(state)
         return state
+
+    def _chrome_metrics(self) -> Any:
+        """Return injected display metrics, or ``None`` when unknown."""
+        return getattr(self, "_display_metrics", None)
+
+    def _runtime_hal(self) -> GreiaHAL | None:
+        """Return the device HAL for runtime services."""
+        return None if self._installed_root() else _development_hal()
+
+    def _runtime_adapters(
+        self,
+    ) -> Sequence[Any] | Mapping[str, Any] | None:
+        """Return custom runtime launch adapters, if any."""
+        return None
 
     def _build_bootstrap_services(self, runtime: RuntimeCatalogue, activities: Any) -> Any:
         """Build the shared device/runtime/permission/history authorities.
@@ -498,7 +512,6 @@ class LauncherApplication:
         supervisor type without a second service build.
         """
 
-        development_hal = None if self._installed_root() else _development_hal()
         return build_launcher_runtime_services(
             runtime,
             activities,
@@ -507,7 +520,8 @@ class LauncherApplication:
             storage_policy_path=self.paths.storage_policy,
             history_policy_path=self.paths.history_policy,
             progression_policy_path=self.paths.progression_policy,
-            hal=development_hal,
+            hal=self._runtime_hal(),
+            runtime_adapters=self._runtime_adapters(),
         )
 
     def _build_bootstrap_supervisor(self, runtime_services: Any) -> Any:
@@ -542,17 +556,7 @@ class LauncherApplication:
         one supervisor only to replace it afterwards.
         """
 
-        development_hal = None if self._installed_root() else _development_hal()
-        runtime_services = build_launcher_runtime_services(
-            self.runtime,
-            self._activities,
-            runtime_policy_path=self.paths.runtime_catalogue,
-            permission_policy_path=self.paths.permission_policy,
-            storage_policy_path=self.paths.storage_policy,
-            history_policy_path=self.paths.history_policy,
-            progression_policy_path=self.paths.progression_policy,
-            hal=development_hal,
-        )
+        runtime_services = self._build_bootstrap_services(self.runtime, self._activities)
         supervisor = self._build_bootstrap_supervisor(runtime_services)
         # Publish the pair only after both objects are completely built. The
         # launch path therefore never observes a supervisor/runtime mismatch.
@@ -1200,19 +1204,30 @@ class LauncherApplication:
             if not getattr(self, "_shared_panel_disabled", False)
             else None
         )
-        from .navigation_layout import compute_navigation_safe_content_bounds
+        from .navigation_layout import (
+            compute_navigation_safe_content_bounds,
+            resolve_page_button_size,
+        )
         from greia_platform.responsive_layout import UiRect, Viewport
 
         viewport = Viewport(width, height)
-        nav_button_size = max(54, min(72, height // 8))
+        panel_layout = getattr(self, "_shell_panel_layout", None)
+        panel_outer = (
+            panel_layout.outer_rect
+            if panel_layout is not None
+            else (UiRect(inner_panel.x, inner_panel.y, inner_panel.width, inner_panel.height) if inner_panel is not None else None)
+        )
+        nav_button_size = resolve_page_button_size(
+            viewport,
+            self._chrome_metrics(),
+            panel_outer_rect=panel_outer if inner_panel is not None else None,
+        )
         pagination_reserve = 38 if page.page_count > 1 else 0
         if inner_panel is not None:
             pad_x = max(14, inner_panel.width // 45)
             pad_y = max(8, inner_panel.height // 40)
             avail_w = max(240, inner_panel.width - pad_x * 2)
             avail_h = max(180, inner_panel.height - pad_y * 2 - pagination_reserve)
-            panel_layout = getattr(self, "_shell_panel_layout", None)
-            panel_outer = panel_layout.outer_rect if panel_layout is not None else UiRect(inner_panel.x, inner_panel.y, inner_panel.width, inner_panel.height)
             if page.page_count > 1:
                 safe_rect = compute_navigation_safe_content_bounds(
                     viewport,
@@ -1225,10 +1240,12 @@ class LauncherApplication:
             else:
                 safe_origin_x = inner_panel.x + pad_x
 
-            tile_w = min(213, (avail_w - gap * (page.columns - 1)) // page.columns)
-            tile_h = min(205, (avail_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
-            tile_w = max(110, tile_w)
-            tile_h = max(120, tile_h)
+            max_tile_w = max(1, (avail_w - gap * (page.columns - 1)) // page.columns)
+            max_tile_h = max(1, (avail_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
+            tile_w = min(213, max_tile_w)
+            tile_h = min(205, max_tile_h)
+            tile_w = max(1, min(max_tile_w, max(110, tile_w)))
+            tile_h = max(1, min(max_tile_h, max(120, tile_h)))
             total_w = page.columns * tile_w + (page.columns - 1) * gap
             total_h = page.rows * tile_h + max(0, page.rows - 1) * gap
             origin_x = safe_origin_x + (avail_w - total_w) // 2
@@ -1250,10 +1267,12 @@ class LauncherApplication:
                 usable_w = max(240, width - side_reserve)
                 safe_origin_x = (width - usable_w) // 2
 
-            tile_w = min(213, (usable_w - gap * (page.columns - 1)) // page.columns)
-            tile_h = min(205, (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
-            tile_w = max(110, tile_w)
-            tile_h = max(120, tile_h)
+            max_tile_w = max(1, (usable_w - gap * (page.columns - 1)) // page.columns)
+            max_tile_h = max(1, (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
+            tile_w = min(213, max_tile_w)
+            tile_h = min(205, max_tile_h)
+            tile_w = max(1, min(max_tile_w, max(110, tile_w)))
+            tile_h = max(1, min(max_tile_h, max(120, tile_h)))
             total_w = page.columns * tile_w + (page.columns - 1) * gap
             total_h = page.rows * tile_h + max(0, page.rows - 1) * gap
             origin_x = safe_origin_x + max(0, (usable_w - total_w) // 2)
@@ -1457,26 +1476,42 @@ class LauncherApplication:
         pygame: Any,
         page: Any,
         *,
-        previous_action: str,
-        next_action: str,
-        total: int,
-        page_action: str | None = None,
+        previous_action: str = "",
+        next_action: str = "",
+        total: int = 0,
+        **_ignored: Any,
     ) -> None:
-        from .navigation_layout import PageControlsState, resolve_page_controls_layout
+        from .navigation_layout import (
+            PageControlsState,
+            resolve_page_button_size,
+            resolve_page_controls_layout,
+        )
         from greia_platform.responsive_layout import Viewport
 
         if isinstance(page, PageControlsState):
             page_state = page
         else:
-            page_state = PageControlsState.from_grid_page(page, total=total)
+            page_state = PageControlsState.from_grid_page(
+                page,
+                total=total,
+                previous_action=previous_action,
+                next_action=next_action,
+            )
 
         if page_state.page_count <= 1:
             return
         viewport = Viewport(screen.get_width(), screen.get_height())
-        size = max(54, min(72, screen.get_height() // 8))
+        panel_layout = getattr(self, "_shell_panel_layout", None)
+        panel_outer = panel_layout.outer_rect if panel_layout else None
+        size = resolve_page_button_size(
+            viewport,
+            self._chrome_metrics(),
+            panel_outer_rect=panel_outer,
+        )
         layout = resolve_page_controls_layout(
             viewport,
             page_state,
+            panel_outer_rect=panel_outer,
             panel_content_rect=getattr(self, "_page_content_rect", None),
             button_size=size,
         )

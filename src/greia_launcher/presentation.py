@@ -163,7 +163,12 @@ class GreiaLauncherPresentation(LauncherApplication):
         """Publish the prepared base state plus the one presentation catalogue."""
 
         super().apply_prepared_state(state)
-        self._catalogue = state.catalogue
+        try:
+            self._catalogue = state.catalogue
+        except Exception:
+            self._catalogue = None
+            self._bootstrapped = False
+            raise
         return self
 
     def _bootstrap_catalogue_builder(self) -> Any:
@@ -179,7 +184,6 @@ class GreiaLauncherPresentation(LauncherApplication):
         exactly one runtime build here (and never a second per-source one).
         """
 
-        development_hal = None if self._installed_root() else _development_hal()
         return build_launcher_runtime_services(
             runtime,
             activities,
@@ -188,7 +192,8 @@ class GreiaLauncherPresentation(LauncherApplication):
             storage_policy_path=self.paths.storage_policy,
             history_policy_path=self.paths.history_policy,
             progression_policy_path=self.paths.progression_policy,
-            hal=development_hal,
+            hal=self._runtime_hal(),
+            runtime_adapters=self._runtime_adapters(),
         )
 
     def _spoken_locale(self) -> str:
@@ -346,30 +351,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         exact same validated Activity set before that new tile becomes launchable.
         """
 
-        development_hal = None if self._installed_root() else _development_hal()
-        runtime_services = build_launcher_runtime_services(
-            self.runtime,
-            self._activities,
-            runtime_policy_path=self.paths.runtime_catalogue,
-            permission_policy_path=self.paths.permission_policy,
-            storage_policy_path=self.paths.storage_policy,
-            history_policy_path=self.paths.history_policy,
-            progression_policy_path=self.paths.progression_policy,
-            hal=development_hal,
-        )
-        display_coordinator = (
-            provisional_installed_display_session() if self._installed_root() else None
-        )
-        supervisor = ActivitySupervisor(
-            runtime_manager=runtime_services.runtime_manager,
-            storage_service=runtime_services.storage_service,
-            history_service=runtime_services.history_service,
-            display_coordinator=display_coordinator,
-        )
-        # Publish the pair only after both objects are completely built. The
-        # launch path therefore never observes a supervisor/runtime mismatch.
-        self.runtime_services = runtime_services
-        self.supervisor = supervisor
+        super()._rebuild_runtime_services()
 
     def _initial_display_request(self, pygame: Any) -> tuple[tuple[int, int], int]:
         """Return the platform-selected initial shell surface request."""
@@ -424,7 +406,6 @@ class GreiaLauncherPresentation(LauncherApplication):
             self._boot_lifecycle.mark_display_ready()
             executor = create_preparation_worker()
             pending: dict[str, Any] = {}
-            intro_failed: list[BaseException] = []
 
             def _on_first_frame() -> None:
                 pending["future"] = self._begin_post_frame_preparation(executor)
@@ -443,8 +424,12 @@ class GreiaLauncherPresentation(LauncherApplication):
                         # run unchanged while the worker prepares off-thread.
                         run_intro(screen, pygame, on_first_frame=_on_first_frame)
                         play_boot_chime()
-                    except Exception as exc:  # noqa: BLE001 - record, then fail at apply boundary
-                        intro_failed.append(exc)
+                    except Exception:  # noqa: BLE001 - presentation must never fail boot
+                        # If the first frame never fired, preparation was not submitted
+                        # and boot cannot proceed. But if the first frame flipped, any
+                        # subsequent animation or chime failure is non-fatal polish.
+                        if "future" not in pending:
+                            raise
                 else:
                     from .boot_intro import (
                         _emit_first_frame_flipped_once,
@@ -457,8 +442,6 @@ class GreiaLauncherPresentation(LauncherApplication):
                     pygame.display.flip()
                     _emit_first_frame_flipped_once()
                     _on_first_frame()
-                if intro_failed:
-                    raise intro_failed[0]
                 if "future" not in pending:
                     raise BootLifecycleError(
                         "first-frame callback never fired; "
@@ -1309,11 +1292,24 @@ class GreiaLauncherPresentation(LauncherApplication):
 
         has_pagination = (len(activities) > page_capacity)
 
-        from .navigation_layout import compute_navigation_safe_content_bounds
+        from .navigation_layout import (
+            compute_navigation_safe_content_bounds,
+            resolve_page_button_size,
+        )
         from greia_platform.responsive_layout import UiRect, Viewport
 
         viewport = Viewport(width, height)
-        nav_button_size = max(54, min(72, height // 8))
+        panel_layout = getattr(self, "_shell_panel_layout", None)
+        panel_outer = (
+            panel_layout.outer_rect
+            if panel_layout is not None
+            else (UiRect(inner_panel.x, inner_panel.y, inner_panel.width, inner_panel.height) if inner_panel is not None else None)
+        )
+        nav_button_size = resolve_page_button_size(
+            viewport,
+            self._chrome_metrics(),
+            panel_outer_rect=panel_outer if inner_panel is not None else None,
+        )
 
         if inner_panel is not None:
             pad_x = max(14, inner_panel.width // 45)
@@ -1321,8 +1317,6 @@ class GreiaLauncherPresentation(LauncherApplication):
             pagination_reserve = 38 if has_pagination else 0
             avail_w = max(240, inner_panel.width - pad_x * 2)
             avail_h = max(180, inner_panel.height - pad_y * 2 - pagination_reserve)
-            panel_layout = getattr(self, "_shell_panel_layout", None)
-            panel_outer = panel_layout.outer_rect if panel_layout is not None else UiRect(inner_panel.x, inner_panel.y, inner_panel.width, inner_panel.height)
             if has_pagination:
                 safe_rect = compute_navigation_safe_content_bounds(
                     viewport,
@@ -1337,12 +1331,10 @@ class GreiaLauncherPresentation(LauncherApplication):
 
             # 218 = 210 reference tile +4%: larger cards give two-line labels
             # breathing room while label font sizes stay unchanged.
-            tile_size = min(
-                218,
-                (avail_w - gap * (columns - 1)) // columns,
-                (avail_h - gap * (rows - 1)) // rows,
-            )
-            tile_size = max(120, tile_size)
+            max_tile_w = max(1, (avail_w - gap * (columns - 1)) // columns)
+            max_tile_h = max(1, (avail_h - gap * (rows - 1)) // rows)
+            tile_size = min(218, max_tile_w, max_tile_h)
+            tile_size = max(1, min(max_tile_w, max(120, tile_size)))
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
             origin_x = safe_origin_x + (avail_w - total_width) // 2
@@ -1365,12 +1357,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                 usable_w = max(240, width - side_reserve)
                 safe_origin_x = (width - usable_w) // 2
 
-            tile_size = min(
-                218,
-                (usable_w - gap * (columns - 1)) // columns,
-                (available_h - gap * (rows - 1)) // rows,
-            )
-            tile_size = max(120, tile_size)
+            max_tile_w = max(1, (usable_w - gap * (columns - 1)) // columns)
+            max_tile_h = max(1, (available_h - gap * (rows - 1)) // rows)
+            tile_size = min(218, max_tile_w, max_tile_h)
+            tile_size = max(1, min(max_tile_w, max(120, tile_size)))
             total_width = columns * tile_size + (columns - 1) * gap
             total_height = rows * tile_size + (rows - 1) * gap
             origin_x = safe_origin_x + max(0, (usable_w - total_width) // 2)
@@ -1712,7 +1702,6 @@ class GreiaLauncherPresentation(LauncherApplication):
             previous_action="presented_activity_page_prev",
             next_action="presented_activity_page_next",
             total=len(activities),
-            page_action="presented_activity_page",
         )
 
     def _draw_scroll_controls(

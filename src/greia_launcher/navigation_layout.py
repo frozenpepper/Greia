@@ -136,6 +136,34 @@ class PageControlsLayout:
     indicators: tuple[PageIndicatorItem, ...] = ()
 
 
+def resolve_page_button_size(
+    viewport: Viewport,
+    metrics: Any = None,
+    *,
+    panel_outer_rect: UiRect | None = None,
+) -> int:
+    """Authoritative sizing helper for pager buttons across safe bounds and layout.
+
+    Guarantees that content reservation and final pager rendering compute the
+    exact same button size, including under physical-metrics (high-DPI) overrides.
+    """
+    from .system_chrome import resolve_trusted_action_minimum_px
+
+    if panel_outer_rect is not None:
+        left_gutter = panel_outer_rect.x
+        right_gutter = viewport.width - panel_outer_rect.right
+        if left_gutter >= 88 and right_gutter >= 88:
+            preferred_size = min(72, min(left_gutter, right_gutter) - 20)
+        elif left_gutter >= 70 and right_gutter >= 70:
+            preferred_size = min(56, min(left_gutter, right_gutter) - 16)
+        else:
+            preferred_size = 56
+    else:
+        preferred_size = max(54, min(72, viewport.height // 8))
+
+    return resolve_trusted_action_minimum_px(metrics, fallback_px=preferred_size)
+
+
 def compute_navigation_safe_content_bounds(
     viewport: Viewport,
     *,

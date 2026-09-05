@@ -46,6 +46,12 @@ class _FakeDisplay:
     def flip(self) -> None:
         self._events.append("flip")
 
+    def set_mode(self, size, flags=0):
+        return _FakeScreen()
+
+    def set_caption(self, caption):
+        pass
+
     def get_surface(self):  # pragma: no cover - not used by intro
         return None
 
@@ -80,6 +86,8 @@ def _make_fake_pygame(events: list[str]):
             return surface
 
     class _FakeTime:
+        Clock = mock.MagicMock
+
         @staticmethod
         def wait(ms: int) -> None:
             return None
@@ -89,6 +97,10 @@ def _make_fake_pygame(events: list[str]):
         def pump() -> None:
             return None
 
+        @staticmethod
+        def get() -> list:
+            return []
+
     fake = mock.MagicMock(name="pygame")
     fake.display = display
     fake.transform = _FakeTransform()
@@ -96,6 +108,8 @@ def _make_fake_pygame(events: list[str]):
     fake.event = _FakeEvent()
     fake.Rect = mock.MagicMock(side_effect=lambda *a, **k: mock.MagicMock())
     fake.draw = mock.MagicMock()
+    fake.mouse.set_visible = mock.MagicMock()
+    fake.key.stop_text_input = mock.MagicMock()
     return fake, screen
 
 
@@ -456,6 +470,160 @@ class PreparationIntegrationTests(unittest.TestCase):
                     self.assertTrue(app._bootstrapped)
                 finally:
                     worker.shutdown(wait=False)
+
+    def test_async_apply_failure_rolls_back_lifecycle_to_created(self) -> None:
+        from greia_launcher.presentation import GreiaLauncherPresentation
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            index_path = tmp_path / "builtin-index.json"
+            self._write_production_index(index_path)
+            env = self._boot_env(tmp_path, index_path)
+            with mock.patch.dict(os.environ, env, clear=False):
+                app = GreiaLauncherPresentation(
+                    windowed=True, allow_exit=True, bootstrap=False
+                )
+                app._boot_lifecycle.mark_display_ready()
+                worker = launcher_main.create_preparation_worker()
+                try:
+                    future = app._begin_post_frame_preparation(worker)
+                    with mock.patch.object(
+                        app, "apply_prepared_state", side_effect=RuntimeError("apply crashed")
+                    ):
+                        with self.assertRaises(RuntimeError):
+                            app._await_and_apply_preparation(future)
+                    self.assertFalse(app._bootstrapped)
+                    self.assertIs(
+                        app._boot_lifecycle.state, BootLifecycleState.CREATED
+                    )
+                finally:
+                    worker.shutdown(wait=False)
+
+    def test_worker_purity_child_shell_usage_limits_not_mutated(self) -> None:
+        from greia_launcher.child_shell import GreiaChildShell
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            index_path = tmp_path / "builtin-index.json"
+            self._write_production_index(index_path)
+            env = self._boot_env(tmp_path, index_path)
+            with mock.patch.dict(os.environ, env, clear=False):
+                shell = GreiaChildShell(
+                    windowed=True, allow_exit=True, bootstrap=False
+                )
+                self.assertIsNone(getattr(shell, "_usage_limits", None))
+                state = shell._prepare_runtime_state()
+                # Crucial invariant: background preparation must NOT mutate self._usage_limits
+                self.assertIsNone(getattr(shell, "_usage_limits", None))
+                self.assertIsNotNone(state.supervisor)
+
+    def test_polymorphic_variation_seams_used_by_bootstrap_and_rebuild(self) -> None:
+        from greia_launcher.child_shell import GreiaChildShell
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            index_path = tmp_path / "builtin-index.json"
+            self._write_production_index(index_path)
+            env = self._boot_env(tmp_path, index_path)
+
+            sentinel_hal = mock.MagicMock(name="custom_hal")
+            sentinel_adapter = mock.MagicMock(name="custom_adapter", runtime_type="python")
+
+            class CustomShell(GreiaChildShell):
+                def _runtime_hal(self):
+                    return sentinel_hal
+
+                def _runtime_adapters(self):
+                    return [sentinel_adapter]
+
+            with mock.patch.dict(os.environ, env, clear=False):
+                shell = CustomShell(
+                    windowed=True, allow_exit=True, bootstrap=False
+                )
+                state = shell._prepare_runtime_state()
+                # 1. Initial bootstrap preparation must consume polymorphic hooks:
+                self.assertIs(
+                    state.runtime_services.device_capabilities._probe._hal,  # type: ignore[attr-defined]
+                    sentinel_hal,
+                )
+                self.assertIs(
+                    state.runtime_services.runtime_manager._adapters["python"],
+                    sentinel_adapter,
+                )
+
+                # 2. Runtime rebuild must also consume polymorphic hooks:
+                shell._boot_lifecycle.begin_preparing_runtime()
+                shell.apply_prepared_state(state)
+                shell._rebuild_runtime_services()
+                self.assertIs(
+                    shell.runtime_services.device_capabilities._probe._hal,  # type: ignore[attr-defined]
+                    sentinel_hal,
+                )
+                self.assertIs(
+                    shell.runtime_services.runtime_manager._adapters["python"],
+                    sentinel_adapter,
+                )
+
+    def test_intro_presentation_failure_is_fail_soft_when_first_frame_flipped(self) -> None:
+        from greia_launcher.presentation import GreiaLauncherPresentation
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            index_path = tmp_path / "builtin-index.json"
+            self._write_production_index(index_path)
+            env = self._boot_env(tmp_path, index_path)
+            with mock.patch.dict(os.environ, env, clear=False):
+                app = GreiaLauncherPresentation(
+                    windowed=False, allow_exit=True, bootstrap=False
+                )
+
+                def _crashing_run_intro(screen, pygame, on_first_frame=None, marker=None):
+                    if on_first_frame:
+                        on_first_frame()
+                    raise RuntimeError("simulated animation frame decode error")
+
+                with mock.patch(
+                    "greia_launcher.boot_intro.run_intro", side_effect=_crashing_run_intro
+                ), mock.patch(
+                    "greia_launcher.boot_chime.play_boot_chime", side_effect=RuntimeError("audio device busy")
+                ), mock.patch.object(
+                    app, "_enter_running_state"
+                ) as mock_enter_running:
+                    mock_enter_running.side_effect = KeyboardInterrupt
+                    with mock.patch.object(app, "_shell_window_backend"):
+                        try:
+                            app.run()
+                        except KeyboardInterrupt:
+                            pass
+                    # Boot succeeded despite intro & chime exceptions because first frame flipped
+                    self.assertTrue(app._bootstrapped)
+                    self.assertIs(
+                        app._boot_lifecycle.state, BootLifecycleState.INTERACTIVE_READY
+                    )
+
+    def test_intro_failure_before_first_frame_aborts_boot(self) -> None:
+        from greia_launcher.presentation import GreiaLauncherPresentation
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            index_path = tmp_path / "builtin-index.json"
+            self._write_production_index(index_path)
+            env = self._boot_env(tmp_path, index_path)
+            with mock.patch.dict(os.environ, env, clear=False):
+                app = GreiaLauncherPresentation(
+                    windowed=False, allow_exit=True, bootstrap=False
+                )
+
+                def _fatal_intro(screen, pygame, on_first_frame=None, marker=None):
+                    # Never invokes on_first_frame, fails immediately
+                    raise RuntimeError("hardware display fatal error")
+
+                with mock.patch(
+                    "greia_launcher.boot_intro.run_intro", side_effect=_fatal_intro
+                ):
+                    with self.assertRaises(RuntimeError):
+                        app.run()
+                    self.assertFalse(app._bootstrapped)
 
 
 if __name__ == "__main__":

@@ -52,22 +52,6 @@ class TrustedGreiaLauncherPresentation(
             ),
         )
 
-    def _rebuild_runtime_services(self) -> None:
-        development_hal = None if self._installed_root() else _development_hal()
-        runtime_services = build_launcher_runtime_services(
-            self.runtime,
-            self._activities,
-            runtime_policy_path=self.paths.runtime_catalogue,
-            permission_policy_path=self.paths.permission_policy,
-            storage_policy_path=self.paths.storage_policy,
-            history_policy_path=self.paths.history_policy,
-            progression_policy_path=self.paths.progression_policy,
-            hal=development_hal,
-        )
-        supervisor = self._build_bootstrap_supervisor(runtime_services)
-        self.runtime_services = runtime_services
-        self.supervisor = supervisor
-
 
 def main() -> int:
     args = parse_args()

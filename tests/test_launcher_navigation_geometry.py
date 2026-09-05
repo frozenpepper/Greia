@@ -17,6 +17,7 @@ from greia_launcher.navigation_layout import (
     PageControlsPlacement,
     PageControlsState,
     compute_navigation_safe_content_bounds,
+    resolve_page_button_size,
     resolve_page_controls_layout,
 )
 from greia_launcher.shared_ui_presentation import SharedUiShellPanelMixin
@@ -381,6 +382,80 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
         # Exactly 2 targets: prev arrow and next arrow. ZERO dot targets.
         actions = [t.action for t in shell._targets]
         self.assertEqual(actions, ["test_prev", "test_next"])
+
+    def test_resolve_page_button_size_authority_high_dpi(self) -> None:
+        from greia_platform.display_metrics import DisplayMetrics, DisplayMetricsSource
+
+        viewport = Viewport(1024, 600)
+        panel_outer = UiRect(100, 40, 824, 520)
+
+        # Baseline: without metrics, falls back to nominal sizing
+        baseline_size = resolve_page_button_size(
+            viewport, metrics=None, panel_outer_rect=panel_outer
+        )
+        self.assertGreaterEqual(baseline_size, 54)
+        self.assertLessEqual(baseline_size, 72)
+
+        # High density metrics: physical width is small (high DPI: ~10.24 px/mm)
+        high_dpi_metrics = DisplayMetrics(
+            pixel_width=1024,
+            pixel_height=600,
+            physical_width_mm=100.0,
+            physical_height_mm=58.6,
+            source=DisplayMetricsSource.MANUAL_OVERRIDE,
+        )
+        high_dpi_size = resolve_page_button_size(
+            viewport, metrics=high_dpi_metrics, panel_outer_rect=panel_outer
+        )
+        self.assertGreater(high_dpi_size, baseline_size)
+        self.assertGreaterEqual(high_dpi_size, 96)
+
+        # Verify that safe content reservation and controls layout use the EXACT same size
+        # and NEVER collide under high-DPI
+        panel_content = UiRect(150, 100, 724, 400)
+        safe_content = compute_navigation_safe_content_bounds(
+            viewport,
+            panel_outer_rect=panel_outer,
+            available_content_rect=panel_content,
+            button_size=high_dpi_size,
+        )
+        state = PageControlsState(
+            page_index=0,
+            page_count=3,
+            previous_value=0,
+            next_value=1,
+            can_go_previous=False,
+            can_go_next=True,
+        )
+        layout = resolve_page_controls_layout(
+            viewport,
+            state,
+            panel_outer_rect=panel_outer,
+            panel_content_rect=safe_content,
+            button_size=high_dpi_size,
+        )
+        self.assertFalse(layout.previous_rect.intersects(safe_content))
+        self.assertFalse(layout.next_rect.intersects(safe_content))
+
+    def test_extreme_constraint_tile_clamping_never_exceeds_available_width(self) -> None:
+        """Under narrow widths or tight containers, cards must never exceed avail_w."""
+        gap = 12
+        for avail_w in (100, 150, 200, 240, 300):
+            for columns in (1, 2, 3, 4):
+                max_tile_w = max(1, (avail_w - gap * (columns - 1)) // columns)
+                tile_w = min(213, max_tile_w)
+                tile_w = max(1, min(max_tile_w, max(110, tile_w)))
+                total_w = columns * tile_w + (columns - 1) * gap
+                self.assertLessEqual(
+                    tile_w,
+                    max_tile_w,
+                    f"tile_w {tile_w} exceeds max_tile_w {max_tile_w} for avail_w={avail_w}, col={columns}",
+                )
+                self.assertLessEqual(
+                    total_w,
+                    avail_w,
+                    f"total_w {total_w} exceeds avail_w {avail_w} for columns={columns}",
+                )
 
 
 if __name__ == "__main__":

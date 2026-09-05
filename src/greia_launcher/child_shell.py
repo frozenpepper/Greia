@@ -167,15 +167,19 @@ class GreiaChildShell(
     def _system_chrome_coordinator(self) -> SystemChromeCoordinator | None:
         return provisional_installed_system_chrome() if self._installed_root() else None
 
+    def _build_usage_limit_service(self) -> UsageLimitService:
+        """Construct a usage limit service without mutating live shell state."""
+        return UsageLimitService(
+            UsageLimitStore(self.paths.profiles_dir / "usage-limits.json")
+        )
+
     def _usage_limit_service(self) -> UsageLimitService:
         service = getattr(self, "_usage_limits", None)
         if service is None:
             # Parent API and Shell deliberately open the same inter-process-safe
             # ledger below the managed profile root. There is no second cache or
             # launcher-private screen-time authority.
-            service = UsageLimitService(
-                UsageLimitStore(self.paths.profiles_dir / "usage-limits.json")
-            )
+            service = self._build_usage_limit_service()
             self._usage_limits = service
         return service
 
@@ -206,7 +210,7 @@ class GreiaChildShell(
             display_coordinator=self._display_session_coordinator(),
             system_chrome_coordinator=self._system_chrome_coordinator(),
             audio_service=audio_service,
-            usage_limit_guard=ActivityUsageLimitGuard(self._usage_limit_service()),
+            usage_limit_guard=ActivityUsageLimitGuard(self._build_usage_limit_service()),
             controller_set=(
                 self._shell_input.controllers
                 if getattr(self, "_shell_input", None) is not None
@@ -215,20 +219,7 @@ class GreiaChildShell(
         )
 
     def _rebuild_runtime_services(self) -> None:
-        runtime_services = build_launcher_runtime_services(
-            self.runtime,
-            self._activities,
-            runtime_policy_path=self.paths.runtime_catalogue,
-            permission_policy_path=self.paths.permission_policy,
-            storage_policy_path=self.paths.storage_policy,
-            history_policy_path=self.paths.history_policy,
-            progression_policy_path=self.paths.progression_policy,
-            hal=self._runtime_hal(),
-            runtime_adapters=self._runtime_adapters(),
-        )
-        supervisor = self._build_bootstrap_supervisor(runtime_services)
-        self.runtime_services = runtime_services
-        self.supervisor = supervisor
+        super()._rebuild_runtime_services()
 
     def _launch_selected(self, pygame: Any) -> None:
         """Run one Activity lifecycle, with a friendly exhausted-budget pre-check.
