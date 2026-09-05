@@ -735,6 +735,7 @@ Implemented comprehensive enhancement of launcher navigation layout, visual poli
    - Rewrote `_draw_page_controls` in `src/greia_launcher/navigation_chrome_presentation.py` to accept `PageControlsState` or `GridPage`, blitting semantic `ui.button.icon` with circular tactile fallback and rendering the bounded capsule pill.
    - Extracted `_draw_page_arrow_button` helper for reuse by damage repair and normal drawing.
    - Replaced duplicate procedural drawing in `_draw_pagination_and_overflow` (`presentation.py`) with delegation to `_draw_page_controls`.
+   - Unified indicator hit targets: dot clicks cleanly map to item index for profile/activity pickers (`profile_page` / `activity_page`) and page index for catalogue scrolling (`presented_activity_page`); verified with `test_profile_picker_pagination_targets_and_navigation` in `tests/test_launcher_shell_productization_contract.py`.
 
 3. **Generalized Bounded Dynamic Scene Compositor (`src/greia_launcher/presentation.py`):**
    - Upgraded `_repair_dynamic_activities` to repair damaged cards, navigation arrows, and the category header directly from the pre-composited `_last_scene_backdrop`.

@@ -220,8 +220,13 @@ class SharedUiNavigationChromeMixin:
                 dot_hit = pygame.Rect(
                     dot_ui.x - 4, dot_ui.y - 6, dot_ui.width + 8, dot_ui.height + 12
                 )
+                dot_target_value = (
+                    target_p * page_state.page_size
+                    if resolved_page_action in ("profile_page", "activity_page")
+                    else target_p
+                )
                 self._targets.append(
-                    HitTarget(resolved_page_action, target_p, dot_hit)
+                    HitTarget(resolved_page_action, dot_target_value, dot_hit)
                 )
 
             # Counter text

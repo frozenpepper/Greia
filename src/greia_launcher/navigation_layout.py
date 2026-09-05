@@ -40,12 +40,15 @@ class PageControlsState:
     next_value: object
     can_go_previous: bool
     can_go_next: bool
+    page_size: int = 1
 
     def __post_init__(self) -> None:
         if self.page_count < 0:
             raise ValueError("page_count must be non-negative")
         if self.page_index < 0 and self.page_count > 0:
             raise ValueError("page_index must be non-negative when pages exist")
+        if self.page_size < 1:
+            raise ValueError("page_size must be at least 1")
 
     @classmethod
     def from_grid_page(
@@ -72,6 +75,7 @@ class PageControlsState:
             next_value=next_val,
             can_go_previous=can_prev,
             can_go_next=can_next,
+            page_size=page_size,
         )
 
     @classmethod
@@ -95,6 +99,7 @@ class PageControlsState:
             next_value=1,
             can_go_previous=can_prev,
             can_go_next=can_next,
+            page_size=capacity,
         )
 
 

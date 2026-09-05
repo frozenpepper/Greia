@@ -197,6 +197,38 @@ class LauncherShellProductizationContractTests(unittest.TestCase):
             for t in act_targets:
                 self.assertTrue(screen.get_rect().contains(t.rect))
 
+    def test_profile_picker_pagination_targets_and_navigation(self) -> None:
+        from unittest.mock import MagicMock
+
+        shell = GreiaChildShell()
+        shell._mode = "profiles"
+        shell.profiles = [
+            MagicMock(
+                profile_id=f"p{i}",
+                display_name=f"Child {i}",
+                avatar_id="unicorn",
+                has_secret=False,
+            )
+            for i in range(10)
+        ]
+        shell._profile_selected = 0
+        screen = pygame.display.get_surface()
+        theme = sample_theme()
+        shell._render_profile_picker_content(screen, theme, pygame)
+
+        page_targets = [t for t in shell._targets if t.action == "profile_page"]
+        # At 1024x600, page_size is 8 (columns=4, max_rows=2). 10 profiles => 2 pages.
+        # Next arrow target has value 8 (first profile on page 1).
+        # Dot 0 target has value 0 (first profile on page 0).
+        # Dot 1 target has value 8 (first profile on page 1).
+        self.assertEqual(len(page_targets), 3)
+        self.assertEqual([t.value for t in page_targets], [8, 0, 8])
+
+        # Clicking Dot 1 sets selection to profile 8 on page 1
+        dot_1_target = page_targets[2]
+        shell._handle_click(dot_1_target.rect.center, pygame)
+        self.assertEqual(shell._profile_selected, 8)
+
 
 if __name__ == "__main__":
     unittest.main()

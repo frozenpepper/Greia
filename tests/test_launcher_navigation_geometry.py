@@ -24,6 +24,7 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
         state = PageControlsState.from_grid_page(grid_page, total=10)
         self.assertEqual(state.page_index, 1)
         self.assertEqual(state.page_count, 3)
+        self.assertEqual(state.page_size, 4)
         self.assertTrue(state.can_go_previous)
         self.assertTrue(state.can_go_next)
         self.assertEqual(state.previous_value, 0)
@@ -41,6 +42,7 @@ class NavigationLayoutGeometryTests(unittest.TestCase):
         )
         self.assertEqual(state.page_index, 1)
         self.assertEqual(state.page_count, 3)
+        self.assertEqual(state.page_size, 6)
         self.assertTrue(state.can_go_previous)
         self.assertTrue(state.can_go_next)
 
