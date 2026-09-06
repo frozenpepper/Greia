@@ -370,8 +370,12 @@ class GreiaLauncherPresentation(LauncherApplication):
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         emit_boot_marker("pygame_display_init_begin")
         try:
-            pygame.init()
-            pygame.font.init()
+            # Display-only pre-frame init: same contract as
+            # LauncherApplication.run — the first frame needs the display
+            # surface only. Fonts init lazily via greia_platform.typography,
+            # the mixer on first spoken-label audio, controllers at
+            # interactive readiness. No mixer/joystick init before first flip.
+            pygame.display.init()
         finally:
             emit_boot_marker("pygame_display_init_end")
         default_size, display_flags = self._initial_display_request(pygame)

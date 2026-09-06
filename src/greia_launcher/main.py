@@ -628,8 +628,13 @@ class LauncherApplication:
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         emit_boot_marker("pygame_display_init_begin")
         try:
-            pygame.init()
-            pygame.font.init()
+            # Display-only pre-frame init: the handoff/intro needs the
+            # display + event/image/transform surface work only. Font
+            # rendering is lazily owned by greia_platform.typography
+            # (_ensure_pygame) and the mixer stays uninitialized until
+            # spoken-label audio first needs it; controller handles open
+            # lazily at interactive readiness via _shell_input.start().
+            pygame.display.init()
         finally:
             emit_boot_marker("pygame_display_init_end")
         display_flags = pygame.RESIZABLE if self.windowed else pygame.FULLSCREEN

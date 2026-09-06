@@ -119,7 +119,19 @@ class SpokenLabelPlayer:
             return False
         try:
             if not pygame.mixer.get_init():
-                return False
+                # Post-intro lazy mixer ownership: the display-only pre-frame
+                # path leaves the mixer uninitialized, so open it here
+                # immediately before the first audio it serves. Fail-soft
+                # like every other optional-presentation path.
+                init = getattr(pygame.mixer, "init", None)
+                if init is None:
+                    return False
+                try:
+                    init()
+                except (OSError, RuntimeError, ValueError, pygame.error):
+                    return False
+                if not pygame.mixer.get_init():
+                    return False
             key = str(clip.resolve())
             sound = self._cache.get(key)
             if sound is None:
