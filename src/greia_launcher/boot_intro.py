@@ -213,13 +213,71 @@ def draw_boot_handoff_frame(screen: Any, pygame: Any, *, progress: int = 92) -> 
     return True
 
 
-def _pump_display(pygame: Any) -> None:
-    """Keep the OS/display connection responsive during intentional intro time."""
+def _drain_intro_motion(pygame: Any) -> None:
+    """Discard stale pointer-motion events queued during the intro.
+
+    Discard set is exactly ``{MOUSEMOTION}`` and nothing else: ``QUIT``,
+    ``KEYDOWN``/``KEYUP``, ``TEXTINPUT``, ``MOUSEBUTTONDOWN``/``MOUSEBUTTONUP``,
+    ``MOUSEWHEEL``, ``VIDEORESIZE`` and every other queued type stay queued
+    for the post-intro interactive loop. ``pygame.event.get(type)`` already
+    pumps SDL internally, so this keeps the display connection responsive
+    exactly like the old ``pump()`` while preventing the 7 s accumulation
+    from arriving as one stale burst in the hottest worker window.
+    Fail-soft by design: any event-system problem is ignored.
+    """
+
     try:
-        pygame.event.pump()
+        event_mod = getattr(pygame, "event", None)
+        if event_mod is None:
+            return
+        get = getattr(event_mod, "get", None)
+        if get is None:
+            try:
+                event_mod.pump()
+            except Exception:  # noqa: BLE001
+                pass
+            return
+        motion_type = getattr(pygame, "MOUSEMOTION", 4)
+        try:
+            get(motion_type)
+            return
+        except TypeError:
+            pass
+        except Exception:  # noqa: BLE001
+            return
+        # Fallback for event stand-ins whose get() takes no filter argument:
+        # consume everything, then re-post every non-motion event in order.
+        try:
+            pending = get()
+        except Exception:  # noqa: BLE001
+            return
+        try:
+            post = getattr(event_mod, "post", None)
+            if post is None:
+                return
+            for queued_event in pending:
+                try:
+                    if int(getattr(queued_event, "type", -1)) == int(motion_type):
+                        continue
+                except Exception:  # noqa: BLE001
+                    pass
+                try:
+                    post(queued_event)
+                except Exception:  # noqa: BLE001
+                    pass
+        except Exception:  # noqa: BLE001
+            pass
     except Exception:  # noqa: BLE001 - intro remains fail-soft
         pass
-    pygame.time.wait(max(1, int(_RENDER_INTERVAL_SECONDS * 1000)))
+
+
+def _pump_display(pygame: Any) -> None:
+    """Drain stale intro motion, then pace one ~1/60 s intro frame."""
+    _drain_intro_motion(pygame)
+    try:
+        pygame.time.wait(max(1, int(_RENDER_INTERVAL_SECONDS * 1000)))
+    except Exception:  # noqa: BLE001 - intro remains fail-soft
+        pass
 
 
 _FIRST_FRAME_FLIPPED_EMITTED = False
@@ -279,6 +337,7 @@ def _run_intro_guarded(
         on_first_frame()
 
     if skip_intro():
+        _drain_intro_motion(pygame)
         return
 
     frames = load_animation_frames(pygame)
@@ -287,6 +346,7 @@ def _run_intro_guarded(
         if logo is not None:
             _draw_canvas(screen, pygame, logo, scale=1.0)
             pygame.display.flip()
+        _drain_intro_motion(pygame)
         mark_boot_intro_played()
         return
 
@@ -311,6 +371,10 @@ def _run_intro_guarded(
         while time.monotonic() - hold_start < FINAL_FRAME_HOLD_SECONDS:
             _pump_display(pygame)
     finally:
+        # Intro-end handoff invariant: no stale MOUSEMOTION survives past
+        # intro_end into the interactive run loop (FIX-MOTION coalescing
+        # assumes this handoff). Only motion is discarded here.
+        _drain_intro_motion(pygame)
         mark_boot_intro_played()
 
 
