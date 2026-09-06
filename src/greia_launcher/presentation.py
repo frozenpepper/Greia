@@ -118,6 +118,10 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._launching_activity_id: str | None = None
         self._launch_animation_started = 0.0
         self._last_input_monotonic = 0.0
+        # Last settled hover target for coalesced MOUSEMOTION handling.
+        # Lets the run loop resolve one hit-test per frame for the final
+        # pointer position instead of two hit-tests per motion event.
+        self._coalesced_hover_target: tuple[str, Any] | None = None
         self._cached_activities_surface: Any = None
         self._cached_activities_key: Any = None
         self._cached_activities_targets: list[HitTarget] = []
@@ -446,8 +450,11 @@ class GreiaLauncherPresentation(LauncherApplication):
                 self._poll_input_hooks(pygame)
                 events = pygame.event.get()
                 if events:
-                    _needs_redraw = True
                     self._last_input_monotonic = frame_start
+                    if any(event.type != pygame.MOUSEMOTION for event in events):
+                        _needs_redraw = True
+                _pending_motion_pos: tuple[int, int] | None = None
+                _motion_seen = False
                 for event in events:
                     if event.type == pygame.QUIT and self.allow_exit:
                         running = False
@@ -475,28 +482,13 @@ class GreiaLauncherPresentation(LauncherApplication):
                     elif event.type == pygame.KEYUP:
                         self._parent_chord.handle_key_up(event.key)
                     elif event.type == pygame.MOUSEMOTION:
+                        # Coalesce: record only the last position. The single
+                        # hit-test + gated speakable update happens once per
+                        # frame after the event loop via _apply_coalesced_motion.
                         self._synthetic_pointer_active = True
-                        _needs_redraw = True
                         if hasattr(event, "pos"):
-                            prev_pos = getattr(self, "_pointer_position", None)
-                            self._pointer_position = event.pos
-                            prev_target = self._target_at(prev_pos) if prev_pos else None
-                            new_target = self._target_at(event.pos)
-                            if prev_target != new_target:
-                                _needs_redraw = True
-                                try:
-                                    now = time.monotonic()
-                                    prev_sp = self._speakable_for_target(prev_target)
-                                    new_sp = self._speakable_for_target(new_target)
-                                    if new_sp is None:
-                                        self._spoken_labels.pointer_focus_changed(None, None, now)
-                                        self._spoken_labels.clear_pointer_focus()
-                                    elif prev_sp is None or new_sp[0] != prev_sp[0]:
-                                        self._spoken_labels.pointer_focus_changed(
-                                            new_sp[0], new_sp[1], now
-                                        )
-                                except Exception:
-                                    pass
+                            _pending_motion_pos = event.pos
+                            _motion_seen = True
                     elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                         _needs_redraw = True
                         if self._mode == "parent_panel":
@@ -512,6 +504,10 @@ class GreiaLauncherPresentation(LauncherApplication):
                         if request is not None:
                             screen = pygame.display.set_mode(*request)
                             _needs_redraw = True
+
+                if _motion_seen and _pending_motion_pos is not None:
+                    if self._apply_coalesced_motion(_pending_motion_pos):
+                        _needs_redraw = True
 
                 current_surface = pygame.display.get_surface()
                 if current_surface is not None:
@@ -860,6 +856,40 @@ class GreiaLauncherPresentation(LauncherApplication):
             if target.rect.collidepoint(pos):
                 return (target.action, target.value)
         return None
+
+    def _apply_coalesced_motion(self, position: tuple[int, int] | None) -> bool:
+        """Apply one coalesced pointer position for the frame.
+
+        Single ``_pointer_position`` update, at most one ``_target_at``
+        hit-test for the settled position, and speakable-label/focus work
+        only when the hover target actually changed. Returns True when the
+        caller must set the once-per-frame redraw flag. This method never
+        draws or flips; the run loop's single present path stays the only
+        draw site.
+        """
+
+        if position is None:
+            return False
+        prev_pos = getattr(self, "_pointer_position", None)
+        pointer_moved = prev_pos != position
+        self._pointer_position = position
+        prev_hover = getattr(self, "_coalesced_hover_target", None)
+        new_target = self._target_at(position)
+        if new_target == prev_hover:
+            return pointer_moved
+        self._coalesced_hover_target = new_target
+        try:
+            now = time.monotonic()
+            prev_sp = self._speakable_for_target(prev_hover) if prev_hover is not None else None
+            new_sp = self._speakable_for_target(new_target)
+            if new_sp is None:
+                self._spoken_labels.pointer_focus_changed(None, None, now)
+                self._spoken_labels.clear_pointer_focus()
+            elif prev_sp is None or new_sp[0] != prev_sp[0]:
+                self._spoken_labels.pointer_focus_changed(new_sp[0], new_sp[1], now)
+        except Exception:
+            pass
+        return True
 
     def _draw_activities(
         self,
