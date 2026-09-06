@@ -11,10 +11,28 @@ greia_boot_marker() { printf 'GREIA_BOOT event=%s\n' "$1" >&2; }
 
 greia_boot_marker x_session_enter || true
 
+# P5-HW-SPLIT: the full hardware watcher (21-spawn first apply cycle) no
+# longer races the first frame. Only the visual prerequisites — display mode
+# plus brightness — run synchronously here; everything nonvisual starts in
+# the watcher below once first-frame readiness releases the gate. The
+# preframe never fails boot (fail-soft inside, || true outside).
+export GREIA_FIRST_FRAME_FIFO=/run/greia-hardware/first-frame-ready.fifo
+mkdir -p "${GREIA_FIRST_FRAME_FIFO%/*}" || true
+rm -f "$GREIA_FIRST_FRAME_FIFO" || true
+mkfifo "$GREIA_FIRST_FRAME_FIFO" || true
+greia_boot_marker hardware_preframe_begin || true
 /usr/bin/python3 -m greia_platform.hardware_session_legacy_x \
   --root "$GREIA_OS_ROOT" \
   --state-dir "$GREIA_SYSTEM_SETTINGS_DIR" \
-  --status-path "$GREIA_HARDWARE_STATUS" &
+  --status-path "$GREIA_HARDWARE_STATUS" \
+  --preframe || true
+greia_boot_marker hardware_preframe_end || true
+
+/usr/bin/python3 -m greia_platform.hardware_session_legacy_x \
+  --root "$GREIA_OS_ROOT" \
+  --state-dir "$GREIA_SYSTEM_SETTINGS_DIR" \
+  --status-path "$GREIA_HARDWARE_STATUS" \
+  --wait-for-first-frame "$GREIA_FIRST_FRAME_FIFO" &
 hardware_pid=$!
 greia_boot_marker hardware_watcher_spawned || true
 cleanup() {

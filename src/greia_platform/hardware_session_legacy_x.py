@@ -35,7 +35,80 @@ def parse_args() -> argparse.Namespace:
         default=Path("/run/greia-hardware/status.json"),
     )
     parser.add_argument("--once", action="store_true")
+    parser.add_argument(
+        "--preframe",
+        action="store_true",
+        help=(
+            "Apply only the visual prerequisites (display mode + brightness) "
+            "synchronously and exit. Never starts the ongoing watcher."
+        ),
+    )
+    parser.add_argument(
+        "--wait-for-first-frame",
+        type=Path,
+        default=None,
+        help=(
+            "Block the ongoing watcher until first-frame readiness is "
+            "signalled through the given FIFO (deterministic gate, no "
+            "polling). Fail-open when the FIFO is absent."
+        ),
+    )
     return parser.parse_args()
+
+
+def run_visual_preframe(
+    hardware_store: HardwareSettingsStore,
+    system_store: SystemControlSettingsStore,
+    *,
+    hardware_controller: LegacyXHardwareSessionController | None = None,
+    system_backend: LegacyXSystemControlBackend | None = None,
+) -> int:
+    """Apply the synchronous pre-frame visual prerequisites and exit.
+
+    Only the P5-HW-MEASURE minimum visual-prerequisite set runs here: the
+    display-mode apply (with its read probes) and the brightness apply
+    (sysfs preferred, xrandr-gamma fallback). Keyboard, microphone gain,
+    pointer enumeration, output volume, status-file pointer summary, media-key
+    grabs and all re-apply loops stay in the deferred watcher behind
+    first-frame readiness. Always returns 0 and never raises: the preframe
+    must never fail boot; the deferred watcher re-applies everything anyway.
+    """
+
+    try:
+        controller = hardware_controller or LegacyXHardwareSessionController()
+        backend = system_backend or LegacyXSystemControlBackend()
+        controller.apply_display_mode(hardware_store.read())
+        backend.apply_brightness_percent(system_store.read().brightness_percent)
+    except Exception:
+        pass
+    return 0
+
+
+def wait_for_first_frame(fifo_path: Path) -> None:
+    """Block until the first-frame readiness callback releases the gate.
+
+    The launcher-owned ``release-boot-cover`` helper (invoked after the first
+    complete flip on every child-shell path) opens the FIFO for writing,
+    which releases this blocking read-side open deterministically — no
+    sleep, no polling, no timer. Fail-open: a missing FIFO (developer
+    invocation without the session gate) or ``GREIA_SKIP_BOOT_HANDOFF=1``
+    (the same opt-out the launcher honors) proceeds immediately, and any
+    other wait error proceeds rather than stranding the watcher.
+    """
+
+    if os.environ.get("GREIA_SKIP_BOOT_HANDOFF") == "1":
+        return
+    try:
+        fd = os.open(fifo_path, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        pass
+    finally:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
 
 
 def main() -> int:
@@ -68,6 +141,17 @@ def main() -> int:
             backend=system_backend,
             once=True,
         )
+
+    if args.preframe:
+        return run_visual_preframe(
+            hardware_store,
+            system_store,
+            hardware_controller=hardware_controller,
+            system_backend=system_backend,
+        )
+
+    if args.wait_for_first_frame is not None:
+        wait_for_first_frame(args.wait_for_first_frame)
 
     stop_event = Event()
     settings_thread = Thread(

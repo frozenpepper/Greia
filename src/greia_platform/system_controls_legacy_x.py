@@ -53,8 +53,8 @@ class LegacyXSystemControlBackend:
 
     def apply(self, settings: SystemControlSettings) -> SystemControlApplyResult:
         volume_ok, volume_message = self._apply_volume(settings)
-        brightness_ok, brightness_backend, brightness_message = self._apply_brightness(
-            settings.brightness_percent
+        brightness_ok, brightness_backend, brightness_message = (
+            self.apply_brightness_percent(settings.brightness_percent)
         )
         return SystemControlApplyResult(
             applied=volume_ok and brightness_ok,
@@ -63,6 +63,16 @@ class LegacyXSystemControlBackend:
             brightness_backend=brightness_backend,
             messages=(volume_message, brightness_message),
         )
+
+    def apply_brightness_percent(self, percent: int) -> tuple[bool, str | None, str]:
+        """Apply only panel brightness (preframe visual-prerequisite seam).
+
+        Prefers the writable kernel backlight endpoint and falls back to the
+        Legacy-X gamma path exactly like the full apply; runs no volume
+        command so the boot path can establish brightness synchronously
+        before the first frame. Failure stays soft (never raises).
+        """
+        return self._apply_brightness(percent)
 
     def _apply_volume(self, settings: SystemControlSettings) -> tuple[bool, str]:
         switch = "mute" if settings.muted else "unmute"

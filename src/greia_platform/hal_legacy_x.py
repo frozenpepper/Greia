@@ -172,7 +172,6 @@ class LegacyXHardwareSessionController:
     def apply(self, settings: HardwareSettings) -> ApplyResult:
         messages: list[str] = []
         success = True
-        display = self.probe_display()
 
         keyboard_messages, keyboard_success = self._apply_keyboard(settings)
         success = success and keyboard_success
@@ -191,6 +190,25 @@ class LegacyXHardwareSessionController:
         else:
             messages.append("No pointer devices were detected.")
 
+        mode_result = self.apply_display_mode(settings)
+        success = success and mode_result.applied
+        messages.extend(mode_result.messages)
+
+        return ApplyResult(success, mode_result.display, tuple(messages))
+
+    def apply_display_mode(self, settings: HardwareSettings) -> ApplyResult:
+        """Apply only the display-mode subset of settings (preframe seam).
+
+        Runs the preceding ``xrandr --query`` probe plus the single mode-set
+        command and nothing else (no keyboard/audio/pointer commands), so the
+        boot path can establish display correctness synchronously before the
+        first frame while all nonvisual work waits behind first-frame
+        readiness. Failure stays soft: an unavailable output or rejected
+        mode-set reports ``applied=False`` without raising.
+        """
+        messages: list[str] = []
+        success = True
+        display = self.probe_display()
         if display.output_name:
             if settings.resolution == "auto":
                 command = ["xrandr", "--output", display.output_name, "--auto"]

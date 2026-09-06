@@ -1,5 +1,16 @@
 #!/bin/sh
 set -eu
+# P5-HW-SPLIT: this helper is the deterministic first-frame readiness
+# callback (invoked after the first complete flip on every launcher path),
+# so it also releases the deferred hardware-watcher gate. The poke runs
+# before the one-shot early exit so service restarts release the fresh gate
+# too. Opening read-write never blocks, even without a reader; the watcher's
+# blocking read-side open wakes on any writer open. Fail-open always: boot
+# never depends on the gate existing.
+fifo="${GREIA_FIRST_FRAME_FIFO:-/run/greia-hardware/first-frame-ready.fifo}"
+if [ -p "$fifo" ]; then
+  exec 3<> "$fifo" 2>/dev/null && { printf 'ready\n' >&3 2>/dev/null || true; exec 3>&-; } || true
+fi
 marker=/run/greia-os/boot-cover-released
 [ -e "$marker" ] && exit 0
 mkdir -p /run/greia-os
