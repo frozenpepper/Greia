@@ -974,3 +974,14 @@ Still open: P4-PROOF reds (intro-tolerance ruling + deferred on-site interactive
 Field report (owner at Acer): category press → shell dies, looks like reboot, boot feels worse. Diagnosis: launcher self-exit-0 (NOT machine reboot — X teardown + restart looks like one), deliberate exits ruled out on installed bytes, X crash rejected, journal structurally blind (xinit-exec boundary), coredumps off by policy, installed input path byte-identical to view, single bounded reproduce press did NOT exit. Exit intermittent, owner UNPROVEN, no fix prescribed (would be guessing). Felt-boot: static wait attributed (compose validation), late pixels partly (pre-kernel unmeasured), black-cursor hold unexplained.
 
 Parked with self-contained on-site handover (FIELD-CLOSEOUT accepted). Device healthy, no data risk. Remote functional proof stays deferred. Boot-05 implementation otherwise complete; downstream chain still gated on P4-PROOF rulings + on-site session.
+
+## 36. Collection-entry crash fixed and proven on-device (2026-09-05)
+
+Root cause (EXIT-HUNT, installed bytes): collection render unconditionally imported
+`navigation_layout`, absent on the Acer → `ModuleNotFoundError` first non-ALL frame;
+then a same-function `page_action` signature skew (TypeError) underneath it. Fixed
+via device-derived minimal patches (module port with closure audit, tolerant kwarg),
+never repo overwrites. PROVE-CHROME-CONTRACT PASS accepted: end-to-end collection
+entry, same PID, NRestarts 0→0, zero-error journal window, real paginated navigation
+screenshots. Motion-port detour rolled back (imported a module the device lacked).
+SSH delivery fixed durably: parent-held multiplex master, workers ride credential-free.
