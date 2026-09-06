@@ -51,15 +51,21 @@ _MAX_RELEASE_SEQUENCE = 2_147_483_647
 _ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
 _DETERMINISTIC_ZIP_DATE = (1980, 1, 1, 0, 0, 0)
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+# L7-PERSIST audit owner: greia_platform.persistent_layout.PERSISTENT_NAMESPACE_ORDER.
+# This tuple must stay identical (names and order); the sync test enforces it.
 _PERSISTENT_NAMESPACES = (
-    "parent-credentials",
+    "layout-authority",
     "child-profiles",
     "activity-saves",
     "progression-rewards",
     "device-settings",
-    "hardware-receipts",
+    "parent-credentials",
+    "activity-activation",
     "update-acceptance-state",
-    "layout-authority",
+    "network-state",
+    "machine-identity",
+    "developer-state",
+    "hardware-receipts",
     "bounded-logs",
 )
 _PERSISTENT_MIGRATION_POLICY = "backward-compatible-or-transactional"
