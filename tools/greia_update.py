@@ -56,6 +56,10 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--architecture")
     build.add_argument("--profile")
     build.add_argument("--version", required=True)
+    build.add_argument("--release-sequence", type=int, required=True)
+    build.add_argument("--hardware-support", type=Path, required=True)
+    build.add_argument("--persistent-contract", type=Path, required=True)
+    build.add_argument("--minimum-slot-bytes", type=int, default=None)
     build.add_argument(
         "--release-id",
         help="stable release identifier; defaults to greia-<version>",
@@ -272,14 +276,18 @@ def main(argv: list[str] | None = None) -> int:
             release_id = args.release_id or f"greia-{args.version}"
             build_update_bundle(
                 payload_path=args.payload,
+                hardware_support_path=args.hardware_support,
+                persistent_contract_path=args.persistent_contract,
                 output_path=output,
                 version=args.version,
                 release_id=release_id,
+                release_sequence=args.release_sequence,
                 platform_family=target.platform_family,
                 architecture=target.architecture,
                 profile=target.profile,
                 signer=args.signer,
                 private_key_path=args.private_key,
+                minimum_slot_bytes=args.minimum_slot_bytes,
                 release_notes=_release_notes(args),
             )
             inspected = inspect_update_bundle(output)

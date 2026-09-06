@@ -8,8 +8,10 @@ import zipfile
 from pathlib import Path
 
 from greia_platform.system_updates import (
+    HARDWARE_SUPPORT_NAME,
     MANIFEST_NAME,
     PAYLOAD_NAME,
+    PERSISTENT_CONTRACT_NAME,
     SCHEMA_VERSION,
     SIGNATURE_NAME,
     SignatureEnvelope,
@@ -22,6 +24,7 @@ from greia_platform.system_updates import (
     UpdateCompatibilityError,
     UpdateManifest,
     UpdateSignatureError,
+    build_persistent_state_contract_bytes,
     build_update_bundle,
     generate_ed25519_keypair,
     inspect_update_bundle,
@@ -31,21 +34,48 @@ from greia_platform.system_updates import (
 
 HAS_CRYPTOGRAPHY = importlib.util.find_spec("cryptography") is not None
 
+_HW_BYTES = b"\x28\xb5\x2f\xfd" + b"hwset" * 32
+_CONTRACT_BYTES = build_persistent_state_contract_bytes()
+
+
+def _hw_digest() -> tuple[str, int]:
+    import hashlib
+
+    return hashlib.sha256(_HW_BYTES).hexdigest(), len(_HW_BYTES)
+
+
+def _contract_digest() -> tuple[str, int]:
+    import hashlib
+
+    return hashlib.sha256(_CONTRACT_BYTES).hexdigest(), len(_CONTRACT_BYTES)
+
 
 class SystemUpdateBundleTests(unittest.TestCase):
-    def _manifest(self, payload: bytes) -> UpdateManifest:
+    def _manifest(self, payload: bytes, *, sequence: int = 7) -> UpdateManifest:
         import hashlib
 
+        hw_sha, hw_size = _hw_digest()
+        contract_sha, contract_size = _contract_digest()
         return UpdateManifest(
             schema_version=SCHEMA_VERSION,
             release_id="greia-0.14.0",
             version="0.14.0",
+            release_sequence=sequence,
             platform_family="legacy-x86",
             architecture="i386",
             profile="legacy-x86-i686",
             signer="greia-release-main",
             payload_sha256=hashlib.sha256(payload).hexdigest(),
             payload_size=len(payload),
+            payload_filesystem_bytes=len(payload),
+            payload_minimum_slot_bytes=len(payload),
+            hardware_support_name=HARDWARE_SUPPORT_NAME,
+            hardware_support_schema_version=1,
+            hardware_support_sha256=hw_sha,
+            hardware_support_size=hw_size,
+            persistent_contract_schema_version=1,
+            persistent_contract_sha256=contract_sha,
+            persistent_contract_size=contract_size,
             release_notes="Emoji and update plumbing.",
         )
 
@@ -55,8 +85,9 @@ class SystemUpdateBundleTests(unittest.TestCase):
         payload: bytes,
         *,
         name: str = "candidate.greiaupdate",
+        sequence: int = 7,
     ) -> Path:
-        manifest = self._manifest(payload)
+        manifest = self._manifest(payload, sequence=sequence)
         signature = SignatureEnvelope(
             schema_version=SCHEMA_VERSION,
             algorithm="ed25519",
@@ -68,6 +99,8 @@ class SystemUpdateBundleTests(unittest.TestCase):
             archive.writestr(MANIFEST_NAME, manifest.canonical_bytes())
             archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
             archive.writestr(PAYLOAD_NAME, payload)
+            archive.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
+            archive.writestr(PERSISTENT_CONTRACT_NAME, _CONTRACT_BYTES)
         return path
 
     def test_inspection_binds_payload_to_manifest_without_granting_trust(self) -> None:
@@ -78,6 +111,7 @@ class SystemUpdateBundleTests(unittest.TestCase):
             self.assertEqual(inspected.manifest.version, "0.14.0")
             self.assertEqual(inspected.manifest.payload_size, len(b"slot-image"))
             self.assertEqual(inspected.signature.signature, b"x" * 64)
+            self.assertEqual(inspected.manifest.release_sequence, 7)
 
     def test_tampered_payload_is_rejected_before_inbox(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -92,6 +126,8 @@ class SystemUpdateBundleTests(unittest.TestCase):
                 archive.writestr(MANIFEST_NAME, manifest.canonical_bytes())
                 archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
                 archive.writestr(PAYLOAD_NAME, b"changed!!!")
+                archive.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
+                archive.writestr(PERSISTENT_CONTRACT_NAME, _CONTRACT_BYTES)
             with self.assertRaises(UpdateBundleError):
                 inspect_update_bundle(path)
 
@@ -109,6 +145,8 @@ class SystemUpdateBundleTests(unittest.TestCase):
                 archive.writestr("extra.txt", b"no")
                 archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
                 archive.writestr(PAYLOAD_NAME, payload)
+                archive.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
+                archive.writestr(PERSISTENT_CONTRACT_NAME, _CONTRACT_BYTES)
             with self.assertRaises(UpdateBundleError):
                 inspect_update_bundle(path)
 
@@ -211,12 +249,19 @@ class SystemUpdateBundleTests(unittest.TestCase):
             self.assertEqual(private.stat().st_mode & 0o777, 0o600)
             payload = root / "slot.img"
             payload.write_bytes(b"a complete slot image\0" * 1024)
+            hw = root / "hw.tar.zst"
+            hw.write_bytes(_HW_BYTES)
+            contract = root / "contract.json"
+            contract.write_bytes(_CONTRACT_BYTES)
             bundle = root / "release.greiaupdate"
             manifest = build_update_bundle(
                 payload_path=payload,
+                hardware_support_path=hw,
+                persistent_contract_path=contract,
                 output_path=bundle,
                 version="0.14.0",
                 release_id="greia-0.14.0",
+                release_sequence=9,
                 platform_family="legacy-x86",
                 architecture="i386",
                 profile="legacy-x86-i686",
@@ -242,12 +287,19 @@ class SystemUpdateBundleTests(unittest.TestCase):
             generate_ed25519_keypair(wrong_private, wrong_public)
             payload = root / "slot.img"
             payload.write_bytes(b"slot")
+            hw = root / "hw.tar.zst"
+            hw.write_bytes(_HW_BYTES)
+            contract = root / "contract.json"
+            contract.write_bytes(_CONTRACT_BYTES)
             bundle = root / "release.greiaupdate"
             manifest = build_update_bundle(
                 payload_path=payload,
+                hardware_support_path=hw,
+                persistent_contract_path=contract,
                 output_path=bundle,
                 version="0.14.0",
                 release_id="greia-0.14.0",
+                release_sequence=9,
                 platform_family="legacy-x86",
                 architecture="i386",
                 profile="legacy-x86-i686",
