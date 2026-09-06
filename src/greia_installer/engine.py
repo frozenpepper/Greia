@@ -21,7 +21,16 @@ from greia_platform.grub_security import (
 )
 from greia_platform.hardware import HardwareSettings, HardwareSettingsStore
 
-from .disk import BlockDevice, LsblkDiskProbe, partition_one_path
+from .disk import (
+    BlockDevice,
+    DeviceIdentity,
+    DiskInventory,
+    InstallTargetPolicy,
+    LiveMediaResolver,
+    LsblkDiskProbe,
+    default_install_target_policy,
+    partition_one_path,
+)
 from .hardware_enablement import (
     HardwareEnablementPlanError,
     InstallerHardwareEnablementPlan,
@@ -130,12 +139,16 @@ class InstallationEngine:
         probe: LsblkDiskProbe | None = None,
         grub_password_hasher: GrubPasswordHasher | None = None,
         power_probe: InstallationPowerProbe | None = None,
+        target_policy: InstallTargetPolicy | None = None,
+        live_resolver: LiveMediaResolver | None = None,
     ):
         self.project_root = project_root.resolve()
         self.runner = runner or SubprocessRunner()
         self.probe = probe or LsblkDiskProbe()
         self.grub_password_hasher = grub_password_hasher
         self.power_probe = power_probe or PowerSupplyProbe()
+        self.target_policy = target_policy or default_install_target_policy()
+        self.live_resolver = live_resolver or LiveMediaResolver()
 
     def install(
         self,
@@ -349,17 +362,40 @@ class InstallationEngine:
         except HardwareSupportPoolError as exc:
             raise InstallationError(f"hardware support media verification failed: {exc}") from exc
 
-    def _verify_target_identity(self, expected: BlockDevice) -> BlockDevice:
-        current = self.probe.probe().by_path(expected.path)
+    def _find_target_identity(
+        self, expected: BlockDevice, inventory: DiskInventory
+    ) -> BlockDevice:
+        expected_identity = DeviceIdentity.from_observation(
+            expected,
+            allow_legacy_ata_fallback=self.target_policy.permit_legacy_ata_fallback,
+        )
+        current = inventory.by_identity(expected_identity)
         if current is None:
             raise InstallationError("selected disk disappeared")
-        if current.fingerprint != expected.fingerprint:
+        # Identity is the authority, but the stored /dev path is still the
+        # locator used for destructive commands below. If the locator moved
+        # while the identity survived, fail closed instead of addressing a
+        # re-enumerated path.
+        if current.path != expected.path:
             raise InstallationError("selected disk identity changed; installation stopped")
         return current
 
+    def _verify_target_identity(self, expected: BlockDevice) -> BlockDevice:
+        return self._find_target_identity(expected, self.probe.probe())
+
     def _verify_target(self, expected: BlockDevice) -> None:
-        current = self._verify_target_identity(expected)
-        if not current.is_install_target_eligible():
+        inventory = self.probe.probe()
+        current = self._find_target_identity(expected, inventory)
+        ancestry = self.live_resolver.resolve(inventory)
+        if ancestry.ambiguous:
+            raise InstallationError(
+                "setup-medium ancestry is ambiguous; installation stopped"
+            )
+        if current.name in ancestry.whole_disk_names:
+            raise InstallationError(
+                "selected disk is no longer an eligible unmounted internal disk"
+            )
+        if not self.target_policy.evaluate(current).eligible:
             raise InstallationError("selected disk is no longer an eligible unmounted internal disk")
 
     def _verify_pre_erase_power(self) -> None:

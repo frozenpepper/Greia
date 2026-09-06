@@ -38,7 +38,13 @@ from greia_platform.keyboard_layout import (
 from greia_platform.typography import FontRole, GreiaTypography
 
 from .composition import provisional_installer_hardware_controller
-from .disk import BlockDevice, DiskProbeError, LsblkDiskProbe
+from .disk import (
+    BlockDevice,
+    DiskProbeError,
+    LiveMediaResolver,
+    LsblkDiskProbe,
+    default_install_target_policy,
+)
 from .engine import (
     InstallProgress,
     InstallRequest,
@@ -193,7 +199,13 @@ class InstallerApplication:
                 ),
             )
         try:
-            return LsblkDiskProbe().probe().install_targets()
+            inventory = LsblkDiskProbe().probe()
+            ancestry = LiveMediaResolver().resolve(inventory)
+            if ancestry.ambiguous:
+                return ()
+            return inventory.install_targets(
+                default_install_target_policy(), excluded=ancestry
+            )
         except DiskProbeError:
             return ()
 
