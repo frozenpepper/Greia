@@ -119,9 +119,11 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._launch_animation_started = 0.0
         self._last_input_monotonic = 0.0
         # Last settled hover target for coalesced MOUSEMOTION handling.
-        # Lets the run loop resolve one hit-test per frame for the final
-        # pointer position instead of two hit-tests per motion event.
+        # Raw hit-target identity is paired with a stable semantic identity so
+        # a category/catalogue change cannot disguise a different Activity as
+        # the same ("presented_activity", index) tuple.
         self._coalesced_hover_target: tuple[str, Any] | None = None
+        self._coalesced_hover_identity: tuple[Any, ...] | None = None
         self._cached_activities_surface: Any = None
         self._cached_activities_key: Any = None
         self._cached_activities_targets: list[HitTarget] = []
@@ -258,6 +260,8 @@ class GreiaLauncherPresentation(LauncherApplication):
             pass
 
     def _clear_spoken_pointer(self) -> None:
+        self._coalesced_hover_target = None
+        self._coalesced_hover_identity = None
         try:
             self._spoken_labels.clear_pointer_focus()
         except Exception:
@@ -361,6 +365,7 @@ class GreiaLauncherPresentation(LauncherApplication):
         import pygame
 
         from .main import create_preparation_worker
+        from .input_semantics import discard_preinteractive_input
 
         os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
         emit_boot_marker("pygame_display_init_begin")
@@ -439,6 +444,13 @@ class GreiaLauncherPresentation(LauncherApplication):
                 raise
             self._shell_window_backend.after_window_created(pygame)
             self._enter_running_state()
+
+        # The handoff/intro/preparation phase is deliberately non-interactive.
+        # Drop every queued user action immediately before the first interactive
+        # poll so a boot-time click/key cannot activate whatever Home control
+        # happens to appear underneath it later. System/lifecycle events remain.
+        discard_preinteractive_input(pygame)
+
         clock = pygame.time.Clock()
         running = True
         last_display_size = screen.get_size()
@@ -529,6 +541,7 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._dimmed_underlay = None
                     self._dimmed_underlay_key = None
                     self._activity_scroll_start = 0
+                    self._clear_spoken_pointer()
                     if self._visual_cache is not None:
                         self._visual_cache.clear()
                     _needs_redraw = True
@@ -785,7 +798,10 @@ class GreiaLauncherPresentation(LauncherApplication):
         self._set_category(ids[(current + delta) % len(ids)])
 
     def _set_category(self, category_id: str) -> None:
-        self._category_id = self._catalogue.nearest_category(category_id)
+        resolved = self._catalogue.nearest_category(category_id)
+        if resolved != self._category_id:
+            self._clear_spoken_pointer()
+        self._category_id = resolved
         self._selected = 0
         self._activity_scroll_start = 0
 
@@ -818,8 +834,10 @@ class GreiaLauncherPresentation(LauncherApplication):
             changed = not self._catalogue_error
             self._catalogue_error = True
             return changed
+        new_catalogue = ActivityCatalogue.from_activities(discovered)
+        self._clear_spoken_pointer()
         self._catalogue_error = False
-        self._catalogue = ActivityCatalogue.from_activities(discovered)
+        self._catalogue = new_catalogue
         self._category_id = self._catalogue.nearest_category(self._category_id)
         presented = self._presented_activities
         self._selected = 0
@@ -857,15 +875,40 @@ class GreiaLauncherPresentation(LauncherApplication):
                 return (target.action, target.value)
         return None
 
+    def _hover_semantic_identity(
+        self, target: tuple[str, Any] | None
+    ) -> tuple[Any, ...] | None:
+        """Return stable hover identity independent of page/category index reuse."""
+
+        if target is None:
+            return None
+        action, value = target
+        locale = self._spoken_locale()
+        try:
+            if action in {"presented_activity", "presented_activity_select"}:
+                index = int(value)
+                activities = self._presented_activities
+                if 0 <= index < len(activities):
+                    return ("activity", activities[index].activity_id, locale)
+            if action in {
+                "home_collection",
+                "activity_subcollection",
+                "activity_category",
+            }:
+                return ("collection", str(value), locale)
+        except (ValueError, TypeError, AttributeError, KeyError):
+            pass
+        return ("target", action, value)
+
     def _apply_coalesced_motion(self, position: tuple[int, int] | None) -> bool:
         """Apply one coalesced pointer position for the frame.
 
-        Single ``_pointer_position`` update, at most one ``_target_at``
-        hit-test for the settled position, and speakable-label/focus work
-        only when the hover target actually changed. Returns True when the
-        caller must set the once-per-frame redraw flag. This method never
-        draws or flips; the run loop's single present path stays the only
-        draw site.
+        Single ``_pointer_position`` update and one ``_target_at`` hit-test are
+        performed for the settled position. Spoken focus is gated by stable
+        semantic identity rather than raw (action, index), so catalogue/category
+        mutations cannot silently reuse an index for a different Activity.
+        Returns True when the once-per-frame redraw flag must be set. This method
+        never draws or flips; the run loop's single present path stays authoritative.
         """
 
         if position is None:
@@ -874,18 +917,30 @@ class GreiaLauncherPresentation(LauncherApplication):
         pointer_moved = prev_pos != position
         self._pointer_position = position
         prev_hover = getattr(self, "_coalesced_hover_target", None)
+        prev_identity = getattr(self, "_coalesced_hover_identity", None)
         new_target = self._target_at(position)
-        if new_target == prev_hover:
+        new_identity = self._hover_semantic_identity(new_target)
+
+        # Compatibility with pre-existing state/tests that seeded only the raw
+        # hover target: adopt the semantic key lazily without triggering speech.
+        if new_target == prev_hover and prev_identity is None:
+            self._coalesced_hover_identity = new_identity
             return pointer_moved
+        if new_target == prev_hover and new_identity == prev_identity:
+            return pointer_moved
+
         self._coalesced_hover_target = new_target
+        self._coalesced_hover_identity = new_identity
+        if new_identity == prev_identity:
+            return True
+
         try:
             now = time.monotonic()
-            prev_sp = self._speakable_for_target(prev_hover) if prev_hover is not None else None
             new_sp = self._speakable_for_target(new_target)
             if new_sp is None:
                 self._spoken_labels.pointer_focus_changed(None, None, now)
                 self._spoken_labels.clear_pointer_focus()
-            elif prev_sp is None or new_sp[0] != prev_sp[0]:
+            else:
                 self._spoken_labels.pointer_focus_changed(new_sp[0], new_sp[1], now)
         except Exception:
             pass
