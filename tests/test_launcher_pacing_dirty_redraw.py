@@ -5,6 +5,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import ANY, MagicMock
 
 import pygame
@@ -109,6 +110,9 @@ class LauncherMotionCoalescingContractTests(unittest.TestCase):
         ]
         app._pointer_position = (10, 10)
         app._coalesced_hover_target = ("presented_activity", 0)
+        app._coalesced_hover_identity = app._hover_semantic_identity(
+            app._coalesced_hover_target
+        )
         app._spoken_labels.pointer_focus_changed = MagicMock()
         app._spoken_labels.clear_pointer_focus = MagicMock()
         return app
@@ -185,6 +189,55 @@ class LauncherMotionCoalescingContractTests(unittest.TestCase):
         self.assertIsNone(app._coalesced_hover_target)
         app._spoken_labels.pointer_focus_changed.assert_called_once()
         app._spoken_labels.clear_pointer_focus.assert_called_once()
+
+    def test_category_change_invalidates_coalesced_pointer_focus(self) -> None:
+        app = self._motion_app()
+        app._catalogue = MagicMock()
+        app._catalogue.nearest_category.return_value = "beta"
+        app._category_id = "alpha"
+        app._spoken_labels.clear_pointer_focus.reset_mock()
+
+        app._set_category("beta")
+
+        self.assertEqual(app._category_id, "beta")
+        self.assertIsNone(app._coalesced_hover_target)
+        self.assertIsNone(app._coalesced_hover_identity)
+        app._spoken_labels.clear_pointer_focus.assert_called_once()
+
+    def test_same_raw_index_after_semantic_collection_change_reannounces(self) -> None:
+        app = self._motion_app()
+        collections = {
+            "alpha": SimpleNamespace(
+                items=(SimpleNamespace(activity_id="activity-alpha"),)
+            ),
+            "beta": SimpleNamespace(
+                items=(SimpleNamespace(activity_id="activity-beta"),)
+            ),
+        }
+        catalogue = MagicMock()
+        catalogue.nearest_category.side_effect = lambda category_id: category_id
+        catalogue.collection.side_effect = lambda category_id: collections[category_id]
+        app._catalogue = catalogue
+        app._category_id = "alpha"
+        app._coalesced_hover_target = ("presented_activity", 0)
+        app._coalesced_hover_identity = app._hover_semantic_identity(
+            app._coalesced_hover_target
+        )
+        app._category_id = "beta"  # Simulate a topology mutation outside _set_category.
+        app._speakable_for_target = MagicMock(return_value=("activity:beta", None))  # type: ignore[method-assign]
+        app._spoken_labels.pointer_focus_changed.reset_mock()
+
+        needs_redraw = app._apply_coalesced_motion((20, 10))
+
+        self.assertTrue(needs_redraw)
+        self.assertEqual(
+            app._coalesced_hover_identity,
+            ("activity", "activity-beta", app._spoken_locale()),
+        )
+        app._speakable_for_target.assert_called_once_with(("presented_activity", 0))  # type: ignore[attr-defined]
+        app._spoken_labels.pointer_focus_changed.assert_called_once_with(
+            "activity:beta", None, ANY
+        )
 
     def test_coalesced_motion_never_draws_and_run_loop_keeps_single_present(self) -> None:
         import inspect
