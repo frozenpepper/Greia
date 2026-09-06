@@ -19,6 +19,7 @@ Key design invariants:
 from __future__ import annotations
 
 import os
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -282,6 +283,46 @@ def _pump_display(pygame: Any) -> None:
 
 _FIRST_FRAME_FLIPPED_EMITTED = False
 
+_SYSTEMD_NOTIFY_BIN = "/usr/bin/systemd-notify"
+_SYSTEMD_READY_STATUS = "Greia first intro frame visible"
+_SYSTEMD_READY_NOTIFIED = False
+
+
+def _notify_systemd_ready_once() -> None:
+    """Report systemd readiness exactly once, after the first visible flip.
+
+    Runs ``/usr/bin/systemd-notify --ready`` with a stable status string so
+    the P6-PARENT ordering change can rely on the payload. Fail-soft by
+    design: tests and non-systemd sessions (no ``NOTIFY_SOCKET``) return
+    silently, a missing binary is skipped, and any spawn failure is ignored.
+    The sent flag is set before attempting so readiness is never duplicated.
+    Argument array with ``shell=False`` semantics; no sleeps, no shell.
+    """
+    global _SYSTEMD_READY_NOTIFIED
+    if _SYSTEMD_READY_NOTIFIED:
+        return
+    _SYSTEMD_READY_NOTIFIED = True
+    try:
+        if not os.environ.get("NOTIFY_SOCKET"):
+            return
+        if not os.path.isfile(_SYSTEMD_NOTIFY_BIN) or not os.access(
+            _SYSTEMD_NOTIFY_BIN, os.X_OK
+        ):
+            return
+        subprocess.run(
+            [
+                _SYSTEMD_NOTIFY_BIN,
+                "--ready",
+                f"--status={_SYSTEMD_READY_STATUS}",
+            ],
+            check=False,
+            timeout=5,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:  # noqa: BLE001 - readiness must never fail boot
+        pass
+
 
 def _emit_first_frame_flipped_once() -> None:
     """Emit the first-frame KPI exactly once per process.
@@ -290,12 +331,15 @@ def _emit_first_frame_flipped_once() -> None:
     intro frame visible. Later flips never call this function, so the flag
     only suppresses repeats across separate ``run_intro()`` calls; a failed
     flip raises before reaching this call and therefore emits nothing.
+    Systemd readiness is reported here as well, so ``READY=1`` can only
+    follow the actual visible frame and never precedes it.
     """
     global _FIRST_FRAME_FLIPPED_EMITTED
     if _FIRST_FRAME_FLIPPED_EMITTED:
         return
     _FIRST_FRAME_FLIPPED_EMITTED = True
     emit_boot_marker("intro_first_frame_flipped")
+    _notify_systemd_ready_once()
 
 
 def run_intro(
