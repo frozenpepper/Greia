@@ -64,6 +64,21 @@ class BuildProfileTests(unittest.TestCase):
         source = source.replace('id = "modern-amd64"', 'id = "arm-schema-probe"')
         source = source.replace('family = "standard-x86-64"', 'family = "arm64"')
         source = source.replace('architecture = "amd64"', 'architecture = "arm64"')
+        # A coherent Pi storage/lifecycle declaration: the typed schema accepts
+        # ARM64 with an explicit Pi board/layout/backend, while the Phase 0
+        # builder still has no ARM implementation.
+        source = source.replace('board = "none"', 'board = "pi-400-v1"')
+        source = source.replace(
+            'layout_adapter = "bios-single-ext4"', 'layout_adapter = "pi-mbr-tryboot-ab-v1"'
+        )
+        source = source.replace(
+            'target_policy = "pc-internal-v1"', 'target_policy = "pi-builtin-microsd-v1"'
+        )
+        source = source.replace('boot_backend = "none-v1"', 'boot_backend = "pi-tryboot-ab-v1"')
+        source = source.replace("required = false", "required = true")
+        source = source.replace(
+            'live_boot_adapter = "pc-live-syslinux-v1"', 'live_boot_adapter = "pi-live-usb-v1"'
+        )
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "arm-schema-probe.toml"
             path.write_text(source)

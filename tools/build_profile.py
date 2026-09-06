@@ -70,6 +70,47 @@ _PHASE0_INSTALLED_BOOT_ADAPTERS = frozenset({"grub-pc-bios"})
 _PHASE0_INSTALLER_BOOT_ADAPTERS = frozenset({"grub-pc-bios-live"})
 _PHASE0_DISPLAY_ADAPTERS = frozenset({"xorg"})
 
+# L7-PROFILES typed storage/lifecycle adapters (R0/R1 source gate).
+#
+# Authority: docs/architecture/UNIVERSAL_GREIA_SETUP_MEDIA_ARCHITECTURE.md
+# secs 8-14 (layout authority, A/B target layouts, Pi tryboot, PERSIST
+# contract, declarative storage/profile extensions) and secs 23-24
+# (regression guards: no single-root+updates, no GRUB Pi backend, no unknown
+# ARM fallback, no global allow_mmc shortcut). Numeric floors are R0 source
+# bounds covering the L7-RELEASE base release + finalization upper bound
+# (build_release PAYLOAD_MIN_HEADROOM plus support/initramfs growth); they are
+# tightened by on-device measurement later, never loosened by guessing.
+_MIB = 1024 * 1024
+_MIN_SYSTEM_SLOT_BYTES = 1024 * _MIB
+_MAX_SYSTEM_SLOT_BYTES = 2 * 1024 * 1024 * 1024
+_MIN_PERSISTENT_BYTES = 256 * _MIB
+_ALLOWED_LAYOUT_ADAPTERS = frozenset(
+    {
+        "bios-single-ext4",
+        "legacy-bios-ab-v1",
+        "modern-gpt-ab-v1",
+        "pi-mbr-tryboot-ab-v1",
+    }
+)
+_AB_LAYOUT_ADAPTERS = frozenset(
+    {"legacy-bios-ab-v1", "modern-gpt-ab-v1", "pi-mbr-tryboot-ab-v1"}
+)
+_PI_LAYOUT_ADAPTERS = frozenset({"pi-mbr-tryboot-ab-v1"})
+_X86_LAYOUT_ADAPTERS = frozenset(
+    {"bios-single-ext4", "legacy-bios-ab-v1", "modern-gpt-ab-v1"}
+)
+_LAYOUT_OVERHEAD_BYTES: Mapping[str, int] = {
+    "bios-single-ext4": 16 * _MIB,
+    "legacy-bios-ab-v1": 64 * _MIB,
+    "modern-gpt-ab-v1": 128 * _MIB,
+    "pi-mbr-tryboot-ab-v1": 256 * _MIB,
+}
+_ALLOWED_TARGET_POLICIES = frozenset({"pc-internal-v1", "pi-builtin-microsd-v1"})
+_ALLOWED_BOOT_BACKENDS = frozenset({"grub-ab-v1", "pi-tryboot-ab-v1", "none-v1"})
+_ALLOWED_LIVE_BOOT_ADAPTERS = frozenset({"pc-live-syslinux-v1", "pi-live-usb-v1"})
+_ALLOWED_ARM_BOARDS = frozenset({"pi-400-v1", "pi-500-v1"})
+_ALLOWED_PLATFORM_BOARDS = frozenset({"none", "pi-400-v1", "pi-500-v1"})
+
 
 @dataclass(frozen=True, slots=True)
 class ProfileIdentity:
@@ -82,6 +123,7 @@ class ProfileIdentity:
 class PlatformDefinition:
     family: str
     compatibility_class: str
+    board: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,6 +176,29 @@ class ResourceLimits:
 
 
 @dataclass(frozen=True, slots=True)
+class StorageDefinition:
+    layout_adapter: str
+    system_slot_bytes: int
+    persistent_minimum_bytes: int
+
+
+@dataclass(frozen=True, slots=True)
+class InstallerDefinition:
+    target_policy: str
+
+
+@dataclass(frozen=True, slots=True)
+class UpdatesDefinition:
+    boot_backend: str
+    required: bool
+
+
+@dataclass(frozen=True, slots=True)
+class SetupDefinition:
+    live_boot_adapter: str
+
+
+@dataclass(frozen=True, slots=True)
 class BuildProfile:
     schema_version: int
     identity: ProfileIdentity
@@ -145,6 +210,10 @@ class BuildProfile:
     runtimes: RuntimeDefinition
     packages: PackageDefinition
     resources: ResourceLimits
+    storage: StorageDefinition
+    installer: InstallerDefinition
+    updates: UpdatesDefinition
+    setup: SetupDefinition
 
     @classmethod
     def load(cls, path: Path) -> "BuildProfile":
@@ -164,6 +233,15 @@ class BuildProfile:
         runtimes = _table(raw, "runtimes")
         packages = _table(raw, "packages")
         resources = _table(raw, "resources")
+        storage = _table(raw, "storage")
+        installer_table = _table(raw, "installer")
+        updates_table = _table(raw, "updates")
+        setup = _table(raw, "setup")
+        if "allow_mmc" in installer_table:
+            raise BuildProfileError(
+                "installer.allow_mmc is not a release target-policy API; "
+                "use installer.target_policy"
+            )
 
         result = cls(
             schema_version=schema_version,
@@ -175,6 +253,7 @@ class BuildProfile:
             platform=PlatformDefinition(
                 family=_string(platform, "family"),
                 compatibility_class=_string(platform, "compatibility_class"),
+                board=_string(platform, "board"),
             ),
             base=BaseDefinition(
                 suite=_string(base, "suite"),
@@ -208,6 +287,23 @@ class BuildProfile:
                 preferred_core_mib=_integer(resources, "preferred_core_mib", minimum=1),
                 required_core_mib=_integer(resources, "required_core_mib", minimum=1),
                 architecture_review_mib=_integer(resources, "architecture_review_mib", minimum=1),
+            ),
+            storage=StorageDefinition(
+                layout_adapter=_string(storage, "layout_adapter"),
+                system_slot_bytes=_integer(storage, "system_slot_bytes", minimum=1),
+                persistent_minimum_bytes=_integer(
+                    storage, "persistent_minimum_bytes", minimum=1
+                ),
+            ),
+            installer=InstallerDefinition(
+                target_policy=_string(installer_table, "target_policy"),
+            ),
+            updates=UpdatesDefinition(
+                boot_backend=_string(updates_table, "boot_backend"),
+                required=_boolean(updates_table, "required"),
+            ),
+            setup=SetupDefinition(
+                live_boot_adapter=_string(setup, "live_boot_adapter"),
             ),
         )
         result.validate()
@@ -277,6 +373,163 @@ class BuildProfile:
         if self.image.size_mib <= self.resources.required_core_mib:
             raise BuildProfileError(
                 "image.size_mib must exceed resources.required_core_mib to leave writable headroom"
+            )
+        _safe_identifier(self.platform.board, "platform.board")
+        self._validate_storage_lifecycle()
+
+    def _validate_storage_lifecycle(self) -> None:
+        """Fail closed on invalid storage/target/update/setup combinations."""
+        layout = self.storage.layout_adapter
+        if layout not in _ALLOWED_LAYOUT_ADAPTERS:
+            raise BuildProfileError(
+                "storage.layout_adapter must be one of: "
+                + ", ".join(sorted(_ALLOWED_LAYOUT_ADAPTERS))
+            )
+        if self.installer.target_policy not in _ALLOWED_TARGET_POLICIES:
+            raise BuildProfileError(
+                "installer.target_policy must be one of: "
+                + ", ".join(sorted(_ALLOWED_TARGET_POLICIES))
+            )
+        if self.updates.boot_backend not in _ALLOWED_BOOT_BACKENDS:
+            raise BuildProfileError(
+                "updates.boot_backend must be one of: "
+                + ", ".join(sorted(_ALLOWED_BOOT_BACKENDS))
+            )
+        if self.setup.live_boot_adapter not in _ALLOWED_LIVE_BOOT_ADAPTERS:
+            raise BuildProfileError(
+                "setup.live_boot_adapter must be one of: "
+                + ", ".join(sorted(_ALLOWED_LIVE_BOOT_ADAPTERS))
+            )
+        is_ab = layout in _AB_LAYOUT_ADAPTERS
+        is_pi_layout = layout in _PI_LAYOUT_ADAPTERS
+        is_arm = self.base.architecture == "arm64" or self.platform.family == "arm64"
+
+        # Single-root layouts are never update-capable targets.
+        if not is_ab:
+            if self.updates.required:
+                raise BuildProfileError(
+                    "single-root layout "
+                    f"{layout!r} cannot satisfy updates.required=true; "
+                    "release-capable installation requires an A/B layout"
+                )
+            if self.updates.boot_backend != "none-v1":
+                raise BuildProfileError(
+                    "single-root layout "
+                    f"{layout!r} requires updates.boot_backend='none-v1'"
+                )
+        else:
+            if self.updates.boot_backend == "none-v1":
+                raise BuildProfileError(
+                    f"A/B layout {layout!r} requires a registered updates.boot_backend"
+                )
+        # Backend/layout family binding. Pi firmware uses native tryboot;
+        # GRUB on a Pi layout is a hard failure, not a fallback.
+        if is_pi_layout:
+            if self.updates.boot_backend == "grub-ab-v1":
+                raise BuildProfileError(
+                    f"Pi layout {layout!r} cannot pair with GRUB update backend 'grub-ab-v1'; "
+                    "Pi uses the native tryboot backend"
+                )
+            if self.updates.boot_backend != "pi-tryboot-ab-v1":
+                raise BuildProfileError(
+                    f"Pi layout {layout!r} requires updates.boot_backend='pi-tryboot-ab-v1'"
+                )
+        elif self.updates.boot_backend == "pi-tryboot-ab-v1":
+            raise BuildProfileError(
+                f"tryboot backend 'pi-tryboot-ab-v1' requires a Pi layout, not {layout!r}"
+            )
+        elif is_ab and self.updates.boot_backend != "grub-ab-v1":
+            raise BuildProfileError(
+                f"x86 A/B layout {layout!r} requires updates.boot_backend='grub-ab-v1'"
+            )
+        # Architecture/layout binding keeps Pi layouts off x86 and vice versa.
+        if is_pi_layout and not is_arm:
+            raise BuildProfileError(
+                f"Pi layout {layout!r} requires base.architecture='arm64' and platform.family='arm64'"
+            )
+        if not is_pi_layout and is_arm:
+            raise BuildProfileError(
+                f"x86 layout {layout!r} cannot pair with ARM architecture/family"
+            )
+        if layout == "modern-gpt-ab-v1" and self.base.architecture != "amd64":
+            raise BuildProfileError(
+                f"layout {layout!r} requires base.architecture='amd64'"
+            )
+        # Target policy is the release API; allow_mmc is rejected at load.
+        if is_pi_layout:
+            if self.installer.target_policy != "pi-builtin-microsd-v1":
+                raise BuildProfileError(
+                    f"Pi layout {layout!r} requires installer.target_policy='pi-builtin-microsd-v1'"
+                )
+        elif self.installer.target_policy != "pc-internal-v1":
+            raise BuildProfileError(
+                f"layout {layout!r} requires installer.target_policy='pc-internal-v1'"
+            )
+        # Live-boot adapter follows the same family split.
+        if is_pi_layout:
+            if self.setup.live_boot_adapter != "pi-live-usb-v1":
+                raise BuildProfileError(
+                    f"Pi layout {layout!r} requires setup.live_boot_adapter='pi-live-usb-v1'"
+                )
+        elif self.setup.live_boot_adapter != "pc-live-syslinux-v1":
+            raise BuildProfileError(
+                f"layout {layout!r} requires setup.live_boot_adapter='pc-live-syslinux-v1'"
+            )
+        # ARM board fallback: unknown/generic ARM never defaults to a known Pi.
+        if is_arm:
+            if self.platform.board not in _ALLOWED_ARM_BOARDS:
+                raise BuildProfileError(
+                    f"ARM profile requires an explicit platform.board in "
+                    f"{sorted(_ALLOWED_ARM_BOARDS)}; "
+                    f"{self.platform.board!r} is not a supported ARM board fallback"
+                )
+        elif self.platform.board != "none":
+            raise BuildProfileError(
+                f"x86 profile requires platform.board='none', not {self.platform.board!r}"
+            )
+        if is_pi_layout and self.platform.board == "none":
+            raise BuildProfileError(
+                f"Pi layout {layout!r} requires an explicit platform.board, not 'none'"
+            )
+        # Slot floor covers the L7-RELEASE base release + finalization upper
+        # bound; the ceiling matches the build_release minimum_slot bound.
+        if self.storage.system_slot_bytes < _MIN_SYSTEM_SLOT_BYTES:
+            raise BuildProfileError(
+                "storage.system_slot_bytes "
+                f"({self.storage.system_slot_bytes}) is below the base release + "
+                f"finalization upper bound ({_MIN_SYSTEM_SLOT_BYTES})"
+            )
+        if self.storage.system_slot_bytes > _MAX_SYSTEM_SLOT_BYTES:
+            raise BuildProfileError(
+                "storage.system_slot_bytes exceeds the release slot bound "
+                f"({_MAX_SYSTEM_SLOT_BYTES})"
+            )
+        if self.storage.persistent_minimum_bytes < _MIN_PERSISTENT_BYTES:
+            raise BuildProfileError(
+                "storage.persistent_minimum_bytes "
+                f"({self.storage.persistent_minimum_bytes}) is below the PERSIST "
+                f"minimum ({_MIN_PERSISTENT_BYTES})"
+            )
+        # Target capacity: complete layout overhead + slots + PERSIST minimum.
+        overhead = _LAYOUT_OVERHEAD_BYTES[layout]
+        slot_count = 2 if is_ab else 1
+        minimum_target = (
+            overhead
+            + slot_count * self.storage.system_slot_bytes
+            + self.storage.persistent_minimum_bytes
+        )
+        image_bytes = self.image.size_mib * _MIB
+        if image_bytes < overhead + self.storage.persistent_minimum_bytes:
+            raise BuildProfileError(
+                f"image.size_mib ({self.image.size_mib} MiB) is below layout overhead + "
+                "PERSIST minimum "
+                f"({(overhead + self.storage.persistent_minimum_bytes) // _MIB} MiB)"
+            )
+        if image_bytes < minimum_target:
+            raise BuildProfileError(
+                f"image.size_mib ({self.image.size_mib} MiB) is below the layout capacity "
+                f"minimum ({minimum_target // _MIB} MiB = overhead + "
+                f"{slot_count}x slot + PERSIST minimum)"
             )
 
     def check_phase0_builder_support(self, scope: str) -> None:
@@ -379,6 +632,10 @@ class BuildProfile:
                 "video_packages": list(self.display.video_packages),
             },
             "runtimes": {"enabled": list(self.runtimes.enabled)},
+            "storage": asdict(self.storage),
+            "installer": asdict(self.installer),
+            "updates": asdict(self.updates),
+            "setup": asdict(self.setup),
             "package_sets": {
                 "target": list(self.package_set_names("target")),
                 "installer": list(self.package_set_names("installer")),
@@ -412,6 +669,14 @@ class BuildProfile:
             "VIDEO_PACKAGES": " ".join(self.display.video_packages),
             "RUNTIME_FAMILIES": " ".join(self.runtimes.enabled),
             "EXTRA_PACKAGES": " ".join(self.packages.extra_packages),
+            "STORAGE_LAYOUT_ADAPTER": self.storage.layout_adapter,
+            "STORAGE_SYSTEM_SLOT_BYTES": str(self.storage.system_slot_bytes),
+            "STORAGE_PERSISTENT_MINIMUM_BYTES": str(self.storage.persistent_minimum_bytes),
+            "INSTALLER_TARGET_POLICY": self.installer.target_policy,
+            "UPDATES_BOOT_BACKEND": self.updates.boot_backend,
+            "UPDATES_REQUIRED": "true" if self.updates.required else "false",
+            "SETUP_LIVE_BOOT_ADAPTER": self.setup.live_boot_adapter,
+            "PLATFORM_BOARD": self.platform.board,
             "PREFERRED_LIMIT_MIB": str(self.resources.preferred_core_mib),
             "REQUIRED_LIMIT_MIB": str(self.resources.required_core_mib),
             "ARCHITECTURE_REVIEW_LIMIT_MIB": str(self.resources.architecture_review_mib),
@@ -456,6 +721,13 @@ def _string_list(container: Mapping[str, object], key: str) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(item, str) and item.strip() for item in value):
         raise BuildProfileError(f"{key} must be an array of non-empty strings")
     return tuple(item.strip() for item in value)
+
+
+def _boolean(container: Mapping[str, object], key: str) -> bool:
+    value = container.get(key)
+    if not isinstance(value, bool):
+        raise BuildProfileError(f"{key} must be a boolean")
+    return value
 
 
 def _safe_identifier(value: str, field: str) -> None:

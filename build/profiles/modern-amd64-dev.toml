@@ -7,6 +7,7 @@ description = "Development-only x86-64 profile with opt-in remote control; never
 
 [platform]
 family = "standard-x86-64"
+board = "none"
 compatibility_class = "C2"
 
 [base]
@@ -55,3 +56,18 @@ extra_packages = []
 preferred_core_mib = 800
 required_core_mib = 1000
 architecture_review_mib = 1250
+
+[storage]
+layout_adapter = "bios-single-ext4"
+system_slot_bytes = 1073741824
+persistent_minimum_bytes = 268435456
+
+[installer]
+target_policy = "pc-internal-v1"
+
+[updates]
+boot_backend = "none-v1"
+required = false
+
+[setup]
+live_boot_adapter = "pc-live-syslinux-v1"
