@@ -1,0 +1,20 @@
+#!/bin/sh
+# Greia developer-image-only one-shot intro motion sweep (FIX-INTRO-INJECTOR).
+#
+# Pre-armed via `greia-devctl arm-intro-sweep` before reboot; fires once
+# during the next live intro, then disarms itself even on failure. SSH (and
+# any xdotool driven over it) is only up after the ~7 s intro completes, so
+# this pre-armed one-shot is the only path that can inject motion inside the
+# intro window for the PROVE-INTRO-DRAIN-R burst verdict.
+#
+# Fail-closed and boot-safe by construction: the python entry point never
+# raises (every error consumes the arm and returns a result), and this
+# wrapper additionally swallows any residual failure so no failure mode
+# reaches boot. Exit status is always 0.
+set -eu
+
+PYTHONPATH=/opt/greia-os/src \
+PYTHONNOUSERSITE=1 \
+PYTHONDONTWRITEBYTECODE=1 \
+/usr/bin/python3 -m greia_platform.developer_input run-intro-sweep || true
+exit 0

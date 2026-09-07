@@ -16,6 +16,11 @@ from typing import Mapping, Sequence
 
 from .activities import ActivityRegistry, ActivityValidationError, RuntimeCatalogue
 from .boot_markers import read_spool_text, spool_path
+from .developer_input import (
+    DeveloperInputError,
+    arm_intro_sweep,
+    read_intro_sweep_log_text,
+)
 from .developer_session import DeveloperDisplayEndpoint, DeveloperSessionError
 from .trust import ActivitySource, PackageTrust
 
@@ -182,6 +187,22 @@ class DeveloperControl:
 
     def poweroff(self) -> None:
         _run_checked(["systemctl", "poweroff"])
+
+    def arm_intro_sweep(self) -> str:
+        """Arm the bounded one-shot at-boot intro motion sweep.
+
+        Writes the one-shot arm file consumed by the next
+        ``greia-intro-sweep`` boot run. Developer-image gating comes from
+        the constructor; the arm primitive re-checks the marker fail-closed.
+        """
+        try:
+            return str(arm_intro_sweep())
+        except DeveloperInputError as exc:
+            raise DeveloperControlError(str(exc)) from exc
+
+    def intro_sweep_log(self) -> str:
+        """Return the bounded sweep timestamp log for burst-verdict collection."""
+        return read_intro_sweep_log_text()
 
     def deploy_activity(self, source: Path, *, replace_system: bool) -> DeploymentRecord:
         source = source.resolve(strict=True)
@@ -586,6 +607,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     restore.add_argument("activity_id")
     sub.add_parser("reboot")
     sub.add_parser("poweroff")
+    sub.add_parser("arm-intro-sweep")
+    sub.add_parser("intro-sweep-log")
     return parser.parse_args(argv)
 
 
@@ -617,6 +640,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             control.reboot()
         elif args.command == "poweroff":
             control.poweroff()
+        elif args.command == "arm-intro-sweep":
+            print(control.arm_intro_sweep())
+        elif args.command == "intro-sweep-log":
+            sys.stdout.write(control.intro_sweep_log())
         else:  # pragma: no cover - argparse guarantees the command set.
             raise DeveloperControlError("unsupported command")
     except DeveloperControlError as exc:

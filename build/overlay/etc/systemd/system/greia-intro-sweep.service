@@ -1,0 +1,24 @@
+[Unit]
+Description=Greia development-only one-shot intro motion sweep
+# Marker gate: inert on non-developer images (no process is started there).
+ConditionPathExists=/etc/greia-os/developer-remote
+# Arm gate: with no arm file the boot path is a no-op (unit skipped, nothing
+# runs), so the unarmed boot is behaviorally identical to not shipping this
+# unit. The sweep consumes (unlinks) the arm file on its single run, so the
+# condition also enforces never-fires-twice across boots.
+ConditionPathExists=/var/lib/greia-developer/intro-sweep.armed
+# Intro-bound trigger: start once the launcher (which owns the intro) starts.
+# The sweep itself waits at most INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS
+# for a fresh intro_enter spool observation, then fires once with a hard
+# deadline, so worst-case occupancy stays below the ~7 s intro. This service
+# never orders or blocks the launcher; it only runs after it has started.
+After=greia-launcher.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/greia-os/greia-intro-sweep
+TimeoutStartSec=15
+RemainAfterExit=no
+
+[Install]
+WantedBy=graphical.target
