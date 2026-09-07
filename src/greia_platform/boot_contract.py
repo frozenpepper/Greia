@@ -320,6 +320,25 @@ def validate_grub_text(
     return entries
 
 
+def validate_kernel_command_line(
+    line: KernelCommandLine,
+    *,
+    live_installer: bool = False,
+    developer: bool = False,
+) -> None:
+    """Validate one parsed kernel command line against appliance boot policy.
+
+    Thin public wrapper over the same per-line checks used by
+    :func:`validate_grub_text`, so multi-entry (A/B) configurations reuse the
+    exact release/developer/live argument contract without copying it.
+    Raises :class:`GrubContractError` on the first policy violation set.
+    """
+
+    errors = _line_errors(line, live_installer=live_installer, developer=developer)
+    if errors:
+        raise GrubContractError("; ".join(errors))
+
+
 def validate_grub_config(
     path: Path | str,
     *,
