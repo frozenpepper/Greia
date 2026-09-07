@@ -248,6 +248,10 @@ class RecordingSeams:
             packages=(),
         )
 
+    def installed_contract_factory(self) -> bytes:
+        self.contacts.append("contract")
+        return _CONTRACT_BYTES
+
     def seams(self) -> UpdateSlotSeams:
         return UpdateSlotSeams(
             slot_store_factory=self.slot_store_factory,
@@ -255,6 +259,7 @@ class RecordingSeams:
             package_installer_factory=self.package_installer_factory,
             inventory_factory=self.inventory_factory,
             support_set_factory=self.support_set_factory,
+            installed_contract_factory=self.installed_contract_factory,
         )
 
 

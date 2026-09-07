@@ -1364,6 +1364,10 @@ class UpdateSlotSeams:
     that first). Unset factories fail closed at stage time with
     :class:`UpdateBackendUnavailable`, so a minimally composed service
     reports unavailable instead of guessing at destination access.
+    ``installed_contract_factory`` is the PERSIST-side preflight: it returns
+    the installed persistent-state contract bytes so staging can prove the
+    candidate binds them (previously accepted slot keeps reading shared
+    state) before any inactive-slot write.
     """
 
     slot_store_factory: Callable[[object], object] | None = None
@@ -1373,6 +1377,7 @@ class UpdateSlotSeams:
     support_set_factory: Callable[[InspectedUpdateBundle], object] | None = None
     profile_policy_factory: Callable[[object], object] | None = None
     selection_factory: Callable[[object, str], object | None] | None = None
+    installed_contract_factory: Callable[[], bytes] | None = None
 
 
 class SlotBackedSystemUpdateBackend:
@@ -1480,6 +1485,34 @@ class SlotBackedSystemUpdateBackend:
                 raise SystemUpdateError(
                     "support set is not the release-bound support member"
                 )
+            # Persistent-state contract preflight while pending: the
+            # candidate must bind the installed contract bytes (same
+            # namespaces/digest), so the previously accepted slot still
+            # reads shared PERSIST state after update and rollback. This
+            # runs before any inactive-slot store is addressed.
+            installed_contract = self._require_seam(
+                "installed persistent-state contract",
+                self.seams.installed_contract_factory,
+            )()
+            if (
+                not isinstance(installed_contract, (bytes, bytearray))
+                or not installed_contract
+            ):
+                raise SystemUpdateError(
+                    "installed persistent-state contract is not authoritative"
+                )
+            try:
+                from .persistent_layout import assert_persistent_contract_accepted
+
+                assert_persistent_contract_accepted(
+                    bytes(installed_contract), bundle.manifest
+                )
+            except SystemUpdateError:
+                raise
+            except Exception as exc:
+                raise SystemUpdateError(
+                    f"persistent-state contract preflight refused: {exc}"
+                ) from exc
             inventory = self._require_seam(
                 "hardware inventory attestation", self.seams.inventory_factory
             )()
@@ -1584,7 +1617,14 @@ class SlotBackedSystemUpdateBackend:
         return {"armed": True, "slot": journal.candidate_slot}
 
     def confirm_boot_health(self) -> dict[str, object]:
-        """Commit or roll back from the authoritative boot observation."""
+        """Commit or roll back from the authoritative boot observation.
+
+        A health commit additionally advances the trusted layout authority
+        to the candidate (accepted slot/release follow the journal), so the
+        next sequenced update resolves the other inactive slot. The
+        advancement is idempotent: an already-converged record is returned
+        unchanged, and a record that drifted unexpectedly fails closed.
+        """
         from .boot_transaction import (
             BootTransactionError,
             BootTransactionJournal,
@@ -1594,6 +1634,8 @@ class SlotBackedSystemUpdateBackend:
         try:
             journal = self._require_staged_journal()
             if journal.is_terminal:
+                if journal.state is BootTransactionState.ACCEPTED:
+                    self._advance_layout_authority(journal)
                 return {
                     "confirmed": journal.state is BootTransactionState.ACCEPTED,
                     "state": journal.state.value,
@@ -1614,6 +1656,7 @@ class SlotBackedSystemUpdateBackend:
                     BootTransactionState.ACCEPTED,
                     "candidate boot confirmed healthy; release accepted",
                 )
+                self._advance_layout_authority(journal)
         except BootTransactionError as exc:
             raise SystemUpdateError(f"update confirm failed fail-closed: {exc}") from exc
         return {
@@ -1700,6 +1743,102 @@ class SlotBackedSystemUpdateBackend:
                 "reconcile or confirm it before staging"
             )
 
+    def _advance_layout_authority(self, journal: "_Journal") -> None:
+        """Advance the trusted layout record to a health-committed journal."""
+        advance_layout_authority_for_acceptance(
+            self.layout_record_path,
+            candidate_slot=journal.candidate_slot,
+            accepted_slot=journal.accepted_slot,
+            release_id=journal.release_id,
+            release_sequence=journal.release_sequence,
+        )
+
+
+def advance_layout_authority_for_acceptance(
+    layout_record_path: Path,
+    *,
+    candidate_slot: str,
+    accepted_slot: str,
+    release_id: str,
+    release_sequence: int,
+) -> "_LayoutRecord":
+    """Advance the trusted A/B layout authority after a health commit.
+
+    Step 8B.4 sequenced updates (A→B→A) require this: the next stage
+    resolves its inactive slot from the record, so without advancement the
+    second update would re-target the just-accepted slot instead of the
+    other one. The rewrite is atomic (write-temp/fsync/rename, owner-only
+    mode) and idempotent: when the record already accepts this candidate
+    release it is returned unchanged. Any unexpected authority drift fails
+    closed without touching the record.
+    """
+    from dataclasses import replace as _replace
+
+    from .persistent_layout import InstalledLayoutRecord, PersistentLayoutError
+
+    if candidate_slot not in ("A", "B") or accepted_slot not in ("A", "B"):
+        raise SystemUpdateError("layout advancement requires semantic slots A/B")
+    if candidate_slot == accepted_slot:
+        raise SystemUpdateError(
+            "layout advancement requires a candidate distinct from accepted"
+        )
+    try:
+        record = load_installed_layout_record(Path(layout_record_path))
+    except UpdateLayoutError as exc:
+        raise SystemUpdateError(
+            f"layout authority is not authoritative: {exc}"
+        ) from exc
+    if record is None or record.system_b is None:
+        raise SystemUpdateError("layout advancement requires an A/B layout authority")
+    if record.accepted_slot == candidate_slot:
+        if (
+            record.accepted_release_id != release_id
+            or record.accepted_release_sequence != release_sequence
+        ):
+            raise SystemUpdateError(
+                "layout authority already accepts a different release "
+                "for this slot; refusing to advance"
+            )
+        if record.boot_control.active_slot != candidate_slot:
+            raise SystemUpdateError(
+                "layout authority accepted slot disagrees with boot control; "
+                "refusing to advance"
+            )
+        return record
+    if record.accepted_slot != accepted_slot:
+        raise SystemUpdateError(
+            "layout authority moved under the accepted transaction; "
+            "refusing to advance"
+        )
+    advanced = _replace(
+        record,
+        accepted_slot=candidate_slot,
+        accepted_release_id=release_id,
+        accepted_release_sequence=release_sequence,
+        boot_control=_replace(record.boot_control, active_slot=candidate_slot),
+    )
+    try:
+        InstalledLayoutRecord.from_dict(advanced.as_dict())
+    except PersistentLayoutError as exc:
+        raise SystemUpdateError(
+            f"advanced layout authority is not authoritative: {exc}"
+        ) from exc
+    try:
+        advanced.write_to(Path(layout_record_path))
+    except OSError as exc:
+        raise SystemUpdateError(
+            f"layout authority advancement failed: {exc}"
+        ) from exc
+    try:
+        reloaded = load_installed_layout_record(Path(layout_record_path))
+    except UpdateLayoutError as exc:
+        raise SystemUpdateError(
+            f"advanced layout authority is unreadable: {exc}"
+        ) from exc
+    if reloaded is None:
+        raise SystemUpdateError("advanced layout authority is missing")
+    return reloaded
+
 
 def _bounded_note(note: str, maximum: int = 512) -> str:
     raw = note if isinstance(note, str) and note else "update journal transition"
@@ -1767,6 +1906,8 @@ class SystemUpdateServiceAuthority:
             object.__setattr__(
                 self, "backend", SlotBackedSystemUpdateBackend(self.state_dir)
             )
+        pinned = self.accepted_sequence is not None
+        object.__setattr__(self, "_accepted_sequence_pinned", pinned)
         if self.accepted_sequence is None:
             object.__setattr__(
                 self, "accepted_sequence", read_accepted_sequence(self.state_dir)
@@ -1834,6 +1975,7 @@ class SystemUpdateServiceAuthority:
         }
 
     def verify_current_candidate(self) -> UpdateCandidateSummary:
+        self._refresh_accepted_sequence()
         path = self._current_bundle_path()
         inspected, _decision = self.service.verify_for_activation(path)
         return UpdateCandidateSummary(
@@ -1845,6 +1987,7 @@ class SystemUpdateServiceAuthority:
         )
 
     def stage_current_candidate(self) -> dict[str, object]:
+        self._refresh_accepted_sequence()
         path = self._current_bundle_path()
         inspected, decision = self.service.verify_for_activation(path)
         if decision == "no-update":
@@ -1877,6 +2020,19 @@ class SystemUpdateServiceAuthority:
         backend = self.backend
         path = getattr(backend, "layout_record_path", None)
         return Path(path) if path is not None else None
+
+    def _refresh_accepted_sequence(self) -> None:
+        """Re-read the accepted sequence unless explicitly pinned.
+
+        The health commit persists a new accepted sequence to disk; a
+        long-lived (socket-activated) authority must observe it, otherwise
+        an equal-sequence replay would classify as "update" instead of
+        "no-update" and a rolled-back sequence could stage again.
+        Explicitly constructed sequences (tests) stay pinned.
+        """
+        if getattr(self, "_accepted_sequence_pinned", False):
+            return
+        self.service.accepted_sequence = read_accepted_sequence(self.state_dir)
 
     def _status_record(self) -> dict[str, object]:
         inbox = SystemUpdateInbox(self.state_dir)
