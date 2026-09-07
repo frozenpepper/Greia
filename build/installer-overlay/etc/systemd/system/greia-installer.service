@@ -1,23 +1,39 @@
+# Step 8A.5: unprivileged installer UI.
+# The graphical installer runs as the Debian ``nobody`` identity and can
+# never open or write raw disks: target selection travels only as an
+# identity digest and installation only as nonce+digest over the semantic
+# socket ``greia-install-transaction.socket`` to the root
+# ``greia-install-transaction.service``, which revalidates every authority
+# before any destructive command. The historic unit name is kept (the image
+# builder enables ``greia-installer.service``) and aliased to the canonical
+# ``greia-installer-ui.service``.
 [Unit]
-Description=Greia OS graphical installer
+Description=Greia OS graphical installer (unprivileged UI)
 Wants=iwd.service systemd-resolved.service systemd-networkd.service avahi-daemon.service
-After=local-fs.target systemd-logind.service iwd.service systemd-resolved.service systemd-networkd.service
+Wants=greia-install-transaction.socket
+After=local-fs.target systemd-logind.service iwd.service systemd-resolved.service systemd-networkd.service greia-install-transaction.socket
 Conflicts=getty@tty1.service
 StartLimitIntervalSec=30
 StartLimitBurst=4
 
 [Service]
 Type=simple
-User=root
+User=nobody
+Group=nogroup
+# Xorg needs video/input group access on bare metal; membership is granted
+# declaratively here so no image user database change is required.
+SupplementaryGroups=video input
 WorkingDirectory=/opt/greia-os
 Environment=GREIA_OS_ROOT=/opt/greia-os
-Environment=GREIA_HARDWARE_SUPPORT_POOL=/opt/greia-hardware-support
 Environment=GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStartPre=/usr/local/lib/greia-os/prepare-installer-vt
-ExecStart=/usr/bin/xinit /usr/bin/python3 -m greia_installer.entrypoint --root /opt/greia-os --payload /run/live/medium/payload/pip-rootfs.squashfs --payload-digest /etc/greia-os/expected-payload.sha256 -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
+# prepare-installer-vt creates /run/greia-os and owns VT/X preconditions as
+# root; the '+' prefix keeps that privilege after the UI itself dropped to
+# the unprivileged identity.
+ExecStartPre=+/usr/local/lib/greia-os/prepare-installer-vt
+ExecStart=/usr/bin/xinit /usr/bin/python3 -m greia_installer.entrypoint --root /opt/greia-os --transaction-socket /run/greia-os/install-transaction.sock --target-profile /etc/greia-os/target-image-profile.json -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
 Restart=on-failure
 RestartSec=2
 TTYPath=/dev/tty1
@@ -32,8 +48,14 @@ StandardOutput=journal
 StandardError=journal
 PrivateTmp=yes
 ProtectHome=read-only
+# The unprivileged UI owns no destructive path: payload, support pool and
+# target profile verification live in the root transaction service. Xorg
+# still needs its normal device/IPC surface, so this stays less confined
+# than the transaction service by design.
+NoNewPrivileges=yes
 LimitCORE=0
 TasksMax=128
 
 [Install]
 WantedBy=graphical.target
+Alias=greia-installer-ui.service

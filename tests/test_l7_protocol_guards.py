@@ -266,33 +266,45 @@ class SemanticServiceDefinitionGuardTests(unittest.TestCase):
                 self.assertIsNone(re.search(r"^class \w*Parser\b", source, re.M))
 
     def test_socket_units_defined_with_enable_gate(self) -> None:
-        pairs = (
-            (
-                "build/installer-overlay/etc/systemd/system/greia-install-transaction.socket",
-                "build/installer-overlay/etc/systemd/system/greia-install-transaction.service",
-            ),
-            (
-                "build/overlay/etc/systemd/system/greia-system-update.socket",
-                "build/overlay/etc/systemd/system/greia-system-update.service",
-            ),
+        # The installed-system update pair stays enable-gated (absent gate
+        # file means inactive, including during ordinary pre-intro boot).
+        socket_unit = "build/overlay/etc/systemd/system/greia-system-update.socket"
+        service_unit = "build/overlay/etc/systemd/system/greia-system-update.service"
+        socket_text = read(socket_unit)
+        self.assertIn("ListenStream=/run/greia-os/", socket_text)
+        self.assertIn("SocketMode=0600", socket_text)
+        self.assertIn("Accept=no", socket_text)
+        self.assertIn(
+            "ConditionPathExists=/run/greia-os/enable-privileged-transactions",
+            socket_text,
         )
-        for socket_unit, service_unit in pairs:
-            with self.subTest(socket=socket_unit):
-                socket_text = read(socket_unit)
-                self.assertIn("ListenStream=/run/greia-os/", socket_text)
-                self.assertIn("SocketMode=0600", socket_text)
-                self.assertIn("Accept=no", socket_text)
-                self.assertIn(
-                    "ConditionPathExists=/run/greia-os/enable-privileged-transactions",
-                    socket_text,
-                )
-                service_text = read(service_unit)
-                self.assertIn(
-                    "ConditionPathExists=/run/greia-os/enable-privileged-transactions",
-                    service_text,
-                )
-                self.assertNotIn("WantedBy=", service_text)
-                self.assertIn("RestrictAddressFamilies=AF_UNIX", service_text)
+        service_text = read(service_unit)
+        self.assertIn(
+            "ConditionPathExists=/run/greia-os/enable-privileged-transactions",
+            service_text,
+        )
+        self.assertNotIn("WantedBy=", service_text)
+        self.assertIn("RestrictAddressFamilies=AF_UNIX", service_text)
+
+    def test_installer_socket_active_by_image_scope_not_gate_file(self) -> None:
+        # Step 8A.5 split: the installer overlay ships only to installer
+        # media, never to the installed system, so the transaction socket is
+        # active by image scope. The confinement shape stays identical, and
+        # the socket additionally restricts connects to the UI identity.
+        socket_text = read(
+            "build/installer-overlay/etc/systemd/system/greia-install-transaction.socket"
+        )
+        self.assertIn("ListenStream=/run/greia-os/", socket_text)
+        self.assertIn("SocketMode=0600", socket_text)
+        self.assertIn("SocketUser=nobody", socket_text)
+        self.assertIn("Accept=no", socket_text)
+        self.assertNotIn("ConditionPathExists", socket_text)
+        service_text = read(
+            "build/installer-overlay/etc/systemd/system/greia-install-transaction.service"
+        )
+        self.assertNotIn("ConditionPathExists", service_text)
+        self.assertNotIn("WantedBy=", service_text)
+        self.assertIn("RestrictAddressFamilies=AF_UNIX", service_text)
 
     def test_no_destructive_backend_wired(self) -> None:
         for relative in (

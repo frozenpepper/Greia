@@ -1,13 +1,17 @@
-# L7-PROTOCOLS R0/R1: socket-activated installer semantic service.
-# Defined but never enabled: gated on /run/greia-os/enable-privileged-
-# transactions (absent on every image) and never wanted by any boot target,
-# so it stays inactive during ordinary pre-intro boot. PREPARE_PLAN/EXECUTE
-# semantics only; no destructive backend is wired at R0/R1.
+# Step 8A.5: root install-transaction service (privileged half of the split).
+# Socket-activated by greia-install-transaction.socket, which only the
+# unprivileged installer UI can connect to. This service owns every
+# destructive installer command, but runs one only while a valid prepared
+# transaction executes: PREPARE_PLAN returns nonce + canonical plan +
+# digest, and EXECUTE with nonce+digest rematerializes the setup release,
+# actual block device, layout adapter, support set and boot backend from
+# Greia-owned state below and re-probes safety authority immediately
+# before destructive work. Never enabled at boot and never part of
+# ordinary pre-intro boot: no WantedBy pulls this in.
 [Unit]
-Description=Greia OS install-transaction semantic service
+Description=Greia OS install-transaction service
 Requires=greia-install-transaction.socket
 After=greia-install-transaction.socket
-ConditionPathExists=/run/greia-os/enable-privileged-transactions
 # Never part of pre-intro boot and never a generic command runner: this unit
 # only serves the bounded PREPARE_PLAN/EXECUTE semantic protocol.
 
@@ -19,7 +23,15 @@ WorkingDirectory=/opt/greia-os
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/usr/bin/python3 -m greia_installer.install_transaction --socket-activated
+# Greia-owned install facts. The UI never supplies these: payload and digest
+# are the setup release on the installer medium, the target profile is the
+# release manifest, and the support pool is the frozen media pool.
+Environment=GREIA_OS_ROOT=/opt/greia-os
+Environment=GREIA_INSTALL_PAYLOAD=/run/live/medium/payload/pip-rootfs.squashfs
+Environment=GREIA_INSTALL_PAYLOAD_DIGEST=/etc/greia-os/expected-payload.sha256
+Environment=GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json
+Environment=GREIA_HARDWARE_SUPPORT_POOL=/opt/greia-hardware-support
+ExecStart=/usr/bin/python3 -m greia_installer.transaction_service
 Restart=no
 TimeoutStartSec=5
 TimeoutStopSec=5

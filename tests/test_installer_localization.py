@@ -83,7 +83,10 @@ class InstallerLocalizationTests(unittest.TestCase):
         self.assertIn("yellow_star.png", source)
         self.assertIn("pygame.mouse.get_pos()", source)
         self.assertIn("hovered = cell.collidepoint(pointer_position)", source)
-        self.assertIn("locale=self.locale", source)
+        # Step 8A.5 split: the language-first selection reaches the install
+        # through the transaction settings snapshot, not a direct request.
+        self.assertIn("def _snapshot_locale", source)
+        self.assertIn("return self.locale", source)
 
 
 if __name__ == "__main__":

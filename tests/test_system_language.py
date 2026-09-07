@@ -152,7 +152,10 @@ class SystemLanguageTests(unittest.TestCase):
             PROJECT_ROOT / "src" / "greia_installer" / "entrypoint.py"
         ).read_text(encoding="utf-8")
         self.assertIn("SUPPORTED_SYSTEM_LANGUAGES", entrypoint)
-        self.assertIn("locale=self.locale", entrypoint)
+        # Step 8A.5 split: the language-first selection reaches the install
+        # through the transaction settings snapshot, not a direct request.
+        self.assertIn("def _snapshot_locale", entrypoint)
+        self.assertIn("return self.locale", entrypoint)
 
         installer_packages = {
             line.strip()

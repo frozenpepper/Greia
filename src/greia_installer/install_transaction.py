@@ -19,8 +19,12 @@ the prepared plan fail-closed.
 R0/R1 bound: protocol definitions only. The coordinator re-proves
 authority and returns a bounded ``ExecuteAuthorization``; no destructive
 backend is wired here, so nothing can be destructively enabled through
-this module yet. The socket units stay inactive during ordinary pre-intro
-boot and accept only the installer peer UID (root).
+this module yet. Step 8A.5 wires destruction in
+:mod:`greia_installer.transaction_service`, which consumes the single-use
+nonce through this coordinator and rematerializes every other install
+fact from Greia-owned service state. The socket units stay inactive during
+ordinary pre-intro boot and accept only the root service and installer UI
+peer UIDs.
 """
 
 from __future__ import annotations
@@ -54,8 +58,15 @@ class InstallTransactionError(RuntimeError):
 #: Semantic operations of the install-transaction service.
 INSTALL_TRANSACTION_OPS = ("PREPARE_PLAN", "EXECUTE")
 
-#: Peer UIDs authorized for the installer service (root installer image).
-INSTALL_TRANSACTION_ALLOWED_UIDS = (0,)
+#: Unprivileged installer UI identity (Debian ``nobody``, always present).
+#: The graphical UI runs as this UID behind ``greia-installer-ui.service``
+#: and is the only non-root peer the transaction socket authorizes. Root
+#: stays authorized because root already owns the machine; authorizing it
+#: here changes nothing, while every other UID is refused fail-closed.
+INSTALLER_UI_UID = 65534
+
+#: Peer UIDs authorized for the installer service (root service + UI peer).
+INSTALL_TRANSACTION_ALLOWED_UIDS = (0, INSTALLER_UI_UID)
 
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 _NONCE_RE = re.compile(r"^[0-9a-f]{32}$")
@@ -103,6 +114,11 @@ def _canonical_bytes(value: Mapping[str, object]) -> bytes:
         json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         + "\n"
     ).encode("utf-8")
+
+
+def canonical_plan_bytes(plan: Mapping[str, object]) -> bytes:
+    """Canonical bytes a plan digest is computed over (shared with the UI)."""
+    return _canonical_bytes(dict(plan))
 
 
 # ---------------------------------------------------------------------------

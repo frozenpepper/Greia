@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-import threading
 from pathlib import Path
-from typing import Any
 
 from greia_platform.system_language import (
     DEFAULT_SYSTEM_LOCALE,
@@ -14,12 +12,9 @@ from greia_platform.system_language import (
 from greia_platform.typography import FontRole, GreiaTypography
 
 from .composition import provisional_installer_hardware_controller
-from .engine import InstallRequest, InstallationEngine
 from .i18n import LocalizedTypography
 from .main import (
-    DemoInstallationEngine,
     InstallerApplication,
-    InstallerPage,
     parse_args,
 )
 
@@ -36,48 +31,9 @@ class LanguageFirstInstallerApplication(InstallerApplication):
         # in disk/network/destructive-install code.
         self._typography = LocalizedTypography(self._typography, self.locale)
 
-    def _start_installation(self) -> None:
-        target = self.state.target
-        if target is None or self._worker is not None:
-            return
-        display_block = self.display_install_block_reason()
-        if display_block:
-            self.state.error = display_block
-            self.state.page = InstallerPage.ERROR
-            return
-        power_problem = self.power_probe.installation_block_reason()
-        if power_problem:
-            self.state.error = power_problem
-            self.state.page = InstallerPage.ERROR
-            return
-        self.state.error = ""
-        self.state.result = None
-        self.state.page = InstallerPage.INSTALLING
-        engine: Any
-        if self.demo:
-            engine = DemoInstallationEngine()
-        else:
-            engine = InstallationEngine(project_root=self.root)
-        request = InstallRequest(
-            target=target,
-            payload=self.payload,
-            payload_digest=self.payload_digest,
-            hardware_settings=self.state.settings,
-            locale=self.locale,
-            wifi_profile=self.wifi.profile,
-        )
-
-        def worker() -> None:
-            try:
-                result = engine.install(request, self._events.put)
-                self._events.put(result)
-            except Exception as exc:
-                self._events.put(exc)
-
-        self._worker = threading.Thread(
-            target=worker, name="greia-installer", daemon=True
-        )
-        self._worker.start()
+    def _snapshot_locale(self) -> str:
+        """Carry the language-first selection into the transaction snapshot."""
+        return self.locale
 
 
 def choose_language(*, root: Path, windowed: bool, demo: bool) -> str:
@@ -274,10 +230,10 @@ def _release_boot_cover() -> None:
 
 def main() -> int:
     args = parse_args()
-    if not args.demo and os.geteuid() != 0:
-        raise SystemExit(
-            "The live installer must run as root. Use --demo for a safe preview."
-        )
+    # Step 8A.5: the graphical UI is unprivileged by design (see
+    # greia-installer-ui.service); destruction lives only in the root
+    # transaction service behind nonce+digest. Use --demo for the
+    # zero-disk-contact simulation.
     locale = choose_language(root=args.root, windowed=args.windowed, demo=args.demo)
     return LanguageFirstInstallerApplication(
         root=args.root,
@@ -286,6 +242,8 @@ def main() -> int:
         windowed=args.windowed,
         demo=args.demo,
         locale=locale,
+        transaction_socket=args.transaction_socket,
+        target_profile=args.target_profile,
         hardware_controller=(
             None if args.demo else provisional_installer_hardware_controller()
         ),

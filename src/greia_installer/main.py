@@ -49,9 +49,15 @@ from .engine import (
     InstallProgress,
     InstallRequest,
     InstallResult,
-    InstallationEngine,
 )
 from .power import PowerSupplyProbe
+from .transaction_client import (
+    InstallTransactionClient,
+    PreparedConfirmation,
+    TransactionClientError,
+    live_target_facts,
+    read_compatible_profile_id,
+)
 from .wifi import IwdWifiBackend, WifiSecurity
 from .wifi_setup import DemoWifiBackend, WifiSetupController, WifiSetupPhase
 
@@ -120,14 +126,47 @@ class InstallerApplication:
         demo: bool,
         power_probe: PowerSupplyProbe | None = None,
         hardware_controller: HardwareSessionController | None = None,
+        transaction_client: InstallTransactionClient | None = None,
+        transaction_socket: Path | None = None,
+        target_profile: Path | None = None,
     ):
         self.root = root.resolve()
+        # Payload paths are retained for the demo simulation only. The
+        # production install path never reads them: the root transaction
+        # service owns the payload/digest from its own Greia-owned state and
+        # the UI travels with nonce+digest alone.
         self.payload = payload.resolve()
         self.payload_digest = (
             payload_digest.resolve() if payload_digest is not None else None
         )
         self.windowed = windowed
         self.demo = demo
+        self.transaction_socket = (
+            transaction_socket
+            or Path(os.environ.get("GREIA_INSTALL_TRANSACTION_SOCKET", ""))
+            or None
+        )
+        self.target_profile = target_profile or Path(
+            os.environ.get(
+                "GREIA_TARGET_IMAGE_PROFILE",
+                "/etc/greia-os/target-image-profile.json",
+            )
+        )
+        self._transaction_client = transaction_client
+        if self._transaction_client is None and not self.demo:
+            from .transaction_client import (
+                DEFAULT_TRANSACTION_SOCKET_PATH,
+                EXECUTE_TIMEOUT_SECONDS,
+                socket_transport,
+            )
+
+            socket_path = self.transaction_socket or DEFAULT_TRANSACTION_SOCKET_PATH
+            self._transaction_client = InstallTransactionClient(
+                socket_transport(socket_path),
+                execute_transport=socket_transport(
+                    socket_path, timeout=EXECUTE_TIMEOUT_SECONDS
+                ),
+            )
         self.power_probe = power_probe or PowerSupplyProbe()
         self.hardware_controller = hardware_controller
         defaults = HardwareDefaults.load(self.root / "runtime" / "hardware-settings.toml")
@@ -577,7 +616,13 @@ class InstallerApplication:
             return max(8, min(320, int(fallback_px)))
 
     def build_install_request(self, target: Any, wifi_profile: Any = None) -> Any:
-        """Single commit path: carry live settings into ``InstallRequest``."""
+        """Single commit path for the demo simulation: live settings carried.
+
+        Production installs never build this object: they travel through
+        the transaction client as identity digest + settings snapshot
+        (:meth:`settings_snapshot_for_service`). Retained because the demo
+        simulation and its pinned regression exercise it.
+        """
         return InstallRequest(
             target=target,
             payload=self.payload,
@@ -585,6 +630,63 @@ class InstallerApplication:
             hardware_settings=self.state.settings,
             wifi_profile=wifi_profile if wifi_profile is not None else self.wifi.profile,
         )
+
+    def _snapshot_locale(self) -> str:
+        """Locale carried in the service settings snapshot (base default)."""
+        return "en"
+
+    def settings_snapshot_for_service(self) -> dict[str, str]:
+        """Bounded semantic preference scalars for ``PREPARE_PLAN``.
+
+        Booleans/numbers render as canonical text; only allowlisted keys
+        travel (see ``transaction_service.checked_service_settings``). No
+        paths, devices, commands or credentials are ever included.
+        """
+        settings = self.state.settings
+        return {
+            "touchpad_tap": "true" if settings.touchpad_tap else "false",
+            "touchpad_speed": repr(float(settings.touchpad_speed)),
+            "mouse_speed": repr(float(settings.mouse_speed)),
+            "natural_scrolling": "true" if settings.natural_scrolling else "false",
+            "resolution": str(settings.resolution),
+            "keyboard_layout": str(settings.keyboard_layout),
+            "mic_gain": repr(float(settings.mic_gain)),
+            "disable_while_typing": (
+                "true" if settings.disable_while_typing else "false"
+            ),
+            "locale": self._snapshot_locale(),
+        }
+
+    def read_live_confirmation_facts(self) -> dict[str, dict[str, object]]:
+        """Fresh read-only inventory projected to safe confirmation facts.
+
+        ``lsblk`` observation only: this never opens or writes a disk, it
+        only re-reads which identity digests are still present and
+        eligible so a changed inventory invalidates the confirmation.
+        """
+        try:
+            inventory = LsblkDiskProbe().probe()
+            ancestry = LiveMediaResolver().resolve(inventory)
+        except DiskProbeError:
+            return {}
+        if ancestry.ambiguous:
+            return {}
+        policy = default_install_target_policy()
+        facts: dict[str, dict[str, object]] = {}
+        for device in inventory.devices:
+            if device.device_type != "disk":
+                continue
+            if device.name in ancestry.whole_disk_names:
+                facts[device.identity_digest] = {
+                    "eligible": False,
+                    "display_summary": device.display_name,
+                }
+                continue
+            facts[device.identity_digest] = {
+                "eligible": policy.evaluate(device).eligible,
+                "display_summary": device.display_name,
+            }
+        return facts
 
     def run(self) -> int:
         import pygame
@@ -1002,6 +1104,38 @@ class InstallerApplication:
         else:
             self.state.settings = settings
 
+    def _transaction_client_or_error(self) -> InstallTransactionClient | None:
+        """Return the UI transaction client, or fail closed to the error page."""
+        if self._transaction_client is not None:
+            return self._transaction_client
+        self.state.error = "The install service is unavailable; installation stopped"
+        self.state.page = InstallerPage.ERROR
+        return None
+
+    def _checked_hold_target(self) -> BlockDevice | None:
+        """Re-probe read-only inventory and require the selection to survive.
+
+        Any inventory refresh or material target-state change since the
+        confirm page was shown invalidates the confirmation fail-closed:
+        the parent returns to target selection and no nonce is prepared.
+        """
+        target = self.state.target
+        if target is None:
+            self.state.error = "No disk is selected; installation stopped"
+            self.state.page = InstallerPage.ERROR
+            return None
+        facts = self.read_live_confirmation_facts()
+        live = facts.get(target.identity_digest)
+        if not isinstance(live, dict) or live.get("eligible") is not True:
+            self.state.error = (
+                "The selected disk changed; choose the internal disk again"
+            )
+            self.state.page = InstallerPage.TARGET
+            self.state.targets = self._load_targets()
+            self.state.selected_target = 0
+            return None
+        return target
+
     def _start_installation(self) -> None:
         target = self.state.target
         if target is None or self._worker is not None:
@@ -1019,17 +1153,75 @@ class InstallerApplication:
         self.state.error = ""
         self.state.result = None
         self.state.page = InstallerPage.INSTALLING
-        engine: Any
         if self.demo:
-            engine = DemoInstallationEngine()
-        else:
-            engine = InstallationEngine(project_root=self.root)
-        request = self.build_install_request(target)
+            # Demo simulation only: timed stages, zero disk contact. The
+            # production path below never constructs an engine or a request.
+            engine: Any = DemoInstallationEngine()
+            request = self.build_install_request(target)
+
+            def demo_worker() -> None:
+                try:
+                    result = engine.install(request, self._events.put)
+                    self._events.put(result)
+                except Exception as exc:
+                    self._events.put(exc)
+
+            self._worker = threading.Thread(
+                target=demo_worker, name="greia-installer", daemon=True
+            )
+            self._worker.start()
+            return
+        # Production path (8A.5 split): the unprivileged UI only prepares a
+        # plan by identity digest and executes nonce+digest. Every
+        # destructive command runs in the root transaction service after it
+        # revalidates the plan against fresh Greia-owned state.
+        held = self._checked_hold_target()
+        if held is None:
+            return
+        client = self._transaction_client_or_error()
+        if client is None:
+            return
+        try:
+            profile_id = read_compatible_profile_id(self.target_profile)
+        except TransactionClientError as exc:
+            self.state.error = str(exc)
+            self.state.page = InstallerPage.ERROR
+            return
+        snapshot = self.settings_snapshot_for_service()
+        identity = held.identity_digest
+        display = held.display_name
 
         def worker() -> None:
             try:
-                result = engine.install(request, self._events.put)
-                self._events.put(result)
+                self._events.put(
+                    InstallProgress(0.05, "prepare", "Confirming the selected disk")
+                )
+                prepared = client.prepare(
+                    expected_target_identity=identity,
+                    compatible_profile_id=profile_id,
+                    settings_snapshot=snapshot,
+                )
+                confirmation = PreparedConfirmation(
+                    prepared=prepared,
+                    expected_target_identity=identity,
+                    expected_display_summary=display,
+                    settings_snapshot=dict(snapshot),
+                )
+                live = self.read_live_confirmation_facts()
+                if not confirmation.still_valid(
+                    live_targets=live, current_settings=self.settings_snapshot_for_service()
+                ):
+                    raise TransactionClientError(
+                        "the selected disk changed; confirmation invalidated"
+                    )
+                self._events.put(
+                    InstallProgress(0.10, "install", "Installing Greia OS")
+                )
+                client.execute(
+                    transaction_nonce=prepared.transaction_nonce,
+                    plan_digest=prepared.plan_digest,
+                )
+                self._events.put(InstallResult())
             except Exception as exc:
                 self._events.put(exc)
 
@@ -2301,6 +2493,18 @@ def parse_args() -> argparse.Namespace:
         default=Path("/run/live/medium/payload/pip-rootfs.squashfs"),
     )
     parser.add_argument("--payload-digest", type=Path)
+    parser.add_argument(
+        "--transaction-socket",
+        type=Path,
+        default=None,
+        help="Root install-transaction socket (8A.5 split; default is the platform socket)",
+    )
+    parser.add_argument(
+        "--target-profile",
+        type=Path,
+        default=None,
+        help="Greia-owned target-image profile the UI reads its profile id from",
+    )
     parser.add_argument("--windowed", action="store_true")
     parser.add_argument("--demo", action="store_true")
     return parser.parse_args()
@@ -2308,16 +2512,18 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    if not args.demo and os.geteuid() != 0:
-        raise SystemExit(
-            "The live installer must run as root. Use --demo for a safe preview."
-        )
+    # Step 8A.5: the graphical UI is unprivileged by design. Destructive
+    # installation runs only in the root transaction service, reached here
+    # through nonce+digest alone, so no root gate belongs in this process.
+    # Use --demo for the zero-disk-contact simulation.
     return InstallerApplication(
         root=args.root,
         payload=args.payload,
         payload_digest=args.payload_digest,
         windowed=args.windowed,
         demo=args.demo,
+        transaction_socket=args.transaction_socket,
+        target_profile=args.target_profile,
         hardware_controller=(
             None if args.demo else provisional_installer_hardware_controller()
         ),

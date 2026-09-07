@@ -105,8 +105,11 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertIn("pip-rootfs.squashfs.sha256", installer_builder)
         self.assertIn("expected-payload.sha256", installer_builder)
         self.assertIn("target_payload_sha256", installer_builder)
-        self.assertIn("--payload-digest /etc/greia-os/expected-payload.sha256", (
-            PROJECT_ROOT / "build/installer-overlay/etc/systemd/system/greia-installer.service"
+        # Step 8A.5 split: the payload digest is verified by the root
+        # transaction service from its own environment, never by the
+        # unprivileged UI.
+        self.assertIn("GREIA_INSTALL_PAYLOAD_DIGEST=/etc/greia-os/expected-payload.sha256", (
+            PROJECT_ROOT / "build/installer-overlay/etc/systemd/system/greia-install-transaction.service"
         ).read_text())
         self.assertNotIn("-no-xattrs", installer_builder)
         self.assertIn("mount -o ro,noload", installer_builder)

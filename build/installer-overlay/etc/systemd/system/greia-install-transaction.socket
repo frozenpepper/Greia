@@ -1,18 +1,20 @@
-# L7-PROTOCOLS R0/R1: socket definition for the installer semantic service.
-# Defined but never enabled: the ConditionPathExists gate below is absent on
-# every image, so the socket stays inactive — including during ordinary
-# pre-intro boot. No destructive backend is wired at R0/R1.
+# Step 8A.5: socket for the root install-transaction service.
+# Active by design in the live installer image (this overlay ships only to
+# installer media, never to the installed system, so no enable-gate file is
+# needed here). Only the unprivileged installer UI identity may connect:
+# the socket node is owned by ``nobody`` with mode 0600, and the endpoint
+# additionally authorizes the peer UID against (root, installer-UI).
 [Unit]
 Description=Greia OS install-transaction semantic socket
-ConditionPathExists=/run/greia-os/enable-privileged-transactions
 # Never part of pre-intro boot: no WantedBy/default dependency pulls this in.
+# The unprivileged UI pulls it via Wants when the installer session starts.
 After=local-fs.target
 
 [Socket]
 ListenStream=/run/greia-os/install-transaction.sock
 SocketMode=0600
-SocketUser=root
-SocketGroup=root
+SocketUser=nobody
+SocketGroup=nogroup
 Accept=no
 MaxConnections=4
 TimeoutSec=5
