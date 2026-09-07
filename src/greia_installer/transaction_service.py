@@ -489,8 +489,12 @@ class InstallTransactionService:
     at prepare time (same-process store keyed by nonce) so ``EXECUTE`` —
     which carries nonce+digest only — can rematerialize settings, target,
     layout fit and payload from service-held state immediately before
-    delegating to :class:`InstallationEngine`, which performs its own
-    pre-erase re-verification (target identity, payload digest, AC/battery).
+    delegating to :class:`InstallationEngine` (legacy single-partition
+    path) or, when :attr:`ab_executor` is configured, to the Phase 8B
+    fresh signed-release A/B installer
+    (:mod:`greia_installer.fresh_ab_install`), which performs its own
+    release/capacity preflight immediately before the first destructive
+    command.
     """
 
     authority: PlatformInstallAuthority
@@ -502,6 +506,16 @@ class InstallTransactionService:
     #: Production is ``None`` (real :class:`InstallationEngine`). Tests
     #: inject a recording fake so gating is proven with zero disk contact.
     engine_factory: Callable[[], InstallationEngine] | None = None
+    #: Phase 8B Step 8B.3 fresh A/B installer (see
+    #: :mod:`greia_installer.fresh_ab_install`). When set, socket ``EXECUTE``
+    #: routes through the same nonce+digest revalidation and then delegates
+    #: destruction to this executor instead of the legacy single-partition
+    #: engine. ``None`` preserves the legacy path (existing deployments and
+    #: unit harnesses). The executor receives the revalidated
+    #: ``(authorization, settings, locale, target)`` and returns an
+    #: :class:`InstallResult`; any failure raises fail-closed with no
+    #: destructive command issued by this service.
+    ab_executor: Callable[[object, HardwareSettings, str, DeviceObservation], InstallResult] | None = None
 
     def _new_engine(self) -> InstallationEngine:
         if self.engine_factory is not None:
@@ -576,10 +590,16 @@ class InstallTransactionService:
             if set(params) != {"transaction_nonce", "plan_digest"}:
                 raise InstallTransactionError("EXECUTE params carry unknown fields")
             reject_raw_authority(params)
-            result = self.execute_and_install(
-                transaction_nonce=params.get("transaction_nonce"),
-                plan_digest=params.get("plan_digest"),
-            )
+            if self.ab_executor is not None:
+                result = self.execute_ab_install(
+                    transaction_nonce=params.get("transaction_nonce"),
+                    plan_digest=params.get("plan_digest"),
+                )
+            else:
+                result = self.execute_and_install(
+                    transaction_nonce=params.get("transaction_nonce"),
+                    plan_digest=params.get("plan_digest"),
+                )
             _ = format_log_record(transaction_id, op, "INSTALLED")
             _ = result
             return encode_response(
@@ -654,20 +674,9 @@ class InstallTransactionService:
         destructive command). The first failure stops with no destructive
         command issued by this service.
         """
-        authorization = self.coordinator.execute(
+        authorization, settings, locale, target = self._consume_authorized_plan(
             transaction_nonce=transaction_nonce, plan_digest=plan_digest
         )
-        if not isinstance(transaction_nonce, str):
-            raise TransactionServiceError("transaction nonce is unknown or expired")
-        plan_settings = self._plan_settings.pop(transaction_nonce, None)
-        if plan_settings is None:
-            raise TransactionServiceError("prepared plan settings are unknown or expired")
-        settings, locale = hardware_settings_from_snapshot(
-            plan_settings, project_root=self.state.project_root
-        )
-        target = self.rematerialize_target(authorization.target_identity)
-        self._prove_layout_fit(target)
-        object.__setattr__(self, "_last_installed_identity", authorization.target_identity)
         runner_engine = engine or self._new_engine()
         try:
             return runner_engine.install(
@@ -684,6 +693,73 @@ class InstallTransactionService:
             )
         except InstallationError as exc:
             raise TransactionServiceError(str(exc)) from exc
+
+    def execute_ab_install(
+        self,
+        *,
+        transaction_nonce: object,
+        plan_digest: object,
+    ) -> InstallResult:
+        """Consume a prepared nonce, revalidate everything, then A/B install.
+
+        Phase 8B Step 8B.3 entry: the identical authorization prelude as
+        :meth:`execute_and_install` (single-use nonce + digest + inventory
+        re-probe, service-held settings, rematerialized target, layout fit),
+        then destruction through the configured :attr:`ab_executor` — the
+        fresh signed-release A/B installer (see
+        :mod:`greia_installer.fresh_ab_install`) — instead of the legacy
+        single-partition engine. Requires :attr:`ab_executor`; without one
+        this entry refuses with no destructive command.
+        """
+        authorization, settings, locale, target = self._consume_authorized_plan(
+            transaction_nonce=transaction_nonce, plan_digest=plan_digest
+        )
+        executor = self.ab_executor
+        if executor is None:
+            raise TransactionServiceError(
+                "fresh A/B install is not configured on this service"
+            )
+        try:
+            return executor(authorization, settings, locale, target)
+        except TransactionServiceError:
+            raise
+        except InstallTransactionError:
+            raise
+        except Exception as exc:
+            raise TransactionServiceError(f"fresh A/B install refused: {exc}") from exc
+
+    def _consume_authorized_plan(
+        self,
+        *,
+        transaction_nonce: object,
+        plan_digest: object,
+    ) -> tuple[object, HardwareSettings, str, DeviceObservation]:
+        """Consume a prepared nonce and rematerialize the authorized install.
+
+        Shared prelude for the legacy engine path and the fresh A/B path:
+        coordinator single-use re-probe, service-held canonical settings
+        (never UI bytes), fresh-probe target rematerialization and
+        layout-adapter fit proof. Records the installed identity before any
+        destructive backend runs. The first failure stops with no
+        destructive command issued by this service.
+        """
+        from .install_transaction import ExecuteAuthorization
+
+        authorization: ExecuteAuthorization = self.coordinator.execute(
+            transaction_nonce=transaction_nonce, plan_digest=plan_digest
+        )
+        if not isinstance(transaction_nonce, str):
+            raise TransactionServiceError("transaction nonce is unknown or expired")
+        plan_settings = self._plan_settings.pop(transaction_nonce, None)
+        if plan_settings is None:
+            raise TransactionServiceError("prepared plan settings are unknown or expired")
+        settings, locale = hardware_settings_from_snapshot(
+            plan_settings, project_root=self.state.project_root
+        )
+        target = self.rematerialize_target(authorization.target_identity)
+        self._prove_layout_fit(target)
+        object.__setattr__(self, "_last_installed_identity", authorization.target_identity)
+        return authorization, settings, locale, target
 
     def _prove_layout_fit(self, target: DeviceObservation) -> None:
         """Prove the release layout plan fits the freshly verified target."""
