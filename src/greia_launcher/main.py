@@ -414,6 +414,17 @@ class LauncherApplication:
             self._selected = snapshot["_selected"]
             self._bootstrapped = False
             raise
+        # FIX-COMPOSE-WINDOW interactive handoff: promote deferred developer
+        # sources into the registry without validating them. The discovery
+        # token above was snapshotted before this promotion, so the first
+        # post-interactive rescan observes the delta and performs the deferred
+        # live validation through the unchanged trust-aware degrade path.
+        # Deferred content stays unserved (never issued) until that rescan
+        # validates it; the promotion itself walks no tree and computes no
+        # digest. ``getattr`` duck-typing keeps synthetic/test states working.
+        attach_deferred = getattr(self.registry, "attach_deferred_sources", None)
+        if callable(attach_deferred):
+            attach_deferred()
         self._boot_lifecycle.mark_interactive_ready()
         return self
 
@@ -433,7 +444,11 @@ class LauncherApplication:
         Worker-thread entry: runs :meth:`LauncherBootstrap.prepare_runtime`
         with this shell's injected builders. Performs only non-Pygame work
         (Activity index reads/deserialization, history file reads/recovery,
-        pure-Python catalogue construction, filesystem reads). Never imports
+        pure-Python catalogue construction, filesystem reads). Developer-source
+        live validation is deferred past the interactive handoff (see
+        :func:`is_developer_boot_validation_deferred`), so the worker holds
+        the GIL over structurally less work before interactive readiness.
+        Never imports
         Pygame, never touches a surface, never mutates live launcher state;
         publication happens on the main thread in
         :meth:`apply_prepared_state`.
@@ -1876,6 +1891,32 @@ def _activity_sources(paths: LauncherPaths) -> tuple[ActivitySource, ...]:
     return tuple(sources)
 
 
+def is_developer_boot_validation_deferred() -> bool:
+    """Whether boot compose defers developer live validation past interactive.
+
+    FIX-COMPOSE-WINDOW worker-side contract: the boot worker holds the GIL
+    while running pure-Python compose/validation as the main thread must
+    poll/drain/flip, so developer-tree live validation (per-package tree
+    validation plus digest recomputation) is deferred past the interactive
+    handoff on developer images. Deferred developer content is absent from
+    the first interactive frame and arrives on the first post-interactive
+    rescan through the unchanged trust-aware degrade path (never served
+    unvalidated). Catalogue-staleness vs contention trade-off: developer
+    tiles appear ~one rescan interval later; the boot worker performs
+    structurally less GIL-bound work before interactive readiness. Owned by
+    ``greia_launcher.composition``; this helper only exposes the same switch
+    for boot-order documentation and tests.
+    """
+
+    raw = os.environ.get(
+        "GREIA_DEFER_DEVELOPER_UNTIL_INTERACTIVE",
+        "1",
+    )
+    if not raw.strip():
+        return True
+    return raw.strip().lower() not in ("0", "false", "no", "off")
+
+
 def boot_activity_sources(paths: LauncherPaths) -> tuple[ActivitySource, ...]:
     """Compose the production boot source set with explicit developer gating.
 
@@ -1886,6 +1927,14 @@ def boot_activity_sources(paths: LauncherPaths) -> tuple[ActivitySource, ...]:
     :func:`_activity_sources` so the developer tree keeps live
     ``ActivityRegistry`` validation semantics with ``DEVELOPER_UNSIGNED`` trust
     that is never promoted to built-in trust.
+
+    FIX-COMPOSE-WINDOW: the returned developer source is still the complete
+    authoritative set, but boot composition (``composition.compose_boot_content``)
+    skips its live validation while :func:`is_developer_boot_validation_deferred`
+    holds. The interactive handoff promotes the deferred source into the
+    registry without validation and the first post-interactive rescan
+    validates it; developer content is therefore never served unvalidated,
+    only later.
     """
 
     builtin = ActivitySource(

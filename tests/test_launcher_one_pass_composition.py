@@ -451,7 +451,11 @@ class TrustAwareDegradeResolverTests(unittest.TestCase):
                 developer_activities=dev_root,
             )
             boot_sources = launcher_main.boot_activity_sources(paths)
-            return launcher_composition.compose_boot_content(runtime, boot_sources)
+            # These trust tests pin the historical cold-boot resolution, so
+            # they opt out of the FIX-COMPOSE-WINDOW deferral explicitly.
+            return launcher_composition.compose_boot_content(
+                runtime, boot_sources, include_developer=True
+            )
 
     def test_builtin_developer_canonical_collision_builtin_wins(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -944,6 +948,224 @@ class BootSingleConstructionTests(unittest.TestCase):
             )
             self.assertNotIn(dev_prefix, repr(launcher.registry.discovery_token()))
             self.assertTrue(len(ids) > 0)
+
+
+class DeferredDeveloperComposeTests(unittest.TestCase):
+    """FIX-COMPOSE-WINDOW: developer live validation deferred past interactive.
+
+    Catalogue-staleness vs contention trade-off under test: the boot worker
+    performs no developer-tree work (staleness: developer tiles absent at the
+    interactive handoff), so the GIL-contention window shrinks by the whole
+    developer-validation share. The first post-interactive rescan performs
+    the deferred validation through the unchanged trust-aware degrade path,
+    so deferred content is never served unvalidated, only later.
+    """
+
+    def _setup_tree(self, tmp: str) -> dict[str, Path]:
+        builtin_root = Path(tmp) / "builtin"
+        dev_root = Path(tmp) / "dev"
+        parent_root = Path(tmp) / "parent-missing"
+        _write_activity(
+            builtin_root / "builtin.pkg", activity_id="org.greia.builtin-probe"
+        )
+        _write_activity(
+            dev_root / "dev.pkg", activity_id="org.greia.dev-probe"
+        )
+        runtime = RuntimeCatalogue.default_safe()
+        builtin_source = ActivitySource(
+            builtin_root, PackageTrust.BUILT_IN, "greia-system"
+        )
+        index_path = Path(tmp) / "builtin-index.json"
+        _write_index(
+            source_root=builtin_root,
+            source=builtin_source,
+            runtime=runtime,
+            dest=index_path,
+        )
+        marker = Path(tmp) / "developer-marker"
+        marker.write_text("", encoding="utf-8")
+        return {
+            "builtin_root": builtin_root,
+            "dev_root": dev_root,
+            "parent_root": parent_root,
+            "index_path": index_path,
+            "marker": marker,
+            "runtime": runtime,
+        }
+
+    def _deferred_env(self, fix: dict[str, Path]) -> dict[str, str]:
+        return {
+            launcher_main.DEVELOPER_MARKER_ENV_VAR: str(fix["marker"]),
+            launcher_composition.BUILT_IN_INDEX_ENV_VAR: str(fix["index_path"]),
+            launcher_composition.PARENT_ACTIVITY_ROOT_ENV_VAR: str(
+                fix["parent_root"]
+            ),
+            launcher_composition.DEFER_DEVELOPER_UNTIL_INTERACTIVE_ENV_VAR: "1",
+        }
+
+    def _dev_glob_spy(self, dev_root: Path):  # type: ignore[no-untyped-def]
+        seen: list[str] = []
+        real_glob = Path.glob
+
+        def _spy(self: Path, pattern: str, *args: object, **kwargs: object):  # type: ignore[no-untyped-def]
+            if pattern == "*/activity.toml":
+                seen.append(self.resolve().as_posix())
+            return real_glob(self, pattern, *args, **kwargs)  # type: ignore[arg-type]
+
+        return seen, _spy
+
+    def test_boot_compose_skips_developer_tree_work_while_deferred(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fix = self._setup_tree(tmp)
+            dev_prefix = fix["dev_root"].resolve().as_posix()
+            seen, spy = self._dev_glob_spy(fix["dev_root"])
+            with mock.patch.dict(os.environ, self._deferred_env(fix), clear=False):
+                paths = SimpleNamespace(
+                    activities=fix["builtin_root"],
+                    developer_activities=fix["dev_root"],
+                )
+                boot_sources = launcher_main.boot_activity_sources(paths)
+                # The authoritative boot set still lists the developer
+                # source; only its validation is deferred.
+                self.assertEqual(len(boot_sources), 2)
+                with _NoValidation(self), mock.patch.object(Path, "glob", spy):
+                    content = launcher_composition.compose_boot_content(
+                        runtime=fix["runtime"], boot_sources=boot_sources
+                    )
+                self.assertTrue(content.developer_deferred)
+                self.assertEqual(len(content.deferred_sources), 1)
+                self.assertEqual(
+                    content.deferred_sources[0].source_id,
+                    launcher_main.DEVELOPER_SOURCE_ID,
+                )
+                # Staleness side: interactive set is built-in only.
+                ids = [item.activity_id for item in content.activities]
+                self.assertEqual(ids, ["org.greia.builtin-probe"])
+                # No developer-tree scan ran inside boot compose.
+                self.assertFalse(
+                    any(
+                        entry == dev_prefix or entry.startswith(dev_prefix + "/")
+                        for entry in seen
+                    ),
+                    f"deferred boot compose scanned developer root: {seen}",
+                )
+                # The registry carries no developer source and no deferred
+                # registration is issuable before the rescan validates it.
+                registry_roots = [
+                    root.resolve().as_posix()
+                    for root in content.registry._roots
+                ]
+                self.assertNotIn(dev_prefix, registry_roots)
+                self.assertEqual(
+                    content.registry.deferred_sources,
+                    content.deferred_sources,
+                )
+
+    def test_deferred_developer_arrives_on_first_post_interactive_rescan(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            fix = self._setup_tree(tmp)
+            # A colliding developer duplicate plus a unique developer
+            # package: the rescan must degrade exactly like cold boot.
+            _write_activity(
+                fix["dev_root"] / "dup.pkg",
+                activity_id="org.greia.builtin-probe",
+            )
+            runtime = fix["runtime"]
+            with mock.patch.dict(os.environ, self._deferred_env(fix), clear=False):
+                paths = SimpleNamespace(
+                    activities=fix["builtin_root"],
+                    developer_activities=fix["dev_root"],
+                )
+                boot_sources = launcher_main.boot_activity_sources(paths)
+                content = launcher_composition.compose_boot_content(
+                    runtime=runtime, boot_sources=boot_sources
+                )
+                self.assertTrue(content.developer_deferred)
+                boot_token = content.registry.discovery_token()
+                # Interactive handoff: promote sources without validating.
+                attached = content.registry.attach_deferred_sources()
+                self.assertEqual(len(attached), 1)
+                self.assertEqual(content.registry.deferred_sources, ())
+                # Ordering proof: the token delta guarantees the existing
+                # rescan gate fires exactly once post-interactive.
+                post_handoff_token = content.registry.discovery_token()
+                self.assertNotEqual(post_handoff_token, boot_token)
+                # Worker-starts-after-interactive-need: developer validation
+                # happens here (post-handoff), never in boot compose.
+                rescanned = content.registry.discover_registrations()
+                rescan_ids = sorted(
+                    item.manifest.activity_id for item in rescanned
+                )
+                self.assertIn("org.greia.builtin-probe", rescan_ids)
+                self.assertIn("org.greia.dev-probe", rescan_ids)
+                self.assertEqual(rescan_ids.count("org.greia.builtin-probe"), 1)
+                # Built-in wins the collision with unchanged trust.
+                builtin_manifest = next(
+                    item.manifest
+                    for item in rescanned
+                    if item.manifest.activity_id == "org.greia.builtin-probe"
+                )
+                builtin_reg = content.registry.registration_for(
+                    builtin_manifest
+                )
+                self.assertEqual(
+                    builtin_reg.package_trust, PackageTrust.BUILT_IN
+                )
+                dev_manifest = next(
+                    item.manifest
+                    for item in rescanned
+                    if item.manifest.activity_id == "org.greia.dev-probe"
+                )
+                dev_reg = content.registry.registration_for(dev_manifest)
+                self.assertEqual(
+                    dev_reg.package_trust, PackageTrust.DEVELOPER_UNSIGNED
+                )
+                self.assertEqual(
+                    dev_reg.source_id, launcher_main.DEVELOPER_SOURCE_ID
+                )
+                # Degrade evidence matches the cold-boot path.
+                self.assertTrue(content.registry.collision_degraded)
+                self.assertEqual(len(content.registry.collision_conflicts), 1)
+                conflict = content.registry.collision_conflicts[0]
+                self.assertEqual(conflict.identity, "org.greia.builtin-probe")
+                self.assertEqual(
+                    conflict.package_trust, PackageTrust.DEVELOPER_UNSIGNED
+                )
+                # Rejected developer claimant is never issuable.
+                for rejected in content.registry.rejected_registrations:
+                    with self.assertRaises(ActivityValidationError):
+                        content.registry.registration_for(rejected.manifest)
+
+    def test_opt_out_keeps_cold_validation_sensitivity_control(self) -> None:
+        # Sensitivity control: with deferral off, boot compose DOES scan the
+        # developer tree, so the glob spy in the deferred test above is
+        # proven capable of observing the work it claims is skipped.
+        with tempfile.TemporaryDirectory() as tmp:
+            fix = self._setup_tree(tmp)
+            dev_prefix = fix["dev_root"].resolve().as_posix()
+            seen, spy = self._dev_glob_spy(fix["dev_root"])
+            with mock.patch.dict(os.environ, self._deferred_env(fix), clear=False):
+                paths = SimpleNamespace(
+                    activities=fix["builtin_root"],
+                    developer_activities=fix["dev_root"],
+                )
+                boot_sources = launcher_main.boot_activity_sources(paths)
+                with mock.patch.object(Path, "glob", spy):
+                    content = launcher_composition.compose_boot_content(
+                        runtime=fix["runtime"],
+                        boot_sources=boot_sources,
+                        include_developer=True,
+                    )
+                self.assertFalse(content.developer_deferred)
+                self.assertTrue(
+                    any(
+                        entry == dev_prefix or entry.startswith(dev_prefix + "/")
+                        for entry in seen
+                    ),
+                    "undeferred boot compose must scan the developer root",
+                )
+                ids = sorted(item.activity_id for item in content.activities)
+                self.assertIn("org.greia.dev-probe", ids)
 
 
 if __name__ == "__main__":

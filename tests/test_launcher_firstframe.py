@@ -626,5 +626,194 @@ class PreparationIntegrationTests(unittest.TestCase):
                     self.assertFalse(app._bootstrapped)
 
 
+class DeferredDeveloperHandoffTests(unittest.TestCase):
+    """FIX-COMPOSE-WINDOW production-path proof for the compose-window shrink.
+
+    The boot worker (``prepare_runtime``) serves the indexed built-in set
+    only; the main-thread handoff (``apply_prepared_state``) promotes the
+    deferred developer source without validating it; the first
+    post-interactive rescan then performs the deferred live validation.
+    Developer validation therefore starts after interactive need while the
+    single-worker invariant and trust boundaries hold.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        try:
+            import pygame
+
+            pygame.init()
+        except Exception:
+            pass
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        try:
+            import pygame
+
+            pygame.quit()
+        except Exception:
+            pass
+
+    def _write_activity(self, root: Path, *, activity_id: str) -> Path:
+        root.mkdir(parents=True, exist_ok=True)
+        root.joinpath("activity.toml").write_text(
+            f'''[activity]
+id = "{activity_id}"
+legacy_ids = []
+title_key = "Test Activity"
+version = "1.0.0"
+icon = "robot"
+languages = ["*"]
+
+[presentation]
+categories = ["play"]
+
+[education]
+categories = ["test"]
+difficulty = 1
+skills = [{{ id = "test.skill", weight = 1 }}]
+events = [{{ id = "probe.completed", kind = "completion" }}]
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "hybrid"
+
+[requirements]
+required_capabilities = []
+optional_capabilities = []
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1
+''',
+            encoding="utf-8",
+        )
+        root.joinpath("main.py").write_text("pass\n", encoding="utf-8")
+        return root
+
+    def test_boot_worker_is_single_bounded_at_runtime(self) -> None:
+        worker = launcher_main.create_preparation_worker()
+        try:
+            self.assertEqual(worker._max_workers, 1)
+        finally:
+            worker.shutdown(wait=False)
+
+    def test_apply_handoff_attaches_deferred_sources_for_post_interactive_rescan(
+        self,
+    ) -> None:
+        from greia_launcher.bootstrap import BootLifecycleState
+        from greia_launcher.main import LauncherPaths
+        from greia_launcher.presentation import GreiaLauncherPresentation
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            builtin_root = tmp_path / "builtin"
+            dev_root = tmp_path / "dev"
+            self._write_activity(
+                builtin_root / "builtin.pkg",
+                activity_id="org.greia.builtin-probe",
+            )
+            self._write_activity(
+                dev_root / "dev.pkg", activity_id="org.greia.dev-probe"
+            )
+            runtime = RuntimeCatalogue.load(
+                REPO_ROOT / "runtime" / "child-runtime.toml"
+            )
+            builtin_source = ActivitySource(
+                builtin_root, PackageTrust.BUILT_IN, "greia-system"
+            )
+            registrations = ActivityRegistry(
+                (builtin_source,), runtime, fail_closed=False
+            ).discover_registrations()
+            index_path = tmp_path / "builtin-index.json"
+            build_index(
+                registrations, source=builtin_source, runtime=runtime
+            ).write_file(index_path)
+            marker = tmp_path / "developer-marker"
+            marker.write_text("", encoding="utf-8")
+            env = {
+                "GREIA_OS_ROOT": str(REPO_ROOT),
+                "SDL_VIDEODRIVER": "dummy",
+                launcher_main.DEVELOPER_MARKER_ENV_VAR: str(marker),
+                launcher_composition.BUILT_IN_INDEX_ENV_VAR: str(index_path),
+                launcher_composition.PARENT_ACTIVITY_ROOT_ENV_VAR: str(
+                    tmp_path / "parent-missing"
+                ),
+                launcher_composition.DEFER_DEVELOPER_UNTIL_INTERACTIVE_ENV_VAR: "1",
+            }
+            with mock.patch.dict(os.environ, env, clear=False):
+                app = GreiaLauncherPresentation(
+                    windowed=True, allow_exit=True, bootstrap=False
+                )
+                app.paths = LauncherPaths(
+                    root=tmp_path / "osroot",
+                    activities=builtin_root,
+                    developer_activities=dev_root,
+                    runtime_catalogue=REPO_ROOT / "runtime" / "child-runtime.toml",
+                    asset_catalogue=REPO_ROOT / "assets" / "catalog" / "core_icons_v1.toml",
+                    shared_visual_catalogue=REPO_ROOT
+                    / "assets"
+                    / "catalog"
+                    / "shared_visuals_v1.toml",
+                    theme_defaults=REPO_ROOT / "runtime" / "theme-defaults.toml",
+                    profile_defaults=REPO_ROOT / "runtime" / "profile-defaults.toml",
+                    permission_policy=REPO_ROOT / "runtime" / "permission-policy.toml",
+                    storage_policy=REPO_ROOT / "runtime" / "storage-policy.toml",
+                    history_policy=REPO_ROOT / "runtime" / "history-policy.toml",
+                    progression_policy=REPO_ROOT
+                    / "runtime"
+                    / "progression-policy.toml",
+                    profiles_dir=tmp_path / "profiles",
+                    active_profile_status=tmp_path / "active.json",
+                )
+                coordinator = LauncherBootstrap(app.paths)
+                state = coordinator.prepare_runtime(
+                    build_services=app._build_bootstrap_services,
+                    build_supervisor=app._build_bootstrap_supervisor,
+                    build_catalogue=app._bootstrap_catalogue_builder(),
+                )
+                # Worker side: the interactive set is built-in only with the
+                # developer source pending (no validation ran on it).
+                self.assertEqual(
+                    [item.activity_id for item in state.activities],
+                    ["org.greia.builtin-probe"],
+                )
+                self.assertEqual(len(state.registry.deferred_sources), 1)
+                boot_token = state.activity_discovery_token
+                # Main-thread handoff publishes interactive readiness...
+                app._boot_lifecycle.mark_display_ready()
+                app._boot_lifecycle.mark_first_frame_visible()
+                app._boot_lifecycle.begin_preparing_runtime()
+                app.apply_prepared_state(state)
+                self.assertTrue(app._bootstrapped)
+                self.assertIs(
+                    app._boot_lifecycle.state,
+                    BootLifecycleState.INTERACTIVE_READY,
+                )
+                # ...and promotes the deferred source without serving it yet.
+                registry_roots = [
+                    root.resolve().as_posix() for root in app.registry._roots
+                ]
+                self.assertIn(dev_root.resolve().as_posix(), registry_roots)
+                self.assertEqual(app.registry.deferred_sources, ())
+                self.assertEqual(
+                    [item.activity_id for item in app._activities],
+                    ["org.greia.builtin-probe"],
+                )
+                # Ordering proof: the token delta guarantees the first
+                # post-interactive rescan validates the deferred source.
+                self.assertNotEqual(
+                    app.registry.discovery_token(), boot_token
+                )
+
+
 if __name__ == "__main__":
     raise SystemExit(unittest.main())

@@ -297,6 +297,46 @@ BUILT_IN_INDEX_PATH = Path("/usr/share/greia/activity-index-v1.json")
 PARENT_ACTIVITY_ROOT_ENV_VAR = "GREIA_PARENT_ACTIVITY_ROOT"
 PARENT_ACTIVITY_ROOT_DEFAULT = Path("/var/lib/greia-os/activity-packages/active")
 
+# -- FIX-COMPOSE-WINDOW: deferred developer validation (boot GIL-window shrink) --
+#
+# Catalogue-staleness vs contention trade-off (stated explicitly, per brief):
+# the boot worker holds the GIL while running pure-Python compose/validation
+# and the main thread must poll/drain/flip concurrently, so every package the
+# worker validates before interactive readiness stretches the contention
+# window. Developer-source live validation (per-package tree validation plus
+# digest recomputation over the developer tree) is the deferrable share:
+# developer content is absent from the first interactive frame and arrives on
+# the first post-interactive rescan (~one rescan interval later) through the
+# unchanged trust-aware degrade path. Built-in/Parent content is unaffected:
+# it is served from the deterministic image indexes without revalidation.
+# Cheap-but-weak mitigations (nice levels, yield points) are not used here;
+# the window shrinks because the worker performs structurally less work
+# before the interactive handoff, not because it is scheduled differently.
+DEFER_DEVELOPER_UNTIL_INTERACTIVE_ENV_VAR = (
+    "GREIA_DEFER_DEVELOPER_UNTIL_INTERACTIVE"
+)
+
+
+def developer_boot_validation_deferred(
+    *,
+    include_developer: bool | None = None,
+) -> bool:
+    """Whether boot compose must skip developer live validation.
+
+    An explicit ``include_developer`` wins over the environment. Otherwise
+    deferral defaults to ON: ``GREIA_DEFER_DEVELOPER_UNTIL_INTERACTIVE``
+    disables it only on explicit ``0``/``false``/``no``/``off``. The default
+    keeps the developer-image boot worker cheap; cold-boot trust tests opt
+    out explicitly to keep asserting the undeferred resolution.
+    """
+
+    if include_developer is not None:
+        return not include_developer
+    raw = os.environ.get(DEFER_DEVELOPER_UNTIL_INTERACTIVE_ENV_VAR, "1")
+    if not raw.strip():
+        return True
+    return raw.strip().lower() not in ("0", "false", "no", "off")
+
 
 def built_in_index_path() -> Path:
     """Return the built-in Activity index file path (env-overridable).
@@ -518,6 +558,7 @@ class ComposedActivityRegistry(ActivityRegistry):
         rejected: Sequence[ActivityRegistration] = (),
         conflicts: Sequence[ActivityCollisionConflict] = (),
         degraded: bool = False,
+        deferred_sources: Sequence[ActivitySource] = (),
     ) -> None:
         super().__init__(sources, runtime, fail_closed=False)
         self._issued.update(
@@ -526,6 +567,39 @@ class ComposedActivityRegistry(ActivityRegistry):
         self._rejected_registrations = tuple(rejected)
         self._collision_conflicts = tuple(conflicts)
         self._collision_degraded = bool(degraded or conflicts)
+        # FIX-COMPOSE-WINDOW: developer sources whose live validation was
+        # deferred past the interactive handoff. They are not scanned,
+        # validated, or issuable until attached; see
+        # :meth:`attach_deferred_sources`.
+        self._deferred_sources = tuple(deferred_sources)
+
+    @property
+    def deferred_sources(self) -> tuple[ActivitySource, ...]:
+        """Developer sources still awaiting post-interactive validation."""
+
+        return self._deferred_sources
+
+    def attach_deferred_sources(self) -> tuple[ActivitySource, ...]:
+        """Promote deferred boot sources without validating them.
+
+        Called once on the main thread at the interactive handoff (see
+        ``LauncherApplication.apply_prepared_state``). This is a cheap tuple
+        update: no tree is walked, no package is validated, no digest is
+        recomputed, and no registration is issued, so the trust boundary is
+        unchanged (deferred content stays unserved until the first
+        post-interactive rescan validates it live through the shared
+        trust-aware degrade resolver). The boot discovery token was
+        snapshotted before this promotion, so the next rescan observes the
+        token delta and runs that validation exactly once.
+        """
+
+        if not self._deferred_sources:
+            return ()
+        pending = self._deferred_sources
+        self._deferred_sources = ()
+        self._sources = (*self._sources, *pending)
+        self._roots = tuple(source.root for source in self._sources)
+        return pending
 
     def discover_registrations(
         self, *, fail_closed: bool | None = None
@@ -566,13 +640,32 @@ class ComposedLauncherContent:
     rejected: tuple[ActivityRegistration, ...] = ()
     conflicts: tuple[ActivityCollisionConflict, ...] = ()
     degraded: bool = False
+    # FIX-COMPOSE-WINDOW: developer sources deferred past interactive need
+    # (validated on the first post-interactive rescan, not by the boot
+    # worker). ``developer_deferred`` marks the staleness side of the
+    # trade-off: the interactive set served at the handoff excludes these
+    # sources until that rescan completes.
+    deferred_sources: tuple[ActivitySource, ...] = ()
+    developer_deferred: bool = False
 
 
 def compose_boot_content(
     runtime: RuntimeCatalogue,
     boot_sources: Sequence[ActivitySource],
+    *,
+    include_developer: bool | None = None,
 ) -> ComposedLauncherContent:
-    """Compose the complete boot Activity set exactly once.
+    """Compose the boot Activity set exactly once.
+
+    FIX-COMPOSE-WINDOW: on developer images the boot worker skips
+    developer-source live validation by default (see
+    :func:`developer_boot_validation_deferred`) and serves the indexed
+    built-in set (+ the Parent active set) at the interactive handoff. The
+    deferred developer sources stay listed in ``sources``/``deferred_sources``
+    and are promoted into the registry at the handoff without validation, so
+    the first post-interactive rescan validates them through the unchanged
+    trust-aware degrade path. Pass ``include_developer=True`` to keep the
+    historical cold-boot validation (trust tests do this explicitly).
 
     ``boot_sources`` is the T35-gated built-in/developer set (see
     ``boot_activity_sources``); the Parent active set is resolved here, so
@@ -608,9 +701,22 @@ def compose_boot_content(
             "parent Activity root must be separate from the built-in Activity root"
         )
     built_in = load_built_in_registrations(built_in_source, runtime)
+    # FIX-COMPOSE-WINDOW: the boot worker skips the developer tree walk
+    # (glob + per-package validation + digest recomputation) while deferred.
+    # The deferred sources stay in the authoritative ``ordered_sources`` set
+    # but outside the registry until the interactive handoff promotes them
+    # without validation; the first post-interactive rescan then performs the
+    # deferred live validation through the same trust-aware degrade resolver.
+    # Deferral is never a trust promotion: deferred content is simply absent
+    # (never served unvalidated) until that rescan validates it.
+    developer_deferred = bool(developer_sources) and developer_boot_validation_deferred(
+        include_developer=include_developer
+    )
     developer: list[ActivityRegistration] = []
-    for source in developer_sources:
-        developer.extend(load_developer_registrations(source, runtime))
+    if not developer_deferred:
+        for source in developer_sources:
+            developer.extend(load_developer_registrations(source, runtime))
+    deferred_sources = tuple(developer_sources) if developer_deferred else ()
     parent_degraded = False
     parent_error: str | None = None
     try:
@@ -630,12 +736,17 @@ def compose_boot_content(
         *developer_sources,
     )
     registry = ComposedActivityRegistry(
-        ordered_sources,
+        (
+            (built_in_source, parent_set.source)
+            if developer_deferred
+            else ordered_sources
+        ),
         runtime,
         accepted,
         rejected=resolution.rejected,
         conflicts=resolution.conflicts,
         degraded=resolution.degraded,
+        deferred_sources=deferred_sources,
     )
     degraded = bool(parent_degraded or resolution.degraded)
     return ComposedLauncherContent(
@@ -648,4 +759,6 @@ def compose_boot_content(
         rejected=tuple(resolution.rejected),
         conflicts=tuple(resolution.conflicts),
         degraded=degraded,
+        deferred_sources=deferred_sources,
+        developer_deferred=developer_deferred,
     )
