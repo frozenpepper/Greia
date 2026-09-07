@@ -1018,3 +1018,27 @@ Evidence: `out/boot-optimization/phase-03/PROVE-INTRO-DRAIN-R-*`.
 Still open: exit-owner attribution (A/B/C — historical window unrecoverable, fresh
 capture path exists); FIX-COMPOSE-WINDOW chain; BOOT-PLAN-05/FIELD-FIX-PLAN analyses.
 No input presses outstanding; device healthy at NRestarts=0.
+
+## 41. Exit forensics closed as solved-moot; compose chain advanced to the deploy boundary (2026-09-07)
+
+- Owner verdict recorded (`boot-05--EXIT-CLOSED--002`): launcher crash fixed long
+  ago, holds in field use. EXIT-HUNT + FDATTR accepted; (A)/(B)/(C) withdrawn;
+  FIELD-FIX-PLAN accepted (remainder: motion re-proof behind PROVE-COMPOSE);
+  FIELD-REPRO-PLAN accepted (already closed by FIELD-REPRO-3 FIXED PASS);
+  P4-INPUTREGATE accepted (remote button-press proof stays on-site STOP).
+- FIX-COMPOSE-WINDOW integrated (`b9fbe378`, 180 tests green, reviewer PASS):
+  developer validation deferred to interactive handoff. Dead dependency on
+  superseded PROVE-INTRO-DRAIN released via supersede; chain unblocked.
+- PROVE-COMPOSE verification-1 BLOCKED (no worker write lane) → discovery-1
+  ESCALATE (human-block): hot-porting live launcher runtime violates the
+  intentional boundary (review 2026-08-15: rebuild/reinstall required; sweep
+  additions-only precedent does not transfer). Vintage skew confirmed
+  parent-side (device main.py/composition.py carry dev-HAL wiring the view
+  refactored away) — whole-file port would regress even with a lane.
+  Awaiting owner path: reinstall image, overlay-verb feature, or risk-accept.
+- P4-INPUTCAP-PLAN accepted; CAP3 drift-STOP → discovery REPLAN → CAP4 PASS
+  accepted: hitbox owners MATCH view, main HERITAGE files MISMATCH (vintage
+  confirmed), zero injections. P4-INPUTRUN7 stays parked (input presses
+  deferred). BOOT-PLAN-05 accepted (already decomposed, no change).
+- Device healthy, sweep unit disabled at-rest, NRestarts=0. No presses, no
+  reboots, no config changes since the proof boot.
