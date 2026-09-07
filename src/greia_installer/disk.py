@@ -913,6 +913,24 @@ class LsblkDiskProbe:
             raise DiskProbeError(f"invalid lsblk device record: {exc}") from exc
 
 
-def partition_one_path(device_path: Path) -> Path:
+def partition_number_path(device_path: Path, number: int) -> Path:
+    """Derive the kernel partition node for ``number`` on ``device_path``.
+
+    The number always comes from a validated :mod:`greia_installer.layout`
+    plan (position in the adapter's declarative partition order), never from
+    UI/Parent input. ``/dev/sdX``-style bases take a bare suffix while
+    digit-ending bases (``/dev/mmcblk0``, ``/dev/loop0``, ``/dev/nvme0n1``)
+    take the ``p`` separator, matching historical ``partition_one_path``.
+    """
+    if isinstance(number, bool) or not isinstance(number, int):
+        raise DiskProbeError("partition number must be an integer")
+    if not 1 <= number <= 128:
+        raise DiskProbeError("partition number is outside Greia bounds")
     name = str(device_path)
-    return Path(f"{name}p1" if name[-1:].isdigit() else f"{name}1")
+    if not name:
+        raise DiskProbeError("device path is empty")
+    return Path(f"{name}p{number}" if name[-1:].isdigit() else f"{name}{number}")
+
+
+def partition_one_path(device_path: Path) -> Path:
+    return partition_number_path(device_path, 1)
