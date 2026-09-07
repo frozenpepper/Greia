@@ -1,10 +1,14 @@
-# L7-PROTOCOLS R0/R1: socket-activated system-update semantic service.
+# Step 8A.6: socket-activated system-update semantic service.
 # Defined but never enabled: gated on /run/greia-os/enable-privileged-
 # transactions (absent on every image) and never wanted by any boot target,
 # so it stays inactive during ordinary pre-intro boot. Semantic operations
 # only (STATUS/VERIFY/STAGE/ARM/CONFIRM/RECONCILE over the current inbox
-# candidate); the single-root backend stays unavailable; no destructive
-# backend is wired at R0/R1.
+# candidate, resolved internally with no request selectors). Separate socket
+# from greia-install-transaction: the installer pair lives on installer media
+# only, while this pair serves the installed system. The services share the
+# common SlotWriter/SlotFinalizer/journal libraries, never a generic root
+# daemon; single-root layouts stay unavailable and the active/accepted slot
+# is never writable through this unit.
 [Unit]
 Description=Greia OS system-update semantic service
 Requires=greia-system-update.socket
@@ -21,7 +25,13 @@ WorkingDirectory=/opt/greia-os
 Environment=PYTHONPATH=/opt/greia-os/src
 Environment=PYTHONNOUSERSITE=1
 Environment=PYTHONDONTWRITEBYTECODE=1
-ExecStart=/usr/bin/python3 -m greia_platform.update_privileged --socket-activated
+# Greia-owned update facts. The inbox candidate bytes come from the
+# unprivileged Parent inbox under the state dir; trust, layout, journal and
+# boot facts are re-resolved from Greia-owned state on every operation.
+Environment=GREIA_UPDATE_STATE_DIR=/var/lib/greia-os
+Environment=GREIA_UPDATE_TRUSTED_KEY_DIR=/etc/greia-os/system-update-keys
+Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/installed-layout.json
+ExecStart=/usr/bin/python3 -m greia_platform.system_updates --socket-activated
 Restart=no
 TimeoutStartSec=5
 TimeoutStopSec=5
@@ -32,7 +42,7 @@ NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=strict
-ReadWritePaths=/run/greia-os
+ReadWritePaths=/var/lib/greia-os /run/greia-os
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes

@@ -1,4 +1,6 @@
 # L7-PROTOCOLS R0/R1: socket definition for the system-update semantic service.
+# Step 8A.6: separate from greia-install-transaction (installer media only);
+# this socket serves the installed system behind the same enable gate.
 # Defined but never enabled: the ConditionPathExists gate below is absent on
 # every image, so the socket stays inactive — including during ordinary
 # pre-intro boot. No destructive backend is wired at R0/R1.

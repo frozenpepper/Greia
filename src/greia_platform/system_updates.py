@@ -6,13 +6,14 @@ import json
 import os
 import re
 import shutil
+import socket
 import stat
 import tempfile
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Callable, NoReturn, Protocol
 
 
 BUNDLE_SUFFIX = ".greiaupdate"
@@ -437,6 +438,12 @@ class SystemUpdateBackend(Protocol):
 
     def stage(self, bundle: InspectedUpdateBundle) -> None: ...
 
+    def arm(self) -> dict[str, object]: ...
+
+    def confirm_boot_health(self) -> dict[str, object]: ...
+
+    def reconcile(self) -> dict[str, object]: ...
+
     def status_payload(self) -> dict[str, object]: ...
 
 
@@ -451,6 +458,15 @@ class UnavailableSystemUpdateBackend:
         return False
 
     def stage(self, bundle: InspectedUpdateBundle) -> None:
+        raise UpdateBackendUnavailable(self.reason)
+
+    def arm(self) -> dict[str, object]:
+        raise UpdateBackendUnavailable(self.reason)
+
+    def confirm_boot_health(self) -> dict[str, object]:
+        raise UpdateBackendUnavailable(self.reason)
+
+    def reconcile(self) -> dict[str, object]:
         raise UpdateBackendUnavailable(self.reason)
 
     def status_payload(self) -> dict[str, object]:
@@ -743,6 +759,18 @@ class SystemUpdateService:
             "activation": self.backend.status_payload(),
             "accepted_release_sequence": self.accepted_sequence,
         }
+
+    def arm(self) -> dict[str, object]:
+        """Arm the staged candidate one-shot via the privileged backend."""
+        return self.backend.arm()
+
+    def confirm_boot_health(self) -> dict[str, object]:
+        """Commit or roll back the candidate from the authoritative boot observation."""
+        return self.backend.confirm_boot_health()
+
+    def reconcile(self) -> dict[str, object]:
+        """Crash-reconcile the update journal against the boot observation."""
+        return self.backend.reconcile()
 
 
 def build_persistent_state_contract_bytes(
@@ -1195,3 +1223,851 @@ def _atomic_json(path: Path, payload: dict[str, object]) -> None:
         os.chmod(path, 0o600)
     finally:
         temporary.unlink(missing_ok=True)
+
+
+# ---------------------------------------------------------------------------
+# Step 8A.6: privileged update service on the common slot/journal seams
+# ---------------------------------------------------------------------------
+# The unprivileged inbox above keeps receiving Parent-delivered bytes; this
+# section wires the privileged side behind the socket-activated
+# ``greia-system-update`` service (separate from
+# ``greia-install-transaction``):
+#
+#   inbox candidate -> SystemUpdateService trust -> SlotBackedSystemUpdateBackend
+#   -> common SlotWriter stream -> common SlotFinalizer bind -> shared
+#   BootTransactionJournal -> boot-backend one-shot arm -> health commit.
+#
+# The brief's four privileged phases map onto the existing six semantic ops
+# (owned by ``greia_platform.update_privileged``; this module never redefines
+# the protocol): VERIFY_AND_STAGE is VERIFY_CURRENT_CANDIDATE followed by
+# STAGE_CURRENT_CANDIDATE, SCHEDULE is ARM_CURRENT_CANDIDATE, CONFIRM is
+# CONFIRM_BOOT_HEALTH, and STATUS/RECONCILE observe and crash-reconcile the
+# same journal the A8-FAULTS harness reads.
+#
+# Dependency direction: ``persistent_layout`` and ``slot_writer`` both import
+# this module at their top level, so the privileged seam below reaches them
+# through function-local imports. No shell, no partition-device authority and
+# no network cross this seam: destination access arrives only through the
+# injected typed factories (loop/disposable-media files and fakes in this
+# phase), and every refusal leaves the destination seam untouched.
+
+if TYPE_CHECKING:  # pragma: no cover - typing only; runtime imports stay local
+    from .boot_transaction import BootTransactionJournal as _Journal
+    from .persistent_layout import InstalledLayoutRecord as _LayoutRecord
+
+#: Journal directory name under ``state_dir / "system-updates"``. The same
+#: ``BootTransactionJournal`` record the A8-FAULTS harness and later
+#: boot-health work reconcile, so crash recovery sees exactly one record.
+UPDATE_JOURNAL_DIR_NAME = "journal"
+
+#: Peer UIDs authorized for the update socket service. Root only: the Parent
+#: control plane stays unprivileged and reaches the privileged side solely
+#: through the inbox candidate it stages. Mirrors
+#: ``update_privileged.UPDATE_PRIVILEGED_ALLOWED_UIDS`` without importing that
+#: module (it imports this one).
+UPDATE_SERVICE_ALLOWED_UIDS = (0,)
+
+#: Environment overrides for the socket-activated composition root. Defaults
+#: bind the installed-system authorities; nothing here names a partition
+#: device or a raw command.
+UPDATE_STATE_DIR_ENV = "GREIA_UPDATE_STATE_DIR"
+UPDATE_STATE_DIR_DEFAULT = "/var/lib/greia-os"
+UPDATE_TRUSTED_KEY_DIR_ENV = "GREIA_UPDATE_TRUSTED_KEY_DIR"
+UPDATE_TRUSTED_KEY_DIR_DEFAULT = "/etc/greia-os/system-update-keys"
+INSTALLED_LAYOUT_RECORD_ENV = "GREIA_INSTALLED_LAYOUT_RECORD"
+INSTALLED_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/installed-layout.json"
+UPDATE_SYSTEM_VERSION_ENV = "GREIA_SYSTEM_VERSION"
+UPDATE_SYSTEM_PLATFORM_ENV = "GREIA_SYSTEM_PLATFORM_FAMILY"
+UPDATE_SYSTEM_ARCH_ENV = "GREIA_SYSTEM_ARCHITECTURE"
+UPDATE_SYSTEM_PROFILE_ENV = "GREIA_SYSTEM_PROFILE"
+
+
+class UpdateLayoutError(SystemUpdateError):
+    """Trusted layout facts are missing or not authoritative (fail-closed)."""
+
+
+def installed_layout_record_path() -> Path:
+    """Resolve the trusted layout-record path (explicit env or system bind)."""
+    override = os.environ.get(INSTALLED_LAYOUT_RECORD_ENV, "").strip()
+    return Path(override) if override else Path(INSTALLED_LAYOUT_RECORD_DEFAULT)
+
+
+def load_installed_layout_record(path: Path | None = None) -> "_LayoutRecord | None":
+    """Load the trusted installed-layout record, or None when absent.
+
+    A missing record is the normal single-root case (no A/B authority), not
+    an error. Symlinks, unreadable files and corrupt records fail closed via
+    :class:`UpdateLayoutError`.
+    """
+    from .persistent_layout import InstalledLayoutRecord, PersistentLayoutError
+
+    candidate = Path(path) if path is not None else installed_layout_record_path()
+    if candidate.is_symlink():
+        raise UpdateLayoutError("installed layout record must not be a symlink")
+    try:
+        raw = candidate.read_bytes()
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise UpdateLayoutError("installed layout record is unreadable") from exc
+    try:
+        document = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise UpdateLayoutError("installed layout record is not valid JSON") from exc
+    try:
+        return InstalledLayoutRecord.from_dict(document)
+    except PersistentLayoutError as exc:
+        raise UpdateLayoutError(
+            f"installed layout record is not authoritative: {exc}"
+        ) from exc
+
+
+def inactive_slot_for(record: "_LayoutRecord") -> str | None:
+    """Return the one slot that is neither active nor accepted.
+
+    Returns None for single-root layouts (no second slot exists). Raises
+    :class:`SystemUpdateError` when an A/B layout has no inactive slot, so
+    the service can never stage into a live slot.
+    """
+    if record.system_b is None:
+        return None
+    live = {
+        slot
+        for slot in (record.boot_control.active_slot, record.accepted_slot)
+        if slot in ("A", "B")
+    }
+    for slot in ("A", "B"):
+        if slot not in live:
+            return slot
+    raise SystemUpdateError(
+        "refusing to stage into the active slot: no inactive slot is available"
+    )
+
+
+def _default_slot_profile_policy(record: "_LayoutRecord") -> object:
+    """Derive the finalizer profile policy from the trusted layout record."""
+    from .slot_writer import SlotProfilePolicy
+
+    return SlotProfilePolicy(
+        layout_id=record.layout_id,
+        system_slot_bytes=record.slot_bytes,
+        boot_backend=record.boot_backend,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class UpdateSlotSeams:
+    """Injectable destination seams for privileged update staging.
+
+    Every factory is destination-scoped: the service never passes the active
+    or accepted slot here (``DestinationSlot.resolve_from_layout`` re-proves
+    that first). Unset factories fail closed at stage time with
+    :class:`UpdateBackendUnavailable`, so a minimally composed service
+    reports unavailable instead of guessing at destination access.
+    """
+
+    slot_store_factory: Callable[[object], object] | None = None
+    filesystem_factory: Callable[[], object] | None = None
+    package_installer_factory: Callable[[], object] | None = None
+    inventory_factory: Callable[[], object] | None = None
+    support_set_factory: Callable[[InspectedUpdateBundle], object] | None = None
+    profile_policy_factory: Callable[[object], object] | None = None
+    selection_factory: Callable[[object, str], object | None] | None = None
+
+
+class SlotBackedSystemUpdateBackend:
+    """Privileged staging/arm/confirm over the common slot/journal seams.
+
+    Reuses :class:`SlotWriter`, :class:`SlotFinalizer` and
+    :class:`BootTransactionJournal` as shared libraries: trust stays in
+    :class:`SystemUpdateService` (signature, compatibility, anti-rollback),
+    while this backend owns the inactive slot, the destination seams, the
+    journal and the boot-backend one-shot. Single-root layouts and missing
+    records stay unavailable; the active/accepted slot is never writable
+    through this object.
+    """
+
+    def __init__(
+        self,
+        state_dir: Path,
+        *,
+        layout_record_path: Path | None = None,
+        seams: UpdateSlotSeams | None = None,
+        boot_backend: object | None = None,
+    ) -> None:
+        self.state_dir = Path(state_dir)
+        self.journal_dir = self.state_dir / "system-updates" / UPDATE_JOURNAL_DIR_NAME
+        self.layout_record_path = (
+            Path(layout_record_path)
+            if layout_record_path is not None
+            else installed_layout_record_path()
+        )
+        self.seams = seams if seams is not None else UpdateSlotSeams()
+        self.boot_backend = boot_backend
+        self._last_staged: dict[str, object] = {}
+
+    @property
+    def available(self) -> bool:
+        try:
+            record = load_installed_layout_record(self.layout_record_path)
+        except UpdateLayoutError:
+            return False
+        return record is not None and record.system_b is not None
+
+    def status_payload(self) -> dict[str, object]:
+        try:
+            record = load_installed_layout_record(self.layout_record_path)
+        except UpdateLayoutError as exc:
+            return {"available": False, "reason": str(exc)}
+        if record is None or record.system_b is None:
+            return {
+                "available": False,
+                "reason": "A/B system-slot backend is not configured",
+            }
+        payload: dict[str, object] = {"available": True}
+        payload.update(self._last_staged)
+        try:
+            journal = self._load_journal()
+        except SystemUpdateError:
+            return payload
+        if journal is not None:
+            payload["journal_state"] = journal.state.value
+            payload["candidate_slot"] = journal.candidate_slot
+            payload["release_id"] = journal.release_id
+            payload["release_sequence"] = journal.release_sequence
+        return payload
+
+    def stage(self, bundle: InspectedUpdateBundle) -> None:
+        """Verify-then-write the inbox candidate into the inactive slot.
+
+        Trust (signature/compatibility/sequence) is established by
+        :class:`SystemUpdateService` before this call; this method re-binds
+        the signed digest at the byte layer (``SlotWriter`` readback),
+        refuses live slots and single-root layouts, then records the shared
+        journal. Any refusal raises before the first destination mutation.
+        """
+        from .boot_transaction import BootJournalError, BootTransactionError, BootTransactionJournal
+        from .slot_writer import (
+            DestinationSlot,
+            SlotFinalizeError,
+            SlotFinalizer,
+            SlotWriteError,
+            SlotWriter,
+            VerifiedReleaseMember,
+        )
+
+        try:
+            record = self._require_ab_record()
+            accepted = record.accepted_slot or record.boot_control.active_slot
+            if accepted not in ("A", "B"):
+                raise UpdateBackendUnavailable(
+                    "update backend has no accepted slot to update from"
+                )
+            inactive = inactive_slot_for(record)
+            if inactive is None:  # pragma: no cover - guarded by _require_ab_record
+                raise UpdateBackendUnavailable(
+                    "A/B system-slot backend is not configured"
+                )
+            destination = DestinationSlot.resolve_from_layout(record, inactive)
+            member = VerifiedReleaseMember.from_manifest(bundle.manifest)
+            # Fail fast before any destination contact: an already-active
+            # transaction must be reconciled or confirmed first, and a
+            # foreign support set never reaches the slot seam.
+            self._refuse_active_transaction()
+            support = self._require_seam("release support set", self.seams.support_set_factory)
+            support_value = support(bundle)
+            if getattr(support_value, "support_digest", None) != member.hardware_support_sha256:
+                raise SystemUpdateError(
+                    "support set is not the release-bound support member"
+                )
+            inventory = self._require_seam(
+                "hardware inventory attestation", self.seams.inventory_factory
+            )()
+            policy_factory = (
+                self.seams.profile_policy_factory or _default_slot_profile_policy
+            )
+            policy = policy_factory(record)
+            filesystem = self._require_seam("slot filesystem", self.seams.filesystem_factory)()
+            package_installer = self._require_seam(
+                "slot package installer", self.seams.package_installer_factory
+            )()
+            selection = None
+            firmware: tuple[str, ...] = ()
+            microcode: tuple[str, ...] = ()
+            if self.seams.selection_factory is not None:
+                selection = self.seams.selection_factory(
+                    support_value, str(getattr(inventory, "token", ""))
+                )
+                if selection is not None:
+                    firmware = tuple(selection.firmware)
+                    microcode = tuple(selection.microcode)
+            writer = SlotWriter()
+            # The backend owns the store lifetime: it is closed on every path
+            # once the verified range is written, so loop files and later
+            # partition handles are never leaked across operations.
+            storage: object = None  # type: ignore[assignment]
+            try:
+                storage = self._require_seam(
+                    "inactive-slot store", self.seams.slot_store_factory
+                )(destination)
+                with zipfile.ZipFile(bundle.path, "r") as archive:
+                    with archive.open(PAYLOAD_NAME, "r") as source:
+                        verified = writer.write(
+                            member=member,
+                            destination=destination,
+                            source=source,
+                            storage=storage,
+                            support_installed_bytes=int(
+                                getattr(support_value, "installed_size_bound", 0)
+                            ),
+                        )
+            finally:
+                closer = getattr(storage, "close", None)
+                if callable(closer):
+                    try:
+                        closer()
+                    except OSError:
+                        pass
+            receipt = SlotFinalizer().finalize(
+                write=verified,
+                destination=destination,
+                filesystem=filesystem,
+                package_installer=package_installer,
+                inventory=inventory,
+                support=support_value,
+                profile_policy=policy,
+                firmware_packages=firmware,
+                microcode_packages=microcode,
+                selection=selection,
+            )
+            BootTransactionJournal.begin_update(
+                self.journal_dir,
+                layout_id=record.layout_id,
+                boot_backend=record.boot_backend,
+                release_id=receipt.release_id,
+                release_sequence=receipt.release_sequence,
+                candidate_slot=inactive,
+                accepted_slot=accepted,
+            )
+            self._last_staged = {
+                "candidate_slot": inactive,
+                "release_id": receipt.release_id,
+                "release_sequence": receipt.release_sequence,
+            }
+        except (SlotWriteError, SlotFinalizeError, BootTransactionError, BootJournalError) as exc:
+            if isinstance(exc, SystemUpdateError):
+                raise
+            raise SystemUpdateError(f"update staging failed fail-closed: {exc}") from exc
+
+    def arm(self) -> dict[str, object]:
+        """Arm the staged candidate one-shot (SCHEDULE phase)."""
+        from .boot_transaction import (
+            BootTransactionError,
+            BootTransactionJournal,
+            BootTransactionState,
+        )
+
+        try:
+            journal = self._require_staged_journal()
+            if journal.state is not BootTransactionState.UPDATE_STAGED:
+                raise SystemUpdateError(
+                    f"update transaction is {journal.state.value}, not staged"
+                )
+            backend = self._require_boot_backend()
+            backend.arm_one_shot(journal.candidate_slot)
+            journal.record(
+                BootTransactionState.ONE_SHOT_ARMED,
+                "candidate one-shot armed by the update service",
+            )
+        except BootTransactionError as exc:
+            raise SystemUpdateError(f"update arm failed fail-closed: {exc}") from exc
+        return {"armed": True, "slot": journal.candidate_slot}
+
+    def confirm_boot_health(self) -> dict[str, object]:
+        """Commit or roll back from the authoritative boot observation."""
+        from .boot_transaction import (
+            BootTransactionError,
+            BootTransactionJournal,
+            BootTransactionState,
+        )
+
+        try:
+            journal = self._require_staged_journal()
+            if journal.is_terminal:
+                return {
+                    "confirmed": journal.state is BootTransactionState.ACCEPTED,
+                    "state": journal.state.value,
+                    "booted_slot": None,
+                }
+            backend = self._require_boot_backend()
+            observed = backend.observe_booted_slot()
+            decision = journal.reconcile(observed)
+            if decision.transition is not None:
+                journal.record(decision.transition, _bounded_note(decision.explanation))
+            if (
+                journal.state is BootTransactionState.CANDIDATE_BOOTING
+                and observed == journal.candidate_slot
+            ):
+                backend.commit_accepted(journal.candidate_slot)
+                write_accepted_sequence(self.state_dir, journal.release_sequence)
+                journal.record(
+                    BootTransactionState.ACCEPTED,
+                    "candidate boot confirmed healthy; release accepted",
+                )
+        except BootTransactionError as exc:
+            raise SystemUpdateError(f"update confirm failed fail-closed: {exc}") from exc
+        return {
+            "confirmed": journal.state is BootTransactionState.ACCEPTED,
+            "state": journal.state.value,
+            "booted_slot": observed,
+        }
+
+    def reconcile(self) -> dict[str, object]:
+        """Crash-reconcile the shared journal (A8-FAULTS harness seam)."""
+        from .boot_transaction import BootTransactionError, BootTransactionJournal
+
+        try:
+            journal = self._require_staged_journal()
+            observed: str | None = None
+            if self.boot_backend is not None:
+                observed = self.boot_backend.observe_booted_slot()
+            decision = journal.reconcile(observed)
+            if decision.transition is not None:
+                journal.record(decision.transition, _bounded_note(decision.explanation))
+        except BootTransactionError as exc:
+            raise SystemUpdateError(
+                f"update reconcile failed fail-closed: {exc}"
+            ) from exc
+        return {
+            "reconciled": True,
+            "state": journal.state.value,
+            "booted_slot": observed,
+            "explanation": decision.explanation,
+        }
+
+    def _require_ab_record(self) -> "_LayoutRecord":
+        record = load_installed_layout_record(self.layout_record_path)
+        if record is None or record.system_b is None:
+            raise UpdateBackendUnavailable(
+                "A/B system-slot backend is not configured"
+            )
+        return record
+
+    def _require_seam(self, name: str, factory: Callable[..., object] | None) -> Callable[..., object]:
+        if factory is None:
+            raise UpdateBackendUnavailable(
+                f"inactive-slot destination seam is not configured: {name}"
+            )
+        return factory
+
+    def _require_boot_backend(self) -> object:
+        if self.boot_backend is None:
+            raise UpdateBackendUnavailable("boot backend is not wired")
+        return self.boot_backend
+
+    def _load_journal(self) -> "_Journal | None":
+        from .boot_transaction import (
+            JOURNAL_FILE_NAME,
+            BootJournalError,
+            BootTransactionJournal,
+        )
+
+        candidate = Path(self.journal_dir) / JOURNAL_FILE_NAME
+        if candidate.is_symlink():
+            raise SystemUpdateError("update journal must not be a symlink")
+        if not candidate.is_file():
+            return None
+        try:
+            return BootTransactionJournal.load(self.journal_dir)
+        except BootJournalError as exc:
+            raise SystemUpdateError(
+                f"update journal is not authoritative: {exc}"
+            ) from exc
+        except OSError as exc:
+            raise SystemUpdateError("update journal is unreadable") from exc
+
+    def _require_staged_journal(self) -> "_Journal":
+        journal = self._load_journal()
+        if journal is None:
+            raise SystemUpdateError("no staged update transaction")
+        return journal
+
+    def _refuse_active_transaction(self) -> None:
+        journal = self._load_journal()
+        if journal is not None and not journal.is_terminal:
+            raise SystemUpdateError(
+                "an update transaction is already active; "
+                "reconcile or confirm it before staging"
+            )
+
+
+def _bounded_note(note: str, maximum: int = 512) -> str:
+    raw = note if isinstance(note, str) and note else "update journal transition"
+    encoded = raw.encode("utf-8")[:maximum].decode("utf-8", "ignore")
+    return encoded or "update journal transition"
+
+
+@dataclass(frozen=True, slots=True)
+class UpdateCandidateSummary:
+    """Bounded public facts for the internally resolved inbox candidate.
+
+    Structural twin of ``update_privileged.CurrentCandidateSummary`` (same
+    attribute names, so the socket endpoint renders it without this module
+    importing the protocol owner); the service resolves it internally and
+    requests never carry selectors.
+    """
+
+    present: bool
+    release_id: str = ""
+    release_sequence: int = 0
+    bundle_sha256: str = ""
+    signature_verified: bool = False
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.present, bool):
+            raise SystemUpdateError("candidate presence must be a boolean")
+        if len(self.release_id) > 96:
+            raise SystemUpdateError("candidate release_id exceeds Greia bound")
+        if (
+            isinstance(self.release_sequence, bool)
+            or not isinstance(self.release_sequence, int)
+            or self.release_sequence < 0
+        ):
+            raise SystemUpdateError(
+                "candidate release_sequence is outside Greia bounds"
+            )
+        if self.bundle_sha256 and (
+            len(self.bundle_sha256) != 64
+            or any(c not in "0123456789abcdef" for c in self.bundle_sha256)
+        ):
+            raise SystemUpdateError("candidate bundle digest is outside Greia bounds")
+
+
+@dataclass
+class SystemUpdateServiceAuthority:
+    """Privileged operation owner behind the socket-activated endpoint.
+
+    Implements the ``UpdatePrivilegedAuthority`` seam structurally: every
+    method resolves the current inbox candidate, the trusted layout and the
+    journal internally. Request bytes carry no paths, slots, digests,
+    devices, URLs or commands.
+    """
+
+    state_dir: Path
+    trusted_key_dir: Path
+    identity: SystemIdentity
+    backend: SystemUpdateBackend | None = None
+    accepted_sequence: int | None = None
+    service: SystemUpdateService = field(init=False)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "state_dir", Path(self.state_dir))
+        object.__setattr__(self, "trusted_key_dir", Path(self.trusted_key_dir))
+        if self.backend is None:
+            object.__setattr__(
+                self, "backend", SlotBackedSystemUpdateBackend(self.state_dir)
+            )
+        if self.accepted_sequence is None:
+            object.__setattr__(
+                self, "accepted_sequence", read_accepted_sequence(self.state_dir)
+            )
+        object.__setattr__(
+            self,
+            "service",
+            SystemUpdateService(
+                self.state_dir,
+                self.trusted_key_dir,
+                self.identity,
+                self.backend,
+                accepted_sequence=int(self.accepted_sequence),
+            ),
+        )
+
+    def candidate_summary(self) -> UpdateCandidateSummary:
+        try:
+            path = self._current_bundle_path()
+            status = self._status_record()
+        except SystemUpdateError:
+            return UpdateCandidateSummary(present=False)
+        if not path.is_file():
+            return UpdateCandidateSummary(present=False)
+        release = status.get("release")
+        if not isinstance(release, dict):
+            return UpdateCandidateSummary(present=False)
+        sequence = release.get("release_sequence", 0)
+        if isinstance(sequence, bool) or not isinstance(sequence, int) or sequence < 0:
+            return UpdateCandidateSummary(present=False)
+        digest = status.get("bundle_sha256", "")
+        if not isinstance(digest, str) or (digest and not re.fullmatch(r"[0-9a-f]{64}", digest)):
+            return UpdateCandidateSummary(present=False)
+        release_id = release.get("release_id", "")
+        if not isinstance(release_id, str) or len(release_id) > 96:
+            return UpdateCandidateSummary(present=False)
+        verified = status.get("signature_verified", False)
+        return UpdateCandidateSummary(
+            present=True,
+            release_id=release_id,
+            release_sequence=sequence,
+            bundle_sha256=digest,
+            signature_verified=verified is True,
+        )
+
+    def layout_summary(self) -> dict[str, object]:
+        try:
+            record = load_installed_layout_record(
+                self._backend_layout_path(),
+            )
+        except UpdateLayoutError:
+            record = None
+        if record is None or record.system_b is None:
+            return {
+                "single_root": True,
+                "slots": ["A"],
+                "active_slot": None,
+                "accepted_slot": None,
+            }
+        return {
+            "single_root": False,
+            "slots": ["A", "B"],
+            "active_slot": record.boot_control.active_slot,
+            "accepted_slot": record.accepted_slot,
+        }
+
+    def verify_current_candidate(self) -> UpdateCandidateSummary:
+        path = self._current_bundle_path()
+        inspected, _decision = self.service.verify_for_activation(path)
+        return UpdateCandidateSummary(
+            present=True,
+            release_id=inspected.manifest.release_id,
+            release_sequence=inspected.manifest.release_sequence,
+            bundle_sha256=sha256_file(path),
+            signature_verified=True,
+        )
+
+    def stage_current_candidate(self) -> dict[str, object]:
+        path = self._current_bundle_path()
+        inspected, decision = self.service.verify_for_activation(path)
+        if decision == "no-update":
+            return {
+                "staged": False,
+                "decision": "no-update",
+                "release_id": inspected.manifest.release_id,
+                "release_sequence": inspected.manifest.release_sequence,
+            }
+        staged = self.service.stage(path)
+        detail: dict[str, object] = {
+            "staged": True,
+            "decision": "update",
+            "release_id": staged.manifest.release_id,
+            "release_sequence": staged.manifest.release_sequence,
+        }
+        detail.update(self.service.backend.status_payload())
+        return detail
+
+    def arm_current_candidate(self) -> dict[str, object]:
+        return self.service.arm()
+
+    def confirm_boot_health(self) -> dict[str, object]:
+        return self.service.confirm_boot_health()
+
+    def reconcile(self) -> dict[str, object]:
+        return self.service.reconcile()
+
+    def _backend_layout_path(self) -> Path | None:
+        backend = self.backend
+        path = getattr(backend, "layout_record_path", None)
+        return Path(path) if path is not None else None
+
+    def _status_record(self) -> dict[str, object]:
+        inbox = SystemUpdateInbox(self.state_dir)
+        try:
+            raw = json.loads(inbox.status_path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise SystemUpdateError("no current update candidate in the inbox") from exc
+        if not isinstance(raw, dict):
+            raise SystemUpdateError("update status state is invalid")
+        return raw
+
+    def _current_bundle_path(self) -> Path:
+        """Resolve the inbox candidate internally (never from request bytes)."""
+        status = self._status_record()
+        raw_path = status.get("bundle_path")
+        if not isinstance(raw_path, str) or not raw_path:
+            raise SystemUpdateError("no current update candidate in the inbox")
+        inbox = SystemUpdateInbox(self.state_dir)
+        try:
+            base = inbox.inbox_dir.resolve(strict=True)
+            candidate = Path(raw_path)
+            resolved = candidate.resolve(strict=True)
+            resolved.relative_to(base)
+            info = resolved.lstat()
+        except (OSError, ValueError) as exc:
+            raise SystemUpdateError("update candidate is not an inbox file") from exc
+        if not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode):
+            raise SystemUpdateError("update candidate is not a regular inbox file")
+        if info.st_size <= 0 or info.st_size > MAX_BUNDLE_BYTES:
+            raise SystemUpdateError("update candidate size is outside Greia bounds")
+        return resolved
+
+
+# ---------------------------------------------------------------------------
+# Socket-activated serving (one framed request per connection)
+# ---------------------------------------------------------------------------
+
+
+def handle_update_connection(
+    connection: socket.socket,
+    *,
+    authority: SystemUpdateServiceAuthority,
+    peer_uid: int,
+    boot_state: str = "update_ready",
+) -> None:
+    """Answer exactly one framed update request on an accepted connection.
+
+    The protocol owner stays ``greia_platform.update_privileged`` (imported
+    here, at the composition edge, because that module imports this one).
+    Any refusal — peer, boot, schema, trust, slot, journal — is answered as
+    a bounded REFUSED frame with no destination contact on the way out.
+    """
+    from .privileged_channel import (
+        MAX_MESSAGE_BYTES,
+        PeerCredential,
+        PrivilegedChannelError,
+        encode_response,
+        new_transaction_id,
+    )
+    from .update_privileged import UpdatePrivilegedEndpoint, UpdatePrivilegedError
+
+    try:
+        from .boot_transaction import BootTransactionError
+        from .slot_writer import SlotFinalizeError, SlotWriteError
+    except ImportError:  # pragma: no cover - platform seams always present
+        BootTransactionError = RuntimeError  # type: ignore[assignment]
+        SlotFinalizeError = RuntimeError  # type: ignore[assignment]
+        SlotWriteError = RuntimeError  # type: ignore[assignment]
+
+    peer = PeerCredential(uid=peer_uid)
+    try:
+        connection.settimeout(10.0)
+        chunks: list[bytes] = []
+        received = 0
+        while True:
+            chunk = connection.recv(4096)
+            if not chunk:
+                break
+            received += len(chunk)
+            if received > MAX_MESSAGE_BYTES:
+                raise UpdatePrivilegedError("request exceeds Greia bound")
+            chunks.append(chunk)
+            if chunk.endswith(b"\n"):
+                break
+        raw = b"".join(chunks)
+        endpoint = UpdatePrivilegedEndpoint(authority)  # type: ignore[arg-type]
+        response = endpoint.handle_request(raw, peer=peer, boot_state=boot_state)
+    except (
+        UpdatePrivilegedError,
+        SystemUpdateError,
+        PrivilegedChannelError,
+        SlotWriteError,
+        SlotFinalizeError,
+        BootTransactionError,
+    ) as exc:
+        response = encode_response(
+            new_transaction_id(), "ERROR", {"status": "REFUSED", "reason": str(exc)[:256]}
+        )
+    connection.sendall(response)
+    try:
+        connection.close()
+    except OSError:
+        pass
+
+
+def build_live_update_service(
+    *,
+    state_dir: Path | None = None,
+    trusted_key_dir: Path | None = None,
+    layout_record_path: Path | None = None,
+) -> SystemUpdateServiceAuthority:
+    """Compose the production authority from Greia-owned environment state."""
+    root = (
+        Path(state_dir)
+        if state_dir is not None
+        else Path(os.environ.get(UPDATE_STATE_DIR_ENV, UPDATE_STATE_DIR_DEFAULT))
+    )
+    keys = (
+        Path(trusted_key_dir)
+        if trusted_key_dir is not None
+        else Path(
+            os.environ.get(UPDATE_TRUSTED_KEY_DIR_ENV, UPDATE_TRUSTED_KEY_DIR_DEFAULT)
+        )
+    )
+    record_path = (
+        Path(layout_record_path)
+        if layout_record_path is not None
+        else installed_layout_record_path()
+    )
+    identity = SystemIdentity(
+        version=os.environ.get(UPDATE_SYSTEM_VERSION_ENV, "unknown"),
+        platform_family=os.environ.get(UPDATE_SYSTEM_PLATFORM_ENV, "unknown"),
+        architecture=os.environ.get(UPDATE_SYSTEM_ARCH_ENV, "unknown"),
+        profile=os.environ.get(UPDATE_SYSTEM_PROFILE_ENV, "unknown"),
+    )
+    backend = SlotBackedSystemUpdateBackend(
+        root,
+        layout_record_path=record_path,
+        boot_backend=None,
+    )
+    return SystemUpdateServiceAuthority(root, keys, identity, backend)
+
+
+def serve_update_forever(
+    listener: socket.socket,
+    *,
+    authority: SystemUpdateServiceAuthority,
+) -> NoReturn:
+    """Accept connections until the socket unit stops (systemd owns the fd)."""
+    import struct
+
+    while True:
+        connection, _ = listener.accept()
+        try:
+            raw = connection.getsockopt(
+                socket.SOL_SOCKET,
+                socket.SO_PEERCRED,
+                struct.calcsize("3i"),
+            )
+            _, uid, _ = struct.unpack("3i", raw)
+            peer_uid = int(uid)
+        except OSError:
+            try:
+                connection.close()
+            except OSError:
+                pass
+            continue
+        handle_update_connection(connection, authority=authority, peer_uid=peer_uid)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Socket-activated entry for ``greia-system-update.service``.
+
+    With systemd socket activation (``LISTEN_FDS``) the passed file
+    descriptor is the listening socket; without one the service exits
+    fail-closed instead of opening any socket itself.     Destination seams stay
+    unconfigured until the loop-media tranche wires them, so staging reports
+    unavailable rather than guessing at destination access.
+    """
+    _ = list(argv or [])
+    listen_fds = int(os.environ.get("LISTEN_FDS", "0"))
+    if listen_fds < 1:
+        raise SystemExit(
+            "greia-system-update: no socket-activated file descriptor; "
+            "refusing to listen (see greia-system-update.socket)"
+        )
+    authority = build_live_update_service()
+    listener = socket.fromfd(3, socket.AF_UNIX, socket.SOCK_STREAM)
+    serve_update_forever(listener, authority=authority)
+    return 0  # pragma: no cover - serve_forever never returns
+
+
+if __name__ == "__main__":  # pragma: no cover - service entry
+    raise SystemExit(main())
