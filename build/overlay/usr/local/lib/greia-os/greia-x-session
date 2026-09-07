@@ -6,8 +6,32 @@ export GREIA_PROFILES_DIR=/var/lib/greia-profiles
 export GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 export GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
 export PYTHONPATH=/opt/greia-os/src
+# Unbuffered python stdout keeps journal lines timely when forwarding works.
+export PYTHONUNBUFFERED=1
+# Bounded fail-soft marker spool (tmpfs, fresh each boot). Python markers are
+# mirrored by greia_platform.boot_markers; shell markers are mirrored by
+# greia_boot_marker() below. devctl logs appends this file because xinit
+# stdio forwarding provably loses ExecStart output (Verification-9: only the
+# two ExecStartPre shell lines reach the journal, 106 lines total < 5000, so
+# the loss is in display-session stdout plumbing, not the query window).
+GREIA_BOOT_MARKERS_SPOOL="${GREIA_BOOT_MARKERS_SPOOL:-/run/greia-os/boot-markers.log}"
+export GREIA_BOOT_MARKERS_SPOOL
 
-greia_boot_marker() { printf 'GREIA_BOOT event=%s\n' "$1" >&2; }
+greia_boot_marker() {
+  line="GREIA_BOOT event=$1"
+  printf '%s\n' "$line" >&2 || true
+  spool="${GREIA_BOOT_MARKERS_SPOOL:-/run/greia-os/boot-markers.log}"
+  spool_dir="${spool%/*}"
+  ( mkdir -p "$spool_dir" 2>/dev/null || true
+    printf '%s\n' "$line" >>"$spool" 2>/dev/null || true
+    if [ -f "$spool" ] 2>/dev/null; then
+      n="$(wc -l <"$spool" 2>/dev/null | tr -d '[:space:]' || echo 0)"
+      case "$n" in ''|*[!0-9]*) n=0 ;; esac
+      if [ "$n" -gt 500 ] 2>/dev/null; then
+        tail -n 500 "$spool" >"$spool.tmp.$$" 2>/dev/null && mv "$spool.tmp.$$" "$spool" 2>/dev/null || rm -f "$spool.tmp.$$" 2>/dev/null || true
+      fi
+    fi ) || true
+}
 
 greia_boot_marker x_session_enter || true
 

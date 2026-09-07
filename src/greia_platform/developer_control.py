@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Mapping, Sequence
 
 from .activities import ActivityRegistry, ActivityValidationError, RuntimeCatalogue
+from .boot_markers import read_spool_text, spool_path
 from .developer_session import DeveloperDisplayEndpoint, DeveloperSessionError
 from .trust import ActivitySource, PackageTrust
 
@@ -155,7 +156,20 @@ class DeveloperControl:
             raise DeveloperControlError(
                 f"journalctl failed with status {completed.returncode}: {completed.stderr.strip()}"
             )
-        return completed.stdout
+        output = completed.stdout
+        try:
+            spool = read_spool_text()
+        except Exception:  # noqa: BLE001 - spool is fail-soft coverage
+            spool = ""
+        if spool:
+            try:
+                location = str(spool_path())
+            except Exception:  # noqa: BLE001 - path display never fails logs
+                location = "boot-marker spool"
+            if output and not output.endswith("\n"):
+                output += "\n"
+            output += f"--- boot-marker spool ({location}) ---\n" + spool
+        return output
 
     def restart_launcher(self) -> None:
         _run_checked(["systemctl", "restart", "greia-launcher.service"])

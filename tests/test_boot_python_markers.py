@@ -185,5 +185,67 @@ class BootPythonMarkersTest(unittest.TestCase):
                 self.assertNotIn("intro_first_frame_flipped", events)
 
 
+class BootMarkerSpoolTests(unittest.TestCase):
+    def test_emission_mirrors_stdout_line_into_spool(self) -> None:
+        from greia_platform import boot_markers
+
+        with tempfile.TemporaryDirectory() as tmp:
+            spool = Path(tmp) / "boot-markers.log"
+            env = {"GREIA_BOOT_MARKERS_SPOOL": str(spool)}
+            with mock.patch.dict(os.environ, env, clear=False):
+                buffer = io.StringIO()
+                with contextlib.redirect_stdout(buffer):
+                    emit_boot_marker("probe_spool_event")
+            stdout_line = buffer.getvalue().splitlines()
+            self.assertEqual(len(stdout_line), 1)
+            spool_lines = spool.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(spool_lines, stdout_line)
+            self.assertIsNotNone(LINE_RE.match(spool_lines[0]))
+
+    def test_spool_is_fail_soft_on_unwritable_path(self) -> None:
+        from greia_platform import boot_markers
+
+        with tempfile.TemporaryDirectory() as tmp:
+            unwritable = Path(tmp) / "missing-dir" / "nested" / "spool.log"
+            # Make the parent a file so mkdir/open must fail.
+            blocker = Path(tmp) / "missing-dir"
+            blocker.write_text("blocker\n", encoding="utf-8")
+            env = {"GREIA_BOOT_MARKERS_SPOOL": str(unwritable)}
+            with mock.patch.dict(os.environ, env, clear=False):
+                buffer = io.StringIO()
+                with contextlib.redirect_stdout(buffer):
+                    emit_boot_marker("probe_fail_soft")
+            # Stdout still emitted; no exception escapes.
+            self.assertIn("probe_fail_soft", buffer.getvalue())
+
+    def test_spool_stays_bounded(self) -> None:
+        from greia_platform import boot_markers
+
+        with tempfile.TemporaryDirectory() as tmp:
+            spool = Path(tmp) / "boot-markers.log"
+            spool.write_text(
+                "\n".join(f"old-line-{i}" for i in range(600)) + "\n",
+                encoding="utf-8",
+            )
+            env = {"GREIA_BOOT_MARKERS_SPOOL": str(spool)}
+            with mock.patch.dict(os.environ, env, clear=False):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    emit_boot_marker("probe_bound")
+            lines = spool.read_text(encoding="utf-8").splitlines()
+            self.assertLessEqual(len(lines), boot_markers.BOOT_MARKER_SPOOL_MAX_LINES)
+            self.assertTrue(lines[-1].startswith("GREIA_BOOT event=probe_bound "))
+            self.assertLessEqual(
+                spool.stat().st_size, boot_markers.BOOT_MARKER_SPOOL_MAX_BYTES + 4096
+            )
+
+    def test_read_spool_text_missing_file_returns_empty(self) -> None:
+        from greia_platform import boot_markers
+
+        with tempfile.TemporaryDirectory() as tmp:
+            env = {"GREIA_BOOT_MARKERS_SPOOL": str(Path(tmp) / "absent.log")}
+            with mock.patch.dict(os.environ, env, clear=False):
+                self.assertEqual(boot_markers.read_spool_text(), "")
+
+
 if __name__ == "__main__":
     unittest.main()

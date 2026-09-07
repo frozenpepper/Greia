@@ -8,15 +8,23 @@ malformed lines ignored, and intro duration calculation.
 
 from __future__ import annotations
 
+import contextlib
+import io
+import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(
     0, str(Path(__file__).resolve().parent.parent / "tools" / "boot")
 )
+ROOT = Path(__file__).resolve().parent.parent
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
 from analyze_boot_markers import (  # noqa: E402
     FIRST_FRAME_EVENT,
@@ -231,6 +239,117 @@ class TestSystemdAnalyzeTime(unittest.TestCase):
         self.assertEqual(components["userspace"], 12_456_000_000)
         analysis = analyze_journal(FULL_JOURNAL, text)
         self.assertEqual(analysis.systemd_userspace_ns, 12_456_000_000)
+
+
+def _make_devctl(tmp: Path, journal_stdout: str):
+    """Build a DeveloperControl with journalctl mocked to journal_stdout."""
+    from greia_platform import developer_control as devctl
+    from greia_platform.developer_session import DeveloperDisplayEndpoint
+
+    marker = tmp / "developer-remote"
+    marker.write_text("enabled\n", encoding="utf-8")
+    state = tmp / "devctl-state"
+    endpoint = DeveloperDisplayEndpoint(user="greiakid", display=":0")
+    stack = contextlib.ExitStack()
+    stack.enter_context(mock.patch.object(devctl, "DEVELOPER_MARKER", marker))
+    stack.enter_context(mock.patch.object(devctl, "STATE_ROOT", state))
+    stack.enter_context(
+        mock.patch.object(devctl, "DEVELOPER_ACTIVITY_ROOT", state / "activities")
+    )
+    stack.enter_context(mock.patch.object(devctl, "STAGING_ROOT", state / "staging"))
+    stack.enter_context(mock.patch.object(devctl, "BACKUP_ROOT", state / "backups"))
+    stack.enter_context(mock.patch.object(devctl, "STATE_FILE", state / "deployments.json"))
+    stack.enter_context(
+        mock.patch("greia_platform.developer_control.os.geteuid", return_value=0)
+    )
+    stack.enter_context(
+        mock.patch.object(
+            devctl.DeveloperDisplayEndpoint, "load", return_value=endpoint
+        )
+    )
+    completed = subprocess.CompletedProcess(
+        ["journalctl"], 0, journal_stdout, ""
+    )
+    run_mock = stack.enter_context(
+        mock.patch(
+            "greia_platform.developer_control.subprocess.run",
+            return_value=completed,
+        )
+    )
+    control = devctl.DeveloperControl()
+    return stack, control, run_mock
+
+
+class TestDevctlSpoolRetrieval(unittest.TestCase):
+    def test_logs_merges_spool_markers_for_analyzer(self) -> None:
+        """Loopback production proof: real emit -> spool -> logs -> analyzer."""
+        from greia_platform.boot_markers import emit_boot_marker
+
+        journal_without_python = (
+            "2026-09-06T10:00:00 acer scrub[1]: GREIA_BOOT event=launcher_execstartpre_vt_begin\n"
+            "2026-09-06T10:00:01 acer scrub[1]: GREIA_BOOT event=launcher_execstartpre_vt_end\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spool = root / "boot-markers.log"
+            with mock.patch.dict(
+                os.environ, {"GREIA_BOOT_MARKERS_SPOOL": str(spool)}, clear=False
+            ):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    emit_boot_marker("intro_enter")
+                    emit_boot_marker("intro_first_frame_flipped")
+                    emit_boot_marker("intro_end")
+                stack, control, _ = _make_devctl(root, journal_without_python)
+                with stack:
+                    output = control.logs("all", 5000)
+            self.assertIn("boot-marker spool", output)
+            names = [
+                line.split("event=")[1].split()[0]
+                for line in output.splitlines()
+                if "GREIA_BOOT event=" in line
+            ]
+            for required in (
+                "launcher_execstartpre_vt_begin",
+                "intro_enter",
+                "intro_first_frame_flipped",
+                "intro_end",
+            ):
+                self.assertIn(required, names)
+            self.assertEqual(names.count("intro_first_frame_flipped"), 1)
+            self.assertLess(
+                names.index("intro_enter"),
+                names.index("intro_first_frame_flipped"),
+            )
+            self.assertLess(
+                names.index("intro_first_frame_flipped"),
+                names.index("intro_end"),
+            )
+            proc = _run_cli(output)
+            self.assertEqual(proc.returncode, 0, msg=proc.stderr)
+
+    def test_logs_without_spool_returns_journal_alone(self) -> None:
+        journal = (
+            "2026-09-06T10:00:00 acer scrub[1]: GREIA_BOOT event=launcher_execstartpre_vt_begin\n"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            with mock.patch.dict(
+                os.environ,
+                {"GREIA_BOOT_MARKERS_SPOOL": str(root / "absent-spool.log")},
+                clear=False,
+            ):
+                stack, control, _ = _make_devctl(root, journal)
+                with stack:
+                    output = control.logs("all", 100)
+            self.assertEqual(output, journal)
+
+    def test_marker_free_input_fails_closed_exit_2(self) -> None:
+        proc = _run_cli("")
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn(FIRST_FRAME_EVENT, proc.stderr)
+        unrelated = "2026-09-06T10:00:00 acer kernel: unrelated line\n" * 5
+        proc = _run_cli(unrelated)
+        self.assertEqual(proc.returncode, 2)
 
 
 if __name__ == "__main__":
