@@ -1002,3 +1002,19 @@ Owner confirms the collection-entry crash was fixed long ago (contract repairs h
 - FDCAP/FD-CLOSE/FD-FRESH/FDHUNT/FDATTR chain: historical 22:35:16 exit-0 window UNRECOVERABLE (sudo policy + volatile journal + xinit-stdio loss, all source-confirmed); current-boot tail clean via compliant devctl path; full installed-tree hunt finds no unprogrammed exit (44 files); exit owner stays UNPROVEN with ranked residuals.
 - BLOCKED on owner: (A) tail-proxy authorization, (B) NOPASSWD journalctl, or (C) hash-alignment — plus NEW: bounded deploy authorization for injector+plumbing to the Acer (verified absent device-side: no `arm-intro-sweep` verb, no helper). PROVE-INTRO-DRAIN-R is READY but would abort on its SHA/arm preconditions until that deploy lands. No input presses until a capture path exists per FDATTR.
 - Live device check (R0, 2026-09-07): `boot_intro.py` SHA `851d04d4…63c45b` MATCH (drain fix live), injector absent. No deploys, no reboots, no config changes this turn.
+
+## 40. Motion-during-intro proven on-device — P-c GREEN, drain fix holds (2026-09-07)
+
+PROVE-INTRO-DRAIN-R verification-10 PASS accepted. Pre-armed one-shot sweep fired
+9/10 steps inside the live intro (first frame flipped mid-sweep); full ordered
+marker list via the new spool channel (first_frame exactly once, intro_end in
+tolerance); zero post-intro burst; NRestarts=0; SHA/initramfs continuity green.
+Chain that got here: marker spool (`1a7f58e8`) + injector (`d6a3714f`) + staged
+trigger tune (`9e01c6a6`) + unit TimeoutStartSec 60 (`3fc51e9d`), all pushed;
+bounded parent-side deploy (5 files byte-identical, backup+manifests on device
+under `/var/lib/greia-developer/backups/deploy-intro-sweep-349a44fe/`, vintage-skew
+checked additions-only); sweep unit returned to DISABLED at-rest; no arm remains.
+Evidence: `out/boot-optimization/phase-03/PROVE-INTRO-DRAIN-R-*`.
+Still open: exit-owner attribution (A/B/C — historical window unrecoverable, fresh
+capture path exists); FIX-COMPOSE-WINDOW chain; BOOT-PLAN-05/FIELD-FIX-PLAN analyses.
+No input presses outstanding; device healthy at NRestarts=0.
