@@ -31,12 +31,30 @@ Interaction surfaces: ``system-a`` / ``system-b`` roles match
 ``PARTITION_ROLES`` in ``greia_platform.persistent_layout`` (A8-SLOTWRITE
 slot targets); the trailing ``persist`` remainder role matches the PERSIST
 namespace authority (A8-PERSIST init).
+
+Phase 8B Step 8B.1 (X8-LAYOUT) adds the installer-owned profile seam on top
+of the 8A adapters: :class:`ProfileSizing` carries the release-profile
+``storage``/``updates`` facts (``system_slot_bytes``,
+``persistent_minimum_bytes``, layout adapter, boot backend) so sizes come
+only from profile data; :func:`plan_for_profile` resolves the adapter and
+returns the validated plan; :func:`require_finalized_slot_capacity` rejects
+undersized profiles with the finalizer capacity bound
+(base + support-set installed-size bound + boot-artifact growth bound +
+metadata/reserve <= slot capacity); :func:`mint_fresh_partition_identities`
+mints the distinct role-owned PARTUUID/filesystem-UUID pairs recorded in
+layout authority (never cloned template UUIDs). ``BOOT_CONTROL`` stays
+outside the layout record by design: it owns stable GRUB
+configuration/environment outside both replaceable A/B roots and is never
+rewritten by slot updates, while the record tracks exactly the
+``system-a`` / ``system-b`` / ``persist`` roles.
 """
 
 from __future__ import annotations
 
 import re
+import uuid
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Sequence
 
@@ -44,6 +62,10 @@ from greia_platform.persistent_layout import (
     MAX_SYSTEM_SLOT_BYTES,
     MIN_PERSIST_BYTES,
     MIN_SYSTEM_SLOT_BYTES,
+)
+from greia_platform.slot_writer import (
+    FINALIZATION_GROWTH_BYTES,
+    SLOT_METADATA_RESERVE_BYTES,
 )
 
 from .disk import DeviceObservation, DiskProbeError, partition_number_path
@@ -792,6 +814,194 @@ def adapter_for(adapter_id: str) -> LayoutAdapter:
         ) from exc
 
 
+# ---------------------------------------------------------------------------
+# Phase 8B Step 8B.1 profile seam (X8-LAYOUT): profile-owned sizing,
+# finalized-slot capacity gate and fresh layout-authority identities.
+# ---------------------------------------------------------------------------
+
+
+def _require_positive_int(value: object, *, field_name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise LayoutError(f"{field_name} must be a positive integer")
+    return value
+
+
+def _require_nonnegative_int(value: object, *, field_name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise LayoutError(f"{field_name} must be a non-negative integer")
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileSizing:
+    """Profile-owned sizing facts for one install (installer seam).
+
+    Carries exactly the release-profile ``storage``/``updates`` facts the
+    layout adapter consumes: the canonical layout-adapter id, the profile
+    ``system_slot_bytes`` / ``persistent_minimum_bytes`` and the profile
+    ``updates.boot_backend``. Numeric slot/PERSIST bounds stay enforced once
+    at :class:`LayoutPlan` construction; this dataclass only proves the
+    profile facts are well-typed, adapter-registered and backend-bound, so
+    X8-GRUB/X8-INSTALL/X8-UPDATE share one typed entry point instead of
+    threading raw profile integers.
+    """
+
+    layout_adapter_id: str
+    slot_bytes: int
+    persist_minimum_bytes: int
+    boot_backend: str
+
+    def __post_init__(self) -> None:
+        if self.layout_adapter_id not in KNOWN_LAYOUT_ADAPTER_IDS:
+            raise LayoutError(
+                f"unknown layout adapter: {self.layout_adapter_id!r}"
+            )
+        _require_positive_int(self.slot_bytes, field_name="profile slot_bytes")
+        _require_positive_int(
+            self.persist_minimum_bytes, field_name="profile persist_minimum_bytes"
+        )
+        if not isinstance(self.boot_backend, str) or not self.boot_backend:
+            raise LayoutError("profile boot_backend must be non-empty text")
+        expected_backend = _ADAPTER_BOOT_BACKENDS.get(self.layout_adapter_id)
+        if expected_backend is not None and self.boot_backend != expected_backend:
+            raise LayoutError("profile boot_backend does not match the layout adapter")
+
+
+def plan_for_profile(
+    sizing: ProfileSizing, *, device_size_bytes: int
+) -> LayoutPlan:
+    """Return the validated declarative plan for profile-owned sizes.
+
+    Sizes come only from the profile ``sizing`` facts; ``device_size_bytes``
+    is the verified target capacity the plan is proven against. Unknown
+    adapters and backend mismatches fail closed with no commands issued.
+    """
+    if not isinstance(sizing, ProfileSizing):
+        raise LayoutError("layout planning requires profile-owned sizing facts")
+    capacity = _require_positive_int(
+        device_size_bytes, field_name="device_size_bytes"
+    )
+    adapter = adapter_for(sizing.layout_adapter_id)
+    if sizing.boot_backend != adapter.boot_backend:
+        raise LayoutError("profile boot_backend does not match the layout adapter")
+    return adapter.plan(
+        device_size_bytes=capacity,
+        slot_bytes=int(sizing.slot_bytes),
+        persist_minimum_bytes=int(sizing.persist_minimum_bytes),
+    )
+
+
+def require_finalized_slot_capacity(
+    *,
+    slot_bytes: int,
+    base_bytes: int,
+    minimum_slot_bytes: int,
+    support_installed_bytes: int,
+    growth_bytes: int = FINALIZATION_GROWTH_BYTES,
+    metadata_reserve_bytes: int = SLOT_METADATA_RESERVE_BYTES,
+) -> int:
+    """Reject an undersized profile slot with the finalizer capacity bound.
+
+    Proves ``max(base bytes, manifest minimum) + support-set installed-size
+    bound + boot-artifact growth bound + metadata/reserve <= slot capacity``
+    — the same bound :class:`greia_platform.slot_writer.SlotWriter` enforces
+    at write time and :class:`greia_platform.slot_writer.SlotFinalizer`
+    re-checks at finalization, applied here at install-plan time so an
+    undersized profile fails before any destructive command runs. Growth and
+    reserve defaults are the platform-owned bounds (imported, never copied);
+    callers pass release-measured facts for the rest. Returns the required
+    bytes so callers and tests can assert headroom explicitly.
+    """
+    capacity = _require_positive_int(slot_bytes, field_name="profile slot_bytes")
+    base = _require_positive_int(base_bytes, field_name="release base_bytes")
+    minimum = _require_positive_int(
+        minimum_slot_bytes, field_name="release minimum_slot_bytes"
+    )
+    support = _require_nonnegative_int(
+        support_installed_bytes, field_name="support installed-size bound"
+    )
+    growth = _require_nonnegative_int(
+        growth_bytes, field_name="boot-artifact growth bound"
+    )
+    reserve = _require_nonnegative_int(
+        metadata_reserve_bytes, field_name="metadata/reserve bound"
+    )
+    required = max(base, minimum) + support + growth + reserve
+    if required > capacity:
+        raise LayoutError(
+            "profile slot_bytes is below the finalized-slot capacity bound: "
+            f"required {required} bytes exceeds slot capacity {capacity} bytes"
+        )
+    return required
+
+
+#: Layout-authority roles minted fresh at install time. ``boot-control`` is
+#: deliberately absent: it owns stable GRUB configuration/environment outside
+#: both replaceable A/B roots and is never rewritten by slot updates, so it
+#: carries no layout-record identity; the record tracks exactly the
+#: ``system-a`` / ``system-b`` / ``persist`` roles (see
+#: ``greia_platform.persistent_layout.PARTITION_ROLES``). Its filesystem UUID
+#: is still never cloned: the adapter formats it with a fresh ``mkfs`` UUID.
+FRESH_IDENTITY_ROLES = ("system-a", "system-b", "persist")
+
+
+def _fresh_uuid_text(uuid_factory: Callable[[], uuid.UUID], *, field_name: str) -> str:
+    try:
+        candidate = uuid_factory()
+    except Exception as exc:
+        raise LayoutError(
+            "layout identity generator is outside Greia bounds"
+        ) from exc
+    try:
+        parsed = uuid.UUID(str(candidate))
+    except (ValueError, AttributeError) as exc:
+        raise LayoutError(
+            f"layout identity {field_name} is not a valid UUID"
+        ) from exc
+    text = str(parsed)
+    if text != text.lower():
+        raise LayoutError(
+            f"layout identity {field_name} must be canonical lowercase UUID text"
+        )
+    return text
+
+
+def mint_fresh_partition_identities(
+    *, uuid_factory: Callable[[], uuid.UUID] = uuid.uuid4
+) -> dict[str, dict[str, str]]:
+    """Mint fresh distinct PARTUUID/filesystem-UUID pairs for layout authority.
+
+    Returns one ``{"partuuid", "filesystem_uuid"}`` mapping per record-tracked
+    role (``system-a``, ``system-b``, ``persist``) in the exact shape
+    :class:`greia_platform.persistent_layout.PartitionIdentity` consumes.
+    Every UUID comes from the factory (never from a release-builder template
+    or a cloned peer), all six are proven distinct, and any factory failure
+    or collision fails closed. X8-INSTALL threads these into the fresh
+    ``InstalledLayoutRecord`` (via ``FreshPersistSpec``) and the slot
+    destinations whose finalizer restores exactly the role UUIDs.
+    """
+    minted: dict[str, dict[str, str]] = {}
+    for role in FRESH_IDENTITY_ROLES:
+        minted[role] = {
+            "partuuid": _fresh_uuid_text(
+                uuid_factory, field_name=f"{role}.partuuid"
+            ),
+            "filesystem_uuid": _fresh_uuid_text(
+                uuid_factory, field_name=f"{role}.filesystem_uuid"
+            ),
+        }
+    seen = [
+        minted[role][key]
+        for role in FRESH_IDENTITY_ROLES
+        for key in ("partuuid", "filesystem_uuid")
+    ]
+    if len(set(seen)) != len(seen):
+        raise LayoutError(
+            "fresh layout partition identities must be unique across roles"
+        )
+    return minted
+
+
 __all__ = [
     "MIB",
     "PARTITION_ALIGNMENT_BYTES",
@@ -799,6 +1009,7 @@ __all__ = [
     "ALLOWED_FILESYSTEMS",
     "ALLOWED_FLAGS",
     "KNOWN_LAYOUT_ADAPTER_IDS",
+    "FRESH_IDENTITY_ROLES",
     "LAYOUT_ADAPTERS",
     "LEGACY_BIOS_AB_ADAPTER_ID",
     "MODERN_GPT_AB_ADAPTER_ID",
@@ -811,6 +1022,10 @@ __all__ = [
     "PartitionCommandRunner",
     "PiMbrTrybootAbAdapter",
     "PlannedPartition",
+    "ProfileSizing",
     "adapter_for",
+    "mint_fresh_partition_identities",
+    "plan_for_profile",
+    "require_finalized_slot_capacity",
     "validate_layout_plan",
 ]
