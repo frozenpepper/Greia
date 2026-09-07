@@ -993,3 +993,12 @@ boot-09 (8A) source chain terminal: L7-lineage tasks integrated+committed, A8-LA
 ## 38. Field crash closed per owner verdict — categories work in daily use (2026-09-06)
 
 Owner confirms the collection-entry crash was fixed long ago (contract repairs held in field use). FIELD-CAPTURE escalation resolved and task retired; exit-owner forensics closed as moot (not waived — answered by sustained fixed behavior). No code or device changes in this turn.
+
+## 39. Intro drain fix + injector/plumbing integrated to source; field forensics settled; deploy-gated proofs await owner (2026-09-07)
+
+- FIX-INTRO-MARKER-PLUMB integrated (`1a7f58e8`): fail-soft bounded marker spool mirrored by `emit_boot_marker`, x-session shell mirrors, `devctl logs` appends spool. Loopback proof green (20/20).
+- FIX-INTRO-INJECTOR integrated (`d6a3714f`): pre-armed one-shot at-boot motion sweep (`arm-intro-sweep` devctl verb, `greia-intro-sweep` helper+service, 10 steps/0.2 s inside 1024x600). Reviewer PASS, focused tests green. Motion proof itself stays RED/deferred.
+- FIELD-REPRO-3 verification-1 PASS accepted: post-fix collection press clean (NRestarts delta 0), confirming the field closure at functional level.
+- FDCAP/FD-CLOSE/FD-FRESH/FDHUNT/FDATTR chain: historical 22:35:16 exit-0 window UNRECOVERABLE (sudo policy + volatile journal + xinit-stdio loss, all source-confirmed); current-boot tail clean via compliant devctl path; full installed-tree hunt finds no unprogrammed exit (44 files); exit owner stays UNPROVEN with ranked residuals.
+- BLOCKED on owner: (A) tail-proxy authorization, (B) NOPASSWD journalctl, or (C) hash-alignment — plus NEW: bounded deploy authorization for injector+plumbing to the Acer (verified absent device-side: no `arm-intro-sweep` verb, no helper). PROVE-INTRO-DRAIN-R is READY but would abort on its SHA/arm preconditions until that deploy lands. No input presses until a capture path exists per FDATTR.
+- Live device check (R0, 2026-09-07): `boot_intro.py` SHA `851d04d4…63c45b` MATCH (drain fix live), injector absent. No deploys, no reboots, no config changes this turn.
