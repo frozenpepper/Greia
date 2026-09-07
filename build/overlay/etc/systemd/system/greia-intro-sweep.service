@@ -17,7 +17,11 @@ After=greia-launcher.service
 [Service]
 Type=oneshot
 ExecStart=/usr/local/lib/greia-os/greia-intro-sweep
-TimeoutStartSec=15
+TimeoutStartSec=60
+# Must exceed the worst-case sweep occupancy: stage-1 python wait (15 s)
+# + stage-2 intro wait (3 s) + 10 paced steps (~2 s) + margin. A shorter
+# timeout kills the sweep mid-wait (observed: timeout/failed, arm consumed,
+# zero steps) under Type=oneshot start-operation accounting.
 RemainAfterExit=no
 
 [Install]
