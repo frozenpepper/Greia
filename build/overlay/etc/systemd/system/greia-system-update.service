@@ -1,0 +1,46 @@
+# L7-PROTOCOLS R0/R1: socket-activated system-update semantic service.
+# Defined but never enabled: gated on /run/greia-os/enable-privileged-
+# transactions (absent on every image) and never wanted by any boot target,
+# so it stays inactive during ordinary pre-intro boot. Semantic operations
+# only (STATUS/VERIFY/STAGE/ARM/CONFIRM/RECONCILE over the current inbox
+# candidate); the single-root backend stays unavailable; no destructive
+# backend is wired at R0/R1.
+[Unit]
+Description=Greia OS system-update semantic service
+Requires=greia-system-update.socket
+After=greia-system-update.socket
+ConditionPathExists=/run/greia-os/enable-privileged-transactions
+# Never part of pre-intro boot and never a generic command runner or broad
+# system manager: this unit only serves the six semantic update operations.
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/greia-os
+Environment=PYTHONPATH=/opt/greia-os/src
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -m greia_platform.update_privileged --socket-activated
+Restart=no
+TimeoutStartSec=5
+TimeoutStopSec=5
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/run/greia-os
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX
+SystemCallArchitectures=native
+LimitCORE=0
+TasksMax=8
