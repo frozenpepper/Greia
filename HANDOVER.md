@@ -985,3 +985,7 @@ never repo overwrites. PROVE-CHROME-CONTRACT PASS accepted: end-to-end collectio
 entry, same PID, NRestarts 0→0, zero-error journal window, real paginated navigation
 screenshots. Motion-port detour rolled back (imported a module the device lacked).
 SSH delivery fixed durably: parent-held multiplex master, workers ride credential-free.
+
+## 37. Phase 8A substrate complete on source; Phase 8B x86 layout open (2026-09-06)
+
+boot-09 (8A) source chain terminal: L7-lineage tasks integrated+committed, A8-LAYOUT/A8-PERSIST/A8-SLOTWRITE/A8-FINALIZE/A8-INSTALL-SVC/A8-UPDATE-SVC integrated+committed, A8-FAULTS accepted (13/13 loopback fault boundaries green, hardware RED/deferred). X8-LAYOUT (8B) launched. Hardware proofs across the chain stay deferred per owner amendment; no device contact since the access cooldown.
