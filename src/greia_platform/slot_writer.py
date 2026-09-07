@@ -22,10 +22,11 @@ to the shared ``SlotPackageInstaller`` protocol instead of copying it (see
 Destination roles resolve only from trusted layout state
 (``InstalledLayoutRecord``), never from Parent/UI paths. ``A`` maps to the
 ``system-a`` partition role and ``B`` to ``system-b``; the destination must be
-neither the active nor the accepted slot. Fresh filesystem UUIDs are minted
-with ``uuid4`` at finalization: A/B role UUIDs stay distinct and are never
-cloned from the release-builder template (the deterministic payload header
-carries only profile/release identity, no UUIDs).
+neither the active nor the accepted slot. A/B filesystem UUIDs are
+role-stable: finalization restores the destination role's recorded UUID onto
+the staged filesystem (overwriting the release-builder template UUID), so
+role identities stay distinct and are never cloned from the template, and
+the layout record stays authoritative across updates with no rewrite path.
 
 Capacity proof (checked at write time and re-checked at finalization)::
 
@@ -105,10 +106,11 @@ _MAX_SLOT_CONFIG_ENTRIES = 32
 _MAX_SLOT_CONFIG_VALUE_BYTES = 256
 
 #: Capability tokens issued by :class:`SlotWriter.write`, keyed by token.
-#: :class:`SlotFinalizer` accepts only registered tokens, so a forged or
-#: guessed ``VerifiedBaseSlotWrite`` can never enter binding/finalization.
-#: Explicitly bounded (one entry per staged slot in practice); evicting the
-#: oldest token only invalidates a stale unfinalized write fail-closed.
+#: :class:`SlotFinalizer` consumes the token for exactly one finalization,
+#: so a forged, guessed or stale ``VerifiedBaseSlotWrite`` can never enter
+#: (or re-enter) binding/finalization. Explicitly bounded (one entry per
+#: staged slot in practice); evicting the oldest token only invalidates a
+#: stale unfinalized write fail-closed.
 _ISSUED_WRITE_TOKENS: deque[str] = deque(maxlen=1024)
 
 
@@ -209,6 +211,9 @@ class DestinationSlot:
 
     Resolved only from the trusted ``InstalledLayoutRecord``. ``semantic_slot``
     ``"A"``/``"B"`` maps to partition role ``"system-a"``/``"system-b"``.
+    ``role_filesystem_uuid`` is the role's stable filesystem UUID recorded by
+    layout authority: finalization restores exactly this UUID onto the staged
+    filesystem (it is never minted fresh and never cloned from the template).
     """
 
     semantic_slot: str
@@ -217,7 +222,7 @@ class DestinationSlot:
     active_slot: str | None
     accepted_slot: str | None
     layout_id: str
-    previous_filesystem_uuid: str
+    role_filesystem_uuid: str
     other_role_filesystem_uuid: str
 
     def __post_init__(self) -> None:
@@ -229,13 +234,13 @@ class DestinationSlot:
             self.slot_capacity_bytes, field_name="slot_capacity_bytes"
         )
         _require_canonical_uuid(
-            self.previous_filesystem_uuid, field_name="previous filesystem UUID"
+            self.role_filesystem_uuid, field_name="role filesystem UUID"
         )
         _require_canonical_uuid(
             self.other_role_filesystem_uuid, field_name="other role filesystem UUID"
         )
         if (
-            self.previous_filesystem_uuid == self.other_role_filesystem_uuid
+            self.role_filesystem_uuid == self.other_role_filesystem_uuid
         ):
             raise SlotWriteError("A/B role filesystem UUIDs must be distinct")
 
@@ -271,7 +276,7 @@ class DestinationSlot:
             active_slot=record.boot_control.active_slot,
             accepted_slot=record.accepted_slot,
             layout_id=record.layout_id,
-            previous_filesystem_uuid=own.filesystem_uuid,
+            role_filesystem_uuid=own.filesystem_uuid,
             other_role_filesystem_uuid=other.filesystem_uuid,
         )
 
@@ -447,8 +452,10 @@ class SlotPackageInstaller(Protocol):
 class VerifiedBaseSlotWrite:
     """Capability proving a streamed base payload passed readback verification.
 
-    Only :class:`SlotWriter.write` issues registered instances; only a
-    registered instance may enter binding/finalization. The capability carries
+    Only :class:`SlotWriter.write` issues registered instances, and each
+    instance is single-use: :class:`SlotFinalizer` consumes the issuance
+    token for exactly one finalization. A stale write can therefore never
+    replay against another role (or the same one). The capability carries
     no byte content, only the proven facts.
     """
 
@@ -468,8 +475,22 @@ class VerifiedBaseSlotWrite:
             raise SlotWriteError("base-slot write carries no issuance token")
 
 
-def _is_issued(write: VerifiedBaseSlotWrite) -> bool:
-    return write.write_token in _ISSUED_WRITE_TOKENS
+def _consume_write_token(write: VerifiedBaseSlotWrite) -> None:
+    """Consume a verified-write capability for exactly one finalization.
+
+    Raises :class:`SlotFinalizeError` when the token is unknown, forged or
+    already consumed. The caller invokes this only after every validation
+    gate and before the first destination mutation, so a refusal — for any
+    reason — always leaves the destination seam untouched and a stale write
+    can never replay.
+    """
+    try:
+        _ISSUED_WRITE_TOKENS.remove(write.write_token)
+    except ValueError as exc:
+        raise SlotFinalizeError(
+            "base-slot write is not a registered verified write; "
+            "refusing finalization"
+        ) from exc
 
 
 def _required_slot_bytes(
@@ -830,11 +851,6 @@ class SlotFinalizer:
         slot_config: Mapping[str, str] | None = None,
     ) -> FinalizationReceipt:
         """Run the bounded destination-only finalization transaction."""
-        if not _is_issued(write):
-            raise SlotFinalizeError(
-                "base-slot write is not a registered verified write; "
-                "refusing finalization"
-            )
         if destination != write.destination:
             raise SlotFinalizeError("finalization role does not match the verified write")
         if destination.semantic_slot == destination.active_slot:
@@ -869,10 +885,20 @@ class SlotFinalizer:
         ):
             _check_relative_path(rel_path)
 
-        # Mint the destination role's stable filesystem UUID: fresh random v4,
-        # distinct from both the previous destination UUID and the other
-        # role's UUID. Never cloned from the release-builder template.
-        filesystem_uuid = self._mint_role_uuid(destination)
+        # Consume the verified-write capability for exactly one
+        # finalization. Every gate above runs before the first destination
+        # mutation, so any refusal — unknown/forged/stale token included —
+        # leaves the destination seam untouched, and a stale write can never
+        # replay against another role (or the same one).
+        _consume_write_token(write)
+
+        # Restore the destination role's stable filesystem UUID recorded in
+        # layout authority, overwriting the release-builder template UUID
+        # carried by the staged payload. The role UUID is distinct from the
+        # other role's UUID by construction (DestinationSlot); it is never
+        # cloned from the template, and the layout record stays authoritative
+        # with no rewrite path.
+        filesystem_uuid = destination.role_filesystem_uuid
 
         mounted = False
         try:
@@ -972,17 +998,6 @@ class SlotFinalizer:
                     filesystem.sync()
             else:
                 filesystem.sync()
-
-    @staticmethod
-    def _mint_role_uuid(destination: DestinationSlot) -> str:
-        for _ in range(10):
-            candidate = str(uuid.uuid4())
-            if (
-                candidate != destination.other_role_filesystem_uuid
-                and candidate != destination.previous_filesystem_uuid
-            ):
-                return candidate
-        raise SlotFinalizeError("could not mint a distinct role filesystem UUID")
 
     @staticmethod
     def _packages_digest(installed: tuple[InstalledPackage, ...]) -> str:

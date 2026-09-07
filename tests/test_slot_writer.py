@@ -37,6 +37,10 @@ _UUID_B = "22222222-3333-4444-5555-666666666666"
 _UUID_B_FS = "bbbbbbbb-cccc-dddd-eeee-ffffffffffff"
 _UUID_P = "33333333-4444-5555-6666-777777777777"
 _UUID_P_FS = "cccccccc-dddd-eeee-ffff-000000000000"
+#: Release-builder template filesystem UUID: the deterministic base payload
+#: carries this identity, so any staged slot still carrying it after
+#: finalization proves the role UUID was cloned instead of restored.
+_TEMPLATE_UUID = "dddddddd-eeee-ffff-0000-111111111111"
 _INSTALL_SHA = "ab" * 32
 
 _FW_PAYLOAD = b"firmware-bytes"
@@ -205,6 +209,37 @@ class FakeSlotPackageInstaller:
             else:
                 tampered.append(record)
         return tuple(tampered)
+
+
+class BoundedReadStream(io.BytesIO):
+    """Source stream refusing any single read larger than the working bound."""
+
+    def __init__(self, payload: bytes, limit: int) -> None:
+        super().__init__(payload)
+        self._limit = limit
+        self.max_single_read = 0
+
+    def read(self, size: int = -1) -> bytes:  # type: ignore[override]
+        if size is None or size < 0 or size > self._limit:
+            raise AssertionError(f"source read exceeds the working bound: {size!r}")
+        self.max_single_read = max(self.max_single_read, size)
+        return super().read(size)
+
+
+class InterruptingStream(io.BytesIO):
+    """Source stream failing mid-read like an interrupted staged payload."""
+
+    def __init__(self, payload: bytes, fail_after: int) -> None:
+        super().__init__(payload)
+        self._fail_after = fail_after
+        self._delivered = 0
+
+    def read(self, size: int = -1) -> bytes:  # type: ignore[override]
+        if self._delivered >= self._fail_after:
+            raise OSError("simulated interrupted payload stream")
+        chunk = super().read(size)
+        self._delivered += len(chunk)
+        return chunk
 
 
 class CorruptingStorage:
@@ -480,6 +515,85 @@ class SlotWriterTests(unittest.TestCase):
             finally:
                 inner.close()
 
+    def test_streaming_memory_is_bounded(self) -> None:
+        import tracemalloc
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload = _payload(4 * 1024 * 1024)
+            record = _record()
+            destination = DestinationSlot.resolve_from_layout(record, "B")
+            member = _member(payload)
+            store = LoopbackSlotFile.create(root / "slot.img", destination.slot_capacity_bytes)
+            try:
+                source = BoundedReadStream(payload, limit=16 * 1024)
+                writer = SlotWriter(chunk_bytes=16 * 1024)
+                tracemalloc.start()
+                try:
+                    write = writer.write(
+                        member=member,
+                        destination=destination,
+                        source=source,
+                        storage=store,
+                        support_installed_bytes=1024,
+                    )
+                finally:
+                    _, peak = tracemalloc.get_traced_memory()
+                    tracemalloc.stop()
+                self.assertEqual(write.bytes_written, len(payload))
+                # No single source read ever exceeds the working chunk, and
+                # peak Python working memory stays far below one full
+                # payload: no second full-size copy is ever materialized
+                # beside the bundle stream.
+                self.assertLessEqual(source.max_single_read, 16 * 1024)
+                self.assertGreater(source.max_single_read, 0)
+                self.assertLess(peak, len(payload) // 4)
+            finally:
+                store.close()
+
+    def test_interrupted_write_never_touches_accepted_slot(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload = _payload()
+            record = _record()
+            destination = DestinationSlot.resolve_from_layout(record, "B")
+            member = _member(payload)
+            accepted = LoopbackSlotFile.create(
+                root / "accepted.img", destination.slot_capacity_bytes
+            )
+            store = LoopbackSlotFile.create(
+                root / "slot.img", destination.slot_capacity_bytes
+            )
+            try:
+                accepted_before = accepted.read_at(0, len(payload))
+                issued_before = len(slot_module._ISSUED_WRITE_TOKENS)
+                with self.assertRaises(OSError):
+                    SlotWriter().write(
+                        member=member,
+                        destination=destination,
+                        source=InterruptingStream(payload, fail_after=4096),
+                        storage=store,
+                        support_installed_bytes=1024,
+                    )
+                # The interrupted staging issues no capability and leaves the
+                # accepted slot byte-identical.
+                self.assertEqual(len(slot_module._ISSUED_WRITE_TOKENS), issued_before)
+                self.assertEqual(accepted.read_at(0, len(payload)), accepted_before)
+                # Retrying the full stream on the same destination store
+                # succeeds and verifies: the interruption poisons nothing.
+                write = SlotWriter().write(
+                    member=member,
+                    destination=destination,
+                    source=io.BytesIO(payload),
+                    storage=store,
+                    support_installed_bytes=1024,
+                )
+                self.assertEqual(write.slot_digest, member.payload_sha256)
+                self.assertEqual(store.read_at(0, len(payload)), payload)
+            finally:
+                accepted.close()
+                store.close()
+
     def test_digest_compare_is_constant_time(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -567,14 +681,14 @@ class SlotFinalizerTests(unittest.TestCase):
             payload = _payload()
             receipt, filesystem, installer = self._finalize_happy(root, payload)
             assert isinstance(receipt, slot_module.FinalizationReceipt)
-            # Fresh v4 UUID, distinct from both previous and other role UUIDs.
-            import uuid as uuid_module
-
+            # Role-stable restore: the destination role's recorded UUID is
+            # rebound onto the staged payload — never minted fresh, never
+            # the template clone, never the other role's UUID.
             bound = filesystem.bound_uuid
             assert bound is not None
-            self.assertEqual(uuid_module.UUID(bound).version, 4)
-            self.assertNotEqual(bound, _UUID_B_FS)
+            self.assertEqual(bound, _UUID_B_FS)
             self.assertNotEqual(bound, _UUID_A_FS)
+            self.assertNotEqual(bound, _TEMPLATE_UUID)
             self.assertTrue(filesystem.expanded)
             # Strict staging order: bind -> expand -> mount -> writes ->
             # health -> unmount -> sync.
@@ -662,10 +776,14 @@ class SlotFinalizerTests(unittest.TestCase):
             finally:
                 store.close()
             assert isinstance(receipt, slot_module.FinalizationReceipt)
-            minted = {first_fs.bound_uuid, receipt.filesystem_uuid}
-            self.assertEqual(len(minted), 2)
-            self.assertNotIn(_UUID_A_FS, minted)
-            self.assertNotIn(_UUID_B_FS, minted)
+            # The same template payload staged into both roles restores each
+            # role's own stable UUID: distinct per role, never the template.
+            self.assertEqual(first_fs.bound_uuid, _UUID_B_FS)
+            self.assertEqual(filesystem.bound_uuid, _UUID_A_FS)
+            self.assertEqual(receipt.filesystem_uuid, _UUID_A_FS)
+            restored = {first_fs.bound_uuid, receipt.filesystem_uuid}
+            self.assertEqual(restored, {_UUID_A_FS, _UUID_B_FS})
+            self.assertNotIn(_TEMPLATE_UUID, restored)
 
     def test_forged_capability_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -715,8 +833,111 @@ class SlotFinalizerTests(unittest.TestCase):
                         support=support,
                         profile_policy=_policy(),
                     )
+                # A refused role binding mutates nothing on the destination.
+                self.assertEqual(filesystem.ops, [])
+                self.assertIsNone(filesystem.bound_uuid)
+                self.assertFalse(filesystem.expanded)
             finally:
                 store.close()
+
+    def test_finalize_consumes_capability_against_replay(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write, destination, store, _ = _write_happy(root, _payload(4096))
+            try:
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                support = _support()
+                SlotFinalizer().finalize(
+                    write=write,
+                    destination=destination,
+                    filesystem=FakeSlotFilesystem(mount_dir),
+                    package_installer=FakeSlotPackageInstaller(support),
+                    inventory=_inventory(),
+                    support=support,
+                    profile_policy=_policy(),
+                )
+                # Replaying the now-stale write against the same role fails
+                # with zero further mutations...
+                replay = FakeSlotFilesystem(mount_dir)
+                with self.assertRaisesRegex(SlotFinalizeError, "not a registered"):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=replay,
+                        package_installer=FakeSlotPackageInstaller(support),
+                        inventory=_inventory(),
+                        support=support,
+                        profile_policy=_policy(),
+                    )
+                self.assertEqual(replay.ops, [])
+                # ...and it cannot be rebound to the other role either.
+                other_record = _record(
+                    accepted_slot="B",
+                    boot_control={"active_slot": "B", "kind": "grub-env-v1"},
+                )
+                other = DestinationSlot.resolve_from_layout(other_record, "A")
+                cross = FakeSlotFilesystem(mount_dir)
+                with self.assertRaises(SlotFinalizeError):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=other,
+                        filesystem=cross,
+                        package_installer=FakeSlotPackageInstaller(support),
+                        inventory=_inventory(),
+                        support=support,
+                        profile_policy=_policy(),
+                    )
+                self.assertEqual(cross.ops, [])
+            finally:
+                store.close()
+
+    def test_readback_failure_issues_no_mutation_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload = _payload()
+            record = _record()
+            destination = DestinationSlot.resolve_from_layout(record, "B")
+            member = _member(payload)
+            inner = LoopbackSlotFile.create(root / "slot.img", destination.slot_capacity_bytes)
+            try:
+                with self.assertRaisesRegex(SlotWriteError, "readback digest"):
+                    SlotWriter().write(
+                        member=member,
+                        destination=destination,
+                        source=io.BytesIO(payload),
+                        storage=CorruptingStorage(inner),
+                        support_installed_bytes=1024,
+                    )
+                # A failed readback issues no capability, so the only route
+                # into binding is refused with the destination seam untouched:
+                # readback strictly precedes UUID restore/expand.
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                filesystem = FakeSlotFilesystem(mount_dir)
+                support = _support()
+                forged = VerifiedBaseSlotWrite(
+                    member=member,
+                    destination=destination,
+                    bytes_written=len(payload),
+                    slot_digest=member.payload_sha256,
+                    write_token="e" * 32,
+                )
+                with self.assertRaisesRegex(SlotFinalizeError, "not a registered"):
+                    SlotFinalizer().finalize(
+                        write=forged,
+                        destination=destination,
+                        filesystem=filesystem,
+                        package_installer=FakeSlotPackageInstaller(support),
+                        inventory=_inventory(),
+                        support=support,
+                        profile_policy=_policy(),
+                    )
+                self.assertEqual(filesystem.ops, [])
+                self.assertIsNone(filesystem.bound_uuid)
+                self.assertFalse(filesystem.expanded)
+            finally:
+                inner.close()
 
     def test_active_slot_is_never_finalized(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
