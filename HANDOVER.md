@@ -989,3 +989,7 @@ SSH delivery fixed durably: parent-held multiplex master, workers ride credentia
 ## 37. Phase 8A substrate complete on source; Phase 8B x86 layout open (2026-09-06)
 
 boot-09 (8A) source chain terminal: L7-lineage tasks integrated+committed, A8-LAYOUT/A8-PERSIST/A8-SLOTWRITE/A8-FINALIZE/A8-INSTALL-SVC/A8-UPDATE-SVC integrated+committed, A8-FAULTS accepted (13/13 loopback fault boundaries green, hardware RED/deferred). X8-LAYOUT (8B) launched. Hardware proofs across the chain stay deferred per owner amendment; no device contact since the access cooldown.
+
+## 38. Field crash closed per owner verdict — categories work in daily use (2026-09-06)
+
+Owner confirms the collection-entry crash was fixed long ago (contract repairs held in field use). FIELD-CAPTURE escalation resolved and task retired; exit-owner forensics closed as moot (not waived — answered by sustained fixed behavior). No code or device changes in this turn.
