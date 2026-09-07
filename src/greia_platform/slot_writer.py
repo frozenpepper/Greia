@@ -48,6 +48,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import BinaryIO, Mapping, Protocol
 
+from .hardware_enablement import (
+    HardwareSupportPlan,
+    SupportDisposition,
+    SupportKind,
+)
 from .persistent_layout import InstalledLayoutRecord
 
 try:
@@ -729,6 +734,162 @@ class SlotProfilePolicy:
 
 
 # ---------------------------------------------------------------------------
+# Release-bound hardware selection (Step 8A.4 glue)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedHardwareSelection:
+    """Deterministic inventory-bound package selection for one finalization.
+
+    Binds a resolver plan's inventory token to the exact approved
+    firmware/microcode sets the finalizer must install. Construct only via
+    :func:`resolve_hardware_selection`; :class:`SlotFinalizer` requires the
+    attested inventory token and the installed package set to match this
+    selection exactly.
+    """
+
+    inventory_token: str
+    firmware: tuple[str, ...]
+    microcode: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        _require_hex64(self.inventory_token, field_name="hardware inventory token")
+        if tuple(sorted(self.firmware)) != tuple(self.firmware) or len(
+            set(self.firmware)
+        ) != len(self.firmware):
+            raise SlotFinalizeError("selected firmware set is not deterministic")
+        if tuple(sorted(self.microcode)) != tuple(self.microcode) or len(
+            set(self.microcode)
+        ) != len(self.microcode):
+            raise SlotFinalizeError("selected microcode set is not deterministic")
+
+
+def resolve_hardware_selection(
+    *,
+    plan: HardwareSupportPlan,
+    support: ReleaseSupportSet,
+) -> ResolvedHardwareSelection:
+    """Resolve one deterministic release-bound selection from a resolver plan.
+
+    Only ``AUTO_ELIGIBLE`` firmware/microcode recommendations are selected;
+    advisory entries stay diagnostic. Every selected package must belong to
+    the release support set's approved classes — a resolver recommendation
+    with no release provider (missing provider) fails closed. The plan must
+    be complete; an incomplete plan selects nothing.
+    """
+    if not plan.complete:
+        raise SlotFinalizeError(
+            "hardware resolution is incomplete; refusing release selection"
+        )
+    firmware: list[str] = []
+    microcode: list[str] = []
+    for recommendation in plan.recommendations:
+        if recommendation.disposition is not SupportDisposition.AUTO_ELIGIBLE:
+            continue
+        if recommendation.kind is SupportKind.FIRMWARE:
+            if recommendation.package not in support.provided_firmware:
+                raise SlotFinalizeError(
+                    "hardware selection has no release provider: "
+                    f"{recommendation.package}"
+                )
+            firmware.append(recommendation.package)
+        elif recommendation.kind is SupportKind.MICROCODE:
+            if recommendation.package not in support.provided_microcode:
+                raise SlotFinalizeError(
+                    "hardware selection has no release provider: "
+                    f"{recommendation.package}"
+                )
+            microcode.append(recommendation.package)
+        else:
+            raise SlotFinalizeError(
+                "hardware selection ignores non-firmware automatic "
+                f"recommendation: {recommendation.package}"
+            )
+    return ResolvedHardwareSelection(
+        inventory_token=plan.inventory_token,
+        firmware=tuple(sorted(set(firmware))),
+        microcode=tuple(sorted(set(microcode))),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Boot artifacts: generic kernel identity plus host-bound initramfs identity
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class SlotBootArtifacts:
+    """Per-slot generic-boot artifacts (x86 stable generic-boot ABI shape)."""
+
+    generic_kernel_sha256: str
+    host_initramfs_sha256: str
+
+    def __post_init__(self) -> None:
+        try:
+            _require_hex64(
+                self.generic_kernel_sha256, field_name="generic kernel digest"
+            )
+            _require_hex64(
+                self.host_initramfs_sha256, field_name="host initramfs digest"
+            )
+        except SlotWriteError as exc:
+            raise SlotFinalizeError(
+                f"boot artifact identity is invalid: {exc}"
+            ) from exc
+
+    def as_dict(self) -> dict[str, str]:
+        return {
+            "generic_kernel_sha256": self.generic_kernel_sha256,
+            "host_initramfs_sha256": self.host_initramfs_sha256,
+        }
+
+
+class SlotBootArtifactBuilder(Protocol):
+    """Build the per-slot boot artifacts during finalization.
+
+    The default (:class:`DeterministicBootArtifactBuilder`) derives the
+    identities deterministically without host tooling; backends that run a
+    real initramfs rebuild implement this protocol instead. Any build
+    failure fails the finalization closed.
+    """
+
+    def build(
+        self,
+        *,
+        base_sha256: str,
+        inventory_token: str,
+        packages_digest: str,
+    ) -> SlotBootArtifacts: ...
+
+
+@dataclass(frozen=True, slots=True)
+class DeterministicBootArtifactBuilder:
+    """Derive boot-artifact identities without host tooling or network.
+
+    The generic kernel identity is the verified base digest itself (the
+    payload carries the generic kernel); the host initramfs identity binds
+    base + inventory + installed packages so it is unique to this machine
+    and this candidate. Recomputed deterministically for verification.
+    """
+
+    def build(
+        self,
+        *,
+        base_sha256: str,
+        inventory_token: str,
+        packages_digest: str,
+    ) -> SlotBootArtifacts:
+        host = hashlib.sha256(
+            f"{base_sha256}:{inventory_token}:{packages_digest}\n".encode("utf-8")
+        ).hexdigest()
+        return SlotBootArtifacts(
+            generic_kernel_sha256=base_sha256,
+            host_initramfs_sha256=host,
+        )
+
+
+# ---------------------------------------------------------------------------
 # Finalization receipt
 # ---------------------------------------------------------------------------
 
@@ -828,8 +989,12 @@ class SlotFinalizer:
 
     Consumes only a registered :class:`VerifiedBaseSlotWrite` plus the
     validated role, hardware-inventory attestation, release-bound support set
-    and profile policy. Performs only bounded mutations on the destination
-    slot; the active/accepted slot is never addressable here.
+    and profile policy. An optional :class:`ResolvedHardwareSelection` pins
+    the attested inventory and the installed package set to one deterministic
+    resolver outcome; an optional :class:`SlotBootArtifactBuilder` owns the
+    per-slot boot-artifact build (its failure fails closed). Performs only
+    bounded mutations on the destination slot; the active/accepted slot is
+    never addressable here.
     """
 
     chunk_bytes: int = SLOT_WRITE_CHUNK_BYTES
@@ -849,6 +1014,8 @@ class SlotFinalizer:
         firmware_packages: tuple[str, ...] = (),
         microcode_packages: tuple[str, ...] = (),
         slot_config: Mapping[str, str] | None = None,
+        selection: ResolvedHardwareSelection | None = None,
+        artifact_builder: SlotBootArtifactBuilder | None = None,
     ) -> FinalizationReceipt:
         """Run the bounded destination-only finalization transaction."""
         if destination != write.destination:
@@ -876,6 +1043,20 @@ class SlotFinalizer:
             )
         firmware = support.require_firmware(tuple(firmware_packages))
         microcode = support.require_microcode(tuple(microcode_packages))
+        if selection is not None:
+            if selection.inventory_token != inventory.token:
+                raise SlotFinalizeError(
+                    "hardware selection inventory does not match "
+                    "the attested inventory"
+                )
+            if (
+                tuple(firmware) != selection.firmware
+                or tuple(microcode) != selection.microcode
+            ):
+                raise SlotFinalizeError(
+                    "finalization package set does not match "
+                    "the resolved hardware selection"
+                )
         config = _check_slot_config(dict(slot_config or {}))
         for rel_path in (
             FINALIZED_GENERIC_REL_PATH,
@@ -925,14 +1106,26 @@ class SlotFinalizer:
                     )
 
             packages_digest = self._packages_digest(installed)
-            artifacts = self._finalized_generic_artifacts(
-                base_sha256=write.slot_digest,
-                inventory_token=inventory.token,
-                packages_digest=packages_digest,
-            )
+            builder = artifact_builder or DeterministicBootArtifactBuilder()
+            try:
+                artifacts = builder.build(
+                    base_sha256=write.slot_digest,
+                    inventory_token=inventory.token,
+                    packages_digest=packages_digest,
+                )
+            except SlotFinalizeError:
+                raise
+            except Exception as exc:
+                raise SlotFinalizeError(
+                    "boot artifact build failed; refusing finalization"
+                ) from exc
+            if not isinstance(artifacts, SlotBootArtifacts):
+                raise SlotFinalizeError(
+                    "boot artifact builder returned an invalid result"
+                )
             filesystem.write_file(
                 FINALIZED_GENERIC_REL_PATH,
-                _canonical_bytes(artifacts),
+                _canonical_bytes(artifacts.as_dict()),
             )
             filesystem.write_file(
                 RELEASE_IDENTITY_REL_PATH,
@@ -973,8 +1166,8 @@ class SlotFinalizer:
                 inventory_token=inventory.token,
                 packages=tuple(sorted(installed, key=lambda item: item.name)),
                 packages_digest=packages_digest,
-                generic_kernel_sha256=artifacts["generic_kernel_sha256"],
-                host_initramfs_sha256=artifacts["host_initramfs_sha256"],
+                generic_kernel_sha256=artifacts.generic_kernel_sha256,
+                host_initramfs_sha256=artifacts.host_initramfs_sha256,
                 filesystem_uuid=filesystem_uuid,
                 layout_id=destination.layout_id,
                 slot_capacity_bytes=destination.slot_capacity_bytes,
@@ -1006,25 +1199,3 @@ class SlotFinalizer:
             for package in sorted(installed, key=lambda item: item.name)
         )
         return hashlib.sha256((lines + "\n").encode("utf-8")).hexdigest()
-
-    @staticmethod
-    def _finalized_generic_artifacts(
-        *,
-        base_sha256: str,
-        inventory_token: str,
-        packages_digest: str,
-    ) -> dict[str, str]:
-        """Derive candidate-local generic/host artifact identities.
-
-        The generic kernel identity is the verified base digest itself (the
-        payload carries the generic kernel); the host initramfs identity binds
-        base + inventory + installed packages so it is unique to this machine
-        and this candidate. Recomputed deterministically for verification.
-        """
-        host = hashlib.sha256(
-            f"{base_sha256}:{inventory_token}:{packages_digest}\n".encode("utf-8")
-        ).hexdigest()
-        return {
-            "generic_kernel_sha256": base_sha256,
-            "host_initramfs_sha256": host,
-        }

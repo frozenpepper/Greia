@@ -12,15 +12,25 @@ from pathlib import Path
 from greia_installer import slots as installer_slots
 from greia_installer.hardware_support import VerifiedHardwareSupportPool
 from greia_platform import slot_writer as slot_module
-from greia_platform.hardware_enablement import HardwareInventory
+from greia_platform.hardware_enablement import (
+    HardwareDevice,
+    HardwareInventory,
+    HardwareSupportPlan,
+    HardwareSupportRecommendation,
+    SupportDisposition,
+    SupportKind,
+)
 from greia_platform.persistent_layout import InstalledLayoutRecord
 from greia_platform.slot_writer import (
     FINALIZER_VERSION,
     DestinationSlot,
+    DeterministicBootArtifactBuilder,
     HardwareInventoryAttestation,
     InstalledPackage,
     LoopbackSlotFile,
     ReleaseSupportSet,
+    ResolvedHardwareSelection,
+    SlotBootArtifacts,
     SlotFinalizeError,
     SlotFinalizer,
     SlotProfilePolicy,
@@ -28,6 +38,7 @@ from greia_platform.slot_writer import (
     SlotWriter,
     VerifiedBaseSlotWrite,
     VerifiedReleaseMember,
+    resolve_hardware_selection,
 )
 from greia_platform.system_updates import UpdateManifest
 
@@ -1155,6 +1166,456 @@ class SlotFinalizerTests(unittest.TestCase):
             )
         with self.assertRaises((SlotWriteError, SlotFinalizeError)):
             HardwareInventoryAttestation(token="not-hex")
+
+
+class SlotFinalizerReleaseTests(unittest.TestCase):
+    """Step 8A.4: common release-bound finalizer over the support set.
+
+    Selection is resolved deterministically from a synthetic hardware
+    inventory through the shared resolver plan shape; the finalizer pins
+    the attested inventory token and the installed package set to that
+    selection, and boot-artifact build failures (initramfs) fail closed.
+    """
+
+    def _inventory(self, modalias: str = "pci:v000010ECd00008168sv0000sd0000bc02sc00i00") -> HardwareInventory:
+        return HardwareInventory(
+            devices=(
+                HardwareDevice(
+                    sysfs_path="/pci0000:00/device",
+                    subsystem="pci",
+                    modalias=modalias,
+                    driver="r8169",
+                ),
+            ),
+            truncated=False,
+            scan_errors=0,
+        )
+
+    def _recommendations(self) -> tuple[HardwareSupportRecommendation, ...]:
+        return (
+            HardwareSupportRecommendation(
+                "firmware-realtek",
+                SupportKind.FIRMWARE,
+                SupportDisposition.AUTO_ELIGIBLE,
+                "synthetic-test",
+            ),
+            HardwareSupportRecommendation(
+                "amd64-microcode",
+                SupportKind.MICROCODE,
+                SupportDisposition.AUTO_ELIGIBLE,
+                "synthetic-test",
+            ),
+        )
+
+    def _select(
+        self,
+        inventory: HardwareInventory,
+        support: ReleaseSupportSet,
+        *,
+        recommendations: tuple[HardwareSupportRecommendation, ...] | None = None,
+        complete: bool = True,
+    ) -> ResolvedHardwareSelection:
+        plan = HardwareSupportPlan(
+            inventory.token,
+            self._recommendations() if recommendations is None else recommendations,
+            complete,
+            (),
+        )
+        return resolve_hardware_selection(plan=plan, support=support)
+
+    def _finalize_with_selection(
+        self,
+        root: Path,
+        payload: bytes,
+        inventory: HardwareInventory,
+        support: ReleaseSupportSet,
+        selection: ResolvedHardwareSelection,
+        *,
+        firmware: tuple[str, ...] | None = None,
+        microcode: tuple[str, ...] | None = None,
+        attestation: HardwareInventoryAttestation | None = None,
+        artifact_builder: object = None,
+    ) -> tuple[object, FakeSlotFilesystem]:
+        write, destination, store, _ = _write_happy(root, payload)
+        try:
+            mount_dir = root / "mnt"
+            mount_dir.mkdir(exist_ok=True)
+            filesystem = FakeSlotFilesystem(mount_dir)
+            receipt = SlotFinalizer().finalize(
+                write=write,
+                destination=destination,
+                filesystem=filesystem,
+                package_installer=FakeSlotPackageInstaller(support),
+                inventory=(
+                    attestation
+                    if attestation is not None
+                    else HardwareInventoryAttestation.from_inventory(inventory)
+                ),
+                support=support,
+                profile_policy=_policy(),
+                firmware_packages=(
+                    selection.firmware if firmware is None else firmware
+                ),
+                microcode_packages=(
+                    selection.microcode if microcode is None else microcode
+                ),
+                selection=selection,
+                artifact_builder=artifact_builder,  # type: ignore[arg-type]
+            )
+            return receipt, filesystem
+        finally:
+            store.close()
+
+    def test_selection_is_deterministic_for_synthetic_inventory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            inventory = self._inventory()
+            support = _support()
+            first = self._select(inventory, support)
+            second = self._select(inventory, support)
+            self.assertEqual(first, second)
+            self.assertEqual(first.inventory_token, inventory.token)
+            self.assertEqual(first.firmware, ("firmware-realtek",))
+            self.assertEqual(first.microcode, ("amd64-microcode",))
+
+            payload = _payload()
+            receipt, filesystem = self._finalize_with_selection(
+                root, payload, inventory, support, first
+            )
+            assert isinstance(receipt, slot_module.FinalizationReceipt)
+            self.assertEqual(receipt.inventory_token, inventory.token)
+            self.assertEqual(
+                [package.name for package in receipt.packages],
+                ["amd64-microcode", "firmware-realtek"],
+            )
+            # FINALIZED_GENERIC artifacts: generic kernel is the verified
+            # base digest; the host initramfs binds base + inventory + set.
+            stored = json.loads(
+                filesystem.files["boot/finalized-generic.json"].decode("utf-8")
+            )
+            self.assertEqual(
+                stored["generic_kernel_sha256"], hashlib.sha256(payload).hexdigest()
+            )
+            self.assertEqual(
+                stored["host_initramfs_sha256"], receipt.host_initramfs_sha256
+            )
+            self.assertEqual(
+                stored, DeterministicBootArtifactBuilder().build(
+                    base_sha256=receipt.base_sha256,
+                    inventory_token=inventory.token,
+                    packages_digest=receipt.packages_digest,
+                ).as_dict(),
+            )
+
+    def test_package_set_drift_from_selection_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            inventory = self._inventory()
+            support = _support()
+            selection = self._select(inventory, support)
+            write, destination, store, _ = _write_happy(root, _payload(4096))
+            try:
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                filesystem = FakeSlotFilesystem(mount_dir)
+                with self.assertRaisesRegex(SlotFinalizeError, "resolved hardware selection"):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=filesystem,
+                        package_installer=FakeSlotPackageInstaller(support),
+                        inventory=HardwareInventoryAttestation.from_inventory(inventory),
+                        support=support,
+                        profile_policy=_policy(),
+                        firmware_packages=(),
+                        microcode_packages=selection.microcode,
+                        selection=selection,
+                    )
+                self.assertEqual(filesystem.ops, [])
+                self.assertIsNone(filesystem.bound_uuid)
+            finally:
+                store.close()
+
+    def test_inventory_token_mismatch_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            support = _support()
+            selection = self._select(self._inventory(), support)
+            other = self._inventory(modalias="pci:v00008086d00001234sv0000sd0000bc02sc00i00")
+            self.assertNotEqual(other.token, selection.inventory_token)
+            write, destination, store, _ = _write_happy(root, _payload(4096))
+            try:
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                filesystem = FakeSlotFilesystem(mount_dir)
+                with self.assertRaisesRegex(SlotFinalizeError, "attested inventory"):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=filesystem,
+                        package_installer=FakeSlotPackageInstaller(support),
+                        inventory=HardwareInventoryAttestation.from_inventory(other),
+                        support=support,
+                        profile_policy=_policy(),
+                        firmware_packages=selection.firmware,
+                        microcode_packages=selection.microcode,
+                        selection=selection,
+                    )
+                self.assertEqual(filesystem.ops, [])
+                self.assertIsNone(filesystem.bound_uuid)
+                self.assertFalse(filesystem.expanded)
+            finally:
+                store.close()
+
+    def test_missing_provider_and_incomplete_plan_refused(self) -> None:
+        inventory = self._inventory()
+        support = _support()
+        rogue = (
+            HardwareSupportRecommendation(
+                "firmware-evil",
+                SupportKind.FIRMWARE,
+                SupportDisposition.AUTO_ELIGIBLE,
+                "synthetic-test",
+            ),
+        )
+        with self.assertRaisesRegex(SlotFinalizeError, "no release provider"):
+            self._select(inventory, support, recommendations=rogue)
+        with self.assertRaisesRegex(SlotFinalizeError, "incomplete"):
+            self._select(inventory, support, complete=False)
+        # Advisory-only plans select nothing but stay deterministic.
+        advisory = (
+            HardwareSupportRecommendation(
+                "firmware-realtek",
+                SupportKind.HARDWARE_PACKAGE,
+                SupportDisposition.ADVISORY,
+                "synthetic-test",
+            ),
+        )
+        empty = self._select(inventory, support, recommendations=advisory)
+        self.assertEqual(empty.firmware, ())
+        self.assertEqual(empty.microcode, ())
+
+    def test_corrupted_support_set_refused_before_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write, destination, store, _ = _write_happy(root, _payload(4096))
+            try:
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                # Corrupted set: digest no longer binds the signed member.
+                foreign = _support(digest="1" * 64)
+                filesystem = FakeSlotFilesystem(mount_dir)
+                with self.assertRaisesRegex(SlotFinalizeError, "not the release-bound"):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=filesystem,
+                        package_installer=FakeSlotPackageInstaller(foreign),
+                        inventory=_inventory(),
+                        support=foreign,
+                        profile_policy=_policy(),
+                    )
+                self.assertEqual(filesystem.ops, [])
+                self.assertIsNone(filesystem.bound_uuid)
+            finally:
+                store.close()
+
+    def test_over_capacity_refused_before_mutation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload = _payload(4096)
+            member = _member(payload)
+            record = _record()
+            destination = DestinationSlot.resolve_from_layout(record, "B")
+            store = LoopbackSlotFile.create(root / "slot.img", destination.slot_capacity_bytes)
+            try:
+                lean = SlotWriter(growth_bytes=0, metadata_reserve_bytes=0)
+                write = lean.write(
+                    member=member,
+                    destination=destination,
+                    source=io.BytesIO(payload),
+                    storage=store,
+                    support_installed_bytes=destination.slot_capacity_bytes - len(payload),
+                )
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                filesystem = FakeSlotFilesystem(mount_dir)
+                oversized = replace(
+                    _support(),
+                    installed_size_bound=destination.slot_capacity_bytes,
+                )
+                with self.assertRaisesRegex(SlotFinalizeError, "headroom"):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=filesystem,
+                        package_installer=FakeSlotPackageInstaller(oversized),
+                        inventory=_inventory(),
+                        support=oversized,
+                        profile_policy=_policy(),
+                    )
+                self.assertEqual(filesystem.ops, [])
+                self.assertIsNone(filesystem.bound_uuid)
+            finally:
+                store.close()
+
+    def test_initramfs_build_failure_fails_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            inventory = self._inventory()
+            support = _support()
+            selection = self._select(inventory, support)
+            with self.assertRaisesRegex(SlotFinalizeError, "boot artifact build failed"):
+                self._finalize_with_selection(
+                    root,
+                    _payload(4096),
+                    inventory,
+                    support,
+                    selection,
+                    artifact_builder=_FailingArtifactBuilder(),
+                )
+            # A builder returning the wrong shape fails closed as well.
+            # NOTE: fresh staged write per attempt (capabilities are single-use).
+            with tempfile.TemporaryDirectory() as second:
+                root2 = Path(second)
+                with self.assertRaisesRegex(SlotFinalizeError, "invalid result"):
+                    self._finalize_with_selection(
+                        root2,
+                        _payload(4096),
+                        inventory,
+                        support,
+                        selection,
+                        artifact_builder=_WrongShapeArtifactBuilder(),
+                    )
+            with self.assertRaisesRegex(SlotFinalizeError, "invalid"):
+                SlotBootArtifacts(
+                    generic_kernel_sha256="not-hex",
+                    host_initramfs_sha256="0" * 64,
+                )
+
+    def test_initramfs_failure_still_unmounts_and_syncs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            inventory = self._inventory()
+            support = _support()
+            selection = self._select(inventory, support)
+            write, destination, store, _ = _write_happy(root, _payload(4096))
+            try:
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                filesystem = FakeSlotFilesystem(mount_dir)
+                with self.assertRaises(SlotFinalizeError):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=filesystem,
+                        package_installer=FakeSlotPackageInstaller(support),
+                        inventory=HardwareInventoryAttestation.from_inventory(inventory),
+                        support=support,
+                        profile_policy=_policy(),
+                        firmware_packages=selection.firmware,
+                        microcode_packages=selection.microcode,
+                        selection=selection,
+                        artifact_builder=_FailingArtifactBuilder(),
+                    )
+                # Mount/install already ran, so cleanup must still detach.
+                self.assertEqual(filesystem.unmount_count, 1)
+                self.assertEqual(filesystem.sync_count, 1)
+                self.assertFalse(filesystem.mounted)
+                self.assertNotIn(
+                    "etc/greia-os/finalization-receipt.json", filesystem.files
+                )
+            finally:
+                store.close()
+
+    def test_refusal_paths_leave_zero_ops(self) -> None:
+        # Reviewer-1 hardening: every gate before capability consumption
+        # must leave the destination seam untouched.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write, destination, store, _ = _write_happy(root, _payload(4096))
+            try:
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                support = _support()
+                # Unapproved package request.
+                refused = FakeSlotFilesystem(mount_dir)
+                with self.assertRaises(SlotFinalizeError):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=refused,
+                        package_installer=FakeSlotPackageInstaller(support),
+                        inventory=_inventory(),
+                        support=support,
+                        profile_policy=_policy(),
+                        firmware_packages=("firmware-evil",),
+                    )
+                self.assertEqual(refused.ops, [])
+                # Profile policy mismatch.
+                refused = FakeSlotFilesystem(mount_dir)
+                with self.assertRaises(SlotFinalizeError):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=refused,
+                        package_installer=FakeSlotPackageInstaller(support),
+                        inventory=_inventory(),
+                        support=support,
+                        profile_policy=_policy(slot_bytes=1024),
+                    )
+                self.assertEqual(refused.ops, [])
+            finally:
+                store.close()
+
+    def test_no_ambient_network_or_apt_trust_in_finalization_path(self) -> None:
+        repo = Path(slot_module.__file__).resolve().parent.parent.parent
+        platform_source = (repo / "src/greia_platform/slot_writer.py").read_text(
+            encoding="utf-8"
+        )
+        for forbidden in (
+            "urllib",
+            "socket",
+            "http://",
+            "https://",
+            "apt-get",
+            "sources.list",
+            "Acquire::",
+        ):
+            self.assertNotIn(forbidden, platform_source)
+        adapter_source = (repo / "src/greia_installer/slots.py").read_text(
+            encoding="utf-8"
+        )
+        for forbidden in ("urllib", "socket", "http://", "https://"):
+            self.assertNotIn(forbidden, adapter_source)
+        # The only APT surface reachable from finalization is the pinned
+        # release-pool install, with host sources disabled and no network
+        # host allow-listed.
+        installer_source = (
+            repo / "src/greia_installer/hardware_support_install.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Dir::Etc::sourcelist", installer_source)
+        self.assertIn("sourceparts=-", installer_source)
+        for forbidden in ("http://", "https://", "deb.debian.org", "sources.list.d"):
+            self.assertNotIn(forbidden, installer_source)
+
+
+class _FailingArtifactBuilder:
+    """Boot-artifact backend whose initramfs rebuild explodes."""
+
+    def build(
+        self, *, base_sha256: str, inventory_token: str, packages_digest: str
+    ) -> SlotBootArtifacts:
+        raise RuntimeError("simulated initramfs rebuild failure")
+
+
+class _WrongShapeArtifactBuilder:
+    """Boot-artifact backend returning an unusable result shape."""
+
+    def build(
+        self, *, base_sha256: str, inventory_token: str, packages_digest: str
+    ) -> object:
+        return {"generic_kernel_sha256": base_sha256}
 
 
 class SharedSeamTests(unittest.TestCase):
