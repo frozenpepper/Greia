@@ -1042,3 +1042,22 @@ No input presses outstanding; device healthy at NRestarts=0.
   deferred). BOOT-PLAN-05 accepted (already decomposed, no change).
 - Device healthy, sweep unit disabled at-rest, NRestarts=0. No presses, no
   reboots, no config changes since the proof boot.
+
+## 42. Boot-optimization plan interrupted for good — run R2 abandoned, everything safe (2026-09-07)
+
+Owner stopped the plan where it stands; a new plan starts next. Run R2 marked
+`abandoned` (preserved as history under `TBag/runs/R2/`, git-ignored by design).
+Terminal state verified before close-out:
+- Main repo clean, `main` in sync with `origin/main` (through `225102f0` + §41).
+  All integrated work committed+pushed: marker spool, injector, staged trigger,
+  unit timeout, compose-window deferral, handover §§39-41.
+- Every T-BAG worktree (boot-02 through boot-10) scanned: zero uncommitted
+  changes. Nothing to lose; no worktree holds unique uncommitted work.
+- Device at rest and healthy: launcher active, NRestarts=0, ExecMainStatus=0,
+  sweep unit DISABLED, no arm file, boot stable. Backups+SHA manifests remain
+  on device at `/var/lib/greia-developer/backups/deploy-intro-sweep-349a44fe/`.
+- Accepted proofs on record: PROVE-INTRO-DRAIN-R PASS (P-c green on-device),
+  FIELD-REPRO-3 FIXED PASS, P4-INPUTCAP4 PASS, marker/plumbing/injector/tune
+  reviews PASS. Open-but-parked: PROVE-COMPOSE deploy boundary (human-block),
+  input-run deferral, motion re-proof behind compose.
+- No live workers, no slots held, SSH master left running (harmless).
