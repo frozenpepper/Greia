@@ -30,10 +30,32 @@ _KEY_RE = re.compile(r"^[A-Za-z0-9_+.:=-]{1,64}$")
 # Design bounds (all stated for the PROVE-INTRO-DRAIN-R burst verdict):
 # - fixed small step count INTRO_SWEEP_STEP_COUNT with pacing
 #   INTRO_SWEEP_STEP_INTERVAL_SECONDS between steps;
-# - intro-enter observation window INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS,
-#   after which the sweep still fires once (launcher-start-with-deadline
-#   fallback) so the one-shot is never left armed across boots;
-# - worst-case occupancy WAIT + COUNT * INTERVAL stays below the ~7 s intro;
+# - staged intro-enter observation (TUNE-SWEEP-TIMEOUT): the sweep unit starts
+#   ``After=greia-launcher.service`` but the launcher python process emits
+#   ``launcher_python_enter`` ~12 s later (v6/v7 live evidence: sweep steps at
+#   boot+25.09-27.63 s vs ``intro_enter`` at boot+34.38 s, i.e. a ~12 s
+#   unit-start-to-``python_enter`` gap against which a single 3.0 s
+#   ``intro_enter`` wait always expired first and took the deadline-fallback
+#   path ~7 s before the intro — the FIRED-EARLY root cause). A single blind
+#   raise of the intro wait past 12 s would push WAIT + COUNT * INTERVAL far
+#   past the ~7 s intro, so the wait is staged instead:
+#   - stage 1 waits up to INTRO_SWEEP_WAIT_FOR_PYTHON_TIMEOUT_SECONDS for a
+#     fresh ``launcher_python_enter`` spool line. This staging happens BEFORE
+#     the intro starts, so it never consumes intro time;
+#   - stage 2 waits up to INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS for a
+#     fresh ``intro_enter`` spool line, after which the sweep still fires once
+#     (launcher-start-with-deadline fallback) so the one-shot is never left
+#     armed across boots;
+# - worst-case intro occupancy WAIT_FOR_INTRO + COUNT * INTERVAL = 3.0 + 2.0
+#   = 5.0 s stays below the ~7 s intro (sweep stepping itself is 2.0 s);
+# - worst-case wall clock from unit start WAIT_FOR_PYTHON + WAIT_FOR_INTRO +
+#   COUNT * INTERVAL = 15.0 + 3.0 + 2.0 = 20.0 s; the nominal path fires at
+#   the fresh ``intro_enter`` (~12 s after unit start on v6/v7 evidence) and
+#   completes its 2.0 s stepping inside the intro. The pure-timeout path can
+#   exceed the unit's fixed ``TimeoutStartSec=15`` (service file, untouched
+#   here); the arm is therefore consumed up-front before waiting, so even a
+#   systemd stop on that already-broken boot cannot carry the arm to a later
+#   boot — a follow-up with unit authority may raise ``TimeoutStartSec``;
 # - geometry stays inside the 1024x600 reference display;
 # - transport is exactly the fixed ``xdotool mousemove --sync`` path below as
 #   the declared display user (no clicks, keys, or text).
@@ -43,7 +65,13 @@ INTRO_SWEEP_STEP_COUNT = 10
 #: Pacing between sweep steps; the sweep itself, never boot orchestration.
 INTRO_SWEEP_STEP_INTERVAL_SECONDS = 0.2
 #: Hard deadline waiting for a fresh ``intro_enter`` spool observation.
+#: This is the stage-2 (post-python-enter) wait only; it alone plus the sweep
+#: stepping counts against the ~7 s intro (5.0 s worst case).
 INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS = 3.0
+#: Hard deadline waiting for a fresh ``launcher_python_enter`` spool
+#: observation (stage-1 pre-intro staging). Covers the observed ~12 s
+#: unit-start-to-``python_enter`` gap with margin; consumes no intro time.
+INTRO_SWEEP_WAIT_FOR_PYTHON_TIMEOUT_SECONDS = 15.0
 #: Sweep geometry inside the 1024x600 reference display (mid-line horizontal).
 INTRO_SWEEP_Y = 300
 INTRO_SWEEP_X_START = 112
@@ -192,17 +220,15 @@ def read_intro_sweep_log_text(*, log_path: Path | None = None) -> str:
         return ""
 
 
-def wait_for_intro_enter(
+def _wait_for_spool_token(
+    token: str,
     *,
-    timeout_seconds: float = INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS,
+    timeout_seconds: float,
     poll_interval_seconds: float = 0.05,
 ) -> bool:
-    """Wait up to ``timeout_seconds`` for a fresh ``intro_enter`` spool line.
+    """Poll the boot-marker spool for ``token`` up to ``timeout_seconds``.
 
-    The spool is tmpfs-fresh each boot, so any ``intro_enter`` line is from
-    the current boot. Returns False on timeout; the caller still fires once
-    (launcher-start-with-deadline fallback) so the one-shot is never left
-    armed across boots. Never raises.
+    Returns False on timeout. Never raises.
     """
     try:
         deadline = time.monotonic() + max(0.0, timeout_seconds)
@@ -211,7 +237,7 @@ def wait_for_intro_enter(
                 text = spool_path().read_text(encoding="utf-8", errors="replace")
             except OSError:
                 text = ""
-            if "event=intro_enter" in text:
+            if token in text:
                 return True
             if time.monotonic() >= deadline:
                 return False
@@ -220,11 +246,54 @@ def wait_for_intro_enter(
         return False
 
 
+def wait_for_launcher_python_enter(
+    *,
+    timeout_seconds: float = INTRO_SWEEP_WAIT_FOR_PYTHON_TIMEOUT_SECONDS,
+    poll_interval_seconds: float = 0.05,
+) -> bool:
+    """Wait up to ``timeout_seconds`` for a fresh ``launcher_python_enter``.
+
+    Stage-1 pre-intro staging: the sweep unit starts ``After=`` the launcher
+    service, ~12 s before the launcher python process emits this marker, so
+    this wait absorbs the unit-start-to-python gap before the intro starts
+    and consumes no intro time. Returns False on timeout; the caller still
+    proceeds to the stage-2 intro wait and fires once (deadline fallback) so
+    the one-shot is never left armed across boots. Never raises.
+    """
+    return _wait_for_spool_token(
+        "event=launcher_python_enter",
+        timeout_seconds=timeout_seconds,
+        poll_interval_seconds=poll_interval_seconds,
+    )
+
+
+def wait_for_intro_enter(
+    *,
+    timeout_seconds: float = INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS,
+    poll_interval_seconds: float = 0.05,
+) -> bool:
+    """Wait up to ``timeout_seconds`` for a fresh ``intro_enter`` spool line.
+
+    Stage-2 intro-bound wait: call only after the stage-1 python-enter
+    staging, so this short deadline plus the sweep stepping is what counts
+    against the ~7 s intro. The spool is tmpfs-fresh each boot, so any
+    ``intro_enter`` line is from the current boot. Returns False on timeout;
+    the caller still fires once (launcher-start-with-deadline fallback) so
+    the one-shot is never left armed across boots. Never raises.
+    """
+    return _wait_for_spool_token(
+        "event=intro_enter",
+        timeout_seconds=timeout_seconds,
+        poll_interval_seconds=poll_interval_seconds,
+    )
+
+
 def run_intro_sweep(
     *,
     arm_path: Path | None = None,
     log_path: Path | None = None,
     wait_timeout_seconds: float = INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS,
+    wait_python_timeout_seconds: float = INTRO_SWEEP_WAIT_FOR_PYTHON_TIMEOUT_SECONDS,
     sleep: Callable[[float], None] = time.sleep,
 ) -> IntroSweepResult:
     """Fire the armed one-shot sweep once, then disarm even on failure.
@@ -248,8 +317,21 @@ def run_intro_sweep(
             return IntroSweepResult(fired=False, steps=0, reason="non-developer-image")
         if not arm.is_file():
             return IntroSweepResult(fired=False, steps=0, reason="not-armed")
-        # Intro-bound trigger with a hard deadline; on timeout the sweep
-        # still fires once so the arm is never carried to a later boot.
+        # Consume the arm up-front, before any waiting: the staged waits can
+        # outlast the unit's fixed TimeoutStartSec on a broken boot (no
+        # markers ever arrive), and a systemd stop mid-wait must still leave
+        # no arm behind for a later boot. The stepping finally below keeps an
+        # idempotent second unlink as belt-and-braces. Firing stays exactly
+        # once: a consumed arm makes any later run a "not-armed" no-op.
+        _disarm()
+        # Staged intro-bound trigger: first absorb the ~12 s
+        # unit-start-to-python gap (pre-intro, consumes no intro time), then
+        # take the short intro-bound wait for the fresh ``intro_enter``. On
+        # either timeout the sweep still fires once so the one-shot verdict
+        # is never silently skipped.
+        wait_for_launcher_python_enter(
+            timeout_seconds=wait_python_timeout_seconds
+        )
         wait_for_intro_enter(timeout_seconds=wait_timeout_seconds)
         coordinates = intro_sweep_coordinates()
         steps = 0

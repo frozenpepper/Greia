@@ -40,6 +40,17 @@ class IntroSweepBoundsTests(unittest.TestCase):
         self.assertEqual(devinput.INTRO_SWEEP_STEP_COUNT, 10)
         self.assertEqual(devinput.INTRO_SWEEP_STEP_INTERVAL_SECONDS, 0.2)
         self.assertEqual(devinput.INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS, 3.0)
+        # Stage-1 pre-intro staging covers the observed ~12 s
+        # unit-start-to-python_enter gap (v6/v7 live evidence) with margin,
+        # and consumes no intro time.
+        self.assertEqual(
+            devinput.INTRO_SWEEP_WAIT_FOR_PYTHON_TIMEOUT_SECONDS, 15.0
+        )
+        self.assertGreater(
+            devinput.INTRO_SWEEP_WAIT_FOR_PYTHON_TIMEOUT_SECONDS, 12.0
+        )
+        # Only the short stage-2 wait plus the sweep stepping counts against
+        # the ~7 s intro; the pre-intro staging wait is excluded.
         worst_case = (
             devinput.INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS
             + devinput.INTRO_SWEEP_STEP_COUNT
@@ -100,6 +111,7 @@ class IntroSweepLifecycleTests(unittest.TestCase):
                     arm_path=arm,
                     log_path=log,
                     wait_timeout_seconds=0,
+                    wait_python_timeout_seconds=0,
                     sleep=lambda _: None,
                 )
             self.assertFalse(result.fired)
@@ -122,6 +134,7 @@ class IntroSweepLifecycleTests(unittest.TestCase):
                         arm_path=arm,
                         log_path=log,
                         wait_timeout_seconds=0,
+                        wait_python_timeout_seconds=0,
                         sleep=sleeps.append,
                     )
             self.assertTrue(result.fired)
@@ -161,6 +174,7 @@ class IntroSweepLifecycleTests(unittest.TestCase):
                         arm_path=arm,
                         log_path=log,
                         wait_timeout_seconds=0,
+                        wait_python_timeout_seconds=0,
                         sleep=lambda _: None,
                     )
                     calls_after_first = run.call_count
@@ -168,6 +182,7 @@ class IntroSweepLifecycleTests(unittest.TestCase):
                         arm_path=arm,
                         log_path=log,
                         wait_timeout_seconds=0,
+                        wait_python_timeout_seconds=0,
                         sleep=lambda _: None,
                     )
             self.assertTrue(first.fired)
@@ -204,12 +219,147 @@ class IntroSweepLifecycleTests(unittest.TestCase):
                             arm_path=arm,
                             log_path=log,
                             wait_timeout_seconds=0,
+                            wait_python_timeout_seconds=0,
                             sleep=lambda _: None,
                         )
                 self.assertTrue(result.fired)
                 self.assertEqual(result.steps, devinput.INTRO_SWEEP_STEP_COUNT)
                 self.assertEqual(run.call_count, devinput.INTRO_SWEEP_STEP_COUNT)
                 self.assertFalse(arm.exists())
+
+    def test_python_enter_observation_and_timeout_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            spool = Path(tmp) / "boot-markers.log"
+            with mock.patch.dict(
+                os.environ, {"GREIA_BOOT_MARKERS_SPOOL": str(spool)}
+            ):
+                # Fresh launcher_python_enter observation succeeds.
+                spool.write_text(
+                    "GREIA_BOOT event=launcher_python_enter monotonic_ns=1\n",
+                    encoding="utf-8",
+                )
+                self.assertTrue(
+                    devinput.wait_for_launcher_python_enter(timeout_seconds=5)
+                )
+                # An unrelated marker is not enough; an empty spool with an
+                # elapsed deadline falls back.
+                spool.write_text(
+                    "GREIA_BOOT event=intro_end monotonic_ns=2\n",
+                    encoding="utf-8",
+                )
+                self.assertFalse(
+                    devinput.wait_for_launcher_python_enter(timeout_seconds=0)
+                )
+                spool.write_text("", encoding="utf-8")
+                self.assertFalse(
+                    devinput.wait_for_launcher_python_enter(timeout_seconds=0)
+                )
+
+    def test_staged_wait_covers_the_observed_gap_then_takes_enter_path(self):
+        # v6/v7 timeline: the sweep unit starts ~12 s before the launcher
+        # python process emits python_enter, and intro_enter follows later
+        # (sweep steps at boot+25.09-27.63 s vs intro_enter at boot+34.38 s).
+        # Stage 1 absorbs the gap; stage 2 then waits for the fresh
+        # intro_enter instead of taking the deadline-fallback path.
+        with tempfile.TemporaryDirectory() as tmp:
+            spool = Path(tmp) / "boot-markers.log"
+            spool.write_text(
+                "GREIA_BOOT event=launcher_python_enter monotonic_ns=1\n",
+                encoding="utf-8",
+            )
+            with mock.patch.dict(
+                os.environ, {"GREIA_BOOT_MARKERS_SPOOL": str(spool)}
+            ):
+                # Python already up: stage 1 returns at once (no 12 s stall).
+                self.assertTrue(
+                    devinput.wait_for_launcher_python_enter(timeout_seconds=5)
+                )
+                # Intro not entered yet: stage 2 correctly reports "not yet"
+                # (this is where the old single 3.0 s wait expired first).
+                self.assertFalse(
+                    devinput.wait_for_intro_enter(timeout_seconds=0)
+                )
+                # The fresh intro_enter arrives: stage 2 takes the
+                # wait-for-enter path.
+                with open(spool, "a", encoding="utf-8") as handle:
+                    handle.write("GREIA_BOOT event=intro_enter monotonic_ns=2\n")
+                self.assertTrue(
+                    devinput.wait_for_intro_enter(timeout_seconds=5)
+                )
+
+    def test_run_uses_both_stages_with_production_timeouts_and_fires_once(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            marker, arm, log = self._developer(tmp)
+            endpoint_patch, run_patch = self._transport()
+            with mock.patch.object(devinput, "DEVELOPER_MARKER", marker):
+                devinput.arm_intro_sweep(arm_path=arm)
+                with (
+                    endpoint_patch,
+                    run_patch as run,
+                    mock.patch.object(
+                        devinput,
+                        "wait_for_launcher_python_enter",
+                        return_value=True,
+                    ) as wait_python,
+                    mock.patch.object(
+                        devinput, "wait_for_intro_enter", return_value=True
+                    ) as wait_intro,
+                ):
+                    result = devinput.run_intro_sweep(
+                        arm_path=arm,
+                        log_path=log,
+                        sleep=lambda _: None,
+                    )
+            # Both stages run with the production timeouts; the sweep fires
+            # once on the wait-for-enter path and the arm is consumed.
+            wait_python.assert_called_once_with(
+                timeout_seconds=devinput.INTRO_SWEEP_WAIT_FOR_PYTHON_TIMEOUT_SECONDS
+            )
+            wait_intro.assert_called_once_with(
+                timeout_seconds=devinput.INTRO_SWEEP_WAIT_FOR_INTRO_TIMEOUT_SECONDS
+            )
+            self.assertTrue(result.fired)
+            self.assertEqual(result.reason, "fired")
+            self.assertEqual(result.steps, devinput.INTRO_SWEEP_STEP_COUNT)
+            self.assertEqual(run.call_count, devinput.INTRO_SWEEP_STEP_COUNT)
+            self.assertFalse(arm.exists())
+
+    def test_staged_double_timeout_still_fires_once_and_disarms(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            marker, arm, log = self._developer(tmp)
+            endpoint_patch, run_patch = self._transport()
+            with mock.patch.object(devinput, "DEVELOPER_MARKER", marker):
+                devinput.arm_intro_sweep(arm_path=arm)
+                with (
+                    endpoint_patch,
+                    run_patch as run,
+                    mock.patch.object(
+                        devinput,
+                        "wait_for_launcher_python_enter",
+                        return_value=False,
+                    ),
+                    mock.patch.object(
+                        devinput, "wait_for_intro_enter", return_value=False
+                    ),
+                ):
+                    result = devinput.run_intro_sweep(
+                        arm_path=arm,
+                        log_path=log,
+                        sleep=lambda _: None,
+                    )
+                    second = devinput.run_intro_sweep(
+                        arm_path=arm,
+                        log_path=log,
+                        wait_timeout_seconds=0,
+                        wait_python_timeout_seconds=0,
+                        sleep=lambda _: None,
+                    )
+            self.assertTrue(result.fired)
+            self.assertEqual(result.steps, devinput.INTRO_SWEEP_STEP_COUNT)
+            self.assertEqual(run.call_count, devinput.INTRO_SWEEP_STEP_COUNT)
+            self.assertFalse(second.fired)
+            self.assertEqual(second.reason, "not-armed")
+            self.assertFalse(arm.exists())
 
     def test_timestamp_log_is_bounded(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -247,6 +397,7 @@ class IntroSweepLifecycleTests(unittest.TestCase):
                     arm_path=arm,
                     log_path=log,
                     wait_timeout_seconds=0,
+                    wait_python_timeout_seconds=0,
                     sleep=lambda _: None,
                 )
             self.assertFalse(result.fired)
@@ -282,6 +433,7 @@ class IntroSweepLifecycleTests(unittest.TestCase):
                         arm_path=arm,
                         log_path=log,
                         wait_timeout_seconds=0,
+                        wait_python_timeout_seconds=0,
                         sleep=lambda _: None,
                     )
             self.assertFalse(arm.exists())
