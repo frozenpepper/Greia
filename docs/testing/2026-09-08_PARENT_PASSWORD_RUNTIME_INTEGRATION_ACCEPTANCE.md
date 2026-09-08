@@ -146,6 +146,16 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_update_parent_clie
   |& tee "$EVIDENCE/source/test-update-parent-client-pin.log"
 ```
 
+Then prove the API-v1 authentication boundary itself and the intentionally separate legacy compatibility boundary:
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_parent_api.py' -v \
+  |& tee "$EVIDENCE/source/test-parent-api.log"
+
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_parent_legacy_status_auth.py' -v \
+  |& tee "$EVIDENCE/source/test-parent-legacy-status-auth.log"
+```
+
 Then run the remaining focused Greia source gate:
 
 ```bash
@@ -162,7 +172,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_parent_production_
   |& tee "$EVIDENCE/source/test-parent-production-api.log"
 ```
 
-All five focused commands must exit 0.
+All seven focused commands must exit 0.
 
 Verify both committed runtime copies against the same contract:
 
