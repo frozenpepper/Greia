@@ -13,6 +13,7 @@ from greia_parent.protocol import API_BASE
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+JsonPayload = dict[str, object] | list[object]
 
 
 def _app(root: Path) -> ParentApiApplication:
@@ -32,7 +33,7 @@ def _request(
     *,
     headers: dict[str, str] | None = None,
     body: dict[str, object] | None = None,
-) -> tuple[int, dict[str, object]]:
+) -> tuple[int, JsonPayload]:
     data = json.dumps(body).encode("utf-8") if body is not None else None
     request = urllib.request.Request(url, data=data, method=method)
     if body is not None:
@@ -45,7 +46,7 @@ def _request(
     except urllib.error.HTTPError as exc:
         raw = exc.read().decode("utf-8", "replace")
         try:
-            payload: dict[str, object] = json.loads(raw)
+            payload: JsonPayload = json.loads(raw)
         except ValueError:
             payload = {"raw": raw}
         return exc.code, payload
@@ -82,6 +83,8 @@ class ParentApiLegacyTokenNegativeTests(unittest.TestCase):
                     with self.subTest(headers=headers):
                         status, payload = _request("GET", protected, headers=headers)
                         self.assertEqual(status, 401)
+                        self.assertIsInstance(payload, dict)
+                        assert isinstance(payload, dict)
                         self.assertEqual(payload.get("error"), "pairing_required")
 
                 status, payload = _request(
@@ -89,6 +92,8 @@ class ParentApiLegacyTokenNegativeTests(unittest.TestCase):
                     protected + f"?token={legacy_token}",
                 )
                 self.assertEqual(status, 401)
+                self.assertIsInstance(payload, dict)
+                assert isinstance(payload, dict)
                 self.assertEqual(payload.get("error"), "pairing_required")
 
                 status, payload = _request(
@@ -100,6 +105,8 @@ class ParentApiLegacyTokenNegativeTests(unittest.TestCase):
                     },
                 )
                 self.assertEqual(status, 400)
+                self.assertIsInstance(payload, dict)
+                assert isinstance(payload, dict)
                 self.assertEqual(payload.get("error"), "invalid_request")
                 self.assertEqual(app.devices_payload(), [])
             finally:
@@ -131,8 +138,13 @@ class ParentApiLegacyTokenNegativeTests(unittest.TestCase):
                     with self.subTest(headers=tuple(headers)):
                         status, payload = _request("GET", protected, headers=headers)
                         self.assertEqual(status, 200)
-                        self.assertIsInstance(payload, dict)
-                        self.assertIn("devices", payload)
+                        self.assertIsInstance(payload, list)
+                        assert isinstance(payload, list)
+                        self.assertEqual(len(payload), 1)
+                        self.assertEqual(
+                            payload[0]["display_name"],
+                            "Accepted browser",
+                        )
             finally:
                 server.shutdown()
                 thread.join(timeout=5)
