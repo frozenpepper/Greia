@@ -2,20 +2,20 @@
 
 **Status:** living design synthesis subordinate to ADR 0012 and ADR 0022  
 **Date:** 2026-08-17  
-**Reviewed:** 2026-09-02  
+**Reviewed:** 2026-09-08  
 **Implementation phase:** API/client foundation in progress; full privileged management remains R12
 
 ## 1. Architectural intent
 
 Greia Parents is a client/server subsystem, not a privileged webpage.
 
-The stable boundary is the Greia Parent API. The first client is a dependency-light responsive HTML application served locally by Greia. A future mobile or desktop application consumes the same protocol.
+The stable boundary is the Greia Parent API. The dependency-light HTML application and any future native Parent application consume the same semantic protocol.
 
 ```text
                     same API contract
         ┌──────────────────┴──────────────────┐
         │                                     │
-Greia-served HTML                       native parent app
+Greia-served HTML                       native Parent app
         │                                     │
         └───────────────┬─────────────────────┘
                         ▼
@@ -38,301 +38,171 @@ Greia-served HTML                       native parent app
 
 The network API must never become a parallel implementation of profiles, package installation, backup, networking, audio, or update logic.
 
-## 2. Process/authority boundary
+## 2. Process and authority boundary
 
-`greia-parent.service` runs as `greiapanel` with a strict systemd sandbox.
+`greia-parent.service` runs as `greiapanel` with a strict systemd sandbox. The installed composition is `src/greia_parent/production_api.py`.
 
-This service owns:
+The service owns protocol parsing, Parent-device identity, read-only status assembly, calls into existing unprivileged Greia stores/services, static Parent-client serving, and typed requests to future privileged services. It does not own generic root authority.
 
-- protocol parsing;
-- authentication/paired-client identity;
-- read-only status assembly;
-- calls into existing unprivileged Greia stores/services;
-- serving the small HTML client;
-- typed requests to future privileged services.
+A capability is true only when the installed process can safely complete the semantic operation under its actual authority. Detecting a lower-level Linux service is not enough.
 
-It does not own root authority.
+Future privileged work crosses a narrow semantic broker. Good requests are `enable_ssh(public_key)`, `install_activity(staged_package_handle)`, `set_audio_volume(0.5)`, and `reboot()`. Generic commands, arbitrary argv, client-selected filesystem writes, `sudo`, and raw package-manager calls are rejected boundaries.
 
-The installed composition is `src/greia_parent/production_api.py`. It must fail closed when a requested mutation cannot be completed under the service's actual authority. In particular, detecting a real IWD service is not by itself enough to advertise writable network management when the sandboxed process cannot persist the required IWD state.
+## 3. Authentication and Parent-device identity
 
-The future privileged parent broker should be a separate root-owned service reached over a private local IPC channel. Its command vocabulary is narrow and semantic.
+Greia has two deliberately different credential classes.
 
-Good:
+### Human bootstrap authority
 
-```text
-enable_ssh(public_key)
-disable_ssh()
-install_activity(staged_package_handle)
-set_audio_volume(0.5)
-reboot()
-```
+The canonical Parent password is owned by `MainCredential`. The initial owner-approved credential is `greia` / `greia`, and parents can change it through the Parent management surface.
 
-Rejected:
+An unpaired browser submits the password once to:
 
 ```text
-run_command("...")
-run_argv([...])
-write_file("/etc/...")
-sudo(...)
-apt(...)
+POST /api/v1/pairing/bootstrap
+{
+  "password": "<Parent password>",
+  "device_name": "<client label>"
+}
 ```
 
-## 3. Client identity and pairing state
+Greia verifies the password locally. The browser does not persist it. Failed attempts are rate-limited per client address with bounded in-memory state.
 
-Persistent parent clients are independent security principals.
+The main credential store persists only bounded PBKDF2 digest material, uses restrictive file permissions, atomic replacement, and rejects final-path symlink substitution.
 
-Stored state contains:
+### Persistent Parent-device identity
+
+Successful password bootstrap issues a fresh random per-device credential. Normal management requests use:
 
 ```text
-device_id
-display_name
-created_at
-credential verifier/hash
+Authorization: Bearer <device credential>
 ```
 
-It does not contain the raw bearer credential.
+Stored device state contains non-secret metadata plus verifier/hash material rather than the raw issued bearer secret. A credential is returned only when created. Devices can be listed and revoked independently.
 
-A credential is returned only when issued.
+This separation keeps the human password out of ordinary API traffic while avoiding one household-wide shared bearer token.
 
-The initial store is deliberately bounded to a small maximum number of paired clients and uses atomic replacement.
+### Retired shared-token model
 
-Future pairing state adds bounded short-lived challenges:
-
-```text
-challenge_id
-expires_at
-attempt budget
-requesting device label
-local approval state
-```
-
-Challenges are transient and are not durable household credentials.
+The old `parent-pairing-token` model is retired rather than retained for compatibility. Production must not authorize `X-Pip-Token`, token query URLs, shared-token cookies, or any equivalent global fallback. Production startup removes stale token state and does not recreate it, and release images do not install the old token-retrieval helper.
 
 ## 4. Discovery
 
-`avahi-daemon` advertises:
+Greia Parent discovery is convenience, not authorization.
 
-```text
-service: _greia-parent._tcp
-port:    8766
-TXT:     api=1
-TXT:     path=/api/v1
-TXT:     product=greia
-```
+The protocol reserves `_greia-parent._tcp.local` on port 8766 with API metadata and no secret payload. Standalone Parent tooling may also use bounded LAN probing of the public metadata endpoint when multicast discovery is unavailable.
 
-No token, profile information, child name, machine serial, or other secret is advertised.
-
-A future friendly device name may be advertised if it is parent-configurable and privacy-reviewed.
-
-## 5. Protocol layering
-
-### Discovery metadata
-
-Unauthenticated metadata is intentionally tiny:
+Unauthenticated discovery metadata is intentionally small:
 
 ```text
 GET /api/v1/meta
 ```
 
-It tells a client that the service is Greia Parents, which API version/base it exposes, and that pairing is required.
+No Parent password, device credential, child/profile data, machine serial, or other secret belongs in discovery output.
 
-### Authenticated resources
+## 5. Protocol layering
 
-The versioned API exposes semantic resources for:
+The versioned API exposes semantic resources for system/health, profiles, Activities, hardware/settings, progress, Parent devices, and later operations.
 
-- system/health;
-- profiles;
-- Activity inventory;
-- hardware/settings;
-- progress;
-- parent devices;
-- future operations.
-
-### Capability negotiation
-
-The API index reports whether optional management families currently exist **and are usable under the active composition/authority**.
-
-This provides one forward-compatible client strategy:
+After bootstrap the client reads the capability map and renders only supported controls:
 
 ```text
 client discovers API v1
-→ authenticates
+→ if needed, bootstraps device identity with Parent password
+→ authenticates with device bearer credential
 → reads capability map
 → renders only supported controls
 ```
 
-No architecture/model-specific branching is required in clients.
+No architecture/model-specific client branching is required.
 
-A capability must not become `true` merely because a lower-level Linux service can be detected. If the current Greia process cannot safely complete the semantic operation, advertise it as unavailable until the proper backend/broker exists.
+## 6. HTML client boundary
 
-## 6. HTML client
+The web application is static/dependency-light HTML/CSS/JavaScript. It performs management through `/api/v1` and contains no Linux-specific management implementation.
 
-The web application is static/dependency-free HTML/CSS/JavaScript generated/served by Greia.
+This remains an architectural test: if a feature cannot be represented cleanly in the Parent API, it is not ready to become a native-app feature either.
 
-It uses browser `fetch()` against `/api/v1`.
-
-The page contains no Linux-specific management implementation. This is an architectural test: if a feature cannot be represented cleanly in the Parent API, it is not ready to become a native-app feature either.
-
-The legacy server-rendered page may remain temporarily as `/legacy` during migration and troubleshooting.
+The old server-rendered Parent implementation is legacy-only and is not an alternate authentication architecture. It must not expose a shared-token route through the installed production service.
 
 ## 7. Long-running operations
 
-Simple profile/settings mutations are synchronous.
+Simple profile/settings mutations are synchronous. Operations with meaningful validation, progress, failure, or rollback phases must use explicit operation resources owned by their platform service.
 
-Operations with meaningful time/failure/recovery phases must use operation resources, for example:
+This applies to Activity install/update, backup/restore, OS/runtime update, and other mutations where disconnect/recovery is expected.
 
-```text
-POST /api/v1/activities/install
-→ 202
-{
-  "operation_id": "op_...",
-  "state": "validating"
-}
+## 8. Activity and package boundary
 
-GET /api/v1/operations/op_...
-→ {
-  "state": "installing",
-  "progress": ...
-}
-```
+The Parent source can list Activities through the trusted Activity Registry and may expose package install/remove only behind explicit capability policy.
 
-The operation object is owned by the corresponding Greia platform service. The Parent API only represents it.
+Package validation and activation remain platform-package responsibilities. The Parent HTTP server does not unpack arbitrary archives directly into the Activity installation root.
 
-This is required for:
+## 9. Settings and hardware boundary
 
-- Activity install/update;
-- backup/restore;
-- OS/runtime update;
-- potentially network transitions where disconnect is expected.
+The Parent API speaks in semantics such as mouse/touchpad behavior, resolution, volume/mute, and network identity. HAL/platform adapters determine how those settings reach the machine.
 
-## 8. Activity management boundary
-
-The current Parent source lists installed Activities through the trusted Activity Registry and includes bounded package install/remove composition behind explicit owner/developer capability enablement.
-
-That does not make the HTTP server a package authority. Package validation/activation remains owned by the Greia platform package service, and provisional Parent transport/capability policy remains fail closed by default.
-
-The intended boundary is:
-
-```text
-Parent API upload/import
-→ bounded staging
-→ Activity package verifier/manager
-→ typed operation/state boundary as the lifecycle matures
-→ atomic activation/rollback
-```
-
-The HTTP server does not unpack arbitrary archives directly into `/opt/greia-os/activities`.
-
-Full ecosystem/release acceptance remains tracked by the active architecture/release plans; presence of the source path is not itself closure evidence.
-
-## 9. Settings boundary
-
-The Parent API talks in semantics:
-
-```text
-mouse_speed
-touchpad_speed
-tap_to_click
-natural_scrolling
-resolution
-volume
-mute
-network identity
-```
-
-The HAL/current adapter determines how those settings reach the machine.
-
-No client sees `xinput`, `xrandr`, ALSA, iwd, sysfs, or future direct-graphics backend details.
+Clients do not see `xinput`, `xrandr`, ALSA, iwd, sysfs, or future direct-graphics implementation details.
 
 ## 10. SSH boundary
 
-SSH is a maintenance capability, not a dependency of Greia Parents.
+SSH is optional maintenance, not a dependency of Greia Parents. Normal images keep it absent/off unless deliberately enabled through the typed maintenance boundary.
 
-Normal image:
+Greia Parents itself continues to use the Parent API, never SSH.
 
-```text
-openssh-server absent/off
-SSH host keys absent until deliberately enabled
-Parent API available independently
-```
+## 11. Transport security
 
-Future explicit enable:
+Current HTTP is development/provisional only.
 
-```text
-parent client
-→ maintenance.ssh capability
-→ typed Parent API request
-→ privileged maintenance broker
-→ validate key/policy
-→ create host keys if needed
-→ install/enable constrained sshd state
-→ return semantic connection status
-```
+Password bootstrap solves the product authentication workflow, but it increases the importance of transport closure: neither the Parent password nor device bearer credentials are release-safe over unauthenticated plaintext LAN traffic.
 
-Developer remote SSH remains a separate image/profile feature.
-
-## 11. Secure transport migration
-
-Current HTTP is development-only.
-
-The protocol intentionally avoids coupling API semantics to HTTP plaintext so authenticated TLS can replace the transport without changing resources.
-
-Production design must address:
-
-- device certificate/key generation;
-- how pairing authenticates the Greia endpoint;
-- certificate rotation/recovery;
-- browser trust UX for the local HTML client;
-- native-client pinning;
-- reinstall/device-identity reset behavior.
-
-No production credential should traverse an unauthenticated plaintext channel.
+Ordinary-family release requires authenticated encrypted transport plus a reviewed Greia endpoint/device-identity lifecycle. The solution must preserve the simple Parent-password bootstrap and must not reintroduce hidden filesystem tokens or shell commands as a security ceremony.
 
 ## 12. Resource budget
 
-The parent service runs on the C0 floor. Initial design therefore keeps:
+The Parent service runs on the C0 floor. The current architecture therefore favors:
 
-- stdlib HTTP server;
-- single request thread;
-- bounded JSON requests;
-- bounded credential file;
-- static small web client;
-- no database solely for pairing;
-- no write on every authenticated request;
+- stdlib HTTP service composition;
+- single-process bounded state;
+- bounded JSON requests and credential stores;
+- no database solely for authentication;
+- no persistent write on every authenticated request;
+- bounded rate-limit state;
+- small static web client;
 - no frontend framework dependency.
 
-These are implementation choices, not API requirements. A future implementation may change them only with measured benefit and acceptable resource/security cost.
+These are implementation choices, not excuses to weaken the protocol or security boundaries.
 
-## 13. Incremental implementation map
+## 13. Current foundation and remaining closure
 
-Foundation now:
+Implemented/source-owned foundation includes:
 
 ```text
 protocol constants/resource index
-per-device credential store
+canonical Parent password authority
+password bootstrap -> per-device credential
+independent Parent-device revocation
+bounded failed-password limiter
+legacy shared-token rejection/removal in installed production composition
 API-v1 facade over profile/hardware/package/update/settings services
 explicit installed production composition with fail-closed capabilities
-on-device Parent Settings Panel via held key chord (s+t for 5s)
-real-IWD discovery/backend with management advertised only when current authority can use it
-bounded Activity package install/remove path behind explicit capability policy
-SSH maintenance API surface through current platform service boundary
+real-IWD backend with management advertised only when usable
+bounded Activity package path behind capability policy
+SSH maintenance API surface through platform service boundaries
 Activity inventory
-mDNS advertisement
-HTML API client
+Parent HTML API client
+standalone bounded LAN discovery/proxy tooling
 ```
 
-Still required / not yet ordinary-family release complete:
+Still required before ordinary-family Parent authentication is release-complete:
 
 ```text
-Greia-screen pairing challenge + QR/code + Allow/Deny
-authenticated encrypted transport
-typed privileged broker for operations requiring Linux/root authority
-ordinary-family Wi-Fi mutation through that typed authority boundary where direct unprivileged IWD is insufficient
-full Activity ecosystem/package release acceptance
-backup/restore through the planned platform service
-complete privileged audio/maintenance operations through typed services
-operation resources for long-running mutations
-native client if/when justified
+authenticated encrypted transport + endpoint/device identity
+exact-head automated verification across Greia + Parent client
+exact Parent runtime revision/integrity pin in the Greia image
+physical discovery -> password bootstrap -> reconnect -> revoke test
+upgrade proof that obsolete token helper/state are absent
+remaining typed privileged broker work for operations requiring root authority
+full package/update/backup/network release acceptance owned by their phases
+resource measurements on the C0 floor
 ```
 
-This foundation does not close R12 and does not change R7 as the primary blocking platform phase.
+This foundation does not falsely close R12 or any later platform/release obligation.
