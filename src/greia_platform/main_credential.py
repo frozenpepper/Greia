@@ -87,17 +87,23 @@ class MainCredentialStore:
     """
 
     def __init__(self, path: Path, iterations: int = _DEFAULT_ITERATIONS):
-        self.path = path.resolve()
+        # Resolve the containing directory, not the credential filename itself.
+        # Resolving the full path would dereference an attacker-created final
+        # symlink before our explicit symlink checks could see it.
+        raw_path = Path(path)
+        self.path = raw_path.parent.resolve() / raw_path.name
         self.iterations = iterations
 
     @classmethod
     def from_environment(cls) -> "MainCredentialStore":
-        root = Path(
+        path = Path(
             os.environ.get("GREIA_MAIN_CREDENTIAL_PATH", "/var/lib/greia-os/main-credential.json")
-        ).resolve()
-        return cls(root)
+        )
+        return cls(path)
 
     def ensure_initialized(self) -> None:
+        if self.path.is_symlink():
+            raise MainCredentialError("main credential state must not be a symlink")
         if self.path.is_file():
             os.chmod(self.path, 0o600)
             return
@@ -119,10 +125,10 @@ class MainCredentialStore:
         self._write(MainCredentialDigest.create(validated, self.iterations))
 
     def _read(self) -> MainCredentialDigest | None:
-        if not self.path.exists():
-            return None
         if self.path.is_symlink():
             raise MainCredentialError("main credential state must not be a symlink")
+        if not self.path.exists():
+            return None
         try:
             stat = self.path.stat()
             if not self.path.is_file() or stat.st_size > _MAX_STATE_BYTES:
@@ -158,6 +164,8 @@ class MainCredentialStore:
         return MainCredentialDigest(salt, digest, iterations)
 
     def _write(self, digest: MainCredentialDigest) -> None:
+        if self.path.is_symlink():
+            raise MainCredentialError("main credential state must not be a symlink")
         payload = {
             "schema_version": SCHEMA_VERSION,
             **digest.as_json_dict(),
