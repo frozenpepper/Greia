@@ -1,7 +1,7 @@
 # Greia — Local Agent / Operator: Start Here
 
 **Status:** LIVING routing document  
-**Reviewed:** 2026-09-02  
+**Reviewed:** 2026-09-08  
 **Branch policy:** current `main`  
 **Repository:** `frozenpepper/Greia`
 
@@ -29,43 +29,41 @@ SETUP.md
 docs/agents/GREIA_AGENT_OPERATIONS.md
 ```
 
-The current handover owns the **current exact evidence boundary and next legitimate gate**. Do not infer the current gate from the newest-looking filename or from an old result document.
+The current handover owns the **current exact evidence boundary and next legitimate gate**. Do not infer the current gate from the newest-looking filename, a stale result document, or an old phase number.
 
 ## 2. Current blocking route
 
-R7 remains the primary blocking architecture phase, but current source has a focused Parent/toddler-runtime cleanup that must earn execution evidence first.
+R7 is complete. The primary architecture plan now identifies **R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters** as the next blocking architecture family.
 
-Run first:
+Do not automatically run an old R7 closure procedure merely because it remains under `docs/testing/`. Use `HANDOVER.md` and the active plan to choose the exact gate for the work being accepted.
+
+The currently open Parent password/runtime cutover uses:
 
 ```text
+docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md
+```
+
+That procedure supersedes the obsolete shared-pairing-token authentication instructions in the older Parent real-runtime document. The older document remains useful only for the wider system-control/hardware checks explicitly retained by the September 8 procedure.
+
+Other current subsystem procedures remain active when their owning workstream is being closed, including:
+
+```text
+docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md
+docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
 docs/testing/2026-09-02_RECENT_COMMIT_CLEANUP_ACCEPTANCE.md
-```
-
-Only after that exact-current cleanup gate is green and the same source candidate remains current, continue with authoritative R7 closure:
-
-```text
 docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
+docs/testing/2026-09-02_R7_PARENT_SPOKEN_LABEL_UNIFIED_PROMOTION_GATE.md
 ```
 
-Always re-read `HANDOVER.md` immediately before execution. Source may have advanced after the last physical candidate, in which case old physical evidence stays scoped to its exact SHA and the procedure must execute against a newly frozen current candidate.
-
-The Home regression itself is physically green only at the exact earlier candidate recorded in `HANDOVER.md`; do not put Home back into Activity rendering to “help” R7.
+Always re-read `HANDOVER.md` immediately before execution. Source may have advanced after an earlier physical or image candidate; old evidence stays scoped to the exact SHA that produced it.
 
 ## 3. Dated procedures are scope-specific evidence contracts
 
 Older protocols under `docs/testing/` remain useful when the current handover/plan explicitly names them or when investigating their historical subsystem.
 
-Examples include:
-
-```text
-2026-08-18_*       earlier broad UI/boot/parent acceptance work
-2026-08-19_*       Activity Simulator acceptance
-2026-08-23_*       microphone processing acceptance
-2026-08-29_R7_*    R7.2/R7.3 focused backend/chrome contracts
-2026-09-02_*       current cleanup/R7/Parent/spoken-label closure gates
-```
-
 Do **not** run every dated test document as one giant ritual. Select the current gate from the handover and expand only where that gate tells you to.
+
+If two procedures conflict, use the newer procedure only where it explicitly supersedes the older one. Preserve still-valid wider checks rather than silently discarding them.
 
 ## 4. Agent role
 
@@ -77,7 +75,7 @@ A coding/test agent is expected to:
 - preserve Greia trust, lifecycle, resource and evidence boundaries;
 - work on current `main` and preserve concurrent changes;
 - rerun the smallest affected gate, then the required broader gate;
-- keep source/simulator/VM/physical/provider evidence clearly separated;
+- keep source/browser/simulator/VM/physical/provider evidence clearly separated;
 - update the active plan/HANDOVER when implementation or continuation state materially changes.
 
 Never obtain a PASS by:
@@ -90,7 +88,8 @@ Never obtain a PASS by:
 - converting a Simulator result into a physical-backend claim;
 - deleting or suppressing useful failure evidence;
 - extending timeouts without evidence that the operation is legitimately slow;
-- weakening the Parent service sandbox merely to advertise a capability that current authority cannot actually complete.
+- weakening the Parent service sandbox merely to advertise a capability that current authority cannot actually complete;
+- reintroducing the retired Parent shared pairing token to make browser authentication easier.
 
 ## 5. Baseline source verification
 
@@ -102,16 +101,16 @@ make verify
 
 Run it on the **exact current checkout** when the active procedure requires the full source gate.
 
-Do not copy a PASS count from this document, an old review or another SHA. Test counts evolve as Greia evolves; the retained evidence record owns the count that actually ran.
+Do not copy a PASS count from this document, an old review or another SHA. Test counts evolve; the retained evidence record owns the count that actually ran.
 
-Subsystem gates should come from the current named procedure or task router. R7 and the current cleanup gate both include the strict Activity backend/system-chrome audits where named:
+Subsystem gates come from the current named procedure or task router. Where required, current strict Activity audits are:
 
 ```bash
 PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities
 PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
 ```
 
-Use exact expected summaries from the current procedure.
+Use exact expected summaries from the current procedure rather than inventing a count.
 
 ## 6. Evidence storage and result reporting
 
@@ -132,7 +131,7 @@ A final report should record at least:
 exact Greia SHA
 exact Parent-App revision when relevant
 commands/procedure sections actually executed
-evidence class (source / provider+human / simulator / VM-image / physical)
+evidence class (source / browser / simulator / VM-image / physical)
 PASS/FAIL/INCOMPLETE
 first failing invariant when not PASS
 what remains unverified
@@ -140,16 +139,35 @@ what remains unverified
 
 ## 7. Parent App
 
-Use the exact Parent client revision pinned by:
+The exact accepted Parent client revision currently integrated into Greia is owned by:
 
 ```text
 runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 ```
 
-If Parent client source changes, update its own repository first, then repin Greia with exact revision/integrity metadata. Do not invent an SSH/shell fallback for a missing Parent API capability.
+At the September 8 cutover the pin is:
 
-The installed Greia Parent server remains unprivileged. If `network.manage` is false because direct IWD mutation is unavailable under the service sandbox, preserve that fail-closed truth; privileged mutation belongs behind the narrow typed broker described by the Parent architecture.
+```text
+01301d285c6ba2a9a1f2948a9768b821d2536729
+```
+
+Do not test moving Parent `main` when an acceptance procedure calls for the frozen revision.
+
+Current authentication semantics are:
+
+```text
+Greia Parent password
+  -> /api/v1/pairing/bootstrap
+  -> per-device credential
+  -> ordinary Bearer-authenticated API calls
+```
+
+The browser stores the issued device credential, not the Parent password. The retired shared `parent-pairing-token`, `X-Pip-Token`, token query URL and household-wide bearer fallback are not production authentication mechanisms.
+
+If Parent client source changes, update its own repository first, then repin Greia with exact revision/integrity metadata, vendor bytes and image-overlay bytes together. Do not invent an SSH/shell fallback for a missing Parent API capability.
+
+The installed Greia Parent server remains unprivileged. If `network.manage` is false because direct iwd mutation is unavailable under the service sandbox, preserve that fail-closed truth; privileged mutation belongs behind the narrow typed broker described by the Parent architecture.
 
 ## 8. Physical/developer-device work
 
@@ -164,12 +182,13 @@ and the exact named physical procedure.
 General rules:
 
 - record the deployed SHA;
-- deploy one coherent tree, not hand-copied source fragments;
+- deploy one coherent tree/image, not hand-copied source fragments;
 - inspect screenshots when visual state matters;
 - prove semantic Activity/process identity where the procedure requires it;
-- retain first failure;
+- retain the first failure;
 - restore temporary Parent/test policy exactly;
-- do not use physical navigation coordinates as proof that the intended Activity actually launched.
+- do not use physical navigation coordinates as proof that the intended Activity actually launched;
+- do not destroy live Parent credential/password state when a disposable/fresh-state lane is required.
 
 ## 9. GitHub-hosted execution
 
@@ -179,9 +198,9 @@ Reading workflow source as repository code is allowed when relevant.
 
 ## 10. Maintenance rule
 
-Whenever a newer procedure supersedes the current global gate:
+Whenever a newer procedure supersedes the current global or subsystem gate:
 
 1. update `HANDOVER.md`;
-2. update this router only if the routing rule or named current blocking gate changed;
-3. leave the older dated procedure intact as historical evidence unless it contains a dangerous instruction that must be explicitly marked superseded;
+2. update this router only if the routing rule or named current gate changed;
+3. leave older dated procedures intact as historical evidence unless a dangerous stale instruction needs an explicit supersession notice;
 4. never freeze current PASS counts in this router.
