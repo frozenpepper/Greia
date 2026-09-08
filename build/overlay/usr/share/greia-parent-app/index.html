@@ -3,20 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7f7f4">
+  <meta name="theme-color" content="#484bd2">
   <meta name="color-scheme" content="light">
   <title>Greia Parents</title>
   <link rel="stylesheet" href="./styles/app.css">
   <link rel="stylesheet" href="./styles/management.css">
 </head>
 <body>
+  <a class="skip-link" href="#content">Skip to content</a>
   <div class="app-shell" id="app-shell">
     <aside class="sidebar" aria-label="Greia Parents">
       <a class="brand" href="#home" aria-label="Greia Parents home">
-        <span class="brand-mark" aria-hidden="true">G</span>
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 27 15 11l10 7 7-9" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="m8 27 13 4 11-22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+            <circle cx="8" cy="27" r="3" fill="currentColor"/>
+            <circle cx="15" cy="11" r="3" fill="currentColor"/>
+            <circle cx="25" cy="18" r="3" fill="currentColor"/>
+            <circle cx="32" cy="9" r="3" fill="currentColor"/>
+            <circle cx="21" cy="31" r="2.5" fill="currentColor"/>
+          </svg>
+        </span>
         <span class="brand-copy"><strong>Greia</strong><small>Parents</small></span>
       </a>
       <nav class="primary-nav" id="desktop-nav" aria-label="Parent sections"></nav>
+      <p class="sidebar-note"><strong>Little minds.<br>Big possibilities.</strong>A little space for the grown-ups.</p>
       <div class="sidebar-status">
         <div class="connection-chip">
           <span class="connection-dot" id="connection-dot"></span>
@@ -36,7 +48,7 @@
         <div class="page-actions" id="page-actions"></div>
       </header>
 
-      <main class="content" id="content">
+      <main class="content" id="content" tabindex="-1">
         <div id="flash" class="flash" role="status" aria-live="polite" hidden></div>
         <div id="view" class="view" aria-live="polite"></div>
       </main>

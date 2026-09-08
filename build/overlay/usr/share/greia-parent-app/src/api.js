@@ -2,7 +2,7 @@ export class ParentApiError extends Error {
   constructor(message, { status = 0, code = "request_failed", details = null } = {}) {
     super(message); this.name = "ParentApiError"; this.status = status; this.code = code; this.details = details;
   }
-  get pairingRequired() { return this.status === 401 || this.code === "pairing_required"; }
+  get authenticationRequired() { return this.status === 401 || this.code === "pairing_required"; }
 }
 export class ParentApiClient {
   constructor({ origin = globalThis.location?.origin ?? "http://127.0.0.1:8766", apiBase = "/api/v1", credentialStore = null, fetchImpl = globalThis.fetch?.bind(globalThis) } = {}) {
@@ -55,7 +55,7 @@ export class ParentApiClient {
   async connectWifi({ ssid, passphrase = "" }) { if (typeof ssid !== "string" || !ssid.trim()) throw new TypeError("Wi-Fi network name is required"); return this.#request("/network/wifi/connect", { method: "POST", body: { ssid: ssid.trim(), passphrase: String(passphrase || "") } }); }
   async updateSsh({ enabled, publicKey = null }) { return this.#request("/maintenance/ssh", { method: "PUT", body: { enabled: Boolean(enabled), public_key: typeof publicKey === "string" && publicKey.trim() ? publicKey.trim() : "" } }); }
   async progress(profileId = null) { const suffix = profileId ? `?profile_id=${encodeURIComponent(profileId)}` : ""; return this.#request(`/progress${suffix}`); }
-  async pairBootstrap({ pairingToken, deviceName }) { const result = await this.#request("/pairing/bootstrap", { method: "POST", authenticated: false, body: { pairing_token: pairingToken, device_name: deviceName } }); if (!result || typeof result.credential !== "string" || !result.credential) throw new ParentApiError("Greia did not return a device credential", { code: "invalid_pairing_response" }); this.credentialStore?.set(this.origin, result.credential); return result; }
+  async connectWithPassword({ password, deviceName }) { const result = await this.#request("/pairing/bootstrap", { method: "POST", authenticated: false, body: { password, device_name: deviceName } }); if (!result || typeof result.credential !== "string" || !result.credential) throw new ParentApiError("Greia did not return a device credential", { code: "invalid_authentication_response" }); this.credentialStore?.set(this.origin, result.credential); return result; }
   forgetCredential() { this.credentialStore?.remove(this.origin); }
   createProfile(profile) { return this.#request("/profiles", { method: "POST", body: profile }); }
   updateProfile(profileId, patch) { return this.#request(`/profiles/${encodeURIComponent(profileId)}`, { method: "PATCH", body: patch }); }

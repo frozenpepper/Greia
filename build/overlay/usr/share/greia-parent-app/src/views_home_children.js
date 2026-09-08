@@ -21,13 +21,16 @@ export function installHomeChildrenViews(proto){
     const timeValue=!supportsUsage?"Unavailable":snapshot.profileUsageLimit?remainingActivityLabel(remaining):"Unavailable";
 
     const overview=el("section","overview-panel"),intro=el("div","overview-intro");
-    intro.append(el("p","section-kicker","Current child"),el("h2","",selected?selected.display_name:"No child selected"),el("p","",selected?profileSubtitle(selected):"Add a child profile to start personalising Greia."));
+    intro.append(el("p","section-kicker","Their world, at a glance"),el("h2","",selected?selected.display_name:"No child selected"),el("p","",selected?profileSubtitle(selected):"Add a child profile to start personalising Greia."));
     const primary=el("div","overview-actions");
     primary.append(button("Manage children",{iconName:"children",className:"button secondary",onClick:()=>this.navigate("children")}),button("Manage Activities",{iconName:"sparkles",onClick:()=>this.navigate("activities")}));
-    intro.append(primary);
+    const profileHeading=el("div","overview-profile"),profileCopy=el("div");
+    if(selected)profileHeading.append(this._avatar(selected,true));
+    profileCopy.append(...Array.from(intro.childNodes));profileHeading.append(profileCopy);intro.append(profileHeading,primary);
     const metrics=el("div","overview-metrics");
     metrics.append(this._metric("Activities visible",visible,"eye"),this._metric("Activity time left",timeValue,"activity"),this._metric("Stars collected",stars,"star"));
-    overview.append(intro,metrics);root.append(overview);
+    const art=el("div","overview-art");art.setAttribute("aria-hidden","true");art.append(icon("book"),icon("sparkles"),icon("palette"));
+    overview.append(intro,art);root.append(overview,metrics);
 
     const columns=el("div","home-columns");
     const recent=el("section","section-panel");recent.append(this._sectionHeading("Recent activity",selected?`What ${selected.display_name} used recently.`:"Recent child sessions."));
@@ -62,6 +65,7 @@ export function installHomeChildrenViews(proto){
       const row=el("article","child-row"),identity=el("div","child-row-identity"),copy=el("div","child-row-copy");identity.append(this._avatar(profile,true));copy.append(el("h3","",profile.display_name),el("p","",profileSubtitle(profile)));identity.append(copy);
       const facts=el("div","child-row-facts");facts.append(this._pill(profile.approximate_age==null?"Age not set":`About ${profile.approximate_age}`,"children",profile.approximate_age==null?"":"info"),this._pill(challengeName(profile.challenge_preference),"sparkles","warm"),this._pill(profile.has_secret?"Password set":"No password","lock",profile.has_secret?"ok":""));if(supportsPresentation){const label={boy:"Boy style",girl:"Girl style",neutral:"Neutral style"}[profile.presentation]||"Neutral style";facts.append(this._pill(label,"palette","info"));}if(supportsUsage&&snapshot.selectedProfileId===profile.profile_id&&snapshot.profileUsageLimit){facts.append(this._pill(dailyLimitLabel(snapshot.profileUsageLimit.profile_daily_minutes),"activity",snapshot.profileUsageLimit.exhausted?"warn":"info"),this._pill(remainingActivityLabel(snapshot.profileUsageLimit.effective_remaining_seconds),"activity",snapshot.profileUsageLimit.exhausted?"warn":"ok"));}
       const actions=el("div","child-row-actions");actions.append(button("Activities",{iconName:"sparkles",className:"button small secondary",onClick:async()=>{await this.state.selectProfile(profile.profile_id);this.navigate("activities");}}));if(supportsUsage)actions.append(button("Time limit",{iconName:"activity",className:"button small secondary",onClick:()=>this._openUsageLimitEditor(snapshot,profile)}));if(canManage)actions.append(button("Edit",{iconName:"edit",className:"button small secondary",onClick:()=>this._openChildEditor(snapshot,profile)}));actions.append(button(snapshot.selectedProfileId===profile.profile_id?"Selected":"Select",{iconName:"star",className:"button small ghost",onClick:async()=>{await this.state.selectProfile(profile.profile_id);this.showFlash(`${profile.display_name} selected for this Parent view.`);}}));
+      row.dataset.selected=String(snapshot.selectedProfileId===profile.profile_id);
       row.append(identity,facts,actions);list.append(row);
     }
     if(!snapshot.profiles.length){const empty=el("div","manager-empty");empty.append(icon("children"),el("strong","","No children yet"),el("span","","Add the first child profile to begin."));if(canManage)empty.append(button("Add child",{iconName:"plus",onClick:()=>this._openChildEditor(snapshot,null)}));list.append(empty);}
