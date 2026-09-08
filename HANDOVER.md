@@ -121,7 +121,7 @@ The September 8 authentication/runtime tranche has now done the following on `ma
 - stale legacy `parent-pairing-token` state is removed by the API-v1 composition boundary rather than by a production-only override;
 - direct API-v1 composition and installed production therefore share the same no-shared-token initialization rule;
 - the standalone legacy status server retains its compatibility token behavior as a separate legacy boundary;
-- direct API-v1 and legacy-status regression tests now protect both sides of that boundary;
+- direct API-v1 behavior, structural ownership, and legacy-status compatibility regressions protect all sides of that boundary;
 - the standalone Parent source uses password bootstrap and stores only the issued device credential;
 - the accepted Parent runtime was frozen at `01301d285c6ba2a9a1f2948a9768b821d2536729`;
 - Greia's pin and exact runtime manifest were advanced to that revision;
@@ -153,6 +153,8 @@ c86016f4e6f27ceaeb01d0537dc55f080acbfa5c  add atomic/synchronized repin regressi
 a1b67afbcd0ca4e4e0b3463c45b9f485d8934d09  retire shared token at API-v1 boundary
 5e834ec05a524cf61f5680f3c932767ec0e2a020  test direct API-v1 shared-token retirement
 e7dbcdc977a8c26e69ed6b81ace4f3f50719c50e  protect legacy status auth boundary
+a17ff8fc6c29ca9442dc78113e01cdeb47ecd8be  protect Parent API auth ownership seam
+397e6cd29a3c468d1165cb0c4ef194ebe07d0dfe  add auth ownership seam to Parent gate
 ```
 
 A documentation commit containing this handover is necessarily a descendant of those implementation commits; use `git rev-parse HEAD` for the exact checkout under test.
@@ -177,7 +179,7 @@ FIRST FAILURE: stale src/views_activities.js digest only
 STALE DIGEST: FIXED IN 35b88c79
 SINGLE-OPERATION REPIN TOOL: IMPLEMENTED
 REPIN TOOL REGRESSION TEST: COMMITTED, LOCAL EXECUTION PENDING
-API-V1 / LEGACY AUTH-BOUNDARY TESTS: COMMITTED, LOCAL EXECUTION PENDING
+API-V1 BEHAVIOR / OWNERSHIP / LEGACY AUTH-BOUNDARY TESTS: COMMITTED, LOCAL EXECUTION PENDING
 POST-FIX GREIA FOCUSED TESTS: PENDING
 POST-FIX make verify: PENDING
 OFFICIAL IMAGE BUILD WITH THIS DESCENDANT: PENDING
@@ -213,7 +215,7 @@ The current gate requires, in order:
 2. dependency-derived Parent runtime manifest regeneration
 3. semantic equality with Greia's committed manifest
 4. synchronized-repin transaction regression test
-5. direct API-v1 token-retirement + legacy-status compatibility boundary tests
+5. direct API-v1 behavior + structural ownership + legacy-status compatibility boundary tests
 6. Greia Parent staging/image/password/production focused tests
 7. vendor integrity verification
 8. image-overlay integrity verification
@@ -243,7 +245,7 @@ The next operator must:
 4. regenerate the Parent manifest or reuse the retained generated file only if its provenance is still exact 01301d...
 5. resume at §4 semantic manifest comparison
 6. run the synchronized-repin regression test
-7. run the direct API-v1 and legacy-status auth-boundary tests
+7. run the direct API-v1 behavior, structural ownership, and legacy-status compatibility tests
 8. if green, continue all remaining Greia focused/integrity/make verify steps in order
 ```
 
@@ -275,6 +277,7 @@ build/overlay/usr/share/greia-parent-app/
 tools/update_parent_client_pin.py
 tests/test_update_parent_client_pin.py
 tests/test_parent_api.py
+tests/test_parent_auth_ownership.py
 tests/test_parent_legacy_status_auth.py
 src/greia_parent/static_client.py
 src/greia_parent/parent_client_integrity.py
@@ -327,6 +330,6 @@ keep Parent at exact 01301d285c6ba2a9a1f2948a9768b821d2536729
 resume docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md at §4
 ```
 
-The already-green Parent source gate from the failed frozen attempt may be reused because Parent source did not change. Re-run the §4 manifest comparison, then execute all seven focused commands in the documented order. If and only if all seven focused tests, both integrity checks and current `make verify` are green, proceed to the sanctioned image and real-browser password/bootstrap/reload/password-change/revocation sequence.
+The already-green Parent source gate from the failed frozen attempt may be reused because Parent source did not change. Re-run the §4 manifest comparison, then execute all eight focused commands in the documented order. If and only if all eight focused tests, both integrity checks and current `make verify` are green, proceed to the sanctioned image and real-browser password/bootstrap/reload/password-change/revocation sequence.
 
 Do not use the old shared-token instructions.
