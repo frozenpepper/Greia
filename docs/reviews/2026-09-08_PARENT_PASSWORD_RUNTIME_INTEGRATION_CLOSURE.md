@@ -2,11 +2,11 @@
 
 **Date:** 2026-09-08  
 **Scope:** Greia Parent authentication migration and exact Parent browser runtime integration  
-**Evidence class:** repository/source review and committed integration only; local automated, image-build and physical-browser evidence remain pending
+**Evidence class:** repository/source review plus partial owner-controlled local source execution; image-build and physical-browser evidence remain pending
 
 ## 1. Result
 
-The migration from the old human-entered shared Parent pairing token to Greia-password bootstrap is now coherent across the maintained Parent client, Greia API, Greia runtime pin, vendored browser runtime, and the actual image overlay.
+The migration from the old human-entered shared Parent pairing token to Greia-password bootstrap is coherent across the maintained Parent client, Greia API, Greia runtime pin, vendored browser runtime, and the actual image overlay.
 
 The accepted Parent client revision is:
 
@@ -30,6 +30,8 @@ build/overlay/usr/share/greia-parent-app/
 ```
 
 The earlier integration defect where Greia's backend expected `password` while the image still shipped a browser posting `pairing_token` is therefore source-fixed.
+
+A first owner-controlled acceptance attempt at Greia `1f01d4139cc80ec4e0846412f3e7695a0cbc1927` correctly stopped in §4 because one committed manifest digest was stale. The runtime bytes themselves were already correct. That metadata defect is fixed by `35b88c79fc10d81ef844df941a3a48321bbce8ab` and requires a fresh resumed source gate before any image/browser claim.
 
 ## 2. Current authentication contract
 
@@ -60,7 +62,16 @@ This is maintainability debt, not an active production authorization fallback. A
 
 The accepted Parent source generates its runtime manifest by walking local dependencies from `index.html`. The generator follows HTML, JavaScript and CSS references, rejects remote runtime dependencies and path escapes, and hashes exact bytes.
 
-Greia's committed manifest for `01301d...` contains the exact accepted runtime closure. The vendor and image-overlay runtime were synchronized to those bytes.
+Greia's vendor and image-overlay runtime are byte-synchronized to Parent `01301d...`. During the first local acceptance attempt, the generated Parent manifest exposed one stale Greia metadata entry:
+
+```text
+src/views_activities.js
+bytes = 13323
+stale Greia sha256 = d8a5ba84bbe387632d528489f88afe16a5d2836b14f7c74475638f38b451dcb5
+actual Parent/vendor/overlay sha256 = f458a5c3cb4a7f21692cefb79e07039d277e14ebb8b27e49441d5ea6e8ec3c02
+```
+
+Parent source, `vendor/parent-app/src/views_activities.js`, and `build/overlay/usr/share/greia-parent-app/src/views_activities.js` are the same Git blob. Therefore the defect was isolated to `runtime/parent-app-client.manifest.json`, not the runtime payload. Commit `35b88c79fc10d81ef844df941a3a48321bbce8ab` corrects only that digest.
 
 The previous review concern about a manually omitted `assets/greia-constellation.png` no longer applies to the accepted revision: the current frozen `index.html` does not reference that obsolete asset, and manifest ownership is dependency-derived rather than a hand-maintained runtime list.
 
@@ -103,17 +114,43 @@ docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md
 
 That procedure explicitly supersedes the old authentication steps while retaining the older document's still-valid wider physical system-control checks.
 
-## 7. Exact-current acceptance required
+## 7. Owner-controlled local attempt at 1f01d413
 
-No local command execution is claimed for the current descendant from this connector-only work.
+The first frozen attempt executed the new acceptance procedure and stopped exactly as designed.
 
-The new acceptance procedure requires, in order:
+Passed:
 
 ```text
-Parent exact-SHA node syntax checks
-Parent npm test
-Parent dependency-derived runtime-manifest regeneration
-semantic manifest equality with Greia's committed manifest
+Greia clean identity at 1f01d4139cc80ec4e0846412f3e7695a0cbc1927
+Parent exact identity at 01301d285c6ba2a9a1f2948a9768b821d2536729
+Parent node --check
+Parent npm test: 77/77 PASS
+Parent runtime_manifest.mjs
+Greia pin revision/integration_state assertions
+```
+
+First failure:
+
+```text
+§4 semantic manifest comparison
+only src/views_activities.js diverged
+```
+
+Per the runbook, the operator did not continue into focused Greia suites, `make verify`, image build, browser, or physical lanes. The evidence root is:
+
+```text
+/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/PARENT_PASSWORD_RUNTIME_2026-09-08
+```
+
+This is a valid REJECTED/STOPPED frozen attempt, not a failed runtime design. It proved the acceptance gate catches exact-byte metadata drift before image construction.
+
+## 8. Exact-current acceptance still required
+
+After pulling a descendant containing `35b88c79...`, the next attempt may reuse the already-green Parent source evidence because the Parent repository SHA is unchanged. It must re-establish the new Greia SHA/clean-tree identity and resume at §4 manifest comparison.
+
+If §4 is green, continue in order:
+
+```text
 Greia Parent staging test
 Greia Parent image-integration test
 Greia password-auth tests
@@ -131,9 +168,9 @@ negative proof that obsolete shared-token state/UI is absent
 wider physical Parent system-control checks
 ```
 
-The run stops on the first failure. GitHub-hosted Actions are not part of this gate.
+Stop on the first new failure. GitHub-hosted Actions are not part of this gate.
 
-## 8. Evidence boundary
+## 9. Evidence boundary
 
 Current status is:
 
@@ -147,16 +184,19 @@ VENDORED RUNTIME: SYNCHRONIZED
 IMAGE OVERLAY RUNTIME: SYNCHRONIZED
 PIN/MANIFEST TEST INVARIANT: IMPLEMENTED
 CURRENT AUTH/RUNTIME DOCUMENTATION: RECONCILED
-EXACT-CURRENT LOCAL TEST EXECUTION: NOT RUN
+PARENT SOURCE GATE AT 01301d...: PASS 77/77
+FIRST GREIA LOCAL ATTEMPT AT 1f01d413: STOPPED AT §4 STALE MANIFEST DIGEST
+STALE MANIFEST DIGEST: FIXED IN 35b88c79
+POST-FIX GREIA FOCUSED/MAKE VERIFY: NOT RUN
 CURRENT CANONICAL IMAGE BUILD: NOT RUN
 REAL-BROWSER PASSWORD LIFECYCLE: NOT RUN
 CURRENT PHYSICAL ACER PARENT ACCEPTANCE: NOT RUN
 AUTHENTICATED ENCRYPTED RELEASE TRANSPORT: NOT IMPLEMENTED
 ```
 
-Do not promote source review into physical or release evidence.
+Do not promote source review or the partial local run into physical or release evidence.
 
-## 9. Relevant Greia commits
+## 10. Relevant Greia commits
 
 The cutover/closure sequence includes:
 
@@ -170,18 +210,21 @@ ef49e88023d4900214d49e2666b163edf5de5a10  make the pin test revision-independent
 818285807b3ab99cabb61a1fc501ea9afdb80c5b  add exact-current password/runtime acceptance gate
 8ad7f0a838d687f0f355192ed739a91b70d4d2f1  refresh current handover
 fe5b51bd5e7b81682a81fa60c2b94d24d56adcbd  refresh local-agent testing router
+1f01d4139cc80ec4e0846412f3e7695a0cbc1927  record pre-run closure review
+35b88c79fc10d81ef844df941a3a48321bbce8ab  fix stale views_activities.js manifest digest
 ```
 
-Resolve the actual final tested Greia SHA with `git rev-parse HEAD`; documentation commits after the runtime cutover are expected descendants.
+Resolve the actual final tested Greia SHA with `git rev-parse HEAD`; documentation commits after the runtime correction are expected descendants.
 
-## 10. Next exact step
+## 11. Next exact step
 
-On an owner-controlled local checkout, execute:
+On the owner-controlled checkout:
 
-```text
-docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md
-```
-
-against current Greia `main` and exact Parent revision `01301d285c6ba2a9a1f2948a9768b821d2536729`.
+1. pull current Greia `main`;
+2. confirm clean tree and record the new exact SHA;
+3. keep Parent at exact `01301d285c6ba2a9a1f2948a9768b821d2536729`;
+4. resume `docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md` at §4 manifest comparison;
+5. if green, continue the focused Greia/integrity/`make verify` source gate;
+6. only after that source gate is green, proceed to image/browser/physical lanes.
 
 Do not start the lower-priority legacy-inheritance refactor or transport redesign before obtaining this current source/image/browser evidence, because either would invalidate the candidate and expand the failure surface unnecessarily.
