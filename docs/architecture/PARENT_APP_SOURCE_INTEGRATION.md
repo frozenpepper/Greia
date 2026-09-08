@@ -68,15 +68,30 @@ The HTTP layer adds the Parent static response security policy. If a lower-level
 
 ## Source-to-Greia trust boundary
 
-`tools/stage_parent_app.py` remains the review/update tool for importing an accepted Parent source export. It verifies the repository/revision pin and exact manifest bytes, rejects symlinks/traversal/unexpected runtime locations, and stages only frozen runtime files.
+The canonical developer repin entrypoint is:
 
-After a Parent revision is accepted, the verified production bytes are committed under:
-
-```text
-vendor/parent-app/
+```bash
+python3 tools/update_parent_client_pin.py \
+  --parent-root /path/to/Greia-Parent-App-Html \
+  --revision <exact-reviewed-parent-sha>
 ```
 
-That directory is provenance, not a second editable Parent application. Changes originate in `Greia-Parent-App-Html`, are accepted there, then the exact accepted bytes and manifest are advanced together in Greia.
+The command requires a clean Parent checkout at exactly the supplied SHA. It discovers the transitive runtime closure from `index.html`, captures those runtime bytes once, derives the manifest from those same bytes, then stages all four Greia-owned artifacts before replacing any current artifact:
+
+```text
+runtime/parent-app-client.toml
+runtime/parent-app-client.manifest.json
+vendor/parent-app/
+build/overlay/usr/share/greia-parent-app/
+```
+
+The replacement step keeps sibling backups until every staged artifact has been installed and restores the previous checkout state if a multi-path swap fails. Both runtime trees are rebuilt from the manifest-owned closure, so stale files from an older Parent revision disappear instead of surviving a repin.
+
+This single operation is intentional. Pin/manifest advancement, vendored provenance, and image-overlay payload must not be performed as separate manual synchronization steps; that can produce an internally inconsistent Greia commit.
+
+`tools/stage_parent_app.py` remains the lower-level exact-byte verifier/stager used by focused tests and other bounded staging work. It verifies repository/revision pin and manifest bytes, rejects symlinks/traversal/unexpected runtime locations, and stages only frozen runtime files. It is not a replacement for the canonical four-artifact repin command above.
+
+`vendor/parent-app/` is provenance, not a second editable Parent application. Changes originate in `Greia-Parent-App-Html`, are accepted there, then the exact accepted bytes and manifest are advanced together in Greia.
 
 ## Canonical image integration
 
@@ -148,11 +163,15 @@ System output controls keep their existing privilege separation: Parent mutates 
 
 ## Verification and remaining evidence
 
-The source/image integration is now structurally represented by the exact pin, manifest, vendored runtime and image-overlay runtime. `tests/test_parent_client_image_integration.py` verifies the pin/manifest relationship without hard-coding a particular future revision, so a legitimate repin does not require changing test policy merely to name a new SHA.
+The source/image integration is structurally represented by the exact pin, manifest, vendored runtime and image-overlay runtime. `tests/test_parent_client_image_integration.py` verifies the pin/manifest relationship without hard-coding a particular future revision, so a legitimate repin does not require changing test policy merely to name a new SHA.
+
+`tests/test_update_parent_client_pin.py` additionally owns the repin transaction itself. It verifies transitive HTML/JS/CSS/asset discovery, exact manifest/runtime byte equality, removal of stale runtime files from both copies, refusal of dirty Parent source before Greia mutation, and rollback when a later path replacement fails after an earlier one has already been installed.
 
 Source-level owners include:
 
 ```text
+tools/update_parent_client_pin.py
+tests/test_update_parent_client_pin.py
 tools/stage_parent_app.py
 tests/test_parent_app_staging.py
 tests/test_parent_client_image_integration.py
@@ -160,7 +179,7 @@ greia_parent.parent_client_integrity
 tests/test_parent_password_auth.py
 ```
 
-The current `01301d...` repin and overlay synchronization still require exact-current local execution. A committed test is not a PASS.
+The current `01301d...` runtime itself is unchanged by the repin-tool hardening. The new updater/test descendant still requires exact-current local execution. A committed test is not a PASS.
 
 This also does **not** prove the physical Acer path. Final real-runtime acceptance must use an officially built image and a real browser against the Greia-served production URL. It must prove:
 
@@ -180,12 +199,10 @@ The exact-current procedure is owned under `docs/testing/` and must supersede th
 Use this order:
 
 1. implement/review/test the browser change in `Greia-Parent-App-Html`;
-2. freeze the exact accepted Parent commit;
-3. derive the production runtime closure from that accepted source and generate its exact manifest with demo/test fixtures excluded;
-4. advance Greia's pin and manifest together;
-5. stage the exact accepted bytes into `vendor/parent-app/`;
-6. replace the image-overlay runtime with those same exact bytes;
-7. run Parent staging/image-integrity/password-auth focused tests and full `make verify` locally;
-8. repeat any browser/image/physical acceptance made stale by the runtime change.
+2. freeze the exact accepted Parent commit and ensure its checkout is clean;
+3. run `tools/update_parent_client_pin.py --parent-root ... --revision <exact-sha>` once; this derives the manifest and synchronizes the pin, vendor, and image overlay from the same captured runtime bytes;
+4. inspect the resulting Greia diff: the two runtime trees must contain exactly the manifest closure and no unrelated Greia source should move merely because of the repin;
+5. run `tests/test_update_parent_client_pin.py`, Parent staging/image-integrity/password-auth focused tests, and full `make verify` locally;
+6. repeat any browser/image/physical acceptance made stale by the runtime change.
 
-Never hand-edit the vendored or image copy as an independent Parent implementation.
+Never hand-edit the manifest, vendored runtime, or image copy as independent Parent implementations.
