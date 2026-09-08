@@ -5,6 +5,9 @@ from http.server import HTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
+from greia_parent.credentials import ParentCredentialError
+from greia_parent.password_auth import ParentPasswordAttemptLimiter
+from greia_parent.protocol import API_BASE
 from greia_parent.server import parse_args
 from greia_parent.static_client import ParentStaticClient
 from greia_parent.update_api import (
@@ -34,6 +37,7 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
             wifi_backend if wifi_backend is not None else IwdWifiBackend()
         )
         super().__init__(*args, **kwargs)
+        self.password_attempts = ParentPasswordAttemptLimiter()
 
     def _load_or_create_token(self) -> str:
         """Retire the pre-password shared token during production startup.
@@ -87,13 +91,48 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
 
 
 class ProductionParentApiRequestHandler(UpdateParentApiRequestHandler):
-    """Installed HTTP surface with explicit fail-closed static-client failure."""
+    """Installed HTTP surface with fail-closed static and auth policy."""
+
+    @property
+    def app(self) -> ProductionParentApiApplication:
+        return self.server.app  # type: ignore[attr-defined,return-value]
 
     def do_GET(self) -> None:  # noqa: N802
         if urlparse(self.path).path == "/" and self.static_client.read("/") is None:
             self._send_html(503, render_parent_web_app())
             return
         super().do_GET()
+
+    def do_POST(self) -> None:  # noqa: N802
+        if urlparse(self.path).path != f"{API_BASE}/pairing/bootstrap":
+            super().do_POST()
+            return
+
+        client_address = self.client_address[0]
+        if not self.app.password_attempts.allowed(client_address):
+            self._send_api_error(
+                429,
+                "authentication_rate_limited",
+                "Too many incorrect Greia password attempts; try again shortly",
+            )
+            return
+
+        try:
+            body = self._read_json_object()
+            payload = self.app.bootstrap_device(
+                self._json_text(body, "password"),
+                self._json_text(body, "device_name"),
+            )
+        except PermissionError as exc:
+            self.app.password_attempts.record_failure(client_address)
+            self._send_api_error(403, "authentication_rejected", str(exc))
+            return
+        except (ParentCredentialError, ValueError) as exc:
+            self._send_api_error(400, "invalid_request", str(exc))
+            return
+
+        self.app.password_attempts.clear(client_address)
+        self._send_json(201, payload)
 
 
 class ProductionParentApiHTTPServer(HTTPServer):
