@@ -3,7 +3,8 @@
 
 The caller supplies a clean Parent checkout and the exact commit SHA that was
 reviewed/tested. Runtime files are discovered from the actual ``index.html``
-dependency graph and read once. Those exact bytes own all four Greia artifacts:
+dependency graph and each runtime file is read once. Those exact captured bytes
+own all four Greia artifacts:
 
 - ``runtime/parent-app-client.toml``
 - ``runtime/parent-app-client.manifest.json``
@@ -158,15 +159,16 @@ def _references_for(relative: PurePosixPath, data: bytes) -> list[PurePosixPath]
     return output
 
 
-def _discover_runtime_files(parent_root: Path) -> list[str]:
-    """Return the exact transitive runtime closure rooted at ``index.html``."""
+def _discover_runtime_payloads(parent_root: Path) -> dict[str, bytes]:
+    """Capture the exact transitive runtime closure rooted at ``index.html``."""
 
     checkout = parent_root.resolve()
     pending = [PurePosixPath("index.html")]
-    visited: set[PurePosixPath] = set()
+    payloads: dict[str, bytes] = {}
     while pending:
         relative = pending.pop()
-        if relative in visited:
+        key = relative.as_posix()
+        if key in payloads:
             continue
         path = (checkout / Path(*relative.parts)).resolve()
         try:
@@ -176,26 +178,11 @@ def _discover_runtime_files(parent_root: Path) -> list[str]:
         if not path.is_file():
             raise PinError(f"referenced Parent runtime file is missing: {relative}")
         data = path.read_bytes()
-        visited.add(relative)
+        payloads[key] = data
         for dependency in _references_for(relative, data):
-            if dependency not in visited:
+            if dependency.as_posix() not in payloads:
                 pending.append(dependency)
-    return [path.as_posix() for path in sorted(visited, key=lambda value: value.as_posix())]
-
-
-def _load_runtime_payloads(parent_root: Path, relative_paths: list[str]) -> dict[str, bytes]:
-    payloads: dict[str, bytes] = {}
-    checkout = parent_root.resolve()
-    for relative in relative_paths:
-        path = (checkout / relative).resolve()
-        try:
-            path.relative_to(checkout)
-        except ValueError as exc:
-            raise PinError(f"runtime file escapes Parent checkout: {relative}") from exc
-        if not path.is_file():
-            raise PinError(f"required Parent runtime file is missing: {relative}")
-        payloads[relative] = path.read_bytes()
-    return payloads
+    return dict(sorted(payloads.items()))
 
 
 def _hash_runtime_payloads(payloads: dict[str, bytes]) -> dict[str, dict[str, object]]:
@@ -221,22 +208,27 @@ def _updated_config_text(config_path: Path, revision: str) -> str:
 
 def _stage_text_file(target: Path, content: str) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
+    mode = 0o644
+    if target.exists() and not target.is_symlink():
+        mode = target.stat().st_mode & 0o777
     descriptor, temporary_name = tempfile.mkstemp(
         prefix=f".{target.name}.pin-",
         suffix=".tmp",
         dir=target.parent,
     )
+    temporary = Path(temporary_name)
     try:
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as handle:
             handle.write(content)
+        temporary.chmod(mode)
     except Exception:
         try:
             os.close(descriptor)
         except OSError:
             pass
-        Path(temporary_name).unlink(missing_ok=True)
+        temporary.unlink(missing_ok=True)
         raise
-    return Path(temporary_name)
+    return temporary
 
 
 def _stage_runtime_tree(target: Path, payloads: dict[str, bytes]) -> Path:
@@ -306,8 +298,7 @@ def update_pin(greia_root: Path, parent_root: Path, revision: str) -> tuple[Path
     overlay_path = greia_root / "build" / "overlay" / "usr" / "share" / "greia-parent-app"
 
     manifest = _load_manifest_metadata(manifest_path)
-    relative_paths = _discover_runtime_files(parent_root)
-    payloads = _load_runtime_payloads(parent_root, relative_paths)
+    payloads = _discover_runtime_payloads(parent_root)
     hashed = _hash_runtime_payloads(payloads)
     rewritten_manifest = {
         "files": hashed,
