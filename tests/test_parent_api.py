@@ -140,6 +140,20 @@ class ParentApiTests(unittest.TestCase):
                 os.environ["GREIA_PARENT_ACTIVITY_INSTALL"] = "true"
                 self.assertTrue(_activity_install_enabled())
 
+    def test_api_v1_startup_retires_legacy_shared_token_state(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            state_dir = root / "parent"
+            state_dir.mkdir(parents=True)
+            token_path = state_dir / "parent-pairing-token"
+            token_path.write_text("legacy-shared-secret\n", encoding="ascii")
+
+            app = _app(root)
+
+            self.assertEqual(app.token, "")
+            self.assertFalse(token_path.exists())
+            self.assertFalse((state_dir / "parent-pairing-token").exists())
+
     def test_parent_api_password_bootstrap_issues_device_credential_and_only_bearer_authenticates(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             app = _app(Path(temporary))
