@@ -86,6 +86,8 @@ This separation keeps the human password out of ordinary API traffic while avoid
 
 The old `parent-pairing-token` model is retired rather than retained for compatibility. Production must not authorize `X-Pip-Token`, token query URLs, shared-token cookies, or any equivalent global fallback. Production startup removes stale token state and does not recreate it, and release images do not install the old token-retrieval helper.
 
+The API-v1 route name `pairing/bootstrap` remains a wire-compatibility name for enrolling a Parent device. It does not imply that the retired shared token remains valid input.
+
 ## 4. Discovery
 
 Greia Parent discovery is convenience, not authorization.
@@ -190,19 +192,30 @@ SSH maintenance API surface through platform service boundaries
 Activity inventory
 Parent HTML API client
 standalone bounded LAN discovery/proxy tooling
+exact Parent runtime revision/integrity pin in Greia
+vendored runtime and image overlay synchronized to the accepted Parent revision
+installed-runtime integrity preflight
+```
+
+Current integrated Parent client revision:
+
+```text
+frozenpepper/Greia-Parent-App-Html
+01301d285c6ba2a9a1f2948a9768b821d2536729
 ```
 
 Still required before ordinary-family Parent authentication is release-complete:
 
 ```text
+exact-head local automated verification across Greia + Parent client
+physical discovery -> password bootstrap -> reconnect -> password-change -> revoke -> rebootstrap test
+upgrade proof that obsolete token helper/state are absent and not recreated
 authenticated encrypted transport + endpoint/device identity
-exact-head automated verification across Greia + Parent client
-exact Parent runtime revision/integrity pin in the Greia image
-physical discovery -> password bootstrap -> reconnect -> revoke test
-upgrade proof that obsolete token helper/state are absent
 remaining typed privileged broker work for operations requiring root authority
 full package/update/backup/network release acceptance owned by their phases
 resource measurements on the C0 floor
 ```
+
+A future cleanup may move legacy shared-token initialization fully out of the API-v1 inheritance chain so `ProductionParentApiApplication` no longer needs the narrow retirement override. That is maintainability debt, not permission to reintroduce the shared-token model and not a blocker for validating the current installed password/device-credential path.
 
 This foundation does not falsely close R12 or any later platform/release obligation.
