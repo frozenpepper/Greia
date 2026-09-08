@@ -139,7 +139,14 @@ print('PARENT_RUNTIME_MANIFEST_MATCH')
 PY
 ```
 
-Run the focused Greia source gate:
+First prove the canonical repin operation cannot independently drift the manifest, vendor and image-overlay copies:
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_update_parent_client_pin.py' -v \
+  |& tee "$EVIDENCE/source/test-update-parent-client-pin.log"
+```
+
+Then run the remaining focused Greia source gate:
 
 ```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_parent_app_staging.py' -v \
@@ -155,7 +162,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_parent_production_
   |& tee "$EVIDENCE/source/test-parent-production-api.log"
 ```
 
-All four commands must exit 0.
+All five focused commands must exit 0.
 
 Verify both committed runtime copies against the same contract:
 
@@ -337,6 +344,7 @@ Return one report containing:
 GREIA_SHA=<exact tested SHA>
 PARENT_SHA=01301d285c6ba2a9a1f2948a9768b821d2536729
 PARENT_SOURCE_GATE=PASS|FAIL
+REPIn_TOOL_GATE=PASS|FAIL
 GREIA_FOCUSED_GATE=PASS|FAIL
 MAKE_VERIFY=PASS|FAIL
 IMAGE_INTEGRITY=PASS|FAIL|NOT_RUN
