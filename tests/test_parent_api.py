@@ -140,13 +140,13 @@ class ParentApiTests(unittest.TestCase):
                 os.environ["GREIA_PARENT_ACTIVITY_INSTALL"] = "true"
                 self.assertTrue(_activity_install_enabled())
 
-    def test_parent_api_bootstrap_issues_device_credential_and_bearer_authenticates(self) -> None:
+    def test_parent_api_password_bootstrap_issues_device_credential_and_only_bearer_authenticates(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             app = _app(Path(temporary))
-            issued = app.bootstrap_device(app.token, "Family laptop")
+            issued = app.bootstrap_device("greia", "Family laptop")
             credential = str(issued["credential"])
             device = issued["device"]
-            self.assertNotEqual(credential, app.token)
+            self.assertNotEqual(credential, "greia")
             self.assertEqual(device["display_name"], "Family laptop")
             self.assertTrue(
                 app.authorized(
@@ -158,6 +158,13 @@ class ParentApiTests(unittest.TestCase):
                 app.authorized(
                     _Handler(Authorization="Bearer definitely-wrong"),
                     {},
+                )
+            )
+            self.assertFalse(
+                app.authorized(
+                    _Handler(**{"X-Pip-Token": app.token}),
+                    {},
+                    allow_query_token=True,
                 )
             )
             with self.assertRaises(PermissionError):
@@ -174,6 +181,10 @@ class ParentApiTests(unittest.TestCase):
             app.change_parent_password("greia", "newpass1")
             self.assertTrue(app.main_credential.verify("newpass1"))
             self.assertFalse(app.main_credential.verify("greia"))
+            with self.assertRaises(PermissionError):
+                app.bootstrap_device("greia", "Old password browser")
+            issued = app.bootstrap_device("newpass1", "New password browser")
+            self.assertIn("credential", issued)
 
     def test_activity_api_payload_hides_filesystem_and_runtime_entrypoint_details(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -562,6 +573,8 @@ class ParentApiTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             app = _app(root)
+            issued = app.bootstrap_device("greia", "Test browser")
+            credential = str(issued["credential"])
             server = ParentApiHTTPServer(("127.0.0.1", 0), app)
             port = server.server_address[1]
             thread = threading.Thread(
@@ -588,7 +601,7 @@ class ParentApiTests(unittest.TestCase):
                         url, data=data, method=method
                     )
                     if token is not None:
-                        request.add_header("X-Pip-Token", token)
+                        request.add_header("Authorization", f"Bearer {token}")
                     if body is not None:
                         request.add_header("Content-Type", "application/json")
                     try:
@@ -609,7 +622,7 @@ class ParentApiTests(unittest.TestCase):
 
                 status, _ = _request("GET", base)
                 self.assertEqual(status, 401)
-                status, payload = _request("GET", base, token=app.token)
+                status, payload = _request("GET", base, token=credential)
                 self.assertEqual(status, 200)
                 self.assertIn("desired", payload)
                 self.assertIn("pointer_devices", payload)
@@ -621,28 +634,28 @@ class ParentApiTests(unittest.TestCase):
                 status, _ = _request(
                     "PUT",
                     base,
-                    token=app.token,
+                    token=credential,
                     body={"touchpad_tap": "on"},
                 )
                 self.assertEqual(status, 400)
                 status, _ = _request(
                     "PUT",
                     base,
-                    token=app.token,
+                    token=credential,
                     body={"mouse_speed": 5.0},
                 )
                 self.assertEqual(status, 400)
                 status, _ = _request(
                     "PUT",
                     base,
-                    token=app.token,
+                    token=credential,
                     body={"xinput_id": 12},
                 )
                 self.assertEqual(status, 400)
                 status, payload = _request(
                     "PUT",
                     base,
-                    token=app.token,
+                    token=credential,
                     body={"disable_while_typing": True},
                 )
                 self.assertEqual(status, 200)
@@ -653,12 +666,16 @@ class ParentApiTests(unittest.TestCase):
                 status, _ = _request("POST", reset_url)
                 self.assertEqual(status, 401)
                 status, payload = _request(
-                    "POST", reset_url, token=app.token, body={}
+                    "POST", reset_url, token=credential, body={}
                 )
                 self.assertEqual(status, 200)
                 assert isinstance(payload, dict)
                 self.assertFalse(payload["touchpad_tap"])
                 self.assertFalse(payload["disable_while_typing"])
+
+                legacy_url = f"http://127.0.0.1:{port}/pair?token={app.token}"
+                status, _ = _request("GET", legacy_url)
+                self.assertEqual(status, 404)
             finally:
                 server.shutdown()
                 thread.join(timeout=5)
