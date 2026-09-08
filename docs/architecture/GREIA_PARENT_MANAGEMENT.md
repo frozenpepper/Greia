@@ -84,7 +84,11 @@ This separation keeps the human password out of ordinary API traffic while avoid
 
 ### Retired shared-token model
 
-The old `parent-pairing-token` model is retired rather than retained for compatibility. Production must not authorize `X-Pip-Token`, token query URLs, shared-token cookies, or any equivalent global fallback. Production startup removes stale token state and does not recreate it, and release images do not install the old token-retrieval helper.
+The old `parent-pairing-token` model is retired from API v1 rather than retained for compatibility there. `ParentApiApplication` owns that rule for every API-v1 composition: its inherited initialization removes stale `parent-pairing-token` state and does not create or retain a shared token. Installed production inherits this API-v1 behavior; it does not carry a separate production-only token-suppression override.
+
+API v1 must not authorize `X-Pip-Token`, token query URLs, shared-token cookies, or any equivalent global fallback, and release images do not install the old token-retrieval helper.
+
+The older `ParentStatusApplication` still owns a compatibility token for the standalone legacy status server only. That legacy server is not an alternate API-v1 authentication model and is not the installed Parent API authority. If the legacy server is removed later, its compatibility token should disappear with it rather than migrate back into API v1.
 
 The API-v1 route name `pairing/bootstrap` remains a wire-compatibility name for enrolling a Parent device. It does not imply that the retired shared token remains valid input.
 
@@ -183,7 +187,8 @@ canonical Parent password authority
 password bootstrap -> per-device credential
 independent Parent-device revocation
 bounded failed-password limiter
-legacy shared-token rejection/removal in installed production composition
+API-v1-owned legacy shared-token rejection/removal
+legacy standalone status token isolated to its compatibility server
 API-v1 facade over profile/hardware/package/update/settings services
 explicit installed production composition with fail-closed capabilities
 real-IWD backend with management advertised only when usable
@@ -216,6 +221,6 @@ full package/update/backup/network release acceptance owned by their phases
 resource measurements on the C0 floor
 ```
 
-A future cleanup may move legacy shared-token initialization fully out of the API-v1 inheritance chain so `ProductionParentApiApplication` no longer needs the narrow retirement override. That is maintainability debt, not permission to reintroduce the shared-token model and not a blocker for validating the current installed password/device-credential path.
+The shared-token initialization ownership debt is closed at the source boundary: API v1 owns retirement, production inherits it, and the legacy standalone server retains compatibility behavior only within its own class. The API-v1 and legacy sides have dedicated regression tests, but those tests still require exact-head local execution before this descendant can claim a source PASS.
 
 This foundation does not falsely close R12 or any later platform/release obligation.
