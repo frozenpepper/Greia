@@ -1,7 +1,8 @@
 # Greia Parents — Product and Interaction Requirements
 
-**Status:** accepted product direction; core local Parent API/client implementation active, with production pairing/security and some management domains still incremental  
+**Status:** accepted product direction; core local Parent API/client authentication implemented, with authenticated encrypted transport and some management domains still incremental  
 **Date:** 2026-08-23  
+**Authentication review:** 2026-09-08  
 **Architecture owner:** ADR 0022; microphone-processing extension ADR 0031  
 **Initial implementation:** responsive HTML client served by Greia itself  
 **Related child discovery policy:** `docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`
@@ -29,52 +30,61 @@ The early web client exists for two reasons:
 
 Greia Parents is offline/local-first. A cloud account is not required for core management.
 
-## 2. First connection
+## 2. First connection and authentication
 
-### Target experience
+A parent should not need to discover IP addresses, Linux hostnames, filesystem secrets, pairing tokens, or shell commands manually.
 
-A parent should not need to discover IP addresses or Linux hostnames manually.
-
-Normal intended flow:
+The accepted normal flow is:
 
 1. Greia is connected to Ethernet or configured Wi-Fi.
-2. The parent chooses **Add a Greia** in a client, or opens the locally advertised Greia Parents page.
-3. The client discovers `_greia-parent._tcp` services on the LAN.
-4. On the Greia screen, the parent opens **Parent setup → Pair a device**.
-5. Greia displays:
-   - a QR code containing a short-lived pairing challenge and local connection information;
-   - a short numeric fallback code.
-6. The parent scans/enters the challenge.
-7. Greia shows the requesting device name and asks **Allow this parent device?**
-8. The parent explicitly chooses Allow or Deny on Greia.
-9. The approved client receives its own revocable credential.
-10. Future connections are automatic when the client can find the same Greia.
+2. The parent chooses a Greia in a Parent client, or opens the Greia-served Parent page.
+3. The client discovers Greia Parent API endpoints on the local network. Discovery is convenience only and grants no authority.
+4. If the browser already has a valid credential for that Greia, it reconnects automatically.
+5. Otherwise the client asks for the **Greia Parent password**. New systems start with `greia`; parents may change it from Greia Parents.
+6. The client submits only the password and a friendly client/device label to the API-v1 bootstrap resource. It does not persist the password.
+7. Greia verifies the password through the canonical `MainCredential` authority and issues a fresh high-entropy per-device credential.
+8. The browser persists only that Greia-scoped device credential and uses it for normal management requests.
+9. Future connections are automatic while that device credential remains valid; parents can revoke clients independently.
 
-mDNS is convenience only. Pairing/QR data must allow a client to reach the Greia if multicast discovery is unavailable.
+The established API-v1 wire path remains:
 
-### Current prototype boundary
+```text
+POST /api/v1/pairing/bootstrap
+{
+  "password": "<Parent password>",
+  "device_name": "<client label>"
+}
+```
 
-The shared pairing-token/bootstrap mechanism is still provisional. Per-device credentials and revocation exist, but the release pairing flow above still requires short-lived challenges, device-local Allow/Deny and authenticated encrypted transport before production acceptance.
+The word `pairing` in this versioned wire path means creation of a paired device identity. It does **not** mean a separate pairing-token secret exists. The retired `parent-pairing-token`, token query URLs, shared-token cookies, `X-Pip-Token`, QR/PIN challenge ceremony and shell token-retrieval helper are not part of the accepted ordinary Parent authentication flow and must not be revived as compatibility mechanisms.
+
+mDNS or bounded LAN probing may help find Greia, but discovery data contains no secret and does not authorize management.
+
+### Release security boundary
+
+Password authentication and revocable device credentials are implemented source architecture, but current plaintext HTTP remains provisional. Before ordinary-family release, Parent traffic requires authenticated encrypted transport plus a reviewed Greia endpoint/device-identity lifecycle so a client can know it is talking to the intended Greia and credentials cannot be intercepted on the LAN.
+
+That transport work must preserve the simple Parent-password experience. It must not add a second human secret, hidden filesystem token, mandatory QR/PIN/Allow ritual, or Linux-administration ceremony merely to compensate for transport design.
 
 ## 3. Parent devices
 
-Greia presents paired clients as individual devices, for example:
+Greia presents authenticated clients as individual devices, for example:
 
 ```text
-Paired devices
+Parent devices
 
-Dad's browser          paired today
-Mum's phone            paired yesterday
-Family tablet          paired Sunday
+Dad's browser          connected today
+Mum's phone            connected yesterday
+Family tablet          connected Sunday
 
-[ Pair another device ]
+[ Connect another device ]
 
 [ Revoke ]
 ```
 
-Each device has its own credential. Revoking one device must not sign every other parent out. No pairing secret or bearer token is shown in ordinary device lists.
+Each device has its own credential. Revoking one device must not sign every other parent out. No Parent password, pairing secret, or bearer token is shown in ordinary device lists.
 
-The current Parent API and rebuilt HTML client list and revoke individual paired devices.
+The current Parent API and rebuilt HTML client list and revoke individual Parent devices.
 
 ## 4. Primary management areas
 
@@ -93,7 +103,9 @@ Requirements:
 - changing it is a typed Greia-owned operation that requires the current password;
 - API responses never return the stored password or its digest;
 - Greia Parents exposes a clear **Change Parent password** control;
-- the main Parent password is distinct from per-device bearer credentials used by paired parent clients;
+- the main Parent password is distinct from per-device bearer credentials used by authenticated Parent clients;
+- the password is used to bootstrap a device identity, not as the bearer credential for every management request;
+- repeated failed password authentication is bounded/rate-limited;
 - during active development/test, the main Parent password intentionally owns the development SSH login on developer images; root SSH login stays disabled.
 
 ### Children
@@ -209,7 +221,7 @@ Brightness remains future work where supported by a typed platform path.
 
 ### Sound
 
-The implemented Audio Service currently owns the bounded **microphone-processing** surface, not general speaker administration.
+The implemented Audio Service currently owns the bounded **microphone-processing** surface, while the shared system-controls service owns currently supported speaker volume/mute state.
 
 Current Parent microphone controls are:
 
@@ -218,13 +230,12 @@ Current Parent microphone controls are:
 - enhanced noise reduction only when the OS advertises a proven advanced endpoint;
 - effective/fallback status.
 
-Broader intended parent audio controls remain future work:
+Current Parent speaker controls, when the system-controls capability is advertised, include:
 
 - output volume;
-- mute;
-- selected output when Greia exposes more than one appropriate target.
+- mute.
 
-`settings.audio` is therefore true in the concrete audio-aware Parent composition, but clients must not infer that every possible audio control exists. The resource schema defines the currently supported microphone fields.
+Selected-output management remains future work if Greia exposes more than one appropriate target.
 
 The existing **microphone input gain** remains a narrower hardware setting. Neither the HTML client nor an Activity may invent shell-based ALSA/Pulse/PipeWire control.
 
@@ -281,6 +292,7 @@ settings.input
 settings.display
 settings.language
 settings.audio
+settings.system_controls
 network.manage
 maintenance.ssh
 paired_devices.manage
@@ -299,11 +311,11 @@ For `settings.audio`, the resource remains capability/data driven inside the sur
 
 ## 6. Common client protocol
 
-The HTML client and future native client share:
+The HTML client and future native clients share:
 
 - discovery;
-- pairing;
-- device credentials;
+- Parent-password authentication;
+- per-device credentials;
 - API versions;
 - resource identifiers;
 - capability discovery;
@@ -311,7 +323,7 @@ The HTML client and future native client share:
 - long-operation status;
 - revocation behavior.
 
-A native app must not gain a private SSH path or hidden root endpoint.
+A native app must not gain a private SSH path, hidden root endpoint, or alternate token credential.
 
 ## 7. API-first web client rule
 
@@ -321,7 +333,7 @@ It must not call Python objects directly, depend on filesystem locations, or enc
 
 This keeps the HTML interface honest: if the browser cannot perform an operation through the public Parent API, a future phone app cannot either.
 
-A legacy server-rendered troubleshooting view may remain temporarily during migration, but it is not the target product contract.
+A legacy server-rendered troubleshooting view may remain temporarily during migration, but it is not the target product contract and must not restore legacy shared-token authorization through the installed production service.
 
 The separately maintained HTML client is source-pinned by Greia through:
 
@@ -330,7 +342,7 @@ runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 ```
 
-The current pin is an integrity-checked build input and is still marked `source-pinned-not-yet-vendored`; runtime JavaScript must never be fetched from moving repository `main`.
+The production browser runtime is vendored into the Greia source/image input and integrity checked against the exact pinned Parent revision. Runtime JavaScript/assets must never be fetched from moving repository `main`. The runtime manifest must describe the actual transitive browser dependency closure rather than rely on a hand-maintained file list.
 
 ## 8. Privilege and safety
 
@@ -353,9 +365,9 @@ Destructive or recovery-sensitive operations require explicit confirmation appro
 
 The early development HTTP endpoint is provisional.
 
-Production paired-device credentials require authenticated encryption. Pairing must bind the client to the intended Greia device rather than trusting a hostname or LAN address alone.
+Parent-password authentication and per-device bearer credentials require authenticated encryption for ordinary-family release. The transport must bind the client to the intended Greia device rather than trusting a hostname or LAN address alone.
 
-No secret belongs in mDNS TXT records.
+No secret belongs in mDNS TXT records. Transport closure must not reintroduce a hidden shared pairing token or second human secret.
 
 ## 10. Low-resource behavior
 
@@ -366,7 +378,8 @@ The parent service is present on the low-resource Acer class, so:
 - the server may remain single-request-at-a-time if interaction remains responsive;
 - no background polling storm;
 - bounded request sizes;
-- bounded paired-device count;
+- bounded Parent-device count;
+- bounded failed-password tracking;
 - no expensive persistent write on every authenticated request.
 
 The microphone-processing policy follows the same rule: lightweight is deterministic/default, advanced is explicit and optional, and no background benchmarking loop exists.
@@ -378,7 +391,9 @@ Resource behavior must be measured before adding heavyweight dependencies. Follo
 The current local Parent foundation can:
 
 - identify the service and expose API metadata;
-- pair through the current provisional bootstrap and use per-device credentials;
+- authenticate a new Parent client with the Greia Parent password and issue a per-device credential;
+- reconnect with and independently revoke per-device credentials;
+- reject the retired shared-token authorization model in installed production composition;
 - load system status;
 - list/create/update/delete child profiles;
 - persist optional approximate age and challenge preference;
@@ -386,18 +401,19 @@ The current local Parent foundation can:
 - read/update per-child Activity visibility policy and explicit overrides;
 - read/update input/display hardware settings, including microphone gain where present;
 - read/update/reset typed microphone-processing preferences and report effective/available mode;
+- read/update speaker volume/mute through shared system controls where advertised;
 - read progress summaries;
 - read/change Greia language;
-- scan/connect Wi-Fi;
+- scan/connect Wi-Fi when the installed service can actually complete the operation;
 - enable/disable SSH maintenance;
 - change the main Parent password;
-- list/revoke paired devices;
+- list/revoke Parent devices;
 - read system-update status and upload only when capability permits;
-- install Activity packages only when capability permits.
+- install/remove Activity packages only when capability permits.
 
-The separately maintained HTML client source includes the capability-gated microphone cleanup controls. The exact Greia pin/integrity manifest must always point to the reviewed Parent revision used in a build; see the physical acceptance runbook for repin verification.
+The separately maintained HTML client is frozen as an exact integrity-checked Greia runtime input. The exact Greia pin/integrity manifest must always point to the reviewed Parent revision used in a build.
 
-This does **not** imply that production pairing/encryption, general speaker/output audio management, backups, complete Activity update/removal lifecycle, production system-update activation, or all future native-client UX is finished. It also does not claim that the Acer lightweight DSP backend is physically proven before its dedicated hardware protocol passes.
+This does **not** imply that authenticated encrypted transport, backups, complete Activity update lifecycle, production system-update activation, every privileged network/package operation, or all future native-client UX is finished. It also does not claim that hardware-specific behavior is physically proven before its dedicated acceptance protocol passes.
 
 ## 12. On-Device Parent Mode & Key Chord
 
