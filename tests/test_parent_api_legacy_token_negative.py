@@ -52,6 +52,16 @@ def _request(
         return exc.code, payload
 
 
+def _error_code(payload: JsonPayload) -> str | None:
+    if not isinstance(payload, dict):
+        return None
+    error = payload.get("error")
+    if not isinstance(error, dict):
+        return None
+    code = error.get("code")
+    return code if isinstance(code, str) else None
+
+
 class ParentApiLegacyTokenNegativeTests(unittest.TestCase):
     def test_api_v1_rejects_every_retired_shared_token_transport(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -83,18 +93,14 @@ class ParentApiLegacyTokenNegativeTests(unittest.TestCase):
                     with self.subTest(headers=headers):
                         status, payload = _request("GET", protected, headers=headers)
                         self.assertEqual(status, 401)
-                        self.assertIsInstance(payload, dict)
-                        assert isinstance(payload, dict)
-                        self.assertEqual(payload.get("error"), "pairing_required")
+                        self.assertEqual(_error_code(payload), "pairing_required")
 
                 status, payload = _request(
                     "GET",
                     protected + f"?token={legacy_token}",
                 )
                 self.assertEqual(status, 401)
-                self.assertIsInstance(payload, dict)
-                assert isinstance(payload, dict)
-                self.assertEqual(payload.get("error"), "pairing_required")
+                self.assertEqual(_error_code(payload), "pairing_required")
 
                 status, payload = _request(
                     "POST",
@@ -105,9 +111,7 @@ class ParentApiLegacyTokenNegativeTests(unittest.TestCase):
                     },
                 )
                 self.assertEqual(status, 400)
-                self.assertIsInstance(payload, dict)
-                assert isinstance(payload, dict)
-                self.assertEqual(payload.get("error"), "invalid_request")
+                self.assertEqual(_error_code(payload), "invalid_request")
                 self.assertEqual(app.devices_payload(), [])
             finally:
                 server.shutdown()
@@ -141,10 +145,10 @@ class ParentApiLegacyTokenNegativeTests(unittest.TestCase):
                         self.assertIsInstance(payload, list)
                         assert isinstance(payload, list)
                         self.assertEqual(len(payload), 1)
-                        self.assertEqual(
-                            payload[0]["display_name"],
-                            "Accepted browser",
-                        )
+                        device = payload[0]
+                        self.assertIsInstance(device, dict)
+                        assert isinstance(device, dict)
+                        self.assertEqual(device.get("display_name"), "Accepted browser")
             finally:
                 server.shutdown()
                 thread.join(timeout=5)
