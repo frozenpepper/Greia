@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hmac
 import json
 import math
 import socket
@@ -167,19 +166,15 @@ class ParentApiApplication(ParentStatusApplication):
         *,
         allow_query_token: bool = False,
     ) -> bool:
+        # API authorization is deliberately device-scoped. The legacy shared
+        # pairing token, cookie, header and query-string paths are not accepted.
+        del query, allow_query_token
         token = self._device_token_from_request(handler)
-        if token and self.device_credentials.authenticate(token) is not None:
-            return True
-        # Transitional compatibility only. The legacy shared token remains a
-        # bootstrap path while the Greia-screen challenge/confirmation UI is
-        # implemented; new API clients should use per-device credentials.
-        return super().authorized(handler, query, allow_query_token=allow_query_token)
+        return bool(token and self.device_credentials.authenticate(token) is not None)
 
-    def bootstrap_device(self, pairing_token: str, display_name: str) -> dict[str, object]:
-        if not isinstance(pairing_token, str) or not hmac.compare_digest(
-            pairing_token, self.token
-        ):
-            raise PermissionError("pairing token rejected")
+    def bootstrap_device(self, password: str, display_name: str) -> dict[str, object]:
+        if not isinstance(password, str) or not self.main_credential.verify(password):
+            raise PermissionError("Greia password rejected")
         issued = self.device_credentials.issue(display_name)
         return {
             "device": issued.device.public_dict(),
@@ -411,6 +406,9 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             self._send_static_not_found()
             return
+        if parsed.path == "/healthz":
+            self._send_json(200, {"status": "ok"})
+            return
         if parsed.path == "/legacy":
             if not self._require_api_authorization(query):
                 return
@@ -511,11 +509,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             self._send_json(200, self.app.ssh_payload())
             return
-        if parsed.path.startswith(f"{API_BASE}/"):
-            self._send_api_error(404, "not_found", "Not found")
-            return
-
-        super().do_GET()
+        self._send_api_error(404, "not_found", "Not found")
 
     def do_POST(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
@@ -523,11 +517,11 @@ class ParentApiRequestHandler(ParentRequestHandler):
             try:
                 body = self._read_json_object()
                 payload = self.app.bootstrap_device(
-                    self._json_text(body, "pairing_token"),
+                    self._json_text(body, "password"),
                     self._json_text(body, "device_name"),
                 )
             except PermissionError as exc:
-                self._send_api_error(403, "pairing_rejected", str(exc))
+                self._send_api_error(403, "authentication_rejected", str(exc))
                 return
             except (ParentCredentialError, ValueError) as exc:
                 self._send_api_error(400, "invalid_request", str(exc))
@@ -581,11 +575,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             self._send_json(200, self.app.reset_hardware())
             return
-        if parsed.path.startswith(f"{API_BASE}/"):
-            self._send_api_error(404, "not_found", "Not found")
-            return
-
-        super().do_POST()
+        self._send_api_error(404, "not_found", "Not found")
 
     def do_PUT(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
@@ -774,7 +764,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
     def _require_api_authorization(self, query: dict[str, list[str]]) -> bool:
         if self.app.authorized(self, query):
             return True
-        self._send_api_error(401, "pairing_required", "Pair this parent client first")
+        self._send_api_error(401, "pairing_required", "Greia password required")
         return False
 
     def _read_json_object(self) -> dict[str, object]:
