@@ -1,274 +1,216 @@
-# ADR 0022 — Parent Management API, Client Parity, Pairing, and Privilege Boundary
+# ADR 0022 — Parent Management API, Client Authentication, and Privilege Boundary
 
 **Status:** ACCEPTED  
 **Date:** 2026-08-17  
-**Scope:** Greia Parents, local-network discovery, parent-client authentication, HTML/native client parity, privileged parent operations, and SSH maintenance policy  
+**Authentication amendment:** 2026-09-08  
+**Scope:** Greia Parents, local-network discovery, Parent-client authentication, HTML/native client parity, privileged Parent operations, and SSH maintenance policy  
 **Clarifies:** ADR 0012 parent-management architecture and active-plan R12
 
 ## Context
 
-Greia needs a practical parent-management surface before a polished native mobile application is justified. Parents must be able to manage child accounts, Activities, hardware settings, system status, network/maintenance features, backups, and eventually software updates without exposing Linux administration concepts.
+Greia needs a practical Parent-management surface that does not expose Linux administration concepts and does not tie the product to one browser implementation. The Parent web application and any future native client therefore consume the same semantic Greia Parent API.
 
-The repository already contains a useful `greia_parent` HTTP prototype with profile, progress, customization, and hardware controls. It also contains a separate developer-only SSH/remote-control path. Those are useful foundations, but neither should define the long-term product protocol:
+The first authentication prototype used one long-lived shared pairing token. That proved to be the wrong product boundary: the token was filesystem state hidden from parents, required shell knowledge to retrieve, and provided no human benefit over the Parent password Greia already owns. Retaining it as a compatibility credential would also preserve an unnecessary second authentication secret indefinitely.
 
-- the parent web page must not become a privileged monolith that directly edits Linux;
-- a future phone app must not require a second management protocol;
-- SSH must remain an optional maintenance facility, not the Parent App transport;
-- one long-lived shared browser token is insufficient as the final paired-device model;
-- LAN discovery is useful, but a LAN is not a trusted security boundary.
+A LAN remains an untrusted transport boundary. Replacing the hidden token with the Parent password fixes the authentication workflow, not plaintext transport security.
 
 ## Decision
 
-### 1. Greia Parent Service is the durable product boundary
+### 1. Greia Parent API is the durable product boundary
 
-Greia exposes one versioned **Greia Parent API**. The first supported client is a small responsive HTML application served by Greia itself.
+Greia exposes one versioned **Greia Parent API** under `/api/v1`. The dependency-light HTML application is a client of that API. Future iOS, Android, desktop, or other Parent clients use the same semantic resources and authentication model rather than acquiring special Linux-side powers.
 
-A future iOS, Android, desktop, or other parent client MUST use the same semantic API, discovery, pairing, authentication, authorization, capability, and long-operation contracts rather than acquiring special Linux-side powers.
-
-Conceptually:
-
-```text
-Greia Parents HTML client
-Future phone/desktop client
-            │
-            │ same versioned protocol
-            ▼
-      Greia Parent API
-            │
-            ├── profiles
-            ├── Activities
-            ├── progress/status
-            ├── settings
-            ├── paired devices
-            └── maintenance requests
-                    │
-                    ▼
-         typed Greia services/brokers
-                    │
-                    ▼
-           Linux/platform adapters
-```
-
-The HTML application is therefore a client, not the authority implementation.
+The network API must not become a parallel implementation of profiles, package management, backup, networking, audio, updates, or other platform services.
 
 ### 2. API semantics are versioned and transport-neutral
 
-The initial namespace is:
+API v1 uses JSON representations and typed errors. It exposes semantic resource IDs, not arbitrary shell commands, Linux paths, package-manager commands, host credentials, or implementation-specific graphics/input details.
+
+Long-running mutations should use explicit operation resources rather than holding an HTTP request open indefinitely.
+
+### 3. Capability discovery is part of the contract
+
+Clients must follow the API capability map. Hardware/service detection alone is insufficient to advertise a mutation: if the installed Parent service cannot safely complete the semantic operation under its actual authority, the capability is false.
+
+A false capability is never permission for a browser-side Linux workaround.
+
+### 4. Discovery does not authorize
+
+Greia may advertise `_greia-parent._tcp.local` and clients may use bounded LAN discovery/fallback probing to find Parent API endpoints. Discovery metadata carries no secret and grants no management authority.
+
+### 5. The Parent password is the human bootstrap credential
+
+An unpaired browser authorizes its first device identity with:
 
 ```text
-/api/v1
+POST /api/v1/pairing/bootstrap
+{
+  "password": "<Parent password>",
+  "device_name": "<client label>"
+}
 ```
 
-JSON is the client-facing representation for API v1.
+The password is verified only through Greia's canonical `MainCredential` authority. The browser must not persist it.
 
-The API MUST expose stable semantic resource IDs and typed errors. It MUST NOT expose Linux paths, arbitrary command lines, implementation-specific X11/DRM details, raw package-manager commands, or host credentials as its public model.
+The initial owner-approved credential is `greia` / `greia`; parents may change the password through the existing Parent-password management path. The stored authority is a bounded password digest, not plaintext.
 
-Long-running operations such as Activity installation, system update, backup/restore, or package verification SHOULD use an operation resource with explicit state/progress rather than keeping an HTTP request open indefinitely.
+Repeated failed bootstrap attempts are rate-limited per client address with bounded in-memory state. A successful verification clears that client's failure history.
 
-### 3. Capability discovery is part of the protocol
+### 6. Successful bootstrap becomes an independent revocable device identity
 
-Greia hardware and platform features vary. Clients must not infer support from CPU architecture, device model, or UI heuristics.
-
-The Parent API exposes semantic capability availability. A client may therefore show, hide, or disable features such as:
+After password verification Greia issues a fresh high-entropy per-device credential. Normal management requests use:
 
 ```text
-profiles.manage
-activities.install
-settings.input
-settings.display
-settings.audio
-network.manage
-backup.manage
-maintenance.ssh
+Authorization: Bearer <device credential>
 ```
 
-A false/unavailable capability is not permission to emulate the operation through shell commands.
+Greia stores only verifier/hash material for issued device credentials where practical. Raw issued credentials are returned only at creation time.
 
-### 4. Local discovery uses a Greia-specific mDNS service
+Parents can list and revoke paired devices independently. Losing or revoking one device must not rotate every other Parent client.
 
-Normal network-capable Greia images advertise:
+The Parent password is therefore an authorization/bootstrap secret, not the ordinary bearer credential sent on every management request.
 
-```text
-_greia-parent._tcp.local
-```
+### 7. The old shared pairing-token model is retired, not transitional
 
-The service record identifies the Parent API port/version/path but carries no authentication secret.
+The following are rejected from the production Parent API:
 
-mDNS/Bonjour is a convenience discovery mechanism, not identity or authorization. Pairing material must remain sufficient to connect when multicast discovery is unavailable.
+- `parent-pairing-token` as a durable/shared authentication authority;
+- `X-Pip-Token` fallback authorization;
+- token query URLs such as `/pair?token=...` on the production service;
+- shared-token authentication cookies;
+- `/usr/local/bin/greia-parent-token` or any equivalent shell requirement for ordinary parents;
+- accepting both password and old token during a compatibility period.
 
-### 5. Parent clients receive independent revocable credentials
+Production startup removes stale `parent-pairing-token` state and must not recreate it.
 
-The final pairing model is **per-device**.
+The reason for rejecting backwards compatibility is architectural: leaving the old secret valid would keep an invisible alternate authentication path and make the migration impossible to reason about or finish.
 
-Each parent client receives its own high-entropy credential. Greia stores only a one-way verifier/digest where practical and exposes only non-secret device metadata to other clients.
+### 8. LAN transport remains provisional until authenticated encryption lands
 
-Parents can list and revoke paired devices independently. Losing one phone must not require rotating every parent's credential.
+The current `http://<device>:8766` transport is explicitly **PROVISIONAL**.
 
-One global forever-token shared by all clients is rejected as the final design.
+The Parent password and device credentials must not be considered ordinary-family release-safe merely because traffic remains on a home LAN. Before release acceptance, Greia requires authenticated encrypted transport plus a reviewed device/endpoint identity lifecycle that prevents credential interception and wrong-endpoint impersonation.
 
-### 6. Pairing requires explicit local approval in the final product
+That transport work must preserve the simple Parent-password bootstrap. It must not reintroduce hidden tokens, shell commands, or mandatory Linux administration as a security ceremony.
 
-The intended first-pairing flow is:
+### 9. Parent API and privileged authority remain separate
 
-```text
-parent chooses "Add a Greia"
-→ client discovers nearby Greia or follows local connection information
-→ parent opens Pair a device on the Greia itself
-→ Greia shows short-lived QR challenge + numeric fallback
-→ client presents the challenge
-→ Greia displays the requesting device and asks Allow / Deny
-→ successful client receives its own revocable credential
-```
+`greia-parent.service` remains narrowly unprivileged. Operations requiring root/system authority cross a small typed Greia-owned privileged boundary.
 
-The current long-lived token endpoint may remain temporarily as a **PROVISIONAL development/bootstrap mechanism** while the local Greia pairing UI is implemented. It is not the production security design.
-
-Pairing challenges must be bounded, short-lived, single-purpose, and must not be logged.
-
-### 7. LAN transport is not automatically trusted
-
-The current `http://<device>:8766` implementation is explicitly **PROVISIONAL**.
-
-Production parent credentials MUST NOT be considered safe merely because traffic remains on a home LAN. Before production pairing is accepted, Greia requires authenticated encryption for the parent channel, with device identity bound during pairing so a client can detect connecting to the wrong endpoint.
-
-The exact TLS/device-certificate mechanism is intentionally left to a focused security design/implementation tranche. This ADR fixes the requirement, not an unreviewed certificate lifecycle.
-
-### 8. Parent API and privileged authority remain separate
-
-The Parent HTTP process continues to run with narrow unprivileged authority.
-
-Operations requiring root/system authority MUST cross a small typed Greia-owned privileged boundary. Examples include:
+Good privileged vocabulary is semantic, for example:
 
 ```text
 maintenance.ssh.enable
 maintenance.ssh.disable
-maintenance.ssh.authorized_key.replace
-activities.install/update/remove
+activities.install
 system.update
-backup.restore where privileged placement is required
-network system configuration
-power/recovery operations
+network.configure
+backup.restore
 ```
 
-The privileged service accepts validated semantic requests, not arbitrary shell text, argv arrays, paths chosen by clients, package-manager commands, or generic `sudo`.
+Rejected privileged vocabulary includes arbitrary command strings, argv arrays, client-selected filesystem writes, generic `sudo`, or raw package-manager access.
 
-The Parent API must reuse existing platform services such as ProfileStore, Hardware Settings/HAL, future R10 Package Manager, R11 Backup Service, and update/recovery services. It must not implement parallel versions of those systems.
+The Parent API reuses platform services such as ProfileStore, Hardware Settings/HAL, Activity/package services, backup, update, and maintenance services. It does not fork those systems inside HTTP handlers.
 
-### 9. SSH is optional parent-controlled maintenance, disabled by default
+### 10. SSH remains optional maintenance, disabled by default
 
-Normal/release Greia MUST NOT enable SSH merely to support Greia Parents.
+Greia Parents does not use SSH as its transport. Normal release images do not enable SSH merely to support the Parent app.
 
-When the typed maintenance service is implemented, a parent may explicitly enable SSH. The intended release policy is:
+Any future Parent-controlled SSH enablement must remain a typed maintenance operation with constrained policy: no root login, no password SSH, key-based authorization, and explicit disable/revoke behavior.
 
-- SSH off by default;
-- host keys created only when SSH is deliberately enabled, unless a later security ADR chooses another bounded lifecycle;
-- root SSH login disabled;
-- password SSH authentication disabled;
-- key-based authentication only;
-- dedicated administrative identity such as `greiaadmin`;
-- parent UI can disable SSH and replace/revoke authorized key material;
-- developer profiles remain a separate development mechanism.
+### 11. Foundations may land without falsely closing later platform phases
 
-Greia Parents itself continues to use the Parent API, not SSH.
+Parent API/client foundations may expose existing safe functionality and honestly advertise unavailable later capabilities. They must not create substitute package, backup, update, network, or privileged systems merely to make the UI appear complete.
 
-### 10. Implementation may proceed in foundations without falsely closing R12
+## API-v1 authentication foundation
 
-The active plan currently places full parent integration at R12 because Activity package management and backup/restore depend on R10/R11.
-
-A limited foundation may be implemented earlier after the relevant shared services exist, provided it only:
-
-- establishes API versioning, discovery, client parity, credential storage, and pairing foundations;
-- exposes existing unprivileged profile/status/settings functionality;
-- honestly reports later capabilities as unavailable;
-- does not create substitute package/backup/update systems;
-- does not add broad privilege.
-
-R12 closure still requires its documented prerequisites and the complete typed privileged-management surface.
-
-## Initial API-v1 foundation
-
-The first implementation tranche establishes:
+Public/bootstrap endpoints:
 
 ```text
-GET    /api/v1/meta
-GET    /api/v1
-GET    /api/v1/system
-GET    /api/v1/profiles
-POST   /api/v1/profiles
-PATCH  /api/v1/profiles/{id}
-DELETE /api/v1/profiles/{id}
-GET    /api/v1/activities
-GET    /api/v1/settings/hardware
-PUT    /api/v1/settings/hardware
-POST   /api/v1/settings/hardware/reset
-GET    /api/v1/progress
-GET    /api/v1/devices
-DELETE /api/v1/devices/{id}
-
-POST   /api/v1/pairing/bootstrap   # provisional only
+GET  /api/v1/meta
+POST /api/v1/pairing/bootstrap
 ```
 
-Activity installation, audio/network management, SSH, backup/restore and system update are intentionally not implemented by this foundation.
+All ordinary management resources require a valid per-device bearer credential, including the API index, system state, profiles, activities, settings, progress, paired devices, and other enabled resources.
+
+## Security/storage invariants
+
+Source and tests must preserve these invariants:
+
+- password bootstrap verifies against `MainCredential` only;
+- the Parent password is not returned, logged, or browser-persisted;
+- main credential state stores only bounded digest material with restrictive permissions;
+- final-path symlink substitution for credential state is rejected;
+- failed password bootstrap is bounded/rate-limited without unbounded per-address allocation;
+- raw device credentials are not persisted by the server;
+- device credentials are independently revocable;
+- unauthenticated management fails;
+- retired shared-token headers/cookies/routes do not authorize management;
+- stale token state is removed by the installed production composition;
+- no secret is advertised through discovery metadata.
 
 ## Consequences
 
 Positive:
 
-- the prototype HTML interface exercises the same semantic protocol a native app can later use;
-- product requirements can mature without rewriting Greia's management architecture;
-- SSH remains optional and independently securable;
-- parent privilege stays narrow and auditable;
-- per-device revocation becomes possible;
-- hardware-specific details remain behind HAL/services;
-- low-resource Greia can keep a small dependency-free local web client.
+- parents use one understandable human credential they already know;
+- successful login immediately becomes a revocable device identity rather than a household-wide shared bearer secret;
+- browser and future native clients share one protocol;
+- the password is not kept in browser storage or sent on every management call;
+- privilege remains narrow and auditable;
+- the unusable shell/token pairing workflow is removed rather than papered over.
 
-Costs:
+Costs and remaining work:
 
-- API compatibility becomes a maintained product contract;
-- pairing/device identity and encrypted local transport require dedicated security work;
-- long operations require explicit job/state design;
-- the web frontend can no longer bypass missing backend functionality by directly editing host state.
+- password bootstrap now makes authenticated encrypted transport an especially explicit release requirement;
+- API compatibility and device-credential lifecycle remain maintained product contracts;
+- long operations and privileged management still require their planned typed service boundaries;
+- physical multi-device/revocation testing remains necessary in image acceptance.
 
 ## Rejected alternatives
 
-### Make the browser page the backend contract
+### Keep the shared token as a fallback
 
-Rejected. A future native app would require scraping/reimplementing HTML behavior and privileged logic would accumulate in one server module.
+Rejected. A fallback would retain the exact hidden, global authentication authority this migration is intended to eliminate.
 
-### Use SSH as the Parent App protocol
+### Use the Parent password as every-request bearer auth
 
-Rejected. SSH is a maintenance tool with much broader authority than the product needs and would force release machines to expose an unnecessary service.
+Rejected. It would repeatedly expose the human password, make independent device revocation impossible, and couple all clients to one credential.
 
-### Give every parent device the same persistent token
+### Require an additional QR/PIN/Allow ceremony for ordinary bootstrap
 
-Rejected. It prevents independent revocation and turns one lost device into a household-wide credential rotation.
+Rejected as the default architecture. The owner-selected Parent password is the explicit authorization action. A future transport may use device-identity/trust UX where necessary, but it must not create a second human secret or mandatory hidden-token workflow.
 
-### Trust any device on the local Wi-Fi
+### Trust any device on local Wi-Fi
 
-Rejected. Local networks contain guests, compromised devices, and traffic observation risks.
+Rejected. Discovery and network proximity are not authorization.
 
-### Implement package/network/backup logic directly inside `greia_parent`
+### Use SSH as the Parent protocol
 
-Rejected. Those are shared platform services with their own integrity/recovery contracts.
+Rejected. SSH exposes broader authority than the product needs and would make a maintenance service a release dependency.
+
+### Implement platform operations directly inside `greia_parent`
+
+Rejected. Those operations belong to shared platform services and typed privileged boundaries.
 
 ## Verification obligations
 
-Before the foundation is described as source-verified:
+Before this authentication migration is described as source-verified at an exact head:
 
-- credential state rejects malformed/oversized input;
-- raw issued tokens are not persisted;
-- independent revocation works;
-- unauthenticated API access fails except explicit discovery/bootstrap endpoints;
-- API Activity output does not leak package filesystem paths;
-- mDNS advertises the correct service without secrets;
-- normal image composition still excludes developer SSH;
-- HTML client performs management through `/api/v1`;
-- existing parent/profile/hardware behavior remains compatible.
+- default and changed Parent passwords bootstrap correctly;
+- wrong passwords fail and are rate-limited;
+- limiter state stays bounded and expires correctly;
+- old shared-token authorization is rejected;
+- device bearer authorization and independent revocation work;
+- main credential digest state is bounded, mode `0600`, non-plaintext, atomic, and symlink-safe;
+- installed production startup removes stale token state;
+- the Parent browser sends only `{password, device_name}` for bootstrap and persists only the returned device credential;
+- the exact Parent browser runtime revision/integrity manifest is pinned in Greia.
 
-Before production parent pairing is accepted:
+Before ordinary-family production Parent authentication is accepted:
 
-- authenticated encrypted transport;
-- Greia-local short-lived pairing challenge;
-- explicit local Allow/Deny;
-- replay/expiry/credential-revocation tests;
-- browser/mobile reconnect and discovery tests;
-- resource measurements on the C0 reference floor.
+- authenticated encrypted transport and endpoint identity are implemented and reviewed;
+- browser/device reconnect and independent revocation are proven on real hardware;
+- password-change → new bootstrap behavior is proven;
+- image install/upgrade removes obsolete token helper/state;
+- resource measurements remain acceptable on the C0 reference floor.
