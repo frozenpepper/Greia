@@ -35,12 +35,24 @@ class ParentPasswordAttemptLimiter:
         self._failures: OrderedDict[str, deque[float]] = OrderedDict()
 
     def allowed(self, client_address: str) -> bool:
-        failures = self._recent_failures(client_address)
+        failures = self._failures.get(client_address)
+        if failures is None:
+            return True
+        self._prune(failures, self.clock())
+        if not failures:
+            self._failures.pop(client_address, None)
+            return True
+        self._failures.move_to_end(client_address)
         return len(failures) < self.max_failures
 
     def record_failure(self, client_address: str) -> None:
         now = self.clock()
-        failures = self._recent_failures(client_address, now=now)
+        failures = self._failures.get(client_address)
+        if failures is None:
+            failures = deque()
+            self._failures[client_address] = failures
+        else:
+            self._prune(failures, now)
         failures.append(now)
         self._failures.move_to_end(client_address)
         while len(self._failures) > self.max_clients:
@@ -49,25 +61,7 @@ class ParentPasswordAttemptLimiter:
     def clear(self, client_address: str) -> None:
         self._failures.pop(client_address, None)
 
-    def _recent_failures(
-        self,
-        client_address: str,
-        *,
-        now: float | None = None,
-    ) -> deque[float]:
-        timestamp = self.clock() if now is None else now
-        failures = self._failures.get(client_address)
-        if failures is None:
-            failures = deque()
-            self._failures[client_address] = failures
-        cutoff = timestamp - self.window_seconds
+    def _prune(self, failures: deque[float], now: float) -> None:
+        cutoff = now - self.window_seconds
         while failures and failures[0] <= cutoff:
             failures.popleft()
-        if not failures:
-            # Keep the current address available to callers that are about to
-            # append, but discard other empty entries opportunistically.
-            for address in tuple(self._failures):
-                if address != client_address and not self._failures[address]:
-                    self._failures.pop(address, None)
-        self._failures.move_to_end(client_address)
-        return failures
