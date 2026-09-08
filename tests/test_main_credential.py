@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -46,6 +47,22 @@ class MainCredentialTests(unittest.TestCase):
             store.change("greia", "newpass1")
             self.assertTrue(store.verify("newpass1"))
             self.assertFalse(store.verify("greia"))
+
+    def test_store_rejects_final_path_symlink_without_touching_target(self) -> None:
+        if not hasattr(os, "symlink"):
+            self.skipTest("symlinks are not supported")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / "outside.json"
+            target.write_text("do not touch\n", encoding="utf-8")
+            path = root / "main-credential.json"
+            path.symlink_to(target)
+            store = MainCredentialStore(path)
+            with self.assertRaises(MainCredentialError):
+                store.ensure_initialized()
+            with self.assertRaises(MainCredentialError):
+                store.verify("greia")
+            self.assertEqual(target.read_text(encoding="utf-8"), "do not touch\n")
 
     def test_password_validation_bounds(self) -> None:
         with self.assertRaises(MainCredentialError):
