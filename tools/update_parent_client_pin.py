@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""Regenerate Greia's exact Parent HTML client pin from a reviewed checkout.
+"""Synchronize Greia's frozen Parent HTML client from a reviewed checkout.
 
-The caller supplies a local clean Parent checkout and the exact commit SHA that
-was reviewed/tested. Runtime files are discovered from the actual ``index.html``
-module/style graph, then every discovered file is hashed from exact bytes.
+The caller supplies a clean Parent checkout and the exact commit SHA that was
+reviewed/tested. Runtime files are discovered from the actual ``index.html``
+dependency graph and read once. Those exact bytes own all four Greia artifacts:
 
-This deliberately avoids a stale hand-maintained file list: adding a new local
-ES module or stylesheet to the Parent app automatically adds it to the generated
-integrity manifest, while unreferenced source/tests/docs remain outside the
-runtime payload.
+- ``runtime/parent-app-client.toml``
+- ``runtime/parent-app-client.manifest.json``
+- ``vendor/parent-app/``
+- ``build/overlay/usr/share/greia-parent-app/``
+
+All replacement artifacts are staged before any current artifact is moved.
+Replacement then uses sibling backups so a failed multi-path swap can restore
+the previous checkout state instead of leaving a half-repinned tree.
 """
 
 from __future__ import annotations
@@ -16,8 +20,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
+import shutil
 import subprocess
+import tempfile
+import uuid
 from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 from urllib.parse import urlsplit
@@ -175,8 +183,8 @@ def _discover_runtime_files(parent_root: Path) -> list[str]:
     return [path.as_posix() for path in sorted(visited, key=lambda value: value.as_posix())]
 
 
-def _hash_runtime_files(parent_root: Path, relative_paths: list[str]) -> dict[str, dict[str, object]]:
-    output: dict[str, dict[str, object]] = {}
+def _load_runtime_payloads(parent_root: Path, relative_paths: list[str]) -> dict[str, bytes]:
+    payloads: dict[str, bytes] = {}
     checkout = parent_root.resolve()
     for relative in relative_paths:
         path = (checkout / relative).resolve()
@@ -186,31 +194,21 @@ def _hash_runtime_files(parent_root: Path, relative_paths: list[str]) -> dict[st
             raise PinError(f"runtime file escapes Parent checkout: {relative}") from exc
         if not path.is_file():
             raise PinError(f"required Parent runtime file is missing: {relative}")
-        data = path.read_bytes()
-        output[relative] = {
+        payloads[relative] = path.read_bytes()
+    return payloads
+
+
+def _hash_runtime_payloads(payloads: dict[str, bytes]) -> dict[str, dict[str, object]]:
+    return {
+        relative: {
             "bytes": len(data),
             "sha256": hashlib.sha256(data).hexdigest(),
         }
-    return output
-
-
-def update_pin(greia_root: Path, parent_root: Path, revision: str) -> tuple[Path, Path]:
-    greia_root = greia_root.resolve()
-    parent_root = parent_root.resolve()
-    _validate_parent_checkout(parent_root, revision)
-
-    config_path = greia_root / "runtime" / "parent-app-client.toml"
-    manifest_path = greia_root / "runtime" / "parent-app-client.manifest.json"
-    manifest = _load_manifest_metadata(manifest_path)
-    relative_paths = _discover_runtime_files(parent_root)
-    hashed = _hash_runtime_files(parent_root, relative_paths)
-    rewritten_manifest = {
-        "files": hashed,
-        "repository": manifest.get("repository", "frozenpepper/Greia-Parent-App-Html"),
-        "revision": revision,
-        "schema_version": 1,
+        for relative, data in sorted(payloads.items())
     }
 
+
+def _updated_config_text(config_path: Path, revision: str) -> str:
     try:
         config = config_path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
@@ -218,20 +216,124 @@ def update_pin(greia_root: Path, parent_root: Path, revision: str) -> tuple[Path
     matches = REVISION_LINE.findall(config)
     if len(matches) != 1:
         raise PinError("Parent pin config must contain exactly one exact revision line")
-    rewritten_config = REVISION_LINE.sub(f'revision = "{revision}"', config, count=1)
+    return REVISION_LINE.sub(f'revision = "{revision}"', config, count=1)
 
-    manifest_text = json.dumps(rewritten_manifest, indent=2, ensure_ascii=False) + "\n"
-    config_tmp = config_path.with_name(f".{config_path.name}.tmp")
-    manifest_tmp = manifest_path.with_name(f".{manifest_path.name}.tmp")
+
+def _stage_text_file(target: Path, content: str) -> Path:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{target.name}.pin-",
+        suffix=".tmp",
+        dir=target.parent,
+    )
     try:
-        config_tmp.write_text(rewritten_config, encoding="utf-8")
-        manifest_tmp.write_text(manifest_text, encoding="utf-8")
-        config_tmp.replace(config_path)
-        manifest_tmp.replace(manifest_path)
+        with os.fdopen(descriptor, "w", encoding="utf-8", newline="") as handle:
+            handle.write(content)
+    except Exception:
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+        Path(temporary_name).unlink(missing_ok=True)
+        raise
+    return Path(temporary_name)
+
+
+def _stage_runtime_tree(target: Path, payloads: dict[str, bytes]) -> Path:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary = Path(tempfile.mkdtemp(prefix=f".{target.name}.pin-", dir=target.parent))
+    try:
+        for relative, data in sorted(payloads.items()):
+            destination = temporary / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(data)
+            destination.chmod(0o644)
+    except Exception:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    return temporary
+
+
+def _remove_path(path: Path) -> None:
+    if path.is_symlink() or path.is_file():
+        path.unlink(missing_ok=True)
+    elif path.exists():
+        shutil.rmtree(path)
+
+
+def _commit_replacements(staged: list[tuple[Path, Path]]) -> None:
+    """Install all staged paths with rollback to the prior checkout on failure."""
+
+    replacements: list[tuple[Path, Path | None]] = []
+    try:
+        for target, temporary in staged:
+            backup: Path | None = None
+            if target.exists() or target.is_symlink():
+                backup = target.with_name(f".{target.name}.backup-{uuid.uuid4().hex}")
+                target.replace(backup)
+            replacements.append((target, backup))
+            temporary.replace(target)
+    except Exception as exc:
+        rollback_errors: list[str] = []
+        for target, backup in reversed(replacements):
+            try:
+                _remove_path(target)
+                if backup is not None and (backup.exists() or backup.is_symlink()):
+                    backup.replace(target)
+            except Exception as rollback_exc:  # pragma: no cover - catastrophic filesystem failure
+                rollback_errors.append(f"{target}: {rollback_exc}")
+        detail = ""
+        if rollback_errors:
+            detail = f"; rollback also failed: {'; '.join(rollback_errors)}"
+        raise PinError(f"could not synchronize Parent runtime artifacts: {exc}{detail}") from exc
+    else:
+        for _target, backup in replacements:
+            if backup is not None:
+                _remove_path(backup)
     finally:
-        config_tmp.unlink(missing_ok=True)
-        manifest_tmp.unlink(missing_ok=True)
-    return config_path, manifest_path
+        for _target, temporary in staged:
+            _remove_path(temporary)
+
+
+def update_pin(greia_root: Path, parent_root: Path, revision: str) -> tuple[Path, Path, Path, Path]:
+    greia_root = greia_root.resolve()
+    parent_root = parent_root.resolve()
+    _validate_parent_checkout(parent_root, revision)
+
+    config_path = greia_root / "runtime" / "parent-app-client.toml"
+    manifest_path = greia_root / "runtime" / "parent-app-client.manifest.json"
+    vendor_path = greia_root / "vendor" / "parent-app"
+    overlay_path = greia_root / "build" / "overlay" / "usr" / "share" / "greia-parent-app"
+
+    manifest = _load_manifest_metadata(manifest_path)
+    relative_paths = _discover_runtime_files(parent_root)
+    payloads = _load_runtime_payloads(parent_root, relative_paths)
+    hashed = _hash_runtime_payloads(payloads)
+    rewritten_manifest = {
+        "files": hashed,
+        "repository": manifest.get("repository", "frozenpepper/Greia-Parent-App-Html"),
+        "revision": revision,
+        "schema_version": 1,
+    }
+    manifest_text = json.dumps(rewritten_manifest, indent=2, ensure_ascii=False) + "\n"
+    config_text = _updated_config_text(config_path, revision)
+
+    staged: list[tuple[Path, Path]] = []
+    try:
+        staged.append((config_path, _stage_text_file(config_path, config_text)))
+        staged.append((manifest_path, _stage_text_file(manifest_path, manifest_text)))
+        staged.append((vendor_path, _stage_runtime_tree(vendor_path, payloads)))
+        staged.append((overlay_path, _stage_runtime_tree(overlay_path, payloads)))
+        # Refuse the swap if the reviewed checkout moved or became dirty while
+        # its dependency graph/bytes were being captured.
+        _validate_parent_checkout(parent_root, revision)
+        _commit_replacements(staged)
+    except Exception:
+        for _target, temporary in staged:
+            _remove_path(temporary)
+        raise
+
+    return config_path, manifest_path, vendor_path, overlay_path
 
 
 def parse_args() -> argparse.Namespace:
@@ -250,11 +352,13 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     try:
-        config, manifest = update_pin(args.greia_root, args.parent_root, args.revision)
+        config, manifest, vendor, overlay = update_pin(args.greia_root, args.parent_root, args.revision)
     except PinError as exc:
         raise SystemExit(f"parent pin update refused: {exc}")
     print(f"updated {config}")
     print(f"updated {manifest}")
+    print(f"synchronized {vendor}")
+    print(f"synchronized {overlay}")
     return 0
 
 
