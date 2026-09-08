@@ -39,19 +39,6 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         super().__init__(*args, **kwargs)
         self.password_attempts = ParentPasswordAttemptLimiter()
 
-    def _load_or_create_token(self) -> str:
-        """Retire the pre-password shared token during production startup.
-
-        ``ParentStatusApplication`` still contains the old standalone-server
-        compatibility hook. Dynamic dispatch reaches this override while the
-        production API application is initialized, so installed Greia systems
-        delete any migrated ``parent-pairing-token`` and never create another.
-        API authentication is password bootstrap followed by revocable
-        per-device credentials.
-        """
-        (self.state_dir / "parent-pairing-token").unlink(missing_ok=True)
-        return ""
-
     def _wifi_management_available(self) -> bool:
         if not self.wifi_backend.available():
             return False
