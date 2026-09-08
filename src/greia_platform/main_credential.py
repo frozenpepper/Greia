@@ -99,6 +99,7 @@ class MainCredentialStore:
 
     def ensure_initialized(self) -> None:
         if self.path.is_file():
+            os.chmod(self.path, 0o600)
             return
         digest = MainCredentialDigest.create(
             INITIAL_PARENT_PASSWORD, self.iterations
@@ -174,9 +175,9 @@ class MainCredentialStore:
                 handle.write(encoded)
                 handle.flush()
                 os.fsync(handle.fileno())
-            os.chmod(temporary, 0o644)
+            os.chmod(temporary, 0o600)
             os.replace(temporary, self.path)
-            os.chmod(self.path, 0o644)
+            os.chmod(self.path, 0o600)
         except BaseException:
             temporary.unlink(missing_ok=True)
             raise
