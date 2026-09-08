@@ -71,7 +71,7 @@ revision = 01301d285c6ba2a9a1f2948a9768b821d2536729
 integration_state = vendored-image-integrity-enforced
 ```
 
-The vendor and image-overlay runtime were advanced together to that frozen Parent revision. The installed service verifies the runtime against the pin/manifest before serving it.
+The vendor and image-overlay runtime are synchronized to that frozen Parent revision. The installed service verifies the runtime against the pin/manifest before serving it.
 
 ## 4. Parent authentication contract
 
@@ -115,7 +115,9 @@ The September 8 authentication/runtime tranche has now done the following on `ma
 - the Parent runtime manifest is dependency-derived from the accepted entrypoint rather than maintained as a fragile hand-written list;
 - `tests/test_parent_client_image_integration.py` no longer hard-codes a specific Parent revision; it checks the pin/manifest invariant instead;
 - Parent architecture/source-integration documentation now describes the password/device-credential model;
-- a new exact-current acceptance procedure exists for the password/bootstrap/reload/password-change/revocation lifecycle.
+- a new exact-current acceptance procedure exists for the password/bootstrap/reload/password-change/revocation lifecycle;
+- the first owner-controlled frozen attempt correctly detected one stale manifest digest before any image was built;
+- that manifest-only defect was corrected without changing runtime bytes or the Parent pin.
 
 Key Greia commits in this cutover include:
 
@@ -127,13 +129,14 @@ ef49e88023d4900214d49e2666b163edf5de5a10  remove fixed-revision test coupling
 91f058b500f2e1a2d91847a79a07f085e7f5b5c4  reconcile Parent source-integration authority
 9a065cd7abe39a53af4d444639028485583422d1  reconcile Parent management auth/runtime state
 818285807b3ab99cabb61a1fc501ea9afdb80c5b  add exact-current Parent password acceptance gate
+35b88c79fc10d81ef844df941a3a48321bbce8ab  correct stale src/views_activities.js manifest digest
 ```
 
 A documentation commit containing this handover is necessarily a descendant of those implementation commits; use `git rev-parse HEAD` for the exact checkout under test.
 
 ## 6. Parent evidence boundary
 
-What is currently established from committed source review/integration:
+What is currently established:
 
 ```text
 PASSWORD BOOTSTRAP ARCHITECTURE: IMPLEMENTED
@@ -143,18 +146,23 @@ PARENT RUNTIME PIN: 01301d... IMPLEMENTED
 VENDOR RUNTIME: SYNCHRONIZED
 IMAGE OVERLAY RUNTIME: SYNCHRONIZED
 INSTALLED-RUNTIME INTEGRITY CONTRACT: IMPLEMENTED
-EXACT-CURRENT LOCAL TEST EXECUTION: PENDING
-OFFICIAL IMAGE BUILD WITH THIS EXACT CURRENT DESCENDANT: PENDING
+PARENT SOURCE GATE AT 01301d...: PASS — npm test 77/77, node syntax, runtime_manifest.mjs
+FIRST GREIA FROZEN ATTEMPT AT 1f01d413: STOPPED AT §4 MANIFEST COMPARISON
+FIRST FAILURE: stale src/views_activities.js digest only
+STALE DIGEST: FIXED IN 35b88c79
+POST-FIX GREIA FOCUSED TESTS: PENDING
+POST-FIX make verify: PENDING
+OFFICIAL IMAGE BUILD WITH THIS DESCENDANT: PENDING
 REAL-BROWSER PASSWORD/RELOAD/CHANGE/REVOKE ACCEPTANCE: PENDING
 PHYSICAL ACER PARENT REAL-RUNTIME ACCEPTANCE FOR THIS DESCENDANT: PENDING
 AUTHENTICATED ENCRYPTED TRANSPORT FOR ORDINARY-FAMILY RELEASE: PENDING
 ```
 
-Do not inherit old test counts or old physical Parent evidence onto the current descendant.
+The failed `1f01d413` attempt was valid evidence: it proved the source gate detects exact runtime-metadata drift and stopped before image construction. Do not erase or reinterpret it as a later PASS.
 
 ## 7. Current Parent acceptance route
 
-The authoritative authentication/runtime gate is now:
+The authoritative authentication/runtime gate is:
 
 ```text
 docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md
@@ -189,6 +197,23 @@ The new gate requires, in order:
 ```
 
 STOP on the first failure and return the evidence collected so far.
+
+### Resume rule after the 1f01d413 failure
+
+Because Parent `01301d...` did not change and its source gate already passed 77/77, the next attempt does not need to repeat `npm test` merely because Greia's manifest metadata changed.
+
+The next operator must:
+
+```text
+1. pull current Greia main
+2. prove clean tree and HEAD == origin/main
+3. keep Parent exactly at 01301d...
+4. regenerate the Parent manifest or reuse the retained generated file only if its provenance is still exact 01301d...
+5. resume at §4 semantic manifest comparison
+6. if §4 passes, continue all Greia focused/integrity/make verify steps in order
+```
+
+Any Parent checkout/source change invalidates that reuse and requires §3 again.
 
 ## 8. Other active acceptance procedures
 
@@ -257,12 +282,15 @@ A committed regression test is not a PASS. A successful HTTP response is not pro
 
 ## 12. Next exact step
 
-Run the source portion of:
+On the owner-controlled checkout:
 
 ```text
-docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md
+pull current Greia main
+confirm clean HEAD == origin/main
+keep Parent at exact 01301d285c6ba2a9a1f2948a9768b821d2536729
+resume docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md at §4
 ```
 
-on a clean exact-current Greia `main` plus the exact Parent revision `01301d285c6ba2a9a1f2948a9768b821d2536729`.
+The already-green Parent source gate from the failed frozen attempt may be reused because Parent source did not change. Re-run the §4 manifest comparison against the new Greia descendant. If and only if it is green, continue the four focused Greia suites, both integrity checks, and `make verify`.
 
-If and only if that local source gate is green, build the sanctioned image and execute the real-browser password/bootstrap/reload/password-change/revocation sequence. Do not use the old shared-token instructions.
+Only after that complete source gate is green should the sanctioned image and real-browser password/bootstrap/reload/password-change/revocation sequence begin. Do not use the old shared-token instructions.
