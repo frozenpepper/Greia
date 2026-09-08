@@ -85,7 +85,7 @@ That command captures the dependency-derived Parent runtime bytes once, derives 
 
 ## 4. Parent authentication contract
 
-The old human-entered shared `parent-pairing-token` model is retired from the installed production path.
+The old human-entered shared `parent-pairing-token` model is retired from API v1 and from the installed production path.
 
 Current browser authentication is:
 
@@ -108,7 +108,9 @@ password: greia
 
 Parents can change the password through Parent management. Existing browser devices remain separate credentials and can be revoked independently.
 
-The route word `pairing` remains API-v1 vocabulary only. Do not reintroduce `pairing_token`, `X-Pip-Token`, token query URLs, a shared household bearer token, or a filesystem-token retrieval workflow.
+`ParentApiApplication` owns this boundary for every API-v1 composition: during inherited initialization it removes stale `parent-pairing-token` state and returns no shared token. `ProductionParentApiApplication` no longer carries a production-only token-suppression override. The older `ParentStatusApplication` still owns its compatibility token only for the standalone legacy status server; that server is not production Parent API authority.
+
+The route word `pairing` remains API-v1 vocabulary only. Do not reintroduce `pairing_token`, `X-Pip-Token`, token query URLs, a shared household bearer token, or a filesystem-token retrieval workflow into API v1 or the installed Parent path.
 
 ## 5. Parent integration work completed in the current tranche
 
@@ -116,7 +118,10 @@ The September 8 authentication/runtime tranche has now done the following on `ma
 
 - Greia backend password bootstrap and device-only ordinary authorization were already implemented;
 - production password attempts are bounded/rate-limited;
-- stale legacy `parent-pairing-token` state is removed in installed production composition;
+- stale legacy `parent-pairing-token` state is removed by the API-v1 composition boundary rather than by a production-only override;
+- direct API-v1 composition and installed production therefore share the same no-shared-token initialization rule;
+- the standalone legacy status server retains its compatibility token behavior as a separate legacy boundary;
+- direct API-v1 and legacy-status regression tests now protect both sides of that boundary;
 - the standalone Parent source uses password bootstrap and stores only the issued device credential;
 - the accepted Parent runtime was frozen at `01301d285c6ba2a9a1f2948a9768b821d2536729`;
 - Greia's pin and exact runtime manifest were advanced to that revision;
@@ -124,12 +129,12 @@ The September 8 authentication/runtime tranche has now done the following on `ma
 - `build/overlay/usr/share/greia-parent-app/` was also synchronized, closing the earlier defect where the actual image payload still contained the old browser;
 - the Parent runtime manifest is dependency-derived from the accepted entrypoint rather than maintained as a fragile hand-written list;
 - `tests/test_parent_client_image_integration.py` no longer hard-codes a specific Parent revision; it checks the pin/manifest invariant instead;
-- Parent architecture/source-integration documentation now describes the password/device-credential model;
-- a new exact-current acceptance procedure exists for the password/bootstrap/reload/password-change/revocation lifecycle;
+- Parent architecture/source-integration documentation describes the password/device-credential model;
+- the exact-current acceptance procedure covers password/bootstrap/reload/password-change/revocation plus the API-v1/legacy auth ownership boundary;
 - the first owner-controlled frozen attempt correctly detected one stale manifest digest before any image was built;
 - that manifest-only defect was corrected without changing runtime bytes or the Parent pin;
-- `tools/update_parent_client_pin.py` was then hardened so one operation owns pin, manifest, vendor and image-overlay synchronization from the same captured Parent bytes;
-- `tests/test_update_parent_client_pin.py` now covers transitive runtime discovery, exact byte/digest equality, stale-file removal, dirty-source refusal and rollback after a partial swap failure.
+- `tools/update_parent_client_pin.py` was hardened so one operation owns pin, manifest, vendor and image-overlay synchronization from the same captured Parent bytes;
+- `tests/test_update_parent_client_pin.py` covers transitive runtime discovery, exact byte/digest equality, stale-file removal, dirty-source refusal and rollback after a partial swap failure.
 
 Key Greia commits in this cutover include:
 
@@ -144,6 +149,10 @@ ef49e88023d4900214d49e2666b163edf5de5a10  remove fixed-revision test coupling
 35b88c79fc10d81ef844df941a3a48321bbce8ab  correct stale src/views_activities.js manifest digest
 c4da23a9fd706bb42c0f06f0b47b000b164a0582  make Parent repin synchronize all runtime copies
 c86016f4e6f27ceaeb01d0537dc55f080acbfa5c  add atomic/synchronized repin regression tests
+6efbba2489f56374ec508056e42029c5f84c5ff6  remove production-only token retirement ownership
+a1b67afbcd0ca4e4e0b3463c45b9f485d8934d09  retire shared token at API-v1 boundary
+5e834ec05a524cf61f5680f3c932767ec0e2a020  test direct API-v1 shared-token retirement
+e7dbcdc977a8c26e69ed6b81ace4f3f50719c50e  protect legacy status auth boundary
 ```
 
 A documentation commit containing this handover is necessarily a descendant of those implementation commits; use `git rev-parse HEAD` for the exact checkout under test.
@@ -155,7 +164,9 @@ What is currently established:
 ```text
 PASSWORD BOOTSTRAP ARCHITECTURE: IMPLEMENTED
 PER-DEVICE CREDENTIAL AUTHORIZATION: IMPLEMENTED
-LEGACY SHARED-TOKEN PRODUCTION FALLBACK: RETIRED IN SOURCE
+API-V1 SHARED-TOKEN INITIALIZATION: RETIRED IN SOURCE
+PRODUCTION-ONLY TOKEN OVERRIDE: REMOVED; PRODUCTION INHERITS API-V1 RULE
+LEGACY STANDALONE STATUS TOKEN: COMPATIBILITY-ONLY, SOURCE UNCHANGED
 PARENT RUNTIME PIN: 01301d... IMPLEMENTED
 VENDOR RUNTIME: SYNCHRONIZED
 IMAGE OVERLAY RUNTIME: SYNCHRONIZED
@@ -166,6 +177,7 @@ FIRST FAILURE: stale src/views_activities.js digest only
 STALE DIGEST: FIXED IN 35b88c79
 SINGLE-OPERATION REPIN TOOL: IMPLEMENTED
 REPIN TOOL REGRESSION TEST: COMMITTED, LOCAL EXECUTION PENDING
+API-V1 / LEGACY AUTH-BOUNDARY TESTS: COMMITTED, LOCAL EXECUTION PENDING
 POST-FIX GREIA FOCUSED TESTS: PENDING
 POST-FIX make verify: PENDING
 OFFICIAL IMAGE BUILD WITH THIS DESCENDANT: PENDING
@@ -176,7 +188,7 @@ AUTHENTICATED ENCRYPTED TRANSPORT FOR ORDINARY-FAMILY RELEASE: PENDING
 
 The failed `1f01d413` attempt was valid evidence: it proved the source gate detects exact runtime-metadata drift and stopped before image construction. Do not erase or reinterpret it as a later PASS.
 
-The newer repin-tool commits do not change the frozen Parent runtime, pin revision, manifest data, vendor bytes or image-overlay bytes. They do invalidate any claim that the Greia exact-head source gate itself has already passed; the new test and current `make verify` still have to execute.
+The repin-tool and API-v1 ownership commits do not change the frozen Parent client, pin revision, manifest data, vendor bytes or image-overlay bytes. They do invalidate any claim that the Greia exact-head source gate itself has already passed; the new tests and current `make verify` still have to execute.
 
 ## 7. Current Parent acceptance route
 
@@ -201,18 +213,19 @@ The current gate requires, in order:
 2. dependency-derived Parent runtime manifest regeneration
 3. semantic equality with Greia's committed manifest
 4. synchronized-repin transaction regression test
-5. Greia Parent staging/image/password/production focused tests
-6. vendor integrity verification
-7. image-overlay integrity verification
-8. current make verify
-9. official image/runtime integrity
-10. real browser: default greia password bootstrap
-11. close/reopen: device credential reconnect without password
-12. Parent password change: old rejected, new accepted for new bootstrap
-13. independent device revocation
-14. revoked browser rebootstrap only with current password
-15. obsolete shared-token state/helper negative proof
-16. wider physical system-control checks where applicable
+5. direct API-v1 token-retirement + legacy-status compatibility boundary tests
+6. Greia Parent staging/image/password/production focused tests
+7. vendor integrity verification
+8. image-overlay integrity verification
+9. current make verify
+10. official image/runtime integrity
+11. real browser: default greia password bootstrap
+12. close/reopen: device credential reconnect without password
+13. Parent password change: old rejected, new accepted for new bootstrap
+14. independent device revocation
+15. revoked browser rebootstrap only with current password
+16. obsolete shared-token state/helper negative proof
+17. wider physical system-control checks where applicable
 ```
 
 STOP on the first failure and return the evidence collected so far.
@@ -229,8 +242,9 @@ The next operator must:
 3. keep Parent exactly at 01301d...
 4. regenerate the Parent manifest or reuse the retained generated file only if its provenance is still exact 01301d...
 5. resume at §4 semantic manifest comparison
-6. run the new synchronized-repin regression test
-7. if green, continue all remaining Greia focused/integrity/make verify steps in order
+6. run the synchronized-repin regression test
+7. run the direct API-v1 and legacy-status auth-boundary tests
+8. if green, continue all remaining Greia focused/integrity/make verify steps in order
 ```
 
 Any Parent checkout/source change invalidates reuse of the earlier Parent source gate and requires §3 again.
@@ -260,6 +274,8 @@ vendor/parent-app/
 build/overlay/usr/share/greia-parent-app/
 tools/update_parent_client_pin.py
 tests/test_update_parent_client_pin.py
+tests/test_parent_api.py
+tests/test_parent_legacy_status_auth.py
 src/greia_parent/static_client.py
 src/greia_parent/parent_client_integrity.py
 src/greia_parent/password_auth.py
@@ -279,9 +295,7 @@ Speaker volume/mute remains a typed desired-state path. The Parent HTTP process 
 
 ## 10. Known lower-priority Parent debt
 
-`ParentApiApplication` still inherits from the older `ParentStatusApplication`, whose standalone legacy server owns shared-token initialization. Installed production suppresses that legacy initialization through a narrow `_load_or_create_token()` retirement override.
-
-This is maintainability debt, not an active shared-token authorization fallback. Clean it in a normal local edit/test tranche by moving the retirement rule to the API-v1 composition boundary or separating legacy status-server authentication from the reusable domain application. Do not perform a large inheritance rewrite merely to remove one method.
+The earlier token-initialization ownership debt is resolved: `ParentApiApplication` now owns API-v1 retirement of stale shared-token state, and production inherits that rule. The old `ParentStatusApplication` token remains only because the standalone legacy status server still has its compatibility authentication path. If that legacy server is later deleted, remove its token mechanism with the server rather than migrating it back into API v1.
 
 The API metadata/route vocabulary still contains `pairing_required` and `/pairing/bootstrap`. Those names are not blockers while the semantics are password bootstrap -> per-device credential.
 
@@ -313,6 +327,6 @@ keep Parent at exact 01301d285c6ba2a9a1f2948a9768b821d2536729
 resume docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md at §4
 ```
 
-The already-green Parent source gate from the failed frozen attempt may be reused because Parent source did not change. Re-run the §4 manifest comparison, then execute `test_update_parent_client_pin.py` before the remaining Parent-focused suites. If and only if all five focused tests, both integrity checks and current `make verify` are green, proceed to the sanctioned image and real-browser password/bootstrap/reload/password-change/revocation sequence.
+The already-green Parent source gate from the failed frozen attempt may be reused because Parent source did not change. Re-run the §4 manifest comparison, then execute all seven focused commands in the documented order. If and only if all seven focused tests, both integrity checks and current `make verify` are green, proceed to the sanctioned image and real-browser password/bootstrap/reload/password-change/revocation sequence.
 
 Do not use the old shared-token instructions.
