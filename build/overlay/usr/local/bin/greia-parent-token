@@ -1,8 +1,0 @@
-#!/bin/sh
-set -eu
-token_file=/var/lib/greia-os/parent-pairing-token
-if [ ! -r "$token_file" ]; then
-  echo "Parent service has not created a pairing token yet." >&2
-  exit 1
-fi
-cat "$token_file"
