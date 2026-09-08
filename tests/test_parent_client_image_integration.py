@@ -35,7 +35,9 @@ class ParentClientImageIntegrationTests(unittest.TestCase):
     def test_pin_records_completed_vendored_image_integration(self) -> None:
         with PIN.open("rb") as handle:
             pin = tomllib.load(handle)
-        self.assertEqual(pin["revision"], "01301d285c6ba2a9a1f2948a9768b821d2536729")
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        self.assertEqual(pin["repository"], manifest["repository"])
+        self.assertEqual(pin["revision"], manifest["revision"])
         self.assertEqual(pin["runtime_root"], "/usr/share/greia-parent-app")
         self.assertEqual(pin["integration_state"], "vendored-image-integrity-enforced")
 
