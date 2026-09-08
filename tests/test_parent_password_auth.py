@@ -41,6 +41,10 @@ class ParentPasswordAuthTests(unittest.TestCase):
             max_clients=2,
             clock=clock,
         )
+        for index in range(1000):
+            self.assertTrue(limiter.allowed(f"read-only-{index}"))
+        self.assertEqual(len(limiter._failures), 0)
+
         self.assertTrue(limiter.allowed("one"))
         limiter.record_failure("one")
         self.assertTrue(limiter.allowed("one"))
@@ -52,8 +56,10 @@ class ParentPasswordAuthTests(unittest.TestCase):
         limiter.record_failure("one")
         clock.advance(61)
         self.assertTrue(limiter.allowed("one"))
+        self.assertNotIn("one", limiter._failures)
         limiter.record_failure("two")
         limiter.record_failure("three")
+        limiter.record_failure("four")
         self.assertLessEqual(len(limiter._failures), 2)
 
     def test_production_startup_deletes_legacy_token_and_protects_password_digest(self) -> None:
