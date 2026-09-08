@@ -73,6 +73,16 @@ integration_state = vendored-image-integrity-enforced
 
 The vendor and image-overlay runtime are synchronized to that frozen Parent revision. The installed service verifies the runtime against the pin/manifest before serving it.
 
+Future repins now have one canonical command:
+
+```bash
+python3 tools/update_parent_client_pin.py \
+  --parent-root /path/to/Greia-Parent-App-Html \
+  --revision <exact-reviewed-parent-sha>
+```
+
+That command captures the dependency-derived Parent runtime bytes once, derives the manifest from those bytes, stages the pin/manifest/vendor/image-overlay artifacts together, and rolls back the previous Greia state if a multi-path replacement fails. Do not manually advance those four artifacts as separate repin steps.
+
 ## 4. Parent authentication contract
 
 The old human-entered shared `parent-pairing-token` model is retired from the installed production path.
@@ -117,7 +127,9 @@ The September 8 authentication/runtime tranche has now done the following on `ma
 - Parent architecture/source-integration documentation now describes the password/device-credential model;
 - a new exact-current acceptance procedure exists for the password/bootstrap/reload/password-change/revocation lifecycle;
 - the first owner-controlled frozen attempt correctly detected one stale manifest digest before any image was built;
-- that manifest-only defect was corrected without changing runtime bytes or the Parent pin.
+- that manifest-only defect was corrected without changing runtime bytes or the Parent pin;
+- `tools/update_parent_client_pin.py` was then hardened so one operation owns pin, manifest, vendor and image-overlay synchronization from the same captured Parent bytes;
+- `tests/test_update_parent_client_pin.py` now covers transitive runtime discovery, exact byte/digest equality, stale-file removal, dirty-source refusal and rollback after a partial swap failure.
 
 Key Greia commits in this cutover include:
 
@@ -130,6 +142,8 @@ ef49e88023d4900214d49e2666b163edf5de5a10  remove fixed-revision test coupling
 9a065cd7abe39a53af4d444639028485583422d1  reconcile Parent management auth/runtime state
 818285807b3ab99cabb61a1fc501ea9afdb80c5b  add exact-current Parent password acceptance gate
 35b88c79fc10d81ef844df941a3a48321bbce8ab  correct stale src/views_activities.js manifest digest
+c4da23a9fd706bb42c0f06f0b47b000b164a0582  make Parent repin synchronize all runtime copies
+c86016f4e6f27ceaeb01d0537dc55f080acbfa5c  add atomic/synchronized repin regression tests
 ```
 
 A documentation commit containing this handover is necessarily a descendant of those implementation commits; use `git rev-parse HEAD` for the exact checkout under test.
@@ -150,6 +164,8 @@ PARENT SOURCE GATE AT 01301d...: PASS — npm test 77/77, node syntax, runtime_m
 FIRST GREIA FROZEN ATTEMPT AT 1f01d413: STOPPED AT §4 MANIFEST COMPARISON
 FIRST FAILURE: stale src/views_activities.js digest only
 STALE DIGEST: FIXED IN 35b88c79
+SINGLE-OPERATION REPIN TOOL: IMPLEMENTED
+REPIN TOOL REGRESSION TEST: COMMITTED, LOCAL EXECUTION PENDING
 POST-FIX GREIA FOCUSED TESTS: PENDING
 POST-FIX make verify: PENDING
 OFFICIAL IMAGE BUILD WITH THIS DESCENDANT: PENDING
@@ -159,6 +175,8 @@ AUTHENTICATED ENCRYPTED TRANSPORT FOR ORDINARY-FAMILY RELEASE: PENDING
 ```
 
 The failed `1f01d413` attempt was valid evidence: it proved the source gate detects exact runtime-metadata drift and stopped before image construction. Do not erase or reinterpret it as a later PASS.
+
+The newer repin-tool commits do not change the frozen Parent runtime, pin revision, manifest data, vendor bytes or image-overlay bytes. They do invalidate any claim that the Greia exact-head source gate itself has already passed; the new test and current `make verify` still have to execute.
 
 ## 7. Current Parent acceptance route
 
@@ -176,31 +194,32 @@ docs/testing/2026-09-02_PARENT_REAL_RUNTIME_FINAL_ACCEPTANCE.md
 
 The older document remains relevant for its wider system-control/hardware evidence after the new password-authentication sections are green.
 
-The new gate requires, in order:
+The current gate requires, in order:
 
 ```text
 1. exact Parent source SHA 01301d... + node syntax + npm test
 2. dependency-derived Parent runtime manifest regeneration
 3. semantic equality with Greia's committed manifest
-4. Greia Parent staging/image/password/production focused tests
-5. vendor integrity verification
-6. image-overlay integrity verification
-7. current make verify
-8. official image/runtime integrity
-9. real browser: default greia password bootstrap
-10. close/reopen: device credential reconnect without password
-11. Parent password change: old rejected, new accepted for new bootstrap
-12. independent device revocation
-13. revoked browser rebootstrap only with current password
-14. obsolete shared-token state/helper negative proof
-15. wider physical system-control checks where applicable
+4. synchronized-repin transaction regression test
+5. Greia Parent staging/image/password/production focused tests
+6. vendor integrity verification
+7. image-overlay integrity verification
+8. current make verify
+9. official image/runtime integrity
+10. real browser: default greia password bootstrap
+11. close/reopen: device credential reconnect without password
+12. Parent password change: old rejected, new accepted for new bootstrap
+13. independent device revocation
+14. revoked browser rebootstrap only with current password
+15. obsolete shared-token state/helper negative proof
+16. wider physical system-control checks where applicable
 ```
 
 STOP on the first failure and return the evidence collected so far.
 
 ### Resume rule after the 1f01d413 failure
 
-Because Parent `01301d...` did not change and its source gate already passed 77/77, the next attempt does not need to repeat `npm test` merely because Greia's manifest metadata changed.
+Because Parent `01301d...` did not change and its source gate already passed 77/77, the next attempt does not need to repeat `npm test` merely because Greia changed.
 
 The next operator must:
 
@@ -210,10 +229,11 @@ The next operator must:
 3. keep Parent exactly at 01301d...
 4. regenerate the Parent manifest or reuse the retained generated file only if its provenance is still exact 01301d...
 5. resume at §4 semantic manifest comparison
-6. if §4 passes, continue all Greia focused/integrity/make verify steps in order
+6. run the new synchronized-repin regression test
+7. if green, continue all remaining Greia focused/integrity/make verify steps in order
 ```
 
-Any Parent checkout/source change invalidates that reuse and requires §3 again.
+Any Parent checkout/source change invalidates reuse of the earlier Parent source gate and requires §3 again.
 
 ## 8. Other active acceptance procedures
 
@@ -238,6 +258,8 @@ runtime/parent-app-client.toml
 runtime/parent-app-client.manifest.json
 vendor/parent-app/
 build/overlay/usr/share/greia-parent-app/
+tools/update_parent_client_pin.py
+tests/test_update_parent_client_pin.py
 src/greia_parent/static_client.py
 src/greia_parent/parent_client_integrity.py
 src/greia_parent/password_auth.py
@@ -291,6 +313,6 @@ keep Parent at exact 01301d285c6ba2a9a1f2948a9768b821d2536729
 resume docs/testing/2026-09-08_PARENT_PASSWORD_RUNTIME_INTEGRATION_ACCEPTANCE.md at §4
 ```
 
-The already-green Parent source gate from the failed frozen attempt may be reused because Parent source did not change. Re-run the §4 manifest comparison against the new Greia descendant. If and only if it is green, continue the four focused Greia suites, both integrity checks, and `make verify`.
+The already-green Parent source gate from the failed frozen attempt may be reused because Parent source did not change. Re-run the §4 manifest comparison, then execute `test_update_parent_client_pin.py` before the remaining Parent-focused suites. If and only if all five focused tests, both integrity checks and current `make verify` are green, proceed to the sanctioned image and real-browser password/bootstrap/reload/password-change/revocation sequence.
 
-Only after that complete source gate is green should the sanctioned image and real-browser password/bootstrap/reload/password-change/revocation sequence begin. Do not use the old shared-token instructions.
+Do not use the old shared-token instructions.
