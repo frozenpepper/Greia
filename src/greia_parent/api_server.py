@@ -159,6 +159,19 @@ class ParentApiApplication(ParentStatusApplication):
             UsageLimitStore(self.profiles_dir / "usage-limits.json")
         )
 
+    def _load_or_create_token(self) -> str:
+        """Retire legacy shared-token state for every API-v1 composition.
+
+        ``ParentStatusApplication`` still owns the standalone legacy server and
+        its compatibility token. API v1 has a different authentication model:
+        Parent password bootstrap followed by independently revocable device
+        credentials. Dynamic dispatch reaches this hook during the inherited
+        initializer, so no API-v1 application creates or retains the old
+        household-wide token.
+        """
+        (self.state_dir / "parent-pairing-token").unlink(missing_ok=True)
+        return ""
+
     def authorized(
         self,
         handler: ParentRequestHandler,
