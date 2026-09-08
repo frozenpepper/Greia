@@ -68,8 +68,10 @@ export function installActivityViews(proto){
     let activeCategory="all";
     for(const category of["all","create","play","learn","explore"]){
       const tab=el("button","filter-tab",category==="all"?"All":categoryLabel(category));tab.type="button";
+      tab.dataset.category=category;tab.setAttribute("aria-pressed",String(category==="all"));
+      tab.prepend(icon(category==="all"?"activity":categoryIcon(category)));
       if(category==="all")tab.classList.add("active");
-      tab.addEventListener("click",()=>{activeCategory=category;for(const item of filters.children)item.classList.toggle("active",item===tab);applyFilter();});
+      tab.addEventListener("click",()=>{activeCategory=category;for(const item of filters.children){item.classList.toggle("active",item===tab);item.setAttribute("aria-pressed",String(item===tab));}applyFilter();});
       filters.append(tab);
     }
     root.append(filters);

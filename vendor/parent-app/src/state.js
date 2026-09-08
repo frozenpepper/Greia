@@ -118,7 +118,7 @@ export class ParentAppState {
       });
       return this.snapshot;
     } catch (error) {
-      this.publish({ phase: error?.pairingRequired ? "pairing" : "error", error });
+      this.publish({ phase: error?.authenticationRequired ? "authentication" : "error", error });
       throw error;
     }
   }

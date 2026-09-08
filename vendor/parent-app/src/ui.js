@@ -1,8 +1,8 @@
 export const NAV_ITEMS = [
-  { id: "home", label: "Home", icon: "home", subtitle: "Children, recent use and the state of this Greia." },
-  { id: "children", label: "Children", icon: "children", subtitle: "Profiles, passwords, age guidance and personal preferences." },
-  { id: "activities", label: "Activities", icon: "sparkles", subtitle: "Install, remove and control what each child can see." },
-  { id: "device", label: "This Greia", icon: "device", subtitle: "Network, language, input, audio, security and system updates." },
+  { id: "home", label: "Home", icon: "home", subtitle: "A little look at their world of discovery." },
+  { id: "children", label: "Children", icon: "children", subtitle: "Their own little world. Set it up to suit them." },
+  { id: "activities", label: "Activities", icon: "sparkles", subtitle: "Make room for play, creativity and new discoveries." },
+  { id: "device", label: "This Greia", icon: "device", subtitle: "Keep their Greia feeling just right." },
 ];
 export const ROUTE_ALIASES = { overview: "home", settings: "device", devices: "device" };
 export const MAX_ACTIVITY_PACKAGE_BYTES = 32 * 1024 * 1024;
