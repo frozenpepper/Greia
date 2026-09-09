@@ -160,6 +160,38 @@ def _read_canonical_record(path: Path, *, context: str) -> dict[str, object]:
     return raw
 
 
+def _require_root_partuuid(value: object, *, field_name: str) -> str:
+    """Observed ``root=PARTUUID=``: GPT GUID or MBR ``<sig>-<NN>`` (T1-IDENT)."""
+    import re as _re
+
+    if not isinstance(value, str):
+        raise BootHealthError(f"{field_name} must be text")
+    try:
+        parsed = uuid.UUID(str(value))
+    except (ValueError, AttributeError):
+        pass
+    else:
+        if str(parsed) == str(value).lower():
+            return str(parsed)
+    text = str(value).strip()
+    if "-" not in text:
+        raise BootHealthError(f"{field_name} is not a PARTUUID")
+    signature_text, _, number_text = text.rpartition("-")
+    signature = signature_text.lower()
+    if signature.startswith("0x"):
+        signature = signature[2:]
+    if not _re.fullmatch(r"[0-9a-f]{8}", signature):
+        raise BootHealthError(f"{field_name} is not a PARTUUID")
+    if not number_text.isascii() or not number_text.isdigit():
+        raise BootHealthError(f"{field_name} carries an invalid MBR partition number")
+    number = int(number_text, 10)
+    if not 1 <= number <= 128:
+        raise BootHealthError(
+            f"{field_name} carries an MBR partition number outside Greia bounds"
+        )
+    return f"{signature}-{number:02d}"
+
+
 def _require_token(value: object, *, field_name: str) -> str:
     if not isinstance(value, str) or len(value) != 64:
         raise BootHealthError(f"{field_name} must be 256-bit hex")
@@ -216,12 +248,10 @@ class ActualBootIdentity:
     def __post_init__(self) -> None:
         if self.booted_slot not in ("A", "B"):
             raise BootHealthError("observed booted slot must be A or B")
-        try:
-            parsed = uuid.UUID(str(self.root_partuuid))
-        except (ValueError, AttributeError) as exc:
-            raise BootHealthError("observed root PARTUUID is not a UUID") from exc
-        if str(parsed) != str(self.root_partuuid).lower():
-            raise BootHealthError("observed root PARTUUID must be canonical lowercase")
+        object.__setattr__(
+            self, "root_partuuid",
+            _require_root_partuuid(self.root_partuuid, field_name="observed root PARTUUID"),
+        )
         _require_identifier(self.release_id, field_name="release_id", maximum=96)
         if (
             isinstance(self.release_sequence, bool)
@@ -240,9 +270,9 @@ class ActualBootObserver(Protocol):
 class FakeActualBootIdentity:
     """R0/R1 file-free fake observer: fixed identity set by the test.
 
-    Stands in for the production root PARTUUID/release reader (kernel
-    cmdline + slot release-identity revalidation). Tests drive wrong
-    slot/release negatives by constructing fakes that report them.
+    File-free stand-in for :class:`ProductionActualBootObserver`. Tests
+    drive wrong slot/release negatives by constructing fakes that report
+    them.
     """
 
     def __init__(self, identity: ActualBootIdentity) -> None:
@@ -254,6 +284,213 @@ class FakeActualBootIdentity:
 
     def observe(self) -> ActualBootIdentity:
         return self._identity
+
+
+# ---------------------------------------------------------------------------
+# Production actual-identity observer (on-device, never caller assertions)
+# ---------------------------------------------------------------------------
+
+#: Kernel command line path carrying the observed ``root=PARTUUID=`` fact.
+PRODUCTION_CMDLINE_ENV = "GREIA_BOOT_CMDLINE"
+PRODUCTION_CMDLINE_DEFAULT = "/proc/cmdline"
+
+#: Slot-local release identity written by ``SlotFinalizer`` into the booted
+#: slot filesystem (``etc/greia-os/release-identity.json``), hence visible on
+#: the running system at this path. Platform-owned, never caller-supplied.
+PRODUCTION_RELEASE_IDENTITY_ENV = "GREIA_RELEASE_IDENTITY_PATH"
+PRODUCTION_RELEASE_IDENTITY_DEFAULT = "/etc/greia-os/release-identity.json"
+
+#: Trusted installed-layout record binding PARTUUIDs to semantic slots.
+PRODUCTION_LAYOUT_RECORD_ENV = "GREIA_INSTALLED_LAYOUT_RECORD"
+PRODUCTION_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/installed-layout.json"
+
+#: Upper bound for the kernel command line read (small by construction).
+MAX_CMDLINE_BYTES = 64 * 1024
+
+
+def production_cmdline_path() -> Path:
+    """Resolve the kernel command line path (explicit env or /proc/cmdline)."""
+    override = os.environ.get(PRODUCTION_CMDLINE_ENV, "").strip()
+    return Path(override) if override else Path(PRODUCTION_CMDLINE_DEFAULT)
+
+
+def production_release_identity_path() -> Path:
+    """Resolve the booted-slot release-identity path (env or system bind)."""
+    override = os.environ.get(PRODUCTION_RELEASE_IDENTITY_ENV, "").strip()
+    return Path(override) if override else Path(PRODUCTION_RELEASE_IDENTITY_DEFAULT)
+
+
+def production_layout_record_path() -> Path:
+    """Resolve the trusted layout-record path (env or system bind)."""
+    override = os.environ.get(PRODUCTION_LAYOUT_RECORD_ENV, "").strip()
+    return Path(override) if override else Path(PRODUCTION_LAYOUT_RECORD_DEFAULT)
+
+
+def read_kernel_root_partuuid(cmdline_path: Path | None = None) -> str:
+    """Return the single observed ``root=PARTUUID=`` value from the kernel cmdline.
+
+    Reads the platform's own kernel fact (``/proc/cmdline`` on device);
+    zero or several ``root=PARTUUID=`` tokens fail closed.
+    """
+    path = Path(cmdline_path) if cmdline_path is not None else production_cmdline_path()
+    if path.is_symlink():
+        raise BootHealthError("kernel command line must not be a symlink")
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise BootHealthError(f"kernel command line is unreadable: {exc}") from exc
+    if len(raw) > MAX_CMDLINE_BYTES:
+        raise BootHealthError("kernel command line exceeds Greia bounds")
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise BootHealthError("kernel command line is not valid text") from exc
+    roots = [
+        token.split("root=PARTUUID=", 1)[1]
+        for token in text.split()
+        if token.startswith("root=PARTUUID=")
+    ]
+    if len(roots) != 1 or not roots[0]:
+        raise BootHealthError("kernel command line carries no single root PARTUUID")
+    return _require_root_partuuid(roots[0], field_name="observed root PARTUUID")
+
+
+def read_booted_release_identity(
+    identity_path: Path | None = None,
+) -> tuple[str, str, int]:
+    """Return ``(slot, release_id, release_sequence)`` from the booted slot.
+
+    Reads the ``release-identity.json`` the ``SlotFinalizer`` wrote into the
+    booted slot filesystem. The record must be a canonical-JSON regular file
+    (never a symlink); its slot must later match the PARTUUID-resolved slot.
+    """
+    path = (
+        Path(identity_path)
+        if identity_path is not None
+        else production_release_identity_path()
+    )
+    if path.is_symlink():
+        raise BootHealthError("booted release identity must not be a symlink")
+    try:
+        raw_bytes = path.read_bytes()
+    except OSError as exc:
+        raise BootHealthError(f"booted release identity is unreadable: {exc}") from exc
+    if len(raw_bytes) > MAX_BOOT_HEALTH_BYTES:
+        raise BootHealthError("booted release identity exceeds Greia bounds")
+    try:
+        raw = json.loads(raw_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise BootHealthError(f"booted release identity is not valid JSON: {exc}") from exc
+    if not isinstance(raw, dict):
+        raise BootHealthError("booted release identity must be a JSON object")
+    slot = raw.get("slot")
+    if slot not in ("A", "B"):
+        raise BootHealthError("booted release identity slot must be A or B")
+    release_id = _require_identifier(
+        raw.get("release_id"), field_name="release_id", maximum=96
+    )
+    release_sequence = raw.get("release_sequence")
+    if (
+        isinstance(release_sequence, bool)
+        or not isinstance(release_sequence, int)
+        or not 0 <= release_sequence <= 2_147_483_647
+    ):
+        raise BootHealthError("booted release_sequence is outside Greia bounds")
+    if _canonical_bytes(raw) != raw_bytes:
+        raise BootHealthError("booted release identity is not canonical JSON")
+    return str(slot), release_id, release_sequence
+
+
+class ProductionActualBootObserver:
+    """On-device actual-identity source: kernel cmdline + layout + identity.
+
+    Re-observes the platform facts on every :meth:`observe` call (both
+    confirm phases revalidate, so a mid-commit reboot can never be talked
+    into the wrong slot): the kernel ``root=PARTUUID=`` fact resolves the
+    booted slot through the trusted installed-layout record, and the
+    slot-local release identity must agree on that same slot. First install
+    uses the same predicate: the machine boots ``SYSTEM_A`` under
+    ``FIRST_INSTALL_PENDING`` and this observer simply reports slot ``A``.
+    """
+
+    def __init__(
+        self,
+        *,
+        cmdline_path: Path | None = None,
+        layout_record_path: Path | None = None,
+        release_identity_path: Path | None = None,
+    ) -> None:
+        self._cmdline_path = (
+            Path(cmdline_path) if cmdline_path is not None else production_cmdline_path()
+        )
+        self._layout_record_path = (
+            Path(layout_record_path)
+            if layout_record_path is not None
+            else production_layout_record_path()
+        )
+        self._release_identity_path = (
+            Path(release_identity_path)
+            if release_identity_path is not None
+            else production_release_identity_path()
+        )
+
+    def observe(self) -> ActualBootIdentity:
+        from .persistent_layout import PersistentLayoutError
+
+        root_partuuid = read_kernel_root_partuuid(self._cmdline_path)
+        if self._layout_record_path.is_symlink():
+            raise BootHealthError("installed layout record must not be a symlink")
+        try:
+            layout_raw = self._layout_record_path.read_bytes()
+        except FileNotFoundError as exc:
+            raise BootHealthError(
+                "no trusted layout authority: single-root layouts resolve "
+                "no A/B actual identity"
+            ) from exc
+        except OSError as exc:
+            raise BootHealthError(
+                f"installed layout record is unreadable: {exc}"
+            ) from exc
+        try:
+            document = json.loads(layout_raw.decode("utf-8"))
+        except (UnicodeDecodeError, ValueError) as exc:
+            raise BootHealthError(
+                "installed layout record is not valid JSON"
+            ) from exc
+        try:
+            from .persistent_layout import InstalledLayoutRecord
+
+            record = InstalledLayoutRecord.from_dict(document)
+        except PersistentLayoutError as exc:
+            raise BootHealthError(
+                f"installed layout record is not authoritative: {exc}"
+            ) from exc
+        candidates = {"A": record.system_a.partuuid}
+        if record.system_b is not None:
+            candidates["B"] = record.system_b.partuuid
+        booted_slot: str | None = None
+        for slot, partuuid in candidates.items():
+            if partuuid == root_partuuid:
+                booted_slot = slot
+                break
+        if booted_slot is None:
+            raise BootHealthError(
+                "observed root PARTUUID matches no layout slot: "
+                "machine is not running an installed Greia slot"
+            )
+        identity_slot, release_id, release_sequence = read_booted_release_identity(
+            self._release_identity_path
+        )
+        if identity_slot != booted_slot:
+            raise BootHealthError(
+                "booted release identity is not the PARTUUID-resolved slot"
+            )
+        return ActualBootIdentity(
+            booted_slot=booted_slot,
+            root_partuuid=root_partuuid,
+            release_id=release_id,
+            release_sequence=release_sequence,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -522,12 +759,9 @@ class BootHealthyProtocol:
             raise BootHealthError("BOOT_HEALTHY requires a boot transaction coordinator")
         if not isinstance(candidate_root_partuuid, str):
             raise BootHealthError("candidate root PARTUUID must be text")
-        try:
-            parsed = uuid.UUID(candidate_root_partuuid)
-        except (ValueError, AttributeError) as exc:
-            raise BootHealthError("candidate root PARTUUID is not a UUID") from exc
-        if str(parsed) != candidate_root_partuuid.lower():
-            raise BootHealthError("candidate root PARTUUID must be canonical lowercase")
+        candidate_root_partuuid = _require_root_partuuid(
+            candidate_root_partuuid, field_name="candidate root PARTUUID"
+        )
         candidate_artifacts = coordinator.candidate_artifacts
         if not isinstance(candidate_artifacts, BootArtifactSet):
             raise BootHealthError("coordinator carries no candidate artifact set")

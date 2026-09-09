@@ -1,0 +1,190 @@
+#!/bin/sh
+# greia-candidate-recovery — TAKEOVER-4/D55 deadline recovery helper.
+#
+# Scope: x86 GrubEnvBackend only. The helper resolves boot-control facts
+# through GrubEnvBackend attached to GREIA_GRUBENV_DIR (/boot/grub); when
+# no backend is present it reports bounded `backend-unavailable` no-action
+# (exit 0, no reboot, no journal/backend mutation). Pi/tryboot deadline
+# triggering is deferred to the PI8 tranche (DOWN-PI8) and is not wired
+# here.
+#
+# Narrow lifecycle capability fired once per boot by
+# greia-candidate-recovery.timer: inspect the existing boot-transaction
+# journal(s); reboot only when a candidate observably booted but never
+# became healthy. The backend persistent default is never mutated here, so
+# the controlled reboot returns to the previous accepted slot.
+#
+# Plain boots (no journal, terminal journal, or machine already on the
+# accepted slot) are a silent no-op: exit 0, no reboot, no state mutation.
+# A hard hang with no proven watchdog is NOT handled here: recovery is the
+# next physical power cycle (manual recovery). No watchdog is claimed on
+# any reference platform.
+#
+# Environment overrides (tests / integration):
+#   GREIA_BOOT_JOURNAL_DIR   first-install journal dir
+#   GREIA_UPDATE_STATE_DIR   update state dir (journal at
+#                            $GREIA_UPDATE_STATE_DIR/system-updates/journal)
+#   GREIA_GRUBENV_DIR        x86 boot-control dir (grubenv)
+#   GREIA_RECOVERY_CLASS     deadline failure class recorded in the journal
+#                            note: launcher-exit, userspace-emergency or
+#                            health-service-failure (default:
+#                            health-service-failure). Unknown or hard-hang
+#                            values are a bounded no-action.
+#   GREIA_RECOVERY_DETAIL    free-text detail recorded in the journal note
+#   GREIA_RECOVERY_DRY_RUN=1 decide and report without marking or rebooting
+set -eu
+
+print_contract() {
+  cat <<'EOF'
+Greia failed-candidate recovery contract (owner Decision A default):
+Scope: x86 GrubEnvBackend only (grub-ab-v1 via /boot/grub or
+GREIA_GRUBENV_DIR). A missing backend is a bounded `backend-unavailable`
+no-action: exit 0, no reboot, no journal/backend mutation. Pi/tryboot
+deadline triggering is deferred to the PI8 tranche (DOWN-PI8).
+- launcher exit/crash: automatic reboot via the health deadline.
+- userspace emergency/failure before health: automatic reboot via the deadline.
+- health-service failure: automatic reboot via the deadline.
+- kernel panic: automatic panic reboot (kernel.panic sysctl), then default.
+- hard hang: NO automatic recovery claimed (no proven watchdog on any
+  reference platform); the previous accepted slot returns on the next
+  physical power cycle. That is manual recovery, described honestly.
+The previous accepted slot stays the persistent default throughout.
+EOF
+}
+
+case "${1:-}" in
+  --help|-h)
+    print_contract
+    echo "Usage: greia-candidate-recovery [--help]"
+    exit 0
+    ;;
+esac
+
+export PYTHONPATH="${PYTHONPATH:-/opt/greia-os/src}"
+export PYTHONNOUSERSITE=1
+export PYTHONDONTWRITEBYTECODE=1
+
+RECOVERY_DETAIL="${GREIA_RECOVERY_DETAIL:-deadline expired without BOOT_HEALTHY}"
+if [ "${GREIA_RECOVERY_DRY_RUN:-0}" = "1" ]; then
+  DRY_RUN=1
+else
+  DRY_RUN=0
+fi
+
+DECISION="$(python3 - "$RECOVERY_DETAIL" "$DRY_RUN" <<'PY'
+import os
+import sys
+from pathlib import Path
+
+detail = sys.argv[1]
+dry_run = sys.argv[2] == "1"
+
+from greia_platform import boot_transaction as bt
+
+update_state = os.environ.get("GREIA_UPDATE_STATE_DIR", "").strip() \
+    or "/var/lib/greia-os"
+journal_dirs = [
+    Path(update_state) / "system-updates" / "journal",
+    Path(os.environ.get("GREIA_BOOT_JOURNAL_DIR", "").strip()
+         or "/var/lib/greia-os/boot-journal"),
+]
+
+# Plain boot: no journal file anywhere.
+live = []
+for journal_dir in journal_dirs:
+    candidate = journal_dir / bt.JOURNAL_FILE_NAME
+    if candidate.is_symlink() or not candidate.is_file():
+        continue
+    try:
+        journal = bt.BootTransactionJournal.load(journal_dir)
+    except bt.BootJournalError as exc:
+        print(f"RECOVERY_STATUS=journal-corrupt:{exc}")
+        sys.exit(0)
+    if not journal.is_terminal:
+        live.append((journal_dir, journal))
+
+if not live:
+    print("RECOVERY_STATUS=no-action:plain-or-settled-boot")
+    sys.exit(0)
+if len(live) > 1:
+    print("RECOVERY_STATUS=no-action:ambiguous-journals-refusing-to-guess")
+    sys.exit(0)
+
+journal_dir, journal = live[0]
+
+# Resolve the production backend (x86 grubenv). Absent backend state is a
+# bounded no-op: without boot-control facts there is no safe reboot claim.
+grubenv_dir = Path(os.environ.get("GREIA_GRUBENV_DIR", "").strip() or "/boot/grub")
+try:
+    from greia_platform.grub_ab import GrubEnvBackend
+    backend = GrubEnvBackend.attach(grubenv_dir)
+    state = backend.inspect()
+except Exception as exc:
+    print(f"RECOVERY_STATUS=no-action:backend-unavailable:{exc}")
+    sys.exit(0)
+
+observed = state.last_booted_slot
+if observed is None:
+    print("RECOVERY_STATUS=no-action:no-authoritative-boot-observation")
+    sys.exit(0)
+if observed == journal.accepted_slot and journal.candidate_slot != journal.accepted_slot:
+    # Failed candidate already back on the accepted slot: reconcile owns
+    # the ROLLED_BACK evidence, never this trigger. No reboot.
+    print("RECOVERY_STATUS=no-action:already-on-accepted-slot")
+    sys.exit(0)
+if observed != journal.candidate_slot:
+    print("RECOVERY_STATUS=no-action:candidate-not-booted")
+    sys.exit(0)
+if journal.state not in bt.RECOVERY_TRIGGER_STATES:
+    print(f"RECOVERY_STATUS=no-action:journal-state-{journal.state.value}")
+    sys.exit(0)
+
+# Candidate observably booted but never healthy: classify. Userspace ran
+# (the backend observed the candidate boot), so this is the deadline path
+# shared by launcher-crash, userspace-emergency and health-service
+# failure. The per-class label (classes 1-3) is preserved in the journal
+# note via GREIA_RECOVERY_CLASS so cause distinction survives in the
+# journal; the T5 PERSIST recovery_reason identifier carries the same
+# bounded label without new schema. Panic/hang leave no such observation
+# and are owned by the panic sysctl / manual power cycle instead.
+requested_class = os.environ.get("GREIA_RECOVERY_CLASS", "").strip() \
+    or bt.RecoveryClass.HEALTH_SERVICE_FAILURE.value
+try:
+    recovery_class = bt.RecoveryClass(requested_class)
+except ValueError:
+    print(f"RECOVERY_STATUS=no-action:unknown-recovery-class:{requested_class}")
+    sys.exit(0)
+if recovery_class not in (
+    bt.RecoveryClass.LAUNCHER_EXIT,
+    bt.RecoveryClass.USERSPACE_EMERGENCY,
+    bt.RecoveryClass.HEALTH_SERVICE_FAILURE,
+):
+    print(f"RECOVERY_STATUS=no-action:recovery-class-not-on-deadline-path:"
+          f"{recovery_class.value}")
+    sys.exit(0)
+note = bt.format_recovery_note(
+    recovery_class, bt.recovery_action_for(recovery_class), detail)
+if not dry_run:
+    journal.record(bt.BootTransactionState.FAILED, note)
+print(f"RECOVERY_STATUS=trigger-reboot:{recovery_class.value}")
+print(f"RECOVERY_ACCEPTED_SLOT={journal.accepted_slot}")
+print(f"RECOVERY_CANDIDATE_SLOT={journal.candidate_slot}")
+PY
+)"
+
+STATUS_LINE="$(printf '%s\n' "$DECISION" | grep '^RECOVERY_STATUS=' | head -n 1)"
+printf '%s\n' "$DECISION"
+
+case "$STATUS_LINE" in
+  RECOVERY_STATUS=trigger-reboot:*)
+    if [ "$DRY_RUN" = "1" ]; then
+      echo "greia-candidate-recovery: dry run, not rebooting" >&2
+      exit 0
+    fi
+    echo "greia-candidate-recovery: candidate unhealthy, rebooting to accepted slot" >&2
+    exec systemctl reboot
+    ;;
+  *)
+    exit 0
+    ;;
+esac

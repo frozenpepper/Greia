@@ -53,6 +53,7 @@ from pathlib import Path
 from typing import Callable, Mapping, NoReturn, Sequence
 
 from greia_platform.hardware import HardwareDefaults, HardwareSettings
+from greia_platform.persistent_layout import ALLOWED_LAYOUT_ADAPTERS
 from greia_platform.privileged_channel import (
     MAX_MESSAGE_BYTES,
     PeerCredential,
@@ -86,7 +87,7 @@ from .install_transaction import (
     PreparePlanRequest,
     PreparedInstallPlan,
 )
-from .layout import KNOWN_LAYOUT_ADAPTER_IDS, LayoutError, adapter_for
+from .layout import LayoutError, adapter_for
 
 
 class TransactionServiceError(RuntimeError):
@@ -125,6 +126,8 @@ class ServiceState:
     payload_digest: Path
     project_root: Path
     compatible_profile_id: str
+    platform_family: str
+    architecture: str
     target_policy_id: str
     layout_adapter_id: str
     boot_backend: str
@@ -142,11 +145,13 @@ class ServiceState:
             self, "project_root", _require_absolute_owned_path(self.project_root, field_name="project_root")
         )
         _require_bounded_id(self.compatible_profile_id, field_name="compatible_profile_id")
+        _require_bounded_id(self.platform_family, field_name="platform_family")
+        _require_bounded_id(self.architecture, field_name="architecture")
         from .disk import POLICY_IDS
 
         _require_bounded_id(self.target_policy_id, field_name="target_policy_id", allowed=POLICY_IDS)
         _require_bounded_id(
-            self.layout_adapter_id, field_name="layout_adapter_id", allowed=KNOWN_LAYOUT_ADAPTER_IDS
+            self.layout_adapter_id, field_name="layout_adapter_id", allowed=ALLOWED_LAYOUT_ADAPTERS
         )
         _require_bounded_id(self.boot_backend, field_name="boot_backend")
         if isinstance(self.slot_bytes, bool) or not isinstance(self.slot_bytes, int) or self.slot_bytes <= 0:
@@ -197,6 +202,8 @@ class ServiceState:
             raise TransactionServiceError("target image profile has no release shape")
         try:
             profile_id = raw["profile"]["id"]
+            platform_family = raw["platform"]["family"]
+            architecture = raw["base"]["architecture"]
             storage = raw["storage"]
             layout_adapter_id = storage["layout_adapter"]
             slot_bytes = storage["system_slot_bytes"]
@@ -209,11 +216,17 @@ class ServiceState:
             raise TransactionServiceError("target image profile slot_bytes is invalid")
         if not isinstance(persist_minimum_bytes, int) or isinstance(persist_minimum_bytes, bool):
             raise TransactionServiceError("target image profile persist floor is invalid")
+        if not isinstance(platform_family, str) or not platform_family:
+            raise TransactionServiceError("target image profile platform family is invalid")
+        if not isinstance(architecture, str) or not architecture:
+            raise TransactionServiceError("target image profile architecture is invalid")
         return cls(
             payload=payload,
             payload_digest=payload_digest,
             project_root=project_root,
             compatible_profile_id=profile_id,
+            platform_family=platform_family,
+            architecture=architecture,
             target_policy_id=target_policy_id,
             layout_adapter_id=layout_adapter_id,
             boot_backend=boot_backend,
@@ -516,6 +529,14 @@ class InstallTransactionService:
     #: :class:`InstallResult`; any failure raises fail-closed with no
     #: destructive command issued by this service.
     ab_executor: Callable[[object, HardwareSettings, str, DeviceObservation], InstallResult] | None = None
+    #: Explicit install mode bound to the configured executor: ``"ab"`` for
+    #: release-capable A/B profiles (requires :attr:`ab_executor`),
+    #: ``"legacy-single"`` for legacy/single-root recovery profiles
+    #: (requires ``ab_executor=None``; update activation stays disabled via
+    #: the ``none-v1`` boot backend). The mode never guesses: a mismatch
+    #: refuses at construction so an A/B profile can never be served by the
+    #: legacy engine, nor a recovery profile by the A/B executor.
+    install_mode: str = "legacy-single"
 
     def _new_engine(self) -> InstallationEngine:
         if self.engine_factory is not None:
@@ -523,6 +544,12 @@ class InstallTransactionService:
         return InstallationEngine(project_root=self.state.project_root)
 
     def __post_init__(self) -> None:
+        if self.install_mode not in ("ab", "legacy-single"):
+            raise TransactionServiceError("install mode must be 'ab' or 'legacy-single'")
+        if (self.ab_executor is None) == (self.install_mode == "ab"):
+            raise TransactionServiceError(
+                "install mode does not match the configured install executor"
+            )
         coordinator = InstallTransactionCoordinator(authority=self.authority)
         object.__setattr__(self, "coordinator", coordinator)
         object.__setattr__(
@@ -762,10 +789,20 @@ class InstallTransactionService:
         return authorization, settings, locale, target
 
     def _prove_layout_fit(self, target: DeviceObservation) -> None:
-        """Prove the release layout plan fits the freshly verified target."""
+        """Prove the release layout plan fits the freshly verified target.
+
+        Runs whenever the state names a registered destructive adapter. A
+        single-root recovery profile (pre-A/B adapter outside the
+        destructive registry) skips this proof on the explicit
+        ``"legacy-single"`` path only: the legacy single-partition engine
+        owns its own pre-erase re-verification immediately before the first
+        destructive command.
+        """
         try:
             adapter = adapter_for(self.state.layout_adapter_id)
         except LayoutError as exc:
+            if self.install_mode == "legacy-single":
+                return
             raise TransactionServiceError(f"release layout adapter is unknown: {exc}") from exc
         if adapter.boot_backend != self.state.boot_backend:
             raise TransactionServiceError("release boot backend does not match the layout adapter")
@@ -820,8 +857,31 @@ def handle_connection(
             pass
 
 
-def build_live_service(*, project_root: Path | None = None) -> InstallTransactionService:
-    """Compose the production service from Greia-owned environment state."""
+def build_live_service(
+    *,
+    project_root: Path | None = None,
+    ab_seams_factory: object = None,
+    ab_identities_factory: object = None,
+) -> InstallTransactionService:
+    """Compose the production service from Greia-owned environment state.
+
+    Single-root recovery profiles return the explicit legacy service
+    (``legacy-single`` mode, no A/B executor). Release-capable A/B profiles
+    resolve the A/B executor from the Setup-owned ``GREIA_AB_*``
+    environment (see :mod:`greia_installer.composition`); any missing
+    element — bundle, key dir, password hash, support bound, block-effect
+    seams or observed-identity observation — raises fail-closed here,
+    before any socket is served. An A/B profile never silently falls back
+    to the legacy single-partition engine. Block-effect factories resolve
+    on the device-execution path; pass them explicitly when the device seam
+    owns them.
+    """
+    from .composition import (
+        AbInstallCompositionError,
+        build_install_service,
+        install_mode_for_state,
+    )
+
     root = project_root or Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
     payload = Path(
         os.environ.get("GREIA_INSTALL_PAYLOAD", "/run/live/medium/payload/pip-rootfs.squashfs")
@@ -841,9 +901,25 @@ def build_live_service(*, project_root: Path | None = None) -> InstallTransactio
         project_root=root,
         hardware_support_pool=pool,
     )
-    return InstallTransactionService(
-        authority=PlatformInstallAuthority.from_service_state(state), state=state
-    )
+    authority = PlatformInstallAuthority.from_service_state(state)
+    try:
+        mode = install_mode_for_state(state)
+    except AbInstallCompositionError as exc:
+        raise TransactionServiceError(str(exc)) from exc
+    if mode == "legacy-single":
+        return InstallTransactionService(
+            authority=authority, state=state, install_mode="legacy-single"
+        )
+    try:
+        return build_install_service(
+            state=state,
+            authority=authority,
+            ab_from_environment=True,
+            ab_seams_factory=ab_seams_factory,  # type: ignore[arg-type]
+            ab_identities_factory=ab_identities_factory,  # type: ignore[arg-type]
+        )
+    except AbInstallCompositionError as exc:
+        raise TransactionServiceError(str(exc)) from exc
 
 
 def serve_forever(listener: socket.socket, *, service: InstallTransactionService) -> NoReturn:

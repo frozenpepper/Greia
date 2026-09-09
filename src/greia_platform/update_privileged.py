@@ -14,10 +14,12 @@ current single-root backend stays unavailable: staging/arming on a
 single-root layout fails closed through
 ``UnavailableSystemUpdateBackend`` semantics.
 
-R0/R1 bound: protocol definitions only. Staging/arming/commit authority
-reuses the staged fakes and file-backed seams; no destructive backend is
-wired here and nothing is destructively enabled. The socket unit stays
-inactive during ordinary pre-intro boot.
+This module owns the protocol (endpoint, framing, peer/boot gates); the
+destructive-capable composition lives in ``system_updates``
+(``SlotBackedSystemUpdateBackend`` over the shared ``SlotWriter`` /
+``SlotFinalizer`` / ``BootTransactionJournal`` seams plus the attached
+boot one-shot backend). :func:`main` serves that production authority;
+the socket unit stays inactive during ordinary pre-intro boot.
 """
 
 from __future__ import annotations
@@ -223,17 +225,17 @@ def read_response(raw: bytes) -> tuple[str, str, dict[str, object]]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Socket-service entry point (R0/R1: defined, never destructively enabled).
+    """Socket-service entry point: serve the production update authority.
 
-    The ``greia-system-update`` socket/service units reference this entry.
-    It refuses to perform destructive work: with no socket-activated file
-    descriptor and no destructive backend wired, it exits fail-closed.
+    Composes the live service from Greia-owned state (trust, layout,
+    journal, boot one-shot backend) and serves socket-activated connections
+    with kernel-attested peers. Without a socket-activated file descriptor
+    the service exits fail-closed instead of opening any socket itself
+    (see ``greia-system-update.socket``).
     """
-    _ = list(argv or [])
-    raise SystemExit(
-        "greia-system-update: destructive backend not wired at R0/R1; "
-        "service defined but never enabled (see greia-system-update.service)"
-    )
+    from .system_updates import main as serve_production_update_service
+
+    return serve_production_update_service(list(argv or []))
 
 
 if __name__ == "__main__":

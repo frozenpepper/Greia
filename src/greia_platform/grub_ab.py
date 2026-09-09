@@ -9,9 +9,13 @@ Parent-supplied boot entries or partition paths:
 
 * :func:`render_grub_ab_config` generates the fixed two-entry ``grub.cfg``
   (``greia-a`` / ``greia-b``) referencing adapter-owned generic
-  kernel/initramfs paths and role-owned root PARTUUIDs. Routine updates
+  kernel/initramfs paths and role-owned slot identities. Each entry locates
+  its slot filesystem with the documented ``search --fs-uuid`` primitive
+  (filesystem UUID) while the kernel/initramfs receives the observed
+  ``root=PARTUUID=`` (GPT GUID or MBR ``<disk-signature>-<partno>``) bound
+  to the same semantic slot. Routine updates
   never run os-prober or cross-root discovery: every entry is
-  self-contained (its own ``search --part-uuid`` plus its own
+  self-contained (its own ``search --fs-uuid`` plus its own
   ``root=PARTUUID=`` binding).
 * :class:`GrubEnvBackend` implements the x86 :class:`BootTransactionBackend`
   one-shot semantics (``inspect`` / ``arm_one_shot`` /
@@ -34,6 +38,7 @@ manager, daemon or parser: menuentry headers are token-checked with
 from __future__ import annotations
 
 import os
+import re
 import shlex
 import tempfile
 import uuid as _uuid
@@ -102,6 +107,58 @@ def _require_canonical_partuuid(value: object, *, field_name: str) -> str:
     return str(parsed)
 
 
+def _require_filesystem_uuid(value: object, *, field_name: str) -> str:
+    """Filesystem UUID for the proven ``search --fs-uuid`` locator.
+
+    Filesystem UUIDs are always canonical lowercase UUIDs, on both GPT and
+    MBR layouts. The partition-UUID search primitive (``search
+    --part-uuid``) is unproven against the shipped GRUB binary (TAKEOVER-1
+    T1.2, D52) and is rejected by the validator below.
+    """
+    return _require_canonical_partuuid(value, field_name=field_name)
+
+
+def _require_root_partuuid(value: object, *, field_name: str) -> str:
+    """Observed ``root=PARTUUID=`` value: GPT GUID or MBR ``<sig>-<NN>``.
+
+    The kernel ABI keeps ``root=PARTUUID=`` for both schemes (T1-IDENT
+    observed record): GPT layouts carry a canonical lowercase GUID, MBR
+    layouts carry the Linux ``<disk-signature>-<partition-number>`` form
+    (e.g. ``1234abcd-02``), never a minted UUID4. Canonicalization matches
+    :func:`persistent_layout.normalize_mbr_partuuid` (lowercase signature,
+    zero-padded two-digit number).
+    """
+    if not isinstance(value, str):
+        raise GrubAbConfigError(f"{field_name} must be text")
+    try:
+        return _require_canonical_partuuid(value, field_name=field_name)
+    except GrubAbConfigError:
+        pass
+    text = value.strip()
+    if "-" not in text:
+        raise GrubAbConfigError(
+            f"{field_name} is neither a canonical UUID nor an MBR PARTUUID"
+        )
+    signature_text, _, number_text = text.rpartition("-")
+    signature = signature_text.lower()
+    if signature.startswith("0x"):
+        signature = signature[2:]
+    if not re.fullmatch(r"[0-9a-f]{8}", signature):
+        raise GrubAbConfigError(
+            f"{field_name} is neither a canonical UUID nor an MBR PARTUUID"
+        )
+    if not number_text.isascii() or not number_text.isdigit():
+        raise GrubAbConfigError(
+            f"{field_name} carries an invalid MBR partition number"
+        )
+    number = int(number_text, 10)
+    if not 1 <= number <= 128:
+        raise GrubAbConfigError(
+            f"{field_name} carries an MBR partition number outside Greia bounds"
+        )
+    return f"{signature}-{number:02d}"
+
+
 #: Entry name -> semantic slot (inverse of the adapter-owned GRUB_ENTRY_NAMES).
 ENTRY_TO_SLOT = {entry: slot for slot, entry in GRUB_ENTRY_NAMES.items()}
 
@@ -155,8 +212,18 @@ def render_grub_ab_config(
     """
     slot_a, slot_b = _check_artifact_pair(artifact_a, artifact_b)
     return _render_entries(
-        partuuid_a=slot_a.root_partuuid,
-        partuuid_b=slot_b.root_partuuid,
+        partuuid_a=_require_root_partuuid(
+            slot_a.root_partuuid, field_name="slot-A root PARTUUID"
+        ),
+        fs_uuid_a=_require_filesystem_uuid(
+            slot_a.root_filesystem_uuid, field_name="slot-A filesystem UUID"
+        ),
+        partuuid_b=_require_root_partuuid(
+            slot_b.root_partuuid, field_name="slot-B root PARTUUID"
+        ),
+        fs_uuid_b=_require_filesystem_uuid(
+            slot_b.root_filesystem_uuid, field_name="slot-B filesystem UUID"
+        ),
         password_hash=password_hash,
         developer=developer,
     )
@@ -184,12 +251,24 @@ def render_grub_ab_config_from_record(
         raise GrubAbConfigError("GRUB entries exist only on the grub-ab-v1 backend")
     if record.system_b is None:
         raise GrubAbConfigError("single-root layouts carry no GRUB A/B entries")
+    # Both identifiers come from the same trusted PartitionIdentity per
+    # slot, so the locator/filesystem-UUID and kernel/PARTUUID binding is
+    # proven at the record layer (scheme + cross-disk gates in
+    # InstalledLayoutRecord.from_dict) and re-checked per entry below.
     return _render_entries(
-        partuuid_a=_require_canonical_partuuid(
+        partuuid_a=_require_root_partuuid(
             record.system_a.partuuid, field_name="system-a PARTUUID"
         ),
-        partuuid_b=_require_canonical_partuuid(
+        fs_uuid_a=_require_filesystem_uuid(
+            record.system_a.filesystem_uuid,
+            field_name="system-a filesystem UUID",
+        ),
+        partuuid_b=_require_root_partuuid(
             record.system_b.partuuid, field_name="system-b PARTUUID"
+        ),
+        fs_uuid_b=_require_filesystem_uuid(
+            record.system_b.filesystem_uuid,
+            field_name="system-b filesystem UUID",
         ),
         password_hash=password_hash,
         developer=developer,
@@ -199,20 +278,29 @@ def render_grub_ab_config_from_record(
 def _render_entries(
     *,
     partuuid_a: str,
+    fs_uuid_a: str,
     partuuid_b: str,
+    fs_uuid_b: str,
     password_hash: str,
     developer: bool,
 ) -> str:
-    """Shared deterministic template: adapter paths plus slot root bindings."""
+    """Shared deterministic template: adapter paths plus slot bindings.
+
+    Each slot entry locates its filesystem with the documented
+    ``search --fs-uuid`` primitive while booting ``root=PARTUUID=``: the
+    unproven ``search --part-uuid`` primitive must not be reintroduced
+    without an executable test against the exact shipped GRUB package
+    (T1.2/D52).
+    """
     digest = _require_password_hash(password_hash)
     if not isinstance(developer, bool):
         raise GrubAbConfigError("developer must be a boolean")
 
-    def _entry(slot: str, partuuid: str) -> str:
+    def _entry(slot: str, partuuid: str, fs_uuid: str) -> str:
         args = " ".join(_kernel_arguments(root_partuuid=partuuid, developer=developer))
         return (
             f"menuentry 'Greia Slot {slot}' --unrestricted --id {GRUB_ENTRY_NAMES[slot]} {{\n"
-            f"  search --no-floppy --part-uuid --set=root {partuuid}\n"
+            f"  search --no-floppy --fs-uuid --set=root {fs_uuid}\n"
             f"  linux {GRUB_KERNEL_PATH} {args}\n"
             f"  initrd {GRUB_INITRAMFS_PATH}\n"
             "}\n"
@@ -234,8 +322,8 @@ def _render_entries(
         "fi\n"
         "set timeout=0\n"
         "set timeout_style=hidden\n"
-        + _entry("A", partuuid_a)
-        + _entry("B", partuuid_b)
+        + _entry("A", partuuid_a, fs_uuid_a)
+        + _entry("B", partuuid_b, fs_uuid_b)
     )
 
 
@@ -286,29 +374,90 @@ def validate_grub_ab_text(
     developer: bool = False,
     artifact_a: BootArtifactSet | None = None,
     artifact_b: BootArtifactSet | None = None,
+    record: InstalledLayoutRecord | None = None,
 ) -> tuple[KernelCommandLine, ...]:
     """Validate a two-entry GRUB A/B configuration.
 
     Reuses the existing per-line kernel contract
     (:func:`validate_kernel_command_line`) for both entries and enforces the
     A/B structure: exactly ``greia-a`` / ``greia-b`` unrestricted entries,
-    owner auth, adapter-owned paths, self-contained ``root=PARTUUID=``
-    bindings, and no os-prober / cross-root / recovery surface. When the
-    artifact sets are supplied, entry PARTUUIDs must equal the layout-bound
-    root identities. Raises :class:`GrubAbConfigError` (or the contract's
+    owner auth, adapter-owned paths, self-contained ``search --fs-uuid`` +
+    ``root=PARTUUID=`` bindings, and no os-prober / cross-root / recovery
+    surface. The GRUB locator is always the documented ``search --fs-uuid``
+    primitive (filesystem UUID); the unproven ``search --part-uuid``
+    primitive is rejected. The kernel root is always ``root=PARTUUID=``
+    carrying the observed GPT GUID or MBR ``<sig>-<NN>`` value.
+
+    When artifact sets (and/or the trusted layout record) are supplied, the
+    per-entry ``(search fs-uuid, kernel root PARTUUID)`` pair must equal the
+    same slot's layout-bound identities: a locator from slot A paired with
+    slot B's root — or any identifier foreign to the record — fails closed.
+    Raises :class:`GrubAbConfigError` (or the contract's
     :class:`GrubContractError` for kernel-line violations).
     """
     if not isinstance(text, str) or not text:
         raise GrubAbConfigError("GRUB A/B configuration must be non-empty text")
     if (artifact_a is None) != (artifact_b is None):
         raise GrubAbConfigError("artifact sets must be supplied as the A/B pair")
+    if record is not None and not isinstance(record, InstalledLayoutRecord):
+        raise GrubAbConfigError("slot roots must come from the trusted layout record")
     expected_roots: dict[str, str] = {}
+    expected_fs_uuids: dict[str, str] = {}
     if artifact_a is not None and artifact_b is not None:
         slot_a, slot_b = _check_artifact_pair(artifact_a, artifact_b)
         expected_roots = {
-            GRUB_ENTRY_NAMES["A"]: slot_a.root_partuuid,
-            GRUB_ENTRY_NAMES["B"]: slot_b.root_partuuid,
+            GRUB_ENTRY_NAMES["A"]: _require_root_partuuid(
+                slot_a.root_partuuid, field_name="slot-A root PARTUUID"
+            ),
+            GRUB_ENTRY_NAMES["B"]: _require_root_partuuid(
+                slot_b.root_partuuid, field_name="slot-B root PARTUUID"
+            ),
         }
+        expected_fs_uuids = {
+            GRUB_ENTRY_NAMES["A"]: _require_filesystem_uuid(
+                slot_a.root_filesystem_uuid, field_name="slot-A filesystem UUID"
+            ),
+            GRUB_ENTRY_NAMES["B"]: _require_filesystem_uuid(
+                slot_b.root_filesystem_uuid, field_name="slot-B filesystem UUID"
+            ),
+        }
+    if record is not None:
+        if record.boot_backend != "grub-ab-v1":
+            raise GrubAbConfigError("GRUB entries exist only on the grub-ab-v1 backend")
+        if record.system_b is None:
+            raise GrubAbConfigError("single-root layouts carry no GRUB A/B entries")
+        record_roots = {
+            GRUB_ENTRY_NAMES["A"]: _require_root_partuuid(
+                record.system_a.partuuid, field_name="system-a PARTUUID"
+            ),
+            GRUB_ENTRY_NAMES["B"]: _require_root_partuuid(
+                record.system_b.partuuid, field_name="system-b PARTUUID"
+            ),
+        }
+        record_fs = {
+            GRUB_ENTRY_NAMES["A"]: _require_filesystem_uuid(
+                record.system_a.filesystem_uuid,
+                field_name="system-a filesystem UUID",
+            ),
+            GRUB_ENTRY_NAMES["B"]: _require_filesystem_uuid(
+                record.system_b.filesystem_uuid,
+                field_name="system-b filesystem UUID",
+            ),
+        }
+        for entry_id in record_roots:
+            if entry_id in expected_roots:
+                if expected_roots[entry_id] != record_roots[entry_id]:
+                    raise GrubAbConfigError(
+                        f"entry {entry_id}: artifact root does not match the layout record"
+                    )
+                if expected_fs_uuids[entry_id] != record_fs[entry_id]:
+                    raise GrubAbConfigError(
+                        f"entry {entry_id}: artifact filesystem UUID "
+                        "does not match the layout record"
+                    )
+            else:
+                expected_roots[entry_id] = record_roots[entry_id]
+                expected_fs_uuids[entry_id] = record_fs[entry_id]
 
     headers = _menuentry_headers(text)
     if len(headers) != 2:
@@ -356,6 +505,12 @@ def validate_grub_ab_text(
         raise GrubAbConfigError(
             "GRUB A/B entries must bind roots by PARTUUID, never filesystem UUID"
         )
+    if "--part-uuid" in text:
+        raise GrubAbConfigError(
+            "GRUB A/B entries must locate slots with the documented "
+            "search --fs-uuid primitive; search --part-uuid is unproven "
+            "against the shipped GRUB binary (T1.2/D52)"
+        )
 
     entries = kernel_command_lines(text)
     if len(entries) != 2:
@@ -384,7 +539,7 @@ def validate_grub_ab_text(
             raise GrubAbConfigError(
                 f"line {line.line_number}: expected exactly one root=PARTUUID= binding"
             )
-        partuuid = _require_canonical_partuuid(roots[0], field_name="root PARTUUID")
+        partuuid = _require_root_partuuid(roots[0], field_name="root PARTUUID")
         for argument in line.arguments:
             if argument.startswith("root=") and argument != f"root=PARTUUID={roots[0]}":
                 raise GrubAbConfigError(
@@ -393,6 +548,21 @@ def validate_grub_ab_text(
         seen_roots[partuuid] = seen_roots.get(partuuid, line.kernel_path)
     if len(seen_roots) != 2:
         raise GrubAbConfigError("slot entries must bind two distinct root PARTUUIDs")
+    seen_fs: set[str] = set()
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if stripped.startswith("search "):
+            parts = stripped.split()
+            if "--set=root" in parts and "--fs-uuid" in parts:
+                target = parts[parts.index("--set=root") + 1]
+                seen_fs.add(
+                    _require_filesystem_uuid(target, field_name="search filesystem UUID")
+                )
+    if len(seen_fs) != 2:
+        raise GrubAbConfigError(
+            "slot entries must locate two distinct filesystem UUIDs "
+            "with search --fs-uuid"
+        )
 
     initrd_paths = [
         line.strip().split()
@@ -407,8 +577,9 @@ def validate_grub_ab_text(
             f"{GRUB_INITRAMFS_PATH}"
         )
 
-    # Each entry block must be self-contained: its search line binds the same
-    # PARTUUID its kernel line boots. Blocks are delimited by menuentry braces.
+    # Each entry block must be self-contained: its search line locates the
+    # slot filesystem (fs-uuid) whose kernel line boots the same slot's
+    # root PARTUUID. Blocks are delimited by menuentry braces.
     blocks = _entry_blocks(text)
     if set(blocks) != {GRUB_ENTRY_NAMES["A"], GRUB_ENTRY_NAMES["B"]}:
         raise GrubAbConfigError("slot entry blocks do not match the stable entry ids")
@@ -416,13 +587,16 @@ def validate_grub_ab_text(
         search_targets = [
             parts[parts.index("--set=root") + 1]
             for parts in (line.split() for line in body.splitlines())
-            if "--set=root" in parts and "--part-uuid" in parts
+            if "--set=root" in parts and "--fs-uuid" in parts
         ]
         if len(search_targets) != 1:
             raise GrubAbConfigError(
                 f"entry {entry_id}: expected exactly one self-contained "
-                "search --part-uuid --set=root binding"
+                "search --fs-uuid --set=root binding"
             )
+        search_fs = _require_filesystem_uuid(
+            search_targets[0], field_name=f"entry {entry_id} search filesystem UUID"
+        )
         kernel_lines = kernel_command_lines(body)
         if len(kernel_lines) != 1:
             raise GrubAbConfigError(
@@ -433,13 +607,45 @@ def validate_grub_ab_text(
             for argument in kernel_lines[0].arguments
             if argument.startswith("root=PARTUUID=")
         ]
-        if kernel_roots != search_targets:
+        if len(kernel_roots) != 1:
             raise GrubAbConfigError(
-                f"entry {entry_id}: search binding does not match the booted root"
+                f"entry {entry_id}: expected exactly one root=PARTUUID= binding"
             )
-        if expected_roots and search_targets[0] != expected_roots[entry_id]:
+        kernel_root = _require_root_partuuid(
+            kernel_roots[0], field_name=f"entry {entry_id} root PARTUUID"
+        )
+        if expected_roots:
+            if kernel_root != expected_roots[entry_id]:
+                raise GrubAbConfigError(
+                    f"entry {entry_id}: root identity does not match the layout record"
+                )
+            if search_fs != expected_fs_uuids[entry_id]:
+                raise GrubAbConfigError(
+                    f"entry {entry_id}: filesystem locator does not match "
+                    "the slot's layout identity"
+                )
+        else:
+            # Without record/artifact authority, self-containment still
+            # requires the two entries to carry distinct locator pairs so a
+            # duplicated slot cannot pass as an A/B configuration.
+            pass
+    if not expected_roots:
+        pairs = set()
+        for entry_id, body in blocks.items():
+            search_targets = [
+                parts[parts.index("--set=root") + 1]
+                for parts in (line.split() for line in body.splitlines())
+                if "--set=root" in parts and "--fs-uuid" in parts
+            ]
+            kernel_roots = [
+                argument.split("root=PARTUUID=", 1)[1]
+                for argument in kernel_command_lines(body)[0].arguments
+                if argument.startswith("root=PARTUUID=")
+            ]
+            pairs.add((search_targets[0], kernel_roots[0]))
+        if len(pairs) != 2:
             raise GrubAbConfigError(
-                f"entry {entry_id}: root identity does not match the layout record"
+                "slot entries must carry two distinct locator/root pairs"
             )
     return entries
 

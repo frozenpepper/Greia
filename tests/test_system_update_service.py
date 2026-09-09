@@ -805,16 +805,76 @@ class AuthoritySocketTests(unittest.TestCase):
 
     @unittest.skipUnless(HAS_CRYPTOGRAPHY, "cryptography is required for trust tests")
     def test_socket_connection_serves_one_request_then_refuses_bad_peer(self) -> None:
-        from greia_platform.system_updates import handle_update_connection
+        import struct
+
+        from greia_platform.privileged_channel import (
+            PeerCredential,
+            PrivilegedChannelError,
+        )
+        from greia_platform.system_updates import (
+            attest_peer_from_connection,
+            handle_update_connection,
+        )
         from greia_platform.update_privileged import build_request, read_response
+
+        class _PeerConnection:
+            """Real transport, kernel-shaped peer credential for one UID.
+
+            ``getsockopt(SO_PEERCRED)`` answers with the fixed UID so the
+            test proves attestation (not caller supply) decides service;
+            all other socket behavior stays real.
+            """
+
+            def __init__(self, transport: socket.socket, uid: int) -> None:
+                self._transport = transport
+                self._uid = uid
+
+            def getsockopt(self, level: int, optname: int, buflen: int) -> bytes:
+                return struct.pack("3i", 12345, self._uid, 12345)
+
+            def settimeout(self, value: float) -> None:
+                self._transport.settimeout(value)
+
+            def recv(self, size: int) -> bytes:
+                return self._transport.recv(size)
+
+            def sendall(self, data: bytes) -> None:
+                self._transport.sendall(data)
+
+            def close(self) -> None:
+                self._transport.close()
 
         with tempfile.TemporaryDirectory() as directory:
             authority = self._authority(Path(directory))
+
+            def attested_uid(uid: int, transport: socket.socket) -> PeerCredential:
+                """Attest one UID through the production helper when possible.
+
+                Platforms without ``SO_PEERCRED`` fail attestation closed
+                (proven separately); there the credential is constructed
+                directly so the serving/refusal contract is still proven.
+                """
+                try:
+                    return attest_peer_from_connection(
+                        _PeerConnection(transport, uid)  # type: ignore[arg-type]
+                    )
+                except PrivilegedChannelError:
+                    if hasattr(socket, "SO_PEERCRED"):
+                        raise
+                    return PeerCredential(uid=uid)
+
             left, right = socket.socketpair()
             try:
                 left.sendall(build_request("STATUS"))
                 left.shutdown(socket.SHUT_WR)
-                handle_update_connection(right, authority=authority, peer_uid=0)
+                peer = attested_uid(0, right)
+                self.assertIsInstance(peer, PeerCredential)
+                self.assertEqual(peer.uid, 0)
+                handle_update_connection(
+                    _PeerConnection(right, 0),  # type: ignore[arg-type]
+                    authority=authority,
+                    peer=peer,
+                )
                 frames = []
                 while True:
                     chunk = left.recv(65536)
@@ -831,7 +891,9 @@ class AuthoritySocketTests(unittest.TestCase):
                 refused_left.sendall(build_request("STATUS"))
                 refused_left.shutdown(socket.SHUT_WR)
                 handle_update_connection(
-                    refused_right, authority=authority, peer_uid=1000
+                    _PeerConnection(refused_right, 1000),  # type: ignore[arg-type]
+                    authority=authority,
+                    peer=PeerCredential(uid=1000),
                 )
                 frames = []
                 while True:
@@ -844,6 +906,29 @@ class AuthoritySocketTests(unittest.TestCase):
                 self.assertEqual(payload["status"], "REFUSED")
             finally:
                 refused_left.close()
+            # Caller-supplied identity (no attested credential) is rejected
+            # before any request byte is served.
+            forged_left, forged_right = socket.socketpair()
+            try:
+                forged_left.sendall(build_request("STATUS"))
+                forged_left.shutdown(socket.SHUT_WR)
+                handle_update_connection(
+                    forged_right,
+                    authority=authority,
+                    peer=0,  # type: ignore[arg-type]
+                )
+                frames = []
+                while True:
+                    chunk = forged_left.recv(65536)
+                    if not chunk:
+                        break
+                    frames.append(chunk)
+                _, op, payload = read_response(b"".join(frames))
+                self.assertEqual(op, "ERROR")
+                self.assertEqual(payload["status"], "REFUSED")
+                self.assertIn("attested", str(payload["reason"]))
+            finally:
+                forged_left.close()
 
     def test_candidate_outside_inbox_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

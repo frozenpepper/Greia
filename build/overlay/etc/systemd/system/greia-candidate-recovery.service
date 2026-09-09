@@ -1,0 +1,29 @@
+# TAKEOVER-4/D55 failed-candidate recovery trigger (oneshot, timer-fired).
+#
+# Narrow lifecycle capability, not a generic daemon or system manager: this
+# unit runs the privileged recovery helper exactly once when the deadline
+# timer fires. The helper consumes only the existing boot-transaction
+# journal(s) and backend state (semantic slots, never caller-supplied
+# entries or paths), marks an unhealthy candidate FAILED, and issues the
+# controlled reboot. The backend persistent default is never mutated here,
+# so the reboot returns to the previous accepted slot while the candidate
+# stays abandoned. Plain boots are a silent no-op (exit 0, no reboot).
+#
+# Failure classes 1-3 converge here (launcher crash loop, userspace
+# emergency/failure, health-service failure). Class 4 (kernel panic) is
+# owned by the panic-reboot sysctl drop-in. Class 5 (hard hang) has no
+# automatic path: no reference platform proves a watchdog, so recovery is
+# the next physical power cycle (manual recovery, honestly described).
+[Unit]
+Description=Greia failed-candidate recovery trigger
+After=local-fs.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/greia-os/greia-candidate-recovery
+TimeoutStartSec=60
+Restart=no
+RemainAfterExit=no
+StandardOutput=journal
+StandardError=journal

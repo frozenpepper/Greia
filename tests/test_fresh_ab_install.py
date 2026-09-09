@@ -126,6 +126,57 @@ def _sizing(slot_bytes: int = 1 * GIB) -> ProfileSizing:
     )
 
 
+#: Observed legacy-MBR disk signature shared by every role (the T1-IDENT
+#: observed ``<disk-signature>-<NN>`` form; never a minted UUID4).
+_MBR_SIGNATURE = "a1b2c3d4"
+
+#: Filesystem UUID the orchestration generates for PERSIST (role-owned, read
+#: back through the persist runner; PARTUUIDs are the observed identities).
+_PERSIST_FS_UUID = "cccccccc-cccc-cccc-cccc-ccccccccccc3"
+
+
+def _observed_mbr_identities(signature: str = _MBR_SIGNATURE):
+    """Return scheme-explicit observed MBR identities for the legacy roles."""
+    return {
+        "system-a": {
+            "scheme": "MBR_PARTUUID",
+            "partuuid": f"{signature}-02",
+            "filesystem_uuid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+        },
+        "system-b": {
+            "scheme": "MBR_PARTUUID",
+            "partuuid": f"{signature}-03",
+            "filesystem_uuid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
+        },
+        "persist": {
+            "scheme": "MBR_PARTUUID",
+            "partuuid": f"{signature}-04",
+            "filesystem_uuid": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+        },
+    }
+
+
+def _observed_gpt_identities():
+    """Return scheme-explicit observed GPT identities (canonical GUIDs)."""
+    return {
+        "system-a": {
+            "scheme": "GPT_GUID",
+            "partuuid": "11111111-1111-1111-1111-1111111111a1",
+            "filesystem_uuid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+        },
+        "system-b": {
+            "scheme": "GPT_GUID",
+            "partuuid": "22222222-2222-2222-2222-2222222222b2",
+            "filesystem_uuid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
+        },
+        "persist": {
+            "scheme": "GPT_GUID",
+            "partuuid": "33333333-3333-3333-3333-3333333333c3",
+            "filesystem_uuid": "dddddddd-dddd-dddd-dddd-ddddddddddd4",
+        },
+    }
+
+
 class RecordingPartitionRunner:
     """Narrow adapter runner: records argument arrays, touches nothing."""
 
@@ -295,7 +346,7 @@ class FreshAbInstallTests(unittest.TestCase):
     def _harness(self, root: Path, payload: bytes):
         bundle = self._bundle(root, payload)
         manifest = inspect_update_bundle(bundle).manifest
-        minted = mint_fresh_partition_identities()
+        observed = _observed_mbr_identities()
         persist_stage = root / "persist-stage"
         persist_stage.mkdir()
         boot_control = root / "boot-control"
@@ -316,9 +367,7 @@ class FreshAbInstallTests(unittest.TestCase):
         filesystem = FakeSlotFilesystem(mount_dir)
         installer = FakePackageInstaller()
         runner = RecordingPartitionRunner()
-        persist_runner = FakePersistRunner(
-            readback_uuid=minted["persist"]["filesystem_uuid"]
-        )
+        persist_runner = FakePersistRunner(readback_uuid=_PERSIST_FS_UUID)
         seams = FreshAbInstallSeams(
             partition_runner=runner,  # type: ignore[arg-type]
             slot_storage_factory=_storage,
@@ -330,7 +379,7 @@ class FreshAbInstallTests(unittest.TestCase):
             support_installed_bound=_SUPPORT_BOUND,
             persist_runner=persist_runner,
             persist_stage_dir=persist_stage,
-            persist_uuid_factory=lambda: uuid.UUID(minted["persist"]["filesystem_uuid"]),
+            persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
             boot_control_dir=boot_control,
             backend_state_dir=backend_state,
             journal_dir=journal,
@@ -347,12 +396,12 @@ class FreshAbInstallTests(unittest.TestCase):
             install_target_sha256=_INSTALL_SHA,
             password_hash=_PASSWORD_HASH,
             installed_at_unix=1757000000,
-            fresh_identities=minted,
+            fresh_identities=observed,
         )
         return {
             "bundle": bundle,
             "manifest": manifest,
-            "minted": minted,
+            "observed": observed,
             "seams": seams,
             "request": request,
             "runner": runner,
@@ -383,7 +432,7 @@ class FreshAbInstallTests(unittest.TestCase):
         payload = _payload()
         harness = self._install(payload)
         result = harness["result"]
-        minted = harness["minted"]
+        observed = harness["observed"]
 
         self.assertEqual(result.receipt.slot, "A")
         self.assertEqual(result.receipt.release_id, "greia-0.15.0")
@@ -391,10 +440,10 @@ class FreshAbInstallTests(unittest.TestCase):
         self.assertEqual(result.bytes_written, len(payload))
         # Role UUID restored exactly from layout authority, never the template.
         self.assertEqual(
-            result.receipt.filesystem_uuid, minted["system-a"]["filesystem_uuid"]
+            result.receipt.filesystem_uuid, observed["system-a"]["filesystem_uuid"]
         )
         self.assertEqual(
-            harness["filesystem"].bound_uuid, minted["system-a"]["filesystem_uuid"]
+            harness["filesystem"].bound_uuid, observed["system-a"]["filesystem_uuid"]
         )
         # SYSTEM_B storage never addressed: no second-slot duplication.
         self.assertEqual(harness["touched"], ["A"])
@@ -420,8 +469,8 @@ class FreshAbInstallTests(unittest.TestCase):
         text = grub_cfg.read_text(encoding="utf-8")
         self.assertEqual(text, result.grub_config_text)
         validate_grub_ab_text(text)
-        self.assertIn(minted["system-a"]["partuuid"], text)
-        self.assertIn(minted["system-b"]["partuuid"], text)
+        self.assertIn(observed["system-a"]["partuuid"], text)
+        self.assertIn(observed["system-b"]["partuuid"], text)
         backend = GrubEnvBackend.attach(harness["dirs"]["backend_state"])
         self.assertEqual(backend.inspect().default_slot, "A")
         self.assertIsNone(backend.inspect().one_shot_slot)
@@ -444,7 +493,116 @@ class FreshAbInstallTests(unittest.TestCase):
         # layout-bound PARTUUID (inactive: selecting it before staging
         # simply fails to boot — the X8-GRUB seam, not a staged system).
         text = harness["result"].grub_config_text
-        self.assertIn(harness["minted"]["system-b"]["partuuid"], text)
+        self.assertIn(harness["observed"]["system-b"]["partuuid"], text)
+
+    # -- observed-identity binding (T3-INSTALL/D51) ------------------------
+
+    def _request_with_identities(self, harness, identities):
+        import dataclasses
+
+        return dataclasses.replace(harness["request"], fresh_identities=identities)
+
+    def _fresh_harness(self, payload: bytes | None = None):
+        directory = tempfile.mkdtemp(prefix="x8-install-")
+        self.addCleanup(shutil.rmtree, directory, True)
+        return self._harness(Path(directory), _payload() if payload is None else payload)
+
+    def test_observed_mbr_identities_bound_to_record(self) -> None:
+        harness = self._install()
+        result = harness["result"]
+        observed = harness["observed"]
+        record = result.record
+        self.assertEqual(record.system_a.partuuid, observed["system-a"]["partuuid"])
+        self.assertEqual(
+            record.system_b.partuuid, observed["system-b"]["partuuid"]  # type: ignore[union-attr]
+        )
+        self.assertEqual(record.persist.partuuid, observed["persist"]["partuuid"])
+        self.assertEqual(record.system_a.scheme, "MBR_PARTUUID")
+        # One disk signature across every bound role (no cross-disk binding).
+        self.assertEqual(record.system_a.disk_signature, _MBR_SIGNATURE)
+        self.assertEqual(record.system_b.disk_signature, _MBR_SIGNATURE)  # type: ignore[union-attr]
+        self.assertEqual(record.persist.disk_signature, _MBR_SIGNATURE)
+        # Role filesystem UUID restored exactly from the observed identities.
+        self.assertEqual(
+            result.receipt.filesystem_uuid,
+            observed["system-a"]["filesystem_uuid"],
+        )
+
+    def test_uuid4_as_mbr_partuuid_rejected_before_destruction(self) -> None:
+        harness = self._fresh_harness()
+        fabricated = mint_fresh_partition_identities()
+        bad = self._request_with_identities(harness, fabricated)
+        with self.assertRaises(FreshAbInstallError):
+            execute_fresh_ab_install(bad, harness["seams"])
+        self.assertEqual(harness["runner"].commands, [])
+
+    def test_missing_identities_refused_without_mint(self) -> None:
+        harness = self._fresh_harness()
+        bad = self._request_with_identities(harness, None)
+        with self.assertRaises(FreshAbInstallError):
+            execute_fresh_ab_install(bad, harness["seams"])
+        self.assertEqual(harness["runner"].commands, [])
+
+    def test_gpt_identities_accepted_for_gpt_adapter(self) -> None:
+        import dataclasses
+
+        harness = self._fresh_harness()
+        gpt_sizing = ProfileSizing(
+            layout_adapter_id="modern-gpt-ab-v1",
+            slot_bytes=1 * GIB,
+            persist_minimum_bytes=256 * MIB,
+            boot_backend="grub-ab-v1",
+        )
+        request = dataclasses.replace(
+            harness["request"],
+            sizing=gpt_sizing,
+            fresh_identities=_observed_gpt_identities(),
+        )
+        # Identities pass validation: the refusal below is the deferred
+        # Phase-8C GPT execution, not the identity gate.
+        with self.assertRaisesRegex(FreshAbInstallError, "partitioning failed"):
+            execute_fresh_ab_install(request, harness["seams"])
+        self.assertEqual(harness["runner"].commands, [])
+
+    def test_mbr_partuuid_rejected_for_gpt_adapter(self) -> None:
+        import dataclasses
+
+        harness = self._fresh_harness()
+        gpt_sizing = ProfileSizing(
+            layout_adapter_id="modern-gpt-ab-v1",
+            slot_bytes=1 * GIB,
+            persist_minimum_bytes=256 * MIB,
+            boot_backend="grub-ab-v1",
+        )
+        request = dataclasses.replace(
+            harness["request"],
+            sizing=gpt_sizing,
+            fresh_identities=_observed_mbr_identities(),
+        )
+        with self.assertRaises(FreshAbInstallError):
+            execute_fresh_ab_install(request, harness["seams"])
+        self.assertEqual(harness["runner"].commands, [])
+
+    def test_explicit_wrong_scheme_rejected(self) -> None:
+        harness = self._fresh_harness()
+        observed = _observed_mbr_identities()
+        mismatched = {
+            role: dict(values, scheme="GPT_GUID") for role, values in observed.items()
+        }
+        bad = self._request_with_identities(harness, mismatched)
+        with self.assertRaises(FreshAbInstallError):
+            execute_fresh_ab_install(bad, harness["seams"])
+        self.assertEqual(harness["runner"].commands, [])
+
+    def test_mixed_mbr_disk_signature_rejected(self) -> None:
+        harness = self._fresh_harness()
+        observed = _observed_mbr_identities()
+        mixed = {role: dict(values) for role, values in observed.items()}
+        mixed["system-b"] = dict(mixed["system-b"], partuuid="deadbeef-03")
+        bad = self._request_with_identities(harness, mixed)
+        with self.assertRaises(FreshAbInstallError):
+            execute_fresh_ab_install(bad, harness["seams"])
+        self.assertEqual(harness["runner"].commands, [])
 
     # -- refusal ordering: nothing destructive before preflight ------------
 
@@ -668,6 +826,8 @@ class AbServiceRoutingTests(unittest.TestCase):
             payload_digest=Path("/etc/greia-os/expected-payload.sha256"),
             project_root=project_root,
             compatible_profile_id="profile-test",
+            platform_family="legacy-x86",
+            architecture="i386",
             target_policy_id="pc-internal-v1",
             layout_adapter_id="legacy-bios-ab-v1",
             boot_backend="grub-ab-v1",
@@ -681,7 +841,10 @@ class AbServiceRoutingTests(unittest.TestCase):
             live_resolver=_Resolver(),  # type: ignore[arg-type]
         )
         return InstallTransactionService(
-            authority=authority, state=state, ab_executor=ab_executor
+            authority=authority,
+            state=state,
+            ab_executor=ab_executor,
+            install_mode="ab" if ab_executor is not None else "legacy-single",
         )
 
     def _disk(self):
@@ -795,7 +958,7 @@ class AbServiceRoutingTests(unittest.TestCase):
         key_dir.mkdir()
         (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
         manifest = inspect_update_bundle(bundle).manifest
-        minted = mint_fresh_partition_identities()
+        observed = _observed_mbr_identities()
         persist_stage = root / "persist-stage"
         persist_stage.mkdir()
         boot_control = root / "boot-control"
@@ -804,6 +967,11 @@ class AbServiceRoutingTests(unittest.TestCase):
         for directory_path in (boot_control, backend_state, journal):
             directory_path.mkdir()
         touched: list[str] = []
+        seen_targets: list[object] = []
+
+        def _identities(target):  # type: ignore[no-untyped-def]
+            seen_targets.append(target)
+            return observed
 
         def _seams(target):  # type: ignore[no-untyped-def]
             return FreshAbInstallSeams(
@@ -818,13 +986,9 @@ class AbServiceRoutingTests(unittest.TestCase):
                 support_digest=manifest.hardware_support_sha256,
                 support_size=manifest.hardware_support_size,
                 support_installed_bound=_SUPPORT_BOUND,
-                persist_runner=FakePersistRunner(
-                    readback_uuid=minted["persist"]["filesystem_uuid"]
-                ),
+                persist_runner=FakePersistRunner(readback_uuid=_PERSIST_FS_UUID),
                 persist_stage_dir=persist_stage,
-                persist_uuid_factory=lambda: uuid.UUID(
-                    minted["persist"]["filesystem_uuid"]
-                ),
+                persist_uuid_factory=lambda: uuid.UUID(_PERSIST_FS_UUID),
                 boot_control_dir=boot_control,
                 backend_state_dir=backend_state,
                 journal_dir=journal,
@@ -840,7 +1004,7 @@ class AbServiceRoutingTests(unittest.TestCase):
             support_installed_bytes=_SUPPORT_BOUND,
             password_hash=_PASSWORD_HASH,
         )
-        executor = build_ab_executor(facts, _seams)
+        executor = build_ab_executor(facts, _seams, identities_factory=_identities)
 
         class _Authorization:
             target_identity = _INSTALL_SHA
@@ -862,6 +1026,84 @@ class AbServiceRoutingTests(unittest.TestCase):
         self.assertEqual(outcome.release_id, "greia-0.15.0")
         self.assertEqual(outcome.release_sequence, 11)
         self.assertEqual(touched, ["A"])
+        # Observed identities arrive per EXECUTE for the rematerialized target.
+        self.assertEqual(len(seen_targets), 1)
+        self.assertEqual(seen_targets[0].name, "sda")
+
+    def test_executor_without_identities_factory_refuses_before_seams(self) -> None:
+        directory = tempfile.mkdtemp(prefix="x8-abexec-")
+        self.addCleanup(shutil.rmtree, directory, True)
+        root = Path(directory)
+        harness = self._harness_bundle_only(root)
+        facts = AbExecutorFacts(
+            bundle_path=harness["bundle"],
+            trusted_key_dir=harness["key_dir"],
+            expected_profile_id=_PROFILE,
+            expected_platform_family=_FAMILY,
+            expected_architecture=_ARCH,
+            sizing=_sizing(),
+            support_installed_bytes=_SUPPORT_BOUND,
+            password_hash=_PASSWORD_HASH,
+        )
+        calls: list[object] = []
+
+        def _seams(target):  # type: ignore[no-untyped-def]
+            calls.append(target)
+            raise AssertionError("seams must not be built without identities")
+
+        executor = build_ab_executor(facts, _seams)
+
+        class _Authorization:
+            target_identity = _INSTALL_SHA
+
+        from greia_platform.hardware import HardwareSettings
+
+        settings = HardwareSettings(
+            schema_version=2,
+            touchpad_tap=False,
+            touchpad_speed=0.35,
+            mouse_speed=0.0,
+            natural_scrolling=False,
+            resolution="auto",
+            keyboard_layout="us",
+            mic_gain=2.0,
+            disable_while_typing=False,
+        )
+        with self.assertRaises(FreshAbInstallError):
+            executor(_Authorization(), settings, "en", _target())
+        self.assertEqual(calls, [])
+
+    def _harness_bundle_only(self, root: Path):
+        """Build a signed bundle + key dir without a full install harness."""
+        private = root / "priv.pem"
+        public = root / "pub.pem"
+        generate_ed25519_keypair(private, public)
+        payload_path = root / "payload.bin"
+        payload_path.write_bytes(_payload())
+        hw_path = root / "hw.tar.zst"
+        hw_path.write_bytes(_HW_BYTES)
+        contract_path = root / "contract.json"
+        contract_path.write_bytes(build_persistent_state_contract_bytes())
+        bundle = root / "r11.greiaupdate"
+        build_update_bundle(
+            payload_path=payload_path,
+            hardware_support_path=hw_path,
+            persistent_contract_path=contract_path,
+            output_path=bundle,
+            version="0.15.0",
+            release_id="greia-0.15.0",
+            release_sequence=11,
+            platform_family=_FAMILY,
+            architecture=_ARCH,
+            profile=_PROFILE,
+            signer=_SIGNER,
+            private_key_path=private,
+            minimum_slot_bytes=len(_payload()) + MIB,
+        )
+        key_dir = root / "trusted"
+        key_dir.mkdir(exist_ok=True)
+        (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
+        return {"bundle": bundle, "key_dir": key_dir}
 
 
 class ModuleHygieneTests(unittest.TestCase):

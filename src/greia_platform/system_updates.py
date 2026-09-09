@@ -1276,6 +1276,11 @@ UPDATE_TRUSTED_KEY_DIR_ENV = "GREIA_UPDATE_TRUSTED_KEY_DIR"
 UPDATE_TRUSTED_KEY_DIR_DEFAULT = "/etc/greia-os/system-update-keys"
 INSTALLED_LAYOUT_RECORD_ENV = "GREIA_INSTALLED_LAYOUT_RECORD"
 INSTALLED_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/installed-layout.json"
+#: Boot-control directory holding the production ``grubenv`` one-shot block.
+#: The installer writes it to the boot-control filesystem; GRUB reads the
+#: same block as ``$prefix/grubenv``. Explicit env or the on-device bind.
+UPDATE_GRUBENV_DIR_ENV = "GREIA_GRUBENV_DIR"
+UPDATE_GRUBENV_DIR_DEFAULT = "/boot/grub"
 UPDATE_SYSTEM_VERSION_ENV = "GREIA_SYSTEM_VERSION"
 UPDATE_SYSTEM_PLATFORM_ENV = "GREIA_SYSTEM_PLATFORM_FAMILY"
 UPDATE_SYSTEM_ARCH_ENV = "GREIA_SYSTEM_ARCHITECTURE"
@@ -2071,19 +2076,80 @@ class SystemUpdateServiceAuthority:
 # ---------------------------------------------------------------------------
 
 
+def resolve_grubenv_dir() -> Path:
+    """Resolve the boot-control directory holding the production grubenv."""
+    override = os.environ.get(UPDATE_GRUBENV_DIR_ENV, "").strip()
+    return Path(override) if override else Path(UPDATE_GRUBENV_DIR_DEFAULT)
+
+
+def production_boot_backend() -> object | None:
+    """Attach the production one-shot backend when its state exists.
+
+    Returns a ``GrubEnvBackend`` attached to the boot-control ``grubenv``
+    block when present and parseable, else None: without boot-control state
+    there is nothing to arm, so arm/confirm stay fail-closed unavailable
+    instead of guessing at boot control.
+    """
+    from .boot_transaction import BootTransactionError
+    from .grub_ab import GrubAbConfigError, GrubEnvBackend
+
+    try:
+        return GrubEnvBackend.attach(resolve_grubenv_dir())
+    except (BootTransactionError, GrubAbConfigError, OSError, ValueError):
+        return None
+
+
+def attest_peer_from_connection(connection: socket.socket) -> "PeerCredential":
+    """Attest the Unix peer from ``SO_PEERCRED`` (kernel fact, never bytes).
+
+    The uid/pid come from the kernel's socket credential, so a peer cannot
+    assert a different identity through request content. Any failure to
+    attest fails closed: the connection carries no servable request.
+    """
+    import struct
+
+    from .privileged_channel import PeerCredential, PrivilegedChannelError
+
+    peer_credibility = getattr(socket, "SO_PEERCRED", None)
+    if peer_credibility is None:
+        raise PrivilegedChannelError(
+            "peer credential is not attestable on this platform"
+        )
+    try:
+        raw = connection.getsockopt(
+            socket.SOL_SOCKET,
+            peer_credibility,
+            struct.calcsize("3i"),
+        )
+    except OSError as exc:
+        raise PrivilegedChannelError(
+            f"peer credential is not attestable: {exc}"
+        ) from exc
+    try:
+        _pid, uid, _gid = struct.unpack("3i", raw)
+    except struct.error as exc:
+        raise PrivilegedChannelError(
+            "peer credential is not attestable"
+        ) from exc
+    return PeerCredential(uid=int(uid))
+
+
 def handle_update_connection(
     connection: socket.socket,
     *,
     authority: SystemUpdateServiceAuthority,
-    peer_uid: int,
+    peer: "PeerCredential",
     boot_state: str = "update_ready",
 ) -> None:
     """Answer exactly one framed update request on an accepted connection.
 
     The protocol owner stays ``greia_platform.update_privileged`` (imported
     here, at the composition edge, because that module imports this one).
-    Any refusal — peer, boot, schema, trust, slot, journal — is answered as
-    a bounded REFUSED frame with no destination contact on the way out.
+    ``peer`` must be a kernel-attested ``PeerCredential`` (see
+    :func:`attest_peer_from_connection`): caller-supplied UIDs or identity
+    text are rejected before any request byte is read. Any refusal — peer,
+    boot, schema, trust, slot, journal — is answered as a bounded REFUSED
+    frame with no destination contact on the way out.
     """
     from .privileged_channel import (
         MAX_MESSAGE_BYTES,
@@ -2102,7 +2168,18 @@ def handle_update_connection(
         SlotFinalizeError = RuntimeError  # type: ignore[assignment]
         SlotWriteError = RuntimeError  # type: ignore[assignment]
 
-    peer = PeerCredential(uid=peer_uid)
+    if not isinstance(peer, PeerCredential):
+        response = encode_response(
+            new_transaction_id(),
+            "ERROR",
+            {"status": "REFUSED", "reason": "peer credential must be attested, never asserted"},
+        )
+        connection.sendall(response)
+        try:
+            connection.close()
+        except OSError:
+            pass
+        return
     try:
         connection.settimeout(10.0)
         chunks: list[bytes] = []
@@ -2143,8 +2220,21 @@ def build_live_update_service(
     state_dir: Path | None = None,
     trusted_key_dir: Path | None = None,
     layout_record_path: Path | None = None,
+    boot_backend: object | None = None,
+    boot_backend_auto: bool = True,
+    seams: UpdateSlotSeams | None = None,
 ) -> SystemUpdateServiceAuthority:
-    """Compose the production authority from Greia-owned environment state."""
+    """Compose the production authority from Greia-owned environment state.
+
+    Trust (keys), compatibility (release identity) and layout authority
+    resolve from Greia-owned state on every composition; the boot one-shot
+    backend attaches to the boot-control ``grubenv`` when present (stays
+    unwired fail-closed where there is no boot-control state, e.g.
+    single-root layouts). Inactive-slot destination factories arrive via
+    ``seams`` from image integration (loop/disposable-media composition in
+    this phase); unset destination seams report unavailable at stage time
+    rather than guessing at destination access.
+    """
     root = (
         Path(state_dir)
         if state_dir is not None
@@ -2168,10 +2258,16 @@ def build_live_update_service(
         architecture=os.environ.get(UPDATE_SYSTEM_ARCH_ENV, "unknown"),
         profile=os.environ.get(UPDATE_SYSTEM_PROFILE_ENV, "unknown"),
     )
+    resolved_boot_backend = (
+        boot_backend
+        if boot_backend is not None or not boot_backend_auto
+        else production_boot_backend()
+    )
     backend = SlotBackedSystemUpdateBackend(
         root,
         layout_record_path=record_path,
-        boot_backend=None,
+        seams=seams if seams is not None else UpdateSlotSeams(),
+        boot_backend=resolved_boot_backend,
     )
     return SystemUpdateServiceAuthority(root, keys, identity, backend)
 
@@ -2181,26 +2277,24 @@ def serve_update_forever(
     *,
     authority: SystemUpdateServiceAuthority,
 ) -> NoReturn:
-    """Accept connections until the socket unit stops (systemd owns the fd)."""
-    import struct
+    """Accept connections until the socket unit stops (systemd owns the fd).
+
+    Every peer is attested from ``SO_PEERCRED`` before serving; connections
+    whose kernel credential cannot be attested are closed unserved.
+    """
+    from .privileged_channel import PrivilegedChannelError
 
     while True:
         connection, _ = listener.accept()
         try:
-            raw = connection.getsockopt(
-                socket.SOL_SOCKET,
-                socket.SO_PEERCRED,
-                struct.calcsize("3i"),
-            )
-            _, uid, _ = struct.unpack("3i", raw)
-            peer_uid = int(uid)
-        except OSError:
+            peer = attest_peer_from_connection(connection)
+        except PrivilegedChannelError:
             try:
                 connection.close()
             except OSError:
                 pass
             continue
-        handle_update_connection(connection, authority=authority, peer_uid=peer_uid)
+        handle_update_connection(connection, authority=authority, peer=peer)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -2208,9 +2302,11 @@ def main(argv: list[str] | None = None) -> int:
 
     With systemd socket activation (``LISTEN_FDS``) the passed file
     descriptor is the listening socket; without one the service exits
-    fail-closed instead of opening any socket itself.     Destination seams stay
-    unconfigured until the loop-media tranche wires them, so staging reports
-    unavailable rather than guessing at destination access.
+    fail-closed instead of opening any socket itself. The production
+    authority (trust, layout, journal, boot one-shot backend) is composed
+    from Greia-owned state; inactive-slot destination factories arrive via
+    image integration, so staging reports unavailable rather than guessing
+    at destination access where no destination seam is composed.
     """
     _ = list(argv or [])
     listen_fds = int(os.environ.get("LISTEN_FDS", "0"))

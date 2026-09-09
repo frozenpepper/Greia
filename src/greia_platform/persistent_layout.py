@@ -4,6 +4,14 @@ L7-PERSIST (R0/R1 source scope): pure data model plus read-only validation.
 No partition, mount, filesystem or boot writes live here; slot writers and
 boot transactions belong to L7-SLOTS/L7-BOOT.
 
+Partition identity is adapter-specific and observed (TAKEOVER-1 T1.1, D51):
+``PARTUUID`` is not globally "a UUID object". Each layout adapter owns
+parsing/normalization behind one semantic interface
+(:class:`PartitionIdentity` with a ``scheme`` of ``GPT_GUID`` or
+``MBR_PARTUUID``). MBR PARTUUIDs are the Linux ``<disk-signature>-<partno>``
+form (e.g. ``1234abcd-02``), never a minted UUID4; GPT PARTUUIDs are
+canonical lowercase GUIDs. Filesystem UUIDs are always canonical UUIDs.
+
 Authoritative identifier sets (layout adapters, boot backends, platform
 families, slot/PERSIST size floors) are owned by ``tools/build_profile.py``
 (L7-PROFILES). This module mirrors them with a sync test instead of
@@ -22,6 +30,7 @@ import fnmatch
 import hashlib
 import json
 import os
+import re
 import tempfile
 import uuid
 from dataclasses import dataclass
@@ -149,6 +158,136 @@ def _require_canonical_uuid(value: object, *, field: str) -> str:
     return str(parsed)
 
 
+# ---------------------------------------------------------------------------
+# Adapter-specific partition-identity schemes (TAKEOVER-1 T1.1, D51)
+# ---------------------------------------------------------------------------
+
+#: Partition-identity scheme bound by each layout adapter. GPT layouts use
+#: GUID PARTUUIDs (canonical UUID text); MBR layouts use the Linux
+#: ``<disk-signature>-<partition-number>`` form, never a minted UUID4.
+PARTITION_SCHEME_GPT_GUID = "GPT_GUID"
+PARTITION_SCHEME_MBR_PARTUUID = "MBR_PARTUUID"
+PARTITION_SCHEMES = frozenset({PARTITION_SCHEME_GPT_GUID, PARTITION_SCHEME_MBR_PARTUUID})
+
+#: Expected identity scheme per layout adapter id. Pi MBR layouts share the
+#: MBR form; their own extended-partition observation rules arrive with the
+#: Phase 8D execution path behind the same semantic interface.
+LAYOUT_PARTITION_SCHEMES: dict[str, str] = {
+    "bios-single-ext4": PARTITION_SCHEME_MBR_PARTUUID,
+    "legacy-bios-ab-v1": PARTITION_SCHEME_MBR_PARTUUID,
+    "modern-gpt-ab-v1": PARTITION_SCHEME_GPT_GUID,
+    "pi-mbr-tryboot-ab-v1": PARTITION_SCHEME_MBR_PARTUUID,
+}
+
+#: MBR disk signatures are 8 lowercase hex digits (the DOS disk identifier).
+_MBR_SIGNATURE_RE = re.compile(r"^[0-9a-f]{8}$")
+
+#: Highest MBR partition number the normalizer accepts (matches the
+#: installer ``partition_number_path`` bound; msdos paths stay far below it).
+MAX_MBR_PARTITION_NUMBER = 128
+
+
+def normalize_mbr_partuuid(value: object, *, field: str) -> str:
+    """Normalize an MBR PARTUUID to ``<signature>-<NN>`` (fail closed).
+
+    Accepts the Linux ``blkid``/``/dev/disk/by-partuuid`` spellings:
+    lowercase or uppercase 8-hex signature, partition number with or
+    without a leading zero (``-2`` and ``-02`` both mean partition 2).
+    A canonical UUID4 (or any non-MBR text) is rejected: minting an
+    independent UUID4 and labeling it an MBR PARTUUID is never valid.
+    """
+    if not isinstance(value, str):
+        raise PersistentLayoutError(f"{field} must be text")
+    text = value.strip()
+    if "-" not in text:
+        raise PersistentLayoutError(
+            f"{field} is not an MBR PARTUUID (expected <disk-signature>-<partno>)"
+        )
+    signature_text, separator, number_text = text.rpartition("-")
+    if not separator or not signature_text or not number_text:
+        raise PersistentLayoutError(
+            f"{field} is not an MBR PARTUUID (expected <disk-signature>-<partno>)"
+        )
+    signature = signature_text.lower()
+    if signature.startswith("0x"):
+        signature = signature[2:]
+    if not _MBR_SIGNATURE_RE.fullmatch(signature):
+        raise PersistentLayoutError(
+            f"{field} carries an invalid MBR disk signature (expected 8 hex digits)"
+        )
+    if not number_text.isascii() or not number_text.isdigit():
+        raise PersistentLayoutError(
+            f"{field} carries an invalid MBR partition number"
+        )
+    number = int(number_text, 10)
+    if not 1 <= number <= MAX_MBR_PARTITION_NUMBER:
+        raise PersistentLayoutError(
+            f"{field} carries an MBR partition number outside Greia bounds"
+        )
+    return f"{signature}-{number:02d}"
+
+
+def split_mbr_partuuid(value: str) -> tuple[str, int]:
+    """Split a normalized MBR PARTUUID into ``(disk_signature, number)``."""
+    normalized = normalize_mbr_partuuid(value, field="partuuid")
+    signature, _, number_text = normalized.rpartition("-")
+    return signature, int(number_text, 10)
+
+
+def require_mbr_disk_signature(value: object, *, field: str) -> str:
+    """Normalize an MBR disk identifier to 8 lowercase hex digits.
+
+    Accepts the ``blkid PTUUID`` / ``sfdisk disk identifier`` spellings
+    (optional ``0x`` prefix, either case). The all-zero signature fails
+    closed: it proves no authority minted/assigned a disk identity.
+    """
+    if not isinstance(value, str):
+        raise PersistentLayoutError(f"{field} must be text")
+    text = value.strip().lower()
+    if text.startswith("0x"):
+        text = text[2:]
+    if not _MBR_SIGNATURE_RE.fullmatch(text):
+        raise PersistentLayoutError(
+            f"{field} is not an MBR disk signature (expected 8 hex digits)"
+        )
+    if text == "00000000":
+        raise PersistentLayoutError(f"{field} carries no disk identity")
+    return text
+
+
+def normalize_partuuid_for_scheme(scheme: str, value: object, *, field: str) -> str:
+    """Normalize a PARTUUID with the parser owned by ``scheme``."""
+    if scheme == PARTITION_SCHEME_MBR_PARTUUID:
+        return normalize_mbr_partuuid(value, field=field)
+    if scheme == PARTITION_SCHEME_GPT_GUID:
+        return _require_canonical_uuid(value, field=field)
+    raise PersistentLayoutError(f"{field} carries an unknown identity scheme: {scheme!r}")
+
+
+def infer_partuuid_scheme(value: object) -> str:
+    """Infer the identity scheme from a PARTUUID value's shape (read-only).
+
+    Used only for scheme-less legacy records (PROVISIONAL compat, see
+    :class:`PartitionIdentity`); new authority always carries an explicit
+    scheme. UUID-shaped values infer ``GPT_GUID``; MBR-shaped values infer
+    ``MBR_PARTUUID``; anything else fails closed.
+    """
+    if isinstance(value, str):
+        try:
+            normalize_mbr_partuuid(value, field="partuuid")
+        except PersistentLayoutError:
+            pass
+        else:
+            return PARTITION_SCHEME_MBR_PARTUUID
+        try:
+            _require_canonical_uuid(value, field="partuuid")
+        except PersistentLayoutError:
+            pass
+        else:
+            return PARTITION_SCHEME_GPT_GUID
+    raise PersistentLayoutError("partuuid matches no known identity scheme")
+
+
 def _require_hex_digest(value: object, *, field: str, length: int = 64) -> str:
     if not isinstance(value, str) or len(value) != length:
         raise PersistentLayoutError(f"{field} must be {length} hex characters")
@@ -203,24 +342,79 @@ def _atomic_write_file(path: Path, payload: bytes, *, mode: int) -> None:
 
 @dataclass(frozen=True, slots=True)
 class PartitionIdentity:
-    """One partition bound by PARTUUID plus filesystem UUID (never /dev/sdX)."""
+    """One partition bound by scheme, PARTUUID plus filesystem UUID.
 
+    ``scheme`` is ``GPT_GUID`` or ``MBR_PARTUUID`` (per-adapter parsers;
+    MBR values are the observed ``<disk-signature>-<partno>`` form, never
+    a minted UUID4). ``filesystem_uuid`` is always a canonical UUID.
+
+    Scheme-less ``{"partuuid", "filesystem_uuid"}`` mappings still parse
+    (PROVISIONAL compat for the pre-T1.1 orchestrator path, which T3-INSTALL
+    rewires to observed identities): the scheme is inferred from the value
+    shape and the identity re-emits without a scheme, so legacy records
+    round-trip byte-identically. New MBR authority must always carry an
+    explicit scheme so the layout binding below can prove no UUID4 is
+    labeled an MBR PARTUUID.
+    """
+
+    scheme: str
     partuuid: str
     filesystem_uuid: str
+    scheme_explicit: bool = True
 
     @classmethod
     def from_dict(cls, raw: object, *, field: str) -> "PartitionIdentity":
-        if not isinstance(raw, dict) or set(raw) != {"partuuid", "filesystem_uuid"}:
-            raise PersistentLayoutError(f"{field} must hold partuuid/filesystem_uuid")
+        if not isinstance(raw, dict):
+            raise PersistentLayoutError(f"{field} must hold a partition identity")
+        keys = set(raw)
+        if keys == {"partuuid", "filesystem_uuid"}:
+            partuuid_raw = raw["partuuid"]
+            scheme = infer_partuuid_scheme(partuuid_raw)
+            return cls(
+                scheme=scheme,
+                partuuid=normalize_partuuid_for_scheme(
+                    scheme, partuuid_raw, field=f"{field}.partuuid"
+                ),
+                filesystem_uuid=_require_canonical_uuid(
+                    raw["filesystem_uuid"], field=f"{field}.filesystem_uuid"
+                ),
+                scheme_explicit=False,
+            )
+        if keys != {"scheme", "partuuid", "filesystem_uuid"}:
+            raise PersistentLayoutError(
+                f"{field} must hold scheme/partuuid/filesystem_uuid"
+            )
+        scheme = raw["scheme"]
+        if scheme not in PARTITION_SCHEMES:
+            raise PersistentLayoutError(f"{field}.scheme is unknown: {scheme!r}")
+        assert isinstance(scheme, str)
         return cls(
-            partuuid=_require_canonical_uuid(raw["partuuid"], field=f"{field}.partuuid"),
+            scheme=scheme,
+            partuuid=normalize_partuuid_for_scheme(
+                scheme, raw["partuuid"], field=f"{field}.partuuid"
+            ),
             filesystem_uuid=_require_canonical_uuid(
                 raw["filesystem_uuid"], field=f"{field}.filesystem_uuid"
             ),
+            scheme_explicit=True,
         )
 
     def as_dict(self) -> dict[str, str]:
+        if self.scheme_explicit:
+            return {
+                "filesystem_uuid": self.filesystem_uuid,
+                "partuuid": self.partuuid,
+                "scheme": self.scheme,
+            }
         return {"filesystem_uuid": self.filesystem_uuid, "partuuid": self.partuuid}
+
+    @property
+    def disk_signature(self) -> str | None:
+        """MBR disk signature, or ``None`` for GPT identities."""
+        if self.scheme != PARTITION_SCHEME_MBR_PARTUUID:
+            return None
+        signature, _ = split_mbr_partuuid(self.partuuid)
+        return signature
 
 
 @dataclass(frozen=True, slots=True)
@@ -244,6 +438,50 @@ class BootControl:
 
     def as_dict(self) -> dict[str, object]:
         return {"active_slot": self.active_slot, "kind": self.kind}
+
+
+def _require_record_scheme_binding(
+    layout_id: str, identities: tuple[tuple[str, PartitionIdentity], ...]
+) -> None:
+    """Prove scheme-explicit identities match the layout adapter (T1.1).
+
+    Identities carrying an explicit ``scheme`` must equal the adapter's
+    expected scheme, and every MBR identity set must share one disk
+    signature: a mixed signature or a UUID4 labeled as an MBR PARTUUID
+    fails closed here, before any boot configuration can commit to it.
+
+    Scheme-less legacy mappings (``scheme_explicit=False``) infer their
+    scheme from the value shape and stay parseable as PROVISIONAL compat
+    for the pre-T1.1 orchestrator path, which T3-INSTALL rewires to
+    observed identities.
+    """
+    expected = LAYOUT_PARTITION_SCHEMES.get(layout_id)
+    if expected is None:
+        raise PersistentLayoutError(f"unknown layout_id: {layout_id!r}")
+    for role, identity in identities:
+        if identity.scheme_explicit and identity.scheme != expected:
+            if (
+                identity.scheme == PARTITION_SCHEME_GPT_GUID
+                and expected == PARTITION_SCHEME_MBR_PARTUUID
+            ):
+                raise PersistentLayoutError(
+                    f"{role} carries a GUID where layout {layout_id!r} requires "
+                    "an observed MBR PARTUUID: refusing a fabricated MBR identity"
+                )
+            raise PersistentLayoutError(
+                f"{role} scheme {identity.scheme!r} does not match layout "
+                f"{layout_id!r} (expected {expected!r})"
+            )
+    mbr_signatures = {
+        split_mbr_partuuid(identity.partuuid)[0]
+        for _, identity in identities
+        if identity.scheme == PARTITION_SCHEME_MBR_PARTUUID
+    }
+    if len(mbr_signatures) > 1:
+        raise PersistentLayoutError(
+            "layout MBR PARTUUIDs span multiple disk signatures: "
+            "refusing a cross-disk identity binding"
+        )
 
 
 _LAYOUT_RECORD_FIELDS = frozenset(
@@ -371,6 +609,17 @@ class InstalledLayoutRecord:
             identities += (system_b.partuuid, system_b.filesystem_uuid)
         if len(set(identities)) != len(identities):
             raise PersistentLayoutError("layout partition identities must be unique")
+        _require_record_scheme_binding(
+            layout_id,
+            tuple(
+                (role, identity)
+                for role, identity in (
+                    ("system_a", system_a),
+                    *((("system_b", system_b),) if system_b is not None else ()),
+                    ("persist", persist),
+                )
+            ),
+        )
         installed_at_unix = raw["installed_at_unix"]
         if (
             not isinstance(installed_at_unix, int)
@@ -487,6 +736,7 @@ class PartitionFact:
     """One observed partition: identities plus transport facts, never authority."""
 
     role: str
+    scheme: str
     partuuid: str
     filesystem_uuid: str
     size_bytes: int
@@ -501,6 +751,7 @@ class PartitionFact:
         filesystem_uuid: str,
         size_bytes: int,
         disk_id: str,
+        scheme: str | None = None,
     ) -> "PartitionFact":
         if role not in PARTITION_ROLES:
             raise PersistentLayoutError(f"unknown partition role: {role!r}")
@@ -509,6 +760,10 @@ class PartitionFact:
                 raise PersistentLayoutError(
                     f"topology {field} must be an identity, never a device path"
                 )
+        if scheme is None:
+            scheme = infer_partuuid_scheme(partuuid)
+        if scheme not in PARTITION_SCHEMES:
+            raise PersistentLayoutError(f"topology scheme is unknown: {scheme!r}")
         if (
             not isinstance(size_bytes, int)
             or isinstance(size_bytes, bool)
@@ -517,13 +772,24 @@ class PartitionFact:
             raise PersistentLayoutError("topology size_bytes must be a positive integer")
         return cls(
             role=role,
-            partuuid=_require_canonical_uuid(partuuid, field="partuuid"),
+            scheme=scheme,
+            partuuid=normalize_partuuid_for_scheme(
+                scheme, partuuid, field="partuuid"
+            ),
             filesystem_uuid=_require_canonical_uuid(
                 filesystem_uuid, field="filesystem_uuid"
             ),
             size_bytes=size_bytes,
             disk_id=_require_identifier(disk_id, field="disk_id"),
         )
+
+    @property
+    def disk_signature(self) -> str | None:
+        """MBR disk signature, or ``None`` for GPT facts."""
+        if self.scheme != PARTITION_SCHEME_MBR_PARTUUID:
+            return None
+        signature, _ = split_mbr_partuuid(self.partuuid)
+        return signature
 
 
 @dataclass(frozen=True, slots=True)
@@ -553,7 +819,8 @@ def read_partuuid_map(by_partuuid_dir: Path) -> dict[str, str]:
     """Read-only PARTUUID -> kernel device name map from udev symlinks.
 
     Symlink *targets* are transport only (``../../sda3``); the returned keys
-    (PARTUUIDs) are the identities the layout record binds.
+    (PARTUUIDs, GPT GUID or MBR ``<signature>-<partno>`` form) are the
+    identities the layout record binds.
     """
     root = Path(by_partuuid_dir)
     try:
@@ -564,13 +831,70 @@ def read_partuuid_map(by_partuuid_dir: Path) -> dict[str, str]:
     for entry in entries:
         if not entry.is_symlink():
             raise PersistentLayoutError("PARTUUID directory must hold only symlinks")
-        partuuid = _require_canonical_uuid(entry.name, field="partuuid")
+        scheme = infer_partuuid_scheme(entry.name)
+        partuuid = normalize_partuuid_for_scheme(scheme, entry.name, field="partuuid")
         if partuuid in mapping:
             raise PersistentLayoutError("PARTUUID directory carries duplicate identities")
         mapping[partuuid] = Path(os.readlink(entry)).name
     if not mapping:
         raise PersistentLayoutError("PARTUUID directory holds no identities")
     return mapping
+
+
+def require_mbr_topology_binding(
+    record: InstalledLayoutRecord, topology: BlockTopology
+) -> str:
+    """Prove an MBR record binds one observed disk signature (T1.1).
+
+    Every record identity and every topology fact for the layout must carry
+    the ``MBR_PARTUUID`` scheme and share a single disk signature; the
+    record and topology signatures must be equal. Returns the proven disk
+    signature. GPT layouts fail closed here (wrong entry point); legacy
+    scheme-less provisional records fail closed as well — callers must
+    supply scheme-explicit observed identities.
+    """
+    expected = LAYOUT_PARTITION_SCHEMES.get(record.layout_id)
+    if expected != PARTITION_SCHEME_MBR_PARTUUID:
+        raise PersistentLayoutError(
+            f"MBR topology binding requires an MBR layout, not {record.layout_id!r}"
+        )
+    record_identities = [record.system_a, record.persist]
+    if record.system_b is not None:
+        record_identities.append(record.system_b)
+    for identity in record_identities:
+        if identity.scheme != PARTITION_SCHEME_MBR_PARTUUID:
+            raise PersistentLayoutError(
+                "MBR layout record carries a non-MBR identity: "
+                "refusing a fabricated MBR binding"
+            )
+    for fact in topology.partitions:
+        if fact.scheme != PARTITION_SCHEME_MBR_PARTUUID:
+            raise PersistentLayoutError(
+                f"topology role {fact.role!r} carries a non-MBR identity: "
+                "refusing a fabricated MBR binding"
+            )
+    record_signatures = {split_mbr_partuuid(item.partuuid)[0] for item in record_identities}
+    if len(record_signatures) != 1:
+        raise PersistentLayoutError(
+            "layout MBR PARTUUIDs span multiple disk signatures: "
+            "refusing a cross-disk identity binding"
+        )
+    topology_signatures = {
+        split_mbr_partuuid(fact.partuuid)[0] for fact in topology.partitions
+    }
+    if len(topology_signatures) != 1:
+        raise PersistentLayoutError(
+            "observed MBR PARTUUIDs span multiple disk signatures: "
+            "refusing a cross-disk topology"
+        )
+    (record_signature,) = sorted(record_signatures)
+    (topology_signature,) = sorted(topology_signatures)
+    if record_signature != topology_signature:
+        raise PersistentLayoutError(
+            "observed MBR disk signature does not match the layout record: "
+            "refusing a wrong-disk binding"
+        )
+    return record_signature
 
 
 def validate_layout_against_topology(
@@ -587,6 +911,50 @@ def validate_layout_against_topology(
             raise PersistentLayoutError(
                 f"topology carries unexpected partition role: {fact.role}"
             )
+    # Scheme agreement per role: an observed GPT fact can never satisfy an
+    # MBR record identity and vice versa (UUID4-as-MBR fails closed here).
+    role_identities: dict[str, PartitionIdentity] = {"system_a": record.system_a}
+    if record.system_b is not None:
+        role_identities["system_b"] = record.system_b
+    role_identities["persist"] = record.persist
+    for fact in topology.partitions:
+        identity = role_identities[fact.role.replace("-", "_")]
+        if fact.scheme != identity.scheme:
+            raise PersistentLayoutError(
+                f"topology role {fact.role!r} scheme {fact.scheme!r} does not match "
+                f"the layout record scheme {identity.scheme!r}"
+            )
+    # MBR disk-signature agreement: every bound identity must live on the
+    # one observed disk. Wrong-disk topologies fail closed here.
+    mbr_record_signatures = {
+        split_mbr_partuuid(item.partuuid)[0]
+        for item in role_identities.values()
+        if item.scheme == PARTITION_SCHEME_MBR_PARTUUID
+    }
+    mbr_topology_signatures = {
+        split_mbr_partuuid(fact.partuuid)[0]
+        for fact in topology.partitions
+        if fact.scheme == PARTITION_SCHEME_MBR_PARTUUID
+    }
+    if mbr_record_signatures and len(mbr_record_signatures) != 1:
+        raise PersistentLayoutError(
+            "layout MBR PARTUUIDs span multiple disk signatures: "
+            "refusing a cross-disk identity binding"
+        )
+    if mbr_topology_signatures and len(mbr_topology_signatures) != 1:
+        raise PersistentLayoutError(
+            "observed MBR PARTUUIDs span multiple disk signatures: "
+            "refusing a cross-disk topology"
+        )
+    if (
+        len(mbr_record_signatures) == 1
+        and len(mbr_topology_signatures) == 1
+        and mbr_record_signatures != mbr_topology_signatures
+    ):
+        raise PersistentLayoutError(
+            "observed MBR disk signature does not match the layout record: "
+            "refusing a wrong-disk binding"
+        )
     fact_a = topology.by_role("system-a")
     assert fact_a is not None
     if is_ab:
@@ -871,6 +1239,18 @@ DURABLE_PATH_AUDIT: tuple[DurablePathEntry, ...] = (
         rationale="Reserved bounded on-device log/evidence staging consumed "
         "by greia-collect-runtime-audit; always size-bounded, never a raw "
         "filesystem dump.",
+    ),
+    DurablePathEntry(
+        path="/var/lib/greia-os/diagnostics/boot-history.json",
+        durability=Durability.PERSISTENT_SHARED,
+        namespace="bounded-logs",
+        mount=MountKind.INHERIT,
+        order=None,
+        rationale="T5-EVID bounded reboot-surviving boot/lifecycle ring "
+        "(current/previous summary, 64 KiB source-enforced cap owned by "
+        "greia_platform.boot_transaction); coarse milestones and terminal "
+        "events only, never animation frames, input events or journal text. "
+        "Listed before the greia-os catch-all so the bounded-logs role is exact.",
     ),
     DurablePathEntry(
         path="/var/lib/greia-profiles/profiles.backup.json",
@@ -1355,6 +1735,25 @@ def persist_contract_path(persist_root: Path) -> Path:
 
 def persist_namespaces_root(persist_root: Path) -> Path:
     return _persist_state_root(persist_root) / PERSIST_NAMESPACES_DIRNAME
+
+
+#: PERSIST-side file name of the T5-EVID bounded boot-history ring.
+#: Mirrors ``greia_platform.boot_transaction.BOOT_HISTORY_FILE_NAME`` without
+#: importing it (this module stays importable from installer contexts that
+#: never load the boot-transaction backend layer).
+PERSIST_BOOT_HISTORY_NAME = "boot-history.json"
+
+#: Running-system bind-visible alias of the boot-history record.
+BOOT_HISTORY_RUNTIME_PATH = "/var/lib/greia-os/diagnostics/boot-history.json"
+
+#: Initial hard cap for the structured boot-history ring (mirrors the
+#: boot-transaction owner; a sync test proves the two stay equal).
+MAX_BOOT_HISTORY_BYTES = 64 * 1024
+
+
+def persist_boot_history_path(persist_root: Path) -> Path:
+    """Return the PERSIST-side boot-history path for a mounted PERSIST tree."""
+    return _persist_state_root(Path(persist_root)) / PERSIST_BOOT_HISTORY_NAME
 
 
 def fresh_initialize_persist(

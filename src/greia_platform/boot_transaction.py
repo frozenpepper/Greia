@@ -117,6 +117,47 @@ def _require_canonical_uuid(value: object, *, field_name: str) -> str:
     return str(parsed)
 
 
+def _require_root_partuuid(value: object, *, field_name: str) -> str:
+    """Observed ``root=PARTUUID=`` value: GPT GUID or MBR ``<sig>-<NN>``.
+
+    T1-IDENT observed record (TAKEOVER-1 T1.1): GPT layouts carry a
+    canonical lowercase GUID; MBR layouts carry the Linux
+    ``<disk-signature>-<partition-number>`` form, never a minted UUID4.
+    Canonicalization matches ``persistent_layout.normalize_mbr_partuuid``.
+    """
+    if not isinstance(value, str):
+        raise BootTransactionError(f"{field_name} must be text")
+    try:
+        return _require_canonical_uuid(value, field_name=field_name)
+    except BootTransactionError:
+        pass
+    import re as _re
+
+    text = value.strip()
+    if "-" not in text:
+        raise BootTransactionError(
+            f"{field_name} is neither a canonical UUID nor an MBR PARTUUID"
+        )
+    signature_text, _, number_text = text.rpartition("-")
+    signature = signature_text.lower()
+    if signature.startswith("0x"):
+        signature = signature[2:]
+    if not _re.fullmatch(r"[0-9a-f]{8}", signature):
+        raise BootTransactionError(
+            f"{field_name} is neither a canonical UUID nor an MBR PARTUUID"
+        )
+    if not number_text.isascii() or not number_text.isdigit():
+        raise BootTransactionError(
+            f"{field_name} carries an invalid MBR partition number"
+        )
+    number = int(number_text, 10)
+    if not 1 <= number <= 128:
+        raise BootTransactionError(
+            f"{field_name} carries an MBR partition number outside Greia bounds"
+        )
+    return f"{signature}-{number:02d}"
+
+
 def _require_identifier(value: object, *, field_name: str, maximum: int) -> str:
     if (
         not isinstance(value, str)
@@ -291,7 +332,12 @@ class BootArtifactSet:
         _require_hex64(
             self.generic_initramfs_sha256, field_name="generic_initramfs_sha256"
         )
-        _require_canonical_uuid(self.root_partuuid, field_name="root_partuuid")
+        # root_partuuid is the observed kernel identity: GPT GUID or MBR
+        # <sig>-<NN> (T1-IDENT). Filesystem UUIDs stay canonical UUIDs.
+        object.__setattr__(
+            self, "root_partuuid",
+            _require_root_partuuid(self.root_partuuid, field_name="root_partuuid"),
+        )
         _require_canonical_uuid(
             self.root_filesystem_uuid, field_name="root_filesystem_uuid"
         )
@@ -1659,3 +1705,788 @@ def coordinator_accepts_backend(backend: object) -> bool:
         "commit_accepted", "verify_rollback_ready", "reconcile",
     )
     return all(callable(getattr(backend, name, None)) for name in required)
+
+
+# ---------------------------------------------------------------------------
+# Bounded reboot-surviving boot/lifecycle history (T5-EVID, TAKEOVER-5, D56)
+# ---------------------------------------------------------------------------
+#
+# Journald stays volatile (``Storage=volatile`` in the installed overlays)
+# and ``/run`` markers do not survive reboot. This ring is the only PERSIST
+# previous-boot record: a tiny structured current/previous summary rotated
+# at boot with coarse milestone/terminal updates only. Never animation
+# frames, input events, or verbose journal text.
+#
+# File location on a mounted PERSIST tree is
+# ``<persist-root>/greia/boot-history.json`` (sibling of
+# ``installed-layout.json`` and the ``boot-journal/`` transaction root).
+# The running-system bind-visible alias is
+# ``/var/lib/greia-os/diagnostics/boot-history.json`` (``bounded-logs``
+# namespace, see ``persistent_layout.DURABLE_PATH_AUDIT``). T6/T7 harnesses
+# read the PERSIST-side file directly from the guest disk.
+#
+
+#: PERSIST-side file name of the bounded boot-history ring.
+BOOT_HISTORY_FILE_NAME = "boot-history.json"
+
+#: Running-system bind-visible alias (audit classification only).
+BOOT_HISTORY_RUNTIME_PATH = "/var/lib/greia-os/diagnostics/boot-history.json"
+
+#: Schema version of the boot-history record.
+BOOT_HISTORY_SCHEMA_VERSION = 1
+
+#: History files are readable only by their owner (root on device).
+BOOT_HISTORY_FILE_MODE = 0o600
+
+#: Initial hard cap: 64 KiB total for the structured ring, source-enforced.
+MAX_BOOT_HISTORY_BYTES = 64 * 1024
+
+#: Ring bound: at most this many boot entries are retained. Rotation
+#: (`current -> previous` at boot) truncates the oldest entry first; the
+#: total-bytes cap is enforced independently on every save.
+MAX_BOOT_HISTORY_ENTRIES = 8
+
+#: Upper bound for short free-text fields (recovery reason/note).
+MAX_BOOT_HISTORY_NOTE_BYTES = 256
+
+#: Coarse lifecycle boundaries only. Anything finer (animation frames,
+#: input events, verbose journal lines) is rejected here by construction.
+BOOT_HISTORY_MILESTONES = frozenset(
+    {
+        "boot-started",
+        "slot-observed",
+        "launcher-started",
+        "interactive-ready",
+        "health-confirmed",
+        "committed",
+        "rolled-back",
+        "failed",
+        "recovery-entered",
+    }
+)
+
+#: Transaction types shared with the boot journal / T4-RECOVER trigger.
+BOOT_HISTORY_TRANSACTION_TYPES = frozenset({"first-install", "update", "none"})
+
+#: Bounded launcher outcomes (no free-form process output).
+BOOT_HISTORY_LAUNCHER_RESULTS = frozenset({"pending", "not-run", "ok", "failed"})
+
+#: Bounded health confirm/finalize outcomes.
+BOOT_HISTORY_HEALTH_RESULTS = frozenset(
+    {"pending", "not-run", "confirmed", "failed", "rolled-back"}
+)
+
+#: Terminal states share the journal's vocabulary (plus explicit pending).
+BOOT_HISTORY_TERMINAL_STATES = frozenset(
+    {state.value for state in BootTransactionState} | {"pending"}
+)
+
+
+def boot_history_path(persist_root: Path) -> Path:
+    """Return the PERSIST-side boot-history path for a mounted PERSIST tree."""
+    return Path(persist_root) / "greia" / BOOT_HISTORY_FILE_NAME
+
+
+def _require_boot_history_identifier(
+    value: object, *, field_name: str, maximum: int
+) -> str:
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value) > maximum
+        or not value[0].isalnum()
+        or any(char not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for char in value)
+    ):
+        raise BootTransactionError(f"{field_name} is not a bounded safe identifier")
+    return value
+
+
+def _require_boot_history_note(value: object, *, field_name: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise BootTransactionError(f"{field_name} must be non-empty text")
+    if len(value.encode("utf-8")) > MAX_BOOT_HISTORY_NOTE_BYTES:
+        raise BootTransactionError(f"{field_name} exceeds Greia bounds")
+    if "\x00" in value:
+        raise BootTransactionError(f"{field_name} carries a NUL byte")
+    return value
+
+
+def _require_boot_history_unix_time(value: object, *, field_name: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise BootTransactionError(f"{field_name} is not a valid timestamp")
+    if value < 0 or value > (1 << 40):
+        raise BootTransactionError(f"{field_name} is not a valid timestamp")
+    return value
+
+
+@dataclass(frozen=True, slots=True)
+class BootHistoryEntry:
+    """One coarse boot summary: the only per-boot PERSIST evidence.
+
+    ``launcher_result``/``health_result`` stay in their bounded vocabularies;
+    ``recovery_reason`` is a bounded ``none``/trigger token shared with the
+    T4-RECOVER trigger (never verbose journal text). ``terminal_state``
+    mirrors :class:`BootTransactionState` values (or ``"pending"``).
+    """
+
+    boot_id: str
+    started_at_unix: int
+    slot: str
+    release_id: str
+    release_sequence: int
+    transaction_id: str
+    transaction_type: str
+    milestone: str
+    launcher_result: str
+    health_result: str
+    backend_default: str
+    backend_one_shot: str | None
+    recovery_reason: str
+    terminal_state: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self, "boot_id",
+            _require_canonical_uuid(self.boot_id, field_name="boot_id"),
+        )
+        object.__setattr__(
+            self, "started_at_unix",
+            _require_boot_history_unix_time(
+                self.started_at_unix, field_name="started_at_unix"
+            ),
+        )
+        _require_slot(self.slot, field_name="slot")
+        _require_boot_history_identifier(
+            self.release_id, field_name="release_id", maximum=96
+        )
+        if (
+            isinstance(self.release_sequence, bool)
+            or not isinstance(self.release_sequence, int)
+            or not 0 <= self.release_sequence <= 2_147_483_647
+        ):
+            raise BootTransactionError("release_sequence is outside Greia bounds")
+        _require_boot_history_identifier(
+            self.transaction_id, field_name="transaction_id", maximum=64
+        )
+        if self.transaction_type not in BOOT_HISTORY_TRANSACTION_TYPES:
+            raise BootTransactionError(
+                f"transaction_type is unknown: {self.transaction_type!r}"
+            )
+        if self.milestone not in BOOT_HISTORY_MILESTONES:
+            raise BootTransactionError(
+                f"milestone is not a coarse lifecycle boundary: {self.milestone!r}"
+            )
+        if self.launcher_result not in BOOT_HISTORY_LAUNCHER_RESULTS:
+            raise BootTransactionError(
+                f"launcher_result is unknown: {self.launcher_result!r}"
+            )
+        if self.health_result not in BOOT_HISTORY_HEALTH_RESULTS:
+            raise BootTransactionError(
+                f"health_result is unknown: {self.health_result!r}"
+            )
+        _require_slot(self.backend_default, field_name="backend_default")
+        if self.backend_one_shot is not None:
+            _require_slot(self.backend_one_shot, field_name="backend_one_shot")
+        _require_boot_history_identifier(
+            self.recovery_reason, field_name="recovery_reason", maximum=64
+        )
+        if self.terminal_state not in BOOT_HISTORY_TERMINAL_STATES:
+            raise BootTransactionError(
+                f"terminal_state is unknown: {self.terminal_state!r}"
+            )
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "backend_default": self.backend_default,
+            "backend_one_shot": self.backend_one_shot,
+            "boot_id": self.boot_id,
+            "health_result": self.health_result,
+            "launcher_result": self.launcher_result,
+            "milestone": self.milestone,
+            "recovery_reason": self.recovery_reason,
+            "release_id": self.release_id,
+            "release_sequence": self.release_sequence,
+            "slot": self.slot,
+            "started_at_unix": self.started_at_unix,
+            "terminal_state": self.terminal_state,
+            "transaction_id": self.transaction_id,
+            "transaction_type": self.transaction_type,
+        }
+
+    @classmethod
+    def from_dict(cls, raw: object) -> "BootHistoryEntry":
+        if not isinstance(raw, dict):
+            raise BootTransactionError("boot-history entry must be a JSON object")
+        expected = {
+            "backend_default", "backend_one_shot", "boot_id", "health_result",
+            "launcher_result", "milestone", "recovery_reason", "release_id",
+            "release_sequence", "slot", "started_at_unix", "terminal_state",
+            "transaction_id", "transaction_type",
+        }
+        if set(raw) != expected:
+            raise BootTransactionError("boot-history entry fields are invalid")
+        return cls(
+            boot_id=raw["boot_id"],
+            started_at_unix=raw["started_at_unix"],
+            slot=raw["slot"],
+            release_id=raw["release_id"],
+            release_sequence=raw["release_sequence"],
+            transaction_id=raw["transaction_id"],
+            transaction_type=raw["transaction_type"],
+            milestone=raw["milestone"],
+            launcher_result=raw["launcher_result"],
+            health_result=raw["health_result"],
+            backend_default=raw["backend_default"],
+            backend_one_shot=raw["backend_one_shot"],
+            recovery_reason=raw["recovery_reason"],
+            terminal_state=raw["terminal_state"],
+        )
+
+
+@dataclass
+class BootHistory:
+    """Bounded ring of coarse boot summaries persisted on PERSIST.
+
+    Rotation happens only at boot (``begin_boot`` moves current -> previous
+    and truncates the oldest entry); afterwards only coarse
+    milestone/terminal updates mutate the head entry. Total stored bytes
+    never exceed ``MAX_BOOT_HISTORY_BYTES``: oversized saves fail closed
+    and leave the existing file untouched.
+    """
+
+    history_dir: Path
+    entries: tuple[BootHistoryEntry, ...] = ()
+
+    def __post_init__(self) -> None:
+        if len(self.entries) > MAX_BOOT_HISTORY_ENTRIES:
+            raise BootTransactionError("boot-history ring exceeds Greia bounds")
+
+    @classmethod
+    def empty(cls, history_dir: Path) -> "BootHistory":
+        """Empty history for a fresh PERSIST tree (no previous boot)."""
+        return cls(history_dir=Path(history_dir), entries=())
+
+    @property
+    def history_path(self) -> Path:
+        return Path(self.history_dir) / BOOT_HISTORY_FILE_NAME
+
+    @property
+    def current(self) -> BootHistoryEntry | None:
+        """The current (head) boot entry, if any."""
+        return self.entries[-1] if self.entries else None
+
+    @property
+    def previous(self) -> BootHistoryEntry | None:
+        """The previous boot entry (the failed candidate after recovery)."""
+        return self.entries[-2] if len(self.entries) >= 2 else None
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "entries": [entry.as_dict() for entry in self.entries],
+            "schema_version": BOOT_HISTORY_SCHEMA_VERSION,
+        }
+
+    def canonical_bytes(self) -> bytes:
+        return _canonical_bytes(self.as_dict())
+
+    def _checked_bytes(self) -> bytes:
+        payload = self.canonical_bytes()
+        if len(payload) > MAX_BOOT_HISTORY_BYTES:
+            raise BootTransactionError(
+                "boot-history exceeds the 64 KiB Greia bound: "
+                "refusing an unbounded persistent write"
+            )
+        return payload
+
+    def save(self) -> None:
+        """Atomically persist the ring; over-budget writes fail closed."""
+        payload = self._checked_bytes()
+        _atomic_write_file(self.history_path, payload, mode=BOOT_HISTORY_FILE_MODE)
+
+    @classmethod
+    def load(cls, history_dir: Path) -> "BootHistory":
+        """Fail-closed load of the PERSIST ring (T6/T7 read this path)."""
+        location = Path(history_dir) / BOOT_HISTORY_FILE_NAME
+        try:
+            if location.is_symlink():
+                raise BootTransactionError("boot-history may not be a symbolic link")
+            status = location.stat()
+        except OSError as exc:
+            raise BootTransactionError(
+                f"boot-history is not accessible: {exc}"
+            ) from exc
+        import stat as _stat
+
+        if not _stat.S_ISREG(status.st_mode):
+            raise BootTransactionError("boot-history must be a regular file")
+        if status.st_size <= 0 or status.st_size > MAX_BOOT_HISTORY_BYTES:
+            raise BootTransactionError("boot-history size is outside Greia bounds")
+        if _stat.S_IMODE(status.st_mode) != BOOT_HISTORY_FILE_MODE:
+            raise BootTransactionError("boot-history must be owner-only mode 0600")
+        if status.st_uid != os.geteuid():
+            raise BootTransactionError("boot-history ownership is not authoritative")
+        try:
+            raw_bytes = location.read_bytes()
+        except OSError as exc:
+            raise BootTransactionError("boot-history is unreadable") from exc
+        if len(raw_bytes) > MAX_BOOT_HISTORY_BYTES:
+            raise BootTransactionError("boot-history size is outside Greia bounds")
+        try:
+            raw = json.loads(raw_bytes.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise BootTransactionError("boot-history is not valid JSON") from exc
+        if not isinstance(raw, dict) or set(raw) != {"entries", "schema_version"}:
+            raise BootTransactionError("boot-history fields are invalid")
+        if raw.get("schema_version") != BOOT_HISTORY_SCHEMA_VERSION:
+            raise BootTransactionError("boot-history schema is unsupported")
+        entries_raw = raw.get("entries")
+        if not isinstance(entries_raw, list):
+            raise BootTransactionError("boot-history entries are invalid")
+        if len(entries_raw) > MAX_BOOT_HISTORY_ENTRIES:
+            raise BootTransactionError("boot-history ring exceeds Greia bounds")
+        entries = tuple(BootHistoryEntry.from_dict(item) for item in entries_raw)
+        history = cls(history_dir=Path(history_dir), entries=entries)
+        if raw_bytes != history.canonical_bytes():
+            raise BootTransactionError("boot-history is not canonical JSON")
+        return history
+
+    def begin_boot(
+        self,
+        *,
+        boot_id: str,
+        started_at_unix: int,
+        slot: str,
+        release_id: str,
+        release_sequence: int,
+        transaction_id: str,
+        transaction_type: str,
+        backend_default: str,
+        backend_one_shot: str | None = None,
+    ) -> "BootHistory":
+        """Rotate current -> previous and start one coarse ``boot-started`` entry."""
+        entry = BootHistoryEntry(
+            boot_id=boot_id,
+            started_at_unix=started_at_unix,
+            slot=slot,
+            release_id=release_id,
+            release_sequence=release_sequence,
+            transaction_id=transaction_id,
+            transaction_type=transaction_type,
+            milestone="boot-started",
+            launcher_result="pending",
+            health_result="pending",
+            backend_default=backend_default,
+            backend_one_shot=backend_one_shot,
+            recovery_reason="none",
+            terminal_state="pending",
+        )
+        rotated = (*self.entries, entry)[-MAX_BOOT_HISTORY_ENTRIES:]
+        candidate = BootHistory(history_dir=Path(self.history_dir), entries=rotated)
+        # Fail closed before and during the write: an over-budget rotation
+        # never lands on disk or in memory.
+        payload = candidate._checked_bytes()
+        _atomic_write_file(candidate.history_path, payload, mode=BOOT_HISTORY_FILE_MODE)
+        object.__setattr__(self, "entries", candidate.entries)
+        return self
+
+    def record_milestone(
+        self,
+        milestone: str,
+        *,
+        launcher_result: str | None = None,
+        health_result: str | None = None,
+        backend_default: str | None = None,
+        backend_one_shot: str | None = None,
+        recovery_reason: str | None = None,
+        terminal_state: str | None = None,
+    ) -> "BootHistory":
+        """Update only the head entry with one coarse lifecycle boundary."""
+        if not self.entries:
+            raise BootTransactionError("no current boot to record a milestone for")
+        if milestone not in BOOT_HISTORY_MILESTONES:
+            raise BootTransactionError(
+                f"milestone is not a coarse lifecycle boundary: {milestone!r}"
+            )
+        head = self.entries[-1]
+        if backend_one_shot is None:
+            new_one_shot = head.backend_one_shot
+        elif backend_one_shot == "":
+            # One-shot consumed/cleared (reconcile path): explicit empty
+            # string clears to None; None alone keeps the head value.
+            new_one_shot = None
+        else:
+            new_one_shot = backend_one_shot
+        updated = BootHistoryEntry(
+            boot_id=head.boot_id,
+            started_at_unix=head.started_at_unix,
+            slot=head.slot,
+            release_id=head.release_id,
+            release_sequence=head.release_sequence,
+            transaction_id=head.transaction_id,
+            transaction_type=head.transaction_type,
+            milestone=milestone,
+            launcher_result=launcher_result or head.launcher_result,
+            health_result=health_result or head.health_result,
+            backend_default=backend_default or head.backend_default,
+            backend_one_shot=new_one_shot,
+            recovery_reason=recovery_reason or head.recovery_reason,
+            terminal_state=terminal_state or head.terminal_state,
+        )
+        candidate = BootHistory(
+            history_dir=Path(self.history_dir), entries=(*self.entries[:-1], updated)
+        )
+        # Fail closed: check the bound, write the candidate bytes, and only
+        # then fold the update into memory. A failed write leaves both the
+        # existing file and this object untouched.
+        payload = candidate._checked_bytes()
+        _atomic_write_file(candidate.history_path, payload, mode=BOOT_HISTORY_FILE_MODE)
+        object.__setattr__(self, "entries", candidate.entries)
+        return self
+
+
+def describe_previous_boot(history: BootHistory) -> dict[str, object] | None:
+    """Explain the previous boot from the PERSIST ring only (T5 gate).
+
+    Returns which slot/release attempted, its last durable milestone, the
+    recovery reason and terminal state — without touching volatile ``/run``
+    or any journal. ``None`` when no previous boot exists yet.
+    """
+    previous = history.previous
+    if previous is None:
+        return None
+    return {
+        "attempted_slot": previous.slot,
+        "attempted_release_id": previous.release_id,
+        "attempted_release_sequence": previous.release_sequence,
+        "last_milestone": previous.milestone,
+        "launcher_result": previous.launcher_result,
+        "health_result": previous.health_result,
+        "backend_default": previous.backend_default,
+        "backend_one_shot": previous.backend_one_shot,
+        "recovery_reason": previous.recovery_reason,
+        "terminal_state": previous.terminal_state,
+        "transaction_id": previous.transaction_id,
+        "transaction_type": previous.transaction_type,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Failed-candidate recovery trigger (TAKEOVER-4 / D55, owner Decision A)
+# ---------------------------------------------------------------------------
+#
+# One-shot selection defines *where* the next boot goes; this section defines
+# *what causes* that next boot for recoverable failures. The boot transaction
+# owns a candidate health deadline as a narrow lifecycle capability: a
+# candidate that reaches the OS but never becomes healthy within the bounded
+# deadline is marked failed in the existing transaction journal and the
+# platform performs a controlled reboot while the previous accepted slot
+# stays the persistent default. No generic looping supervisor is introduced:
+# deadline expiry is owned by one systemd timer unit firing one oneshot
+# recovery helper per boot (see the ``greia-candidate-recovery`` unit and
+# helper under ``build/overlay``); this module owns only the journal
+# decision, the failure-class contract and the exact reboot/panic/watchdog
+# configuration facts the image must carry.
+#
+# Failure classes (TAKEOVER-4 T4.2):
+#
+# 1. launcher exits/crashes — the launcher unit keeps restarting under its
+#    own restart bound while the deadline timer still fires, so the reboot
+#    path is reached even across a crash loop;
+# 2. userspace reaches emergency/failure state before health — the system
+#    timer still fires independently of the launcher state;
+# 3. health service fails (BOOT_HEALTHY never confirms) — the pending
+#    journal stays non-terminal, so the helper marks it failed and reboots;
+# 4. kernel panic — automatic panic reboot is configured (see
+#    ``PANIC_REBOOT_SYSCTL`` and the sysctl drop-in under ``build/overlay``),
+#    then the consumed one-shot returns the machine to the accepted default;
+# 5. hard kernel/hardware hang — automatic recovery exists only where a
+#    hardware watchdog is present *and* proven per platform (see
+#    ``WATCHDOG_PROVEN_PLATFORMS``). No reference platform currently proves
+#    one, so the contract guarantees previous-slot recovery on the next
+#    physical power cycle and describes it honestly as manual recovery.
+#
+# The trigger itself terminally records journal ``FAILED`` (candidate
+# abandoned with bounded operator evidence). ``reconcile()`` returns
+# ``None`` on terminal journals, so no ``ROLLED_BACK`` transition ever
+# follows a trigger-``FAILED``: the reboot after the trigger returns to
+# the accepted default via the untouched backend default, and rollback
+# readiness is proven from that backend fact, not from a later journal
+# transition. ``ROLLED_BACK`` arises only on reconcile paths that never
+# entered ``FAILED`` (a non-terminal ``ONE_SHOT_ARMED``/``CANDIDATE_BOOTING``
+# journal observed back on the accepted slot). First-install failures use
+# the same trigger; their outcome medium is setup-medium, never A/B rollback.
+#
+# Coordination with the T5 reboot-surviving record: this trigger consumes
+# the transaction journal and writes nothing to any persistent boot-history
+# namespace. The structured note produced by :func:`format_recovery_note`
+# carries the ``recovery:<class>:<action>`` prefix with the field names
+# (``recovery_class``, ``recovery_action``, ``accepted_slot``,
+# ``candidate_slot``, ``transaction_id``) the T5 record reuses when it
+# lands; T5 must reference this contract, not duplicate it.
+#
+# Cause-label decision (T4-RECOVER2 Option A): the production deadline
+# helper preserves the per-class label for classes 1-3
+# (``launcher-exit``, ``userspace-emergency``, ``health-service-failure``)
+# in the journal note instead of converging them. Option B (converge on
+# ``health-service-failure`` plus free-text detail in the T5 record) was
+# rejected because ``BootHistoryEntry.recovery_reason`` is a bounded
+# identifier (never verbose journal text) and no new PERSIST schema is
+# allowed; the bounded per-class label round-trips into ``recovery_reason``
+# unchanged, so cause distinction survives reboot without schema change.
+
+
+#: Candidate health deadline in seconds, owned by the boot transaction and
+#: enforced by the ``greia-candidate-recovery.timer`` unit (``OnBootSec``
+#: matches this value). Covers the 7-second intro plus health acceptance
+#: with margin for the low-resource reference floor, while staying short
+#: enough for a child-visible recovery. Bounds: 60..600.
+CANDIDATE_HEALTH_DEADLINE_SEC = 180
+
+#: Systemd timer owning deadline expiry (single fire per boot).
+CANDIDATE_RECOVERY_TIMER = "greia-candidate-recovery.timer"
+
+#: Systemd oneshot service running the recovery helper (fired by the timer).
+CANDIDATE_RECOVERY_SERVICE = "greia-candidate-recovery.service"
+
+#: Absolute path of the privileged recovery helper in the image.
+RECOVERY_HELPER_PATH = "/usr/local/lib/greia-os/greia-candidate-recovery"
+
+#: Kernel panic-reboot configuration the image must carry so failure
+#: class 4 reboots automatically. The sysctl drop-in under
+#: ``build/overlay/etc/sysctl.d`` renders exactly this mapping:
+#: reboot ~10s after a panic, including oops-induced panics.
+PANIC_REBOOT_SYSCTL = {
+    "kernel.panic": "10",
+    "kernel.panic_on_oops": "1",
+}
+
+#: Platforms with a proven hardware watchdog capable of resetting a fully
+#: hung machine. Empty: no reference platform currently proves one, so no
+#: automatic hard-hang recovery may be claimed anywhere. A platform joins
+#: this set only with per-board reset-capability evidence; until then the
+#: contract guarantees previous-slot recovery on the next physical power
+#: cycle (manual recovery).
+WATCHDOG_PROVEN_PLATFORMS: frozenset[str] = frozenset()
+
+#: Recovery medium recorded for a failed first install (never "rollback").
+RECOVERY_SETUP_MEDIUM = "setup-medium"
+
+#: Recovery medium recorded for a failed update candidate.
+RECOVERY_ACCEPTED_SLOT_MEDIUM = "accepted-slot"
+
+#: Structured journal-note prefix owned by this trigger contract.
+RECOVERY_NOTE_PREFIX = "recovery:"
+
+
+class RecoveryClass(StrEnum):
+    """TAKEOVER-4 T4.2 failure classes, proven separately per the brief."""
+
+    LAUNCHER_EXIT = "launcher-exit"
+    USERSPACE_EMERGENCY = "userspace-emergency"
+    HEALTH_SERVICE_FAILURE = "health-service-failure"
+    KERNEL_PANIC = "kernel-panic"
+    HARD_HANG = "hard-hang"
+
+
+class RecoveryAction(StrEnum):
+    """What the platform guarantees for a failure class (Decision A)."""
+
+    AUTOMATIC_REBOOT = "automatic-reboot"
+    MANUAL_POWER_CYCLE = "manual-power-cycle"
+
+
+#: Failure classes whose reboot the OS can still trigger (1-4).
+AUTOMATIC_RECOVERY_CLASSES = frozenset(
+    {
+        RecoveryClass.LAUNCHER_EXIT,
+        RecoveryClass.USERSPACE_EMERGENCY,
+        RecoveryClass.HEALTH_SERVICE_FAILURE,
+        RecoveryClass.KERNEL_PANIC,
+    }
+)
+
+#: Journal states in which the deadline trigger may mark a candidate failed.
+RECOVERY_TRIGGER_STATES = frozenset(
+    {
+        BootTransactionState.FIRST_INSTALL_PENDING,
+        BootTransactionState.UPDATE_STAGED,
+        BootTransactionState.ONE_SHOT_ARMED,
+        BootTransactionState.CANDIDATE_BOOTING,
+    }
+)
+
+
+@dataclass(frozen=True, slots=True)
+class RecoveryTriggerDecision:
+    """Outcome of marking a candidate failed through the recovery trigger."""
+
+    recovery_class: RecoveryClass
+    action: RecoveryAction
+    accepted_slot: str
+    candidate_slot: str
+    transaction_id: str
+    journal_transition: BootTransactionState
+    recovery_medium: str
+    note: str
+
+
+def recovery_action_for(recovery_class: RecoveryClass | str) -> RecoveryAction:
+    """Return the guaranteed action for a failure class (Decision A).
+
+    Classes 1-4 reboot automatically where the OS can still trigger a
+    reboot (including configured panic recovery). A hard hang reboots
+    automatically only on a platform with a proven watchdog; with the
+    current empty :data:`WATCHDOG_PROVEN_PLATFORMS` set that is never, so
+    a hard hang always resolves to manual power-cycle recovery.
+    """
+    resolved = _require_recovery_class(recovery_class)
+    if resolved in AUTOMATIC_RECOVERY_CLASSES:
+        return RecoveryAction.AUTOMATIC_REBOOT
+    return RecoveryAction.MANUAL_POWER_CYCLE
+
+
+def is_watchdog_proven(platform_id: object) -> bool:
+    """True only for platforms with proven watchdog reset capability."""
+    return isinstance(platform_id, str) and platform_id in WATCHDOG_PROVEN_PLATFORMS
+
+
+def format_recovery_note(
+    recovery_class: RecoveryClass | str, action: RecoveryAction | str, detail: str = ""
+) -> str:
+    """Format the bounded structured journal note for a recovery marking.
+
+    Shape: ``recovery:<class>:<action>[:<detail>]``. Field names T5 reuses
+    are ``recovery_class``, ``recovery_action``, ``accepted_slot``,
+    ``candidate_slot`` and ``transaction_id``; the free-text detail stays
+    inside the journal note bound.
+    """
+    resolved_class = _require_recovery_class(recovery_class)
+    resolved_action = _require_recovery_action(action)
+    text = str(detail) if detail else ""
+    note = (
+        f"{RECOVERY_NOTE_PREFIX}{resolved_class.value}:{resolved_action.value}"
+        + (f":{text}" if text else "")
+    )
+    if not note or len(note.encode("utf-8")) > MAX_TRANSITION_NOTE_BYTES:
+        raise BootJournalError("recovery note exceeds Greia bounds")
+    return note
+
+
+def parse_recovery_note(note: object) -> dict[str, str] | None:
+    """Parse a trigger note, or None when the note is not a trigger note."""
+    if not isinstance(note, str) or not note.startswith(RECOVERY_NOTE_PREFIX):
+        return None
+    body = note[len(RECOVERY_NOTE_PREFIX):]
+    parts = body.split(":", 2)
+    if len(parts) < 2:
+        return None
+    try:
+        resolved_class = _require_recovery_class(parts[0])
+        resolved_action = _require_recovery_action(parts[1])
+    except BootJournalError:
+        return None
+    return {
+        "recovery_class": resolved_class.value,
+        "recovery_action": resolved_action.value,
+        "detail": parts[2] if len(parts) > 2 else "",
+    }
+
+
+def describe_recovery_contract() -> dict[str, object]:
+    """Return the honest per-class recovery contract (Decision A default).
+
+    Used by the recovery helper text and tests from one source: classes
+    1-4 map to automatic reboot, hard hang maps to manual power cycle
+    while no watchdog platform is proven. The deadline helper operates
+    x86 ``GrubEnvBackend``-only; a missing backend is a bounded
+    ``backend-unavailable`` no-action, and Pi/tryboot deadline triggering
+    is deferred to the PI8 tranche (DOWN-PI8).
+    """
+    return {
+        "deadline_sec": CANDIDATE_HEALTH_DEADLINE_SEC,
+        "timer": CANDIDATE_RECOVERY_TIMER,
+        "service": CANDIDATE_RECOVERY_SERVICE,
+        "helper": RECOVERY_HELPER_PATH,
+        "boot_backend": "grub-ab-v1",
+        "backend_scope": "x86 GrubEnvBackend only",
+        "backend_unavailable": (
+            "bounded no-action: no reboot, no journal/backend mutation"
+        ),
+        "pi_tryboot": "deferred to the PI8 tranche (DOWN-PI8)",
+        "classes": {
+            RecoveryClass.LAUNCHER_EXIT.value: RecoveryAction.AUTOMATIC_REBOOT.value,
+            RecoveryClass.USERSPACE_EMERGENCY.value: RecoveryAction.AUTOMATIC_REBOOT.value,
+            RecoveryClass.HEALTH_SERVICE_FAILURE.value: RecoveryAction.AUTOMATIC_REBOOT.value,
+            RecoveryClass.KERNEL_PANIC.value: RecoveryAction.AUTOMATIC_REBOOT.value,
+            RecoveryClass.HARD_HANG.value: RecoveryAction.MANUAL_POWER_CYCLE.value,
+        },
+        "panic_sysctl": dict(PANIC_REBOOT_SYSCTL),
+        "watchdog_proven_platforms": sorted(WATCHDOG_PROVEN_PLATFORMS),
+    }
+
+
+def mark_candidate_unhealthy(
+    coordinator: BootTransactionCoordinator,
+    *,
+    recovery_class: RecoveryClass | str,
+    detail: str = "",
+) -> RecoveryTriggerDecision:
+    """Mark a non-healthy candidate failed through the recovery trigger.
+
+    Records journal ``FAILED`` terminally with the structured trigger note;
+    the backend persistent default is never mutated here, so the following
+    controlled reboot (owned by systemd, not this module) returns to the
+    previous accepted slot with the candidate abandoned. ``ROLLED_BACK``
+    is deliberately not recorded here and never follows: ``reconcile()``
+    returns ``None`` on terminal journals, so ``ROLLED_BACK`` arises only
+    on reconcile paths that never entered ``FAILED``.
+    """
+    if not isinstance(coordinator, BootTransactionCoordinator):
+        raise BootJournalError("recovery trigger requires a boot transaction coordinator")
+    resolved = _require_recovery_class(recovery_class)
+    action = recovery_action_for(resolved)
+    if action is not RecoveryAction.AUTOMATIC_REBOOT:
+        raise BootJournalError(
+            "the deadline trigger never fires for a hard hang without a "
+            "proven watchdog: recovery is manual power-cycle only"
+        )
+    journal = coordinator.journal
+    if journal.is_terminal:
+        raise BootJournalError("recovery trigger refuses a completed transaction")
+    if journal.state not in RECOVERY_TRIGGER_STATES:
+        raise BootJournalError(
+            f"recovery trigger refuses journal state {journal.state.value}"
+        )
+    note = format_recovery_note(resolved, action, detail)
+    journal.record(BootTransactionState.FAILED, note)
+    medium = (
+        RECOVERY_SETUP_MEDIUM if journal.first_install else RECOVERY_ACCEPTED_SLOT_MEDIUM
+    )
+    return RecoveryTriggerDecision(
+        recovery_class=resolved,
+        action=action,
+        accepted_slot=journal.accepted_slot,
+        candidate_slot=journal.candidate_slot,
+        transaction_id=journal.transaction_id,
+        journal_transition=BootTransactionState.FAILED,
+        recovery_medium=medium,
+        note=note,
+    )
+
+
+def _require_recovery_class(value: object) -> RecoveryClass:
+    if isinstance(value, RecoveryClass):
+        return value
+    try:
+        return RecoveryClass(str(value))
+    except ValueError as exc:
+        raise BootJournalError(f"unknown recovery class: {value!r}") from exc
+
+
+def _require_recovery_action(value: object) -> RecoveryAction:
+    if isinstance(value, RecoveryAction):
+        return value
+    try:
+        return RecoveryAction(str(value))
+    except ValueError as exc:
+        raise BootJournalError(f"unknown recovery action: {value!r}") from exc

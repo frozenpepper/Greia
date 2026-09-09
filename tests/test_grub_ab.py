@@ -126,10 +126,13 @@ class ConfigGenerationTests(unittest.TestCase):
         self.assertIn("--id greia-b", text)
         self.assertIn(f"linux {GRUB_KERNEL_PATH} ", text)
         self.assertIn(f"initrd {GRUB_INITRAMFS_PATH}", text)
+        # Kernel ABI keeps the observed PARTUUID per slot ...
         self.assertIn(f"root=PARTUUID={_UUID_A}", text)
         self.assertIn(f"root=PARTUUID={_UUID_B}", text)
-        self.assertIn(f"search --no-floppy --part-uuid --set=root {_UUID_A}", text)
-        self.assertIn(f"search --no-floppy --part-uuid --set=root {_UUID_B}", text)
+        # ... while GRUB locates each slot by the documented fs-uuid primitive.
+        self.assertIn(f"search --no-floppy --fs-uuid --set=root {_UUID_A_FS}", text)
+        self.assertIn(f"search --no-floppy --fs-uuid --set=root {_UUID_B_FS}", text)
+        self.assertNotIn("--part-uuid", text)
         self.assertIn(f"password_pbkdf2 {GRUB_USER} {_PASSWORD_HASH}", text)
         self.assertIn("${next_entry}", text)
         self.assertIn("${saved_entry}", text)
@@ -251,7 +254,7 @@ class ConfigValidatorTests(unittest.TestCase):
             f'set superusers="{GRUB_USER}"\nexport superusers\n'
             f"password_pbkdf2 {GRUB_USER} {_PASSWORD_HASH}\n"
             "menuentry 'Greia OS' --unrestricted --id greia-os {\n"
-            f"  search --no-floppy --part-uuid --set=root {_UUID_A}\n"
+            f"  search --no-floppy --fs-uuid --set=root {_UUID_A_FS}\n"
             f"  linux {GRUB_KERNEL_PATH} root=PARTUUID={_UUID_A} ro quiet\n"
             f"  initrd {GRUB_INITRAMFS_PATH}\n}}\n"
         )
@@ -308,22 +311,155 @@ class ConfigValidatorTests(unittest.TestCase):
         with self.assertRaises(GrubAbConfigError):
             validate_grub_ab_text(wrong_initrd)
         cross_root = good.replace(
-            f"search --no-floppy --part-uuid --set=root {_UUID_B}",
-            f"search --no-floppy --part-uuid --set=root {_UUID_A}",
+            f"search --no-floppy --fs-uuid --set=root {_UUID_B_FS}",
+            f"search --no-floppy --fs-uuid --set=root {_UUID_A_FS}",
         )
         with self.assertRaises(GrubAbConfigError):
             validate_grub_ab_text(cross_root)
+
+    def test_rejects_unproven_partuuid_search_primitive(self) -> None:
+        good = _config()
+        regressed = good.replace(
+            "--fs-uuid", "--part-uuid",
+        )
+        with self.assertRaises(GrubAbConfigError):
+            validate_grub_ab_text(regressed)
 
     def test_rejects_parent_boot_entry_injection(self) -> None:
         good = _config()
         injected = good + (
             "menuentry 'Parent Game' --unrestricted --id parent-game {\n"
-            f"  search --no-floppy --part-uuid --set=root {_UUID_A}\n"
+            f"  search --no-floppy --fs-uuid --set=root {_UUID_A_FS}\n"
             f"  linux {GRUB_KERNEL_PATH} root=PARTUUID={_UUID_A} ro quiet\n"
             f"  initrd {GRUB_INITRAMFS_PATH}\n}}\n"
         )
         with self.assertRaises(GrubAbConfigError):
             validate_grub_ab_text(injected)
+
+
+class MbrSlotBindingTests(unittest.TestCase):
+    """T1-GRUB/T1-IDENT binding: MBR PARTUUID kernel roots + fs-uuid locators."""
+
+    _SIG = "1a2b3c4d"
+    _MBR_A = "1a2b3c4d-01"
+    _MBR_B = "1a2b3c4d-02"
+    _MBR_P = "1a2b3c4d-03"
+
+    def _mbr_record_dict(self) -> dict[str, object]:
+        return _record_dict(
+            layout_id="legacy-bios-ab-v1",
+            platform_family="legacy-x86",
+            system_a={
+                "scheme": "MBR_PARTUUID",
+                "partuuid": self._MBR_A,
+                "filesystem_uuid": _UUID_A_FS,
+            },
+            system_b={
+                "scheme": "MBR_PARTUUID",
+                "partuuid": self._MBR_B,
+                "filesystem_uuid": _UUID_B_FS,
+            },
+            persist={
+                "scheme": "MBR_PARTUUID",
+                "partuuid": self._MBR_P,
+                "filesystem_uuid": _UUID_P_FS,
+            },
+        )
+
+    def test_mbr_record_renders_fs_uuid_locator_and_partuuid_root(self) -> None:
+        record = InstalledLayoutRecord.from_dict(self._mbr_record_dict())
+        text = render_grub_ab_config_from_record(
+            record=record, password_hash=_PASSWORD_HASH,
+        )
+        self.assertIn(f"search --no-floppy --fs-uuid --set=root {_UUID_A_FS}", text)
+        self.assertIn(f"search --no-floppy --fs-uuid --set=root {_UUID_B_FS}", text)
+        self.assertIn(f"root=PARTUUID={self._MBR_A}", text)
+        self.assertIn(f"root=PARTUUID={self._MBR_B}", text)
+        self.assertNotIn("--part-uuid", text)
+        validate_grub_ab_text(text, record=record)
+        artifact_a = BootArtifactSet.from_finalization(
+            receipt=_receipt("A", layout_id="legacy-bios-ab-v1"), record=record,
+        )
+        artifact_b = BootArtifactSet.from_finalization(
+            receipt=_receipt("B", layout_id="legacy-bios-ab-v1"), record=record,
+        )
+        self.assertEqual(artifact_a.root_partuuid, self._MBR_A)
+        from_artifacts = render_grub_ab_config(
+            artifact_a=artifact_a, artifact_b=artifact_b,
+            password_hash=_PASSWORD_HASH,
+        )
+        self.assertEqual(from_artifacts, text)
+        validate_grub_ab_text(
+            text, artifact_a=artifact_a, artifact_b=artifact_b, record=record,
+        )
+
+    def test_corrupted_slot_binding_fails_closed(self) -> None:
+        """Positive control for slot binding: any cross-slot pairing is RED."""
+        record = InstalledLayoutRecord.from_dict(self._mbr_record_dict())
+        good = render_grub_ab_config_from_record(
+            record=record, password_hash=_PASSWORD_HASH,
+        )
+        artifact_a = BootArtifactSet.from_finalization(
+            receipt=_receipt("A", layout_id="legacy-bios-ab-v1"), record=record,
+        )
+        artifact_b = BootArtifactSet.from_finalization(
+            receipt=_receipt("B", layout_id="legacy-bios-ab-v1"), record=record,
+        )
+        # Corruptions: locator from the other slot, root from the other
+        # slot, and a foreign root. Each must fail against the record.
+        swapped_locator = good.replace(_UUID_A_FS, _UUID_B_FS)
+        with self.assertRaises(GrubAbConfigError, msg="swapped-locator"):
+            validate_grub_ab_text(
+                swapped_locator,
+                artifact_a=artifact_a, artifact_b=artifact_b, record=record,
+            )
+        swapped_root = good.replace(self._MBR_A, self._MBR_B)
+        with self.assertRaises(GrubAbConfigError, msg="swapped-root"):
+            validate_grub_ab_text(
+                swapped_root,
+                artifact_a=artifact_a, artifact_b=artifact_b, record=record,
+            )
+        foreign = good.replace(self._MBR_B, _UUID_B, 1)
+        with self.assertRaises(GrubAbConfigError, msg="foreign-root"):
+            validate_grub_ab_text(
+                foreign, artifact_a=artifact_a, artifact_b=artifact_b, record=record,
+            )
+        # Cross-pair: entry A keeps its locator but boots slot B's root.
+        cross_pair = good.replace(
+            f"root=PARTUUID={self._MBR_A}", f"root=PARTUUID={self._MBR_B}", 1,
+        )
+        with self.assertRaises(GrubAbConfigError, msg="cross-pair"):
+            validate_grub_ab_text(
+                cross_pair, artifact_a=artifact_a, artifact_b=artifact_b, record=record,
+            )
+
+    def test_mbr_normalization_accepts_unnpadded_partition_number(self) -> None:
+        record = InstalledLayoutRecord.from_dict(
+            _record_dict(
+                layout_id="legacy-bios-ab-v1",
+                platform_family="legacy-x86",
+                system_a={
+                    "scheme": "MBR_PARTUUID",
+                    "partuuid": f"{self._SIG}-1",
+                    "filesystem_uuid": _UUID_A_FS,
+                },
+                system_b={
+                    "scheme": "MBR_PARTUUID",
+                    "partuuid": f"{self._SIG}-2",
+                    "filesystem_uuid": _UUID_B_FS,
+                },
+                persist={
+                    "scheme": "MBR_PARTUUID",
+                    "partuuid": f"{self._SIG}-3",
+                    "filesystem_uuid": _UUID_P_FS,
+                },
+            )
+        )
+        text = render_grub_ab_config_from_record(
+            record=record, password_hash=_PASSWORD_HASH,
+        )
+        self.assertIn(f"root=PARTUUID={self._MBR_A}", text)
+        validate_grub_ab_text(text, record=record)
 
 
 class NoParentAuthorityTests(unittest.TestCase):

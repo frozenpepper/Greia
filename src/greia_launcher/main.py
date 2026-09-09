@@ -244,6 +244,11 @@ class LauncherApplication:
         # Post-intro wait: seconds the main thread blocked on the single
         # preparation worker after the intro ended (near zero by design).
         self._post_intro_wait_seconds = 0.0
+        # Production post-intro health acceptance (T3-UPDATE2): outcome of
+        # the single INTERACTIVE_READY seam call, or None on plain boots;
+        # bounded error text when health infra refused on a pending boot.
+        self._post_intro_health_outcome: Any = None
+        self._post_intro_health_error: str | None = None
         # Auto-bootstrap only the exact base type. Subclass instances must
         # let their own explicit bootstrap run after this constructor has
         # returned, so the base constructor never dispatches to a subclass
@@ -426,7 +431,38 @@ class LauncherApplication:
         if callable(attach_deferred):
             attach_deferred()
         self._boot_lifecycle.mark_interactive_ready()
+        # T3-UPDATE2 production call graph: exactly one BOOT_HEALTHY
+        # acceptance at the real INTERACTIVE_READY transition. Outside
+        # candidate/first-install boots it is a bounded no-op (plain boots
+        # mutate no journal or health state); first-frame systemd READY=1
+        # stays owned by boot_intro and never implies update health.
+        self._run_post_intro_health()
         return self
+
+    def _run_post_intro_health(self) -> None:
+        """Invoke the production post-intro health seam exactly once.
+
+        The default implementation calls the production seam
+        (:func:`greia_launcher.boot_health.maybe_accept_production_boot`)
+        with the live lifecycle guard. Health-infra failures are recorded
+        in bounded attributes and never take the Shell down: the journal
+        stays pending for the privileged service to reconcile. Tests may
+        count invocations by wrapping this method; the default stays the
+        production path, never a stub.
+        """
+
+        from . import boot_health as _launcher_boot_health
+
+        try:
+            outcome = _launcher_boot_health.maybe_accept_production_boot(
+                self._boot_lifecycle
+            )
+        except Exception as exc:
+            self._post_intro_health_outcome = None
+            self._post_intro_health_error = str(exc)[:256]
+            return
+        self._post_intro_health_outcome = outcome
+        self._post_intro_health_error = None
 
     def _bootstrap_catalogue_builder(self) -> Any:
         """Return the presentation-catalogue factory for prepare, if any.

@@ -1,0 +1,34 @@
+# TAKEOVER-4/D55 candidate health-deadline trigger (one fire per boot).
+#
+# Narrow lifecycle capability, not a generic supervisor: this timer fires the
+# oneshot recovery helper exactly once per boot, OnBootSec after boot. The
+# helper inspects the existing boot-transaction journal(s) and does nothing
+# on plain boots (no journal, terminal journal, or machine already on the
+# accepted slot). Only when a candidate observably booted but never became
+# healthy does the helper mark the journal FAILED and issue the controlled
+# reboot; the persistent default is never mutated, so the reboot returns to
+# the previous accepted slot.
+#
+# Failure-class wiring:
+#  1. launcher exit/crash — the launcher unit restarts under its own bound
+#     while this system-level timer still fires, so a crash loop cannot
+#     outlast the deadline;
+#  2. userspace emergency/failure before health — this timer is independent
+#     of launcher state and still fires;
+#  3. health-service failure (BOOT_HEALTHY never confirms) — the pending
+#     journal stays non-terminal, so the helper marks it failed and reboots;
+#  4. kernel panic — handled by the kernel panic-reboot sysctl drop-in
+#     (30-greia-panic-reboot.conf), not by this timer; the consumed one-shot
+#     then returns the machine to the accepted default;
+#  5. hard hang — no watchdog is claimed (no reference platform proves one):
+#     recovery is the next physical power cycle (manual recovery), which the
+#     consumed one-shot likewise returns to the accepted default.
+[Unit]
+Description=Greia candidate health-deadline trigger
+
+[Timer]
+OnBootSec=3min
+Unit=greia-candidate-recovery.service
+
+[Install]
+WantedBy=timers.target

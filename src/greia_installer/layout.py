@@ -41,27 +41,49 @@ returns the validated plan; :func:`require_finalized_slot_capacity` rejects
 undersized profiles with the finalizer capacity bound
 (base + support-set installed-size bound + boot-artifact growth bound +
 metadata/reserve <= slot capacity); :func:`mint_fresh_partition_identities`
-mints the distinct role-owned PARTUUID/filesystem-UUID pairs recorded in
-layout authority (never cloned template UUIDs). ``BOOT_CONTROL`` stays
+mints the distinct role-owned PARTUUID/filesystem-UUID pairs for the GPT
+path only — MBR layouts bind observed identities instead (see below). ``BOOT_CONTROL`` stays
 outside the layout record by design: it owns stable GRUB
 configuration/environment outside both replaceable A/B roots and is never
 rewritten by slot updates, while the record tracks exactly the
 ``system-a`` / ``system-b`` / ``persist`` roles.
+
+TAKEOVER-1 T1.1 (D51) supersedes the minted-MBR-identity evidence: MBR
+PARTUUIDs are the observed ``<disk-signature>-<partno>`` form, never a
+minted UUID4. The legacy MBR observed-identity path
+(:func:`observe_partition_identities` for ``legacy-bios-ab-v1``) creates
+the DOS table through :meth:`LegacyBiosAbAdapter.execute`, obtains the
+disk signature through the controlled ``blkid`` tool path, settles udev,
+probes the actual partitions and binds layout authority to the observed
+identities; :func:`verify_mbr_topology_for_boot` proves the topology
+before any boot configuration commits. GPT and Pi adapters implement
+their own observation rules behind the same semantic interface when
+their execution paths land (Phases 8C/8D); no MBR parsing is imported
+into them.
 """
 
 from __future__ import annotations
 
 import re
+import subprocess
 import uuid
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Sequence
+from pathlib import Path
 
 from greia_platform.persistent_layout import (
     MAX_SYSTEM_SLOT_BYTES,
     MIN_PERSIST_BYTES,
     MIN_SYSTEM_SLOT_BYTES,
+    PARTITION_SCHEME_MBR_PARTUUID,
+    BlockTopology,
+    PartitionFact,
+    PersistentLayoutError,
+    normalize_mbr_partuuid,
+    require_mbr_disk_signature,
+    require_mbr_topology_binding,
+    validate_layout_against_topology,
 )
 from greia_platform.slot_writer import (
     FINALIZATION_GROWTH_BYTES,
@@ -815,6 +837,367 @@ def adapter_for(adapter_id: str) -> LayoutAdapter:
 
 
 # ---------------------------------------------------------------------------
+# TAKEOVER-1 T1.1 legacy MBR observed-identity path (D51).
+#
+# MBR PARTUUIDs are observed ``<disk-signature>-<partno>`` values, never a
+# minted UUID4. The DOS table is created by
+# :meth:`LegacyBiosAbAdapter.execute` (``mklabel msdos`` + ``mkpart`` +
+# ``partprobe`` + ``udevadm settle`` + role ``mkfs``); the helpers below
+# obtain the disk signature through the controlled ``blkid`` tool path,
+# probe the actual partitions and bind layout authority to what the block
+# layer reports. GPT (Phase 8C) and Pi MBR (Phase 8D) adapters implement
+# their own observation rules behind the :func:`observe_partition_identities`
+# semantic interface; this section's MBR parsing is never imported into
+# them (see the boundary test in ``tests/test_mbr_observed_identity.py``).
+# ---------------------------------------------------------------------------
+
+#: Roles whose layout-record identities the legacy MBR path observes.
+#: ``boot-control`` stays outside layout authority by design (see
+#: ``FRESH_IDENTITY_ROLES``); its filesystem UUID is still never cloned
+#: because the adapter formats it with a fresh ``mkfs`` UUID.
+OBSERVED_MBR_ROLES = ("system-a", "system-b", "persist")
+
+#: Longest ``blkid`` probe line accepted (identifiers are tiny by
+#: construction; anything larger is not a block identity).
+MAX_PROBE_LINE_BYTES = 256
+
+#: ``blkid`` timeout per probe (local block queries return immediately).
+PROBE_TIMEOUT_SECONDS = 30
+
+
+@dataclass(frozen=True, slots=True)
+class MbrCommandResult:
+    """Bounded result of one controlled probe command."""
+
+    stdout: str
+    returncode: int
+
+
+class MbrProbeRunner:
+    """Narrow seam: run one probe argument array (``shell=False``)."""
+
+    def run(self, command: Sequence[str]) -> MbrCommandResult: ...  # pragma: no cover
+
+
+class SubprocessMbrProbeRunner(MbrProbeRunner):
+    """Production probe runner: argument arrays only, never shell strings."""
+
+    def run(self, command: Sequence[str]) -> MbrCommandResult:
+        argv = _check_command(tuple(command))
+        try:
+            completed = subprocess.run(
+                list(argv),
+                shell=False,
+                capture_output=True,
+                text=True,
+                timeout=PROBE_TIMEOUT_SECONDS,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise LayoutError(f"block probe failed to execute: {exc}") from exc
+        stdout = completed.stdout.strip()
+        if len(stdout.encode("utf-8")) > MAX_PROBE_LINE_BYTES:
+            raise LayoutError("block probe returned an oversized identity")
+        return MbrCommandResult(stdout=stdout, returncode=completed.returncode)
+
+
+def _run_probe(runner: MbrProbeRunner, argv: tuple[str, ...]) -> str:
+    """Run one controlled probe and return its stripped stdout (fail closed)."""
+    command = _check_command(argv)
+    try:
+        result = runner.run(list(command))
+    except LayoutError:
+        raise
+    except Exception as exc:
+        raise LayoutError(f"block probe failed: {exc}") from exc
+    stdout = getattr(result, "stdout", None)
+    returncode = getattr(result, "returncode", None)
+    if not isinstance(stdout, str) or not isinstance(returncode, int):
+        raise LayoutError("block probe returned no bounded stdout/returncode")
+    if len(stdout.encode("utf-8")) > MAX_PROBE_LINE_BYTES:
+        raise LayoutError("block probe returned an oversized identity")
+    return stdout.strip()
+
+
+def read_mbr_disk_signature(runner: MbrProbeRunner, device: Path) -> str:
+    """Obtain the DOS disk signature through the controlled tool path.
+
+    Runs ``blkid -s PTUUID -o value -- <device>`` (argument array,
+    ``shell=False``); the device locator comes only from the verified
+    target. Empty output, probe failure or a missing/zero signature
+    fails closed — layout authority is never bound to a guessed disk.
+    """
+    locator = str(device)
+    if not locator or not Path(locator).is_absolute():
+        raise LayoutError("block probing requires an absolute device locator")
+    output = _run_probe(
+        runner, ("blkid", "-s", "PTUUID", "-o", "value", "--", locator)
+    )
+    if not output:
+        raise LayoutError("block probe reported no disk signature")
+    try:
+        return require_mbr_disk_signature(output, field="disk signature")
+    except PersistentLayoutError as exc:
+        raise LayoutError(f"disk signature is not authoritative: {exc}") from exc
+
+
+def probe_mbr_partition_partuuid(runner: MbrProbeRunner, node: Path) -> str:
+    """Probe one observed MBR PARTUUID via ``blkid -s PARTUUID``."""
+    locator = str(node)
+    if not locator or not Path(locator).is_absolute():
+        raise LayoutError("block probing requires an absolute partition locator")
+    output = _run_probe(
+        runner, ("blkid", "-s", "PARTUUID", "-o", "value", "--", locator)
+    )
+    if not output:
+        raise LayoutError(f"block probe reported no PARTUUID for {locator}")
+    try:
+        return normalize_mbr_partuuid(output, field="partuuid")
+    except PersistentLayoutError as exc:
+        raise LayoutError(
+            f"observed PARTUUID is not an MBR PARTUUID: {exc}"
+        ) from exc
+
+
+def probe_partition_filesystem_uuid(runner: MbrProbeRunner, node: Path) -> str:
+    """Probe one observed filesystem UUID via ``blkid -s UUID``."""
+    locator = str(node)
+    if not locator or not Path(locator).is_absolute():
+        raise LayoutError("block probing requires an absolute partition locator")
+    output = _run_probe(
+        runner, ("blkid", "-s", "UUID", "-o", "value", "--", locator)
+    )
+    if not output:
+        raise LayoutError(f"block probe reported no filesystem UUID for {locator}")
+    try:
+        parsed = uuid.UUID(output.strip())
+    except (ValueError, AttributeError) as exc:
+        raise LayoutError(
+            "observed filesystem identity is not a valid UUID"
+        ) from exc
+    text = str(parsed)
+    if text != text.lower():
+        raise LayoutError("observed filesystem UUID must be canonical lowercase")
+    return text
+
+
+@dataclass(frozen=True, slots=True)
+class DosPartitionObservation:
+    """One present primary partition parsed from MBR table bytes."""
+
+    number: int
+    partition_type: int
+    bootable: bool
+
+
+@dataclass(frozen=True, slots=True)
+class DosTableObservation:
+    """Read-only facts parsed from 512 DOS MBR table bytes."""
+
+    disk_signature: str
+    partitions: tuple[DosPartitionObservation, ...]
+
+    def partuuid_for(self, number: int) -> str:
+        """Return the observed MBR PARTUUID for a present partition number."""
+        for partition in self.partitions:
+            if partition.number == number:
+                return f"{self.disk_signature}-{number:02d}"
+        raise LayoutError(f"MBR table carries no partition number {number}")
+
+
+def parse_dos_partition_table(image_bytes: bytes, *, field: str = "mbr") -> DosTableObservation:
+    """Parse 512 DOS MBR table bytes into the disk signature + present primaries.
+
+    Pure read-only bytes rule for file-backed images (no device contact):
+    checks the ``0x55AA`` magic, requires a non-zero disk signature at
+    bytes 440-443 (little-endian) and returns every present primary
+    partition (non-zero type) with its number, type and boot flag.
+    Corrupt magic, a missing signature or an empty table fails closed.
+    """
+    table = bytes(image_bytes[:512])
+    if len(table) != 512:
+        raise LayoutError(f"{field} is shorter than one MBR sector")
+    if table[510] != 0x55 or table[511] != 0xAA:
+        raise LayoutError(f"{field} carries no DOS partition-table magic")
+    signature_value = int.from_bytes(table[440:444], "little")
+    try:
+        signature = require_mbr_disk_signature(
+            f"{signature_value:08x}", field="disk signature"
+        )
+    except PersistentLayoutError as exc:
+        raise LayoutError(f"{field} disk signature is not authoritative: {exc}") from exc
+    partitions: list[DosPartitionObservation] = []
+    for index in range(4):
+        entry = table[446 + index * 16 : 446 + (index + 1) * 16]
+        partition_type = entry[4]
+        if partition_type == 0x00:
+            continue
+        status = entry[0]
+        if status not in (0x00, 0x80):
+            raise LayoutError(f"{field} partition {index + 1} status is invalid")
+        partitions.append(
+            DosPartitionObservation(
+                number=index + 1,
+                partition_type=partition_type,
+                bootable=status == 0x80,
+            )
+        )
+    if not partitions:
+        raise LayoutError(f"{field} carries no partitions")
+    return DosTableObservation(disk_signature=signature, partitions=tuple(partitions))
+
+
+def observe_legacy_mbr_identities(
+    runner: MbrProbeRunner, *, target: DeviceObservation, plan: LayoutPlan
+) -> dict[str, dict[str, str]]:
+    """Bind layout authority to observed MBR PARTUUIDs + filesystem UUIDs.
+
+    Expects the DOS table already created by
+    :meth:`LegacyBiosAbAdapter.execute` (which settles udev before any
+    ``mkfs``). Probes the disk signature once, then probes each
+    ``system-a`` / ``system-b`` / ``persist`` partition node for its
+    actual PARTUUID and filesystem UUID. A PARTUUID off the probed disk,
+    a non-MBR value, or cloned filesystem UUIDs fail closed. Returns
+    scheme-explicit identity mappings in the exact shape
+    :class:`greia_platform.persistent_layout.PartitionIdentity` consumes.
+    """
+    if plan.adapter_id != LEGACY_BIOS_AB_ADAPTER_ID:
+        raise LayoutError("MBR observation requires the legacy-bios-ab-v1 plan")
+    if target.device_type != "disk":
+        raise LayoutError("MBR observation requires a whole-disk target")
+    device = target.path
+    if not str(device) or not device.is_absolute():
+        raise LayoutError("verified target carries no absolute device locator")
+    validate_layout_plan(plan)
+    disk_signature = read_mbr_disk_signature(runner, device)
+    observed: dict[str, dict[str, str]] = {}
+    for role in OBSERVED_MBR_ROLES:
+        planned = plan.by_role(role)
+        if planned is None:
+            raise LayoutError(f"legacy plan carries no {role!r} partition")
+        try:
+            node = partition_number_path(device, planned.number)
+        except DiskProbeError as exc:
+            raise LayoutError(str(exc)) from exc
+        partuuid = probe_mbr_partition_partuuid(runner, node)
+        if not partuuid.startswith(f"{disk_signature}-"):
+            raise LayoutError(
+                f"observed {role} PARTUUID is off the probed disk: "
+                "refusing a wrong-disk binding"
+            )
+        observed[role] = {
+            "filesystem_uuid": probe_partition_filesystem_uuid(runner, node),
+            "partuuid": partuuid,
+            "scheme": PARTITION_SCHEME_MBR_PARTUUID,
+        }
+    filesystem_uuids = [observed[role]["filesystem_uuid"] for role in OBSERVED_MBR_ROLES]
+    if len(set(filesystem_uuids)) != len(filesystem_uuids):
+        raise LayoutError(
+            "observed filesystem UUIDs are cloned across roles: "
+            "refusing a cloned-identity binding"
+        )
+    if len(set(observed[role]["partuuid"] for role in OBSERVED_MBR_ROLES)) != len(
+        OBSERVED_MBR_ROLES
+    ):
+        raise LayoutError("observed MBR PARTUUIDs are not distinct across roles")
+    return observed
+
+
+def build_observed_mbr_topology(
+    *, plan: LayoutPlan, target: DeviceObservation, identities: dict[str, dict[str, str]]
+) -> BlockTopology:
+    """Present the observed MBR identities as block topology facts.
+
+    Sizes come from the validated plan (slot roles carry the profile
+    ``slot_bytes``; ``persist`` carries the proven remainder); the disk
+    ancestry comes from the verified target name. Fails closed on role
+    gaps so a partial observation can never validate.
+    """
+    if plan.adapter_id != LEGACY_BIOS_AB_ADAPTER_ID:
+        raise LayoutError("MBR topology requires the legacy-bios-ab-v1 plan")
+    if set(identities) != set(OBSERVED_MBR_ROLES):
+        raise LayoutError("observed MBR identities must cover system-a/system-b/persist")
+    try:
+        facts = tuple(
+            PartitionFact.create(
+                role=role,
+                scheme=identities[role]["scheme"],
+                partuuid=identities[role]["partuuid"],
+                filesystem_uuid=identities[role]["filesystem_uuid"],
+                size_bytes=(
+                    int(plan.slot_bytes)
+                    if role in ("system-a", "system-b")
+                    else plan.remainder_bytes()
+                ),
+                disk_id=target.name,
+            )
+            for role in OBSERVED_MBR_ROLES
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise LayoutError(f"observed MBR identities are not authoritative: {exc}") from exc
+    except PersistentLayoutError as exc:
+        raise LayoutError(f"observed MBR identities are not authoritative: {exc}") from exc
+    try:
+        return BlockTopology(partitions=facts)
+    except PersistentLayoutError as exc:
+        raise LayoutError(f"observed MBR topology is not authoritative: {exc}") from exc
+
+
+def verify_mbr_topology_for_boot(
+    record: object, topology: BlockTopology, *, expected_disk_signature: str
+) -> str:
+    """Verify observed MBR topology before any boot configuration commits.
+
+    Proves the single-disk-signature binding
+    (:func:`require_mbr_topology_binding`) and the full record/topology
+    agreement (:func:`validate_layout_against_topology`), then proves the
+    bound signature equals the independently probed disk signature so a
+    swapped or wrong-disk observation fails closed even when it is
+    internally consistent. Returns the proven disk signature.
+    """
+    from greia_platform.persistent_layout import InstalledLayoutRecord
+
+    if not isinstance(record, InstalledLayoutRecord):
+        raise LayoutError("MBR boot verification requires a layout record")
+    if not isinstance(topology, BlockTopology):
+        raise LayoutError("MBR boot verification requires observed block topology")
+    try:
+        wanted = require_mbr_disk_signature(
+            expected_disk_signature, field="disk signature"
+        )
+    except PersistentLayoutError as exc:
+        raise LayoutError(f"disk signature is not authoritative: {exc}") from exc
+    try:
+        bound = require_mbr_topology_binding(record, topology)
+        validate_layout_against_topology(record, topology)
+    except PersistentLayoutError as exc:
+        raise LayoutError(f"MBR topology does not match layout authority: {exc}") from exc
+    if bound != wanted:
+        raise LayoutError(
+            "observed MBR disk signature does not match the probed disk: "
+            "refusing a wrong-disk boot binding"
+        )
+    return bound
+
+
+def observe_partition_identities(
+    runner: MbrProbeRunner, *, target: DeviceObservation, plan: LayoutPlan
+) -> dict[str, dict[str, str]]:
+    """Semantic observation interface behind every layout adapter id.
+
+    The legacy MBR adapter observes today; GPT (Phase 8C) and Pi MBR
+    (Phase 8D) adapters implement their own parsers/observation rules
+    behind this same interface when their execution paths land. Routing
+    by adapter id keeps MBR parsing out of the GPT/Pi paths.
+    """
+    if plan.adapter_id == LEGACY_BIOS_AB_ADAPTER_ID:
+        return observe_legacy_mbr_identities(runner, target=target, plan=plan)
+    raise LayoutError(
+        f"adapter {plan.adapter_id!r} observation is deferred; "
+        "role-model plans only"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Phase 8B Step 8B.1 profile seam (X8-LAYOUT): profile-owned sizing,
 # finalized-slot capacity gate and fresh layout-authority identities.
 # ---------------------------------------------------------------------------
@@ -971,6 +1354,16 @@ def mint_fresh_partition_identities(
 ) -> dict[str, dict[str, str]]:
     """Mint fresh distinct PARTUUID/filesystem-UUID pairs for layout authority.
 
+    RETIRED FOR MBR (T3-INSTALL/D51): the minted PARTUUIDs are UUID-shaped
+    and therefore valid only for GPT layouts. They must never be bound to
+    an MBR layout — the fresh-install orchestrator
+    (:func:`greia_installer.fresh_ab_install.execute_fresh_ab_install`)
+    requires caller-supplied observed identities and rejects both a missing
+    identity mapping and a UUID4 labeled as an MBR PARTUUID, and the legacy
+    MBR path observes identities via :func:`observe_legacy_mbr_identities`
+    instead. This helper stays only for the GPT path and existing
+    orchestrator-adjacent tests.
+
     Returns one ``{"partuuid", "filesystem_uuid"}`` mapping per record-tracked
     role (``system-a``, ``system-b``, ``persist``) in the exact shape
     :class:`greia_platform.persistent_layout.PartitionIdentity` consumes.
@@ -1010,6 +1403,9 @@ __all__ = [
     "ALLOWED_FLAGS",
     "KNOWN_LAYOUT_ADAPTER_IDS",
     "FRESH_IDENTITY_ROLES",
+    "OBSERVED_MBR_ROLES",
+    "MAX_PROBE_LINE_BYTES",
+    "PROBE_TIMEOUT_SECONDS",
     "LAYOUT_ADAPTERS",
     "LEGACY_BIOS_AB_ADAPTER_ID",
     "MODERN_GPT_AB_ADAPTER_ID",
@@ -1018,14 +1414,27 @@ __all__ = [
     "LayoutError",
     "LayoutPlan",
     "LegacyBiosAbAdapter",
+    "MbrCommandResult",
+    "MbrProbeRunner",
+    "SubprocessMbrProbeRunner",
+    "DosPartitionObservation",
+    "DosTableObservation",
     "ModernGptAbAdapter",
     "PartitionCommandRunner",
     "PiMbrTrybootAbAdapter",
     "PlannedPartition",
     "ProfileSizing",
     "adapter_for",
+    "build_observed_mbr_topology",
     "mint_fresh_partition_identities",
+    "observe_legacy_mbr_identities",
+    "observe_partition_identities",
+    "parse_dos_partition_table",
     "plan_for_profile",
+    "probe_mbr_partition_partuuid",
+    "probe_partition_filesystem_uuid",
+    "read_mbr_disk_signature",
     "require_finalized_slot_capacity",
     "validate_layout_plan",
+    "verify_mbr_topology_for_boot",
 ]

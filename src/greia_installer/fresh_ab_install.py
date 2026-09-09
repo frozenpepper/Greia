@@ -60,7 +60,6 @@ import time
 import uuid
 import zipfile
 from dataclasses import dataclass
-from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO, Callable, Mapping, Sequence
 
@@ -92,6 +91,9 @@ from greia_platform.slot_writer import (
     VerifiedReleaseMember,
 )
 from greia_platform.system_updates import (
+    MANIFEST_NAME,
+    MAX_MANIFEST_BYTES,
+    MAX_PAYLOAD_BYTES,
     PAYLOAD_NAME,
     SystemUpdateError,
     UpdateBundleError,
@@ -106,7 +108,6 @@ from .layout import (
     LayoutPlan,
     ProfileSizing,
     adapter_for,
-    mint_fresh_partition_identities,
     plan_for_profile,
     require_finalized_slot_capacity,
 )
@@ -154,13 +155,14 @@ class FreshAbInstallRequest:
     ``bundle_path`` is the signed deterministic ``.greiaupdate`` v2 release
     artifact; ``trusted_key_dir`` holds the release signer public keys.
     ``expected_*`` are the installer image's own compatibility facts: the
-    manifest must match all three exactly. ``install_target_sha256`` is the
+    manifest must match all three exactly.     ``install_target_sha256`` is the
     authorized identity digest the privileged protocol rematerialized from a
     fresh probe (never a ``/dev`` path). ``fresh_identities`` carries the
-    minted role-owned PARTUUID/filesystem-UUID pairs (see
-    :func:`mint_fresh_partition_identities`); when ``None`` the orchestrator
-    mints them. ``password_hash`` is the stored GRUB PBKDF2 token rendered
-    into the fixed boot entries.
+    observed role-owned PARTUUID/filesystem-UUID pairs bound to the profile
+    layout adapter's identity scheme (MBR ``<disk-signature>-<NN>`` via the
+    T1-IDENT normalizer, GPT canonical GUIDs); it is required — the
+    orchestrator never mints identities. ``password_hash`` is the stored
+    GRUB PBKDF2 token rendered into the fixed boot entries.
     """
 
     bundle_path: Path
@@ -291,27 +293,195 @@ class FreshAbInstallResult:
 
 
 # ---------------------------------------------------------------------------
-# Bundle payload stream (read-only ZIP member access, no shell)
+# Bundle payload stream (live ZIP member stream, bounded working memory)
 # ---------------------------------------------------------------------------
 
 
-def open_bundle_payload_stream(bundle_path: Path) -> BinaryIO:
-    """Open a read-only stream over the bundle's signed payload member."""
+class BundlePayloadStream:
+    """Live streaming view over the bundle's signed payload member (D33).
+
+    The owning :class:`zipfile.ZipFile` lifetime spans the whole writer
+    consumption: the archive stays open until this stream is closed, so the
+    shared :class:`SlotWriter` pulls bounded chunks straight from the ZIP
+    member with no full uncompressed ``payload.bin`` allocation and no
+    second extracted copy on disk. Manifest-declared uncompressed size is
+    bounded at open time (live ``ZipInfo.file_size`` must equal the signed
+    manifest ``payload.size`` and the optional ``expected_size``); stream
+    errors surface as :class:`FreshAbInstallError` (transaction failure).
+    Hash/readback ownership stays with ``SlotWriter`` — this object only
+    transports bytes. Unbounded ``read()`` (no size) is refused so an
+    accidental whole-buffering call fails closed instead of allocating
+    payload-scale RAM.
+    """
+
+    def __init__(
+        self,
+        archive: zipfile.ZipFile,
+        handle: BinaryIO,
+        expected_bytes: int,
+    ) -> None:
+        self._archive = archive
+        self._handle = handle
+        self._expected_bytes = expected_bytes
+        self._closed = False
+
+    # -- BinaryIO surface used by SlotWriter ---------------------------------
+    def readable(self) -> bool:
+        return True
+
+    def writable(self) -> bool:
+        return False
+
+    def seekable(self) -> bool:
+        return False
+
+    @property
+    def closed(self) -> bool:
+        return self._closed
+
+    def read(self, size: int = -1) -> bytes:
+        if self._closed:
+            raise FreshAbInstallError("release payload stream is closed")
+        if size is None or not isinstance(size, int) or size < 0:
+            raise FreshAbInstallError(
+                "unbounded payload read refused; streaming reads must be bounded"
+            )
+        if size == 0:
+            return b""
+        try:
+            data = self._handle.read(size)
+        except FreshAbInstallError:
+            raise
+        except (zipfile.BadZipFile, OSError) as exc:
+            raise FreshAbInstallError(
+                f"release payload stream failed: {exc}"
+            ) from exc
+        except Exception as exc:
+            raise FreshAbInstallError(
+                f"release payload stream failed: {exc}"
+            ) from exc
+        if data is None:
+            return b""
+        if not isinstance(data, (bytes, bytearray)):
+            raise FreshAbInstallError("release payload stream must yield bytes")
+        return bytes(data)
+
+    def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        try:
+            try:
+                self._handle.close()
+            except Exception:
+                pass
+        finally:
+            try:
+                self._archive.close()
+            except Exception:
+                pass
+
+    def __enter__(self) -> "BundlePayloadStream":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
+
+    def __del__(self) -> None:  # pragma: no cover - deterministic close is explicit
+        try:
+            self.close()
+        except Exception:
+            pass
+
+
+def _manifest_payload_size(archive: zipfile.ZipFile) -> int:
+    """Read the manifest-declared payload size from an open bundle (small)."""
+    try:
+        info = archive.getinfo(MANIFEST_NAME)
+    except KeyError as exc:
+        raise FreshAbInstallError("release bundle carries no signed manifest") from exc
+    if info.file_size <= 0 or info.file_size > MAX_MANIFEST_BYTES:
+        raise FreshAbInstallError("release manifest exceeds Greia bounds")
+    try:
+        raw = archive.read(MANIFEST_NAME)
+    except (zipfile.BadZipFile, OSError) as exc:
+        raise FreshAbInstallError(f"release manifest is not readable: {exc}") from exc
+    import json as _json
+
+    try:
+        document = _json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise FreshAbInstallError(f"release manifest is not valid JSON: {exc}") from exc
+    try:
+        payload = document["payload"]
+        size = payload["size"]
+    except (KeyError, TypeError) as exc:
+        raise FreshAbInstallError("release manifest payload object is invalid") from exc
+    if isinstance(size, bool) or not isinstance(size, int):
+        raise FreshAbInstallError("release manifest payload size must be an integer")
+    return size
+
+
+def open_bundle_payload_stream(
+    bundle_path: Path, *, expected_size: int | None = None
+) -> BinaryIO:
+    """Open a live read-only stream over the bundle's signed payload member.
+
+    The returned stream owns both the ZIP member handle and the archive:
+    the archive stays open until the caller closes the stream (the
+    orchestrator's ``_closing`` wrapper does this deterministically on both
+    success and failure), so :class:`SlotWriter` consumes bounded chunks
+    with no whole-payload RAM allocation and no extracted second copy.
+    The live ``ZipInfo.file_size`` is bounded against ``MAX_PAYLOAD_BYTES``
+    and must equal the manifest-declared ``payload.size`` (plus the optional
+    ``expected_size`` from the already-verified release member) before the
+    caller writes anything.
+    """
     location = Path(bundle_path)
+    if location.is_symlink() or not location.is_file():
+        raise FreshAbInstallError("release bundle is not a regular file")
     try:
         archive = zipfile.ZipFile(location, "r")
     except (zipfile.BadZipFile, OSError) as exc:
         raise FreshAbInstallError(f"release bundle is not readable: {exc}") from exc
     try:
-        data = archive.read(PAYLOAD_NAME)
-    except (KeyError, zipfile.BadZipFile, OSError) as exc:
-        raise FreshAbInstallError(f"release bundle carries no signed payload: {exc}") from exc
-    finally:
+        try:
+            info = archive.getinfo(PAYLOAD_NAME)
+        except KeyError as exc:
+            raise FreshAbInstallError(
+                f"release bundle carries no signed payload: {exc}"
+            ) from exc
+        if info.file_size <= 0 or info.file_size > MAX_PAYLOAD_BYTES:
+            raise FreshAbInstallError("release payload size is outside Greia bounds")
+        declared = _manifest_payload_size(archive)
+        if declared <= 0 or declared > MAX_PAYLOAD_BYTES:
+            raise FreshAbInstallError("release manifest payload size is outside Greia bounds")
+        if info.file_size != declared:
+            raise FreshAbInstallError("payload size does not match signed manifest")
+        if expected_size is not None:
+            if (
+                isinstance(expected_size, bool)
+                or not isinstance(expected_size, int)
+                or expected_size <= 0
+            ):
+                raise FreshAbInstallError("expected payload size is outside Greia bounds")
+            if info.file_size != expected_size:
+                raise FreshAbInstallError(
+                    "payload size does not match the verified release member"
+                )
+        try:
+            handle = archive.open(PAYLOAD_NAME, "r")
+        except (KeyError, zipfile.BadZipFile, OSError) as exc:
+            raise FreshAbInstallError(
+                f"release bundle carries no signed payload: {exc}"
+            ) from exc
+        return BundlePayloadStream(archive, handle, info.file_size)
+    except Exception:
         try:
             archive.close()
-        except OSError:
+        except Exception:
             pass
-    return BytesIO(data)
+        raise
 
 
 # ---------------------------------------------------------------------------
@@ -399,7 +569,7 @@ def execute_fresh_ab_install(
     if plan.boot_backend != request.sizing.boot_backend:
         raise FreshAbInstallError("layout boot backend does not match the profile sizing")
 
-    # -- Fresh role-owned identities (never cloned template UUIDs) ---------
+    # -- Fresh role-owned identities (observed, never minted) ------------
     minted = _fresh_identities(request)
     try:
         from greia_platform.slot_writer import (
@@ -450,7 +620,11 @@ def execute_fresh_ab_install(
     except Exception as exc:
         raise FreshAbInstallError(f"SYSTEM_A slot store is not authoritative: {exc}") from exc
     writer = SlotWriter()
-    stream_factory = seams.payload_stream_factory or (lambda: open_bundle_payload_stream(request.bundle_path))
+    stream_factory = seams.payload_stream_factory or (
+        lambda: open_bundle_payload_stream(
+            request.bundle_path, expected_size=member.payload_size
+        )
+    )
     try:
         source = stream_factory()
     except FreshAbInstallError:
@@ -466,8 +640,14 @@ def execute_fresh_ab_install(
                 storage=storage,
                 support_installed_bytes=seams.support_installed_bound,
             )
+    except FreshAbInstallError:
+        raise
     except SlotWriteError as exc:
         raise FreshAbInstallError(f"SYSTEM_A streaming refused: {exc}") from exc
+    except (zipfile.BadZipFile, OSError) as exc:
+        raise FreshAbInstallError(f"SYSTEM_A streaming failed: {exc}") from exc
+    except Exception as exc:
+        raise FreshAbInstallError(f"SYSTEM_A streaming failed: {exc}") from exc
     try:
         filesystem = seams.slot_filesystem_factory()
         package_installer = seams.package_installer_factory()
@@ -638,11 +818,14 @@ class AbExecutorFacts:
     """Service-owned facts the A/B executor rematerializes per EXECUTE.
 
     Every value comes from the installer image / privileged service
-    environment — never from UI request bytes. ``install`` builds the typed
+    environment — never from UI request bytes.     ``install`` builds the typed
     :class:`FreshAbInstallRequest` from the revalidated authorization
     (identity digest), the service-held settings snapshot outcome and the
     rematerialized target, then runs :func:`execute_fresh_ab_install`
-    through the bound seam factories.
+    through the bound seam factories. Observed partition identities arrive
+    per ``EXECUTE`` through the executor's ``identities_factory`` (device
+    facts for the rematerialized target), never from UI request bytes and
+    never from a mint.
     """
 
     bundle_path: Path
@@ -683,26 +866,51 @@ class AbExecutorFacts:
 def build_ab_executor(
     facts: AbExecutorFacts,
     seams_factory: Callable[[DeviceObservation], FreshAbInstallSeams],
+    *,
+    identities_factory: (
+        Callable[[DeviceObservation], Mapping[str, Mapping[str, str]]] | None
+    ) = None,
 ):
     """Bind service-owned facts into an :attr:`ab_executor` callable.
 
     ``seams_factory`` receives the rematerialized target and returns the
     fully bound seams (partition/persist runners, slot storage/filesystem,
-    staging dirs, journal/backend dirs, support/inventory facts). The
-    returned executor takes ``(authorization, settings, locale, target)``
-    from :meth:`InstallTransactionService.execute_ab_install` and returns
-    an install result object; any refusal raises fail-closed.
+    staging dirs, journal/backend dirs, support/inventory facts).
+    ``identities_factory`` receives the same rematerialized target and
+    returns the observed partition identities bound by
+    :func:`execute_fresh_ab_install` (MBR ``<disk-signature>-<NN>`` via the
+    T1-IDENT normalizer, GPT canonical GUIDs); it is required — a missing
+    factory refuses fail-closed before any destructive work instead of
+    minting an independent UUID4. The returned executor takes
+    ``(authorization, settings, locale, target)`` from
+    :meth:`InstallTransactionService.execute_ab_install` and returns an
+    install result object; any refusal raises fail-closed.
     """
     if not isinstance(facts, AbExecutorFacts):
         raise FreshAbInstallError("A/B executor requires typed service facts")
     if not callable(seams_factory):
         raise FreshAbInstallError("A/B executor requires a seam factory")
+    if identities_factory is not None and not callable(identities_factory):
+        raise FreshAbInstallError("A/B executor requires an observed-identity factory")
 
     def _execute(authorization: object, settings: object, locale: object, target: DeviceObservation):  # type: ignore[no-untyped-def]
         identity = getattr(authorization, "target_identity", "")
         _require_hex64(identity, field_name="install target identity")
         if not isinstance(target, DeviceObservation):
             raise FreshAbInstallError("A/B executor requires a rematerialized target")
+        if identities_factory is None:
+            raise FreshAbInstallError(
+                "A/B executor requires observed partition identities; "
+                "minting an independent UUID4 is retired"
+            )
+        try:
+            observed = identities_factory(target)
+        except FreshAbInstallError:
+            raise
+        except Exception as exc:
+            raise FreshAbInstallError(
+                f"observed partition identities are not authoritative: {exc}"
+            ) from exc
         seams = seams_factory(target)
         if not isinstance(seams, FreshAbInstallSeams):
             raise FreshAbInstallError("A/B seam factory returned no install seams")
@@ -718,6 +926,7 @@ def build_ab_executor(
             install_target_sha256=identity,
             password_hash=facts.password_hash,
             developer=facts.developer,
+            fresh_identities=observed,  # type: ignore[arg-type]
         )
         result = execute_fresh_ab_install(request, seams)
         return _InstallResultShim(
@@ -786,39 +995,142 @@ def _support_set_from_seams(seams: FreshAbInstallSeams):  # -> ReleaseSupportSet
     )
 
 
-def _fresh_identities(request: FreshAbInstallRequest) -> dict[str, dict[str, str]]:
-    if request.fresh_identities is None:
-        try:
-            return mint_fresh_partition_identities()
-        except LayoutError as exc:
-            raise FreshAbInstallError(f"layout identities are not authoritative: {exc}") from exc
+def _require_canonical_filesystem_uuid(value: object) -> str:
+    """Normalize an observed filesystem UUID to canonical lowercase text."""
     try:
-        minted = {
-            role: dict(values) for role, values in dict(request.fresh_identities).items()
+        parsed = uuid.UUID(str(value))
+    except (ValueError, AttributeError, TypeError) as exc:
+        raise FreshAbInstallError(
+            "observed filesystem identity is not a valid UUID"
+        ) from exc
+    text = str(parsed)
+    if not isinstance(value, str) or value != text:
+        raise FreshAbInstallError(
+            "observed filesystem UUID must be canonical lowercase UUID text"
+        )
+    return text
+
+
+def _fresh_identities(request: FreshAbInstallRequest) -> dict[str, dict[str, str]]:
+    """Bind the orchestrator to caller-supplied observed partition identities.
+
+    T3-INSTALL rewire (TAKEOVER D51): identities are observed device facts,
+    never minted here. ``request.fresh_identities`` must carry one mapping
+    per layout-authority role (``system-a``/``system-b``/``persist``); each
+    entry holds ``partuuid`` + ``filesystem_uuid`` and may carry an explicit
+    ``scheme``. The PARTUUID is normalized with the parser owned by the
+    profile layout adapter's expected scheme
+    (:func:`greia_platform.persistent_layout.normalize_partuuid_for_scheme`):
+    MBR layouts accept only the observed ``<disk-signature>-<NN>`` form, so
+    a minted UUID4 labeled as an MBR PARTUUID is rejected; GPT layouts accept
+    only canonical GUIDs. An explicit scheme must equal the expected one, MBR
+    bindings must share one disk signature, and every identity must be
+    unique across roles. ``None`` is refused: no path mints an independent
+    UUID4. The returned mappings carry an explicit scheme so layout
+    authority re-proves the adapter binding at record construction.
+    """
+    from greia_platform.persistent_layout import (
+        LAYOUT_PARTITION_SCHEMES,
+        PARTITION_SCHEME_MBR_PARTUUID,
+        PersistentLayoutError,
+        normalize_partuuid_for_scheme,
+        split_mbr_partuuid,
+    )
+
+    adapter_id = getattr(request.sizing, "layout_adapter_id", None)
+    expected = (
+        LAYOUT_PARTITION_SCHEMES.get(adapter_id)
+        if isinstance(adapter_id, str)
+        else None
+    )
+    if expected is None:
+        raise FreshAbInstallError(
+            "layout identities require a known profile layout adapter"
+        )
+    if request.fresh_identities is None:
+        raise FreshAbInstallError(
+            "fresh install requires observed partition identities; "
+            "minting an independent UUID4 is retired"
+        )
+    try:
+        supplied = {
+            role: dict(values)
+            for role, values in dict(request.fresh_identities).items()
         }
     except (TypeError, ValueError, AttributeError) as exc:
-        raise FreshAbInstallError(f"layout identities are not authoritative: {exc}") from exc
-    if set(minted) != {"system-a", "system-b", "persist"}:
-        raise FreshAbInstallError("layout identities must cover system-a/system-b/persist")
-    seen: list[str] = []
+        raise FreshAbInstallError(
+            f"layout identities are not authoritative: {exc}"
+        ) from exc
+    if set(supplied) != {"system-a", "system-b", "persist"}:
+        raise FreshAbInstallError(
+            "layout identities must cover system-a/system-b/persist"
+        )
+    bound: dict[str, dict[str, str]] = {}
     for role in ("system-a", "system-b", "persist"):
-        entry = minted[role]
-        if set(entry) != {"partuuid", "filesystem_uuid"}:
-            raise FreshAbInstallError(f"layout identity {role} must hold partuuid/filesystem_uuid")
-        for key in ("partuuid", "filesystem_uuid"):
-            try:
-                normalized = str(uuid.UUID(str(entry[key])))
-            except (ValueError, AttributeError) as exc:
+        entry = supplied[role]
+        if not isinstance(entry, dict):
+            raise FreshAbInstallError(
+                f"layout identity {role} must hold an identity mapping"
+            )
+        keys = set(entry)
+        if keys == {"partuuid", "filesystem_uuid"}:
+            pass
+        elif keys == {"scheme", "partuuid", "filesystem_uuid"}:
+            if entry["scheme"] != expected:
                 raise FreshAbInstallError(
-                    f"layout identity {role}.{key} is not a valid UUID"
-                ) from exc
-            if normalized != normalized.lower():
-                raise FreshAbInstallError(f"layout identity {role}.{key} must be canonical lowercase")
-            minted[role][key] = normalized
-            seen.append(normalized)
+                    f"layout identity {role} scheme {entry['scheme']!r} does not "
+                    f"match the profile layout adapter (expected {expected!r})"
+                )
+        else:
+            raise FreshAbInstallError(
+                f"layout identity {role} must hold scheme/partuuid/filesystem_uuid"
+            )
+        try:
+            partuuid = normalize_partuuid_for_scheme(
+                expected, entry["partuuid"], field=f"{role}.partuuid"
+            )
+        except PersistentLayoutError as exc:
+            raise FreshAbInstallError(
+                f"layout identity {role}.partuuid is not authoritative: {exc}"
+            ) from exc
+        try:
+            filesystem_uuid = _require_canonical_filesystem_uuid(
+                entry["filesystem_uuid"]
+            )
+        except FreshAbInstallError as exc:
+            raise FreshAbInstallError(
+                f"layout identity {role}.filesystem_uuid is not authoritative: {exc}"
+            ) from exc
+        bound[role] = {
+            "scheme": expected,
+            "partuuid": partuuid,
+            "filesystem_uuid": filesystem_uuid,
+        }
+    if expected == PARTITION_SCHEME_MBR_PARTUUID:
+        try:
+            signatures = {
+                split_mbr_partuuid(bound[role]["partuuid"])[0]
+                for role in ("system-a", "system-b", "persist")
+            }
+        except PersistentLayoutError as exc:
+            raise FreshAbInstallError(
+                f"observed MBR PARTUUIDs are not authoritative: {exc}"
+            ) from exc
+        if len(signatures) != 1:
+            raise FreshAbInstallError(
+                "observed MBR PARTUUIDs span multiple disk signatures: "
+                "refusing a cross-disk identity binding"
+            )
+    seen = [
+        bound[role][key]
+        for role in ("system-a", "system-b", "persist")
+        for key in ("partuuid", "filesystem_uuid")
+    ]
     if len(set(seen)) != len(seen):
-        raise FreshAbInstallError("layout partition identities must be unique across roles")
-    return minted
+        raise FreshAbInstallError(
+            "layout partition identities must be unique across roles"
+        )
+    return bound
 
 
 def _write_boot_control_config(boot_control_dir: Path, text: str) -> None:
@@ -891,6 +1203,7 @@ class _closing:
 __all__ = [
     "GRUB_CONFIG_NAME",
     "AbExecutorFacts",
+    "BundlePayloadStream",
     "FreshAbInstallError",
     "FreshAbInstallRequest",
     "FreshAbInstallResult",

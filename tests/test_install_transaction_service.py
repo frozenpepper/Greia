@@ -141,6 +141,8 @@ class ServiceHarness:
             payload_digest=Path("/etc/greia-os/expected-payload.sha256"),
             project_root=PROJECT_ROOT,
             compatible_profile_id=profile_id,
+            platform_family="legacy-x86",
+            architecture="i386",
             target_policy_id="pc-internal-v1",
             layout_adapter_id="legacy-bios-ab-v1",
             boot_backend="grub-ab-v1",
@@ -638,6 +640,8 @@ class ServiceStateTests(unittest.TestCase):
     def _manifest(self, root: Path, **overrides: object) -> Path:
         manifest = {
             "profile": {"id": "profile-test"},
+            "platform": {"family": "legacy-x86"},
+            "base": {"architecture": "i386"},
             "storage": {
                 "layout_adapter": "legacy-bios-ab-v1",
                 "system_slot_bytes": 1 * GIB,
