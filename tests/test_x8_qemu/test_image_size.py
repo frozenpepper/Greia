@@ -109,7 +109,8 @@ class DisposableImageSizeTests(unittest.TestCase):
                 max(PRE_FIX_IMAGE_BYTES, PLAN_DEVICE_BYTES)
             )
             expected = plan_mbr_sector_extents(plan)
-            intact_table = image.read_bytes()[:512]
+            with open(image, "rb") as _sector_handle:
+                intact_table = _sector_handle.read(512)
             # BREAK 1: shrink the file 1 MiB below the plan span.
             with open(image, "r+b") as handle:
                 handle.truncate(int(getattr(plan, "device_size_bytes")) - 1024 * 1024)

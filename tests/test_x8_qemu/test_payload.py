@@ -24,13 +24,18 @@ from tools.x8_qemu.lifecycle import (
     write_mbr_table_for_plan,
 )
 from tools.x8_qemu.payload import (
+    DESCRIPTOR_OFFSET,
     PayloadError,
+    PayloadManifest,
     assert_payload_present,
     compose_guest_payload,
     embed_payload_descriptor,
     payload_assembly_cost,
+    populate_guest_boot_files,
     read_attestation_signal,
     read_payload_descriptor,
+    rebind_payload_descriptor,
+    verify_sector_gap_reserved,
     verify_staged_payload,
 )
 from tools.x8_qemu.runner import layout_plan_for_device
@@ -63,7 +68,7 @@ class PayloadCompositionTests(unittest.TestCase):
             image = Path(manifest["image"])
             self.assertTrue(image.is_file())
             self.assertEqual(manifest["payload_magic"], "GREIAPY1")
-            self.assertEqual(manifest["payload_descriptor"], "sector-1:512")
+            self.assertEqual(manifest["payload_descriptor"], "sector-2047:512")
             self.assertFalse(manifest["payload_whole_ram_copy"])
             descriptor = read_payload_descriptor(image)
             self.assertEqual(
@@ -113,6 +118,9 @@ class PayloadRedControlTests(unittest.TestCase):
     """Each required RED condition fails for the right reason."""
 
     def test_missing_payload_fails_boot_gate_break_restore_green(self) -> None:
+        from tools.x8_qemu.bootchain import STUB_CORE_SECTORS, stub_core_sha256
+        from tools.x8_qemu.payload import DESCRIPTOR_OFFSET
+
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
@@ -120,7 +128,7 @@ class PayloadRedControlTests(unittest.TestCase):
             assert_payload_present(image)
             # BREAK: wipe the descriptor sector (512 bounded bytes).
             with open(image, "r+b") as handle:
-                handle.seek(512)
+                handle.seek(DESCRIPTOR_OFFSET)
                 handle.write(b"\x00" * 512)
             # RED: the boot gate fails closed, never false green.
             with self.assertRaises(PayloadError):
@@ -130,7 +138,12 @@ class PayloadRedControlTests(unittest.TestCase):
             # RESTORE the exact payload binding and re-prove GREEN.
             payload_dir = Path(tmp) / "out" / "guest-payload"
             reproven = verify_staged_payload(payload_dir)
-            embed_payload_descriptor(image, reproven)
+            embed_payload_descriptor(
+                image,
+                reproven,
+                core_sha256=stub_core_sha256(),
+                core_sectors=STUB_CORE_SECTORS,
+            )
             assert_payload_present(image)
 
     def test_corrupted_disk_binding_fails_observation(self) -> None:
@@ -272,7 +285,8 @@ class PayloadDeviceCopyRegressionTests(unittest.TestCase):
             "undefined grubenv destination name must not recur",
         )
         installer_source = inspect.getsource(module.install_payload_to_device)
-        self.assertIn("STAGED_GRUBENV_NAME", installer_source)
+        self.assertIn("populate_guest_boot_files", installer_source)
+        self.assertIn("STAGED_GRUBENV_NAME", Path(module.__file__).read_text(encoding="utf-8"))
         completed = _subprocess.run(
             [_sys.executable, "-m", "pyflakes", str(Path(module.__file__))],
             capture_output=True,
@@ -305,12 +319,28 @@ class PayloadDeviceCopyRegressionTests(unittest.TestCase):
             image = Path(tmp) / "fake.img"
             image.write_bytes(b"\x00" * (1024 * 1024))
 
-            copies: list[tuple[str, str]] = []
+            copies: list[tuple[str, str, str]] = []
             real_copy2 = _shutil.copy2
 
             def _recording_copy2(src: object, dst: object, *args: object, **kwargs: object) -> object:
-                copies.append((Path(str(src)).name, Path(str(dst)).name))
+                rel = Path(str(dst))
+                copies.append(
+                    (
+                        Path(str(src)).name,
+                        Path(str(dst)).name,
+                        rel.parent.name,
+                    )
+                )
                 return real_copy2(src, dst, *args, **kwargs)  # type: ignore[arg-type]
+
+            fake_tree = Path(tmp) / "grub-tree"
+            fake_tree.mkdir()
+            (fake_tree / "normal.mod").write_bytes(b"N" * 64)
+            (fake_tree / "bufio.mod").write_bytes(b"B" * 32)
+            (fake_tree / "moddep.lst").write_text(
+                "normal: bufio\nbufio:\n", encoding="utf-8"
+            )
+            (fake_tree / "command.lst").write_text("x\n", encoding="utf-8")
 
             with (
                 _mock.patch(
@@ -323,17 +353,32 @@ class PayloadDeviceCopyRegressionTests(unittest.TestCase):
                 _mock.patch("subprocess.run") as fake_run,
                 _mock.patch.object(module.shutil, "copy2", side_effect=_recording_copy2),
                 _mock.patch.object(module.time, "sleep", return_value=None),
+                _mock.patch.object(
+                    module, "INSTALLED_GRUB_MODULE_DIR", str(fake_tree)
+                ),
+                _mock.patch.object(
+                    module, "GUEST_MODULE_ROOTS", ("normal",)
+                ),
             ):
                 fake_run.return_value = _mock.MagicMock(returncode=0)
                 result = module.install_payload_to_device(image, payload_dir)
 
             self.assertTrue(result["installed"])
+            self.assertTrue(result["module_closure"])
+            # Root boot files (the genuine ``(,msdos1)/`` prefix reads
+            # exactly here) plus the module closure under i386-pc.
             self.assertEqual(
-                copies,
+                copies[:2],
                 [
-                    (module.STAGED_GRUB_CFG_NAME, module.STAGED_GRUB_CFG_NAME),
-                    (module.STAGED_GRUBENV_NAME, module.STAGED_GRUBENV_NAME),
+                    (module.STAGED_GRUB_CFG_NAME, module.STAGED_GRUB_CFG_NAME, "payload-mnt"),
+                    (module.STAGED_GRUBENV_NAME, module.STAGED_GRUBENV_NAME, "payload-mnt"),
                 ],
+            )
+            self.assertIn(
+                ("normal.mod", "normal.mod", "i386-pc"), copies
+            )
+            self.assertIn(
+                ("bufio.mod", "bufio.mod", "i386-pc"), copies
             )
             # Destination names equal the guest paths consumed by run_device.
             self.assertEqual(
@@ -348,6 +393,314 @@ class PayloadDeviceCopyRegressionTests(unittest.TestCase):
             installed_env = mountpoint / module.STAGED_GRUBENV_NAME
             self.assertTrue(installed_env.is_file())
             self.assertEqual(installed_env.stat().st_size, 1024)
+            # The module closure lands byte-identical under i386-pc.
+            placed_normal = mountpoint / module.GUEST_MODULES_DIR / "normal.mod"
+            self.assertTrue(placed_normal.is_file())
+            self.assertEqual(placed_normal.read_bytes(), b"N" * 64)
+
+
+class GuestBootPlacementTests(unittest.TestCase):
+    """Guest boot-file placement at the partition root (no mirror).
+
+    The genuine ``(,msdos1)/`` prefix resolves ``grub.cfg``/``grubenv``
+    at the partition root — the exact paths the frozen attestation
+    seam inspects — so a single byte-identical placement (no second
+    copy to drift) is both the boot path and the observation path.
+    Pure directory ops: no root/loop/mount.
+    """
+
+    def test_populate_places_root_copies(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            machine = fresh_machine_state(Path(tmp) / "machine")
+            payload_dir = Path(tmp) / "guest-payload"
+            manifest = compose_guest_payload(
+                layout_record_path=machine["layout"],
+                password_hash=_PASSWORD_HASH,
+                output_dir=payload_dir,
+            )
+            target = Path(tmp) / "target"
+            target.mkdir()
+            proof = populate_guest_boot_files(target, payload_dir)
+            self.assertEqual(
+                proof["grub_cfg_sha256"], manifest.grub_cfg_sha256
+            )
+            self.assertEqual(
+                proof["grubenv_sha256"], manifest.grubenv_sha256
+            )
+            self.assertEqual(proof["files"], ["grub.cfg", "grubenv"])
+            for name in ("grub.cfg", "grubenv"):
+                placed = target / name
+                self.assertTrue(placed.is_file())
+                self.assertEqual(
+                    placed.read_bytes(), (payload_dir / name).read_bytes()
+                )
+
+    def test_populate_refuses_tampered_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            machine = fresh_machine_state(Path(tmp) / "machine")
+            payload_dir = Path(tmp) / "guest-payload"
+            compose_guest_payload(
+                layout_record_path=machine["layout"],
+                password_hash=_PASSWORD_HASH,
+                output_dir=payload_dir,
+            )
+            target = Path(tmp) / "target"
+            target.mkdir()
+            (payload_dir / "grub.cfg").write_bytes(b"tampered")
+            with self.assertRaises(PayloadError):
+                populate_guest_boot_files(target, payload_dir)
+            self.assertFalse((target / "grub.cfg").exists())
+            self.assertFalse((target / "grubenv").exists())
+
+
+class ModuleClosureTests(unittest.TestCase):
+    """GRUB module-closure placement (normal + deps, stock layout).
+
+    The embedded core cannot hold ``normal`` (115 KiB vs the 64 KiB
+    gap), so it auto-loads from ``$prefix/i386-pc/`` at boot. The
+    closure resolves ``moddep.lst`` breadth-first from the roots and
+    ships ``.mod`` files plus the tree ``.lst`` indexes. Pure
+    directory ops over a fake tree: no root/loop/mount, no GRUB tool.
+    """
+
+    @staticmethod
+    def _fake_tree(root: Path) -> None:
+        root.mkdir(parents=True, exist_ok=True)
+        (root / "normal.mod").write_bytes(b"N" * 64)
+        (root / "bufio.mod").write_bytes(b"B" * 32)
+        (root / "crypto.mod").write_bytes(b"C" * 16)
+        (root / "moddep.lst").write_text(
+            "normal: bufio crypto\nbufio:\ncrypto:\n", encoding="utf-8"
+        )
+        (root / "command.lst").write_text("x\n", encoding="utf-8")
+
+    def test_closure_resolves_transitive_deps(self) -> None:
+        from tools.x8_qemu import payload as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tree = Path(tmp) / "tree"
+            self._fake_tree(tree)
+            closure = module.resolve_grub_module_closure(tree, ("normal",))
+            self.assertEqual(closure, ["bufio", "crypto", "normal"])
+
+    def test_place_copies_closure_and_lists(self) -> None:
+        from tools.x8_qemu import payload as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tree = Path(tmp) / "tree"
+            self._fake_tree(tree)
+            target = Path(tmp) / "target"
+            target.mkdir()
+            proof = module.place_grub_module_closure(
+                target, tree, ("normal",)
+            )
+            self.assertEqual(proof["modules"], ["bufio", "crypto", "normal"])
+            self.assertEqual(proof["lists"], 2)
+            for name, body in (
+                ("normal.mod", b"N" * 64),
+                ("bufio.mod", b"B" * 32),
+                ("crypto.mod", b"C" * 16),
+            ):
+                placed = target / module.GUEST_MODULES_DIR / name
+                self.assertTrue(placed.is_file())
+                self.assertEqual(placed.read_bytes(), body)
+            self.assertTrue(
+                (target / module.GUEST_MODULES_DIR / "moddep.lst").is_file()
+            )
+
+    def test_closure_refuses_missing_tree_parts(self) -> None:
+        from tools.x8_qemu import payload as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "target"
+            target.mkdir()
+            with self.assertRaises(PayloadError):
+                module.resolve_grub_module_closure(
+                    Path(tmp) / "absent", ("normal",)
+                )
+            tree = Path(tmp) / "tree"
+            self._fake_tree(tree)
+            (tree / "moddep.lst").unlink()
+            with self.assertRaises(PayloadError):
+                module.resolve_grub_module_closure(tree, ("normal",))
+            self._fake_tree(tree)
+            with self.assertRaises(PayloadError):
+                module.resolve_grub_module_closure(tree, ("ghost",))
+            (tree / "crypto.mod").unlink()
+            with self.assertRaises(PayloadError):
+                module.place_grub_module_closure(target, tree, ("normal",))
+
+
+class DescriptorRebindTests(unittest.TestCase):
+    """Explicit stub→genuine descriptor rebind (never a silent overwrite)."""
+
+    @staticmethod
+    def _synthetic_core(sectors: int) -> bytes:
+        """Deterministic NON-GRUB core exerciser (never claimed as GRUB)."""
+        return bytes((index * 31 + 7) % 256 for index in range(sectors * 512))
+
+    @staticmethod
+    def _descriptor_sector(image: Path) -> bytes:
+        with open(image, "rb") as handle:
+            handle.seek(DESCRIPTOR_OFFSET)
+            return handle.read(512)
+
+    def test_rebind_stub_to_genuine_binding_green_with_evidence(self) -> None:
+        from tools.x8_qemu.bootchain import (
+            STUB_CORE_SECTORS,
+            install_genuine_grub_chain,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            genuine = self._synthetic_core(40)
+            proof = install_genuine_grub_chain(image, genuine)
+            staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+            result = rebind_payload_descriptor(
+                image,
+                staged,
+                core_sha256=str(proof["core_sha256"]),
+                core_sectors=int(proof["core_sectors"]),
+            )
+            # Previous stub binding evidenced, new binding installed.
+            self.assertEqual(
+                result["previous"]["core_sectors"], STUB_CORE_SECTORS
+            )
+            self.assertEqual(result["descriptor"]["core_sectors"], 40)
+            self.assertEqual(
+                result["descriptor"]["core_sha256"], proof["core_sha256"]
+            )
+            # Staged payload hashes ride along unchanged.
+            self.assertEqual(
+                result["descriptor"]["grub_cfg_sha256"],
+                result["previous"]["grub_cfg_sha256"],
+            )
+            # Guard green on the rebound binding.
+            guard = verify_sector_gap_reserved(image)
+            self.assertEqual(guard["core_sectors"], 40)
+            assert_payload_present(image)
+
+    def test_rebind_refuses_core_hash_mismatch_and_restores_previous(
+        self,
+    ) -> None:
+        from tools.x8_qemu.bootchain import install_genuine_grub_chain
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            proof = install_genuine_grub_chain(image, self._synthetic_core(40))
+            staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+            intact = self._descriptor_sector(image)
+            # BREAK: claim a core binding that is not on the image.
+            with self.assertRaises(PayloadError):
+                rebind_payload_descriptor(
+                    image,
+                    staged,
+                    core_sha256="ab" * 32,
+                    core_sectors=40,
+                )
+            # The failed rebind restores the exact previous sector bytes.
+            self.assertEqual(self._descriptor_sector(image), intact)
+            read_payload_descriptor(image)
+            # The correct rebind then lands green on the genuine binding.
+            rebind_payload_descriptor(
+                image,
+                staged,
+                core_sha256=str(proof["core_sha256"]),
+                core_sectors=int(proof["core_sectors"]),
+            )
+            verify_sector_gap_reserved(image)
+
+    def test_rebind_refuses_missing_descriptor(self) -> None:
+        from tools.x8_qemu.bootchain import install_genuine_grub_chain
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            install_genuine_grub_chain(image, self._synthetic_core(40))
+            staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+            with open(image, "r+b") as handle:
+                handle.seek(DESCRIPTOR_OFFSET)
+                handle.write(b"\x00" * 512)
+            with self.assertRaises(PayloadError):
+                rebind_payload_descriptor(
+                    image,
+                    staged,
+                    core_sha256="ab" * 32,
+                    core_sectors=40,
+                )
+            self.assertEqual(self._descriptor_sector(image), b"\x00" * 512)
+
+    def test_rebind_refuses_foreign_sector(self) -> None:
+        from tools.x8_qemu.bootchain import install_genuine_grub_chain
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            install_genuine_grub_chain(image, self._synthetic_core(40))
+            staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+            foreign = b"COREIMGB" + b"\x01" * 504
+            with open(image, "r+b") as handle:
+                handle.seek(DESCRIPTOR_OFFSET)
+                handle.write(foreign)
+            with self.assertRaises(PayloadError):
+                rebind_payload_descriptor(
+                    image,
+                    staged,
+                    core_sha256="ab" * 32,
+                    core_sectors=40,
+                )
+            self.assertEqual(self._descriptor_sector(image), foreign)
+
+    def test_rebind_refuses_different_staged_payload(self) -> None:
+        from tools.x8_qemu.bootchain import install_genuine_grub_chain
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            genuine = self._synthetic_core(40)
+            proof = install_genuine_grub_chain(image, genuine)
+            intact = self._descriptor_sector(image)
+            staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+            swapped = PayloadManifest(
+                grub_cfg_sha256="ab" * 32,
+                grubenv_sha256=staged.grubenv_sha256,
+                grub_cfg_bytes=staged.grub_cfg_bytes,
+                grubenv_bytes=staged.grubenv_bytes,
+            )
+            with self.assertRaises(PayloadError):
+                rebind_payload_descriptor(
+                    image,
+                    swapped,
+                    core_sha256=str(proof["core_sha256"]),
+                    core_sectors=int(proof["core_sectors"]),
+                )
+            self.assertEqual(self._descriptor_sector(image), intact)
+
+    def test_idempotent_rebind_same_binding_is_green(self) -> None:
+        from tools.x8_qemu.bootchain import (
+            STUB_CORE_SECTORS,
+            stub_core_sha256,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+            intact = self._descriptor_sector(image)
+            result = rebind_payload_descriptor(
+                image,
+                staged,
+                core_sha256=stub_core_sha256(),
+                core_sectors=STUB_CORE_SECTORS,
+            )
+            self.assertEqual(
+                result["previous"]["core_sha256"],
+                result["descriptor"]["core_sha256"],
+            )
+            self.assertEqual(self._descriptor_sector(image), intact)
+            verify_sector_gap_reserved(image)
 
 
 class PayloadBoundaryTests(unittest.TestCase):

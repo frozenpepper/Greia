@@ -905,20 +905,139 @@ def run_file_cross_check(image: Path, *, expected_signature: str) -> dict[str, o
     return {"executed": True, "green": True, "detail": "sfdisk+blkid agree with byte parse"}
 
 
+#: Fail-closed gate naming the post-run loop-attach partition rescan.
+#: Raised when loop partition nodes never surface for observation after
+#: a bounded kernel rescan plus bounded observation retries.
+LOOP_RESCAN_GATE = "post-run-loop-attach-partition-rescan"
+
+#: Fixed small cap on observation attempts per loop-attached observe
+#: (initial attempt plus settle/sleep retries). Bounded: at most
+#: ``LOOP_OBSERVE_MAX_ATTEMPTS`` production observations plus the same
+#: number of ``udevadm settle`` waits.
+LOOP_OBSERVE_MAX_ATTEMPTS = 5
+
+#: Settle/sleep between observation attempts (matches the ``_loop_attach``
+#: 0.5 s settle discipline).
+LOOP_OBSERVE_RETRY_SETTLE_SECONDS = 0.5
+
+#: Bounded timeout per rescan/settle subprocess (matches the harness's
+#: existing 60 s device-tool discipline).
+LOOP_RESCAN_TIMEOUT_SECONDS = 60
+
+
+def rescan_loop_partitions(
+    device: Path,
+    *,
+    run: Callable[..., object] | None = None,
+    which: Callable[[str], str | None] | None = None,
+) -> dict[str, object]:
+    """Force a bounded kernel partition rescan for a loop-attached device.
+
+    Runs ``partprobe <device>`` and/or ``partx -u <device>`` (fallback
+    for whichever tool exists — both when both exist), then
+    ``udevadm settle``, as argument arrays with ``shell=False``. A host
+    missing every rescan tool records a tolerated single attempt and
+    returns: observation must still run (never a silent skip). Rescan
+    command failures are recorded, not fatal — the retried production
+    observation is authoritative and fails closed at
+    :data:`LOOP_RESCAN_GATE` when partitions never surface.
+    """
+    locator = str(device)
+    if not locator or not Path(locator).is_absolute():
+        raise LifecycleHarnessError("loop rescan needs an absolute device path")
+    _run = run if run is not None else subprocess.run
+    _which = which if which is not None else shutil.which
+    attempted: list[list[str]] = []
+    missing: list[str] = []
+    failures: list[str] = []
+    candidates: list[list[str]] = []
+    if _which("partprobe") is not None:
+        candidates.append(["partprobe", locator])
+    else:
+        missing.append("partprobe")
+    if _which("partx") is not None:
+        candidates.append(["partx", "-u", locator])
+    else:
+        missing.append("partx")
+    for argv in candidates:
+        attempted.append(list(argv))
+        try:
+            completed = _run(
+                list(argv),
+                capture_output=True,
+                timeout=LOOP_RESCAN_TIMEOUT_SECONDS,
+                shell=False,
+            )
+        except Exception as exc:
+            failures.append(f"{argv[0]} failed: {exc}")
+            continue
+        if getattr(completed, "returncode", 1) != 0:
+            failures.append(
+                f"{argv[0]} exited {getattr(completed, 'returncode', '?')}"
+            )
+    if _which("udevadm") is not None:
+        settle_argv = ["udevadm", "settle"]
+        attempted.append(list(settle_argv))
+        try:
+            _run(
+                list(settle_argv),
+                capture_output=True,
+                timeout=LOOP_RESCAN_TIMEOUT_SECONDS,
+                shell=False,
+            )
+        except Exception as exc:
+            failures.append(f"udevadm settle failed: {exc}")
+    else:
+        missing.append("udevadm")
+    if not attempted:
+        detail = "deferred: tool-less host; missing " + ",".join(missing)
+    elif failures:
+        detail = (
+            "rescan attempted (" + ",".join(a[0] for a in attempted) + "); "
+            "failures: " + "; ".join(failures)
+        )
+    else:
+        detail = "rescan attempted (" + ",".join(a[0] for a in attempted) + ")"
+    return {
+        "device": locator,
+        "attempted": attempted,
+        "missing": missing,
+        "failures": failures,
+        "detail": detail,
+    }
+
+
 def observe_loop_attached_device(
-    device: Path, *, plan: object, record_path: Path
+    device: Path,
+    *,
+    plan: object,
+    record_path: Path,
+    runner: object | None = None,
+    rescan_run: Callable[..., object] | None = None,
+    rescan_which: Callable[[str], str | None] | None = None,
+    max_attempts: int = LOOP_OBSERVE_MAX_ATTEMPTS,
+    retry_settle_seconds: float = LOOP_OBSERVE_RETRY_SETTLE_SECONDS,
 ) -> dict[str, object]:
     """Run the production observation path against a loop-attached device.
 
-    Device scope only: probes the disk signature once plus each
-    system-a/system-b/persist PARTUUID and filesystem UUID through
-    ``SubprocessMbrProbeRunner`` (argument arrays, ``shell=False``), then
-    proves the bound record equals the observed topology. Raises
-    fail-closed on any mismatch; returns the observed identities plus the
-    proven signature on success.
+    Harness-owned rescan-then-observe: forces a bounded kernel partition
+    rescan first (:func:`rescan_loop_partitions`), then probes the disk
+    signature once plus each system-a/system-b/persist PARTUUID and
+    filesystem UUID through ``SubprocessMbrProbeRunner`` (argument
+    arrays, ``shell=False``), retrying the whole production observation
+    up to ``max_attempts`` with settle/sleep between attempts so a stale
+    kernel partition view settles instead of REDing permanently. Proves
+    the bound record equals the observed topology on success.
+
+    Fail-closed: exhausted retries raise :class:`LifecycleHarnessError`
+    naming :data:`LOOP_RESCAN_GATE` with the device, the rescan detail
+    and the last probe error. Wrong-disk, non-MBR and cloned-UUID
+    bindings still RED (surfaced as the last probe error); no PARTUUID
+    or filesystem-UUID value is ever synthesized host-side.
     """
     from greia_installer.disk import DeviceObservation
     from greia_installer.layout import (
+        LayoutError,
         SubprocessMbrProbeRunner,
         build_observed_mbr_topology,
         observe_legacy_mbr_identities,
@@ -928,7 +1047,11 @@ def observe_loop_attached_device(
 
     if not str(device) or not device.is_absolute():
         raise LifecycleHarnessError("loop observation needs an absolute device path")
-    runner = SubprocessMbrProbeRunner()
+    attempts = max(1, int(max_attempts))
+    rescan = rescan_loop_partitions(
+        device, run=rescan_run, which=rescan_which
+    )
+    probe_runner = runner if runner is not None else SubprocessMbrProbeRunner()
     target = DeviceObservation(
         path=Path(device),
         device_type="disk",
@@ -943,17 +1066,48 @@ def observe_loop_attached_device(
         wwn="WWN-T6-LIFECYCLE",
         major_minor="7:99",
     )
-    observed = observe_legacy_mbr_identities(runner, target=target, plan=plan)
-    record = InstalledLayoutRecord.read_from(Path(record_path))
-    topology = build_observed_mbr_topology(plan=plan, target=target, identities=observed)
-    signature = verify_mbr_topology_for_boot(
-        record, topology, expected_disk_signature=observed_signature(record, observed)
+    last_error: Exception | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            observed = observe_legacy_mbr_identities(
+                probe_runner, target=target, plan=plan  # type: ignore[arg-type]
+            )
+        except LayoutError as exc:
+            last_error = exc
+            if attempt < attempts:
+                _which = rescan_which if rescan_which is not None else shutil.which
+                if _which("udevadm") is not None:
+                    _run = rescan_run if rescan_run is not None else subprocess.run
+                    try:
+                        _run(
+                            ["udevadm", "settle"],
+                            capture_output=True,
+                            timeout=LOOP_RESCAN_TIMEOUT_SECONDS,
+                            shell=False,
+                        )
+                    except Exception:
+                        pass
+                time.sleep(retry_settle_seconds)
+            continue
+        record = InstalledLayoutRecord.read_from(Path(record_path))
+        topology = build_observed_mbr_topology(
+            plan=plan, target=target, identities=observed  # type: ignore[arg-type]
+        )
+        signature = verify_mbr_topology_for_boot(
+            record, topology, expected_disk_signature=observed_signature(record, observed)
+        )
+        return {
+            "observed": observed,
+            "proven_signature": signature,
+            "loop_attach_green": True,
+            "rescan": rescan,
+            "observation_attempts": attempt,
+        }
+    raise LifecycleHarnessError(
+        f"{LOOP_RESCAN_GATE} gate: partitions never surfaced for {device} "
+        f"after rescan ({rescan['detail']}) and {attempts} observation "
+        f"attempt(s); last probe error: {last_error}"
     )
-    return {
-        "observed": observed,
-        "proven_signature": signature,
-        "loop_attach_green": True,
-    }
 
 
 def observed_signature(record: object, observed: Mapping[str, Mapping[str, str]]) -> str:
@@ -1119,6 +1273,100 @@ def write_mbr_table_for_plan(
         os.fsync(handle.fileno())
 
 
+def genuine_core_capability() -> dict[str, object]:
+    """Report the capable-host genuine-GRUB capability (no mutation).
+
+    The consumption mechanism is the guest ``save_env next_entry``
+    consumer block executed by a genuine GRUB core built with the
+    pinned ``(,msdos1)/`` root prefix; the frozen seam reads exactly
+    that root (``/grub.cfg``/``/grubenv``). Off a capable host this
+    reports unavailable and the caller keeps the source-scope stub
+    core (armed-leg consumption stays RED by construction).
+    """
+    from .bootchain import grub_mkimage_available
+
+    return {
+        "grub_mkimage_available": bool(grub_mkimage_available()),
+        "prefix": "(,msdos1)/",
+        "mechanism": "guest save_env next_entry via the genuine core "
+        "at the (,msdos1)/ root",
+    }
+
+
+def maybe_install_genuine_grub_core(
+    image: Path, payload_manifest: object
+) -> dict[str, object]:
+    """Capable-host-only genuine-core upgrade over the stub chain.
+
+    Reuses the reviewed helpers only: ``build_grub_core_via_mkimage``
+    (pinned prefix + default module set), ``pad_core_bytes_to_sectors``,
+    ``install_genuine_grub_chain`` (matching MBR load count + zeroed
+    reservation tail), and the explicit ``rebind_payload_descriptor``
+    path (previous-to-new evidence, never a silent overwrite).
+
+    - Tool absent (``grub-mkimage`` missing): returns
+      ``installed=False`` with reason
+      ``grub-mkimage-absent:source-scope-stub``; the caller keeps the
+      stub core and armed-leg consumption stays RED.
+    - Tool present: builds/installs/rebinds and re-proves the gap
+      guard; any build/install/rebind failure raises
+      :class:`LifecycleHarnessError` fail-closed RED (never a silent
+      stub fallback on a capable host, which would hide the breakage
+      behind a bootable-but-unconsuming image).
+
+    Pure file-offset writes (no loop/mount, no privilege); the frozen
+    seam is untouched (no host stamping of ``next_entry``/``last_booted``).
+    """
+    from .bootchain import (
+        BootchainError,
+        build_grub_core_via_mkimage,
+        grub_mkimage_available,
+        install_genuine_grub_chain,
+        pad_core_bytes_to_sectors,
+    )
+    from .payload import (
+        PayloadError,
+        rebind_payload_descriptor,
+        verify_sector_gap_reserved,
+    )
+
+    if not grub_mkimage_available():
+        return {
+            "attempted": False,
+            "installed": False,
+            "chain": "stub",
+            "reason": "grub-mkimage-absent:source-scope-stub",
+        }
+    try:
+        with tempfile.TemporaryDirectory(prefix="greia-genuine-core-") as directory:
+            core_path = Path(directory) / "core.img"
+            mkimage = build_grub_core_via_mkimage(output=core_path)
+            raw = core_path.read_bytes()
+            padded = pad_core_bytes_to_sectors(raw)
+            proof = install_genuine_grub_chain(Path(image), padded)
+            rebind = rebind_payload_descriptor(
+                Path(image),
+                payload_manifest,  # type: ignore[arg-type]
+                core_sha256=str(proof["core_sha256"]),
+                core_sectors=int(proof["core_sectors"]),
+            )
+            guard = verify_sector_gap_reserved(Path(image))
+    except (BootchainError, PayloadError, OSError) as exc:
+        raise LifecycleHarnessError(
+            f"genuine GRUB upgrade failed fail-closed: {exc}"
+        ) from exc
+    return {
+        "attempted": True,
+        "installed": True,
+        "chain": "genuine",
+        "mkimage": mkimage,
+        "proof": proof,
+        "previous": rebind["previous"],
+        "descriptor": rebind["descriptor"],
+        "gap": guard,
+    }
+
+
 def assemble_disposable_image(output_dir: Path, *, image_bytes: int = 64 * 1024 * 1024) -> dict[str, object]:
     """Create the harness-owned disposable raw disk outside the source tree.
 
@@ -1139,6 +1387,7 @@ def assemble_disposable_image(output_dir: Path, *, image_bytes: int = 64 * 1024 
         embed_payload_descriptor,
         payload_assembly_cost,
     )
+    from .bootchain import install_boot_chain
     from .runner import (
         PROFILE_PERSIST_MINIMUM_BYTES,
         PROFILE_SLOT_BYTES,
@@ -1188,9 +1437,54 @@ def assemble_disposable_image(output_dir: Path, *, image_bytes: int = 64 * 1024 
         password_hash=_PASSWORD_HASH,
         output_dir=out / "guest-payload",
     )
-    embed_payload_descriptor(image, payload)
+    # Guest boot chain first (MBR stub + stub core into the reserved gap),
+    # then the descriptor binds staged payload AND installed core bytes, so
+    # the image SHA computed below binds the whole chain.
+    chain = install_boot_chain(image)
+    embed_payload_descriptor(
+        image,
+        payload,
+        core_sha256=str(chain["core_sha256"]),
+        core_sectors=int(chain["core_sectors"]),
+    )
+    # G1 capable-host step: on a host with grub-mkimage, replace the
+    # source-scope stub core with the genuine GRUB core (matching MBR
+    # load count) and rebind the sector-2047 descriptor through the
+    # explicit rebind path. Off a capable host this keeps the stub core
+    # (armed-leg consumption stays RED by construction); the frozen
+    # seam is never touched host-side.
+    genuine = maybe_install_genuine_grub_core(image, payload)
+    if bool(genuine.get("installed")):
+        proof = genuine["proof"]
+        assert isinstance(proof, dict)
+        chain = {
+            "mbr_stub_sha256": proof["mbr_stub_sha256"],
+            "core_sha256": proof["core_sha256"],
+            "core_sectors": proof["core_sectors"],
+            "core_first_sector": proof["core_first_sector"],
+            "core_last_reserved_sector": proof["core_last_reserved_sector"],
+            "chain_bytes": proof["chain_bytes"],
+            "mbr_load_sectors": proof["mbr_load_sectors"],
+            "mbr_entry_sector": proof["mbr_entry_sector"],
+        }
     cost = payload_assembly_cost(out / "guest-payload")
-    manifest = {
+    guest_chain_bytes = int(chain["chain_bytes"]) + 512
+    previous_binding: dict[str, object] | None = None
+    mkimage_info: dict[str, object] | None = None
+    if bool(genuine.get("installed")):
+        previous = genuine["previous"]
+        assert isinstance(previous, dict)
+        previous_binding = {
+            "core_sha256": previous["core_sha256"],
+            "core_sectors": previous["core_sectors"],
+        }
+        mkimage_raw = genuine["mkimage"]
+        assert isinstance(mkimage_raw, dict)
+        mkimage_info = {
+            "bytes": mkimage_raw.get("bytes"),
+            "sha256": mkimage_raw.get("sha256"),
+        }
+    manifest: dict[str, object] = {
         "image": str(image),
         "image_sha256": sha256_file(image),
         "adapter": plan.adapter_id,
@@ -1199,7 +1493,7 @@ def assemble_disposable_image(output_dir: Path, *, image_bytes: int = 64 * 1024 
         "install_composition_mode": composition["install_mode"],
         "grub_cfg_bytes": len(grub_text.encode("utf-8")),
         "payload_magic": "GREIAPY1",
-        "payload_descriptor": "sector-1:512",
+        "payload_descriptor": "sector-2047:512",
         "payload_grub_cfg_sha256": payload.grub_cfg_sha256,
         "payload_grubenv_sha256": payload.grubenv_sha256,
         "payload_grub_cfg_bytes": payload.grub_cfg_bytes,
@@ -1207,7 +1501,27 @@ def assemble_disposable_image(output_dir: Path, *, image_bytes: int = 64 * 1024 
         "payload_guest_paths": ["/grub.cfg", "/grubenv"],
         "payload_files_touched": cost["files_touched"],
         "payload_whole_ram_copy": cost["whole_payload_ram_copy"],
+        "guest_core_chain": str(genuine.get("chain")),
+        "genuine_core_attempted": bool(genuine.get("attempted")),
+        "genuine_core_installed": bool(genuine.get("installed")),
+        "genuine_core_reason": str(genuine.get("reason", "genuine-installed")),
+        "guest_mbr_stub_sha256": chain["mbr_stub_sha256"],
+        "guest_core_sha256": chain["core_sha256"],
+        "guest_core_sectors": chain["core_sectors"],
+        "guest_core_first_sector": chain["core_first_sector"],
+        "guest_core_last_reserved_sector": chain["core_last_reserved_sector"],
+        "guest_chain_bytes": guest_chain_bytes,
     }
+    if previous_binding is not None:
+        manifest["genuine_previous_core_sha256"] = previous_binding["core_sha256"]
+        manifest["genuine_previous_core_sectors"] = previous_binding["core_sectors"]
+    if mkimage_info is not None:
+        manifest["genuine_mkimage_bytes"] = mkimage_info["bytes"]
+        manifest["genuine_mkimage_sha256"] = mkimage_info["sha256"]
+    if "mbr_load_sectors" in chain:
+        manifest["guest_mbr_load_sectors"] = chain["mbr_load_sectors"]
+    if "mbr_entry_sector" in chain:
+        manifest["guest_mbr_entry_sector"] = chain["mbr_entry_sector"]
     (out / "image-manifest.json").write_text(
         json.dumps(manifest, sort_keys=True, indent=2) + "\n", encoding="utf-8"
     )
@@ -1606,18 +1920,21 @@ def check_boot_exit(returncode: int, *, leg: str, qemu_log: Path) -> None:
 
 
 def device_gate_for_image(image: Path) -> dict[str, object]:
-    """Payload + sector-gap gate for the real boot path (fail-closed).
+    """Payload + sector-gap + boot-chain gate for the real boot path.
 
-    A payload-less/tampered image REDs here — in the device body before
-    any QEMU boot is claimed — not only in the helper unit tests. The
-    sector 1-2047 gap reservation is pinned alongside so a future GRUB
-    ``core.img`` embed cannot silently clobber the descriptor.
+    A payload-less/tampered/chain-less image REDs here — in the device
+    body before any QEMU boot is claimed — not only in the helper unit
+    tests. The sector 1-2047 gap reservation (relocated descriptor +
+    hash-bound core) is pinned alongside the MBR boot code, so a
+    chain-less MBR can never reach a green exit claim through this gate.
     """
+    from .bootchain import verify_boot_chain_present
     from .payload import assert_payload_present, verify_sector_gap_reserved
 
     descriptor = assert_payload_present(Path(image))
     gap = verify_sector_gap_reserved(Path(image))
-    return {"descriptor": descriptor, "gap": gap}
+    chain = verify_boot_chain_present(Path(image))
+    return {"descriptor": descriptor, "gap": gap, "chain": chain}
 
 
 def bind_gate_to_install(
@@ -1761,6 +2078,603 @@ def decide_device_boot_observation(
     observed = post["default_slot"]
     assert isinstance(observed, str)
     return observed
+
+
+# ---------------------------------------------------------------------------
+# DIAG-C1 fail-collect observation mode (device harness reporting layer)
+# ---------------------------------------------------------------------------
+#
+# Fail-collect widens OBSERVATION only. Every lifecycle leg, the post-run
+# loop/cross-check binding, and the devproof device envelope execute under
+# per-leg capture; an observed RED is recorded with full context and the
+# run continues under ``COLLECT_CONTINUATION_RULES``. The frozen
+# attestation predicates (:func:`decide_device_boot_observation`,
+# :func:`check_boot_exit`, ``read_attestation_signal``) are *called*,
+# never redefined: a collected RED carries the verbatim fail-fast error,
+# so single-fault equivalence holds by construction. Abort-class
+# conditions (teardown/loop-detach safety, destructive-bound violations)
+# raise :class:`CollectAbortError` and stop the run immediately, fail
+# closed. Aggregated reporting never converts a RED to green/yellow.
+
+#: Fail-collect leg order: the 8 lifecycle legs plus the post-run
+#: loop/cross-check binding and the devproof device envelope.
+COLLECT_LEG_ORDER: tuple[str, ...] = tuple(LIFECYCLE_SEQUENCE) + (
+    "post-run-loop-cross-check",
+    "devproof-device-envelope",
+)
+
+#: Abort-class gates: a RED here stops collection immediately, fail
+#: closed. Never collected, never skipped past.
+COLLECT_ABORT_GATES: frozenset[str] = frozenset({
+    "teardown-loop-detach-safety",
+    "destructive-bound-violation",
+})
+
+#: Observed gates: a RED here is recorded with full context while the run
+#: continues. Production/device behavior behind these gates stays
+#: fail-fast and fail-closed; collection never weakens, bypasses, or
+#: converts their predicates.
+COLLECT_OBSERVED_GATES: frozenset[str] = frozenset({
+    "require_device_host",
+    "device_gate_for_image",
+    "clean-exit-gate",
+    "consumption-predicate",
+    "attestation-binding",
+    LOOP_RESCAN_GATE,
+    "post-run-loop-cross-check",
+    "devproof-device-envelope",
+})
+
+#: Explicit continuation rules (this tuple and LIFECYCLE.md carry the
+#: same list; code is authoritative for behavior):
+#: 1. every boot-outcome leg re-reads on-image state independently
+#:    (fresh pre/post per leg; no leg consumes another leg's cached
+#:    observation);
+#: 2. a RED boot leg never blocks later stage/boot legs;
+#: 3. a RED stage/arm leg never blocks later legs either: each later leg
+#:    re-syncs and re-reads image state, REDing under its own frozen
+#:    predicate when its preconditions are absent;
+#: 4. the post-run loop/cross-check binding is always attempted with its
+#:    own capture, even with prior reds;
+#: 5. the devproof device envelope is always attempted with its own
+#:    capture, even with prior reds;
+#: 6. only abort-class conditions stop the run; nothing is skipped after
+#:    an observed RED (a leg whose preconditions are absent REDs under
+#:    its own frozen predicate instead of being skipped, so the full red
+#:    set stays observable).
+COLLECT_CONTINUATION_RULES: tuple[str, ...] = (
+    "each boot-outcome leg re-reads on-image state independently; "
+    "no leg consumes another leg's cached observation",
+    "a RED boot leg never blocks later stage/boot legs",
+    "a RED stage/arm leg never blocks later legs; each later leg "
+    "re-syncs and re-reads image state and REDs under its own frozen "
+    "predicate when its preconditions are absent",
+    "the post-run loop/cross-check binding is always attempted with "
+    "its own capture once setup yields an image, even with prior reds",
+    "the devproof device envelope is always attempted with its own "
+    "capture once setup yields an image, even with prior reds",
+    "only abort-class conditions stop the run; nothing is skipped "
+    "after an observed RED, except the no-image fail-closed early "
+    "return (setup never produced an image, so boots/bindings have "
+    "no image to observe)",
+)
+
+#: Frozen-predicate descriptions recorded per gate (wording only; the
+#: predicate itself lives in the named production function).
+COLLECT_FROZEN_PREDICATES: dict[str, str] = {
+    "require_device_host": (
+        "Linux host, root, and qemu/losetup/mount/umount/partprobe/"
+        "udevadm/mkfs.ext4/blkid/sfdisk present (require_device_host)"
+    ),
+    "device_gate_for_image": (
+        "payload descriptor present plus sector 1-2047 gap reserved "
+        "plus boot chain present (device_gate_for_image)"
+    ),
+    "clean-exit-gate": (
+        "QEMU process exits 0 before the leg timeout "
+        "(check_boot_exit; timeout/silence/stall RED via "
+        "bootchain.wait_for_clean_exit)"
+    ),
+    "consumption-predicate": (
+        "decide_device_boot_observation on on-image pre/post grubenv "
+        "bytes: pre-armed one-shot absent post-boot (armed legs), or "
+        "post-boot default equals expected with no armed one-shot "
+        "(plain legs)"
+    ),
+    "attestation-binding": (
+        "read_attestation_signal through the post-boot loop "
+        "remount/read path: next_entry absent AND "
+        "last_booted == expected"
+    ),
+    LOOP_RESCAN_GATE: (
+        "post-run loop-attach partition rescan: partitions surface "
+        "for production observation within bounded retries "
+        f"({LOOP_RESCAN_GATE})"
+    ),
+    "post-run-loop-cross-check": (
+        "observe_loop_attached_device green plus run_file_cross_check "
+        "executed-and-green on a capable host"
+    ),
+    "devproof-device-envelope": (
+        "run_envelope_device device-measured D31/interruption/resource/"
+        "cgroup predicates RED fail the device run closed"
+    ),
+    "teardown-loop-detach-safety": (
+        "loop detach and partition-1 unmount succeed; any teardown "
+        "failure aborts immediately, fail closed"
+    ),
+    "destructive-bound-violation": (
+        "no write outside disposable paths, no non-absolute device "
+        "path, no extent beyond the image file; any violation aborts "
+        "immediately, fail closed"
+    ),
+}
+
+
+class CollectAbortError(LifecycleHarnessError):
+    """Abort-class collect failure (teardown/destructive safety).
+
+    Never collected, never skipped past: the collect runner records the
+    abort entry and re-raises immediately, fail closed.
+    """
+
+
+@dataclass(frozen=True, slots=True)
+class LegTimeoutPolicy:
+    """Progress-aware per-leg timeout policy (record layer).
+
+    The real wait mechanism stays ``bootchain.wait_for_clean_exit``,
+    called by ``_boot_image_once``: serial-byte growth and image SHA
+    delta count as progress, the leg timeout is the hard ceiling, and
+    silence plus progress-then-stall are RED. This policy only names the
+    thresholds for per-leg timeout/progress detail in the diagnostics
+    artifact, so a hung leg's evidence always carries the ceiling it ran
+    against. Threshold defaults mirror the bootchain frozen predicates
+    (pinned equal by test, never copied silently).
+    """
+
+    timeout_seconds: float
+    no_progress_seconds: float = 120.0
+    stall_seconds: float = 120.0
+
+    def describe(self) -> dict[str, object]:
+        return {
+            "timeout_seconds": float(self.timeout_seconds),
+            "no_progress_seconds": float(self.no_progress_seconds),
+            "stall_seconds": float(self.stall_seconds),
+            "progress rule": (
+                "serial-byte growth and image SHA delta count as "
+                "progress; the leg timeout is the hard ceiling; "
+                "silence and progress-then-stall are RED with the "
+                "timeout recorded"
+            ),
+        }
+
+    def classify(
+        self,
+        *,
+        serial_growth_bytes: int,
+        image_sha_changed: bool,
+        elapsed_seconds: float,
+        clean_exit: bool,
+    ) -> dict[str, object]:
+        """Classify one leg's progress/timeout evidence (record-only).
+
+        Mirrors the ``wait_for_clean_exit`` frozen predicates without
+        reimplementing the wait: timeout ceiling first, then silence
+        (no progress evidence past ``no_progress_seconds``), then
+        progress-then-stall (progress observed, no clean exit, past
+        ``stall_seconds``), else progress-clean / in-progress.
+        """
+        progress = bool(serial_growth_bytes > 0 or image_sha_changed)
+        if elapsed_seconds >= float(self.timeout_seconds):
+            outcome = "timeout"
+            red = True
+        elif not progress and elapsed_seconds >= float(self.no_progress_seconds):
+            outcome = "silence"
+            red = True
+        elif progress and not clean_exit and elapsed_seconds >= float(self.stall_seconds):
+            outcome = "progress-then-stall"
+            red = True
+        elif clean_exit:
+            outcome = "progress-clean" if progress else "clean-no-progress"
+            red = False
+        else:
+            outcome = "in-progress"
+            red = False
+        return {
+            "outcome": outcome,
+            "red": red,
+            "timeout_seconds": float(self.timeout_seconds),
+            "no_progress_seconds": float(self.no_progress_seconds),
+            "stall_seconds": float(self.stall_seconds),
+            "serial_growth_bytes": int(serial_growth_bytes),
+            "image_sha_changed": bool(image_sha_changed),
+            "elapsed_seconds": float(elapsed_seconds),
+            "clean_exit": bool(clean_exit),
+            "detail": (
+                f"leg {outcome}: serial_growth={int(serial_growth_bytes)}B "
+                f"image_changed={bool(image_sha_changed)} "
+                f"elapsed={float(elapsed_seconds):.1f}s "
+                f"ceiling={float(self.timeout_seconds):.1f}s"
+            ),
+        }
+
+
+#: Evidence keys normalized into every diagnostics red entry (missing
+#: keys record as None; never synthesized green).
+COLLECT_RED_EVIDENCE_KEYS: tuple[str, ...] = (
+    "returncode",
+    "serial_log",
+    "qemu_log",
+    "serial_bytes",
+    "serial_growth_bytes",
+    "image_sha256_pre",
+    "image_sha256_post",
+    "on_image_pre",
+    "on_image_post",
+    "disk_snapshot",
+    "timeout",
+)
+
+
+@dataclass
+class DeviceCollectRecorder:
+    """Per-run fail-collect recorder for the device harness.
+
+    Owns the collect-vs-abort boundary: :class:`CollectAbortError`
+    records an abort entry and re-raises immediately (fail closed);
+    any other ``Exception`` (including the fail-fast
+    :class:`LifecycleHarnessError` REDs with their verbatim messages)
+    records an observed red and lets the run continue under
+    ``COLLECT_CONTINUATION_RULES``. ``BaseException`` (keyboard
+    interrupt, system exit) is never caught.
+    """
+
+    reds: list[dict[str, object]] = field(default_factory=list)
+    attempted: list[str] = field(default_factory=list)
+    abort: dict[str, object] | None = None
+
+    def run_leg(
+        self,
+        *,
+        leg: str,
+        gate: str,
+        frozen_predicate: str,
+        run: Callable[[], object],
+        context: Callable[[], Mapping[str, object]] | None = None,
+    ) -> object | None:
+        """Execute one collect unit; return its result or None on RED.
+
+        On observed RED the verbatim error is recorded with the leg's
+        gate, frozen predicate, and best-effort context, and None is
+        returned so the run continues. On abort-class failure the abort
+        entry is recorded and the error re-raised immediately.
+        """
+        self.attempted.append(leg)
+        try:
+            return run()
+        except CollectAbortError as exc:
+            entry = self._entry(
+                leg=leg, gate=gate, frozen_predicate=frozen_predicate,
+                error=exc, abort=True, context=context,
+            )
+            self.reds.append(entry)
+            self.abort = entry
+            raise
+        except Exception as exc:
+            self.reds.append(self._entry(
+                leg=leg, gate=gate, frozen_predicate=frozen_predicate,
+                error=exc, abort=False, context=context,
+            ))
+            return None
+
+    def _entry(
+        self,
+        *,
+        leg: str,
+        gate: str,
+        frozen_predicate: str,
+        error: BaseException,
+        abort: bool,
+        context: Callable[[], Mapping[str, object]] | None,
+    ) -> dict[str, object]:
+        evidence: dict[str, object] = {}
+        if context is not None:
+            try:
+                raw = context()
+                evidence = dict(raw) if isinstance(raw, Mapping) else {}
+            except Exception as exc:
+                evidence = {"context_error": f"{type(exc).__name__}: {exc}"}
+        normalized = {key: evidence.get(key) for key in COLLECT_RED_EVIDENCE_KEYS}
+        return {
+            "leg": leg,
+            "gate": gate,
+            "frozen_predicate": frozen_predicate,
+            "error_type": type(error).__name__,
+            "error": str(error),
+            "abort": abort,
+            **normalized,
+        }
+
+    def verdict(self) -> dict[str, object]:
+        """Aggregate ALL reds; never converts a RED to green/yellow."""
+        red_count = len(self.reds)
+        return {
+            "ok": red_count == 0 and self.abort is None,
+            "red_count": red_count,
+            "legs_attempted": list(self.attempted),
+            "aborted": self.abort is not None,
+            "note": (
+                "aggregated reporting: every recorded RED stays RED; "
+                "collection widens observation only"
+            ),
+        }
+
+
+def run_collect_sequence(
+    legs: Sequence[Mapping[str, object]],
+    recorder: DeviceCollectRecorder,
+) -> dict[str, object]:
+    """Drive one fail-collect sequence through ``recorder``.
+
+    Each leg maps ``leg``/``gate``/``frozen_predicate``/``run`` with an
+    optional ``context`` callable for failure evidence. Observed REDs
+    record and continue; abort-class re-raises immediately after
+    recording. Returns the aggregated verdict (observed REDs do not
+    raise).
+    """
+    for spec in legs:
+        run = spec["run"]
+        assert callable(run)
+        context = spec.get("context")
+        assert context is None or callable(context)
+        recorder.run_leg(
+            leg=str(spec["leg"]),
+            gate=str(spec["gate"]),
+            frozen_predicate=str(spec["frozen_predicate"]),
+            run=run,  # type: ignore[arg-type]
+            context=context,  # type: ignore[arg-type]
+        )
+    return recorder.verdict()
+
+
+def snapshot_device_collect_state(
+    *,
+    image: Path | None = None,
+    machine: Mapping[str, Path] | None = None,
+) -> dict[str, object]:
+    """Best-effort disk-state snapshot for one diagnostics entry.
+
+    Records image SHA plus host backend slot state, journal state,
+    accepted slot/release/sequence, and the PERSIST marker; any
+    unreadable part records None (never raises, never synthesizes).
+    """
+    snapshot: dict[str, object] = {
+        "image_sha256": None,
+        "default_slot": None,
+        "one_shot_slot": None,
+        "last_booted_slot": None,
+        "journal_state": None,
+        "journal_candidate": None,
+        "accepted_slot": None,
+        "accepted_release": None,
+        "accepted_sequence": None,
+        "persist_marker": None,
+    }
+    try:
+        if image is not None and Path(image).is_file():
+            snapshot["image_sha256"] = sha256_file(Path(image))
+        if machine is not None:
+            from greia_platform.grub_ab import GrubEnvBackend
+
+            try:
+                state = GrubEnvBackend.attach(
+                    Path(machine["boot_control"])).inspect()
+                snapshot["default_slot"] = state.default_slot
+                snapshot["one_shot_slot"] = state.one_shot_slot
+                snapshot["last_booted_slot"] = state.last_booted_slot
+            except Exception as exc:
+                snapshot["backend_error"] = f"{type(exc).__name__}: {exc}"
+            try:
+                from greia_platform.boot_transaction import BootTransactionJournal
+
+                journal = BootTransactionJournal.load(
+                    Path(machine["state"]) / "system-updates" / "journal"
+                )
+                snapshot["journal_state"] = journal.state.value
+                snapshot["journal_candidate"] = journal.candidate_slot
+            except Exception as exc:
+                snapshot["journal_error"] = f"{type(exc).__name__}: {exc}"
+            try:
+                record = _load_record(Path(machine["layout"]))
+                snapshot["accepted_slot"] = record.accepted_slot
+                snapshot["accepted_release"] = record.accepted_release_id
+            except Exception as exc:
+                snapshot["record_error"] = f"{type(exc).__name__}: {exc}"
+            try:
+                from greia_platform.system_updates import read_accepted_sequence
+
+                snapshot["accepted_sequence"] = read_accepted_sequence(
+                    Path(machine["state"]))
+            except Exception as exc:
+                snapshot["sequence_error"] = f"{type(exc).__name__}: {exc}"
+            try:
+                persist_profile = Path(machine["persist"]) / "profile.json"
+                if persist_profile.is_file():
+                    snapshot["persist_marker"] = sha256_file(persist_profile)
+            except Exception as exc:
+                snapshot["persist_error"] = f"{type(exc).__name__}: {exc}"
+    except Exception as exc:
+        snapshot["snapshot_error"] = f"{type(exc).__name__}: {exc}"
+    return snapshot
+
+
+def build_device_collect_diagnostics(
+    recorder: DeviceCollectRecorder,
+    *,
+    run_meta: Mapping[str, object] | None = None,
+) -> dict[str, object]:
+    """Build the per-run diagnostics artifact from the recorder.
+
+    Contains, per red: gate name, frozen predicate, leg name, error
+    (verbatim fail-fast RED), abort flag, return code, serial
+    bytes/growth, QEMU/host log paths, on-image pre/post grubenv bytes,
+    disk state snapshot, and timeout/progress detail. The final verdict
+    aggregates ALL reds and never converts a RED to green/yellow.
+    """
+    meta = dict(run_meta) if isinstance(run_meta, Mapping) else {}
+    verdict = recorder.verdict()
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "artifact": "greia-device-collect-diagnostics",
+        "collect_mode": True,
+        "run_meta": meta,
+        "continuation_rules": list(COLLECT_CONTINUATION_RULES),
+        "abort_boundary": {
+            "abort_gates": sorted(COLLECT_ABORT_GATES),
+            "observed_gates": sorted(COLLECT_OBSERVED_GATES),
+            "rule": (
+                "teardown/loop-detach safety and destructive-bound "
+                "violations abort immediately and fail closed; "
+                "require_device_host, clean-exit gate predicates, "
+                "consumption checks, and attestation binding predicates "
+                "are observed and recorded but their REDs are never "
+                "weakened, bypassed, or converted"
+            ),
+        },
+        "collect_leg_order": list(COLLECT_LEG_ORDER),
+        "legs_attempted": list(recorder.attempted),
+        "reds": [dict(entry) for entry in recorder.reds],
+        "verdict": verdict,
+    }
+
+
+def write_device_collect_diagnostics(
+    output_dir: Path, artifact: Mapping[str, object]
+) -> Path:
+    """Write the diagnostics artifact for one collect run."""
+    path = Path(output_dir) / "greia-device-collect-diagnostics.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(artifact, sort_keys=True, indent=2) + "\n",
+                     encoding="utf-8")
+    return path
+
+
+@dataclass
+class BootLegCapture:
+    """Live boot-evidence holder for one collect boot leg.
+
+    ``run_device_collect`` populates this progressively inside
+    ``_collect_boot_leg`` (pre → boot → post → elapsed) so the
+    recorder's failure context can forward the evidence that exists
+    at the throw site. ``to_context`` builds the same evidence shape
+    as the collect ``_context_for`` closure (returncode, serial
+    bytes/growth, log paths, on-image pre/post, disk snapshot,
+    timeout/progress detail) from the captured partial state.
+    """
+
+    pre: dict[str, object] | None = None
+    boot: dict[str, object] | None = None
+    post: dict[str, object] | None = None
+    elapsed_seconds: float = 0.0
+    clean_exit: bool = False
+
+    def to_context(
+        self,
+        *,
+        machine: Mapping[str, Path] | None = None,
+        image: Path | None = None,
+        policy: LegTimeoutPolicy,
+    ) -> dict[str, object]:
+        evidence: dict[str, object] = {}
+        boot = self.boot
+        if boot is not None:
+            evidence["returncode"] = boot.get("returncode")
+            evidence["serial_log"] = boot.get("serial_log")
+            evidence["qemu_log"] = boot.get("qemu_log")
+            evidence["serial_bytes"] = boot.get("serial_bytes")
+            evidence["serial_growth_bytes"] = boot.get("serial_growth_bytes")
+            evidence["image_sha256_pre"] = boot.get("image_sha256_pre")
+            evidence["image_sha256_post"] = boot.get("image_sha256_post")
+        if self.pre is not None:
+            evidence["on_image_pre"] = dict(self.pre)
+        if self.post is not None:
+            evidence["on_image_post"] = dict(self.post)
+        if machine is not None or image is not None:
+            evidence["disk_snapshot"] = snapshot_device_collect_state(
+                image=image, machine=machine,
+            )
+            if image is not None and "image_sha256_pre" not in evidence:
+                snap = evidence["disk_snapshot"]
+                assert isinstance(snap, dict)
+                evidence["image_sha256_post"] = snap.get("image_sha256")
+        growth = boot.get("serial_growth_bytes", 0) if boot else 0
+        sha_changed = bool(
+            boot and boot.get("image_sha256_post") is not None
+            and boot.get("image_sha256_post") != boot.get("image_sha256_pre")
+        )
+        evidence["timeout"] = policy.classify(
+            serial_growth_bytes=int(growth) if isinstance(growth, int) else 0,
+            image_sha_changed=sha_changed,
+            elapsed_seconds=float(self.elapsed_seconds),
+            clean_exit=self.clean_exit,
+        )
+        return evidence
+
+
+def require_collect_precondition(
+    value: object | None, *, message: str
+) -> object:
+    """Return ``value`` or raise the frozen-predicate RED for collection.
+
+    Later collect legs must RED under their own frozen predicate when
+    an earlier leg's in-memory product is absent — never with a bare
+    ``assert``/``IndexError``. Raises :class:`LifecycleHarnessError`
+    (observed RED, collected) with the caller's frozen-predicate
+    wording.
+    """
+    if value is None or value is False:
+        raise LifecycleHarnessError(message)
+    return value
+
+
+def assert_collect_destructive_bounds(
+    output_dir: Path, image: Path | None = None
+) -> None:
+    """Abort-class destructive-bound guard for collect mode.
+
+    Raises :class:`CollectAbortError` (abort, fail closed — never
+    collected) when the disposable output root is not absolute or the
+    disposable image escapes it. Called in the collect setup path and
+    before the post-run loop binding; teardown/loop-detach failures
+    raise the same abort class via the ``*_checked`` helpers.
+    """
+    out = Path(output_dir)
+    if not out.is_absolute():
+        raise CollectAbortError(
+            "destructive-bound-violation: collect output_dir is not "
+            f"absolute ({out}); aborting fail closed"
+        )
+    if image is not None:
+        candidate = Path(image)
+        if not candidate.is_absolute():
+            raise CollectAbortError(
+                "destructive-bound-violation: collect image path is not "
+                f"absolute ({candidate}); aborting fail closed"
+            )
+        try:
+            resolved_out = out.resolve()
+            resolved_image = candidate.resolve()
+        except Exception:
+            resolved_out = out
+            resolved_image = candidate
+        if resolved_image != resolved_out and resolved_out not in resolved_image.parents:
+            raise CollectAbortError(
+                "destructive-bound-violation: collect image escapes the "
+                f"disposable output dir ({resolved_image} outside "
+                f"{resolved_out}); aborting fail closed"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -2312,11 +3226,17 @@ class LifecycleHarness:
         """Boot the disposable image once under real SeaBIOS firmware.
 
         Returns the per-leg boot evidence (argv, logs, pre/post image
-        SHA). The clean-exit gate (:func:`check_boot_exit`) runs before
-        any observation: timeout or nonzero status is RED, never a
-        claimed boot. Guest disk writes persist (no snapshot flag) so
-        grubenv effects are observable after the boot exits.
+        SHA, serial progress). The progress-aware bounded wait
+        (:func:`bootchain.wait_for_clean_exit`) replaces the bare
+        blocking wait: serial-byte growth and image SHA delta count as
+        progress evidence with the leg timeout as the hard ceiling, and
+        the clean-exit gate (:func:`check_boot_exit`) still runs before
+        any observation — timeout, silence, stall, or nonzero status is
+        RED, never a claimed boot. Guest disk writes persist (no snapshot
+        flag) so grubenv effects are observable after the boot exits.
         """
+        from .bootchain import BootchainError, wait_for_clean_exit
+
         argv, serial_log, host_log = device_qemu_argv(
             Path(image),
             output_dir=Path(self.config.output_dir),
@@ -2335,35 +3255,32 @@ class LifecycleHarness:
                 start_new_session=True,
             )
             try:
-                returncode = process.wait(timeout=self.config.timeout_seconds)
-            except subprocess.TimeoutExpired as exc:
-                import signal as _signal
-
-                try:
-                    os.killpg(process.pid, _signal.SIGTERM)
-                except (ProcessLookupError, PermissionError):
-                    pass
-                try:
-                    process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    try:
-                        os.killpg(process.pid, _signal.SIGKILL)
-                    except (ProcessLookupError, PermissionError):
-                        pass
-                    process.wait()
-                raise LifecycleHarnessError(
-                    f"device boot leg {leg} exceeded timeout; "
-                    f"inspect {host_log} (unclean exit is RED)"
-                ) from exc
-        check_boot_exit(returncode, leg=leg, qemu_log=host_log)
+                waited = wait_for_clean_exit(
+                    process,
+                    leg=leg,
+                    qemu_log=host_log,
+                    serial_log=serial_log,
+                    image=Path(image),
+                    image_sha_at_start=pre_sha,
+                    timeout_seconds=float(self.config.timeout_seconds),
+                )
+            except BootchainError as exc:
+                raise LifecycleHarnessError(str(exc)) from exc
+        check_boot_exit(int(waited["returncode"]), leg=leg, qemu_log=host_log)
+        post_sha = waited["image_sha256_post"]
         return {
             "leg": leg,
-            "returncode": returncode,
+            "returncode": int(waited["returncode"]),
             "qemu_argv": list(argv),
             "serial_log": str(serial_log),
             "qemu_log": str(host_log),
             "image_sha256_pre": pre_sha,
-            "image_sha256_post": sha256_file(Path(image)),
+            "image_sha256_post": (
+                str(post_sha) if post_sha is not None else sha256_file(Path(image))
+            ),
+            "serial_bytes": int(waited["serial_bytes"]),
+            "serial_growth_bytes": int(waited["serial_growth_bytes"]),
+            "progress_observed": bool(waited["progress_observed"]),
         }
 
     def run_device(self) -> dict[str, object]:
@@ -2377,15 +3294,19 @@ class LifecycleHarness:
         attestation seam (grubenv-on-image with post-boot loop
         remount/read via ``GrubEnvBackend.attach(mountpoint).inspect()``).
 
-        Preserved fixer-1 gates (verbatim): fail-closed
-        ``require_device_host`` strictness; the payload + sector-gap gate
-        (``device_gate_for_image``: a payload-less/tampered image REDs the
-        real boot path before any QEMU boot); the clean-exit gate per
-        boot (unclean QEMU exit is RED); per-leg disk-file proof with the
-        image SHA bound after the payload embed (pre/post SHA per boot
-        leg); the post-run loop/cross-check binding (executed-and-green
-        enforced on a capable host); honest device/source classification
-        (``DEVICE_T7_DEVRUN3`` only when the device path executed).
+        Preserved fixer-1 gates (verbatim) plus the GUEST-BOOT-CHAIN boot
+        chain: fail-closed ``require_device_host`` strictness; the payload
+        + sector-gap + boot-chain gate (``device_gate_for_image``: a
+        payload-less/tampered/chain-less image REDs the real boot path
+        before any QEMU boot); the clean-exit gate per boot (unclean QEMU
+        exit is RED); the progress-aware bounded wait (serial-byte growth
+        and image SHA delta count as progress with the leg timeout as the
+        hard ceiling; silence and progress-then-stall are RED); per-leg
+        disk-file proof with the image SHA bound after the payload embed
+        (pre/post SHA per boot leg); the post-run loop/cross-check binding
+        (executed-and-green enforced on a capable host); honest
+        device/source classification (``DEVICE_T7_DEVRUN3`` only when the
+        device path executed).
 
         Observation discipline: only the on-image observation feeds the
         ``reconcile``/journal/launcher folds — the observed slot is
@@ -2410,9 +3331,12 @@ class LifecycleHarness:
         fail-closed behavior hold throughout (loop/mount state torn down
         in finally).
 
-        Source readiness only: with the T7-PAYLOAD minimal image (no
-        guest userspace/kernel yet) a capable host reaches the clean-exit
-        gate RED fail-closed; live green belongs to T7-DEVRUN-LIVE2.
+        Source readiness: the GUEST-BOOT-CHAIN guest (MBR stub + stub
+        core) emits COM1 progress and exits via guest reboot, so the
+        clean-exit gate is satisfiable on a capable host; the stub never
+        stamps ``last_booted`` (no guest agent), so armed-leg consumption
+        stays RED until genuine GRUB (load_env/save_env) lands via the
+        gated ``bootchain`` seam. Live green belongs to B3-DEVRUN-RERUN.
         """
         require_device_host()
         from greia_platform.boot_transaction import (
@@ -2792,6 +3716,876 @@ class LifecycleHarness:
             ],
         }
         assert_lifecycle_transitions(report)
+        self.report_path.write_text(
+            json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8"
+        )
+        return report
+
+    # -- fail-collect observation mode (DIAG-C1) -------------------------
+
+    def _loop_detach_checked(self, device: Path) -> None:
+        """Abort-class loop detach for collect mode.
+
+        Unlike :meth:`_loop_detach` (best-effort, fail-fast path
+        unchanged), a non-zero detach here raises
+        :class:`CollectAbortError`: a device left attached is a
+        teardown-safety violation and stops collection immediately,
+        fail closed.
+        """
+        completed = subprocess.run(
+            ["losetup", "--detach", str(device)],
+            capture_output=True, timeout=60,
+        )
+        if completed.returncode != 0:
+            raise CollectAbortError(
+                "teardown-loop-detach-safety: loop detach failed for "
+                f"{device} (rc={completed.returncode}); aborting fail closed"
+            )
+
+    def _unmount_checked(self, mountpoint: Path) -> None:
+        """Abort-class unmount for collect mode (same boundary)."""
+        completed = subprocess.run(
+            ["umount", str(mountpoint)], capture_output=True, timeout=60
+        )
+        if completed.returncode != 0:
+            raise CollectAbortError(
+                "teardown-loop-detach-safety: unmount failed for "
+                f"{mountpoint} (rc={completed.returncode}); aborting fail closed"
+            )
+
+    def _read_on_image_grubenv_strict(self, image: Path) -> dict[str, object]:
+        """Collect-mode on-image grubenv read (checked teardown).
+
+        Observation failures raise the fail-fast RED for collection;
+        teardown failures raise :class:`CollectAbortError` and abort.
+        Uses the frozen ``GrubEnvBackend.attach(mountpoint).inspect()``
+        seam, identical to :meth:`_read_on_image_grubenv`.
+        """
+        from greia_platform.grub_ab import GrubEnvBackend
+
+        device = self._loop_attach(Path(image))
+        mountpoint = Path(self.config.output_dir) / "observe-mnt"
+        try:
+            self._mount_partition1(device, mountpoint, read_only=True)
+            try:
+                state = GrubEnvBackend.attach(mountpoint).inspect()
+            finally:
+                self._unmount_checked(mountpoint)
+        finally:
+            self._loop_detach_checked(device)
+        return {
+            "default_slot": state.default_slot,
+            "one_shot_slot": state.one_shot_slot,
+            "last_booted_slot": state.last_booted_slot,
+            "seam": "GrubEnvBackend.attach(mountpoint).inspect()",
+        }
+
+    def _sync_boot_state_to_image_strict(
+        self, image: Path, boot_control_dir: Path
+    ) -> None:
+        """Collect-mode armed-block sync (checked teardown)."""
+        from greia_platform.grub_ab import GRUBENV_FILE_NAME
+
+        device = self._loop_attach(Path(image))
+        mountpoint = Path(self.config.output_dir) / "sync-mnt"
+        try:
+            self._mount_partition1(device, mountpoint, read_only=False)
+            try:
+                shutil.copy2(
+                    Path(boot_control_dir) / GRUBENV_FILE_NAME,
+                    mountpoint / GRUBENV_FILE_NAME,
+                )
+                subprocess.run(["sync"], capture_output=True, timeout=60)
+            finally:
+                self._unmount_checked(mountpoint)
+        finally:
+            self._loop_detach_checked(device)
+
+    def _stamp_and_gate_on_image_strict(
+        self, image: Path, *, observed: str, expected: str
+    ) -> dict[str, object]:
+        """Collect-mode stamp+gate (checked teardown).
+
+        Folds the derived observation through the production
+        ``reconcile`` on the real on-image bytes, then gates with
+        ``read_attestation_signal`` through the post-boot loop
+        remount/read path — identical predicates to
+        :meth:`_stamp_and_gate_on_image`.
+        """
+        from greia_platform.grub_ab import GrubEnvBackend
+
+        from .payload import read_attestation_signal
+
+        device = self._loop_attach(Path(image))
+        mountpoint = Path(self.config.output_dir) / "stamp-mnt"
+        try:
+            self._mount_partition1(device, mountpoint, read_only=False)
+            try:
+                GrubEnvBackend.attach(mountpoint).reconcile(observed)
+                signal = read_attestation_signal(
+                    mountpoint, expected_booted_slot=expected
+                )
+                return dict(signal)
+            finally:
+                self._unmount_checked(mountpoint)
+        finally:
+            self._loop_detach_checked(device)
+
+    def run_device_collect(self) -> dict[str, object]:
+        """Execute the device lifecycle in fail-collect observation mode.
+
+        Same production path as :meth:`run_device` (same image
+        assembly, device gate, shipped update path, real SeaBIOS boots,
+        frozen attestation seam, launcher seam, post-run
+        loop/cross-check binding, devproof device envelope), but each
+        of the 8 lifecycle legs plus the post-run loop/cross-check
+        binding and the devproof device envelope runs under per-leg
+        capture in :data:`COLLECT_LEG_ORDER`:
+
+        - an observed RED (``require_device_host``, device gate,
+          clean-exit gate, consumption predicate, attestation binding,
+          loop/cross-check, envelope) records the verbatim fail-fast
+          error with full context and the run continues under
+          ``COLLECT_CONTINUATION_RULES`` (each boot leg re-reads
+          on-image state independently; a RED leg never blocks later
+          legs; the loop/cross-check and envelope bindings are always
+          attempted once setup yields an image; each boot-leg RED
+          forwards its live pre/boot/post/elapsed evidence via
+          :class:`BootLegCapture`);
+        - an abort-class RED (teardown/loop-detach safety,
+          destructive-bound violation via
+          :func:`assert_collect_destructive_bounds` and the checked
+          teardown helpers) records and re-raises
+          immediately, fail closed (the no-image setup failure is the
+          only fail-closed early return: without an image no boot or
+          binding has anything to observe);
+        - per-leg timeout/progress detail (serial-byte growth and image
+          SHA delta as progress, leg timeout as the hard ceiling,
+          silence and progress-then-stall RED with the timeout
+          recorded) rides on the real
+          ``bootchain.wait_for_clean_exit`` evidence inside
+          :meth:`_boot_image_once`;
+        - the frozen attestation seam is byte-identical in semantics:
+          :func:`decide_device_boot_observation` predicates are called,
+          never changed; only RED collection/reporting differs;
+        - a diagnostics artifact
+          (``greia-device-collect-diagnostics.json``) is emitted per
+          run; the final verdict aggregates ALL reds and never converts
+          a RED to green/yellow.
+
+        Preregistered acceptance: predicates frozen before observation;
+        collection widens OBSERVATION only.
+        """
+        from greia_platform.boot_transaction import (
+            BootTransactionCoordinator,
+            BootTransactionJournal,
+            BootTransactionState,
+            mark_candidate_unhealthy,
+        )
+        from greia_platform.grub_ab import GrubEnvBackend
+        from greia_platform.privileged_channel import PeerCredential
+        from greia_platform.system_updates import (
+            SystemUpdateInbox,
+            build_persistent_state_contract_bytes,
+            read_accepted_sequence,
+        )
+        from greia_platform.update_privileged import (
+            UpdatePrivilegedEndpoint,
+            build_request,
+            read_response,
+        )
+
+        from .payload import install_payload_to_device
+
+        recorder = DeviceCollectRecorder()
+        policy = LegTimeoutPolicy(timeout_seconds=float(self.config.timeout_seconds))
+        out = Path(self.config.output_dir)
+        out.mkdir(parents=True, exist_ok=True)
+        run_meta: dict[str, object] = {
+            "timeout_policy": policy.describe(),
+            "mode": "fail-collect",
+        }
+
+        def _context_for(
+            *,
+            boot: Mapping[str, object] | None = None,
+            pre: Mapping[str, object] | None = None,
+            post: Mapping[str, object] | None = None,
+            machine: Mapping[str, Path] | None = None,
+            image: Path | None = None,
+            elapsed_seconds: float = 0.0,
+            clean_exit: bool = False,
+        ) -> dict[str, object]:
+            # Single evidence shape owned by BootLegCapture; this
+            # closure only adapts the non-boot call sites to it.
+            cap = BootLegCapture(
+                pre=dict(pre) if pre is not None else None,
+                boot=dict(boot) if boot is not None else None,
+                post=dict(post) if post is not None else None,
+                elapsed_seconds=float(elapsed_seconds),
+                clean_exit=clean_exit,
+            )
+            return cap.to_context(machine=machine, image=image, policy=policy)
+
+        # Setup legs: host gate, image assembly, device gate, payload
+        # install, gate binding. Each is its own collect unit; the
+        # machine/seams below are created lazily so a RED setup leg
+        # still lets later legs attempt and RED under their own frozen
+        # predicates where preconditions are absent.
+        holder: dict[str, object] = {}
+
+        def _setup_host() -> object:
+            require_device_host()
+            return {"gate": "require_device_host", "green": True}
+
+        recorder.run_leg(
+            leg="collect-setup-host-gate", gate="require_device_host",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["require_device_host"],
+            run=_setup_host,
+        )
+
+        def _setup_image() -> object:
+            assert_collect_destructive_bounds(out)
+            manifest = assemble_disposable_image(out)
+            holder["manifest"] = manifest
+            holder["image"] = Path(manifest["image"])
+            assert_collect_destructive_bounds(out, holder["image"])  # type: ignore[arg-type]
+            return manifest
+
+        recorder.run_leg(
+            leg="collect-setup-image", gate="device_gate_for_image",
+            frozen_predicate="disposable image assembles outside the source tree",
+            run=_setup_image,
+            context=lambda: _context_for(image=holder.get("image")),  # type: ignore[arg-type]
+        )
+
+        def _setup_gate() -> object:
+            raw_image = holder.get("image")
+            require_collect_precondition(
+                raw_image if isinstance(raw_image, Path) else None,
+                message=(
+                    "device_gate_for_image precondition absent: collect "
+                    "setup never produced an image (setup-image RED)"
+                ),
+            )
+            assert isinstance(raw_image, Path)
+            image = raw_image
+            gate = device_gate_for_image(image)
+            holder["gate"] = gate
+            proof = install_payload_to_device(image, out / "guest-payload")
+            holder["install_proof"] = proof
+            bind_gate_to_install(gate, proof)
+            return {"gate": "device_gate_for_image", "green": True}
+
+        recorder.run_leg(
+            leg="collect-setup-device-gate", gate="device_gate_for_image",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["device_gate_for_image"],
+            run=_setup_gate,
+            context=lambda: _context_for(
+                image=holder.get("image"),  # type: ignore[arg-type]
+            ),
+        )
+        image = holder.get("image")
+        # Fail-closed early return (the only skip permitted by
+        # COLLECT_CONTINUATION_RULES): without a disposable image no
+        # boot leg or binding has anything to observe; diagnostics are
+        # still emitted with the setup reds aggregated.
+        if not isinstance(image, Path):
+            artifact = build_device_collect_diagnostics(recorder, run_meta=run_meta)
+            artifact_path = write_device_collect_diagnostics(out, artifact)
+            return {
+                "schema_version": SCHEMA_VERSION,
+                "ok": False,
+                "classification": "DEVICE_T7_DEVRUN3_COLLECT",
+                "collect_mode": True,
+                "spec": lifecycle_spec(),
+                "steps": [],
+                "collected_reds": [dict(entry) for entry in recorder.reds],
+                "diagnostics_artifact": str(artifact_path),
+                "diagnostics": artifact,
+                "device_scope": {"executed": False,
+                                 "detail": "collect setup never produced an image"},
+                "limitations": ["does not prove Acer or physical-firmware behavior"],
+            }
+
+        machine = fresh_machine_state(self.machine_root)
+        contract_bytes = build_persistent_state_contract_bytes()
+        factory = self.seams_factory or ImageIntegrationSeams
+        seams = factory(self.machine_root / "integration", contract_bytes)
+        private_key, _ = mint_signing_keys(self.machine_root, machine["keys"])
+        for name, release_id, sequence in (
+            ("r21", "greia-0.21.0", 21),
+            ("r22broken", "greia-0.21.1", 22),
+            ("r23", "greia-0.22.0", 23),
+        ):
+            build_test_release(
+                self.machine_root, name=name, release_id=release_id,
+                sequence=sequence, private_key=private_key,
+            )
+        steps: list[dict[str, object]] = []
+        shipped_legs_used: list[str] = []
+        launcher_legs_used: list[str] = []
+        boot_legs: list[dict[str, object]] = []
+        leg_samples: list[dict[str, object]] = []
+        from .devproof import record_leg_sample as _record_leg_sample
+
+        def _observe(step: str) -> dict[str, object]:
+            backend = GrubEnvBackend.attach(machine["boot_control"]).inspect()
+            try:
+                journal = BootTransactionJournal.load(
+                    machine["state"] / "system-updates" / "journal"
+                )
+                journal_state: object = journal.state.value
+                candidate: object = journal.candidate_slot
+            except Exception:
+                journal_state = None
+                candidate = None
+            record = _load_record(machine["layout"])
+            try:
+                accepted_seq: object = read_accepted_sequence(machine["state"])
+            except Exception:
+                accepted_seq = None
+            return {
+                "step": step,
+                "default_slot": backend.default_slot,
+                "one_shot_slot": backend.one_shot_slot,
+                "last_booted_slot": backend.last_booted_slot,
+                "journal_state": journal_state,
+                "journal_candidate": candidate,
+                "accepted_slot": record.accepted_slot,
+                "accepted_release": record.accepted_release_id,
+                "accepted_sequence": accepted_seq,
+                "persist_marker": sha256_file(machine["persist"] / "profile.json"),
+                "image_sha256": sha256_file(image),
+            }
+
+        def _collect_boot_leg(
+            leg: str, capture: BootLegCapture | None = None,
+        ) -> dict[str, object]:
+            """One real SeaBIOS boot with independent on-image observation.
+
+            Re-reads on-image state fresh per leg (pre/post), derives the
+            observed slot solely from those bytes via the frozen
+            :func:`decide_device_boot_observation` predicate, stamps
+            through the production ``reconcile`` on the real on-image
+            bytes, gates with ``read_attestation_signal`` through the
+            post-boot loop remount/read path, and only then folds into
+            the host backend. Teardown uses the checked (abort-class)
+            path; observation REDs are fail-fast errors for collection.
+
+            ``capture`` (a :class:`BootLegCapture`) is populated
+            progressively (pre → boot → post → elapsed) so the
+            recorder's failure context forwards the live evidence that
+            exists at the throw site instead of recording ``None``.
+            """
+            import time as _time
+
+            expected = BOOT_OUTCOME_EXPECTED_SLOT[leg]
+            started = _time.monotonic()
+            cap = capture if capture is not None else BootLegCapture()
+            pre = self._read_on_image_grubenv_strict(image)
+            cap.pre = dict(pre)
+            boot = self._boot_image_once(image, leg=leg)
+            cap.boot = dict(boot)
+            post = self._read_on_image_grubenv_strict(image)
+            cap.post = dict(post)
+            elapsed = _time.monotonic() - started
+            cap.elapsed_seconds = elapsed
+            observed = decide_device_boot_observation(leg=leg, pre=pre, post=post)
+            if observed != expected:
+                raise LifecycleHarnessError(
+                    f"device boot leg {leg} observed {observed!r}, "
+                    f"expected {expected!r}"
+                )
+            signal = self._stamp_and_gate_on_image_strict(
+                image, observed=observed, expected=expected
+            )
+            check_boot_exit(int(boot["returncode"]), leg=leg,
+                            qemu_log=Path(str(boot["qemu_log"])))
+            GrubEnvBackend.attach(machine["boot_control"]).reconcile(observed)
+            evidence = {
+                **boot,
+                "expected_slot": expected,
+                "observed_slot": observed,
+                "on_image_pre": pre,
+                "on_image_post": post,
+                "attestation_signal": signal,
+                "disk_snapshot": snapshot_device_collect_state(
+                    image=image, machine=machine),
+                "timeout": policy.classify(
+                    serial_growth_bytes=int(boot.get("serial_growth_bytes", 0)),
+                    image_sha_changed=(
+                        boot.get("image_sha256_post") != boot.get("image_sha256_pre")
+                    ),
+                    elapsed_seconds=elapsed,
+                    clean_exit=True,
+                ),
+            }
+            boot_legs.append(evidence)
+            return evidence
+
+        def _leg_context(
+            boot: Mapping[str, object] | None = None,
+            pre: Mapping[str, object] | None = None,
+            post: Mapping[str, object] | None = None,
+        ) -> dict[str, object]:
+            return _context_for(boot=boot, pre=pre, post=post,
+                                machine=machine, image=image)
+
+        # Leg 1: fresh install A (production-composed install proof).
+        def _leg_fresh_install() -> object:
+            composition = prove_install_composition(
+                out / "install-proof",
+                layout_record_path=machine["layout"],
+                password_hash=_PASSWORD_HASH,
+            )
+            observed = _observe("fresh-install-A")
+            holder["persist_marker"] = observed["persist_marker"]
+            steps.append({**observed,
+                           "install_composition_mode": composition["install_mode"]})
+            leg_samples.append(dict(_record_leg_sample("fresh-install-A",
+                                                       surface="DEVICE")))
+            return composition
+
+        recorder.run_leg(
+            leg="fresh-install-A", gate="device_gate_for_image",
+            frozen_predicate="production-composed install proof resolves in ab mode",
+            run=_leg_fresh_install,
+            context=lambda: _leg_context(),
+        )
+
+        # Leg 2: boot A accepted (plain default boot, launcher accepts).
+        boot_a_capture = BootLegCapture()
+
+        def _leg_boot_a() -> object:
+            boot = _collect_boot_leg("boot-A-accepted", capture=boot_a_capture)
+            boot_a_capture.clean_exit = True
+            launcher_a = self._launcher_boot(
+                machine, booted_slot=str(boot["observed_slot"]),
+                release_id="greia-0.20.0", sequence=20,
+            )
+            launcher_legs_used.append("boot-A-accepted")
+            obs = _observe("boot-A-accepted")
+            if launcher_a["seam_calls"] != ["interactive_ready"]:
+                raise LifecycleContractError(
+                    "launcher seam was not called exactly once")
+            steps.append({**obs, "launcher": launcher_a,
+                           "device_boot": boot["image_sha256_post"]})
+            return boot
+
+        recorder.run_leg(
+            leg="boot-A-accepted", gate="consumption-predicate",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["consumption-predicate"],
+            run=_leg_boot_a,
+            context=lambda: boot_a_capture.to_context(
+                machine=machine, image=image, policy=policy,
+            ),
+        )
+
+        # Legs 3-4: stage + arm B through the shipped endpoint, push the
+        # armed block to the image, boot B, launcher accepts, commit.
+        # Each later leg rebuilds the shipped authority from production
+        # primitives instead of asserting on an earlier leg's in-memory
+        # product, so a RED stage leg yields a shipped-path RED under a
+        # frozen predicate rather than an AssertionError.
+        authority_holder: dict[str, object] = {}
+
+        def _build_collect_authority() -> tuple[object, object]:
+            authority = shipped_update_authority(
+                state_dir=machine["state"],
+                trusted_key_dir=machine["keys"],
+                layout_record_path=machine["layout"],
+                boot_backend=GrubEnvBackend.attach(machine["boot_control"]),
+                seams=seams,
+            )
+            authority_holder["authority"] = authority
+            endpoint = UpdatePrivilegedEndpoint(authority)  # type: ignore[arg-type]
+            peer = PeerCredential(uid=0)
+            authority_holder["endpoint"] = endpoint
+            authority_holder["peer"] = peer
+
+            def _op(name: str) -> dict[str, object]:
+                raw = endpoint.handle_request(
+                    build_request(name), peer=peer, boot_state="update_ready"
+                )
+                _txid, op_name, payload = read_response(raw)
+                if op_name == "ERROR":
+                    raise LifecycleContractError(
+                        f"shipped endpoint refused {name}: {payload}"
+                    )
+                return dict(payload)
+
+            authority_holder["op"] = _op
+            return authority, _op
+
+        def _require_collect_op(*, leg: str) -> object:
+            existing = authority_holder.get("op")
+            if callable(existing):
+                return existing
+            _authority, fresh_op = _build_collect_authority()
+            require_collect_precondition(
+                fresh_op if callable(fresh_op) else None,
+                message=(
+                    f"shipped stage precondition absent for {leg}: "
+                    "stage-B-one-shot did not establish the shipped "
+                    "endpoint (shipped build_live_update_service path RED)"
+                ),
+            )
+            return fresh_op
+
+        def _require_collect_authority(*, leg: str) -> object:
+            existing = authority_holder.get("authority")
+            if existing is not None:
+                return existing
+            authority, _op = _build_collect_authority()
+            require_collect_precondition(
+                authority,
+                message=(
+                    f"shipped authority precondition absent for {leg}: "
+                    "stage-B-one-shot did not establish the shipped "
+                    "authority (shipped build_live_update_service path RED)"
+                ),
+            )
+            return authority
+
+        def _leg_stage_b() -> object:
+            authority, _op = _build_collect_authority()
+            shipped_legs_used.append("stage-B-one-shot")
+            received = self.machine_root / "releases" / "r21" / "r21.greiaupdate"
+            SystemUpdateInbox(machine["state"]).receive(received)
+            verified = authority.verify_current_candidate()
+            if not verified.present:
+                raise LifecycleContractError("staged candidate did not verify")
+            staged = _op("STAGE_CURRENT_CANDIDATE")
+            if staged.get("status") != "STAGED":
+                raise LifecycleContractError("shipped stage leg did not report STAGED")
+            detail = staged.get("detail", {})
+            if not isinstance(detail, dict) or detail.get("candidate_slot") != "B":
+                raise LifecycleContractError("shipped stage did not target system-b")
+            if ("store:system-b" not in seams.contacts
+                    or "store:system-a" in seams.contacts):
+                raise LifecycleContractError("shipped stage touched the wrong slot")
+            obs = _observe("stage-B-one-shot")
+            if obs["default_slot"] != "A":
+                raise LifecycleContractError("default moved before health commit")
+            steps.append({**obs, "shipped_stage": staged})
+            leg_samples.append(dict(_record_leg_sample("stage-B-one-shot",
+                                                       surface="DEVICE")))
+            return staged
+
+        recorder.run_leg(
+            leg="stage-B-one-shot", gate="device_gate_for_image",
+            frozen_predicate="shipped build_live_update_service stage targets system-b",
+            run=_leg_stage_b,
+            context=lambda: _leg_context(),
+        )
+
+        boot_b_capture = BootLegCapture()
+
+        def _leg_boot_b() -> object:
+            _op = _require_collect_op(leg="boot-B-commit")
+            assert callable(_op)
+            armed = _op("ARM_CURRENT_CANDIDATE")
+            if armed.get("status") != "ARMED":
+                raise LifecycleContractError("shipped arm leg did not report ARMED")
+            self._sync_boot_state_to_image_strict(image, machine["boot_control"])
+            shipped_legs_used.append("boot-B-commit")
+            boot = _collect_boot_leg("boot-B-commit", capture=boot_b_capture)
+            boot_b_capture.clean_exit = True
+            launcher_b = self._launcher_boot(
+                machine, booted_slot=str(boot["observed_slot"]),
+                release_id="greia-0.21.0", sequence=21,
+                filesystem_files=seams.files,
+            )
+            launcher_legs_used.append("boot-B-commit")
+            if launcher_b["accepted_slot"] != "B":
+                raise LifecycleContractError("launcher leg did not accept B")
+            obs = _observe("boot-B-commit")
+            if obs["default_slot"] != "B" or obs["accepted_slot"] != "B":
+                raise LifecycleContractError(
+                    "persistent default/accepted record not on B")
+            if obs["accepted_sequence"] != 21:
+                raise LifecycleContractError("accepted sequence did not advance to 21")
+            steps.append({**obs, "launcher": launcher_b,
+                           "device_boot": boot["image_sha256_post"]})
+            leg_samples.append(dict(_record_leg_sample("boot-B-commit",
+                                                       surface="DEVICE")))
+            return boot
+
+        recorder.run_leg(
+            leg="boot-B-commit", gate="consumption-predicate",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["consumption-predicate"],
+            run=_leg_boot_b,
+            context=lambda: boot_b_capture.to_context(
+                machine=machine, image=image, policy=policy,
+            ),
+        )
+
+        # Leg 5: stage + arm the deliberately broken candidate (system-a).
+        def _leg_stage_broken() -> object:
+            _op = _require_collect_op(leg="stage-broken-candidate")
+            assert callable(_op)
+            _authority = _require_collect_authority(
+                leg="stage-broken-candidate")
+            broken_bundle = (self.machine_root / "releases" / "r22broken"
+                             / "r22broken.greiaupdate")
+            SystemUpdateInbox(machine["state"]).receive(broken_bundle)
+            _authority.verify_current_candidate()  # type: ignore[union-attr]
+            staged_broken = _op("STAGE_CURRENT_CANDIDATE")
+            if staged_broken.get("status") != "STAGED":
+                raise LifecycleContractError("broken candidate did not stage")
+            broken_detail = staged_broken.get("detail", {})
+            if (not isinstance(broken_detail, dict)
+                    or broken_detail.get("candidate_slot") != "A"):
+                raise LifecycleContractError(
+                    "broken candidate did not target system-a")
+            armed_broken = _op("ARM_CURRENT_CANDIDATE")
+            if armed_broken.get("status") != "ARMED":
+                raise LifecycleContractError("broken candidate did not arm")
+            steps.append({**_observe("stage-broken-candidate"),
+                           "shipped_stage": staged_broken})
+            return staged_broken
+
+        recorder.run_leg(
+            leg="stage-broken-candidate", gate="device_gate_for_image",
+            frozen_predicate="shipped stage of the broken candidate targets system-a",
+            run=_leg_stage_broken,
+            context=lambda: _leg_context(),
+        )
+
+        # Leg 6: boot broken candidate -> observed on A via the image,
+        # health never confirms, recovery trigger marks FAILED, default B.
+        boot_broken_capture = BootLegCapture()
+
+        def _leg_boot_broken() -> object:
+            self._sync_boot_state_to_image_strict(image, machine["boot_control"])
+            boot_broken = _collect_boot_leg(
+                "boot-broken-candidate", capture=boot_broken_capture)
+            boot_broken_capture.clean_exit = True
+            journal_dir = machine["state"] / "system-updates" / "journal"
+            coordinator = BootTransactionCoordinator.resume(
+                journal_dir=journal_dir,
+                backend=GrubEnvBackend.attach(machine["boot_control"]),
+                candidate_artifacts=_artifact_set("A", "greia-0.21.1", 22),
+                accepted_artifacts=_artifact_set("B", "greia-0.21.0", 21),
+            )
+            observed_booted, _decision = coordinator.observe_boot()
+            if observed_booted != str(boot_broken["observed_slot"]):
+                raise LifecycleContractError(
+                    "journal fold did not follow the on-image observation"
+                )
+            decision = mark_candidate_unhealthy(
+                coordinator,
+                recovery_class="health-service-failure",
+                detail="t7-devrun3 controlled post-boot failure",
+            )
+            journal_after = BootTransactionJournal.load(journal_dir)
+            if journal_after.state is not BootTransactionState.FAILED:
+                raise LifecycleContractError("broken candidate was not marked FAILED")
+            if (GrubEnvBackend.attach(machine["boot_control"]).inspect()
+                    .default_slot != "B"):
+                raise LifecycleContractError("recovery trigger mutated the default")
+            steps.append({**_observe("boot-broken-candidate"),
+                           "recovery_decision": decision.note,
+                           "device_boot": boot_broken["image_sha256_post"]})
+            return boot_broken
+
+        recorder.run_leg(
+            leg="boot-broken-candidate", gate="consumption-predicate",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["consumption-predicate"],
+            run=_leg_boot_broken,
+            context=lambda: boot_broken_capture.to_context(
+                machine=machine, image=image, policy=policy,
+            ),
+        )
+
+        # Leg 7: recovery boot of B (bounded launcher no-op, PERSIST kept).
+        # The expected PERSIST marker is the one recorded by the fresh
+        # install leg (holder), not a positional steps index, so a RED
+        # install leg yields a frozen-predicate RED here instead of an
+        # IndexError.
+        recovery_capture = BootLegCapture()
+
+        def _leg_recovery() -> object:
+            boot_rec = _collect_boot_leg(
+                "recovery-boot-B", capture=recovery_capture)
+            recovery_capture.clean_exit = True
+            launcher_r = self._launcher_boot(
+                machine, booted_slot=str(boot_rec["observed_slot"]),
+                release_id="greia-0.21.0", sequence=21,
+                expect_no_acceptance=True,
+            )
+            launcher_legs_used.append("recovery-boot-B")
+            obs = _observe("recovery-boot-B")
+            if obs["default_slot"] != "B":
+                raise LifecycleContractError(
+                    "recovery boot did not return to default B")
+            expected_persist = holder.get("persist_marker")
+            require_collect_precondition(
+                expected_persist,
+                message=(
+                    "PERSIST-marker precondition absent for "
+                    "recovery-boot-B: fresh-install-A did not record a "
+                    "persist marker (install proof RED)"
+                ),
+            )
+            if obs["persist_marker"] != expected_persist:
+                raise LifecycleContractError("PERSIST marker did not survive recovery")
+            steps.append({**obs, "launcher": launcher_r,
+                           "device_boot": boot_rec["image_sha256_post"]})
+            return boot_rec
+
+        recorder.run_leg(
+            leg="recovery-boot-B", gate="consumption-predicate",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["consumption-predicate"],
+            run=_leg_recovery,
+            context=lambda: recovery_capture.to_context(
+                machine=machine, image=image, policy=policy,
+            ),
+        )
+
+        # Leg 8: B-to-A reverse update through the shipped path + boot.
+        reverse_capture = BootLegCapture()
+
+        def _leg_reverse() -> object:
+            _op = _require_collect_op(leg="reverse-update-B-to-A")
+            assert callable(_op)
+            _authority = _require_collect_authority(
+                leg="reverse-update-B-to-A")
+            reverse_bundle = (self.machine_root / "releases" / "r23"
+                              / "r23.greiaupdate")
+            SystemUpdateInbox(machine["state"]).receive(reverse_bundle)
+            _authority.verify_current_candidate()  # type: ignore[union-attr]
+            staged_rev = _op("STAGE_CURRENT_CANDIDATE")
+            if staged_rev.get("status") != "STAGED":
+                raise LifecycleContractError("reverse update did not stage")
+            if "store:system-a" not in seams.contacts:
+                raise LifecycleContractError("reverse update did not target system-a")
+            rearmed = _op("ARM_CURRENT_CANDIDATE")
+            if rearmed.get("status") != "ARMED":
+                raise LifecycleContractError("reverse update did not arm")
+            self._sync_boot_state_to_image_strict(image, machine["boot_control"])
+            shipped_legs_used.append("reverse-update-B-to-A")
+            boot_rev = _collect_boot_leg(
+                "reverse-update-B-to-A", capture=reverse_capture)
+            reverse_capture.clean_exit = True
+            launcher_rev = self._launcher_boot(
+                machine, booted_slot=str(boot_rev["observed_slot"]),
+                release_id="greia-0.22.0", sequence=23,
+                filesystem_files=seams.files,
+            )
+            launcher_legs_used.append("reverse-update-B-to-A")
+            if launcher_rev["accepted_slot"] != "A":
+                raise LifecycleContractError("reverse update did not accept A")
+            obs = _observe("reverse-update-B-to-A")
+            if obs["default_slot"] != "A" or obs["accepted_sequence"] != 23:
+                raise LifecycleContractError("reverse update did not land on A/23")
+            steps.append({**obs, "launcher": launcher_rev,
+                           "device_boot": boot_rev["image_sha256_post"]})
+            leg_samples.append(dict(_record_leg_sample("reverse-update-B-to-A",
+                                                       surface="DEVICE")))
+            return boot_rev
+
+        recorder.run_leg(
+            leg="reverse-update-B-to-A", gate="consumption-predicate",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["consumption-predicate"],
+            run=_leg_reverse,
+            context=lambda: reverse_capture.to_context(
+                machine=machine, image=image, policy=policy,
+            ),
+        )
+
+        # Post-run loop/cross-check binding: always attempted with its
+        # own capture once setup yields an image, even with prior reds.
+        # The no-image fail-closed early return above is the only skip.
+        def _leg_loop_binding() -> object:
+            from greia_installer.layout import ProfileSizing, plan_for_profile
+
+            assert_collect_destructive_bounds(out, image)
+            sizing = ProfileSizing(
+                layout_adapter_id=LAYOUT_ADAPTER_ID,
+                slot_bytes=1073741824,
+                persist_minimum_bytes=268435456,
+                boot_backend=BOOT_BACKEND_ID,
+            )
+            plan = plan_for_profile(sizing, device_size_bytes=4 * 1024 * 1024 * 1024)
+            device = self._loop_attach(image)
+            try:
+                loop_result = observe_loop_attached_device(
+                    device, plan=plan, record_path=machine["layout"],
+                )
+                cross = run_file_cross_check(
+                    image,
+                    expected_signature=str(loop_result["proven_signature"]),
+                )
+                if not cross["executed"] or not cross["green"]:
+                    raise LifecycleHarnessError(
+                        "file cross-check must execute and pass on a capable host"
+                    )
+                return {"loop_attach_green": True, "cross_check": cross}
+            finally:
+                self._loop_detach_checked(device)
+
+        recorder.run_leg(
+            leg="post-run-loop-cross-check", gate="post-run-loop-cross-check",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["post-run-loop-cross-check"],
+            run=_leg_loop_binding,
+            context=lambda: _leg_context(),
+        )
+
+        # Devproof device envelope: always attempted with its own
+        # capture; RED fails the device run closed (recorded, kept RED).
+        def _leg_envelope() -> object:
+            from .devproof import run_envelope_device
+
+            bundle = self.machine_root / "releases" / "r21" / "r21.greiaupdate"
+            return run_envelope_device(
+                out / "devproof-device",
+                bundle_path=bundle if bundle.is_file() else None,
+                leg_samples=leg_samples,
+            )
+
+        envelope_result = recorder.run_leg(
+            leg="devproof-device-envelope", gate="devproof-device-envelope",
+            frozen_predicate=COLLECT_FROZEN_PREDICATES["devproof-device-envelope"],
+            run=_leg_envelope,
+            context=lambda: _leg_context(),
+        )
+
+        verdict = recorder.verdict()
+        artifact = build_device_collect_diagnostics(recorder, run_meta=run_meta)
+        artifact_path = write_device_collect_diagnostics(out, artifact)
+        report: dict[str, object] = {
+            "schema_version": SCHEMA_VERSION,
+            "ok": bool(verdict["ok"]),
+            "classification": "DEVICE_T7_DEVRUN3_COLLECT",
+            "collect_mode": True,
+            "spec": lifecycle_spec(),
+            "image_manifest": holder.get("manifest"),
+            "device_gate": holder.get("gate"),
+            "install_proof": holder.get("install_proof"),
+            "shipped_update_legs": list(shipped_legs_used),
+            "launcher_acceptance_legs": list(launcher_legs_used),
+            "boot_outcome_legs": list(BOOT_OUTCOME_LEGS),
+            "device_boots": boot_legs,
+            "steps": steps,
+            "devproof_envelope": envelope_result,
+            "collected_reds": [dict(entry) for entry in recorder.reds],
+            "collect_leg_order": list(COLLECT_LEG_ORDER),
+            "diagnostics_artifact": str(artifact_path),
+            "diagnostics": artifact,
+            "device_scope": {
+                "executed": True,
+                "collect_mode": True,
+                "red_count": verdict["red_count"],
+                "image_sha256": sha256_file(image),
+            },
+            "limitations": [
+                "fail-collect widens observation only: every recorded "
+                "RED keeps its fail-fast predicate and stays RED",
+                "does not prove Acer or physical-firmware behavior",
+            ],
+        }
         self.report_path.write_text(
             json.dumps(report, sort_keys=True, indent=2) + "\n", encoding="utf-8"
         )

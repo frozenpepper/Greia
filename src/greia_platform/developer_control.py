@@ -12,7 +12,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Mapping, Sequence
+from typing import Callable, Mapping, Protocol, Sequence
 
 from .activities import ActivityRegistry, ActivityValidationError, RuntimeCatalogue
 from .boot_markers import read_spool_text, spool_path
@@ -35,6 +35,21 @@ UPLOAD_ROOT = Path("/var/lib/greia-admin/greia-dev-upload")
 STATE_FILE = STATE_ROOT / "deployments.json"
 STAGING_ROOT = STATE_ROOT / "staging"
 BACKUP_ROOT = STATE_ROOT / "backups"
+
+#: Disposable device-collect work root owned by the permanent harness verb.
+#: The verb refuses any output outside this root (absolute only; no `/tmp`
+#: images, no partition/device paths, no boot-config paths). The harness
+#: image file itself always lives inside the chosen output dir, so every
+#: privileged write stays a disposable file under this root.
+DEVICE_COLLECT_WORK_ROOT = Path("/var/lib/greia/greia-device-work")
+#: Frozen DIAG-C1 per-leg timeout policy enforced inside the verb:
+#: 300 s hard ceiling with 120 s no-progress and 120 s stall thresholds.
+DEVICE_COLLECT_TIMEOUT_SECONDS = 300
+DEVICE_COLLECT_NO_PROGRESS_SECONDS = 120.0
+DEVICE_COLLECT_STALL_SECONDS = 120.0
+#: Frozen guest-memory cap for disposable device-collect runs (MiB).
+DEVICE_COLLECT_MEMORY_MIB = 768
+DEVICE_COLLECT_CPUS = 1
 
 _SERVICE_MAP: Mapping[str, tuple[str, ...]] = {
     "launcher": ("greia-launcher.service",),
@@ -64,6 +79,21 @@ _SERVICE_MAP: Mapping[str, tuple[str, ...]] = {
 
 class DeveloperControlError(RuntimeError):
     """Raised when a development-only control operation must fail closed."""
+
+
+class DeviceCollectHarness(Protocol):
+    """Polymorphic disposable device-collect runner.
+
+    The production implementation is ``LifecycleHarness`` (its
+    ``run_device_collect`` fail-collect path); tests substitute a
+    recording double through the ``harness_factory`` seam. The verb
+    owns all bound enforcement before this seam is reached, so a
+    double can never widen the allowed surface.
+    """
+
+    def run_device_collect(self) -> dict[str, object]:
+        """Execute one disposable device-collect run; return its report."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,6 +233,152 @@ class DeveloperControl:
     def intro_sweep_log(self) -> str:
         """Return the bounded sweep timestamp log for burst-verdict collection."""
         return read_intro_sweep_log_text()
+
+    def run_device_collect(
+        self,
+        output_dir: Path | str,
+        *,
+        keep_image: bool = False,
+        harness_factory: Callable[[object], DeviceCollectHarness] | None = None,
+    ) -> dict[str, object]:
+        """Run one disposable device-collect run under Greia-owned bounds.
+
+        This is the permanent privileged path for disposable
+        device-collect runs (DIAG-C1 fail-collect observation mode). It
+        delegates to the existing ``LifecycleHarness.run_device_collect``
+        production path and owns no device-mount/boot logic itself.
+
+        Bounds enforced here, fail closed (never caller folklore):
+
+        - ``output_dir`` must be absolute and resolve inside
+          ``/var/lib/greia/greia-device-work``. ``/tmp`` outputs,
+          partition/device paths, boot-config paths, and symlink
+          escapes are refused explicitly;
+        - the DIAG-C1 collect-vs-abort boundary and the 300/120/120
+          per-leg timeout policy are pinned (drift in the frozen
+          thresholds fails closed);
+        - the guest is capped at 768 MiB (``-m 768``); the production
+          ``LifecycleConfig`` default is never modified as a side
+          effect — the cap applies to this verb's runs only.
+        """
+        if not isinstance(keep_image, bool):
+            raise DeveloperControlError("keep_image must be a boolean")
+        if isinstance(output_dir, str):
+            output_dir = Path(output_dir)
+        if not isinstance(output_dir, Path):
+            raise DeveloperControlError("device-collect output_dir must be a path")
+        if not output_dir.is_absolute():
+            raise DeveloperControlError(
+                "device-collect output_dir must be an absolute path "
+                f"inside {DEVICE_COLLECT_WORK_ROOT}"
+            )
+        resolved_out = output_dir.resolve(strict=False)
+        resolved_root = DEVICE_COLLECT_WORK_ROOT.resolve(strict=False)
+        tmp_root = Path("/tmp").resolve(strict=False)
+        if resolved_out == tmp_root or tmp_root in resolved_out.parents:
+            raise DeveloperControlError(
+                "device-collect refuses /tmp outputs: "
+                f"{output_dir} is outside {DEVICE_COLLECT_WORK_ROOT}"
+            )
+        dev_root = Path("/dev").resolve(strict=False)
+        if resolved_out == dev_root or dev_root in resolved_out.parents:
+            raise DeveloperControlError(
+                "device-collect refuses partition/device paths: "
+                f"{output_dir} is outside {DEVICE_COLLECT_WORK_ROOT}"
+            )
+        for protected in (Path("/boot"), Path("/etc"), Path("/opt/greia-os")):
+            resolved_protected = protected.resolve(strict=False)
+            if resolved_out == resolved_protected or (
+                resolved_protected in resolved_out.parents
+            ):
+                raise DeveloperControlError(
+                    "device-collect refuses boot-config/system paths: "
+                    f"{output_dir} is outside {DEVICE_COLLECT_WORK_ROOT}"
+                )
+        if resolved_out != resolved_root and resolved_root not in resolved_out.parents:
+            raise DeveloperControlError(
+                "device-collect writes disposable files only inside "
+                f"{DEVICE_COLLECT_WORK_ROOT}: refused {output_dir}"
+            )
+
+        try:
+            from tools.x8_qemu import lifecycle as _lifecycle
+        except ImportError:
+            try:
+                import x8_qemu.lifecycle as _lifecycle  # type: ignore[no-redef]
+            except ImportError as exc:
+                raise DeveloperControlError(
+                    "device-collect harness payload is not installed on "
+                    "this image; refusing to run outside the production "
+                    "LifecycleHarness.run_device_collect path"
+                ) from exc
+        try:
+            from tools.x8_qemu import bootchain as _bootchain
+        except ImportError:
+            try:
+                import x8_qemu.bootchain as _bootchain  # type: ignore[no-redef]
+            except ImportError as exc:
+                raise DeveloperControlError(
+                    "device-collect timeout policy is unavailable on this "
+                    "image; refusing to run with an unenforced ceiling"
+                ) from exc
+
+        if (
+            float(getattr(
+                _bootchain, "BOOT_WAIT_NO_PROGRESS_SECONDS", -1.0
+            ))
+            != DEVICE_COLLECT_NO_PROGRESS_SECONDS
+            or float(getattr(_bootchain, "BOOT_WAIT_STALL_SECONDS", -1.0))
+            != DEVICE_COLLECT_STALL_SECONDS
+        ):
+            raise DeveloperControlError(
+                "device-collect 300/120/120 timeout policy drifted from "
+                "the frozen bootchain thresholds; refusing to run"
+            )
+        policy = _lifecycle.LegTimeoutPolicy(
+            timeout_seconds=float(DEVICE_COLLECT_TIMEOUT_SECONDS)
+        )
+        if (
+            float(policy.no_progress_seconds)
+            != DEVICE_COLLECT_NO_PROGRESS_SECONDS
+            or float(policy.stall_seconds) != DEVICE_COLLECT_STALL_SECONDS
+        ):
+            raise DeveloperControlError(
+                "device-collect 300/120/120 timeout policy drifted from "
+                "the frozen collect thresholds; refusing to run"
+            )
+
+        config = _lifecycle.LifecycleConfig(
+            output_dir=resolved_out,
+            timeout_seconds=DEVICE_COLLECT_TIMEOUT_SECONDS,
+            memory_mib=DEVICE_COLLECT_MEMORY_MIB,
+            cpus=DEVICE_COLLECT_CPUS,
+            keep_image=keep_image,
+            seabios_path=None,
+        )
+        try:
+            harness: DeviceCollectHarness = (
+                harness_factory(config)
+                if harness_factory is not None
+                else _lifecycle.LifecycleHarness(config)
+            )
+            result = harness.run_device_collect()
+        except DeveloperControlError:
+            raise
+        except Exception as exc:
+            harness_error = getattr(_lifecycle, "LifecycleHarnessError", None)
+            if harness_error is not None and isinstance(exc, harness_error):
+                raise DeveloperControlError(
+                    f"device-collect run failed closed: {exc}"
+                ) from exc
+            raise DeveloperControlError(
+                f"device-collect harness failed closed: {exc}"
+            ) from exc
+        if not isinstance(result, dict):
+            raise DeveloperControlError(
+                "device-collect harness returned a non-report result"
+            )
+        return result
 
     def deploy_activity(self, source: Path, *, replace_system: bool) -> DeploymentRecord:
         source = source.resolve(strict=True)
@@ -609,6 +785,30 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     sub.add_parser("poweroff")
     sub.add_parser("arm-intro-sweep")
     sub.add_parser("intro-sweep-log")
+    collect = sub.add_parser(
+        "run-device-collect",
+        description=(
+            "Disposable device-collect run under Greia-owned bounds "
+            "(DIAG-C1 fail-collect observation mode). Writes disposable "
+            "files only inside /var/lib/greia/greia-device-work; "
+            "300/120/120 per-leg timeout policy; 768 MiB guest cap."
+        ),
+    )
+    collect.add_argument(
+        "--output-dir",
+        type=Path,
+        required=True,
+        help=(
+            "Disposable output dir inside "
+            "/var/lib/greia/greia-device-work (absolute; no /tmp, "
+            "partition, or boot-config paths)."
+        ),
+    )
+    collect.add_argument(
+        "--keep-image",
+        action="store_true",
+        help="Retain the disposable image file inside the output dir.",
+    )
     return parser.parse_args(argv)
 
 
@@ -644,6 +844,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(control.arm_intro_sweep())
         elif args.command == "intro-sweep-log":
             sys.stdout.write(control.intro_sweep_log())
+        elif args.command == "run-device-collect":
+            result = control.run_device_collect(
+                args.output_dir, keep_image=args.keep_image
+            )
+            print(json.dumps(result, indent=2, sort_keys=True, default=str))
         else:  # pragma: no cover - argparse guarantees the command set.
             raise DeveloperControlError("unsupported command")
     except DeveloperControlError as exc:

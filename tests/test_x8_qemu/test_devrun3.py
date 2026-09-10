@@ -128,15 +128,19 @@ class DeviceGateTests(unittest.TestCase):
     """Payload-less/tampered images RED the real boot-path gate."""
 
     def test_device_gate_break_restore_round_trip(self) -> None:
+        from tools.x8_qemu.bootchain import STUB_CORE_SECTORS, stub_core_sha256
+        from tools.x8_qemu.payload import DESCRIPTOR_OFFSET
+
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
-            # GREEN: payload present, gap reserved.
+            # GREEN: payload present, gap reserved, chain installed.
             gate = device_gate_for_image(image)
             self.assertEqual(gate["descriptor"]["magic"], "GREIAPY1")
+            self.assertEqual(gate["descriptor"]["descriptor_sector"], 2047)
             # BREAK: wipe the descriptor sector (512 bounded bytes).
             with open(image, "r+b") as handle:
-                handle.seek(512)
+                handle.seek(DESCRIPTOR_OFFSET)
                 handle.write(b"\x00" * 512)
             # RED: the device gate fails closed (payload + gap agree).
             with self.assertRaises(PayloadError):
@@ -145,17 +149,24 @@ class DeviceGateTests(unittest.TestCase):
                 assert_payload_present(image)
             # RESTORE the exact binding and re-prove GREEN.
             reproven = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
-            embed_payload_descriptor(image, reproven)
+            embed_payload_descriptor(
+                image,
+                reproven,
+                core_sha256=stub_core_sha256(),
+                core_sectors=STUB_CORE_SECTORS,
+            )
             device_gate_for_image(image)
             assert_payload_present(image)
 
     def test_device_gate_refuses_tampered_hashes(self) -> None:
+        from tools.x8_qemu.payload import DESCRIPTOR_OFFSET
+
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
             # Non-hex hash bytes: malformed descriptor REDs the gate.
             with open(image, "r+b") as handle:
-                handle.seek(512 + 9)
+                handle.seek(DESCRIPTOR_OFFSET + 9)
                 handle.write(b"*" * 64)
             with self.assertRaises(PayloadError):
                 device_gate_for_image(image)
@@ -299,6 +310,8 @@ class DeviceObservationDecisionTests(unittest.TestCase):
 
 class SectorGapGuardTests(unittest.TestCase):
     def test_gap_reserved_on_assembled_image(self) -> None:
+        from tools.x8_qemu.payload import DESCRIPTOR_SECTOR
+
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
@@ -306,32 +319,56 @@ class SectorGapGuardTests(unittest.TestCase):
             self.assertEqual(guard["reserved_first_sector"], 1)
             self.assertEqual(guard["reserved_last_sector"], 2047)
             self.assertEqual(guard["partition_1_first_sector"], 2048)
-            self.assertEqual(guard["sector_1_state"], "descriptor")
+            self.assertEqual(guard["descriptor_sector"], 2047)
+            self.assertEqual(guard["core_sectors"], 15)
+            self.assertEqual(guard["sector_state"], "descriptor-bound-core")
             self.assertEqual(SECTOR_GAP_FIRST_SECTOR, 1)
             self.assertEqual(SECTOR_GAP_LAST_SECTOR, 2047)
             self.assertEqual(PARTITION_1_FIRST_SECTOR, 2048)
+            self.assertEqual(DESCRIPTOR_SECTOR, 2047)
 
-    def test_gap_refuses_foreign_sector_1_break_restore_green(self) -> None:
+    def test_gap_refuses_foreign_descriptor_break_restore_green(self) -> None:
+        from tools.x8_qemu.bootchain import STUB_CORE_SECTORS, stub_core_sha256
+        from tools.x8_qemu.payload import DESCRIPTOR_OFFSET
+
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
-            intact = image.read_bytes()[512:1024]
-            # BREAK: foreign (non-zero, non-descriptor) bytes in sector 1.
+            with open(image, "rb") as _sector_handle:
+                _sector_handle.seek(DESCRIPTOR_OFFSET)
+                intact = _sector_handle.read(512)
+            # BREAK: foreign (non-zero, non-descriptor) bytes at sector 2047.
             with open(image, "r+b") as handle:
-                handle.seek(512)
+                handle.seek(DESCRIPTOR_OFFSET)
                 handle.write(b"COREIMGB" + b"\x01" * 504)
             with self.assertRaises(PayloadError):
                 verify_sector_gap_reserved(image)
             with self.assertRaises(PayloadError):
                 embed_payload_descriptor(
-                    image, verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+                    image,
+                    verify_staged_payload(Path(tmp) / "out" / "guest-payload"),
+                    core_sha256=stub_core_sha256(),
+                    core_sectors=STUB_CORE_SECTORS,
                 )
             # RESTORE the exact descriptor bytes and re-prove GREEN.
             with open(image, "r+b") as handle:
-                handle.seek(512)
+                handle.seek(DESCRIPTOR_OFFSET)
                 handle.write(intact)
             verify_sector_gap_reserved(image)
             read_payload_descriptor(image)
+
+    def test_gap_refuses_swapped_core_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            # BREAK: one flipped byte inside the bound core region.
+            with open(image, "r+b") as handle:
+                handle.seek(2 * 512)
+                handle.write(b"\x07")
+            with self.assertRaises(PayloadError):
+                verify_sector_gap_reserved(image)
+            with self.assertRaises(PayloadError):
+                device_gate_for_image(image)
 
     def test_gap_refuses_nonzero_gap_tail(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -406,6 +443,195 @@ class DeviceWiringBoundaryTests(unittest.TestCase):
             self.assertEqual(report["classification"], "SOURCE_SCOPE_T6_LIFECYCLE")
             self.assertFalse(report["device_scope"]["executed"])
             assert_lifecycle_transitions(report)
+
+
+class DeviceGateCollectSensitivityTests(unittest.TestCase):
+    """DIAG-C2-SENSITIVITY: image-gate REDs stay RED under collect mode.
+
+    Companion to the full ``DIAG_C2_SENSITIVITY_CONTROL_INVENTORY`` in
+    ``test_lifecycle.py`` from the device-gate owner's surface: each
+    break calls the real ``device_gate_for_image`` (payload plus
+    sector-gap plus boot chain), each RED records through the real
+    ``DeviceCollectRecorder`` / ``run_collect_sequence`` /
+    ``build_device_collect_diagnostics`` path with the
+    ``device_gate_for_image`` gate and the verbatim fail-fast error, and
+    each byte-exact restore re-proves GREEN. Preregistered predicates:
+    RED-under-collect with gate named plus GREEN after restore; no
+    frozen predicate weakened.
+    """
+
+    def test_collect_sensitivity_payload_less_red_and_restore_green(
+        self,
+    ) -> None:
+        from tools.x8_qemu.lifecycle import (
+            COLLECT_FROZEN_PREDICATES,
+            DeviceCollectRecorder,
+            build_device_collect_diagnostics,
+            run_collect_sequence,
+        )
+        from tools.x8_qemu.payload import DESCRIPTOR_OFFSET, PayloadError
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            device_gate_for_image(image)
+            with open(image, "rb") as handle:
+                handle.seek(DESCRIPTOR_OFFSET)
+                intact = handle.read(512)
+
+            def _break() -> object:
+                with open(image, "r+b") as handle:
+                    handle.seek(DESCRIPTOR_OFFSET)
+                    handle.write(b"\x00" * 512)
+                return device_gate_for_image(image)
+
+            with self.assertRaises(PayloadError) as caught:
+                _break()
+            fail_fast_error = str(caught.exception)
+
+            recorder = DeviceCollectRecorder()
+            verdict = run_collect_sequence(
+                [{
+                    "leg": "collect-setup-image",
+                    "gate": "device_gate_for_image",
+                    "frozen_predicate": COLLECT_FROZEN_PREDICATES[
+                        "device_gate_for_image"],
+                    "run": _break,
+                    "context": lambda: {
+                        "image_sha256_pre": manifest["image_sha256"],
+                        "disk_snapshot": {"image": str(image)},
+                    },
+                }],
+                recorder,
+            )
+            self.assertFalse(verdict["ok"])
+            self.assertEqual(verdict["red_count"], 1)
+            red = recorder.reds[0]
+            self.assertEqual(red["gate"], "device_gate_for_image")
+            self.assertEqual(red["error_type"], "PayloadError")
+            self.assertEqual(red["error"], fail_fast_error)
+            self.assertFalse(red["abort"])
+            self.assertEqual(
+                red["image_sha256_pre"], manifest["image_sha256"])
+            artifact = build_device_collect_diagnostics(
+                recorder, run_meta={"diag-c2": "payload-less"})
+            self.assertFalse(artifact["verdict"]["ok"])
+            self.assertEqual(
+                artifact["reds"][0]["gate"], "device_gate_for_image")
+
+            # RESTORE the exact descriptor bytes and re-prove GREEN.
+            with open(image, "r+b") as handle:
+                handle.seek(DESCRIPTOR_OFFSET)
+                handle.write(intact)
+            device_gate_for_image(image)
+            green_recorder = DeviceCollectRecorder()
+            green_verdict = run_collect_sequence(
+                [{
+                    "leg": "collect-setup-image",
+                    "gate": "device_gate_for_image",
+                    "frozen_predicate": COLLECT_FROZEN_PREDICATES[
+                        "device_gate_for_image"],
+                    "run": lambda: device_gate_for_image(image),
+                }],
+                green_recorder,
+            )
+            self.assertTrue(green_verdict["ok"])
+
+    def test_collect_sensitivity_gap_foreign_and_core_swap_red(self) -> None:
+        from tools.x8_qemu.lifecycle import (
+            COLLECT_FROZEN_PREDICATES,
+            DeviceCollectRecorder,
+            build_device_collect_diagnostics,
+            run_collect_sequence,
+        )
+        from tools.x8_qemu.payload import (
+            DESCRIPTOR_OFFSET,
+            PayloadError,
+            verify_sector_gap_reserved,
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            image = Path(manifest["image"])
+            device_gate_for_image(image)
+            verify_sector_gap_reserved(image)
+            with open(image, "rb") as handle:
+                handle.seek(DESCRIPTOR_OFFSET)
+                intact_descriptor = handle.read(512)
+            with open(image, "rb") as handle:
+                handle.seek(2 * 512)
+                intact_core_byte = handle.read(1)
+
+            def _break_foreign() -> object:
+                with open(image, "r+b") as handle:
+                    handle.seek(DESCRIPTOR_OFFSET)
+                    handle.write(b"COREIMGB" + b"\x01" * 504)
+                return device_gate_for_image(image)
+
+            def _restore_descriptor() -> None:
+                with open(image, "r+b") as handle:
+                    handle.seek(DESCRIPTOR_OFFSET)
+                    handle.write(intact_descriptor)
+                device_gate_for_image(image)
+
+            def _break_core_swap() -> object:
+                with open(image, "r+b") as handle:
+                    handle.seek(2 * 512)
+                    handle.write(
+                        b"\x07" if intact_core_byte != b"\x07" else b"\x08")
+                return device_gate_for_image(image)
+
+            def _restore_core() -> None:
+                with open(image, "r+b") as handle:
+                    handle.seek(2 * 512)
+                    handle.write(intact_core_byte)
+                device_gate_for_image(image)
+
+            for leg, break_fn, restore_fn in (
+                ("image-gap-foreign", _break_foreign, _restore_descriptor),
+                ("image-core-swap", _break_core_swap, _restore_core),
+            ):
+                with self.assertRaises(PayloadError) as caught:
+                    break_fn()
+                fail_fast_error = str(caught.exception)
+
+                recorder = DeviceCollectRecorder()
+                verdict = run_collect_sequence(
+                    [{
+                        "leg": leg,
+                        "gate": "device_gate_for_image",
+                        "frozen_predicate": COLLECT_FROZEN_PREDICATES[
+                            "device_gate_for_image"],
+                        "run": break_fn,
+                        "context": lambda: {
+                            "image_sha256_pre": manifest["image_sha256"],
+                        },
+                    }],
+                    recorder,
+                )
+                self.assertFalse(verdict["ok"])
+                red = recorder.reds[0]
+                self.assertEqual(red["gate"], "device_gate_for_image")
+                self.assertEqual(red["error_type"], "PayloadError")
+                self.assertEqual(red["error"], fail_fast_error)
+                self.assertFalse(red["abort"])
+                artifact = build_device_collect_diagnostics(
+                    recorder, run_meta={"diag-c2": leg})
+                self.assertFalse(artifact["verdict"]["ok"])
+
+                restore_fn()
+                green_recorder = DeviceCollectRecorder()
+                green_verdict = run_collect_sequence(
+                    [{
+                        "leg": leg,
+                        "gate": "device_gate_for_image",
+                        "frozen_predicate": COLLECT_FROZEN_PREDICATES[
+                            "device_gate_for_image"],
+                        "run": lambda: device_gate_for_image(image),
+                    }],
+                    green_recorder,
+                )
+                self.assertTrue(green_verdict["ok"])
 
 
 if __name__ == "__main__":

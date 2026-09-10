@@ -69,11 +69,17 @@ own contract on out-of-order, movement-free, or leg-bypassed reports.
 
 ## 6. On-device identity observation
 
-Loop-attach the file-backed DOS image and run the production
+Loop-attach the file-backed DOS image, force a bounded kernel
+partition rescan first (`partprobe` and/or `partx -u` for whichever
+tool exists, then `udevadm settle`), and run the production
 observation path (`read_mbr_disk_signature`,
 `probe_mbr_partition_partuuid`, `probe_partition_filesystem_uuid` via
-`SubprocessMbrProbeRunner`); assert the bound record equals the observed
-topology. The `sfdisk`/`blkid -p` file cross-check executes (not
+`SubprocessMbrProbeRunner`) with bounded settle/sleep retries so a
+stale kernel partition view settles instead of REDing permanently;
+exhausted retries fail closed at the
+`post-run-loop-attach-partition-rescan` gate naming the device, the
+rescan detail and the last probe error. Assert the bound record equals
+the observed topology. The `sfdisk`/`blkid -p` file cross-check executes (not
 skipped) on capable hosts and reports explicit deferred elsewhere —
 never false green. Record teardown/remount/reload semantics hold.
 
@@ -87,35 +93,75 @@ fabricated slot/journal/GRUB state, no `simulate_reboot`.
 Source scope (`run_source_scope`) drives the same seams with declared
 boot outcomes folded through the real backend + journal reconcile;
 device scope (`run_device`, capable Linux host only) gates on the
-payload + sector guard, installs the payload to partition 1, pushes
-each armed block to the image, boots each boot-outcome leg once under
-real SeaBIOS firmware with a clean-exit gate, derives the observed
-slot solely from on-image pre/post consumption evidence, stamps it
-through the production `reconcile` on the real on-image bytes, gates
-it with `read_attestation_signal` through the post-boot loop
-remount/read path, and only then folds it into the host backend, the
-journal coordinator and the launcher seam (with the guest-observed
-boot identity). Post-run loop/cross-check binding is enforced
+payload + gap + boot-chain gate, installs the payload to partition 1,
+pushes each armed block to the image, boots each boot-outcome leg once
+under real SeaBIOS firmware with a progress-aware bounded wait (COM1
+serial-byte growth and image SHA delta count as progress with the leg
+timeout as the hard ceiling; silence and progress-then-stall are RED)
+and a clean-exit gate, derives the observed slot solely from on-image
+pre/post consumption evidence, stamps it through the production
+`reconcile` on the real on-image bytes, gates it with
+`read_attestation_signal` through the post-boot loop remount/read path,
+and only then folds it into the host backend, the journal coordinator
+and the launcher seam (with the guest-observed boot identity). Post-run loop/cross-check binding is enforced
 executed-and-green. Device execution stays RED/deferred off capable
 hosts — never claimed from source evidence. There is no `on_boot`
 hook: stubbed-spawn runs are source scope and explicitly non-proxying
 for the live predicate.
 
-## 8. Sector 1-2047 gap coordination (future GRUB installer: read this)
+## 8. Sector 1-2047 gap coordination (guest boot core + relocated descriptor)
 
-Sectors 1–2047 of the disposable image are RESERVED. Sector 1 carries
-the T7-PAYLOAD descriptor (magic `GREIAPY1`, pinned by
-`verify_sector_gap_reserved` plus an explicit refusal on foreign or
-non-zero sector bytes); sectors 2–2047 must read zero. Partition 1
-starts at sector 2048. No gap embed lands in this task.
+Sectors 1–2047 of the disposable image are RESERVED under the
+GUEST-BOOT-CHAIN layout:
 
-A future real GRUB `core.img` gap embed MUST NOT land in sectors
-1–2047 without first relocating the descriptor through an explicit,
-reviewed migration: reserve a different gap region, or move the
-descriptor and update `read_payload_descriptor`,
-`embed_payload_descriptor` and `verify_sector_gap_reserved` together.
-Silently clobbering the descriptor (or hiding core bytes inside the
-reserved gap) fails the guard RED by design.
+- sector 0: MBR — 440 bytes of guest boot stub code (COM1 progress +
+  single EDD LBA core load + bounded reboot exit) owned by
+  `tools/x8_qemu/bootchain.py`, then the disk signature + DOS partition
+  table owned by `write_mbr_table_for_plan` (the chain installer
+  preserves bytes 440–511 and re-proves the table through the
+  production parse seam). The single call (not a CHS call, not a loop:
+  repeated EDD calls silently repeat the first transfer on this
+  target) loads sectors 1..N and preserves DL for the core entry; a
+  disk error or a missing EDD BIOS takes the bounded reboot exit;
+- sectors 1–127: the guest boot core reservation. Source scope installs
+  the reviewed stub core (sectors 1–15, zero-padded image of
+  `stub_core_bytes()`); a capable host replaces it at assembly time
+  via `maybe_install_genuine_grub_core` (`assemble_disposable_image`)
+  with a genuine GRUB `core.img` through `install_genuine_grub_chain`
+  (matching MBR load count derived from the core length + zeroed
+  reservation tail), with the sector-2047 binding replaced through the
+  explicit `rebind_payload_descriptor` path (previous binding evidenced,
+  never silently overwritten; off a capable host the stub stays and
+  armed-leg consumption stays RED). Split-core architecture (Acer-measured):
+  `normal.mod` alone exceeds the reservation, so the embedded core is
+  the minimal disk-reaching set (serial + loadenv + reboot/halt +
+  terminal + biosdisk + part_msdos + ext2 + test + echo, plus an
+  embedded early serial config) while `normal`, the `password_pbkdf2`
+  stack, and their dependency closure load from `/i386-pc/` on
+  partition 1 at boot (normal-mode auto-insmod resolves them there).
+  The mkimage prefix is `(,msdos1)/`, so genuine GRUB consumes the
+  partition-ROOT `grub.cfg`/`grubenv` — the exact paths the frozen
+  attestation seam inspects, with no mirror copy to drift;
+- sectors 128–2046: must read zero;
+- sector 2047: the T7-PAYLOAD descriptor (magic `GREIAPY1`, version 2),
+  relocated here from sector 1 by the GUEST-BOOT-CHAIN migration, now
+  binding the installed core bytes (`core_sha256` + `core_sectors`) next
+  to the staged payload hashes.
+
+The guard (`verify_sector_gap_reserved` + `verify_boot_chain_present`,
+both enforced by `device_gate_for_image` before any QEMU boot) proves
+the descriptor field-by-field, re-hashes sectors 1–N against the bound
+`core_sha256`, and refuses any foreign/non-zero byte elsewhere in the
+gap. An old-layout image (descriptor still at sector 1, zero MBR boot
+code) REDs this guard: the relocation omission is itself a RED
+condition, pinned by test. Silently clobbering the descriptor, hiding
+bytes inside the reserved gap, or swapping the core without rebinding
+the descriptor fails RED by design.
+
+`read_payload_descriptor`, `embed_payload_descriptor` and
+`verify_sector_gap_reserved` were updated together for this relocation
+and must stay consistent: the embed verifies the installed core hash
+before writing, and the guard re-proves it on every device boot.
 
 ## 9. T7-DEVPROOF envelope (D31, interruptions, resources, cgroup gate)
 
@@ -162,3 +208,68 @@ its legs:
 the device run closed). Device-measured values are recorded only from
 real runs behind `require_device_host`, never synthesized; elsewhere
 the device predicates report deferred/RED, never source-proxied green.
+
+## 10. Fail-collect observation mode (DIAG-C1)
+
+`LifecycleHarness.run_device_collect` runs the same production path as
+`run_device` (same image assembly, device gate, shipped update path,
+real SeaBIOS boots, frozen attestation seam, launcher seam, post-run
+loop/cross-check binding, devproof device envelope) but wraps each of
+the 8 lifecycle legs plus the post-run loop/cross-check binding and the
+devproof device envelope in per-leg capture (`DeviceCollectRecorder` /
+`run_collect_sequence` in `tools/x8_qemu/lifecycle.py`). Collection
+widens OBSERVATION only: predicates are frozen before observation and
+no RED is weakened, bypassed, or converted.
+
+Continuation rules (code-authoritative in `COLLECT_CONTINUATION_RULES`):
+
+1. every boot-outcome leg re-reads on-image state independently (fresh
+   pre/post per leg; no leg consumes another leg's cached observation);
+2. a RED boot leg never blocks later stage/boot legs;
+3. a RED stage/arm leg never blocks later legs either: each later leg
+   re-syncs and re-reads image state, REDing under its own frozen
+   predicate when its preconditions are absent;
+ 4. the post-run loop/cross-check binding is always attempted with its
+    own capture once setup yields an image, even with prior reds;
+ 5. the devproof device envelope is always attempted with its own
+    capture once setup yields an image, even with prior reds;
+ 6. only abort-class conditions stop the run; nothing is skipped after
+    an observed RED, except the no-image fail-closed early return
+    (setup never produced an image, so boots/bindings have no image
+    to observe — diagnostics are still emitted with setup reds).
+
+ Collect-vs-abort boundary: teardown/loop-detach safety (checked
+ `*_checked` helpers) and destructive-bound violations
+ (`assert_collect_destructive_bounds`: non-absolute output dir or an
+ image escaping the disposable output dir) abort immediately and fail
+ closed (`CollectAbortError`, never collected); `require_device_host`,
+clean-exit gate predicates, consumption checks, and attestation binding
+predicates are observed and recorded but their REDs are never weakened,
+bypassed, or converted — production/device behavior stays fail-fast and
+fail-closed.
+
+The frozen attestation seam (grubenv-on-image, T7-ATTEST leg partition)
+is byte-identical in semantics: `decide_device_boot_observation`
+predicates are called, never changed; only RED collection/reporting
+differs. A collected RED carries the verbatim fail-fast error, so a
+single injected fault produces the identical RED predicate as the
+fail-fast path.
+
+Per-leg timeout policy: serial-byte growth and image SHA delta count as
+progress, the leg timeout (`LegTimeoutPolicy`, thresholds mirroring the
+frozen `bootchain.wait_for_clean_exit` predicates) is the hard ceiling,
+and silence plus progress-then-stall are RED with the timeout recorded —
+so a hung leg cannot eat the run. The real wait mechanism stays inside
+`_boot_image_once`; the collect layer only stamps the evidence.
+
+ Each run emits `greia-device-collect-diagnostics.json` containing, per
+ red: gate name, frozen predicate, leg name, verbatim error, return code,
+ serial bytes/growth, QEMU/host log paths, on-image pre/post grubenv
+ bytes, disk state snapshot (image SHA pre/post, slot/default/one-shot/
+ last-booted, journal state, accepted slot/release/sequence, PERSIST
+ marker), and timeout/progress detail. Boot-leg REDs forward the live
+ pre/boot/post/elapsed evidence present at the throw site
+ (`BootLegCapture`, populated progressively inside the boot leg), so a
+ consumption/clean-exit RED still carries its serial/log/pre/post/timeout
+ detail. The final verdict aggregates ALL
+ reds; aggregated reporting never converts a RED to green/yellow.
