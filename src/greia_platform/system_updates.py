@@ -2147,14 +2147,12 @@ def handle_update_connection(
     here, at the composition edge, because that module imports this one).
     ``peer`` must be a kernel-attested ``PeerCredential`` (see
     :func:`attest_peer_from_connection`): caller-supplied UIDs or identity
-    text are rejected before any request byte is served (pipelined bytes are
-    discarded, never dispatched). Any refusal — peer, boot, schema, trust,
+    text are rejected before any request byte is read. Any refusal — peer, boot, schema, trust,
     slot, journal — is answered as a bounded REFUSED frame with no
     destination contact on the way out.
     """
     from .privileged_channel import (
         MAX_MESSAGE_BYTES,
-        SOCKET_TIMEOUT_SECONDS,
         PeerCredential,
         PrivilegedChannelError,
         encode_response,
@@ -2171,23 +2169,6 @@ def handle_update_connection(
         SlotWriteError = RuntimeError  # type: ignore[assignment]
 
     if not isinstance(peer, PeerCredential):
-        # Discard (never dispatch) any already-pipelined request bytes before
-        # answering. Linux sends RST on close() while the receive queue still
-        # holds unread data, which would discard the REFUSED frame itself and
-        # surface as ECONNRESET on the peer; draining first keeps the refusal
-        # deliverable on both Linux and macOS transports.
-        try:
-            connection.settimeout(SOCKET_TIMEOUT_SECONDS)
-            drained = 0
-            while True:
-                discarded = connection.recv(4096)
-                if not discarded:
-                    break
-                drained += len(discarded)
-                if drained > MAX_MESSAGE_BYTES or discarded.endswith(b"\n"):
-                    break
-        except (OSError, ValueError):
-            pass
         response = encode_response(
             new_transaction_id(),
             "ERROR",
