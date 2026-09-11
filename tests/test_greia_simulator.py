@@ -167,6 +167,33 @@ def _services_for(
     return adapter, services
 
 
+def _real_activity_ready_seconds() -> float:
+    """Bounded ready window for the real-activity integration leg.
+
+    Device evidence (Acer reference host, T03 isolation): the child needs
+    ~7.9s warm from start to ready (pygame cold import plus dummy-SDL init
+    on i686) against an 8.0s ceiling, so cold runs miss the window with no
+    product defect present. Linux hosts below the 2 GiB line (the
+    documented low-resource reference floor) therefore get a bounded 30s
+    window; every other host keeps the strict 8s. The supervisor's own 15s
+    ready deadline stays the backstop, so a hung child still fails fast
+    through ``session.result`` instead of lingering here.
+    """
+    if sys.platform == "linux":
+        try:
+            with open("/proc/meminfo", encoding="utf-8") as handle:
+                for line in handle:
+                    if line.startswith("MemTotal:"):
+                        total_kb = int(line.split()[1])
+                        break
+                else:
+                    return 8.0
+        except (OSError, ValueError):
+            return 8.0
+        return 30.0 if total_kb < 2 * 1024 * 1024 else 8.0
+    return 8.0
+
+
 class GreiaSimulatorDeviceTests(unittest.TestCase):
     def test_viewport_parser_and_bounds(self) -> None:
         self.assertEqual(parse_viewport("1024x600"), (1024, 600))
@@ -783,7 +810,12 @@ while not activity_stop_requested():
     time.sleep(0.02)
 pygame.quit()
 '''
-        with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+        # Honor $TMPDIR (never pin to /tmp): the Acer device host mounts /tmp
+        # as a 64 MiB tmpfs while storage policy keeps a 64 MiB protected
+        # free-space reserve, so any profile write under /tmp is refused with
+        # quota_exceeded there. Device runs set TMPDIR to a /dev/sda1-backed
+        # workspace directory where the reserve holds.
+        with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             workspace = SimulatorWorkspace(REPO, base / "state")
             registration = workspace.load_activity(_write_activity(base / "source", body=body))
@@ -807,7 +839,7 @@ pygame.quit()
             )
             with mock.patch.dict(os.environ, environment, clear=False):
                 session = supervisor.start(registration.manifest, profile, authority)
-                deadline = time.monotonic() + 8.0
+                deadline = time.monotonic() + _real_activity_ready_seconds()
                 while (
                     session.result is None
                     and session.ready_at is None

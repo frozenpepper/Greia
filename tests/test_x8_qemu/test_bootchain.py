@@ -200,8 +200,18 @@ class RelocationMigrationTests(unittest.TestCase):
             self.assertEqual(PAYLOAD_VERSION, 2)
             self.assertEqual(descriptor["descriptor_sector"], DESCRIPTOR_SECTOR)
             self.assertEqual(DESCRIPTOR_SECTOR, 2047)
-            self.assertEqual(descriptor["core_sectors"], STUB_CORE_SECTORS)
-            self.assertEqual(descriptor["core_sha256"], stub_core_sha256())
+            # Capable-host branch: the assembled image may carry the
+            # genuine core (installed before any test mock applies); the
+            # live manifest binding is authoritative, never a hardcoded stub.
+            live_sectors = int(manifest["guest_core_sectors"])
+            live_sha = str(manifest["guest_core_sha256"])
+            self.assertEqual(descriptor["core_sectors"], live_sectors)
+            self.assertEqual(descriptor["core_sha256"], live_sha)
+            if str(manifest["guest_core_chain"]) == "stub":
+                self.assertEqual(descriptor["core_sectors"], STUB_CORE_SECTORS)
+                self.assertEqual(descriptor["core_sha256"], stub_core_sha256())
+            else:
+                self.assertEqual(str(manifest["guest_core_chain"]), "genuine")
             self.assertEqual(CORE_FIRST_SECTOR, 1)
             self.assertEqual(CORE_LAST_SECTOR, 127)
 
@@ -542,13 +552,25 @@ class ManifestBudgetTests(unittest.TestCase):
     def test_manifest_records_guest_bytes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
+            # Capable-host branch: the live manifest binding is
+            # authoritative; stub expectations apply only off-host.
+            live_sectors = int(manifest["guest_core_sectors"])
+            live_sha = str(manifest["guest_core_sha256"])
             self.assertEqual(
                 manifest["guest_chain_bytes"],
-                MBR_BOOT_CODE_SIZE + STUB_CORE_SECTORS * 512 + 512,
+                MBR_BOOT_CODE_SIZE + live_sectors * 512 + 512,
             )
-            self.assertEqual(manifest["guest_core_sectors"], STUB_CORE_SECTORS)
-            self.assertEqual(manifest["guest_core_sha256"], stub_core_sha256())
+            self.assertEqual(manifest["guest_core_sectors"], live_sectors)
+            self.assertEqual(manifest["guest_core_sha256"], live_sha)
             self.assertEqual(len(str(manifest["guest_mbr_stub_sha256"])), 64)
+            descriptor = read_payload_descriptor(Path(manifest["image"]))
+            self.assertEqual(descriptor["core_sectors"], live_sectors)
+            self.assertEqual(descriptor["core_sha256"], live_sha)
+            if str(manifest["guest_core_chain"]) == "stub":
+                self.assertEqual(manifest["guest_core_sectors"], STUB_CORE_SECTORS)
+                self.assertEqual(manifest["guest_core_sha256"], stub_core_sha256())
+            else:
+                self.assertEqual(str(manifest["guest_core_chain"]), "genuine")
             self.assertTrue(callable(install_boot_chain))
 
 
@@ -630,6 +652,13 @@ class GenuineChainPairingTests(unittest.TestCase):
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
             device_gate_for_image(image)
+            # Live binding before the install: stub off-host, genuine
+            # on a capable host (assembly already upgraded the core).
+            live = read_payload_descriptor(image)
+            expected_previous_sectors = int(live["core_sectors"])
+            self.assertEqual(
+                expected_previous_sectors, int(manifest["guest_core_sectors"])
+            )
             genuine = _synthetic_core_bytes(63)
             proof = install_genuine_grub_chain(image, genuine)
             self.assertEqual(proof["core_sectors"], 63)
@@ -652,7 +681,8 @@ class GenuineChainPairingTests(unittest.TestCase):
                 core_sha256=str(proof["core_sha256"]),
                 core_sectors=int(proof["core_sectors"]),
             )
-            self.assertEqual(rebind["previous"]["core_sectors"], STUB_CORE_SECTORS)
+            self.assertEqual(rebind["previous"]["core_sectors"], expected_previous_sectors)
+            self.assertEqual(rebind["previous"]["core_sha256"], live["core_sha256"])
             self.assertEqual(rebind["descriptor"]["core_sectors"], 63)
             # Full device gate green on the genuine-sized binding.
             gate = device_gate_for_image(image)

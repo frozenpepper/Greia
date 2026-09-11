@@ -793,7 +793,16 @@ def install_payload_to_device(image: Path, payload_dir: Path) -> dict[str, objec
         _run(["partprobe", str(device)])
         _run(["udevadm", "settle"])
         time.sleep(0.5)
-        _run(["mkfs.ext4", "-L", "GREIA-BOOT", str(part)])
+        # The filesystem root must belong to the invoking (unprivileged)
+        # user: the mount itself is privileged (sudo) but every file
+        # write/read afterwards runs in-process unprivileged, and the
+        # provisioned sudo set contains no chown/debugfs to repair
+        # ownership after the fact. ``-E root_owner=uid:gid`` makes the
+        # fresh root directory owned by the caller (0:0 on direct-root
+        # runs: identical to a plain mkfs). Device-proven on the Acer
+        # (greia:greia root, unprivileged writes succeed).
+        owner = f"{os.getuid()}:{os.getgid()}"
+        _run(["mkfs.ext4", "-E", f"root_owner={owner}", "-L", "GREIA-BOOT", str(part)])
         mountpoint = Path(payload_dir).parent / "payload-mnt"
         mountpoint.mkdir(parents=True, exist_ok=True)
         _run(["mount", "-t", "ext4", str(part), str(mountpoint)])
@@ -808,6 +817,8 @@ def install_payload_to_device(image: Path, payload_dir: Path) -> dict[str, objec
             closure = place_grub_module_closure(mounted)
             if "normal" not in closure.get("modules", []):
                 raise PayloadError("module closure lacks normal")
+            # sync(1) is unprivileged and outside the provisioned sudo set:
+            # it always runs direct, never via the privileged runner.
             subprocess.run(["sync"], capture_output=True, timeout=60)
             # Post-copy proof: the installed block must be a clean
             # default-A grubenv (default A, no one-shot armed). This is a
@@ -824,12 +835,14 @@ def install_payload_to_device(image: Path, payload_dir: Path) -> dict[str, objec
                     "installed payload is not a clean default-A block"
                 )
         finally:
-            subprocess.run(
-                ["umount", str(mountpoint)], capture_output=True, timeout=60
-            )
+            from tools.x8_qemu.lifecycle import run_device_host_tool as _priv_run
+
+            _priv_run(["umount", str(mountpoint)], capture_output=True, timeout=60)
             mounted = None
     finally:
-        subprocess.run(
+        from tools.x8_qemu.lifecycle import run_device_host_tool as _priv_detach
+
+        _priv_detach(
             ["losetup", "--detach", str(device)], capture_output=True, timeout=60
         )
     return {
@@ -841,7 +854,17 @@ def install_payload_to_device(image: Path, payload_dir: Path) -> dict[str, objec
 
 
 def _loop_attach(image: Path) -> Path:
-    completed = subprocess.run(
+    """Attach the disposable image to a free loop device (privileged).
+
+    Routes through the harness privileged runner so the losetup binary
+    resolves sbin-aware and runs via ``sudo -n`` on non-root hosts under
+    the owner-provisioned rule. A genuinely missing binary raises the
+    runner's fail-closed ``LifecycleHarnessError`` (recorded under the
+    caller's frozen gate); a failed attach raises ``PayloadError``.
+    """
+    from tools.x8_qemu.lifecycle import run_device_host_tool
+
+    completed = run_device_host_tool(
         ["losetup", "--find", "--show", str(image)],
         capture_output=True,
         text=True,
@@ -849,11 +872,20 @@ def _loop_attach(image: Path) -> Path:
     )
     if completed.returncode != 0:
         raise PayloadError("loop attach failed for the disposable image")
-    return Path(completed.stdout.strip())
+    return Path(str(completed.stdout).strip())
 
 
 def _run(argv: list[str]) -> None:
-    completed = subprocess.run(argv, capture_output=True, text=True, timeout=120)
+    """Run one privileged payload step (sbin-aware, sudo-routed).
+
+    Same privileged runner as :func:`_loop_attach`; nonzero exits raise
+    ``PayloadError`` naming the binary, exactly as before.
+    """
+    from tools.x8_qemu.lifecycle import run_device_host_tool
+
+    completed = run_device_host_tool(
+        argv, capture_output=True, text=True, timeout=120
+    )
     if completed.returncode != 0:
         raise PayloadError(f"device payload install failed: {argv[0]}")
 

@@ -40,11 +40,13 @@ from tools.x8_qemu.lifecycle import (
     LifecycleHarness,
     LifecycleHarnessError,
     LegTimeoutPolicy,
+    SUDOERS_PROVISIONED_BINARIES,
     assert_collect_destructive_bounds,
     assert_lifecycle_transitions,
     build_device_collect_diagnostics,
     check_boot_exit,
     decide_device_boot_observation,
+    device_tool_invocation,
     file_cross_check_tools,
     lifecycle_spec,
     observe_file_backed_image,
@@ -52,7 +54,9 @@ from tools.x8_qemu.lifecycle import (
     require_collect_precondition,
     require_device_host,
     rescan_loop_partitions,
+    resolve_device_host_tool,
     run_collect_sequence,
+    run_device_host_tool,
     run_file_cross_check,
     shipped_update_authority,
     snapshot_device_collect_state,
@@ -2220,6 +2224,364 @@ class DiagC2MultiControlTests(unittest.TestCase):
                 [red["leg"] for red in artifact["reds"]],
                 ["report-out-of-order", "boot-B-commit",
                  "devproof-device-envelope"],
+            )
+
+
+class PrivilegeSeamTests(unittest.TestCase):
+    """Owner-provisioned sudo path: privileged legs via ``sudo -n``.
+
+    The gate still refuses when genuine root capability is absent (same
+    fail-closed error); the provisioned passwordless rule is an additional
+    pass branch, not a weakened predicate. No passwords, no -S/askpass.
+    """
+
+    def test_invocation_root_runs_direct(self) -> None:
+        from unittest import mock as _mock
+
+        with (
+            _mock.patch("os.geteuid", return_value=0),
+            _mock.patch(
+                "tools.x8_qemu.lifecycle.resolve_device_host_tool",
+                return_value="/sbin/losetup",
+            ),
+        ):
+            self.assertEqual(
+                device_tool_invocation("losetup", "--find", "--show", "img"),
+                ["/sbin/losetup", "--find", "--show", "img"],
+            )
+
+    def test_invocation_nonroot_provisioned_uses_sudo_n(self) -> None:
+        from unittest import mock as _mock
+
+        with (
+            _mock.patch("os.geteuid", return_value=1001),
+            _mock.patch(
+                "tools.x8_qemu.lifecycle.resolve_device_host_tool",
+                return_value="/sbin/losetup",
+            ),
+        ):
+            self.assertEqual(
+                device_tool_invocation("losetup", "--find"),
+                ["sudo", "-n", "/sbin/losetup", "--find"],
+            )
+
+    def test_invocation_nonroot_unprovisioned_stays_direct(self) -> None:
+        from unittest import mock as _mock
+
+        self.assertNotIn("sync", SUDOERS_PROVISIONED_BINARIES)
+        with (
+            _mock.patch("os.geteuid", return_value=1001),
+            _mock.patch(
+                "tools.x8_qemu.lifecycle.resolve_device_host_tool",
+                return_value="/bin/sync",
+            ),
+        ):
+            self.assertEqual(device_tool_invocation("sync"), ["/bin/sync"])
+
+    def test_invocation_missing_tool_stays_red(self) -> None:
+        from unittest import mock as _mock
+
+        with _mock.patch(
+            "tools.x8_qemu.lifecycle.resolve_device_host_tool",
+            return_value=None,
+        ):
+            with self.assertRaises(LifecycleHarnessError) as ctx:
+                device_tool_invocation("losetup")
+            self.assertIn("device host tool missing", str(ctx.exception))
+
+    def test_runner_prefixes_sudo_off_root(self) -> None:
+        from unittest import mock as _mock
+
+        with (
+            _mock.patch("os.geteuid", return_value=1001),
+            _mock.patch(
+                "tools.x8_qemu.lifecycle.resolve_device_host_tool",
+                return_value="/sbin/blkid",
+            ),
+            _mock.patch("subprocess.run") as fake_run,
+        ):
+            fake_run.return_value = _mock.MagicMock(returncode=0)
+            run_device_host_tool(["blkid", "-p", "img"])
+            executed = fake_run.call_args[0][0]
+            self.assertEqual(executed[:3], ["sudo", "-n", "/sbin/blkid"])
+
+    def test_gate_passes_with_working_passwordless_sudo(self) -> None:
+        from unittest import mock as _mock
+
+        import tools.x8_qemu.lifecycle as module
+
+        with (
+            _mock.patch("sys.platform", "linux"),
+            _mock.patch("os.geteuid", return_value=1001),
+            _mock.patch.object(
+                module.shutil, "which", side_effect=lambda name: (
+                    "/usr/bin/sudo" if name == "sudo" else f"/usr/bin/{name}"
+                ),
+            ),
+            _mock.patch.object(
+                module, "resolve_device_host_tool",
+                side_effect=lambda name: (
+                    "/sbin/losetup" if name == "losetup"
+                    else f"/usr/bin/{name}"
+                ),
+            ),
+            _mock.patch("subprocess.run") as fake_run,
+        ):
+            fake_run.return_value = _mock.MagicMock(returncode=0)
+            require_device_host()  # must not raise
+            probe_argv = fake_run.call_args[0][0]
+            self.assertEqual(probe_argv[:2], ["sudo", "-n"])
+            self.assertNotIn("-S", probe_argv)
+
+    def test_gate_stays_red_when_sudo_probe_fails(self) -> None:
+        from unittest import mock as _mock
+
+        import tools.x8_qemu.lifecycle as module
+
+        with (
+            _mock.patch("sys.platform", "linux"),
+            _mock.patch("os.geteuid", return_value=1001),
+            _mock.patch.object(module.shutil, "which", return_value="/usr/bin/sudo"),
+            _mock.patch.object(
+                module, "resolve_device_host_tool", return_value="/sbin/losetup"
+            ),
+            _mock.patch("subprocess.run") as fake_run,
+        ):
+            fake_run.return_value = _mock.MagicMock(returncode=1)
+            with self.assertRaises(LifecycleHarnessError) as ctx:
+                require_device_host()
+            # Identical fail-closed refusal: absence of genuine root
+            # capability stays RED under the frozen gate.
+            self.assertEqual(
+                str(ctx.exception),
+                "device lifecycle runs as root on a Linux host",
+            )
+
+    def test_gate_stays_red_without_sudo_binary(self) -> None:
+        from unittest import mock as _mock
+
+        import tools.x8_qemu.lifecycle as module
+
+        with (
+            _mock.patch("sys.platform", "linux"),
+            _mock.patch("os.geteuid", return_value=1001),
+            _mock.patch.object(module.shutil, "which", return_value=None),
+            _mock.patch.object(
+                module, "resolve_device_host_tool", return_value="/sbin/losetup"
+            ),
+        ):
+            with self.assertRaises(LifecycleHarnessError) as ctx:
+                require_device_host()
+            self.assertEqual(
+                str(ctx.exception),
+                "device lifecycle runs as root on a Linux host",
+            )
+
+    def test_gate_missing_tools_still_names_them(self) -> None:
+        from unittest import mock as _mock
+
+        with (
+            _mock.patch("sys.platform", "linux"),
+            _mock.patch(
+                "tools.x8_qemu.lifecycle.resolve_device_host_tool",
+                return_value=None,
+            ),
+        ):
+            with self.assertRaises(LifecycleHarnessError) as ctx:
+                require_device_host(runner_which=lambda name: None)
+            self.assertIn("missing device host tools", str(ctx.exception))
+
+    def test_sudoers_set_matches_provisioned_rule(self) -> None:
+        self.assertEqual(
+            sorted(SUDOERS_PROVISIONED_BINARIES),
+            sorted([
+                "blkid", "losetup", "mkfs.ext4", "mount", "partprobe",
+                "partx", "qemu-system-i386", "qemu-system-x86_64",
+                "sfdisk", "udevadm", "umount",
+            ]),
+        )
+
+    def test_privileged_probe_runner_rewrites_argv(self) -> None:
+        from unittest import mock as _mock
+
+        import tools.x8_qemu.lifecycle as module
+
+        runner = module.PrivilegedMbrProbeRunner()
+        self.assertIsInstance(runner, module.SubprocessMbrProbeRunner)
+        with (
+            _mock.patch("os.geteuid", return_value=0),
+            _mock.patch.object(
+                module, "resolve_device_host_tool", return_value="/sbin/blkid"
+            ),
+            _mock.patch("subprocess.run") as fake_run,
+        ):
+            fake_run.return_value = _mock.MagicMock(returncode=0, stdout="AB12\n")
+            result = runner.run(["blkid", "-s", "PTUUID", "-o", "value", "--", "/dev/loop0"])
+            self.assertEqual(result.stdout, "AB12")
+            executed = fake_run.call_args[0][0]
+            self.assertEqual(executed[0], "/sbin/blkid")
+            self.assertNotIn("sudo", executed)
+
+    def test_privileged_probe_runner_prefixes_sudo_off_root(self) -> None:
+        from unittest import mock as _mock
+
+        import tools.x8_qemu.lifecycle as module
+
+        runner = module.PrivilegedMbrProbeRunner()
+        with (
+            _mock.patch("os.geteuid", return_value=1001),
+            _mock.patch.object(
+                module, "resolve_device_host_tool", return_value="/sbin/blkid"
+            ),
+            _mock.patch("subprocess.run") as fake_run,
+        ):
+            fake_run.return_value = _mock.MagicMock(returncode=0, stdout="AB12\n")
+            runner.run(["blkid", "-s", "UUID", "-o", "value", "--", "/dev/loop0p2"])
+            executed = fake_run.call_args[0][0]
+            self.assertEqual(executed[:3], ["sudo", "-n", "/sbin/blkid"])
+
+    def test_privileged_probe_runner_refuses_empty_argv(self) -> None:
+        import tools.x8_qemu.lifecycle as module
+
+        with self.assertRaises(LifecycleHarnessError):
+            module.PrivilegedMbrProbeRunner().run([])
+
+
+class DataPartitionFormatTests(unittest.TestCase):
+    """Capable-host data-partition formatting with the record's UUIDs."""
+
+    def _record(self, tmp: str) -> Path:
+        from tools.x8_qemu.lifecycle import fresh_machine_state
+
+        machine = fresh_machine_state(Path(tmp) / "machine")
+        return Path(machine["layout"])
+
+    def test_defers_off_capable_host(self) -> None:
+        from unittest import mock as _mock
+
+        import tools.x8_qemu.lifecycle as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            image = Path(tmp) / "disk.img"
+            image.write_bytes(b"\x00" * (4 * 1024 * 1024))
+            record = self._record(tmp)
+            with _mock.patch.object(
+                module, "require_device_host",
+                side_effect=LifecycleHarnessError("nope"),
+            ):
+                result = module.format_data_partitions_for_record(
+                    image, record_path=record
+                )
+            self.assertFalse(result["formatted"])
+            self.assertIn("reason", result)
+
+    def test_formats_with_record_uuids_then_detaches(self) -> None:
+        import json
+        from unittest import mock as _mock
+
+        import tools.x8_qemu.lifecycle as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            image = Path(tmp) / "disk.img"
+            image.write_bytes(b"\x00" * (4 * 1024 * 1024))
+            record = self._record(tmp)
+            declared = json.loads(record.read_text(encoding="utf-8"))
+            expected = {
+                "system-a": declared["system_a"]["filesystem_uuid"],
+                "system-b": declared["system_b"]["filesystem_uuid"],
+                "persist": declared["persist"]["filesystem_uuid"],
+            }
+            calls: list[list[str]] = []
+
+            def _fake_priv(argv: object, **kwargs: object) -> _mock.MagicMock:
+                argv_list = [str(part) for part in list(argv)]  # type: ignore[arg-type]
+                calls.append(argv_list)
+                if argv_list[:2] == ["losetup", "--find"]:
+                    return _mock.MagicMock(returncode=0, stdout="/dev/loop9\n")
+                return _mock.MagicMock(returncode=0, stdout="")
+
+            with (
+                _mock.patch.object(
+                    module, "require_device_host", return_value=None
+                ),
+                _mock.patch.object(
+                    module, "run_device_host_tool", side_effect=_fake_priv
+                ),
+                _mock.patch.object(
+                    module, "rescan_loop_partitions", return_value={"detail": "ok"}
+                ),
+                _mock.patch.object(
+                    Path, "exists", return_value=True
+                ),
+            ):
+                result = module.format_data_partitions_for_record(
+                    image, record_path=record
+                )
+            self.assertTrue(result["formatted"])
+            mkfs_calls = [c for c in calls if c[:1] == ["mkfs.ext4"]]
+            self.assertEqual(len(mkfs_calls), 3)
+            seen = {}
+            for call in mkfs_calls:
+                self.assertIn("-U", call)
+                seen[call[-1]] = call[call.index("-U") + 1]
+            self.assertEqual(
+                seen,
+                {
+                    "/dev/loop9p2": expected["system-a"],
+                    "/dev/loop9p3": expected["system-b"],
+                    "/dev/loop9p4": expected["persist"],
+                },
+            )
+            # Partition 1 is never touched here; loop always detached.
+            self.assertFalse(any("loop9p1" in c for call in calls for c in call))
+            detach_calls = [
+                c for c in calls if c[:2] == ["losetup", "--detach"]
+            ]
+            self.assertEqual(detach_calls, [["losetup", "--detach", "/dev/loop9"]])
+
+    def test_missing_node_is_fail_closed(self) -> None:
+        from unittest import mock as _mock
+
+        import tools.x8_qemu.lifecycle as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            image = Path(tmp) / "disk.img"
+            image.write_bytes(b"\x00" * (4 * 1024 * 1024))
+            record = self._record(tmp)
+
+            def _fake_priv(argv: object, **kwargs: object) -> _mock.MagicMock:
+                argv_list = [str(part) for part in list(argv)]  # type: ignore[arg-type]
+                if argv_list[:2] == ["losetup", "--find"]:
+                    return _mock.MagicMock(returncode=0, stdout="/dev/loop9\n")
+                return _mock.MagicMock(returncode=0, stdout="")
+
+            with (
+                _mock.patch.object(
+                    module, "require_device_host", return_value=None
+                ),
+                _mock.patch.object(
+                    module, "run_device_host_tool", side_effect=_fake_priv
+                ),
+                _mock.patch.object(
+                    module, "rescan_loop_partitions", return_value={"detail": "ok"}
+                ),
+                _mock.patch.object(Path, "exists", return_value=False),
+            ):
+                with self.assertRaises(LifecycleHarnessError):
+                    module.format_data_partitions_for_record(
+                        image, record_path=record
+                    )
+
+    def test_assembly_manifest_records_format_outcome(self) -> None:
+        from tools.x8_qemu.lifecycle import assemble_disposable_image
+
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = assemble_disposable_image(Path(tmp) / "out")
+            self.assertIn("data_filesystems", manifest)
+            self.assertTrue(
+                str(manifest["data_filesystems"]).startswith(
+                    ("formatted:", "source-scope-deferred:")
+                )
             )
 
 

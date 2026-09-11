@@ -118,7 +118,6 @@ class PayloadRedControlTests(unittest.TestCase):
     """Each required RED condition fails for the right reason."""
 
     def test_missing_payload_fails_boot_gate_break_restore_green(self) -> None:
-        from tools.x8_qemu.bootchain import STUB_CORE_SECTORS, stub_core_sha256
         from tools.x8_qemu.payload import DESCRIPTOR_OFFSET
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -126,6 +125,12 @@ class PayloadRedControlTests(unittest.TestCase):
             image = Path(manifest["image"])
             # GREEN: payload present.
             assert_payload_present(image)
+            # Live binding before the break (stub off-host, genuine on a
+            # capable host); restores derive from it so the core-hash
+            # guard stays green on either host class.
+            live = read_payload_descriptor(image)
+            live_sha = str(live["core_sha256"])
+            live_sectors = int(live["core_sectors"])
             # BREAK: wipe the descriptor sector (512 bounded bytes).
             with open(image, "r+b") as handle:
                 handle.seek(DESCRIPTOR_OFFSET)
@@ -141,8 +146,8 @@ class PayloadRedControlTests(unittest.TestCase):
             embed_payload_descriptor(
                 image,
                 reproven,
-                core_sha256=stub_core_sha256(),
-                core_sectors=STUB_CORE_SECTORS,
+                core_sha256=live_sha,
+                core_sectors=live_sectors,
             )
             assert_payload_present(image)
 
@@ -350,7 +355,11 @@ class PayloadDeviceCopyRegressionTests(unittest.TestCase):
                     module, "_loop_attach", return_value=Path("/dev/fake-loop0")
                 ),
                 _mock.patch.object(module, "_run", return_value=None),
-                _mock.patch("subprocess.run") as fake_run,
+                # Teardown umount/detach run through the privileged runner
+                # (sbin-aware, sudo-routed); sync stays direct subprocess.
+                _mock.patch(
+                    "tools.x8_qemu.lifecycle.run_device_host_tool"
+                ) as priv_run,
                 _mock.patch.object(module.shutil, "copy2", side_effect=_recording_copy2),
                 _mock.patch.object(module.time, "sleep", return_value=None),
                 _mock.patch.object(
@@ -360,7 +369,7 @@ class PayloadDeviceCopyRegressionTests(unittest.TestCase):
                     module, "GUEST_MODULE_ROOTS", ("normal",)
                 ),
             ):
-                fake_run.return_value = _mock.MagicMock(returncode=0)
+                priv_run.return_value = _mock.MagicMock(returncode=0)
                 result = module.install_payload_to_device(image, payload_dir)
 
             self.assertTrue(result["installed"])
@@ -547,13 +556,17 @@ class DescriptorRebindTests(unittest.TestCase):
 
     def test_rebind_stub_to_genuine_binding_green_with_evidence(self) -> None:
         from tools.x8_qemu.bootchain import (
-            STUB_CORE_SECTORS,
             install_genuine_grub_chain,
         )
 
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
+            # Live binding before the install (stub off-host, genuine on a
+            # capable host where assembly already upgraded the core).
+            live = read_payload_descriptor(image)
+            expected_previous_sectors = int(live["core_sectors"])
+            expected_previous_sha = str(live["core_sha256"])
             genuine = self._synthetic_core(40)
             proof = install_genuine_grub_chain(image, genuine)
             staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
@@ -565,7 +578,10 @@ class DescriptorRebindTests(unittest.TestCase):
             )
             # Previous stub binding evidenced, new binding installed.
             self.assertEqual(
-                result["previous"]["core_sectors"], STUB_CORE_SECTORS
+                result["previous"]["core_sectors"], expected_previous_sectors
+            )
+            self.assertEqual(
+                result["previous"]["core_sha256"], expected_previous_sha
             )
             self.assertEqual(result["descriptor"]["core_sectors"], 40)
             self.assertEqual(
@@ -679,21 +695,19 @@ class DescriptorRebindTests(unittest.TestCase):
             self.assertEqual(self._descriptor_sector(image), intact)
 
     def test_idempotent_rebind_same_binding_is_green(self) -> None:
-        from tools.x8_qemu.bootchain import (
-            STUB_CORE_SECTORS,
-            stub_core_sha256,
-        )
-
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
             staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
             intact = self._descriptor_sector(image)
+            # Live binding is authoritative (stub off-host, genuine on a
+            # capable host); idempotent rebind re-asserts exactly it.
+            live = read_payload_descriptor(image)
             result = rebind_payload_descriptor(
                 image,
                 staged,
-                core_sha256=stub_core_sha256(),
-                core_sectors=STUB_CORE_SECTORS,
+                core_sha256=str(live["core_sha256"]),
+                core_sectors=int(live["core_sectors"]),
             )
             self.assertEqual(
                 result["previous"]["core_sha256"],
@@ -734,6 +748,179 @@ class PayloadBoundaryTests(unittest.TestCase):
             self.assertTrue(report["ok"])
             assert_lifecycle_transitions(report)
             _ = write_mbr_table_for_plan
+
+
+class PrivilegedRunnerRoutingTests(unittest.TestCase):
+    """Payload privileged steps route via the harness privileged runner.
+
+    ``_loop_attach``/``_run``/teardown must resolve sbin-aware and run via
+    ``sudo -n`` on non-root hosts (owner-provisioned rule); ``sync`` stays
+    direct. Absence stays RED as ``LifecycleHarnessError``, never a bare
+    ``FileNotFoundError`` PATH leak.
+    """
+
+    def test_run_routes_privileged_and_names_failed_binary(self) -> None:
+        from unittest import mock as _mock
+
+        from tools.x8_qemu import payload as module
+
+        with _mock.patch(
+            "tools.x8_qemu.lifecycle.run_device_host_tool"
+        ) as priv_run:
+            priv_run.return_value = _mock.MagicMock(returncode=0)
+            module._run(["mkfs.ext4", "-L", "X", "/dev/fake"])
+            called_argv = priv_run.call_args[0][0]
+            self.assertEqual(
+                list(called_argv), ["mkfs.ext4", "-L", "X", "/dev/fake"]
+            )
+            self.assertTrue(priv_run.call_args[1]["capture_output"])
+            priv_run.return_value = _mock.MagicMock(returncode=1)
+            with self.assertRaises(PayloadError) as ctx:
+                module._run(["mkfs.ext4"])
+            self.assertIn("mkfs.ext4", str(ctx.exception))
+
+    def test_loop_attach_returns_path_and_stays_red_when_missing(self) -> None:
+        from unittest import mock as _mock
+
+        from tools.x8_qemu import payload as module
+
+        with _mock.patch(
+            "tools.x8_qemu.lifecycle.run_device_host_tool"
+        ) as priv_run:
+            priv_run.return_value = _mock.MagicMock(
+                returncode=0, stdout="/dev/loop7\n"
+            )
+            self.assertEqual(
+                module._loop_attach(Path("/tmp/fake.img")), Path("/dev/loop7")
+            )
+            priv_run.return_value = _mock.MagicMock(returncode=1, stdout="")
+            with self.assertRaises(PayloadError):
+                module._loop_attach(Path("/tmp/fake.img"))
+            # Genuinely missing binary: fail-closed harness error, never a
+            # FileNotFoundError PATH leak under the caller's gate.
+            priv_run.side_effect = LifecycleHarnessError(
+                "device host tool missing: losetup (device lifecycle runs "
+                "as root on a Linux host with sbin tools present)"
+            )
+            with self.assertRaises(LifecycleHarnessError):
+                module._loop_attach(Path("/tmp/fake.img"))
+
+    def test_teardown_uses_privileged_runner_sync_stays_direct(self) -> None:
+        from unittest import mock as _mock
+
+        from tools.x8_qemu import payload as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            machine = fresh_machine_state(Path(tmp) / "machine")
+            payload_dir = Path(tmp) / "guest-payload"
+            compose_guest_payload(
+                layout_record_path=machine["layout"],
+                password_hash=_PASSWORD_HASH,
+                output_dir=payload_dir,
+            )
+            image = Path(tmp) / "disk.img"
+            image.write_bytes(b"\x00" * (1024 * 1024))
+            fake_tree = Path(tmp) / "grub-tree"
+            fake_tree.mkdir()
+            (fake_tree / "normal.mod").write_bytes(b"N" * 64)
+            (fake_tree / "bufio.mod").write_bytes(b"B" * 32)
+            (fake_tree / "moddep.lst").write_text(
+                "normal: bufio\nbufio:\n", encoding="utf-8"
+            )
+            (fake_tree / "command.lst").write_text("x\n", encoding="utf-8")
+            with (
+                _mock.patch(
+                    "tools.x8_qemu.lifecycle.require_device_host",
+                    return_value=None,
+                ),
+                _mock.patch.object(
+                    module, "_loop_attach", return_value=Path("/dev/fake-loop0")
+                ),
+                _mock.patch.object(module, "_run", return_value=None),
+                _mock.patch(
+                    "tools.x8_qemu.lifecycle.run_device_host_tool"
+                ) as priv_run,
+                _mock.patch("subprocess.run") as direct_run,
+                _mock.patch.object(
+                    module, "INSTALLED_GRUB_MODULE_DIR", str(fake_tree)
+                ),
+                _mock.patch.object(module, "GUEST_MODULE_ROOTS", ("normal",)),
+            ):
+                priv_run.return_value = _mock.MagicMock(returncode=0)
+                direct_run.return_value = _mock.MagicMock(returncode=0)
+                result = module.install_payload_to_device(image, payload_dir)
+            self.assertTrue(result["installed"])
+            privileged_argvs = [list(call[0][0]) for call in priv_run.call_args_list]
+            self.assertIn(["umount", _mock.ANY], privileged_argvs)
+            self.assertTrue(
+                any(
+                    argv[:2] == ["losetup", "--detach"]
+                    for argv in privileged_argvs
+                ),
+                f"detach missing from privileged calls: {privileged_argvs}",
+            )
+            # sync(1) is unprivileged and outside the sudoers set: direct.
+            direct_argvs = [list(call[0][0]) for call in direct_run.call_args_list]
+            self.assertEqual(direct_argvs, [["sync"]])
+
+
+    def test_mkfs_claims_filesystem_root_for_invoking_user(self) -> None:
+        import os as _os
+        from unittest import mock as _mock
+
+        from tools.x8_qemu import payload as module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            machine = fresh_machine_state(Path(tmp) / "machine")
+            payload_dir = Path(tmp) / "guest-payload"
+            compose_guest_payload(
+                layout_record_path=machine["layout"],
+                password_hash=_PASSWORD_HASH,
+                output_dir=payload_dir,
+            )
+            image = Path(tmp) / "disk.img"
+            image.write_bytes(b"\x00" * (1024 * 1024))
+            fake_tree = Path(tmp) / "grub-tree"
+            fake_tree.mkdir()
+            (fake_tree / "normal.mod").write_bytes(b"N" * 64)
+            (fake_tree / "bufio.mod").write_bytes(b"B" * 32)
+            (fake_tree / "moddep.lst").write_text(
+                "normal: bufio\nbufio:\n", encoding="utf-8"
+            )
+            (fake_tree / "command.lst").write_text("x\n", encoding="utf-8")
+            with (
+                _mock.patch(
+                    "tools.x8_qemu.lifecycle.require_device_host",
+                    return_value=None,
+                ),
+                _mock.patch.object(
+                    module, "_loop_attach", return_value=Path("/dev/fake-loop0")
+                ),
+                _mock.patch.object(module, "_run") as fake_priv,
+                _mock.patch(
+                    "tools.x8_qemu.lifecycle.run_device_host_tool"
+                ) as priv_run,
+                _mock.patch("subprocess.run") as direct_run,
+                _mock.patch.object(
+                    module, "INSTALLED_GRUB_MODULE_DIR", str(fake_tree)
+                ),
+                _mock.patch.object(module, "GUEST_MODULE_ROOTS", ("normal",)),
+            ):
+                priv_run.return_value = _mock.MagicMock(returncode=0)
+                direct_run.return_value = _mock.MagicMock(returncode=0)
+                module.install_payload_to_device(image, payload_dir)
+            mkfs_calls = [
+                list(call[0][0])
+                for call in fake_priv.call_args_list
+                if list(call[0][0])[:1] == ["mkfs.ext4"]
+            ]
+            self.assertEqual(len(mkfs_calls), 1)
+            # The fresh root belongs to the caller (0:0 on direct-root runs:
+            # identical to a plain mkfs), so unprivileged file writes into
+            # the sudo-mounted filesystem succeed without chown.
+            self.assertIn(
+                f"root_owner={_os.getuid()}:{_os.getgid()}", mkfs_calls[0]
+            )
 
 
 if __name__ == "__main__":

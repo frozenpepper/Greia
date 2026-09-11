@@ -333,7 +333,10 @@ class SimulatorSupervisorTests(unittest.TestCase):
         from greia_simulator.workspace import SimulatorWorkspace
 
         runtime = RuntimeCatalogue.load(ROOT / "runtime" / "child-runtime.toml")
-        with tempfile.TemporaryDirectory(dir="/tmp") as directory:
+        # Honor TMPDIR (device /tmp is noexec); no exec artifact or
+        # explicit broker socket lives here — broker defaults already
+        # handle sun_path length with a /tmp fallback. T02-SPAWN-HYGIENE.
+        with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)
             workspace = SimulatorWorkspace(ROOT, base / "state")
             device = SimulatedDeviceProfile(1024, 600, DEFAULT_CAPABILITIES)

@@ -361,8 +361,14 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(result.return_code, -9)
 
     def test_storage_broker_is_exposed_for_launch_and_removed_on_exit(self) -> None:
-        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
+        # Outer dir honors TMPDIR (device /tmp is noexec); broker socket
+        # stays short under /tmp (sun_path guard), where noexec does not
+        # affect sockets. T02-SPAWN-HYGIENE split convention.
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory(
+            dir="/tmp"
+        ) as broker_base:
             root = Path(temporary)
+            brokers = Path(broker_base)
             manifest = _manifest(root / "activity")
             profile = _ProfileContext(root / "profile")
             authority = _Authority(
@@ -381,7 +387,7 @@ class SupervisorTests(unittest.TestCase):
                     {"display", "pointer"}, process_factory=factory
                 ),
                 storage_service=_storage_service(),
-                storage_broker_factory=_broker_factory(root / "brokers"),
+                storage_broker_factory=_broker_factory(brokers / "brokers"),
             )
             session = supervisor.start(manifest, profile, authority)
             environment = calls[0][1]["env"]
@@ -482,8 +488,15 @@ class SupervisorTests(unittest.TestCase):
             self.assertEqual(command[chdir + 2 :], ["runtime", "--start"])
 
     def test_sandbox_launch_mounts_only_ephemeral_storage_broker(self) -> None:
-        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
+        # The fixture sandbox needs an exec-capable dir (the device host
+        # mounts /tmp noexec, so honor TMPDIR here); broker sockets need a
+        # short dir (sun_path guard), so they stay under /tmp, where noexec
+        # does not affect sockets.
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory(
+            dir="/tmp"
+        ) as broker_base:
             root = Path(temporary)
+            brokers = Path(broker_base)
             sandbox = root / "bwrap"
             sandbox.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
             sandbox.chmod(0o755)
@@ -506,9 +519,9 @@ class SupervisorTests(unittest.TestCase):
                     {"display", "pointer"}, process_factory=factory
                 ),
                 storage_service=_storage_service(),
-                storage_broker_factory=_broker_factory(root / "brokers"),
+                storage_broker_factory=_broker_factory(brokers / "brokers"),
                 history_service=_history_service(),
-                event_broker_factory=_event_broker_factory(root / "event-brokers"),
+                event_broker_factory=_event_broker_factory(brokers / "event-brokers"),
             )
             session = supervisor.start(manifest, profile, authority)
             command = list(calls[0][0][0])

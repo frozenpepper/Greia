@@ -195,8 +195,14 @@ class R5IntegrationTests(unittest.TestCase):
         self.assertEqual(summary.recent_sessions[0].exit_reason, "platform_failure")
 
     def test_event_broker_round_trip_applies_only_platform_reward_and_cleans_up(self) -> None:
-        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
+        # Outer dir honors TMPDIR (device /tmp is noexec); broker sockets
+        # stay short under /tmp (sun_path guard), where noexec does not
+        # affect sockets. T02-SPAWN-HYGIENE split convention.
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory(
+            dir="/tmp"
+        ) as broker_base:
             root = Path(temporary)
+            brokers = Path(broker_base)
             profile = self._profile(root)
             process = _FakeProcess()
             calls = []
@@ -209,9 +215,9 @@ class R5IntegrationTests(unittest.TestCase):
                 require_sandbox=False,
                 runtime_manager=self._manager(factory),
                 storage_service=self.storage,
-                storage_broker_factory=self._storage_factory(root / "storage-brokers"),
+                storage_broker_factory=self._storage_factory(brokers / "storage-brokers"),
                 history_service=self.history,
-                event_broker_factory=self._event_factory(root / "event-brokers"),
+                event_broker_factory=self._event_factory(brokers / "event-brokers"),
             )
             session = supervisor.start(
                 self.shape, profile, _Authority(self.shape.activity_id)
@@ -247,8 +253,15 @@ class R5IntegrationTests(unittest.TestCase):
         self.assertFalse(event_socket.exists())
 
     def test_sandbox_receives_only_current_event_broker_endpoint(self) -> None:
-        with tempfile.TemporaryDirectory(dir="/tmp") as temporary:
+        # The fixture sandbox needs an exec-capable dir (the device host
+        # mounts /tmp noexec, so honor TMPDIR here); broker sockets need a
+        # short dir (sun_path guard), so they stay under /tmp, where noexec
+        # does not affect sockets.
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory(
+            dir="/tmp"
+        ) as broker_base:
             root = Path(temporary)
+            brokers = Path(broker_base)
             profile = self._profile(root)
             process = _FakeProcess()
             calls = []
@@ -265,9 +278,9 @@ class R5IntegrationTests(unittest.TestCase):
                 require_sandbox=True,
                 runtime_manager=self._manager(factory),
                 storage_service=self.storage,
-                storage_broker_factory=self._storage_factory(root / "storage-brokers"),
+                storage_broker_factory=self._storage_factory(brokers / "storage-brokers"),
                 history_service=self.history,
-                event_broker_factory=self._event_factory(root / "event-brokers"),
+                event_broker_factory=self._event_factory(brokers / "event-brokers"),
             )
             session = supervisor.start(
                 self.shape, profile, _Authority(self.shape.activity_id)

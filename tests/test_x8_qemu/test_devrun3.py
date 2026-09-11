@@ -128,7 +128,6 @@ class DeviceGateTests(unittest.TestCase):
     """Payload-less/tampered images RED the real boot-path gate."""
 
     def test_device_gate_break_restore_round_trip(self) -> None:
-        from tools.x8_qemu.bootchain import STUB_CORE_SECTORS, stub_core_sha256
         from tools.x8_qemu.payload import DESCRIPTOR_OFFSET
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -138,6 +137,13 @@ class DeviceGateTests(unittest.TestCase):
             gate = device_gate_for_image(image)
             self.assertEqual(gate["descriptor"]["magic"], "GREIAPY1")
             self.assertEqual(gate["descriptor"]["descriptor_sector"], 2047)
+            # Live binding before the break: stub off-host, genuine on a
+            # capable host. Restores must derive from it, never from a
+            # hardcoded stub, or the fail-closed core-hash guard correctly
+            # raises PayloadError on a genuine image.
+            live = read_payload_descriptor(image)
+            live_sha = str(live["core_sha256"])
+            live_sectors = int(live["core_sectors"])
             # BREAK: wipe the descriptor sector (512 bounded bytes).
             with open(image, "r+b") as handle:
                 handle.seek(DESCRIPTOR_OFFSET)
@@ -152,8 +158,8 @@ class DeviceGateTests(unittest.TestCase):
             embed_payload_descriptor(
                 image,
                 reproven,
-                core_sha256=stub_core_sha256(),
-                core_sectors=STUB_CORE_SECTORS,
+                core_sha256=live_sha,
+                core_sectors=live_sectors,
             )
             device_gate_for_image(image)
             assert_payload_present(image)
@@ -320,7 +326,14 @@ class SectorGapGuardTests(unittest.TestCase):
             self.assertEqual(guard["reserved_last_sector"], 2047)
             self.assertEqual(guard["partition_1_first_sector"], 2048)
             self.assertEqual(guard["descriptor_sector"], 2047)
-            self.assertEqual(guard["core_sectors"], 15)
+            # Capable-host branch: the live manifest binding is
+            # authoritative; 15 applies only to the stub branch.
+            live_sectors = int(manifest["guest_core_sectors"])
+            self.assertEqual(guard["core_sectors"], live_sectors)
+            if str(manifest["guest_core_chain"]) == "stub":
+                self.assertEqual(guard["core_sectors"], 15)
+            else:
+                self.assertEqual(str(manifest["guest_core_chain"]), "genuine")
             self.assertEqual(guard["sector_state"], "descriptor-bound-core")
             self.assertEqual(SECTOR_GAP_FIRST_SECTOR, 1)
             self.assertEqual(SECTOR_GAP_LAST_SECTOR, 2047)

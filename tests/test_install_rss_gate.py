@@ -11,8 +11,17 @@ Preregistered acceptance (frozen before observation):
   finalize, PERSIST, GRUB, journal) with file-backed storage peaks below
   128 MiB process RSS at 32 MiB payload and writes every payload byte.
 
-Each mode runs in a CHILD process so ``ru_maxrss`` is attributed per mode
-(Linux reports KiB, macOS bytes; normalized here). This is the permanent
+Each mode runs in a CHILD process so the peak is attributed per mode.
+On Linux the child peak is read from ``VmHWM`` in ``/proc/self/status``:
+``RUSAGE_SELF.ru_maxrss`` is inherited across fork+exec, so a child
+spawned after the parent builds payload bundles would report the
+parent's high-water mark instead of its own cost (device-measured
+T04-FIX-RSS: an identical streaming child reads 18.37 MiB from a lean
+parent vs 108.47 MiB from a +100 MiB parent, while ``VmHWM`` reads
+7.84 vs 8.05 MiB — stable). ``VmHWM`` resets at exec, so it attributes
+only the child. macOS keeps the ``ru_maxrss``-in-bytes path (no
+``/proc``, no such inheritance). Linux without ``/proc`` falls back to
+``ru_maxrss``. This is the permanent
 CI mirror of the 768 MiB cgroup gate evidence (384 MiB payload, disposable
 install+update, swap off) recorded in the T2-STREAM fixer report: it fails
 if whole-buffering is reintroduced into the production seam.
@@ -57,6 +66,20 @@ _NONSCALE_BOUND = 12 * MIB
 
 
 def _peak_rss_bytes() -> int:
+    """Return this child process's own post-exec peak RSS in bytes.
+
+    See the module docstring: on Linux ``VmHWM`` is the attribution
+    source because ``ru_maxrss`` inherits the spawner's high-water mark
+    across fork+exec.
+    """
+    if sys.platform != "darwin":
+        try:
+            with open("/proc/self/status", "r", encoding="utf-8") as handle:
+                for line in handle:
+                    if line.startswith("VmHWM:"):
+                        return int(line.split()[1]) * 1024
+        except OSError:
+            pass
     peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     if sys.platform == "darwin":
         return int(peak)

@@ -92,7 +92,11 @@ class GenuineWiringTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
-            device_gate_for_image(image)  # stub baseline green
+            device_gate_for_image(image)  # live baseline green (stub or genuine)
+            # Live binding before the install: stub off-host, genuine on a
+            # capable host where assembly already upgraded the core.
+            live_sectors = int(manifest["guest_core_sectors"])
+            live_sha = str(manifest["guest_core_sha256"])
             genuine = _synthetic_core(40)
             proof = install_genuine_grub_chain(image, genuine)
             self.assertEqual(proof["core_sectors"], 40)
@@ -105,7 +109,8 @@ class GenuineWiringTests(unittest.TestCase):
                 core_sha256=str(proof["core_sha256"]),
                 core_sectors=int(proof["core_sectors"]),
             )
-            self.assertEqual(rebind["previous"]["core_sectors"], 15)
+            self.assertEqual(rebind["previous"]["core_sectors"], live_sectors)
+            self.assertEqual(rebind["previous"]["core_sha256"], live_sha)
             self.assertEqual(rebind["descriptor"]["core_sectors"], 40)
             gate = device_gate_for_image(image)
             self.assertEqual(gate["descriptor"]["core_sectors"], 40)
@@ -141,6 +146,11 @@ class GenuineWiringTests(unittest.TestCase):
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
             staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+            # Live binding before the mocked-capable install: assembly has
+            # already installed the genuine core on a capable host, so the
+            # previous binding equals the live manifest, not hardcoded 15.
+            expected_previous_sectors = int(manifest["guest_core_sectors"])
+            expected_previous_sha = str(manifest["guest_core_sha256"])
             with (
                 _mock.patch.object(bc, "grub_mkimage_available", return_value=True),
                 _mock.patch.object(bc, "build_grub_core_via_mkimage",
@@ -154,7 +164,8 @@ class GenuineWiringTests(unittest.TestCase):
             self.assertEqual(proof["core_sectors"], 21)
             previous = result["previous"]
             assert isinstance(previous, dict)
-            self.assertEqual(previous["core_sectors"], 15)
+            self.assertEqual(previous["core_sectors"], expected_previous_sectors)
+            self.assertEqual(previous["core_sha256"], expected_previous_sha)
             gate = device_gate_for_image(image)
             self.assertEqual(gate["descriptor"]["core_sectors"], 21)
 
@@ -165,16 +176,28 @@ class GenuineWiringTests(unittest.TestCase):
             genuine_core_capability,
             maybe_install_genuine_grub_core,
         )
-        from tools.x8_qemu.payload import verify_staged_payload
+        from tools.x8_qemu.payload import read_payload_descriptor, verify_staged_payload
 
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
-            self.assertEqual(manifest["guest_core_chain"], "stub")
-            self.assertFalse(manifest["genuine_core_installed"])
-            self.assertFalse(manifest["genuine_core_attempted"])
-            self.assertEqual(manifest["guest_core_sectors"], 15)
+            # Live binding is authoritative: stub off-host, genuine on a
+            # capable host where assembly already upgraded the core before
+            # the mock below applies. The mock only forces the
+            # off-capable return path; it does not downgrade the image.
+            live_chain = str(manifest["guest_core_chain"])
+            live_sectors = int(manifest["guest_core_sectors"])
+            live_sha = str(manifest["guest_core_sha256"])
+            self.assertIn(live_chain, ("stub", "genuine"))
+            if live_chain == "stub":
+                self.assertFalse(manifest["genuine_core_installed"])
+                self.assertFalse(manifest["genuine_core_attempted"])
+                self.assertEqual(live_sectors, 15)
+            else:
+                self.assertTrue(manifest["genuine_core_installed"])
+                self.assertTrue(manifest["genuine_core_attempted"])
             image = Path(manifest["image"])
             staged = verify_staged_payload(Path(tmp) / "out" / "guest-payload")
+            before = read_payload_descriptor(image)
             with _mock.patch.object(
                 bc, "grub_mkimage_available", return_value=False
             ):
@@ -182,6 +205,13 @@ class GenuineWiringTests(unittest.TestCase):
                 cap = genuine_core_capability()
             self.assertFalse(result["installed"])
             self.assertEqual(result["chain"], "stub")
+            self.assertFalse(cap["grub_mkimage_available"])
+            # The mocked off-capable call leaves the live image binding
+            # untouched on either host class.
+            after = read_payload_descriptor(image)
+            self.assertEqual(after["core_sectors"], live_sectors)
+            self.assertEqual(after["core_sha256"], live_sha)
+            self.assertEqual(after, before)
             _ = cap
 
 
@@ -209,7 +239,10 @@ class SensitivityControlTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             manifest = assemble_disposable_image(Path(tmp) / "out")
             image = Path(manifest["image"])
-            self.assertEqual(manifest["guest_core_chain"], "stub")
+            # Live chain is authoritative (stub off-host, genuine on a
+            # capable host); sensitivity controls below are chain-agnostic.
+            live_chain = str(manifest["guest_core_chain"])
+            self.assertIn(live_chain, ("stub", "genuine"))
 
             # 1. Stub-core armed leg still REDs armed-but-unconsumed
             # (sensitivity proof: the gate is not laundered).

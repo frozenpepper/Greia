@@ -56,6 +56,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Mapping, Sequence
 
+from greia_installer.layout import (
+    MbrCommandResult,
+    MbrProbeRunner,
+    SubprocessMbrProbeRunner,
+)
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 SCHEMA_VERSION = 1
@@ -208,40 +214,187 @@ def lifecycle_spec() -> dict[str, object]:
     }
 
 
+#: Device binaries covered by the owner-provisioned bounded sudoers drop-in
+#: (``/etc/sudoers.d/greia-harness`` on the Acer reference device, temporary
+#: pending the permanent ``greia-devctl`` harness verb owned by P2-DEVCTL-VERB).
+#: Privileged legs invoke exactly these binaries via ``sudo -n`` when the
+#: harness itself does not run as root. Anything outside this set (e.g.
+#: ``sync``) runs unprivileged-direct and must never gain a sudo prefix.
+SUDOERS_PROVISIONED_BINARIES: frozenset[str] = frozenset({
+    "losetup",
+    "partprobe",
+    "partx",
+    "mount",
+    "umount",
+    "blkid",
+    "sfdisk",
+    "mkfs.ext4",
+    "udevadm",
+    "qemu-system-x86_64",
+    "qemu-system-i386",
+})
+
+#: Device tools that must resolve for the device path (``require_device_host``
+#: presence check). ``partx`` is rescan-fallback only and is resolved lazily
+#: by :func:`rescan_loop_partitions`, not here.
+DEVICE_HOST_REQUIRED_TOOLS: tuple[str, ...] = (
+    QEMU_BINARY,
+    "losetup",
+    "mount",
+    "umount",
+    "partprobe",
+    "udevadm",
+    "mkfs.ext4",
+    "blkid",
+    "sfdisk",
+)
+
+
 def require_device_host(*, runner_which=None) -> None:
     """Fail closed unless this host can execute the device path."""
     import sys as _sys
 
-    which = runner_which or shutil.which
+    which = runner_which or resolve_device_host_tool
     if _sys.platform != "linux":
         raise LifecycleHarnessError(
             "device lifecycle requires a Linux host "
             f"(this host reports {_sys.platform}); source-scope proof only"
         )
-    if os.geteuid() != 0:
-        raise LifecycleHarnessError("device lifecycle runs as root on a Linux host")
-    missing = [
-        command
-        for command in (
-            QEMU_BINARY,
-            "losetup",
-            "mount",
-            "umount",
-            "partprobe",
-            "udevadm",
-            "mkfs.ext4",
-            "blkid",
-            "sfdisk",
-        )
-        if which(command) is None
-    ]
+    missing = [command for command in DEVICE_HOST_REQUIRED_TOOLS if which(command) is None]
     if missing:
         raise LifecycleHarnessError("missing device host tools: " + ", ".join(missing))
+    if os.geteuid() == 0:
+        return
+    # Non-root path: the owner-provisioned bounded sudoers rule (temporary
+    # pending the greia-devctl verb). Prove the passwordless mechanism with a
+    # harmless probe of one provisioned binary; never handle passwords, never
+    # use -S/askpass/timestamp tricks. Absence of both root and the rule stays
+    # RED under the same fail-closed error.
+    if shutil.which("sudo") is None:
+        raise LifecycleHarnessError("device lifecycle runs as root on a Linux host")
+    probe = resolve_device_host_tool("losetup")
+    if probe is None:  # pragma: no cover - missing already raised above
+        raise LifecycleHarnessError("device lifecycle runs as root on a Linux host")
+    try:
+        completed = subprocess.run(
+            ["sudo", "-n", probe, "--version"],
+            capture_output=True,
+            timeout=60,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError):
+        raise LifecycleHarnessError(
+            "device lifecycle runs as root on a Linux host"
+        ) from None
+    if completed.returncode != 0:
+        raise LifecycleHarnessError("device lifecycle runs as root on a Linux host")
+
+
+def resolve_device_host_tool(name: str) -> str | None:
+    """Resolve a device host tool without leaking PATH artifacts.
+
+    Unprivileged PATHs commonly lack ``/sbin``/``/usr/sbin`` where
+    ``losetup``/``mount`` live, so a bare ``subprocess`` call would raise
+    ``FileNotFoundError`` under the caller's gate (e.g. recorded under the
+    consumption-predicate). Resolution falls back to the sbin directories
+    and returns ``None`` when the tool is genuinely absent so callers can
+    fail closed with :class:`LifecycleHarnessError`.
+    """
+    found = shutil.which(name)
+    if found is not None:
+        return found
+    for candidate in (f"/sbin/{name}", f"/usr/sbin/{name}"):
+        if Path(candidate).is_file():
+            return candidate
+    return None
+
+
+def device_tool_invocation(name: str, *args: str) -> list[str]:
+    """Build the privileged argv for one device host tool.
+
+    Resolves ``name`` to its absolute path (sbin-aware, so unprivileged
+    PATHs without ``/sbin`` cannot leak ``FileNotFoundError``), then
+    prefixes ``sudo -n`` when the harness is not root and the tool is in
+    the owner-provisioned set. Raises :class:`LifecycleHarnessError` when
+    the tool is genuinely absent — absence stays RED, never a silent skip.
+    Non-provisioned tools run unprivileged-direct (they must never gain a
+    sudo prefix). Never uses ``-S``/askpass/timestamp tricks.
+    """
+    resolved = resolve_device_host_tool(name)
+    if resolved is None:
+        raise LifecycleHarnessError(
+            f"device host tool missing: {name} "
+            "(device lifecycle runs as root on a Linux host "
+            "with sbin tools present)"
+        )
+    if os.geteuid() != 0 and name in SUDOERS_PROVISIONED_BINARIES:
+        return ["sudo", "-n", resolved, *list(args)]
+    return [resolved, *list(args)]
+
+
+def run_device_host_tool(
+    argv: Sequence[str],
+    *,
+    capture_output: bool = True,
+    text: bool = False,
+    timeout: int = 60,
+) -> subprocess.CompletedProcess[object]:
+    """Run one device host tool, fail-closed on missing binary.
+
+    Converts ``FileNotFoundError`` (PATH artifact) into
+    :class:`LifecycleHarnessError` so collect legs record the verbatim
+    fail-closed error under their own frozen gate instead of an
+    environment-lookup leak. Never weakens the gate: absence stays RED.
+    Non-root hosts run provisioned tools via ``sudo -n`` (owner rule);
+    see :func:`device_tool_invocation`.
+    """
+    if not argv:
+        raise LifecycleHarnessError("device host tool argv is empty")
+    resolved_argv = device_tool_invocation(argv[0], *[str(part) for part in argv[1:]])
+    try:
+        return subprocess.run(
+            resolved_argv,
+            capture_output=capture_output,
+            text=text,  # type: ignore[arg-type]
+            timeout=timeout,
+        )
+    except FileNotFoundError as exc:
+        raise LifecycleHarnessError(
+            f"device host tool missing: {argv[0]} "
+            "(device lifecycle runs as root on a Linux host "
+            "with sbin tools present)"
+        ) from exc
 
 
 def file_cross_check_tools() -> dict[str, str | None]:
     """Resolve the file cross-check tools (must both exist to execute)."""
-    return {"sfdisk": shutil.which("sfdisk"), "blkid": shutil.which("blkid")}
+    return {
+        "sfdisk": resolve_device_host_tool("sfdisk"),
+        "blkid": resolve_device_host_tool("blkid"),
+    }
+
+
+def _privileged_rescan_run(argv: object, **kwargs: object) -> object:
+    """Default rescan runner: privileged argv, ``shell=False`` semantics.
+
+    Accepts the same call shape as ``subprocess.run`` (used by the
+    rescan/observe injectable seams) but builds the argv through
+    :func:`device_tool_invocation` so partprobe/partx/udevadm resolve
+    sbin-aware and run via ``sudo -n`` on non-root hosts under the
+    owner-provisioned rule. A genuinely missing tool raises
+    :class:`LifecycleHarnessError`, which the rescan caller records as a
+    failure (never a silent skip).
+    """
+    parts = [str(part) for part in list(argv)]  # type: ignore[arg-type]
+    if not parts:
+        raise LifecycleHarnessError("loop rescan argv is empty")
+    timeout = kwargs.get("timeout", LOOP_RESCAN_TIMEOUT_SECONDS)
+    capture = bool(kwargs.get("capture_output", True))
+    return subprocess.run(
+        device_tool_invocation(parts[0], *parts[1:]),
+        capture_output=capture,
+        timeout=int(timeout),  # type: ignore[arg-type]
+        shell=False,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -862,6 +1015,10 @@ def run_file_cross_check(image: Path, *, expected_signature: str) -> dict[str, o
     is True only when both tools exist and both probes ran; green is True
     only when every executed probe agreed with the production byte parse.
     Tool-less hosts report executed=False (explicit deferred, never green).
+    Invalid/unparseable tool output (including the all-zero signature,
+    which the production validator refuses fail-closed) returns
+    executed=True green=False RED instead of raising, so callers record
+    the binding RED through the collect gate.
     """
     tools = file_cross_check_tools()
     if tools["sfdisk"] is None or tools["blkid"] is None:
@@ -884,10 +1041,17 @@ def run_file_cross_check(image: Path, *, expected_signature: str) -> dict[str, o
     )
     if disk_id.returncode != 0:
         return {"executed": True, "green": False, "detail": "sfdisk --disk-id failed"}
-    if (
-        require_mbr_disk_signature(disk_id.stdout.strip(), field="disk signature")
-        != expected_signature
-    ):
+    try:
+        sfdisk_signature = require_mbr_disk_signature(
+            disk_id.stdout.strip(), field="disk signature"
+        )
+    except Exception as exc:
+        return {
+            "executed": True,
+            "green": False,
+            "detail": f"sfdisk disk-id invalid: {exc}",
+        }
+    if sfdisk_signature != expected_signature:
         return {"executed": True, "green": False, "detail": "sfdisk disk-id mismatch"}
     probed = subprocess.run(
         [tools["blkid"], "-p", "-s", "PTUUID", "-o", "value", str(image)],
@@ -897,10 +1061,17 @@ def run_file_cross_check(image: Path, *, expected_signature: str) -> dict[str, o
     )
     if probed.returncode != 0:
         return {"executed": True, "green": False, "detail": "blkid -p PTUUID failed"}
-    if (
-        require_mbr_disk_signature(probed.stdout.strip(), field="disk signature")
-        != expected_signature
-    ):
+    try:
+        blkid_signature = require_mbr_disk_signature(
+            probed.stdout.strip(), field="disk signature"
+        )
+    except Exception as exc:
+        return {
+            "executed": True,
+            "green": False,
+            "detail": f"blkid PTUUID invalid: {exc}",
+        }
+    if blkid_signature != expected_signature:
         return {"executed": True, "green": False, "detail": "blkid PTUUID mismatch"}
     return {"executed": True, "green": True, "detail": "sfdisk+blkid agree with byte parse"}
 
@@ -945,8 +1116,8 @@ def rescan_loop_partitions(
     locator = str(device)
     if not locator or not Path(locator).is_absolute():
         raise LifecycleHarnessError("loop rescan needs an absolute device path")
-    _run = run if run is not None else subprocess.run
-    _which = which if which is not None else shutil.which
+    _run = run if run is not None else _privileged_rescan_run
+    _which = which if which is not None else resolve_device_host_tool
     attempted: list[list[str]] = []
     missing: list[str] = []
     failures: list[str] = []
@@ -1007,12 +1178,31 @@ def rescan_loop_partitions(
     }
 
 
+class PrivilegedMbrProbeRunner(SubprocessMbrProbeRunner):
+    """Harness block-probe runner: privileged argv, installer bounds.
+
+    Polymorphic :class:`MbrProbeRunner` implementation for the device path:
+    rewrites the probe argv through :func:`device_tool_invocation`
+    (sbin-aware absolute path, ``sudo -n`` on non-root hosts under the
+    owner-provisioned rule) and delegates execution to the production
+    :class:`SubprocessMbrProbeRunner`, so the probe timeout/line-cap/
+    fail-closed ``LayoutError`` mapping stays owned by the installer with
+    no parallel mechanism here. As root the rewritten argv is the resolved
+    absolute path (same binary, no sudo).
+    """
+
+    def run(self, command: Sequence[str]) -> MbrCommandResult:
+        argv = [str(part) for part in list(command)]
+        if not argv:
+            raise LifecycleHarnessError("block probe argv is empty")
+        return super().run(device_tool_invocation(argv[0], *argv[1:]))
+
 def observe_loop_attached_device(
     device: Path,
     *,
     plan: object,
     record_path: Path,
-    runner: object | None = None,
+    runner: MbrProbeRunner | None = None,
     rescan_run: Callable[..., object] | None = None,
     rescan_which: Callable[[str], str | None] | None = None,
     max_attempts: int = LOOP_OBSERVE_MAX_ATTEMPTS,
@@ -1023,8 +1213,9 @@ def observe_loop_attached_device(
     Harness-owned rescan-then-observe: forces a bounded kernel partition
     rescan first (:func:`rescan_loop_partitions`), then probes the disk
     signature once plus each system-a/system-b/persist PARTUUID and
-    filesystem UUID through ``SubprocessMbrProbeRunner`` (argument
-    arrays, ``shell=False``), retrying the whole production observation
+    filesystem UUID through :class:`PrivilegedMbrProbeRunner` (production
+    ``SubprocessMbrProbeRunner`` bounds; argument arrays, ``shell=False``),
+    retrying the whole production observation
     up to ``max_attempts`` with settle/sleep between attempts so a stale
     kernel partition view settles instead of REDing permanently. Proves
     the bound record equals the observed topology on success.
@@ -1038,7 +1229,6 @@ def observe_loop_attached_device(
     from greia_installer.disk import DeviceObservation
     from greia_installer.layout import (
         LayoutError,
-        SubprocessMbrProbeRunner,
         build_observed_mbr_topology,
         observe_legacy_mbr_identities,
         verify_mbr_topology_for_boot,
@@ -1051,7 +1241,7 @@ def observe_loop_attached_device(
     rescan = rescan_loop_partitions(
         device, run=rescan_run, which=rescan_which
     )
-    probe_runner = runner if runner is not None else SubprocessMbrProbeRunner()
+    probe_runner = runner if runner is not None else PrivilegedMbrProbeRunner()
     target = DeviceObservation(
         path=Path(device),
         device_type="disk",
@@ -1075,9 +1265,17 @@ def observe_loop_attached_device(
         except LayoutError as exc:
             last_error = exc
             if attempt < attempts:
-                _which = rescan_which if rescan_which is not None else shutil.which
+                _which = (
+                    rescan_which
+                    if rescan_which is not None
+                    else resolve_device_host_tool
+                )
                 if _which("udevadm") is not None:
-                    _run = rescan_run if rescan_run is not None else subprocess.run
+                    _run = (
+                        rescan_run
+                        if rescan_run is not None
+                        else _privileged_rescan_run
+                    )
                     try:
                         _run(
                             ["udevadm", "settle"],
@@ -1367,6 +1565,91 @@ def maybe_install_genuine_grub_core(
     }
 
 
+#: Data partitions formatted with the record's filesystem UUIDs during
+#: capable-host assembly (role -> DOS partition number). Partition 1
+#: (boot-control) is excluded: the payload install owns its filesystem.
+DATA_PARTITION_NUMBERS: dict[str, int] = {
+    "system-a": 2,
+    "system-b": 3,
+    "persist": 4,
+}
+
+
+def format_data_partitions_for_record(image: Path, *, record_path: Path) -> dict[str, object]:
+    """Format data partitions with the record's filesystem UUIDs (capable hosts).
+
+    Device-only assembly step: loop-attaches the disposable image, rescans
+    partitions, and formats system-a/system-b/persist with the exact
+    filesystem UUIDs declared by the installed-layout record, so the
+    post-run loop observation can bind observed topology to the record
+    through real blkid probes. Partition 1 is never touched here; the
+    payload install owns the boot-control filesystem (including its
+    unprivileged-writer ownership).
+
+    Off a capable host — or when loop attach itself is unavailable —
+    returns deferred (source-scope never loop-observes, so there is nothing
+    to bind). Once attached, any rescan/format/teardown failure raises
+    :class:`LifecycleHarnessError` fail-closed: a half-formatted image must
+    never proceed silently.
+    """
+    try:
+        require_device_host()
+    except LifecycleHarnessError as exc:
+        return {"formatted": False, "reason": f"deferred: {exc}"}
+    try:
+        declared = json.loads(Path(record_path).read_text(encoding="utf-8"))
+        wanted = {
+            role: str(declared[role_key]["filesystem_uuid"])
+            for role, role_key in (
+                ("system-a", "system_a"),
+                ("system-b", "system_b"),
+                ("persist", "persist"),
+            )
+        }
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise LifecycleHarnessError(
+            f"data-partition format needs record filesystem UUIDs: {exc}"
+        ) from exc
+    attached = run_device_host_tool(
+        ["losetup", "--find", "--show", str(image)],
+        capture_output=True, text=True, timeout=60,
+    )
+    if attached.returncode != 0:
+        return {"formatted": False, "reason": "deferred: loop attach unavailable"}
+    device = Path(str(attached.stdout).strip())
+    if not device.is_absolute():
+        run_device_host_tool(
+            ["losetup", "--detach", str(device)], capture_output=True, timeout=60
+        )
+        return {"formatted": False, "reason": "deferred: loop attach unavailable"}
+    try:
+        rescan_loop_partitions(device)
+        for role, number in DATA_PARTITION_NUMBERS.items():
+            part = Path(f"{device}p{number}")
+            if not part.exists():
+                raise LifecycleHarnessError(
+                    f"data-partition format: partition node missing for {role} "
+                    f"({part}) after rescan"
+                )
+            formatted = run_device_host_tool(
+                ["mkfs.ext4", "-U", wanted[role], str(part)],
+                capture_output=True, text=True, timeout=120,
+            )
+            if formatted.returncode != 0:
+                raise LifecycleHarnessError(
+                    f"data-partition format failed for {role} ({part})"
+                )
+        return {"formatted": True, "roles": sorted(wanted)}
+    finally:
+        detached = run_device_host_tool(
+            ["losetup", "--detach", str(device)], capture_output=True, timeout=60
+        )
+        if detached.returncode != 0:
+            raise LifecycleHarnessError(
+                f"data-partition format leaked loop device {device}"
+            )
+
+
 def assemble_disposable_image(output_dir: Path, *, image_bytes: int = 64 * 1024 * 1024) -> dict[str, object]:
     """Create the harness-owned disposable raw disk outside the source tree.
 
@@ -1422,6 +1705,12 @@ def assemble_disposable_image(output_dir: Path, *, image_bytes: int = 64 * 1024 
         )
     machine = fresh_machine_state(out / "machine")
     record = machine["layout"]
+    # Capable-host step: format the data partitions with the record's
+    # filesystem UUIDs so the post-run loop observation binds through real
+    # blkid probes. Off a capable host this defers with a recorded reason
+    # (source-scope never loop-observes); the frozen observation seam is
+    # never touched host-side.
+    data_filesystems = format_data_partitions_for_record(image, record_path=record)
     grub_text = render_guest_grub_config(
         _load_record(record), password_hash=_PASSWORD_HASH
     )
@@ -1511,6 +1800,11 @@ def assemble_disposable_image(output_dir: Path, *, image_bytes: int = 64 * 1024 
         "guest_core_first_sector": chain["core_first_sector"],
         "guest_core_last_reserved_sector": chain["core_last_reserved_sector"],
         "guest_chain_bytes": guest_chain_bytes,
+        "data_filesystems": (
+            "formatted:system-a,system-b,persist"
+            if bool(data_filesystems.get("formatted"))
+            else f"source-scope-deferred:{data_filesystems.get('reason')}"
+        ),
     }
     if previous_binding is not None:
         manifest["genuine_previous_core_sha256"] = previous_binding["core_sha256"]
@@ -2163,8 +2457,10 @@ COLLECT_CONTINUATION_RULES: tuple[str, ...] = (
 #: predicate itself lives in the named production function).
 COLLECT_FROZEN_PREDICATES: dict[str, str] = {
     "require_device_host": (
-        "Linux host, root, and qemu/losetup/mount/umount/partprobe/"
-        "udevadm/mkfs.ext4/blkid/sfdisk present (require_device_host)"
+        "Linux host, root (direct, or owner-provisioned passwordless sudo "
+        "for the bounded harness binary set), and qemu/losetup/mount/umount/"
+        "partprobe/udevadm/mkfs.ext4/blkid/sfdisk present "
+        "(require_device_host)"
     ),
     "device_gate_for_image": (
         "payload descriptor present plus sector 1-2047 gap reserved "
@@ -3120,7 +3416,7 @@ class LifecycleHarness:
             (["udevadm", "settle"], "udevadm settle failed"),
         ]
         for argv, message in runners:
-            completed = subprocess.run(argv, capture_output=True, timeout=60)
+            completed = run_device_host_tool(argv, capture_output=True, timeout=60)
             if completed.returncode != 0:
                 raise LifecycleHarnessError(message + f" for {device}")
         time.sleep(0.5)
@@ -3129,12 +3425,14 @@ class LifecycleHarness:
         if read_only:
             argv.extend(["-o", "ro"])
         argv.extend([str(part), str(mountpoint)])
-        mounted = subprocess.run(argv, capture_output=True, timeout=60)
+        mounted = run_device_host_tool(argv, capture_output=True, timeout=60)
         if mounted.returncode != 0:
             raise LifecycleHarnessError(f"partition-1 mount failed for {device}")
 
     def _unmount(self, mountpoint: Path) -> None:
-        subprocess.run(["umount", str(mountpoint)], capture_output=True, timeout=60)
+        run_device_host_tool(
+            ["umount", str(mountpoint)], capture_output=True, timeout=60
+        )
 
     def _read_on_image_grubenv(self, image: Path) -> dict[str, object]:
         """Read the on-image grubenv via the frozen production seam.
@@ -3245,6 +3543,12 @@ class LifecycleHarness:
             cpus=self.config.cpus,
             seabios_path=self.config.seabios_path,
         )
+        # Privileged launch: resolve the QEMU binary sbin/PATH-aware and
+        # prefix sudo -n on non-root hosts under the owner-provisioned rule.
+        # The executed argv (not just the logical one) is recorded below so
+        # the artifact shows the real production launch. A missing binary
+        # raises here fail-closed instead of Popen's FileNotFoundError.
+        argv = device_tool_invocation(argv[0], *argv[1:])
         pre_sha = sha256_file(Path(image))
         with host_log.open("ab") as log:
             process = subprocess.Popen(
@@ -3732,7 +4036,7 @@ class LifecycleHarness:
         teardown-safety violation and stops collection immediately,
         fail closed.
         """
-        completed = subprocess.run(
+        completed = run_device_host_tool(
             ["losetup", "--detach", str(device)],
             capture_output=True, timeout=60,
         )
@@ -3744,7 +4048,7 @@ class LifecycleHarness:
 
     def _unmount_checked(self, mountpoint: Path) -> None:
         """Abort-class unmount for collect mode (same boundary)."""
-        completed = subprocess.run(
+        completed = run_device_host_tool(
             ["umount", str(mountpoint)], capture_output=True, timeout=60
         )
         if completed.returncode != 0:
@@ -4592,20 +4896,24 @@ class LifecycleHarness:
         return report
 
     def _loop_attach(self, image: Path) -> Path:
-        completed = subprocess.run(
+        completed = run_device_host_tool(
             ["losetup", "--find", "--show", str(image)],
             capture_output=True, text=True, timeout=60,
         )
         if completed.returncode != 0:
             raise LifecycleHarnessError("loop attach failed for the disposable image")
-        node = Path(completed.stdout.strip())
-        settle = subprocess.run(["udevadm", "settle"], capture_output=True, timeout=60)
+        node = Path(str(completed.stdout).strip())
+        settle = run_device_host_tool(
+            ["udevadm", "settle"], capture_output=True, timeout=60
+        )
         _ = settle
         time.sleep(0.5)
         return node
 
     def _loop_detach(self, device: Path) -> None:
-        subprocess.run(["losetup", "--detach", str(device)], capture_output=True, timeout=60)
+        run_device_host_tool(
+            ["losetup", "--detach", str(device)], capture_output=True, timeout=60
+        )
 
 
 def assert_lifecycle_transitions(report: Mapping[str, object]) -> None:
