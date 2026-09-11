@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
 from tools.update_parent_client_pin import PinError, _commit_replacements, update_pin
+
+HAS_GIT = shutil.which("git") is not None
+NEEDS_GIT = "device-deferred: git not installed on this host; needs recorded authority amendment per T01-FIX-ENV"
 
 
 class ParentClientPinUpdateTests(unittest.TestCase):
@@ -96,6 +100,8 @@ class ParentClientPinUpdateTests(unittest.TestCase):
         }
 
     def test_repin_updates_contract_vendor_and_image_overlay_from_same_bytes(self) -> None:
+        if not HAS_GIT:
+            self.skipTest(NEEDS_GIT)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             parent, revision = self._parent_checkout(root)
@@ -125,6 +131,8 @@ class ParentClientPinUpdateTests(unittest.TestCase):
                 self.assertEqual(data, (parent / relative).read_bytes())
 
     def test_dirty_parent_checkout_refuses_before_mutating_greia(self) -> None:
+        if not HAS_GIT:
+            self.skipTest(NEEDS_GIT)
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             parent, revision = self._parent_checkout(root)

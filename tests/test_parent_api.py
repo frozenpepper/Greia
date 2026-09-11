@@ -31,6 +31,8 @@ from greia_parent.protocol import (
 from greia_parent.web_client import render_parent_web_app
 from greia_platform.hardware import HardwareSettingsError
 from greia_platform.usage_limits import UsageLimitError
+from greia_platform.ssh_maintenance import MockSshMaintenanceProvider, SshMaintenanceService
+from greia_platform.wifi import DemoWifiBackend
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -42,6 +44,14 @@ class _Handler:
 
 
 def _app(root: Path) -> ParentApiApplication:
+    # Hermetic device-host fix: inject the deterministic DemoWifiBackend so this
+    # contract test does not depend on iwd/python3-dbus presence. On hosts with
+    # /var/lib/iwd the default would select IwdWifiBackend and raise WifiError
+    # where dbus is absent; the Demo backend is the established testing backend.
+    # Likewise inject the in-memory Mock SSH provider: on the device host the
+    # default is the real systemd provider (ssh.service is active there, and an
+    # unprivileged disable is a silent no-op), so the enable/disable contract
+    # assertions require the Mock provider. Never touch real system SSH state.
     return ParentApiApplication(
         PROJECT_ROOT,
         root / "parent",
@@ -49,6 +59,8 @@ def _app(root: Path) -> ParentApiApplication:
         hardware_settings_dir=root / "hardware",
         hardware_status_path=root / "hardware-status.json",
         active_profile_status_path=root / "active-profile.json",
+        wifi_backend=DemoWifiBackend(),
+        ssh_service=SshMaintenanceService(MockSshMaintenanceProvider()),
     )
 
 
