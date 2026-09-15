@@ -448,6 +448,7 @@ class StreamingSeamTests(unittest.TestCase):
             backend_state_dir=backend_state,
             journal_dir=journal,
             payload_stream_factory=_Interrupting,
+            post_layout_identity_observer=lambda target, plan: observed,
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
@@ -461,7 +462,6 @@ class StreamingSeamTests(unittest.TestCase):
             install_target_sha256=_INSTALL_SHA,
             password_hash=_PASSWORD_HASH,
             installed_at_unix=1757000000,
-            fresh_identities=observed,
         )
         with self.assertRaises(FreshAbInstallError):
             execute_fresh_ab_install(request, seams)
@@ -604,6 +604,7 @@ class StreamingMemoryTests(unittest.TestCase):
                 boot_control_dir=boot_control,
                 backend_state_dir=backend_state,
                 journal_dir=journal,
+                post_layout_identity_observer=lambda target, plan: observed,
             )
             request = FreshAbInstallRequest(
                 bundle_path=bundle,
@@ -617,7 +618,6 @@ class StreamingMemoryTests(unittest.TestCase):
                 install_target_sha256=_INSTALL_SHA,
                 password_hash=_PASSWORD_HASH,
                 installed_at_unix=1757000000,
-                fresh_identities=observed,
             )
 
             def _run():

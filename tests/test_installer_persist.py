@@ -278,14 +278,53 @@ class FreshInitTests(unittest.TestCase):
             stage_a = Path(directory) / "a"
             stage_a.mkdir()
             do_fresh(first, stage_a)
-            # A later attempt with a new staging dir still sees the occupant.
+            # A later attempt that re-mounts the initialized tree still
+            # refuses — exactly once — even though the occupant UUID equals
+            # the intended identity. The refusal comes from the
+            # post-mount initialization gates, never from a silent wipe.
             stage_b = Path(directory) / "b"
             stage_b.mkdir()
             second = FakePersistRunner()
             second.blkid_responses = [(_UUID_P_FS + "\n", 0)]
-            with self.assertRaisesRegex(PersistError, "already exists"):
+            second.device_tree = stage_a
+            with self.assertRaisesRegex(
+                PersistError, "(never re-mint|transaction root)"
+            ):
                 do_fresh(second, stage_b)
-            self.assertEqual(second.names(), ["blkid"])
+            self.assertNotIn("mkfs.ext4", second.names())
+            self.assertIn("umount", second.names())
+
+    def test_adopt_adapter_formatted_matching_uuid_skips_mkfs(self) -> None:
+        # Adapter-formatted PERSIST whose blkid UUID already equals the
+        # intended (observed) identity is adopted exactly once: no second
+        # mkfs, then mount + exactly-once initialization with that identity.
+        runner = FakePersistRunner()
+        runner.blkid_responses = [(_UUID_P_FS + "\n", 0)]
+        with tempfile.TemporaryDirectory() as directory:
+            stage = Path(directory) / "stage"
+            stage.mkdir()
+            result = do_fresh(runner, stage)
+            self.assertEqual(result.persist_filesystem_uuid, _UUID_P_FS)
+            self.assertEqual(runner.names(), ["blkid", "mount", "umount"])
+            self.assertNotIn("mkfs.ext4", runner.names())
+            self.assertEqual(
+                result.record.persist.filesystem_uuid, _UUID_P_FS
+            )
+            journal = persist_transaction_path(stage)
+            self.assertTrue(journal.is_dir())
+            self.assertFalse(journal.is_symlink())
+
+    def test_foreign_uuid_refused_before_any_destructive_command(self) -> None:
+        # A foreign occupant (blkid UUID != intended identity) still
+        # refuses fail-closed at the pre-check with zero destructive work.
+        runner = FakePersistRunner()
+        runner.blkid_responses = [(_UUID_X_FS + "\n", 0)]
+        with tempfile.TemporaryDirectory() as directory:
+            stage = Path(directory) / "stage"
+            stage.mkdir()
+            with self.assertRaisesRegex(PersistError, "already exists"):
+                do_fresh(runner, stage)
+            self.assertEqual(runner.names(), ["blkid"])
 
     def test_partial_init_fails_closed_and_detaches(self) -> None:
         # Fault injection: the mounted device reveals a partial occupant
@@ -308,15 +347,21 @@ class FreshInitTests(unittest.TestCase):
                 runner.names(), ["blkid", "mkfs.ext4", "blkid", "mount", "umount"]
             )
             self.assertFalse((stage / "greia" / "installed-layout.json").exists())
-            # No silent resume: the occupant still blocks a retry.
+            # No silent resume: the occupant still blocks a retry. The
+            # retry observes the same (matching) occupant UUID, adopts the
+            # node, then fails closed at the initialization gates.
             retry = FakePersistRunner()
             retry.blkid_responses = [(_UUID_P_FS + "\n", 0)]
+            retry.device_tree = device
             with tempfile.TemporaryDirectory() as other:
                 stage_b = Path(other) / "stage"
                 stage_b.mkdir()
-                with self.assertRaisesRegex(PersistError, "already exists"):
+                with self.assertRaisesRegex(
+                    PersistError, "(never re-mint|namespace exists)"
+                ):
                     do_fresh(retry, stage_b)
-                self.assertEqual(retry.names(), ["blkid"])
+                self.assertNotIn("mkfs.ext4", retry.names())
+                self.assertIn("umount", retry.names())
 
     def test_readback_mismatch_rejected_without_initialization(self) -> None:
         runner = FakePersistRunner()

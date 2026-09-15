@@ -617,7 +617,11 @@ class BuildProfile:
         return {
             "schema_version": self.schema_version,
             "artifact_scope": scope,
-            "profile": asdict(self.identity),
+            "profile": {
+                "id": self.identity.profile_id,
+                "certification_state": self.identity.certification_state,
+                "description": self.identity.description,
+            },
             "platform": asdict(self.platform),
             "base": {
                 "suite": self.base.suite,

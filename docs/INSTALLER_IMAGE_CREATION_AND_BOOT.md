@@ -241,8 +241,21 @@ The systemd/Xorg service keeps the hardware-proven invariants from the Acer brin
 
 The newer profile-aware `greia_launcher.child_shell` remains primary. Because it was introduced after the original hardware proof, the X session now falls back once to `greia_launcher.presentation` if the child-shell process exits non-zero. The original error remains in the journal. This protects the graphical boot from a new composition-layer exception without hiding an Xorg failure.
 
-## 11. What a successful physical build must report
+## 11. Repeated rebuilds reuse the persistent host apt/pool caches
 
+`build/lib/apt-cache.sh` keeps two persistent host caches outside the produced
+image (`GREIA_APT_CACHE=/var/cache/greia-apt`,
+`GREIA_POOL_CACHE=/var/cache/greia-pool`). Both builders bind-mount them for
+the chroot's lifetime, with the apt cache mounted BEFORE debootstrap (before
+any `apt-get`) so base downloads land on the host, and the existing
+`MOUNTS`/`safe_unmount_paths` teardown releases
+them before footprint measurement and `mksquashfs`. Chroots run `apt-get
+autoclean` (never `clean`), so a repeated
+`build/build-installer-image.sh <profile>` run reuses already-downloaded
+`.deb`s instead of re-fetching the whole package set. Never clear the host
+caches to "save space" — that only forces a full re-download next build.
+
+## 12. What a successful physical build must report
 The exact wording may grow, but the development build must at minimum complete the artifact and USB gates rather than merely creating an `.img`:
 
 ```text

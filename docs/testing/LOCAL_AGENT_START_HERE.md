@@ -33,7 +33,7 @@ The current handover owns the **current exact evidence boundary and next legitim
 
 ## 2. Current blocking route
 
-R7 is complete. The primary architecture plan now identifies **R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters** as the next blocking architecture family.
+Post-R1 product-composition closure is blocking: source composition primitives (T3-S) are done, exact shipped installer/update/boot-health product composition (T3-P) is OPEN/BLOCKING, and the next executable task is **`POSTR1-P1-INSTALLER-RED`**. Do not start Raspberry Pi 400/500 work, UEFI work, or destructive Acer installation in this lane. R8 ARM64/Pi board adapters resume only after the common product lifecycle is proven — they are not the current blocking route.
 
 Do not automatically run an old R7 closure procedure merely because it remains under `docs/testing/`. Use `HANDOVER.md` and the active plan to choose the exact gate for the work being accepted.
 

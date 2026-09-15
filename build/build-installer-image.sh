@@ -5,6 +5,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=lib/safe-cleanup.sh
 source "$SCRIPT_DIR/lib/safe-cleanup.sh"
+# shellcheck source=lib/apt-cache.sh
+source "$SCRIPT_DIR/lib/apt-cache.sh"
 
 PROFILE_TOOL="$PROJECT_ROOT/tools/build_profile.py"
 PACKAGE_SET_ROOT="$SCRIPT_DIR/package-sets"
@@ -132,6 +134,13 @@ TARGET_LOOP=""
 # Build the live installer environment. It is allowed to be substantially
 # larger than the installed target because broad hardware support belongs on
 # removable installation media, not permanently on low-storage child devices.
+# Persistent host apt + pool caches: bind-mount BEFORE the live debootstrap so
+# base downloads land in the persistent host caches instead of the real live
+# directory (a post-debootstrap mount would shadow them and they would survive
+# into the squashfs). Released by cleanup() and the explicit pre-mksquashfs
+# safe_unmount_paths before compression; never clear the caches.
+LIVE_APT_CACHE_MOUNT="$(mount_apt_archives_cache "$LIVE_ROOT")"; MOUNTS+=("$LIVE_APT_CACHE_MOUNT")
+LIVE_POOL_CACHE_MOUNT="$(mount_pool_cache "$LIVE_ROOT")"; MOUNTS+=("$LIVE_POOL_CACHE_MOUNT")
 [[ -r "$DEBIAN_ARCHIVE_KEYRING" ]] || { echo "Pinned Debian archive keyring is missing: $DEBIAN_ARCHIVE_KEYRING" >&2; exit 1; }
 debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates --keyring="$DEBIAN_ARCHIVE_KEYRING" --force-check-gpg "$SUITE" "$LIVE_ROOT" "$MIRROR"
 live_arch="$(chroot "$LIVE_ROOT" /usr/bin/dpkg --print-architecture)"
@@ -165,6 +174,8 @@ mount --rbind /sys "$LIVE_ROOT/sys"; MOUNTS+=("$LIVE_ROOT/sys"); mount --make-rs
 mount -t tmpfs tmpfs "$LIVE_ROOT/run"; MOUNTS+=("$LIVE_ROOT/run")
 install -d -m 0755 "$LIVE_ROOT/run/systemd/resolve"
 cat /etc/resolv.conf > "$LIVE_ROOT/run/systemd/resolve/stub-resolv.conf" 2>/dev/null || true
+# NOTE: the persistent apt + pool caches are already bind-mounted above
+# (before the live debootstrap); no second mount here.
 
 # The live-media UUID must exist before the kernel package postinst runs
 # update-initramfs during the apt install below: the installer overlay's
@@ -413,8 +424,95 @@ cp "$LIVE_ROOT/etc/greia-os/package-manifest.tsv" "$OUTPUT_DIR/greia-os-installe
 cp "$LIVE_ROOT/etc/greia-os/base-system-manifest" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-base-system-manifest.txt"
 cp "$LIVE_ROOT/etc/greia-os/security-support-status.txt" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-security-support-status.txt"
 
-chroot "$LIVE_ROOT" apt-get clean
-rm -rf "$LIVE_ROOT/var/lib/apt/lists/"* "$LIVE_ROOT/var/cache/apt/archives/"*.deb
+# POSTR1-P2: immutable image-owned A/B release facts (installer-ab.env).
+# For A/B target profiles the installer medium carries one small typed
+# config at /etc/greia-os/installer-ab.env, generated here from the same
+# image profile/release build — never hand-maintained. The shipped
+# greia-install-transaction.service loads it through EnvironmentFile and
+# greia_installer.composition parses/validates it centrally. Single-root
+# recovery profiles ship no A/B facts (the unit's EnvironmentFile entry is
+# optional and Python refuses an A/B profile with missing facts fail-closed).
+# Build-time assertion (P2 requirement 2): the referenced signed release
+# bundle and trusted key directory must actually be present on the installer
+# medium, otherwise the build fails here — before any disk mutation.
+if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
+  echo "A/B target profile ($STORAGE_LAYOUT_ADAPTER): generating installer A/B release facts."
+  AB_RELEASE_SRC="${GREIA_AB_RELEASE_BUNDLE_SRC:-}"
+  AB_KEYS_SRC="${GREIA_AB_TRUSTED_KEY_SRC:-}"
+  [[ -n "$AB_RELEASE_SRC" ]] || {
+    echo "A/B installer build refused: set GREIA_AB_RELEASE_BUNDLE_SRC to the signed deterministic .greiaupdate v2 release artifact." >&2
+    exit 1
+  }
+  [[ -f "$AB_RELEASE_SRC" && ! -L "$AB_RELEASE_SRC" ]] || {
+    echo "A/B installer build refused: release bundle is not a regular file: $AB_RELEASE_SRC" >&2
+    exit 1
+  }
+  [[ -n "$AB_KEYS_SRC" ]] || {
+    echo "A/B installer build refused: set GREIA_AB_TRUSTED_KEY_SRC to the release signer public-key directory." >&2
+    exit 1
+  }
+  [[ -d "$AB_KEYS_SRC" && ! -L "$AB_KEYS_SRC" ]] || {
+    echo "A/B installer build refused: trusted key dir is not a real directory: $AB_KEYS_SRC" >&2
+    exit 1
+  }
+  AB_KEY_COUNT="$(find "$AB_KEYS_SRC" -maxdepth 1 -type f -name '*.pem' | wc -l)"
+  (( AB_KEY_COUNT > 0 )) || {
+    echo "A/B installer build refused: no trusted release keys (*.pem) in $AB_KEYS_SRC" >&2
+    exit 1
+  }
+  # Trusted keys live read-only on the medium next to the other release
+  # facts; the bundle itself travels in the USB payload beside the target
+  # squashfs (copied at USB assembly below) and is re-asserted there.
+  install -d -m 0755 "$LIVE_ROOT/etc/greia-os/system-update-keys"
+  cp "$AB_KEYS_SRC"/*.pem "$LIVE_ROOT/etc/greia-os/system-update-keys/"
+  chmod 0644 "$LIVE_ROOT/etc/greia-os/system-update-keys/"*.pem
+  chown root:root "$LIVE_ROOT/etc/greia-os/system-update-keys" "$LIVE_ROOT/etc/greia-os/system-update-keys/"*.pem
+  # Dedicated GRUB secret for the installed target's fixed boot entries. This
+  # is deliberately distinct from the USB boot-menu recovery hash generated
+  # at USB assembly: sharing one secret would let the installer recovery
+  # code unlock the installed system's GRUB.
+  AB_GRUB_SECURITY_ROOT="$BUILD_DIR/installer-ab-grub-security"
+  AB_GRUB_RECOVERY_CODE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-ab-grub-recovery-code.txt"
+  mkdir -p "$AB_GRUB_SECURITY_ROOT"
+  PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.grub_security \
+    "$AB_GRUB_SECURITY_ROOT" --copy-code-to "$AB_GRUB_RECOVERY_CODE"
+  ab_grub_hash="$(cat "$AB_GRUB_SECURITY_ROOT/etc/greia-os/grub-recovery.pbkdf2")"
+  [[ -n "$ab_grub_hash" ]] || { echo "A/B installer build refused: GRUB secret generation failed." >&2; exit 1; }
+  if [[ "${installer_sets:-}" == *developer-remote* ]]; then
+    ab_developer=1
+  else
+    ab_developer=0
+  fi
+  cat > "$LIVE_ROOT/etc/greia-os/installer-ab.env" <<ABENV
+# Greia OS installer A/B release facts (generated, do not hand-edit).
+# Profile $PROFILE_ID / layout $STORAGE_LAYOUT_ADAPTER / backend $UPDATES_BOOT_BACKEND.
+GREIA_AB_RELEASE_BUNDLE=/run/live/medium/payload/greia-release.greiaupdate
+GREIA_AB_TRUSTED_KEY_DIR=/etc/greia-os/system-update-keys
+GREIA_AB_GRUB_PASSWORD_HASH=$ab_grub_hash
+GREIA_AB_DEVELOPER=$ab_developer
+GREIA_AB_SUPPORT_INSTALLED_BYTES=$hardware_support_pool_bytes
+ABENV
+  chmod 0644 "$LIVE_ROOT/etc/greia-os/installer-ab.env"
+  chown root:root "$LIVE_ROOT/etc/greia-os/installer-ab.env"
+  # Re-assert exactly what the medium now carries.
+  [[ -s "$LIVE_ROOT/etc/greia-os/installer-ab.env" ]] || {
+    echo "A/B installer build refused: generated installer-ab.env is missing." >&2
+    exit 1
+  }
+  ab_live_keys="$(find "$LIVE_ROOT/etc/greia-os/system-update-keys" -maxdepth 1 -type f -name '*.pem' | wc -l)"
+  (( ab_live_keys > 0 )) || {
+    echo "A/B installer build refused: trusted keys missing on the installer medium." >&2
+    exit 1
+  }
+  cp "$LIVE_ROOT/etc/greia-os/installer-ab.env" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-installer-ab.env"
+  chmod 0644 "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-installer-ab.env"
+else
+  # Single-root recovery media carry no A/B facts by construction.
+  rm -f "$LIVE_ROOT/etc/greia-os/installer-ab.env"
+fi
+
+chroot "$LIVE_ROOT" apt-get autoclean
+rm -rf "$LIVE_ROOT/var/lib/apt/lists/"*
 find "$LIVE_ROOT" -xdev -type d -name __pycache__ -prune -exec rm -rf '{}' +
 chroot "$LIVE_ROOT" update-initramfs -u -k all
 kernel_name="$(find "$LIVE_ROOT/boot" -maxdepth 1 -type f -name 'vmlinuz-*' -printf '%f\n' | sort -V | tail -1)"
@@ -467,6 +565,24 @@ cp "$KERNEL_PATH" "$USB_MOUNT/live/vmlinuz"
 cp "$INITRD_PATH" "$USB_MOUNT/live/initrd.img"
 cp "$TARGET_PAYLOAD" "$USB_MOUNT/payload/pip-rootfs.squashfs"
 cp "$TARGET_PAYLOAD_DIGEST" "$USB_MOUNT/payload/pip-rootfs.squashfs.sha256"
+# POSTR1-P2: the signed A/B release bundle travels in the USB payload beside
+# the target squashfs and is re-asserted here — the installer-ab.env reference
+# above must resolve on the booted medium.
+if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
+  [[ -n "${AB_RELEASE_SRC:-}" && -f "$AB_RELEASE_SRC" && ! -L "$AB_RELEASE_SRC" ]] || {
+    echo "A/B installer build refused: signed release bundle missing for USB payload." >&2
+    exit 1
+  }
+  cp "$AB_RELEASE_SRC" "$USB_MOUNT/payload/greia-release.greiaupdate"
+  chmod 0644 "$USB_MOUNT/payload/greia-release.greiaupdate"
+  [[ -s "$USB_MOUNT/payload/greia-release.greiaupdate" ]] || {
+    echo "A/B installer build refused: release bundle missing on the installer medium." >&2
+    exit 1
+  }
+  ab_bundle_sha256="$(sha256sum "$USB_MOUNT/payload/greia-release.greiaupdate" | awk '{print $1}')"
+else
+  ab_bundle_sha256="none-legacy-single-root"
+fi
 # Removable installer media carries only declarative, non-executable build
 # metadata. The old shell-sourced profile.env representation is intentionally
 # gone so profile selection cannot become a code-execution/configuration seam.
@@ -531,6 +647,10 @@ install -m 0644 "$INSTALLER_PROFILE_MANIFEST" "$INSTALLER_PROFILE_REPORT"
   echo "target_payload_bytes=$(stat -c %s "$TARGET_PAYLOAD")"
   echo "target_payload_sha256=$payload_sha256"
   echo "embedded_payload_digest=/etc/greia-os/expected-payload.sha256"
+  echo "storage_layout_adapter=$STORAGE_LAYOUT_ADAPTER"
+  echo "updates_boot_backend=$UPDATES_BOOT_BACKEND"
+  echo "installer_ab_env=/etc/greia-os/installer-ab.env"
+  echo "installer_ab_bundle_sha256=${ab_bundle_sha256:-none-legacy-single-root}"
   echo "live_media_id=$live_media_id"
   echo "live_media_marker=/.disk/live-uuid"
   echo "boot_cover_backend=$BOOT_COVER_BACKEND"

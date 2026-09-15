@@ -5,6 +5,8 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 # shellcheck source=lib/safe-cleanup.sh
 source "$SCRIPT_DIR/lib/safe-cleanup.sh"
+# shellcheck source=lib/apt-cache.sh
+source "$SCRIPT_DIR/lib/apt-cache.sh"
 
 PROFILE_TOOL="$PROJECT_ROOT/tools/build_profile.py"
 PACKAGE_SET_ROOT="$SCRIPT_DIR/package-sets"
@@ -134,6 +136,14 @@ mkdir -p "$ROOTFS"
 mount "$partition" "$ROOTFS"
 MOUNTS+=("$ROOTFS")
 
+# Persistent host apt cache: bind-mount BEFORE debootstrap so the base
+# downloads land in the persistent host cache instead of the real target
+# directory. A post-debootstrap mount would shadow debootstrap's .debs on the
+# real filesystem (invisible to du -sx, counted by df) and they would survive
+# into the image. Released by cleanup() (safe_unmount_paths); never clear the
+# host cache.
+APT_CACHE_MOUNT="$(mount_apt_archives_cache "$ROOTFS")"; MOUNTS+=("$APT_CACHE_MOUNT")
+
 echo "Bootstrapping Debian $SUITE $ARCH..."
 [[ -r "$DEBIAN_ARCHIVE_KEYRING" ]] || { echo "Pinned Debian archive keyring is missing: $DEBIAN_ARCHIVE_KEYRING" >&2; exit 1; }
 debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates --keyring="$DEBIAN_ARCHIVE_KEYRING" --force-check-gpg "$SUITE" "$ROOTFS" "$MIRROR"
@@ -191,6 +201,8 @@ mount --rbind /sys "$ROOTFS/sys"; MOUNTS+=("$ROOTFS/sys"); mount --make-rslave "
 mount -t tmpfs tmpfs "$ROOTFS/run"; MOUNTS+=("$ROOTFS/run")
 install -d -m 0755 "$ROOTFS/run/systemd/resolve"
 cat /etc/resolv.conf > "$ROOTFS/run/systemd/resolve/stub-resolv.conf" 2>/dev/null || true
+# NOTE: the persistent apt cache is already bind-mounted above (before
+# debootstrap); no second mount here. Released by cleanup().
 
 APT_ACQUIRE_OPTIONS=(
   -o Acquire::Retries=3
@@ -374,7 +386,8 @@ build_early_framebuffer() {
 build_early_framebuffer "$ROOTFS"
 
 systemctl --root="$ROOTFS" enable \
-  greia-first-boot.service greia-launcher.service greia-parent.service \
+  greia-first-boot.service greia-boot-observer.service greia-launcher.service greia-parent.service \
+  greia-boot-health.socket greia-system-update.socket \
   systemd-networkd.service systemd-resolved.service iwd.service avahi-daemon.service
 systemctl --root="$ROOTFS" mask \
   getty@.service autovt@.service console-getty.service debug-shell.service \
@@ -462,6 +475,38 @@ if [[ "$target_sets" == *developer-remote* ]]; then
   provision_developer_ssh "$ROOTFS"
 fi
 
+# POSTR1-P5 footprint composition reduction (build-hygiene only; no
+# Phase-0 product scope removed). The official acer-aspire-one-i386-ab
+# target measured 1080 MiB against required <1000 MiB; the overrun is
+# build-toolchain orphans plus surviving base-system locale/man/doc
+# weight, reclaimed here before manifest/footprint capture:
+#   1. purge orphaned build-toolchain binutils (~32 MiB; auto-marked with
+#      no installed reverse-dependency; plain autoremove does not reclaim);
+#   2. prune the unused cc1 compiler backend (~34 MiB; pulled only via the
+#      x11-xserver-utils hard dependency on cpp; the platform uses only
+#      xrandr/xinput, never xrdb/cpp);
+#   3. deterministically prune base-system non-English gettext locales
+#      (~32 MiB; the child UI uses Greia locale JSON, not system gettext);
+#   4. deterministically prune base man/info pages and non-copyright doc
+#      files (~19 MiB; no runtime man/doc reader exists on the appliance).
+chroot "$ROOTFS" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+  apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y purge --auto-remove binutils >/dev/null
+chroot "$ROOTFS" apt-get -y autoremove >/dev/null 2>&1 || true
+rm -f "$ROOTFS"/usr/lib/gcc/*/*/cc1
+if [[ -d "$ROOTFS/usr/share/locale" ]]; then
+  find "$ROOTFS/usr/share/locale" -mindepth 1 -maxdepth 1 -type d ! -name 'en*' -exec rm -rf '{}' +
+fi
+if [[ -d "$ROOTFS/usr/share/man" ]]; then
+  find "$ROOTFS/usr/share/man" -mindepth 1 -exec rm -rf '{}' +
+fi
+if [[ -d "$ROOTFS/usr/share/info" ]]; then
+  find "$ROOTFS/usr/share/info" -mindepth 1 -exec rm -rf '{}' +
+fi
+if [[ -d "$ROOTFS/usr/share/doc" ]]; then
+  find "$ROOTFS/usr/share/doc" -mindepth 1 -maxdepth 1 -type d \
+    -exec find '{}' -maxdepth 1 -type f ! -name copyright -delete ';'
+fi
+
 # Record the exact package/kernel base actually resolved by APT. Profiles use
 # Debian suite names and meta-packages, so this manifest is the authoritative
 # identity of a produced image until snapshot-pinned builds are introduced.
@@ -510,8 +555,10 @@ chmod 0644 "$ROOTFS/etc/greia-os/package-manifest.tsv" \
   "$ROOTFS/etc/greia-os/security-support-status.txt"
 
 # Avoid package/cache growth and persistent logs on the 7 GB reference disk.
-chroot "$ROOTFS" apt-get clean
-rm -rf "$ROOTFS/var/lib/apt/lists/"* "$ROOTFS/var/cache/apt/archives/"*.deb
+# autoclean keeps the persistent host .deb cache (bind-mounted above) for the
+# next build; only APT lists are dropped from the image.
+chroot "$ROOTFS" apt-get autoclean
+rm -rf "$ROOTFS/var/lib/apt/lists/"*
 find "$ROOTFS" -xdev -type d -name __pycache__ -prune -exec rm -rf '{}' +
 find "$ROOTFS/var/log" -type f -exec truncate -s 0 '{}' +
 

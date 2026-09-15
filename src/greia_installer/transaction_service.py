@@ -872,12 +872,16 @@ def build_live_service(
     element — bundle, key dir, password hash, support bound, block-effect
     seams or observed-identity observation — raises fail-closed here,
     before any socket is served. An A/B profile never silently falls back
-    to the legacy single-partition engine. Block-effect factories resolve
-    on the device-execution path; pass them explicitly when the device seam
-    owns them.
+    to the legacy single-partition engine. Block-effect factories default
+    to the production pair from :mod:`greia_installer.device_seams`
+    (device-backed slot storage/filesystem/package installer over the
+    rematerialized target, production partition/persist runners, post-layout
+    ``blkid`` observer); pass them explicitly only when the device seam or
+    a test harness owns them.
     """
     from .composition import (
         AbInstallCompositionError,
+        ab_executor_facts_from_environment,
         build_install_service,
         install_mode_for_state,
     )
@@ -911,12 +915,36 @@ def build_live_service(
             authority=authority, state=state, install_mode="legacy-single"
         )
     try:
+        _defaulted_seams_factory = ab_seams_factory
+        _defaulted_identities_factory = ab_identities_factory
+        if _defaulted_seams_factory is None or _defaulted_identities_factory is None:
+            # Production default: bind the rematerialized target into fully
+            # typed seams from executor facts + service state. Explicit
+            # injected factories remain a supported test/harness feature and
+            # take precedence wherever supplied. A missing production
+            # configuration raises here (fail-closed degraded construction),
+            # never a silent legacy fallback.
+            from .device_seams import (
+                build_production_seam_pair,
+                config_from_facts_and_state,
+            )
+
+            prod_facts = ab_executor_facts_from_environment(state=state)
+            prod_config = config_from_facts_and_state(
+                facts=prod_facts,
+                hardware_support_pool=state.hardware_support_pool,
+            )
+            prod_seams, prod_identities = build_production_seam_pair(prod_config)
+            if _defaulted_seams_factory is None:
+                _defaulted_seams_factory = prod_seams
+            if _defaulted_identities_factory is None:
+                _defaulted_identities_factory = prod_identities
         return build_install_service(
             state=state,
             authority=authority,
             ab_from_environment=True,
-            ab_seams_factory=ab_seams_factory,  # type: ignore[arg-type]
-            ab_identities_factory=ab_identities_factory,  # type: ignore[arg-type]
+            ab_seams_factory=_defaulted_seams_factory,  # type: ignore[arg-type]
+            ab_identities_factory=_defaulted_identities_factory,  # type: ignore[arg-type]
         )
     except AbInstallCompositionError as exc:
         raise TransactionServiceError(str(exc)) from exc

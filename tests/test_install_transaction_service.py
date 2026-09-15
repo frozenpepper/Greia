@@ -869,7 +869,17 @@ class SplitUnitContractTests(unittest.TestCase):
             unit,
         )
         self.assertIn("RestrictAddressFamilies=AF_UNIX", unit)
-        self.assertIn("StandardInput=socket", unit)
+        # Directive-level check (comments may name the forbidden value):
+        # no StandardInput=socket directive (it leaves LISTEN_FDS unset
+        # and the entry exits fail-closed); the service starts only via
+        # its socket through the native fd store.
+        stdin_lines = [
+            line.strip()
+            for line in unit.splitlines()
+            if line.strip().startswith("StandardInput=")
+        ]
+        self.assertNotIn("StandardInput=socket", stdin_lines)
+        self.assertIn("Requires=greia-install-transaction.socket", unit)
         self.assertNotIn("WantedBy=", unit)
 
     def test_run_directory_is_declared_before_socket_bind(self) -> None:

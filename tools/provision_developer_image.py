@@ -179,7 +179,7 @@ class DeveloperImageProvisioner:
         profile = payload.get("profile")
         package_sets = payload.get("package_sets")
         expected = self.config.expected_profile
-        if not isinstance(profile, dict) or profile.get("profile_id") != expected:
+        if not isinstance(profile, dict) or profile.get("id") != expected:
             raise DeveloperImageProvisionError(
                 f"refusing to provision non-developer/unexpected profile; expected {expected!r}"
             )

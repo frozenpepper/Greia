@@ -1258,3 +1258,90 @@ gate (T7, T8, downstream adapters) remains `PLANNED` until its executable
 proof runs. Stale R2 `planned` boot proofs are not ordered for rerun by this
 ledger; T0-LEDGER dispositions each predicate as
 PROVEN / STALE-SUPERSEDED / STILL-OPEN with a named owner.
+
+---
+
+# Post-R1 evidence correction (appended 2026-09-12, `POSTR1-P0-AUTHORITY-RECONCILE`)
+
+Documentation/routing correction only; no source claim below exceeds
+source scope, and no earlier entry in this ledger was rewritten.
+
+- **Frozen baseline:** `main` == `372ee310f8e9a652bb88ecce75168e62928489e7`,
+  clean tree. Lifecycle tranche on top of the cited plan baseline:
+  `d13fc571` (T0–T6 source completion), `9e6f4e93` (device-leg tranche 2),
+  `44be4853` (device-leg tranche 3), `f7270e61` (forged-peer refusal
+  restoration), `372ee310` (suite hardening). Test results are never
+  inferred from these commit messages.
+- **T3 is split.** T3 source work is renamed **T3-S (source composition
+  primitives — DONE, grade S)**: builders, protocols,
+  writer/finalizer/journal/health abstractions and harness-injected
+  composition exist and are useful. The exact shipped product path is
+  added as **T3-P (shipped product composition — OPEN / BLOCKING)**.
+  Confirmed against the frozen head: shipped installer `main()`
+  (`src/greia_installer/transaction_service.py`) still calls
+  `build_live_service()` with no `ab_seams_factory`/`ab_identities_factory`;
+  the installer unit supplies no `GREIA_AB_*` facts; fresh-install identity
+  observation (`build_ab_executor`: `observed = identities_factory(target)`)
+  still occurs before real partitioning inside `execute_fresh_ab_install`;
+  shipped update `main()` (`src/greia_platform/system_updates.py`) still
+  composes an empty default `UpdateSlotSeams`; the update unit/socket
+  remain gated by the absent
+  `/run/greia-os/enable-privileged-transactions` marker and lack
+  installed-system compatibility facts; there is no single platform-owned
+  early boot-observation owner (`ProductionActualBootObserver` exists only
+  as a library consumed launcher-side); launcher-side BOOT_HEALTHY still
+  has no privileged product boundary and the launcher unit provisions no
+  credential.
+- **T7 stays GREEN in its exact disposable/device-harness scope** (T1/T2/T4/
+  T5/T6/T7 source and harness evidence preserved as R1 achievements). T7
+  exercised production constructors with explicit image-integration
+  factories supplied by the harness; it is **not** the exact shipped
+  service/unit proof and must not be described as one.
+- **Historical Acer suite waiver retained as historical evidence** until a
+  new exact-head rerun replaces it.
+- **Retained gaps:** `.greiabackup` absent; recovery media absent; Parent
+  encrypted/authenticated LAN transport still blocked (provisional HTTP).
+- **Next executable task:** `POSTR1-P1-INSTALLER-RED` (P1.1 installer
+  composition RED). P1.2/P1.3 RED tests, P1.4 systemd-sandbox RED proof and
+  all P2+ product-composition work are future work. Do not start Pi 400/500,
+  UEFI, or destructive Acer installation in this lane.
+
+---
+
+# Post-R1 evidence entry (appended 2026-09-12, `POSTR1-P3-TIMING-WAIVER-RECORD`)
+
+Documentation/evidence record only; no earlier entry in this ledger was
+rewritten.
+
+- **Owner authority:**
+  `TBag/runs/R1/authority/decisions/postr1--POSTR1-P3-PREINTRO-TIMING-MEASURE--001.md`
+  (2026-09-12; functionality first — "lets have everything working, then we
+  will work on shaving seconds in a later stage").
+- **Preregistered pre-intro timing comparison (P1–P4 predicates):
+  DEFERRED** and waived for Gate P3 / `UPDATE_PRODUCT_COMPOSED`. It was
+  not measured and is not proven. This supersedes
+  `POSTR1-P3-PREINTRO-TIMING-MEASURE`, which never passed: no QEMU
+  baseline/activated boot occurred and no measurement record exists. No
+  measurement is fabricated or interpolated here.
+- **The red timing predicate stays red and parked:** waived by explicit
+  owner authority for the P3 gate, not proven and not narrowed by workers.
+  Gate P3 no longer depends on it; `POSTR1-P3-UPDATE-ACTIVATION`
+  integration and `POSTR1-P3-UPDATE-PROOF2` may proceed without the timing
+  evidence.
+- The fixed 7.0 s intro (5 s animation + 2 s hold) and the frozen P1–P4
+  predicate definitions remain unchanged; only their scheduling/ownership
+  changes.
+- **Re-ownership obligation:** the timing proof must be re-owned by the
+  later boot/performance stage plan before release certification.
+
+## 2026-09-15 — D5 repair note (append-only; architecture unchanged)
+
+The shipped install-transaction unit now declares exactly `CAP_SYS_ADMIN` + `CAP_SYS_CHROOT` (D5 minimum-privilege repair, `POSTR1-P5-INSTALLER-CHROOT-PRIVILEGE-FIX`, commit `2eae3f93`): the A/B finalize path installs hardware support via `chroot <slot> apt-get …` through the production argv-array runner, and `chroot(2)` requires `CAP_SYS_CHROOT`. No lifecycle/trigger/PERSIST contract changed; single writer/finalizer preserved; T3-P remains OPEN pending `POSTR1-P5-GATE-CLOSURE-V12G`. Details: `HANDOVER.md` §23.
+
+## 2026-09-15 — Test-guard scoping note (append-only; architecture unchanged)
+
+The installer no-network/tool absence guard in `tests/test_installer_hardware_support_service.py` now evaluates systemd directive lines only (blanks and `#`/`;` comments ignored), with a synthetic positive control proving both directions (`POSTR1-P5-INSTALLER-SVC-TEST-SCOPE`, test-only, no shipped-unit change). No lifecycle/trigger/PERSIST contract changed. Details: `HANDOVER.md` §24.
+
+## 2026-09-15 — V12G closure outcome note (append-only; architecture unchanged)
+
+`POSTR1-P5-GATE-CLOSURE-V12G` re-ran the full live closure at HEAD `98b06079` (official image sha `3d3a01de…`, footprint 985 < 1000): 0/9 predicates GREEN — install-execute timed out (1200 s) and the diag replay isolates new shipped defect D6 (`chroot: failed to run command 'apt-get': No such file or directory`; slot A forensically holds only the streamed 64 MiB bundle payload, so the `chroot <slot> apt-get` finalize leg is deterministically unexecutable with V12E/V12F/V12G-minted bundles). D5 is proven effective on the product path (EPERM gone). No lifecycle/trigger/PERSIST contract changed by this attempt; T3-P remains OPEN pending a product-authority D6 repair decision (full-Debian release payloads vs install flow no longer assuming `apt-get` in a payload-only slot). Details: `HANDOVER.md` §25.

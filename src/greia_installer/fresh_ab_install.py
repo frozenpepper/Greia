@@ -106,10 +106,12 @@ from .disk import DeviceObservation
 from .layout import (
     LayoutError,
     LayoutPlan,
+    PostLayoutIdentityObserver,
     ProfileSizing,
     adapter_for,
     plan_for_profile,
     require_finalized_slot_capacity,
+    validate_observed_identities_against_plan,
 )
 from .persist import (
     FreshPersistSpec,
@@ -157,11 +159,13 @@ class FreshAbInstallRequest:
     ``expected_*`` are the installer image's own compatibility facts: the
     manifest must match all three exactly.     ``install_target_sha256`` is the
     authorized identity digest the privileged protocol rematerialized from a
-    fresh probe (never a ``/dev`` path). ``fresh_identities`` carries the
-    observed role-owned PARTUUID/filesystem-UUID pairs bound to the profile
-    layout adapter's identity scheme (MBR ``<disk-signature>-<NN>`` via the
-    T1-IDENT normalizer, GPT canonical GUIDs); it is required — the
-    orchestrator never mints identities. ``password_hash`` is the stored
+    fresh probe (never a ``/dev`` path). ``fresh_identities`` is RETIRED
+    (POSTR1-P2): production identity observation happens after the
+    destructive partition/filesystem effects through the seams'
+    ``post_layout_identity_observer``, never from caller-supplied
+    pre-layout facts — any non-``None`` value is refused fail-closed so a
+    blank target can never be satisfied with controlled identities.
+    ``password_hash`` is the stored
     GRUB PBKDF2 token rendered into the fixed boot entries.
     """
 
@@ -242,6 +246,12 @@ class FreshAbInstallSeams:
     existing empty directory; ``boot_control_dir``/``backend_state_dir``/
     ``journal_dir`` receive the installed GRUB config, the ``grubenv`` block
     and the ``FIRST_INSTALL_PENDING`` journal.
+    ``post_layout_identity_observer`` is the narrow post-layout seam the
+    orchestrator invokes as ``observer(target, plan)`` only after
+    ``adapter.execute`` has created the partition table and filesystems;
+    it is required — production binds the real block observer, tests bind
+    recording fakes behind the same seam, and it is never invoked before
+    the first destructive command.
     """
 
     partition_runner: PartitionRunner
@@ -263,6 +273,7 @@ class FreshAbInstallSeams:
     microcode_packages: tuple[str, ...] = ()
     payload_stream_factory: Callable[[], BinaryIO] | None = None
     inventory_complete: bool = True
+    post_layout_identity_observer: PostLayoutIdentityObserver | None = None
 
     def __post_init__(self) -> None:
         _require_hex64(self.inventory_token, field_name="hardware inventory token")
@@ -271,6 +282,12 @@ class FreshAbInstallSeams:
             value = getattr(self, field_name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise FreshAbInstallError(f"{field_name} must be a non-negative integer")
+        if self.post_layout_identity_observer is not None and not callable(
+            self.post_layout_identity_observer
+        ):
+            raise FreshAbInstallError(
+                "post-layout identity observer must be a callable observer"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -569,8 +586,23 @@ def execute_fresh_ab_install(
     if plan.boot_backend != request.sizing.boot_backend:
         raise FreshAbInstallError("layout boot backend does not match the profile sizing")
 
-    # -- Fresh role-owned identities (observed, never minted) ------------
-    minted = _fresh_identities(request)
+    # -- Post-layout observer wiring (checked BEFORE destruction) ---------
+    # Caller-supplied pre-layout identities are retired: a blank target
+    # cannot satisfy them, and trusting them would let a harness fabricate
+    # MBR PARTUUID authority. The observer below runs only after
+    # ``adapter.execute`` creates the identities.
+    if request.fresh_identities is not None:
+        raise FreshAbInstallError(
+            "fresh install no longer accepts caller-supplied partition "
+            "identities; production observation happens after partitioning "
+            "through the post-layout identity observer"
+        )
+    observer = seams.post_layout_identity_observer
+    if observer is None or not callable(observer):
+        raise FreshAbInstallError(
+            "fresh install requires a post-layout identity observer; "
+            "minting an independent UUID4 is retired"
+        )
     try:
         from greia_platform.slot_writer import (
             HardwareInventoryAttestation,
@@ -584,6 +616,10 @@ def execute_fresh_ab_install(
             layout_id=request.sizing.layout_adapter_id,
             system_slot_bytes=int(request.sizing.slot_bytes),
             boot_backend=request.sizing.boot_backend,
+            architecture=manifest.architecture,
+            platform_family=manifest.platform_family,
+            profile=manifest.profile,
+            version=manifest.version,
         )
     except (SlotWriteError, SlotFinalizeError) as exc:
         raise FreshAbInstallError(f"install policy facts are not authoritative: {exc}") from exc
@@ -602,6 +638,27 @@ def execute_fresh_ab_install(
     except Exception as exc:
         raise FreshAbInstallError(f"disk partitioning failed fail-closed: {exc}") from exc
 
+    # -- 3b. Observe + bind identities AFTER the layout effects -----------
+    # MBR PARTUUID authority is observed from the partitioned target, never
+    # minted/predicted: the observer settles/rescans through the block
+    # layer (partprobe + udevadm settle + role mkfs already ran inside
+    # ``adapter.execute``) and returns the actual disk signature, role
+    # PARTUUIDs and filesystem UUIDs. Any observation failure aborts here,
+    # before a single SYSTEM_A payload byte is written.
+    try:
+        raw_observed = observer(request.target, plan)
+    except FreshAbInstallError:
+        raise
+    except LayoutError as exc:
+        raise FreshAbInstallError(
+            f"post-layout identity observation refused: {exc}"
+        ) from exc
+    except Exception as exc:
+        raise FreshAbInstallError(
+            f"post-layout identity observation is not authoritative: {exc}"
+        ) from exc
+    observed = _bind_post_layout_identities(plan, raw_observed)
+
     # -- 4./5. Stream + finalize SYSTEM_A only (B never addressed) ---------
     destination_a = DestinationSlot(
         semantic_slot="A",
@@ -610,8 +667,8 @@ def execute_fresh_ab_install(
         active_slot=None,
         accepted_slot=None,
         layout_id=request.sizing.layout_adapter_id,
-        role_filesystem_uuid=minted["system-a"]["filesystem_uuid"],
-        other_role_filesystem_uuid=minted["system-b"]["filesystem_uuid"],
+        role_filesystem_uuid=observed["system-a"]["filesystem_uuid"],
+        other_role_filesystem_uuid=observed["system-b"]["filesystem_uuid"],
     )
     try:
         storage = seams.slot_storage_factory("A")
@@ -685,12 +742,12 @@ def execute_fresh_ab_install(
         accepted_release_id=member.release_id,
         accepted_release_sequence=member.release_sequence,
         slot_bytes=int(request.sizing.slot_bytes),
-        system_a=dict(minted["system-a"]),
-        system_b=dict(minted["system-b"]),
-        persist_partuuid=minted["persist"]["partuuid"],
+        system_a=dict(observed["system-a"]),
+        system_b=dict(observed["system-b"]),
+        persist_partuuid=observed["persist"]["partuuid"],
     )
     persist_uuid_factory = seams.persist_uuid_factory or (
-        lambda: uuid.UUID(minted["persist"]["filesystem_uuid"])
+        lambda: uuid.UUID(observed["persist"]["filesystem_uuid"])
     )
     try:
         persist_result = initialize_fresh_persist(
@@ -823,9 +880,10 @@ class AbExecutorFacts:
     (identity digest), the service-held settings snapshot outcome and the
     rematerialized target, then runs :func:`execute_fresh_ab_install`
     through the bound seam factories. Observed partition identities arrive
-    per ``EXECUTE`` through the executor's ``identities_factory`` (device
-    facts for the rematerialized target), never from UI request bytes and
-    never from a mint.
+    per ``EXECUTE`` through the executor's post-layout ``identities_factory``
+    observer (invoked by the orchestrator with ``(target, plan)`` only
+    after the partition/filesystem effects exist), never from UI request
+    bytes and never from a mint.
     """
 
     bundle_path: Path
@@ -868,7 +926,10 @@ def build_ab_executor(
     seams_factory: Callable[[DeviceObservation], FreshAbInstallSeams],
     *,
     identities_factory: (
-        Callable[[DeviceObservation], Mapping[str, Mapping[str, str]]] | None
+        Callable[
+            [DeviceObservation, LayoutPlan], Mapping[str, Mapping[str, str]]
+        ]
+        | None
     ) = None,
 ):
     """Bind service-owned facts into an :attr:`ab_executor` callable.
@@ -876,15 +937,17 @@ def build_ab_executor(
     ``seams_factory`` receives the rematerialized target and returns the
     fully bound seams (partition/persist runners, slot storage/filesystem,
     staging dirs, journal/backend dirs, support/inventory facts).
-    ``identities_factory`` receives the same rematerialized target and
-    returns the observed partition identities bound by
-    :func:`execute_fresh_ab_install` (MBR ``<disk-signature>-<NN>`` via the
-    T1-IDENT normalizer, GPT canonical GUIDs); it is required — a missing
-    factory refuses fail-closed before any destructive work instead of
-    minting an independent UUID4. The returned executor takes
-    ``(authorization, settings, locale, target)`` from
-    :meth:`InstallTransactionService.execute_ab_install` and returns an
-    install result object; any refusal raises fail-closed.
+    ``identities_factory`` is the post-layout identity observer: the
+    orchestrator invokes it as ``observer(target, plan)`` only after
+    ``adapter.execute`` has created the partition table and filesystems,
+    then binds the result through the T1 validators plus the
+    partition-number gate (MBR ``<disk-signature>-<NN>`` via the T1-IDENT
+    normalizer, GPT canonical GUIDs). It is required — a missing observer
+    refuses fail-closed before any destructive work instead of minting an
+    independent UUID4 — and it is never invoked before partitioning. The
+    returned executor takes ``(authorization, settings, locale, target)``
+    from :meth:`InstallTransactionService.execute_ab_install` and returns
+    an install result object; any refusal raises fail-closed.
     """
     if not isinstance(facts, AbExecutorFacts):
         raise FreshAbInstallError("A/B executor requires typed service facts")
@@ -898,22 +961,19 @@ def build_ab_executor(
         _require_hex64(identity, field_name="install target identity")
         if not isinstance(target, DeviceObservation):
             raise FreshAbInstallError("A/B executor requires a rematerialized target")
-        if identities_factory is None:
-            raise FreshAbInstallError(
-                "A/B executor requires observed partition identities; "
-                "minting an independent UUID4 is retired"
-            )
-        try:
-            observed = identities_factory(target)
-        except FreshAbInstallError:
-            raise
-        except Exception as exc:
-            raise FreshAbInstallError(
-                f"observed partition identities are not authoritative: {exc}"
-            ) from exc
         seams = seams_factory(target)
         if not isinstance(seams, FreshAbInstallSeams):
             raise FreshAbInstallError("A/B seam factory returned no install seams")
+        observer = identities_factory or seams.post_layout_identity_observer
+        if observer is None or not callable(observer):
+            raise FreshAbInstallError(
+                "A/B executor requires a post-layout identity observer; "
+                "minting an independent UUID4 is retired"
+            )
+        # Bind the post-layout observer without invoking it: the
+        # orchestrator calls it only after the partition/filesystem
+        # effects exist, never before the first destructive command.
+        seams.post_layout_identity_observer = observer  # type: ignore[union-attr]
         request = FreshAbInstallRequest(
             bundle_path=facts.bundle_path,
             trusted_key_dir=facts.trusted_key_dir,
@@ -926,7 +986,6 @@ def build_ab_executor(
             install_target_sha256=identity,
             password_hash=facts.password_hash,
             developer=facts.developer,
-            fresh_identities=observed,  # type: ignore[arg-type]
         )
         result = execute_fresh_ab_install(request, seams)
         return _InstallResultShim(
@@ -995,142 +1054,30 @@ def _support_set_from_seams(seams: FreshAbInstallSeams):  # -> ReleaseSupportSet
     )
 
 
-def _require_canonical_filesystem_uuid(value: object) -> str:
-    """Normalize an observed filesystem UUID to canonical lowercase text."""
-    try:
-        parsed = uuid.UUID(str(value))
-    except (ValueError, AttributeError, TypeError) as exc:
-        raise FreshAbInstallError(
-            "observed filesystem identity is not a valid UUID"
-        ) from exc
-    text = str(parsed)
-    if not isinstance(value, str) or value != text:
-        raise FreshAbInstallError(
-            "observed filesystem UUID must be canonical lowercase UUID text"
-        )
-    return text
+def _bind_post_layout_identities(
+    plan: LayoutPlan,
+    raw: Mapping[str, Mapping[str, str]],
+) -> dict[str, dict[str, str]]:
+    """Bind observer-returned post-layout identities to the validated plan.
 
-
-def _fresh_identities(request: FreshAbInstallRequest) -> dict[str, dict[str, str]]:
-    """Bind the orchestrator to caller-supplied observed partition identities.
-
-    T3-INSTALL rewire (TAKEOVER D51): identities are observed device facts,
-    never minted here. ``request.fresh_identities`` must carry one mapping
-    per layout-authority role (``system-a``/``system-b``/``persist``); each
-    entry holds ``partuuid`` + ``filesystem_uuid`` and may carry an explicit
-    ``scheme``. The PARTUUID is normalized with the parser owned by the
-    profile layout adapter's expected scheme
-    (:func:`greia_platform.persistent_layout.normalize_partuuid_for_scheme`):
-    MBR layouts accept only the observed ``<disk-signature>-<NN>`` form, so
-    a minted UUID4 labeled as an MBR PARTUUID is rejected; GPT layouts accept
-    only canonical GUIDs. An explicit scheme must equal the expected one, MBR
-    bindings must share one disk signature, and every identity must be
-    unique across roles. ``None`` is refused: no path mints an independent
-    UUID4. The returned mappings carry an explicit scheme so layout
-    authority re-proves the adapter binding at record construction.
+    Thin orchestrator wrapper over
+    :func:`greia_installer.layout.validate_observed_identities_against_plan`:
+    the T1 typed validators (``normalize_partuuid_for_scheme``,
+    ``split_mbr_partuuid``, cross-disk/uniqueness checks) plus the
+    adapter-declared partition-number binding are owned there, so a minted
+    UUID4 labeled as an MBR PARTUUID, a cross-disk mix, a swapped
+    partition number, or any cloned identity is refused here — after
+    partitioning, before any ``SYSTEM_A`` payload byte. Failures surface
+    as :class:`FreshAbInstallError` (orchestrator authority).
     """
-    from greia_platform.persistent_layout import (
-        LAYOUT_PARTITION_SCHEMES,
-        PARTITION_SCHEME_MBR_PARTUUID,
-        PersistentLayoutError,
-        normalize_partuuid_for_scheme,
-        split_mbr_partuuid,
-    )
-
-    adapter_id = getattr(request.sizing, "layout_adapter_id", None)
-    expected = (
-        LAYOUT_PARTITION_SCHEMES.get(adapter_id)
-        if isinstance(adapter_id, str)
-        else None
-    )
-    if expected is None:
-        raise FreshAbInstallError(
-            "layout identities require a known profile layout adapter"
-        )
-    if request.fresh_identities is None:
-        raise FreshAbInstallError(
-            "fresh install requires observed partition identities; "
-            "minting an independent UUID4 is retired"
-        )
     try:
-        supplied = {
-            role: dict(values)
-            for role, values in dict(request.fresh_identities).items()
-        }
-    except (TypeError, ValueError, AttributeError) as exc:
+        return validate_observed_identities_against_plan(
+            plan=plan, identities=raw
+        )
+    except LayoutError as exc:
         raise FreshAbInstallError(
-            f"layout identities are not authoritative: {exc}"
+            f"observed layout identities are not authoritative: {exc}"
         ) from exc
-    if set(supplied) != {"system-a", "system-b", "persist"}:
-        raise FreshAbInstallError(
-            "layout identities must cover system-a/system-b/persist"
-        )
-    bound: dict[str, dict[str, str]] = {}
-    for role in ("system-a", "system-b", "persist"):
-        entry = supplied[role]
-        if not isinstance(entry, dict):
-            raise FreshAbInstallError(
-                f"layout identity {role} must hold an identity mapping"
-            )
-        keys = set(entry)
-        if keys == {"partuuid", "filesystem_uuid"}:
-            pass
-        elif keys == {"scheme", "partuuid", "filesystem_uuid"}:
-            if entry["scheme"] != expected:
-                raise FreshAbInstallError(
-                    f"layout identity {role} scheme {entry['scheme']!r} does not "
-                    f"match the profile layout adapter (expected {expected!r})"
-                )
-        else:
-            raise FreshAbInstallError(
-                f"layout identity {role} must hold scheme/partuuid/filesystem_uuid"
-            )
-        try:
-            partuuid = normalize_partuuid_for_scheme(
-                expected, entry["partuuid"], field=f"{role}.partuuid"
-            )
-        except PersistentLayoutError as exc:
-            raise FreshAbInstallError(
-                f"layout identity {role}.partuuid is not authoritative: {exc}"
-            ) from exc
-        try:
-            filesystem_uuid = _require_canonical_filesystem_uuid(
-                entry["filesystem_uuid"]
-            )
-        except FreshAbInstallError as exc:
-            raise FreshAbInstallError(
-                f"layout identity {role}.filesystem_uuid is not authoritative: {exc}"
-            ) from exc
-        bound[role] = {
-            "scheme": expected,
-            "partuuid": partuuid,
-            "filesystem_uuid": filesystem_uuid,
-        }
-    if expected == PARTITION_SCHEME_MBR_PARTUUID:
-        try:
-            signatures = {
-                split_mbr_partuuid(bound[role]["partuuid"])[0]
-                for role in ("system-a", "system-b", "persist")
-            }
-        except PersistentLayoutError as exc:
-            raise FreshAbInstallError(
-                f"observed MBR PARTUUIDs are not authoritative: {exc}"
-            ) from exc
-        if len(signatures) != 1:
-            raise FreshAbInstallError(
-                "observed MBR PARTUUIDs span multiple disk signatures: "
-                "refusing a cross-disk identity binding"
-            )
-    seen = [
-        bound[role][key]
-        for role in ("system-a", "system-b", "persist")
-        for key in ("partuuid", "filesystem_uuid")
-    ]
-    if len(set(seen)) != len(seen):
-        raise FreshAbInstallError(
-            "layout partition identities must be unique across roles"
-        )
-    return bound
 
 
 def _write_boot_control_config(boot_control_dir: Path, text: str) -> None:

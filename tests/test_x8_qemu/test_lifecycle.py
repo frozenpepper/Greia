@@ -162,19 +162,30 @@ class ShippedLifecycleTests(unittest.TestCase):
             self.assertTrue(harness.report_path.is_file())
 
     def test_default_construction_without_seams_fails_closed(self) -> None:
-        """Shipped constructor with no destination seams stages fail-closed."""
+        """Shipped default binds production seams; staging fails closed with no device.
+
+        "Without seams" means no explicit ``seams`` argument (``seams=None``,
+        the shipped ``main()`` path): per the integrated
+        ``POSTR1-P3-UPDATE-SEAMS`` contract the authority binds the
+        production ``UpdateSlotSeams`` destination factories, and staging
+        still fails closed with ``UpdateBackendUnavailable`` where no
+        inactive device can be resolved — with no journal write, no slot
+        write, no fake/loop fallback, an untouched default slot ``A``, and
+        no single-root routing.
+        """
         from unittest import mock as _mock
 
         from greia_platform.grub_ab import GrubEnvBackend
         from greia_platform.system_updates import (
             SystemUpdateInbox,
             UpdateBackendUnavailable,
+            UpdateSlotSeams,
             build_persistent_state_contract_bytes,
             generate_ed25519_keypair,
         )
         from tools.x8_qemu.lifecycle import (
             build_test_release,
-            default_shipped_authority_without_seams,
+            default_shipped_authority_with_production_seams,
             fresh_machine_state,
             mint_signing_keys,
         )
@@ -197,26 +208,66 @@ class ShippedLifecycleTests(unittest.TestCase):
                 },
                 clear=False,
             ):
-                authority = default_shipped_authority_without_seams(
+                authority = default_shipped_authority_with_production_seams(
                     state_dir=machine["state"],
                     trusted_key_dir=machine["keys"],
                     layout_record_path=machine["layout"],
                     boot_backend=GrubEnvBackend.attach(machine["boot_control"]),
                 )
-                self.assertIsNone(authority.backend.seams.slot_store_factory)
+                # Now-satisfied composition: the shipped default binds the
+                # production destination factories (never an empty set).
+                self.assertIsInstance(authority.backend.seams, UpdateSlotSeams)
+                for factory_name in (
+                    "slot_store_factory",
+                    "filesystem_factory",
+                    "package_installer_factory",
+                    "inventory_factory",
+                    "support_set_factory",
+                    "installed_contract_factory",
+                ):
+                    self.assertIsNotNone(
+                        getattr(authority.backend.seams, factory_name),
+                        f"production {factory_name} must be bound",
+                    )
                 SystemUpdateInbox(machine["state"]).receive(bundle)
                 verified = authority.verify_current_candidate()
                 self.assertTrue(verified.present)
                 journal_file = (
                     machine["state"] / "system-updates" / "journal" / "boot-journal.json"
                 )
-                with self.assertRaises(UpdateBackendUnavailable):
+                layout_before = machine["layout"].read_bytes()
+                boot_before = GrubEnvBackend.attach(
+                    machine["boot_control"]).inspect().default_slot
+                state_before = sorted(
+                    str(p.relative_to(root)) for p in root.rglob("*")
+                    if p.is_file()
+                )
+                with self.assertRaises(UpdateBackendUnavailable) as raised:
                     authority.stage_current_candidate()
+                message = str(raised.exception)
+                # Production refusal names the unavailable production path,
+                # never the retired empty-seam marker and never single-root.
+                self.assertIn("is unavailable", message)
+                self.assertNotIn("destination seam is not configured", message)
+                self.assertNotIn("single-root", message)
             self.assertFalse(journal_file.exists())
+            self.assertEqual(machine["layout"].read_bytes(), layout_before)
             self.assertEqual(
                 GrubEnvBackend.attach(machine["boot_control"]).inspect().default_slot,
                 "A",
             )
+            self.assertEqual(
+                GrubEnvBackend.attach(machine["boot_control"]).inspect().default_slot,
+                boot_before,
+            )
+            state_after = sorted(
+                str(p.relative_to(root)) for p in root.rglob("*")
+                if p.is_file()
+            )
+            new_files = [p for p in state_after if p not in state_before]
+            for extra in new_files:
+                self.assertNotIn("slot-", extra)
+                self.assertNotIn(".img", extra)
             _ = build_persistent_state_contract_bytes
             _ = generate_ed25519_keypair
 
@@ -445,6 +496,26 @@ class HarnessBoundaryTests(unittest.TestCase):
             "LauncherApplication",
             "mark_candidate_unhealthy",
             "observe_legacy_mbr_identities",
+        ):
+            self.assertIn(required, text)
+
+    def test_launcher_acceptance_drives_production_health_bindings(self) -> None:
+        """Launcher legs drive the shipped token->endpoint path, not the vault."""
+        from tools.x8_qemu import lifecycle as module
+
+        text = Path(module.__file__).read_text(encoding="utf-8")
+        # The removed launcher credential vault must stay gone.
+        self.assertNotIn("CREDENTIALS_DIRECTORY", text)
+        self.assertNotIn("default_vault", text)
+        # The harness stages a root-issued one-use capability and serves
+        # the real CONFIRM_BOOT_HEALTH endpoint on disposable paths.
+        for required in (
+            "GREIA_BOOT_HEALTH_DELIVERY_DIR",
+            "GREIA_BOOT_HEALTH_SOCKET_PATH",
+            "maybe_issue_boot_capability",
+            "build_production_verifier",
+            "BootHealthService",
+            "handle_boot_health_connection",
         ):
             self.assertIn(required, text)
 

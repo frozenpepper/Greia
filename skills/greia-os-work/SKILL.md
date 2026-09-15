@@ -37,6 +37,21 @@ For current evidence/test routing use:
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
+## Current blocking route: post-R1 product-composition closure
+
+The next executable task is **`POSTR1-P1-INSTALLER-RED`** (P1.1 installer
+composition RED). Source composition primitives (T3-S) are done; exact
+shipped installer/update/boot-health product composition (T3-P) is
+OPEN/BLOCKING. T7 remains valid only in its disposable/device-harness
+scope. See `HANDOVER.md` §2/§8, the active-plan entry of 2026-09-12, and
+`docs/plans/GREIA_BOOT_INSTALL_LIFECYCLE_TAKEOVER_2026-09-08.md` (post-R1
+correction) for the exact disposition.
+
+Do not start Raspberry Pi 400/500 work, UEFI work, destructive Acer
+installation, or backup work in this lane, and do not treat shipped
+product composition as complete. Pi/UEFI adapters resume only after the
+common product lifecycle is proven.
+
 ## Broad architecture / new platform seam
 
 Read:

@@ -1,8 +1,8 @@
 [Unit]
 Description=Greia OS child launcher
-After=local-fs.target systemd-tmpfiles-setup.service systemd-logind.service greia-first-boot.service
+After=local-fs.target systemd-tmpfiles-setup.service systemd-logind.service greia-first-boot.service greia-boot-health-credential.service
 Requires=greia-first-boot.service
-Wants=greia-parent.service
+Wants=greia-parent.service greia-boot-health-credential.service
 Conflicts=getty@tty1.service
 # Fail-closed existence gate for the volatile runtime roots (D2/P1): PID 1
 # evaluates these natively without a fork. Assert (not Condition) so a missing
@@ -35,6 +35,13 @@ Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 Environment=GREIA_MEDIA_ROOT=/media/greia
 Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
+# P4.3 read-only capability delivery: the root generator stages the one-use
+# BOOT_HEALTHY token under /run/greia-os/boot-health before this unit
+# starts. The launcher (greiakid) reads it read-only at INTERACTIVE_READY
+# and never writes it. The leading "-" keeps plain boots (no pending
+# transaction, no delivery directory) starting normally: the bind is simply
+# skipped instead of failing the unit.
+BindReadOnlyPaths=-/run/greia-os/boot-health
 # The launcher itself remains unprivileged, but Activity roots can be root-owned
 # and sealed read-only. Clean only the curated regenerable host/cache noise in a
 # privileged pre-start helper before any Activity registry is constructed.

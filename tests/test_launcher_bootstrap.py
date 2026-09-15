@@ -80,6 +80,7 @@ BOOT_MARKER_ORDER = (
     "activity_runtime_build_end",
     "history_prepare_begin",
     "history_prepare_end",
+    "launcher_interactive_ready",
     "launcher_construct_end",
 )
 

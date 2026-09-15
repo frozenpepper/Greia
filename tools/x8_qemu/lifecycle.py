@@ -592,18 +592,22 @@ def shipped_update_authority(
         _os.environ.update(previous)
 
 
-def default_shipped_authority_without_seams(
+def default_shipped_authority_with_production_seams(
     *,
     state_dir: Path,
     trusted_key_dir: Path,
     layout_record_path: Path,
     boot_backend: object,
 ):  # type: ignore[no-untyped-def]
-    """Shipped constructor with default (missing) destination seams.
+    """Shipped constructor with the default production destination seams.
 
-    Used only to prove fail-closed staging: stage time must raise
-    ``UpdateBackendUnavailable`` with no silent fallback and no
-    single-root routing.
+    Calls ``build_live_update_service`` with no explicit ``seams`` (the
+    shipped ``main()`` path), so the authority binds the production
+    ``UpdateSlotSeams`` destination factories per the integrated
+    ``POSTR1-P3-UPDATE-SEAMS`` contract. Used only to prove fail-closed
+    staging where no inactive device can be resolved: stage time must
+    raise ``UpdateBackendUnavailable`` with no silent fallback, no journal
+    write, and no single-root routing.
     """
     from greia_platform.system_updates import build_live_update_service
 
@@ -776,6 +780,7 @@ def run_launcher_acceptance(
     identity_path: Path,
     receipt_path: Path,
     journal_candidates: Sequence[Path] = (),
+    update_authority: object | None = None,
 ) -> dict[str, object]:
     """Drive the real launcher acceptance seam exactly once per boot.
 
@@ -784,12 +789,29 @@ def run_launcher_acceptance(
     display/first-frame path, and publishes one synthetic prepared state
     through the real ``apply_prepared_state`` ->
     ``maybe_accept_production_boot`` graph with the production observer,
-    vault, journal and layout bindings resolved from the disposable
-    device tree. Returns the seam-call record plus the outcome.
+    journal and layout bindings resolved from the disposable device tree.
 
-    No stubbed health: the counting wrapper delegates to the real seam.
+    Post-``POSTR1-P4-HEALTH-PROOF2`` product path: a real one-use
+    capability is issued for the booted pending transaction through the
+    production root authority (digest record + delivery token under a
+    disposable health root), the token is delivered via the production
+    ``GREIA_BOOT_HEALTH_DELIVERY_DIR`` binding, and the real root
+    ``CONFIRM_BOOT_HEALTH`` endpoint (``BootHealthService`` behind the
+    production verifier) is served on a disposable AF_UNIX socket bound
+    through ``GREIA_BOOT_HEALTH_SOCKET_PATH``. The launcher seam then
+    connects, presents exactly once, and returns the real outcome. A
+    terminal journal / plain boot yields no delivered token (bounded
+    no-op, socket never touched), so the recovery leg stays
+    non-accepting. Returns the seam-call record plus the outcome.
+
+    No stubbed health: the counting wrapper delegates to the real seam,
+    the token is root-issued, and the commit traverses the real endpoint.
     """
     import os as _os
+    import socket as _socket
+    import tempfile as _tempfile
+    import threading as _threading
+    import uuid as _uuid
     from unittest import mock as _mock
 
     from greia_launcher import boot_health as launcher_health
@@ -801,53 +823,168 @@ def run_launcher_acceptance(
         calls.append(str(getattr(guard.state, "value", guard.state)))
         return real_seam(guard)
 
-    env = {
-        "GREIA_OS_ROOT": str(PROJECT_ROOT),
-        "GREIA_PROFILES_DIR": str(Path(update_state_dir).parent / "profiles"),
-        "GREIA_ACTIVE_PROFILE_STATUS": str(Path(update_state_dir).parent / "active.json"),
-        "GREIA_MAIN_CREDENTIAL_PATH": str(Path(update_state_dir).parent / "cred.json"),
-        "CREDENTIALS_DIRECTORY": str(Path(update_state_dir).parent / "credentials"),
-        "GREIA_UPDATE_STATE_DIR": str(update_state_dir),
-        "GREIA_BOOT_JOURNAL_DIR": str(
-            journal_candidates[0]
+    with _tempfile.TemporaryDirectory(prefix="t6-boot-health-") as health_raw:
+        health_root = Path(health_raw)
+        delivery_dir = health_root / "delivery"
+        delivery_dir.mkdir(parents=True)
+        authority_dir = health_root / "authority"
+        history_dir = health_root / "history"
+        history_dir.mkdir(parents=True)
+        socket_path = health_root / "boot-health.sock"
+        install_journal_dir = (
+            Path(journal_candidates[0])
             if journal_candidates
-            else (Path(update_state_dir).parent / "empty-boot-journal")
-        ),
-        "GREIA_GRUBENV_DIR": str(boot_control_dir),
-        "GREIA_INSTALLED_LAYOUT_RECORD": str(layout_record_path),
-        "GREIA_BOOT_CMDLINE": str(cmdline_path),
-        "GREIA_RELEASE_IDENTITY_PATH": str(identity_path),
-        "GREIA_FINALIZATION_RECEIPT_PATH": str(receipt_path),
-    }
-    with _mock.patch.dict(_os.environ, env, clear=False):
-        from greia_launcher import main as launcher_main
-
-        previous_marker = _os.environ.get(launcher_main.DEVELOPER_MARKER_ENV_VAR)
-        _os.environ[launcher_main.DEVELOPER_MARKER_ENV_VAR] = str(
-            Path(update_state_dir).parent / "no-developer-marker"
+            else (health_root / "empty-boot-journal")
         )
-        _os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-        try:
-            with _mock.patch.object(
-                launcher_health,
-                "maybe_accept_production_boot",
-                side_effect=_counting,
-            ):
-                from greia_launcher.main import LauncherApplication
+        install_journal_dir.mkdir(parents=True, exist_ok=True)
 
-                app = LauncherApplication(windowed=True, allow_exit=True, bootstrap=False)
-                app._boot_lifecycle.mark_display_ready()
-                app._boot_lifecycle.mark_first_frame_visible()
-                app._boot_lifecycle.begin_preparing_runtime()
-                state = _synthetic_prepared_state()
-                app.apply_prepared_state(state)
-                outcome = app._post_intro_health_outcome
-                error = app._post_intro_health_error
+        # Root generator side: issue the real one-use capability for the
+        # pending transaction, if any. Plain boots and terminal journals
+        # yield None and write nothing (bounded no-op preserved).
+        from greia_platform.boot_health import (
+            default_capability_authority,
+            maybe_issue_boot_capability,
+        )
+
+        cap_authority = default_capability_authority(
+            authority_dir=authority_dir,
+            delivery_dir=delivery_dir,
+        )
+        boot_id = str(_uuid.uuid4())
+        issued = maybe_issue_boot_capability(
+            authority=cap_authority,
+            boot_journal_dir=install_journal_dir,
+            update_state_dir=Path(update_state_dir),
+            boot_id=boot_id,
+            peer_bootstrap_path=launcher_health.TRUSTED_BOOTSTRAP_PATH,
+            peer_uid=_os.getuid(),
+        )
+
+        # Root endpoint side: serve the real CONFIRM_BOOT_HEALTH service
+        # on the disposable socket while the launcher runs. Started only
+        # when a capability was actually issued; otherwise the launcher
+        # leg is a genuine no-op with no socket contact.
+        server_thread: _threading.Thread | None = None
+        listener: _socket.socket | None = None
+        if issued is not None:
+            if update_authority is None:
+                raise LifecycleContractError(
+                    "launcher leg has a pending boot-health transaction "
+                    "but no update authority was supplied to confirm it"
+                )
+            from greia_platform.boot_capability import build_production_verifier
+            from greia_platform.boot_health_service import (
+                BootHealthEndpoint,
+                BootHealthService,
+                handle_boot_health_connection,
+            )
+            from greia_platform.grub_ab import GrubEnvBackend
+            from greia_platform.privileged_channel import PeerCredential
+
+            verifier = build_production_verifier(
+                authority=cap_authority,
+                boot_journal_dir=install_journal_dir,
+                update_state_dir=Path(update_state_dir),
+                boot_id=boot_id,
+                peer_bootstrap_path=launcher_health.TRUSTED_BOOTSTRAP_PATH,
+            )
+            service = BootHealthService(
+                boot_journal_dir=install_journal_dir,
+                update_state_dir=Path(update_state_dir),
+                history_dir=history_dir,
+                update_authority=update_authority,
+                capability_verifier=verifier,
+                boot_backend_factory=(
+                    lambda: GrubEnvBackend.attach(Path(boot_control_dir))
+                ),
+            )
+            endpoint = BootHealthEndpoint(
+                service, allowed_uids=(0, _os.getuid())
+            )
+            listener = _socket.socket(_socket.AF_UNIX, _socket.SOCK_STREAM)
+            listener.bind(_os.fspath(socket_path))
+            listener.listen(1)
+            listener.settimeout(15.0)
+
+            def _serve_once() -> None:
+                assert listener is not None
+                try:
+                    connection, _ = listener.accept()
+                except OSError:
+                    return
+                try:
+                    handle_boot_health_connection(
+                        connection,
+                        endpoint=endpoint,
+                        peer=PeerCredential(uid=_os.getuid()),
+                        boot_state="interactive_ready",
+                    )
+                finally:
+                    try:
+                        listener.close()
+                    except OSError:
+                        pass
+
+            server_thread = _threading.Thread(target=_serve_once, daemon=True)
+            server_thread.start()
+
+        env = {
+            "GREIA_OS_ROOT": str(PROJECT_ROOT),
+            "GREIA_PROFILES_DIR": str(Path(update_state_dir).parent / "profiles"),
+            "GREIA_ACTIVE_PROFILE_STATUS": str(Path(update_state_dir).parent / "active.json"),
+            "GREIA_MAIN_CREDENTIAL_PATH": str(Path(update_state_dir).parent / "cred.json"),
+            "GREIA_BOOT_HEALTH_DELIVERY_DIR": str(delivery_dir),
+            "GREIA_BOOT_HEALTH_SOCKET_PATH": _os.fspath(socket_path),
+            "GREIA_UPDATE_STATE_DIR": str(update_state_dir),
+            "GREIA_BOOT_JOURNAL_DIR": str(
+                journal_candidates[0]
+                if journal_candidates
+                else (Path(update_state_dir).parent / "empty-boot-journal")
+            ),
+            "GREIA_GRUBENV_DIR": str(boot_control_dir),
+            "GREIA_INSTALLED_LAYOUT_RECORD": str(layout_record_path),
+            "GREIA_BOOT_CMDLINE": str(cmdline_path),
+            "GREIA_RELEASE_IDENTITY_PATH": str(identity_path),
+            "GREIA_FINALIZATION_RECEIPT_PATH": str(receipt_path),
+        }
+        try:
+            with _mock.patch.dict(_os.environ, env, clear=False):
+                from greia_launcher import main as launcher_main
+
+                previous_marker = _os.environ.get(launcher_main.DEVELOPER_MARKER_ENV_VAR)
+                _os.environ[launcher_main.DEVELOPER_MARKER_ENV_VAR] = str(
+                    Path(update_state_dir).parent / "no-developer-marker"
+                )
+                _os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+                try:
+                    with _mock.patch.object(
+                        launcher_health,
+                        "maybe_accept_production_boot",
+                        side_effect=_counting,
+                    ):
+                        from greia_launcher.main import LauncherApplication
+
+                        app = LauncherApplication(windowed=True, allow_exit=True, bootstrap=False)
+                        app._boot_lifecycle.mark_display_ready()
+                        app._boot_lifecycle.mark_first_frame_visible()
+                        app._boot_lifecycle.begin_preparing_runtime()
+                        state = _synthetic_prepared_state()
+                        app.apply_prepared_state(state)
+                        outcome = app._post_intro_health_outcome
+                        error = app._post_intro_health_error
+                finally:
+                    if previous_marker is None:
+                        _os.environ.pop(launcher_main.DEVELOPER_MARKER_ENV_VAR, None)
+                    else:
+                        _os.environ[launcher_main.DEVELOPER_MARKER_ENV_VAR] = previous_marker
         finally:
-            if previous_marker is None:
-                _os.environ.pop(launcher_main.DEVELOPER_MARKER_ENV_VAR, None)
-            else:
-                _os.environ[launcher_main.DEVELOPER_MARKER_ENV_VAR] = previous_marker
+            if server_thread is not None:
+                server_thread.join(timeout=15.0)
+                if listener is not None:
+                    try:
+                        listener.close()
+                    except OSError:
+                        pass
     outcome_dict = None
     if outcome is not None:
         as_dict = getattr(outcome, "as_dict", None)
@@ -2080,7 +2217,7 @@ def prove_install_composition(
             journal_dir=work / "journal",
         )
 
-    def _identities(target):  # type: ignore[no-untyped-def]
+    def _identities(target, plan):  # type: ignore[no-untyped-def]
         if not isinstance(target, DeviceObservation):
             raise FreshAbInstallError("identities need a rematerialized target")
         return observed
@@ -3163,6 +3300,7 @@ class LifecycleHarness:
         launcher_b = self._launcher_boot(
             machine, booted_slot="B", release_id="greia-0.21.0", sequence=21,
             filesystem_files=seams.files,
+            update_authority=authority,
         )
         launcher_legs_used.append("boot-B-commit")
         if launcher_b["accepted_slot"] != "B":
@@ -3230,6 +3368,7 @@ class LifecycleHarness:
         launcher_r = self._launcher_boot(
             machine, booted_slot="B", release_id="greia-0.21.0", sequence=21,
             expect_no_acceptance=True,
+            update_authority=authority,
         )
         launcher_legs_used.append("recovery-boot-B")
         obs = _observe("recovery-boot-B")
@@ -3256,6 +3395,7 @@ class LifecycleHarness:
         launcher_rev = self._launcher_boot(
             machine, booted_slot="A", release_id="greia-0.22.0", sequence=23,
             filesystem_files=seams.files,
+            update_authority=authority,
         )
         launcher_legs_used.append("reverse-update-B-to-A")
         if launcher_rev["accepted_slot"] != "A":
@@ -3324,6 +3464,7 @@ class LifecycleHarness:
         filesystem_files: Mapping[str, bytes] | None = None,
         expect_accepted_slot: str | None = None,
         expect_no_acceptance: bool = False,
+        update_authority: object | None = None,
     ) -> dict[str, object]:
         """Fold one observed boot through journal + launcher acceptance.
 
@@ -3381,8 +3522,11 @@ class LifecycleHarness:
                         },
                     }, sort_keys=True) + "\n").encode()
                 )
-            # Credentials vault: the launcher seam needs CREDENTIALS_DIRECTORY
-            # to resolve a vault; an absent vault is the plain-boot no-op.
+            # Production boot-health bindings: the launcher seam reads the
+            # root-issued one-use token from GREIA_BOOT_HEALTH_DELIVERY_DIR
+            # and presents it to GREIA_BOOT_HEALTH_SOCKET_PATH. With no
+            # pending transaction no token is delivered (plain-boot no-op);
+            # a terminal journal likewise yields no acceptance.
             credentials = root / "credentials"
             accepted = run_launcher_acceptance(
                 update_state_dir=machine["state"],
@@ -3391,6 +3535,7 @@ class LifecycleHarness:
                 cmdline_path=cmdline,
                 identity_path=identity,
                 receipt_path=receipt,
+                update_authority=update_authority,
             )
             _ = credentials
             if expect_no_acceptance and accepted["accepted_slot"] is not None:
@@ -3833,6 +3978,7 @@ class LifecycleHarness:
             machine, booted_slot=str(boot_b["observed_slot"]),
             release_id="greia-0.21.0", sequence=21,
             filesystem_files=seams.files,
+            update_authority=authority,
         )
         launcher_legs_used.append("boot-B-commit")
         if launcher_b["accepted_slot"] != "B":
@@ -3898,6 +4044,7 @@ class LifecycleHarness:
             machine, booted_slot=str(boot_rec["observed_slot"]),
             release_id="greia-0.21.0", sequence=21,
             expect_no_acceptance=True,
+            update_authority=authority,
         )
         launcher_legs_used.append("recovery-boot-B")
         obs = _observe("recovery-boot-B")
@@ -3927,6 +4074,7 @@ class LifecycleHarness:
             machine, booted_slot=str(boot_rev["observed_slot"]),
             release_id="greia-0.22.0", sequence=23,
             filesystem_files=seams.files,
+            update_authority=authority,
         )
         launcher_legs_used.append("reverse-update-B-to-A")
         if launcher_rev["accepted_slot"] != "A":
@@ -4600,6 +4748,8 @@ class LifecycleHarness:
                 machine, booted_slot=str(boot["observed_slot"]),
                 release_id="greia-0.21.0", sequence=21,
                 filesystem_files=seams.files,
+                update_authority=_require_collect_authority(
+                    leg="boot-B-commit"),
             )
             launcher_legs_used.append("boot-B-commit")
             if launcher_b["accepted_slot"] != "B":
@@ -4777,6 +4927,7 @@ class LifecycleHarness:
                 machine, booted_slot=str(boot_rev["observed_slot"]),
                 release_id="greia-0.22.0", sequence=23,
                 filesystem_files=seams.files,
+                update_authority=_authority,
             )
             launcher_legs_used.append("reverse-update-B-to-A")
             if launcher_rev["accepted_slot"] != "A":

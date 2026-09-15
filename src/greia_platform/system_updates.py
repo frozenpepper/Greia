@@ -1276,6 +1276,22 @@ UPDATE_TRUSTED_KEY_DIR_ENV = "GREIA_UPDATE_TRUSTED_KEY_DIR"
 UPDATE_TRUSTED_KEY_DIR_DEFAULT = "/etc/greia-os/system-update-keys"
 INSTALLED_LAYOUT_RECORD_ENV = "GREIA_INSTALLED_LAYOUT_RECORD"
 INSTALLED_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/installed-layout.json"
+#: Installed product identity: the single image-owned release authority written
+#: by ``SlotFinalizer`` into every finalized slot
+#: (``etc/greia-os/release-identity.json``), visible on the running system at
+#: the default below. This file is the installed product identity contract;
+#: the same ``GREIA_RELEASE_IDENTITY_PATH`` name the boot-health observer uses
+#: (``greia_platform.boot_health``) so both readers resolve one path.
+INSTALLED_RELEASE_IDENTITY_ENV = "GREIA_RELEASE_IDENTITY_PATH"
+INSTALLED_RELEASE_IDENTITY_DEFAULT = "/etc/greia-os/release-identity.json"
+#: Installed profile document baked by ``build/build-image.sh`` (declared
+#: profile manifest): fallback for compatibility facts when an older slot
+#: was finalized before the release authority stated them. Never a second
+#: identity: the release-identity file always wins where it states a fact.
+INSTALLED_IMAGE_PROFILE_ENV = "GREIA_IMAGE_PROFILE_PATH"
+INSTALLED_IMAGE_PROFILE_DEFAULT = "/etc/greia-os/image-profile.json"
+#: Upper bound for installed identity/profile reads (small by construction).
+MAX_INSTALLED_IDENTITY_BYTES = 64 * 1024
 #: Boot-control directory holding the production ``grubenv`` one-shot block.
 #: The installer writes it to the boot-control filesystem; GRUB reads the
 #: same block as ``$prefix/grubenv``. Explicit env or the on-device bind.
@@ -1285,6 +1301,31 @@ UPDATE_SYSTEM_VERSION_ENV = "GREIA_SYSTEM_VERSION"
 UPDATE_SYSTEM_PLATFORM_ENV = "GREIA_SYSTEM_PLATFORM_FAMILY"
 UPDATE_SYSTEM_ARCH_ENV = "GREIA_SYSTEM_ARCHITECTURE"
 UPDATE_SYSTEM_PROFILE_ENV = "GREIA_SYSTEM_PROFILE"
+#: Test-only identity fallbacks. The shipped ``greia-system-update.service``
+#: sets none of these: on device the identity resolves from the installed
+#: release authority above. They remain so offline unit/proof harnesses can
+#: compose an identity without installed image state; a fact stated by the
+#: installed files always wins over the environment.
+#: Deployment parameters for the production inactive-slot seams below.
+#: Defaults bind the installed system; explicit values point the same
+#: production factories at a disposable device tree (tests/proofs), never
+#: at a Python-supplied seam. No Python caller supplies custom seams.
+UPDATE_DEV_ROOT_ENV = "GREIA_UPDATE_DEV_ROOT"
+UPDATE_DEV_ROOT_DEFAULT = "/dev"
+#: Optional override for the udev PARTUUID directory. When unset, the
+#: default owned by ``greia_platform.block_slots`` applies (that module,
+#: not this service composition, names the installed udev path).
+UPDATE_BY_PARTUUID_DIR_ENV = "GREIA_UPDATE_BY_PARTUUID_DIR"
+UPDATE_MOUNT_ROOT_ENV = "GREIA_UPDATE_MOUNT_ROOT"
+#: Updater-scoped runtime directory under the already-granted ``/run/greia-os``
+#: tree (created by tmpfiles): the service mkdirs the per-stage mountpoint
+#: itself, so no extra top-level runtime path needs a sandbox grant. The
+#: installer keeps its own separate ``/run/greia-slots`` default.
+UPDATE_MOUNT_ROOT_DEFAULT = "/run/greia-os/slots"
+UPDATE_HARDWARE_SUPPORT_POOL_ENV = "GREIA_UPDATE_HARDWARE_SUPPORT_POOL"
+UPDATE_HARDWARE_SUPPORT_POOL_DEFAULT = "/opt/greia-hardware-support"
+UPDATE_SYSFS_DEVICES_ENV = "GREIA_UPDATE_SYSFS_DEVICES"
+UPDATE_SYSFS_DEVICES_DEFAULT = "/sys/devices"
 
 
 class UpdateLayoutError(SystemUpdateError):
@@ -1327,6 +1368,211 @@ def load_installed_layout_record(path: Path | None = None) -> "_LayoutRecord | N
         ) from exc
 
 
+def installed_release_identity_path() -> Path:
+    """Resolve the installed release-authority path (explicit env or image bind)."""
+    override = os.environ.get(INSTALLED_RELEASE_IDENTITY_ENV, "").strip()
+    return Path(override) if override else Path(INSTALLED_RELEASE_IDENTITY_DEFAULT)
+
+
+def installed_image_profile_path() -> Path:
+    """Resolve the installed profile-document path (explicit env or image bind)."""
+    override = os.environ.get(INSTALLED_IMAGE_PROFILE_ENV, "").strip()
+    return Path(override) if override else Path(INSTALLED_IMAGE_PROFILE_DEFAULT)
+
+
+def load_installed_release_identity(
+    path: Path | None = None,
+) -> dict[str, object] | None:
+    """Load the image-owned installed release authority, or None when absent.
+
+    A missing file is the normal no-slot case (single-root images, offline
+    harnesses), not an error: the caller falls back to the installed profile
+    and test-only environment. A present file must be authoritative (regular
+    file, never a symlink, bounded canonical JSON with the ``SlotFinalizer``
+    keys); anything else fails closed via :class:`UpdateLayoutError`.
+    """
+    candidate = Path(path) if path is not None else installed_release_identity_path()
+    if candidate.is_symlink():
+        raise UpdateLayoutError("installed release identity must not be a symlink")
+    try:
+        raw_bytes = candidate.read_bytes()
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise UpdateLayoutError("installed release identity is unreadable") from exc
+    if len(raw_bytes) > MAX_INSTALLED_IDENTITY_BYTES:
+        raise UpdateLayoutError("installed release identity exceeds Greia bounds")
+    try:
+        document = json.loads(raw_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise UpdateLayoutError(
+            "installed release identity is not valid JSON"
+        ) from exc
+    if not isinstance(document, dict):
+        raise UpdateLayoutError("installed release identity must be a JSON object")
+    slot = document.get("slot")
+    if slot not in ("A", "B"):
+        raise UpdateLayoutError("installed release identity slot must be A or B")
+    release_id = document.get("release_id")
+    if (
+        not isinstance(release_id, str)
+        or not release_id
+        or len(release_id) > _MAX_RELEASE_ID
+        or not _IDENTIFIER.fullmatch(release_id)
+    ):
+        raise UpdateLayoutError("installed release identity release_id is invalid")
+    sequence = document.get("release_sequence")
+    if (
+        isinstance(sequence, bool)
+        or not isinstance(sequence, int)
+        or sequence < 0
+        or sequence > _MAX_RELEASE_SEQUENCE
+    ):
+        raise UpdateLayoutError("installed release identity release_sequence is invalid")
+    for key, maximum in (
+        ("platform_family", 64),
+        ("architecture", 32),
+        ("profile", 96),
+    ):
+        value = document.get(key)
+        if value is None:
+            continue
+        if (
+            not isinstance(value, str)
+            or not value
+            or len(value) > maximum
+            or not _IDENTIFIER.fullmatch(value)
+        ):
+            raise UpdateLayoutError(
+                f"installed release identity {key} is invalid"
+            )
+    version = document.get("version")
+    if version is not None and (
+        not isinstance(version, str)
+        or not version
+        or len(version) > _MAX_VERSION
+        or any(ord(character) < 32 for character in version)
+    ):
+        raise UpdateLayoutError("installed release identity version is invalid")
+    canonical = (
+        json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + "\n"
+    ).encode("utf-8")
+    if canonical != raw_bytes:
+        raise UpdateLayoutError("installed release identity is not canonical JSON")
+    return document
+
+
+def _installed_profile_compat_facts(path: Path | None = None) -> dict[str, str]:
+    """Read compatibility facts from the installed profile document, best effort.
+
+    Returns any of ``platform_family``/``profile``/``architecture`` the
+    document states as bounded identifiers, else ``{}``. Absent or unusable
+    documents contribute nothing: this source is only a fallback for facts
+    the release-identity authority does not carry, and enforcement stays in
+    :meth:`SystemIdentity.assert_compatible` (unknown facts refuse).
+    """
+    candidate = Path(path) if path is not None else installed_image_profile_path()
+    try:
+        if candidate.is_symlink():
+            return {}
+        raw_bytes = candidate.read_bytes()
+    except OSError:
+        return {}
+    if len(raw_bytes) > MAX_INSTALLED_IDENTITY_BYTES:
+        return {}
+    try:
+        document = json.loads(raw_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+        return {}
+    if not isinstance(document, dict):
+        return {}
+    facts: dict[str, str] = {}
+
+    def _nested(section: object, key: str) -> object:
+        if not isinstance(section, dict):
+            return None
+        return section.get(key)
+
+    candidates = (
+        ("platform_family", _nested(document.get("platform"), "family"), 64),
+        ("profile", _nested(document.get("profile"), "id"), 96),
+        ("architecture", _nested(document.get("base"), "architecture"), 32),
+    )
+    for name, value, maximum in candidates:
+        if (
+            isinstance(value, str)
+            and value
+            and len(value) <= maximum
+            and _IDENTIFIER.fullmatch(value)
+        ):
+            facts[name] = value
+    return facts
+
+
+def resolve_installed_system_identity(
+    *,
+    layout_record_path: Path | None = None,
+    release_identity_path: Path | None = None,
+    image_profile_path: Path | None = None,
+) -> SystemIdentity:
+    """Resolve the updater identity from the installed release authority.
+
+    Precedence per fact: the image-owned ``release-identity.json`` first;
+    then the authoritative installed layout record (platform family, install
+    profile) and the installed profile document (architecture, profile,
+    platform family); then the test-only ``GREIA_SYSTEM_*`` environment;
+    finally ``"unknown"`` (which refuses compatibility). A corrupt primary
+    authority fails closed; unusable fallback sources simply contribute
+    nothing, while the backend still enforces layout authority at stage time.
+    """
+    release = load_installed_release_identity(release_identity_path)
+    layout: "_LayoutRecord | None"
+    try:
+        if layout_record_path is not None:
+            layout = load_installed_layout_record(Path(layout_record_path))
+        else:
+            layout = load_installed_layout_record()
+    except UpdateLayoutError:
+        layout = None
+    profile_facts = _installed_profile_compat_facts(image_profile_path)
+
+    def _first(*values: object) -> str:
+        for value in values:
+            if isinstance(value, str) and value:
+                return value
+        return "unknown"
+
+    release_text = (
+        {key: value for key, value in release.items() if isinstance(value, str)}
+        if release is not None
+        else {}
+    )
+    return SystemIdentity(
+        version=_first(
+            release_text.get("version"),
+            os.environ.get(UPDATE_SYSTEM_VERSION_ENV, "").strip(),
+        ),
+        platform_family=_first(
+            release_text.get("platform_family"),
+            getattr(layout, "platform_family", None),
+            profile_facts.get("platform_family"),
+            os.environ.get(UPDATE_SYSTEM_PLATFORM_ENV, "").strip(),
+        ),
+        architecture=_first(
+            release_text.get("architecture"),
+            profile_facts.get("architecture"),
+            os.environ.get(UPDATE_SYSTEM_ARCH_ENV, "").strip(),
+        ),
+        profile=_first(
+            release_text.get("profile"),
+            getattr(layout, "install_profile", None),
+            profile_facts.get("profile"),
+            os.environ.get(UPDATE_SYSTEM_PROFILE_ENV, "").strip(),
+        ),
+    )
+
+
 def inactive_slot_for(record: "_LayoutRecord") -> str | None:
     """Return the one slot that is neither active nor accepted.
 
@@ -1360,6 +1606,31 @@ def _default_slot_profile_policy(record: "_LayoutRecord") -> object:
     )
 
 
+def _bind_release_facts_to_policy(policy: object, manifest: UpdateManifest) -> object:
+    """Bind the signed release compatibility facts onto a profile policy.
+
+    The signed manifest is authoritative for ``architecture``/
+    ``platform_family``/``profile``/``version``; layout facts
+    (``layout_id``/slot bytes/boot backend) stay exactly as the caller's
+    policy factory derived them. A plain non-``SlotProfilePolicy`` object
+    from a custom factory is returned unchanged so test/harness seams keep
+    their type.
+    """
+    from .slot_writer import SlotProfilePolicy
+
+    if not isinstance(policy, SlotProfilePolicy):
+        return policy
+    return SlotProfilePolicy(
+        layout_id=policy.layout_id,
+        system_slot_bytes=policy.system_slot_bytes,
+        boot_backend=policy.boot_backend,
+        architecture=manifest.architecture,
+        platform_family=manifest.platform_family,
+        profile=manifest.profile,
+        version=manifest.version,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class UpdateSlotSeams:
     """Injectable destination seams for privileged update staging.
@@ -1373,6 +1644,12 @@ class UpdateSlotSeams:
     the installed persistent-state contract bytes so staging can prove the
     candidate binds them (previously accepted slot keeps reading shared
     state) before any inactive-slot write.
+
+    An empty ``UpdateSlotSeams()`` stays a deliberate fail-closed degraded
+    construction (direct ``SlotBackedSystemUpdateBackend`` default). It is
+    never the installed A/B default: :func:`build_live_update_service`
+    composes :func:`build_production_update_seams` when the caller supplies
+    no explicit seams, while explicit seams remain a test/harness feature.
     """
 
     slot_store_factory: Callable[[object], object] | None = None
@@ -1524,7 +1801,9 @@ class SlotBackedSystemUpdateBackend:
             policy_factory = (
                 self.seams.profile_policy_factory or _default_slot_profile_policy
             )
-            policy = policy_factory(record)
+            policy = _bind_release_facts_to_policy(
+                policy_factory(record), bundle.manifest
+            )
             filesystem = self._require_seam("slot filesystem", self.seams.filesystem_factory)()
             package_installer = self._require_seam(
                 "slot package installer", self.seams.package_installer_factory
@@ -2215,6 +2494,759 @@ def handle_update_connection(
         pass
 
 
+# ---------------------------------------------------------------------------
+# P3.2 production UpdateSlotSeams (installed A/B default)
+# ---------------------------------------------------------------------------
+# The factories below are the exact installed updater's destination path:
+# every device address derives from the trusted ``InstalledLayoutRecord``
+# plus freshly re-observed topology at factory-call time, never from a
+# caller path. They reuse the shared primitives owner
+# (``greia_platform.block_slots``: authoritative role->device resolution,
+# device-backed ``SlotStorage``/``SlotFilesystem``, installer-path package
+# reuse) and the shared ``SlotWriter``/``SlotFinalizer`` staging order. No
+# second writer, finalizer, device-storage class or loop/file destination
+# store is created here: ``LoopbackSlotFile`` stays a test stand-in behind
+# explicitly injected seams, never the installed default.
+#
+# Construction performs no device IO: :func:`build_production_update_seams`
+# only binds closures over deployment parameters. Every observation (layout
+# record reload, udev PARTUUID map, blkid probes, size/disk re-observation,
+# pool load, inventory snapshot) happens inside the factory call, so a
+# stale pre-captured topology can never satisfy resolution. Factories fail
+# closed with :class:`UpdateBackendUnavailable` when the A/B authority or
+# the inactive device is unavailable; inventory/selection mismatches keep
+# their ``SlotFinalizeError``/``SystemUpdateError`` shape so ``stage``
+# wraps them as staging failures, never as silent skips.
+#
+# Trust notes (image integration contract):
+# - the hardware-support pool is Greia-owned image state (default
+#   ``/opt/greia-hardware-support``, same location the installer consumes);
+#   it is verified at every load (manifest/payload digests, no
+#   unmanifested payloads) and converted with the signed manifest
+#   digest/size, so the support set stays release-bound;
+# - the installed persistent-state contract is the canonical registry
+#   contract (identical bytes the release builder embeds); staging proves
+#   the candidate binds it before any inactive-slot write;
+# - the hardware inventory is a fresh sysfs snapshot attested complete;
+#   an incomplete inventory refuses finalization instead of staging blind.
+
+
+@dataclass(frozen=True, slots=True)
+class _ProductionUpdatePaths:
+    """One fresh read of the production seam deployment parameters.
+
+    ``by_partuuid_dir`` is None when undeployed: callers then use the bare
+    ``block_slots`` reader whose installed udev default that module owns.
+    """
+
+    dev_root: Path
+    by_partuuid_dir: Path | None
+    mount_root: Path
+    hardware_support_pool: Path
+    sysfs_devices: Path
+
+
+def _production_paths() -> _ProductionUpdatePaths:
+    """Read the seam deployment parameters (fresh on every composition)."""
+    by_partuuid_override = os.environ.get(UPDATE_BY_PARTUUID_DIR_ENV, "").strip()
+    return _ProductionUpdatePaths(
+        dev_root=_update_env_path(UPDATE_DEV_ROOT_ENV, UPDATE_DEV_ROOT_DEFAULT),
+        by_partuuid_dir=Path(by_partuuid_override) if by_partuuid_override else None,
+        mount_root=_update_env_path(UPDATE_MOUNT_ROOT_ENV, UPDATE_MOUNT_ROOT_DEFAULT),
+        hardware_support_pool=_update_env_path(
+            UPDATE_HARDWARE_SUPPORT_POOL_ENV, UPDATE_HARDWARE_SUPPORT_POOL_DEFAULT
+        ),
+        sysfs_devices=_update_env_path(
+            UPDATE_SYSFS_DEVICES_ENV, UPDATE_SYSFS_DEVICES_DEFAULT
+        ),
+    )
+
+
+def _update_env_path(name: str, default: str) -> Path:
+    override = os.environ.get(name, "").strip()
+    return Path(override) if override else Path(default)
+
+
+def _bounded_reason(exc: BaseException, maximum: int = 200) -> str:
+    raw = str(exc) if str(exc) else exc.__class__.__name__
+    encoded = raw.encode("utf-8")[:maximum].decode("utf-8", "ignore")
+    return encoded or exc.__class__.__name__
+
+
+@dataclass
+class _ProductionUpdateContext:
+    """Mutable per-service cell shared by one set of production factories.
+
+    Holds no device state at construction. Deployment parameters are
+    captured once at composition (same model as the state/key/layout paths
+    above); every observation (layout record reload, udev PARTUUID map,
+    blkid probes, size/disk re-observation, pool load, inventory snapshot)
+    still happens inside each factory call, so a stale pre-captured
+    topology can never satisfy resolution. ``filesystem_tracker`` and
+    ``mounted`` are populated by the filesystem/package-installer factories
+    during a stage so the lazy package installer addresses exactly the
+    mounted inactive slot the finalizer owns; they are refreshed on every
+    filesystem-factory call, so a restage after rollback cannot reuse a
+    stale mountpoint.
+    """
+
+    layout_record_path: Path
+    paths: _ProductionUpdatePaths
+    filesystem_tracker: "_MountTrackingFilesystem | None" = None
+    mounted: list[Path] = field(default_factory=list)
+
+
+def _require_production_ab_record(layout_record_path: Path) -> "_LayoutRecord":
+    """Reload the trusted A/B record fresh (fail closed without authority)."""
+    try:
+        record = load_installed_layout_record(Path(layout_record_path))
+    except UpdateLayoutError as exc:
+        raise UpdateBackendUnavailable(
+            f"inactive-slot destination is unavailable: {exc}"
+        ) from exc
+    if record is None or record.system_b is None:
+        raise UpdateBackendUnavailable(
+            "A/B system-slot backend is not configured"
+        )
+    return record
+
+
+def _production_primitives(
+    record: "_LayoutRecord", paths: _ProductionUpdatePaths
+) -> object:
+    """Bind the shared primitives to fresh production observers (no IO yet)."""
+    from .block_slots import (
+        SubprocessBlockFilesystemRunner,
+        SharedBlockSlotPrimitives,
+        blkid_device_partuuid,
+    )
+
+    runner = SubprocessBlockFilesystemRunner()
+
+    def _observe_topology() -> object:
+        return _observe_production_topology(
+            record,
+            dev_root=paths.dev_root,
+            by_partuuid_dir=paths.by_partuuid_dir,
+            filesystem_runner=runner,
+        )
+
+    def _read_map() -> dict[str, str]:
+        return _read_production_partuuid_map(paths.by_partuuid_dir)
+
+    return SharedBlockSlotPrimitives(
+        record=record,
+        observe_topology=_observe_topology,  # type: ignore[arg-type]
+        read_partuuid_map=_read_map,
+        probe_device_partuuid=blkid_device_partuuid,
+        dev_root=paths.dev_root,
+        filesystem_runner=runner,
+        mount_root=paths.mount_root,
+        package_runner=_PlatformCommandAdapter(),
+    )
+
+
+def _read_production_partuuid_map(by_partuuid_dir: Path | None) -> dict[str, str]:
+    """Read the live udev PARTUUID map (installed default owned by block_slots)."""
+    from .block_slots import default_partuuid_map_reader
+
+    if by_partuuid_dir is None:
+        return default_partuuid_map_reader()
+    return default_partuuid_map_reader(by_partuuid_dir)
+
+
+def _observe_production_topology(
+    record: "_LayoutRecord",
+    *,
+    dev_root: Path,
+    by_partuuid_dir: Path | None,
+    filesystem_runner: object,
+) -> object:
+    """Re-observe the installed block topology fresh (no caller addresses).
+
+    Reads the live udev PARTUUID map, then probes every layout role device
+    back (PARTUUID equality against the trusted record, filesystem UUID,
+    size, parent-disk ancestry). Any absence, substitution, ambiguity or
+    wrong-disk identity fails closed before a ``BlockTopology`` is returned;
+    the shared ``resolve_slot_device`` re-validates the result against the
+    record, so topology and resolution cross-check instead of trusting one
+    observation.
+    """
+    try:
+        mapping = _read_production_partuuid_map(by_partuuid_dir)
+    except Exception as exc:
+        raise UpdateBackendUnavailable(
+            f"inactive-slot topology is unavailable: {_bounded_reason(exc)}"
+        ) from exc
+    roles: list[str] = ["system-a"]
+    if record.system_b is not None:
+        roles.append("system-b")
+    roles.append("persist")
+    identities = {
+        "system-a": record.system_a,
+        "system-b": record.system_b,
+        "persist": record.persist,
+    }
+    facts: list[object] = []
+    for role in roles:
+        identity = identities[role]
+        if identity is None:  # pragma: no cover - single-root guarded earlier
+            raise UpdateBackendUnavailable(
+                "A/B system-slot backend is not configured"
+            )
+        try:
+            facts.append(
+                _probe_role_fact(
+                    role,
+                    identity,
+                    mapping=mapping,
+                    dev_root=dev_root,
+                    filesystem_runner=filesystem_runner,
+                )
+            )
+        except UpdateBackendUnavailable:
+            raise
+        except Exception as exc:
+            raise UpdateBackendUnavailable(
+                f"inactive-slot topology for role {role} is unavailable: "
+                f"{_bounded_reason(exc)}"
+            ) from exc
+    try:
+        from .persistent_layout import BlockTopology
+
+        return BlockTopology(partitions=tuple(facts))  # type: ignore[arg-type]
+    except Exception as exc:
+        raise UpdateBackendUnavailable(
+            f"inactive-slot topology is not authoritative: {_bounded_reason(exc)}"
+        ) from exc
+
+
+def _probe_role_fact(
+    role: str,
+    identity: object,
+    *,
+    mapping: dict[str, str],
+    dev_root: Path,
+    filesystem_runner: object,
+) -> object:
+    """Probe one layout role back to its partition device (fail closed)."""
+    from .block_slots import _normalize_partuuid_best_effort, blkid_device_partuuid
+    from .persistent_layout import PartitionFact
+
+    trusted_partuuid = str(getattr(identity, "partuuid"))
+    if trusted_partuuid not in mapping:
+        raise UpdateBackendUnavailable(
+            f"trusted role PARTUUID is absent from the PARTUUID map: {role}"
+        )
+    kernel_name = mapping[trusted_partuuid]
+    if (
+        not isinstance(kernel_name, str)
+        or not kernel_name
+        or "/" in kernel_name
+        or kernel_name in (".", "..")
+    ):
+        raise UpdateBackendUnavailable(
+            f"PARTUUID map device name escapes its form: {role}"
+        )
+    node = Path(dev_root) / kernel_name
+    if os.path.islink(node):
+        raise UpdateBackendUnavailable(
+            f"slot device node may not be a symbolic link: {role}"
+        )
+    try:
+        node_stat = node.stat()
+    except OSError as exc:
+        raise UpdateBackendUnavailable(
+            f"slot device node is not accessible: {role}"
+        ) from exc
+    if not stat.S_ISBLK(node_stat.st_mode):
+        raise UpdateBackendUnavailable(
+            f"slot device node must be a block device: {role}"
+        )
+    probed_partuuid = blkid_device_partuuid(node)
+    if _normalize_partuuid_best_effort(probed_partuuid) != trusted_partuuid:
+        raise UpdateBackendUnavailable(
+            f"device node identity does not match the trusted role PARTUUID: {role}"
+        )
+    observed_uuid = filesystem_runner.blkid_uuid(node)  # type: ignore[union-attr]
+    return PartitionFact.create(
+        role=role,
+        partuuid=_normalize_partuuid_best_effort(probed_partuuid),
+        filesystem_uuid=observed_uuid,
+        size_bytes=_block_node_size_bytes(node),
+        disk_id=_parent_disk_name(node),
+    )
+
+
+def _block_node_size_bytes(node: Path) -> int:
+    """Re-observe a block device capacity (ioctl first, binary fallback)."""
+    try:
+        import fcntl
+        import struct
+
+        with node.open("rb") as handle:
+            raw = fcntl.ioctl(handle.fileno(), 0x80081272, b"\x00" * 8)
+        (size,) = struct.unpack("Q", raw)
+        if size <= 0:
+            raise UpdateBackendUnavailable(
+                f"slot device capacity is outside Greia bounds: {node.name}"
+            )
+        return int(size)
+    except UpdateBackendUnavailable:
+        raise
+    except Exception:
+        pass
+    try:
+        result = _PlatformCommandAdapter(timeout_seconds=30.0).run(
+            ["blockdev", "--getsize64", "--", str(node)], check=False
+        )
+    except Exception as exc:
+        raise UpdateBackendUnavailable(
+            f"slot device capacity is unobservable: {node.name}"
+        ) from exc
+    if result.returncode != 0:  # type: ignore[union-attr]
+        raise UpdateBackendUnavailable(
+            f"slot device capacity is unobservable: {node.name}"
+        )
+    try:
+        size = int(result.stdout.strip().splitlines()[0])  # type: ignore[union-attr]
+    except (IndexError, ValueError) as exc:
+        raise UpdateBackendUnavailable(
+            f"slot device capacity is not authoritative: {node.name}"
+        ) from exc
+    if size <= 0:
+        raise UpdateBackendUnavailable(
+            f"slot device capacity is outside Greia bounds: {node.name}"
+        )
+    return size
+
+
+def _parent_disk_name(node: Path) -> str:
+    """Resolve the parent disk kernel name via ``lsblk`` (never guessed).
+
+    The ancestry comes from the live block layer on every call, so two
+    roles on different disks (or a substituted node) fail the layout
+    single-disk proof in ``validate_layout_against_topology``. Execution
+    flows through the owned platform command runner.
+    """
+    try:
+        result = _PlatformCommandAdapter(timeout_seconds=30.0).run(
+            ["lsblk", "--json", "--bytes", "--output", "NAME,PKNAME", "--", str(node)],
+            check=False,
+        )
+    except Exception as exc:
+        raise UpdateBackendUnavailable(
+            "slot device disk ancestry is unobservable"
+        ) from exc
+    if result.returncode != 0:  # type: ignore[union-attr]
+        raise UpdateBackendUnavailable(
+            "slot device disk ancestry is unobservable"
+        )
+    try:
+        document = json.loads(result.stdout)  # type: ignore[union-attr]
+        devices = document.get("blockdevices")
+        if not isinstance(devices, list) or len(devices) != 1:
+            raise ValueError("lsblk ancestry is not authoritative")
+        disk = devices[0].get("pkname") or devices[0].get("name")
+    except (ValueError, AttributeError, KeyError, TypeError, json.JSONDecodeError) as exc:
+        raise UpdateBackendUnavailable(
+            "slot device disk ancestry is not authoritative"
+        ) from exc
+    if (
+        not isinstance(disk, str)
+        or not disk
+        or not disk[0].isalnum()
+        or any(c not in "abcdefghijklmnopqrstuvwxyz0123456789._-" for c in disk)
+    ):
+        raise UpdateBackendUnavailable(
+            "slot device disk ancestry is not authoritative"
+        )
+    return disk
+
+
+class _MountTrackingFilesystem:
+    """Delegate to the production block filesystem, remembering the mount.
+
+    The finalizer owns the mount lifecycle (it mounts the inactive slot
+    internally); the lazy package installer must address exactly that
+    mountpoint. This wrapper records the mountpoint returned by
+    :meth:`mount` and clears it on :meth:`unmount`, so installer and
+    filesystem cannot drift to different targets. It implements no
+    filesystem logic itself: every operation delegates to the shared
+    ``BlockSlotFilesystem``.
+    """
+
+    def __init__(self, inner: object) -> None:
+        self._inner = inner
+        self._mountpoint: Path | None = None
+
+    @property
+    def current_mountpoint(self) -> Path | None:
+        return self._mountpoint
+
+    def bind_filesystem_uuid(self, filesystem_uuid: str) -> None:
+        self._inner.bind_filesystem_uuid(filesystem_uuid)  # type: ignore[union-attr]
+
+    def expand_to_capacity(self) -> None:
+        self._inner.expand_to_capacity()  # type: ignore[union-attr]
+
+    def mount(self) -> Path:
+        mountpoint = self._inner.mount()  # type: ignore[union-attr]
+        if not isinstance(mountpoint, Path):
+            raise UpdateBackendUnavailable("slot mount did not return a path")
+        self._mountpoint = mountpoint
+        return mountpoint
+
+    def unmount(self) -> None:
+        try:
+            self._inner.unmount()  # type: ignore[union-attr]
+        finally:
+            self._mountpoint = None
+
+    def sync(self) -> None:
+        self._inner.sync()  # type: ignore[union-attr]
+
+    def write_file(self, relative_path: str, data: bytes) -> None:
+        self._inner.write_file(relative_path, data)  # type: ignore[union-attr]
+
+    def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
+        return self._inner.missing_files(required)  # type: ignore[union-attr]
+
+    def check_health(self) -> None:
+        self._inner.check_health()  # type: ignore[union-attr]
+
+
+@dataclass(frozen=True, slots=True)
+class _PlatformCommandAdapter:
+    """Adapt the owned platform command runner to the installer protocol.
+
+    All command execution on this path flows through
+    ``hardware_enablement.SubprocessCommandRunner`` (argument arrays,
+    no shell): this service composition adds no command runner of its own.
+    Failures surface as :class:`SlotFinalizeError` so ``stage`` wraps them
+    as fail-closed staging failures.
+    """
+
+    timeout_seconds: float = 120.0
+
+    def run(self, command: object, *, check: bool = True) -> object:
+        from .hardware_enablement import SubprocessCommandRunner
+
+        try:
+            result = SubprocessCommandRunner().run(
+                list(command),  # type: ignore[arg-type]
+                timeout_seconds=self.timeout_seconds,
+            )
+        except Exception as exc:
+            from .slot_writer import SlotFinalizeError
+
+            raise SlotFinalizeError(
+                f"slot package command is not executable: {_bounded_reason(exc)}"
+            ) from exc
+        if check and result.returncode != 0:
+            from .slot_writer import SlotFinalizeError
+
+            raise SlotFinalizeError(
+                "slot package command failed fail-closed: "
+                f"{(result.stderr.strip() or 'command failed')[:200]}"
+            )
+        return result
+
+
+class _LazyTargetPackageInstaller:
+    """Install into the mounted inactive slot (mountpoint resolved lazily).
+
+    Construction happens before the finalizer mounts the slot, so the
+    target cannot be fixed then. At :meth:`install` time (called by the
+    finalizer while mounted) the target resolves from the mount-tracking
+    filesystem of the same stage, the verified pool reloads fresh, and
+    installation delegates to the existing installer path
+    (``InstallerSlotPackageInstaller``/``TargetHardwareSupportInstaller``):
+    no package logic is copied here. Bind mounts the installer records are
+    detached before returning so the slot unmount never sees a busy target.
+    """
+
+    def __init__(self, context: _ProductionUpdateContext) -> None:
+        self._context = context
+
+    def install(
+        self, firmware: tuple[str, ...], microcode: tuple[str, ...]
+    ) -> tuple[object, ...]:
+        from .slot_writer import SlotFinalizeError
+
+        tracker = self._context.filesystem_tracker
+        mountpoint = tracker.current_mountpoint if tracker is not None else None
+        if mountpoint is None:
+            raise SlotFinalizeError(
+                "slot package install requires the mounted inactive slot"
+            )
+        try:
+            from greia_installer.hardware_support import VerifiedHardwareSupportPool
+            from greia_installer.slots import InstallerSlotPackageInstaller
+
+            pool = VerifiedHardwareSupportPool.load(
+                self._context.paths.hardware_support_pool
+            )
+            adapter = InstallerSlotPackageInstaller(
+                runner=_PlatformCommandAdapter(),  # type: ignore[arg-type]
+                target_root=mountpoint,
+                pool=pool,
+                mounted=self._context.mounted,
+            )
+            before = len(self._context.mounted)
+            try:
+                return adapter.install(tuple(firmware), tuple(microcode))  # type: ignore[return-value]
+            finally:
+                self._detach_added_mounts(before)
+        except SlotFinalizeError:
+            raise
+        except UpdateBackendUnavailable:
+            raise
+        except Exception as exc:
+            raise SlotFinalizeError(
+                f"slot package install failed fail-closed: {_bounded_reason(exc)}"
+            ) from exc
+
+    def _detach_added_mounts(self, before: int) -> None:
+        runner = _PlatformCommandAdapter(timeout_seconds=30.0)
+        added = self._context.mounted[before:]
+        for mountpoint in reversed(added):
+            try:
+                runner.run(["umount", "--", str(mountpoint)], check=False)
+            except Exception:
+                pass
+        del self._context.mounted[before:]
+
+
+def build_production_update_seams(
+    *, layout_record_path: Path | None = None
+) -> UpdateSlotSeams:
+    """Compose the installed A/B production seams (no device IO here).
+
+    Binds all eight destination factories over the trusted layout record
+    path plus freshly re-observed topology at every factory call. Safe to
+    compose on any machine: with no A/B authority (or no devices) each
+    factory fails closed with :class:`UpdateBackendUnavailable` instead of
+    addressing a drive. Explicitly injected seams remain available by
+    passing them to the backend/service directly.
+    """
+    context = _ProductionUpdateContext(
+        layout_record_path=(
+            Path(layout_record_path)
+            if layout_record_path is not None
+            else installed_layout_record_path()
+        ),
+        paths=_production_paths(),
+    )
+    return UpdateSlotSeams(
+        slot_store_factory=_production_slot_store_factory(context),
+        filesystem_factory=_production_filesystem_factory(context),
+        package_installer_factory=_production_package_installer_factory(context),
+        inventory_factory=_production_inventory_factory(context),
+        support_set_factory=_production_support_set_factory(context),
+        profile_policy_factory=_production_profile_policy_factory(),
+        selection_factory=_production_selection_factory(context),
+        installed_contract_factory=_production_installed_contract_factory(),
+    )
+
+
+def _production_slot_store_factory(
+    context: _ProductionUpdateContext,
+) -> Callable[[object], object]:
+    """Inactive-slot raw storage over the freshly resolved device."""
+
+    def _factory(destination: object) -> object:
+        semantic = getattr(destination, "semantic_slot", None)
+        try:
+            record = _require_production_ab_record(context.layout_record_path)
+            primitives = _production_primitives(record, context.paths)
+            resolved = primitives.resolve(semantic)  # type: ignore[union-attr]
+            if resolved.role != getattr(
+                destination, "role", resolved.role
+            ) or resolved.filesystem_uuid != getattr(
+                destination, "role_filesystem_uuid", resolved.filesystem_uuid
+            ):
+                raise UpdateBackendUnavailable(
+                    "resolved inactive-slot device does not match "
+                    "the staged destination"
+                )
+            return primitives.open_storage(resolved)  # type: ignore[union-attr]
+        except UpdateBackendUnavailable:
+            raise
+        except Exception as exc:
+            raise UpdateBackendUnavailable(
+                f"inactive-slot store is unavailable: {_bounded_reason(exc)}"
+            ) from exc
+
+    return _factory
+
+
+def _production_filesystem_factory(
+    context: _ProductionUpdateContext,
+) -> Callable[[], object]:
+    """Slot filesystem (UUID binding/expansion/mount) for the inactive slot."""
+
+    def _factory() -> object:
+        try:
+            record = _require_production_ab_record(context.layout_record_path)
+            inactive = inactive_slot_for(record)
+            if inactive is None:  # pragma: no cover - guarded by AB record
+                raise UpdateBackendUnavailable(
+                    "A/B system-slot backend is not configured"
+                )
+            primitives = _production_primitives(record, context.paths)
+            resolved = primitives.resolve(inactive)  # type: ignore[union-attr]
+            tracker = _MountTrackingFilesystem(
+                primitives.open_filesystem(resolved)  # type: ignore[union-attr]
+            )
+            context.filesystem_tracker = tracker
+            return tracker
+        except UpdateBackendUnavailable:
+            raise
+        except SystemUpdateError:
+            raise
+        except Exception as exc:
+            raise UpdateBackendUnavailable(
+                f"inactive-slot filesystem is unavailable: {_bounded_reason(exc)}"
+            ) from exc
+
+    return _factory
+
+
+def _production_package_installer_factory(
+    context: _ProductionUpdateContext,
+) -> Callable[[], object]:
+    """Lazy installer addressing the mounted inactive slot of this stage."""
+
+    def _factory() -> object:
+        if context.filesystem_tracker is None:
+            raise UpdateBackendUnavailable(
+                "slot package installer requires the staged slot filesystem"
+            )
+        return _LazyTargetPackageInstaller(context)
+
+    return _factory
+
+
+def _production_inventory_factory(
+    context: _ProductionUpdateContext,
+) -> Callable[[], object]:
+    """Hardware inventory attestation from a fresh sysfs snapshot."""
+
+    def _factory() -> object:
+        from .hardware_enablement import LinuxSysfsHardwareInventory
+        from .slot_writer import SlotFinalizeError, HardwareInventoryAttestation
+
+        try:
+            snapshot = LinuxSysfsHardwareInventory(
+                sysfs_devices=context.paths.sysfs_devices
+            ).snapshot()
+        except Exception as exc:
+            raise UpdateBackendUnavailable(
+                f"hardware inventory is unavailable: {_bounded_reason(exc)}"
+            ) from exc
+        try:
+            return HardwareInventoryAttestation.from_inventory(snapshot)
+        except SlotFinalizeError:
+            raise
+        except Exception as exc:
+            raise UpdateBackendUnavailable(
+                f"hardware inventory is not attestable: {_bounded_reason(exc)}"
+            ) from exc
+
+    return _factory
+
+
+def _production_support_set_factory(
+    context: _ProductionUpdateContext,
+) -> Callable[[object], object]:
+    """Release-bound support set from the verified image pool + manifest."""
+
+    def _factory(bundle: object) -> object:
+        try:
+            from greia_installer.hardware_support import VerifiedHardwareSupportPool
+            from greia_installer.slots import pool_to_support_set
+
+            manifest = getattr(bundle, "manifest")
+            pool = VerifiedHardwareSupportPool.load(
+                context.paths.hardware_support_pool
+            )
+            return pool_to_support_set(
+                pool,
+                support_digest=manifest.hardware_support_sha256,
+                support_size=manifest.hardware_support_size,
+            )
+        except UpdateBackendUnavailable:
+            raise
+        except Exception as exc:
+            raise UpdateBackendUnavailable(
+                f"release support set is unavailable: {_bounded_reason(exc)}"
+            ) from exc
+
+    return _factory
+
+
+def _production_profile_policy_factory() -> Callable[[object], object]:
+    """Finalizer profile policy derived from the trusted layout record."""
+
+    def _factory(record: object) -> object:
+        return _default_slot_profile_policy(record)  # type: ignore[arg-type]
+
+    return _factory
+
+
+def _production_selection_factory(
+    context: _ProductionUpdateContext,
+) -> Callable[[object, str], object | None]:
+    """Optional release-bound hardware selection (None when not resolvable)."""
+
+    def _factory(support: object, token: str) -> object | None:
+        from .hardware_enablement import (
+            CompositeHardwareSupportResolver,
+            IsenkramHardwareSupportResolver,
+            LinuxSysfsHardwareInventory,
+            X86MicrocodeResolver,
+        )
+        from .slot_writer import resolve_hardware_selection
+
+        if not isinstance(token, str) or not token:
+            raise SystemUpdateError(
+                "hardware selection requires the attested inventory token"
+            )
+        try:
+            snapshot = LinuxSysfsHardwareInventory(
+                sysfs_devices=context.paths.sysfs_devices
+            ).snapshot()
+        except Exception as exc:
+            raise UpdateBackendUnavailable(
+                f"hardware selection is unavailable: {_bounded_reason(exc)}"
+            ) from exc
+        if snapshot.token != token:
+            raise SystemUpdateError(
+                "hardware inventory changed during staging; refusing selection"
+            )
+        plan = CompositeHardwareSupportResolver(
+            resolvers=(
+                IsenkramHardwareSupportResolver(),
+                X86MicrocodeResolver(),
+            )
+        ).resolve(snapshot)
+        if not plan.complete:
+            return None
+        return resolve_hardware_selection(plan=plan, support=support)  # type: ignore[arg-type]
+
+    return _factory
+
+
+def _production_installed_contract_factory() -> Callable[[], bytes]:
+    """Installed persistent-state contract (canonical registry bytes)."""
+
+    def _factory() -> bytes:
+        return build_persistent_state_contract_bytes()
+
+    return _factory
+
+
 def build_live_update_service(
     *,
     state_dir: Path | None = None,
@@ -2230,10 +3262,12 @@ def build_live_update_service(
     resolve from Greia-owned state on every composition; the boot one-shot
     backend attaches to the boot-control ``grubenv`` when present (stays
     unwired fail-closed where there is no boot-control state, e.g.
-    single-root layouts). Inactive-slot destination factories arrive via
-    ``seams`` from image integration (loop/disposable-media composition in
-    this phase); unset destination seams report unavailable at stage time
-    rather than guessing at destination access.
+    single-root layouts). With ``seams=None`` (the shipped ``main()``
+    path) the inactive-slot destination factories are the production
+    seams from :func:`build_production_update_seams`: the exact installed
+    updater stages only the freshly resolved inactive slot, and reports
+    unavailable fail-closed where no A/B authority or device exists.
+    Explicitly injected seams remain a test/harness feature.
     """
     root = (
         Path(state_dir)
@@ -2252,11 +3286,8 @@ def build_live_update_service(
         if layout_record_path is not None
         else installed_layout_record_path()
     )
-    identity = SystemIdentity(
-        version=os.environ.get(UPDATE_SYSTEM_VERSION_ENV, "unknown"),
-        platform_family=os.environ.get(UPDATE_SYSTEM_PLATFORM_ENV, "unknown"),
-        architecture=os.environ.get(UPDATE_SYSTEM_ARCH_ENV, "unknown"),
-        profile=os.environ.get(UPDATE_SYSTEM_PROFILE_ENV, "unknown"),
+    identity = resolve_installed_system_identity(
+        layout_record_path=record_path,
     )
     resolved_boot_backend = (
         boot_backend
@@ -2266,7 +3297,9 @@ def build_live_update_service(
     backend = SlotBackedSystemUpdateBackend(
         root,
         layout_record_path=record_path,
-        seams=seams if seams is not None else UpdateSlotSeams(),
+        seams=seams
+        if seams is not None
+        else build_production_update_seams(layout_record_path=record_path),
         boot_backend=resolved_boot_backend,
     )
     return SystemUpdateServiceAuthority(root, keys, identity, backend)
@@ -2303,10 +3336,10 @@ def main(argv: list[str] | None = None) -> int:
     With systemd socket activation (``LISTEN_FDS``) the passed file
     descriptor is the listening socket; without one the service exits
     fail-closed instead of opening any socket itself. The production
-    authority (trust, layout, journal, boot one-shot backend) is composed
-    from Greia-owned state; inactive-slot destination factories arrive via
-    image integration, so staging reports unavailable rather than guessing
-    at destination access where no destination seam is composed.
+    authority (trust, layout, journal, boot one-shot backend, production
+    inactive-slot seams) is composed from Greia-owned state; staging
+    reports unavailable rather than guessing at destination access where
+    no A/B authority or inactive device exists.
     """
     _ = list(argv or [])
     listen_fds = int(os.environ.get("LISTEN_FDS", "0"))

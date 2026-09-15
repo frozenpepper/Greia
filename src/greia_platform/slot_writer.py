@@ -107,8 +107,17 @@ REQUIRED_FINALIZED_FILES = (
 
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 _SLOT_ROLE_RE = re.compile(r"^system-[ab]$")
+_RELEASE_FACT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _MAX_SLOT_CONFIG_ENTRIES = 32
 _MAX_SLOT_CONFIG_VALUE_BYTES = 256
+
+#: Bounds for the signed release-identity facts the finalizer may state.
+#: They mirror the ``load_installed_release_identity`` acceptance bounds in
+#: ``greia_platform.system_updates`` so every written document reloads there.
+_MAX_RELEASE_ARCHITECTURE = 32
+_MAX_RELEASE_PLATFORM_FAMILY = 64
+_MAX_RELEASE_PROFILE = 96
+_MAX_RELEASE_VERSION = 64
 
 #: Capability tokens issued by :class:`SlotWriter.write`, keyed by token.
 #: :class:`SlotFinalizer` consumes the token for exactly one finalization,
@@ -719,11 +728,24 @@ class ReleaseSupportSet:
 
 @dataclass(frozen=True, slots=True)
 class SlotProfilePolicy:
-    """Validated profile policy the finalizer writes slot-locally."""
+    """Validated profile policy the finalizer writes slot-locally.
+
+    The four optional release facts (``architecture``, ``platform_family``,
+    ``profile``, ``version``) are the signed release's compatibility
+    identity. They are stated into the slot-owned
+    ``etc/greia-os/release-identity.json`` authority only when the caller
+    supplies an authoritative (non-``unknown``) value; ``None`` means the
+    fact is not authoritatively known and the key is omitted so downstream
+    resolution keeps falling back instead of recording a guess.
+    """
 
     layout_id: str
     system_slot_bytes: int
     boot_backend: str
+    architecture: str | None = None
+    platform_family: str | None = None
+    profile: str | None = None
+    version: str | None = None
 
     def __post_init__(self) -> None:
         if not self.layout_id or len(self.layout_id) > 64:
@@ -731,6 +753,50 @@ class SlotProfilePolicy:
         _require_count(self.system_slot_bytes, field_name="profile slot bytes")
         if not self.boot_backend or len(self.boot_backend) > 64:
             raise SlotFinalizeError("profile boot_backend is invalid")
+        for field_name, value, maximum in (
+            ("profile architecture", self.architecture, _MAX_RELEASE_ARCHITECTURE),
+            (
+                "profile platform_family",
+                self.platform_family,
+                _MAX_RELEASE_PLATFORM_FAMILY,
+            ),
+            ("profile profile", self.profile, _MAX_RELEASE_PROFILE),
+        ):
+            if value is None:
+                continue
+            if (
+                not isinstance(value, str)
+                or not value
+                or len(value) > maximum
+                or not _RELEASE_FACT_RE.fullmatch(value)
+            ):
+                raise SlotFinalizeError(f"{field_name} is invalid")
+        if self.version is not None:
+            if (
+                not isinstance(self.version, str)
+                or not self.version
+                or len(self.version) > _MAX_RELEASE_VERSION
+                or any(ord(character) < 32 for character in self.version)
+            ):
+                raise SlotFinalizeError("profile version is invalid")
+
+    def release_identity_facts(self) -> dict[str, str]:
+        """Return the authoritative release facts to state in the identity.
+
+        ``None``, empty and ``"unknown"`` values are unstated (omitted):
+        the finalizer must never record a host guess or an ``unknown``
+        placeholder as an authoritative fact.
+        """
+        facts: dict[str, str] = {}
+        for key, value in (
+            ("architecture", self.architecture),
+            ("platform_family", self.platform_family),
+            ("profile", self.profile),
+            ("version", self.version),
+        ):
+            if isinstance(value, str) and value and value != "unknown":
+                facts[key] = value
+        return facts
 
 
 # ---------------------------------------------------------------------------
@@ -1137,6 +1203,7 @@ class SlotFinalizer:
                         "release_sequence": write.member.release_sequence,
                         "role": destination.role,
                         "slot": destination.semantic_slot,
+                        **profile_policy.release_identity_facts(),
                     }
                 ),
             )

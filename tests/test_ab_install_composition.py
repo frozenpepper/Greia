@@ -381,7 +381,7 @@ class AbInstallCompositionProofTests(unittest.TestCase):
                 journal_dir=root / "journal",
             )
 
-        def _identities(target):  # type: ignore[no-untyped-def]
+        def _identities(target, plan):  # type: ignore[no-untyped-def]
             if not isinstance(target, DeviceObservation):
                 raise FreshAbInstallError("identities need a rematerialized target")
             return observed
@@ -559,7 +559,7 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
                 journal_dir=root / "journal",
             )
 
-        def _identities(target):  # type: ignore[no-untyped-def]
+        def _identities(target, plan):  # type: ignore[no-untyped-def]
             return observed
 
         return {

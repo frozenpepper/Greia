@@ -1,10 +1,11 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-12  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
+**Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)  
 **Version:** `0.13.0-phase0-dev`  
-**Primary blocking platform phase:** **R8 — Raspberry Pi 400 / Pi 500 ARM64 board and image adapters**  
-**Public-source readiness:** **IN PROGRESS**  
+**Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; V12G RED on new shipped defect D6 (slot payload has no apt-get for the chroot install leg — see §25); product decision required on the D6 repair side before any further closure re-run**
+**Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
 This file is current-state routing only. Historical implementation detail belongs in Git history, dated reviews, testing records, and the append-only active architecture plan.
@@ -33,11 +34,25 @@ Do not use GitHub-hosted Actions without explicit owner authorization.
 
 ## 2. Platform state
 
-R7 display/session/trusted-chrome work is complete and has recorded physical Acer evidence. The next blocking architecture family is R8 ARM64/Pi board and image support.
+Run R1 achieved the T0–T6 source tranche plus device-leg tranches 2 and 3, the forged-peer refusal restoration, and suite hardening (frozen at `372ee310`). That work is preserved, not repeated.
+
+Evidence correction now in force (see the active plan entry of 2026-09-12 and the lifecycle-ledger correction of 2026-09-12):
+
+```text
+T3-S source composition primitives: DONE (source scope)
+T3-P exact shipped product composition: OPEN / BLOCKING
+T7: GREEN only in disposable/device-harness scope — not exact shipped service/unit proof
+.greiabackup: absent
+recovery media: absent
+Parent encrypted/authenticated LAN transport: blocked (provisional HTTP)
+historical Acer suite waiver: retained as history until an exact-head rerun replaces it
+```
+
+The exact next implementation task is **`POSTR1-P1-INSTALLER-RED`** (P1.1 installer composition RED). Do **not** start Raspberry Pi 400/500 work, UEFI work, destructive Acer installation, or R11 backup work in this lane, and do not treat T3 shipped product composition as complete. Do not discard or downgrade T7 evidence.
 
 Current catalogue assertions must remain discovery-based. Do not freeze a first-party Activity count into new architecture or release gates.
 
-The Parent authentication/runtime work below is a cross-cutting release-readiness tranche. It does not replace or skip R8 or later platform phases.
+The Parent authentication/runtime work below is a cross-cutting release-readiness tranche. It does not replace or skip the blocking product-composition closure above or later platform phases.
 
 ## 3. Parent client authority and frozen runtime
 
@@ -227,7 +242,15 @@ Do not combine their obsolete token instructions with the unified procedure.
 
 ## 8. Current exact next step
 
-On the owner-controlled checkout:
+The next implementation task is:
+
+```text
+POSTR1-P1-INSTALLER-RED (P1.1 installer composition RED)
+```
+
+— a deterministic failing test pinning the exact shipped installer composition gap, with no production fix yet. P1.2/P1.3 RED tests, P1.4 systemd-sandbox RED proof and all P2+ product-composition work follow as future work.
+
+Before starting, on the owner-controlled checkout:
 
 ```bash
 git fetch origin
@@ -239,7 +262,7 @@ git rev-parse origin/main
 
 Require a clean relevant tree and `HEAD == origin/main`.
 
-Keep the Parent repository at exactly:
+The Parent unified acceptance below remains the execution authority for the Parent authentication/runtime tranche, but it is not the current blocking implementation task. When executing it, keep the Parent repository at exactly:
 
 ```text
 01301d285c6ba2a9a1f2948a9768b821d2536729
@@ -254,6 +277,18 @@ docs/testing/2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md
 Stop on the first failure and return the evidence root plus the final report template from that protocol.
 
 Do not edit source during the frozen attempt.
+
+## 13. Footprint composition reduction (2026-09-13) — `POSTR1-P5-FOOTPRINT-REDUCE`
+
+Build-hygiene-only change, no Phase-0 product scope removed, no bound raised or weakened:
+
+- `build/build-image.sh`: before manifest/footprint capture, purge orphaned build-toolchain `binutils`, prune unused `cc1`, prune base non-`en*` gettext locales, prune base man/info and non-copyright doc files (disposition `POSTR1-P5-FOOTPRINT-DISPOSITION` rows 1–4; row 5 Perl/media-types and row 6 WAV→OGG not applied).
+- Source: worktree commit `4379de64` (only `build/build-image.sh`, +32 lines); profile `acer-aspire-one-i386-ab.toml` unchanged (800 preferred / 1000 required / 1250 review).
+- Measured on the owner-provisioned orbiter lane, official `build/build-installer-image.sh acer-aspire-one-i386-ab` with V8-pinned bundle/key inputs (`greia-release.greiaupdate` sha `e20895a0…`, `trusted-keys/greia-release-main.pem`): target gate **PASSES** with `installed 981 / filesystem-used 981 / accounted 981 MiB < required 1000` (red baseline was 1080; reclaim 99 MiB; preferred ≤800 still unmet by honest disposition — warning only, no child scope cut to chase it). Full installer image built: `greia-os-installer-acer-aspire-one-i386-ab.img` (1257 MiB USB, sha `93c0fda9…`, payload squashfs sha `e5b3818d…`).
+- Mechanism proved on the shipped payload (mounted read-only): `cc1` absent, `binutils` absent from package manifest (`cpp-12`/`x11-xserver-utils` intact), locales `en*` only, man/info empty, docs copyright-only; preserved scope verified: `xinit`/`xrandr`/`xinput`/`bwrap`, `Xwrapper.config` (`allowed_users=anybody`, `needs_root_rights=yes`), `python3-pygame`/`python3-pil`/`fonts-noto-color-emoji`/`bubblewrap`/`xserver-xorg-legacy`/`openssh-server`/`sudo` in manifest, 41 activities incl. `writing`+`painting`, `import pygame` 2.1.2 OK in payload chroot, A/B bundle + `installer-ab.env` (`DEVELOPER=0`) on the medium.
+- Local `make verify` PASS at the change (3367 tests OK, skipped=3; validate/shell-check/footprint clean).
+- Evidence: T-BAG attempt dir `POSTR1-P5-FOOTPRINT-REDUCE/attempts/implementer-1/` (`evidence.tgz` sha `839192bd…`, orbiter log `/tmp/greia-p5-reduce-build.log`, out `/tmp/greia-p5-reduce-out/`).
+- Next exact step: `POSTR1-P5-GATE-CLOSURE-V9` re-attempts the live nine-predicate closure against this official image. Margin note for planning: 19 MiB under required; optional Perl/media-types cut (row 5, ~40 MiB, needs pygame import re-proof) remains available if headroom is wanted — not this task's scope.
 
 ## 9. Parent/API ownership boundaries
 
@@ -317,3 +352,127 @@ PHYSICAL DEVICE
 ```
 
 A successful HTTP response is not proof that physical hardware changed. A later SHA does not inherit earlier physical evidence unless the relevant bytes and acceptance contract explicitly establish equivalence.
+
+## 12. Owner waiver (2026-09-12) — preregistered pre-intro timing comparison DEFERRED for Gate P3 (`POSTR1-P3-TIMING-WAIVER-RECORD`)
+
+Owner authority: `TBag/runs/R1/authority/decisions/postr1--POSTR1-P3-PREINTRO-TIMING-MEASURE--001.md` (2026-09-12; owner intent: functionality first — "lets have everything working, then we will work on shaving seconds in a later stage").
+
+- The preregistered pre-intro timing comparison (P1–P4 predicates) is DEFERRED and waived for Gate P3 / `UPDATE_PRODUCT_COMPOSED`. It was not measured and is not proven.
+- This task supersedes `POSTR1-P3-PREINTRO-TIMING-MEASURE`, which never passed: no QEMU baseline/activated boot occurred and no measurement record exists. No measurement is fabricated or interpolated here.
+- The red timing predicate stays red and parked: waived by explicit owner authority for the P3 gate, not proven and not narrowed by workers.
+- Gate P3 no longer depends on the P1–P4 comparison. Blocked downstream work (`POSTR1-P3-UPDATE-ACTIVATION` integration, `POSTR1-P3-UPDATE-PROOF2`) may proceed without the timing evidence.
+- The fixed 7.0 s intro (5 s animation + 2 s hold) and the frozen P1–P4 predicate definitions remain unchanged; only their scheduling/ownership changes.
+- Re-ownership obligation: the timing proof must be re-owned by the later boot/performance stage plan before release certification.
+
+## 14. Persistent apt/pool cache port (2026-09-13) — `POSTR1-P5-APTCACHE-PORT`
+
+Source port of the persistent apt-cache behavior onto the current
+footprint-hygiene builders (orbiter reference `e36dd148` unreachable from this
+lane; behavior reconstructed from the task brief):
+
+- New `build/lib/apt-cache.sh` (`GREIA_APT_CACHE=/var/cache/greia-apt`,
+  `GREIA_POOL_CACHE=/var/cache/greia-pool`; `mount_apt_archives_cache` /
+  `mount_pool_cache` bind-mount + print mountpoint).
+- `build/build-image.sh`: sources helper, bind-mounts the apt cache after the
+  `/run` tmpfs + resolver stub into `MOUNTS`; `apt-get clean` → `autoclean`,
+  drops only the `archives/*.deb` removal term.
+- `build/build-installer-image.sh`: sources helper, bind-mounts apt + pool
+  caches into `MOUNTS`; same `autoclean`/lists-only cleanup; existing
+  pre-`mksquashfs` `safe_unmount_paths` releases both before compression.
+- `build/install-live-hardware-firmware.sh`: `clean` → `autoclean`.
+- `build/populate-hardware-support-pool.sh`: `POOL_CACHE_IN_CHROOT` (default
+  `/var/cache/greia-pool`) + `POOL_CACHE_HOST` (default
+  `$LIVE_ROOT$POOL_CACHE_IN_CHROOT`, so standalone unmounted runs stage the
+  same pool); both `Dir::Cache::archives=` point at the in-chroot cache;
+  post-loop in-chroot `autoclean`, then copy `*.deb` into a fresh `POOL_DIR`
+  before `finalize_hardware_support_pool.py`.
+- Contract test `test_builds_share_a_persistent_apt_cache_instead_of_redownloading`
+  in `tests/test_system_overlay_contract.py`; docs in
+  `docs/agents/GREIA_AGENT_OPERATIONS.md` (§12, never-clear rule) and
+  `docs/INSTALLER_IMAGE_CREATION_AND_BOOT.md` (§11, rebuild reuse).
+- No profile/package-set/limit/gate/installed-content change; footprint-hygiene
+  block and A/B installer wiring intact.
+- Verification: four focused suites green; `bash -n` + `make shell-check`
+  clean; full `make verify` result recorded in the attempt report.
+
+## 15. Apt-cache debootstrap-era .deb fix (2026-09-14) — `POSTR1-P5-APTCACHE-FIX`
+
+Source fix for the mount-after-debootstrap trap: `build/build-image.sh` and
+`build/build-installer-image.sh` now bind-mount the persistent apt cache
+BEFORE `debootstrap` so base `.deb`s land in the host cache
+(`GREIA_APT_CACHE`) instead of the real target/live directory; pool-cache
+mount moved with it on the live root. `build/lib/apt-cache.sh` header and
+both cache docs now mandate before-debootstrap mounting. Contract test
+`test_builds_share_a_persistent_apt_cache_instead_of_redownloading`
+strengthened to assert `mount_apt_archives_cache < debootstrap --arch= <
+apt-get` on both builders. Fast path preserved (`autoclean`, no `clean`, no
+host-cache clear, `MOUNTS` teardown intact); footprint-hygiene block and A/B
+wiring untouched. Verification: 23/23 overlay-contract + pool/live/installer
+suites green; full `make verify` 3368 OK (skipped=3); validate/shell-check/
+footprint clean. Real-image proof deferred to `POSTR1-P5-APTCACHE-REPROOF`.
+
+## 16. Gate-P5 closure attempt V11 (2026-09-14) — RED, Gate P5 OPEN, T3-P OPEN, escalated product defects
+
+Orbiter lane recovered and fully capable; official `acer-aspire-one-i386-ab` image rebuilt (footprint 981/981/981 PASS) and boots. Six live closure attempts ran real product legs; 0/9 predicates GREEN. Harness fixes inside worker scope (squashfs host-rebuild, ctl snapshot, IDE+kvm:tcg, clone serial console, live transaction-socket bridge; all unit-green) are committed in the task worktree. Two shipped-product defects block the gate and need product authority: (D1) socket activation spawns `greia-install-transaction.service` without `LISTEN_FDS` (in-guest serial proof; install impossible); (D2) `greia-system-update.socket` is never enabled/started anywhere (payload lacks the wants-link; no puller), so update/recovery legs cannot run even after D1. Evidence: T-BAG `POSTR1-P5-GATE-CLOSURE-V11/attempts/implementer-1/` (report + evidence/). Next: product fix D1+D2, official rebuild, closure re-run. T3-P remains OPEN/BLOCKING.
+
+## 17. Gate-P5 closure re-run V12C (2026-09-14) — continuation (Gate P5 OPEN, T3-P OPEN)
+
+V12B implementer lane wedged (poisoned resumable session; owner re-issued identical brief as V12C, V12B superseded). V12C re-derives V11's four harness behaviors as code-only against current primary (frozen `HANDOVER.md` hunk not applied; history append-only): clone-only serial-console prepend, clone-only transaction-socket wants-link, squashfs rebuild into host work_dir, control-disk/installer `snapshot=on` + explicit `ide-hd` placement + `pc,accel=kvm:tcg`, plus the `gate_p5` boot-perf timeout binding; three focused `tests/test_x8_qemu` suites re-proven green before any orbiter run. Depends on integrated `POSTR1-P5-SOCKET-ACTIVATION-FIX` (D1+D2: native `LISTEN_FDS` + fd 3 on all three services, `greia-system-update.socket` enabled in `build/build-image.sh`; reviewer-1 PASS). Next: clean-archive delivery to orbiter, official installer rebuild with both A/B env vars, single full `run_gate_p5_closure_product()` with seeded `d31_fn` and P5.4 baseline; T3-P DONE if and only if all nine predicates GREEN.
+
+## 18. Gate-P5 closure re-run V12C (2026-09-14) — RED, Gate P5 OPEN, T3-P OPEN, new shipped defect D3
+
+Official image rebuilt from HEAD `135d4b85` (socket-fix + re-derived harness): `greia-os-installer-acer-aspire-one-i386-ab.img` 1318060032 B, sha `2893e0d5…`, payload `8569f8e2…`, footprint 981 PASS. D1+D2 confirmed fixed IN the built image (both socket wants-links present in target payload; zero `^StandardInput` on all three shipped units). Closure run on orbiter: positive control RED-as-expected (`d31_fn=None` → BLOCKED), then the real install-prepare leg failed red — guest boots to login, socket listens, control dials, but `greia-install-transaction.service` dies on every activation (5× spawn → `service-start-limit-hit`), guest never powers off, host leg times out. Root cause (host-side chroot proof against the run clone's own live bytes, sensitivity-controlled): D1 gate now PASSES, but `ServiceState.from_target_profile` raises `target image profile misses release facts` — shipped live `/etc/greia-os/target-image-profile.json` carries `profile.profile_id` while service AND client both contract `profile.id` (writer `BuildProfile.declared_manifest` serializes the dataclass field name; contract suites mask it with hand-written `id` fixtures, 38/38 + 10/10 green). D3 predates this delta (all implicated files byte-identical to primary; reader dates to 8A-era; masked in V11 by D1) and its files sit outside this task's Allowed changes, so no repair was attempted — product/build authority must decide writer-vs-reader ownership. One lane-hygiene note: orbiter's persistent pool cache held a stale `libssh2-1_1.10.0-3+b1` duplicate that failed the first build at pool finalize; only that stale file was removed (58 cached debs scanned, no other duplicates), rebuild GREEN. Evidence: T-BAG `POSTR1-P5-GATE-CLOSURE-V12C/attempts/implementer-1/` (report + evidence/ + SHAs). Next: product fix D3 (profile-manifest `profile.id` contract), official rebuild, closure re-run. T3-P remains OPEN/BLOCKING.
+
+## 19. Gate-P5 closure re-run V12D (2026-09-14/15) — BLOCKED, orbiter lane inaccessible after worker-caused host unmount; Gate P5 OPEN, T3-P OPEN
+
+V12D implementer validated everything reachable, then lost the lane before any closure leg ran. Pre-orbiter: HEAD `210d377b` carries the D3 `profile.id` contract fix (writer `tools/build_profile.py:621`, readers aligned, `src/greia_installer/` untouched) plus the carried V12C harness delta; focused suites green (`test_product_install` 38, `test_product_boot_health` 44, `test_product_recovery_d31_reverse` 31) and dependency surface green (contract 6, build-profiles 8, update-unit 15, transaction-service 38, developer-remote 32). Orbiter lane verified healthy (`SSH_OK`, `sudo -n whoami` → root); V12C image (bound to pre-fix `135d4b85`) treated as absent; clean archive of `210d377b` (sha `5af77ee9…`) delivered to `/tmp/greia-p5-v12d-src`; V8 bundles/keys reused as recorded inputs; closure driver `/tmp/greia-p5-v12d-closure.py` written (V12C two-phase shape, pinned HEAD, frozen P5.4 baseline, positive control first; syntax-checked on orbiter, never executed). Partial build evidence (transcribed): payload manifest carries canonical `profile.id`, footprint 981 PASS.
+
+Incident (worker-owned): after killing a misconfigured build (first attempt fail-closed — exported `GREIA_AB_*` stripped by sudo `env_reset`; env must ride on the sudo command line), cleanup ran raw `umount -R` against a chroot with shared-propagation host bind mounts; host `/dev`+`/proc`+`/sys` were unmounted (`/dev/null` became a regular file, `/dev/loop*` gone). `/proc` remounted OK and `/sys` was still mounted, but `/dev` recovery was inconclusive and minutes later new ssh fails deterministically (TCP accept then RST; ping OK, port 22 open). Only the worker's own SIGKILL debris was removed (loop63, 2 build dirs, partial out dir — verified); all pre-existing residual loops left untouched per lane policy. No project source modified (worktree clean). No closure leg, positive control, predicate, or SHA binding was executed: 0/9 UNEXECUTED (not red). Evidence: T-BAG `POSTR1-P5-GATE-CLOSURE-V12D/attempts/implementer-1/` (report + `v12d-status.json`); orbiter-side artifacts marooned in `/tmp/greia-p5-v12d-*` pending lane recovery. Next: owner/parent restores orbiter via console (reboot drops residual loop bindings — re-record `losetup -a` after), then rebuild with sudo-command-line env and run the on-disk driver; never `umount -R` a build chroot with host bind mounts. T3-P remains OPEN/BLOCKING.
+
+## 20. Gate-P5 closure re-run V12E (2026-09-15) — RED, Gate P5 OPEN, T3-P OPEN, new shipped defect D4
+
+V12E implementer re-ran the full closure on the owner-restored orbiter lane at HEAD `0afa1b96` (R01-03 ops notes only; D3 fix + V12D-carried harness delta integrated). Lane healthy; orbiter `/tmp` held no V12D residue so all artifacts rebuilt. Official `acer-aspire-one-i386-ab` image rebuilt from this HEAD (1318060032 B, sha `036f6ea9…`, footprint 981 PASS; keys/bundles re-minted through production builders, seq20/21/23 signature-verified). D3 verified fixed IN the built artifact (payload and live `target-image-profile.json` both carry canonical `profile.id`); D1+D2 intact in the image. Closure run: positive control RED-as-expected, then the real install-execute leg timed out (guest boots to login, never powers off) — 0/9 predicates GREEN. Journal-to-console replay on a disposable copy of the run clone isolates new shipped defect D4: the install-transaction service dies verifying ANY release signature (`release signature is not trusted: Ed25519 … requires python3-cryptography` ← no `cryptography` module in the built live root; live manifest confirms absence). Composition cause: the A/B profile omits package-set `system-update` (header defers inclusion pending measured/accepted C0 footprint delta) while shipped install/update services fail-closed require it — a product/build-authority decision outside this task's Allowed changes, so no repair attempted and no clone-side injection (that would be harness substitution). Own mounts/loops cleaned (single unmounts only); key/sudoers plus one pre-existing stuck deleted-file loop left for parent/owner. Evidence: T-BAG `POSTR1-P5-GATE-CLOSURE-V12E/attempts/implementer-1/` (report + `v12e-status.json` + `closure.log` + `diag-execute-serial.log`). Next: product/build authority accepts the `system-update` set for the A/B profile (verify i386 installability + footprint delta), official rebuild, closure re-run. T3-P remains OPEN/BLOCKING.
+
+## 21. `system-update` set selected for the A/B profile (2026-09-15) — `POSTR1-P5-SYSTEM-UPDATE-INCLUSION`
+
+Composition decision (product/build, ADR 0013; the A/B profile is exactly the profile the `system-update` set header anticipated): `acer-aspire-one-i386-ab` now selects `system-update` (`python3-cryptography`) in `target_sets` (installed update/recovery verification via `SystemUpdateService.verify` → `_cryptography_ed25519`) and in `installer_sets` (live release verification via `fresh_ab_install` → `verify_update_signature`); all single-root/dev profiles still omit it. Resolves Gate-P5 blocker D4. No bound raised, no Phase-0 scope removed.
+
+- i386/bookworm closure proven on orbiter (disposable chroot, since removed): candidate `python3-cryptography 38.0.4-3+deb12u1` (`pool/main/p/python-cryptography/python3-cryptography_38.0.4-3+deb12u1_i386.deb`, sha `78a69c1c…`, Installed-Size 3070 KiB; closure `python3-cffi-backend` 207 KiB + `libssl3`/`libc6`/`libgcc-s1`/`python3`); `apt-get install` exit 0, `import cryptography` 38.0.4 + Ed25519 sign/verify OK.
+- Official rebuild from source HEAD `16fdbedd` (archive sha `e2ee65c0…`; `GREIA_AB_*` on the sudo command line; bundle input reused V12E seq20 `ad7e4e39…`, trusted key `f9814ae9…`): target footprint `installed 985 / filesystem-used 985 / accounted 985 MiB < required 1000` — gate **PASSES** (delta +4 MiB vs the 981 baseline; preferred ≤800 warning honestly retained). Installer image `greia-os-installer-acer-aspire-one-i386-ab.img` 1320157184 B (1259 MiB USB) sha `e51f24e0…`; payload squashfs sha `03fbcc35…`; USB bundle == input seq20; target manifest sha `f4ca5474…`, installer manifest `1db2706a…`.
+- Built-artifact proof (read-only USB mount + unsquashfs of both squashfs): live AND target package manifests carry `python3-cryptography 38.0.4-3+deb12u1`; live AND target chroots `import cryptography` 38.0.4 + Ed25519 OK; production `verify_update_signature` inside the built live bytes verifies the real bundle (`greia-0.20.0`, profile `acer-aspire-one-i386-ab`) — the exact D4 call is now GREEN at artifact level.
+- Regression: `test_ab_profile_selects_system_update_in_both_scopes` in `tests/test_build_profiles.py` (positive control: selection removed → 1 failure RED; restored → 9/9 GREEN). Local full suite 3386 OK (skipped=3) at the composition commit.
+- Honest notes: live security-support report carries a pre-existing binutils trusted-content notice (live-root build-toolchain residue, unrelated to this change); target `security_support_state=no-alerts`. Orbiter lane left clean (single unmounts only, loop detached, no `umount -R`); key/sudoers plus pre-existing snap loops untouched for parent/owner.
+- Orbiter evidence: `/tmp/greia-p5-sysupd-out/` (image + reports), `/tmp/greia-p5-sysupd-build.log`, `/tmp/greia-p5-crypto-proof.txt`; source archive `/tmp/greia-p5-sysupd-src.tgz` (sha `e2ee65c0…`). T-BAG report: `POSTR1-P5-SYSTEM-UPDATE-INCLUSION/attempts/implementer-1/`.
+- Next exact step: `POSTR1-P5-GATE-CLOSURE-V12F` re-runs the live closure against this official image. T3-P remains OPEN/BLOCKING — not marked DONE here.
+
+## 22. Gate-P5 closure re-run V12F (2026-09-15) — RED, Gate P5 OPEN, T3-P OPEN, new shipped defect D5
+
+V12F implementer re-ran the full closure on the orbiter lane at HEAD `5d33920` (D4 `system-update` selection + D3 `profile.id` fix + V12D-carried harness delta integrated). The sysupd image (from `16fdbedd`) was treated as absent (not SHA-bound to this HEAD); clean archive (sha `022718fc…`) delivered with the D4 fix confirmed in the delivered tree. Keys/bundles re-minted through production builders only (fresh ed25519 `greia-release-main`; 64 MiB ext4 base payload with pinned issuer; seq20 `77ab514a…` / seq21 `5896f235…` / seq23 `79468c2d…`, all signature-verified). Official `acer-aspire-one-i386-ab` image rebuilt with `GREIA_AB_*` on the sudo command line: 1320157184 B sha `cfbb2d97…`, payload squashfs `2b1f55d0…`, footprint installed/filesystem-used/accounted 985 < required 1000 PASS (+4 vs the 981 baseline; preferred-≤800 warning retained); USB bundle == minted seq20. D4 verified fixed at every stage (payload + live manifests carry `python3-cryptography 38.0.4-3+deb12u1`; live AND target chroots `import cryptography` 38.0.4 + Ed25519 OK; production `inspect_update_bundle` + `verify_update_signature` inside the built live bytes verifies the real seq20 bundle GREEN); D3/D1/D2 intact in the image (canonical `profile.id`, both socket wants-links, zero `^StandardInput` on socket-activated units).
+
+Closure run (`/tmp/greia-p5-v12f-closure.py`, sha `02de92e0…`, V12C two-phase shape, frozen P5.4 baseline, pinned HEAD): positive control RED-as-expected (`d31_fn=None` → BLOCKED naming the unpinned D31 mapping), then the real install-execute leg timed out after 1200 s (guest boots to login, never powers off) — 0/9 predicates GREEN. Journal-to-console replay on a disposable copy of the run clone isolates new shipped defect D5: the install-transaction service now gets PAST release-signature verification into `finalize` and dies in hardware-support install — `TransactionServiceError: fresh A/B install refused: hardware-support command failed: chroot: cannot change root directory to '/run/greia-slots/slot-a-401': Operation not permitted` (chain: `execute_fresh_ab_install` → `slot_writer.finalize:1159` → `slots:173` → `block_slots:679` → `slots:126` → `hardware_support_install:61` → `device_seams:143`). Cause: the shipped `greia-install-transaction.service` grants only `CAP_SYS_ADMIN` (bounding + ambient, pinned by `tests/test_installer_unit_contract.py:411-414`) while shipped `hardware_support_install.py` runs `chroot <slot> apt-get …` (three invocations) via the production runner — `chroot(2)` requires `CAP_SYS_CHROOT`, so the denial is deterministic capability law, identical on physical Acer hardware. The unit comment's "CAP_SYS_ADMIN and nothing else" evidence covered mount/write only, never chroot; D1/D3/D4 masked this path in sequence, so D5 is new line-of-sight, not a regression. Both the unit file and the implementation choice sit outside this task's Allowed changes, so no repair was attempted and no clone-side bypass (that would be harness substitution).
+
+Procedure note (facility, not product): the closure driver must run as root (`sudo -n python3`, the established V9/V11 procedure) — `tools/x8_qemu/product.py` loop/mount calls carry no sudo prefix and `orb` is not in the `disk` group, so an unprivileged driver run fails pre-QEMU at `inject_live_clone` with `losetup: Permission denied` (recorded; first V12F launch hit exactly this, then relaunched clean as root).
+
+Lane left healthy (own loops detached via `losetup -d`, no stray mounts/processes, never `umount -R`; pre-existing stuck deleted-file loops + key/sudoers for parent/owner). Evidence: T-BAG `POSTR1-P5-GATE-CLOSURE-V12F/attempts/implementer-1/` (report + `v12f-status.json` + `closure.log` + `diag-execute-serial.log`); orbiter-side artifacts remain in `/tmp/greia-p5-v12f-*` + `/tmp/v12f-diag-*`. Next: product authority decides the D5 repair side (grant `CAP_SYS_CHROOT` to the install-transaction unit vs remove `chroot` from the hardware-support install path; the contract test pins the current set and must move with the decision), then official rebuild + closure re-run. T3-P remains OPEN/BLOCKING.
+
+## 23. D5 installer `chroot` privilege repair (2026-09-15) — unit carries `CAP_SYS_CHROOT`, hardware-support install leg proven on disposable loop target (`POSTR1-P5-INSTALLER-CHROOT-PRIVILEGE-FIX`)
+
+Decision (bounded minimum-privilege determination, recorded in commit `2eae3f93`): retain the shipped `chroot` hardware-support install path and add exactly `CAP_SYS_CHROOT` to `CapabilityBoundingSet` + `AmbientCapabilities` (final set `CAP_SYS_ADMIN` + `CAP_SYS_CHROOT`, nothing else). Rationale: `TargetHardwareSupportInstaller.install()` runs `chroot <slot> apt-get update/install/clean` (three argv-array invocations) through the production `SubprocessHardwareSupportRunner` (`shell=False`) on the A/B finalize path; `chroot(2)` fails EPERM without `CAP_SYS_CHROOT` (V12F traceback), so the old "nothing else" comment was evidenced for mounts only, never for `chroot`. The remove-`chroot` alternative would fork install plumbing with a second writer/finalizer and no minimality proof, so it is rejected. Envelope unchanged: `ProtectSystem=strict`, `NoNewPrivileges=yes`, `AF_UNIX`-only, the six `ReadWritePaths`, single writer/finalizer. Contract test renamed to `test_capabilities_are_exactly_cap_sys_admin_and_cap_sys_chroot` plus a `chroot`-leg regression (declared capability + three `chroot` argv arrays + `shell=False`); local positive control (withdraw `CAP_SYS_CHROOT` → 2 RED, restore → 19/19 GREEN).
+
+Orbiter proof from HEAD `2eae3f93` (clean archive sha `7d0ab8ff…`, keys/bundles re-minted through production builders: seq20 `0a969941…` / seq21 `ab6d1c26…` / seq23 `6ec20b88…`, all signature-verified): official `acer-aspire-one-i386-ab` image rebuilt with `GREIA_AB_*` on the sudo command line — 1320157184 B sha `f2aedcfe…`, payload squashfs `269ce745…`, USB bundle == minted seq20, footprint installed/filesystem-used/accounted 985 < required 1000 PASS (unit-declaration change, no new package; preferred-≤800 warning retained); live manifest keeps `python3-cryptography 38.0.4-3+deb12u1` (D4 intact). Built-artifact proof (read-only USB + squashfs mounts, single unmounts): the live installer unit declares exactly `CAP_SYS_ADMIN CAP_SYS_CHROOT` with the rest of the envelope intact, and the live code keeps the three `chroot` legs.
+
+Product-path proof on a disposable 1 GiB ext4 loop target (single usr overlay off the built live root, usrmerge symlinks, apt-bind, proc/sys/dev/devpts; real medium pool verified: 58 packages; real built `TargetHardwareSupportInstaller.install` + production runner under `systemd-run` with the exact unit sandbox): old caps reproduce the V12F EPERM byte-identical (`chroot: cannot change root directory … Operation not permitted`, exit 10); repaired caps complete the leg (`INSTALL_OK: ['firmware-ast']`, update/install/clean all RC 0; `dpkg -l` → `ii`; firmware file on the slot layer). Bare-`chroot` sensitivity: old exit 125 EPERM / new exit 0. One harness-only detour is honestly recorded (first positive attempt failed at dpkg unpack for a non-usrmerged hand-built target + stacked duplicate overlay mounts; target rebuilt clean, identical real install re-ran GREEN — no source/privilege change to force green). Lane left clean (single unmounts only, both own loops detached, never `umount -R`; key/sudoers + pre-existing loops for parent/owner). Evidence: T-BAG `POSTR1-P5-INSTALLER-CHROOT-PRIVILEGE-FIX/attempts/implementer-1/` (`d5-status.json` + `proof-excerpts.txt`); orbiter-side artifacts in `/tmp/greia-p5-d5-*` + `/tmp/greia-p5-out-d5/`. Next: `POSTR1-P5-GATE-CLOSURE-V12G` re-runs the full live closure against this image. T3-P remains OPEN/BLOCKING — not marked DONE here.
+
+## 24. Installer no-network/tool guard scoped to systemd directives (2026-09-15) — test-only (`POSTR1-P5-INSTALLER-SVC-TEST-SCOPE`)
+
+Test-only change to `tests/test_installer_hardware_support_service.py` (no shipped unit, no `src/`): local `_directive_text` helper keeps only systemd directive lines (drops blanks and lines whose first non-whitespace char is `#` or `;`); both negative guards (`apt-get`/`curl`/`wget` absence on both units; `GREIA_HARDWARE_SUPPORT_POOL` absence on the UI unit) now evaluate directive text, and all other assertions are unchanged. New `test_directive_scope_positive_control` proves both directions on synthetic text (comment-only tool mention → no hit; real `ExecStart` naming `curl` → hit); sensitivity re-proven in-memory against the shipped units (comment-injected prose trips the old whole-file scan but not the directive scan; both shipped units carry 0 guarded tokens in directives today). Evidence: full local suite 3388 OK (skipped=3) — prior baseline 3387 OK + 1 new test, no new failure; `git diff` touches only the test file. T3-P remains OPEN/BLOCKING — not marked DONE here.
+
+## 25. Gate-P5 closure re-run V12G (2026-09-15) — RED, Gate P5 OPEN, T3-P OPEN, D5 proven effective on the product path, new shipped defect D6 (slot payload has no `apt-get`)
+
+V12G implementer re-ran the full closure on the orbiter lane at HEAD `98b06079` (D5 `CAP_SYS_CHROOT` repair + D4 `system-update` selection + D3 `profile.id` fix + test-scope §24 integrated; tree `7657e5cb`). Prior V12G residue (image built from the tree-identical checkpoint `6cf3fef1`) was treated as ABSENT (not SHA-bound to this HEAD); clean archive of HEAD (tgz sha `bd8dc86d…`, match both sides) delivered to `/tmp/greia-p5-v12g5-src` with D5 caps + D4 selection confirmed in the delivered tree. Keys/bundles re-minted through production builders only (fresh ed25519 `greia-release-main`; 64 MiB ext4 base payload with pinned issuer; seq20 `c66d46bc…` / seq21 `5e2d611d…` / seq23 `1526ce11…`, all signature-verified). Official `acer-aspire-one-i386-ab` image rebuilt with `GREIA_AB_*` on the sudo command line: 1320157184 B sha `3d3a01de…`, USB bundle == minted seq20, footprint installed/filesystem-used/accounted 985 < required 1000 PASS (preferred-≤800 warning retained). Built-artifact proof (read-only loop + unsquashfs, single unmounts): target `profile.id` canonical; live AND target manifests carry `python3-cryptography 38.0.4-3+deb12u1` (D4 intact at both levels); the built live installer unit declares exactly `CAP_SYS_ADMIN CAP_SYS_CHROOT` (D5 reached the artifact); target payload enables `greia-system-update.socket` via `sockets.target.wants`. Focused local suites 92/92 GREEN during the build window.
+
+Closure run (`/tmp/greia-p5-v12g5-closure.py`, sha `c4d9cd07…`, V12F two-phase shape, frozen P5.4 baseline, pinned HEAD, run as root per the V9/V11 procedure): positive control RED-as-expected (`d31_fn=None` → BLOCKED naming the unpinned D31 mapping), then the real install-execute leg timed out after 1200 s (guest boots to login, never powers off) — 0/9 predicates GREEN, P5.4 record NOT_READY, D31 seed unexecuted, T3-P left OPEN. Journal-to-console replay on a disposable copy of the run clone (only added `systemd.log_target=console` + `journald.forward_to_console` on the one grub.cfg linux line; run clone read-only source) shows the IDENTICAL call chain as V12F (`slot_writer.finalize:1159` → `slots:173` → `block_slots:679` → `slots:126` → `hardware_support_install:61` → `device_seams:143`) diverging only at the final errno: `TransactionServiceError: fresh A/B install refused: hardware-support command failed: chroot: failed to run command 'apt-get': No such file or directory` (was V12F `chroot: cannot change root directory … Operation not permitted`). D5 is therefore proven effective on the product path (`chroot(2)` EPERM gone), but the install-execute leg does NOT pass the hardware-support leg — acceptance bullet 2 red.
+
+New shipped defect D6, forensically closed (read-only loop mount of slot A on the quiescent disposable target): slot A holds ONLY `{etc, lost+found, run, var}` — the raw streamed 64 MiB minted bundle payload — with no `/usr`, no `/bin`, no `apt-get`. `fresh_ab_install` streams `open_bundle_payload_stream(bundle)` verbatim into the slot and `finalize` then `chroot <slot> apt-get update/install/clean`, so with any bundle built by the V12E/V12F/V12G mint procedure the ENOENT is deterministic: nothing in the slot can execute `apt-get`. No in-guest log, manifest, or earlier predicate masked this — V12F died one stage earlier (EPERM), so D6 is new line-of-sight, not a regression. Resolution needs product/architecture authority outside the closure lane's Allowed changes (`src/greia_installer`, `src/greia_platform`, `tools/greia_update.py`, `build/*` all excluded): either release payloads must be full Debian systems carrying apt/dpkg (and the mint must build one — a methodology change with footprint/capacity consequences for the 1 GiB slot), or the install flow must stop assuming `apt-get` inside a payload-only slot. No fixture hack was applied to force green (same principle as the D5 task's refused harness substitution).
+
+Lane left healthy (own loops detached — build-forensics loop43 and diag loop — no stray mounts/processes; diag QEMU SIGTERM'd by the operator only AFTER the decisive traceback was captured at 17:45, so its "QEMU EXITED" line is a driver logging imprecision, not a guest power-off; pre-existing loops + key/sudoers for parent/owner). Evidence: T-BAG `POSTR1-P5-GATE-CLOSURE-V12G/attempts/implementer-5/` (report + `v12g5-status.json` + `closure.log` + `diag-execute-serial.log`); orbiter-side artifacts in `/tmp/greia-p5-v12g5-*` + `/tmp/greia-p5-out-v12g5/` + `/tmp/v12g5-diag-*`. Next: product authority decides the D6 repair side and issues the rebuild + closure re-run successor; do NOT mark T3-P DONE. T3-P remains OPEN/BLOCKING.

@@ -28,6 +28,7 @@ import json
 import os
 import socket
 import tempfile
+import threading
 import tomllib
 import unittest
 from contextlib import contextmanager
@@ -1022,13 +1023,90 @@ class LauncherProductionCallTests(unittest.TestCase):
     """`apply_prepared_state` owns the single production seam call.
 
     The shipped ``INTERACTIVE_READY`` publication invokes
-    ``maybe_accept_production_boot`` exactly once: a pending
+    ``maybe_accept_production_boot`` exactly once: the unprivileged
+    launcher presents the root-issued one-use token to the root
+    ``greia-boot-health`` socket, and the root service commits through
+    the production verifier and backends. A pending
     candidate/first-install boot whose candidate observably booted is
-    accepted through the production vault/observer/protocol bindings,
-    while plain boots (and failed candidates still on the accepted slot)
-    mutate no journal or health state. The existing exactly-once apply
-    guard keeps holding.
+    accepted, while plain boots (and failed candidates still on the
+    accepted slot) mutate no journal or health state. The existing
+    exactly-once apply guard keeps holding.
     """
+
+    #: Fixture kernel boot ID binding issue and verify in these tests.
+    _BOOT_ATTEMPT = "aaaaaaaa-1111-2222-3333-444444444444"
+
+    def _serve_boot_health_once(
+        self, sock_path: Path, service: object
+    ) -> threading.Thread:
+        """Serve one root health connection behind a real AF_UNIX socket."""
+        from greia_platform.boot_health_service import (
+            BootHealthEndpoint,
+            handle_boot_health_connection,
+        )
+
+        endpoint = BootHealthEndpoint(service, allowed_uids=(0, os.getuid()))  # type: ignore[arg-type]
+        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        listener.bind(os.fspath(sock_path))
+        listener.listen(1)
+
+        def _serve() -> None:
+            try:
+                connection, _ = listener.accept()
+                try:
+                    handle_boot_health_connection(
+                        connection,
+                        endpoint=endpoint,
+                        peer=PeerCredential(uid=os.getuid()),
+                        boot_state="interactive_ready",
+                    )
+                finally:
+                    listener.close()
+            except OSError:
+                try:
+                    listener.close()
+                except OSError:
+                    pass
+
+        thread = threading.Thread(target=_serve, daemon=True)
+        thread.start()
+        return thread
+
+    def _issue_production_capability(
+        self,
+        root: Path,
+        *,
+        boot_journal_dir: Path,
+        update_state_dir: Path,
+    ):
+        """Issue the one-use token through the production generator entry."""
+        from greia_platform.boot_capability import build_production_verifier
+        from greia_platform.boot_health import (
+            default_capability_authority,
+            maybe_issue_boot_capability,
+        )
+
+        owner = default_capability_authority(
+            authority_dir=root / "cap-authority",
+            delivery_dir=root / "cap-delivery",
+        )
+        issued = maybe_issue_boot_capability(
+            authority=owner,
+            boot_journal_dir=boot_journal_dir,
+            update_state_dir=update_state_dir,
+            boot_id=self._BOOT_ATTEMPT,
+            peer_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,
+            peer_uid=os.getuid(),
+        )
+        assert issued is not None
+        verifier = build_production_verifier(
+            authority=owner,
+            boot_journal_dir=boot_journal_dir,
+            update_state_dir=update_state_dir,
+            boot_id=self._BOOT_ATTEMPT,
+            peer_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,
+        )
+        return owner, verifier
 
     def _launcher_env(self, tmp: Path) -> dict[str, str]:
         from greia_launcher import main as launcher_main
@@ -1159,17 +1237,60 @@ class LauncherProductionCallTests(unittest.TestCase):
     def test_apply_accepts_first_install_through_production_seam_exactly_once(
         self,
     ) -> None:
+        from types import SimpleNamespace
         from unittest import mock
 
         from greia_launcher import boot_health as launcher_health
         from greia_launcher.bootstrap import BootLifecycleError
+        from greia_platform.boot_health_service import (
+            BootHealthService,
+            ReceiptBackedArtifactResolver,
+        )
         from greia_platform.boot_transaction import BootTransactionState
 
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             health_env = self._first_install_tree(root)
+            journal_dir = Path(health_env["GREIA_BOOT_JOURNAL_DIR"])
+            grub_dir = Path(health_env["GREIA_GRUBENV_DIR"])
+            layout_path = Path(health_env["GREIA_INSTALLED_LAYOUT_RECORD"])
+            receipt_path = Path(health_env["GREIA_FINALIZATION_RECEIPT_PATH"])
+            svc_state = root / "svc-update-state"
+            svc_state.mkdir(parents=True)
+            history_dir = root / "svc-history"
+            history_dir.mkdir(parents=True)
+            _, verifier = self._issue_production_capability(
+                root, boot_journal_dir=journal_dir, update_state_dir=svc_state
+            )
+
+            class _StubUpdateAuthority:
+                backend = SimpleNamespace(layout_record_path=layout_path)
+
+                @staticmethod
+                def confirm_boot_health() -> dict[str, object]:
+                    raise AssertionError("first-install never delegates")
+
+            service = BootHealthService(
+                boot_journal_dir=journal_dir,
+                update_state_dir=svc_state,
+                history_dir=history_dir,
+                update_authority=_StubUpdateAuthority(),
+                capability_verifier=verifier,
+                artifact_resolver=ReceiptBackedArtifactResolver(
+                    layout_record_path=layout_path,
+                    receipt_path=receipt_path,
+                ),
+                boot_backend_factory=lambda: GrubEnvBackend.attach(grub_dir),
+            )
+            sock_path = root / "boot-health.sock"
+            server = self._serve_boot_health_once(sock_path, service)
             env = self._launcher_env(root)
-            env.update(health_env)
+            env.update(
+                {
+                    "GREIA_BOOT_HEALTH_DELIVERY_DIR": str(root / "cap-delivery"),
+                    "GREIA_BOOT_HEALTH_SOCKET_PATH": os.fspath(sock_path),
+                }
+            )
             with mock.patch.dict(os.environ, env, clear=False):
                 real_seam = launcher_health.maybe_accept_production_boot
                 calls: list[str] = []
@@ -1196,13 +1317,15 @@ class LauncherProductionCallTests(unittest.TestCase):
                 self.assertEqual(outcome.accepted_slot, "A")
                 self.assertTrue(outcome.first_install)
                 self.assertEqual(outcome.recovery_medium_if_failed, SETUP_MEDIUM)
-                journal = BootTransactionJournal.load(root / "boot-journal")
+                journal = BootTransactionJournal.load(journal_dir)
                 self.assertEqual(journal.state, BootTransactionState.ACCEPTED)
                 # The exactly-once apply guard keeps holding: a second
                 # apply raises without a second seam call.
                 with self.assertRaises(BootLifecycleError):
                     app.apply_prepared_state(state)
                 self.assertEqual(len(calls), 1)
+            server.join(timeout=10)
+            self.assertFalse(server.is_alive())
 
     def test_apply_is_bounded_noop_on_plain_boot(self) -> None:
         from unittest import mock
@@ -1330,6 +1453,7 @@ class LauncherProductionCallTests(unittest.TestCase):
         from unittest import mock
 
         from greia_launcher import boot_health as launcher_health
+        from greia_platform.boot_health_service import BootHealthService
         from greia_platform.boot_transaction import BootTransactionState
 
         family, arch, profile = _shipped_identity()
@@ -1347,27 +1471,27 @@ class LauncherProductionCallTests(unittest.TestCase):
                 rig.op("STAGE_CURRENT_CANDIDATE")
                 rig.op("ARM_CURRENT_CANDIDATE")
                 self.assertEqual(rig.grub.simulate_reboot(), "B")
-            files = rig.seams.filesystem.files
-            cmdline = root / "cmdline"
-            cmdline.write_text(
-                f"BOOT_IMAGE=/boot/vmlinuz root=PARTUUID={_UUID_B} ro quiet\n",
-                encoding="utf-8",
+            empty_boot = root / "empty-boot-journal"
+            empty_boot.mkdir(parents=True)
+            history_dir = root / "svc-history"
+            history_dir.mkdir(parents=True)
+            _, verifier = self._issue_production_capability(
+                root, boot_journal_dir=empty_boot, update_state_dir=rig.state_dir
             )
-            identity = root / "identity.json"
-            identity.write_bytes(files["etc/greia-os/release-identity.json"])
-            receipt = root / "receipt.json"
-            receipt.write_bytes(files["etc/greia-os/finalization-receipt.json"])
+            service = BootHealthService(
+                boot_journal_dir=empty_boot,
+                update_state_dir=rig.state_dir,
+                history_dir=history_dir,
+                update_authority=rig.authority,
+                capability_verifier=verifier,
+            )
+            sock_path = root / "boot-health.sock"
+            server = self._serve_boot_health_once(sock_path, service)
             env = self._launcher_env(root)
             env.update(
                 {
-                    "GREIA_UPDATE_STATE_DIR": str(rig.state_dir),
-                    "GREIA_BOOT_JOURNAL_DIR": str(root / "empty-boot-journal"),
-                    "CREDENTIALS_DIRECTORY": str(root / "credentials"),
-                    "GREIA_GRUBENV_DIR": str(rig.root / "boot-control"),
-                    "GREIA_INSTALLED_LAYOUT_RECORD": str(rig.layout_path),
-                    "GREIA_BOOT_CMDLINE": str(cmdline),
-                    "GREIA_RELEASE_IDENTITY_PATH": str(identity),
-                    "GREIA_FINALIZATION_RECEIPT_PATH": str(receipt),
+                    "GREIA_BOOT_HEALTH_DELIVERY_DIR": str(root / "cap-delivery"),
+                    "GREIA_BOOT_HEALTH_SOCKET_PATH": os.fspath(sock_path),
                 }
             )
             with mock.patch.dict(os.environ, env, clear=False):
@@ -1399,6 +1523,8 @@ class LauncherProductionCallTests(unittest.TestCase):
                 self.assertEqual(record.accepted_slot, "B")
                 self.assertEqual(record.accepted_release_id, _R9_ID)
                 self.assertEqual(record.accepted_release_sequence, _R9_SEQ)
+            server.join(timeout=10)
+            self.assertFalse(server.is_alive())
 
 
 if __name__ == "__main__":

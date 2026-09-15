@@ -1,7 +1,10 @@
 # Step 8A.6: socket-activated system-update semantic service.
-# Defined but never enabled: gated on /run/greia-os/enable-privileged-
-# transactions (absent on every image) and never wanted by any boot target,
-# so it stays inactive during ordinary pre-intro boot. Semantic operations
+# POSTR1-P3-UPDATE-ACTIVATION: the normal installed contract. The old
+# ConditionPathExists gate on /run/greia-os/enable-privileged-transactions
+# (absent on every image) is removed: the service is a normal on-demand
+# product service, started only by greia-system-update.socket on the first
+# connection and never wanted by any boot target, so it stays inactive
+# during ordinary pre-intro boot. Semantic operations
 # only (STATUS/VERIFY/STAGE/ARM/CONFIRM/RECONCILE over the current inbox
 # candidate, resolved internally with no request selectors). Separate socket
 # from greia-install-transaction: the installer pair lives on installer media
@@ -13,9 +16,11 @@
 Description=Greia OS system-update semantic service
 Requires=greia-system-update.socket
 After=greia-system-update.socket
-ConditionPathExists=/run/greia-os/enable-privileged-transactions
 # Never part of pre-intro boot and never a generic command runner or broad
 # system manager: this unit only serves the six semantic update operations.
+# No Before= edge toward the boot chain (see the socket's ordering note):
+# the service cannot delay the first frame; it exists only after a client
+# connects, which happens post-intro.
 
 [Service]
 Type=simple
@@ -28,6 +33,12 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 # Greia-owned update facts. The inbox candidate bytes come from the
 # unprivileged Parent inbox under the state dir; trust, layout, journal and
 # boot facts are re-resolved from Greia-owned state on every operation.
+# Installed product identity comes from the image-owned
+# /etc/greia-os/release-identity.json release authority (SlotFinalizer-written
+# per slot), with the installed layout record and image-profile.json as
+# fallbacks for compatibility facts the identity file does not carry. No
+# GREIA_SYSTEM_* Environment= lines are shipped here: those names remain
+# test-only composition fallbacks in code, never installed product identity.
 Environment=GREIA_UPDATE_STATE_DIR=/var/lib/greia-os
 Environment=GREIA_UPDATE_TRUSTED_KEY_DIR=/etc/greia-os/system-update-keys
 Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/installed-layout.json
@@ -35,21 +46,42 @@ ExecStart=/usr/bin/python3 -m greia_platform.system_updates --socket-activated
 Restart=no
 TimeoutStartSec=5
 TimeoutStopSec=5
-StandardInput=socket
+# Native systemd fd store (LISTEN_FDS + fd 3, see
+# greia_platform.system_updates.main): never StandardInput=socket —
+# inetd-style stdin passing leaves LISTEN_FDS unset and the entry exits
+# fail-closed. Standard input stays disconnected.
 StandardOutput=journal
 StandardError=journal
 NoNewPrivileges=yes
 PrivateTmp=yes
+# Inactive-slot device access: the trusted layout record resolves partition
+# devices at runtime across transports, and blkid/blockdev/lsblk probes plus
+# the raw slot write and temporary slot mount need those nodes. PrivateDevices
+# stays off so the resolved inactive-slot device is addressable; containment
+# for device choice is the code-scoped resolution, not a static major list.
+PrivateDevices=no
 ProtectHome=yes
 ProtectSystem=strict
 ReadWritePaths=/var/lib/greia-os /run/greia-os
+# Minimum extra writes the implementation requires: atomic installed-layout
+# advancement (/etc/greia-os), GRUB one-shot/default mutation (/boot/grub).
+# The temporary inactive-slot mountpoint is self-created under the granted
+# /run/greia-os tree. Everything else stays read-only.
+ReadWritePaths=/etc/greia-os /boot/grub
+# Trust root stays read-only inside the writable /etc/greia-os grant above:
+# systemd applies BindReadOnlyPaths over ReadWritePaths, so the key directory
+# can never be rewritten through this unit.
+BindReadOnlyPaths=/etc/greia-os/system-update-keys
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
-CapabilityBoundingSet=
-AmbientCapabilities=
+# Mount/ device administration only: the temporary inactive-slot mount (and
+# the block size/UUID probes around it) requires CAP_SYS_ADMIN and nothing
+# else. No launcher/Parent process carries this bound.
+CapabilityBoundingSet=CAP_SYS_ADMIN
+AmbientCapabilities=CAP_SYS_ADMIN
 RestrictAddressFamilies=AF_UNIX
 SystemCallArchitectures=native
 LimitCORE=0

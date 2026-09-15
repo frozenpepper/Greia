@@ -1,0 +1,49 @@
+# P4.1 platform-owned early-boot observation owner.
+#
+# Production entry point: observe_and_reconcile_boot in
+# greia_platform.boot_observation via ProductionActualBootObserver
+# (kernel root=PARTUUID= through the trusted installed layout record plus
+# booted release-identity cross-check) + GrubEnvBackend.reconcile into the
+# single authoritative greia_last_booted fact. Makes no BOOT_HEALTHY
+# decision and commits no journal/health/accepted-state.
+#
+# Runs on the installed product before launcher health acceptance and
+# before the recovery deadline can depend on it (Before
+# greia-launcher.service), after the boot-control/filesystem state it reads
+# (local-fs.target). Ordered only, never Required: a refused boot fact
+# fails this unit loudly without silently authorizing boot. Enabled in
+# build/build-image.sh (systemctl enable), not merely copied.
+[Unit]
+Description=Greia platform-owned early-boot observation owner
+After=local-fs.target
+Before=greia-launcher.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -m greia_platform.boot_observation
+TimeoutStartSec=30
+Restart=no
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+WorkingDirectory=/opt/greia-os
+Environment=PYTHONPATH=/opt/greia-os/src
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=GREIA_GRUBENV_DIR=/boot/grub
+Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/installed-layout.json
+Environment=GREIA_RELEASE_IDENTITY_PATH=/etc/greia-os/release-identity.json
+Environment=GREIA_BOOT_CMDLINE=/proc/cmdline
+# Read-only boot facts plus the single authoritative grubenv observation
+# write (greia_last_booted via reconcile; persistent default untouched).
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/boot/grub
+BindReadOnlyPaths=/proc/cmdline /etc/greia-os/installed-layout.json /etc/greia-os/release-identity.json
+NoNewPrivileges=yes
+LimitCORE=0
+TasksMax=4
+
+[Install]
+WantedBy=multi-user.target

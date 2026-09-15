@@ -45,6 +45,8 @@ requires the full intro completion flag and ``INTERACTIVE_READY``.
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import secrets
@@ -996,3 +998,648 @@ class BootHealthyProtocol:
             raise BootHealthError(
                 "BOOT_HEALTHY refuses: actual release sequence is not pending"
             )
+
+
+# ---------------------------------------------------------------------------
+# Root-owned one-use capability authority (P4.3)
+# ---------------------------------------------------------------------------
+#
+# P4.3 moves BOOT_HEALTHY capability generation to root. The launcher-side
+# ``BootHealthCredentialVault`` above stays for the established in-process
+# protocol path (owned by its existing tests); this authority is the
+# production root side:
+#
+# - the root generator (``greia-boot-health-credential.service``) issues a
+#   capability only when a real pending transaction exists (first-install or
+#   update journal, non-terminal). A plain boot issues nothing and writes
+#   nothing: a bounded no-op.
+# - the authoritative record lives in a root-only directory and stores only
+#   the SHA-256 digest of the token bound to
+#   ``(transaction_id, boot_attempt, peer_bootstrap_path)``. The raw token
+#   never rests on the root side outside the delivery file. The record also
+#   carries ``peer_uid`` as provenance/audit metadata only: it is validated
+#   for shape (non-negative int) but is NOT a consume-time binding —
+#   ``verify_and_consume`` never gates on it. Activities share the launcher
+#   UID, so UID gating is not an Activity-isolation boundary (isolation
+#   rests on env/mount hiding); presenter-UID enforcement, if ever added,
+#   is owned by the socket/verifier seam (POSTR1-P4-HEALTH-PROOF2).
+# - delivery to the unprivileged launcher is the raw token in a separate
+#   root-owned directory the launcher can only read. The launcher loader
+#   (``greia_launcher.boot_health.maybe_load_production_token``) opens it
+#   ``O_RDONLY`` and never writes: double provisioning, replay, copies and
+#   stale boot attempts all fail closed at ``verify_and_consume``.
+# - ``boot_attempt`` is the kernel boot ID (``/proc/sys/kernel/random/boot_id``),
+#   a platform-owned per-boot fact: a token copied from an earlier boot never
+#   matches the current attempt.
+#
+# Both directories live under ``/run`` (fresh tmpfs every boot), so a
+# capability can never survive into a later boot: staleness across reboots
+# is structurally impossible, not merely checked.
+
+#: Environment override for the root-only authoritative record directory.
+CAPABILITY_AUTHORITY_DIR_ENV = "GREIA_BOOT_HEALTH_AUTHORITY_DIR"
+
+#: Production root-only authoritative record directory (0700 root).
+CAPABILITY_AUTHORITY_DEFAULT = "/run/greia-boot-health-authority"
+
+#: Environment override for the read-only delivery directory.
+CAPABILITY_DELIVERY_DIR_ENV = "GREIA_BOOT_HEALTH_DELIVERY_DIR"
+
+#: Production delivery directory (root-owned; readable, never writable, by
+#: the launcher identity).
+CAPABILITY_DELIVERY_DEFAULT = "/run/greia-os/boot-health"
+
+#: Authoritative digest record inside the authority directory.
+CAPABILITY_RECORD_FILE_NAME = "boot-healthy-capability.json"
+
+#: Raw one-use token inside the delivery directory.
+CAPABILITY_DELIVERY_FILE_NAME = "boot-healthy-token"
+
+#: Authority directory and record modes: root only.
+CAPABILITY_AUTHORITY_DIR_MODE = 0o700
+
+#: Delivery directory mode: root-owned, launcher-readable, never writable
+#: by the launcher (group ownership is set to the launcher identity by the
+#: root generator; the mode alone already denies launcher writes).
+CAPABILITY_DELIVERY_DIR_MODE = 0o750
+
+#: Delivery token file mode: launcher-readable, launcher-unwritable.
+CAPABILITY_DELIVERY_FILE_MODE = 0o640
+
+#: Kernel boot-ID source carrying the platform-owned per-boot attempt fact.
+BOOT_ID_PATH_ENV = "GREIA_BOOT_ID_PATH"
+BOOT_ID_PATH_DEFAULT = "/proc/sys/kernel/random/boot_id"
+
+#: Login name of the unprivileged launcher identity allowed to present.
+LAUNCHER_USER_NAME = "greiakid"
+
+#: Environment override for the presenting launcher UID (tests inject the
+#: current UID; production resolves ``greiakid`` by name).
+CAPABILITY_PEER_UID_ENV = "GREIA_BOOT_HEALTH_PEER_UID"
+
+#: Environment override for the trusted launcher bootstrap path (the single
+#: source of the identifier stays
+#: ``greia_launcher.boot_health.TRUSTED_BOOTSTRAP_PATH``; the override
+#: exists so tests and the generator unit name it explicitly).
+CAPABILITY_PEER_PATH_ENV = "GREIA_BOOT_HEALTH_PEER_PATH"
+
+#: Fallback trusted launcher bootstrap path when the environment names none.
+#: Must equal ``greia_launcher.boot_health.TRUSTED_BOOTSTRAP_PATH``; the
+#: capability test module asserts that equality.
+CAPABILITY_PEER_PATH_DEFAULT = "greia_launcher.bootstrap:LauncherBootstrap"
+
+#: Upper bound for the delivery token file bytes (small by construction).
+MAX_CAPABILITY_DELIVERY_BYTES = 256
+
+
+def capability_authority_dir() -> Path:
+    """Resolve the root-only authoritative record directory."""
+    override = os.environ.get(CAPABILITY_AUTHORITY_DIR_ENV, "").strip()
+    return Path(override) if override else Path(CAPABILITY_AUTHORITY_DEFAULT)
+
+
+def capability_delivery_dir() -> Path:
+    """Resolve the read-only delivery directory for the launcher token."""
+    override = os.environ.get(CAPABILITY_DELIVERY_DIR_ENV, "").strip()
+    return Path(override) if override else Path(CAPABILITY_DELIVERY_DEFAULT)
+
+
+def capability_peer_bootstrap_path() -> str:
+    """Resolve the trusted launcher bootstrap path bound into capabilities."""
+    override = os.environ.get(CAPABILITY_PEER_PATH_ENV, "").strip()
+    return override if override else CAPABILITY_PEER_PATH_DEFAULT
+
+
+def boot_id_path() -> Path:
+    """Resolve the kernel boot-ID source (env override or the live file)."""
+    override = os.environ.get(BOOT_ID_PATH_ENV, "").strip()
+    return Path(override) if override else Path(BOOT_ID_PATH_DEFAULT)
+
+
+def read_boot_id(path: Path | None = None) -> str:
+    """Return the platform-owned per-boot attempt fact (kernel boot ID).
+
+    Reads ``/proc/sys/kernel/random/boot_id`` on device (``O_RDONLY``: never
+    written). The value is a fresh UUID every boot, so a capability bound to
+    it cannot be replayed from an earlier boot.
+    """
+    source = Path(path) if path is not None else boot_id_path()
+    if source.is_symlink():
+        raise BootHealthError("kernel boot ID must not be a symlink")
+    try:
+        descriptor = os.open(os.fspath(source), os.O_RDONLY)
+    except OSError as exc:
+        raise BootHealthError(f"kernel boot ID is unreadable: {exc}") from exc
+    try:
+        with os.fdopen(descriptor, "rb") as handle:
+            raw = handle.read(MAX_CAPABILITY_DELIVERY_BYTES + 1)
+    except OSError as exc:
+        raise BootHealthError(f"kernel boot ID read failed: {exc}") from exc
+    if len(raw) > MAX_CAPABILITY_DELIVERY_BYTES:
+        raise BootHealthError("kernel boot ID exceeds Greia bounds")
+    try:
+        text = raw.decode("utf-8").strip()
+    except UnicodeDecodeError as exc:
+        raise BootHealthError("kernel boot ID is not valid text") from exc
+    try:
+        parsed = uuid.UUID(text)
+    except ValueError as exc:
+        raise BootHealthError("kernel boot ID is not a UUID") from exc
+    if str(parsed) != text.lower():
+        raise BootHealthError("kernel boot ID is not a canonical UUID")
+    return str(parsed)
+
+
+def resolve_capability_peer_uid() -> int:
+    """Return the UID authorized to present the capability (the launcher).
+
+    Explicit ``GREIA_BOOT_HEALTH_PEER_UID`` wins (tests); otherwise the
+    ``greiakid`` login is resolved by name so image-assigned dynamic system
+    UIDs need no hardcoding. Unresolvable names fail closed.
+    """
+    override = os.environ.get(CAPABILITY_PEER_UID_ENV, "").strip()
+    if override:
+        try:
+            uid = int(override, 10)
+        except ValueError as exc:
+            raise BootHealthError(
+                "capability peer UID override is not an integer"
+            ) from exc
+        if isinstance(uid, bool) or uid < 0 or uid > 2**32 - 1:
+            raise BootHealthError("capability peer UID is outside Greia bounds")
+        return uid
+    try:
+        import pwd as _pwd
+    except ImportError as exc:  # pragma: no cover - POSIX target always has pwd
+        raise BootHealthError("capability peer identity is unresolvable") from exc
+    try:
+        return int(_pwd.getpwnam(LAUNCHER_USER_NAME).pw_uid)
+    except KeyError as exc:
+        raise BootHealthError(
+            f"launcher identity {LAUNCHER_USER_NAME!r} is unknown; "
+            "refusing to issue a capability"
+        ) from exc
+
+
+def _capability_digest(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _ensure_root_dir(path: Path, mode: int) -> None:
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise BootHealthError(
+            f"capability directory is not creatable: {exc}"
+        ) from exc
+    try:
+        os.chmod(path, mode)
+    except OSError as exc:
+        raise BootHealthError(
+            f"capability directory mode cannot be enforced: {exc}"
+        ) from exc
+    if path.is_symlink():
+        raise BootHealthError("capability directory must not be a symlink")
+    try:
+        current = stat.S_IMODE(os.stat(path).st_mode)
+    except OSError as exc:
+        raise BootHealthError(f"capability directory is not statable: {exc}") from exc
+    if current != mode:
+        raise BootHealthError("capability directory mode is not authoritative")
+
+
+def _chown_launcher_readable(path: Path) -> None:
+    """Best-effort group grant so the launcher identity can read delivery.
+
+    Production (root generator): sets group ``greiakid`` on the delivery
+    directory/file, yielding 0750/0640 root:greiakid. Any failure (tests run
+    unprivileged, unknown names) is ignored: the mode alone already denies
+    launcher writes, and readability in production additionally follows from
+    the root-owned generator running before the launcher unit.
+    """
+    try:
+        import grp as _grp
+
+        gid = _grp.getgrnam(LAUNCHER_USER_NAME).gr_gid
+    except (ImportError, KeyError, OSError):
+        return
+    try:
+        os.chown(path, 0, gid)
+    except OSError:
+        return
+
+
+@dataclass(frozen=True, slots=True)
+class BootHealthCapabilityRecord:
+    """Authoritative root-side record: digest-only, never the raw token.
+
+    ``peer_uid`` is provenance/audit metadata (shape-validated), not a
+    consume-time binding enforced by ``verify_and_consume``.
+    """
+
+    transaction_id: str
+    boot_attempt: str
+    peer_bootstrap_path: str
+    peer_uid: int
+    token_digest: str
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "boot_attempt": self.boot_attempt,
+            "peer_bootstrap_path": self.peer_bootstrap_path,
+            "peer_uid": self.peer_uid,
+            "schema_version": BOOT_HEALTH_SCHEMA_VERSION,
+            "token_digest": self.token_digest,
+            "transaction_id": self.transaction_id,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class IssuedBootHealthCapability:
+    """Generator-side issue result: the one raw token plus its bindings."""
+
+    transaction_id: str
+    boot_attempt: str
+    token: str
+
+
+class BootHealthCapabilityAuthority:
+    """Root-owned one-use capability store: digest record plus delivery.
+
+    ``authority_dir`` is root-only (0700): it holds the canonical digest
+    record. ``delivery_dir`` is root-owned and launcher-readable (0750,
+    token file 0640): it holds only the raw token. The launcher loader never
+    touches the authority directory; verification compares the SHA-256 digest
+    of the presented token with constant-time equality and deletes both files
+    on success, so the token is one-use and a copied or stale token fails.
+    """
+
+    def __init__(self, authority_dir: Path, delivery_dir: Path) -> None:
+        self._authority_dir = Path(authority_dir)
+        self._delivery_dir = Path(delivery_dir)
+
+    @property
+    def authority_dir(self) -> Path:
+        return self._authority_dir
+
+    @property
+    def delivery_dir(self) -> Path:
+        return self._delivery_dir
+
+    @property
+    def record_path(self) -> Path:
+        return self._authority_dir / CAPABILITY_RECORD_FILE_NAME
+
+    @property
+    def delivery_path(self) -> Path:
+        return self._delivery_dir / CAPABILITY_DELIVERY_FILE_NAME
+
+    def issue_for_pending_journal(
+        self,
+        journal: object,
+        *,
+        boot_attempt: str,
+        peer_bootstrap_path: str,
+        peer_uid: int,
+    ) -> IssuedBootHealthCapability:
+        """Issue the one-use capability for a real pending transaction.
+
+        ``journal`` is the non-terminal first-install or update journal the
+        generator loaded read-only: only its ``transaction_id`` and
+        ``is_terminal`` are consulted (duck-typed, never asserted by the
+        caller beyond the loaded journal object). A terminal journal fails
+        closed; a missing journal never reaches this call (the generator
+        returns its bounded no-op instead). Issuing twice for the same
+        ``(transaction_id, boot_attempt)`` fails closed; a live record for a
+        superseded transaction is replaced (it could never verify again).
+        """
+        transaction_id = _require_identifier(
+            getattr(journal, "transaction_id", None),
+            field_name="transaction_id",
+            maximum=64,
+        )
+        if bool(getattr(journal, "is_terminal", True)):
+            raise BootHealthError(
+                "capability issue refuses a completed transaction"
+            )
+        _require_identifier(boot_attempt, field_name="boot_attempt", maximum=128)
+        _require_nonempty_text(
+            peer_bootstrap_path, field_name="peer_bootstrap_path", maximum=256
+        )
+        if isinstance(peer_uid, bool) or not isinstance(peer_uid, int) or peer_uid < 0:
+            raise BootHealthError("peer_uid is outside Greia bounds")
+        live = self._read_live_record()
+        if (
+            live is not None
+            and live.transaction_id == transaction_id
+            and live.boot_attempt == boot_attempt
+        ):
+            raise BootHealthError(
+                "a live BOOT_HEALTHY capability already exists for this "
+                "transaction and boot attempt"
+            )
+        token = secrets.token_hex(32)
+        record = BootHealthCapabilityRecord(
+            transaction_id=transaction_id,
+            boot_attempt=boot_attempt,
+            peer_bootstrap_path=peer_bootstrap_path,
+            peer_uid=peer_uid,
+            token_digest=_capability_digest(token),
+        )
+        _ensure_root_dir(self._authority_dir, CAPABILITY_AUTHORITY_DIR_MODE)
+        _atomic_write_0600(self.record_path, _canonical_bytes(record.as_dict()))
+        _ensure_root_dir(self._delivery_dir, CAPABILITY_DELIVERY_DIR_MODE)
+        payload = (token + "\n").encode("utf-8")
+        _atomic_write_0600(self.delivery_path, payload)
+        try:
+            os.chmod(self.delivery_path, CAPABILITY_DELIVERY_FILE_MODE)
+        except OSError as exc:
+            raise BootHealthError(
+                f"delivery token mode cannot be enforced: {exc}"
+            ) from exc
+        _chown_launcher_readable(self._delivery_dir)
+        _chown_launcher_readable(self.delivery_path)
+        return IssuedBootHealthCapability(
+            transaction_id=transaction_id,
+            boot_attempt=boot_attempt,
+            token=token,
+        )
+
+    def verify_and_consume(
+        self,
+        *,
+        token: str,
+        transaction_id: str,
+        boot_attempt: str,
+        peer_bootstrap_path: str,
+    ) -> BootHealthCapabilityRecord:
+        """Verify the bindings and consume the capability (exactly once).
+
+        Enforced binding set: token digest + ``transaction_id`` +
+        ``boot_attempt`` + ``peer_bootstrap_path``. ``peer_uid`` is
+        explicitly NOT enforced here: the stored value is provenance/audit
+        metadata (shape-validated on load) and presenter-UID attestation
+        lives at the socket/verifier seam outside this authority.
+        Any mismatch (unknown token, copied token on another transaction or
+        boot attempt, stale boot ID, wrong presenter path) fails closed
+        without deleting the live record, so a failed guess never burns the
+        real capability. Success deletes both the authoritative record and
+        the delivery token: a replay finds nothing live and fails.
+        """
+        _require_token(token, field_name="credential token")
+        record = self._load_live()
+        presented = _capability_digest(token)
+        if (
+            not hmac.compare_digest(presented, record.token_digest)
+            or record.transaction_id != transaction_id
+            or record.boot_attempt != boot_attempt
+            or record.peer_bootstrap_path != peer_bootstrap_path
+        ):
+            raise BootHealthError(
+                "BOOT_HEALTHY capability does not match this transaction, "
+                "boot attempt and launcher path"
+            )
+        for path in (self.record_path, self.delivery_path):
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                continue
+            except OSError as exc:
+                raise BootHealthError(
+                    f"BOOT_HEALTHY capability cannot be invalidated: {exc}"
+                ) from exc
+        for directory in (self._authority_dir, self._delivery_dir):
+            try:
+                _fsync_directory(directory)
+            except BootHealthError:
+                pass
+        return record
+
+    def capability_live(self) -> bool:
+        """True when an unconsumed authoritative record is present."""
+        return self._read_live_record() is not None
+
+    def _read_live_record(self) -> BootHealthCapabilityRecord | None:
+        if self.record_path.is_symlink() or not self.record_path.is_file():
+            return None
+        try:
+            return self._load_live()
+        except BootHealthError:
+            return None
+
+    def _load_live(self) -> BootHealthCapabilityRecord:
+        raw = _read_canonical_record(
+            self.record_path, context="BOOT_HEALTHY capability"
+        )
+        expected = {
+            "boot_attempt", "peer_bootstrap_path", "peer_uid",
+            "schema_version", "token_digest", "transaction_id",
+        }
+        if set(raw) != expected:
+            raise BootHealthError("BOOT_HEALTHY capability fields are invalid")
+        peer_uid = raw["peer_uid"]
+        if isinstance(peer_uid, bool) or not isinstance(peer_uid, int) or peer_uid < 0:
+            raise BootHealthError("BOOT_HEALTHY capability peer_uid is invalid")
+        digest = raw["token_digest"]
+        if (
+            not isinstance(digest, str)
+            or len(digest) != 64
+            or any(char not in _HEX_LOWER for char in digest)
+        ):
+            raise BootHealthError("BOOT_HEALTHY capability digest is invalid")
+        return BootHealthCapabilityRecord(
+            transaction_id=_require_identifier(
+                raw["transaction_id"], field_name="transaction_id", maximum=64
+            ),
+            boot_attempt=_require_identifier(
+                raw["boot_attempt"], field_name="boot_attempt", maximum=128
+            ),
+            peer_bootstrap_path=_require_nonempty_text(
+                raw["peer_bootstrap_path"],
+                field_name="peer_bootstrap_path",
+                maximum=256,
+            ),
+            peer_uid=peer_uid,
+            token_digest=digest,
+        )
+
+
+def default_capability_authority(
+    authority_dir: Path | None = None,
+    delivery_dir: Path | None = None,
+) -> BootHealthCapabilityAuthority:
+    """Compose the authority from explicit dirs or the production binds."""
+    return BootHealthCapabilityAuthority(
+        authority_dir=Path(authority_dir)
+        if authority_dir is not None
+        else capability_authority_dir(),
+        delivery_dir=Path(delivery_dir)
+        if delivery_dir is not None
+        else capability_delivery_dir(),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Root generator entry (greia-boot-health-credential.service)
+# ---------------------------------------------------------------------------
+
+
+def load_pending_boot_journal(
+    *,
+    boot_journal_dir: Path | None = None,
+    update_state_dir: Path | None = None,
+) -> tuple[Path, object] | None:
+    """Return ``(journal_dir, journal)`` for the single pending transaction.
+
+    Read-only: loading never writes. ``None`` is the normal plain-boot case
+    (no pending journal anywhere). Both-pending or corrupt journals fail
+    closed rather than guessing.
+    """
+    from .boot_transaction import JOURNAL_FILE_NAME, BootJournalError
+
+    try:
+        from .system_updates import UPDATE_JOURNAL_DIR_NAME
+    except ImportError as exc:
+        raise BootHealthError(f"update journal layout is unavailable: {exc}") from exc
+
+    candidates: list[tuple[Path, object]] = []
+    update_root = (
+        Path(update_state_dir)
+        if update_state_dir is not None
+        else Path("/var/lib/greia-os")
+    )
+    install_dir = (
+        Path(boot_journal_dir)
+        if boot_journal_dir is not None
+        else Path("/var/lib/greia-os/boot-journal")
+    )
+    journal_dirs = [
+        update_root / "system-updates" / UPDATE_JOURNAL_DIR_NAME,
+        install_dir,
+    ]
+    for journal_dir in journal_dirs:
+        candidate = journal_dir / JOURNAL_FILE_NAME
+        if candidate.is_symlink():
+            raise BootHealthError("boot journal must not be a symlink")
+        if not candidate.is_file():
+            continue
+        try:
+            from .boot_transaction import BootTransactionJournal
+
+            journal = BootTransactionJournal.load(journal_dir)
+        except BootJournalError as exc:
+            raise BootHealthError(
+                f"boot journal is not authoritative: {exc}"
+            ) from exc
+        except OSError as exc:
+            raise BootHealthError(f"boot journal is unreadable: {exc}") from exc
+        if journal.is_terminal:
+            continue
+        candidates.append((journal_dir, journal))
+    if len(candidates) > 1:
+        raise BootHealthError(
+            "ambiguous boot authority: update and first-install journals "
+            "are both pending; refusing to guess"
+        )
+    if not candidates:
+        return None
+    return candidates[0]
+
+
+def maybe_issue_boot_capability(
+    *,
+    authority: BootHealthCapabilityAuthority | None = None,
+    boot_journal_dir: Path | None = None,
+    update_state_dir: Path | None = None,
+    boot_id: str | None = None,
+    peer_bootstrap_path: str | None = None,
+    peer_uid: int | None = None,
+) -> IssuedBootHealthCapability | None:
+    """Issue the boot-attempt capability for the pending transaction, if any.
+
+    Plain boots (no pending journal) return ``None`` and write nothing: a
+    bounded no-op. A pending transaction yields exactly one capability bound
+    to the kernel boot ID of this boot; double issuance for the same
+    transaction and boot fails closed inside the authority.
+    """
+    pending = load_pending_boot_journal(
+        boot_journal_dir=boot_journal_dir,
+        update_state_dir=update_state_dir,
+    )
+    if pending is None:
+        return None
+    _, journal = pending
+    owner = authority if authority is not None else default_capability_authority()
+    attempt = boot_id if boot_id is not None else read_boot_id()
+    return owner.issue_for_pending_journal(
+        journal,
+        boot_attempt=attempt,
+        peer_bootstrap_path=peer_bootstrap_path
+        if peer_bootstrap_path is not None
+        else capability_peer_bootstrap_path(),
+        peer_uid=peer_uid if peer_uid is not None else resolve_capability_peer_uid(),
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Root generator entry for ``greia-boot-health-credential.service``.
+
+    ``--issue-for-pending`` issues the one-use capability when a pending
+    transaction exists and exits ``0`` having printed ``ISSUED``; with no
+    pending journal it prints ``NO_PENDING`` and exits ``0`` without writing
+    anything. Any refusal exits ``1`` fail-closed (never a partial write:
+    the authority writes the record before the delivery token, and a failed
+    run leaves at most a live record the next verify still gates on).
+    """
+    import argparse as _argparse
+
+    parser = _argparse.ArgumentParser(
+        prog="greia_platform.boot_health",
+        description="Root BOOT_HEALTHY capability generator (P4.3).",
+    )
+    parser.add_argument(
+        "--issue-for-pending",
+        action="store_true",
+        help="issue the one-use capability for the pending transaction, if any",
+    )
+    parser.add_argument("--authority-dir", default=None)
+    parser.add_argument("--delivery-dir", default=None)
+    parser.add_argument("--boot-journal-dir", default=None)
+    parser.add_argument("--update-state-dir", default=None)
+    parser.add_argument("--boot-id-path", default=None)
+    args = parser.parse_args(list(argv or []))
+    if not args.issue_for_pending:
+        parser.print_usage()
+        return 2
+    if args.boot_id_path is not None:
+        os.environ[BOOT_ID_PATH_ENV] = args.boot_id_path
+    authority = default_capability_authority(
+        authority_dir=Path(args.authority_dir)
+        if args.authority_dir is not None
+        else None,
+        delivery_dir=Path(args.delivery_dir)
+        if args.delivery_dir is not None
+        else None,
+    )
+    try:
+        issued = maybe_issue_boot_capability(
+            authority=authority,
+            boot_journal_dir=Path(args.boot_journal_dir)
+            if args.boot_journal_dir is not None
+            else None,
+            update_state_dir=Path(args.update_state_dir)
+            if args.update_state_dir is not None
+            else None,
+        )
+    except BootHealthError as exc:
+        print(f"REFUSED: {exc}")
+        return 1
+    if issued is None:
+        print("NO_PENDING")
+        return 0
+    print(f"ISSUED: {issued.transaction_id}")
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover - service entry
+    raise SystemExit(main())

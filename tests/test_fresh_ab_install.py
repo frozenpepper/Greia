@@ -357,12 +357,19 @@ class FreshAbInstallTests(unittest.TestCase):
         mount_dir = root / "slot-a-mnt"
         touched: list[str] = []
         storage_holder: dict[str, SparseSlotStorage] = {}
+        observer_calls: list[str] = []
 
         def _storage(role: str):  # type: ignore[no-untyped-def]
             touched.append(role)
             storage = SparseSlotStorage(1 * GIB)
             storage_holder[role] = storage
             return storage
+
+        def _observer(target, plan):  # type: ignore[no-untyped-def]
+            # Post-layout seam: invoked only after adapter.execute created
+            # the identities; records ordering for sequencing proof.
+            observer_calls.append("observe")
+            return {role: dict(values) for role, values in observed.items()}
 
         filesystem = FakeSlotFilesystem(mount_dir)
         installer = FakePackageInstaller()
@@ -383,6 +390,7 @@ class FreshAbInstallTests(unittest.TestCase):
             boot_control_dir=boot_control,
             backend_state_dir=backend_state,
             journal_dir=journal,
+            post_layout_identity_observer=_observer,
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
@@ -396,7 +404,6 @@ class FreshAbInstallTests(unittest.TestCase):
             install_target_sha256=_INSTALL_SHA,
             password_hash=_PASSWORD_HASH,
             installed_at_unix=1757000000,
-            fresh_identities=observed,
         )
         return {
             "bundle": bundle,
@@ -409,6 +416,7 @@ class FreshAbInstallTests(unittest.TestCase):
             "filesystem": filesystem,
             "installer": installer,
             "persist_runner": persist_runner,
+            "observer_calls": observer_calls,
             "dirs": {
                 "root": root,
                 "boot_control": boot_control,
@@ -495,12 +503,34 @@ class FreshAbInstallTests(unittest.TestCase):
         text = harness["result"].grub_config_text
         self.assertIn(harness["observed"]["system-b"]["partuuid"], text)
 
-    # -- observed-identity binding (T3-INSTALL/D51) ------------------------
+    # -- observed-identity binding (POSTR1-P2 post-layout sequencing) --------
 
-    def _request_with_identities(self, harness, identities):
-        import dataclasses
+    def _harness_with_observer(self, identities=None, *, explode=None):
+        """Build a harness whose post-layout observer returns ``identities``.
 
-        return dataclasses.replace(harness["request"], fresh_identities=identities)
+        ``explode`` (an exception instance) makes the observer raise instead,
+        proving observation failure aborts before any SYSTEM_A payload write.
+        """
+        harness = self._fresh_harness()
+        if explode is not None:
+
+            def _exploding(target, plan):  # type: ignore[no-untyped-def]
+                raise explode
+
+            harness["seams"].post_layout_identity_observer = _exploding
+            return harness
+
+        mapping = (
+            {role: dict(values) for role, values in identities.items()}
+            if identities is not None
+            else _observed_mbr_identities()
+        )
+
+        def _observer(target, plan):  # type: ignore[no-untyped-def]
+            return {role: dict(values) for role, values in mapping.items()}
+
+        harness["seams"].post_layout_identity_observer = _observer
+        return harness
 
     def _fresh_harness(self, payload: bytes | None = None):
         directory = tempfile.mkdtemp(prefix="x8-install-")
@@ -527,23 +557,57 @@ class FreshAbInstallTests(unittest.TestCase):
             result.receipt.filesystem_uuid,
             observed["system-a"]["filesystem_uuid"],
         )
+        # Post-layout sequencing: partitioning ran, then the observer fired.
+        self.assertTrue(harness["runner"].commands)
+        self.assertEqual(harness["observer_calls"], ["observe"])
 
-    def test_uuid4_as_mbr_partuuid_rejected_before_destruction(self) -> None:
+    def test_uuid4_as_mbr_partuuid_refused_after_partitioning(self) -> None:
+        harness = self._harness_with_observer(mint_fresh_partition_identities())
+        with self.assertRaisesRegex(FreshAbInstallError, "not authoritative"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        # Partitioning already ran (identities exist only after layout),
+        # but no SYSTEM_A payload byte was written.
+        self.assertTrue(harness["runner"].commands)
+        self.assertEqual(harness["touched"], [])
+
+    def test_missing_observer_refused_before_destruction(self) -> None:
         harness = self._fresh_harness()
-        fabricated = mint_fresh_partition_identities()
-        bad = self._request_with_identities(harness, fabricated)
-        with self.assertRaises(FreshAbInstallError):
+        harness["seams"].post_layout_identity_observer = None
+        with self.assertRaisesRegex(FreshAbInstallError, "post-layout identity observer"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        self.assertEqual(harness["runner"].commands, [])
+
+    def test_retired_caller_supplied_identities_refused(self) -> None:
+        import dataclasses
+
+        harness = self._fresh_harness()
+        bad = dataclasses.replace(
+            harness["request"], fresh_identities=_observed_mbr_identities()
+        )
+        with self.assertRaisesRegex(FreshAbInstallError, "no longer accepts"):
             execute_fresh_ab_install(bad, harness["seams"])
         self.assertEqual(harness["runner"].commands, [])
 
-    def test_missing_identities_refused_without_mint(self) -> None:
-        harness = self._fresh_harness()
-        bad = self._request_with_identities(harness, None)
-        with self.assertRaises(FreshAbInstallError):
-            execute_fresh_ab_install(bad, harness["seams"])
-        self.assertEqual(harness["runner"].commands, [])
+    def test_observer_failure_aborts_before_system_a_write(self) -> None:
+        harness = self._harness_with_observer(
+            explode=RuntimeError("blkid reported no disk signature")
+        )
+        with self.assertRaisesRegex(FreshAbInstallError, "not authoritative"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        self.assertTrue(harness["runner"].commands)
+        self.assertEqual(harness["touched"], [])
 
-    def test_gpt_identities_accepted_for_gpt_adapter(self) -> None:
+    def test_partition_number_mismatch_refused_after_partitioning(self) -> None:
+        swapped = _observed_mbr_identities()
+        swapped["system-a"] = dict(swapped["system-a"], partuuid=f"{_MBR_SIGNATURE}-03")
+        swapped["system-b"] = dict(swapped["system-b"], partuuid=f"{_MBR_SIGNATURE}-02")
+        harness = self._harness_with_observer(swapped)
+        with self.assertRaisesRegex(FreshAbInstallError, "partition number"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        self.assertTrue(harness["runner"].commands)
+        self.assertEqual(harness["touched"], [])
+
+    def test_gpt_execution_still_deferred_before_observation(self) -> None:
         import dataclasses
 
         harness = self._fresh_harness()
@@ -556,10 +620,9 @@ class FreshAbInstallTests(unittest.TestCase):
         request = dataclasses.replace(
             harness["request"],
             sizing=gpt_sizing,
-            fresh_identities=_observed_gpt_identities(),
         )
-        # Identities pass validation: the refusal below is the deferred
-        # Phase-8C GPT execution, not the identity gate.
+        # The refusal below is the deferred Phase-8C GPT execution, not the
+        # identity gate: the adapter fails before the observer ever fires.
         with self.assertRaisesRegex(FreshAbInstallError, "partitioning failed"):
             execute_fresh_ab_install(request, harness["seams"])
         self.assertEqual(harness["runner"].commands, [])
@@ -577,32 +640,31 @@ class FreshAbInstallTests(unittest.TestCase):
         request = dataclasses.replace(
             harness["request"],
             sizing=gpt_sizing,
-            fresh_identities=_observed_mbr_identities(),
         )
         with self.assertRaises(FreshAbInstallError):
             execute_fresh_ab_install(request, harness["seams"])
         self.assertEqual(harness["runner"].commands, [])
 
-    def test_explicit_wrong_scheme_rejected(self) -> None:
-        harness = self._fresh_harness()
+    def test_explicit_wrong_scheme_refused_after_partitioning(self) -> None:
         observed = _observed_mbr_identities()
         mismatched = {
             role: dict(values, scheme="GPT_GUID") for role, values in observed.items()
         }
-        bad = self._request_with_identities(harness, mismatched)
-        with self.assertRaises(FreshAbInstallError):
-            execute_fresh_ab_install(bad, harness["seams"])
-        self.assertEqual(harness["runner"].commands, [])
+        harness = self._harness_with_observer(mismatched)
+        with self.assertRaisesRegex(FreshAbInstallError, "scheme"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        self.assertTrue(harness["runner"].commands)
+        self.assertEqual(harness["touched"], [])
 
-    def test_mixed_mbr_disk_signature_rejected(self) -> None:
-        harness = self._fresh_harness()
+    def test_mixed_mbr_disk_signature_refused_after_partitioning(self) -> None:
         observed = _observed_mbr_identities()
         mixed = {role: dict(values) for role, values in observed.items()}
         mixed["system-b"] = dict(mixed["system-b"], partuuid="deadbeef-03")
-        bad = self._request_with_identities(harness, mixed)
-        with self.assertRaises(FreshAbInstallError):
-            execute_fresh_ab_install(bad, harness["seams"])
-        self.assertEqual(harness["runner"].commands, [])
+        harness = self._harness_with_observer(mixed)
+        with self.assertRaisesRegex(FreshAbInstallError, "cross-disk"):
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        self.assertTrue(harness["runner"].commands)
+        self.assertEqual(harness["touched"], [])
 
     # -- refusal ordering: nothing destructive before preflight ------------
 
@@ -967,15 +1029,25 @@ class AbServiceRoutingTests(unittest.TestCase):
         for directory_path in (boot_control, backend_state, journal):
             directory_path.mkdir()
         touched: list[str] = []
-        seen_targets: list[object] = []
+        seen: list[tuple[object, object]] = []
+        partition_runners: list[RecordingPartitionRunner] = []
 
-        def _identities(target):  # type: ignore[no-untyped-def]
-            seen_targets.append(target)
-            return observed
+        def _identities(target, plan):  # type: ignore[no-untyped-def]
+            # Post-layout observer: invoked with (target, plan) only after
+            # the orchestrator partitioned, never pre-computed by the
+            # executor. Records the call for sequencing proof.
+            seen.append((target, plan))
+            if not partition_runners or not partition_runners[0].commands:
+                raise AssertionError(
+                    "observer must fire only after partitioning created identities"
+                )
+            return {role: dict(values) for role, values in observed.items()}
 
         def _seams(target):  # type: ignore[no-untyped-def]
+            runner = RecordingPartitionRunner()
+            partition_runners.append(runner)
             return FreshAbInstallSeams(
-                partition_runner=RecordingPartitionRunner(),  # type: ignore[arg-type]
+                partition_runner=runner,  # type: ignore[arg-type]
                 slot_storage_factory=lambda role: (
                     touched.append(role),
                     SparseSlotStorage(1 * GIB),
@@ -1026,15 +1098,18 @@ class AbServiceRoutingTests(unittest.TestCase):
         self.assertEqual(outcome.release_id, "greia-0.15.0")
         self.assertEqual(outcome.release_sequence, 11)
         self.assertEqual(touched, ["A"])
-        # Observed identities arrive per EXECUTE for the rematerialized target.
-        self.assertEqual(len(seen_targets), 1)
-        self.assertEqual(seen_targets[0].name, "sda")
+        # The post-layout observer fired exactly once, after partitioning,
+        # for the rematerialized target with the validated plan.
+        self.assertEqual(len(seen), 1)
+        self.assertEqual(seen[0][0].name, "sda")
+        self.assertEqual(seen[0][1].adapter_id, "legacy-bios-ab-v1")
 
-    def test_executor_without_identities_factory_refuses_before_seams(self) -> None:
+    def test_executor_without_observer_refuses_before_destruction(self) -> None:
         directory = tempfile.mkdtemp(prefix="x8-abexec-")
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
         harness = self._harness_bundle_only(root)
+        manifest = inspect_update_bundle(harness["bundle"]).manifest
         facts = AbExecutorFacts(
             bundle_path=harness["bundle"],
             trusted_key_dir=harness["key_dir"],
@@ -1045,11 +1120,23 @@ class AbServiceRoutingTests(unittest.TestCase):
             support_installed_bytes=_SUPPORT_BOUND,
             password_hash=_PASSWORD_HASH,
         )
-        calls: list[object] = []
+        runners: list[RecordingPartitionRunner] = []
 
         def _seams(target):  # type: ignore[no-untyped-def]
-            calls.append(target)
-            raise AssertionError("seams must not be built without identities")
+            runner = RecordingPartitionRunner()
+            runners.append(runner)
+            # No post-layout observer anywhere: neither the seams nor an
+            # executor-level identities_factory supplies one.
+            return FreshAbInstallSeams(
+                partition_runner=runner,  # type: ignore[arg-type]
+                slot_storage_factory=lambda role: SparseSlotStorage(1 * GIB),
+                slot_filesystem_factory=lambda: FakeSlotFilesystem(root / "mnt"),
+                package_installer_factory=FakePackageInstaller,
+                inventory_token="cd" * 32,
+                support_digest=manifest.hardware_support_sha256,
+                support_size=manifest.hardware_support_size,
+                support_installed_bound=_SUPPORT_BOUND,
+            )
 
         executor = build_ab_executor(facts, _seams)
 
@@ -1069,9 +1156,14 @@ class AbServiceRoutingTests(unittest.TestCase):
             mic_gain=2.0,
             disable_while_typing=False,
         )
-        with self.assertRaises(FreshAbInstallError):
+        with self.assertRaisesRegex(
+            FreshAbInstallError, "post-layout identity observer"
+        ):
             executor(_Authorization(), settings, "en", _target())
-        self.assertEqual(calls, [])
+        # The observer wiring is checked before the first destructive
+        # command: partitioning never ran.
+        self.assertEqual(len(runners), 1)
+        self.assertEqual(runners[0].commands, [])
 
     def _harness_bundle_only(self, root: Path):
         """Build a signed bundle + key dir without a full install harness."""

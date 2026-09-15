@@ -8,10 +8,13 @@ What this module owns (and what it does not):
 
 - Fresh path: derive the persist partition node from the verified
   :class:`~greia_installer.disk.DeviceObservation` plus the validated
-  :class:`~greia_installer.layout.LayoutPlan` persist role, refuse when a
-  filesystem already exists there (exactly-once pre-check *before* any
-  destructive command), create the filesystem with a generated stable
-  identity, prove the identity back with ``blkid`` before trusting it,
+  :class:`~greia_installer.layout.LayoutPlan` persist role, adopt exactly
+  once when the node already carries the adapter-created filesystem whose
+  UUID equals the intended (observed) identity — skipping the redundant
+  ``mkfs`` — refuse when a different/unexpected filesystem already exists
+  there (exactly-once pre-check *before* any destructive command),
+  otherwise create the filesystem with the intended identity, prove the
+  identity back with ``blkid`` before trusting it,
   mount it at the caller-provided staging mountpoint, run the platform
   exactly-once initialization (layout authority record, versioned namespace
   schema, state contract) plus the orchestration-owned transaction root,
@@ -308,49 +311,69 @@ def initialize_fresh_persist(
     generated identity does not read back, or when any initialization step
     is partial. The staging mount is detached on success and best-effort
     detached on failure.
+
+    Adapter reconciliation (POSTR1-P2): the layout adapter creates the
+    PERSIST filesystem after partitioning and the post-layout observer
+    reads its filesystem UUID, which the orchestrator binds as the
+    intended identity via ``uuid_factory``. When the node already carries
+    a filesystem whose UUID equals that intended identity, it is adopted
+    exactly once — the redundant ``mkfs.ext4`` is skipped — and
+    initialization continues with mount plus the exactly-once gates
+    below. A different/unexpected UUID still refuses fail-closed, as does
+    any pre-existing transaction root or layout-authority record.
     """
     stage = _require_staging_mountpoint(Path(mountpoint))
     node = persist_node_for(target, plan)
-
-    # Exactly-once pre-check BEFORE any destructive command: an existing
-    # filesystem means a previous (possibly partial) initialization or a
-    # foreign occupant. Never mkfs over it; the operator repartitions.
-    if _blkid_filesystem_uuid(runner, node) is not None:
-        raise PersistError(
-            "fresh PERSIST initialization refused: "
-            "a filesystem already exists on the persist partition"
-        )
 
     try:
         generated = uuid.UUID(str(uuid_factory()))
     except (ValueError, AttributeError) as exc:
         raise PersistError("PERSIST identity generator is outside Greia bounds") from exc
-    filesystem_uuid = str(generated)
+    intended_uuid = str(generated)
 
-    mkfs = _check_command(
-        (
-            "mkfs.ext4",
-            "-F",
-            "-m",
-            "1",
-            "-L",
-            PERSIST_LABEL,
-            "-U",
-            filesystem_uuid,
-            str(node),
-        )
-    )
-    if runner.run(list(mkfs)).returncode != 0:
-        raise PersistError("PERSIST filesystem creation failed")
-
-    # Prove the generated identity back before trusting the device: a
-    # swapped/wrong node or a failed write must not receive an identity.
-    observed = _blkid_filesystem_uuid(runner, node)
-    if observed != filesystem_uuid:
+    # Exactly-once pre-check BEFORE any destructive command: an existing
+    # filesystem means a previous (possibly partial) initialization or a
+    # foreign occupant — unless it is exactly the adapter-created
+    # filesystem the observer already bound as the intended identity.
+    # Never mkfs over a foreign occupant; the operator repartitions.
+    existing_uuid = _blkid_filesystem_uuid(runner, node)
+    if existing_uuid is not None and existing_uuid != intended_uuid:
         raise PersistError(
-            "PERSIST filesystem identity did not read back; "
-            "refusing to initialize an unproven device"
+            "fresh PERSIST initialization refused: "
+            "a filesystem already exists on the persist partition"
         )
+    adopted = existing_uuid is not None
+
+    if adopted:
+        filesystem_uuid = existing_uuid
+        assert filesystem_uuid is not None
+    else:
+        filesystem_uuid = intended_uuid
+
+        mkfs = _check_command(
+            (
+                "mkfs.ext4",
+                "-F",
+                "-m",
+                "1",
+                "-L",
+                PERSIST_LABEL,
+                "-U",
+                filesystem_uuid,
+                str(node),
+            )
+        )
+        if runner.run(list(mkfs)).returncode != 0:
+            raise PersistError("PERSIST filesystem creation failed")
+
+        # Prove the generated identity back before trusting the device: a
+        # swapped/wrong node or a failed write must not receive an identity.
+        observed = _blkid_filesystem_uuid(runner, node)
+        if observed != filesystem_uuid:
+            raise PersistError(
+                "PERSIST filesystem identity did not read back; "
+                "refusing to initialize an unproven device"
+            )
 
     # Validate the full spec before mounting: a bad spec must fail before
     # any mount or initialization work, not after.

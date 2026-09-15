@@ -18,7 +18,12 @@ Legacy/single-root recovery profiles stay explicit (``legacy-single`` mode)
 and update-activation-disabled (``none-v1`` boot backend, no A/B executor).
 
 Live A/B knobs (Setup authority owns the values; the builder only
-validates):
+validates). On the release medium these arrive as one immutable image-owned
+file (``/etc/greia-os/installer-ab.env``, loaded through the unit's
+``EnvironmentFile`` and parsed centrally by
+:func:`ab_executor_facts_from_environment`); an explicitly exported
+``GREIA_AB_*`` variable wins per key so tests/harnesses can override a
+single fact without copying the file:
 
 - ``GREIA_AB_RELEASE_BUNDLE``: absolute path to the signed deterministic
   ``.greiaupdate`` v2 release artifact;
@@ -54,7 +59,7 @@ from .fresh_ab_install import (
     FreshAbInstallSeams,
     build_ab_executor,
 )
-from .layout import LayoutError, ProfileSizing
+from .layout import LayoutError, LayoutPlan, ProfileSizing
 
 
 def provisional_installer_hardware_controller() -> HardwareSessionController:
@@ -84,6 +89,35 @@ AB_INSTALL_ENV_KEY_DIR = "GREIA_AB_TRUSTED_KEY_DIR"
 AB_INSTALL_ENV_PASSWORD_HASH = "GREIA_AB_GRUB_PASSWORD_HASH"
 AB_INSTALL_ENV_DEVELOPER = "GREIA_AB_DEVELOPER"
 AB_INSTALL_ENV_SUPPORT_BOUND = "GREIA_AB_SUPPORT_INSTALLED_BYTES"
+
+#: Image-owned A/B release-facts file shipped on the installer medium and
+#: loaded through the unit's ``EnvironmentFile``. The release image must not
+#: depend on undocumented operator environment: individual ``GREIA_AB_*``
+#: variables remain accepted as explicit test/harness overrides, but on the
+#: release medium the values below come from this one immutable file, which
+#: the image build generates from the same image profile/release build.
+AB_INSTALL_ENV_FILE_DEFAULT = "/etc/greia-os/installer-ab.env"
+
+#: Optional override pointing at a disposable env file (tests/harness only).
+#: When set, this path replaces the image-owned default; it is never set by
+#: the shipped unit.
+AB_INSTALL_CONFIG_PATH_ENV = "GREIA_AB_CONFIG"
+
+#: Upper bound for the env-file read: the file carries five short scalar
+#: assignments, never payloads or key material.
+AB_INSTALL_ENV_FILE_MAX_BYTES = 8 * 1024
+
+#: Keys the env file may assign. Unknown keys fail closed so a misspelled
+#: release fact can never be silently ignored.
+AB_INSTALL_ENV_FILE_KEYS = frozenset(
+    {
+        AB_INSTALL_ENV_BUNDLE,
+        AB_INSTALL_ENV_KEY_DIR,
+        AB_INSTALL_ENV_PASSWORD_HASH,
+        AB_INSTALL_ENV_DEVELOPER,
+        AB_INSTALL_ENV_SUPPORT_BOUND,
+    }
+)
 
 
 def install_mode_for_state(state: object) -> str:
@@ -219,6 +253,123 @@ def resolve_ab_executor_facts(
         ) from exc
 
 
+def ab_env_file_path_from_environment() -> Path | None:
+    """Return the image-owned A/B env-file path, or ``None`` when absent.
+
+    ``GREIA_AB_CONFIG`` (tests/harness only) replaces the image-owned
+    default ``/etc/greia-os/installer-ab.env``. A configured-but-missing
+    file fails closed in :func:`read_ab_env_file`; an unset default that
+    does not exist simply means "no image-owned facts" (legacy media or a
+    bare test environment relying on explicit ``GREIA_AB_*`` overrides).
+    """
+    override = os.environ.get(AB_INSTALL_CONFIG_PATH_ENV, "").strip()
+    if override:
+        return Path(override)
+    return Path(AB_INSTALL_ENV_FILE_DEFAULT)
+
+
+def read_ab_env_file(path: Path) -> dict[str, str]:
+    """Parse one immutable A/B env file into raw ``GREIA_AB_*`` assignments.
+
+    Strict systemd-``EnvironmentFile``-shaped subset: ``KEY=VALUE`` lines,
+    ``#`` comments and blank lines; optional surrounding double quotes on
+    values; no ``export`` prefix, no shell expansion, no line continuations.
+    Unknown keys, empty values for required names, oversized files,
+    symlinks and missing files all raise
+    :class:`AbInstallCompositionError` fail-closed.
+    """
+    if not isinstance(path, Path):
+        raise AbInstallCompositionError("A/B env-file path must be a Path")
+    if not path.is_absolute():
+        raise AbInstallCompositionError("A/B env-file path must be absolute")
+    if path.is_symlink() or not path.is_file():
+        raise AbInstallCompositionError(
+            f"A/B release facts file is missing: {path} "
+            "(release medium carries /etc/greia-os/installer-ab.env; "
+            "tests set explicit GREIA_AB_* overrides or GREIA_AB_CONFIG)"
+        )
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise AbInstallCompositionError(
+            f"A/B release facts file is unreadable: {path}: {exc}"
+        ) from exc
+    if len(raw) > AB_INSTALL_ENV_FILE_MAX_BYTES:
+        raise AbInstallCompositionError("A/B release facts file exceeds Greia bound")
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise AbInstallCompositionError(
+            "A/B release facts file is not valid UTF-8"
+        ) from exc
+    facts: dict[str, str] = {}
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if "=" not in stripped:
+            raise AbInstallCompositionError(
+                f"A/B release facts file line {lineno} is not KEY=VALUE"
+            )
+        key, _, value = stripped.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if key in ("export", "") or not key.startswith("GREIA_AB_"):
+            raise AbInstallCompositionError(
+                f"A/B release facts file line {lineno} carries an invalid key"
+            )
+        if key not in AB_INSTALL_ENV_FILE_KEYS:
+            raise AbInstallCompositionError(
+                f"A/B release facts file carries unknown key {key!r}"
+            )
+        if key in facts:
+            raise AbInstallCompositionError(
+                f"A/B release facts file repeats key {key!r}"
+            )
+        if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
+            value = value[1:-1]
+        if not value:
+            raise AbInstallCompositionError(
+                f"A/B release facts file key {key!r} must be non-empty"
+            )
+        if "\n" in value or "\r" in value:
+            raise AbInstallCompositionError(
+                f"A/B release facts file key {key!r} carries an invalid value"
+            )
+        facts[key] = value
+    return facts
+
+
+def _merged_ab_assignments() -> dict[str, str]:
+    """Merge image-owned env-file facts with explicit ``GREIA_AB_*`` overrides.
+
+    The file supplies the release baseline; an explicitly exported variable
+    wins per key so tests and harnesses can override one fact without
+    copying the whole file. Absence of both is not an error here — the
+    downstream validators name the missing ``GREIA_AB_*`` fact.
+    """
+    merged: dict[str, str] = {}
+    candidate = ab_env_file_path_from_environment()
+    assert candidate is not None
+    use_file = False
+    if os.environ.get(AB_INSTALL_CONFIG_PATH_ENV, "").strip():
+        use_file = True
+    elif candidate.is_file() and not candidate.is_symlink():
+        use_file = True
+    if use_file:
+        merged.update(read_ab_env_file(candidate))
+    for key in (
+        AB_INSTALL_ENV_BUNDLE,
+        AB_INSTALL_ENV_KEY_DIR,
+        AB_INSTALL_ENV_PASSWORD_HASH,
+        AB_INSTALL_ENV_DEVELOPER,
+        AB_INSTALL_ENV_SUPPORT_BOUND,
+    ):
+        if key in os.environ:
+            merged[key] = os.environ[key]
+    return merged
+
+
 def _env_flag(name: str) -> bool:
     raw = os.environ.get(name, "").strip().lower()
     if raw in ("", "0", "false", "no"):
@@ -242,19 +393,52 @@ def _env_support_bound(name: str) -> int:
 
 
 def ab_executor_facts_from_environment(*, state: object) -> AbExecutorFacts:
-    """Resolve executor facts from the live Setup-owned environment."""
-    password_hash = os.environ.get(AB_INSTALL_ENV_PASSWORD_HASH, "")
+    """Resolve executor facts from the live Setup-owned release facts.
+
+    Single central parser: the image-owned env file
+    (``/etc/greia-os/installer-ab.env`` via the unit's ``EnvironmentFile``,
+    or ``GREIA_AB_CONFIG`` in tests) supplies the release baseline and an
+    explicitly exported ``GREIA_AB_*`` variable wins per key. A missing
+    bundle, key directory, password hash, support bound or non-A/B profile
+    fails closed here, before any service or destructive work exists.
+    """
+    merged = _merged_ab_assignments()
+    password_hash = (merged.get(AB_INSTALL_ENV_PASSWORD_HASH) or "").strip()
     if not password_hash:
         raise AbInstallCompositionError(
             f"{AB_INSTALL_ENV_PASSWORD_HASH} is required for A/B composition"
         )
+    developer_raw = (merged.get(AB_INSTALL_ENV_DEVELOPER) or "").strip().lower()
+    if developer_raw in ("", "0", "false", "no"):
+        developer = False
+    elif developer_raw in ("1", "true", "yes"):
+        developer = True
+    else:
+        raise AbInstallCompositionError(
+            f"{AB_INSTALL_ENV_DEVELOPER} must be a boolean flag"
+        )
+    support_raw = (merged.get(AB_INSTALL_ENV_SUPPORT_BOUND) or "").strip()
+    if not support_raw:
+        raise AbInstallCompositionError(
+            f"{AB_INSTALL_ENV_SUPPORT_BOUND} is required for A/B composition"
+        )
+    try:
+        support_bound = int(support_raw, 10)
+    except ValueError as exc:
+        raise AbInstallCompositionError(
+            f"{AB_INSTALL_ENV_SUPPORT_BOUND} must be a non-negative integer"
+        ) from exc
+    if support_bound < 0:
+        raise AbInstallCompositionError(
+            f"{AB_INSTALL_ENV_SUPPORT_BOUND} must be a non-negative integer"
+        )
     return resolve_ab_executor_facts(
         state=state,
-        release_bundle=os.environ.get(AB_INSTALL_ENV_BUNDLE, ""),
-        trusted_key_dir=os.environ.get(AB_INSTALL_ENV_KEY_DIR, ""),
+        release_bundle=merged.get(AB_INSTALL_ENV_BUNDLE, ""),
+        trusted_key_dir=merged.get(AB_INSTALL_ENV_KEY_DIR, ""),
         password_hash=password_hash,
-        developer=_env_flag(AB_INSTALL_ENV_DEVELOPER),
-        support_installed_bytes=_env_support_bound(AB_INSTALL_ENV_SUPPORT_BOUND),
+        developer=developer,
+        support_installed_bytes=support_bound,
     )
 
 
@@ -263,14 +447,19 @@ def compose_ab_executor(
     facts: AbExecutorFacts,
     seams_factory: Callable[[DeviceObservation], FreshAbInstallSeams] | None,
     identities_factory: (
-        Callable[[DeviceObservation], Mapping[str, Mapping[str, str]]] | None
+        Callable[
+            [DeviceObservation, LayoutPlan], Mapping[str, Mapping[str, str]]
+        ]
+        | None
     ),
 ):  # -> Callable (executor; annotation kept loose for the narrow protocol)
     """Bind executor facts plus per-target factories into the A/B executor.
 
     ``seams_factory`` owns every destructive/filesystem effect for the
-    rematerialized target; ``identities_factory`` owns the observed
-    partition identities for it. Either missing fails closed here — the
+    rematerialized target; ``identities_factory`` is the post-layout
+    identity observer the orchestrator invokes as ``observer(target, plan)``
+    only after the partition/filesystem effects exist (never before the
+    first destructive command). Either missing fails closed here — the
     executor is never built half-wired.
     """
     if not isinstance(facts, AbExecutorFacts):
@@ -301,7 +490,10 @@ def build_install_service(
     ab_support_installed_bytes: object = None,
     ab_seams_factory: Callable[[DeviceObservation], FreshAbInstallSeams] | None = None,
     ab_identities_factory: (
-        Callable[[DeviceObservation], Mapping[str, Mapping[str, str]]] | None
+        Callable[
+            [DeviceObservation, LayoutPlan], Mapping[str, Mapping[str, str]]
+        ]
+        | None
     ) = None,
     ab_from_environment: bool = False,
     engine_factory: object = None,
@@ -352,17 +544,23 @@ def build_install_service(
 
 __all__ = [
     "AB_INSTALL_BOOT_BACKENDS",
+    "AB_INSTALL_CONFIG_PATH_ENV",
     "AB_INSTALL_ENV_BUNDLE",
     "AB_INSTALL_ENV_DEVELOPER",
+    "AB_INSTALL_ENV_FILE_DEFAULT",
+    "AB_INSTALL_ENV_FILE_KEYS",
+    "AB_INSTALL_ENV_FILE_MAX_BYTES",
     "AB_INSTALL_ENV_KEY_DIR",
     "AB_INSTALL_ENV_PASSWORD_HASH",
     "AB_INSTALL_ENV_SUPPORT_BOUND",
     "AbInstallCompositionError",
+    "ab_env_file_path_from_environment",
     "ab_executor_facts_from_environment",
     "ab_sizing_for_state",
     "build_install_service",
     "compose_ab_executor",
     "install_mode_for_state",
     "provisional_installer_hardware_controller",
+    "read_ab_env_file",
     "resolve_ab_executor_facts",
 ]

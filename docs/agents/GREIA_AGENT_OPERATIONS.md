@@ -117,9 +117,17 @@ A PASS at SHA A does not certify runtime-affecting source at SHA B.
 
 ---
 
-## 5. Current R7 boundary
+## 5. Current blocking boundary: post-R1 product-composition closure
 
-R7 remains the blocking platform phase until `HANDOVER.md` and the active plan say otherwise.
+The blocking work is exact shipped installer/update/boot-health product
+composition (T3-P OPEN/BLOCKING; next task `POSTR1-P1-INSTALLER-RED`) until
+`HANDOVER.md` and the active plan say otherwise. T3 source primitives
+(T3-S) are done; T7 remains valid only in its disposable/device-harness
+scope and is not shipped service/unit proof.
+
+Do not start Raspberry Pi 400/500 work, UEFI work, or destructive Acer
+installation in this lane, and do not treat shipped product composition
+as complete.
 
 Do not deepen provisional X11 coupling merely because the installed compatibility path currently uses Xorg/xinit.
 
@@ -304,6 +312,51 @@ Then read the task-specific ADR/product documents named by `skills/greia-os-work
 Do not perform destructive physical installation from memory. The exact named procedure must permit it and revalidate target identity before destructive work.
 
 Developer-image convenience must not leak into normal/release profiles.
+
+### Capable build-host process rules (2026-09-15 — `POSTR1-P5-GATE-CLOSURE-V12E`, R01-03)
+
+- Pass `GREIA_AB_*` (`GREIA_AB_RELEASE_BUNDLE_SRC`, `GREIA_AB_TRUSTED_KEY_SRC`)
+  on the `sudo` command line. Exported environment does not survive sudo
+  `env_reset`, so an export-then-`sudo build/...` launch fail-closes on the
+  missing A/B inputs.
+- Never `umount -R` a build chroot that holds host bind mounts. The chroot
+  bind-mounts propagate as shared, so a recursive unmount escapes onto the
+  host and can take down host `/dev`+`/proc`+`/sys` (observed: sshd unable to
+  fork sessions afterwards, lane lost until console/owner recovery). Use the
+  builders' own `build/lib/safe-cleanup.sh` teardown, or per-mount lazy
+  unmounts of exactly the paths the build mounted.
+- Never SIGKILL a builder mid-chroot without expecting trap/cleanup races;
+  prefer letting the build exit so its own teardown releases mounts and loop
+  devices.
+- Run the Gate-P5 closure driver as root (`sudo -n python3
+  /tmp/greia-p5-*-closure.py`, the established V9/V11 procedure):
+  `tools/x8_qemu/product.py` loop/mount calls carry no sudo prefix and `orb`
+  is not in the `disk` group, so an unprivileged driver run fails pre-QEMU at
+  clone injection with `losetup: Permission denied` (observed V12F; not a
+  product finding). Disposable `/tmp` media only.
+
+### Persistent host apt/pool caches (build hosts only)
+
+Repeated image builds reuse already-downloaded `.deb`s through two persistent
+host caches, implemented by `build/lib/apt-cache.sh`:
+
+```text
+GREIA_APT_CACHE=/var/cache/greia-apt    (chroot /var/cache/apt/archives)
+GREIA_POOL_CACHE=/var/cache/greia-pool  (chroot /var/cache/greia-pool)
+```
+
+The builders bind-mount the host caches for the chroot's lifetime, with the
+apt cache mounted BEFORE debootstrap so base `.deb` downloads land in the
+host cache instead of the real target/live directory (a post-debootstrap
+mount would shadow them: invisible to `du -sx`, counted by `df`, and baked
+into the image/squashfs); the existing `MOUNTS`/`safe_unmount_paths`
+teardown releases them before compression, so cached `.deb`s never enter
+the image.
+
+Never clear these host caches (`apt-get autoclean` inside the chroot only
+drops obsolete entries; `rm -rf` of the `archives/*.deb` cache and `apt-get
+clean` are forbidden in the builders). Deleting them only forces a full
+re-download of the package set on the next build.
 
 ---
 

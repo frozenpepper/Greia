@@ -146,6 +146,7 @@ def _whole_install(bundle: Path, key_dir: Path, case: Path) -> int:
             boot_control_dir=boot_control,
             backend_state_dir=backend_state,
             journal_dir=journal,
+            post_layout_identity_observer=lambda target, plan: observed,
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
@@ -159,7 +160,6 @@ def _whole_install(bundle: Path, key_dir: Path, case: Path) -> int:
             install_target_sha256=stream_mod._INSTALL_SHA,
             password_hash=stream_mod._PASSWORD_HASH,
             installed_at_unix=1757000000,
-            fresh_identities=observed,
         )
         result = execute_fresh_ab_install(request, seams)
         return int(result.bytes_written)

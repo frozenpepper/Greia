@@ -111,7 +111,8 @@ chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
 
 # The live installer intentionally carries broad firmware for coldplug support;
 # package archives remain in /opt/greia-hardware-support for selective target
-# installation. Only APT's ordinary cache is cleaned here.
-chroot "$LIVE_ROOT" apt-get clean
+# installation. Only APT's ordinary cache is cleaned here; autoclean keeps the
+# persistent host .deb cache for the next build.
+chroot "$LIVE_ROOT" apt-get autoclean
 
 echo "Installed ${#firmware_packages[@]} broad firmware packages into the live installer."

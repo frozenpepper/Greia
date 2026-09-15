@@ -117,8 +117,33 @@ class BuildProfileTests(unittest.TestCase):
             capture_output=True,
         )
         payload = json.loads(result.stdout)
-        self.assertEqual("acer-aspire-one-i386", payload["profile"]["profile_id"])
+        self.assertEqual("acer-aspire-one-i386", payload["profile"]["id"])
         self.assertEqual("legacy-x86", payload["platform"]["family"])
+
+    def test_ab_profile_selects_system_update_in_both_scopes(self) -> None:
+        """Regression: the A/B profile must select `system-update`.
+
+        Shipped install/update/recovery entrypoints fail-closed require
+        Ed25519 verification via ``python3-cryptography``
+        (``_cryptography_ed25519`` in ``greia_platform.system_updates``,
+        reached from ``SystemUpdateService.verify`` on the installed target
+        and from ``fresh_ab_install`` in the live installer). Omitting the
+        set from either scope reproduces Gate-P5 D4 on the built artifact.
+        """
+        profile = BuildProfile.load(
+            PROJECT_ROOT / "build/profiles/acer-aspire-one-i386-ab.toml"
+        )
+        self.assertIn("system-update", profile.package_set_names("target"))
+        self.assertIn("system-update", profile.package_set_names("installer"))
+        package_root = PROJECT_ROOT / "build/package-sets"
+        self.assertIn(
+            "python3-cryptography",
+            profile.resolve_packages(package_root, "target"),
+        )
+        self.assertIn(
+            "python3-cryptography",
+            profile.resolve_packages(package_root, "installer"),
+        )
 
 
 if __name__ == "__main__":

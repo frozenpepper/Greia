@@ -1,0 +1,40 @@
+# P4.2: socket definition for the boot-health semantic service.
+# The single root-owned CONFIRM_BOOT_HEALTH endpoint (first-install and
+# update pending journals). Separate from the update socket: that socket
+# serves the inbox-candidate lifecycle, this one owns the health commit.
+#
+# On-demand product contract. This socket listens from sockets.target on
+# every installed boot. Narrow on-demand activation is structural, not a
+# gate: this unit performs no Exec and no boot-control work (it only
+# creates the /run/greia-os/boot-health.sock listener node); the service
+# starts only on the first connection, and the only client connects
+# post-intro (the launcher health path after INTERACTIVE_READY). No
+# destructive backend is wired at this layer.
+[Unit]
+Description=Greia OS boot-health semantic socket
+# Boot-critical-chain ordering: deliberately no Before=/Requires=/Wants=
+# edge toward greia-first-boot, greia-launcher, greia-parent, the intro
+# sweep, the recovery units, or any graphical/multi-user target.
+# After=local-fs.target only orders the listener node after the filesystem
+# providing /run; nothing on the pre-intro path can block on, or be
+# delayed by, this listener. The service is never pulled onto the
+# pre-intro critical path: it has no [Install] section and is started
+# only by this socket on first connection.
+After=local-fs.target
+
+[Socket]
+ListenStream=/run/greia-os/boot-health.sock
+# Bounded launcher reachability (P4 socket-access): root owns the node;
+# group greiakid (the launcher identity's own primary group, created by
+# build-image.sh --user-group) may read+write; no world access. The
+# launcher (User=greiakid, Group=greiakid) connects; Activities stay
+# hidden behind the Bubblewrap --tmpfs over /run and /run/greia-os.
+SocketMode=0660
+SocketUser=root
+SocketGroup=greiakid
+Accept=no
+MaxConnections=4
+TimeoutSec=5
+
+[Install]
+WantedBy=sockets.target

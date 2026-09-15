@@ -61,7 +61,7 @@ class DeveloperRemoteProfileTests(unittest.TestCase):
             profile_path.write_text(
                 json.dumps(
                     {
-                        "profile": {"profile_id": "acer-aspire-one-i386-dev"},
+                        "profile": {"id": "acer-aspire-one-i386-dev"},
                         "package_sets": {"target": ["developer-remote"]},
                     }
                 ),
@@ -75,7 +75,7 @@ class DeveloperRemoteProfileTests(unittest.TestCase):
                 )
             )
             payload = provisioner._validate_profile(root)
-            self.assertEqual(payload["profile"]["profile_id"], "acer-aspire-one-i386-dev")
+            self.assertEqual(payload["profile"]["id"], "acer-aspire-one-i386-dev")
 
             wrong = DeveloperImageProvisioner(
                 ProvisionConfig(
@@ -95,7 +95,7 @@ class DeveloperRemoteProfileTests(unittest.TestCase):
             profile_path.write_text(
                 json.dumps(
                     {
-                        "profile": {"profile_id": "acer-aspire-one-i386-dev"},
+                        "profile": {"id": "acer-aspire-one-i386-dev"},
                         "package_sets": {"target": ["platform-base"]},
                     }
                 ),

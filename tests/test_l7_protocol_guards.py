@@ -265,26 +265,46 @@ class SemanticServiceDefinitionGuardTests(unittest.TestCase):
                 self.assertIsNone(re.search(r"^class \w*Daemon\b", source, re.M))
                 self.assertIsNone(re.search(r"^class \w*Parser\b", source, re.M))
 
-    def test_socket_units_defined_with_enable_gate(self) -> None:
-        # The installed-system update pair stays enable-gated (absent gate
-        # file means inactive, including during ordinary pre-intro boot).
+    def test_socket_units_on_demand_without_enable_gate(self) -> None:
+        # Activated contract (POSTR1-P3-UPDATE-ACTIVATION): the old
+        # enable gate file is removed from the installed-system update
+        # pair. Narrow on-demand socket identity/separation is preserved
+        # structurally (listener node only, first-connection start, never
+        # boot-wanted on the service), with no generic command/daemon
+        # surface.
         socket_unit = "build/overlay/etc/systemd/system/greia-system-update.socket"
         service_unit = "build/overlay/etc/systemd/system/greia-system-update.service"
         socket_text = read(socket_unit)
         self.assertIn("ListenStream=/run/greia-os/", socket_text)
         self.assertIn("SocketMode=0600", socket_text)
         self.assertIn("Accept=no", socket_text)
-        self.assertIn(
-            "ConditionPathExists=/run/greia-os/enable-privileged-transactions",
-            socket_text,
-        )
+        self.assertNotIn("ConditionPathExists=", socket_text)
+        for line in socket_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#") or not stripped or stripped.startswith("["):
+                continue
+            self.assertFalse(
+                stripped.startswith("Condition"),
+                f"activated contract must not gate: {stripped!r}",
+            )
         service_text = read(service_unit)
+        self.assertNotIn("ConditionPathExists=", service_text)
+        for line in service_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#") or not stripped or stripped.startswith("["):
+                continue
+            self.assertFalse(
+                stripped.startswith("Condition"),
+                f"activated contract must not gate: {stripped!r}",
+            )
+        self.assertNotIn("WantedBy=", service_text)
+        self.assertIn("WantedBy=sockets.target", socket_text)
+        self.assertIn("RestrictAddressFamilies=AF_UNIX", service_text)
         self.assertIn(
-            "ConditionPathExists=/run/greia-os/enable-privileged-transactions",
+            "ExecStart=/usr/bin/python3 -m greia_platform.system_updates "
+            "--socket-activated",
             service_text,
         )
-        self.assertNotIn("WantedBy=", service_text)
-        self.assertIn("RestrictAddressFamilies=AF_UNIX", service_text)
 
     def test_installer_socket_active_by_image_scope_not_gate_file(self) -> None:
         # Step 8A.5 split: the installer overlay ships only to installer

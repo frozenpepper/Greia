@@ -431,6 +431,13 @@ class LauncherApplication:
         if callable(attach_deferred):
             attach_deferred()
         self._boot_lifecycle.mark_interactive_ready()
+        # POSTR1-P3-PREINTRO-TIMING-INSTRUMENT: canonical observable for the
+        # real INTERACTIVE_READY transition. Single owner of the
+        # ``launcher_interactive_ready`` GREIA_BOOT event (emitted only via
+        # emit_boot_marker, never a second printer); consumed by
+        # tools/boot/analyze_boot_markers.py and
+        # tools/x8_qemu/preintro_timing.py P3.
+        emit_boot_marker("launcher_interactive_ready")
         # T3-UPDATE2 production call graph: exactly one BOOT_HEALTHY
         # acceptance at the real INTERACTIVE_READY transition. Outside
         # candidate/first-install boots it is a bounded no-op (plain boots

@@ -1,0 +1,82 @@
+# P4.2: socket-activated boot-health semantic service.
+# The single root-owned CONFIRM_BOOT_HEALTH endpoint owning all privileged
+# health-commit mutation for the first-install and update pending journals,
+# so the unprivileged launcher never writes /boot, /etc/greia-os or root
+# update state. Semantic operation only (CONFIRM_BOOT_HEALTH over the
+# internally resolved pending journal, plus the one-use capability token:
+# no slot, journal, path, device, command or journal-operation selectors).
+# Separate socket from the update pair: that socket serves the
+# inbox-candidate lifecycle (STATUS/VERIFY/STAGE/ARM/RECONCILE), while this
+# pair owns the health commit. Both services share the SlotWriter/
+# SlotFinalizer/journal libraries and the privileged_channel transport;
+# never a generic root daemon.
+[Unit]
+Description=Greia OS boot-health semantic service
+Requires=greia-boot-health.socket
+After=greia-boot-health.socket
+# Never part of pre-intro boot and never a generic command runner or broad
+# system manager: this unit only serves the single semantic health-confirm
+# operation. No Before= edge toward the boot chain (see the socket's
+# ordering note): the service cannot delay the first frame; it exists only
+# after a client connects, which happens post-intro.
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/greia-os
+Environment=PYTHONPATH=/opt/greia-os/src
+Environment=PYTHONNOUSERSITE=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Greia-owned health facts, re-resolved from Greia-owned state on every
+# operation. The first-install pending journal lives under
+# GREIA_BOOT_JOURNAL_DIR; the update pending journal under
+# GREIA_UPDATE_STATE_DIR/system-updates/journal; trust, layout, GRUB and
+# boot facts resolve from the same Greia-owned state the update service
+# uses. No GREIA_* Environment= lines below are request selectors: they
+# are image-owned composition roots, never client-supplied authority.
+Environment=GREIA_UPDATE_STATE_DIR=/var/lib/greia-os
+Environment=GREIA_BOOT_JOURNAL_DIR=/var/lib/greia-os/boot-journal
+Environment=GREIA_GRUBENV_DIR=/boot/grub
+Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/installed-layout.json
+Environment=GREIA_BOOT_HISTORY_DIR=/var/lib/greia-os/diagnostics
+Environment=GREIA_FINALIZATION_RECEIPT_PATH=/etc/greia-os/finalization-receipt.json
+# P4 socket-access: image-owned provisioning of the unprivileged launcher
+# into the peer allowlist. The service resolves this name to a UID at
+# startup (resolve_allowed_uids); an unresolvable name fails closed.
+# No wildcard, no numeric guess, no launcher write authority.
+Environment=GREIA_BOOT_HEALTH_CALLER=greiakid
+ExecStart=/usr/bin/python3 -m greia_platform.boot_health_service --socket-activated
+Restart=no
+TimeoutStartSec=5
+TimeoutStopSec=5
+# Native systemd fd store (LISTEN_FDS + fd 3, see
+# greia_platform.boot_health_service.main): never StandardInput=socket —
+# inetd-style stdin passing leaves LISTEN_FDS unset and the entry exits
+# fail-closed. Standard input stays disconnected.
+StandardOutput=journal
+StandardError=journal
+NoNewPrivileges=yes
+PrivateTmp=yes
+# GRUB one-shot/default mutation needs the boot-control state visible.
+# PrivateDevices stays off so the resolved boot-control directory is
+# addressable; containment for boot choice is the code-scoped journal
+# selection, not a static device list.
+PrivateDevices=no
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/greia-os /run/greia-os
+# Minimum extra writes the implementation requires: atomic installed-layout
+# advancement and accepted-sequence state (/etc/greia-os), GRUB one-shot/
+# default mutation (/boot/grub). Everything else stays read-only.
+ReadWritePaths=/etc/greia-os /boot/grub
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_UNIX
+SystemCallArchitectures=native
+LimitCORE=0
+TasksMax=8

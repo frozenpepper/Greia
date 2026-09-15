@@ -185,144 +185,135 @@ def _require_guard_type(guard: object) -> BootLifecycleGuard:
 
 
 # ---------------------------------------------------------------------------
+# P4.3 read-only production token loading (unprivileged launcher side)
+# ---------------------------------------------------------------------------
+#
+# The root generator (``greia-boot-health-credential.service``) owns the
+# authoritative digest record and stages only the raw one-use token in the
+# read-only delivery directory. This seam is the launcher's only production
+# token path: it opens the delivery file ``O_RDONLY``, validates the token
+# shape, and never writes — the authority directory is never even resolved
+# here, so the launcher cannot own, write, or invalidate the authoritative
+# vault. A missing delivery file is the normal plain-boot case and yields
+# ``None`` (bounded no-op); a corrupt file fails closed. Consumption stays
+# owned by the root health service (one-use ``verify_and_consume``): reading
+# the token never burns it, so a failed presentation never destroys the real
+# capability, while a consumed capability can never be presented twice.
+
+#: Delivery token file name staged by the root generator.
+DELIVERY_TOKEN_FILE_NAME = "boot-healthy-token"
+
+#: Environment override for the delivery directory (tests point at tmpdirs).
+DELIVERY_DIR_ENV = "GREIA_BOOT_HEALTH_DELIVERY_DIR"
+
+#: Production delivery directory (root-owned, launcher-readable only).
+DELIVERY_DIR_DEFAULT = "/run/greia-os/boot-health"
+
+
+def production_delivery_path(explicit_path: Path | None = None) -> Path:
+    """Resolve the delivery token file (explicit path, env, or system bind)."""
+    if explicit_path is not None:
+        return Path(explicit_path)
+    override = os.environ.get(DELIVERY_DIR_ENV, "").strip()
+    base = Path(override) if override else Path(DELIVERY_DIR_DEFAULT)
+    return base / DELIVERY_TOKEN_FILE_NAME
+
+
+def maybe_load_production_token(
+    explicit_path: Path | None = None,
+) -> str | None:
+    """Read the root-issued one-use token, or ``None`` on a plain boot.
+
+    Read-only: the file is opened ``O_RDONLY`` and the authority directory
+    is never resolved, so this call cannot provision, overwrite, or
+    invalidate any capability. ``None`` means no pending transaction exists
+    (bounded no-op); a present-but-malformed file raises
+    :class:`BootHealthError` fail-closed.
+    """
+    from greia_platform.boot_health import BootHealthError as _PlatformError
+
+    path = production_delivery_path(explicit_path)
+    if path.is_symlink():
+        raise _PlatformError("boot-health delivery token must not be a symlink")
+    try:
+        descriptor = os.open(os.fspath(path), os.O_RDONLY)
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise _PlatformError(
+            f"boot-health delivery token is unreadable: {exc}"
+        ) from exc
+    try:
+        with os.fdopen(descriptor, "rb") as handle:
+            raw = handle.read(257)
+    except OSError as exc:
+        raise _PlatformError(
+            f"boot-health delivery token read failed: {exc}"
+        ) from exc
+    if len(raw) > 256:
+        raise _PlatformError("boot-health delivery token exceeds Greia bounds")
+    try:
+        text = raw.decode("utf-8").strip()
+    except UnicodeDecodeError as exc:
+        raise _PlatformError(
+            "boot-health delivery token is not valid text"
+        ) from exc
+    # Local shape gate only (defense in depth): the root authority's digest
+    # comparison stays authoritative at consume time.
+    if len(text) != 64 or any(
+        char not in "0123456789abcdef" for char in text
+    ):
+        raise _PlatformError("boot-health delivery token must be 256-bit hex")
+    return text
+
+
+# ---------------------------------------------------------------------------
 # Production post-intro acceptance at the INTERACTIVE_READY transition
 # ---------------------------------------------------------------------------
+#
+# The unprivileged launcher (``greiakid``) performs no privileged boot-state
+# write. At ``INTERACTIVE_READY`` — after the full 7 s intro, first frame
+# visible, no untrusted Activity launched — it presents the root-issued
+# one-use token (:func:`maybe_load_production_token`) exactly once to the
+# root ``greia-boot-health`` service/socket and returns the real outcome.
+# All journal/GRUB/layout/history mutation is owned by that root endpoint;
+# the launcher-side credential provisioning and in-process privileged
+# mutation it replaces are gone (see the service module for the owner).
 
-#: First-install boot journal directory (image-integration parameter: the
-#: installer device seam owns the on-device path; T6-HARNESS2/T7-LIFE2 own
-#: its device execution. Tests point it at a disposable directory).
-PRODUCTION_BOOT_JOURNAL_ENV = "GREIA_BOOT_JOURNAL_DIR"
-PRODUCTION_BOOT_JOURNAL_DEFAULT = "/var/lib/greia-os/boot-journal"
+#: Environment override for the root health socket (tests point at tmpdirs).
+BOOT_HEALTH_SOCKET_ENV = "GREIA_BOOT_HEALTH_SOCKET_PATH"
 
-#: Slot-local finalization receipt visible on the running system
-#: (``etc/greia-os/finalization-receipt.json`` in the booted slot, hence
-#: ``/etc/greia-os/finalization-receipt.json`` on device). Carries the
-#: boot-artifact digests the coordinator binds to the candidate slot.
-PRODUCTION_FINALIZATION_RECEIPT_ENV = "GREIA_FINALIZATION_RECEIPT_PATH"
-PRODUCTION_FINALIZATION_RECEIPT_DEFAULT = "/etc/greia-os/finalization-receipt.json"
+#: Production root health socket served by ``greia-boot-health.socket``.
+BOOT_HEALTH_SOCKET_DEFAULT = "/run/greia-os/boot-health.sock"
 
-
-def production_boot_journal_dir() -> Path:
-    """Resolve the first-install boot journal directory (env or system bind)."""
-    override = os.environ.get(PRODUCTION_BOOT_JOURNAL_ENV, "").strip()
-    return Path(override) if override else Path(PRODUCTION_BOOT_JOURNAL_DEFAULT)
-
-
-def production_update_journal_dir() -> Path:
-    """Resolve the system-update boot journal directory (env or system bind).
-
-    Mirrors the privileged update composition root
-    (``greia_platform.system_updates`` state dir + ``system-updates/journal``)
-    so the launcher observes the same journal the update backend staged.
-    """
-    from greia_platform.system_updates import (
-        UPDATE_JOURNAL_DIR_NAME,
-        UPDATE_STATE_DIR_DEFAULT,
-        UPDATE_STATE_DIR_ENV,
-    )
-
-    raw = os.environ.get(UPDATE_STATE_DIR_ENV, "").strip()
-    state_dir = Path(raw) if raw else Path(UPDATE_STATE_DIR_DEFAULT)
-    return state_dir / "system-updates" / UPDATE_JOURNAL_DIR_NAME
+#: Single semantic op echoed on a CONFIRMED health response.
+CONFIRM_BOOT_HEALTH_OP = "CONFIRM_BOOT_HEALTH"
 
 
-def production_finalization_receipt_path() -> Path:
-    """Resolve the booted-slot finalization receipt path (env or system bind)."""
-    override = os.environ.get(PRODUCTION_FINALIZATION_RECEIPT_ENV, "").strip()
-    return Path(override) if override else Path(PRODUCTION_FINALIZATION_RECEIPT_DEFAULT)
-
-
-def _load_non_terminal_journal(journal_dir: Path):  # type: ignore[no-untyped-def]
-    """Return the journal at ``journal_dir``, or None when absent/terminal.
-
-    Read-only: loading never writes. A corrupt journal raises
-    :class:`BootHealthError` (fail-closed, observable); a missing journal
-    file is the normal plain-boot case and returns None.
-    """
-    from greia_platform.boot_transaction import (
-        JOURNAL_FILE_NAME,
-        BootJournalError,
-        BootTransactionJournal,
-    )
-
-    candidate = Path(journal_dir) / JOURNAL_FILE_NAME
-    if candidate.is_symlink():
-        raise BootHealthError("boot journal must not be a symlink")
-    if not candidate.is_file():
-        return None
-    try:
-        journal = BootTransactionJournal.load(Path(journal_dir))
-    except BootJournalError as exc:
-        raise BootHealthError(f"boot journal is not authoritative: {exc}") from exc
-    except OSError as exc:
-        raise BootHealthError(f"boot journal is unreadable: {exc}") from exc
-    if journal.is_terminal:
-        return None
-    return journal
-
-
-def _read_production_receipt(path: Path) -> dict[str, object]:
-    """Return the validated finalization receipt record for the booted slot."""
-    import json as _json
-
-    if path.is_symlink():
-        raise BootHealthError("finalization receipt must not be a symlink")
-    try:
-        raw_bytes = path.read_bytes()
-    except OSError as exc:
-        raise BootHealthError(f"finalization receipt is unreadable: {exc}") from exc
-    if len(raw_bytes) > 32 * 1024:
-        raise BootHealthError("finalization receipt exceeds Greia bounds")
-    try:
-        raw = _json.loads(raw_bytes.decode("utf-8"))
-    except (UnicodeDecodeError, ValueError) as exc:
-        raise BootHealthError(f"finalization receipt is not valid JSON: {exc}") from exc
-    if not isinstance(raw, dict):
-        raise BootHealthError("finalization receipt must be a JSON object")
-    digests = raw.get("artifact_digests")
-    if not isinstance(digests, dict):
-        raise BootHealthError("finalization receipt carries no artifact digests")
-    for key in ("generic_kernel_sha256", "host_initramfs_sha256"):
-        value = digests.get(key)
-        if not isinstance(value, str) or len(value) != 64 or any(
-            char not in "0123456789abcdef" for char in value
-        ):
-            raise BootHealthError(
-                f"finalization receipt digest {key} is not authoritative"
-            )
-    for key in ("release_id", "release_sequence", "slot", "layout_id"):
-        if raw.get(key) is None:
-            raise BootHealthError(
-                f"finalization receipt is missing authoritative field {key}"
-            )
-    return raw
+def production_boot_health_socket_path() -> Path:
+    """Resolve the root health socket (env override or system bind)."""
+    override = os.environ.get(BOOT_HEALTH_SOCKET_ENV, "").strip()
+    return Path(override) if override else Path(BOOT_HEALTH_SOCKET_DEFAULT)
 
 
 def maybe_accept_production_boot(
     guard: BootLifecycleGuard,
 ) -> BootHealthOutcome | None:
-    """Run production BOOT_HEALTHY acceptance once, or bounded no-op.
+    """Present the root-issued token once, or bounded no-op.
 
     Called exactly once from ``LauncherApplication.apply_prepared_state``
-    after ``mark_interactive_ready()``. On a candidate/first-install boot
-    with a pending journal whose candidate observably booted, this
-    provisions the one-use credential from the production systemd vault,
-    confirms through :func:`run_post_intro_acceptance` with the production
-    observer, and finalizes through the boot journal, returning the outcome.
-
-    Outside candidate/first-install boots it is a bounded no-op returning
-    None: missing vault/journal/backend/layout/observation, a terminal
-    journal, or a machine running the accepted slot (failed candidate)
-    writes nothing — no vault, journal, grubenv or health-state mutation.
-    Journal reconcile of a failed candidate stays owned by the privileged
-    update/install service, never by the launcher. Unexpected evidence
-    failures on a pending candidate boot raise :class:`BootHealthError`
-    instead of silently skipping acceptance.
+    after ``mark_interactive_ready()``. With no delivered token (plain
+    boot) it returns None having written nothing. Otherwise it carries
+    the one-use token to the root ``greia-boot-health`` socket over a
+    single ``CONFIRM_BOOT_HEALTH`` transaction and returns the confirmed
+    outcome mapped from the service detail. Any refusal — unreadable
+    socket, malformed frame, non-CONFIRMED status — raises
+    :class:`BootHealthError` instead of silently skipping acceptance.
 
     Intro evidence is the transition itself: reaching ``INTERACTIVE_READY``
     is the intro-end boundary, so first frame and intro completion are
-    reported True and no untrusted Activity has launched yet (the
-    supervisor is composed but has issued nothing).
+    implied and no untrusted Activity has launched yet (the supervisor is
+    composed but has issued nothing).
     """
     _require_guard_type(guard)
     if guard.state is not BootLifecycleState.INTERACTIVE_READY:
@@ -330,225 +321,134 @@ def maybe_accept_production_boot(
             "production BOOT_HEALTHY acceptance requires INTERACTIVE_READY; "
             f"guard reports {guard.state.value}"
         )
-    # Plain-boot fast path: without a systemd credential vault there is no
-    # provisionable credential, so no acceptance can exist. No mutation.
-    try:
-        vault = default_vault()
-    except BootHealthError:
+    # Plain-boot fast path: without a root-issued token there is no
+    # presentable capability, so no acceptance can exist. No mutation: the
+    # loader is read-only and the socket is never touched.
+    token = maybe_load_production_token()
+    if token is None:
         return None
-    observer = ProductionActualBootObserver()
-    candidates: list[tuple[Path, object, bool]] = []
-    update_journal_dir = production_update_journal_dir()
-    for journal_dir, is_update in (
-        (update_journal_dir, True),
-        (production_boot_journal_dir(), False),
+    from greia_platform.boot_health_service import (
+        BootHealthServiceError as _ServiceError,
+    )
+    from greia_platform.boot_health_service import (
+        build_confirm_request,
+        read_confirm_response,
+    )
+
+    try:
+        request = build_confirm_request(token)
+    except _ServiceError as exc:
+        raise BootHealthError(
+            f"production BOOT_HEALTHY request refused: {exc}"
+        ) from exc
+    raw = _transact_with_health_service(request)
+    try:
+        _, op, payload = read_confirm_response(raw)
+    except _ServiceError as exc:
+        raise BootHealthError(
+            f"production BOOT_HEALTHY response refused: {exc}"
+        ) from exc
+    return _outcome_from_service_detail(op, payload)
+
+
+def _transact_with_health_service(request: bytes) -> bytes:
+    """Send one framed request to the root socket; return one raw frame.
+
+    Exactly one connection, one send, one bounded frame read. The socket
+    unit (``greia-boot-health.socket``) owns listening and activation; the
+    launcher never opens, binds or serves any socket.
+    """
+    import socket as _socket
+
+    from greia_platform.privileged_channel import MAX_MESSAGE_BYTES
+
+    path = production_boot_health_socket_path()
+    if path.is_symlink():
+        raise BootHealthError("boot-health socket must not be a symlink")
+    client = _socket.socket(_socket.AF_UNIX, _socket.SOCK_STREAM)
+    try:
+        client.settimeout(10.0)
+        try:
+            client.connect(os.fspath(path))
+        except OSError as exc:
+            raise BootHealthError(
+                f"root boot-health service is unreachable: {exc}"
+            ) from exc
+        try:
+            client.sendall(request)
+        except OSError as exc:
+            raise BootHealthError(
+                f"root boot-health request was not delivered: {exc}"
+            ) from exc
+        chunks: list[bytes] = []
+        received = 0
+        while True:
+            try:
+                chunk = client.recv(4096)
+            except OSError as exc:
+                raise BootHealthError(
+                    f"root boot-health response was not readable: {exc}"
+                ) from exc
+            if not chunk:
+                break
+            received += len(chunk)
+            if received > MAX_MESSAGE_BYTES:
+                raise BootHealthError(
+                    "root boot-health response exceeds Greia bounds"
+                )
+            chunks.append(chunk)
+            if chunk.endswith(b"\n"):
+                break
+        return b"".join(chunks)
+    finally:
+        try:
+            client.close()
+        except OSError:
+            pass
+
+
+def _outcome_from_service_detail(op: str, payload: dict[str, object]) -> BootHealthOutcome:
+    """Map one CONFIRMED service payload to the launcher outcome."""
+    from greia_platform.boot_health import (
+        ACCEPTED_SLOT_MEDIUM,
+        SETUP_MEDIUM,
+    )
+
+    reason = payload.get("reason") if isinstance(payload, dict) else None
+    if op != CONFIRM_BOOT_HEALTH_OP or not isinstance(payload, dict):
+        raise BootHealthError(
+            f"root boot-health service refused: {reason or op}"
+        )
+    if payload.get("status") != "CONFIRMED":
+        raise BootHealthError(
+            f"root boot-health service refused: {reason or payload.get('status')}"
+        )
+    detail = payload.get("detail")
+    if not isinstance(detail, dict):
+        raise BootHealthError("root boot-health service gave no confirm detail")
+    accepted_slot = detail.get("accepted_slot")
+    release_id = detail.get("release_id")
+    release_sequence = detail.get("release_sequence")
+    journal = detail.get("journal")
+    if accepted_slot not in ("A", "B"):
+        raise BootHealthError("root boot-health detail carries no accepted slot")
+    if not isinstance(release_id, str) or not release_id:
+        raise BootHealthError("root boot-health detail carries no release")
+    if (
+        isinstance(release_sequence, bool)
+        or not isinstance(release_sequence, int)
+        or release_sequence < 0
     ):
-        journal = _load_non_terminal_journal(journal_dir)
-        if journal is not None:
-            candidates.append((Path(journal_dir), journal, is_update))
-    if not candidates:
-        return None
-    if len(candidates) > 1:
-        raise BootHealthError(
-            "ambiguous boot authority: update and first-install journals "
-            "are both pending; refusing to guess"
-        )
-    journal_dir, journal, is_update = candidates[0]
-    return _accept_pending_journal(
-        guard=guard, journal_dir=journal_dir, journal=journal,
-        vault=vault, observer=observer, advance_layout=is_update,
+        raise BootHealthError("root boot-health detail carries no sequence")
+    if journal not in ("update", "first-install"):
+        raise BootHealthError("root boot-health detail carries no journal kind")
+    first_install = journal == "first-install"
+    return BootHealthOutcome(
+        accepted_slot=str(accepted_slot),
+        release_id=str(release_id),
+        release_sequence=int(release_sequence),
+        first_install=first_install,
+        recovery_medium_if_failed=(
+            SETUP_MEDIUM if first_install else ACCEPTED_SLOT_MEDIUM
+        ),
     )
-
-
-def _accept_pending_journal(  # type: ignore[no-untyped-def]
-    *, guard: BootLifecycleGuard, journal_dir: Path, journal: object,
-    vault: BootHealthCredentialVault, observer: ProductionActualBootObserver,
-    advance_layout: bool,
-) -> BootHealthOutcome | None:
-    """Accept one pending journal whose candidate observably booted, else None."""
-    from greia_platform.boot_transaction import (
-        BootTransactionCoordinator,
-        BootTransactionError,
-    )
-    from greia_platform.grub_ab import GrubAbConfigError
-    from greia_platform.system_updates import (
-        UpdateLayoutError,
-        load_installed_layout_record,
-        resolve_grubenv_dir,
-    )
-
-    try:
-        from greia_platform.grub_ab import GrubEnvBackend
-    except ImportError as exc:  # pragma: no cover - platform seam always present
-        raise BootHealthError(f"boot backend is unavailable: {exc}") from exc
-    try:
-        backend = GrubEnvBackend.attach(resolve_grubenv_dir())
-    except (BootTransactionError, GrubAbConfigError, OSError, ValueError):
-        return None
-    try:
-        record = load_installed_layout_record()
-    except UpdateLayoutError:
-        return None
-    if record is None or record.system_b is None:
-        return None
-    try:
-        observed = backend.observe_booted_slot()
-    except (BootTransactionError, OSError):
-        return None
-    if observed != journal.candidate_slot:
-        # Failed candidate or pre-reboot staging: the launcher records
-        # nothing; reconcile stays owned by the privileged service.
-        return None
-    candidate_artifacts, accepted_artifacts = _production_artifact_sets(
-        journal=journal, record=record,
-    )
-    try:
-        coordinator = BootTransactionCoordinator.resume(
-            journal_dir=journal_dir,
-            backend=backend,
-            candidate_artifacts=candidate_artifacts,
-            accepted_artifacts=accepted_artifacts,
-        )
-    except BootTransactionError as exc:
-        raise BootHealthError(
-            f"production boot coordinator refused: {exc}"
-        ) from exc
-    # Fold the authoritative observation (records CANDIDATE_BOOTING on a
-    # pending candidate; no-op when already candidate-booting).
-    try:
-        coordinator.observe_boot()
-    except BootTransactionError as exc:
-        raise BootHealthError(
-            f"production boot observation refused: {exc}"
-        ) from exc
-    protocol = build_protocol(
-        coordinator=coordinator,
-        candidate_root_partuuid=_slot_root_partuuid(record, journal.candidate_slot),
-        candidate_release_id=journal.release_id,
-        candidate_release_sequence=journal.release_sequence,
-        vault=vault,
-        observer=observer,
-    )
-    boot_attempt = str(journal.transaction_id)
-    record_credential = protocol.provision_for_boot_attempt(
-        boot_attempt=boot_attempt, peer_uid=os.getuid(),
-    )
-    outcome = run_post_intro_acceptance(
-        protocol,
-        guard=guard,
-        boot_attempt=boot_attempt,
-        token=record_credential.token,
-        first_frame_visible=True,
-        intro_completed=True,
-        untrusted_activity_launched=False,
-    )
-    if advance_layout and not journal.first_install:
-        _advance_update_layout_authority(journal=journal)
-    return outcome
-
-
-def _advance_update_layout_authority(journal: object) -> None:  # type: ignore[no-untyped-def]
-    """Mirror the update backend's health-commit advancement after acceptance.
-
-    Reuses :func:`greia_platform.system_updates.advance_layout_authority_for_acceptance`
-    (no parallel mechanism): the trusted layout record follows the committed
-    journal so the next sequenced update resolves the other inactive slot,
-    and the accepted-sequence file follows the accepted release. Both are
-    idempotent, so a later privileged-service confirm of the same terminal
-    journal converges instead of conflicting.
-    """
-    from greia_platform.system_updates import (
-        SystemUpdateError,
-        advance_layout_authority_for_acceptance,
-        installed_layout_record_path,
-        write_accepted_sequence,
-    )
-
-    try:
-        advance_layout_authority_for_acceptance(
-            installed_layout_record_path(),
-            candidate_slot=str(journal.candidate_slot),
-            accepted_slot=str(journal.accepted_slot),
-            release_id=str(journal.release_id),
-            release_sequence=int(journal.release_sequence),
-        )
-        write_accepted_sequence(
-            production_update_journal_dir().parent.parent,
-            int(journal.release_sequence),
-        )
-    except SystemUpdateError as exc:
-        raise BootHealthError(
-            f"update layout advancement refused after acceptance: {exc}"
-        ) from exc
-
-
-def _slot_root_partuuid(record: object, slot: str) -> str:
-    """Return the layout-authoritative root PARTUUID for ``slot``."""
-    if slot == "A":
-        return str(record.system_a.partuuid)  # type: ignore[union-attr]
-    return str(record.system_b.partuuid)  # type: ignore[union-attr]
-
-
-def _slot_filesystem_uuid(record: object, slot: str) -> str:
-    """Return the layout-authoritative filesystem UUID for ``slot``."""
-    if slot == "A":
-        return str(record.system_a.filesystem_uuid)  # type: ignore[union-attr]
-    return str(record.system_b.filesystem_uuid)  # type: ignore[union-attr]
-
-
-def _production_artifact_sets(journal: object, record: object):  # type: ignore[no-untyped-def]
-    """Build candidate/accepted artifact sets from layout + booted receipt.
-
-    Release/slot/layout identity comes from the trusted layout record and
-    the pending journal; boot-artifact digests come from the booted slot's
-    finalization receipt (visible at the production receipt path because
-    the machine observably runs the candidate slot). The accepted side
-    reuses the candidate digests: accepted digests gate staging (already
-    proven before the reboot), never health acceptance, which checks only
-    slots, roots and release identity. A receipt that disagrees with the
-    pending candidate release/slot fails closed.
-    """
-    from greia_platform.boot_transaction import BootArtifactSet
-
-    receipt = _read_production_receipt(production_finalization_receipt_path())
-    if receipt.get("slot") != journal.candidate_slot:
-        raise BootHealthError(
-            "finalization receipt is not the pending candidate slot"
-        )
-    if receipt.get("release_id") != journal.release_id:
-        raise BootHealthError(
-            "finalization receipt is not the pending candidate release"
-        )
-    if receipt.get("release_sequence") != journal.release_sequence:
-        raise BootHealthError(
-            "finalization receipt is not the pending candidate sequence"
-        )
-    if receipt.get("layout_id") != journal.layout_id:
-        raise BootHealthError(
-            "finalization receipt layout does not match the journal"
-        )
-    digests = receipt["artifact_digests"]
-    assert isinstance(digests, dict)
-    candidate_artifacts = BootArtifactSet(
-        slot=str(journal.candidate_slot),
-        layout_id=str(record.layout_id),  # type: ignore[union-attr]
-        boot_backend=str(record.boot_backend),  # type: ignore[union-attr]
-        generic_kernel_sha256=str(digests["generic_kernel_sha256"]),
-        generic_initramfs_sha256=str(digests["host_initramfs_sha256"]),
-        root_partuuid=_slot_root_partuuid(record, str(journal.candidate_slot)),
-        root_filesystem_uuid=_slot_filesystem_uuid(record, str(journal.candidate_slot)),
-        release_id=str(journal.release_id),
-        release_sequence=int(journal.release_sequence),
-    )
-    accepted_artifacts = BootArtifactSet(
-        slot=str(journal.accepted_slot),
-        layout_id=str(record.layout_id),  # type: ignore[union-attr]
-        boot_backend=str(record.boot_backend),  # type: ignore[union-attr]
-        generic_kernel_sha256=str(digests["generic_kernel_sha256"]),
-        generic_initramfs_sha256=str(digests["host_initramfs_sha256"]),
-        root_partuuid=_slot_root_partuuid(record, str(journal.accepted_slot)),
-        root_filesystem_uuid=_slot_filesystem_uuid(record, str(journal.accepted_slot)),
-        release_id=str(record.accepted_release_id),  # type: ignore[union-attr]
-        release_sequence=int(record.accepted_release_sequence),  # type: ignore[union-attr]
-    )
-    return candidate_artifacts, accepted_artifacts

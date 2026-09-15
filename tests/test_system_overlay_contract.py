@@ -364,6 +364,64 @@ class SystemOverlayContractTests(unittest.TestCase):
             self.assertNotIn("rm -f /tmp/.X0-lock", script)
 
 
+    def test_builds_share_a_persistent_apt_cache_instead_of_redownloading(self) -> None:
+        helper = (PROJECT_ROOT / "build/lib/apt-cache.sh").read_text()
+        self.assertIn('GREIA_APT_CACHE:-/var/cache/greia-apt', helper)
+        self.assertIn('GREIA_POOL_CACHE:-/var/cache/greia-pool', helper)
+        self.assertIn('mount_apt_archives_cache', helper)
+        self.assertIn('mount_pool_cache', helper)
+        self.assertIn('mount --bind', helper)
+        image_builder = (PROJECT_ROOT / "build/build-image.sh").read_text()
+        installer_builder = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
+        live_firmware = (PROJECT_ROOT / "build/install-live-hardware-firmware.sh").read_text()
+        pool_builder = (PROJECT_ROOT / "build/populate-hardware-support-pool.sh").read_text()
+        for builder in (image_builder, installer_builder):
+            self.assertIn('lib/apt-cache.sh', builder)
+            self.assertIn('mount_apt_archives_cache', builder)
+            self.assertIn('apt-get autoclean', builder)
+            self.assertNotIn('apt-get clean', builder)
+            self.assertIn('var/lib/apt/lists/', builder)
+            self.assertNotIn('var/cache/apt/archives/', builder)
+        # Mount sequencing (debootstrap-era .deb trap): the apt host cache must
+        # be bound BEFORE debootstrap so base downloads land on the host. A
+        # post-debootstrap mount shadows the real archives dir (invisible to
+        # du -sx, counted by df) and bakes stale .debs into the image/squashfs.
+        for builder, root in ((image_builder, '$ROOTFS'), (installer_builder, '$LIVE_ROOT')):
+            cache_mount = builder.index('$(mount_apt_archives_cache')
+            bootstrap = builder.index('debootstrap --arch=')
+            first_apt = builder.index('apt-get "${APT_ACQUIRE_OPTIONS')
+            self.assertLess(cache_mount, bootstrap)
+            self.assertLess(bootstrap, first_apt)
+            self.assertIn('MOUNTS+=(', builder)
+            # Virtual mounts + resolver stub still precede any APT fetch.
+            run_mount = builder.index('tmpfs "%s/run"' % root)
+            resolver = builder.index('stub-resolv.conf')
+            self.assertLess(run_mount, first_apt)
+            self.assertLess(resolver, first_apt)
+        # Installer live root shares both caches; the existing pre-mksquashfs
+        # teardown releases them before compression.
+        self.assertIn('mount_pool_cache', installer_builder)
+        unmount = installer_builder.index('safe_unmount_paths "${MOUNTS[@]}"')
+        squash = installer_builder.index('mksquashfs "$LIVE_ROOT"')
+        self.assertLess(unmount, squash)
+        # Footprint hygiene stays intact (not reverted for the cache port).
+        self.assertIn('purge --auto-remove binutils', image_builder)
+        self.assertIn("rm -f \"$ROOTFS\"/usr/lib/gcc", image_builder)
+        # Live firmware keeps only autoclean; pool downloads route through the
+        # persistent pool cache and are staged into a fresh pool afterwards.
+        self.assertIn('apt-get autoclean', live_firmware)
+        self.assertNotIn('apt-get clean', live_firmware)
+        self.assertIn('POOL_CACHE_IN_CHROOT', pool_builder)
+        self.assertIn('/var/cache/greia-pool', pool_builder)
+        self.assertIn('POOL_CACHE_HOST', pool_builder)
+        self.assertIn('Dir::Cache::archives="$POOL_CACHE_IN_CHROOT"', pool_builder)
+        self.assertNotIn('Dir::Cache::archives=/opt/greia-hardware-support/pool', pool_builder)
+        self.assertIn('Dir::Cache::archives="$POOL_CACHE_IN_CHROOT" autoclean', pool_builder)
+        self.assertIn('"$POOL_CACHE_HOST"', pool_builder)
+        pool_copy = pool_builder.index('"$POOL_CACHE_HOST"')
+        finalize = pool_builder.index('finalize_hardware_support_pool.py')
+        self.assertLess(pool_copy, finalize)
+
     def test_installer_powers_off_before_parent_removes_live_usb(self) -> None:
         installer = (PROJECT_ROOT / "src/greia_installer/main.py").read_text()
         self.assertIn('["systemctl", "poweroff"]', installer)

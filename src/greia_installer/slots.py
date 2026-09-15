@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 from greia_platform.slot_writer import (
     InstalledPackage,
@@ -35,7 +36,24 @@ __all__ = [
     "InstalledPackage",
     "pool_to_support_set",
     "InstallerSlotPackageInstaller",
+    "InstallerPoolBindCleanupPackageInstaller",
 ]
+
+
+class SlotPackageInstallInner(Protocol):
+    """Narrow install protocol wrapped by the pool-bind cleanup wrapper.
+
+    Satisfied structurally by both ``InstallerSlotPackageInstaller`` and
+    the shared ``SharedSlotPackageInstaller`` (identical ``install``
+    shape); kept local so this module never imports the platform package
+    at top level (platform imports this module for the shared installer).
+    """
+
+    def install(
+        self,
+        firmware: tuple[str, ...],
+        microcode: tuple[str, ...],
+    ) -> tuple[InstalledPackage, ...]: ...
 
 
 def pool_to_support_set(
@@ -117,3 +135,50 @@ class InstallerSlotPackageInstaller:
             support_size=1,
         )
         return tuple(support.record_for(name) for name in installed)
+
+
+@dataclass(slots=True)
+class InstallerPoolBindCleanupPackageInstaller:
+    """Installer-side bind-mount cleanup wrapper (P2 production seam).
+
+    Wraps the shared install path (``SharedSlotPackageInstaller`` over
+    ``InstallerSlotPackageInstaller`` / ``TargetHardwareSupportInstaller``;
+    no package logic is copied here) and detaches every bind mount the
+    install records in ``mounted`` before returning, so the slot ``unmount``
+    never sees a busy target. Mirrors the updater
+    ``_LazyTargetPackageInstaller._detach_added_mounts`` invariant: "Bind
+    mounts the installer records are detached before returning so the slot
+    unmount never sees a busy target."
+
+    The caller owns ``mounted`` (one per-EXECUTE list threaded through the
+    installer seam); this wrapper only detaches the slice it adds
+    (``mounted[before:]``) in reverse order via ``umount`` argv arrays
+    (the runner enforces ``shell=False``), truncates that slice in a
+    ``finally`` so no stale entry survives, and never masks the install's
+    real result: detach runs best-effort (``check=False`` + swallowed)
+    while an install failure still propagates after cleanup.
+    """
+
+    inner: SlotPackageInstallInner
+    runner: HardwareSupportCommandRunner
+    mounted: list[Path]
+
+    def install(
+        self,
+        firmware: tuple[str, ...],
+        microcode: tuple[str, ...],
+    ) -> tuple[InstalledPackage, ...]:
+        before = len(self.mounted)
+        try:
+            return self.inner.install(tuple(firmware), tuple(microcode))
+        finally:
+            self.detach_added_mounts(before)
+
+    def detach_added_mounts(self, before: int) -> None:
+        added = self.mounted[before:]
+        for mountpoint in reversed(added):
+            try:
+                self.runner.run(["umount", "--", str(mountpoint)], check=False)
+            except Exception:
+                pass
+        del self.mounted[before:]

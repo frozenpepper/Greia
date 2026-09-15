@@ -64,6 +64,11 @@ KNOWN_EVENTS = frozenset(
         "intro_enter",
         "intro_first_frame_flipped",
         "intro_end",
+        # POSTR1-P3-PREINTRO-TIMING-INSTRUMENT: canonical interactive-ready
+        # marker emitted via emit_boot_marker at the real INTERACTIVE_READY
+        # transition (LauncherApplication.apply_prepared_state). Consumed by
+        # tools/x8_qemu/preintro_timing.py P3 predicate.
+        "launcher_interactive_ready",
     ]
 )
 

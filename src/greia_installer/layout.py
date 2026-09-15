@@ -68,9 +68,10 @@ import re
 import subprocess
 import uuid
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 from greia_platform.persistent_layout import (
     MAX_SYSTEM_SLOT_BYTES,
@@ -1198,6 +1199,197 @@ def observe_partition_identities(
 
 
 # ---------------------------------------------------------------------------
+# POSTR1-P2 post-layout identity observer seam + observation validation.
+#
+# Production identity observation happens AFTER the destructive
+# partition/filesystem effects that create the identities, never before:
+# the orchestrator executes the layout adapter first, then invokes a
+# ``PostLayoutIdentityObserver`` with the verified target plus the validated
+# plan, then binds the returned mapping through
+# :func:`validate_observed_identities_against_plan`. The observer never
+# mints: the production observer below probes the block layer through the
+# controlled ``blkid`` tool path, and the validator rejects every
+# fabricated shape (UUID4 labeled as MBR PARTUUID, cross-disk signature,
+# partition-number mismatch, cloned identities) with the T1 typed
+# normalizers owned by ``greia_platform.persistent_layout``.
+# ---------------------------------------------------------------------------
+
+
+class PostLayoutIdentityObserver(Protocol):
+    """Narrow seam: observe role identities after layout effects exist.
+
+    Called as ``observer(target, plan)`` by the fresh-install orchestrator
+    only after :meth:`LayoutAdapter.execute` has created the partition
+    table and filesystems. Returns one ``partuuid`` + ``filesystem_uuid``
+    mapping (plus an explicit ``scheme``) per layout-authority role.
+    """
+
+    def __call__(
+        self, target: DeviceObservation, plan: LayoutPlan
+    ) -> dict[str, dict[str, str]]: ...  # pragma: no cover
+
+
+def build_post_layout_mbr_observer(
+    runner: MbrProbeRunner,
+) -> PostLayoutIdentityObserver:
+    """Return the production post-layout observer bound to a probe runner.
+
+    The returned observer routes through :func:`observe_partition_identities`
+    (legacy MBR path today; GPT/Pi paths behind the same interface when
+    their execution paths land), so production block facts never depend on
+    a harness-only injection: tests supply recording fakes behind the same
+    narrow seam instead.
+    """
+
+    def _observe(
+        target: DeviceObservation, plan: LayoutPlan
+    ) -> dict[str, dict[str, str]]:
+        return observe_partition_identities(runner, target=target, plan=plan)
+
+    return _observe
+
+
+def validate_observed_identities_against_plan(
+    *,
+    plan: LayoutPlan,
+    identities: Mapping[str, Mapping[str, str]],
+) -> dict[str, dict[str, str]]:
+    """Bind post-layout observed identities to the validated plan.
+
+    Every check reuses the T1 typed validators owned by
+    ``greia_platform.persistent_layout`` (``normalize_partuuid_for_scheme``,
+    ``split_mbr_partuuid``, cross-disk/uniqueness rules) plus the
+    adapter-declared partition-number binding: an observed MBR PARTUUID
+    whose numeric suffix does not equal the role's planned partition
+    number is refused (a swapped/wrong-partition observation), as is a
+    minted UUID4 labeled as an MBR PARTUUID, a cross-disk signature mix,
+    or any cloned PARTUUID/filesystem-UUID across roles. Returns
+    scheme-explicit mappings in the exact shape the layout record consumes.
+    """
+    from greia_platform.persistent_layout import (
+        LAYOUT_PARTITION_SCHEMES,
+        PARTITION_SCHEME_MBR_PARTUUID,
+        PersistentLayoutError,
+        normalize_partuuid_for_scheme,
+        split_mbr_partuuid,
+    )
+
+    expected = (
+        LAYOUT_PARTITION_SCHEMES.get(plan.adapter_id)
+        if isinstance(plan.adapter_id, str)
+        else None
+    )
+    if expected is None:
+        raise LayoutError(
+            "layout identities require a known profile layout adapter"
+        )
+    try:
+        supplied = {
+            role: dict(values) for role, values in dict(identities).items()
+        }
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise LayoutError(
+            f"observed layout identities are not authoritative: {exc}"
+        ) from exc
+    if set(supplied) != {"system-a", "system-b", "persist"}:
+        raise LayoutError(
+            "observed layout identities must cover system-a/system-b/persist"
+        )
+    bound: dict[str, dict[str, str]] = {}
+    for role in ("system-a", "system-b", "persist"):
+        entry = supplied[role]
+        if not isinstance(entry, dict):
+            raise LayoutError(
+                f"observed layout identity {role} must hold an identity mapping"
+            )
+        keys = set(entry)
+        if keys == {"partuuid", "filesystem_uuid"}:
+            pass
+        elif keys == {"scheme", "partuuid", "filesystem_uuid"}:
+            if entry["scheme"] != expected:
+                raise LayoutError(
+                    f"observed layout identity {role} scheme {entry['scheme']!r} "
+                    f"does not match the profile layout adapter "
+                    f"(expected {expected!r})"
+                )
+        else:
+            raise LayoutError(
+                f"observed layout identity {role} must hold "
+                "scheme/partuuid/filesystem_uuid"
+            )
+        try:
+            partuuid = normalize_partuuid_for_scheme(
+                expected, entry["partuuid"], field=f"{role}.partuuid"
+            )
+        except PersistentLayoutError as exc:
+            raise LayoutError(
+                f"observed layout identity {role}.partuuid is not "
+                f"authoritative: {exc}"
+            ) from exc
+        try:
+            parsed = uuid.UUID(str(entry["filesystem_uuid"]))
+        except (ValueError, AttributeError, TypeError) as exc:
+            raise LayoutError(
+                f"observed layout identity {role}.filesystem_uuid is not "
+                "authoritative: observed filesystem identity is not a valid "
+                "UUID"
+            ) from exc
+        filesystem_uuid = str(parsed)
+        if not isinstance(entry["filesystem_uuid"], str) or (
+            entry["filesystem_uuid"] != filesystem_uuid
+        ):
+            raise LayoutError(
+                f"observed layout identity {role}.filesystem_uuid is not "
+                "authoritative: observed filesystem UUID must be canonical "
+                "lowercase UUID text"
+            )
+        bound[role] = {
+            "scheme": expected,
+            "partuuid": partuuid,
+            "filesystem_uuid": filesystem_uuid,
+        }
+    if expected == PARTITION_SCHEME_MBR_PARTUUID:
+        try:
+            split = {
+                role: split_mbr_partuuid(bound[role]["partuuid"])
+                for role in ("system-a", "system-b", "persist")
+            }
+        except PersistentLayoutError as exc:
+            raise LayoutError(
+                f"observed MBR PARTUUIDs are not authoritative: {exc}"
+            ) from exc
+        signatures = {signature for signature, _number in split.values()}
+        if len(signatures) != 1:
+            raise LayoutError(
+                "observed MBR PARTUUIDs span multiple disk signatures: "
+                "refusing a cross-disk identity binding"
+            )
+        for role in ("system-a", "system-b", "persist"):
+            planned = plan.by_role(role)
+            if planned is None:
+                raise LayoutError(
+                    f"legacy plan carries no {role!r} partition"
+                )
+            _signature, number = split[role]
+            if number != int(planned.number):
+                raise LayoutError(
+                    f"observed {role} PARTUUID partition number {number:02d} "
+                    f"does not match the planned partition {int(planned.number):02d}: "
+                    "refusing a swapped-partition binding"
+                )
+    seen = [
+        bound[role][key]
+        for role in ("system-a", "system-b", "persist")
+        for key in ("partuuid", "filesystem_uuid")
+    ]
+    if len(set(seen)) != len(seen):
+        raise LayoutError(
+            "observed layout partition identities must be unique across roles"
+        )
+    return bound
+
+
+# ---------------------------------------------------------------------------
 # Phase 8B Step 8B.1 profile seam (X8-LAYOUT): profile-owned sizing,
 # finalized-slot capacity gate and fresh layout-authority identities.
 # ---------------------------------------------------------------------------
@@ -1416,6 +1608,7 @@ __all__ = [
     "LegacyBiosAbAdapter",
     "MbrCommandResult",
     "MbrProbeRunner",
+    "PostLayoutIdentityObserver",
     "SubprocessMbrProbeRunner",
     "DosPartitionObservation",
     "DosTableObservation",
@@ -1426,6 +1619,7 @@ __all__ = [
     "ProfileSizing",
     "adapter_for",
     "build_observed_mbr_topology",
+    "build_post_layout_mbr_observer",
     "mint_fresh_partition_identities",
     "observe_legacy_mbr_identities",
     "observe_partition_identities",
@@ -1436,5 +1630,6 @@ __all__ = [
     "read_mbr_disk_signature",
     "require_finalized_slot_capacity",
     "validate_layout_plan",
+    "validate_observed_identities_against_plan",
     "verify_mbr_topology_for_boot",
 ]

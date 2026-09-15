@@ -31,11 +31,18 @@ ARCH="$3"
 
 POOL_ROOT="$LIVE_ROOT/opt/greia-hardware-support"
 POOL_DIR="$POOL_ROOT/pool"
+# Persistent host pool cache: the installer builder bind-mounts the host cache
+# at $POOL_CACHE_IN_CHROOT for the chroot's lifetime so repeated builds reuse
+# already-downloaded .debs. POOL_CACHE_HOST defaults to the live-joined path so
+# a standalone (unmounted) invocation still reaches the same pool result.
+POOL_CACHE_IN_CHROOT="${POOL_CACHE_IN_CHROOT:-/var/cache/greia-pool}"
+POOL_CACHE_HOST="${POOL_CACHE_HOST:-$LIVE_ROOT$POOL_CACHE_IN_CHROOT}"
 CANDIDATE_MANIFEST="$POOL_ROOT/candidates.json"
 AVAILABLE_LIST="$POOL_ROOT/available-candidates.txt"
 TARGET_STATUS_IN_CHROOT="$LIVE_ROOT/tmp/greia-target-dpkg-status"
 rm -rf "$POOL_ROOT"
 install -d -m 0755 "$POOL_DIR/partial"
+install -d -m 0755 "$POOL_CACHE_HOST/partial"
 
 if [[ $# -eq 4 ]]; then
   TARGET_DPKG_STATUS="$(realpath "$4")"
@@ -94,14 +101,15 @@ for package in "${available_packages[@]}"; do
   # Resolve candidates independently. Debian firmware providers can be
   # alternatives or conflict with one another; requiring all candidates in one
   # solver transaction would make the broad media pool less compatible. The
-  # archive cache is shared, so dependency .debs accumulate into one local repo.
+  # persistent pool cache is shared, so dependency .debs accumulate into one
+  # local repository instead of being re-fetched on every build.
   chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
     apt-get \
       -o Acquire::Retries=3 \
       -o Acquire::http::Timeout=20 \
       -o Acquire::https::Timeout=20 \
       -o Dir::State::status=/tmp/greia-target-dpkg-status \
-      -o Dir::Cache::archives=/opt/greia-hardware-support/pool \
+      -o Dir::Cache::archives="$POOL_CACHE_IN_CHROOT" \
       --download-only install -y --no-install-recommends \
       "$package"
 done
@@ -115,7 +123,7 @@ for package in "${available_packages[@]}"; do
       -o Acquire::Retries=3 \
       -o Acquire::http::Timeout=20 \
       -o Acquire::https::Timeout=20 \
-      -o Dir::Cache::archives=/opt/greia-hardware-support/pool \
+      -o Dir::Cache::archives="$POOL_CACHE_IN_CHROOT" \
       --download-only install -y --no-install-recommends \
       "$package"
 done
@@ -124,6 +132,22 @@ after_packages="$(chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}\t${Version}\n
   echo "Hardware-support pool population changed the live installed package set; refusing build." >&2
   exit 1
 }
+
+# Keep only currently-resolvable .debs in the persistent cache, then stage a
+# fresh pool from it. Copying (not moving) preserves the host cache for the
+# next build. POOL_CACHE_HOST defaults to the live-joined cache path, so a
+# standalone invocation without the installer builder's bind-mount stages the
+# same pool result from the chroot-local cache.
+chroot "$LIVE_ROOT" apt-get -o Dir::Cache::archives="$POOL_CACHE_IN_CHROOT" autoclean
+install -d -m 0755 "$POOL_DIR"
+shopt -s nullglob
+pool_cache_debs=("$POOL_CACHE_HOST"/*.deb)
+shopt -u nullglob
+(( ${#pool_cache_debs[@]} > 0 )) || {
+  echo "Pool cache holds no .debs after download: $POOL_CACHE_HOST" >&2
+  exit 1
+}
+cp -- "${pool_cache_debs[@]}" "$POOL_DIR/"
 
 rm -rf "$POOL_DIR/partial"
 python3 "$PROJECT_ROOT/tools/finalize_hardware_support_pool.py" \

@@ -961,6 +961,11 @@ class OverlayContractTests(unittest.TestCase):
         return (self.ROOT / relative).read_text(encoding="utf-8")
 
     def test_update_service_is_wired_and_never_boot_enabled(self) -> None:
+        # Activated contract (POSTR1-P3-UPDATE-ACTIVATION): the old
+        # ConditionPathExists gate is absent. On-demand activation is
+        # structural: Requires/After the socket only, no [Install] section
+        # and no WantedBy=, so the service starts only on first connection
+        # and never via any boot target.
         service = self._read(
             "build/overlay/etc/systemd/system/greia-system-update.service"
         )
@@ -969,15 +974,36 @@ class OverlayContractTests(unittest.TestCase):
             "--socket-activated",
             service,
         )
-        self.assertIn(
-            "ConditionPathExists=/run/greia-os/enable-privileged-transactions",
-            service,
-        )
+        for line in service.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#") or not stripped or stripped.startswith("["):
+                continue
+            self.assertFalse(
+                stripped.startswith("Condition"),
+                f"activated contract must not gate: {stripped!r}",
+            )
+        self.assertNotIn("ConditionPathExists=", service)
         self.assertNotIn("WantedBy=", service)
+        self.assertNotIn("[Install]", service)
+        self.assertIn("Requires=greia-system-update.socket", service)
+        self.assertIn("After=greia-system-update.socket", service)
+        non_comment = [
+            line.strip()
+            for line in service.splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        ]
+        for line in non_comment:
+            self.assertFalse(
+                line.startswith("Before="),
+                f"activated contract keeps no Before= edge: {line!r}",
+            )
         self.assertIn("RestrictAddressFamilies=AF_UNIX", service)
         self.assertIn("ReadWritePaths=/var/lib/greia-os /run/greia-os", service)
 
-    def test_update_socket_stays_separate_and_gated(self) -> None:
+    def test_update_socket_stays_separate_and_on_demand(self) -> None:
+        # Activated contract: gate absent on the socket too; the listener
+        # keeps its narrow identity and stays separate from the installer
+        # transaction socket (installer media only).
         text = self._read(
             "build/overlay/etc/systemd/system/greia-system-update.socket"
         )
@@ -985,9 +1011,16 @@ class OverlayContractTests(unittest.TestCase):
         self.assertIn("SocketMode=0600", text)
         self.assertIn("SocketUser=root", text)
         self.assertIn("Accept=no", text)
-        self.assertIn(
-            "ConditionPathExists=/run/greia-os/enable-privileged-transactions", text
-        )
+        for line in text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("#") or not stripped or stripped.startswith("["):
+                continue
+            self.assertFalse(
+                stripped.startswith("Condition"),
+                f"activated contract must not gate: {stripped!r}",
+            )
+        self.assertNotIn("ConditionPathExists=", text)
+        self.assertIn("WantedBy=sockets.target", text)
         installer = self._read(
             "build/installer-overlay/etc/systemd/system/"
             "greia-install-transaction.socket"

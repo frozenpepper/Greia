@@ -236,7 +236,7 @@ class DeveloperRemoteTests(unittest.TestCase):
             profile_path.write_text(
                 json.dumps(
                     {
-                        "profile": {"profile_id": "modern-amd64-dev"},
+                        "profile": {"id": "modern-amd64-dev"},
                         "package_sets": {"target": ["developer-remote"]},
                     }
                 ),
@@ -246,11 +246,11 @@ class DeveloperRemoteTests(unittest.TestCase):
                 ProvisionConfig(image=root / "unused.img", output_dir=root / "out")
             )
             payload = provisioner._validate_profile(root)
-            self.assertEqual(payload["profile"]["profile_id"], "modern-amd64-dev")
+            self.assertEqual(payload["profile"]["id"], "modern-amd64-dev")
             profile_path.write_text(
                 json.dumps(
                     {
-                        "profile": {"profile_id": "modern-amd64"},
+                        "profile": {"id": "modern-amd64"},
                         "package_sets": {"target": ["developer-remote"]},
                     }
                 ),
