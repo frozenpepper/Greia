@@ -1,138 +1,142 @@
 # ADR 0030 — Platform-Owned Transactional System Updates
 
-**Status:** ACCEPTED architecture; implementation incremental/evidence-gated  
-**Date:** 2026-08-19  
-**Scope:** Greia OS/runtime updates, delivery, authenticity, activation, rollback, Parent control and offline update paths  
-**Extends:** ADR 0012; active-plan R13B
+**Status:** ACCEPTED core A/B update architecture; release-authenticity sections superseded by ADR 0036  
+**Date:** 2026-08-19; simplified 2026-09-15  
+**Scope:** Greia OS/runtime updates, delivery, activation, rollback and Parent control  
+**Extends:** ADR 0012  
+**Superseded by ADR 0036 where conflicting:** release signing, key trust, anti-tamper, cryptographic anti-rollback and release-file authenticity requirements
 
 ## 1. Decision
 
-Greia system/runtime updates are a **platform-owned appliance service**. The Greia Parents client may discover, upload, authorize and observe an update, but it MUST NOT execute package-manager commands, write boot/system partitions, select boot slots, or implement rollback itself.
+Greia system/runtime updates are a **platform-owned appliance service**.
 
-The stable product model is:
+The Parent client may choose/upload an update, authorize restart and observe progress. It does not execute package-manager commands, write partitions or implement boot rollback itself.
+
+Stable model:
 
 ```text
-Internet / Parents upload / USB-SD
-              |
-              v
-       Greia update bundle
-              |
-       verify authenticity
-       verify compatibility
-       power/space preflight
-              |
-              v
-   privileged SystemUpdateService
-              |
-              v
-       inactive system slot
-              |
-        pending reboot
-              |
-      boot health check
-        /          \
-   confirm        rollback
+Parent upload / future Internet download / removable media
+                     |
+                     v
+                .greiaupdate
+                     |
+          basic structure + compatibility
+                     |
+                     v
+          SystemUpdateService
+                     |
+             inactive system slot
+                     |
+               one-shot boot
+               /          \
+         healthy           failed
+           |                 |
+         commit           rollback
 ```
 
-Delivery source and activation mechanism are deliberately separate. All delivery paths feed the same verified bundle/service contract.
+This is a reliability architecture, not a hostile-tamper security architecture.
 
-## 2. A/B system direction
+## 2. A/B system model
 
-The target release layout is logically:
+Release-capable Greia installations use:
 
 ```text
-boot-selection metadata
+boot-selection state
 system slot A
 system slot B
-persistent Greia data
+PERSIST
 ```
 
-Routine updates write only the **inactive** system slot. The active known-good system is not modified in place. After complete verification/staging, Greia arms exactly one pending boot into the candidate slot. The candidate must confirm platform health before it becomes the new known-good slot. Failure or missing confirmation rolls back to the previous slot.
+Routine updates write only the **inactive** system slot.
 
-A machine/backend may implement these semantics differently below a typed slot backend, but it may not weaken the observable guarantees.
+The active system is never mutated in place by the normal updater.
 
-The existing `bios-single-ext4` profiles are **not** retroactively claimed to be A/B capable. Until a profile has a proven slot layout/backend, system-update activation MUST report unavailable rather than falling back to in-place `apt`, file copy, `dd` to the active root, or other destructive shortcuts.
+After staging, Greia boots the candidate once. If Greia reaches the required usable Shell/service health point, the candidate becomes current. If candidate boot or health fails, the previous slot becomes current again.
 
-## 3. Persistent child data is outside routine system slots
+Existing single-root installations are not pretended to have rollback. They require reinstall/migration into the supported layout.
 
-Profiles, Activity saves/creations, progression/rewards/awards, Parent credentials, device configuration and other logical Greia state must survive system-slot replacement.
+## 3. Persistent child data
 
-Rollback is only real if shared-data migrations are rollback-safe. An unconfirmed candidate OS MUST NOT irreversibly migrate shared state beyond what the previous known-good OS can recover/read. Migration strategies may include backward-compatible schemas or transactional migration snapshots, but irreversible mutation before boot confirmation is forbidden.
+Profiles, Activity saves/creations, progression, Parent configuration and other durable user state live outside routine system slots.
 
-## 4. Update bundle
+An unconfirmed candidate must not irreversibly transform shared data so that the previous release cannot use it after rollback.
 
-The portable system update artifact uses the suffix:
+Keep migrations backward-compatible until candidate acceptance or defer irreversible migration until after acceptance.
+
+## 4. `.greiaupdate`
+
+The portable update artifact uses:
 
 ```text
 .greiaupdate
 ```
 
-The format is intentionally transport-neutral. A bundle contains, at minimum:
+ADR 0036 owns the current simple bundle format.
+
+The bundle contains a small manifest, one complete system-slot image and the bounded hardware-support content required by finalization.
+
+Normal acceptance checks are practical:
 
 ```text
-manifest.json
-manifest.sig
-payload.bin
+bundle is readable
+manifest fields are valid
+profile/architecture/board are compatible
+payload fits the inactive slot
+payload is a complete Greia system image
 ```
 
-The manifest identifies the release, target platform family/architecture/profile compatibility, payload size/hash and signer. The signature authenticates the canonical manifest. The payload hash binds the payload bytes to that signed manifest.
+No release signing key, signature verification, public-key trust store or cryptographic anti-rollback mechanism is required by Greia's update architecture.
 
-Production update bundles MUST be signed by a trusted Greia release key. HTTPS alone is not release authenticity. Unsigned production activation is forbidden.
+Optional checksums are ordinary corruption/debugging aids only.
 
-Exact schema/limits are source-owned by `src/greia_platform/system_updates.py` and its tests. Documentation examples are not a second parser definition.
+## 5. Whole-system payloads
 
-## 5. Whole-system payloads first
-
-The initial supported release strategy is a complete system-slot payload, not package-by-package mutation and not binary delta patching.
+The supported strategy is a complete system-slot payload, not package-by-package mutation of the active root.
 
 Reasons:
 
-- the tested release image is the image installed;
-- interrupted package scripts cannot leave a half-upgraded active root;
-- rollback remains understandable;
-- cross-architecture/profile compatibility can be checked before writing;
-- later delta transport can be added without changing Parent/API semantics.
+- interrupted update cannot half-upgrade the running OS;
+- rollback remains simple;
+- the same artifact is used by fresh installation and update;
+- architecture/profile compatibility can be checked before writing.
 
-Routine updates SHOULD NOT rewrite the partition table or bootloader itself. Bootloader/layout migrations require a separately reviewed recovery-capable path.
+Routine updates do not repartition the disk or replace the platform bootloader.
 
 ## 6. Delivery sources
 
-Greia supports one update service with interchangeable sources:
+All delivery sources feed the same updater:
 
-1. **Network source** — Greia itself downloads an advertised release after Parent authorization/policy permits it.
-2. **Parents upload** — a Parent client uploads a `.greiaupdate` file to Greia.
-3. **USB/SD source** — Greia discovers a bundle on removable media and offers it through a Parent-authorized flow.
+1. Parent uploads a local `.greiaupdate`;
+2. Greia may later download an advertised update itself;
+3. removable media may later provide a bundle.
 
-The Parents app does not need to remain connected during staging/activation. For normal online updates, Greia should download directly rather than relaying a large release through the phone/browser.
+Delivery source does not change staging/rollback behavior.
 
 ## 7. Parent API boundary
 
-The Parent API exposes semantic update operations/status, for example:
+The Parent API exposes semantic operations such as:
 
 ```text
 read update status
-check availability
-queue/upload bundle
-prepare verified candidate
-request restart when ready
+upload/queue bundle
+prepare candidate
+request restart
+read result
 ```
 
-Exact routes/states are protocol-source-owned.
+The Parent web application does not expose arbitrary `apt`, `dpkg`, `mount`, `dd`, GRUB or shell commands.
 
-The Parent HTTP service remains unprivileged. Receiving a bundle is not system authority. Privileged slot writes, boot selection, reboot and boot confirmation belong to the dedicated system update service/backend.
-
-No API may expose arbitrary `apt`, `dpkg`, `mount`, `dd`, GRUB commands, shell commands or arbitrary filesystem destinations.
+This boundary is kept because it makes the product simpler and prevents accidental misuse, not because the owner is treated as an attacker.
 
 ## 8. State model
 
-The implementation should distinguish at least these semantic phases even if exact enum names differ:
+Implementation may use names equivalent to:
 
 ```text
 UP_TO_DATE
 AVAILABLE
 RECEIVING
-VERIFYING
-VERIFIED
+CHECKING
 STAGING
 READY_TO_RESTART
 PENDING_BOOT_CONFIRMATION
@@ -142,78 +146,64 @@ FAILED
 UNAVAILABLE
 ```
 
-Errors must be bounded parent-readable classifications; detailed diagnostics may remain in privileged logs.
+Exact enum names remain source-owned.
 
-## 9. Safety preflight
+## 9. Practical preflight
 
-Before activation, Greia must verify:
+Before writing the inactive slot, check only useful failure conditions:
 
-- signature/key trust;
-- bundle schema and bounded archive structure;
-- payload hash and declared size;
-- target platform family/architecture/profile compatibility;
-- no prohibited downgrade unless an explicit recovery policy authorizes it;
-- sufficient inactive-slot capacity/free working space;
-- suitable power condition where the hardware can report it;
-- candidate slot is not the currently active slot;
-- boot backend supports atomic/pending selection and rollback semantics.
+- bundle is readable and structurally bounded;
+- profile/architecture/board compatibility matches;
+- inactive slot has enough capacity;
+- destination is not the active slot;
+- candidate payload passes the fast completeness smoke check;
+- boot backend supports one-shot candidate selection/rollback;
+- power condition is acceptable where useful/reliably detectable.
 
-Any failed trust/safety check fails closed.
+Selecting an older compatible Greia version may show a warning and require explicit confirmation. It is not prohibited by an anti-rollback security mechanism.
 
 ## 10. Boot confirmation
 
-A candidate is not accepted merely because the kernel started. The selected backend must have a bounded boot-attempt/health-confirmation mechanism. Confirmation should require the minimum Greia platform health necessary to know that the child appliance can recover into a usable Shell/service state.
+A candidate is not accepted just because the kernel started.
 
-Missing confirmation causes rollback; it must not create an infinite candidate-boot loop.
+Confirmation should mean the child appliance reached the minimum usable Greia Shell/service state required for normal recovery.
 
-## 11. Cryptographic implementation boundary
+Missing confirmation must not create an infinite candidate-boot loop.
 
-Greia will not implement custom cryptographic primitives. Release signing/verification uses a reviewed library/tooling backend. The initial source contract uses Ed25519 manifest signatures with trusted public keys; production image composition must deliberately include and measure the verifier dependency before enabling update activation.
+## 11. Implementation boundary
 
-Private release signing keys never ship in Greia images or the Git repository.
+Use Greia's narrow shared update implementation:
 
-## 12. RAUC evaluation
+```text
+SlotWriter
+SlotFinalizer
+platform BootBackend
+```
 
-RAUC remains a strong candidate implementation below this ADR because its signed bundles, slot model and bootloader integration align closely with these semantics. It is **not selected merely by this ADR**. Before choosing it, Greia must measure package/disk/RAM/process/boot integration cost on the C0/Acer floor and verify GRUB plus Raspberry Pi backend fit.
+Do not grow a second package manager or a parallel updater per platform.
 
-A custom backend, if chosen, must meet the same transaction/rollback/authenticity contracts and must stay narrow rather than becoming a second package manager.
+Raspberry Pi and x86 may implement boot selection differently underneath the same candidate/commit/rollback semantics.
 
-## 13. Initial implementation slice
-
-The first source slice may safely implement before A/B migration:
-
-- signed `.greiaupdate` build/inspect/verification primitives;
-- an immutable verified-update inbox/store;
-- typed update status and backend protocol;
-- an explicitly unavailable backend for current single-root layouts;
-- Parent API capability/status/upload plumbing;
-- developer tooling to generate keys, build bundles and push them;
-- focused provider-free tests.
-
-It MUST NOT claim that current `bios-single-ext4` machines can activate updates.
-
-## 14. Rejected alternatives
+## 12. Rejected normal-update approaches
 
 Rejected:
 
-- Parent web app executing `apt upgrade` or shell commands;
-- in-place mutation of the active root as the normal update model;
-- trusting SHA-256 without publisher authentication;
-- trusting HTTPS as the sole authenticity boundary;
-- one update mechanism for Internet and a different installer for USB/Parents upload;
-- automatically rebooting a child in the middle of an Activity;
-- irreversible shared-data migration before candidate confirmation;
-- pretending a single-root current profile has rollback because an old installer image exists.
+- Parent browser directly running `apt upgrade`;
+- in-place mutation of the active system root;
+- platform-specific updater copies;
+- automatic destructive repartition as an ordinary update;
+- irreversible shared-data migration before candidate acceptance;
+- treating file tampering/signature verification as a core product requirement.
 
-## 15. Product rule
+## 13. Product rule
 
-The parent-facing experience should remain approximately:
+The parent-facing experience remains approximately:
 
 ```text
-Update available -> Update Greia -> Update ready -> Restart & Update
+Choose update -> Preparing -> Ready to Restart -> Restart & Update
 ```
 
-If the candidate fails:
+If candidate boot fails:
 
 ```text
 Greia restored the previous version. Child data was preserved.
