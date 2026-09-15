@@ -1,180 +1,459 @@
-# ADR 0036 — Unified System-Slot Releases and Platform Install Media
+# ADR 0036 — Simple Multiplatform Releases, A/B Updates, and One Universal Setup Image
 
-**Status:** ACCEPTED  
+**Status:** ACCEPTED — owner-corrected architecture  
 **Date:** 2026-09-15  
-**Scope:** release building, `.greiaupdate`, fresh installation media, Parent-delivered updates, ARM64/Raspberry Pi, x86 boot backends  
-**Extends:** ADR 0013, ADR 0014, ADR 0030  
-**Supersedes where conflicting:** the single-binary universal-media product requirement and Pi hot-insert-as-primary-install-flow in `docs/architecture/UNIVERSAL_GREIA_SETUP_MEDIA_ARCHITECTURE.md`
+**Scope:** release building, `.greiaupdate`, universal installation media, Parent updates, x86, ARM64 and Raspberry Pi  
+**Extends:** ADR 0013 and ADR 0014  
+**Supersedes where conflicting:** ADR 0030's cryptographic release-signing / anti-tamper requirements and the earlier same-day ADR 0036 text that split installation into platform-specific public images  
+**Reaffirms:** the single universal Greia Setup image is a product requirement
 
-## 1. Decision
+## 1. Product decision
 
-Greia has **one system-release model** and several thin platform media/boot adapters.
-
-For each release-capable build profile, the canonical operating-system artifact is one **complete relocatable system-slot filesystem image**. It contains the full Greia userspace for that profile. It is not a bootstrap filesystem, package list, partial tree, test skeleton, or installer reconstruction input.
-
-That exact slot image is wrapped in the signed `.greiaupdate` bundle defined by ADR 0030. The same signed bundle is consumed by:
-
-1. fresh installation;
-2. Parent-delivered system update;
-3. removable/offline update;
-4. factory/install-media creation.
-
-No installer-specific second OS payload format is allowed.
-
-## 2. Canonical system-slot image
-
-The canonical slot image is:
-
-- an ext-family relocatable filesystem image with no MBR/GPT partition table;
-- produced from the same profile-driven rootfs composition authority used for Greia target images;
-- complete enough to boot as the base Greia OS after bounded platform finalization;
-- profile/architecture/platform identified by embedded Greia build/profile facts;
-- carrying the package-management/runtime facilities required by the current offline machine-specific finalizer, including `dpkg`/`apt-get` while that finalizer remains package based;
-- carrying the kernel/userspace inputs required by the profile; platform boot adapters may copy/render candidate boot-partition assets from the verified slot during finalization;
-- signed only after semantic validation proves it is a complete Greia slot image.
-
-`build_update_bundle()` may not sign an arbitrary structurally-valid ext filesystem as a production `system-slot-image`. The V12E/V12F/V12G 64 MiB `{etc,lost+found,run,var}` payload class is invalid by architecture even though it was structurally relocatable.
-
-## 3. Rootfs composition ownership
-
-There is one target-root composition pipeline.
-
-The builder must factor current `build/build-image.sh` target-root construction into reusable composition primitives rather than creating a second ARM builder or a second update-root builder. Disk-image builders, release-slot builders, and factory-media builders consume the same composed root/profile authority.
-
-Platform-specific code is limited to package/repository selection that is genuinely profile specific, boot assets, partition layout, boot selection, storage eligibility, and hardware acceptance.
-
-## 4. Signed release bundle
-
-`.greiaupdate` schema v2 remains the release transport unless implementation proves a new field is strictly required. D6 is **not** grounds for a schema version bump by itself.
-
-A production bundle contains the canonical complete slot image plus the already-defined signed hardware-support member and persistent-state contract. Signature, compatibility and monotonic release-sequence checks remain platform authority.
-
-One Greia release version uses one monotonically increasing release sequence across the release matrix. Each profile gets its own signed bundle because profile compatibility remains exact.
-
-Private signing keys never ship on devices, installer media, source control, or Parent clients.
-
-## 5. Hardware finalization
-
-The existing shared `SlotWriter`/`SlotFinalizer` remains the common install/update path.
-
-The machine-specific hardware-support step remains **offline and release-bound**. The current verified support pool may be installed with `apt-get` inside the mounted candidate slot; this is acceptable because the canonical slot is now a complete Debian/Greia root. Do not redesign the finalizer into static file copying merely to accommodate an invalid partial payload.
-
-The finalizer may specialize a complete slot. It does not construct the base OS.
-
-## 6. A/B update semantics
-
-All newly supported release profiles are A/B from first install:
+Greia gets one simple lifecycle architecture:
 
 ```text
-boot authority
+profile-driven Greia rootfs
+        |
+        v
+complete relocatable system-slot image
+        |
+        v
+.greiaupdate
+        |
+        +--------------------------+
+        |                          |
+        v                          v
+universal Setup image        Parent update
+        |                          |
+        v                          v
+fresh A/B install            inactive A/B slot
+        |                          |
+        +------- boot health ------+
+                 |
+          accept or rollback
+```
+
+There is **one user-facing Greia Setup image**. The same image must boot the supported legacy-PC, modern-PC and Raspberry Pi setup paths.
+
+There is **one OS composition pipeline**. Fresh installation and system update use the same complete per-profile system-slot artifact. There is no installer-only OS payload and no update-only OS payload.
+
+There is **no hostile-tamper threat model for release files**. Greia is a family appliance, not a secure-boot distribution system. A parent or developer manually modifying a file is not an architecture problem.
+
+## 2. What safety actually matters
+
+Keep safeguards only for real failure modes:
+
+- writing the wrong physical disk;
+- losing power or crashing during an update;
+- booting a broken new release;
+- installing a release for the wrong architecture/profile;
+- obviously corrupt or incomplete release files;
+- accidentally producing an update payload that does not contain a usable Greia OS.
+
+Do **not** build architecture for:
+
+- malicious local file tampering;
+- proving publisher identity cryptographically;
+- hiding or protecting release contents;
+- preventing a knowledgeable owner from downgrading;
+- preventing manual modification of Greia files;
+- treating hashes/signatures as governance or authority.
+
+A checksum may be used internally as an ordinary corruption diagnostic if already cheap/useful. It is not an authorization mechanism, release identity, or acceptance gate. No worker may grow a security subsystem around it.
+
+## 3. `.greiaupdate` is a simple local release bundle
+
+The update artifact remains named:
+
+```text
+.greiaupdate
+```
+
+It contains a small manifest plus the complete system-slot payload and, where needed, the hardware-support payload used by finalization.
+
+Conceptually:
+
+```text
+manifest.json
+payload.bin
+hardware-support/ or equivalent existing bounded member
+```
+
+The manifest carries practical facts only:
+
+```text
+format version
+Greia version
+profile id
+architecture
+platform/board compatibility
+payload size
+optional corruption checksum
+```
+
+No private keys. No public-key store. No signature. No signer identity. No anti-rollback cryptographic sequence. No trust ceremony.
+
+The update service accepts a bundle when it is structurally readable, compatible with the current machine/profile, fits the inactive slot, and contains a complete Greia system image.
+
+Downgrade policy is simple product UX: ordinary UI can warn when selecting an older version; an explicit parent/developer choice may proceed. It is not a security boundary.
+
+## 4. The payload is the complete Greia OS
+
+`payload.bin` is a complete relocatable filesystem image for one system slot.
+
+It is not:
+
+- an empty ext4 filesystem;
+- a bootstrap tree;
+- a package list;
+- a partial root that finalization must turn into an OS.
+
+The V12G-style 64 MiB `{etc,lost+found,run,var}` payload is therefore invalid production output.
+
+The base OS is built once. Finalization may add machine-specific firmware/microcode and boot artifacts, but it does not construct the operating system.
+
+## 5. One rootfs composition authority
+
+Refactor the existing `build/build-image.sh` composition logic into reusable build primitives.
+
+The same composer produces the canonical target root for:
+
+```text
+legacy i386
+modern amd64
+arm64 / Pi 400
+arm64 / Pi 500
+```
+
+Architecture/profile differences are data and adapters, not copied build pipelines.
+
+From the composed root we may derive:
+
+```text
+system-slot image
+live installer root
+raw development/test image
+```
+
+but they all come from the same composition authority.
+
+Do not create a copied `build-arm-image.sh` that duplicates the x86 build logic. Do not create an update-only root builder.
+
+## 6. Cheap completeness validation, not security validation
+
+Before packaging a production `.greiaupdate`, run a fast mounted/chroot smoke check that proves the slot is actually usable.
+
+Check practical essentials such as:
+
+- profile/architecture metadata exists;
+- Greia runtime files exist;
+- systemd/userspace needed by the profile exists;
+- Python and key Greia imports run;
+- kernel/initramfs inputs exist where required;
+- `apt-get`/`dpkg` exist while the current offline hardware-finalizer needs them;
+- the filesystem fits the configured slot;
+- a deliberately minimal filesystem is rejected.
+
+This exists to catch builder mistakes like D6 in seconds instead of discovering them after a long QEMU run.
+
+It is **not** a tamper detector and must not evolve into one.
+
+## 7. A/B remains because it is simple and useful
+
+All newly supported installations use:
+
+```text
 system A
 system B
 PERSIST
+boot-selection state
 ```
 
-Routine update writes only the inactive slot, verifies/finalizes it, arms one candidate boot, and accepts it only after Greia reaches the trusted interactive-health point. Failure or missing confirmation returns to the previously accepted slot. PERSIST is not replaced by routine system updates.
+Routine update:
 
-Existing single-root installs are not remotely repartitioned by ordinary update. They require reinstall/migration media.
+```text
+current system = A
+-> write complete new release to B
+-> finalize B
+-> mark B as next boot
+-> reboot
+-> Greia reaches usable Shell/health point
+   -> B becomes current
+OR
+-> boot/health fails
+   -> return to A
+```
 
-## 7. Boot backends
+The same works in reverse on the next update.
 
-Common code owns candidate/accepted semantics; boot mechanics are polymorphic.
+PERSIST contains child profiles, saves, settings and Parent data and is not replaced by routine OS updates.
 
-- legacy/modern x86 A/B: `grub-ab-v1`;
-- Raspberry Pi A/B: `pi-tryboot-ab-v1`, using Raspberry Pi firmware `tryboot`/`autoboot.txt`, never GRUB or U-Boot merely for abstraction symmetry.
+This is failure recovery, not security machinery.
 
-For Pi, boot-partition candidate assets are produced from the verified candidate slot and board adapter, written to the inactive Pi boot partition, verified, then armed through native one-shot tryboot. Health commit updates the normal `autoboot.txt` default. A failed tryboot naturally returns to the previous default because the tryboot flag is one-shot.
+## 8. Shared installer/update implementation
 
-Routine Greia install/update does not rewrite Raspberry Pi EEPROM to obtain update semantics.
+Keep the existing shared `SlotWriter` / `SlotFinalizer` direction.
 
-## 8. ARM64 / Raspberry Pi product profiles
+Both fresh install and update use the same basic operation:
 
-Raspberry Pi 400 and Raspberry Pi 500 are first-class ARM64 targets and remain distinct build profiles because they are different boot generations:
+```text
+choose destination system slot
+-> write complete system-slot image
+-> mount it
+-> perform bounded machine-specific finalization
+-> write boot assets/state
+-> verify basic usability
+```
+
+Do not build parallel installer and updater implementations.
+
+Hardware finalization remains offline. Network access is not required while installing or applying an update.
+
+## 9. One universal Setup image is mandatory
+
+The release produces one public setup artifact:
+
+```text
+greia-setup-<version>.img
+```
+
+That image is a compatibility container with several small boot paths. It does **not** pretend all firmware families are identical.
+
+Recommended layout:
+
+```text
+MBR partition table
+
+P1  FAT32  GREIA_SETUP_BOOT  active
+    |
+    +-- SYSLINUX legacy-BIOS files + i386 kernel/initramfs
+    +-- EFI/BOOT x86-64 UEFI files + amd64 kernel/initramfs
+    +-- Pi 400 firmware/boot files
+    +-- Pi 500 firmware/boot files
+    `-- small setup metadata
+
+P2  Linux data filesystem  GREIA_SETUP_DATA
+    |
+    +-- live/i386/rootfs.squashfs
+    +-- live/amd64/rootfs.squashfs
+    +-- live/arm64/rootfs.squashfs
+    +-- releases/acer-aspire-one-i386-ab.greiaupdate
+    +-- releases/standard-amd64-ab.greiaupdate
+    +-- releases/raspberry-pi-400-arm64-ab.greiaupdate
+    `-- releases/raspberry-pi-500-arm64-ab.greiaupdate
+```
+
+The legacy Acer path keeps the already-proven active-FAT32 + SYSLINUX removable boot method.
+
+Modern PC firmware uses the UEFI files on the same FAT partition.
+
+Raspberry Pi firmware uses its board-appropriate files on the same FAT partition.
+
+After the kernel starts, the architecture-appropriate live root mounts P2 and runs the same Greia installer application.
+
+The image does not need cryptographic self-identity or hash-based authority. Setup-media self-exclusion uses the actually mounted physical device ancestry so the installer does not erase its own USB.
+
+## 10. Raspberry Pi support is first-class
+
+Supported ARM profiles:
 
 ```text
 raspberry-pi-400-arm64-ab
 raspberry-pi-500-arm64-ab
 ```
 
-They share common Greia ARM64 userspace/package sets wherever possible. Board adapters own the differing firmware/DTB/kernel boot composition.
+They share one ARM64 Greia userspace where possible. Board adapters own only the Pi-4/BCM2711 versus Pi-5/BCM2712 firmware/kernel/DTB differences.
 
-The ARM base remains Debian-compatible and uses the reviewed Raspberry Pi package repository only for Raspberry Pi kernel/firmware/board support required for these profiles. Repository keys are pinned in Greia build trust; no curl-pipe-shell or runtime package download is introduced.
+Unknown ARM hardware does not silently map to a Pi profile; the installer simply says the hardware is unsupported.
 
-Initial Pi graphics uses the existing Greia X/SDL appliance path on KMS/DRM-capable Raspberry Pi drivers. Direct DRM/KMS remains a later graphics optimization and does not block ARM parity.
+Initial Pi graphics uses the existing Greia X/SDL/Pygame appliance path with appropriate KMS/DRM drivers. Direct DRM/KMS is later optimization work and does not block ARM support.
 
-## 9. Build-host strategy
+## 11. Raspberry installed layout and updates
 
-The official build environment is a supported x86_64 Linux build host. It may build:
-
-- i386 natively/chroot-compatible;
-- amd64 natively;
-- arm64 with `qemu-aarch64-static`/binfmt for build-time chroot execution.
-
-A build preflight must fail clearly when the required cross-architecture execution support is absent. Containers and VMs are not part of the product build architecture and are not required by this decision.
-
-## 10. Installation media: one command, not one magical binary
-
-Greia standardizes the **media creation workflow**, not a single cross-firmware disk image.
-
-The previous requirement that one exact removable image boot legacy BIOS, UEFI and Raspberry Pi made release construction and physical acceptance unnecessarily coupled. It is no longer a release blocker.
-
-The operator uses one release/media tool and the same signed bundles, but it emits platform-appropriate media:
-
-- legacy/modern PC: bootable Greia Setup USB image that runs the graphical installer and installs the selected signed bundle to an eligible internal disk;
-- Raspberry Pi 400/500: ready-to-flash factory image for microSD/USB, already laid out as Pi boot-control + boot A/B + system A/B + PERSIST and seeded from the same signed bundle.
-
-For Pi, direct flashing is the ordinary fresh-install path. A future Pi recovery/setup USB may be provided, but microSD hot insertion is not a prerequisite for first-class Pi support.
-
-This is still one architecture: factory media is a container generated from the signed release, not a second release payload.
-
-## 11. Parent update UX
-
-The Parent application never signs releases and never receives root/shell/package-manager authority.
-
-Initial ordinary update UX is deliberately simple:
+Pi uses the already-designed native layout:
 
 ```text
-Parent -> System Update -> Choose Greia update file
--> upload/queue
--> device verifies compatibility/signature/sequence
--> device stages inactive slot
--> "Ready to restart"
--> parent confirms restart
--> Greia accepts after healthy interactive boot or rolls back automatically
+P1  FAT32  boot-control
+P2  FAT32  boot-A
+P3  FAT32  boot-B
+P4         extended container where needed
+P5  ext4   system-A
+P6  ext4   system-B
+P7  ext4   PERSIST
 ```
 
-The browser may display release/version/profile/progress/error state. It may not select raw slots, partitions, commands or mount paths.
+Pi update boot selection uses Raspberry Pi firmware `tryboot` / `autoboot.txt` through the `pi-tryboot-ab-v1` adapter.
 
-Automatic online release discovery can be added later without changing the activation contract.
+No GRUB or U-Boot is added merely for abstraction symmetry.
 
-## 12. Operator release UX
+No automatic EEPROM rewriting is part of routine Greia update/install.
 
-One high-level Greia release CLI becomes the supported production entry point. Exact command names are source-owned, but the product workflow is:
+The Pi backend only needs to provide the same simple semantic operations as x86:
 
 ```text
-build one profile
-build the supported release matrix
-inspect/verify artifacts
-create platform install media from a built release set
+current_slot()
+stage_next(slot)
+commit(slot)
+rollback/default_previous()
 ```
 
-The high-level builder owns profile resolution, canonical root composition, semantic slot validation, signing, checksums, media generation and a machine-readable release report. Low-level bundle APIs remain reusable implementation plumbing, not the normal production release recipe.
+## 12. PC installed layouts
 
-## 13. Rejected alternatives
+Legacy x86 keeps:
 
-Rejected as normal architecture:
+```text
+legacy-bios-ab-v1
+GRUB A/B boot backend
+```
 
-- 64 MiB/minimal placeholder filesystems signed as production system slots;
-- separate installer root payload and update root payload for the same profile;
-- package-by-package mutation of the active root;
-- constructing the base OS during finalization;
-- GRUB/U-Boot on Raspberry Pi merely to reuse x86 code;
-- ordinary Pi install depending on hot-inserting microSD after USB boot;
-- one universal setup-image hash as a release blocker;
-- worker-selected ad-hoc package copying instead of the verified finalizer;
-- Parent-side signing, `apt`, `dd`, mount, shell or boot-slot authority;
-- automatic destructive repartition of existing single-root systems.
+Modern amd64 uses:
 
-## 14. Consequence
+```text
+modern-gpt-ab-v1
+UEFI-capable GRUB A/B boot backend
+```
 
-D6 is resolved on the **release composition side**: production slot payloads become what the already-accepted update architecture says they are — complete system-slot images. The next implementation plan must finish that path first, then close the legacy-x86 lifecycle once, and immediately continue into ARM64/Pi instead of opening another architecture-design cycle.
+Do not make Secure Boot or cryptographic boot-chain work a blocker for the core lifecycle unless the owner separately decides to support/certify it as a product feature. Ordinary UEFI boot is required; hostile boot-chain protection is not.
+
+## 13. Universal Setup installation flow
+
+### PC
+
+```text
+flash the one Greia Setup image to USB
+-> boot USB
+-> graphical Greia installer
+-> installer identifies compatible profile
+-> choose eligible internal disk
+-> confirm erase/install
+-> create A/B + PERSIST
+-> install complete Greia system to A
+-> configure boot backend
+-> reboot
+```
+
+### Raspberry Pi 400 / 500
+
+Preferred flow using the same Setup image:
+
+```text
+flash the one Greia Setup image to USB
+-> boot Pi from USB
+-> installer identifies Pi model
+-> choose the built-in target microSD
+-> confirm erase/install
+-> create Pi boot A/B + system A/B + PERSIST
+-> install Greia to A
+-> reboot from microSD
+```
+
+Physical testing decides the practical boot-order/card-insertion instructions for Pi 400 and Pi 500. If an existing bootable card prevents USB setup boot, recovery instructions may require removing it for initial USB boot and inserting it when the installer is running. That is a UX/firmware behavior to document, not a reason to create a second image.
+
+## 14. Parent update UX
+
+Keep it boring:
+
+```text
+Parent app
+-> System Update
+-> Choose .greiaupdate file
+-> Greia checks "is this for this machine and does it look complete?"
+-> write inactive slot
+-> Ready to restart
+-> Restart & Update
+-> successful Greia boot: done
+   or
+-> failed boot: previous system comes back
+```
+
+No release keys, certificates, signing UI, raw partitions, shell commands, package-manager UI or slot-selection UI.
+
+Later, optional Internet update discovery can download the same `.greiaupdate` automatically. It does not change the updater.
+
+## 15. Owner release/build workflow
+
+Create one high-level release CLI, preferably:
+
+```text
+tools/greia_release.py
+```
+
+Supported workflow:
+
+```text
+doctor
+build-profile
+build-matrix
+build-setup-image
+inspect
+```
+
+Normal release operation should be approximately:
+
+```bash
+sudo python3 tools/greia_release.py doctor
+sudo python3 tools/greia_release.py build-matrix --version <VERSION> --output <DIR>
+sudo python3 tools/greia_release.py build-setup-image --release-dir <DIR>
+```
+
+No signing key argument. No key generation step. No trust-store maintenance.
+
+The release directory should contain understandable ordinary files:
+
+```text
+release-report.json
+releases/<profile>.greiaupdate
+greia-setup-<version>.img
+```
+
+Optional checksums may be emitted for download/copy troubleshooting, but they are informational only.
+
+## 16. Build host and ARM cross-build
+
+Official release builder: x86_64 Linux.
+
+It builds:
+
+- i386;
+- amd64;
+- arm64 using `qemu-aarch64-static`/binfmt where chroot execution is needed.
+
+`doctor` checks only practical build prerequisites: tools, disk space, privileges needed by image creation, qemu/binfmt for ARM, profiles and package repositories.
+
+No Docker or VM requirement is introduced.
+
+## 17. Existing single-root installs
+
+Do not implement remote in-place repartitioning in this project slice.
+
+Old single-root Greia systems show a simple Parent message that this update generation requires reinstalling with the current universal Setup image. Portable user data migration/backup is handled separately.
+
+## 18. Testing philosophy
+
+Use only three useful layers:
+
+1. **fast build/artifact smoke tests** — catch missing OS files, wrong profile, oversized slot, invalid media composition;
+2. **QEMU/loop tests** — exercise installer/update transaction logic without risking hardware;
+3. **physical tests** — firmware boot, Pi behavior and real-device install/update/rollback.
+
+Do not create new governance gates, evidence authorities, cryptographic identities or hash-equality rituals around these tests.
+
+A test result answers one question: did the thing work?
+
+## 19. Definition of done
+
+This architecture is complete when:
+
+```text
+one universal Setup image boots the supported Acer, modern PC, Pi 400 and Pi 500 paths
+AND the graphical installer works on all of them
+AND all new installs create A/B + PERSIST
+AND the same rootfs composition builds install/update payloads
+AND Parent can apply a local .greiaupdate without technical Linux knowledge
+AND a normal update replaces only the inactive slot
+AND a broken candidate returns to the previous slot
+AND child/Parent data survives OS replacement
+AND one Linux build host can produce i386 + amd64 + arm64 releases and the universal image
+```
+
+Nothing in this definition requires protection against a user manually editing Greia files.
