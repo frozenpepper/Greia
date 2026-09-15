@@ -50,15 +50,10 @@ Keep safeguards for real product failures:
 - truncated/corrupt/unusable payloads;
 - accidentally producing an update payload that is not a complete Greia OS;
 - exhausting update staging space;
-- breaking low-memory installer operation.
+- breaking low-memory installer operation;
+- reinstalling/updating an OS that cannot read the current PERSIST schema.
 
-Do not create architecture for:
-
-- malicious local file tampering;
-- publisher identity proof;
-- Greia-owned release signing keys;
-- cryptographic anti-rollback;
-- hashes/signatures as governance or activation authority.
+Do not create architecture for malicious local file tampering, publisher-identity proof, Greia release signing keys, cryptographic anti-rollback, or hashes/signatures as activation authority.
 
 Checksums may exist as ordinary transfer/debug aids only.
 
@@ -72,7 +67,7 @@ payload.ext4.zst
 hardware-support.tar.zst     # optional
 ```
 
-The outer container is ZIP because it is easy to create/read as one file. The already-compressed `.zst` members are stored without a second compression layer.
+The outer container is ZIP; already-compressed `.zst` members are stored without double compression.
 
 The manifest carries practical facts only:
 
@@ -85,6 +80,9 @@ platform family
 board id or none
 uncompressed payload bytes
 minimum destination slot bytes
+persist_read_schema_min
+persist_read_schema_max
+persist_write_schema
 optional hardware-support presence/size
 optional short release notes
 ```
@@ -96,8 +94,6 @@ The old signed experimental format is rejected with a clear rebuild/migration me
 ## 4. Complete OS payload, compressed only for transport
 
 The uncompressed payload is a complete relocatable ext4 image for one system slot.
-
-It is not an empty filesystem, bootstrap tree, package list or partial root that installation must turn into an OS.
 
 Build path:
 
@@ -116,7 +112,7 @@ Install/update path:
 ```text
 payload.ext4.zst
 -> stream decompression directly to destination system slot
--> expected raw byte-count check
+-> expected raw-byte count check
 -> fsync
 -> filesystem consistency check
 -> expand filesystem to slot capacity
@@ -131,9 +127,7 @@ The V12G-style 64 MiB `{etc,lost+found,run,var}` payload is invalid production o
 
 ## 5. One composition engine with explicit artifact roles
 
-Refactor the existing target-build composition into reusable primitives.
-
-The same engine supports:
+The shared build engine supports:
 
 ```text
 compose_root(profile, role="target")
@@ -142,9 +136,7 @@ compose_root(profile, role="live-installer")
 
 Common primitives own base/debootstrap, repositories, package-set resolution, Greia overlay/runtime/assets, system-service composition, metadata and footprint hygiene.
 
-Role-specific package sets/overlays are explicit declarative inputs. A live installer is not forced to carry all target-only services, and an installed child OS does not inherit installer-only packages merely to achieve source reuse.
-
-Architecture/board differences are profile data and adapters, not copied build scripts.
+Role-specific package sets/overlays are explicit inputs. Architecture/board differences are profile data and adapters, not copied build scripts.
 
 ## 6. A/B + PERSIST
 
@@ -159,20 +151,24 @@ PERSIST
 
 Routine update writes only the inactive slot. The previous accepted slot remains the normal boot default until the candidate reaches Greia health and is committed.
 
-PERSIST contains durable child/Parent/device state and is not replaced by routine updates.
+PERSIST contains durable child/Parent/device state and one small ordinary schema marker, conceptually:
 
-Before candidate acceptance, a candidate must not migrate PERSIST in a way that prevents the previous accepted release from reading it.
+```json
+{"schema_version": 1}
+```
 
-Fresh install writes only A as a valid system. B is formatted but empty/unavailable until the first later update.
+Before trial/update/recovery, current PERSIST schema must fall inside the candidate release's declared readable range.
 
-Fresh A begins as `first_boot_pending`; the first healthy Greia boot marks it accepted and enables normal A/B update activation.
+Before candidate acceptance, migrations must remain backward compatible or transactionally reversible so the previous accepted slot can still recover. After acceptance, the release may advance the PERSIST schema through its normal migration path.
 
-## 7. Shared writer/finalizer
+Fresh install writes only A as a valid system. B is formatted but empty/unavailable until the first later update. Fresh A begins as `first_boot_pending`; the first healthy Greia boot marks it accepted.
+
+## 7. Shared writer/finalizer and bounded staging
 
 Fresh install and update share the same `SlotWriter` / `SlotFinalizer` direction:
 
 ```text
-select system destination
+select destination
 -> stream complete slot filesystem
 -> check/expand/mount
 -> practical Greia smoke
@@ -180,27 +176,13 @@ select system destination
 -> generate platform boot assets
 ```
 
-Platform adapters own actual platform differences only: partition layout, boot assets, one-shot/commit mechanics, target-storage policy and board-specific hardware enablement.
-
 Hardware finalization remains offline. No network APT is used during normal install/update.
 
-## 8. Update receive/staging is deliberately small
-
-Greia stores at most one compressed update candidate:
-
-```text
-candidate.uploading
--> atomic rename -> candidate.greiaupdate
--> stage inactive slot
--> remove large candidate after slot + boot assets are prepared
--> retain only small status/journal state
-```
+Greia stores at most one compressed update candidate. Upload uses a temporary file followed by atomic rename to a fixed candidate. The large candidate is removed after the inactive slot and boot assets are prepared; only small status/journal state remains across reboot.
 
 Before upload/stage, require enough PERSIST free space for the compressed candidate plus a 256 MiB operating reserve.
 
-No content-addressed hash store is required.
-
-## 9. Candidate validity is practical usability
+## 8. Candidate validity is practical usability
 
 Before arming a candidate, prove:
 
@@ -209,27 +191,23 @@ Before arming a candidate, prove:
 - destination write was flushed;
 - ext filesystem is consistent and mountable;
 - architecture/profile/board matches;
+- current PERSIST schema is readable;
 - Greia runtime/system essentials are present;
 - machine-specific finalization completed;
 - boot assets were prepared.
 
 This is reliability validation, not provenance/tamper validation.
 
-## 10. One universal Setup image
+## 9. One universal Setup image
 
-The public setup artifact is one disk image:
+The public setup artifact is one disk image, optionally distributed compressed:
 
 ```text
 greia-setup-<version>.img
-```
-
-It may be distributed compressed as:
-
-```text
 greia-setup-<version>.img.xz
 ```
 
-These are the same disk image, not platform variants.
+They are the same image, not platform variants.
 
 Layout:
 
@@ -253,62 +231,48 @@ P2  ext4 GREIA_SETUP_DATA
     `-- releases/raspberry-pi-500-arm64-ab.greiaupdate
 ```
 
-The raw image must remain <= **7,400,000,000 bytes**, preserving ordinary marketed 8 GB media as the supported floor. If the complete image exceeds that, optimize compression/duplication before considering a larger public-media requirement. Do not split the image.
+The raw image remains <= **7,400,000,000 bytes**, preserving ordinary marketed 8 GB media as the supported floor. If the complete image exceeds that, optimize compression/duplication; do not split the image.
 
-The Acer removable path preserves the physically proven active-FAT32 + SYSLINUX mechanism.
+The Acer removable path preserves active-FAT32 + SYSLINUX. Modern x86 uses the UEFI fallback path on the same FAT partition. Pi firmware uses board-filtered files on the same FAT partition.
 
-Modern x86 firmware uses the UEFI fallback path on the same FAT partition.
-
-Pi firmware uses board-filtered files on the same FAT partition.
-
-## 11. Low-memory universal-media behavior
-
-The universal image may be large on disk without becoming large in RAM.
+## 10. Low-memory behavior
 
 On the Acer-class live path:
 
 - `toram` is forbidden;
-- only the selected i386 SquashFS is mounted from P2;
-- amd64/arm64 files remain ordinary unused files on USB;
+- only selected i386 SquashFS is mounted from P2;
+- amd64/arm64 files remain unused files on USB;
 - writable live overlay starts at the current 128 MiB bounded tmpfs configuration.
-
-Architecture selection occurs before mounting the live SquashFS.
 
 Adding architectures to the Setup medium must not materially increase Acer idle/live-installer RAM merely because their files exist on P2.
 
-## 12. Setup-media self-protection and target identity
+## 11. Setup-media self-protection and target policy
 
-After P2 is mounted, resolve the actual block partition and parent whole-disk device. Exclude that disk and all descendants from installer targets.
+After P2 is mounted, resolve its actual block partition and parent whole disk. Exclude that disk and all descendants from installer targets.
 
-If more than one candidate `GREIA_SETUP_DATA` is present, stop with a simple user instruction to remove extra Greia installer drives rather than guessing.
+If more than one candidate `GREIA_SETUP_DATA` exists, stop with a simple instruction to remove extra Greia installer drives.
 
-Immediately before erase/repartition, re-read the selected target's locator/identity facts such as path, major:minor, capacity and serial/WWN/MMC CID where available. If the device changed or disappeared, clear the selection/confirmation.
+Immediately before destructive work, re-read selected target facts such as path, major:minor, capacity and serial/WWN/MMC CID where available. If changed or missing, clear selection/confirmation.
 
-This exists to prevent wrong-disk destruction, not hostile device impersonation.
+PC normal install offers eligible internal SATA/NVMe/eMMC-class storage and excludes ordinary removable USB plus Setup disk.
 
-## 13. Target-storage policy
+Pi normal fresh install targets the built-in microSD host through topology, not a hard-coded node name. Pi recovery may explicitly offer a microSD in an external USB reader after excluding Setup disk.
 
-PC normal install offers eligible internal SATA/NVMe/eMMC-class storage and excludes ordinary removable USB plus the Setup disk.
+Every target policy verifies the complete fixed layout plus PERSIST minimum fits before confirmation.
 
-Pi 400/500 normal fresh install targets the built-in microSD host, identified through topology rather than a hard-coded device-node name.
+## 12. Modern x86 compatibility includes Secure Boot without Greia signing infrastructure
 
-Pi recovery may explicitly offer a microSD card in an external USB reader after excluding the Setup disk.
-
-## 14. Modern x86 compatibility includes Secure Boot without Greia signing infrastructure
-
-Greia does not build a custom Secure Boot security program, but normal modern PCs frequently ship with Secure Boot enabled.
-
-Therefore the amd64 UEFI setup/installed path uses Debian-provided signed boot components (`shim-signed`, signed GRUB and distro-signed kernel packages or their source-owned equivalents).
+The amd64 UEFI setup/installed path uses Debian-provided signed boot components (`shim-signed`, signed GRUB and distro-signed kernel packages or current source-owned equivalents).
 
 Greia manages no Secure Boot private keys or custom trust database.
 
-The product compatibility test is simply: the normal universal image and installed OS boot with Secure Boot ON and OFF on supported modern x86 hardware.
+The compatibility test is simply that the universal image and installed OS boot with Secure Boot ON and OFF on supported modern x86 hardware.
 
-## 15. Raspberry Pi live boot
+## 13. Raspberry Pi live boot and USB prerequisite
 
 Pi 400 and Pi 500 are distinct board adapters sharing one ARM64 Greia userspace/live root where possible.
 
-The universal FAT boot partition uses official Raspberry Pi model filters:
+The universal FAT boot partition uses official model filters:
 
 ```text
 [pi400]
@@ -320,25 +284,27 @@ The universal FAT boot partition uses official Raspberry Pi model filters:
 [all]
 ```
 
-The Pi 400 adapter owns its Pi-4/BCM2711 firmware/DTB/kernel path; the Pi 500 adapter owns its Pi-5/BCM2712 path. The stable Raspberry Pi package repository provides the supported kernel/firmware packages.
+Pi 400 owns its Pi-4/BCM2711 boot path; Pi 500 owns its Pi-5/BCM2712 path. Unknown ARM hardware does not silently map to a Pi profile.
 
-Unknown ARM hardware does not silently map to a Pi profile.
+Initial graphics uses the existing Greia X/SDL/Pygame appliance path. Direct DRM/KMS is later optimization work.
 
-Initial graphics uses the existing Greia X/SDL/Pygame appliance path with the required KMS/DRM drivers. Direct DRM/KMS is later optimization work.
+Greia Setup assumes the Pi EEPROM boot order includes USB-MSD. The normal/default empty Raspberry Pi boot order tries SD then USB-MSD and repeats. If a user customized EEPROM to remove USB, Greia documentation directs them to restore a standard USB-capable boot order using Raspberry Pi's normal bootloader configuration/recovery tooling. Greia does not silently rewrite EEPROM or create a second Greia image.
 
-## 16. Raspberry Pi installed layout and tryboot
+## 14. Raspberry Pi installed layout and tryboot
 
 Installed Pi layout:
 
 ```text
-P1  FAT32  boot-control   64 MiB
-P2  FAT32  boot-A        128 MiB
-P3  FAT32  boot-B        128 MiB
+P1  FAT32  boot-control-recovery   256 MiB
+P2  FAT32  boot-A                  256 MiB
+P3  FAT32  boot-B                  256 MiB
 P4         extended container as required by MBR
-P5  ext4   system-A      2048 MiB
-P6  ext4   system-B      2048 MiB
-P7  ext4   PERSIST       remainder, minimum 1536 MiB
+P5  ext4   system-A               2048 MiB
+P6  ext4   system-B               2048 MiB
+P7  ext4   PERSIST                remainder, minimum 1536 MiB
 ```
+
+The builder rejects board boot/recovery assets that leave less than 32 MiB free headroom in P1, P2 or P3.
 
 Use native Raspberry Pi `autoboot.txt` + one-shot `tryboot`; no GRUB/U-Boot for symmetry and no routine EEPROM rewrite.
 
@@ -352,35 +318,41 @@ boot_partition=2
 boot_partition=3
 ```
 
-After B is healthy, commit swaps the normal/tryboot partition numbers.
+After B is healthy, commit swaps normal/tryboot partition numbers. Each A/B boot partition points to its matching system root.
 
-Each boot partition's cmdline points to its corresponding system root.
+P1 is itself bootable and contains `autoboot.txt`, board-appropriate boot assets, and a minimal recovery kernel/initramfs. `autoboot.txt` replacement uses write-new, fsync, rename, syncfs, re-read.
 
-`autoboot.txt` replacement uses a small durability sequence: write new file, fsync, rename, syncfs and re-read. Keep a non-authoritative previous copy for Setup recovery diagnostics.
+If firmware falls onto P1 because `autoboot.txt` is missing/malformed, the recovery environment reads accepted-slot/layout state from PERSIST, reconstructs the normal A/B control file, syncs it and reboots. If safe accepted state cannot be determined, it only displays a bounded instruction to use the universal Setup medium.
 
-The tryboot flag is one-shot. A userspace health failure can trigger a reboot and return to the previous default. A candidate that hangs before Greia userspace may require one manual reset/power cycle; on that next boot the previous accepted default remains selected. Do not promise impossible autonomous recovery without adding a separate watchdog mechanism.
+A userspace health failure can reboot and return to the previous default. A candidate that hangs before Greia userspace may require one manual reset/power cycle; on that next boot the previous accepted default remains selected. Do not promise autonomous pre-kernel recovery without a separate watchdog.
 
-## 17. Pi Setup USB fresh-install and reinstall flows
+## 15. Pi Setup fresh-install and reinstall flows
 
-Normal fresh install assumes a blank/unbootable target microSD is inserted along with the Setup USB. Normal Raspberry Pi SD-first boot order falls through to USB when the SD card is not bootable.
+Normal fresh install:
 
-For a bootable existing microSD, the preferred reinstall flow is:
+```text
+blank/unbootable microSD inserted
+Setup USB inserted
+power on
+SD attempt fails -> USB-MSD Setup boots
+install to built-in microSD
+```
+
+For existing bootable microSD, preferred reinstall after physical proof:
 
 ```text
 remove card
 -> boot Setup USB
--> insert card when Setup is running
+-> insert card
 -> Refresh Drives
 -> reinstall
 ```
 
-This built-in-card hot-insertion flow is documented only after physical proof on Pi 400 and Pi 500.
+Guaranteed fallback uses the target microSD in an external USB reader while Setup USB boots; install/reinstall it there, then move it back to the built-in slot.
 
-Guaranteed fallback uses the same target microSD in an external USB card reader while the Setup USB boots. Install/reinstall the card there, then move it back to the Pi's built-in slot.
+No second installer image is introduced.
 
-No second installer image and no mandatory EEPROM boot-order change is introduced.
-
-## 18. Installed x86 layouts
+## 16. Installed x86 layouts
 
 Legacy i386:
 
@@ -405,9 +377,9 @@ PERSIST      remainder, minimum 1536 MiB
 UEFI GRUB A/B backend
 ```
 
-These are product defaults, not per-session tuning suggestions.
+These are product defaults.
 
-## 19. Boot health
+## 17. Boot health
 
 A candidate is committed only after Greia reaches existing platform interactive health:
 
@@ -419,26 +391,24 @@ graphical display/session running
 Greia Shell interactive/profile-selection readiness
 ```
 
-Kernel start alone is not acceptance.
+Kernel start alone is not acceptance. Parent API availability is not required to accept an otherwise usable child appliance.
 
-Parent API availability is not required to accept an otherwise usable child appliance.
+## 18. Universal Setup is also bounded recovery media
 
-## 20. Universal Setup media is also bounded recovery media
-
-When Setup detects a valid existing Greia A/B layout/profile, it may offer:
+When Setup detects a valid Greia A/B layout/profile, it may offer:
 
 ```text
 Reinstall Greia, keep child data
 Erase and install Greia
 ```
 
-Preserve-data reinstall does not repartition or format PERSIST. It writes the matching bundled release to system A, finalizes/rebuilds boot state, clears B as a candidate and marks A first-boot-pending.
+Preserve-data reinstall is offered only when PERSIST mounts for inspection and its schema is inside the bundled release's readable range.
 
-If the existing layout/profile cannot be identified safely, preserve-data reinstall is not offered.
+It does not repartition or format PERSIST. It writes the matching bundled release to system A, finalizes/rebuilds boot state, clears B as a candidate and marks A first-boot-pending.
 
-This does not turn Setup into a general Linux rescue shell.
+If layout/profile/schema cannot be identified safely, preserve-data reinstall is not offered.
 
-## 21. Parent update UX
+## 19. Parent update UX
 
 Normal Parent flow:
 
@@ -455,27 +425,25 @@ System Update
 
 If candidate userspace starts but fails Greia health, it reboots without commit and the previous version returns.
 
-If the candidate hangs before Greia userspace, one reset/power cycle may be required; the previous accepted slot remains the default.
+If the candidate hangs before Greia userspace, one reset/power cycle may be required.
 
-Older compatible bundles are not cryptographically prohibited. Parent may allow an explicit downgrade with a warning that data compatibility after later migrations is not guaranteed.
+Older bundles are not prohibited for security reasons, but ordinary update proceeds only when the candidate declares the current PERSIST schema readable. Otherwise Parent reports a data-compatibility refusal.
 
-## 22. Owner release/build workflow
+## 20. Owner release/build workflow
 
-One high-level tool is the normal entry point:
+Normal release is one command:
 
 ```bash
 sudo python3 tools/greia_release.py build --version <VERSION> --output <DIR>
 ```
 
-It builds all target profiles, i386/amd64/arm64 live roots, boot adapters, four update bundles and the one universal Setup image, then emits the compressed public `.img.xz` plus a concise release report.
-
-Developer subcommands may expose doctor/build-profile/build-live-root/build-setup-image/inspect/write-media, but normal release construction is one command.
+It builds all target profiles, i386/amd64/arm64 live roots, boot adapters, four update bundles and the one universal Setup image, then emits `.img.xz` plus a concise release report.
 
 Official build host is x86_64 Linux. arm64 chroot phases use `qemu-aarch64-static`/binfmt. Docker/VM is not a requirement.
 
-## 23. Testing philosophy
+## 21. Testing philosophy
 
-Use three useful layers:
+Use only useful layers:
 
 1. fast source/build/artifact smoke checks;
 2. QEMU/loop lifecycle tests;
@@ -485,7 +453,7 @@ Run the full repository suite at meaningful integration boundaries, not after ev
 
 Do not create new governance gates, artifact authorities, signed reports, evidence tokens or orchestration frameworks as part of this work.
 
-## 24. Definition of done
+## 22. Definition of done
 
 This architecture is complete when:
 
@@ -505,7 +473,9 @@ fresh install and update share the complete target-root release artifact
 all new supported installs are A/B + PERSIST
 first healthy boot accepts a fresh install
 bad candidates never replace the previous default before health
-PERSIST survives update, rollback and preserve-data reinstall
+PERSIST schema compatibility is checked before update/recovery
+PERSIST survives update, rollback and compatible preserve-data reinstall
+Pi P1 provides bounded recovery from broken autoboot control state
 Parent can apply a local .greiaupdate without Linux knowledge
 one Linux build host creates the complete release in one normal command
 ```
