@@ -30,17 +30,18 @@ Before changing implementation or architecture, read:
 11. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
 12. **`docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` — mandatory universal Home/Back child-navigation requirement**;
 13. **`docs/product/ACTIVITY_INPUT_STANDARDS.md` — mandatory Phase-0 keyboard/pointer/touch/controller interaction standards**;
-14. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN**;
-15. **`docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` — MANDATORY MAIN ENTRY POINT for Greia art/graphics/visual-asset architecture, source-library structure, composition, runtime rendition/caching and documentation navigation whenever the work touches visual assets or visual integration**;
-16. **`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` — MANDATORY CURRENT ART/VISUAL WORKSTREAM PLAN whenever designing, generating, refining, reviewing, integrating, or migrating Greia character art, scenes, props, FX, reusable visual assets, or visual UI treatment**;
-17. **`docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` — current visual-workstream resume contract when continuing art/graphics work across sessions**;
-18. `HANDOVER.md`;
-19. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
-20. **`skills/greia-os-work/SKILL.md` whenever creating, modifying, reviewing, refactoring, optimizing, testing or documenting Greia OS/platform/Shell/Parent/installer/simulator/build/runtime/hardware-service implementation**;
-21. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
-22. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
-23. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
-24. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
+14. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN for its remaining non-lifecycle obligations**;
+15. **`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` — MANDATORY CURRENT INSTALL/UPDATE/RELEASE LIFECYCLE ROUTE (ADR 0036 successor plan; owns install/update/release sequencing and closure criteria)**;
+16. **`docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` — MANDATORY MAIN ENTRY POINT for Greia art/graphics/visual-asset architecture, source-library structure, composition, runtime rendition/caching and documentation navigation whenever the work touches visual assets or visual integration**;
+17. **`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` — MANDATORY CURRENT ART/VISUAL WORKSTREAM PLAN whenever designing, generating, refining, reviewing, integrating, or migrating Greia character art, scenes, props, FX, reusable visual assets, or visual UI treatment**;
+18. **`docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` — current visual-workstream resume contract when continuing art/graphics work across sessions**;
+19. `HANDOVER.md`;
+20. **`docs/agents/GREIA_AGENT_OPERATIONS.md` — mandatory project/build/test-hardware operating manual for agents**;
+21. **`skills/greia-os-work/SKILL.md` whenever creating, modifying, reviewing, refactoring, optimizing, testing or documenting Greia OS/platform/Shell/Parent/installer/simulator/build/runtime/hardware-service implementation**;
+22. `skills/greia-activity-authoring/SKILL.md` whenever creating, modifying, reviewing, validating, optimizing, packaging, deploying, or testing an Activity;
+23. `skills/greia-visual-authoring/SKILL.md` whenever creating, modifying, reviewing, generating, or integrating Greia visual assets or Activity art;
+24. phase-specific testing/review documents referenced by `HANDOVER.md` or the active plan;
+25. `docs/plans/2026-08-06_PHASE0_BOOTABLE_VERTICAL_SLICE.md` only as historical/supporting Phase-0 context where it is not superseded.
 
 `docs/DOCUMENTATION.md` defines which document class owns which fact. In short:
 
@@ -57,13 +58,13 @@ Before changing implementation or architecture, read:
 
 Do not resolve contradictions by choosing whichever document is convenient. Identify the owner of the fact and correct stale derived documentation.
 
-The architecture-remediation plan is the single active **blocking implementation** plan until its final completion criteria are satisfied. Resume from the first incomplete blocking phase in that plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open.
+The architecture-remediation plan remains the active **blocking implementation** plan for its remaining non-lifecycle obligations until its final completion criteria are satisfied. It does **not** own install/update/release lifecycle routing: that route is `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Resume non-lifecycle work from the first incomplete blocking phase in the remediation plan; route all install/update/release/multiplatform lifecycle work from the 2026-09-15 plan. Do not create a competing implementation plan or jump ahead to a more visible feature while an earlier authority/safety prerequisite remains open. The old signed `.greiaupdate` v2 / release-signing-key route is superseded by ADR 0036 and must not be treated as the normal production route.
 
 The visual-foundation plan is the current **art/visual workstream** plan. It owns art sequencing, checkpoints and append-only art progress while active, but it is subordinate to the blocking architecture plan and accepted ADRs. `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system architecture/index and must remain interpretable after the current plan becomes historical. Art/design/library work may advance where it does not bypass platform prerequisites; a visual task must not be used as justification to deepen provisional X11 coupling, invent a parallel runtime/UI architecture, weaken protected system chrome, or claim hardware/runtime evidence that did not execute.
 
 After every substantive **implementation** turn:
 
-1. append an accurate progress entry to `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`;
+1. append an accurate progress entry to `docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md`; append install/update/release/multiplatform lifecycle progress to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` instead;
 2. update `HANDOVER.md` with the exact current phase, implemented work, verification/evidence, blockers, and next exact step;
 3. run the verification required by the active phase before claiming it complete;
 4. update `docs/agents/GREIA_AGENT_OPERATIONS.md` if repository/build/test-hardware/remote-control procedure changed;

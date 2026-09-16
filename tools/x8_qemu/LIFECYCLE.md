@@ -17,16 +17,18 @@ comprises 3 non-boot transitions (`fresh-install-A`,
 (`boot-A-accepted`, `boot-B-commit`, `boot-broken-candidate`,
 `recovery-boot-B`, `reverse-update-B-to-A`); every transition records
 per-transition evidence (default/one-shot/last-booted, journal,
-accepted slot/release/sequence, PERSIST marker, release hashes, image
+accepted slot/release, PERSIST marker, release hashes, image
 SHA), but only the 5 boot-outcome legs assert a guest-observed boot
 outcome through the frozen seam (grubenv-on-image with post-boot loop
 remount/read via `GrubEnvBackend.attach(mountpoint).inspect()`;
 consumption predicate: `next_entry` absent AND `last_booted ==
 expected`). Expected slots: A, B, A, B, A respectively.
 
-Release lineage: `greia-0.20.0`/20 (A) → `greia-0.21.0`/21 (B) →
-`greia-0.21.1`/22 (broken B→A candidate, validly signed, controlled
-post-boot failure) → `greia-0.22.0`/23 (A).
+Release lineage: `greia-0.20.0` (A) → `greia-0.21.0` (B) →
+`greia-0.21.1` (broken B→A candidate, valid v3, controlled
+post-boot failure) → `greia-0.22.0` (A). No sequence authority under
+ADR 0036; release identity is the `release_id` and lineage order is the
+launch order only.
 
 ## 2. Shipped update path (successful-update legs)
 
@@ -62,7 +64,7 @@ failure and the recovery boot.
 ## 5. Observations and the `ok` flag
 
 After each transition the harness observes: semantic slot/release,
-layout record, GRUB env/default/one-shot, journal, accepted sequence,
+layout record, GRUB env/default/one-shot, journal, accepted release,
 PERSIST markers, release hashes, image SHA, boot outcome. `ok` derives
 from those assertions; `assert_lifecycle_transitions` fails the harness's
 own contract on out-of-order, movement-free, or leg-bypassed reports.
@@ -184,9 +186,9 @@ its legs:
   `committed-backend-unwritten-accepted-state`): the first six
   reconcile to the previous accepted slot A through the real backend +
   journal; the committed-backend case completes the pending
-  accepted-state write (accepted-sequence 20 → 21) and reconciles to
+  accepted-state write (accepted release `greia-0.20.0` → `greia-0.21.0`) and reconciles to
   the committed slot B, verified by re-reading the backend default
-  plus the accepted sequence.
+  plus the accepted release.
 - Resource envelope: RSS/MemAvailable, decompression and finalization
   peaks, staging workspace, disk used/free measured per run; slot
   sizes and the PERSIST minimum are layout-plan facts owned by
@@ -266,7 +268,7 @@ so a hung leg cannot eat the run. The real wait mechanism stays inside
  red: gate name, frozen predicate, leg name, verbatim error, return code,
  serial bytes/growth, QEMU/host log paths, on-image pre/post grubenv
  bytes, disk state snapshot (image SHA pre/post, slot/default/one-shot/
- last-booted, journal state, accepted slot/release/sequence, PERSIST
+  last-booted, journal state, accepted slot/release, PERSIST
  marker), and timeout/progress detail. Boot-leg REDs forward the live
  pre/boot/post/elapsed evidence present at the throw site
  (`BootLegCapture`, populated progressively inside the boot leg), so a

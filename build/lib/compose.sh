@@ -1,0 +1,894 @@
+#!/usr/bin/env bash
+# Greia OS shared composition engine (A5 / ADR 0036 §5).
+#
+# One composition implementation with explicit artifact roles. The engine
+# composes a root filesystem into a caller-provided directory:
+#
+#   compose_root --profile <id-or-path> --role target --root <path>
+#   compose_root --profile <id-or-path> --role live-installer --root <path>
+#
+# Partitioning, mkfs, mounting, installed-boot assembly and media assembly
+# remain the role consumer's responsibility (build/build-image.sh for the
+# target role; build/build-installer-image.sh for live-installer, owned by
+# T02; the T04 slot producer composes a target root through this engine).
+#
+# Role-specific package sets, overlays, Greia content, systemd lists and
+# metadata are declarative role inputs below (compose_role_*), never forked
+# script bodies.
+#
+# When sourced, this file defines the compose_* functions. When executed
+# directly, it runs compose_root with the given arguments.
+set -Eeuo pipefail
+
+_COMPOSE_SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+_COMPOSE_BUILD_DIR="$(cd -- "$_COMPOSE_SCRIPT_DIR/.." && pwd)"
+_COMPOSE_PROJECT_ROOT_DEFAULT="$(cd -- "$_COMPOSE_BUILD_DIR/.." && pwd)"
+# shellcheck source=safe-cleanup.sh
+source "$_COMPOSE_SCRIPT_DIR/safe-cleanup.sh"
+# shellcheck source=apt-cache.sh
+source "$_COMPOSE_SCRIPT_DIR/apt-cache.sh"
+
+COMPOSE_VALID_ROLES=("target" "live-installer")
+
+# Declarative role inputs. Architecture/board differences are profile and
+# adapter data, never role branches here.
+compose_assert_role() {
+  local role="${1:-}"
+  case "$role" in
+    target|live-installer) ;;
+    *)
+      echo "Unknown composition role: '$role' (expected: target|live-installer)." >&2
+      return 1
+      ;;
+  esac
+}
+
+# Package-scope input for tools/build_profile.py (target|installer).
+compose_role_scope() {
+  local role="$1"
+  compose_assert_role "$role" || return 1
+  if [[ "$role" == "target" ]]; then
+    printf '%s\n' "target"
+  else
+    printf '%s\n' "installer"
+  fi
+}
+
+# Overlay input: the role-selected appliance overlay directory.
+compose_role_overlay_dir() {
+  local role="$1"
+  local project_root="${2:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  compose_assert_role "$role" || return 1
+  if [[ "$role" == "target" ]]; then
+    printf '%s\n' "$project_root/build/overlay"
+  else
+    printf '%s\n' "$project_root/build/installer-overlay"
+  fi
+}
+
+# Build-phase input recorded in build-info metadata.
+compose_role_build_phase() {
+  local role="$1"
+  compose_assert_role "$role" || return 1
+  if [[ "$role" == "target" ]]; then
+    printf '%s\n' "phase0"
+  else
+    printf '%s\n' "phase0-live-installer"
+  fi
+}
+
+# Whether the role composes the appliance user/group set (target only; the
+# live-installer root carries no child appliance accounts).
+compose_role_manages_appliance_users() {
+  local role="$1"
+  compose_assert_role "$role" || return 1
+  [[ "$role" == "target" ]]
+}
+
+compose_usage() {
+  cat <<'USAGE'
+Usage: compose_root --profile <id-or-path> --role <target|live-installer> --root <path>
+
+Composes a Greia OS root filesystem into the caller-provided root path.
+The caller owns partitioning, mkfs, mounting, boot assembly and media
+assembly. Must run on a Debian/Ubuntu build host as root for chroot/apt
+steps (debootstrap, package install, users, systemd enablement).
+USAGE
+}
+
+# Resolve + validate the declarative profile for a role. Sets the typed
+# profile variables (PROFILE_ID, ARCH, SUITE, MIRROR, ...) in the caller
+# environment and enforces the release gate + support-date guard before any
+# root mutation. Idempotent per profile+role (guarded by _COMPOSE_RESOLVED).
+compose_resolve_profile() {
+  local profile_input="$1"
+  local role="$2"
+  local project_root="${3:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  compose_assert_role "$role" || return 1
+  local scope
+  scope="$(compose_role_scope "$role")"
+  local profile_tool="$project_root/tools/build_profile.py"
+  local package_set_root="$project_root/build/package-sets"
+  local profile_path
+  if [[ -f "$profile_input" ]]; then
+    profile_path="$(realpath "$profile_input")"
+  else
+    profile_path="$project_root/build/profiles/${profile_input%.toml}.toml"
+  fi
+  [[ -r "$profile_path" ]] || { echo "Profile not found: $profile_path" >&2; return 1; }
+  [[ "$profile_path" == *.toml ]] || {
+    echo "Build profiles are declarative TOML; executable .env profiles are no longer accepted: $profile_path" >&2
+    return 1
+  }
+  if [[ "${_COMPOSE_RESOLVED:-}" == "$profile_path|$role" ]]; then
+    return 0
+  fi
+
+  # Parse/validate declarative profile data before any root mutation. The
+  # helper emits only shell-quoted assignments from a typed schema; the
+  # profile itself is never sourced or executed.
+  local profile_assignments
+  profile_assignments="$(python3 "$profile_tool" shell "$profile_path")"
+  eval "$profile_assignments"
+  python3 "$profile_tool" --package-root "$package_set_root" validate "$profile_path" >/dev/null
+  python3 "$profile_tool" check-phase0-builder "$profile_path" --scope "$scope" >/dev/null
+
+  # Boot-cover release eligibility follows the declared boot adapter rather
+  # than a builder-global assumption so a future accepted backend can be
+  # selected per image family. No backend is release-safe until its physical
+  # acceptance gate passes.
+  local release_error=""
+  if [[ "${PIP_RELEASE_BUILD:-0}" == "1" ]]; then
+    if ! release_error="$(python3 "$profile_tool" check-release "$profile_path" 2>&1)"; then
+      echo "Release build refused: $release_error" >&2
+      return 1
+    fi
+  fi
+
+  local current_build_date
+  current_build_date="$(date -u +%F)"
+  if [[ "$current_build_date" > "$SUPPORT_END_DATE" ]]; then
+    echo "Profile $PROFILE_ID passed its declared security-support end date $SUPPORT_END_DATE; refusing build." >&2
+    return 1
+  fi
+
+  COMPOSE_PROFILE_PATH="$profile_path"
+  COMPOSE_PROFILE_TOOL="$profile_tool"
+  COMPOSE_PACKAGE_SET_ROOT="$package_set_root"
+  COMPOSE_PROJECT_ROOT="$project_root"
+  _COMPOSE_RESOLVED="$profile_path|$role"
+  export COMPOSE_PROFILE_PATH COMPOSE_PROFILE_TOOL COMPOSE_PACKAGE_SET_ROOT COMPOSE_PROJECT_ROOT
+}
+
+# Composition-command probe (disk/boot assembly commands such as parted,
+# losetup, mkfs.ext4 and grub-install remain the role consumer's probe).
+compose_require_composition_commands() {
+  local require_commands=(debootstrap chroot mount umount mountpoint findmnt udevadm rsync python3 dpkg-deb readelf)
+  local command_name
+  for command_name in "${require_commands[@]}"; do
+    command -v "$command_name" >/dev/null || {
+      echo "Missing build dependency: $command_name" >&2
+      echo "On Debian/Ubuntu: apt install debootstrap parted e2fsprogs grub-pc-bin grub-common rsync" >&2
+      return 1
+    }
+  done
+}
+
+compose_check_host_arch() {
+  local host_arch
+  host_arch="$(uname -m)"
+  case "$ARCH:$host_arch" in
+    i386:x86_64|i386:i?86|amd64:x86_64) ;;
+    *)
+      echo "Profile architecture $ARCH cannot be executed safely on build host $host_arch." >&2
+      echo "Use an x86_64 Debian/Ubuntu VM for Acer and modern image builds." >&2
+      return 1
+      ;;
+  esac
+}
+
+# Debootstrap + architecture verification. The persistent host apt cache
+# must already be bind-mounted BEFORE this call so base downloads land in
+# the persistent host cache instead of the real target directory.
+compose_debootstrap() {
+  local rootfs="$1"
+  local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  local debian_keyring="$project_root/build/trust/debian-archive-keyring-2025.1.gpg"
+  echo "Bootstrapping Debian $SUITE $ARCH..."
+  [[ -r "$debian_keyring" ]] || { echo "Pinned Debian archive keyring is missing: $debian_keyring" >&2; return 1; }
+  DEBIAN_ARCHIVE_KEYRING="$debian_keyring"
+  debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates --keyring="$DEBIAN_ARCHIVE_KEYRING" --force-check-gpg "$SUITE" "$rootfs" "$MIRROR"
+  local resolved_arch
+  resolved_arch="$(chroot "$rootfs" /usr/bin/dpkg --print-architecture)"
+  [[ "$resolved_arch" == "$ARCH" ]] || { echo "Bootstrapped architecture $resolved_arch does not match profile $ARCH." >&2; return 1; }
+}
+
+# Persistent host apt cache (bind-mounted BEFORE debootstrap by the caller
+# ordering) plus virtual mounts + resolver stub. Appends every mount to the
+# caller's MOUNTS array for bounded teardown via safe_unmount_paths.
+# Persistent host apt cache: bind-mount BEFORE debootstrap so the base
+# downloads land in the persistent host cache instead of the real target
+# directory. A post-debootstrap mount would shadow debootstrap's .debs on the
+# real filesystem (invisible to du -sx, counted by df) and they would survive
+# into the image. Released by cleanup() (safe_unmount_paths); never clear the
+# host cache.
+compose_mount_apt_cache() {
+  local rootfs="$1"
+  local apt_mount
+  apt_mount="$(mount_apt_archives_cache "$rootfs")"
+  MOUNTS+=("$apt_mount")
+}
+
+compose_mount_virtual() {
+  local rootfs="$1"
+  local virtual
+  for virtual in dev proc sys run; do
+    mkdir -p "$rootfs/$virtual"
+  done
+  mount --rbind /dev "$rootfs/dev"; MOUNTS+=("$rootfs/dev"); mount --make-rslave "$rootfs/dev"
+  mount -t proc proc "$rootfs/proc"; MOUNTS+=("$rootfs/proc")
+  mount --rbind /sys "$rootfs/sys"; MOUNTS+=("$rootfs/sys"); mount --make-rslave "$rootfs/sys"
+  # /run is tmpfs at runtime; a fresh mount avoids carrying the build host's
+  # desktop-session mounts (gvfs/portal under /run/user/1000) into the chroot,
+  # which would keep the build busy and block teardown. Seed a resolver stub
+  # so chroot apt/DNS still works while sharing the host network namespace.
+  mount -t tmpfs tmpfs "$rootfs/run"; MOUNTS+=("$rootfs/run")
+  install -d -m 0755 "$rootfs/run/systemd/resolve"
+  cat /etc/resolv.conf > "$rootfs/run/systemd/resolve/stub-resolv.conf" 2>/dev/null || true
+  # NOTE: the persistent apt cache is already bind-mounted above (before
+  # debootstrap); no second mount here. Released by cleanup().
+}
+
+compose_apt_options() {
+  APT_ACQUIRE_OPTIONS=(
+    -o Acquire::Retries=3
+    -o Acquire::http::Timeout=20
+    -o Acquire::https::Timeout=20
+  )
+}
+
+# Package-set resolution + install for the role scope. Keeps intentionally
+# pre-seeded Greia conffiles without any dpkg prompt.
+compose_install_packages() {
+  local rootfs="$1"
+  local role="$2"
+  local scope
+  scope="$(compose_role_scope "$role")"
+  compose_apt_options
+  local package_output
+  package_output="$(python3 "$COMPOSE_PROFILE_TOOL" --package-root "$COMPOSE_PACKAGE_SET_ROOT" packages "$COMPOSE_PROFILE_PATH" --scope "$scope")"
+  local packages=()
+  mapfile -t packages <<< "$package_output"
+  (( ${#packages[@]} > 0 )) || { echo "Resolved $scope package set is empty." >&2; return 1; }
+  if [[ "$role" == "target" ]]; then
+    printf 'grub-pc grub-pc/install_devices_empty boolean true\n' | chroot "$rootfs" debconf-set-selections
+  fi
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
+  # Greia intentionally pre-seeds appliance conffiles in the overlay. dpkg's
+  # conffile prompt is independent of debconf, so make product ownership explicit.
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
+}
+
+# Role-selected overlay. Repository checkout ownership is never
+# target-filesystem authority: static appliance overlay files are installed
+# as root regardless of the UID/GID of the developer or CI checkout.
+compose_apply_overlay() {
+  local rootfs="$1"
+  local role="$2"
+  local overlay_dir
+  overlay_dir="$(compose_role_overlay_dir "$role" "${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}")"
+  rsync -a --chown=root:root "$overlay_dir/" "$rootfs/"
+  if [[ "$role" == "target" ]]; then
+    [[ "$(stat -c '%u:%g' "$rootfs")" == "0:0" ]] || {
+      echo "Greia overlay changed target root ownership away from root:root." >&2
+      return 1
+    }
+  else
+    [[ "$(stat -c '%u:%g' "$rootfs")" == "0:0" ]] || {
+      echo "Greia installer overlay changed live root ownership away from root:root." >&2
+      return 1
+    }
+  fi
+}
+
+compose_write_build_info() {
+  local rootfs="$1"
+  local role="$2"
+  local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  local boot_adapter
+  if [[ "$role" == "target" ]]; then
+    boot_adapter="$INSTALLED_BOOT_ADAPTER"
+  else
+    boot_adapter="$INSTALLER_BOOT_ADAPTER"
+  fi
+  local project_version
+  project_version="$(tr -d '\r\n' < "$project_root/VERSION")"
+  [[ -n "$project_version" ]] || { echo "VERSION is empty." >&2; return 1; }
+  PROJECT_VERSION="$project_version"
+  install -d -m 0755 "$rootfs/etc/greia-os"
+  cat > "$rootfs/etc/greia-os/build-info" <<BUILDINFO
+GREIA_OS_VERSION=$project_version
+PIP_RUNTIME_API=0.1
+PIP_BUILD_PHASE=$(compose_role_build_phase "$role")
+PIP_BUILD_PROFILE=$PROFILE_ID
+PIP_PLATFORM_FAMILY=$PLATFORM_FAMILY
+PIP_COMPATIBILITY_CLASS=$COMPATIBILITY_CLASS
+PIP_RUNTIME_FAMILIES=$RUNTIME_FAMILIES
+PIP_DISPLAY_ADAPTER=$DISPLAY_ADAPTER
+PIP_BOOT_ADAPTER=$boot_adapter
+PIP_BOOT_COVER_BACKEND=$BOOT_COVER_BACKEND
+BUILDINFO
+  local declared_manifest="${COMPOSE_DECLARED_MANIFEST:-}"
+  if [[ -n "$declared_manifest" && -r "$declared_manifest" ]]; then
+    install -m 0644 "$declared_manifest" "$rootfs/etc/greia-os/image-profile.json"
+  else
+    python3 "$COMPOSE_PROFILE_TOOL" manifest "$COMPOSE_PROFILE_PATH" --scope "$(compose_role_scope "$role")" > "$rootfs/etc/greia-os/image-profile.json"
+  fi
+}
+
+compose_write_sources_hostname_hosts() {
+  local rootfs="$1"
+  local role="$2"
+  local hostname_value="$HOSTNAME"
+  if [[ "$role" == "live-installer" ]]; then
+    hostname_value="greia-installer"
+  fi
+  cat > "$rootfs/etc/apt/sources.list" <<SOURCES
+deb $MIRROR $SUITE main non-free-firmware
+deb $MIRROR $SUITE-updates main non-free-firmware
+deb $SECURITY_MIRROR $SUITE-security main non-free-firmware
+SOURCES
+  printf '%s\n' "$hostname_value" > "$rootfs/etc/hostname"
+  if [[ "$role" == "target" ]]; then
+    cat > "$rootfs/etc/hosts" <<HOSTS
+127.0.0.1 localhost
+127.0.1.1 $hostname_value
+::1 localhost ip6-localhost ip6-loopback
+HOSTS
+  else
+    cat > "$rootfs/etc/hosts" <<'HOSTS'
+127.0.0.1 localhost
+127.0.1.1 greia-installer
+::1 localhost ip6-localhost ip6-loopback
+HOSTS
+  fi
+}
+
+# Appliance users have no passwords. pipprofiles owns the bounded profile
+# registry/tree shared by the launcher and typed parent profile controls;
+# pipsettings owns only bounded input/display preference state.
+# Target role only; the live-installer root carries no appliance accounts.
+compose_create_users_groups() {
+  local rootfs="$1"
+  chroot "$rootfs" groupadd --system pipsettings
+  chroot "$rootfs" groupadd --system pipprofiles
+  chroot "$rootfs" useradd --system --create-home --home-dir /var/lib/greia-kid \
+    --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles,audio greiakid
+  chroot "$rootfs" useradd --system --create-home --home-dir /var/lib/greia-os \
+    --shell /usr/sbin/nologin --user-group --groups pipsettings,pipprofiles greiapanel
+  chroot "$rootfs" useradd --create-home --home-dir /var/lib/greia-admin \
+    --shell /bin/bash --groups sudo greiaadmin
+  chroot "$rootfs" passwd --lock greiaadmin
+  # The managed greia account is the owner-approved development/admin SSH and
+  # Greia Parents identity. Base images keep it locked and SSH disabled; explicit
+  # developer provisioning sets the greia/greia login on dev images only.
+  chroot "$rootfs" useradd --create-home --home-dir /var/lib/greia \
+    --shell /bin/bash --groups sudo greia
+  chroot "$rootfs" passwd --lock greia
+}
+
+# Greia content installation (role-selected). Target installs the curated
+# built-in Activity tree + runtime + assets + deterministic index; the
+# live-installer root installs the installer runtime subset.
+compose_install_greia_content() {
+  local rootfs="$1"
+  local role="$2"
+  local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  if [[ "$role" == "target" ]]; then
+    compose_install_target_content "$rootfs" "$project_root"
+  else
+    compose_install_live_content "$rootfs" "$project_root"
+  fi
+}
+
+compose_install_target_content() {
+  local rootfs="$1"
+  local project_root="$2"
+  # 2A built-in trust boundary: the image build owns built-in Activity hygiene
+  # and validation. Fail closed here — curated host/editor noise or a registry
+  # validation error aborts the build — so installed content is already
+  # sanitized and validated and normal boot never re-sanitizes the built-in
+  # root. __pycache__ stays excluded by the rsync below (not a violation).
+  PYTHONPATH="$project_root/src" python3 - "$project_root" <<'GREIA_BUILTIN_GATE_EOF'
+import sys
+from pathlib import Path
+
+project = Path(sys.argv[1])
+sys.path.insert(0, str(project / "src"))
+
+from greia_platform.activities import (
+    ActivityRegistry,
+    ActivityValidationError,
+    RuntimeCatalogue,
+)
+from greia_platform.activity_tree_cleanup import _is_junk_name
+from greia_platform.trust import ActivitySource, PackageTrust
+
+source_root = project / "activities"
+junk_hits = []
+for path in sorted(source_root.rglob("*")):
+    name = path.name
+    if name == "__pycache__" or "__pycache__" in path.parts:
+        continue
+    if _is_junk_name(name):
+        junk_hits.append(str(path.relative_to(project)))
+if junk_hits:
+    print("Built-in Activity tree carries curated host/editor noise:", file=sys.stderr)
+    for hit in junk_hits:
+        print(f"  {hit}", file=sys.stderr)
+    sys.exit(1)
+
+runtime = RuntimeCatalogue.load(project / "runtime" / "child-runtime.toml")
+source = ActivitySource(source_root, PackageTrust.BUILT_IN, "greia-system")
+try:
+    registry = ActivityRegistry((source,), runtime)
+    registry.discover_registrations()
+except ActivityValidationError as exc:
+    print(f"Built-in Activity validation failed: {exc}", file=sys.stderr)
+    sys.exit(1)
+GREIA_BUILTIN_GATE_EOF
+
+  install -d -m 0755 "$rootfs/opt/greia-os"
+  rsync -a --delete --exclude '__pycache__' \
+    "$project_root/src" "$project_root/activities" "$project_root/runtime" \
+    "$rootfs/opt/greia-os/"
+  install -d -m 0755 "$rootfs/opt/greia-os/assets"
+  rsync -a --delete \
+    --exclude 'source/' \
+    --exclude '*contact_sheet*' \
+    "$project_root/assets/" "$rootfs/opt/greia-os/assets/"
+
+  install -d -m 0755 "$rootfs/usr/lib/python3/dist-packages"
+  printf '%s\n' '/opt/greia-os/src' > "$rootfs/usr/lib/python3/dist-packages/pip_os.pth"
+  chown -R root:root "$rootfs/opt/greia-os"
+  chmod -R a-w "$rootfs/opt/greia-os"
+
+  # T33 built-in index: ship the deterministic built-in Activity index from the
+  # same build transaction as the built-in Activity content installed above.
+  # The generator (tools/build_activity_index.py) re-validates through the
+  # authoritative ActivityRegistry and serializes via the accepted
+  # activity_index model; it reads the same "$PROJECT_ROOT/activities" source
+  # root that was just installed to "$ROOTFS/opt/greia-os/activities", so index
+  # and content always resolve from one source transaction. Any generation
+  # failure aborts the build with no half-installed index. Developer images
+  # delegate to this script and installer images build their target payload
+  # through it, so both paths inherit this transaction unchanged; the live
+  # installer root carries no Activity content and needs no index.
+  local index_staging
+  index_staging="$(mktemp "${TMPDIR:-/tmp}/activity-index.XXXXXX")"
+  local image_index="$rootfs/usr/share/greia/activity-index-v1.json"
+  if ! PYTHONPATH="$project_root/src" python3 "$project_root/tools/build_activity_index.py" \
+    --activities "$project_root/activities" \
+    --runtime "$project_root/runtime/child-runtime.toml" \
+    --output "$index_staging"; then
+    echo "Built-in Activity index generation failed; refusing image." >&2
+    rm -f "$index_staging" "$index_staging.tmp" "$image_index"
+    return 1
+  fi
+  install -D -m 0644 "$index_staging" "$image_index"
+  rm -f "$index_staging" "$index_staging.tmp"
+}
+
+compose_install_live_content() {
+  local rootfs="$1"
+  local project_root="$2"
+  install -d -m 0755 "$rootfs/opt/greia-os"
+  rsync -a --delete --exclude '__pycache__' "$project_root/src" "$project_root/runtime" "$rootfs/opt/greia-os/"
+  install -d -m 0755 "$rootfs/opt/greia-os/assets/icons/core/v1/256"
+  rsync -a "$project_root/assets/icons/core/v1/256/" "$rootfs/opt/greia-os/assets/icons/core/v1/256/"
+  install -d -m 0755 "$rootfs/opt/greia-os/assets/fonts"
+  rsync -a "$project_root/assets/fonts/" "$rootfs/opt/greia-os/assets/fonts/"
+  install -d -m 0755 "$rootfs/usr/lib/python3/dist-packages"
+  printf '%s\n' /opt/greia-os/src > "$rootfs/usr/lib/python3/dist-packages/pip_os.pth"
+  chown -R root:root "$rootfs/opt/greia-os"
+  chmod -R a-w "$rootfs/opt/greia-os"
+}
+
+# Root filesystem table. The filesystem UUID is disk identity owned by the
+# caller (partition/mkfs assembly); pass it via GREIA_ROOT_UUID.
+compose_write_fstab() {
+  local rootfs="$1"
+  local root_uuid="${GREIA_ROOT_UUID:-}"
+  [[ -n "$root_uuid" ]] || { echo "compose_write_fstab: GREIA_ROOT_UUID is not set." >&2; return 1; }
+  # Root filesystem and volatile working storage.
+  cat > "$rootfs/etc/fstab" <<FSTAB
+UUID=$root_uuid / ext4 defaults,noatime,errors=remount-ro 0 1
+tmpfs /tmp tmpfs nosuid,nodev,noexec,mode=1777,size=64M 0 0
+tmpfs /var/tmp tmpfs nosuid,nodev,noexec,mode=1777,size=32M 0 0
+FSTAB
+}
+
+# Build the Greia-owned early framebuffer boot cover for the TARGET
+# architecture inside the composed root. The binary is compiled with the target
+# klibc toolchain so the build host architecture is never authoritative. The
+# build-only libklibc-dev package is removed again before package-manifest and
+# footprint capture so it cannot leak into the final image.
+compose_build_early_framebuffer() {
+  local rootfs="$1"
+  local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  compose_apt_options
+  local rootfs_arg="$rootfs"
+  build_early_framebuffer() {
+    local rootfs="$1"
+    # klcc needs the matching native compiler (e.g. i686-linux-gnu-gcc) which is
+    # provided by the gcc package; install it together with libklibc-dev so the
+    # target toolchain can actually compile. Both are removed again afterwards.
+    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+      apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
+      install -y --no-install-recommends libklibc-dev gcc >/dev/null
+    install -d -m 0755 "$rootfs/usr/lib/greia-boot"
+    # Stage the renderer source into the target root so the target toolchain
+    # compiles it with target headers. klcc is a gcc wrapper that links against
+    # klibc; its path differs across Debian/Ubuntu, so locate it inside the root.
+    install -d -m 0755 "$rootfs/usr/src/greia-boot"
+    cp "$project_root/build/early-boot/greia-fb-splash.c" \
+      "$rootfs/usr/src/greia-boot/greia-fb-splash.c"
+    local klcc_path
+    klcc_path="$(chroot "$rootfs" /bin/sh -c 'command -v klcc')" || {
+      echo "klcc not found in target root after libklibc-dev install." >&2
+      return 1
+    }
+    chroot "$rootfs" "$klcc_path" -static -Os -s \
+      -o /usr/lib/greia-boot/greia-fb-splash \
+      /usr/src/greia-boot/greia-fb-splash.c
+    rm -rf "$rootfs/usr/src/greia-boot"
+    chmod 0755 "$rootfs/usr/lib/greia-boot/greia-fb-splash"
+    # Verify the produced binary matches the target architecture before it can
+    # ever reach an initramfs. The target is a chroot; readelf must run outside.
+    local elf_machine
+    elf_machine="$(readelf -h "$rootfs/usr/lib/greia-boot/greia-fb-splash" 2>/dev/null \
+      | awk '/Machine:/{print $2, $3}')"
+    case "$ARCH" in
+      i386)
+        [ "$elf_machine" = "Intel 80386" ] || {
+          echo "Early framebuffer helper architecture ($elf_machine) does not match i386 target." >&2
+          return 1
+        }
+        ;;
+      amd64)
+        [ "$elf_machine" = "Advanced Micro" ] || [ "$elf_machine" = "AMD x86-64" ] || {
+          echo "Early framebuffer helper architecture ($elf_machine) does not match amd64 target." >&2
+          return 1
+        }
+        ;;
+    esac
+    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+      apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge libklibc-dev gcc >/dev/null
+    chroot "$rootfs" apt-get -y autoremove >/dev/null 2>&1 || true
+  }
+  build_early_framebuffer "$rootfs_arg"
+}
+
+# System service composition (declarative per-role enable/mask lists).
+compose_configure_systemd() {
+  local rootfs="$1"
+  local role="$2"
+  if [[ "$role" == "target" ]]; then
+    systemctl --root="$rootfs" enable \
+      greia-first-boot.service greia-boot-observer.service greia-launcher.service greia-parent.service \
+      greia-boot-health.socket greia-system-update.socket \
+      systemd-networkd.service systemd-resolved.service iwd.service avahi-daemon.service
+    systemctl --root="$rootfs" mask \
+      getty@.service autovt@.service console-getty.service debug-shell.service \
+      emergency.service rescue.service console-shell.service kbrequest.target \
+      getty@tty1.service getty@tty2.service getty@tty3.service \
+      getty@tty4.service getty@tty5.service getty@tty6.service
+    systemctl --root="$rootfs" set-default graphical.target
+  else
+    systemctl --root="$rootfs" enable greia-installer.service
+    systemctl --root="$rootfs" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service
+    systemctl --root="$rootfs" set-default graphical.target
+  fi
+}
+
+# The base builder fails closed: SSH disabled, no password minted, the
+# managed greia account locked. For an explicit developer-remote profile the
+# owner policy requires the greia/greia development login to be reachable after
+# install, so the builder provisions it here (root stays denied).
+compose_configure_ssh_base() {
+  local rootfs="$1"
+  systemctl --root="$rootfs" disable ssh.service 2>/dev/null || true
+  install -d -m 0755 "$rootfs/etc/ssh/sshd_config.d"
+  cat > "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+AuthenticationMethods publickey
+PermitRootLogin no
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+SSH
+}
+
+# Developer provisioning (role-selected floors; root stays denied in both).
+compose_provision_developer_ssh() {
+  local rootfs="$1"
+  local role="$2"
+  if [[ "$role" == "target" ]]; then
+    compose_provision_developer_ssh_target "$rootfs"
+  else
+    compose_provision_developer_ssh_live "$rootfs"
+  fi
+}
+
+compose_provision_developer_ssh_target() {
+  local rootfs="$1"
+  # The greia account already exists in the target composition (created and
+  # locked). Set the owner-approved password first, then unlock (unlocking a
+  # locked and passwordless account is refused by passwd; after chpasswd it
+  # is allowed).
+  printf 'greia:greia\n' | chroot "$rootfs" /usr/sbin/chpasswd
+  chroot "$rootfs" /usr/bin/passwd -u greia
+  # Write BOTH sshd drop-ins consistently. sshd_config.d is included in glob
+  # order and the first value wins; the base builder writes 20-greia-parent.conf
+  # with PasswordAuthentication no / AuthenticationMethods publickey, which
+  # would otherwise defeat the developer floor. The dev floor must be coherent
+  # across every included file so the greia/greia password login works.
+  cat > "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf" <<'FLOOR'
+# Target development security floor (owner-approved greia/greia).
+# Enables the development/test SSH identity greia/greia; root stays denied.
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+PermitRootLogin no
+AuthenticationMethods publickey,password
+DenyUsers root
+AllowUsers greia
+FLOOR
+  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
+  cat > "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'DEVSSH'
+# Development target SSH policy (owner-approved greia/greia).
+PasswordAuthentication yes
+KbdInteractiveAuthentication yes
+PermitRootLogin no
+AuthenticationMethods publickey,password
+AllowUsers greia
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+DEVSSH
+  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf"
+  systemctl --root="$rootfs" enable ssh.service
+  # Developer marker: keeps the installed boot observable (console=tty1,
+  # panic=30) via grub.d/10_greia_appliance and identifies this image as a
+  # developer/test build.
+  install -d -m 0755 "$rootfs/etc/greia-os"
+  printf '%s\n' "profile=$PROFILE_ID" > "$rootfs/etc/greia-os/developer-remote"
+  chmod 0644 "$rootfs/etc/greia-os/developer-remote"
+  # Bounded developer privilege: the SSH-reachable greia identity may run only
+  # greia-devctl as root without a password. Development images only; the base
+  # path writes no sudoers file. Validated below with visudo -cf semantics.
+  install -d -m 0755 "$rootfs/etc/sudoers.d"
+  cat > "$rootfs/etc/sudoers.d/greia-developer-remote" <<'SUDOERS'
+# Development-image only: privileged operations stay inside greia-devctl.
+greia ALL=(root) NOPASSWD: /usr/local/sbin/greia-devctl
+SUDOERS
+  chown root:root "$rootfs/etc/sudoers.d/greia-developer-remote"
+  chmod 0440 "$rootfs/etc/sudoers.d/greia-developer-remote"
+  chroot "$rootfs" /usr/sbin/visudo -cf /etc/sudoers.d/greia-developer-remote
+}
+
+compose_provision_developer_ssh_live() {
+  local rootfs="$1"
+  # Create the managed greia development account if absent.
+  if ! chroot "$rootfs" /usr/bin/id -u greia >/dev/null 2>&1; then
+    chroot "$rootfs" /usr/sbin/useradd --create-home --home-dir /var/lib/greia \
+      --shell /bin/bash --groups sudo greia
+  fi
+  printf 'greia:greia\n' | chroot "$rootfs" /usr/sbin/chpasswd
+  # Rewrite the shared security floor so the owner-approved greia/greia login
+  # works while root stays denied. This is the dev-image floor from the
+  # provisioning tools, applied at build time for developer profiles.
+  cat > "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf" <<'FLOOR'
+# Live-installer development security floor (owner-approved greia/greia).
+# Enables the development/test SSH identity greia/greia; root stays denied.
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+PermitRootLogin no
+AuthenticationMethods password
+DenyUsers root
+AllowUsers greia
+FLOOR
+  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
+  # Also make the later-sorted 20-greia-parent.conf consistent. sshd_config.d
+  # is included in glob order with first-value-wins; the base builder writes
+  # 20-greia-parent.conf with PasswordAuthentication no / publickey-only, which
+  # would otherwise defeat the developer floor.
+  cat > "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'DEVSSH'
+# Development live-installer SSH policy (owner-approved greia/greia).
+PasswordAuthentication yes
+KbdInteractiveAuthentication no
+PermitRootLogin no
+AuthenticationMethods password
+AllowUsers greia
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+DEVSSH
+  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf"
+  systemctl --root="$rootfs" enable ssh.service
+}
+
+compose_maybe_provision_developer_ssh() {
+  local rootfs="$1"
+  local role="$2"
+  local scope
+  scope="$(compose_role_scope "$role")"
+  local role_sets
+  role_sets="$(python3 "$COMPOSE_PROFILE_TOOL" --package-root "$COMPOSE_PACKAGE_SET_ROOT" package-sets "$COMPOSE_PROFILE_PATH" --scope "$scope" 2>/dev/null)"
+  if [[ "$role_sets" == *developer-remote* ]]; then
+    if [[ "$role" == "target" ]]; then
+      echo "Developer target profile: enabling greia/greia SSH (root denied)."
+    else
+      echo "Developer installer profile: enabling greia/greia SSH (root denied)."
+    fi
+    compose_provision_developer_ssh "$rootfs" "$role"
+  fi
+  COMPOSE_ROLE_SETS="$role_sets"
+}
+
+# POSTR1-P5 footprint composition reduction (build-hygiene only; no
+# Phase-0 product scope removed).
+compose_footprint_prune() {
+  local rootfs="$1"
+  compose_apt_options
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y purge --auto-remove binutils >/dev/null
+  chroot "$rootfs" apt-get -y autoremove >/dev/null 2>&1 || true
+  rm -f "$rootfs"/usr/lib/gcc/*/*/cc1
+  if [[ -d "$rootfs/usr/share/locale" ]]; then
+    find "$rootfs/usr/share/locale" -mindepth 1 -maxdepth 1 -type d ! -name 'en*' -exec rm -rf '{}' +
+  fi
+  if [[ -d "$rootfs/usr/share/man" ]]; then
+    find "$rootfs/usr/share/man" -mindepth 1 -exec rm -rf '{}' +
+  fi
+  if [[ -d "$rootfs/usr/share/info" ]]; then
+    find "$rootfs/usr/share/info" -mindepth 1 -exec rm -rf '{}' +
+  fi
+  if [[ -d "$rootfs/usr/share/doc" ]]; then
+    find "$rootfs/usr/share/doc" -mindepth 1 -maxdepth 1 -type d \
+      -exec find '{}' -maxdepth 1 -type f ! -name copyright -delete ';'
+  fi
+}
+
+# Record the exact package/kernel base actually resolved by APT. Profiles use
+# Debian suite names and meta-packages, so this manifest is the authoritative
+# identity of a produced image until snapshot-pinned builds are introduced.
+compose_write_metadata_manifests() {
+  local rootfs="$1"
+  local role="$2"
+  install -d -m 0755 "$rootfs/etc/greia-os"
+  chroot "$rootfs" dpkg-query -W -f='${Package}\t${Version}\t${Architecture}\t${Installed-Size}\n' \
+    | LC_ALL=C sort > "$rootfs/etc/greia-os/package-manifest.tsv"
+  {
+    echo "profile=$PROFILE_ID"
+    echo "certification_state=$CERTIFICATION_STATE"
+    echo "platform_family=$PLATFORM_FAMILY"
+    echo "compatibility_class=$COMPATIBILITY_CLASS"
+    echo "image_layout=$IMAGE_LAYOUT"
+    if [[ "$role" == "target" ]]; then
+      echo "installed_boot_adapter=$INSTALLED_BOOT_ADAPTER"
+    else
+      echo "installer_boot_adapter=$INSTALLER_BOOT_ADAPTER"
+    fi
+    echo "display_adapter=$DISPLAY_ADAPTER"
+    echo "enabled_runtime_families=$RUNTIME_FAMILIES"
+    echo "suite=$SUITE"
+    echo "architecture=$ARCH"
+    echo "kernel_meta_package=$KERNEL_PACKAGE"
+    echo "declared_support_end_date=$SUPPORT_END_DATE"
+    if [[ -n "${GREIA_ROOT_UUID:-}" ]]; then
+      echo "root_filesystem_uuid=$GREIA_ROOT_UUID"
+    fi
+    echo "debian_version=$(cat "$rootfs/etc/debian_version")"
+    echo "resolved_kernel_packages=$(chroot "$rootfs" dpkg-query -W -f='${Package}=${Version} ' 'linux-image-*' 2>/dev/null || true)"
+    echo "resolved_xorg_packages=$(chroot "$rootfs" dpkg-query -W -f='${Package}=${Version} ' 'xserver-xorg-*' 2>/dev/null || true)"
+  } > "$rootfs/etc/greia-os/base-system-manifest"
+  local support_status_exit=0
+  chroot "$rootfs" check-support-status --no-heading \
+    > "$rootfs/etc/greia-os/security-support-status.txt" 2>&1 || support_status_exit=$?
+  local security_support_state
+  if (( support_status_exit != 0 )); then
+    security_support_state="probe-failed"
+    echo "WARNING: Debian security-support probe failed with exit $support_status_exit; the image must not be released until reviewed." >&2
+  elif [[ -s "$rootfs/etc/greia-os/security-support-status.txt" ]]; then
+    security_support_state="alerts-present"
+    echo "WARNING: Debian reports packages with limited or ended security support; inspect security-support-status.txt before testing or release." >&2
+  else
+    security_support_state="no-alerts"
+  fi
+  {
+    echo "build_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    echo "mirror=$MIRROR"
+    echo "security_mirror=$SECURITY_MIRROR"
+    echo "security_support_state=$security_support_state"
+    echo "security_support_probe_exit=$support_status_exit"
+  } >> "$rootfs/etc/greia-os/base-system-manifest"
+  chmod 0644 "$rootfs/etc/greia-os/package-manifest.tsv" \
+    "$rootfs/etc/greia-os/base-system-manifest" \
+    "$rootfs/etc/greia-os/security-support-status.txt"
+  COMPOSE_SECURITY_SUPPORT_STATE="$security_support_state"
+  COMPOSE_SECURITY_SUPPORT_EXIT="$support_status_exit"
+}
+
+# Avoid package/cache growth and persistent logs on the 7 GB reference disk.
+# autoclean keeps the persistent host .deb cache (bind-mounted above) for the
+# next build; only APT lists are dropped from the image.
+compose_footprint_hygiene() {
+  local rootfs="$1"
+  chroot "$rootfs" apt-get autoclean
+  rm -rf "$rootfs/var/lib/apt/lists/"*
+  find "$rootfs" -xdev -type d -name __pycache__ -prune -exec rm -rf '{}' +
+  find "$rootfs/var/log" -type f -exec truncate -s 0 '{}' +
+}
+
+# Main entry point: compose a role root into a caller-provided directory.
+# Partitioning, mkfs, mounting, installed-boot assembly and media assembly
+# remain the caller's responsibility.
+compose_root() {
+  local profile_input=""
+  local role=""
+  local rootfs=""
+  local project_root="$_COMPOSE_PROJECT_ROOT_DEFAULT"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --profile) profile_input="${2:-}"; shift 2 ;;
+      --role) role="${2:-}"; shift 2 ;;
+      --root) rootfs="${2:-}"; shift 2 ;;
+      --project-root) project_root="${2:-}"; shift 2 ;;
+      -h|--help) compose_usage; return 0 ;;
+      *) echo "Unknown compose_root argument: $1" >&2; compose_usage >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$profile_input" && -n "$role" && -n "$rootfs" ]] || {
+    echo "compose_root requires --profile, --role and --root." >&2
+    compose_usage >&2
+    return 2
+  }
+  compose_assert_role "$role" || return 1
+  [[ "$EUID" -eq 0 ]] || { echo "Run as root." >&2; return 1; }
+  compose_resolve_profile "$profile_input" "$role" "$project_root" || return 1
+  compose_require_composition_commands || return 1
+  compose_check_host_arch || return 1
+  mkdir -p "$rootfs"
+  # The caller provides the root path; when it is not yet a mount, MOUNTS
+  # starts empty and this engine appends only its own composition mounts.
+  if [[ -z "${MOUNTS+x}" ]]; then
+    MOUNTS=()
+  fi
+  compose_mount_apt_cache "$rootfs" || return 1
+  compose_debootstrap "$rootfs" || return 1
+  compose_apply_overlay "$rootfs" "$role" || return 1
+  compose_write_build_info "$rootfs" "$role" || return 1
+  compose_write_sources_hostname_hosts "$rootfs" "$role" || return 1
+  compose_mount_virtual "$rootfs" || return 1
+  compose_install_packages "$rootfs" "$role" || return 1
+  if compose_role_manages_appliance_users "$role"; then
+    compose_create_users_groups "$rootfs" || return 1
+  fi
+  compose_install_greia_content "$rootfs" "$role" || return 1
+  if [[ -n "${GREIA_ROOT_UUID:-}" ]]; then
+    compose_write_fstab "$rootfs" || return 1
+  fi
+  compose_build_early_framebuffer "$rootfs" || return 1
+  compose_configure_systemd "$rootfs" "$role" || return 1
+  compose_configure_ssh_base "$rootfs" || return 1
+  compose_maybe_provision_developer_ssh "$rootfs" "$role" || return 1
+  compose_footprint_prune "$rootfs" || return 1
+  compose_write_metadata_manifests "$rootfs" "$role" || return 1
+  compose_footprint_hygiene "$rootfs" || return 1
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  compose_root "$@"
+fi

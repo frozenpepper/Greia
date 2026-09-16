@@ -30,6 +30,7 @@ import hashlib as _hashlib
 import shutil as _shutil
 import tempfile
 import unittest
+import zipfile as _zipfile
 from pathlib import Path
 from unittest import mock as _mock
 
@@ -74,31 +75,15 @@ def _payload_bytes(size: int, tag: bytes) -> bytes:
     return bytes(fixed)
 
 
-def _mint_keys(work: Path, signer: str = "greia-recovery-test") -> tuple[Path, Path, Path]:
-    from greia_platform.system_updates import generate_ed25519_keypair
-
-    private_key = work / "private.pem"
-    public_key = work / "public.pem"
-    generate_ed25519_keypair(private_key, public_key)
-    key_dir = work / "trusted-keys"
-    key_dir.mkdir(parents=True, exist_ok=True)
-    (key_dir / f"{signer}.pem").write_bytes(public_key.read_bytes())
-    return private_key, public_key, key_dir
-
-
-def _base_inputs(work: Path, *, signer: str = "greia-recovery-test") -> dict[str, object]:
+def _base_inputs(work: Path) -> dict[str, object]:
     Path(work).mkdir(parents=True, exist_ok=True)
     payload = Path(work) / "base-payload.img"
     payload.write_bytes(_payload_bytes(64 * 1024, b"recovery-base:"))
     hw = work / "hw.tar.zst"
     hw.write_bytes(b"\x28\xb5\x2f\xfd" + b"recovery-hw" * 64)
-    private_key, _, key_dir = _mint_keys(work, signer=signer)
     return {
         "payload": payload,
         "hw": hw,
-        "private_key": private_key,
-        "key_dir": key_dir,
-        "signer": signer,
     }
 
 
@@ -169,12 +154,9 @@ def _build_candidate(work: Path, **overrides) -> tuple[dict[str, object], list[s
         "output_path": work / "unhealthy.greiaupdate",
         "work_dir": work / "candidate-work",
         "release_id": "greia-0.21.1",
-        "release_sequence": 22,
         "platform_family": "legacy-x86",
         "architecture": "i386",
         "profile": "legacy-x86-i686",
-        "signer": inputs["signer"],
-        "private_key_path": inputs["private_key"],
         "attach_fn": attach,
         "mount_fn": mount,
         "unmount_fn": unmount,
@@ -205,7 +187,7 @@ def _good_observations() -> dict[str, dict[str, object]]:
         "reverse-update-accepted": {
             "journal_state": "accepted",
             "default_slot": "A",
-            "accepted_sequence": 23,
+            "accepted_release_id": "greia-0.22.0",
             "committed_slot": "A",
             "last_booted": "A",
         },
@@ -251,9 +233,9 @@ def _run_leg(**overrides) -> dict[str, object]:
     params: dict[str, object] = {
         "accepted_slot": "B",
         "candidate_slot": "A",
-        "accepted_sequence": 21,
-        "candidate_sequence": 22,
-        "reverse_sequence": 23,
+        "accepted_release_id": "greia-0.21.0",
+        "candidate_release_id": "greia-0.21.1",
+        "reverse_release_id": "greia-0.22.0",
         "boot_fn": seen.append,
         "observe_fn": lambda stage: dict(observations[stage]),
         "d31_fn": lambda: {
@@ -360,14 +342,28 @@ class BuildUnhealthyBundleTests(unittest.TestCase):
             self.assertNotEqual(
                 result["payload_pre_sha256"], result["payload_post_sha256"]
             )
-            self.assertEqual(result["release_sequence"], 22)
-            self.assertEqual(result["signer"], "greia-recovery-test")
-            # Bundle manifest binds the mutated payload bytes.
-            from greia_platform.system_updates import inspect_update_bundle
+            self.assertEqual(result["release_id"], "greia-0.21.1")
+            # Bundle manifest binds the compressed mutated payload bytes:
+            # decompressing the archived member yields the staged raw image.
+            import zstandard
+
+            from greia_platform.system_updates import (
+                PAYLOAD_NAME,
+                inspect_update_bundle,
+            )
 
             inspected = inspect_update_bundle(Path(str(result["bundle"])))
+            with _zipfile.ZipFile(
+                Path(str(result["bundle"])), "r"
+            ) as archive:
+                compressed = archive.read(PAYLOAD_NAME)
             self.assertEqual(
-                inspected.manifest.payload_sha256, result["payload_post_sha256"]
+                inspected.manifest.payload_sha256,
+                _hashlib.sha256(compressed).hexdigest(),
+            )
+            self.assertEqual(
+                zstandard.ZstdDecompressor().decompress(compressed),
+                (work / "candidate-work" / "unhealthy-candidate-payload.img").read_bytes(),
             )
 
     def test_base_payload_never_mutated(self) -> None:
@@ -383,12 +379,9 @@ class BuildUnhealthyBundleTests(unittest.TestCase):
                 output_path=work / "unhealthy.greiaupdate",
                 work_dir=work / "candidate-work",
                 release_id="greia-0.21.1",
-                release_sequence=22,
                 platform_family="legacy-x86",
                 architecture="i386",
                 profile="legacy-x86-i686",
-                signer=inputs["signer"],  # type: ignore[arg-type]
-                private_key_path=inputs["private_key"],  # type: ignore[arg-type]
                 attach_fn=attach,
                 mount_fn=mount,
                 unmount_fn=unmount,
@@ -410,12 +403,9 @@ class BuildUnhealthyBundleTests(unittest.TestCase):
                     output_path=work / "unhealthy.greiaupdate",
                     work_dir=work / "candidate-work",
                     release_id="greia-0.21.1",
-                    release_sequence=22,
                     platform_family="legacy-x86",
                     architecture="i386",
                     profile="legacy-x86-i686",
-                    signer=inputs["signer"],  # type: ignore[arg-type]
-                    private_key_path=inputs["private_key"],  # type: ignore[arg-type]
                 )
             self.assertIn("BLOCKED", str(caught.exception))
 
@@ -434,12 +424,9 @@ class BuildUnhealthyBundleTests(unittest.TestCase):
                     output_path=work / "unhealthy.greiaupdate",
                     work_dir=work / "candidate-work",
                     release_id="greia-0.21.1",
-                    release_sequence=22,
                     platform_family="legacy-x86",
                     architecture="i386",
                     profile="legacy-x86-i686",
-                    signer=inputs["signer"],  # type: ignore[arg-type]
-                    private_key_path=inputs["private_key"],  # type: ignore[arg-type]
                 )
             self.assertNotIn("BLOCKED", str(caught.exception))
             self.assertIn("MBR", str(caught.exception))
@@ -461,12 +448,9 @@ class BuildUnhealthyBundleTests(unittest.TestCase):
                     output_path=work / "unhealthy.greiaupdate",
                     work_dir=work / "candidate-work",
                     release_id="greia-0.21.1",
-                    release_sequence=22,
                     platform_family="legacy-x86",
                     architecture="i386",
                     profile="legacy-x86-i686",
-                    signer=inputs["signer"],  # type: ignore[arg-type]
-                    private_key_path=inputs["private_key"],  # type: ignore[arg-type]
                     attach_fn=attach,
                     mount_fn=mount,
                     unmount_fn=unmount,
@@ -481,49 +465,56 @@ class VerifyBundleTests(unittest.TestCase):
             work = Path(tmp)
             result, _ = _build_candidate(work)
             bundle = Path(str(result["bundle"]))
-            keys = work / "trusted-keys"
             good = {
-                "trusted_key_dir": keys,
-                "accepted_sequence": 21,
                 "platform_family": "legacy-x86",
                 "architecture": "i386",
                 "profile": "legacy-x86-i686",
                 "expected_hardware_sha256": str(result["hardware_support_sha256"]),
             }
-            # GREEN: the real trusted dir binds the manifest.
+            # GREEN: v3 inspection + compatibility bind the manifest.
             bound = verify_unhealthy_candidate_bundle(bundle, **good)  # type: ignore[arg-type]
-            self.assertTrue(bound["signature_verified"])
-            self.assertEqual(bound["sequence_decision"], "update")
-            self.assertEqual(bound["release_sequence"], 22)
-            # Break: a foreign trusted-key dir (same signer name, different
-            # keypair) -> RED.
-            foreign = _base_inputs(work / "keys-probe")["key_dir"]
-            broken = dict(good)
-            broken["trusted_key_dir"] = foreign
-            with self.assertRaises(LifecycleHarnessError) as caught:
-                verify_unhealthy_candidate_bundle(bundle, **broken)  # type: ignore[arg-type]
-            self.assertIn("signature", str(caught.exception).lower())
-            # Restore: the real trusted dir -> GREEN again.
-            restored = verify_unhealthy_candidate_bundle(bundle, **good)  # type: ignore[arg-type]
-            self.assertTrue(restored["signature_verified"])
+            self.assertEqual(bound["compatibility"], "compatible")
+            self.assertEqual(bound["release_id"], "greia-0.21.1")
+            # Break: a tampered copy (payload digest mismatch) -> RED.
+            tampered = work / "tampered.greiaupdate"
+            with _zipfile.ZipFile(bundle, "r") as src:
+                from greia_platform.system_updates import MANIFEST_NAME, PAYLOAD_NAME
 
-    def test_verify_rejects_sequence_profile_hw(self) -> None:
+                manifest_raw = src.read(MANIFEST_NAME)
+                payload = bytearray(src.read(PAYLOAD_NAME))
+            payload[10] ^= 0xFF
+            with _zipfile.ZipFile(
+                tampered, "w", compression=_zipfile.ZIP_STORED
+            ) as dst:
+                info = _zipfile.ZipInfo(
+                    filename=MANIFEST_NAME, date_time=(1980, 1, 1, 0, 0, 0)
+                )
+                info.compress_type = _zipfile.ZIP_DEFLATED
+                dst.writestr(info, manifest_raw)
+                info2 = _zipfile.ZipInfo(
+                    filename=PAYLOAD_NAME, date_time=(1980, 1, 1, 0, 0, 0)
+                )
+                info2.compress_type = _zipfile.ZIP_STORED
+                dst.writestr(info2, bytes(payload))
+            with self.assertRaises(LifecycleHarnessError) as caught:
+                verify_unhealthy_candidate_bundle(tampered, **good)  # type: ignore[arg-type]
+            self.assertIn("inspection", str(caught.exception).lower())
+            # Restore: the intact bundle -> GREEN again.
+            restored = verify_unhealthy_candidate_bundle(bundle, **good)  # type: ignore[arg-type]
+            self.assertEqual(restored["compatibility"], "compatible")
+
+    def test_verify_rejects_compat_profile_hw(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             work = Path(tmp)
             result, _ = _build_candidate(work)
             bundle = Path(str(result["bundle"]))
-            keys = work / "trusted-keys"
             good = {
-                "trusted_key_dir": keys,
-                "accepted_sequence": 21,
                 "platform_family": "legacy-x86",
                 "architecture": "i386",
                 "profile": "legacy-x86-i686",
                 "expected_hardware_sha256": str(result["hardware_support_sha256"]),
             }
             for field, bad in (
-                ("accepted_sequence", 22),
-                ("accepted_sequence", 99),
                 ("platform_family", "other-family"),
                 ("architecture", "amd64"),
                 ("profile", "other-profile"),
@@ -536,21 +527,53 @@ class VerifyBundleTests(unittest.TestCase):
                 ):
                     verify_unhealthy_candidate_bundle(bundle, **params)  # type: ignore[arg-type]
 
-    def test_verify_absent_key_dir_is_blocked(self) -> None:
+    def test_verify_board_mismatch_is_red(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            inputs = _base_inputs(work)
+            calls: list[str] = []
+            attach, mount, unmount, detach = _recording_mount_fixture(calls)
+            build_unhealthy_candidate_bundle(
+                base_payload=inputs["payload"],  # type: ignore[arg-type]
+                base_hardware_support=inputs["hw"],  # type: ignore[arg-type]
+                output_path=work / "boarded.greiaupdate",
+                work_dir=work / "boarded-work",
+                release_id="greia-0.21.1",
+                platform_family="legacy-x86",
+                architecture="i386",
+                profile="legacy-x86-i686",
+                board="pi-500",
+                attach_fn=attach,
+                mount_fn=mount,
+                unmount_fn=unmount,
+                detach_fn=detach,
+            )
+            with self.assertRaises(LifecycleHarnessError) as caught:
+                verify_unhealthy_candidate_bundle(
+                    work / "boarded.greiaupdate",
+                    platform_family="legacy-x86",
+                    architecture="i386",
+                    profile="legacy-x86-i686",
+                    expected_hardware_sha256=_hashlib.sha256(
+                        inputs["hw"].read_bytes()  # type: ignore[union-attr]
+                    ).hexdigest(),
+                    board="pi-400",
+                )
+            self.assertIn("compatibility", str(caught.exception).lower())
+
+    def test_verify_missing_bundle_is_red(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             work = Path(tmp)
             result, _ = _build_candidate(work)
             with self.assertRaises(LifecycleHarnessError) as caught:
                 verify_unhealthy_candidate_bundle(
-                    Path(str(result["bundle"])),
-                    trusted_key_dir=work / "absent-keys",
-                    accepted_sequence=21,
+                    work / "absent.greiaupdate",
                     platform_family="legacy-x86",
                     architecture="i386",
                     profile="legacy-x86-i686",
                     expected_hardware_sha256=str(result["hardware_support_sha256"]),
                 )
-            self.assertIn("BLOCKED", str(caught.exception))
+            self.assertIn("inspection", str(caught.exception).lower())
 
 
 class D31SurvivalFoldTests(unittest.TestCase):
@@ -631,10 +654,9 @@ class StageInspectorTests(unittest.TestCase):
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir,
             backend=backend,
-            candidate_artifacts=_artifact_set("A", "greia-0.22.0", 23),
-            accepted_artifacts=_artifact_set("B", "greia-0.21.0", 21),
+            candidate_artifacts=_artifact_set("A", "greia-0.22.0"),
+            accepted_artifacts=_artifact_set("B", "greia-0.21.0"),
             release_id="greia-0.22.0",
-            release_sequence=23,
         )
         return backend, journal_dir, coordinator
 
@@ -773,7 +795,7 @@ class LegDriverTests(unittest.TestCase):
             observations["reverse-update-accepted"],
             journal_state="failed",
             default_slot="B",
-            accepted_sequence=21,
+            accepted_release_id="greia-0.21.0",
         )
         with self.assertRaises(LifecycleHarnessError) as caught:
             _run_leg(observe_fn=lambda stage: dict(observations[stage]))
@@ -797,11 +819,11 @@ class LegDriverTests(unittest.TestCase):
         result = _run_leg()
         self.assertTrue(result["d31_byte_identical"])
 
-    def test_leg_requires_strict_sequence_advance(self) -> None:
+    def test_leg_requires_distinct_release_advance(self) -> None:
         with self.assertRaises(LifecycleHarnessError):
-            _run_leg(candidate_sequence=21, reverse_sequence=23)
+            _run_leg(candidate_release_id="greia-0.21.0", reverse_release_id="greia-0.22.0")
         with self.assertRaises(LifecycleHarnessError):
-            _run_leg(candidate_sequence=23, reverse_sequence=22)
+            _run_leg(candidate_release_id="greia-0.22.0", reverse_release_id="greia-0.22.0")
 
     def test_report_rejects_wrong_default(self) -> None:
         with self.assertRaises(LifecycleHarnessError):

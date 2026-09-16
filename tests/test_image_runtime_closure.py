@@ -30,7 +30,7 @@ class ImageRuntimeClosureTests(unittest.TestCase):
         self.assertIn("PAMName=login", service)
         self.assertIn("User=greiakid", service)
 
-        builder = (ROOT / "build/build-image.sh").read_text(encoding="utf-8")
+        builder = (ROOT / "build/lib/compose.sh").read_text(encoding="utf-8")
         useradd = next(
             line
             for line in builder.splitlines()

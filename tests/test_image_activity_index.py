@@ -1,6 +1,7 @@
 """Image-build integration of the built-in Activity index (T33).
 
-Covers the ``build/build-image.sh`` transaction that invokes the T32
+Covers the ``build/lib/compose.sh`` transaction (consumed for role `target`
+by ``build/build-image.sh``) that invokes the T32
 generator (``tools/build_activity_index.py``) and installs the final index
 under the image-owned path ``usr/share/greia/activity-index-v1.json`` from
 the same build transaction as the built-in Activity content.
@@ -29,7 +30,10 @@ from greia_platform.activities import package_digest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TOOL = PROJECT_ROOT / "tools" / "build_activity_index.py"
 RUNTIME_PATH = PROJECT_ROOT / "runtime" / "child-runtime.toml"
-BUILD_SCRIPT = PROJECT_ROOT / "build" / "build-image.sh"
+# T01: the index transaction lives in the shared composition engine; the thin
+# target consumer invokes it through compose_root --role target.
+BUILD_SCRIPT = PROJECT_ROOT / "build" / "lib" / "compose.sh"
+THIN_CONSUMER = PROJECT_ROOT / "build" / "build-image.sh"
 IMAGE_INDEX_RELPATH = Path("usr/share/greia/activity-index-v1.json")
 BUILT_IN_SOURCE_ID = "greia-system"
 
@@ -109,18 +113,24 @@ class ImageActivityIndexTests(unittest.TestCase):
         self.assertIn("tools/build_activity_index.py", text)
         # Same source transaction: the generator reads the exact source root
         # whose content the build installs, with the child runtime catalogue.
-        self.assertIn('"$PROJECT_ROOT/activities"', text)
+        self.assertIn('"$project_root/activities"', text)
         self.assertIn("child-runtime.toml", text)
         # The final index ships under the image-owned path.
         self.assertIn("usr/share/greia/activity-index-v1.json", text)
         # Fail-closed block: nonzero abort, no half-installed index, atomic
-        # install only on success.
+        # install only on success. The engine is a sourced library, so the
+        # abort is `return 1` propagated through compose_root to the
+        # set -e consumer (which exits); the staging cleanup + atomic
+        # install semantics are unchanged.
         marker = "# T33 built-in index"
         self.assertIn(marker, text)
-        block = text.split(marker, 1)[1].split("# Root filesystem", 1)[0]
-        self.assertIn("exit 1", block)
+        block = text.split(marker, 1)[1].split("compose_install_live_content", 1)[0]
+        self.assertIn("return 1", block)
         self.assertIn("rm -f", block)
         self.assertIn("install -D -m 0644", block)
+        self.assertIn('compose_install_greia_content "$rootfs" "$role" || return 1', text)
+        consumer = THIN_CONSUMER.read_text(encoding="utf-8")
+        self.assertIn('compose_root --profile "$PROFILE_PATH" --role target --root "$ROOTFS"', consumer)
         # Scope guard: the index transaction touches no initramfs, module, or
         # partition-layout machinery.
         for forbidden in (

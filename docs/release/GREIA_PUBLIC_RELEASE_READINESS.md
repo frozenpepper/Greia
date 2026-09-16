@@ -124,7 +124,7 @@ Important ordinary-user release gaps visible in the current authoritative reposi
 2. **The normal legacy-x86 profile is still `certification_state = "unverified"`.** It also uses the current `bios-single-ext4` layout and `display.adapter = "xorg"`.
 3. **Raspberry Pi 400/500 remain first-class required ARM targets but R8/final ARM certification is not closed.**
 4. **Production Greia Parents pairing/transport is not complete.** Current LAN HTTP/bootstrap behavior is explicitly provisional; release requires short-lived pairing challenges, Greia-local Allow/Deny and authenticated encrypted transport.
-5. **System update activation is not release-capable on current single-root images.** Signed bundle construction/inbox work exists, but A/B payload/layout, trusted-key installation, inactive-slot activation, boot-health confirmation and rollback are not available on the current profile.
+5. **System update activation is not release-capable on current single-root images.** Unsigned v3 bundle construction/inbox work exists, but A/B payload/layout, inactive-slot activation, boot-health confirmation and rollback are not available on the current profile.
 6. **Portable `.greiabackup` release closure is still required.** A normal family needs a supported way to preserve and restore child data before Greia can ask them to trust upgrades/reinstalls.
 7. **`.greiaactivity` initial installation exists, but full update/migration/rollback/provenance lifecycle remains R10 work.**
 8. **Selectable language is broader than proven localization coverage.** Locale persistence is not proof of translation, font, shaping or RTL readiness.
@@ -246,7 +246,7 @@ The release profile must be intentionally different from a developer/test profil
 - no developer pairing token/bootstrap accepted as production authority;
 - no hidden test services listening by default;
 - no test Activities/assets that are not part of the product;
-- release update trusted public key(s) provisioned only when the production updater is ready;
+- no release signing keys or trusted update public keys are provisioned (the unsigned `.greiaupdate` v3 flow has no signing-key workflow);
 - exact release version embedded in the system identity;
 - exact build profile recorded in release provenance;
 - `certification_state` changed only when the corresponding evidence exists;
@@ -278,7 +278,7 @@ Provide per-supported-target artifacts with unambiguous names, for example conce
 Greia-<version>-Legacy-PC.img.xz
 Greia-<version>-Raspberry-Pi.img.xz
 SHA256SUMS
-release signatures
+content-integrity hashes (SHA-256, not release signatures)
 release notes
 hardware compatibility link
 ```
@@ -399,15 +399,12 @@ The Parent UI must hide unavailable capabilities rather than exposing an enginee
 
 A public appliance needs a supported way to receive fixes without reinstalling by hand.
 
-The current signed `.greiaupdate` source foundation is useful, but ordinary-family release requires the complete update lifecycle.
+The current `.greiaupdate` source foundation is useful, but ordinary-family release requires the complete update lifecycle.
 
 ## Required system-update capabilities
 
 - canonical A/B or equivalently rollback-safe system layout accepted for each release hardware family;
 - canonical builder emits the exact slot payload consumed by `.greiaupdate`;
-- trusted update public-key provisioning;
-- documented signing-key custody, backup, rotation and revocation;
-- exact signature verification before privileged writes;
 - exact platform/architecture/profile compatibility checks;
 - inactive-slot-only staging;
 - free-space preflight;
@@ -430,7 +427,7 @@ The current signed `.greiaupdate` source foundation is useful, but ordinary-fami
 
 Prove at minimum:
 
-- bad signature;
+- corrupt/tampered bundle;
 - wrong architecture/profile;
 - truncated/corrupt bundle;
 - insufficient free space;
@@ -726,7 +723,7 @@ Write and review a concise release threat model covering at least:
 - no generic root/shell RPC;
 - release listening-service/port allowlist;
 - SSH default-off verification;
-- update signature/rollback tests;
+- update bundle-integrity/rollback tests;
 - backup parser hostile/corrupt input tests;
 - secret/token redaction in logs;
 - bounded logs/history/caches;
@@ -937,7 +934,7 @@ For every published build record:
 - Activity inventory + versions;
 - release build host/toolchain identity sufficient for reproduction;
 - artifact filename/size/SHA-256;
-- signature identity;
+- content-integrity identity (artifact SHA-256, not a signature);
 - SBOM or equivalent machine-readable component inventory;
 - third-party notices bundle;
 - test/certification evidence IDs;
@@ -1136,7 +1133,7 @@ At minimum:
 - image artifact verification;
 - installed footprint;
 - package/SBOM inventory;
-- artifact hashes/signatures;
+- artifact hashes (content-integrity aids, not signatures);
 - release/dev separation verification.
 
 ### VM/synthetic low-resource
@@ -1260,7 +1257,7 @@ Then:
 7. freeze final RC;
 8. run final ordinary-parent and child-facing acceptance;
 9. publish exact supported-hardware/known-issues matrix;
-10. sign/tag/publish artifacts.
+10. tag/publish artifacts.
 
 ---
 
@@ -1304,7 +1301,7 @@ Greia may be considered ready for a simple-user public family release only when 
 4. **The child sees Greia, never Linux**, including bounded failure/recovery paths.
 5. **The parent can administer Greia without technical knowledge.**
 6. **Greia Parents pairing is locally authorized and cryptographically protected.**
-7. **System updates are signed, staged safely, health-checked and automatically rollback-capable.**
+7. **System updates are staged safely, health-checked, automatically rollback-capable and PERSIST-schema compatible.**
 8. **Child data has a proven portable backup/restore path.**
 9. **Activity install/update/removal cannot silently damage child state.**
 10. **Mandatory built-in Activities are product-quality and physically accepted, not merely source-complete.**
@@ -1314,7 +1311,7 @@ Greia may be considered ready for a simple-user public family release only when 
 14. **Licensing/provenance/privacy/public-project publication work is complete.**
 15. **Advertised languages are honestly supported at the level claimed.**
 16. **Public documentation covers the complete parent lifecycle without developer instructions.**
-17. **Every binary release is traceable to an immutable source SHA, profile, dependency inventory and signed hash.**
+17. **Every binary release is traceable to an immutable source SHA, profile and dependency inventory with content-integrity verification.**
 18. **Fresh ordinary-parent testing demonstrates that the intended lifecycle works without project knowledge.**
 19. **Child-facing testing demonstrates that navigation, Home, Activities and recovery remain understandable and safe.**
 20. **One final immutable RC has passed the complete release matrix.**

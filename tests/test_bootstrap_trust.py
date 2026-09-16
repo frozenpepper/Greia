@@ -28,14 +28,18 @@ class BootstrapTrustTests(unittest.TestCase):
         self.assertTrue(facts["upstream_url"].startswith("https://deb.debian.org/"))
 
     def test_both_builders_force_release_signature_verification(self) -> None:
-        for name in ("build/build-image.sh", "build/build-installer-image.sh"):
-            text = (ROOT / name).read_text(encoding="utf-8")
-            self.assertIn("DEBIAN_ARCHIVE_KEYRING=", text)
-            self.assertIn('--keyring="$DEBIAN_ARCHIVE_KEYRING"', text)
-            self.assertIn("--force-check-gpg", text)
-            self.assertIn("Pinned Debian archive keyring is missing", text)
-            self.assertNotIn("--no-check-gpg", text)
-            self.assertNotIn("--no-check-sig", text)
+        # T02: live-installer debootstrap lives in the shared engine; the thin
+        # installer consumer delegates via compose_debootstrap.
+        text = (ROOT / "build/lib/compose.sh").read_text(encoding="utf-8")
+        self.assertIn("DEBIAN_ARCHIVE_KEYRING=", text)
+        self.assertIn('--keyring="$DEBIAN_ARCHIVE_KEYRING"', text)
+        self.assertIn("--force-check-gpg", text)
+        self.assertIn("Pinned Debian archive keyring is missing", text)
+        self.assertNotIn("--no-check-gpg", text)
+        self.assertNotIn("--no-check-sig", text)
+        installer = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
+        self.assertIn('compose_debootstrap "$LIVE_ROOT"', installer)
+        self.assertNotIn("--force-check-gpg", installer)
 
 
 if __name__ == "__main__":

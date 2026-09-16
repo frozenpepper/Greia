@@ -7,12 +7,15 @@ the active/accepted slot is never writable, every refusal leaves the
 destination seam untouched, and the Parent semantic API keeps reporting
 ``system.update.activate=false``. No valued disk is touched: slot stores
 are pre-sized loopback files under tmpdirs and every other seam is a fake.
+
+v3 contract (ADR 0036): unsigned bundles, no key material, no
+anti-rollback sequence. Compatibility is version/profile/architecture/
+board/space + PERSIST-schema-range gating.
 """
 
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
 import socket
 import tempfile
@@ -21,15 +24,15 @@ import zipfile
 from pathlib import Path
 
 from greia_platform.boot_transaction import BootTransactionJournal, FakeGrubBackend
-from greia_platform.persistent_layout import InstalledLayoutRecord
+from greia_platform.persistent_layout import (
+    InstalledLayoutRecord,
+    emit_persist_schema_marker,
+)
 from greia_platform.system_updates import (
     HARDWARE_SUPPORT_NAME,
     MANIFEST_NAME,
     PAYLOAD_NAME,
-    PERSISTENT_CONTRACT_NAME,
     SCHEMA_VERSION,
-    SIGNATURE_NAME,
-    SignatureEnvelope,
     SlotBackedSystemUpdateBackend,
     SystemIdentity,
     SystemUpdateService,
@@ -38,21 +41,20 @@ from greia_platform.system_updates import (
     SystemUpdateServiceAuthority,
     UnavailableSystemUpdateBackend,
     UpdateBackendUnavailable,
+    UpdateBundleError,
     UpdateCandidateSummary,
+    UpdateCompatibilityError,
     UpdateManifest,
     UpdateSlotSeams,
-    build_persistent_state_contract_bytes,
+    build_update_bundle,
     inactive_slot_for,
     inspect_update_bundle,
     load_installed_layout_record,
-    read_accepted_sequence,
 )
 
 
-HAS_CRYPTOGRAPHY = importlib.util.find_spec("cryptography") is not None
-
 _HW_BYTES = b"\x28\xb5\x2f\xfd" + b"hwset" * 32
-_CONTRACT_BYTES = build_persistent_state_contract_bytes()
+_PERSIST_MARKER = emit_persist_schema_marker(1)
 
 _UUID_A = "11111111-2222-3333-4444-555555555555"
 _UUID_A_FS = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -68,7 +70,6 @@ _SLOT_BYTES = 1024 * 1024 * 1024
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -95,53 +96,86 @@ def _write_layout(root: Path, **overrides: object) -> Path:
     return path
 
 
-def _payload(size: int = 200 * 1024) -> bytes:
+def _raw_payload(size: int = 200 * 1024) -> bytes:
     return bytes((index * 31 + 7) % 256 for index in range(size))
 
 
-def _manifest(payload: bytes, *, sequence: int = 9) -> UpdateManifest:
-    hw_sha = hashlib.sha256(_HW_BYTES).hexdigest()
-    contract_sha = hashlib.sha256(_CONTRACT_BYTES).hexdigest()
+def _compress_raw(raw: bytes) -> bytes:
+    import zstandard
+
+    return zstandard.ZstdCompressor(level=3).compress(raw)
+
+
+def _manifest_for(compressed: bytes, raw_len: int) -> UpdateManifest:
     return UpdateManifest(
         schema_version=SCHEMA_VERSION,
         release_id="greia-0.15.0",
         version="0.15.0",
-        release_sequence=sequence,
         platform_family="standard-x86-64",
         architecture="x86-64",
         profile="modern-amd64",
-        signer="greia-release-main",
-        payload_sha256=hashlib.sha256(payload).hexdigest(),
-        payload_size=len(payload),
-        payload_filesystem_bytes=len(payload),
-        payload_minimum_slot_bytes=len(payload),
-        hardware_support_name=HARDWARE_SUPPORT_NAME,
-        hardware_support_schema_version=1,
-        hardware_support_sha256=hw_sha,
+        board=None,
+        payload_sha256=hashlib.sha256(compressed).hexdigest(),
+        payload_size=len(compressed),
+        payload_uncompressed_bytes=raw_len,
+        payload_minimum_slot_bytes=raw_len,
+        hardware_support_sha256=hashlib.sha256(_HW_BYTES).hexdigest(),
         hardware_support_size=len(_HW_BYTES),
-        persistent_contract_schema_version=1,
-        persistent_contract_sha256=contract_sha,
-        persistent_contract_size=len(_CONTRACT_BYTES),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
         release_notes="Step 8A.6 test release.",
     )
 
 
-def _unsigned_bundle(root: Path, payload: bytes, *, name: str = "candidate.greiaupdate") -> Path:
-    manifest = _manifest(payload)
-    signature = SignatureEnvelope(
-        schema_version=SCHEMA_VERSION,
-        algorithm="ed25519",
-        signer=manifest.signer,
-        signature=b"x" * 64,
+def _unsigned_bundle(
+    root: Path, raw: bytes, *, name: str = "candidate.greiaupdate"
+) -> Path:
+    compressed = _compress_raw(raw)
+    payload_path = root / f"payload-{name}.ext4.zst"
+    payload_path.write_bytes(compressed)
+    hw_path = root / f"hw-{name}.tar.zst"
+    hw_path.write_bytes(_HW_BYTES)
+    out = root / name
+    if out.exists():
+        out.unlink()
+    build_update_bundle(
+        payload_path=payload_path,
+        hardware_support_path=hw_path,
+        output_path=out,
+        version="0.15.0",
+        release_id="greia-0.15.0",
+        platform_family="standard-x86-64",
+        architecture="x86-64",
+        profile="modern-amd64",
+        payload_uncompressed_bytes=len(raw),
+        minimum_slot_bytes=len(raw),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
+        release_notes="Step 8A.6 test release.",
     )
-    path = root / name
-    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.writestr(MANIFEST_NAME, manifest.canonical_bytes())
-        archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
-        archive.writestr(PAYLOAD_NAME, payload)
-        archive.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
-        archive.writestr(PERSISTENT_CONTRACT_NAME, _CONTRACT_BYTES)
-    return path
+    return out
+
+
+def _populate_slot_completeness(mount_dir: Path) -> None:
+    """Create the required Greia userspace tree for a passing smoke."""
+    from greia_platform.slot_writer import (
+        REQUIRED_SLOT_COMPLETENESS_DIRS,
+        REQUIRED_SLOT_COMPLETENESS_FILES,
+    )
+
+    for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+        (mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+    for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+        candidate = mount_dir / rel_path
+        candidate.parent.mkdir(parents=True, exist_ok=True)
+        if candidate.is_symlink() or not candidate.is_file():
+            candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+            try:
+                candidate.chmod(0o755)
+            except OSError:
+                pass
 
 
 class FakeSlotFilesystem:
@@ -182,6 +216,12 @@ class FakeSlotFilesystem:
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
 
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        self.ops.append("completeness")
+        check_slot_completeness(self.mount_dir)
+
     def check_health(self) -> None:
         self.ops.append("health")
 
@@ -212,7 +252,10 @@ class RecordingSeams:
         self._loopback = LoopbackSlotFile
         self._support_set = ReleaseSupportSet
         self.contacts: list[str] = []
-        self.filesystem = FakeSlotFilesystem(root / "mnt")
+        mount_dir = root / "mnt"
+        mount_dir.mkdir(parents=True, exist_ok=True)
+        _populate_slot_completeness(mount_dir)
+        self.filesystem = FakeSlotFilesystem(mount_dir)
         self.package_installer = FakeSlotPackageInstaller()
 
     def token(self) -> str:
@@ -250,7 +293,7 @@ class RecordingSeams:
 
     def installed_contract_factory(self) -> bytes:
         self.contacts.append("contract")
-        return _CONTRACT_BYTES
+        return _PERSIST_MARKER
 
     def seams(self) -> UpdateSlotSeams:
         return UpdateSlotSeams(
@@ -331,7 +374,7 @@ class SingleRootUnavailableTests(unittest.TestCase):
                 layout_record_path=root / "no-such-layout.json",
                 seams=seams.seams(),
             )
-            bundle = inspect_update_bundle(_unsigned_bundle(root, _payload()))
+            bundle = inspect_update_bundle(_unsigned_bundle(root, _raw_payload()))
             self.assertFalse(backend.available)
             with self.assertRaises(UpdateBackendUnavailable):
                 backend.stage(bundle)
@@ -354,7 +397,7 @@ class SingleRootUnavailableTests(unittest.TestCase):
                     "system_b": None,
                 },
             )
-            bundle = inspect_update_bundle(_unsigned_bundle(root, _payload()))
+            bundle = inspect_update_bundle(_unsigned_bundle(root, _raw_payload()))
             self.assertFalse(backend.available)
             with self.assertRaises(UpdateBackendUnavailable):
                 backend.stage(bundle)
@@ -373,7 +416,7 @@ class SingleRootUnavailableTests(unittest.TestCase):
                 seams=seams.seams(),
             )
             self.assertFalse(backend.available)
-            bundle = inspect_update_bundle(_unsigned_bundle(root, _payload()))
+            bundle = inspect_update_bundle(_unsigned_bundle(root, _raw_payload()))
             with self.assertRaises(SystemUpdateError):
                 backend.stage(bundle)
             self.assertEqual(seams.contacts, [])
@@ -386,15 +429,13 @@ class SingleRootUnavailableTests(unittest.TestCase):
                 root / "state", layout_record_path=layout_path
             )
             self.assertTrue(backend.available)
-            bundle = inspect_update_bundle(_unsigned_bundle(root, _payload()))
+            bundle = inspect_update_bundle(_unsigned_bundle(root, _raw_payload()))
             with self.assertRaisesRegex(UpdateBackendUnavailable, "not configured"):
                 backend.stage(bundle)
 
     def test_unavailable_backend_keeps_arm_confirm_reconcile_closed(self) -> None:
         backend = UnavailableSystemUpdateBackend("single-root layout")
-        service = SystemUpdateService(
-            Path("/nonexistent"), Path("/nonexistent"), _identity(), backend
-        )
+        service = SystemUpdateService(Path("/nonexistent"), _identity(), backend)
         with self.assertRaises(UpdateBackendUnavailable):
             service.arm()
         with self.assertRaises(UpdateBackendUnavailable):
@@ -416,7 +457,7 @@ class ActiveSlotDenialTests(unittest.TestCase):
                     "boot_control": {"active_slot": "B", "kind": "grub-env-v1"},
                 },
             )
-            bundle = inspect_update_bundle(_unsigned_bundle(root, _payload()))
+            bundle = inspect_update_bundle(_unsigned_bundle(root, _raw_payload()))
             with self.assertRaises(SystemUpdateError):
                 backend.stage(bundle)
             self.assertEqual(seams.contacts, [])
@@ -427,13 +468,15 @@ class ActiveSlotDenialTests(unittest.TestCase):
             seams = RecordingSeams(root)
             backend, _ = _backend(root, seams)
             first = inspect_update_bundle(
-                _unsigned_bundle(root, _payload(), name="first.greiaupdate")
+                _unsigned_bundle(root, _raw_payload(), name="first.greiaupdate")
             )
             backend.stage(first)
             contacts_after_first = list(seams.contacts)
             self.assertTrue(contacts_after_first)
             second = inspect_update_bundle(
-                _unsigned_bundle(root, b"second-payload" + _payload(), name="second.greiaupdate")
+                _unsigned_bundle(
+                    root, b"second-payload" + _raw_payload(), name="second.greiaupdate"
+                )
             )
             with self.assertRaisesRegex(SystemUpdateError, "already active"):
                 backend.stage(second)
@@ -445,8 +488,8 @@ class InactiveSlotStagingTests(unittest.TestCase):
             root = Path(directory)
             seams = RecordingSeams(root)
             backend, _ = _backend(root, seams)
-            payload = _payload()
-            bundle = inspect_update_bundle(_unsigned_bundle(root, payload))
+            raw = _raw_payload()
+            bundle = inspect_update_bundle(_unsigned_bundle(root, raw))
             self.assertTrue(backend.available)
             backend.stage(bundle)
             # Destination seam saw exactly the inactive role, never the live one.
@@ -463,7 +506,6 @@ class InactiveSlotStagingTests(unittest.TestCase):
             self.assertEqual(journal.candidate_slot, "B")
             self.assertEqual(journal.accepted_slot, "A")
             self.assertEqual(journal.release_id, "greia-0.15.0")
-            self.assertEqual(journal.release_sequence, 9)
             self.assertEqual(journal.state.value, "update_staged")
             status = backend.status_payload()
             self.assertTrue(status["available"])
@@ -475,7 +517,7 @@ class InactiveSlotStagingTests(unittest.TestCase):
             root = Path(directory)
             seams = RecordingSeams(root)
             backend, _ = _backend(root, seams)
-            bundle = inspect_update_bundle(_unsigned_bundle(root, _payload()))
+            bundle = inspect_update_bundle(_unsigned_bundle(root, _raw_payload()))
             from greia_platform.slot_writer import ReleaseSupportSet
 
             def wrong_support(candidate: object) -> object:
@@ -500,6 +542,60 @@ class InactiveSlotStagingTests(unittest.TestCase):
             self.assertNotIn("store:system-b", seams.contacts)
             self.assertNotIn("store:system-a", seams.contacts)
 
+    def test_digest_mismatch_fails_before_any_slot_contact(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            seams = RecordingSeams(root)
+            backend, _ = _backend(root, seams)
+            bundle_path = _unsigned_bundle(root, _raw_payload())
+            with zipfile.ZipFile(bundle_path) as src:
+                manifest_raw = src.read(MANIFEST_NAME)
+                hw = src.read(HARDWARE_SUPPORT_NAME)
+            with zipfile.ZipFile(bundle_path) as src:
+                payload_compressed = src.read(PAYLOAD_NAME)
+            tampered = bytearray(payload_compressed)
+            tampered[10] ^= 0xFF
+            tampered_path = root / "tampered.greiaupdate"
+            with zipfile.ZipFile(tampered_path, "w", compression=zipfile.ZIP_STORED) as dst:
+                dst.writestr(MANIFEST_NAME, manifest_raw)
+                dst.writestr(PAYLOAD_NAME, bytes(tampered))
+                dst.writestr(HARDWARE_SUPPORT_NAME, hw)
+            with self.assertRaises(UpdateBundleError):
+                inspect_update_bundle(tampered_path)
+            self.assertEqual(seams.contacts, [])
+
+    def test_persist_range_refusal_fails_before_any_slot_contact(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            seams = RecordingSeams(root)
+            backend, _ = _backend(root, seams)
+            raw = _raw_payload()
+            compressed = _compress_raw(raw)
+            payload_path = root / "payload-narrow.ext4.zst"
+            payload_path.write_bytes(compressed)
+            hw_path = root / "hw-narrow.tar.zst"
+            hw_path.write_bytes(_HW_BYTES)
+            narrow = root / "narrow.greiaupdate"
+            build_update_bundle(
+                payload_path=payload_path,
+                hardware_support_path=hw_path,
+                output_path=narrow,
+                version="0.15.0",
+                release_id="greia-0.15.0-narrow",
+                platform_family="standard-x86-64",
+                architecture="x86-64",
+                profile="modern-amd64",
+                payload_uncompressed_bytes=len(raw),
+                minimum_slot_bytes=len(raw),
+                persist_read_schema_min=10,
+                persist_read_schema_max=10,
+                persist_write_schema=10,
+            )
+            bundle = inspect_update_bundle(narrow)
+            with self.assertRaises(SystemUpdateError):
+                backend.stage(bundle)
+            self.assertNotIn("store:system-b", seams.contacts)
+
 
 class ArmConfirmReconcileTests(unittest.TestCase):
     def _staged(
@@ -510,7 +606,7 @@ class ArmConfirmReconcileTests(unittest.TestCase):
         boot_state.mkdir()
         grub = FakeGrubBackend.initialize(boot_state, default_slot="A")
         backend, _ = _backend(root, seams, boot_backend=grub)
-        backend.stage(inspect_update_bundle(_unsigned_bundle(root, _payload())))
+        backend.stage(inspect_update_bundle(_unsigned_bundle(root, _raw_payload())))
         return backend, grub, seams
 
     def test_arm_without_boot_backend_is_unavailable(self) -> None:
@@ -518,11 +614,11 @@ class ArmConfirmReconcileTests(unittest.TestCase):
             root = Path(directory)
             seams = RecordingSeams(root)
             backend, _ = _backend(root, seams)
-            backend.stage(inspect_update_bundle(_unsigned_bundle(root, _payload())))
+            backend.stage(inspect_update_bundle(_unsigned_bundle(root, _raw_payload())))
             with self.assertRaisesRegex(UpdateBackendUnavailable, "not wired"):
                 backend.arm()
 
-    def test_arm_confirm_round_trip_accepts_and_persists_sequence(self) -> None:
+    def test_arm_confirm_round_trip_accepts_release_identity(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             backend, grub, _ = self._staged(root)
@@ -536,7 +632,8 @@ class ArmConfirmReconcileTests(unittest.TestCase):
             self.assertTrue(confirmed["confirmed"])
             self.assertEqual(confirmed["state"], "accepted")
             self.assertEqual(confirmed["booted_slot"], "B")
-            self.assertEqual(read_accepted_sequence(root / "state"), 9)
+            journal_after = BootTransactionJournal.load(backend.journal_dir)
+            self.assertEqual(journal_after.release_id, "greia-0.15.0")
             # Confirm is idempotent once terminal.
             again = backend.confirm_boot_health()
             self.assertTrue(again["confirmed"])
@@ -552,14 +649,13 @@ class ArmConfirmReconcileTests(unittest.TestCase):
             confirmed = backend.confirm_boot_health()
             self.assertFalse(confirmed["confirmed"])
             self.assertEqual(confirmed["state"], "rolled_back")
-            self.assertEqual(read_accepted_sequence(root / "state"), 0)
 
     def test_reconcile_without_observation_stays_steady(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             seams = RecordingSeams(root)
             backend, _ = _backend(root, seams)
-            backend.stage(inspect_update_bundle(_unsigned_bundle(root, _payload())))
+            backend.stage(inspect_update_bundle(_unsigned_bundle(root, _raw_payload())))
             outcome = backend.reconcile()
             self.assertTrue(outcome["reconciled"])
             self.assertEqual(outcome["state"], "update_staged")
@@ -574,96 +670,116 @@ class ArmConfirmReconcileTests(unittest.TestCase):
                 backend.arm()
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "cryptography is required for trust tests")
 class ServiceTrustOrderingTests(unittest.TestCase):
-    def _signed_bundle(
-        self, root: Path, *, sequence: int = 9
-    ) -> tuple[Path, Path, object]:
-        from greia_platform.system_updates import (
-            build_update_bundle,
-            generate_ed25519_keypair,
-        )
+    """v3 trust ordering: compatibility + PERSIST before slot contact."""
 
-        private = root / "private.pem"
-        public = root / "public.pem"
-        generate_ed25519_keypair(private, public)
-        payload = root / "slot.img"
-        payload.write_bytes(_payload())
-        hardware = root / "hw.tar.zst"
-        hardware.write_bytes(_HW_BYTES)
-        contract = root / "contract.json"
-        contract.write_bytes(_CONTRACT_BYTES)
-        bundle = root / "release.greiaupdate"
-        manifest = build_update_bundle(
-            payload_path=payload,
-            hardware_support_path=hardware,
-            persistent_contract_path=contract,
-            output_path=bundle,
-            version="0.15.0",
-            release_id="greia-0.15.0",
-            release_sequence=sequence,
-            platform_family="standard-x86-64",
-            architecture="x86-64",
-            profile="modern-amd64",
-            signer="greia-release-main",
-            private_key_path=private,
-        )
-        return bundle, public, manifest
+    def _v3_bundle(self, root: Path, *, name: str = "release.greiaupdate") -> Path:
+        return _unsigned_bundle(root, _raw_payload(), name=name)
 
-    def test_untrusted_bundle_never_reaches_the_slot_seam(self) -> None:
+    def test_compatibility_refusal_never_reaches_the_slot_seam(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle, _, _ = self._signed_bundle(root)
-            key_dir = root / "trusted"
-            key_dir.mkdir()
+            bundle = self._v3_bundle(root)
             seams = RecordingSeams(root)
             backend, _ = _backend(root, seams)
             service = SystemUpdateService(
-                root / "state", key_dir, _identity(), backend
+                root / "state",
+                SystemIdentity("0.15.0", "standard-x86-64", "arm64", "modern-amd64"),
+                backend,
             )
-            # No trusted key installed: trust fails before any slot contact.
             with self.assertRaises(SystemUpdateError):
                 service.stage(bundle)
             self.assertEqual(seams.contacts, [])
 
-    def test_trusted_stage_flows_through_service_to_journal(self) -> None:
+    def test_verified_stage_flows_through_service_to_journal(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle, public, manifest = self._signed_bundle(root)
-            key_dir = root / "trusted"
-            key_dir.mkdir()
-            (key_dir / "greia-release-main.pem").write_bytes(public.read_bytes())
+            bundle = self._v3_bundle(root)
             seams = RecordingSeams(root)
             boot_state = root / "boot"
             boot_state.mkdir()
             grub = FakeGrubBackend.initialize(boot_state, default_slot="A")
             backend, _ = _backend(root, seams, boot_backend=grub)
-            service = SystemUpdateService(
-                root / "state", key_dir, _identity(), backend
-            )
+            service = SystemUpdateService(root / "state", _identity(), backend)
             staged = service.stage(bundle)
             self.assertEqual(staged.manifest.release_id, "greia-0.15.0")
             self.assertIn("store:system-b", seams.contacts)
             journal = BootTransactionJournal.load(backend.journal_dir)
             self.assertEqual(journal.candidate_slot, "B")
+            self.assertEqual(journal.release_id, "greia-0.15.0")
             status = service.status_payload()
             self.assertTrue(status["activation"]["available"])
-            self.assertEqual(status["accepted_release_sequence"], 0)
 
-    def test_rollback_sequence_is_rejected_before_slot_contact(self) -> None:
+    def test_persist_range_refused_before_slot_contact(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle, public, _ = self._signed_bundle(root, sequence=3)
-            key_dir = root / "trusted"
-            key_dir.mkdir()
-            (key_dir / "greia-release-main.pem").write_bytes(public.read_bytes())
+            raw = _raw_payload()
+            compressed = _compress_raw(raw)
+            payload_path = root / "payload-persist.ext4.zst"
+            payload_path.write_bytes(compressed)
+            hw_path = root / "hw-persist.tar.zst"
+            hw_path.write_bytes(_HW_BYTES)
+            narrow = root / "narrow.greiaupdate"
+            build_update_bundle(
+                payload_path=payload_path,
+                hardware_support_path=hw_path,
+                output_path=narrow,
+                version="0.15.0",
+                release_id="greia-0.15.0-narrow",
+                platform_family="standard-x86-64",
+                architecture="x86-64",
+                profile="modern-amd64",
+                payload_uncompressed_bytes=len(raw),
+                minimum_slot_bytes=len(raw),
+                persist_read_schema_min=10,
+                persist_read_schema_max=10,
+                persist_write_schema=10,
+            )
             seams = RecordingSeams(root)
             backend, _ = _backend(root, seams)
-            service = SystemUpdateService(
-                root / "state", key_dir, _identity(), backend, accepted_sequence=7
-            )
+            service = SystemUpdateService(root / "state", _identity(), backend)
             with self.assertRaises(SystemUpdateError):
-                service.stage(bundle)
+                service.stage(narrow)
+            # PERSIST preflight runs before any destination slot store is
+            # addressed; support/contract seam reads are allowed, slot
+            # stores are not.
+            self.assertNotIn("store:system-b", seams.contacts)
+            self.assertNotIn("store:system-a", seams.contacts)
+
+    def test_old_signed_format_rejected_with_migration_message(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = {
+                "schema_version": 2,
+                "release_id": "greia-0.14.0",
+                "version": "0.14.0",
+                "platform_family": "standard-x86-64",
+                "architecture": "x86-64",
+                "profile": "modern-amd64",
+                "payload": {
+                    "name": "payload.bin",
+                    "sha256": "0" * 64,
+                    "size": 4,
+                    "kind": "system-slot-image",
+                },
+                "release_notes": "",
+            }
+            path = root / "old-signed.greiaupdate"
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
+                archive.writestr(
+                    MANIFEST_NAME,
+                    (json.dumps(manifest, sort_keys=True, separators=(",", ":")) + "\n").encode(),
+                )
+                archive.writestr("manifest.sig", b"{}")
+                archive.writestr("payload.bin", b"data")
+            seams = RecordingSeams(root)
+            backend, _ = _backend(root, seams)
+            service = SystemUpdateService(root / "state", _identity(), backend)
+            with self.assertRaises(UpdateBundleError) as ctx:
+                service.stage(path)
+            message = str(ctx.exception).lower()
+            self.assertIn("v3", message)
+            self.assertTrue("rebuild" in message or "migration" in message)
             self.assertEqual(seams.contacts, [])
 
 
@@ -671,45 +787,32 @@ class AuthoritySocketTests(unittest.TestCase):
     def _authority(
         self, root: Path, *, present: bool = True
     ) -> SystemUpdateServiceAuthority:
-        from greia_platform.system_updates import generate_ed25519_keypair
-
-        key_dir = root / "trusted"
-        key_dir.mkdir(exist_ok=True)
-        if present:
-            private = root / "private.pem"
-            public = root / "public.pem"
-            if not private.exists():
-                generate_ed25519_keypair(private, public)
-            (key_dir / "greia-release-main.pem").write_bytes(public.read_bytes())
         seams = RecordingSeams(root)
         backend, _ = _backend(root, seams)
-        authority = SystemUpdateServiceAuthority(
-            root / "state", key_dir, _identity(), backend
-        )
+        authority = SystemUpdateServiceAuthority(root / "state", _identity(), backend)
         if present:
-            from greia_platform.system_updates import build_update_bundle
-
-            payload = root / "slot.img"
-            payload.write_bytes(_payload())
+            raw = _raw_payload()
+            compressed = _compress_raw(raw)
+            payload = root / "slot.img.ext4.zst"
+            payload.write_bytes(compressed)
             hardware = root / "hw.tar.zst"
             hardware.write_bytes(_HW_BYTES)
-            contract = root / "contract.json"
-            contract.write_bytes(_CONTRACT_BYTES)
             bundle = root / "release.greiaupdate"
             if not bundle.exists():
                 build_update_bundle(
                     payload_path=payload,
                     hardware_support_path=hardware,
-                    persistent_contract_path=contract,
                     output_path=bundle,
                     version="0.15.0",
                     release_id="greia-0.15.0",
-                    release_sequence=9,
                     platform_family="standard-x86-64",
                     architecture="x86-64",
                     profile="modern-amd64",
-                    signer="greia-release-main",
-                    private_key_path=root / "private.pem",
+                    payload_uncompressed_bytes=len(raw),
+                    minimum_slot_bytes=len(raw),
+                    persist_read_schema_min=1,
+                    persist_read_schema_max=1,
+                    persist_write_schema=1,
                 )
             inbox = SystemUpdateInbox(root / "state")
             inbox.receive(bundle)
@@ -729,8 +832,6 @@ class AuthoritySocketTests(unittest.TestCase):
     def test_single_root_layout_summary_reports_unavailable_shape(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            key_dir = root / "trusted"
-            key_dir.mkdir()
             layout_path = _write_layout(
                 root,
                 layout_id="bios-single-ext4",
@@ -742,14 +843,11 @@ class AuthoritySocketTests(unittest.TestCase):
             backend = SlotBackedSystemUpdateBackend(
                 root / "state", layout_record_path=layout_path
             )
-            authority = SystemUpdateServiceAuthority(
-                root / "state", key_dir, _identity(), backend
-            )
+            authority = SystemUpdateServiceAuthority(root / "state", _identity(), backend)
             layout = authority.layout_summary()
             self.assertTrue(layout["single_root"])
             self.assertFalse(backend.available)
 
-    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "cryptography is required for trust tests")
     def test_verify_and_stage_through_real_endpoint(self) -> None:
         from greia_platform.privileged_channel import PeerCredential
         from greia_platform.update_privileged import (
@@ -774,7 +872,11 @@ class AuthoritySocketTests(unittest.TestCase):
             )
             self.assertEqual(op, "STATUS")
             self.assertTrue(payload["candidate"]["present"])
-            self.assertFalse(payload["candidate"]["signature_verified"])
+            self.assertEqual(
+                set(payload["candidate"].keys()),
+                {"present", "release_id", "bundle_sha256"},
+            )
+            self.assertEqual(payload["candidate"]["release_id"], "greia-0.15.0")
             _, op, payload = read_response(
                 endpoint.handle_request(
                     build_request("VERIFY_CURRENT_CANDIDATE"),
@@ -783,7 +885,12 @@ class AuthoritySocketTests(unittest.TestCase):
                 )
             )
             self.assertEqual(payload["status"], "VERIFIED")
-            self.assertTrue(payload["candidate"]["signature_verified"])
+            self.assertEqual(
+                set(payload["candidate"].keys()),
+                {"present", "release_id", "bundle_sha256"},
+            )
+            self.assertTrue(payload["candidate"]["present"])
+            self.assertEqual(payload["candidate"]["release_id"], "greia-0.15.0")
             _, op, payload = read_response(
                 endpoint.handle_request(
                     build_request("STAGE_CURRENT_CANDIDATE"),
@@ -794,16 +901,17 @@ class AuthoritySocketTests(unittest.TestCase):
             self.assertEqual(payload["status"], "STAGED")
             self.assertTrue(payload["detail"]["staged"])
             self.assertEqual(payload["detail"]["candidate_slot"], "B")
-            # Staging again without arm/confirm is refused: the active
-            # transaction must be reconciled or confirmed first.
-            with self.assertRaisesRegex(SystemUpdateError, "already active"):
+            # After a successful stage the large inbox candidate is
+            # discarded (T03 fixed-candidate inbox) while the backend
+            # journal keeps the staged transaction: a second stage
+            # without arm/confirm is refused fail-closed.
+            with self.assertRaises(SystemUpdateError):
                 endpoint.handle_request(
                     build_request("STAGE_CURRENT_CANDIDATE"),
                     peer=root_peer,
                     boot_state="update_ready",
                 )
 
-    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "cryptography is required for trust tests")
     def test_socket_connection_serves_one_request_then_refuses_bad_peer(self) -> None:
         import struct
 
@@ -944,7 +1052,6 @@ class AuthoritySocketTests(unittest.TestCase):
                         "state": "received",
                         "bundle_path": str(outside),
                         "bundle_sha256": "0" * 64,
-                        "signature_verified": False,
                     }
                 ),
                 encoding="utf-8",
@@ -1069,7 +1176,6 @@ class OverlayContractTests(unittest.TestCase):
             inbox = SystemUpdateInbox(Path(directory))
             status = inbox.status_payload()
             self.assertFalse(status["activation_available"])
-            self.assertFalse(status["signature_verified"])
 
 
 if __name__ == "__main__":

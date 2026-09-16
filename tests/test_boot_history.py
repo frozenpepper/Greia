@@ -48,7 +48,6 @@ def _boot_kwargs(*, slot: str, release: str, seq: int, txn: str,
         "started_at_unix": started,
         "slot": slot,
         "release_id": release,
-        "release_sequence": seq,
         "transaction_id": txn,
         "transaction_type": txn_type,
         "backend_default": default,
@@ -186,7 +185,6 @@ class BootHistoryRingTests(unittest.TestCase):
             assert summary is not None
             self.assertEqual(summary["attempted_slot"], "B")
             self.assertEqual(summary["attempted_release_id"], "greia-0.15.0")
-            self.assertEqual(summary["attempted_release_sequence"], 11)
             self.assertEqual(summary["last_milestone"], "failed")
             self.assertEqual(summary["recovery_reason"], "candidate-failed")
             self.assertEqual(summary["terminal_state"], "failed")

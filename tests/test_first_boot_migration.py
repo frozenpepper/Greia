@@ -10,7 +10,9 @@ SERVICE = ROOT / "build/overlay/etc/systemd/system/greia-launcher.service"
 PREPARE = ROOT / "build/overlay/usr/local/lib/greia-os/prepare-launcher-vt"
 X_SESSION = ROOT / "build/overlay/usr/local/lib/greia-os/greia-x-session"
 FIRST_BOOT = ROOT / "build/overlay/usr/local/lib/greia-os/first-boot"
-BUILDER = ROOT / "build/build-image.sh"
+# T01: account/group construction lives in the shared composition engine.
+BUILDER = ROOT / "build/lib/compose.sh"
+THIN_CONSUMER = ROOT / "build/build-image.sh"
 
 # The complete launch path: the unit plus every script it invokes.
 LAUNCH_PATH = (SERVICE, PREPARE, X_SESSION)
@@ -94,6 +96,9 @@ class FreshImageMembershipTests(unittest.TestCase):
         )
         self.assertNotIn("video", useradd)
         self.assertNotIn("render", useradd)
+        self.assertIn(
+            "--role target", THIN_CONSUMER.read_text(encoding="utf-8")
+        )
 
     def test_first_boot_state_roots_match_builder_groups(self) -> None:
         first_boot = FIRST_BOOT.read_text(encoding="utf-8")

@@ -74,9 +74,7 @@ from greia_platform.grub_ab import GrubEnvBackend, validate_grub_ab_text
 from greia_platform.privileged_channel import PeerCredential
 from greia_platform.slot_writer import SlotFinalizeError
 from greia_platform.system_updates import (
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     inspect_update_bundle,
 )
 
@@ -88,7 +86,6 @@ MIB = 1024 * 1024
 _PROFILE = "legacy-x86-i686"
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
-_SIGNER = "greia-release-main"
 _INSTALL_SHA = "ab" * 32
 _PASSWORD_HASH = "grub.pbkdf2.sha512.10000." + "A" * 128
 _HW_BODY = b"hwset-payload" * 64
@@ -247,6 +244,25 @@ class FakeSlotFilesystem:
             raise SlotFinalizeError("slot is already mounted")
         self.mounted = True
         self.mount_dir.mkdir(parents=True, exist_ok=True)
+        # Simulate a staged slot carrying real Greia userspace so the
+        # shared completeness smoke passes (an empty mount would be a
+        # V12G-like skeleton). Uses the shared validator's path set.
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (self.mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = self.mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
         return self.mount_dir
 
     def unmount(self) -> None:
@@ -264,6 +280,12 @@ class FakeSlotFilesystem:
 
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
+
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        self.ops.append("completeness")
+        check_slot_completeness(self.mount_dir)
 
     def check_health(self) -> None:
         self.ops.append("health")
@@ -310,37 +332,33 @@ class FakePersistRunner(PersistCommandRunner):
         return [command[0] for command in self.commands]
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "signed bundles need cryptography")
 class FreshAbInstallTests(unittest.TestCase):
     def _bundle(self, root: Path, payload: bytes, *, sequence: int = 11) -> Path:
-        private = root / "priv.pem"
-        public = root / "pub.pem"
-        generate_ed25519_keypair(private, public)
-        payload_path = root / "payload.bin"
-        payload_path.write_bytes(payload)
+        import zstandard
+
+        compressed = zstandard.ZstdCompressor(level=3).compress(payload)
+        payload_path = root / "payload.ext4.zst"
+        payload_path.write_bytes(compressed)
         hw_path = root / "hw.tar.zst"
         hw_path.write_bytes(_HW_BYTES)
-        contract_path = root / "contract.json"
-        contract_path.write_bytes(build_persistent_state_contract_bytes())
         bundle = root / f"r{sequence}.greiaupdate"
+        if bundle.exists():
+            bundle.unlink()
         build_update_bundle(
             payload_path=payload_path,
             hardware_support_path=hw_path,
-            persistent_contract_path=contract_path,
             output_path=bundle,
             version="0.15.0",
             release_id="greia-0.15.0",
-            release_sequence=sequence,
             platform_family=_FAMILY,
             architecture=_ARCH,
             profile=_PROFILE,
-            signer=_SIGNER,
-            private_key_path=private,
+            payload_uncompressed_bytes=len(payload),
             minimum_slot_bytes=len(payload) + MIB,
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
         )
-        key_dir = root / "trusted"
-        key_dir.mkdir(exist_ok=True)
-        (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
         return bundle
 
     def _harness(self, root: Path, payload: bytes):
@@ -394,7 +412,6 @@ class FreshAbInstallTests(unittest.TestCase):
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
-            trusted_key_dir=root / "trusted",
             expected_profile_id=_PROFILE,
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,
@@ -444,7 +461,6 @@ class FreshAbInstallTests(unittest.TestCase):
 
         self.assertEqual(result.receipt.slot, "A")
         self.assertEqual(result.receipt.release_id, "greia-0.15.0")
-        self.assertEqual(result.receipt.release_sequence, 11)
         self.assertEqual(result.bytes_written, len(payload))
         # Role UUID restored exactly from layout authority, never the template.
         self.assertEqual(
@@ -463,7 +479,6 @@ class FreshAbInstallTests(unittest.TestCase):
         self.assertEqual(record.boot_control.active_slot, "A")
         self.assertIsNotNone(record.system_b)
         self.assertEqual(record.accepted_release_id, "greia-0.15.0")
-        self.assertEqual(record.accepted_release_sequence, 11)
         self.assertEqual(record.slot_bytes, 1 * GIB)
 
         self.assertEqual(
@@ -676,7 +691,6 @@ class FreshAbInstallTests(unittest.TestCase):
         request = harness["request"]
         bad = FreshAbInstallRequest(
             bundle_path=request.bundle_path,
-            trusted_key_dir=request.trusted_key_dir,
             expected_profile_id=_PROFILE,
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,
@@ -704,28 +718,47 @@ class FreshAbInstallTests(unittest.TestCase):
             execute_fresh_ab_install(harness["request"], harness["seams"])
         self.assertEqual(harness["runner"].commands, [])
 
-    def test_untrusted_signer_refused_before_destruction(self) -> None:
+    def test_old_signed_bundle_refused_before_destruction(self) -> None:
+        import json as _json
+        import zipfile as _zipfile
+
         directory = tempfile.mkdtemp(prefix="x8-install-")
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
         harness = self._harness(root, _payload())
-        empty_keys = root / "empty-keys"
-        empty_keys.mkdir()
-        request = harness["request"]
-        bad = FreshAbInstallRequest(
-            bundle_path=request.bundle_path,
-            trusted_key_dir=empty_keys,
-            expected_profile_id=_PROFILE,
-            expected_platform_family=_FAMILY,
-            expected_architecture=_ARCH,
-            sizing=request.sizing,
-            target=request.target,
-            support_installed_bytes=_SUPPORT_BOUND,
-            install_target_sha256=_INSTALL_SHA,
-            password_hash=_PASSWORD_HASH,
-        )
-        with self.assertRaises(FreshAbInstallError):
-            execute_fresh_ab_install(bad, harness["seams"])
+        old = harness["bundle"]
+        with _zipfile.ZipFile(old, "w", compression=_zipfile.ZIP_STORED) as archive:
+            archive.writestr(
+                "manifest.json",
+                (
+                    _json.dumps(
+                        {
+                            "schema_version": 2,
+                            "release_id": "greia-0.14.0",
+                            "version": "0.14.0",
+                            "platform_family": _FAMILY,
+                            "architecture": _ARCH,
+                            "profile": _PROFILE,
+                            "payload": {
+                                "name": "payload.bin",
+                                "sha256": "0" * 64,
+                                "size": 4,
+                                "kind": "system-slot-image",
+                            },
+                            "release_notes": "",
+                        },
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                    + "\n"
+                ).encode(),
+            )
+            archive.writestr("manifest.sig", b"{}")
+            archive.writestr("payload.bin", b"data")
+        with self.assertRaises(FreshAbInstallError) as ctx:
+            execute_fresh_ab_install(harness["request"], harness["seams"])
+        message = str(ctx.exception).lower()
+        self.assertIn("v3", message)
         self.assertEqual(harness["runner"].commands, [])
 
     def test_profile_mismatch_refused_before_destruction(self) -> None:
@@ -736,7 +769,6 @@ class FreshAbInstallTests(unittest.TestCase):
         request = harness["request"]
         bad = FreshAbInstallRequest(
             bundle_path=request.bundle_path,
-            trusted_key_dir=request.trusted_key_dir,
             expected_profile_id="modern-amd64",
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,
@@ -773,7 +805,6 @@ class FreshAbInstallTests(unittest.TestCase):
                 layout_id="legacy-bios-ab-v1",
                 boot_backend="grub-ab-v1",
                 release_id="greia-0.15.0",
-                release_sequence=11,
             )
         self.assertEqual(
             BootTransactionJournal.load(journal_dir).state,
@@ -987,38 +1018,33 @@ class AbServiceRoutingTests(unittest.TestCase):
             )
 
     def test_executor_factory_wires_request_from_service_facts(self) -> None:
+        import zstandard
+
         directory = tempfile.mkdtemp(prefix="x8-abexec-")
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
         payload = _payload()
-        private = root / "priv.pem"
-        public = root / "pub.pem"
-        generate_ed25519_keypair(private, public)
-        payload_path = root / "payload.bin"
-        payload_path.write_bytes(payload)
+        compressed = zstandard.ZstdCompressor(level=3).compress(payload)
+        payload_path = root / "payload.ext4.zst"
+        payload_path.write_bytes(compressed)
         hw_path = root / "hw.tar.zst"
         hw_path.write_bytes(_HW_BYTES)
-        contract_path = root / "contract.json"
-        contract_path.write_bytes(build_persistent_state_contract_bytes())
         bundle = root / "r11.greiaupdate"
         build_update_bundle(
             payload_path=payload_path,
             hardware_support_path=hw_path,
-            persistent_contract_path=contract_path,
             output_path=bundle,
             version="0.15.0",
             release_id="greia-0.15.0",
-            release_sequence=11,
             platform_family=_FAMILY,
             architecture=_ARCH,
             profile=_PROFILE,
-            signer=_SIGNER,
-            private_key_path=private,
+            payload_uncompressed_bytes=len(payload),
             minimum_slot_bytes=len(payload) + MIB,
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
         )
-        key_dir = root / "trusted"
-        key_dir.mkdir()
-        (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
         manifest = inspect_update_bundle(bundle).manifest
         observed = _observed_mbr_identities()
         persist_stage = root / "persist-stage"
@@ -1068,7 +1094,6 @@ class AbServiceRoutingTests(unittest.TestCase):
 
         facts = AbExecutorFacts(
             bundle_path=bundle,
-            trusted_key_dir=key_dir,
             expected_profile_id=_PROFILE,
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,
@@ -1096,7 +1121,6 @@ class AbServiceRoutingTests(unittest.TestCase):
         )
         outcome = executor(_Authorization(), settings, "en", _target())
         self.assertEqual(outcome.release_id, "greia-0.15.0")
-        self.assertEqual(outcome.release_sequence, 11)
         self.assertEqual(touched, ["A"])
         # The post-layout observer fired exactly once, after partitioning,
         # for the rematerialized target with the validated plan.
@@ -1112,7 +1136,6 @@ class AbServiceRoutingTests(unittest.TestCase):
         manifest = inspect_update_bundle(harness["bundle"]).manifest
         facts = AbExecutorFacts(
             bundle_path=harness["bundle"],
-            trusted_key_dir=harness["key_dir"],
             expected_profile_id=_PROFILE,
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,
@@ -1166,36 +1189,34 @@ class AbServiceRoutingTests(unittest.TestCase):
         self.assertEqual(runners[0].commands, [])
 
     def _harness_bundle_only(self, root: Path):
-        """Build a signed bundle + key dir without a full install harness."""
-        private = root / "priv.pem"
-        public = root / "pub.pem"
-        generate_ed25519_keypair(private, public)
-        payload_path = root / "payload.bin"
-        payload_path.write_bytes(_payload())
+        """Build an unsigned v3 bundle without a full install harness."""
+        import zstandard
+
+        payload = _payload()
+        compressed = zstandard.ZstdCompressor(level=3).compress(payload)
+        payload_path = root / "payload.ext4.zst"
+        payload_path.write_bytes(compressed)
         hw_path = root / "hw.tar.zst"
         hw_path.write_bytes(_HW_BYTES)
-        contract_path = root / "contract.json"
-        contract_path.write_bytes(build_persistent_state_contract_bytes())
         bundle = root / "r11.greiaupdate"
+        if bundle.exists():
+            bundle.unlink()
         build_update_bundle(
             payload_path=payload_path,
             hardware_support_path=hw_path,
-            persistent_contract_path=contract_path,
             output_path=bundle,
             version="0.15.0",
             release_id="greia-0.15.0",
-            release_sequence=11,
             platform_family=_FAMILY,
             architecture=_ARCH,
             profile=_PROFILE,
-            signer=_SIGNER,
-            private_key_path=private,
-            minimum_slot_bytes=len(_payload()) + MIB,
+            payload_uncompressed_bytes=len(payload),
+            minimum_slot_bytes=len(payload) + MIB,
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
         )
-        key_dir = root / "trusted"
-        key_dir.mkdir(exist_ok=True)
-        (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
-        return {"bundle": bundle, "key_dir": key_dir}
+        return {"bundle": bundle}
 
 
 class ModuleHygieneTests(unittest.TestCase):

@@ -109,7 +109,6 @@ def _directive_values(path: Path, name: str) -> set[str]:
 def _record_dict() -> dict[str, object]:
     return {
         "accepted_release_id": "greia-0.16.0",
-        "accepted_release_sequence": 8,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -304,8 +303,6 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
         from greia_platform.system_updates import build_live_update_service
 
         state_dir = root / "state"
-        key_dir = root / "keys"
-        key_dir.mkdir(parents=True, exist_ok=True)
         layout_path = root / "installed-layout.json"
         layout_path.write_bytes(
             (json.dumps(_record_dict(), sort_keys=True, separators=(",", ":"))
@@ -319,7 +316,6 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
         ):
             return build_live_update_service(
                 state_dir=state_dir,
-                trusted_key_dir=key_dir,
                 layout_record_path=layout_path,
                 boot_backend_auto=False,
             )
@@ -358,8 +354,26 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
                 layout = authority.layout_summary()
                 self.assertEqual(layout["slots"], ["A", "B"])
                 # Real protocol path: STATUS through the production endpoint
-                # (root peer, interactive boot state) answers absent.
-                endpoint = UpdatePrivilegedEndpoint(authority)  # type: ignore[arg-type]
+                # (root peer, interactive boot state) answers absent. The
+                # endpoint renders the legacy summary shape, so the v3
+                # authority is adapted at the socket boundary (T04 notes).
+                from greia_platform.update_privileged import CurrentCandidateSummary
+
+                _real_authority = authority
+
+                class _SocketAuthority:
+                    def candidate_summary(self) -> CurrentCandidateSummary:
+                        summary = _real_authority.candidate_summary()
+                        return CurrentCandidateSummary(
+                            present=summary.present,
+                            release_id=summary.release_id,
+                            bundle_sha256=summary.bundle_sha256,
+                        )
+
+                    def layout_summary(self) -> dict[str, object]:
+                        return dict(_real_authority.layout_summary())
+
+                endpoint = UpdatePrivilegedEndpoint(_SocketAuthority())  # type: ignore[arg-type]
                 raw = endpoint.handle_request(
                     build_request("STATUS"),
                     peer=PeerCredential(uid=0),
@@ -382,53 +396,45 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
             )
 
     def test_candidate_present_but_no_device_still_fails_closed(self) -> None:
-        # Sensitivity control: the spy above is live — with a signed
+        # Sensitivity control: the spy above is live — with an unsigned v3
         # candidate present but no inactive device resolvable, the same
         # shipped composition demands a destination seam and then refuses
         # fail-closed with no journal write and no slot artifacts.
+        import zstandard
+
         from greia_platform.system_updates import (
             SystemUpdateInbox,
             UpdateBackendUnavailable,
-            build_persistent_state_contract_bytes,
             build_update_bundle,
-            generate_ed25519_keypair,
-            write_accepted_sequence,
         )
 
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             authority = self._compose(root)
             state_dir = root / "state"
-            key_dir = root / "keys"
             layout_path = root / "installed-layout.json"
-            private_key = root / "release-private.pem"
-            public_key = root / "release-public.pem"
-            generate_ed25519_keypair(private_key, public_key)
-            (key_dir / "greia-release-main.pem").write_bytes(
-                public_key.read_bytes()
-            )
-            write_accepted_sequence(state_dir, 8)
             work = root / "releases" / "r9"
             work.mkdir(parents=True, exist_ok=True)
-            (work / "slot.img").write_bytes(_payload(220 * 1024, b"postr1-p34:"))
-            (work / "hw.tar.zst").write_bytes(b"\x28\xb5\x2f\xfd" + b"p34-hw" * 64)
-            (work / "contract.json").write_bytes(
-                build_persistent_state_contract_bytes()
+            raw = _payload(220 * 1024, b"postr1-p34:")
+            (work / "slot.ext4.zst").write_bytes(
+                zstandard.ZstdCompressor(level=3).compress(raw)
             )
+            (work / "hw.tar.zst").write_bytes(b"\x28\xb5\x2f\xfd" + b"p34-hw" * 64)
             bundle = work / "r9.greiaupdate"
             build_update_bundle(
-                payload_path=work / "slot.img",
+                payload_path=work / "slot.ext4.zst",
                 hardware_support_path=work / "hw.tar.zst",
-                persistent_contract_path=work / "contract.json",
                 output_path=bundle,
                 version="0.17.0",
                 release_id="greia-0.17.0",
-                release_sequence=9,
                 platform_family=_FAMILY,
                 architecture=_ARCH,
                 profile=_PROFILE,
-                signer="greia-release-main",
-                private_key_path=private_key,
+                payload_uncompressed_bytes=len(raw),
+                minimum_slot_bytes=len(raw),
+                persist_read_schema_min=1,
+                persist_read_schema_max=1,
+                persist_write_schema=1,
                 release_notes="POSTR1-P3-UPDATE-ACTIVATION sensitivity control.",
             )
             SystemUpdateInbox(state_dir).receive(bundle)
@@ -450,7 +456,7 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
                 ):
                     verified = authority.verify_current_candidate()
                     self.assertTrue(verified.present)
-                    self.assertEqual(verified.release_sequence, 9)
+                    self.assertEqual(verified.release_id, "greia-0.17.0")
                     with self.assertRaises(UpdateBackendUnavailable) as raised:
                         authority.stage_current_candidate()
             finally:

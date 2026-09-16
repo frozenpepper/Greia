@@ -148,7 +148,7 @@ class SubprocessHardwareSupportRunner:
 class ProductionAbSeamsConfig:
     """Typed production seam configuration (Greia-owned facts only).
 
-    ``bundle_path``/``trusted_key_dir``/``support_installed_bound``/``sizing``
+    ``bundle_path``/``support_installed_bound``/``sizing``
     come from :class:`AbExecutorFacts`; ``hardware_support_pool`` comes from
     service state; staging/mount dirs are platform-owned paths (disposable
     tmpdirs in tests). Support digests, inventory attestation and pool
@@ -158,7 +158,6 @@ class ProductionAbSeamsConfig:
     """
 
     bundle_path: Path
-    trusted_key_dir: Path
     support_installed_bound: int
     sizing: ProfileSizing
     hardware_support_pool: Path | None
@@ -176,17 +175,6 @@ class ProductionAbSeamsConfig:
         if self.bundle_path.is_symlink() or not self.bundle_path.is_file():
             raise AbInstallCompositionError(
                 "production seam configuration release bundle is not a regular file"
-            )
-        if (
-            not isinstance(self.trusted_key_dir, Path)
-            or not self.trusted_key_dir.is_absolute()
-        ):
-            raise AbInstallCompositionError(
-                "production seam configuration carries no absolute trusted key dir"
-            )
-        if self.trusted_key_dir.is_symlink() or not self.trusted_key_dir.is_dir():
-            raise AbInstallCompositionError(
-                "production seam configuration trusted key dir is not a real directory"
             )
         if (
             isinstance(self.support_installed_bound, bool)
@@ -260,7 +248,6 @@ def config_from_facts_and_state(
             )
     return ProductionAbSeamsConfig(
         bundle_path=Path(facts.bundle_path),
-        trusted_key_dir=Path(facts.trusted_key_dir),
         support_installed_bound=int(facts.support_installed_bytes),
         sizing=facts.sizing,
         hardware_support_pool=pool,

@@ -97,13 +97,13 @@ GATE_P5_TRANSITION_UNITS: dict[str, dict[str, object]] = {
         ],
         "sockets": ["greia-boot-health.sock"],
         "entrypoint": "boot-health commit B + launcher INTERACTIVE_READY",
-        "evidence": "boot_health_result.observed (default B, sequence)",
+        "evidence": "boot_health_result.observed (default B, release_id)",
     },
     "stage-broken-candidate": {
         "units": ["greia-system-update.service"],
         "sockets": ["greia-system-update.sock"],
         "entrypoint": (
-            "STAGE_CURRENT_CANDIDATE stages the validly-signed unhealthy "
+            "STAGE_CURRENT_CANDIDATE stages the structurally-valid unhealthy "
             "candidate (pinned remove-root-health-capability-issuer build)"
         ),
         "evidence": "recovery_result.stages[stage-broken-candidate]",
@@ -706,7 +706,6 @@ def run_gate_p5_closure_product(
     official_installer_image: Path,
     release_bundle: Path,
     reverse_bundle: Path,
-    trusted_key_dir: Path,
     unhealthy_release: Mapping[str, object],
     base_hardware_support: Path | None = None,
     d31_fn=None,
@@ -773,7 +772,6 @@ def run_gate_p5_closure_product(
         config,
         official_image=Path(official_installer_image),
         release_bundle=Path(release_bundle),
-        trusted_key_dir=Path(trusted_key_dir),
     )
 
     if install_fn is not None:
@@ -827,12 +825,14 @@ def run_gate_p5_closure_product(
                 output_path=unhealthy_path,
                 work_dir=work,
                 release_id=str(unhealthy_release.get("release_id")),
-                release_sequence=int(unhealthy_release.get("release_sequence", 0)),
                 platform_family=str(unhealthy_release.get("platform_family", "")),
                 architecture=str(unhealthy_release.get("architecture", "")),
                 profile=str(unhealthy_release.get("profile", "")),
-                signer=str(unhealthy_release.get("signer", "")),
-                private_key_path=Path(str(unhealthy_release.get("private_key_path", ""))),
+                board=(
+                    str(unhealthy_release["board"])
+                    if unhealthy_release.get("board") is not None
+                    else None
+                ),
             )
         )
     if unhealthy_verify_fn is not None:
@@ -841,13 +841,16 @@ def run_gate_p5_closure_product(
         unhealthy_verified = dict(
             _product.verify_unhealthy_candidate_bundle(
                 unhealthy_path,
-                trusted_key_dir=Path(trusted_key_dir),
-                accepted_sequence=int(unhealthy_release.get("accepted_sequence", 21)),
                 platform_family=str(unhealthy_release.get("platform_family", "")),
                 architecture=str(unhealthy_release.get("architecture", "")),
                 profile=str(unhealthy_release.get("profile", "")),
                 expected_hardware_sha256=str(
                     unhealthy_release.get("expected_hardware_sha256", "")
+                ),
+                board=(
+                    str(unhealthy_release["board"])
+                    if unhealthy_release.get("board") is not None
+                    else None
                 ),
             )
         )

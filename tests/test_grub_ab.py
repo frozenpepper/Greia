@@ -61,7 +61,6 @@ _PASSWORD_HASH = "grub.pbkdf2.sha512.10000.ABCDEF0123456789"
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -85,7 +84,6 @@ def _receipt(slot: str, *, layout_id: str = "modern-gpt-ab-v1") -> FinalizationR
         schema_version=1,
         finalizer_version=FINALIZER_VERSION,
         release_id="greia-0.15.0",
-        release_sequence=11,
         slot=slot,
         role=f"system-{slot.lower()}",
         base_sha256=_KERNEL_A,
@@ -624,7 +622,7 @@ class FailedHealthLeavesDefaultTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             coordinator.arm()
             # Candidate kernel fails: firmware boots the accepted default.
@@ -644,7 +642,7 @@ class FailedHealthLeavesDefaultTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             coordinator.arm()
             self.assertEqual(backend.simulate_reboot(), "B")
@@ -668,7 +666,7 @@ class FailedHealthLeavesDefaultTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             coordinator.arm()
             self.assertEqual(backend.simulate_reboot(), "B")

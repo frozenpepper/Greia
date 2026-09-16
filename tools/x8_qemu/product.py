@@ -10,7 +10,7 @@ orchestration wrapper and the control-seam text/injection helpers. The
 8-transition sequence (``LIFECYCLE_SEQUENCE``), the transition contract
 (``assert_lifecycle_transitions``), the observation folds
 (``decide_device_boot_observation``,
-``GrubEnvBackend.attach(...).inspect()``, journal/accepted-sequence/
+``GrubEnvBackend.attach(...).inspect()``, journal/accepted-release/
 PERSIST reads), the release lineage shape, the ``ImageIntegrationSeams``
 positive controls, the D31 fixture/interruption/resource envelope and
 the 768 MiB cgroup gate all stay owned by ``lifecycle.py`` /
@@ -111,7 +111,7 @@ ATTESTATION_SOURCES: tuple[str, ...] = (
     "decide_device_boot_observation(pre, post)",
     "payload.read_attestation_signal",
     "BootTransactionJournal.load(<image state dir>)",
-    "read_accepted_sequence(<image state dir>)",
+    "InstalledLayoutRecord.load(<persist layout record>)",
     "persist partition bytes + devproof D31 fixture parse",
     "sha256_file(image) + blkid/sfdisk cross-check",
     "control channel: NOT A SOURCE (orchestration only)",
@@ -986,42 +986,42 @@ def create_disposable_target(
 
 
 def _require_install_artifacts(
-    *, release_bundle: Path, trusted_key_dir: Path
+    *, release_bundle: Path
 ) -> dict[str, str]:
-    """Presence gate for install artifacts before any scratch allocation.
+    """Presence + v3 inspection gate before any scratch allocation.
 
-    First stage of the fail-closed preflight: the signed release bundle
-    must be a real file and the trusted key dir must hold at least one
-    ``*.pem``. Runs before the disposable target/clone exist so a missing
-    artifact refuses with zero side effects. The full semantic preflight
-    (:func:`preflight_install_composition`) re-validates these plus
-    profile, identity equality and A/B mode before any mutation.
+    First stage of the fail-closed preflight: the unsigned v3 release
+    bundle must be a real file AND pass production v3 inspection
+    (member order, digests, manifest bounds). Runs before the disposable
+    target/clone exist so a missing or corrupt artifact refuses with
+    zero side effects. The full semantic preflight
+    (:func:`preflight_install_composition`) re-validates the bundle
+    plus profile, identity equality and A/B mode before any mutation.
     """
+    from greia_platform.system_updates import inspect_update_bundle
+
     bundle = Path(release_bundle)
-    key_dir = Path(trusted_key_dir)
     if bundle.is_symlink() or not bundle.is_file():
         raise LifecycleHarnessError(
-            "BLOCKED product mode: missing signed release bundle "
+            "BLOCKED product mode: missing release bundle "
             f"({bundle}); refusing before any slot payload write"
         )
-    if key_dir.is_symlink() or not key_dir.is_dir():
+    try:
+        inspected = inspect_update_bundle(bundle)
+    except Exception as exc:
         raise LifecycleHarnessError(
-            "BLOCKED product mode: missing trusted key dir "
-            f"({key_dir}); refusing before any slot payload write"
-        )
-    pems = [p for p in key_dir.glob("*.pem") if p.is_file() and not p.is_symlink()]
-    if not pems:
-        raise LifecycleHarnessError(
-            "BLOCKED product mode: missing trusted key "
-            f"(no *.pem under {key_dir}); refusing before any slot payload write"
-        )
-    return {"release_bundle": str(bundle), "trusted_key_dir": str(key_dir)}
+            "BLOCKED product mode: release bundle fails v3 inspection "
+            f"({bundle}: {exc}); refusing before any slot payload write"
+        ) from exc
+    return {
+        "release_bundle": str(bundle),
+        "release_id": inspected.manifest.release_id,
+    }
 
 
 def preflight_install_composition(
     *,
     release_bundle: Path,
-    trusted_key_dir: Path,
     expected_profile_id: str,
     prepare_identity: str,
     execute_identity: str,
@@ -1032,8 +1032,9 @@ def preflight_install_composition(
 
     Proves the four brief negatives without mutating a disk:
 
-    - missing signed release bundle → ``BLOCKED`` naming the artifact;
-    - missing trusted key (absent dir or no ``*.pem``) → ``BLOCKED``;
+    - missing release bundle → ``BLOCKED`` naming the artifact;
+    - corrupt or legacy bundle (v3 inspection refuses) → ``BLOCKED``
+      naming the inspection failure;
     - target-profile mismatch → fail-closed refusal;
     - target identity changed between ``PREPARE_PLAN`` and ``EXECUTE`` →
       fail-closed refusal.
@@ -1045,24 +1046,21 @@ def preflight_install_composition(
     """
     import re as _re
 
+    from greia_platform.system_updates import inspect_update_bundle
+
     bundle = Path(release_bundle)
-    key_dir = Path(trusted_key_dir)
     if bundle.is_symlink() or not bundle.is_file():
         raise LifecycleHarnessError(
-            "BLOCKED product mode: missing signed release bundle "
+            "BLOCKED product mode: missing release bundle "
             f"({bundle}); refusing before any slot payload write"
         )
-    if key_dir.is_symlink() or not key_dir.is_dir():
+    try:
+        inspected = inspect_update_bundle(bundle)
+    except Exception as exc:
         raise LifecycleHarnessError(
-            "BLOCKED product mode: missing trusted key dir "
-            f"({key_dir}); refusing before any slot payload write"
-        )
-    pems = [p for p in key_dir.glob("*.pem") if p.is_file() and not p.is_symlink()]
-    if not pems:
-        raise LifecycleHarnessError(
-            "BLOCKED product mode: missing trusted key "
-            f"(no *.pem under {key_dir}); refusing before any slot payload write"
-        )
+            "BLOCKED product mode: release bundle fails v3 inspection "
+            f"({bundle}: {exc}); refusing before any slot payload write"
+        ) from exc
     if expected_profile_id != INSTALL_PROFILE_ID:
         raise LifecycleHarnessError(
             "install refused: target-profile mismatch "
@@ -1115,7 +1113,7 @@ def preflight_install_composition(
         "profile_id": expected_profile_id,
         "target_identity": prepare_identity,
         "release_bundle": str(bundle),
-        "trusted_key_dir": str(key_dir),
+        "release_id": inspected.manifest.release_id,
     }
 
 
@@ -1773,7 +1771,6 @@ def run_install_leg(
     profile_id: str,
     expected_target_identity: str,
     release_bundle: Path,
-    trusted_key_dir: Path,
     official_image: Path | None = None,
     clone_fn=None,
     boot_fn=None,
@@ -1791,7 +1788,6 @@ def run_install_leg(
     """
     preflight = preflight_install_composition(
         release_bundle=release_bundle,
-        trusted_key_dir=trusted_key_dir,
         expected_profile_id=profile_id,
         prepare_identity=expected_target_identity,
         execute_identity=expected_target_identity,
@@ -2160,7 +2156,7 @@ def _require_boot_observation_evidence(
     ``disk_identities`` (MBR signature + three PARTUUIDs),
     ``observed_identities`` (system-a/system-b/persist PARTUUID +
     filesystem UUIDs), and the inspected ``default_slot`` /
-    ``accepted_sequence`` / ``committed_slot`` / ``last_booted`` /
+    ``accepted_release_id`` / ``committed_slot`` / ``last_booted`` /
     ``journal_state``. A missing section or field raises RED naming it,
     never a partial green; synthetic defaults are refused because every
     required key must be present with a well-formed value.
@@ -2168,7 +2164,7 @@ def _require_boot_observation_evidence(
     if not isinstance(observed, Mapping):
         raise LifecycleHarnessError(
             "unit identity record requires the observed boot-health facts "
-            "(MBR/PARTUUID/filesystem/journal/sequence/layout); "
+            "(MBR/PARTUUID/filesystem/journal/release/layout); "
             "got no boot observation record"
         )
     disk = observed.get("disk_identities")
@@ -2209,7 +2205,7 @@ def _require_boot_observation_evidence(
                 )
     for field in (
         "default_slot",
-        "accepted_sequence",
+        "accepted_release_id",
         "committed_slot",
         "last_booted",
         "journal_state",
@@ -2229,11 +2225,11 @@ def _require_boot_observation_evidence(
             "unit identity record boot observation does not bind the "
             "committed slot 'B' (committed_slot/last_booted)"
         )
-    sequence = observed.get("accepted_sequence")
-    if isinstance(sequence, bool) or not isinstance(sequence, int):
+    release_id = observed.get("accepted_release_id")
+    if not isinstance(release_id, str) or not release_id:
         raise LifecycleHarnessError(
-            "unit identity record requires the observed accepted sequence "
-            "as returned by gather_boot_health_observation (integer)"
+            "unit identity record requires the observed accepted release_id "
+            "as returned by gather_boot_health_observation (non-empty string)"
         )
     if observed.get("journal_state") != "accepted":
         raise LifecycleHarnessError(
@@ -2247,7 +2243,7 @@ def _require_boot_observation_evidence(
             for role in ("system-a", "system-b", "persist")
         },
         "default_slot": observed.get("default_slot"),
-        "accepted_sequence": int(sequence),
+        "accepted_release_id": release_id,
         "committed_slot": observed.get("committed_slot"),
         "last_booted": observed.get("last_booted"),
         "journal_state": observed.get("journal_state"),
@@ -2277,7 +2273,7 @@ def build_product_identity_record(
     ``slot_isolation`` (via :func:`verify_update_slot_isolation`) + the
     observed ``boot_observation`` facts from
     :func:`gather_boot_health_observation` (MBR/PARTUUID/filesystem/
-    journal/sequence/layout). Exactly one image leg must be selected;
+    journal/release/layout). Exactly one image leg must be selected;
     mixing both refuses. Fail-closed: any missing/unreadable identity
     or missing provenance field raises (``BLOCKED`` naming the artifact
     when a built image/unit/bundle is unavailable to hash, RED
@@ -2564,7 +2560,7 @@ SHIPPED_BOOT_UNITS: tuple[str, ...] = (
 #: p1 boot-control, p2 system-a, p3 system-b, p4 persist).
 SLOT_PARTITION_NUMBER: dict[str, int] = {"A": 2, "B": 3}
 
-#: Control-disk copy of the signed candidate staged by the host for the
+#: Control-disk copy of the unsigned v3 candidate staged by the host for the
 #: ``update-stage`` phase; the guest runner copies it into the real
 #: installed inbox before driving ``STAGE_CURRENT_CANDIDATE``.
 CANDIDATE_BUNDLE_FILE = "candidate.greiaupdate"
@@ -3105,10 +3101,9 @@ def inspect_boot_health_roots(
     *,
     backend_state_dir: Path,
     journal_dir: Path,
-    accepted_state_dir: Path,
     layout_record_path: Path,
     expected_slot: str,
-    expected_sequence: int,
+    expected_release_id: str | None = None,
 ) -> dict[str, object]:
     """Verify one health-committed boot through production parsers only.
 
@@ -3120,20 +3115,26 @@ def inspect_boot_health_roots(
       is ``expected_slot`` (the real ``greia-boot-observer`` unit must
       have reconciled it before launcher acceptance);
     - ``BootTransactionJournal``: terminal ``ACCEPTED`` binding
-      ``expected_slot``;
-    - ``read_accepted_sequence``: ``expected_sequence``;
-    - ``InstalledLayoutRecord``: accepted slot/sequence agree.
+      ``expected_slot`` and ``expected_release_id``;
+    - ``InstalledLayoutRecord``: accepted slot/release_id agree.
     """
     from greia_platform.boot_transaction import (
         BootTransactionJournal,
         BootTransactionState,
     )
     from greia_platform.grub_ab import GrubEnvBackend
-    from greia_platform.system_updates import read_accepted_sequence
 
     if expected_slot not in ("A", "B"):
         raise LifecycleHarnessError(
             f"boot-health inspection refused: unknown slot {expected_slot!r}"
+        )
+    if expected_release_id is None:
+        raise LifecycleHarnessError(
+            "boot-health inspection refused: expected release identity is missing"
+        )
+    if not isinstance(expected_release_id, str) or not expected_release_id:
+        raise LifecycleHarnessError(
+            "boot-health inspection refused: expected release identity is missing"
         )
     backend = GrubEnvBackend.attach(Path(backend_state_dir))
     state = backend.inspect()
@@ -3160,10 +3161,9 @@ def inspect_boot_health_roots(
         raise LifecycleHarnessError(
             "boot-health journal does not bind the committed slot"
         )
-    sequence = read_accepted_sequence(Path(accepted_state_dir))
-    if int(sequence) != int(expected_sequence):
+    if journal.release_id != expected_release_id:
         raise LifecycleHarnessError(
-            f"accepted sequence is {sequence!r}, expected {expected_sequence!r}"
+            f"journal release is {journal.release_id!r}, expected {expected_release_id!r}"
         )
     from greia_platform.system_updates import load_installed_layout_record
 
@@ -3175,13 +3175,13 @@ def inspect_boot_health_roots(
             f"layout authority accepts {record.accepted_slot!r}, "
             f"expected {expected_slot!r}"
         )
-    if int(record.accepted_release_sequence) != int(expected_sequence):
+    if record.accepted_release_id != expected_release_id:
         raise LifecycleHarnessError(
-            "layout authority sequence moved under the health transaction"
+            "layout authority release moved under the health transaction"
         )
     return {
         "committed_slot": expected_slot,
-        "accepted_sequence": int(sequence),
+        "accepted_release_id": expected_release_id,
         "grubenv_default": state.default_slot,
         "last_booted": state.last_booted_slot,
         "journal_state": str(journal.state.value),
@@ -3242,9 +3242,9 @@ def _resolve_boot_evidence_dirs(
 
     Shared by the boot-health and recovery observers: grubenv state on
     the boot-control mount; the update pending journal preferred, else
-    the first-install journal; the accepted release state; and the
-    installed layout record. Every Miss fails closed naming the searched
-    paths (single owner for the candidate lists).
+    the first-install journal; and the installed layout record. Every
+    miss fails closed naming the searched paths (single owner for the
+    candidate lists).
     """
     from greia_platform.boot_transaction import JOURNAL_FILE_NAME
     from greia_platform.grub_ab import GRUBENV_FILE_NAME
@@ -3295,21 +3295,12 @@ def _resolve_boot_evidence_dirs(
     if journal_dir is None:
         raise LifecycleHarnessError(str(last_error))
     assert journal_dir is not None
-    # Accepted-sequence state and layout authority resolve from the
-    # same persist tree while still mounted: the update state dir
-    # (/var/lib/greia-os at runtime) binds from PERSIST namespace
-    # parent-credentials, so its system-updates/accepted.json is
-    # probed there first; the installed layout record's authoritative
-    # on-persist copy is greia/installed-layout.json
+    # Layout authority resolves from the same persist tree while still
+    # mounted: the installed layout record's authoritative on-persist
+    # copy is greia/installed-layout.json
     # (greia_platform.persistent_layout.persist_record_path), with
     # the layout-authority namespace source as the bounded second
     # candidate. A miss fails closed naming every searched path.
-    accepted_state_dir = _resolve_marker_dir(
-        persist_mnt,
-        ["greia/namespaces/parent-credentials", ""],
-        "system-updates/accepted.json",
-        what="accepted release state",
-    )
     layout_record_dir = _resolve_marker_dir(
         persist_mnt,
         ["greia", "greia/namespaces/layout-authority", ""],
@@ -3319,7 +3310,7 @@ def _resolve_boot_evidence_dirs(
     return {
         "backend_state_dir": backend_state_dir,
         "journal_dir": journal_dir,
-        "accepted_state_dir": accepted_state_dir,
+        "layout_record_dir": layout_record_dir,
         "layout_record_path": layout_record_dir / LAYOUT_RECORD_NAME,
     }
 
@@ -3331,19 +3322,19 @@ def gather_boot_health_observation(
     runner=None,
     which=None,
     expected_slot: str,
-    expected_sequence: int,
+    expected_release_id: str | None = None,
 ) -> dict[str, object]:
     """Observe the health-committed disposable target (production parsers).
 
     Partscan-attaches the target, reads the MBR PARTUUIDs plus the
     system-a/system-b/persist filesystem UUIDs via ``blkid``, mounts
     boot-control (p1) and persist (p4) read-only, resolves the
-    production-placed ``grubenv``/journal/accepted-sequence/layout evidence
+    production-placed ``grubenv``/journal/layout evidence
     dirs, and verifies them through :func:`inspect_boot_health_roots` for
     the committed slot while still mounted. Every
-    slot/journal/sequence/default/layout fact is derived from real disk
+    slot/journal/release/default/layout fact is derived from real disk
     bytes; the control channel is never read for attestation. The returned
-    ``default_slot``/``accepted_sequence``/``committed_slot`` come from
+    ``default_slot``/``accepted_release_id``/``committed_slot`` come from
     that inspection (never minted), so the report closure predicate reads
     authoritative state. A missing facility stays ``BLOCKED`` naming it;
     a missing evidence file fails closed naming the searched paths.
@@ -3359,9 +3350,9 @@ def gather_boot_health_observation(
         raise LifecycleHarnessError(
             f"boot-health observation refused: unknown expected slot {expected_slot!r}"
         )
-    if isinstance(expected_sequence, bool) or not isinstance(expected_sequence, int):
+    if expected_release_id is None:
         raise LifecycleHarnessError(
-            "boot-health observation refused: expected sequence is not an integer"
+            "boot-health observation refused: expected release identity is missing"
         )
 
     target = Path(target_path)
@@ -3438,22 +3429,20 @@ def gather_boot_health_observation(
         resolved = _resolve_boot_evidence_dirs(boot_mnt, persist_mnt)
         backend_state_dir = resolved["backend_state_dir"]
         journal_dir = resolved["journal_dir"]
-        accepted_state_dir = resolved["accepted_state_dir"]
-        layout_record_dir = resolved["layout_record_path"].parent
+        layout_record_dir = resolved["layout_record_dir"]
         health = inspect_boot_health_roots(
             backend_state_dir=backend_state_dir,
             journal_dir=journal_dir,
-            accepted_state_dir=accepted_state_dir,
             layout_record_path=layout_record_dir / LAYOUT_RECORD_NAME,
             expected_slot=expected_slot,
-            expected_sequence=expected_sequence,
+            expected_release_id=expected_release_id,
         )
         inspection = {
             "disk_identities": disk_identities,
             "observed_identities": observed_identities,
             "backend_state_dir": str(backend_state_dir),
             "journal_dir": str(journal_dir),
-            "accepted_state_dir": str(accepted_state_dir),
+            "layout_record_dir": str(layout_record_dir),
             "layout_record": str(layout_record_dir / LAYOUT_RECORD_NAME),
         }
     finally:
@@ -3476,14 +3465,14 @@ def gather_boot_health_observation(
         },
         "inspection": health,
         "default_slot": health["grubenv_default"],
-        "accepted_sequence": health["accepted_sequence"],
+        "accepted_release_id": health["accepted_release_id"],
         "committed_slot": health["committed_slot"],
         "last_booted": health["last_booted"],
         "journal_state": health["journal_state"],
         "resolved_paths": {
             "backend_state_dir": str(inspection["backend_state_dir"]),
             "journal_dir": str(inspection["journal_dir"]),
-            "accepted_state_dir": str(inspection["accepted_state_dir"]),
+            "layout_record_dir": str(inspection["layout_record_dir"]),
             "layout_record": str(inspection["layout_record"]),
         },
     }
@@ -3497,7 +3486,7 @@ def build_boot_health_lifecycle_report(
     The boot-health leg observes ``boot-A-accepted`` (first-install A
     health-committed), ``stage-B-one-shot`` (inactive slot B staged
     through the shipped socket) and ``boot-B-commit`` (B health-committed
-    with accepted-sequence advancement) host-side; the remaining legs
+    with accepted-release advancement) host-side; the remaining legs
     keep the frozen expected-slot pattern so
     ``assert_lifecycle_transitions`` can verify the report shape. The
     returned dict names which steps this leg observed
@@ -3556,9 +3545,9 @@ def run_boot_health_leg(
     ``wait-health-poweroff`` (observer ``last_booted=A``, launcher
     ``INTERACTIVE_READY``, root health commits first-install A once) →
     drive ``update-status``/``update-verify``/``update-stage``/``update-arm``
-    through the real update socket with the signed ``.greiaupdate`` →
+    through the real update socket with the unsigned v3 ``.greiaupdate`` →
     re-inject slot B (the real updater rewrote it) → boot B
-    ``wait-health-poweroff`` (health-commits B, accepted sequence
+    ``wait-health-poweroff`` (health-commits B, accepted release
     advances) → hash both slots again and prove through
     :func:`verify_update_slot_isolation` that the active slot stayed
     byte-identical while the staged inactive slot moved → host-side
@@ -3573,7 +3562,7 @@ def run_boot_health_leg(
     bundle = Path(release_bundle)
     if bundle.is_symlink() or not bundle.is_file():
         raise LifecycleHarnessError(
-            "BLOCKED product mode: missing signed release bundle "
+                "BLOCKED product mode: missing release bundle "
             f"({bundle}); refusing before any slot payload write"
         )
     digest_fn = slot_digest_fn or hash_slot_partition
@@ -3659,7 +3648,6 @@ class ProductHarness:
     official_image: Path | None = None
     control_enabled: bool = True
     release_bundle: Path | None = None
-    trusted_key_dir: Path | None = None
     inner: LifecycleHarness = field(init=False)
 
     def __post_init__(self) -> None:
@@ -3690,7 +3678,6 @@ class ProductHarness:
         self,
         *,
         release_bundle: Path | None = None,
-        trusted_key_dir: Path | None = None,
         clone_fn=None,
         target_fn=None,
         inject_fn=None,
@@ -3701,8 +3688,8 @@ class ProductHarness:
         """Boot the disposable product image under the control seam.
 
         Phased wiring (P5.2 install leg): gate → fail-closed preflight
-        (release bundle, trusted key, profile, prepare/execute identity
-        equality, A/B mode, all before any clone/boot/mutation) → clone
+        (unsigned v3 release bundle inspection, profile, prepare/execute
+        identity equality, A/B mode, all before any clone/boot/mutation) → clone
         the official image into the disposable output root → create the
         disposable target and observe its pre-install identity through the
         production :class:`greia_installer.disk.DeviceObservation`
@@ -3719,8 +3706,8 @@ class ProductHarness:
 
         ``BLOCKED`` remains only for a genuinely absent facility/artifact
         that the message names (non-Linux, missing QEMU/loop/mount/
-        squashfs tooling, absent official image, missing release bundle
-        or trusted key). Never fabricates a boot, unit, disk or identity.
+        squashfs tooling, absent official image, missing or corrupt
+        release bundle). Never fabricates a boot, unit, disk or identity.
         The ``*_fn`` seams default to the real implementations; tests
         inject recording fakes to prove preflight-before-mutation and
         observation-before-closure through this entry point.
@@ -3744,21 +3731,10 @@ class ProductHarness:
             bundle = Path(self.release_bundle)
         else:
             bundle = None
-        if trusted_key_dir is not None:
-            keys = Path(trusted_key_dir)
-        elif self.trusted_key_dir is not None:
-            keys = Path(self.trusted_key_dir)
-        else:
-            keys = None
         if bundle is None:
             raise LifecycleHarnessError(
-                "BLOCKED product mode: no signed release bundle was provided "
+                "BLOCKED product mode: no release bundle was provided "
                 "(ProductHarness.release_bundle); refusing before any slot payload write"
-            )
-        if keys is None:
-            raise LifecycleHarnessError(
-                "BLOCKED product mode: no trusted key dir was provided "
-                "(ProductHarness.trusted_key_dir); refusing before any slot payload write"
             )
         root = self.product_root
         root.mkdir(parents=True, exist_ok=True)
@@ -3770,8 +3746,8 @@ class ProductHarness:
         observe_work.mkdir(parents=True, exist_ok=True)
 
         # Stage-1 artifact presence BEFORE any scratch allocation: a
-        # missing bundle/key refuses here with zero side effects.
-        _require_install_artifacts(release_bundle=bundle, trusted_key_dir=keys)
+        # missing bundle refuses here with zero side effects.
+        _require_install_artifacts(release_bundle=bundle)
 
         # Disposable target first so its pre-install identity is observed
         # from the real device descriptor (production DeviceObservation
@@ -3788,11 +3764,10 @@ class ProductHarness:
         expected_target_identity = str(target_observation.identity_digest)
 
         # Fail-closed preflight BEFORE any clone/boot/mutation: a missing
-        # bundle/key, profile mismatch, identity change or non-A/B mode
-        # refuses here with zero downstream calls.
+        # or corrupt bundle, profile mismatch, identity change or non-A/B
+        # mode refuses here with zero downstream calls.
         preflight = preflight_install_composition(
             release_bundle=bundle,
-            trusted_key_dir=keys,
             expected_profile_id=INSTALL_PROFILE_ID,
             prepare_identity=expected_target_identity,
             execute_identity=expected_target_identity,
@@ -3915,7 +3890,6 @@ class ProductHarness:
             "installer_image_sha256": installer_sha,
             "release_bundle": str(bundle),
             "release_bundle_sha256": bundle_sha,
-            "trusted_key_dir": str(keys),
             "preflight": preflight,
             "expected_target_identity": expected_target_identity,
             "target_observation": {
@@ -3988,7 +3962,7 @@ class ProductHarness:
         *,
         installed_image: Path | None = None,
         release_bundle: Path | None = None,
-        expected_sequence_b: int = 21,
+        expected_release_id_b: str = "greia-0.21.0",
         clone_fn=None,
         inject_fn=None,
         materialize_fn=None,
@@ -4006,7 +3980,7 @@ class ProductHarness:
         phases (``BOOT_HEALTH_LEG_PHASES``: boot-A
         ``wait-health-poweroff`` through the shipped boot-health socket,
         then ``update-status``/``update-verify``/``update-stage``/
-        ``update-arm`` through the shipped update socket with the signed
+        ``update-arm`` through the shipped update socket with the unsigned v3
         ``.greiaupdate``, re-injecting slot B after the real updater
         rewrites it and before its boot, then boot-B
     ``wait-health-poweroff``) under QEMU with the virtual VGA device
@@ -4017,12 +3991,12 @@ class ProductHarness:
         observation through production parsers
         (:func:`gather_boot_health_observation` /
         :func:`inspect_boot_health_roots`, returning the observed default
-        and accepted sequence from authoritative state) → close through
+        and accepted release_id from authoritative state) → close through
         ``assert_lifecycle_transitions``.
 
         ``BLOCKED`` remains only for a genuinely absent facility/artifact
         that the message names (non-Linux, missing QEMU/loop/mount/
-        squashfs tooling, absent installed image or signed bundle).
+        squashfs tooling, absent installed image or release bundle).
         Never fabricates a boot, unit, disk or identity. The ``*_fn``
         seams default to the real implementations (``slot_digest_fn``
         defaults to the real :func:`hash_slot_partition`); tests inject
@@ -4058,7 +4032,7 @@ class ProductHarness:
             bundle = None
         if bundle is None or bundle.is_symlink() or not bundle.is_file():
             raise LifecycleHarnessError(
-                "BLOCKED product mode: missing signed release bundle "
+            "BLOCKED product mode: missing release bundle "
                 f"({bundle}); refusing before any slot payload write"
             )
         bundle_sha = sha256_file(bundle)
@@ -4133,7 +4107,7 @@ class ProductHarness:
                 target_path=clone_path,
                 work_dir=observe_work,
                 expected_slot="B",
-                expected_sequence=expected_sequence_b,
+                expected_release_id=expected_release_id_b,
             )
         active_after = str(digest_fn(clone_path, "A"))
         inactive_after = str(digest_fn(clone_path, "B"))
@@ -4162,7 +4136,7 @@ class ProductHarness:
         # P5.3 identity record: binds the exact booted installed image,
         # the staged bundle, the src-tree units/modules at evidence time,
         # both slot-injection provenances, the slot-isolation digests and
-        # the observed MBR/PARTUUID/filesystem/journal/sequence/layout
+        # the observed MBR/PARTUUID/filesystem/journal/release/layout
         # facts. Real injections carry the nested ``slot_mutation``
         # mapping; recording fakes carry the flat pre/post/injected-files
         # facts (with ``source_image_mutated`` forwarded so a mutated
@@ -4208,9 +4182,9 @@ class ProductHarness:
     def _stage_candidate_onto_control(
         self, control_dir: Path, bundle: Path, *, control_image=None
     ) -> None:
-        """Record the signed candidate for the ``update-stage`` boot.
+        """Record the unsigned v3 candidate for the ``update-stage`` boot.
 
-        The host places the exact signed ``.greiaupdate`` bytes beside
+        The host places the exact unsigned v3 ``.greiaupdate`` bytes beside
         ``phase.json`` in the host control dir before materializing the
         control disk, so the guest runner finds
         ``candidate.greiaupdate`` on the control mount and copies it into
@@ -4260,7 +4234,7 @@ class ProductHarness:
         target_path: Path,
         work_dir: Path,
         expected_slot: str,
-        expected_sequence: int,
+        expected_release_id: str,
         runner=None,
         which=None,
     ) -> dict[str, object]:
@@ -4268,10 +4242,10 @@ class ProductHarness:
 
         Delegates to :func:`gather_boot_health_observation`: MBR bytes
         plus ``blkid`` filesystem UUIDs plus resolved grubenv/journal/
-        accepted-sequence/layout evidence over loop-mounted boot-control/
+        layout evidence over loop-mounted boot-control/
         persist, verified through :func:`inspect_boot_health_roots` for
         the committed slot while still mounted. The returned
-        ``default_slot``/``accepted_sequence``/``committed_slot`` come
+        ``default_slot``/``accepted_release_id``/``committed_slot`` come
         from that inspection, never minted. No fallback, no default slot:
         a missing facility stays ``BLOCKED`` and a missing evidence file
         fails closed. Slot facts appear only when read from real disk
@@ -4283,7 +4257,7 @@ class ProductHarness:
             runner=runner,
             which=which,
             expected_slot=expected_slot,
-            expected_sequence=expected_sequence,
+            expected_release_id=expected_release_id,
         )
 
     def run_recovery_d31_reverse_product(
@@ -4293,9 +4267,9 @@ class ProductHarness:
         unhealthy_bundle: Path | None = None,
         reverse_bundle: Path | None = None,
         accepted_slot: str = "B",
-        accepted_sequence: int = 21,
-        candidate_sequence: int = 22,
-        reverse_sequence: int = 23,
+        accepted_release_id: str = "greia-0.21.0",
+        candidate_release_id: str = "greia-0.21.1",
+        reverse_release_id: str = "greia-0.22.0",
         clone_fn=None,
         materialize_fn=None,
         boot_fn=None,
@@ -4314,7 +4288,7 @@ class ProductHarness:
         :func:`enable_installed_clone_serial_console`) ->
         record the shipped recovery units -> drive
         RECOVERY_D31_REVERSE_LEG_PHASES under QEMU (first update-stage
-        round stages the validly-signed unhealthy candidate through the
+        round stages the structurally-valid unhealthy candidate through the
         real update socket; the candidate boot withholds health because
         no production token can exist; the real 3-minute timer marks
         FAILED and reboots to the accepted slot; the second update-stage
@@ -4325,7 +4299,7 @@ class ProductHarness:
 
         BLOCKED remains only for a genuinely absent facility/artifact
         that the message names (non-Linux, missing QEMU/loop/mount
-        tooling, absent installed image or signed bundles, and — until
+        tooling, absent installed image or release bundles, and — until
         the capable-host run pins it — the on-image D31 persist
         mapping when no d31_fn is supplied). Never fabricates a boot,
         journal or D31 result. The *_fn seams default to the real
@@ -4365,7 +4339,7 @@ class ProductHarness:
         ):
             if bundle is None or bundle.is_symlink() or not bundle.is_file():
                 raise LifecycleHarnessError(
-                    "BLOCKED product mode: missing signed "
+                    "BLOCKED product mode: missing "
                     f"{label} bundle ({bundle}); refusing before any slot payload write"
                 )
         assert unhealthy is not None and reverse is not None
@@ -4440,9 +4414,9 @@ class ProductHarness:
                 stage=stage,
                 accepted_slot=accepted_slot,
                 candidate_slot=candidate_slot,
-                accepted_sequence=accepted_sequence,
-                candidate_sequence=candidate_sequence,
-                reverse_sequence=reverse_sequence,
+                accepted_release_id=accepted_release_id,
+                candidate_release_id=candidate_release_id,
+                reverse_release_id=reverse_release_id,
             )
 
         def _observe_d31() -> dict[str, object]:
@@ -4461,9 +4435,9 @@ class ProductHarness:
         leg = run_recovery_d31_reverse_leg(
             accepted_slot=accepted_slot,
             candidate_slot=candidate_slot,
-            accepted_sequence=accepted_sequence,
-            candidate_sequence=candidate_sequence,
-            reverse_sequence=reverse_sequence,
+            accepted_release_id=accepted_release_id,
+            candidate_release_id=candidate_release_id,
+            reverse_release_id=reverse_release_id,
             boot_fn=_boot_phase,
             observe_fn=_observe_stage,
             d31_fn=_observe_d31,
@@ -4492,22 +4466,22 @@ class ProductHarness:
         stage: str,
         accepted_slot: str,
         candidate_slot: str,
-        accepted_sequence: int,
-        candidate_sequence: int,
-        reverse_sequence: int,
+        accepted_release_id: str,
+        candidate_release_id: str,
+        reverse_release_id: str,
         runner=None,
         which=None,
     ) -> dict[str, object]:
         """Host-side recovery-stage observation entry point (production parsers).
 
         Delegates to :func:`gather_recovery_stage_observation`: MBR bytes
-        plus the resolved grubenv/journal/accepted-sequence/layout
+        plus the resolved grubenv/journal/layout
         evidence over loop-mounted boot-control/persist, verified
         through the stage inspector while still mounted. No fallback:
         a missing facility stays BLOCKED and a missing evidence file
         fails closed.
         """
-        del accepted_sequence, candidate_sequence
+        del accepted_release_id, candidate_release_id
         return gather_recovery_stage_observation(
             target_path,
             stage,
@@ -4516,7 +4490,7 @@ class ProductHarness:
             which=which,
             accepted_slot=accepted_slot,
             candidate_slot=candidate_slot,
-            expected_sequence=reverse_sequence,
+            expected_release_id=reverse_release_id,
         )
 
 
@@ -4533,9 +4507,9 @@ class ProductHarness:
 # candidate FAILED. No health/recovery/lifecycle predicate is weakened;
 # the control channel triggers operations but never attests an outcome.
 #
-# Reuse, not duplication: bundle signing/verification stays owned by
-# greia_platform.system_updates (build_update_bundle/inspect_update_bundle/
-# verify_update_signature/authorize_release_sequence); the trigger and its
+# Reuse, not duplication: bundle construction/inspection stays owned by
+# greia_platform.system_updates (build_update_bundle/inspect_update_bundle);
+# the trigger and its
 # deadline stay owned by greia_platform.boot_transaction
 # (mark_candidate_unhealthy/CANDIDATE_HEALTH_DEADLINE_SEC/
 # RECOVERY_TRIGGER_STATES); D31 write/read/verify stays owned by
@@ -4637,7 +4611,7 @@ RECOVERY_HELPER_REL_PATH = "usr/local/lib/greia-os/greia-candidate-recovery"
 
 
 def describe_unhealthy_candidate_construction() -> dict[str, object]:
-    """Pin the validly-signed-but-genuinely-unhealthy candidate (pure data).
+    """Pin the structurally-valid-but-genuinely-unhealthy candidate (pure data).
 
     Returns the frozen construction consumed by this leg: the removal
     mechanism, the exact unit paths, the production recovery class, and
@@ -4665,7 +4639,7 @@ def describe_unhealthy_candidate_construction() -> dict[str, object]:
         "invariants": [
             "candidate payload is a relocatable ext4 slot rootfs, no MBR/GPT",
             "source artifacts are never mutated (host-side copy only)",
-            "bundle signed by a key the installed slot already trusts",
+            "bundle is a structurally valid unsigned v3 .greiaupdate",
             "control channel triggers only and attests nothing",
         ],
     }
@@ -4768,28 +4742,27 @@ def build_unhealthy_candidate_bundle(
     output_path: Path,
     work_dir: Path,
     release_id: str,
-    release_sequence: int,
     platform_family: str,
     architecture: str,
     profile: str,
-    signer: str,
-    private_key_path: Path,
+    board: str | None = None,
     attach_fn=None,
     mount_fn=None,
     unmount_fn=None,
     detach_fn=None,
     which=None,
 ) -> dict[str, object]:
-    """Build the pinned validly-signed genuinely-unhealthy candidate bundle.
+    """Build the pinned structurally-valid genuinely-unhealthy candidate bundle.
 
     Copies the real base slot payload (the release lineage's own rootfs:
-    the payload member of the base signed .greiaupdate or a host-side
-    read-back of the installed accepted slot) onto a host-side working
-    copy, loop-attaches and mounts it read-write, deletes the pinned
-    root health-capability issuer unit plus its enablement symlinks via
-    :func:`_remove_health_issuer_files`, then rebuilds a signed bundle
-    through the production :func:`build_update_bundle` with the base
-    hardware-support bytes and a fresh persistent-state contract.
+    the decompressed payload of the base unsigned v3 .greiaupdate or a
+    host-side read-back of the installed accepted slot) onto a host-side
+    working copy, loop-attaches and mounts it read-write, deletes the
+    pinned root health-capability issuer unit plus its enablement symlinks
+    via :func:`_remove_health_issuer_files`, then rebuilds an unsigned v3
+    bundle through the production :func:`build_update_bundle` with the
+    base hardware-support bytes (recompressed to a real zstd frame, since
+    v3 stages genuinely decompress ``payload.ext4.zst``).
 
     Fail-closed: a missing base payload or missing loop/mount facility
     stays BLOCKED naming it; a non-relocatable payload, a base rootfs
@@ -4800,10 +4773,7 @@ def build_unhealthy_candidate_bundle(
     proving attach->mount->remove->unmount->detach order on real file
     bytes without loop contact.
     """
-    from greia_platform.system_updates import (
-        build_persistent_state_contract_bytes,
-        build_update_bundle,
-    )
+    from greia_platform.system_updates import build_update_bundle
 
     base = Path(base_payload)
     if base.is_symlink() or not base.is_file():
@@ -4819,10 +4789,6 @@ def build_unhealthy_candidate_bundle(
             f"candidate ({hw}); STAGE requires the release-bound member"
         )
     _assert_relocatable_payload_bytes(base)
-    if isinstance(release_sequence, bool) or not isinstance(release_sequence, int):
-        raise LifecycleHarnessError(
-            "unhealthy candidate refused: release sequence is not an integer"
-        )
     work = Path(work_dir)
     work.mkdir(parents=True, exist_ok=True)
     base_sha_before = sha256_file(base)
@@ -4884,24 +4850,30 @@ def build_unhealthy_candidate_bundle(
             "unhealthy candidate refused: base payload was mutated "
             "(source artifacts are never mutated)"
         )
-    contract_path = work / "contract.json"
-    if contract_path.exists():
-        contract_path.unlink()
-    contract_path.write_bytes(build_persistent_state_contract_bytes())
+    import zstandard
+
+    mutated_raw = payload_copy.read_bytes()
+    compressed_payload = work / "payload.ext4.zst"
+    if compressed_payload.exists():
+        compressed_payload.unlink()
+    compressed_payload.write_bytes(
+        zstandard.ZstdCompressor(level=3).compress(mutated_raw)
+    )
     out = Path(output_path)
     manifest = build_update_bundle(
-        payload_path=payload_copy,
+        payload_path=compressed_payload,
         hardware_support_path=hw,
-        persistent_contract_path=contract_path,
         output_path=out,
         version=str(release_id).split("-", 1)[1] if "-" in str(release_id) else str(release_id),
         release_id=release_id,
-        release_sequence=int(release_sequence),
         platform_family=platform_family,
         architecture=architecture,
         profile=profile,
-        signer=signer,
-        private_key_path=Path(private_key_path),
+        board=board,
+        payload_uncompressed_bytes=len(mutated_raw),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
         release_notes=(
             "P5.2 deliberately unhealthy candidate "
             f"({UNHEALTHY_CANDIDATE_MECHANISM})."
@@ -4911,11 +4883,10 @@ def build_unhealthy_candidate_bundle(
         "bundle": str(out),
         "bundle_sha256": sha256_file(out),
         "release_id": manifest.release_id,
-        "release_sequence": int(manifest.release_sequence),
         "platform_family": manifest.platform_family,
         "architecture": manifest.architecture,
         "profile": manifest.profile,
-        "signer": manifest.signer,
+        "board": manifest.board,
         "payload_sha256": manifest.payload_sha256,
         "hardware_support_sha256": manifest.hardware_support_sha256,
         "payload_pre_sha256": pre_sha,
@@ -4929,36 +4900,27 @@ def build_unhealthy_candidate_bundle(
 def verify_unhealthy_candidate_bundle(
     bundle: Path,
     *,
-    trusted_key_dir: Path,
-    accepted_sequence: int,
     platform_family: str,
     architecture: str,
     profile: str,
     expected_hardware_sha256: str,
+    board: str | None = None,
 ) -> dict[str, object]:
     """Verify the unhealthy candidate through the production owners (RED).
 
-    Inspects the bundle (member order/digests, relocatable payload,
-    zstd hardware-support member), verifies the ed25519 signature against
-    the installed slot's trusted-key dir, authorizes the release sequence
-    past the accepted sequence through the production anti-rollback
-    owner, and binds platform/architecture/profile plus the
-    release-bound hardware-support digest. Any failure is RED naming the
-    predicate; only an absent trusted-key dir is BLOCKED. Returns the
-    bound manifest facts for the staging evidence.
+    Inspects the bundle (v3 member order/digests, relocatable payload,
+    zstd members), binds platform/architecture/profile/board through the
+    production compatibility owner
+    (:meth:`SystemIdentity.assert_compatible`) plus the release-bound
+    hardware-support digest. Any failure is RED naming the predicate.
+    Returns the bound manifest facts for the staging evidence.
     """
     from greia_platform.system_updates import (
-        authorize_release_sequence,
+        SystemIdentity,
+        UpdateCompatibilityError,
         inspect_update_bundle,
-        verify_update_signature,
     )
 
-    keys = Path(trusted_key_dir)
-    if not keys.is_dir():
-        raise LifecycleHarnessError(
-            "BLOCKED product mode: installed trusted-key dir is absent "
-            f"({keys}); VERIFY would fail closed without it"
-        )
     candidate = Path(bundle)
     try:
         inspected = inspect_update_bundle(candidate)
@@ -4966,36 +4928,19 @@ def verify_unhealthy_candidate_bundle(
         raise LifecycleHarnessError(
             f"unhealthy candidate bundle inspection is RED ({exc})"
         ) from exc
-    try:
-        verify_update_signature(inspected, keys)
-    except Exception as exc:
-        raise LifecycleHarnessError(
-            f"unhealthy candidate signature is RED ({exc})"
-        ) from exc
     manifest = inspected.manifest
     try:
-        decision = authorize_release_sequence(
-            int(manifest.release_sequence), int(accepted_sequence)
-        )
-    except Exception as exc:
+        SystemIdentity(
+            version=manifest.version,
+            platform_family=platform_family,
+            architecture=architecture,
+            profile=profile,
+            board=board,
+        ).assert_compatible(manifest)
+    except UpdateCompatibilityError as exc:
         raise LifecycleHarnessError(
-            f"unhealthy candidate sequence is RED ({exc})"
+            f"unhealthy candidate compatibility is RED ({exc})"
         ) from exc
-    if decision != "update":
-        raise LifecycleHarnessError(
-            "unhealthy candidate sequence is RED "
-            f"(anti-rollback decision {decision!r}, expected 'update')"
-        )
-    for field, expected in (
-        ("platform_family", platform_family),
-        ("architecture", architecture),
-        ("profile", profile),
-    ):
-        if getattr(manifest, field) != expected:
-            raise LifecycleHarnessError(
-                f"unhealthy candidate {field} is RED "
-                f"(got {getattr(manifest, field)!r}, expected {expected!r})"
-            )
     if manifest.hardware_support_sha256 != expected_hardware_sha256:
         raise LifecycleHarnessError(
             "unhealthy candidate hardware-support is RED "
@@ -5003,14 +4948,12 @@ def verify_unhealthy_candidate_bundle(
         )
     return {
         "bundle": str(candidate),
-        "signature_verified": True,
-        "sequence_decision": decision,
+        "compatibility": "compatible",
         "release_id": manifest.release_id,
-        "release_sequence": int(manifest.release_sequence),
         "platform_family": manifest.platform_family,
         "architecture": manifest.architecture,
         "profile": manifest.profile,
-        "signer": manifest.signer,
+        "board": manifest.board,
         "payload_sha256": manifest.payload_sha256,
         "hardware_support_sha256": manifest.hardware_support_sha256,
     }
@@ -5127,10 +5070,9 @@ def run_d31_survival_fold(workdir: Path) -> dict[str, object]:
     coordinator = BootTransactionCoordinator.begin_update(
         journal_dir=journal_dir,
         backend=backend,
-        candidate_artifacts=_artifact_set("B", "greia-0.21.0", 21),
-        accepted_artifacts=_artifact_set("A", "greia-0.20.0", 20),
+        candidate_artifacts=_artifact_set("B", "greia-0.21.0"),
+        accepted_artifacts=_artifact_set("A", "greia-0.20.0"),
         release_id="greia-0.21.0",
-        release_sequence=21,
     )
     coordinator.arm()
     backend.reconcile("B")
@@ -5199,7 +5141,7 @@ def prove_recovery_noop_cases(workdir: Path) -> dict[str, object]:
       recovery trigger (bounded no-op, never a second failure marking).
     - Plain boot: no pending transaction refuses the trigger.
     - Sensitivity: the identical transaction with health committed
-      reaches ACCEPTED with the accepted sequence advanced, so a valid
+      reaches ACCEPTED with the accepted release advanced, so a valid
       candidate is not falsely failed.
 
     Returns the refusal/acceptance facts. Labeled SOURCE_SCOPE like the
@@ -5229,10 +5171,9 @@ def prove_recovery_noop_cases(workdir: Path) -> dict[str, object]:
     coordinator = BootTransactionCoordinator.begin_update(
         journal_dir=journal_dir,
         backend=backend,
-        candidate_artifacts=_artifact_set("B", "greia-0.21.0", 21),
-        accepted_artifacts=_artifact_set("A", "greia-0.20.0", 20),
+        candidate_artifacts=_artifact_set("B", "greia-0.21.0"),
+        accepted_artifacts=_artifact_set("A", "greia-0.20.0"),
         release_id="greia-0.21.0",
-        release_sequence=21,
     )
     coordinator.arm()
     backend.reconcile("B")
@@ -5260,10 +5201,9 @@ def prove_recovery_noop_cases(workdir: Path) -> dict[str, object]:
     coordinator2 = BootTransactionCoordinator.begin_update(
         journal_dir=journal_dir2,
         backend=backend2,
-        candidate_artifacts=_artifact_set("B", "greia-0.21.0", 21),
-        accepted_artifacts=_artifact_set("A", "greia-0.20.0", 20),
+        candidate_artifacts=_artifact_set("B", "greia-0.21.0"),
+        accepted_artifacts=_artifact_set("A", "greia-0.20.0"),
         release_id="greia-0.21.0",
-        release_sequence=21,
     )
     # No arm, no boot: journal UPDATE_STAGED is a trigger state, so the
     # plain-boot analogue is proven by the helper contract instead: the
@@ -5281,10 +5221,9 @@ def prove_recovery_noop_cases(workdir: Path) -> dict[str, object]:
     coordinator3 = BootTransactionCoordinator.begin_update(
         journal_dir=journal_dir3,
         backend=backend3,
-        candidate_artifacts=_artifact_set("B", "greia-0.21.0", 21),
-        accepted_artifacts=_artifact_set("A", "greia-0.20.0", 20),
+        candidate_artifacts=_artifact_set("B", "greia-0.21.0"),
+        accepted_artifacts=_artifact_set("A", "greia-0.20.0"),
         release_id="greia-0.21.0",
-        release_sequence=21,
     )
     coordinator3.arm()
     backend3.reconcile("B")
@@ -5315,7 +5254,7 @@ def build_recovery_d31_reverse_lifecycle_report(
     """Build the contract-shaped recovery/D31/reverse report and close it.
 
     The recovery leg observes ``stage-broken-candidate``
-    (validly-signed unhealthy candidate staged through the shipped
+    (structurally-valid unhealthy candidate staged through the shipped
     socket), ``boot-broken-candidate`` (candidate boots, health
     genuinely withheld, accepted default unchanged), ``recovery-boot-B``
     (real deadline marks FAILED, controlled reboot to accepted B) and
@@ -5373,9 +5312,9 @@ def run_recovery_d31_reverse_leg(
     *,
     accepted_slot: str = "B",
     candidate_slot: str = "A",
-    accepted_sequence: int = 21,
-    candidate_sequence: int = 22,
-    reverse_sequence: int = 23,
+    accepted_release_id: str = "greia-0.21.0",
+    candidate_release_id: str = "greia-0.21.1",
+    reverse_release_id: str = "greia-0.22.0",
     boot_fn=None,
     observe_fn=None,
     d31_fn=None,
@@ -5389,12 +5328,16 @@ def run_recovery_d31_reverse_leg(
     boot withholds health because no production token can exist, the
     real timer marks FAILED and reboots to accepted, then the reverse
     bundle stages/arms/boots/accepts) -> read each authoritative stage
-    observation via ``observe_fn(stage)`` (grubenv/journal/sequence
+    observation via ``observe_fn(stage)`` (grubenv/journal/release
     facts from on-image state, never the control channel) -> prove D31
     survival via ``d31_fn()`` (semantic before/after through the store
     parse paths plus byte snapshots) -> prove slot isolation (accepted
     slot byte-identical across failure/recovery, inactive moved) ->
     close through ``assert_lifecycle_transitions``.
+
+    The sequenced A→B→A update coverage is carried by three distinct
+    ``release_id``s (accepted → candidate → reverse); the reverse stage
+    must report the reverse ``release_id`` from authoritative state.
 
     Injectable ``boot_fn``/``observe_fn``/``d31_fn``/``slot_digest_fn``
     let unit tests prove ordering, attestation discipline and that a
@@ -5413,18 +5356,18 @@ def run_recovery_d31_reverse_leg(
             "recovery leg refused: candidate must differ from the accepted slot"
         )
     for name, value in (
-        ("accepted_sequence", accepted_sequence),
-        ("candidate_sequence", candidate_sequence),
-        ("reverse_sequence", reverse_sequence),
+        ("accepted_release_id", accepted_release_id),
+        ("candidate_release_id", candidate_release_id),
+        ("reverse_release_id", reverse_release_id),
     ):
-        if isinstance(value, bool) or not isinstance(value, int):
+        if isinstance(value, bool) or not isinstance(value, str) or not value:
             raise LifecycleHarnessError(
-                f"recovery leg refused: {name} is not an integer"
+                f"recovery leg refused: {name} is not a release_id string"
             )
-    if not (accepted_sequence < candidate_sequence < reverse_sequence):
+    if len({accepted_release_id, candidate_release_id, reverse_release_id}) != 3:
         raise LifecycleHarnessError(
-            "recovery leg refused: sequences must strictly advance "
-            "(accepted < candidate < reverse)"
+            "recovery leg refused: release_ids must be three distinct "
+            "identities (accepted/candidate/reverse sequenced update)"
         )
     boots: list[str] = []
     pre_digests: dict[tuple[str, str], str] = {}
@@ -5552,10 +5495,10 @@ def run_recovery_d31_reverse_leg(
             "recovery leg is RED: reverse default is "
             f"{reversed_stage.get('default_slot')!r}, expected {reverse_slot!r}"
         )
-    if reversed_stage.get("accepted_sequence") != reverse_sequence:
+    if reversed_stage.get("accepted_release_id") != reverse_release_id:
         raise LifecycleHarnessError(
-            "recovery leg is RED: reverse accepted sequence is "
-            f"{reversed_stage.get('accepted_sequence')!r}, expected {reverse_sequence!r}"
+            "recovery leg is RED: reverse accepted release_id is "
+            f"{reversed_stage.get('accepted_release_id')!r}, expected {reverse_release_id!r}"
         )
 
     isolation = None
@@ -5580,9 +5523,9 @@ def run_recovery_d31_reverse_leg(
         "accepted_slot": accepted_slot,
         "candidate_slot": candidate_slot,
         "reverse_slot": reverse_slot,
-        "accepted_sequence": accepted_sequence,
-        "candidate_sequence": candidate_sequence,
-        "reverse_sequence": reverse_sequence,
+        "accepted_release_id": accepted_release_id,
+        "candidate_release_id": candidate_release_id,
+        "reverse_release_id": reverse_release_id,
         "stages": stages,
         "d31_semantic_preserved": True,
         "d31_byte_identical": True,
@@ -5740,7 +5683,7 @@ def gather_recovery_stage_observation(
     which=None,
     accepted_slot: str,
     candidate_slot: str,
-    expected_sequence: int,
+    expected_release_id: str,
 ) -> dict[str, object]:
     """Observe one recovery stage from disposable target bytes (capable host).
 
@@ -5755,7 +5698,7 @@ def gather_recovery_stage_observation(
     - ``recovery-boot-accepted`` ->
       :func:`inspect_recovery_postrecovery_roots` (FAILED + reboot);
     - ``reverse-update-accepted`` -> :func:`inspect_boot_health_roots`
-      for the reverse slot (terminal ACCEPTED, sequence advanced).
+      for the reverse slot (terminal ACCEPTED, reverse release_id).
 
     Every fact is derived from real disk bytes; the control channel is
     never read for attestation. A missing facility stays BLOCKED naming
@@ -5776,9 +5719,9 @@ def gather_recovery_stage_observation(
             "recovery observation refused: unknown accepted/candidate slot "
             f"({accepted_slot!r}/{candidate_slot!r})"
         )
-    if isinstance(expected_sequence, bool) or not isinstance(expected_sequence, int):
+    if isinstance(expected_release_id, bool) or not isinstance(expected_release_id, str) or not expected_release_id:
         raise LifecycleHarnessError(
-            "recovery observation refused: expected sequence is not an integer"
+            "recovery observation refused: expected release identity is missing"
         )
     target = Path(target_path)
     if str(target).startswith("/dev/"):
@@ -5835,14 +5778,13 @@ def gather_recovery_stage_observation(
             health = inspect_boot_health_roots(
                 backend_state_dir=resolved["backend_state_dir"],
                 journal_dir=resolved["journal_dir"],
-                accepted_state_dir=resolved["accepted_state_dir"],
                 layout_record_path=resolved["layout_record_path"],
                 expected_slot=reverse_slot,
-                expected_sequence=expected_sequence,
+                expected_release_id=expected_release_id,
             )
             observed: dict[str, object] = {
                 "default_slot": health["grubenv_default"],
-                "accepted_sequence": health["accepted_sequence"],
+                "accepted_release_id": health["accepted_release_id"],
                 "committed_slot": health["committed_slot"],
                 "last_booted": health["last_booted"],
                 "journal_state": health["journal_state"],

@@ -39,11 +39,14 @@ class R7RuntimeAuditTests(unittest.TestCase):
         self.assertNotIn("--acknowledge-display-takeover", collector)
 
     def test_probe_module_is_in_the_existing_installed_source_tree(self) -> None:
-        builder = BUILD_IMAGE.read_text(encoding="utf-8")
+        # T01: Greia content installation lives in the shared engine.
+        builder = (PROJECT_ROOT / "build" / "lib" / "compose.sh").read_text(encoding="utf-8")
         module = PROJECT_ROOT / "src" / "greia_platform" / "direct_graphics_probe.py"
         self.assertTrue(module.is_file())
-        self.assertIn('"$PROJECT_ROOT/src"', builder)
-        self.assertIn('"$ROOTFS/opt/greia-os/"', builder)
+        self.assertIn('"$project_root/src"', builder)
+        self.assertIn('"$rootfs/opt/greia-os/"', builder)
+        consumer = (PROJECT_ROOT / "build" / "build-image.sh").read_text(encoding="utf-8")
+        self.assertIn('compose_root --profile "$PROFILE_PATH" --role target', consumer)
 
     def test_probe_contract_never_equates_prerequisites_with_active_success(self) -> None:
         source = (

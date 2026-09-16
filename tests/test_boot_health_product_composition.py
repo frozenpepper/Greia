@@ -52,6 +52,7 @@ from greia_platform.boot_transaction import (
 )
 from greia_platform.grub_ab import GrubEnvBackend
 from greia_platform.privileged_channel import PeerCredential
+from greia_platform.system_updates import load_installed_layout_record
 
 
 _UUID_A = "11111111-2222-3333-4444-555555555555"
@@ -162,7 +163,6 @@ class _EnvGuard:
 def _layout_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": _RELEASE,
-        "accepted_release_sequence": _RELEASE_SEQ,
         "accepted_slot": "A",
         "boot_backend": _BACKEND_ID,
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -189,7 +189,6 @@ def _identity_dict(*, slot: str) -> dict[str, object]:
         "boot_backend": _BACKEND_ID,
         "layout_id": _LAYOUT_ID,
         "release_id": _RELEASE,
-        "release_sequence": _RELEASE_SEQ,
         "role": f"system-{slot.lower()}",
         "slot": slot,
     }
@@ -211,7 +210,6 @@ def _artifact_sets_for_journal(
         root_partuuid=_UUID_A if journal.candidate_slot == "A" else _UUID_B,
         root_filesystem_uuid=_UUID_A_FS if journal.candidate_slot == "A" else _UUID_B_FS,
         release_id=journal.release_id,
-        release_sequence=journal.release_sequence,
     )
     return candidate, candidate
 
@@ -272,7 +270,6 @@ class BootHealthProductCompositionTests(unittest.TestCase):
                 layout_id=_LAYOUT_ID,
                 boot_backend=_BACKEND_ID,
                 release_id=_RELEASE,
-                release_sequence=_RELEASE_SEQ,
             )
             journal = BootTransactionJournal.load(journal_dir)
             # Root side: the production generator issues the one-use token
@@ -331,7 +328,9 @@ class BootHealthProductCompositionTests(unittest.TestCase):
         launcher = _parse_service_directives(launcher_text)
         requires = " ".join(launcher.get("Unit.Requires", []))
         self.assertNotIn("greia-boot-observer", requires)
-        build_text = (_repo_root() / "build" / "build-image.sh").read_text(
+        # T01: service composition lives in the shared engine, consumed for
+        # role `target` by the thin build-image.sh wrapper.
+        build_text = (_repo_root() / "build" / "lib" / "compose.sh").read_text(
             encoding="utf-8"
         )
         self.assertIn("greia-boot-observer.service", build_text)
@@ -386,7 +385,7 @@ class BootHealthProductCompositionTests(unittest.TestCase):
         self.assertEqual(
             sock.get("Socket.ListenStream"), ["/run/greia-os/boot-health.sock"]
         )
-        build_text = (_repo_root() / "build" / "build-image.sh").read_text(
+        build_text = (_repo_root() / "build" / "lib" / "compose.sh").read_text(
             encoding="utf-8"
         )
         self.assertIn("greia-boot-health.socket", build_text)
@@ -438,7 +437,6 @@ class BootHealthProductCompositionTests(unittest.TestCase):
                 layout_id=_LAYOUT_ID,
                 boot_backend=_BACKEND_ID,
                 release_id=_RELEASE,
-                release_sequence=_RELEASE_SEQ,
             )
             backend.simulate_reboot()
             assert backend.observe_booted_slot() == "A"
@@ -530,12 +528,10 @@ class BootHealthProductCompositionTests(unittest.TestCase):
             self.assertEqual(
                 GrubEnvBackend.attach(grubenv_dir).inspect().default_slot, "A"
             )
-            accepted = json.loads(
-                (state_dir / "system-updates" / "accepted.json").read_text(
-                    encoding="utf-8"
-                )
-            )
-            self.assertEqual(accepted["release_sequence"], _RELEASE_SEQ)
+            self.assertEqual(journal.release_id, _RELEASE)
+            record = load_installed_layout_record(layout_path)
+            assert record is not None
+            self.assertEqual(record.accepted_release_id, _RELEASE)
             # One-use end to end: the consumed token is gone, so a second
             # launcher presentation is a bounded no-op, never a second
             # commit.

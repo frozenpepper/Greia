@@ -319,7 +319,6 @@ class BootArtifactSet:
     root_partuuid: str
     root_filesystem_uuid: str
     release_id: str
-    release_sequence: int
 
     def __post_init__(self) -> None:
         _require_slot(self.slot)
@@ -342,12 +341,6 @@ class BootArtifactSet:
             self.root_filesystem_uuid, field_name="root_filesystem_uuid"
         )
         _require_identifier(self.release_id, field_name="release_id", maximum=96)
-        if (
-            isinstance(self.release_sequence, bool)
-            or not isinstance(self.release_sequence, int)
-            or not 0 <= self.release_sequence <= 2_147_483_647
-        ):
-            raise BootArtifactError("release_sequence is outside Greia bounds")
 
     @classmethod
     def from_finalization(cls, *, receipt: object, record: object) -> "BootArtifactSet":
@@ -376,7 +369,6 @@ class BootArtifactSet:
             root_partuuid=root.partuuid,
             root_filesystem_uuid=root.filesystem_uuid,
             release_id=getattr(receipt, "release_id"),
-            release_sequence=getattr(receipt, "release_sequence"),
         )
 
     @property
@@ -422,7 +414,6 @@ class BootArtifactSet:
             "generic_kernel_sha256": self.generic_kernel_sha256,
             "layout_id": self.layout_id,
             "release_id": self.release_id,
-            "release_sequence": self.release_sequence,
             "root_filesystem_uuid": self.root_filesystem_uuid,
             "root_partuuid": self.root_partuuid,
             "slot": self.slot,
@@ -466,7 +457,6 @@ class InitramfsArtifact:
     sha256: str
     producer: str
     release_id: str
-    release_sequence: int
     derived_from_sha256: str | None = None
 
     def __post_init__(self) -> None:
@@ -483,12 +473,6 @@ class InitramfsArtifact:
                 f"initramfs producer {self.producer!r} does not own role {self.role.value!r}"
             )
         _require_identifier(self.release_id, field_name="release_id", maximum=96)
-        if (
-            isinstance(self.release_sequence, bool)
-            or not isinstance(self.release_sequence, int)
-            or not 0 <= self.release_sequence <= 2_147_483_647
-        ):
-            raise BootArtifactError("release_sequence is outside Greia bounds")
         if self.role is InitramfsRole.HOST_FAST:
             if self.derived_from_sha256 is None:
                 raise BootArtifactError(
@@ -510,7 +494,6 @@ class InitramfsArtifact:
             sha256=getattr(receipt, "host_initramfs_sha256"),
             producer=FINALIZED_GENERIC_PRODUCER,
             release_id=getattr(receipt, "release_id"),
-            release_sequence=getattr(receipt, "release_sequence"),
         )
 
     def as_dict(self) -> dict[str, object]:
@@ -518,7 +501,6 @@ class InitramfsArtifact:
             "derived_from_sha256": self.derived_from_sha256,
             "producer": self.producer,
             "release_id": self.release_id,
-            "release_sequence": self.release_sequence,
             "role": self.role.value,
             "sha256": self.sha256,
         }
@@ -929,7 +911,6 @@ class FakePiTrybootBackend:
             "generic_initramfs_sha256": artifacts.generic_initramfs_sha256,
             "generic_kernel_sha256": artifacts.generic_kernel_sha256,
             "release_id": artifacts.release_id,
-            "release_sequence": artifacts.release_sequence,
             "schema_version": BOOT_RECORD_SCHEMA_VERSION,
             "slot": slot,
         }
@@ -1207,7 +1188,6 @@ class BootTransactionJournal:
     layout_id: str
     boot_backend: str
     release_id: str
-    release_sequence: int
     candidate_slot: str
     accepted_slot: str
     state: BootTransactionState = BootTransactionState.UPDATE_STAGED
@@ -1221,12 +1201,6 @@ class BootTransactionJournal:
         if self.boot_backend not in AB_BOOT_BACKENDS:
             raise BootJournalError("journal boot backend carries no A/B semantics")
         _require_identifier(self.release_id, field_name="release_id", maximum=96)
-        if (
-            isinstance(self.release_sequence, bool)
-            or not isinstance(self.release_sequence, int)
-            or not 0 <= self.release_sequence <= 2_147_483_647
-        ):
-            raise BootJournalError("release_sequence is outside Greia bounds")
         _require_slot(self.candidate_slot, field_name="candidate_slot")
         _require_slot(self.accepted_slot, field_name="accepted_slot")
         if not self.first_install and self.candidate_slot == self.accepted_slot:
@@ -1248,7 +1222,6 @@ class BootTransactionJournal:
         layout_id: str,
         boot_backend: str,
         release_id: str,
-        release_sequence: int,
         candidate_slot: str,
         accepted_slot: str,
     ) -> "BootTransactionJournal":
@@ -1260,7 +1233,6 @@ class BootTransactionJournal:
             layout_id=layout_id,
             boot_backend=boot_backend,
             release_id=release_id,
-            release_sequence=release_sequence,
             candidate_slot=candidate_slot,
             accepted_slot=accepted_slot,
             state=BootTransactionState.UPDATE_STAGED,
@@ -1283,7 +1255,6 @@ class BootTransactionJournal:
         layout_id: str,
         boot_backend: str,
         release_id: str,
-        release_sequence: int,
     ) -> "BootTransactionJournal":
         """Open the first-install transaction (SYSTEM_A, default A)."""
         journal = cls(
@@ -1293,7 +1264,6 @@ class BootTransactionJournal:
             layout_id=layout_id,
             boot_backend=boot_backend,
             release_id=release_id,
-            release_sequence=release_sequence,
             candidate_slot="A",
             accepted_slot="A",
             state=BootTransactionState.FIRST_INSTALL_PENDING,
@@ -1323,7 +1293,7 @@ class BootTransactionJournal:
             ) from exc
         expected = {
             "accepted_slot", "boot_backend", "candidate_slot", "first_install",
-            "layout_id", "release_id", "release_sequence", "schema_version",
+            "layout_id", "release_id", "schema_version",
             "state", "transaction_id", "transitions",
         }
         if set(raw) != expected:
@@ -1366,7 +1336,6 @@ class BootTransactionJournal:
             layout_id=raw["layout_id"],
             boot_backend=raw["boot_backend"],
             release_id=raw["release_id"],
-            release_sequence=raw["release_sequence"],
             candidate_slot=raw["candidate_slot"],
             accepted_slot=raw["accepted_slot"],
             state=state,
@@ -1486,7 +1455,6 @@ class BootTransactionJournal:
             "first_install": self.first_install,
             "layout_id": self.layout_id,
             "release_id": self.release_id,
-            "release_sequence": self.release_sequence,
             "schema_version": BOOT_RECORD_SCHEMA_VERSION,
             "state": self.state.value,
             "transaction_id": self.transaction_id,
@@ -1570,7 +1538,6 @@ class BootTransactionCoordinator:
         candidate_artifacts: BootArtifactSet,
         accepted_artifacts: BootArtifactSet,
         release_id: str,
-        release_sequence: int,
     ) -> "BootTransactionCoordinator":
         """Open an update transaction bound to both artifact sets."""
         if candidate_artifacts.slot == accepted_artifacts.slot:
@@ -1582,7 +1549,6 @@ class BootTransactionCoordinator:
             layout_id=candidate_artifacts.layout_id,
             boot_backend=candidate_artifacts.boot_backend,
             release_id=release_id,
-            release_sequence=release_sequence,
             candidate_slot=candidate_artifacts.slot,
             accepted_slot=accepted_artifacts.slot,
         )
@@ -1608,7 +1574,6 @@ class BootTransactionCoordinator:
             layout_id=artifact_a.layout_id,
             boot_backend=artifact_a.boot_backend,
             release_id=artifact_a.release_id,
-            release_sequence=artifact_a.release_sequence,
         )
         return cls(
             journal=journal, backend=backend,
@@ -1833,7 +1798,6 @@ class BootHistoryEntry:
     started_at_unix: int
     slot: str
     release_id: str
-    release_sequence: int
     transaction_id: str
     transaction_type: str
     milestone: str
@@ -1859,12 +1823,6 @@ class BootHistoryEntry:
         _require_boot_history_identifier(
             self.release_id, field_name="release_id", maximum=96
         )
-        if (
-            isinstance(self.release_sequence, bool)
-            or not isinstance(self.release_sequence, int)
-            or not 0 <= self.release_sequence <= 2_147_483_647
-        ):
-            raise BootTransactionError("release_sequence is outside Greia bounds")
         _require_boot_history_identifier(
             self.transaction_id, field_name="transaction_id", maximum=64
         )
@@ -1905,7 +1863,6 @@ class BootHistoryEntry:
             "milestone": self.milestone,
             "recovery_reason": self.recovery_reason,
             "release_id": self.release_id,
-            "release_sequence": self.release_sequence,
             "slot": self.slot,
             "started_at_unix": self.started_at_unix,
             "terminal_state": self.terminal_state,
@@ -1920,7 +1877,7 @@ class BootHistoryEntry:
         expected = {
             "backend_default", "backend_one_shot", "boot_id", "health_result",
             "launcher_result", "milestone", "recovery_reason", "release_id",
-            "release_sequence", "slot", "started_at_unix", "terminal_state",
+            "slot", "started_at_unix", "terminal_state",
             "transaction_id", "transaction_type",
         }
         if set(raw) != expected:
@@ -1930,7 +1887,6 @@ class BootHistoryEntry:
             started_at_unix=raw["started_at_unix"],
             slot=raw["slot"],
             release_id=raw["release_id"],
-            release_sequence=raw["release_sequence"],
             transaction_id=raw["transaction_id"],
             transaction_type=raw["transaction_type"],
             milestone=raw["milestone"],
@@ -2057,7 +2013,6 @@ class BootHistory:
         started_at_unix: int,
         slot: str,
         release_id: str,
-        release_sequence: int,
         transaction_id: str,
         transaction_type: str,
         backend_default: str,
@@ -2069,7 +2024,6 @@ class BootHistory:
             started_at_unix=started_at_unix,
             slot=slot,
             release_id=release_id,
-            release_sequence=release_sequence,
             transaction_id=transaction_id,
             transaction_type=transaction_type,
             milestone="boot-started",
@@ -2121,7 +2075,6 @@ class BootHistory:
             started_at_unix=head.started_at_unix,
             slot=head.slot,
             release_id=head.release_id,
-            release_sequence=head.release_sequence,
             transaction_id=head.transaction_id,
             transaction_type=head.transaction_type,
             milestone=milestone,
@@ -2157,7 +2110,6 @@ def describe_previous_boot(history: BootHistory) -> dict[str, object] | None:
     return {
         "attempted_slot": previous.slot,
         "attempted_release_id": previous.release_id,
-        "attempted_release_sequence": previous.release_sequence,
         "last_milestone": previous.milestone,
         "launcher_result": previous.launcher_result,
         "health_result": previous.health_result,

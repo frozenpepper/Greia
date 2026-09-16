@@ -311,7 +311,6 @@ class WrongMovedTargetRefusalTests(unittest.TestCase):
                 state=state,
                 authority=authority,
                 ab_release_bundle=fix["bundle"],
-                ab_trusted_key_dir=fix["key_dir"],
                 ab_password_hash=_AB_PASSWORD_HASH,
                 ab_support_installed_bytes=_AB_SUPPORT_BOUND,
                 ab_seams_factory=seams_factory,

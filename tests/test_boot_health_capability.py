@@ -146,7 +146,6 @@ def _write_boot_id(root: Path, name: str, value: str) -> Path:
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": _BACKEND_ID,
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -184,7 +183,6 @@ def _stage_pending_update(root: Path) -> Path:
         layout_id=_LAYOUT_ID,
         boot_backend=_BACKEND_ID,
         release_id=_RELEASE,
-        release_sequence=_RELEASE_SEQ,
         candidate_slot="B",
         accepted_slot="A",
     )
@@ -199,7 +197,6 @@ def _stage_pending_first_install(root: Path) -> Path:
         layout_id=_LAYOUT_ID,
         boot_backend=_BACKEND_ID,
         release_id=_RELEASE,
-        release_sequence=_RELEASE_SEQ,
     )
     return journal_dir
 
@@ -307,19 +304,19 @@ class CapabilityIssuanceTests(unittest.TestCase):
                 generic_kernel_sha256=_KERNEL_SHA,
                 generic_initramfs_sha256=_INITRAMFS_SHA,
                 root_partuuid=_UUID_B, root_filesystem_uuid=_UUID_B_FS,
-                release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                release_id=_RELEASE,
             )
             accepted = BootArtifactSet(
                 slot="A", layout_id=_LAYOUT_ID, boot_backend=_BACKEND_ID,
                 generic_kernel_sha256=_KERNEL_SHA,
                 generic_initramfs_sha256=_INITRAMFS_SHA,
                 root_partuuid=_UUID_A, root_filesystem_uuid=_UUID_A_FS,
-                release_id="greia-0.14.0", release_sequence=7,
+                release_id="greia-0.14.0",
             )
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                release_id=_RELEASE,
             )
             coordinator.arm()
             backend.simulate_reboot()
@@ -332,12 +329,11 @@ class CapabilityIssuanceTests(unittest.TestCase):
                 coordinator=coordinator,
                 candidate_root_partuuid=_UUID_B,
                 candidate_release_id=_RELEASE,
-                candidate_release_sequence=_RELEASE_SEQ,
                 vault=BootHealthCredentialVault(root / "vault"),
                 observer=FakeActualBootIdentity(
                     ActualBootIdentity(
                         booted_slot="B", root_partuuid=_UUID_B,
-                        release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                        release_id=_RELEASE,
                     )
                 ),
                 trusted_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,
@@ -565,7 +561,6 @@ class _StubArtifactResolver:
             root_partuuid=_UUID_A if journal.candidate_slot == "A" else _UUID_B,
             root_filesystem_uuid=_UUID_A_FS if journal.candidate_slot == "A" else _UUID_B_FS,
             release_id=journal.release_id,
-            release_sequence=journal.release_sequence,
         )
         if journal.first_install:
             return candidate, candidate
@@ -578,7 +573,6 @@ class _StubArtifactResolver:
             root_partuuid=_UUID_A if journal.accepted_slot == "A" else _UUID_B,
             root_filesystem_uuid=_UUID_A_FS if journal.accepted_slot == "A" else _UUID_B_FS,
             release_id="greia-0.14.0",
-            release_sequence=7,
         )
         return candidate, accepted
 
@@ -605,7 +599,6 @@ def _compose_with_authority(root: Path):
     )
     update_authority = SystemUpdateServiceAuthority(
         state_dir,
-        root / "trusted-keys",
         SystemIdentity("0.14.0", "standard-x86-64", "x86-64", "modern-amd64"),
         update_backend,
     )
@@ -616,7 +609,6 @@ def _compose_with_authority(root: Path):
         layout_id=_LAYOUT_ID,
         boot_backend=_BACKEND_ID,
         release_id=_RELEASE,
-        release_sequence=_RELEASE_SEQ,
         candidate_slot="B",
         accepted_slot="A",
     )
@@ -734,7 +726,7 @@ class OneUseNegativeTests(unittest.TestCase):
             BootTransactionJournal.begin_update(
                 first_dir,
                 layout_id=_LAYOUT_ID, boot_backend=_BACKEND_ID,
-                release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                release_id=_RELEASE,
                 candidate_slot="B", accepted_slot="A",
             )
             first_journal = BootTransactionJournal.load(first_dir)
@@ -751,7 +743,7 @@ class OneUseNegativeTests(unittest.TestCase):
             second = BootTransactionJournal.begin_update(
                 second_dir,
                 layout_id=_LAYOUT_ID, boot_backend=_BACKEND_ID,
-                release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                release_id=_RELEASE,
                 candidate_slot="B", accepted_slot="A",
             )
             owner.issue_for_pending_journal(
@@ -1091,19 +1083,19 @@ class PredicateAndIntroTests(unittest.TestCase):
                 generic_kernel_sha256=_KERNEL_SHA,
                 generic_initramfs_sha256=_INITRAMFS_SHA,
                 root_partuuid=_UUID_B, root_filesystem_uuid=_UUID_B_FS,
-                release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                release_id=_RELEASE,
             )
             accepted = BootArtifactSet(
                 slot="A", layout_id=_LAYOUT_ID, boot_backend=_BACKEND_ID,
                 generic_kernel_sha256=_KERNEL_SHA,
                 generic_initramfs_sha256=_INITRAMFS_SHA,
                 root_partuuid=_UUID_A, root_filesystem_uuid=_UUID_A_FS,
-                release_id="greia-0.14.0", release_sequence=7,
+                release_id="greia-0.14.0",
             )
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                release_id=_RELEASE,
             )
             coordinator.arm()
             backend.simulate_reboot()
@@ -1117,12 +1109,11 @@ class PredicateAndIntroTests(unittest.TestCase):
                 coordinator=coordinator,
                 candidate_root_partuuid=_UUID_B,
                 candidate_release_id=_RELEASE,
-                candidate_release_sequence=_RELEASE_SEQ,
                 vault=BootHealthCredentialVault(root / "vault"),
                 observer=FakeActualBootIdentity(
                     ActualBootIdentity(
                         booted_slot="B", root_partuuid=_UUID_B,
-                        release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                        release_id=_RELEASE,
                     )
                 ),
                 trusted_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,

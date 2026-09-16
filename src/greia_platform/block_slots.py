@@ -485,10 +485,11 @@ class BlockSlotFilesystem:
 
     Owns only the destination device: binds its role filesystem UUID
     (never cloned from a template, never the boot-control identity),
-    expands it, mounts it, performs bounded file writes, checks health,
-    then unmounts and syncs. The active/accepted slot is never addressable
-    here because construction requires a :class:`ResolvedSlotDevice` that
-    already refused live slots.
+    expands it, mounts it, proves slot completeness, performs bounded
+    file writes, checks health, then unmounts and syncs. The
+    active/accepted slot is never addressable here because construction
+    requires a :class:`ResolvedSlotDevice` that already refused live
+    slots.
     """
 
     def __init__(
@@ -617,6 +618,29 @@ class BlockSlotFilesystem:
             if not (mountpoint / rel).is_file() or os.path.islink(mountpoint / rel):
                 missing.append(name)
         return tuple(missing)
+
+    def check_completeness(self) -> None:
+        """Mounted completeness smoke: real Greia userspace incl. apt/dpkg.
+
+        Single shared implementation via
+        ``greia_platform.slot_writer.check_slot_completeness`` on the
+        mounted slot root — the same validator the shared
+        ``SlotFinalizer`` and the build-time producer call. Bounded to
+        the documented required-path set; no traversal, no hashing.
+        """
+        mountpoint = self._require_mounted()
+        try:
+            from .slot_writer import check_slot_completeness
+        except Exception as exc:
+            raise BlockSlotError(
+                f"slot completeness validator is unavailable: {exc}"
+            ) from exc
+        try:
+            check_slot_completeness(mountpoint)
+        except BlockSlotError:
+            raise
+        except Exception as exc:
+            raise BlockSlotError(str(exc)) from exc
 
     def check_health(self) -> None:
         """Mounted health gate: node-substitution + UUID binding re-proof.

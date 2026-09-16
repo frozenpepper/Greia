@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """Deterministic Greia release builder (L7-RELEASE, R0/R1 source gate).
 
-Builds the v2 release inputs without partition/boot writes:
-- persistent-state-contract.json (deterministic canonical JSON);
+Builds the v3 release inputs without partition/boot writes:
 - hardware-support.tar.zst (deterministic tar.zst from a verified pool);
-- payload.bin (deterministic relocatable slot image from a staging dir);
-- read-only payload verification (header + required Greia paths).
+- payload.ext4.zst (real relocatable ext4 slot image from a staging dir);
+- read-only payload verification (ext4 superblock + required Greia paths).
 
-No privileged operations, no network, no key generation. Missing production
-keys are a hard failure in the bundle step (see system_updates).
+The payload producer populates the composed target root into an ext4
+image with the standard e2fsprogs sequence (populate -> e2fsck clean ->
+shrink to practical minimum -> e2fsck clean), validates the staging tree
+with the shared T03 slot validator before compression, then zstd-compresses
+the shrunk image. No privileged operations, no network, no signing. The v3
+bundle carries no signature, signer, or release sequence (see ADR 0036 §3
+and system_updates).
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
-import io
 import json
 import os
 import shutil
@@ -23,7 +26,10 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SRC = PROJECT_ROOT / "src"
@@ -31,6 +37,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from greia_installer.hardware_support import VerifiedHardwareSupportPool
+from greia_platform.slot_writer import SlotFinalizeError, check_slot_completeness
 from greia_platform.system_updates import (
     MAX_HARDWARE_SUPPORT_BYTES,
     MAX_PAYLOAD_BYTES,
@@ -38,8 +45,6 @@ from greia_platform.system_updates import (
     verify_persistent_state_contract_bytes,
 )
 
-PAYLOAD_MAGIC = b"GREIA-SLOT-V1\n"
-PAYLOAD_HEADER_SIZE = 4096
 PAYLOAD_MIN_HEADROOM = 1024 * 1024
 REQUIRED_PAYLOAD_PATHS = (
     "etc/greia-os/build-info",
@@ -49,9 +54,157 @@ REQUIRED_PAYLOAD_PATHS = (
 )
 _ALLOWED_POOL_TOP = frozenset({"manifest.json", "Packages", "Packages.gz"})
 
+_EXT4_SUPERBLOCK_OFFSET = 1080
+_EXT4_MAGIC = b"\x53\xef"
+_SLOT_LABEL = "greia-slot"
+_ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
+
+# Per-command bound policy (T11).
+#
+# The production `build-payload` CLI previously applied a hard 120 s bound to
+# every command including `zstd -19` over the ~1 GiB post-shrink Acer image.
+# A host-native measurement of the same real content took ~811 s wall
+# (~408 s user CPU), so the 120 s bound is exceeded by roughly 2-7x on the
+# hardware actually available. The bound is an implementation constant: no
+# governing authority fixes it or the compression level.
+#
+# Policy: keep `zstd -19` single-threaded output (no ratio/compat change) and
+# raise the bound with real headroom instead:
+# - DEFAULT_COMMAND_TIMEOUT_SECONDS (600 s) covers populate/check/shrink and
+#   the smaller hardware-support compression step;
+# - PAYLOAD_COMPRESSION_TIMEOUT_SECONDS (1800 s = 30 min) covers `zstd -19`
+#   over the largest supported payload (MAX_PAYLOAD_BYTES = 1536 MiB):
+#   linear extrapolation of the measured 1 GiB / ~811 s wall gives ~1220 s
+#   at 1.5 GiB, so 1800 s leaves ~1.5x margin there and ~2.2x margin over the
+#   measured Acer ~1 GiB case. Both bounds stay finite and fail-closed: an
+#   expired or failing command still raises ReleaseBuildError.
+DEFAULT_COMMAND_TIMEOUT_SECONDS = 600.0
+PAYLOAD_COMPRESSION_TIMEOUT_SECONDS = 1800.0
+
+# Image-content paths the read-only verifier proves with debugfs stat.
+# Directory entries first, then the APT command files, then the generic
+# boot pair seeded by the producer. Values mirror the documented T03
+# shared-validator set plus the producer-seeded boot assets; the validator
+# itself is reused directly on the staging tree at build time (see
+# build_release_payload) so this list never becomes a second definition.
+_IMAGE_COMPLETENESS_DIRS = (
+    "usr",
+    "bin",
+    "etc",
+    "var",
+    "opt/greia-os",
+    "etc/greia-os",
+)
+_IMAGE_COMPLETENESS_FILES = (
+    "usr/bin/apt-get",
+    "usr/bin/dpkg",
+    "usr/bin/env",
+)
+_IMAGE_BOOT_FILES = (
+    "boot/vmlinuz-generic",
+    "boot/initrd-generic",
+)
+_IMAGE_IDENTITY_FILES = (
+    "etc/greia-os/build-info",
+    "etc/greia-os/release-identity.json",
+)
+
 
 class ReleaseBuildError(RuntimeError):
     pass
+
+
+@dataclass(frozen=True, slots=True)
+class ReleaseCommandResult:
+    """Narrow completed-command fact: raw stdout plus exit status."""
+
+    stdout: bytes
+    returncode: int
+
+
+class ReleaseCommandRunner(Protocol):
+    """Injectable command seam: argument arrays only, never shell strings.
+
+    ``timeout_seconds`` is an explicit per-call bound override carried through
+    the seam so tests can assert the applied bound; ``None`` means the
+    runner's own default (``SubprocessReleaseRunner.timeout_seconds``).
+    """
+
+    def run(
+        self, command: Sequence[str], *, timeout_seconds: float | None = None
+    ) -> ReleaseCommandResult: ...  # pragma: no cover
+
+
+@dataclass(frozen=True, slots=True)
+class SubprocessReleaseRunner:
+    """Production runner: ``shell=False`` subprocess execution."""
+
+    timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS
+
+    def run(
+        self, command: Sequence[str], *, timeout_seconds: float | None = None
+    ) -> ReleaseCommandResult:
+        effective = self.timeout_seconds if timeout_seconds is None else timeout_seconds
+        try:
+            completed = subprocess.run(
+                list(command),
+                check=False,
+                shell=False,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=effective,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise ReleaseBuildError(f"release command is unavailable: {exc}") from exc
+        return ReleaseCommandResult(stdout=completed.stdout, returncode=completed.returncode)
+
+
+def _runner_or_default(runner: ReleaseCommandRunner | None) -> ReleaseCommandRunner:
+    return runner if runner is not None else SubprocessReleaseRunner()
+
+
+def _run_checked(
+    runner: ReleaseCommandRunner,
+    command: Sequence[str],
+    *,
+    label: str,
+    timeout_seconds: float | None = None,
+) -> None:
+    result = runner.run(command, timeout_seconds=timeout_seconds)
+    if result.returncode != 0:
+        detail = result.stdout.decode("utf-8", "replace").strip()
+        suffix = f": {detail}" if detail else ""
+        raise ReleaseBuildError(f"{label} failed ({' '.join(list(command)[:2])}){suffix}")
+
+
+def _run_capture(
+    runner: ReleaseCommandRunner,
+    command: Sequence[str],
+    *,
+    label: str,
+    timeout_seconds: float | None = None,
+) -> bytes:
+    result = runner.run(command, timeout_seconds=timeout_seconds)
+    if result.returncode != 0:
+        detail = result.stdout.decode("utf-8", "replace").strip()
+        suffix = f": {detail}" if detail else ""
+        raise ReleaseBuildError(f"{label} failed ({' '.join(list(command)[:2])}){suffix}")
+    return result.stdout
+
+
+def _assert_relocatable(head: bytes) -> None:
+    if len(head) < 520:
+        raise ReleaseBuildError("payload image is too small to be relocatable")
+    if head[510:512] == b"\x55\xaa" or head[512:520] == b"EFI PART":
+        raise ReleaseBuildError("payload carries a partition table; must be relocatable")
+
+
+def _assert_ext4_magic(head: bytes) -> None:
+    if len(head) < _EXT4_SUPERBLOCK_OFFSET + 2:
+        raise ReleaseBuildError("payload is not a real ext4 image (too small)")
+    if head[_EXT4_SUPERBLOCK_OFFSET : _EXT4_SUPERBLOCK_OFFSET + 2] != _EXT4_MAGIC:
+        raise ReleaseBuildError("payload is not a real ext4 image (bad superblock magic)")
 
 
 def build_persistent_contract(output: Path) -> bytes:
@@ -97,8 +250,20 @@ def _assert_no_hooks(root: Path) -> None:
 
 
 def build_hardware_support_set(
-    pool_root: Path, output: Path, *, max_bytes: int = MAX_HARDWARE_SUPPORT_BYTES
+    pool_root: Path,
+    output: Path,
+    *,
+    max_bytes: int = MAX_HARDWARE_SUPPORT_BYTES,
+    command_timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS,
+    runner: ReleaseCommandRunner | None = None,
 ) -> dict[str, object]:
+    if (
+        isinstance(command_timeout_seconds, bool)
+        or not isinstance(command_timeout_seconds, (int, float))
+        or not command_timeout_seconds > 0
+    ):
+        raise ReleaseBuildError("command_timeout_seconds must be a positive timeout")
+    active = _runner_or_default(runner)
     pool = VerifiedHardwareSupportPool.load(pool_root)
     if pool.total_bytes > max_bytes:
         raise ReleaseBuildError("hardware-support pool exceeds release byte bound")
@@ -138,23 +303,20 @@ def build_hardware_support_set(
                         raise ReleaseBuildError(f"symlink archive member forbidden: {arcname}")
                     with member.open("rb") as src:
                         tar.addfile(info, src)
-        completed = subprocess.run(
+        result = active.run(
             [zstd, "-19", "-c", "--rm", str(tar_tmp)],
-            check=False,
-            capture_output=True,
-            timeout=120,
-            shell=False,
+            timeout_seconds=command_timeout_seconds,
         )
-        if completed.returncode != 0:
+        if result.returncode != 0:
             raise ReleaseBuildError("zstd compression of hardware-support set failed")
-        if not completed.stdout.startswith(b"\x28\xb5\x2f\xfd"):
+        if not result.stdout.startswith(_ZSTD_MAGIC):
             raise ReleaseBuildError("hardware-support compressor did not emit zstd bytes")
         with tempfile.NamedTemporaryFile(
             prefix=f".{output.name}.", suffix=".tmp", dir=output.parent, delete=False
         ) as handle:
             tmp_out = Path(handle.name)
         try:
-            tmp_out.write_bytes(completed.stdout)
+            tmp_out.write_bytes(result.stdout)
             os.chmod(tmp_out, 0o644)
             if tmp_out.stat().st_size > max_bytes:
                 raise ReleaseBuildError("hardware-support.tar.zst exceeds release byte bound")
@@ -174,54 +336,6 @@ def build_hardware_support_set(
     }
 
 
-def _deterministic_tar_bytes(staging: Path) -> bytes:
-    staging = staging.resolve()
-    if not staging.is_dir():
-        raise ReleaseBuildError("payload staging dir is missing")
-    buffer = io.BytesIO()
-    entries: list[Path] = []
-    for path in sorted(staging.rglob("*"), key=lambda p: p.relative_to(staging).as_posix()):
-        entries.append(path)
-    with tarfile.open(fileobj=buffer, mode="w", format=tarfile.PAX_FORMAT) as tar:
-        for path in entries:
-            arcname = path.relative_to(staging).as_posix()
-            if path.is_symlink():
-                raise ReleaseBuildError(f"payload staging symlink forbidden: {arcname}")
-            info = tar.gettarinfo(str(path), arcname=arcname)
-            info.uid = 0
-            info.gid = 0
-            info.uname = ""
-            info.gname = ""
-            info.mtime = 0
-            if info.isdir():
-                info.mode = 0o755
-                tar.addfile(info)
-            elif info.isfile():
-                info.mode = 0o644 if path.suffix != ".bin" else 0o644
-                with path.open("rb") as src:
-                    tar.addfile(info, src)
-            else:
-                raise ReleaseBuildError(f"unsupported staging member: {arcname}")
-    return buffer.getvalue()
-
-
-def _payload_header(*, profile_id: str, release_id: str, release_sequence: int) -> bytes:
-    record = {
-        "magic": "GREIA-SLOT-V1",
-        "profile": profile_id,
-        "release_id": release_id,
-        "release_sequence": release_sequence,
-    }
-    encoded = json.dumps(record, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    if len(encoded) + 1 > PAYLOAD_HEADER_SIZE:
-        raise ReleaseBuildError("release identity header does not fit")
-    header = PAYLOAD_MAGIC + encoded + b"\n"
-    header = header.ljust(PAYLOAD_HEADER_SIZE, b"\x00")
-    if header[510:512] == b"\x55\xaa" or header[512:520] == b"EFI PART":
-        raise ReleaseBuildError("payload header collides with partition magic")
-    return header
-
-
 def build_release_payload(
     *,
     staging_dir: Path,
@@ -230,20 +344,56 @@ def build_release_payload(
     output: Path,
     profile_id: str,
     release_id: str,
-    release_sequence: int,
     filesystem_bytes: int,
     minimum_slot_bytes: int,
+    runner: ReleaseCommandRunner | None = None,
+    command_timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS,
+    compression_timeout_seconds: float = PAYLOAD_COMPRESSION_TIMEOUT_SECONDS,
 ) -> dict[str, object]:
+    """Build a real relocatable ext4 slot image from the composed target root.
+
+    Standard e2fsprogs sequence through the injectable runner seam:
+    ``mkfs.ext4 -d <staging>`` (populate) -> ``e2fsck -f -y`` (clean) ->
+    ``resize2fs -M`` (shrink to practical minimum) -> ``e2fsck -f -y``
+    (clean) -> ``zstd -19`` (compress). The staging tree is validated with
+    the shared T03 slot validator before any image byte is emitted, so a
+    skeleton root is refused before compression. Returns the post-shrink
+    image size as ``uncompressed_bytes``.
+
+    Command-bound policy: populate/check/shrink run under
+    ``command_timeout_seconds`` (default 600 s); the ``zstd -19`` step over
+    the ~1 GiB post-shrink image runs under ``compression_timeout_seconds``
+    (default 1800 s, ~2.2x margin over the measured ~811 s wall for the real
+    Acer content and ~1.5x over the linear extrapolation to the 1536 MiB
+    maximum). Both bounds stay finite: expiry raises ReleaseBuildError.
+    """
+    active = _runner_or_default(runner)
     staging = Path(staging_dir).resolve()
     kernel = Path(kernel_path)
     initramfs = Path(initramfs_path)
     for path, label in ((kernel, "kernel"), (initramfs, "initramfs")):
         if path.is_symlink() or not path.is_file():
             raise ReleaseBuildError(f"generic {label} input is not a regular file")
-    if filesystem_bytes <= 0 or filesystem_bytes > MAX_PAYLOAD_BYTES:
+    if isinstance(filesystem_bytes, bool) or filesystem_bytes <= 0 or filesystem_bytes > MAX_PAYLOAD_BYTES:
         raise ReleaseBuildError("filesystem_bytes is outside Greia bounds")
-    if minimum_slot_bytes < filesystem_bytes or minimum_slot_bytes > 2 * 1024 * 1024 * 1024:
+    if (
+        isinstance(minimum_slot_bytes, bool)
+        or minimum_slot_bytes < filesystem_bytes
+        or minimum_slot_bytes > 2 * 1024 * 1024 * 1024
+    ):
         raise ReleaseBuildError("minimum_slot_bytes must cover filesystem_bytes")
+    for label, bound in (
+        ("command_timeout_seconds", command_timeout_seconds),
+        ("compression_timeout_seconds", compression_timeout_seconds),
+    ):
+        if (
+            isinstance(bound, bool)
+            or not isinstance(bound, (int, float))
+            or not bound > 0
+        ):
+            raise ReleaseBuildError(f"{label} must be a positive timeout")
+    if not staging.is_dir():
+        raise ReleaseBuildError("payload staging dir is missing")
     # Seed generic kernel/initramfs + release identity deterministically.
     boot_dir = staging / "boot"
     etc_dir = staging / "etc" / "greia-os"
@@ -254,7 +404,6 @@ def build_release_payload(
     identity = {
         "profile": profile_id,
         "release_id": release_id,
-        "release_sequence": release_sequence,
     }
     (etc_dir / "release-identity.json").write_text(
         json.dumps(identity, sort_keys=True, indent=2) + "\n", encoding="utf-8"
@@ -262,76 +411,152 @@ def build_release_payload(
     for required in REQUIRED_PAYLOAD_PATHS:
         candidate = staging / required
         if required.endswith("src"):
-            if not candidate.is_dir():
+            if candidate.is_symlink() or not candidate.is_dir():
                 raise ReleaseBuildError(f"staging is missing required path: {required}")
-        elif not candidate.is_file():
+        elif candidate.is_symlink() or not candidate.is_file():
             raise ReleaseBuildError(f"staging is missing required path: {required}")
-    body = _deterministic_tar_bytes(staging)
-    header = _payload_header(
-        profile_id=profile_id, release_id=release_id, release_sequence=release_sequence
+    try:
+        check_slot_completeness(staging)
+    except SlotFinalizeError as exc:
+        raise ReleaseBuildError(f"staging lacks required Greia userspace: {exc}") from exc
+    out_path = Path(output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    if out_path.exists():
+        raise ReleaseBuildError(f"output already exists: {out_path}")
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=".slot.", suffix=".ext4", dir=str(out_path.parent)
     )
-    if len(header) + len(body) + PAYLOAD_MIN_HEADROOM > filesystem_bytes:
-        raise ReleaseBuildError("staging does not leave finalization headroom in filesystem_bytes")
-    image = header + body
-    image = image.ljust(filesystem_bytes, b"\x00")
-    if image[510:512] == b"\x55\xaa" or image[512:520] == b"EFI PART":
-        raise ReleaseBuildError("payload must stay relocatable without partition magic")
-    output.parent.mkdir(parents=True, exist_ok=True)
-    if output.exists():
-        raise ReleaseBuildError(f"output already exists: {output}")
-    output.write_bytes(image)
-    os.chmod(output, 0o644)
+    os.close(fd)
+    tmp_img = Path(tmp_name)
+    try:
+        kib = max(1, filesystem_bytes // 1024)
+        _run_checked(
+            active,
+            ["mkfs.ext4", "-d", str(staging), "-L", _SLOT_LABEL, str(tmp_img), f"{kib}K"],
+            label="ext4 population",
+            timeout_seconds=command_timeout_seconds,
+        )
+        _run_checked(
+            active,
+            ["e2fsck", "-f", "-y", "--", str(tmp_img)],
+            label="ext4 check",
+            timeout_seconds=command_timeout_seconds,
+        )
+        _run_checked(
+            active,
+            ["resize2fs", "-M", "--", str(tmp_img)],
+            label="ext4 shrink",
+            timeout_seconds=command_timeout_seconds,
+        )
+        _run_checked(
+            active,
+            ["e2fsck", "-f", "-y", "--", str(tmp_img)],
+            label="ext4 re-check",
+            timeout_seconds=command_timeout_seconds,
+        )
+        try:
+            shrunk_bytes = tmp_img.stat().st_size
+        except OSError as exc:
+            raise ReleaseBuildError("shrunk slot image is unavailable") from exc
+        if shrunk_bytes <= 0 or shrunk_bytes > MAX_PAYLOAD_BYTES:
+            raise ReleaseBuildError("shrunk slot image is outside Greia bounds")
+        if shrunk_bytes > filesystem_bytes:
+            raise ReleaseBuildError("shrunk slot image exceeds filesystem_bytes")
+        try:
+            with tmp_img.open("rb") as handle:
+                head = handle.read(2048)
+        except OSError as exc:
+            raise ReleaseBuildError("slot image is unreadable") from exc
+        _assert_ext4_magic(head)
+        _assert_relocatable(head)
+        if minimum_slot_bytes < shrunk_bytes + PAYLOAD_MIN_HEADROOM:
+            raise ReleaseBuildError(
+                "minimum_slot_bytes must cover the shrunk image plus finalization headroom"
+            )
+        compressed = _run_capture(
+            active,
+            ["zstd", "-19", "-c", "--", str(tmp_img)],
+            label="payload compression",
+            timeout_seconds=compression_timeout_seconds,
+        )
+        if not compressed.startswith(_ZSTD_MAGIC):
+            raise ReleaseBuildError("payload compressor did not emit zstd bytes")
+        with tempfile.NamedTemporaryFile(
+            prefix=f".{out_path.name}.", suffix=".tmp", dir=str(out_path.parent), delete=False
+        ) as handle:
+            tmp_out = Path(handle.name)
+        try:
+            tmp_out.write_bytes(compressed)
+            os.chmod(tmp_out, 0o644)
+            tmp_out.replace(out_path)
+        finally:
+            tmp_out.unlink(missing_ok=True)
+    finally:
+        tmp_img.unlink(missing_ok=True)
+    digest = hashlib.sha256(out_path.read_bytes()).hexdigest()
     return {
-        "output": str(output),
+        "output": str(out_path),
         "filesystem_bytes": filesystem_bytes,
+        "uncompressed_bytes": shrunk_bytes,
         "minimum_slot_bytes": minimum_slot_bytes,
-        "sha256": hashlib.sha256(image).hexdigest(),
+        "sha256": digest,
+        "size": out_path.stat().st_size,
     }
 
 
-def verify_release_payload(payload: Path) -> dict[str, object]:
+def verify_release_payload(
+    payload: Path, *, runner: ReleaseCommandRunner | None = None
+) -> dict[str, object]:
+    """Verify a real ext4 slot payload plus Greia completeness (read-only).
+
+    Decompresses ``payload.ext4.zst`` through the runner seam, proves the
+    ext4 superblock magic and relocatability (no MBR/GPT signature), runs a
+    read-only ``e2fsck -n`` through the seam, then proves every required
+    Greia path with read-only ``debugfs -R "stat <path>"`` probes. Any
+    tar-body payload is rejected as not-a-real-ext4-image.
+    """
+    active = _runner_or_default(runner)
     path = Path(payload)
     if path.is_symlink() or not path.is_file():
         raise ReleaseBuildError("payload is not a regular file")
     with path.open("rb") as handle:
-        header = handle.read(PAYLOAD_HEADER_SIZE)
-        head_check = handle.read(1024)
-    if not header.startswith(PAYLOAD_MAGIC):
-        raise ReleaseBuildError("payload magic is invalid")
-    if header[510:512] == b"\x55\xaa" or header[512:520] == b"EFI PART":
-        raise ReleaseBuildError("payload carries a partition table; must be relocatable")
-    # Read-only member listing of the deterministic tar body. Trailing zero
-    # padding after the tar end-of-archive markers is expected (finalization
-    # headroom) and is ignored by the tar reader; do not strip terminators.
-    with path.open("rb") as handle:
-        handle.seek(PAYLOAD_HEADER_SIZE)
-        raw = handle.read()
-    if not raw or not raw.strip(b"\x00"):
-        raise ReleaseBuildError("payload body is empty")
+        magic = handle.read(4)
+    if magic != _ZSTD_MAGIC:
+        raise ReleaseBuildError("payload.ext4.zst must be zstd-compressed bytes")
+    raw_image = _run_capture(active, ["zstd", "-d", "-c", "--", str(path)], label="payload decompression")
+    if not raw_image or len(raw_image) > MAX_PAYLOAD_BYTES:
+        raise ReleaseBuildError("decompressed payload is outside Greia bounds")
+    _assert_ext4_magic(raw_image[:2048])
+    _assert_relocatable(raw_image[:2048])
+    fd, tmp_name = tempfile.mkstemp(prefix=".verify-slot.", suffix=".ext4")
+    os.close(fd)
+    tmp_img = Path(tmp_name)
     try:
-        members: set[str] = set()
-        with tarfile.open(fileobj=io.BytesIO(raw), mode="r") as tar:
-            for member in tar.getmembers():
-                if member.issym() or member.islnk():
-                    raise ReleaseBuildError("payload body symlink is forbidden")
-                if member.name.startswith("/") or ".." in Path(member.name).parts:
-                    raise ReleaseBuildError("payload body member is unsafe")
-                members.add(member.name)
-    except (tarfile.TarError, OSError) as exc:
-        raise ReleaseBuildError("payload body is not a readable deterministic image") from exc
-    missing = [p for p in REQUIRED_PAYLOAD_PATHS if not any(m == p or m.startswith(p.rstrip("src") if p.endswith("src") else p) for m in members)]
-    # Directory prefix match for opt/greia-os/src (tar contains files beneath it).
-    still_missing: list[str] = []
-    for required in REQUIRED_PAYLOAD_PATHS:
-        if required in members:
-            continue
-        if required == "opt/greia-os/src":
-            if any(m.startswith("opt/greia-os/src/") for m in members):
-                continue
-        still_missing.append(required)
-    if still_missing:
-        raise ReleaseBuildError(f"payload is missing required Greia paths: {still_missing}")
-    return {"payload": str(path), "size": path.stat().st_size, "members": len(members)}
+        try:
+            tmp_img.write_bytes(raw_image)
+        except OSError as exc:
+            raise ReleaseBuildError("payload staging write failed") from exc
+        _run_checked(active, ["e2fsck", "-n", "-f", "--", str(tmp_img)], label="payload read-only check")
+        required = (
+            *_IMAGE_COMPLETENESS_DIRS,
+            *_IMAGE_COMPLETENESS_FILES,
+            *_IMAGE_BOOT_FILES,
+            *_IMAGE_IDENTITY_FILES,
+        )
+        for rel in required:
+            result = active.run(["debugfs", "-R", f"stat {rel}", str(tmp_img)])
+            stdout_text = result.stdout.decode("utf-8", "replace")
+            lowered = stdout_text.lower()
+            if result.returncode != 0 or "not found" in lowered or "no such file" in lowered:
+                raise ReleaseBuildError(f"payload is missing required Greia path: {rel}")
+    finally:
+        tmp_img.unlink(missing_ok=True)
+    return {
+        "payload": str(path),
+        "size": path.stat().st_size,
+        "uncompressed_bytes": len(raw_image),
+        "checked_paths": len(required),
+    }
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -343,6 +568,12 @@ def _parser() -> argparse.ArgumentParser:
     hwset.add_argument("--pool-root", type=Path, required=True)
     hwset.add_argument("--output", type=Path, required=True)
     hwset.add_argument("--max-bytes", type=int, default=MAX_HARDWARE_SUPPORT_BYTES)
+    hwset.add_argument(
+        "--command-timeout-seconds",
+        type=float,
+        default=DEFAULT_COMMAND_TIMEOUT_SECONDS,
+        help="Per-command bound in seconds (fail-closed).",
+    )
     payload = sub.add_parser("build-payload")
     payload.add_argument("--staging-dir", type=Path, required=True)
     payload.add_argument("--kernel", type=Path, required=True)
@@ -350,9 +581,20 @@ def _parser() -> argparse.ArgumentParser:
     payload.add_argument("--output", type=Path, required=True)
     payload.add_argument("--profile-id", required=True)
     payload.add_argument("--release-id", required=True)
-    payload.add_argument("--release-sequence", type=int, required=True)
     payload.add_argument("--filesystem-bytes", type=int, required=True)
     payload.add_argument("--minimum-slot-bytes", type=int, required=True)
+    payload.add_argument(
+        "--command-timeout-seconds",
+        type=float,
+        default=DEFAULT_COMMAND_TIMEOUT_SECONDS,
+        help="Bound for populate/check/shrink commands in seconds (fail-closed).",
+    )
+    payload.add_argument(
+        "--compression-timeout-seconds",
+        type=float,
+        default=PAYLOAD_COMPRESSION_TIMEOUT_SECONDS,
+        help="Bound for the zstd -19 payload compression step in seconds (fail-closed).",
+    )
     verify = sub.add_parser("verify-payload")
     verify.add_argument("--payload", type=Path, required=True)
     return parser
@@ -365,7 +607,7 @@ def main(argv: list[str] | None = None) -> int:
             build_persistent_contract(args.output)
             print(json.dumps({"output": str(args.output)}, indent=2))
         elif args.command == "build-hardware-support":
-            print(json.dumps(build_hardware_support_set(args.pool_root, args.output, max_bytes=args.max_bytes), indent=2))
+            print(json.dumps(build_hardware_support_set(args.pool_root, args.output, max_bytes=args.max_bytes, command_timeout_seconds=args.command_timeout_seconds), indent=2))
         elif args.command == "build-payload":
             print(
                 json.dumps(
@@ -376,9 +618,10 @@ def main(argv: list[str] | None = None) -> int:
                         output=args.output,
                         profile_id=args.profile_id,
                         release_id=args.release_id,
-                        release_sequence=args.release_sequence,
                         filesystem_bytes=args.filesystem_bytes,
                         minimum_slot_bytes=args.minimum_slot_bytes,
+                        command_timeout_seconds=args.command_timeout_seconds,
+                        compression_timeout_seconds=args.compression_timeout_seconds,
                     ),
                     indent=2,
                 )

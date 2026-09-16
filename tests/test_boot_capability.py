@@ -65,7 +65,6 @@ def _stage_pending_update(root: Path) -> tuple[Path, Path]:
         layout_id=_LAYOUT_ID,
         boot_backend=_BACKEND_ID,
         release_id=_RELEASE,
-        release_sequence=_RELEASE_SEQ,
         candidate_slot="B",
         accepted_slot="A",
     )
@@ -81,7 +80,6 @@ def _stage_pending_first_install(root: Path) -> tuple[Path, Path]:
         layout_id=_LAYOUT_ID,
         boot_backend=_BACKEND_ID,
         release_id=_RELEASE,
-        release_sequence=_RELEASE_SEQ,
     )
     return journal_dir, root / "update-state"
 

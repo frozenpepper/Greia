@@ -6,6 +6,12 @@ until a capable host backfills it. The procedure below is complete at
 source scope: `make verify` green plus the unit contract in
 `tests/test_x8_qemu/`.
 
+Documents `tools/x8_qemu/runner.py` as implemented: the unsigned
+`.greiaupdate` v3 bundle path (`build_update_bundle` /
+`inspect_update_bundle`) with `release_id` release identity. No
+signing step, no key material, and no extra signing dependency exist
+in this procedure.
+
 ## 1. Exact layout / profile / release under test
 
 - **Layout adapter:** `legacy-bios-ab-v1` (executable MBR A/B/PERSIST:
@@ -23,11 +29,13 @@ source scope: `make verify` green plus the unit contract in
   procedure builds the `legacy-bios-ab-v1` + `grub-ab-v1` test variant and
   claims **no profile-bounds conformance** beyond the stated MiB
   comparison in the report.
-- **Release lineage:** `greia-x8qemu-0.20.0` (seq 20, slot A) →
-  `greia-x8qemu-0.21.0` (seq 21, slot B) →
-  `greia-x8qemu-0.22.0` (seq 22, slot A), each a signed `.greiaupdate` v2
+- **Release lineage:** `greia-x8qemu-0.20.0` (slot A) →
+  `greia-x8qemu-0.21.0` (slot B) →
+  `greia-x8qemu-0.22.0` (slot A), each an unsigned `.greiaupdate` v3
   bundle built through `build_update_bundle` and identified per run by
-  `inspect_update_bundle` (id, sequence, payload SHA-256, bundle SHA-256).
+  `inspect_update_bundle` (release_id, payload SHA-256, bundle SHA-256).
+  No sequence authority under ADR 0036; lineage order is the launch
+  order only.
 
 ## 2. Host prerequisites (Linux x86_64 only)
 
@@ -37,8 +45,8 @@ source scope: `make verify` green plus the unit contract in
 3. GRUB tooling compatible with the boot-control `grubenv` block.
 4. Loopback + mount capability (`losetup`, `mount`, `partprobe`,
    `udevadm`, `mkfs.ext4`) for disposable raw-image assembly.
-5. `python3` with Greia `src` on `PYTHONPATH` and the `cryptography`
-   package for signed bundles.
+5. `python3` with Greia `src` on `PYTHONPATH`; v3 bundles need no key
+   material.
 6. Root for the privileged run (`os.geteuid() == 0` is enforced).
 
 No GitHub-hosted Actions are used (opt-in only; no owner authorization).
@@ -53,7 +61,7 @@ No GitHub-hosted Actions are used (opt-in only; no owner authorization).
    (`mint_fresh_partition_identities` — never cloned template UUIDs).
 3. Stage the inactive slot through `SlotWriter` (bounded-chunk streaming,
    readback digest) and `SlotFinalizer` (role-UUID restore, receipt) via
-   the signed `.greiaupdate` v2 install/update path. No parallel writer,
+   the unsigned `.greiaupdate` v3 install/update path. No parallel writer,
    updater, installer, or boot manager exists in this procedure.
 4. Render `grub.cfg` from the trusted layout record only
    (`render_grub_ab_config_from_record`); validate with
@@ -84,8 +92,12 @@ Note: the exact default-slot assertions per run follow the
 `GrubEnvBackend` contract (default moves only through the verified
 health commit after the candidate provably booted; a consumed one-shot
 without a health commit leaves the accepted default in place). Each run
-records `release_id`, `release_sequence`, `release_sha256`,
+records `release_id`, payload SHA-256, bundle SHA-256,
 `image_sha256`, and the full `boot_backend_state`.
+
+The 8-step lifecycle in `tools/x8_qemu/LIFECYCLE.md` builds on this
+7-run sequence for lifecycle purposes; this 7-run sequence remains the
+intact procedure for `runner.py`.
 
 ## 5. Footprint and staging-memory method
 

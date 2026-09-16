@@ -56,9 +56,7 @@ from greia_installer.layout import (
 from greia_installer.persist import PersistCommandResult, PersistCommandRunner
 from greia_platform.slot_writer import SlotFinalizeError
 from greia_platform.system_updates import (
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     inspect_update_bundle,
 )
 
@@ -70,7 +68,6 @@ MIB = 1024 * 1024
 _PROFILE = "legacy-x86-i686"
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
-_SIGNER = "greia-release-main"
 _INSTALL_SHA = "ab" * 32
 _PASSWORD_HASH = "grub.pbkdf2.sha512.10000." + "A" * 128
 _HW_BODY = b"hwset-payload" * 64
@@ -197,6 +194,24 @@ class FakeSlotFilesystem:
             raise SlotFinalizeError("slot is already mounted")
         self.mounted = True
         self.mount_dir.mkdir(parents=True, exist_ok=True)
+        # Simulate a staged slot carrying real Greia userspace so the
+        # shared completeness smoke passes (uses the shared path set).
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (self.mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = self.mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
         return self.mount_dir
 
     def unmount(self) -> None:
@@ -214,6 +229,12 @@ class FakeSlotFilesystem:
 
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
+
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        self.ops.append("completeness")
+        check_slot_completeness(self.mount_dir)
 
     def check_health(self) -> None:
         self.ops.append("health")
@@ -383,39 +404,35 @@ class PostLayoutObserverValidationTests(unittest.TestCase):
             )
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "signed bundles need cryptography")
 class OrchestratorSequencingTests(unittest.TestCase):
     """The orchestrator observes after partitioning, before SYSTEM_A."""
 
     def _bundle(self, root: Path, payload: bytes) -> Path:
-        private = root / "priv.pem"
-        public = root / "pub.pem"
-        generate_ed25519_keypair(private, public)
-        payload_path = root / "payload.bin"
-        payload_path.write_bytes(payload)
+        import zstandard
+
+        compressed = zstandard.ZstdCompressor(level=3).compress(payload)
+        payload_path = root / "payload.ext4.zst"
+        payload_path.write_bytes(compressed)
         hw_path = root / "hw.tar.zst"
         hw_path.write_bytes(_HW_BYTES)
-        contract_path = root / "contract.json"
-        contract_path.write_bytes(build_persistent_state_contract_bytes())
         bundle = root / "r11.greiaupdate"
+        if bundle.exists():
+            bundle.unlink()
         build_update_bundle(
             payload_path=payload_path,
             hardware_support_path=hw_path,
-            persistent_contract_path=contract_path,
             output_path=bundle,
             version="0.15.0",
             release_id="greia-0.15.0",
-            release_sequence=11,
             platform_family=_FAMILY,
             architecture=_ARCH,
             profile=_PROFILE,
-            signer=_SIGNER,
-            private_key_path=private,
+            payload_uncompressed_bytes=len(payload),
             minimum_slot_bytes=len(payload) + MIB,
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
         )
-        key_dir = root / "trusted"
-        key_dir.mkdir(exist_ok=True)
-        (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
         return bundle
 
     def _harness(self, root: Path, payload: bytes, observer):
@@ -460,7 +477,6 @@ class OrchestratorSequencingTests(unittest.TestCase):
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
-            trusted_key_dir=root / "trusted",
             expected_profile_id=_PROFILE,
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,
@@ -635,7 +651,6 @@ class OrchestratorSequencingTests(unittest.TestCase):
 
         facts = AbExecutorFacts(
             bundle_path=bundle,
-            trusted_key_dir=root / "trusted",
             expected_profile_id=_PROFILE,
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,

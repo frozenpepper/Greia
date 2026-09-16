@@ -238,7 +238,7 @@ class InstallerHardwareEnablementPlanner:
 
         if missing:
             diagnostics.append(
-                "required signed hardware packages are absent from this installer media: "
+                "required hardware packages are absent from this installer media: "
                 + ", ".join(sorted(set(missing)))
             )
 

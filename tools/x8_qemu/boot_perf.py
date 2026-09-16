@@ -331,7 +331,7 @@ def run_boot_perf_product(
     if release_bundle is None:
         raise LifecycleHarnessError(
             "BLOCKED boot-perf: no source SHA is available "
-            "(pass the signed release_bundle; never mint one)"
+            "(pass the release_bundle; never mint one)"
         )
     bundle = Path(release_bundle)
     if bundle.is_symlink() or not bundle.is_file():

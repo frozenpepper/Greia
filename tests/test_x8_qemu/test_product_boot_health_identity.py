@@ -9,7 +9,7 @@ contact:
   ``PRODUCT_IDENTITY_UNITS``, per-slot pre/post clone SHAs + exact
   injected-file lists via ``record_slot_injection_mutation``,
   slot-isolation digests via ``verify_update_slot_isolation``, and the
-  observed MBR/PARTUUID/filesystem/journal/sequence/layout facts from
+  observed MBR/PARTUUID/filesystem/journal/release/layout facts from
   ``gather_boot_health_observation``).
 - RED (never a partial green): a missing slot-injection provenance, a
   missing slot-isolation digest/proof, or a missing observed boot fact
@@ -104,7 +104,7 @@ def _green_observation() -> dict[str, object]:
             },
         },
         "default_slot": "B",
-        "accepted_sequence": 21,
+        "accepted_release_id": "greia-0.21.0",
         "committed_slot": "B",
         "last_booted": "B",
         "journal_state": "accepted",
@@ -167,7 +167,7 @@ class BootIdentityGreenTests(unittest.TestCase):
                 record["boot_observation"]["default_slot"], "B"  # type: ignore[index]
             )
             self.assertEqual(
-                record["boot_observation"]["accepted_sequence"], 21  # type: ignore[index]
+                record["boot_observation"]["accepted_release_id"], "greia-0.21.0"  # type: ignore[index]
             )
             self.assertFalse(record["source_image_mutated"])
             assert_product_identity_complete(
@@ -257,7 +257,7 @@ class BootIdentityGreenTests(unittest.TestCase):
                 result["release_bundle_sha256"],
             )
             self.assertEqual(identity["boot_observation"]["default_slot"], "B")
-            self.assertEqual(identity["boot_observation"]["accepted_sequence"], 21)
+            self.assertEqual(identity["boot_observation"]["accepted_release_id"], "greia-0.21.0")
             self.assertFalse(result["source_image_mutated"])
             self.assertFalse(identity["source_image_mutated"])
             assert_product_identity_complete(
@@ -518,13 +518,13 @@ class BootIdentityNegativeTests(unittest.TestCase):
             record, installed, bundle = _green_record(base)
             drifted = _copy.deepcopy(record)
             boot_obs = dict(drifted["boot_observation"])  # type: ignore[arg-type]
-            del boot_obs["accepted_sequence"]
+            del boot_obs["accepted_release_id"]
             drifted["boot_observation"] = boot_obs
             with self.assertRaises(LifecycleHarnessError) as caught:
                 assert_product_identity_complete(
                     drifted, installed_image=installed, release_bundles=[bundle]
                 )
-            self.assertIn("accepted_sequence", str(caught.exception))
+            self.assertIn("accepted_release_id", str(caught.exception))
             drifted["boot_observation"] = dict(record["boot_observation"])  # type: ignore[arg-type]
             assert_product_identity_complete(
                 drifted, installed_image=installed, release_bundles=[bundle]

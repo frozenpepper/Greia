@@ -33,7 +33,9 @@ class BootAnimationMigrationTests(unittest.TestCase):
         self.assertFalse((PROJECT_ROOT / "build/installer-overlay/etc/plymouth").exists())
 
     def test_builders_never_stage_or_enable_plymouth(self) -> None:
-        for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
+        # T01: target-role composition lives in the shared engine; the thin
+        # consumer must also stay Plymouth-free.
+        for builder_name in ("build/lib/compose.sh", "build/build-installer-image.sh", "build/build-image.sh"):
             with self.subTest(builder=builder_name):
                 builder = (PROJECT_ROOT / builder_name).read_text(encoding="utf-8")
                 self.assertNotIn("plymouth-set-default-theme", builder)

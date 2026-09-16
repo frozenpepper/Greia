@@ -61,9 +61,7 @@ from greia_platform.slot_writer import (
 )
 from greia_platform.system_updates import (
     PAYLOAD_NAME,
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     inspect_update_bundle,
 )
 
@@ -73,7 +71,6 @@ MIB = 1024 * 1024
 _PROFILE = "legacy-x86-i686"
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
-_SIGNER = "greia-release-main"
 _INSTALL_SHA = "ab" * 32
 _PASSWORD_HASH = "grub.pbkdf2.sha512.10000." + "A" * 128
 _HW_BYTES = b"\x28\xb5\x2f\xfd" + b"hwset-payload" * 64
@@ -84,39 +81,51 @@ _LARGE = 32 * MIB
 
 
 def _payload(size: int) -> bytes:
-    return bytes((index * 31 + 7) % 256 for index in range(size))
+    """Deterministic incompressible raw payload (uncompressed image bytes).
+
+    v3 bundles store ``payload.ext4.zst`` (zstd-compressed); the streaming
+    and RSS gates need the compressed member to stay near payload scale so
+    the whole-buffering positive control remains sensitive. A fixed-seed
+    PRNG gives deterministic incompressible bytes (patterned payloads would
+    compress to kilobytes and weaken the detector).
+    """
+    import random
+
+    return random.Random(0x5EED1234 + size).randbytes(size)
+
+
+def _compress_raw(raw: bytes) -> bytes:
+    import zstandard
+
+    return zstandard.ZstdCompressor(level=3).compress(raw)
 
 
 def _build_bundle(root: Path, payload: bytes, *, sequence: int):
-    private = root / f"priv-{sequence}.pem"
-    public = root / f"pub-{sequence}.pem"
-    generate_ed25519_keypair(private, public)
-    payload_path = root / f"payload-{sequence}.bin"
-    payload_path.write_bytes(payload)
+    """Build an unsigned v3 bundle; ``payload`` is raw uncompressed bytes."""
+    compressed = _compress_raw(payload)
+    payload_path = root / f"payload-{sequence}.ext4.zst"
+    payload_path.write_bytes(compressed)
     hw_path = root / f"hw-{sequence}.tar.zst"
     hw_path.write_bytes(_HW_BYTES)
-    contract_path = root / f"contract-{sequence}.json"
-    contract_path.write_bytes(build_persistent_state_contract_bytes())
     bundle = root / f"r{sequence}.greiaupdate"
+    if bundle.exists():
+        bundle.unlink()
     build_update_bundle(
         payload_path=payload_path,
         hardware_support_path=hw_path,
-        persistent_contract_path=contract_path,
         output_path=bundle,
         version="0.15.0",
         release_id=f"greia-0.15.{sequence}",
-        release_sequence=sequence,
         platform_family=_FAMILY,
         architecture=_ARCH,
         profile=_PROFILE,
-        signer=_SIGNER,
-        private_key_path=private,
+        payload_uncompressed_bytes=len(payload),
         minimum_slot_bytes=len(payload) + MIB,
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
     )
-    key_dir = root / f"trusted-{sequence}"
-    key_dir.mkdir(exist_ok=True)
-    (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
-    return bundle, key_dir
+    return bundle, None
 
 
 def _consume_fully(stream, *, chunk: int = 64 * 1024) -> int:
@@ -187,6 +196,24 @@ class FakeSlotFilesystem:
     def mount(self) -> Path:
         self.mounted = True
         self.mount_dir.mkdir(parents=True, exist_ok=True)
+        # Simulate a staged slot carrying real Greia userspace so the
+        # shared completeness smoke passes (uses the shared path set).
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (self.mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = self.mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
         return self.mount_dir
 
     def unmount(self) -> None:
@@ -202,6 +229,11 @@ class FakeSlotFilesystem:
 
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
+
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        check_slot_completeness(self.mount_dir)
 
     def check_health(self) -> None:
         pass
@@ -290,8 +322,10 @@ class StreamingSeamTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
         payload = _payload(2 * MIB)
-        bundle, _key_dir = _build_bundle(root, payload, sequence=41)
-        expected_digest = hashlib.sha256(payload).hexdigest()
+        bundle, _ = _build_bundle(root, payload, sequence=41)
+        with zipfile.ZipFile(bundle) as archive:
+            member_bytes = archive.read(PAYLOAD_NAME)
+        expected_digest = hashlib.sha256(member_bytes).hexdigest()
 
         stream = open_bundle_payload_stream(bundle)
         self.assertIsInstance(stream, BundlePayloadStream)
@@ -305,7 +339,7 @@ class StreamingSeamTests(unittest.TestCase):
                 break
             digest.update(piece)
             total += len(piece)
-        self.assertEqual(total, len(payload))
+        self.assertEqual(total, len(member_bytes))
         self.assertEqual(digest.hexdigest(), expected_digest)
         stream.close()
         self.assertTrue(stream.closed)
@@ -318,16 +352,17 @@ class StreamingSeamTests(unittest.TestCase):
         directory = tempfile.mkdtemp(prefix="t2-stream-ctx-")
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
-        bundle, _key_dir = _build_bundle(root, _payload(1 * MIB), sequence=42)
+        bundle, _ = _build_bundle(root, _payload(1 * MIB), sequence=42)
+        expected = inspect_update_bundle(bundle).manifest.payload_size
         with open_bundle_payload_stream(bundle) as stream:
-            self.assertEqual(_consume_fully(stream), 1 * MIB)
+            self.assertEqual(_consume_fully(stream), expected)
         self.assertTrue(stream.closed)
 
     def test_unbounded_read_refused_fail_closed(self) -> None:
         directory = tempfile.mkdtemp(prefix="t2-stream-unbounded-")
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
-        bundle, _key_dir = _build_bundle(root, _payload(256 * 1024), sequence=43)
+        bundle, _ = _build_bundle(root, _payload(256 * 1024), sequence=43)
         stream = open_bundle_payload_stream(bundle)
         try:
             with self.assertRaises(FreshAbInstallError):
@@ -341,7 +376,7 @@ class StreamingSeamTests(unittest.TestCase):
         directory = tempfile.mkdtemp(prefix="t2-stream-skew-")
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
-        bundle, _key_dir = _build_bundle(root, _payload(1 * MIB), sequence=44)
+        bundle, _ = _build_bundle(root, _payload(1 * MIB), sequence=44)
         manifest = inspect_update_bundle(bundle).manifest
         # Wrong expected size (TOCTOU guard) must refuse at open, before write.
         with self.assertRaises(FreshAbInstallError):
@@ -352,7 +387,7 @@ class StreamingSeamTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
         payload = _payload(1 * MIB)
-        bundle, _key_dir = _build_bundle(root, payload, sequence=45)
+        bundle, _ = _build_bundle(root, payload, sequence=45)
         manifest = inspect_update_bundle(bundle).manifest
         member = VerifiedReleaseMember.from_manifest(manifest)
         observed = _observed_mbr_identities()
@@ -390,7 +425,7 @@ class StreamingSeamTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
         payload = _payload(1 * MIB)
-        bundle, key_dir = _build_bundle(root, payload, sequence=47)
+        bundle, _ = _build_bundle(root, payload, sequence=47)
         manifest = inspect_update_bundle(bundle).manifest
         observed = _observed_mbr_identities()
         persist_stage = root / "persist-stage"
@@ -415,7 +450,7 @@ class StreamingSeamTests(unittest.TestCase):
         class _Interrupting:
             def __init__(self) -> None:
                 self._real = open_bundle_payload_stream(
-                    bundle, expected_size=len(payload)
+                    bundle, expected_size=manifest.payload_size
                 )
 
             def read(self, size: int = -1) -> bytes:
@@ -452,7 +487,6 @@ class StreamingSeamTests(unittest.TestCase):
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
-            trusted_key_dir=key_dir,
             expected_profile_id=_PROFILE,
             expected_platform_family=_FAMILY,
             expected_architecture=_ARCH,
@@ -483,11 +517,12 @@ class StreamingSeamTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
         payload = _payload(2 * MIB)
-        bundle, _key_dir = _build_bundle(root, payload, sequence=46)
+        bundle, _ = _build_bundle(root, payload, sequence=46)
         before = {path.name for path in root.iterdir()}
+        expected = inspect_update_bundle(bundle).manifest.payload_size
         stream = open_bundle_payload_stream(bundle)
         try:
-            self.assertEqual(_consume_fully(stream), len(payload))
+            self.assertEqual(_consume_fully(stream), expected)
         finally:
             stream.close()
         after = {path.name for path in root.iterdir()}
@@ -505,6 +540,8 @@ class StreamingMemoryTests(unittest.TestCase):
         large = _payload(_LARGE)
         small_bundle, _ = _build_bundle(root, small, sequence=51)
         large_bundle, _ = _build_bundle(root, large, sequence=52)
+        small_compressed = inspect_update_bundle(small_bundle).manifest.payload_size
+        large_compressed = inspect_update_bundle(large_bundle).manifest.payload_size
 
         def _stream_peak(bundle: Path, size: int) -> int:
             def _run() -> int:
@@ -534,9 +571,9 @@ class StreamingMemoryTests(unittest.TestCase):
             self.assertEqual(total, size)
             return peak
 
-        small_stream = _stream_peak(small_bundle, _SMALL)
-        large_stream = _stream_peak(large_bundle, _LARGE)
-        large_buffered = _buffered_peak(large_bundle, _LARGE)
+        small_stream = _stream_peak(small_bundle, small_compressed)
+        large_stream = _stream_peak(large_bundle, large_compressed)
+        large_buffered = _buffered_peak(large_bundle, large_compressed)
 
         # Streaming stays at chunk scale for a 32 MiB payload.
         self.assertLess(
@@ -548,12 +585,12 @@ class StreamingMemoryTests(unittest.TestCase):
         # peaks at payload scale.
         self.assertGreaterEqual(
             large_buffered,
-            _LARGE,
+            large_compressed,
             f"positive control peak {large_buffered} does not reach payload scale",
         )
         # Peak does not scale ~1:1 with payload: 24 MiB more payload must add
         # less than 25% of the delta to the streaming peak.
-        delta_payload = _LARGE - _SMALL
+        delta_payload = large_compressed - small_compressed
         delta_peak = abs(large_stream - small_stream)
         self.assertLess(
             delta_peak,
@@ -569,7 +606,7 @@ class StreamingMemoryTests(unittest.TestCase):
         def _install_peak(payload: bytes, sequence: int) -> int:
             case = root / f"case-{sequence}"
             case.mkdir()
-            bundle, key_dir = _build_bundle(case, payload, sequence=sequence)
+            bundle, _ = _build_bundle(case, payload, sequence=sequence)
             manifest = inspect_update_bundle(bundle).manifest
             observed = _observed_mbr_identities()
             persist_stage = case / "persist-stage"
@@ -608,7 +645,6 @@ class StreamingMemoryTests(unittest.TestCase):
             )
             request = FreshAbInstallRequest(
                 bundle_path=bundle,
-                trusted_key_dir=key_dir,
                 expected_profile_id=_PROFILE,
                 expected_platform_family=_FAMILY,
                 expected_architecture=_ARCH,

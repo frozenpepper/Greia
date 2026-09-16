@@ -59,7 +59,6 @@ _SUPPORT = "ef" * 32
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -96,7 +95,6 @@ def _receipt(slot: str, *, kernel: str = _KERNEL_A, initramfs: str = _INITRAMFS_
         schema_version=1,
         finalizer_version=FINALIZER_VERSION,
         release_id="greia-0.15.0",
-        release_sequence=11,
         slot=slot,
         role=f"system-{slot.lower()}",
         base_sha256=kernel,
@@ -219,7 +217,7 @@ class BootArtifactSetTests(unittest.TestCase):
                 slot="A", layout_id="modern-gpt-ab-v1", boot_backend="none-v1",
                 generic_kernel_sha256=_KERNEL_A, generic_initramfs_sha256=_INITRAMFS_A,
                 root_partuuid=_UUID_A, root_filesystem_uuid=_UUID_A_FS,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
 
 
@@ -235,7 +233,7 @@ class InitramfsRoleTests(unittest.TestCase):
         artifact = InitramfsArtifact(
             role=InitramfsRole.BASE, sha256=_KERNEL_A,
             producer="release-builder-v1",
-            release_id="greia-0.15.0", release_sequence=11,
+            release_id="greia-0.15.0",
         )
         self.assertIsNone(artifact.derived_from_sha256)
         # BASE alone is not a per-slot recovery path.
@@ -246,7 +244,7 @@ class InitramfsRoleTests(unittest.TestCase):
         fast = InitramfsArtifact(
             role=InitramfsRole.HOST_FAST, sha256="12" * 32,
             producer="host-derivative-v1",
-            release_id="greia-0.15.0", release_sequence=11,
+            release_id="greia-0.15.0",
             derived_from_sha256=_INITRAMFS_A,
         )
         with self.assertRaises(BootArtifactError):
@@ -261,19 +259,19 @@ class InitramfsRoleTests(unittest.TestCase):
             InitramfsArtifact(
                 role=InitramfsRole.BASE, sha256=_KERNEL_A,
                 producer="slot-finalizer-v1",
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
         with self.assertRaises(BootArtifactError):
             InitramfsArtifact(
                 role=InitramfsRole.HOST_FAST, sha256="12" * 32,
                 producer="host-derivative-v1",
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
         with self.assertRaises(BootArtifactError):
             InitramfsArtifact(
                 role=InitramfsRole.FINALIZED_GENERIC, sha256=_INITRAMFS_A,
                 producer="slot-finalizer-v1",
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
                 derived_from_sha256=_KERNEL_A,
             )
 
@@ -287,7 +285,7 @@ class FakeGrubBackendTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             armed = coordinator.arm()
             self.assertEqual(armed.one_shot_slot, "B")
@@ -322,7 +320,7 @@ class FakeGrubBackendTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             coordinator.arm()
             self.assertEqual(backend.simulate_reboot(), "B")
@@ -346,7 +344,7 @@ class FakeGrubBackendTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             coordinator.arm()
             # Candidate kernel fails: firmware boots the accepted default.
@@ -405,7 +403,7 @@ class FakePiBackendTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             armed = coordinator.arm()
             self.assertEqual(armed.one_shot_slot, "B")
@@ -518,7 +516,7 @@ class JournalTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             # Crash after backend arm, before the journal records it.
             backend.arm_one_shot("B")
@@ -543,7 +541,7 @@ class JournalTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             observed, decision = coordinator.reconcile_after_crash()
             self.assertIsNone(observed)
@@ -580,7 +578,7 @@ class JournalTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             journal = coordinator.journal
             with self.assertRaises(BootJournalError):
@@ -589,7 +587,7 @@ class JournalTests(unittest.TestCase):
                 BootTransactionJournal.begin_update(
                     root / "journal", layout_id="modern-gpt-ab-v1",
                     boot_backend="grub-ab-v1", release_id="greia-0.15.0",
-                    release_sequence=12, candidate_slot="B", accepted_slot="A",
+                    candidate_slot="B", accepted_slot="A",
                 )
             coordinator.mark_failed("candidate userspace never became healthy")
             self.assertEqual(journal.state, BootTransactionState.FAILED)
@@ -606,7 +604,7 @@ class JournalTests(unittest.TestCase):
             BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             journal_path = root / "journal" / JOURNAL_FILE_NAME
             pristine = json.loads(journal_path.read_text(encoding="utf-8"))
@@ -653,7 +651,7 @@ class JournalTests(unittest.TestCase):
             BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             journal_path = root / "journal" / JOURNAL_FILE_NAME
             os.chmod(journal_path, 0o644)
@@ -723,7 +721,7 @@ class CoordinatorProtocolTests(unittest.TestCase):
                 BootTransactionCoordinator.begin_update(
                     journal_dir=root / "journal", backend=backend,
                     candidate_artifacts=accepted, accepted_artifacts=accepted,
-                    release_id="greia-0.15.0", release_sequence=11,
+                    release_id="greia-0.15.0",
                 )
             pi_record = InstalledLayoutRecord.from_dict(_pi_record_dict())
             pi_candidate = BootArtifactSet.from_finalization(
@@ -734,7 +732,7 @@ class CoordinatorProtocolTests(unittest.TestCase):
                 BootTransactionCoordinator.begin_update(
                     journal_dir=root / "journal2", backend=backend,
                     candidate_artifacts=pi_candidate, accepted_artifacts=accepted,
-                    release_id="greia-0.15.0", release_sequence=11,
+                    release_id="greia-0.15.0",
                 )
 
     def test_module_has_no_privileged_or_manager_surface(self) -> None:

@@ -92,7 +92,6 @@ _SHIPPED_ENV_NAMES = (
 # explicit test/harness overrides.
 _AB_ENV_NAMES = (
     "GREIA_AB_RELEASE_BUNDLE",
-    "GREIA_AB_TRUSTED_KEY_DIR",
     "GREIA_AB_GRUB_PASSWORD_HASH",
     "GREIA_AB_DEVELOPER",
     "GREIA_AB_SUPPORT_INSTALLED_BYTES",
@@ -124,13 +123,12 @@ def _write_profile(path: Path, *, profile_id: str, layout: str, backend: str) ->
 
 
 def _write_ab_env_file(
-    path: Path, *, bundle: Path, key_dir: Path, support_bound: int = _AB_SUPPORT_BOUND
+    path: Path, *, bundle: Path, support_bound: int = _AB_SUPPORT_BOUND
 ) -> Path:
     """Write a disposable image-owned-shaped A/B facts file."""
     path.write_text(
         "# disposable image-owned A/B release facts (GREIA_AB_CONFIG shadow)\n"
         f"GREIA_AB_RELEASE_BUNDLE={bundle}\n"
-        f"GREIA_AB_TRUSTED_KEY_DIR={key_dir}\n"
         f"GREIA_AB_GRUB_PASSWORD_HASH={_AB_PASSWORD_HASH}\n"
         "GREIA_AB_DEVELOPER=0\n"
         f"GREIA_AB_SUPPORT_INSTALLED_BYTES={support_bound}\n",
@@ -204,10 +202,8 @@ def _make_ab_tree() -> tuple[str, dict[str, Path]]:
     )
     bundle = root / "ab-release.greiaupdate"
     bundle.write_bytes(b"test-release-bundle")
-    key_dir = root / "ab-trusted-keys"
-    key_dir.mkdir()
     env_file = root / "installer-ab.env"
-    _write_ab_env_file(env_file, bundle=bundle, key_dir=key_dir)
+    _write_ab_env_file(env_file, bundle=bundle)
     return directory, {
         "root": root,
         "os_root": os_root,
@@ -216,7 +212,6 @@ def _make_ab_tree() -> tuple[str, dict[str, Path]]:
         "digest": digest,
         "profile": profile,
         "bundle": bundle,
-        "key_dir": key_dir,
         "env_file": env_file,
     }
 
@@ -312,11 +307,8 @@ class ShippedAbProductCompositionTests(unittest.TestCase):
         )
         bundle = root / "ab-release.greiaupdate"
         bundle.write_bytes(b"test-release-bundle")
-        key_dir = root / "ab-trusted-keys"
-        key_dir.mkdir()
         ab_overrides = {
             "GREIA_AB_RELEASE_BUNDLE": str(bundle),
-            "GREIA_AB_TRUSTED_KEY_DIR": str(key_dir),
             "GREIA_AB_GRUB_PASSWORD_HASH": _AB_PASSWORD_HASH,
             "GREIA_AB_SUPPORT_INSTALLED_BYTES": str(_AB_SUPPORT_BOUND),
         }
@@ -368,8 +360,6 @@ class InstallerProductControlsTests(unittest.TestCase):
         )
         bundle = root / "release.greiaupdate"
         bundle.write_bytes(b"test-release-bundle")
-        key_dir = root / "trusted-keys"
-        key_dir.mkdir()
         project_root = Path(__file__).resolve().parents[1]
         state = ServiceState.from_target_profile(
             profile,
@@ -402,7 +392,6 @@ class InstallerProductControlsTests(unittest.TestCase):
             state=state,
             authority=authority,
             ab_release_bundle=bundle,
-            ab_trusted_key_dir=key_dir,
             ab_password_hash=_AB_PASSWORD_HASH,
             ab_support_installed_bytes=_AB_SUPPORT_BOUND,
             ab_seams_factory=_seams,

@@ -76,7 +76,6 @@ def build_protocol(
     coordinator: object,
     candidate_root_partuuid: str,
     candidate_release_id: str,
-    candidate_release_sequence: int,
     vault: BootHealthCredentialVault,
     observer: object,
 ) -> BootHealthyProtocol:
@@ -85,7 +84,6 @@ def build_protocol(
         coordinator=coordinator,
         candidate_root_partuuid=candidate_root_partuuid,
         candidate_release_id=candidate_release_id,
-        candidate_release_sequence=candidate_release_sequence,
         vault=vault,
         observer=observer,  # type: ignore[arg-type]
         trusted_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,
@@ -428,25 +426,17 @@ def _outcome_from_service_detail(op: str, payload: dict[str, object]) -> BootHea
         raise BootHealthError("root boot-health service gave no confirm detail")
     accepted_slot = detail.get("accepted_slot")
     release_id = detail.get("release_id")
-    release_sequence = detail.get("release_sequence")
     journal = detail.get("journal")
     if accepted_slot not in ("A", "B"):
         raise BootHealthError("root boot-health detail carries no accepted slot")
     if not isinstance(release_id, str) or not release_id:
         raise BootHealthError("root boot-health detail carries no release")
-    if (
-        isinstance(release_sequence, bool)
-        or not isinstance(release_sequence, int)
-        or release_sequence < 0
-    ):
-        raise BootHealthError("root boot-health detail carries no sequence")
     if journal not in ("update", "first-install"):
         raise BootHealthError("root boot-health detail carries no journal kind")
     first_install = journal == "first-install"
     return BootHealthOutcome(
         accepted_slot=str(accepted_slot),
         release_id=str(release_id),
-        release_sequence=int(release_sequence),
         first_install=first_install,
         recovery_medium_if_failed=(
             SETUP_MEDIUM if first_install else ACCEPTED_SLOT_MEDIUM

@@ -40,7 +40,6 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 # GREIA_SYSTEM_* Environment= lines are shipped here: those names remain
 # test-only composition fallbacks in code, never installed product identity.
 Environment=GREIA_UPDATE_STATE_DIR=/var/lib/greia-os
-Environment=GREIA_UPDATE_TRUSTED_KEY_DIR=/etc/greia-os/system-update-keys
 Environment=GREIA_INSTALLED_LAYOUT_RECORD=/etc/greia-os/installed-layout.json
 ExecStart=/usr/bin/python3 -m greia_platform.system_updates --socket-activated
 Restart=no
@@ -68,10 +67,6 @@ ReadWritePaths=/var/lib/greia-os /run/greia-os
 # The temporary inactive-slot mountpoint is self-created under the granted
 # /run/greia-os tree. Everything else stays read-only.
 ReadWritePaths=/etc/greia-os /boot/grub
-# Trust root stays read-only inside the writable /etc/greia-os grant above:
-# systemd applies BindReadOnlyPaths over ReadWritePaths, so the key directory
-# can never be rewritten through this unit.
-BindReadOnlyPaths=/etc/greia-os/system-update-keys
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes

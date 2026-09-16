@@ -74,7 +74,6 @@ class BootObservationResult:
     observed_slot: str | None
     root_partuuid: str | None
     release_id: str | None
-    release_sequence: int | None
     reconciled: bool
     reason: str
 
@@ -182,7 +181,6 @@ def observe_and_reconcile_boot(
             observed_slot=None,
             root_partuuid=None,
             release_id=None,
-            release_sequence=None,
             reconciled=False,
             reason=REASON_NOOP_ABSENT_LAYOUT,
         )
@@ -191,7 +189,6 @@ def observe_and_reconcile_boot(
             observed_slot=None,
             root_partuuid=None,
             release_id=None,
-            release_sequence=None,
             reconciled=False,
             reason=REASON_NOOP_SINGLE_ROOT,
         )
@@ -233,7 +230,6 @@ def observe_and_reconcile_boot(
         observed_slot=observed.booted_slot,
         root_partuuid=observed.root_partuuid,
         release_id=observed.release_id,
-        release_sequence=observed.release_sequence,
         reconciled=True,
         reason=REASON_RECONCILED,
     )

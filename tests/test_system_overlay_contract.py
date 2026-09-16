@@ -58,11 +58,25 @@ class SystemOverlayContractTests(unittest.TestCase):
         profile_tool = (PROJECT_ROOT / "tools/build_profile.py").read_text()
         self.assertIn("_RELEASE_SAFE_BOOT_COVERS", profile_tool)
         self.assertIn("frozenset()", profile_tool)
+        # T02: live-installer release gating lives in the shared engine; both
+        # thin consumers delegate (compose_resolve_profile) rather than
+        # reimplement.
+        engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
+        self.assertIn('PIP_RELEASE_BUILD:-0', engine)
+        self.assertIn('check-release', engine)
+        self.assertIn("Release build refused", engine)
+        for consumer_name in ("build/build-image.sh", "build/build-installer-image.sh"):
+            consumer = (PROJECT_ROOT / consumer_name).read_text()
+            self.assertNotIn("Release build refused", consumer)
+            self.assertNotIn('check-release', consumer)
+        consumer = (PROJECT_ROOT / "build/build-image.sh").read_text()
+        self.assertIn('compose_resolve_profile "$PROFILE_PATH" "target"', consumer)
+        installer = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
+        self.assertIn('compose_resolve_profile "$PROFILE_PATH" "live-installer"', installer)
+        # The lowercase footprint field stays with the role consumers that
+        # own footprint reporting (target consumer here; installer until T02).
         for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
             builder = (PROJECT_ROOT / builder_name).read_text()
-            self.assertIn('PIP_RELEASE_BUILD:-0', builder)
-            self.assertIn('check-release "$PROFILE_PATH"', builder)
-            self.assertIn("Release build refused", builder)
             self.assertIn("boot_cover_backend=$BOOT_COVER_BACKEND", builder)
 
     def test_activity_namespace_sandbox_is_a_profile_composed_package_set(self) -> None:
@@ -98,10 +112,15 @@ class SystemOverlayContractTests(unittest.TestCase):
     def test_build_enforces_hard_sub_one_gib_budget_and_payload_digest(self) -> None:
         image_builder = (PROJECT_ROOT / "build/build-image.sh").read_text()
         installer_builder = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
+        engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
         self.assertIn("accounted_bytes >= required_limit_bytes", image_builder)
         self.assertIn("filesystem_used_bytes", image_builder)
         self.assertNotIn("WARNING: installed root is ${installed_mib} MiB; Phase 0 required", image_builder)
-        self.assertIn("PROJECT_VERSION=", image_builder)
+        # T01: build-info composition (PROJECT_VERSION) lives in the engine;
+        # the thin consumer carries the engine's result into its footprint
+        # report instead of recomputing it.
+        self.assertIn("PROJECT_VERSION=", engine)
+        self.assertIn("compose_root --profile", image_builder)
         self.assertIn("pip-rootfs.squashfs.sha256", installer_builder)
         self.assertIn("expected-payload.sha256", installer_builder)
         self.assertIn("target_payload_sha256", installer_builder)
@@ -121,6 +140,12 @@ class SystemOverlayContractTests(unittest.TestCase):
             self.assertIn("safe_unmount_paths", builder)
             self.assertIn("safe_remove_build_dir", builder)
             self.assertNotIn('rm -rf "$BUILD_DIR"', builder)
+        # T01: the engine appends only to the caller's MOUNTS bookkeeping and
+        # never deletes the build tree itself; teardown stays with the caller.
+        engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
+        self.assertIn("MOUNTS+=(", engine)
+        self.assertNotIn('rm -rf "$BUILD_DIR"', engine)
+        self.assertNotIn("safe_remove_build_dir", engine)
         self.assertIn("findmnt -rn -R", helper)
         self.assertIn("rm -rf --one-file-system", helper)
 
@@ -166,14 +191,20 @@ class SystemOverlayContractTests(unittest.TestCase):
             PROJECT_ROOT
             / "build/installer-overlay/etc/systemd/system/greia-installer.service"
         ).read_text()
-        builder = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
         self.assertIn("xinit", unit)
         self.assertIn("greia_installer.entrypoint", unit)
-        self.assertIn("getty@tty6.service", builder)
-        self.assertIn("getty@.service", builder)
-        self.assertIn("autovt@.service", builder)
-        self.assertIn("debug-shell.service", builder)
-        self.assertIn("kbrequest.target", builder)
+        # T02: live-installer systemd composition lives in the shared engine;
+        # the thin installer consumer delegates instead of reimplementing
+        # the mask list.
+        engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
+        self.assertIn("getty@tty6.service", engine)
+        self.assertIn("getty@.service", engine)
+        self.assertIn("autovt@.service", engine)
+        self.assertIn("debug-shell.service", engine)
+        self.assertIn("kbrequest.target", engine)
+        self.assertIn('compose_configure_systemd "$LIVE_ROOT" "live-installer"', (
+            PROJECT_ROOT / "build/build-installer-image.sh"
+        ).read_text())
         for overlay in ("build/overlay", "build/installer-overlay"):
             logind = (PROJECT_ROOT / overlay / "etc/systemd/logind.conf.d/10-greia-vts.conf").read_text()
             xorg = (PROJECT_ROOT / overlay / "etc/X11/xorg.conf.d/10-greia-kiosk.conf").read_text()
@@ -209,7 +240,13 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertIn(': > "$ROOTFS/etc/machine-id"', image_builder)
         self.assertNotIn("ssh-keygen -A", first_boot)
         self.assertIn("ssh-keygen -A", enable_ssh)
-        self.assertIn("UUID=$root_uuid / ext4", image_builder)
+        # T01: fstab composition moved into the shared engine (UUID arrives as
+        # caller-owned GREIA_ROOT_UUID disk identity); the thin consumer feeds
+        # it and keeps the boot/identity assembly around it.
+        engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
+        self.assertIn("UUID=$root_uuid / ext4", engine)
+        self.assertIn('export GREIA_ROOT_UUID="$root_uuid"', image_builder)
+        self.assertNotIn("LABEL=PIP_ROOT / ext4", engine)
         self.assertNotIn("LABEL=PIP_ROOT / ext4", image_builder)
         auth_script = (PROJECT_ROOT / "build/overlay/etc/grub.d/01_greia_auth").read_text()
         appliance_script = (PROJECT_ROOT / "build/overlay/etc/grub.d/10_greia_appliance").read_text()
@@ -224,11 +261,16 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertNotIn('"systemd-machine-id-setup"', engine)
 
     def test_base_profiles_record_security_support_and_legacy_x_on_acer(self) -> None:
-        builder = (PROJECT_ROOT / "build/build-image.sh").read_text()
+        builder = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
+        consumer = (PROJECT_ROOT / "build/build-image.sh").read_text()
         self.assertIn("package-manifest.tsv", builder)
         self.assertIn("check-support-status --no-heading", builder)
         self.assertIn("security_support_state", builder)
         self.assertIn("security_support_probe_exit", builder)
+        # T01: the thin consumer carries the engine's probe outcome into its
+        # footprint report instead of re-probing.
+        self.assertIn("security_support_state=$COMPOSE_SECURITY_SUPPORT_STATE", consumer)
+        self.assertIn("security_support_probe_exit=$COMPOSE_SECURITY_SUPPORT_EXIT", consumer)
         platform_base = (PROJECT_ROOT / "build/package-sets/platform-base.txt").read_text()
         installer_base = (PROJECT_ROOT / "build/package-sets/installer-base.txt").read_text()
         self.assertIn("debian-security-support", platform_base)
@@ -311,11 +353,19 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertIn("/etc/greia-os/live-media-id", hook)
 
     def test_https_bootstrap_includes_ca_and_requires_executable_target_architecture(self) -> None:
-        for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
-            builder = (PROJECT_ROOT / builder_name).read_text()
-            self.assertIn("--include=ca-certificates", builder)
-            self.assertIn("dpkg --print-architecture", builder)
-            self.assertIn("host_arch=", builder)
+        # T02: live-installer bootstrap lives in the shared engine; both thin
+        # consumers delegate debootstrap + host-arch validation to the engine.
+        engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
+        self.assertIn("--include=ca-certificates", engine)
+        self.assertIn("dpkg --print-architecture", engine)
+        self.assertIn("host_arch=", engine)
+        for consumer_name in ("build/build-image.sh", "build/build-installer-image.sh"):
+            consumer = (PROJECT_ROOT / consumer_name).read_text()
+            self.assertIn("compose_check_host_arch", consumer)
+            self.assertNotIn("dpkg --print-architecture", consumer)
+            self.assertNotIn("--include=ca-certificates", consumer)
+        installer = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
+        self.assertIn('compose_debootstrap "$LIVE_ROOT"', installer)
 
     def test_first_boot_is_required_and_service_resource_counts_are_bounded(self) -> None:
         launcher = (PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-launcher.service").read_text()
@@ -371,42 +421,89 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertIn('mount_apt_archives_cache', helper)
         self.assertIn('mount_pool_cache', helper)
         self.assertIn('mount --bind', helper)
-        image_builder = (PROJECT_ROOT / "build/build-image.sh").read_text()
+        # T02: live-installer apt-cache composition lives in the shared engine;
+        # the thin installer consumer delegates instead of reimplementing the
+        # cache mount and hygiene.
+        image_builder = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
         installer_builder = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
+        consumer = (PROJECT_ROOT / "build/build-image.sh").read_text()
+        self.assertIn('compose_root --profile', consumer)
+        self.assertNotIn('mount_apt_archives_cache', consumer)
         live_firmware = (PROJECT_ROOT / "build/install-live-hardware-firmware.sh").read_text()
         pool_builder = (PROJECT_ROOT / "build/populate-hardware-support-pool.sh").read_text()
-        for builder in (image_builder, installer_builder):
-            self.assertIn('lib/apt-cache.sh', builder)
-            self.assertIn('mount_apt_archives_cache', builder)
-            self.assertIn('apt-get autoclean', builder)
-            self.assertNotIn('apt-get clean', builder)
-            self.assertIn('var/lib/apt/lists/', builder)
-            self.assertNotIn('var/cache/apt/archives/', builder)
+        self.assertIn('lib/apt-cache.sh', installer_builder)
+        self.assertIn('apt-cache.sh', image_builder)
+        # The engine remains the single owner of the apt-cache mount, bounded
+        # hygiene and footprint pruning.
+        self.assertIn('mount_apt_archives_cache', image_builder)
+        self.assertIn('apt-get autoclean', image_builder)
+        self.assertNotIn('apt-get clean', image_builder)
+        self.assertIn('var/lib/apt/lists/', image_builder)
+        self.assertNotIn('var/cache/apt/archives/', image_builder)
+        # The thin installer delegates those blocks instead of duplicating
+        # them, while retaining the live-only pool cache.
+        for call in (
+            'compose_mount_apt_cache "$LIVE_ROOT"',
+            'compose_debootstrap "$LIVE_ROOT"',
+            'compose_mount_virtual "$LIVE_ROOT"',
+            'compose_install_packages "$LIVE_ROOT" "live-installer"',
+            'compose_footprint_hygiene "$LIVE_ROOT"',
+        ):
+            self.assertIn(call, installer_builder)
+        self.assertNotIn('debootstrap --arch=', installer_builder)
+        self.assertNotIn('apt-get autoclean', installer_builder)
+        self.assertNotIn('var/lib/apt/lists/', installer_builder)
+        self.assertIn('mount_pool_cache', installer_builder)
         # Mount sequencing (debootstrap-era .deb trap): the apt host cache must
         # be bound BEFORE debootstrap so base downloads land on the host. A
         # post-debootstrap mount shadows the real archives dir (invisible to
         # du -sx, counted by df) and bakes stale .debs into the image/squashfs.
-        for builder, root in ((image_builder, '$ROOTFS'), (installer_builder, '$LIVE_ROOT')):
-            cache_mount = builder.index('$(mount_apt_archives_cache')
-            bootstrap = builder.index('debootstrap --arch=')
-            first_apt = builder.index('apt-get "${APT_ACQUIRE_OPTIONS')
-            self.assertLess(cache_mount, bootstrap)
-            self.assertLess(bootstrap, first_apt)
-            self.assertIn('MOUNTS+=(', builder)
-            # Virtual mounts + resolver stub still precede any APT fetch.
-            run_mount = builder.index('tmpfs "%s/run"' % root)
-            resolver = builder.index('stub-resolv.conf')
-            self.assertLess(run_mount, first_apt)
-            self.assertLess(resolver, first_apt)
+        # The engine is a function library, so its execution order is the
+        # compose_root call sequence (not file order); the thin installer
+        # consumer is a linear script calling the same engine functions, so
+        # file order is execution order there.
+        engine_calls = [
+            'compose_mount_apt_cache "$rootfs" || return 1',
+            'compose_debootstrap "$rootfs" || return 1',
+            'compose_mount_virtual "$rootfs" || return 1',
+            'compose_install_packages "$rootfs" "$role" || return 1',
+        ]
+        engine_positions = [image_builder.index(call) for call in engine_calls]
+        self.assertEqual(engine_positions, sorted(engine_positions))
+        self.assertIn('mount_apt_archives_cache "$rootfs"', image_builder)
+        self.assertIn('debootstrap --arch=', image_builder)
+        self.assertIn('apt-get "${APT_ACQUIRE_OPTIONS', image_builder)
+        self.assertIn('MOUNTS+=(', image_builder)
+        # Virtual mounts + resolver stub still precede any APT fetch.
+        self.assertIn('tmpfs "$rootfs/run"', image_builder)
+        self.assertIn('stub-resolv.conf', image_builder)
+        # Thin installer consumer preserves the same sequencing through the
+        # engine functions: apt cache before debootstrap before virtual
+        # mounts before package install; the live-media id is seeded before
+        # the install so the kernel postinst hook embeds it.
+        builder = installer_builder
+        installer_calls = [
+            'compose_mount_apt_cache "$LIVE_ROOT"',
+            'compose_debootstrap "$LIVE_ROOT"',
+            'compose_mount_virtual "$LIVE_ROOT"',
+            'greia-live-media-id initramfs hook',
+            'compose_install_packages "$LIVE_ROOT" "live-installer"',
+        ]
+        installer_positions = [builder.index(call) for call in installer_calls]
+        self.assertEqual(installer_positions, sorted(installer_positions))
+        self.assertIn('MOUNTS+=(', builder)
+        self.assertIn('mount_pool_cache', builder)
+        pool_mount = builder.index('mount_pool_cache')
+        bootstrap = builder.index('compose_debootstrap "$LIVE_ROOT"')
+        self.assertLess(pool_mount, bootstrap)
         # Installer live root shares both caches; the existing pre-mksquashfs
         # teardown releases them before compression.
-        self.assertIn('mount_pool_cache', installer_builder)
         unmount = installer_builder.index('safe_unmount_paths "${MOUNTS[@]}"')
         squash = installer_builder.index('mksquashfs "$LIVE_ROOT"')
         self.assertLess(unmount, squash)
         # Footprint hygiene stays intact (not reverted for the cache port).
         self.assertIn('purge --auto-remove binutils', image_builder)
-        self.assertIn("rm -f \"$ROOTFS\"/usr/lib/gcc", image_builder)
+        self.assertIn('rm -f "$rootfs"/usr/lib/gcc', image_builder)
         # Live firmware keeps only autoclean; pool downloads route through the
         # persistent pool cache and are staged into a fresh pool afterwards.
         self.assertIn('apt-get autoclean', live_firmware)

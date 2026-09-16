@@ -11,7 +11,6 @@ closed with explicit deferred markers instead of false green.
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import tempfile
 import unittest
@@ -65,8 +64,6 @@ from tools.x8_qemu.lifecycle import (
 )
 from tools.x8_qemu.runner import layout_plan_for_device
 
-HAS_CRYPTOGRAPHY = importlib.util.find_spec("cryptography") is not None
-
 
 def _harness(tmp: str) -> LifecycleHarness:
     return LifecycleHarness(LifecycleConfig(output_dir=Path(tmp) / "out"))
@@ -106,7 +103,6 @@ class LifecycleSpecTests(unittest.TestCase):
             LifecycleConfig(output_dir=Path("relative/out")).validate()
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "signed bundles need cryptography")
 class ShippedLifecycleTests(unittest.TestCase):
     def test_full_8_step_run_green_through_shipped_paths(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -126,7 +122,7 @@ class ShippedLifecycleTests(unittest.TestCase):
             self.assertEqual(by_step["stage-B-one-shot"]["journal_state"], "update_staged")
             self.assertEqual(by_step["boot-B-commit"]["default_slot"], "B")
             self.assertEqual(by_step["boot-B-commit"]["accepted_slot"], "B")
-            self.assertEqual(by_step["boot-B-commit"]["accepted_sequence"], 21)
+            self.assertEqual(by_step["boot-B-commit"]["accepted_release"], "greia-0.21.0")
             self.assertEqual(by_step["boot-B-commit"]["launcher"]["accepted_slot"], "B")
             self.assertEqual(
                 by_step["boot-B-commit"]["launcher"]["seam_calls"],
@@ -149,7 +145,9 @@ class ShippedLifecycleTests(unittest.TestCase):
             # Reverse update: slot role and release identity independent.
             self.assertEqual(by_step["reverse-update-B-to-A"]["default_slot"], "A")
             self.assertEqual(by_step["reverse-update-B-to-A"]["accepted_slot"], "A")
-            self.assertEqual(by_step["reverse-update-B-to-A"]["accepted_sequence"], 23)
+            self.assertEqual(
+                by_step["reverse-update-B-to-A"]["accepted_release"], "greia-0.22.0"
+            )
             self.assertEqual(
                 by_step["reverse-update-B-to-A"]["launcher"]["accepted_slot"], "A"
             )
@@ -180,23 +178,18 @@ class ShippedLifecycleTests(unittest.TestCase):
             SystemUpdateInbox,
             UpdateBackendUnavailable,
             UpdateSlotSeams,
-            build_persistent_state_contract_bytes,
-            generate_ed25519_keypair,
         )
         from tools.x8_qemu.lifecycle import (
             build_test_release,
             default_shipped_authority_with_production_seams,
             fresh_machine_state,
-            mint_signing_keys,
         )
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             machine = fresh_machine_state(root / "machine")
-            private_key, _ = mint_signing_keys(root / "machine", machine["keys"])
             bundle = build_test_release(
                 root / "machine", name="r9", release_id="greia-0.21.0",
-                sequence=21, private_key=private_key,
             )
             with _mock.patch.dict(
                 __import__("os").environ,
@@ -210,7 +203,6 @@ class ShippedLifecycleTests(unittest.TestCase):
             ):
                 authority = default_shipped_authority_with_production_seams(
                     state_dir=machine["state"],
-                    trusted_key_dir=machine["keys"],
                     layout_record_path=machine["layout"],
                     boot_backend=GrubEnvBackend.attach(machine["boot_control"]),
                 )
@@ -268,8 +260,6 @@ class ShippedLifecycleTests(unittest.TestCase):
             for extra in new_files:
                 self.assertNotIn("slot-", extra)
                 self.assertNotIn(".img", extra)
-            _ = build_persistent_state_contract_bytes
-            _ = generate_ed25519_keypair
 
     def test_install_composition_executes_through_shipped_builder(self) -> None:
         from tools.x8_qemu.lifecycle import fresh_machine_state, prove_install_composition
@@ -291,7 +281,6 @@ class ShippedLifecycleTests(unittest.TestCase):
 class PositiveControlTests(unittest.TestCase):
     """Each required RED condition fails the run for the right reason."""
 
-    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "signed bundles need cryptography")
     def test_pc1_defeated_candidate_health_forces_failure_and_recovery(self) -> None:
         """Break -> RED -> restore -> GREEN on the recovery trigger."""
         from greia_platform.boot_transaction import (
@@ -311,10 +300,9 @@ class PositiveControlTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=journal_dir,
                 backend=backend,
-                candidate_artifacts=_artifact_set("B", "greia-0.21.0", 21),
-                accepted_artifacts=_artifact_set("A", "greia-0.20.0", 20),
+                candidate_artifacts=_artifact_set("B", "greia-0.21.0"),
+                accepted_artifacts=_artifact_set("A", "greia-0.20.0"),
                 release_id="greia-0.21.0",
-                release_sequence=21,
             )
             coordinator.arm()
             # BREAK: the candidate boots but health never confirms.
@@ -360,7 +348,6 @@ class PositiveControlTests(unittest.TestCase):
             self.assertEqual(observed.default_slot, "A")
             self.assertEqual(observed.one_shot_slot, "B")
 
-    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "signed bundles need cryptography")
     def test_pc3_broken_rollback_default_invariant_fails_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             harness = _harness(tmp)
@@ -409,16 +396,15 @@ class PositiveControlTests(unittest.TestCase):
         # A report missing any shipped/launcher leg fails the contract.
         with tempfile.TemporaryDirectory() as tmp:
             harness = LifecycleHarness(LifecycleConfig(output_dir=Path(tmp) / "out"))
-            report = dict(harness.run_source_scope()) if HAS_CRYPTOGRAPHY else None
-            if report is not None:
-                bypassed = json.loads(json.dumps(report))
-                bypassed["shipped_update_legs"] = ["stage-B-one-shot"]
-                with self.assertRaises(LifecycleContractError):
-                    assert_lifecycle_transitions(bypassed)
-                bypassed2 = json.loads(json.dumps(report))
-                bypassed2["launcher_acceptance_legs"] = []
-                with self.assertRaises(LifecycleContractError):
-                    assert_lifecycle_transitions(bypassed2)
+            report = dict(harness.run_source_scope())
+            bypassed = json.loads(json.dumps(report))
+            bypassed["shipped_update_legs"] = ["stage-B-one-shot"]
+            with self.assertRaises(LifecycleContractError):
+                assert_lifecycle_transitions(bypassed)
+            bypassed2 = json.loads(json.dumps(report))
+            bypassed2["launcher_acceptance_legs"] = []
+            with self.assertRaises(LifecycleContractError):
+                assert_lifecycle_transitions(bypassed2)
 
 
 class ObservationTests(unittest.TestCase):
@@ -486,6 +472,11 @@ class HarnessBoundaryTests(unittest.TestCase):
             "def build_update_bundle",
             "class GrubEnvBackend",
             "class BootTransactionJournal",
+            # v3: no key material or signature verification in the harness.
+            "generate_ed25519_keypair",
+            "private_key",
+            "trusted_key_dir",
+            "verify_update_signature",
         ):
             self.assertNotIn(forbidden, text)
         for required in (
@@ -1182,7 +1173,7 @@ class CollectDiagnosticsTests(unittest.TestCase):
                          "persist": Path(tmp)},
             )
             for key in ("image_sha256", "default_slot", "journal_state",
-                        "accepted_slot", "accepted_sequence", "persist_marker"):
+                        "accepted_slot", "accepted_release", "persist_marker"):
                 self.assertIn(key, snapshot)
             self.assertIsNone(snapshot["image_sha256"])
             self.assertIsNone(snapshot["persist_marker"])
@@ -1537,7 +1528,6 @@ class DiagC2InventoryTests(unittest.TestCase):
             self.assertTrue(mechanism)
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "real lifecycle report needs cryptography")
 class DiagC2ReportContractSensitivityTests(unittest.TestCase):
     """LC-ORDER/LC-NOMOVE/LC-SHIP/LC-LAUNCH under collect mode.
 

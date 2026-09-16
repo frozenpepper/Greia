@@ -63,7 +63,6 @@ _INSTALL_SHA = "ab" * 32
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -222,10 +221,6 @@ class AuditTests(unittest.TestCase):
             "/etc/machine-id": (Durability.PERSISTENT_SHARED, "machine-identity"),
             # update inbox/status
             "/var/lib/greia-os/system-updates/inbox": (
-                Durability.PERSISTENT_SHARED,
-                "update-acceptance-state",
-            ),
-            "/var/lib/greia-os/system-updates/accepted.json": (
                 Durability.PERSISTENT_SHARED,
                 "update-acceptance-state",
             ),
@@ -425,7 +420,7 @@ class LayoutRecordTests(unittest.TestCase):
             _record_dict(system_b={"filesystem_uuid": _UUID_B_FS, "partuuid": _UUID_A}),
             _record_dict(platform_family="arm64"),  # x86 layout, ARM family
             _record_dict(slot_bytes=128 * 1024 * 1024),
-            _record_dict(accepted_release_sequence=-1),
+            _record_dict(accepted_release_id=""),
             _record_dict(system_a={"filesystem_uuid": _UUID_A_FS, "partuuid": "not-a-uuid"}),
             _record_dict(install_target_sha256="xyz"),
         ]
@@ -671,56 +666,58 @@ class ContractTests(unittest.TestCase):
         with self.assertRaises(PersistentLayoutError):
             emit_persistent_state_contract(shuffled)
 
-    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "release binding needs cryptography")
-    def test_contract_bound_into_release_and_consumed_by_rollback(self) -> None:
-        from greia_platform.system_updates import generate_ed25519_keypair
+    def test_persist_schema_bound_into_v3_release_and_consumed(self) -> None:
+        from greia_platform.persistent_layout import emit_persist_schema_marker
 
         namespace_map = build_namespace_map()
         contract_raw = emit_persistent_state_contract(namespace_map)
+        # The installed PERSIST marker is the canonical schema document;
+        # the v3 bundle carries only the readable range.
+        installed_marker = emit_persist_schema_marker(1)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            payload_path = root / "payload.bin"
-            payload_path.write_bytes(b"slot-image" * 128)
+            payload = b"\x28\xb5\x2f\xfd" + b"slot-image" * 128
+            payload_path = root / "payload.ext4.zst"
+            payload_path.write_bytes(payload)
             hw_path = root / "hw.tar.zst"
             hw_path.write_bytes(b"\x28\xb5\x2f\xfd" + b"hw" * 64)
-            contract_path = root / "contract.json"
-            contract_path.write_bytes(contract_raw)
-            private = root / "priv.pem"
-            public = root / "pub.pem"
-            generate_ed25519_keypair(private, public)
             manifest = build_update_bundle(
                 payload_path=payload_path,
                 hardware_support_path=hw_path,
-                persistent_contract_path=contract_path,
                 output_path=root / "out.greiaupdate",
                 version="0.14.0",
                 release_id="greia-0.14.0",
-                release_sequence=8,
                 platform_family="standard-x86-64",
                 architecture="amd64",
                 profile="modern-amd64",
-                signer="greia-release-main",
-                private_key_path=private,
+                payload_uncompressed_bytes=8 * 1024 * 1024,
+                minimum_slot_bytes=8 * 1024 * 1024,
+                persist_read_schema_min=1,
+                persist_read_schema_max=1,
+                persist_write_schema=1,
             )
             inspected = inspect_update_bundle(root / "out.greiaupdate")
+            self.assertEqual(inspected.manifest.persist_read_schema_min, 1)
+            self.assertEqual(inspected.manifest.persist_read_schema_max, 1)
+            # PERSIST gate accepts the in-range schema, returns it.
             self.assertEqual(
-                inspected.manifest.persistent_contract_sha256,
-                hashlib.sha256(contract_raw).hexdigest(),
+                assert_persistent_contract_accepted(installed_marker, manifest), 1
             )
-            # rollback gate accepts the bound contract, returns the sequence
-            self.assertEqual(
-                assert_persistent_contract_accepted(contract_raw, manifest), 8
-            )
-            # a Parent-supplied "approved" claim cannot override a digest mismatch
-            tampered = replace(
+            # A Parent-supplied "approved" claim cannot override range:
+            # a narrow manifest that cannot read schema 1 is refused.
+            narrow = replace(
                 manifest,
-                persistent_contract_sha256="00" * 32,
+                persist_read_schema_min=10,
+                persist_read_schema_max=10,
             )
             with self.assertRaises(PersistentLayoutError):
-                assert_persistent_contract_accepted(contract_raw, tampered)
-            other_contract = contract_raw.replace(b"layout-authority", b"layout-authoritx")
+                assert_persistent_contract_accepted(installed_marker, narrow)
+            other_marker = emit_persist_schema_marker(10)
             with self.assertRaises(PersistentLayoutError):
-                assert_persistent_contract_accepted(other_contract, manifest)
+                assert_persistent_contract_accepted(other_marker, manifest)
+            # The legacy whole-contract document is not a marker.
+            with self.assertRaises(PersistentLayoutError):
+                assert_persistent_contract_accepted(contract_raw, manifest)
 
 
 if __name__ == "__main__":

@@ -5,13 +5,20 @@ filesystem, boot or physical-slot writes live here; production block/mount
 backends are injected later through the narrow protocols below
 (``SlotStorage``, ``SlotFilesystem``, ``SlotPackageInstaller``).
 
-Staging order (strict):
+Staging order (strict, ADR 0036 §4 v3):
 
 .. code-block:: text
 
-    stream signed base payload -> flush -> read back the exact signed range
-    -> require the signed digest -> only then bind the destination role's
-    stable filesystem UUID, expand, and run the finalizer.
+    stream zstd decompression of payload.ext4.zst -> write raw bytes
+    -> flush -> read back the exact uncompressed range
+    -> require the uncompressed raw byte count -> only then bind
+    the destination role's stable filesystem UUID, expand, and run
+    the finalizer.
+
+The compressed member digest/size are bundle-transport facts verified at
+inspection (``inspect_update_bundle``); the writer proves the uncompressed
+raw byte count against the manifest's ``payload_uncompressed_bytes`` with
+no full uncompressed temp file (bounded streaming chunks only).
 
 Both the updater (``greia_platform.system_updates``) and the installer
 (``greia_installer``) import and call this same implementation; the installer
@@ -30,7 +37,7 @@ the layout record stays authoritative across updates with no rewrite path.
 
 Capacity proof (checked at write time and re-checked at finalization)::
 
-    max(base bytes, manifest minimum) + support installed-size bound
+    max(uncompressed bytes, manifest minimum) + support installed-size bound
         + initramfs/boot growth bound + metadata/reserve <= slot capacity
 """
 
@@ -105,6 +112,94 @@ REQUIRED_FINALIZED_FILES = (
     SLOT_PROFILE_REL_PATH,
 )
 
+#: Bounded slot-completeness smoke: directories proving a staged slot carries
+#: real Greia userspace (not a payload-only skeleton). Checked with a fixed
+#: list of ``is_dir()`` probes only — no traversal, no whole-image hashing.
+#: ``bin`` is accepted as a directory or a usrmerge symlink-to-directory
+#: (``is_dir()`` follows symlinks). Deliberately free of build-only
+#: knowledge (no ``boot/vmlinuz-generic``): the build-time producer (T04)
+#: calls this identical implementation on a staging dir, and the shared
+#: :class:`SlotFinalizer` calls it on the mounted slot before boot assets
+#: are accepted. Usable from a plain directory tree (no privileged mounts).
+REQUIRED_SLOT_COMPLETENESS_DIRS = (
+    "usr",
+    "bin",
+    "etc",
+    "var",
+    "opt/greia-os",
+    "etc/greia-os",
+)
+
+#: Bounded slot-completeness smoke: regular files proving the finalizer's
+#: ``chroot <slot>`` APT needs. Each must be a real regular file
+#: (a symlink leaf is invalid) — ``is_file()`` plus an ``is_symlink()``
+#: refusal, no traversal, no hashing. ``usr/bin/env`` is required because
+#: the hardware-support install runs under ``/usr/bin/env``.
+REQUIRED_SLOT_COMPLETENESS_FILES = (
+    "usr/bin/apt-get",
+    "usr/bin/dpkg",
+    "usr/bin/env",
+)
+
+#: Documented required-path set for the slot-completeness smoke, in
+#: check order: directories first, then command files.
+REQUIRED_SLOT_COMPLETENESS_PATHS = (
+    *REQUIRED_SLOT_COMPLETENESS_DIRS,
+    *REQUIRED_SLOT_COMPLETENESS_FILES,
+)
+
+
+def slot_completeness_missing(slot_root: Path) -> tuple[str, ...]:
+    """Return the missing/invalid completeness paths under ``slot_root``.
+
+    Bounded to ``len(REQUIRED_SLOT_COMPLETENESS_PATHS)`` stat probes.
+    An empty tuple means the slot carries the required Greia userspace
+    including usable ``apt-get``/``dpkg`` presence. Directory entries
+    must satisfy ``is_dir()``; file entries must be non-symlink regular
+    files. Raises :class:`SlotFinalizeError` only when ``slot_root``
+    itself is not a usable directory probe point (fail closed).
+    """
+    if not isinstance(slot_root, Path):
+        raise SlotFinalizeError("slot completeness probe requires a path")
+    try:
+        if not slot_root.is_dir():
+            raise SlotFinalizeError("slot completeness probe requires a slot directory")
+    except SlotFinalizeError:
+        raise
+    except Exception as exc:
+        raise SlotFinalizeError(
+            f"slot completeness probe failed: {exc}"
+        ) from exc
+    missing: list[str] = []
+    for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+        try:
+            if not (slot_root / rel_path).is_dir():
+                missing.append(rel_path)
+        except Exception:
+            missing.append(rel_path)
+    for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+        try:
+            candidate = slot_root / rel_path
+            if candidate.is_symlink() or not candidate.is_file():
+                missing.append(rel_path)
+        except Exception:
+            missing.append(rel_path)
+    return tuple(missing)
+
+
+def check_slot_completeness(slot_root: Path) -> None:
+    """Fail closed when ``slot_root`` lacks required Greia userspace.
+
+    Shared implementation for the build-time staging check (T04) and the
+    runtime finalization smoke. Raises :class:`SlotFinalizeError` naming
+    every missing/invalid path; no boot/QEMU step is involved.
+    """
+    missing = slot_completeness_missing(slot_root)
+    if missing:
+        raise SlotFinalizeError(
+            "slot completeness smoke failed: missing " + ", ".join(missing)
+        )
+
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 _SLOT_ROLE_RE = re.compile(r"^system-[ab]$")
 _RELEASE_FACT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
@@ -166,48 +261,57 @@ def _canonical_bytes(value: Mapping[str, object]) -> bytes:
 
 @dataclass(frozen=True, slots=True)
 class VerifiedReleaseMember:
-    """One previously verified release payload bound to its signed digest.
+    """One previously verified v3 release payload (ADR 0036 §3, no provenance).
 
-    Construct only from an ``InspectedUpdateBundle`` *after* signature,
-    compatibility and anti-rollback verification (``SystemUpdateService``).
-    The writer re-proves the digest against the streamed bytes; it does not
-    re-prove signatures.
+    Construct only from an ``InspectedUpdateBundle`` *after* structure,
+    integrity and compatibility verification (``SystemUpdateService``).
+    ``payload_sha256``/``payload_size`` are the compressed transport facts
+    (already digest-verified at inspection); the writer proves the
+    decompressed raw byte count against ``payload_uncompressed_bytes``.
+    There is no signer, key id or anti-rollback sequence. ``hardware_*``
+    are None together when the optional member is absent.
     """
 
     release_id: str
-    release_sequence: int
     payload_sha256: str
     payload_size: int
+    payload_uncompressed_bytes: int
     minimum_slot_bytes: int
-    hardware_support_sha256: str
-    hardware_support_size: int
+    hardware_support_sha256: str | None
+    hardware_support_size: int | None
 
     def __post_init__(self) -> None:
         if not self.release_id or len(self.release_id) > 96:
             raise SlotWriteError("release_id is outside Greia bounds")
-        _require_count(self.release_sequence, field_name="release_sequence", minimum=0)
         _require_hex64(self.payload_sha256, field_name="payload_sha256")
         _require_count(self.payload_size, field_name="payload_size")
         _require_count(
-            self.minimum_slot_bytes, field_name="minimum_slot_bytes"
-        )
-        if self.minimum_slot_bytes < self.payload_size:
-            raise SlotWriteError("minimum_slot_bytes must cover the base payload")
-        _require_hex64(
-            self.hardware_support_sha256, field_name="hardware_support_sha256"
+            self.payload_uncompressed_bytes,
+            field_name="payload_uncompressed_bytes",
         )
         _require_count(
-            self.hardware_support_size, field_name="hardware_support_size"
+            self.minimum_slot_bytes, field_name="minimum_slot_bytes"
         )
+        if self.minimum_slot_bytes < self.payload_uncompressed_bytes:
+            raise SlotWriteError("minimum_slot_bytes must cover the uncompressed payload")
+        hw_sha = self.hardware_support_sha256
+        hw_size = self.hardware_support_size
+        if (hw_sha is None) != (hw_size is None):
+            raise SlotWriteError(
+                "hardware-support sha256/size must be present together or absent together"
+            )
+        if hw_sha is not None and hw_size is not None:
+            _require_hex64(hw_sha, field_name="hardware_support_sha256")
+            _require_count(hw_size, field_name="hardware_support_size")
 
     @classmethod
     def from_manifest(cls, manifest: "UpdateManifest") -> "VerifiedReleaseMember":
-        """Bind the signed manifest facts after the caller verified trust."""
+        """Bind the v3 manifest facts after the caller verified compatibility."""
         return cls(
             release_id=manifest.release_id,
-            release_sequence=manifest.release_sequence,
             payload_sha256=manifest.payload_sha256,
             payload_size=manifest.payload_size,
+            payload_uncompressed_bytes=manifest.payload_uncompressed_bytes,
             minimum_slot_bytes=manifest.payload_minimum_slot_bytes,
             hardware_support_sha256=manifest.hardware_support_sha256,
             hardware_support_size=manifest.hardware_support_size,
@@ -407,9 +511,14 @@ class SlotFilesystem(Protocol):
     """Bounded mutation seam for one destination slot (R0: fakes).
 
     Implementations own only the destination slot: binding its filesystem
-    UUID, expanding it, mounting it, writing slot-local files, checking
-    health, then unmounting and syncing. The active/accepted slot is never
-    addressable through this seam.
+    UUID, expanding it, mounting it, proving slot completeness
+    (``check_completeness`` via :func:`check_slot_completeness`), writing
+    slot-local files, checking health, then unmounting and syncing. The
+    active/accepted slot is never addressable through this seam.
+    ``check_completeness`` and ``check_health`` are distinct gates of the
+    same finalization framework (A23): completeness proves real Greia
+    userspace including ``apt-get``/``dpkg`` presence, health re-proves
+    the filesystem UUID binding.
     """
 
     def bind_filesystem_uuid(self, filesystem_uuid: str) -> None: ...
@@ -425,6 +534,8 @@ class SlotFilesystem(Protocol):
     def write_file(self, relative_path: str, data: bytes) -> None: ...
 
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]: ...
+
+    def check_completeness(self) -> None: ...
 
     def check_health(self) -> None: ...
 
@@ -464,13 +575,17 @@ class SlotPackageInstaller(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class VerifiedBaseSlotWrite:
-    """Capability proving a streamed base payload passed readback verification.
+    """Capability proving a streamed v3 payload passed readback verification.
 
     Only :class:`SlotWriter.write` issues registered instances, and each
     instance is single-use: :class:`SlotFinalizer` consumes the issuance
     token for exactly one finalization. A stale write can therefore never
     replay against another role (or the same one). The capability carries
-    no byte content, only the proven facts.
+    no byte content, only the proven facts: the decompressed raw byte
+    count equals the manifest's uncompressed bytes and the readback hash
+    matches the streamed hash (write integrity). ``slot_digest`` is the
+    uncompressed image hash bound into the receipt/boot artifacts; it is
+    not compared to the compressed transport digest.
     """
 
     member: VerifiedReleaseMember
@@ -481,12 +596,57 @@ class VerifiedBaseSlotWrite:
 
     def __post_init__(self) -> None:
         _require_hex64(self.slot_digest, field_name="slot digest")
-        if self.slot_digest != self.member.payload_sha256:
-            raise SlotWriteError("slot digest does not match the signed release digest")
-        if self.bytes_written != self.member.payload_size:
-            raise SlotWriteError("written byte count does not match the signed size")
+        if self.bytes_written != self.member.payload_uncompressed_bytes:
+            raise SlotWriteError(
+                "written byte count does not match the uncompressed payload bytes"
+            )
         if not self.write_token:
             raise SlotWriteError("base-slot write carries no issuance token")
+
+
+# ---------------------------------------------------------------------------
+# Streaming zstd decompression (ADR 0036 §4, no uncompressed temp file)
+# ---------------------------------------------------------------------------
+
+
+def open_zstd_decompressed_stream(source: BinaryIO) -> BinaryIO:
+    """Wrap a compressed ``payload.ext4.zst`` stream as a decompressed reader.
+
+    Bounded streaming only: bytes are decompressed on ``read()`` with no
+    full uncompressed temp file and no whole-payload RAM allocation. The
+    caller keeps ``source`` open until the returned reader is closed; closing
+    the reader does not close ``source`` (the ZIP archive lifetime stays with
+    the caller). Corrupt frames and a missing zstd backend fail closed via
+    :class:`SlotWriteError`.
+    """
+    if not hasattr(source, "read"):
+        raise SlotWriteError("compressed payload source must be a binary stream")
+    try:
+        import zstandard
+    except ImportError as exc:
+        raise SlotWriteError(
+            "zstd decompression backend is unavailable; refusing staging"
+        ) from exc
+    try:
+        reader = zstandard.ZstdDecompressor().stream_reader(source)
+    except Exception as exc:
+        raise SlotWriteError(f"zstd decompression refused: {exc}") from exc
+    return reader  # type: ignore[no-any-return]
+
+
+def _read_exact(stream: BinaryIO, size: int) -> bytes:
+    """Read exactly ``size`` decompressed bytes or fail closed (bounded)."""
+    if size == 0:
+        return b""
+    try:
+        data = stream.read(size)
+    except Exception as exc:
+        raise SlotWriteError(f"payload decompression failed: {exc}") from exc
+    if data is None:
+        return b""
+    if not isinstance(data, (bytes, bytearray)):
+        raise SlotWriteError("decompressed payload stream must yield bytes")
+    return bytes(data)
 
 
 def _consume_write_token(write: VerifiedBaseSlotWrite) -> None:
@@ -536,12 +696,16 @@ def _required_slot_bytes(
 
 @dataclass(frozen=True, slots=True)
 class SlotWriter:
-    """Stream a verified release payload into a destination slot store.
+    """Stream a verified v3 release payload into a destination slot store.
 
     Public API takes only typed values: the previously verified release
-    member, the layout-resolved destination role, a binary source stream, the
-    destination store, and the release-bound support installed-size bound. No
-    shell strings, arbitrary paths, or ``dd`` arguments cross this API.
+    member, the layout-resolved destination role, a binary **decompressed**
+    source stream (wrap the ``payload.ext4.zst`` ZIP member with
+    :func:`open_zstd_decompressed_stream`), the destination store, and the
+    release-bound support installed-size bound. No shell strings, arbitrary
+    paths, or ``dd`` arguments cross this API. The writer proves the
+    uncompressed raw byte count, fsyncs, reads back the exact uncompressed
+    range and requires stream/readback hash agreement.
     """
 
     chunk_bytes: int = SLOT_WRITE_CHUNK_BYTES
@@ -561,7 +725,7 @@ class SlotWriter:
     ) -> int:
         """Capacity the destination must prove: base + support + growth + reserve."""
         return _required_slot_bytes(
-            base_bytes=member.payload_size,
+            base_bytes=member.payload_uncompressed_bytes,
             minimum_slot_bytes=member.minimum_slot_bytes,
             support_installed_bytes=support_installed_bytes,
             growth_bytes=self.growth_bytes,
@@ -577,7 +741,7 @@ class SlotWriter:
         storage: SlotStorage,
         support_installed_bytes: int,
     ) -> VerifiedBaseSlotWrite:
-        """Stream, flush, read back and digest-verify the signed payload range."""
+        """Stream decompressed bytes, flush, read back and prove the raw count."""
         if destination.semantic_slot == destination.active_slot:
             raise SlotWriteError("refusing to stage into the active slot")
         if destination.semantic_slot == destination.accepted_slot:
@@ -594,26 +758,37 @@ class SlotWriter:
 
         digest = hashlib.sha256()
         offset = 0
-        remaining = member.payload_size
+        remaining = member.payload_uncompressed_bytes
         while remaining > 0:
-            chunk = source.read(min(self.chunk_bytes, remaining))
+            chunk = _read_exact(source, min(self.chunk_bytes, remaining))
             if not chunk:
-                raise SlotWriteError("release member stream ended before the signed size")
-            if not isinstance(chunk, (bytes, bytearray)):
-                raise SlotWriteError("release member stream must yield bytes")
-            storage.write_at(offset, bytes(chunk))
+                raise SlotWriteError(
+                    "decompressed payload stream ended before the uncompressed size"
+                )
+            if len(chunk) > remaining:
+                raise SlotWriteError(
+                    "decompressed payload stream exceeds the uncompressed size"
+                )
+            storage.write_at(offset, chunk)
             digest.update(chunk)
             offset += len(chunk)
             remaining -= len(chunk)
-        if source.read(1):
-            raise SlotWriteError("release member stream is longer than the signed size")
+        try:
+            trailing = source.read(1)
+        except Exception as exc:
+            raise SlotWriteError(f"payload decompression failed: {exc}") from exc
+        if trailing:
+            raise SlotWriteError(
+                "decompressed payload stream is longer than the uncompressed size"
+            )
         storage.flush()
 
-        # Read back exactly the signed range and require the signed digest
-        # with a constant-time comparison.
+        # Read back exactly the uncompressed range and require stream/readback
+        # hash agreement with a constant-time comparison (write integrity;
+        # the compressed transport digest was already proven at inspection).
         readback = hashlib.sha256()
         read_offset = 0
-        read_remaining = member.payload_size
+        read_remaining = member.payload_uncompressed_bytes
         while read_remaining > 0:
             piece = storage.read_at(
                 read_offset, min(self.chunk_bytes, read_remaining)
@@ -621,18 +796,18 @@ class SlotWriter:
             readback.update(piece)
             read_offset += len(piece)
             read_remaining -= len(piece)
-        if not hmac.compare_digest(readback.hexdigest(), member.payload_sha256):
-            raise SlotWriteError("slot readback digest does not match the signed digest")
-        if not hmac.compare_digest(digest.hexdigest(), member.payload_sha256):
-            raise SlotWriteError("streamed digest does not match the signed digest")
+        streamed_hex = digest.hexdigest()
+        readback_hex = readback.hexdigest()
+        if not hmac.compare_digest(readback_hex, streamed_hex):
+            raise SlotWriteError("slot readback digest does not match the streamed digest")
 
         token = secrets.token_hex(16)
         _ISSUED_WRITE_TOKENS.append(token)
         return VerifiedBaseSlotWrite(
             member=member,
             destination=destination,
-            bytes_written=member.payload_size,
-            slot_digest=member.payload_sha256,
+            bytes_written=member.payload_uncompressed_bytes,
+            slot_digest=readback_hex,
             write_token=token,
         )
 
@@ -673,23 +848,29 @@ class HardwareInventoryAttestation:
 class ReleaseSupportSet:
     """The release-bound support set the finalizer may install from.
 
-    ``support_digest``/``support_size`` bind the signed hardware-support
-    member from the release manifest; ``installed_size_bound`` is the
-    installed-size upper bound used by the capacity proof. Requested packages
-    must be release-approved firmware/microcode classes; anything else fails
-    closed. Installer pools convert via ``greia_installer.slots``.
+    ``support_digest``/``support_size`` bind the v3 hardware-support member
+    from the release manifest (None together when the optional member is
+    absent); ``installed_size_bound`` is the installed-size upper bound used
+    by the capacity proof. Requested packages must be release-approved
+    firmware/microcode classes; anything else fails closed. Installer pools
+    convert via ``greia_installer.slots``.
     """
 
-    support_digest: str
-    support_size: int
+    support_digest: str | None
+    support_size: int | None
     installed_size_bound: int
     provided_firmware: frozenset[str]
     provided_microcode: frozenset[str]
     packages: tuple[InstalledPackage, ...]
 
     def __post_init__(self) -> None:
-        _require_hex64(self.support_digest, field_name="support digest")
-        _require_count(self.support_size, field_name="support size")
+        if (self.support_digest is None) != (self.support_size is None):
+            raise SlotFinalizeError(
+                "support digest/size must be present together or absent together"
+            )
+        if self.support_digest is not None and self.support_size is not None:
+            _require_hex64(self.support_digest, field_name="support digest")
+            _require_count(self.support_size, field_name="support size")
         _require_count(
             self.installed_size_bound,
             field_name="support installed-size bound",
@@ -731,7 +912,7 @@ class SlotProfilePolicy:
     """Validated profile policy the finalizer writes slot-locally.
 
     The four optional release facts (``architecture``, ``platform_family``,
-    ``profile``, ``version``) are the signed release's compatibility
+    ``profile``, ``version``) are the v3 release's compatibility
     identity. They are stated into the slot-owned
     ``etc/greia-os/release-identity.json`` authority only when the caller
     supplies an authoritative (non-``unknown``) value; ``None`` means the
@@ -962,18 +1143,22 @@ class DeterministicBootArtifactBuilder:
 
 @dataclass(frozen=True, slots=True)
 class FinalizationReceipt:
-    """Bounded finalization facts written slot-locally and returned."""
+    """Bounded finalization facts written slot-locally and returned.
+
+    ``support_*`` are None together when
+    the optional hardware-support member was absent. ``base_*`` bind the
+    uncompressed staged image (raw byte count + readback hash).
+    """
 
     schema_version: int
     finalizer_version: str
     release_id: str
-    release_sequence: int
     slot: str
     role: str
     base_sha256: str
     base_bytes: int
-    support_sha256: str
-    support_size: int
+    support_sha256: str | None
+    support_size: int | None
     inventory_token: str
     packages: tuple[InstalledPackage, ...]
     packages_digest: str
@@ -1007,7 +1192,6 @@ class FinalizationReceipt:
             ],
             "packages_digest": self.packages_digest,
             "release_id": self.release_id,
-            "release_sequence": self.release_sequence,
             "role": self.role,
             "schema_version": self.schema_version,
             "slot": self.slot,
@@ -1096,8 +1280,10 @@ class SlotFinalizer:
             raise SlotFinalizeError("profile layout does not match the layout record")
         if support.support_digest != write.member.hardware_support_sha256:
             raise SlotFinalizeError("support set is not the release-bound support member")
+        if support.support_size != write.member.hardware_support_size:
+            raise SlotFinalizeError("support set size is not the release-bound member size")
         required = _required_slot_bytes(
-            base_bytes=write.member.payload_size,
+            base_bytes=write.member.payload_uncompressed_bytes,
             minimum_slot_bytes=write.member.minimum_slot_bytes,
             support_installed_bytes=support.installed_size_bound,
             growth_bytes=self.growth_bytes,
@@ -1156,6 +1342,20 @@ class SlotFinalizer:
             if not isinstance(mountpoint, Path):
                 raise SlotFinalizeError("slot mount did not return a path")
 
+            # Shared post-write completeness smoke (A4/A11): prove the
+            # staged slot carries real Greia userspace including the
+            # finalizer's apt-get/dpkg needs before any support install
+            # or boot-asset write. An incomplete or V12G-like slot fails
+            # closed here and can never become bootable.
+            try:
+                filesystem.check_completeness()
+            except SlotFinalizeError:
+                raise
+            except Exception as exc:
+                raise SlotFinalizeError(
+                    f"slot completeness smoke failed: {exc}"
+                ) from exc
+
             installed = package_installer.install(firmware, microcode)
             expected = {*(firmware), *(microcode)}
             if {package.name for package in installed} != expected or len(installed) != len(expected):
@@ -1200,7 +1400,6 @@ class SlotFinalizer:
                         "boot_backend": profile_policy.boot_backend,
                         "layout_id": destination.layout_id,
                         "release_id": write.member.release_id,
-                        "release_sequence": write.member.release_sequence,
                         "role": destination.role,
                         "slot": destination.semantic_slot,
                         **profile_policy.release_identity_facts(),
@@ -1223,7 +1422,6 @@ class SlotFinalizer:
                 schema_version=FINALIZATION_RECEIPT_SCHEMA_VERSION,
                 finalizer_version=FINALIZER_VERSION,
                 release_id=write.member.release_id,
-                release_sequence=write.member.release_sequence,
                 slot=destination.semantic_slot,
                 role=destination.role,
                 base_sha256=write.slot_digest,

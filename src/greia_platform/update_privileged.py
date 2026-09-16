@@ -70,21 +70,13 @@ class CurrentCandidateSummary:
 
     present: bool
     release_id: str = ""
-    release_sequence: int = 0
     bundle_sha256: str = ""
-    signature_verified: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.present, bool):
             raise UpdatePrivilegedError("candidate presence must be a boolean")
         if len(self.release_id) > 96:
             raise UpdatePrivilegedError("candidate release_id exceeds Greia bound")
-        if (
-            isinstance(self.release_sequence, bool)
-            or not isinstance(self.release_sequence, int)
-            or self.release_sequence < 0
-        ):
-            raise UpdatePrivilegedError("candidate release_sequence is outside Greia bounds")
         if self.bundle_sha256 and (
             len(self.bundle_sha256) != 64
             or any(c not in "0123456789abcdef" for c in self.bundle_sha256)
@@ -200,9 +192,7 @@ def _summary_dict(summary: CurrentCandidateSummary) -> dict[str, object]:
     return {
         "present": summary.present,
         "release_id": summary.release_id,
-        "release_sequence": summary.release_sequence,
         "bundle_sha256": summary.bundle_sha256,
-        "signature_verified": summary.signature_verified,
     }
 
 

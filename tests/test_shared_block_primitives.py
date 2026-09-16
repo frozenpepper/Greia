@@ -52,7 +52,6 @@ _SLOT_BYTES = 1024 * 1024 * 1024
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -124,6 +123,26 @@ class _FakeFsRunner:
     def mount(self, device: Path, mountpoint: Path) -> None:
         self.ops.append(f"mount:{device.name}")
         mountpoint.mkdir(parents=True, exist_ok=True)
+        # Simulate a staged slot carrying real Greia userspace: the
+        # production mount would expose the streamed payload content, so
+        # the shared completeness smoke passes here. An empty mount would
+        # be a V12G-like skeleton and must fail closed in finalization.
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (mountpoint / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = mountpoint / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
 
     def unmount(self, mountpoint: Path) -> None:
         self.ops.append(f"unmount:{mountpoint.name}")
@@ -231,9 +250,9 @@ def _member(payload: bytes) -> VerifiedReleaseMember:
     hw = b"hwset-member"
     return VerifiedReleaseMember(
         release_id="greia-0.15.0",
-        release_sequence=11,
         payload_sha256=hashlib.sha256(payload).hexdigest(),
         payload_size=len(payload),
+        payload_uncompressed_bytes=len(payload),
         minimum_slot_bytes=len(payload),
         hardware_support_sha256=hashlib.sha256(hw).hexdigest(),
         hardware_support_size=len(hw),

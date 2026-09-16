@@ -74,7 +74,6 @@ _SUPPORT = "ef" * 32
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -98,7 +97,6 @@ def _receipt(slot: str) -> FinalizationReceipt:
         schema_version=1,
         finalizer_version=FINALIZER_VERSION,
         release_id="greia-0.15.0",
-        release_sequence=11,
         slot=slot,
         role=f"system-{slot.lower()}",
         base_sha256=_KERNEL_A,
@@ -131,7 +129,7 @@ def _booted_candidate(root: Path):
     coordinator = BootTransactionCoordinator.begin_update(
         journal_dir=root / "journal", backend=backend,
         candidate_artifacts=candidate, accepted_artifacts=accepted,
-        release_id="greia-0.15.0", release_sequence=11,
+        release_id="greia-0.15.0",
     )
     coordinator.arm()
     assert backend.simulate_reboot() == "B"
@@ -382,7 +380,7 @@ class RecoveryImageWiringTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=journal_dir, backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             coordinator.arm()
             self.assertEqual(backend.simulate_reboot(), "B")
@@ -427,7 +425,7 @@ class RecoveryImageWiringTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=journal_dir, backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id="greia-0.15.0", release_sequence=11,
+                release_id="greia-0.15.0",
             )
             coordinator.arm()
             self.assertEqual(backend.simulate_reboot(), "B")
@@ -515,7 +513,7 @@ class Recover2FollowUpTests(unittest.TestCase):
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir, backend=backend,
             candidate_artifacts=candidate, accepted_artifacts=accepted,
-            release_id="greia-0.15.0", release_sequence=11,
+            release_id="greia-0.15.0",
         )
         coordinator.arm()
         self.assertEqual(backend.simulate_reboot(), "B")
@@ -659,13 +657,13 @@ class Recover2FollowUpTests(unittest.TestCase):
                     history = BootHistory.empty(history_dir)
                     history.begin_boot(
                         boot_id=str(_uuid.uuid4()), started_at_unix=1757000000,
-                        slot="A", release_id="greia-0.14.0", release_sequence=7,
+                        slot="A", release_id="greia-0.14.0",
                         transaction_id="txn-a", transaction_type="update",
                         backend_default="A",
                     )
                     history.begin_boot(
                         boot_id=str(_uuid.uuid4()), started_at_unix=1757000600,
-                        slot="B", release_id="greia-0.15.0", release_sequence=11,
+                        slot="B", release_id="greia-0.15.0",
                         transaction_id="txn-b", transaction_type="update",
                         backend_default="A", backend_one_shot="B",
                     )
@@ -677,7 +675,7 @@ class Recover2FollowUpTests(unittest.TestCase):
                     # Head is current; rotate to accepted to expose previous.
                     history.begin_boot(
                         boot_id=str(_uuid.uuid4()), started_at_unix=1757001200,
-                        slot="A", release_id="greia-0.14.0", release_sequence=7,
+                        slot="A", release_id="greia-0.14.0",
                         transaction_id="txn-a2", transaction_type="update",
                         backend_default="A",
                     )

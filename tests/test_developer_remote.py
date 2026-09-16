@@ -441,7 +441,14 @@ class DeveloperRemoteTests(unittest.TestCase):
         self.assertNotIn("debootstrap", wrapper)
 
     def test_canonical_builder_emits_bounded_greia_devctl_sudoers(self):
-        builder = (PROJECT_ROOT / "build/build-image.sh").read_text(
+        # T01: target-role developer provisioning lives in the shared engine;
+        # the thin consumer must not mint SSH/sudo surface itself.
+        consumer = (PROJECT_ROOT / "build/build-image.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("NOPASSWD:", consumer)
+        self.assertIn('compose_root --profile "$PROFILE_PATH" --role target', consumer)
+        builder = (PROJECT_ROOT / "build/lib/compose.sh").read_text(
             encoding="utf-8"
         )
         expected = (
@@ -454,14 +461,15 @@ class DeveloperRemoteTests(unittest.TestCase):
         self.assertIn("0440", builder)
         self.assertIn("visudo", builder)
         self.assertIn("-cf", builder)
-        # The rule lives inside the developer-remote provisioner, whose only
-        # caller is guarded by the developer-remote package-set conditional.
-        func_start = builder.index("provision_developer_ssh()")
+        # The rule lives inside the target developer-remote provisioner, whose
+        # only caller is guarded by the developer-remote package-set
+        # conditional.
+        func_start = builder.index("compose_provision_developer_ssh_target()")
         func_body = builder[func_start:]
         self.assertIn("greia ALL=(root) NOPASSWD:", func_body)
         self.assertIn(
-            'if [[ "$target_sets" == *developer-remote* ]]',
-            builder[builder.index("provision_developer_ssh \"$ROOTFS\"") - 400:],
+            'if [[ "$role_sets" == *developer-remote* ]]',
+            builder,
         )
         # Bounded: no wildcards, no second principal, no second binary.
         rule_lines = [
@@ -486,7 +494,7 @@ class DeveloperRemoteTests(unittest.TestCase):
         )
 
     def test_canonical_builder_sudoers_bytes_are_visudo_clean(self):
-        builder = (PROJECT_ROOT / "build/build-image.sh").read_text(
+        builder = (PROJECT_ROOT / "build/lib/compose.sh").read_text(
             encoding="utf-8"
         )
         marker = (

@@ -75,7 +75,7 @@ INTERRUPTION_CASES: tuple[str, ...] = (
 #: Expected reconciled slot per interruption case. The first six cases
 #: preserve the previous accepted slot A; the committed-backend case
 #: completes the pending accepted-state write, so the committed slot B
-#: (backend default B plus accepted-sequence 21) is the correct
+#: (backend default B plus accepted release greia-0.21.0) is the correct
 #: reconciliation target.
 INTERRUPTION_EXPECTED_SLOT: dict[str, str] = {
     "inactive-base-write": "A",
@@ -468,10 +468,9 @@ def run_d31_rollback_proof(workdir: Path) -> dict[str, object]:
     coordinator = BootTransactionCoordinator.begin_update(
         journal_dir=journal_dir,
         backend=backend,
-        candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0", 21),
-        accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0", 20),
+        candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0"),
+        accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0"),
         release_id="greia-0.21.0",
-        release_sequence=21,
     )
     coordinator.arm()
     backend.reconcile("B")
@@ -502,7 +501,7 @@ def run_d31_rollback_proof(workdir: Path) -> dict[str, object]:
     }
 
 
-def _devproof_artifacts(slot: str, release_id: str, sequence: int):  # type: ignore[no-untyped-def]
+def _devproof_artifacts(slot: str, release_id: str):  # type: ignore[no-untyped-def]
     from greia_platform.boot_transaction import BootArtifactSet
 
     number = "02" if slot == "A" else "03"
@@ -520,7 +519,6 @@ def _devproof_artifacts(slot: str, release_id: str, sequence: int):  # type: ign
         root_partuuid=f"1a2b3c4d-{number}",
         root_filesystem_uuid=fs_uuid,
         release_id=release_id,
-        release_sequence=sequence,
     )
 
 
@@ -584,10 +582,9 @@ def run_interruption_case(case: str, workdir: Path) -> dict[str, object]:
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir,
             backend=backend,
-            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0", 21),
-            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0", 20),
+            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0"),
+            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0"),
             release_id="greia-0.21.0",
-            release_sequence=21,
         )
         _ = coordinator
         journal = BootTransactionJournal.load(journal_dir)
@@ -598,10 +595,9 @@ def run_interruption_case(case: str, workdir: Path) -> dict[str, object]:
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir,
             backend=backend,
-            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0", 21),
-            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0", 20),
+            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0"),
+            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0"),
             release_id="greia-0.21.0",
-            release_sequence=21,
         )
         coordinator.arm()
         # Interrupted after arm but before the candidate boot: the
@@ -615,10 +611,9 @@ def run_interruption_case(case: str, workdir: Path) -> dict[str, object]:
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir,
             backend=backend,
-            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0", 21),
-            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0", 20),
+            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0"),
+            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0"),
             release_id="greia-0.21.0",
-            release_sequence=21,
         )
         coordinator.arm()
         backend.reconcile("B")
@@ -642,10 +637,9 @@ def run_interruption_case(case: str, workdir: Path) -> dict[str, object]:
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir,
             backend=backend,
-            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0", 21),
-            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0", 20),
+            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0"),
+            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0"),
             release_id="greia-0.21.0",
-            release_sequence=21,
         )
         coordinator.arm()
         backend.reconcile("B")
@@ -659,46 +653,37 @@ def run_interruption_case(case: str, workdir: Path) -> dict[str, object]:
         if reconciled != "A":
             raise DevproofError("HEALTHY_COMMITTING interruption moved the default")
     elif case == "committed-backend-unwritten-accepted-state":
-        # Backend committed to B but the accepted-state record was never
-        # written: recovery retries the accepted-state write from the
-        # journal/sidecar before the slot is trusted, then the committed
+        # Backend committed to B but the layout-authority advancement never
+        # landed: recovery retries the advancement from the journal
+        # release_id before the slot is trusted, then the committed
         # slot B is the correct reconciliation target (verified by
-        # re-reading the backend default plus the accepted sequence).
-        from greia_platform.system_updates import (
-            read_accepted_sequence,
-            write_accepted_sequence,
-        )
-
+        # re-reading the backend default plus the journal release_id).
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir,
             backend=backend,
-            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0", 21),
-            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0", 20),
+            candidate_artifacts=_devproof_artifacts("B", "greia-0.21.0"),
+            accepted_artifacts=_devproof_artifacts("A", "greia-0.20.0"),
             release_id="greia-0.21.0",
-            release_sequence=21,
         )
         coordinator.arm()
         backend.reconcile("B")
         coordinator.observe_boot()
-        state_dir = workdir / "accepted-state"
-        state_dir.mkdir(parents=True, exist_ok=True)
-        write_accepted_sequence(state_dir, 20)
         backend.commit_accepted("B")
         if backend.inspect().default_slot != "B":
             raise DevproofError("backend commit did not land")
-        if read_accepted_sequence(state_dir) != 20:
-            raise DevproofError("previous accepted-state record is unreadable")
-        # Interruption point: the accepted-state write for sequence 21
-        # never landed. Recovery retries it from the journal record.
+        # Interruption point: the layout-authority advancement for
+        # release greia-0.21.0 never landed. Recovery retries it from
+        # the journal record (release_id identity only).
         journal = BootTransactionJournal.load(journal_dir)
         if journal.state is not BootTransactionState.CANDIDATE_BOOTING:
             raise DevproofError("candidate boot did not record CANDIDATE_BOOTING")
-        write_accepted_sequence(state_dir, 21)
+        if journal.release_id != "greia-0.21.0":
+            raise DevproofError("journal release identity moved under commit")
         journal.record(BootTransactionState.ACCEPTED, "devproof accepted-state retry")
         reconciled = backend.inspect().default_slot
-        if reconciled != "B" or read_accepted_sequence(state_dir) != 21:
+        if reconciled != "B" or journal.release_id != "greia-0.21.0":
             raise DevproofError(
-                "committed-backend recovery did not converge on accepted B/21"
+                "committed-backend recovery did not converge on accepted B/greia-0.21.0"
             )
     else:  # pragma: no cover - guarded above
         raise DevproofContractError(f"unhandled interruption case {case!r}")
@@ -1180,7 +1165,7 @@ def run_envelope_device(
     """Run the device-measured envelope (capable Linux host only).
 
     ``bundle_path`` lets the lifecycle device run bind the envelope to
-    a real signed bundle built through the shipped path, so
+    a real v3 bundle built through the shipped path, so
     ``bundle_bytes``/``bundle_present`` are run-observed rather than
     default-absent. ``leg_samples`` carries the per-leg install/update
     RSS/MemAvailable samples recorded by the lifecycle across the

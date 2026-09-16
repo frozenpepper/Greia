@@ -3,9 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
-import tempfile
 import tomllib
 import urllib.error
 import urllib.request
@@ -22,9 +20,7 @@ from greia_platform.system_updates import (  # noqa: E402
     MAX_BUNDLE_BYTES,
     SystemUpdateError,
     build_update_bundle,
-    generate_ed25519_keypair,
     inspect_update_bundle,
-    verify_update_signature,
 )
 
 
@@ -37,15 +33,11 @@ class UpdateTarget:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Create, inspect and push signed Greia .greiaupdate bundles."
+        description="Create, inspect and push unsigned Greia .greiaupdate v3 bundles."
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    keygen = sub.add_parser("keygen", help="create an Ed25519 release signing keypair")
-    keygen.add_argument("--private-key", type=Path, required=True)
-    keygen.add_argument("--public-key", type=Path, required=True)
-
-    build = sub.add_parser("build", help="build and sign one .greiaupdate bundle")
+    build = sub.add_parser("build", help="build one unsigned .greiaupdate v3 bundle")
     build.add_argument("--payload", type=Path, required=True)
     build.add_argument(
         "--profile-file",
@@ -55,17 +47,18 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--platform-family")
     build.add_argument("--architecture")
     build.add_argument("--profile")
+    build.add_argument("--board", default=None)
     build.add_argument("--version", required=True)
-    build.add_argument("--release-sequence", type=int, required=True)
-    build.add_argument("--hardware-support", type=Path, required=True)
-    build.add_argument("--persistent-contract", type=Path, required=True)
+    build.add_argument("--hardware-support", type=Path, default=None)
+    build.add_argument("--payload-uncompressed-bytes", type=int, required=True)
     build.add_argument("--minimum-slot-bytes", type=int, default=None)
+    build.add_argument("--persist-read-min", type=int, required=True)
+    build.add_argument("--persist-read-max", type=int, required=True)
+    build.add_argument("--persist-write", type=int, required=True)
     build.add_argument(
         "--release-id",
         help="stable release identifier; defaults to greia-<version>",
     )
-    build.add_argument("--signer", default="greia-release-main")
-    build.add_argument("--private-key", type=Path, required=True)
     build.add_argument(
         "--output",
         type=Path,
@@ -74,9 +67,8 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--release-notes", default="")
     build.add_argument("--release-notes-file", type=Path)
 
-    inspect = sub.add_parser("inspect", help="inspect and optionally verify a bundle")
+    inspect = sub.add_parser("inspect", help="inspect a v3 bundle")
     inspect.add_argument("bundle", type=Path)
-    inspect.add_argument("--public-key", type=Path)
 
     push = sub.add_parser("push", help="upload a bundle through the Greia Parent API")
     push.add_argument("bundle", type=Path)
@@ -151,18 +143,6 @@ def _build_output(args: argparse.Namespace, target: UpdateTarget) -> Path:
     return PROJECT_ROOT / "out" / f"greia-{args.version}-{target.profile}.greiaupdate"
 
 
-def _verify_with_single_key(bundle_path: Path, public_key: Path) -> dict[str, object]:
-    inspected = inspect_update_bundle(bundle_path)
-    with tempfile.TemporaryDirectory(prefix="greia-update-key-") as directory:
-        key_dir = Path(directory)
-        trusted = key_dir / f"{inspected.manifest.signer}.pem"
-        shutil.copyfile(public_key, trusted)
-        verify_update_signature(inspected, key_dir)
-    payload = inspected.as_json_dict()
-    payload["signature_verified"] = True
-    return payload
-
-
 def _auth_headers(args: argparse.Namespace) -> dict[str, str]:
     if getattr(args, "bearer", None):
         return {"Authorization": f"Bearer {args.bearer}"}
@@ -204,9 +184,7 @@ def _push(args: argparse.Namespace) -> object:
         "Content-Length": str(size),
         "X-Greia-Update-Release": inspected.manifest.release_id,
     }
-    # Stream the potentially large artifact without loading it into RAM. This
-    # stays dependency-free on the operator Mac; only signing/verification needs
-    # the reviewed cryptography package.
+    # Stream the potentially large artifact without loading it into RAM.
     import http.client
     from urllib.parse import urlsplit
 
@@ -258,18 +236,6 @@ def _status(args: argparse.Namespace) -> object:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
-        if args.command == "keygen":
-            generate_ed25519_keypair(args.private_key, args.public_key)
-            print(
-                json.dumps(
-                    {
-                        "private_key": str(args.private_key),
-                        "public_key": str(args.public_key),
-                    },
-                    indent=2,
-                )
-            )
-            return 0
         if args.command == "build":
             target = _resolve_target(args)
             output = _build_output(args, target)
@@ -277,17 +243,18 @@ def main(argv: list[str] | None = None) -> int:
             build_update_bundle(
                 payload_path=args.payload,
                 hardware_support_path=args.hardware_support,
-                persistent_contract_path=args.persistent_contract,
                 output_path=output,
                 version=args.version,
                 release_id=release_id,
-                release_sequence=args.release_sequence,
                 platform_family=target.platform_family,
                 architecture=target.architecture,
                 profile=target.profile,
-                signer=args.signer,
-                private_key_path=args.private_key,
+                board=args.board,
+                payload_uncompressed_bytes=args.payload_uncompressed_bytes,
                 minimum_slot_bytes=args.minimum_slot_bytes,
+                persist_read_schema_min=args.persist_read_min,
+                persist_read_schema_max=args.persist_read_max,
+                persist_write_schema=args.persist_write,
                 release_notes=_release_notes(args),
             )
             inspected = inspect_update_bundle(output)
@@ -296,11 +263,7 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(payload, indent=2, ensure_ascii=False))
             return 0
         if args.command == "inspect":
-            payload = (
-                _verify_with_single_key(args.bundle, args.public_key)
-                if args.public_key is not None
-                else inspect_update_bundle(args.bundle).as_json_dict()
-            )
+            payload = inspect_update_bundle(args.bundle).as_json_dict()
             print(json.dumps(payload, indent=2, ensure_ascii=False))
             return 0
         if args.command == "push":

@@ -12,7 +12,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SERVICE_FILE = PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-launcher.service"
 SCRUB_HELPER = PROJECT_ROOT / "build/overlay/usr/local/lib/greia-os/scrub-activity-trees"
 LAUNCHER_MAIN = PROJECT_ROOT / "src/greia_launcher/main.py"
-BUILD_IMAGE = PROJECT_ROOT / "build/build-image.sh"
+# T01: the build gate lives in the shared composition engine, consumed for
+# role `target` by the thin build-image.sh wrapper.
+BUILD_IMAGE = PROJECT_ROOT / "build/lib/compose.sh"
+THIN_CONSUMER = PROJECT_ROOT / "build/build-image.sh"
 
 
 def _exec_start_pre_directives(unit_text: str) -> list[str]:
@@ -148,6 +151,8 @@ class BootScrubRelocationTests(unittest.TestCase):
         self.assertLess(
             builder.index("GREIA_BUILTIN_GATE"), builder.index(rsync_anchor)
         )
+        consumer = THIN_CONSUMER.read_text(encoding="utf-8")
+        self.assertIn('compose_root --profile "$PROFILE_PATH" --role target', consumer)
 
     def test_build_junk_scan_catches_what_validation_allows(self) -> None:
         """The gate's junk scan is load-bearing: `notes.txt~` passes the

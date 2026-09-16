@@ -42,7 +42,6 @@ def _canonical(payload: dict[str, object]) -> bytes:
 def _layout_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.16.0",
-        "accepted_release_sequence": 8,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -64,7 +63,6 @@ def _layout_dict(**overrides: object) -> dict[str, object]:
 def _single_root_layout_dict() -> dict[str, object]:
     return {
         "accepted_release_id": "greia-0.16.0",
-        "accepted_release_sequence": 8,
         "accepted_slot": None,
         "boot_backend": "none-v1",
         "boot_control": {"active_slot": None, "kind": "none-v1"},
@@ -86,7 +84,6 @@ def _identity_dict(*, slot: str) -> dict[str, object]:
         "boot_backend": "grub-ab-v1",
         "layout_id": "modern-gpt-ab-v1",
         "release_id": _RELEASE,
-        "release_sequence": _RELEASE_SEQ,
         "role": f"system-{slot.lower()}",
         "slot": slot,
     }
@@ -172,7 +169,6 @@ class BootObserverProductTests(unittest.TestCase):
             self.assertEqual(result.observed_slot, "B")
             self.assertEqual(result.root_partuuid, _UUID_B)
             self.assertEqual(result.release_id, _RELEASE)
-            self.assertEqual(result.release_sequence, _RELEASE_SEQ)
             state = GrubEnvBackend.attach(rig.grubenv_dir).inspect()
             self.assertEqual(state.last_booted_slot, "B")
             self.assertEqual(state.default_slot, "A")
@@ -251,7 +247,6 @@ class BootObserverProductTests(unittest.TestCase):
                 "boot_backend": "none-v1",
                 "layout_id": "bios-single-ext4",
                 "release_id": _RELEASE,
-                "release_sequence": _RELEASE_SEQ,
                 "role": "system-a",
                 "slot": "A",
             }
@@ -381,8 +376,8 @@ class BootObserverUnitContractTests(unittest.TestCase):
         self.assertEqual(directives.get("Service.Type", []), ["oneshot"])
 
     def test_observer_enabled_in_image_build(self) -> None:
-        """Image enablement/ordering: build-image.sh starts the observer."""
-        build_script = _repo_root() / "build" / "build-image.sh"
+        """Image enablement/ordering: the composition engine starts the observer."""
+        build_script = _repo_root() / "build" / "lib" / "compose.sh"
         text = build_script.read_text(encoding="utf-8")
         self.assertIn(
             "greia-boot-observer.service",
@@ -392,6 +387,8 @@ class BootObserverUnitContractTests(unittest.TestCase):
         enable_index = text.index("greia-boot-observer.service")
         enable_window = text[max(0, enable_index - 400): enable_index + 400]
         self.assertIn("enable", enable_window)
+        consumer = (_repo_root() / "build" / "build-image.sh").read_text(encoding="utf-8")
+        self.assertIn("--role target", consumer)
 
 
 if __name__ == "__main__":

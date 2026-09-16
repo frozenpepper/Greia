@@ -66,9 +66,9 @@ def _member(payload: bytes) -> VerifiedReleaseMember:
     hw_digest = hashlib.sha256(b"hwset-member").hexdigest()
     return VerifiedReleaseMember(
         release_id="greia-r9",
-        release_sequence=9,
         payload_sha256=digest,
         payload_size=len(payload),
+        payload_uncompressed_bytes=len(payload),
         minimum_slot_bytes=len(payload),
         hardware_support_sha256=hw_digest,
         hardware_support_size=len(b"hwset-member"),
@@ -103,6 +103,22 @@ class _FakeFilesystem:
     def mount(self) -> Path:
         self.mounted = True
         self.mount_dir.mkdir(parents=True, exist_ok=True)
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (self.mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = self.mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
         return self.mount_dir
 
     def unmount(self) -> None:
@@ -118,6 +134,11 @@ class _FakeFilesystem:
 
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
+
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        check_slot_completeness(self.mount_dir)
 
     def check_health(self) -> None:
         return None
@@ -162,6 +183,23 @@ def _finalize_with_policy(root: Path, policy: SlotProfilePolicy) -> dict:
             support_installed_bytes=1024,
         )
         filesystem = _FakeFilesystem(root / "mnt")
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        mount_dir = root / "mnt"
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
         SlotFinalizer().finalize(
             write=write,
             destination=destination,
@@ -197,7 +235,6 @@ def _isolated_env(root: Path, extra: dict | None = None):
 def _layout_dict() -> dict:
     return {
         "accepted_release_id": "greia-r8",
-        "accepted_release_sequence": 8,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -347,7 +384,6 @@ class InstalledReleaseIdentityFactsTests(unittest.TestCase):
             "boot_backend": "grub-ab-v1",
             "layout_id": "legacy-bios-ab-v1",
             "release_id": "greia-r9",
-            "release_sequence": 9,
             "role": "system-b",
             "slot": "B",
             "architecture": _ARCH,
@@ -418,46 +454,40 @@ class InstalledReleaseIdentityFactsTests(unittest.TestCase):
         )
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "signed bundles need cryptography")
 class ProductionPathProofTests(unittest.TestCase):
-    """Drive both production finalization call sites with signed manifests."""
+    """Drive both production finalization call sites with unsigned v3 manifests."""
 
-    def _signed_bundle(self, root: Path, payload: bytes):  # type: ignore[no-untyped-def]
+    def _v3_bundle(self, root: Path, payload: bytes):  # type: ignore[no-untyped-def]
+        import zstandard
+
         from greia_platform.system_updates import (
-            build_persistent_state_contract_bytes,
             build_update_bundle,
-            generate_ed25519_keypair,
             inspect_update_bundle,
         )
 
-        private = root / "priv.pem"
-        public = root / "pub.pem"
-        generate_ed25519_keypair(private, public)
-        payload_path = root / "payload.bin"
-        payload_path.write_bytes(payload)
+        compressed = zstandard.ZstdCompressor(level=3).compress(payload)
+        payload_path = root / "payload.ext4.zst"
+        payload_path.write_bytes(compressed)
         hw_path = root / "hw.tar.zst"
         hw_path.write_bytes(b"\x28\xb5\x2f\xfd" + b"hwset-payload" * 64)
-        contract_path = root / "contract.json"
-        contract_path.write_bytes(build_persistent_state_contract_bytes())
         bundle = root / "r11.greiaupdate"
+        if bundle.exists():
+            bundle.unlink()
         build_update_bundle(
             payload_path=payload_path,
             hardware_support_path=hw_path,
-            persistent_contract_path=contract_path,
             output_path=bundle,
             version=_VERSION,
             release_id="greia-r11",
-            release_sequence=11,
             platform_family=_FAMILY,
             architecture=_ARCH,
             profile=_PROFILE,
-            signer="greia-release-main",
-            private_key_path=private,
+            payload_uncompressed_bytes=len(payload),
             minimum_slot_bytes=len(payload) + 1024 * 1024,
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
         )
-        key_dir = root / "trusted"
-        key_dir.mkdir(exist_ok=True)
-        (key_dir / "greia-release-main.pem").write_bytes(public.read_bytes())
         return bundle, inspect_update_bundle(bundle).manifest
 
     def test_installer_path_states_architecture(self) -> None:
@@ -474,7 +504,7 @@ class ProductionPathProofTests(unittest.TestCase):
         payload = _payload(128 * 1024)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle, manifest = self._signed_bundle(root, payload)
+            bundle, manifest = self._v3_bundle(root, payload)
             observed = {
                 "system-a": {
                     "scheme": "MBR_PARTUUID",
@@ -581,7 +611,6 @@ class ProductionPathProofTests(unittest.TestCase):
             )
             request = FreshAbInstallRequest(
                 bundle_path=bundle,
-                trusted_key_dir=root / "trusted",
                 expected_profile_id=_PROFILE,
                 expected_platform_family=_FAMILY,
                 expected_architecture=_ARCH,
@@ -631,7 +660,6 @@ class ProductionPathProofTests(unittest.TestCase):
             UpdateSlotSeams,
             load_installed_layout_record,
             resolve_installed_system_identity,
-            write_accepted_sequence,
         )
 
         payload = _payload(220 * 1024)
@@ -640,8 +668,7 @@ class ProductionPathProofTests(unittest.TestCase):
             layout_path = root / "installed-layout.json"
             layout_path.write_bytes(_canonical(_layout_dict()))
             state_dir = root / "state"
-            bundle, manifest = self._signed_bundle(root, payload)
-            write_accepted_sequence(state_dir, 8)
+            bundle, manifest = self._v3_bundle(root, payload)
             record = load_installed_layout_record(layout_path)
             assert record is not None
             from greia_platform.slot_writer import (
@@ -711,8 +738,8 @@ class ProductionPathProofTests(unittest.TestCase):
                 selection_factory=None,
                 installed_contract_factory=(
                     lambda: __import__(
-                        "greia_platform.system_updates", fromlist=["x"]
-                    ).build_persistent_state_contract_bytes()
+                        "greia_platform.persistent_layout", fromlist=["x"]
+                    ).emit_persist_schema_marker(1)
                 ),
             )
             backend = SlotBackedSystemUpdateBackend(

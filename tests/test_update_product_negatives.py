@@ -42,15 +42,11 @@ from greia_platform.system_updates import (
     UpdateBackendUnavailable,
     UpdateBundleError,
     UpdateCompatibilityError,
-    UpdateSequenceError,
     UpdateSlotSeams,
     build_live_update_service,
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     inspect_update_bundle,
     load_installed_layout_record,
-    write_accepted_sequence,
 )
 
 
@@ -65,10 +61,8 @@ def _patched_env(**overrides: str):
         os.environ.update(previous)
 
 
-_SIGNER = "greia-release-main"
 _SLOT_BYTES = 1024 * 1024 * 1024
 _HW_BYTES = b"\x28\xb5\x2f\xfd" + b"p3-proof3-hw" * 64
-_CONTRACT_BYTES = build_persistent_state_contract_bytes()
 
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
@@ -92,7 +86,6 @@ _R9_SEQ = 9
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": _R8_ID,
-        "accepted_release_sequence": _R8_SEQ,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -185,15 +178,8 @@ def _rig(root: Path, *, record: dict[str, object] | None = None,
     ``GREIA_*`` environment only.
     """
     state_dir = root / "state"
-    key_dir = root / "trusted"
-    key_dir.mkdir(parents=True, exist_ok=True)
     layout_path = root / "installed-layout.json"
     layout_path.write_bytes(_canonical_record(record or _record_dict()))
-    private_key = root / "release-private.pem"
-    public_key = root / "release-public.pem"
-    generate_ed25519_keypair(private_key, public_key)
-    (key_dir / f"{_SIGNER}.pem").write_bytes(public_key.read_bytes())
-    write_accepted_sequence(state_dir, _R8_SEQ)
     boot_dir = root / "boot-control"
     boot_dir.mkdir(parents=True, exist_ok=True)
     grub = GrubEnvBackend.initialize(boot_dir, default_slot="A")
@@ -211,12 +197,11 @@ def _rig(root: Path, *, record: dict[str, object] | None = None,
     with _patched_env(**env):
         authority = build_live_update_service(
             state_dir=state_dir,
-            trusted_key_dir=key_dir,
             layout_record_path=layout_path,
             boot_backend=grub,
             boot_backend_auto=False,
         )
-    return authority, grub, layout_path, state_dir, private_key
+    return authority, grub, layout_path, state_dir, None
 
 
 def _recompose(root: Path, *, record: dict[str, object] | None = None,
@@ -230,7 +215,6 @@ def _recompose(root: Path, *, record: dict[str, object] | None = None,
     from greia_platform.grub_ab import GrubEnvBackend as _GrubAttach
 
     state_dir = root / "state"
-    key_dir = root / "trusted"
     layout_path = root / "installed-layout.json"
     if record is not None:
         layout_path.write_bytes(_canonical_record(record))
@@ -248,47 +232,52 @@ def _recompose(root: Path, *, record: dict[str, object] | None = None,
     with _patched_env(**env):
         authority = build_live_update_service(
             state_dir=state_dir,
-            trusted_key_dir=key_dir,
             layout_record_path=layout_path,
             boot_backend=grub,
             boot_backend_auto=False,
         )
-    private_key = root / "release-private.pem"
-    return authority, grub, layout_path, state_dir, private_key
+    return authority, grub, layout_path, state_dir, None
 
 
-def _signed_bundle(root: Path, private_key: Path, name: str, *,
-                   sequence: int = _R9_SEQ,
+def _signed_bundle(root: Path, _ignored: object, name: str, *,
                    release_id: str = _R9_ID,
                    family: str = _FAMILY, arch: str = _ARCH,
                    profile: str = _PROFILE,
-                   contract_bytes: bytes = _CONTRACT_BYTES,
                    payload_bytes: bytes | None = None,
-                   minimum_slot_bytes: int | None = None) -> Path:
+                   minimum_slot_bytes: int | None = None,
+                   persist_min: int = 1, persist_max: int = 1) -> Path:
+    import zstandard
+
     work = root / "releases" / name
     work.mkdir(parents=True, exist_ok=True)
-    (work / "slot.img").write_bytes(
-        payload_bytes if payload_bytes is not None else _payload())
+    raw = payload_bytes if payload_bytes is not None else _payload()
+    (work / "slot.ext4.zst").write_bytes(
+        zstandard.ZstdCompressor(level=3).compress(raw)
+    )
     (work / "hw.tar.zst").write_bytes(_HW_BYTES)
-    (work / "contract.json").write_bytes(contract_bytes)
     bundle = work / f"{name}.greiaupdate"
+    if bundle.exists():
+        bundle.unlink()
     build_update_bundle(
-        payload_path=work / "slot.img",
+        payload_path=work / "slot.ext4.zst",
         hardware_support_path=work / "hw.tar.zst",
-        persistent_contract_path=work / "contract.json",
         output_path=bundle,
         version=release_id.split("-", 1)[1],
         release_id=release_id,
-        release_sequence=sequence,
         platform_family=family,
         architecture=arch,
         profile=profile,
-        signer=_SIGNER,
-        private_key_path=private_key,
-        minimum_slot_bytes=minimum_slot_bytes,
+        payload_uncompressed_bytes=len(raw),
+        minimum_slot_bytes=minimum_slot_bytes if minimum_slot_bytes is not None else len(raw),
+        persist_read_schema_min=persist_min,
+        persist_read_schema_max=persist_max,
+        persist_write_schema=persist_min,
         release_notes="POSTR1-P3-UPDATE-PROOF3 negative release.",
     )
     return bundle
+
+
+_v3_bundle = _signed_bundle
 
 
 def _journal_path(state_dir: Path) -> Path:
@@ -384,7 +373,45 @@ class ForgedPeerRefusalTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            authority, _grub, _layout, _state, _key = _rig(root)
+            real_authority, _grub, _layout, _state, _key = _rig(root)
+
+            from greia_platform.update_privileged import CurrentCandidateSummary
+
+            class _SocketAuthority:
+                """Socket-shape adapter over the v3 authority (see T04 notes)."""
+
+                def candidate_summary(self) -> CurrentCandidateSummary:
+                    summary = real_authority.candidate_summary()
+                    return CurrentCandidateSummary(
+                        present=summary.present,
+                        release_id=summary.release_id,
+                        bundle_sha256=summary.bundle_sha256,
+                    )
+
+                def layout_summary(self) -> dict[str, object]:
+                    return dict(real_authority.layout_summary())
+
+                def verify_current_candidate(self) -> CurrentCandidateSummary:
+                    summary = real_authority.verify_current_candidate()
+                    return CurrentCandidateSummary(
+                        present=summary.present,
+                        release_id=summary.release_id,
+                        bundle_sha256=summary.bundle_sha256,
+                    )
+
+                def stage_current_candidate(self) -> dict[str, object]:
+                    return dict(real_authority.stage_current_candidate())
+
+                def arm_current_candidate(self) -> dict[str, object]:
+                    return dict(real_authority.arm_current_candidate())
+
+                def confirm_boot_health(self) -> dict[str, object]:
+                    return dict(real_authority.confirm_boot_health())
+
+                def reconcile(self) -> dict[str, object]:
+                    return dict(real_authority.reconcile())
+
+            authority = _SocketAuthority()
             left, right = socket.socketpair()
             try:
                 left.sendall(build_request("STATUS"))
@@ -488,35 +515,44 @@ class CompatibilityNegativeTests(unittest.TestCase):
             _assert_no_slot_residue(self, root, state_dir)
 
 
-class SequencePolicyNegativeTests(unittest.TestCase):
-    """Replay/equal sequences follow the signed-integer policy."""
+class PersistPolicyNegativeTests(unittest.TestCase):
+    """PERSIST-schema gating replaces the retired sequence policy (v3).
 
-    def test_equal_sequence_is_no_update_without_slot_contact(self) -> None:
+    Compatibility (family/arch/profile) passes at verify; the PERSIST
+    readable range is enforced at stage before any slot contact. There is
+    no sequence authority: an older display version with a readable range
+    still verifies, while an unreadable range is refused with a
+    compatibility/migration message.
+    """
+
+    def test_persist_out_of_range_refused_before_slot_contact(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             authority, _grub, _layout, state_dir, key = _rig(root)
-            write_accepted_sequence(state_dir, _R9_SEQ)
-            bundle = _signed_bundle(root, key, "equal-seq", sequence=_R9_SEQ)
+            bundle = _signed_bundle(
+                root, key, "narrow-persist",
+                persist_min=10, persist_max=10,
+            )
             SystemUpdateInbox(state_dir).receive(bundle)
             verified = authority.verify_current_candidate()
             self.assertTrue(verified.present)
-            outcome = authority.stage_current_candidate()
-            self.assertEqual(outcome["decision"], "no-update")
-            self.assertFalse(outcome["staged"])
+            with self.assertRaises(SystemUpdateError) as raised:
+                authority.stage_current_candidate()
+            self.assertIn("migration", str(raised.exception).lower())
             _assert_no_slot_residue(self, root, state_dir)
 
-    def test_older_sequence_is_rejected_even_when_signed(self) -> None:
+    def test_older_display_version_with_readable_range_still_verifies(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             authority, _grub, _layout, state_dir, key = _rig(root)
-            write_accepted_sequence(state_dir, _R9_SEQ)
-            bundle = _signed_bundle(root, key, "rollback-seq", sequence=_R8_SEQ,
-                                    release_id=_R8_ID)
+            bundle = _signed_bundle(root, key, "older-display", release_id=_R8_ID)
             SystemUpdateInbox(state_dir).receive(bundle)
-            with self.assertRaises(UpdateSequenceError) as raised:
-                authority.verify_current_candidate()
-            self.assertIn("older than accepted", str(raised.exception))
-            _assert_no_slot_residue(self, root, state_dir)
+            verified = authority.verify_current_candidate()
+            # Version strings are never a security boundary in v3: the
+            # older display version verifies when family/arch/profile and
+            # the PERSIST range match.
+            self.assertTrue(verified.present)
+            self.assertEqual(verified.release_id, _R8_ID)
 
 
 class LiveSlotAddressNegativeTests(unittest.TestCase):
@@ -596,29 +632,20 @@ class LiveSlotAddressNegativeTests(unittest.TestCase):
 
 
 class PersistContractNegativeTests(unittest.TestCase):
-    """PERSIST contract mismatch is refused before any slot write."""
+    """PERSIST-schema mismatch is refused before any slot write."""
 
-    def test_contract_mismatch_refused_before_slot_write(self) -> None:
-        from greia_platform.system_updates import canonical_json
-
+    def test_persist_range_mismatch_refused_before_slot_write(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             authority, _grub, _layout, state_dir, key = _rig(root)
-            foreign_contract = canonical_json(
-                {
-                    "schema_version": 1,
-                    "namespaces": ["telemetry"],
-                    "migration_policy": "backward-compatible-or-transactional",
-                }
-            )
             bundle = _signed_bundle(
-                root, key, "foreign-contract", contract_bytes=foreign_contract)
+                root, key, "foreign-persist", persist_min=10, persist_max=10)
             SystemUpdateInbox(state_dir).receive(bundle)
             verified = authority.verify_current_candidate()
             self.assertTrue(verified.present)
             with self.assertRaises(SystemUpdateError) as raised:
                 authority.stage_current_candidate()
-            self.assertIn("persistent-state contract", str(raised.exception))
+            self.assertIn("migration", str(raised.exception).lower())
             _assert_no_slot_residue(self, root, state_dir)
 
 
@@ -695,29 +722,34 @@ class FreeSpaceNegativeTests(unittest.TestCase):
     """Insufficient free space is refused before any durable write."""
 
     def test_inbox_receive_refused_on_full_disk(self) -> None:
+        import zstandard
+
         _DiskUsage = namedtuple("_DiskUsage", ["total", "used", "free"])
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             _authority, _grub, _layout, state_dir, key = _rig(root)
             work = root / "releases" / "full-disk"
             work.mkdir(parents=True, exist_ok=True)
-            (work / "slot.img").write_bytes(_payload())
+            raw = _payload()
+            (work / "slot.ext4.zst").write_bytes(
+                zstandard.ZstdCompressor(level=3).compress(raw)
+            )
             (work / "hw.tar.zst").write_bytes(_HW_BYTES)
-            (work / "contract.json").write_bytes(_CONTRACT_BYTES)
             bundle = work / "full-disk.greiaupdate"
             build_update_bundle(
-                payload_path=work / "slot.img",
+                payload_path=work / "slot.ext4.zst",
                 hardware_support_path=work / "hw.tar.zst",
-                persistent_contract_path=work / "contract.json",
                 output_path=bundle,
                 version=_R9_ID.split("-", 1)[1],
                 release_id=_R9_ID,
-                release_sequence=_R9_SEQ,
                 platform_family=_FAMILY,
                 architecture=_ARCH,
                 profile=_PROFILE,
-                signer=_SIGNER,
-                private_key_path=key,
+                payload_uncompressed_bytes=len(raw),
+                minimum_slot_bytes=len(raw),
+                persist_read_schema_min=1,
+                persist_read_schema_max=1,
+                persist_write_schema=1,
             )
             with mock.patch.object(
                 shutil, "disk_usage",
@@ -804,13 +836,13 @@ class InterruptionNegativeTests(unittest.TestCase):
             del authority
             authority2, _, _, _, _ = _recompose(root)
             # The candidate is durable but still unverified until the
-            # restarted service re-verifies it through the trust path.
+            # restarted service re-verifies it through the compatibility path.
             durable = authority2.candidate_summary()
             self.assertTrue(durable.present)
-            self.assertFalse(durable.signature_verified)
+            self.assertEqual(durable.release_id, _R9_ID)
             verified = authority2.verify_current_candidate()
             self.assertTrue(verified.present)
-            self.assertTrue(verified.signature_verified)
+            self.assertEqual(verified.release_id, _R9_ID)
             # Staging still fails closed at the device path (no devices
             # here) with no journal residue from the interrupted run.
             with self.assertRaises(UpdateBackendUnavailable) as raised:
@@ -853,7 +885,6 @@ class InterruptionNegativeTests(unittest.TestCase):
                 layout_id="legacy-bios-ab-v1",
                 boot_backend="grub-ab-v1",
                 release_id=_R9_ID,
-                release_sequence=_R9_SEQ,
                 candidate_slot="B",
                 accepted_slot="A",
             )
@@ -892,7 +923,6 @@ class InterruptionNegativeTests(unittest.TestCase):
                 layout_id="legacy-bios-ab-v1",
                 boot_backend="grub-ab-v1",
                 release_id=_R9_ID,
-                release_sequence=_R9_SEQ,
                 candidate_slot="B",
                 accepted_slot="A",
             )

@@ -1,20 +1,26 @@
 from __future__ import annotations
 
-import importlib.util
+import hashlib
 import json
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
 
+from greia_platform.persistent_layout import (
+    PersistentLayoutError,
+    assert_persist_schema_compatible,
+    emit_persist_schema_marker,
+    parse_persist_schema_marker,
+)
 from greia_platform.system_updates import (
+    BUNDLE_MEMBERS_V3,
+    BUNDLE_MEMBERS_V3_WITH_HW,
     HARDWARE_SUPPORT_NAME,
+    INBOX_CANDIDATE_NAME,
     MANIFEST_NAME,
     PAYLOAD_NAME,
-    PERSISTENT_CONTRACT_NAME,
     SCHEMA_VERSION,
-    SIGNATURE_NAME,
-    SignatureEnvelope,
     SystemIdentity,
     SystemUpdateInbox,
     SystemUpdateService,
@@ -23,212 +29,239 @@ from greia_platform.system_updates import (
     UpdateBundleError,
     UpdateCompatibilityError,
     UpdateManifest,
-    UpdateSignatureError,
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     inspect_update_bundle,
-    verify_update_signature,
 )
 
-
-HAS_CRYPTOGRAPHY = importlib.util.find_spec("cryptography") is not None
-
-_HW_BYTES = b"\x28\xb5\x2f\xfd" + b"hwset" * 32
-_CONTRACT_BYTES = build_persistent_state_contract_bytes()
+_ZSTD = b"\x28\xb5\x2f\xfd"
 
 
-def _hw_digest() -> tuple[str, int]:
-    import hashlib
+def _zst_bytes(seed: bytes, size: int = 4096) -> bytes:
+    assert size > 4
+    body = (seed * ((size // len(seed)) + 1))[: size - 4]
+    return _ZSTD + body
 
-    return hashlib.sha256(_HW_BYTES).hexdigest(), len(_HW_BYTES)
+
+_HW_BYTES = _zst_bytes(b"hwset-", size=2048)
+_UNCOMPRESSED = 8 * 1024 * 1024
 
 
-def _contract_digest() -> tuple[str, int]:
-    import hashlib
-
-    return hashlib.sha256(_CONTRACT_BYTES).hexdigest(), len(_CONTRACT_BYTES)
+def _v3_bundle(root: Path, payload: bytes, *, name: str = "candidate.greiaupdate") -> Path:
+    payload_path = root / f"payload-{name}.ext4.zst"
+    payload_path.write_bytes(payload)
+    hw_path = root / f"hw-{name}.tar.zst"
+    hw_path.write_bytes(_HW_BYTES)
+    out = root / name
+    if out.exists():
+        out.unlink()
+    build_update_bundle(
+        payload_path=payload_path,
+        hardware_support_path=hw_path,
+        output_path=out,
+        version="0.14.0",
+        release_id="greia-0.14.0",
+        platform_family="legacy-x86",
+        architecture="i386",
+        profile="legacy-x86-i686",
+        payload_uncompressed_bytes=_UNCOMPRESSED,
+        minimum_slot_bytes=_UNCOMPRESSED,
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
+        release_notes="v3",
+    )
+    return out
 
 
 class SystemUpdateBundleTests(unittest.TestCase):
-    def _manifest(self, payload: bytes, *, sequence: int = 7) -> UpdateManifest:
-        import hashlib
-
-        hw_sha, hw_size = _hw_digest()
-        contract_sha, contract_size = _contract_digest()
+    def _manifest(self, payload: bytes) -> UpdateManifest:
         return UpdateManifest(
             schema_version=SCHEMA_VERSION,
             release_id="greia-0.14.0",
             version="0.14.0",
-            release_sequence=sequence,
             platform_family="legacy-x86",
             architecture="i386",
             profile="legacy-x86-i686",
-            signer="greia-release-main",
+            board=None,
             payload_sha256=hashlib.sha256(payload).hexdigest(),
             payload_size=len(payload),
-            payload_filesystem_bytes=len(payload),
+            payload_uncompressed_bytes=len(payload),
             payload_minimum_slot_bytes=len(payload),
-            hardware_support_name=HARDWARE_SUPPORT_NAME,
-            hardware_support_schema_version=1,
-            hardware_support_sha256=hw_sha,
-            hardware_support_size=hw_size,
-            persistent_contract_schema_version=1,
-            persistent_contract_sha256=contract_sha,
-            persistent_contract_size=contract_size,
+            hardware_support_sha256=hashlib.sha256(_HW_BYTES).hexdigest(),
+            hardware_support_size=len(_HW_BYTES),
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
             release_notes="Emoji and update plumbing.",
         )
-
-    def _unsigned_structurally_valid_bundle(
-        self,
-        root: Path,
-        payload: bytes,
-        *,
-        name: str = "candidate.greiaupdate",
-        sequence: int = 7,
-    ) -> Path:
-        manifest = self._manifest(payload, sequence=sequence)
-        signature = SignatureEnvelope(
-            schema_version=SCHEMA_VERSION,
-            algorithm="ed25519",
-            signer=manifest.signer,
-            signature=b"x" * 64,
-        )
-        path = root / name
-        with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr(MANIFEST_NAME, manifest.canonical_bytes())
-            archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
-            archive.writestr(PAYLOAD_NAME, payload)
-            archive.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
-            archive.writestr(PERSISTENT_CONTRACT_NAME, _CONTRACT_BYTES)
-        return path
 
     def test_inspection_binds_payload_to_manifest_without_granting_trust(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle = self._unsigned_structurally_valid_bundle(root, b"slot-image")
+            bundle = _v3_bundle(root, _zst_bytes(b"slot-image-"))
             inspected = inspect_update_bundle(bundle)
             self.assertEqual(inspected.manifest.version, "0.14.0")
-            self.assertEqual(inspected.manifest.payload_size, len(b"slot-image"))
-            self.assertEqual(inspected.signature.signature, b"x" * 64)
-            self.assertEqual(inspected.manifest.release_sequence, 7)
+            self.assertEqual(inspected.manifest.release_id, "greia-0.14.0")
+            self.assertEqual(inspected.manifest.schema_version, 3)
+            # No provenance trust: the inspected bundle carries structure +
+            # digests only, never a signature verdict.
+            self.assertFalse(hasattr(inspected, "signature"))
+            with zipfile.ZipFile(bundle) as archive:
+                self.assertEqual(
+                    [i.filename for i in archive.infolist()],
+                    list(BUNDLE_MEMBERS_V3_WITH_HW),
+                )
 
     def test_tampered_payload_is_rejected_before_inbox(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            payload = b"slot-image"
-            manifest = self._manifest(payload)
-            signature = SignatureEnvelope(
-                SCHEMA_VERSION, "ed25519", manifest.signer, b"x" * 64
-            )
+            bundle = _v3_bundle(root, _zst_bytes(b"slot-image-"))
+            with zipfile.ZipFile(bundle) as src:
+                manifest_raw = src.read(MANIFEST_NAME)
+            payload = bytearray(_zst_bytes(b"slot-image-"))
+            payload[10] ^= 0xFF
             path = root / "tampered.greiaupdate"
-            with zipfile.ZipFile(path, "w") as archive:
-                archive.writestr(MANIFEST_NAME, manifest.canonical_bytes())
-                archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
-                archive.writestr(PAYLOAD_NAME, b"changed!!!")
-                archive.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
-                archive.writestr(PERSISTENT_CONTRACT_NAME, _CONTRACT_BYTES)
-            with self.assertRaises(UpdateBundleError):
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as dst:
+                info = zipfile.ZipInfo(MANIFEST_NAME, date_time=(1980, 1, 1, 0, 0, 0))
+                info.compress_type = zipfile.ZIP_DEFLATED
+                dst.writestr(info, manifest_raw)
+                info2 = zipfile.ZipInfo(PAYLOAD_NAME, date_time=(1980, 1, 1, 0, 0, 0))
+                info2.compress_type = zipfile.ZIP_STORED
+                dst.writestr(info2, bytes(payload))
+                info3 = zipfile.ZipInfo(
+                    HARDWARE_SUPPORT_NAME, date_time=(1980, 1, 1, 0, 0, 0)
+                )
+                info3.compress_type = zipfile.ZIP_STORED
+                dst.writestr(info3, _HW_BYTES)
+            with self.assertRaises(UpdateBundleError) as ctx:
                 inspect_update_bundle(path)
+            self.assertIn("digest", str(ctx.exception).lower())
 
     def test_extra_or_reordered_members_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            payload = b"slot"
-            manifest = self._manifest(payload)
-            signature = SignatureEnvelope(
-                SCHEMA_VERSION, "ed25519", manifest.signer, b"x" * 64
-            )
+            bundle = _v3_bundle(root, _zst_bytes(b"slot-"))
+            with zipfile.ZipFile(bundle) as src:
+                members = {name: src.read(name) for name in src.namelist()}
             path = root / "bad.greiaupdate"
             with zipfile.ZipFile(path, "w") as archive:
-                archive.writestr(MANIFEST_NAME, manifest.canonical_bytes())
+                archive.writestr(MANIFEST_NAME, members[MANIFEST_NAME])
                 archive.writestr("extra.txt", b"no")
-                archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
-                archive.writestr(PAYLOAD_NAME, payload)
-                archive.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
-                archive.writestr(PERSISTENT_CONTRACT_NAME, _CONTRACT_BYTES)
+                archive.writestr(PAYLOAD_NAME, members[PAYLOAD_NAME])
+                archive.writestr(HARDWARE_SUPPORT_NAME, members[HARDWARE_SUPPORT_NAME])
             with self.assertRaises(UpdateBundleError):
                 inspect_update_bundle(path)
+            # Reordered members are also rejected (deterministic order).
+            reordered = root / "reordered.greiaupdate"
+            with zipfile.ZipFile(reordered, "w") as archive:
+                archive.writestr(PAYLOAD_NAME, members[PAYLOAD_NAME])
+                archive.writestr(MANIFEST_NAME, members[MANIFEST_NAME])
+                archive.writestr(HARDWARE_SUPPORT_NAME, members[HARDWARE_SUPPORT_NAME])
+            with self.assertRaises(UpdateBundleError):
+                inspect_update_bundle(reordered)
 
-    def test_signature_envelope_rejects_type_coercion(self) -> None:
-        malformed = json.dumps(
-            {
-                "schema_version": True,
-                "algorithm": "ed25519",
-                "signer": "greia-release-main",
-                "signature": "eA==",
-            }
-        ).encode("utf-8")
-        with self.assertRaises(UpdateSignatureError):
-            SignatureEnvelope.from_json_bytes(malformed)
-
-    def test_inbox_receives_bounded_bytes_but_does_not_claim_signature_or_activation(self) -> None:
+    def test_manifest_rejects_type_coercion(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle = self._unsigned_structurally_valid_bundle(root, b"slot-image")
+            bundle = _v3_bundle(root, _zst_bytes(b"slot-"))
+            base = json.loads(zipfile.ZipFile(bundle).read(MANIFEST_NAME).decode())
+            bad = dict(base)
+            bad["schema_version"] = True
+            with self.assertRaises(UpdateBundleError):
+                UpdateManifest.from_json_dict(bad)
+            bad = dict(base)
+            bad["persist_read_schema_min"] = 5
+            bad["persist_read_schema_max"] = 2
+            with self.assertRaises(UpdateBundleError):
+                UpdateManifest.from_json_dict(bad)
+            bad = dict(base)
+            bad["board"] = "bad board!"
+            with self.assertRaises(UpdateBundleError):
+                UpdateManifest.from_json_dict(bad)
+            good = dict(base)
+            good["board"] = None
+            UpdateManifest.from_json_dict(good)
+
+    def test_inbox_receives_bounded_bytes_to_fixed_candidate(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundle = _v3_bundle(root, _zst_bytes(b"slot-image-"))
             inbox = SystemUpdateInbox(root / "state")
             queued = inbox.receive(bundle)
             self.assertTrue(queued.path.is_file())
-            self.assertIn("greia-0.14.0-", queued.path.name)
+            self.assertEqual(queued.path.name, INBOX_CANDIDATE_NAME)
             status = inbox.status_payload()
             self.assertEqual(status["state"], "received")
-            self.assertFalse(status["signature_verified"])
             self.assertFalse(status["activation_available"])
             self.assertRegex(str(status["bundle_sha256"]), r"^[0-9a-f]{64}$")
             self.assertNotIn("bundle_path", status)
 
-    def test_inbox_is_content_addressed_and_identical_reupload_is_idempotent(self) -> None:
+    def test_inbox_fixed_candidate_reupload_is_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle = self._unsigned_structurally_valid_bundle(root, b"slot-image")
+            bundle = _v3_bundle(root, _zst_bytes(b"slot-image-"))
             inbox = SystemUpdateInbox(root / "state")
             first = inbox.receive(bundle)
             original_bytes = first.path.read_bytes()
             second = inbox.receive(bundle)
             self.assertEqual(first.path, second.path)
+            self.assertEqual(first.path.name, INBOX_CANDIDATE_NAME)
             self.assertEqual(first.path.read_bytes(), original_bytes)
             self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 1)
 
-    def test_new_candidate_uses_new_digest_path_and_prunes_previous_inbox_candidate(self) -> None:
+    def test_new_candidate_overwrites_fixed_path_and_prunes_legacy(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            first_source = self._unsigned_structurally_valid_bundle(
-                root, b"slot-image-a", name="first.greiaupdate"
-            )
-            second_source = self._unsigned_structurally_valid_bundle(
-                root, b"slot-image-b", name="second.greiaupdate"
-            )
+            first_source = _v3_bundle(root, _zst_bytes(b"slot-image-a-"), name="first.greiaupdate")
+            second_source = _v3_bundle(root, _zst_bytes(b"slot-image-b-"), name="second.greiaupdate")
             inbox = SystemUpdateInbox(root / "state")
             first = inbox.receive(first_source)
             first_path = first.path
+            first_bytes = first_path.read_bytes()
             second = inbox.receive(second_source)
-            self.assertNotEqual(first_path, second.path)
-            self.assertFalse(first_path.exists())
+            self.assertEqual(first_path, second.path)
+            self.assertEqual(second.path.name, INBOX_CANDIDATE_NAME)
+            self.assertNotEqual(second.path.read_bytes(), first_bytes)
             self.assertTrue(second.path.is_file())
             self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 1)
-            self.assertEqual(inbox.status_payload()["bundle_sha256"], second.as_json_dict()["bundle_sha256"])
+            # Legacy content-addressed duplicate is pruned on next receive.
+            legacy = inbox.inbox_dir / "greia-0.14.0-deadbeef.greiaupdate"
+            legacy.write_bytes(b"legacy")
+            third = inbox.receive(second_source)
+            self.assertEqual(third.path.name, INBOX_CANDIDATE_NAME)
+            self.assertFalse(legacy.exists())
+            self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 1)
 
     def test_current_unavailable_backend_never_falls_back_to_active_root(self) -> None:
         backend = UnavailableSystemUpdateBackend("single-root layout")
         self.assertFalse(backend.available)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle = self._unsigned_structurally_valid_bundle(root, b"slot-image")
+            bundle = _v3_bundle(root, _zst_bytes(b"slot-image-"))
             service = SystemUpdateService(
                 root / "state",
-                root / "keys",
                 SystemIdentity("0.13.0", "legacy-x86", "i386", "legacy-x86-i686"),
                 backend,
             )
-            # Trust verification runs before backend authority. A fake signature
-            # must therefore fail rather than reaching any destructive fallback.
-            with self.assertRaises(UpdateSignatureError):
-                service.stage(bundle)
+            # Compatibility verification runs before backend authority. A
+            # digest-tampered bundle must therefore fail at inspection rather
+            # than reaching any destructive fallback.
+            with zipfile.ZipFile(bundle) as src:
+                manifest_raw = src.read(MANIFEST_NAME)
+            payload = bytearray(_zst_bytes(b"slot-image-"))
+            payload[10] ^= 0xFF
+            tampered = root / "tampered.greiaupdate"
+            with zipfile.ZipFile(tampered, "w", compression=zipfile.ZIP_STORED) as dst:
+                dst.writestr(MANIFEST_NAME, manifest_raw)
+                dst.writestr(PAYLOAD_NAME, bytes(payload))
+                dst.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
+            with self.assertRaises(UpdateBundleError):
+                service.stage(tampered)
             with self.assertRaises(UpdateBackendUnavailable):
                 backend.stage(inspect_update_bundle(bundle))
 
     def test_system_identity_requires_exact_family_architecture_and_profile(self) -> None:
-        manifest = self._manifest(b"slot")
+        manifest = self._manifest(_zst_bytes(b"slot-", size=64))
         SystemIdentity(
             "0.13.0", "legacy-x86", "i386", "legacy-x86-i686"
         ).assert_compatible(manifest)
@@ -239,78 +272,62 @@ class SystemUpdateBundleTests(unittest.TestCase):
         with self.assertRaises(UpdateCompatibilityError):
             SystemIdentity().assert_compatible(manifest)
 
-    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "cryptography is optional until R13B package set is enabled")
-    def test_keygen_build_and_signature_verification_round_trip(self) -> None:
+    def test_build_inspect_round_trip_without_keys(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            private = root / "private.pem"
-            public = root / "public.pem"
-            generate_ed25519_keypair(private, public)
-            self.assertEqual(private.stat().st_mode & 0o777, 0o600)
-            payload = root / "slot.img"
-            payload.write_bytes(b"a complete slot image\0" * 1024)
-            hw = root / "hw.tar.zst"
-            hw.write_bytes(_HW_BYTES)
-            contract = root / "contract.json"
-            contract.write_bytes(_CONTRACT_BYTES)
-            bundle = root / "release.greiaupdate"
-            manifest = build_update_bundle(
-                payload_path=payload,
-                hardware_support_path=hw,
-                persistent_contract_path=contract,
-                output_path=bundle,
-                version="0.14.0",
-                release_id="greia-0.14.0",
-                release_sequence=9,
-                platform_family="legacy-x86",
-                architecture="i386",
-                profile="legacy-x86-i686",
-                signer="greia-release-main",
-                private_key_path=private,
-                release_notes="Test release",
-            )
-            key_dir = root / "trusted"
-            key_dir.mkdir()
-            (key_dir / f"{manifest.signer}.pem").write_bytes(public.read_bytes())
+            bundle = _v3_bundle(root, _zst_bytes(b"complete-slot-"))
             inspected = inspect_update_bundle(bundle)
-            verify_update_signature(inspected, key_dir)
+            self.assertEqual(inspected.manifest.schema_version, SCHEMA_VERSION)
+            self.assertEqual(inspected.manifest.release_id, "greia-0.14.0")
+            with zipfile.ZipFile(bundle) as archive:
+                names = [i.filename for i in archive.infolist()]
+                self.assertEqual(names, list(BUNDLE_MEMBERS_V3_WITH_HW))
+                for info in archive.infolist():
+                    if info.filename.endswith(".zst"):
+                        self.assertEqual(info.compress_type, zipfile.ZIP_STORED)
 
-    @unittest.skipUnless(HAS_CRYPTOGRAPHY, "cryptography is optional until R13B package set is enabled")
-    def test_wrong_trusted_key_rejects_release(self) -> None:
+    def test_old_signed_format_rejected_with_migration_message(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            private = root / "private.pem"
-            public = root / "public.pem"
-            wrong_private = root / "wrong-private.pem"
-            wrong_public = root / "wrong-public.pem"
-            generate_ed25519_keypair(private, public)
-            generate_ed25519_keypair(wrong_private, wrong_public)
-            payload = root / "slot.img"
-            payload.write_bytes(b"slot")
-            hw = root / "hw.tar.zst"
-            hw.write_bytes(_HW_BYTES)
-            contract = root / "contract.json"
-            contract.write_bytes(_CONTRACT_BYTES)
-            bundle = root / "release.greiaupdate"
-            manifest = build_update_bundle(
-                payload_path=payload,
-                hardware_support_path=hw,
-                persistent_contract_path=contract,
-                output_path=bundle,
-                version="0.14.0",
-                release_id="greia-0.14.0",
-                release_sequence=9,
-                platform_family="legacy-x86",
-                architecture="i386",
-                profile="legacy-x86-i686",
-                signer="greia-release-main",
-                private_key_path=private,
-            )
-            key_dir = root / "trusted"
-            key_dir.mkdir()
-            (key_dir / f"{manifest.signer}.pem").write_bytes(wrong_public.read_bytes())
-            with self.assertRaises(UpdateSignatureError):
-                verify_update_signature(inspect_update_bundle(bundle), key_dir)
+            manifest = {
+                "schema_version": 2,
+                "release_id": "greia-0.14.0",
+                "version": "0.14.0",
+                "platform_family": "legacy-x86",
+                "architecture": "i386",
+                "profile": "legacy-x86-i686",
+                "payload": {
+                    "name": "payload.bin",
+                    "sha256": "0" * 64,
+                    "size": 4,
+                    "kind": "system-slot-image",
+                },
+                "release_notes": "",
+            }
+            path = root / "old-signed.greiaupdate"
+            with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_STORED) as archive:
+                archive.writestr(
+                    MANIFEST_NAME,
+                    (json.dumps(manifest, sort_keys=True, separators=(",", ":")) + "\n").encode(),
+                )
+                archive.writestr("manifest.sig", b"{}")
+                archive.writestr("payload.bin", b"data")
+            with self.assertRaises(UpdateBundleError) as ctx:
+                inspect_update_bundle(path)
+            message = str(ctx.exception).lower()
+            self.assertIn("v3", message)
+            self.assertTrue("rebuild" in message or "migration" in message)
+
+    def test_persist_schema_range_refusal(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundle = _v3_bundle(root, _zst_bytes(b"persist-"))
+            manifest = inspect_update_bundle(bundle).manifest
+            self.assertEqual(parse_persist_schema_marker(emit_persist_schema_marker(1)), 1)
+            self.assertEqual(assert_persist_schema_compatible(1, manifest), 1)
+            with self.assertRaises(PersistentLayoutError) as ctx:
+                assert_persist_schema_compatible(10, manifest)
+            self.assertIn("migration", str(ctx.exception).lower())
 
 
 if __name__ == "__main__":

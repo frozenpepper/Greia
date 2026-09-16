@@ -140,7 +140,7 @@ def _green_observation() -> dict[str, object]:
             },
         },
         "default_slot": "B",
-        "accepted_sequence": 21,
+        "accepted_release_id": "greia-0.21.0",
         "committed_slot": "B",
         "last_booted": "B",
         "journal_state": "accepted",
@@ -241,7 +241,7 @@ def _recovery_stages() -> dict[str, dict[str, object]]:
         "reverse-update-accepted": {
             "journal_state": "accepted",
             "default_slot": "A",
-            "accepted_sequence": 23,
+            "accepted_release_id": "greia-0.22.0",
             "committed_slot": "A",
             "last_booted": "A",
         },
@@ -428,8 +428,7 @@ class GateGreenTests(unittest.TestCase):
                     official_installer_image=base / "installer.img",
                     release_bundle=base / "greia-0.20.0.greiaupdate",
                     reverse_bundle=base / "reverse.greiaupdate",
-                    trusted_key_dir=base,
-                    unhealthy_release={"release_id": "x", "release_sequence": 22},
+                    unhealthy_release={"release_id": "x"},
                     d31_fn=_d31,
                     install_fn=_install,
                     boot_health_fn=_boot_health,
@@ -475,8 +474,7 @@ class GateGreenTests(unittest.TestCase):
                     official_installer_image=installer,
                     release_bundle=bundle,
                     reverse_bundle=bundle,
-                    trusted_key_dir=base,
-                    unhealthy_release={"release_id": "x", "release_sequence": 22},
+                    unhealthy_release={"release_id": "x"},
                     d31_fn=lambda: {},
                 )
             self.assertIn("BLOCKED", str(ctx.exception))
@@ -500,7 +498,6 @@ class GateRedTests(unittest.TestCase):
                         official_installer_image=base / "installer.img",
                         release_bundle=base / "b.greiaupdate",
                         reverse_bundle=base / "r.greiaupdate",
-                        trusted_key_dir=base,
                         unhealthy_release={},
                         d31_fn=None,
                     )
@@ -779,9 +776,9 @@ class GateD31SeedTests(unittest.TestCase):
             leg = run_recovery_d31_reverse_leg(
                 accepted_slot="B",
                 candidate_slot="A",
-                accepted_sequence=21,
-                candidate_sequence=22,
-                reverse_sequence=23,
+                accepted_release_id="greia-0.21.0",
+                candidate_release_id="greia-0.21.1",
+                reverse_release_id="greia-0.22.0",
                 boot_fn=lambda phase: None,
                 observe_fn=lambda stage: dict(observations[stage]),
                 d31_fn=d31_fn,  # type: ignore[arg-type]

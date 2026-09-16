@@ -1,8 +1,8 @@
 # Greia System Updates — Product and Operator Requirements
 
-**Status:** accepted product direction; implementation incremental  
-**Date:** 2026-08-19  
-**Architecture owner:** ADR 0030  
+**Status:** accepted product direction; implementation incremental
+**Date:** 2026-09-16
+**Architecture owner:** ADR 0036 (supersedes ADR 0030's release-signing requirements where they conflict)  
 **Primary future phase:** R13B
 
 ## 1. Parent-facing goal
@@ -61,7 +61,7 @@ It must not:
 - execute shell/package-manager commands;
 - write OS partitions/files directly;
 - select boot slots;
-- decide whether a signature is trusted;
+- decide release trust;
 - implement rollback itself.
 
 The same API is used by the built-in responsive HTML client and future native clients.
@@ -86,7 +86,7 @@ For development, offline distribution or manual recovery:
 parent computer has release.greiaupdate
 -> upload through Greia Parents or tooling
 -> Greia receives the same artifact
--> privileged updater later re-verifies trust before any system write
+-> privileged updater re-checks machine/profile/board compatibility and PERSIST schema readability before any system write
 ```
 
 ### USB/SD
@@ -95,7 +95,7 @@ The same `.greiaupdate` file may later be discovered from removable media. Remov
 
 ## 4. One artifact
 
-All sources use exactly the same signed `.greiaupdate` bundle. There is no separate “online update format” and “offline installer patch format.”
+All sources use exactly the same unsigned `.greiaupdate` v3 bundle. There is no separate “online update format” and “offline installer patch format.”
 
 Current bundle contract is source-owned by:
 
@@ -108,53 +108,85 @@ The target shape is:
 ```text
 release.greiaupdate
 ├── manifest.json
-├── manifest.sig
-└── payload.bin
+├── payload.ext4.zst
+└── hardware-support.tar.zst     # optional
 ```
+
+The outer container is ZIP with the already-compressed `.zst` members
+stored without double compression. The manifest carries practical facts
+only (format version, Greia version, profile id, architecture, platform
+family, board id or none, uncompressed payload bytes, minimum destination
+slot bytes, PERSIST schema integers, optional hardware-support
+presence/size, optional short release notes). There is no signature
+member, signer identity, key id or release sequence. Old signed bundles
+(`manifest.sig`, `payload.bin`) are rejected with a rebuild/migration
+message, not interpreted.
 
 The first release implementation uses whole-system slot payloads. Delta transport may be added later behind the same semantic service.
 
 ## 5. Simple release-creation workflow
 
-The repository provides one operator tool:
+The repository provides two operator tools:
 
 ```text
-tools/greia_update.py
+tools/build_release.py    # real ext4 slot payload + read-only verification
+tools/greia_update.py     # unsigned v3 bundle build / inspect / push / status
 ```
 
-The intended flow is deliberately small. Signing/verification requires Python's reviewed `cryptography` package on the release/operator machine. Greia's future production verifier dependency is isolated in `build/package-sets/system-update.txt`; current single-root images do not include that package set yet.
+The intended flow is deliberately small. No signing key and no
+`cryptography` package are required anywhere: the build host needs
+`zstd` plus e2fsprogs (`mkfs.ext4`, `e2fsck`, `resize2fs`, `debugfs`).
+There is no release-signing ceremony to perform and no public key to
+install into images.
 
-### One-time signing key creation
+### Build the real slot payload first
 
-On a trusted release/operator machine:
+Given the composed target root for the release profile (role `target`
+of the canonical composition engine) plus the generic kernel and
+initramfs, build the real relocatable ext4 slot image:
 
 ```bash
-python3 tools/greia_update.py keygen \
-  --private-key ./local-secrets/greia-update-ed25519-private.pem \
-  --public-key ./out/greia-update-ed25519-public.pem
+python3 tools/build_release.py build-payload \
+  --staging-dir ./out/composed-target-root \
+  --kernel ./out/vmlinuz-generic \
+  --initramfs ./out/initrd-generic \
+  --output ./out/payload.ext4.zst \
+  --profile-id acer-aspire-one-i386-ab \
+  --release-id greia-0.14.0 \
+  --filesystem-bytes 1073741824 \
+  --minimum-slot-bytes 1073741824
 ```
 
-The private key must remain outside Git and outside Greia images.
+The producer runs `mkfs.ext4 -d <staging>` → `e2fsck -f -y` →
+`resize2fs -M` → `e2fsck -f -y` → `zstd -19`, validates the staging tree
+with the shared slot completeness validator before any image byte
+(a skeleton root is refused before compression), and rejects partition
+tables and tar bodies. Verify the payload read-only before bundling:
 
-A reviewed public key is installed into the image's trusted update-key directory when production update activation is enabled.
+```bash
+python3 tools/build_release.py verify-payload \
+  --payload ./out/payload.ext4.zst
+```
 
 ### Build an update bundle — normal path
 
-Given a complete candidate **system-slot payload** produced by the canonical release builder, point the tool at the Greia build profile. The tool derives `profile.id`, `platform.family` and `base.architecture` from that file so the operator does not retype compatibility identity by hand:
+Given the verified `payload.ext4.zst` produced above, point the tool at the Greia build profile. The tool derives `profile.id`, `platform.family` and `base.architecture` from that file so the operator does not retype compatibility identity by hand:
 
 ```bash
 python3 tools/greia_update.py build \
-  --payload ./out/greia-system-slot.img \
+  --payload ./out/payload.ext4.zst \
+  --payload-uncompressed-bytes <shrunk-image-bytes> \
   --profile-file ./build/profiles/legacy-x86-i686.toml \
   --version 0.14.0 \
-  --private-key ./local-secrets/greia-update-ed25519-private.pem
+  --persist-read-min 1 \
+  --persist-read-max 1 \
+  --persist-write 1
 ```
 
 Defaults deliberately reduce release-command ceremony:
 
 ```text
 release_id = greia-<version>
-signer     = greia-release-main
 output     = ./out/greia-<version>-<profile-id>.greiaupdate
 ```
 
@@ -166,19 +198,24 @@ For the example above, the default output is:
 
 Advanced/test tooling may supply explicit `--platform-family`, `--architecture` and `--profile` instead of `--profile-file`, but mixing the two forms is rejected.
 
-The tool calculates the payload size/SHA-256, canonicalizes the manifest, signs it with Ed25519 and creates the bounded bundle. It refuses to overwrite an existing output file.
+The tool records the payload size/SHA-256, the shrunk uncompressed size
+and the PERSIST schema integers in the canonical manifest and creates the
+bounded bundle. It refuses to overwrite an existing output file. An
+optional `--hardware-support <hardware-support.tar.zst>` member may be
+included; it is genuinely optional.
 
-**Important current boundary:** today's canonical `legacy-x86-i686` profile is still `bios-single-ext4`; its normal builder does not yet produce an installable A/B slot payload. The command above defines the release packaging workflow now, but a production-installable payload requires the later R13B A/B image/layout builder. Do not wrap today's whole single-root disk image and call that a proven A/B update.
+**Important current boundary:** today's canonical `legacy-x86-i686` profile is still `bios-single-ext4`; its normal builder does not yet produce an installable A/B slot payload. The commands above define the release packaging workflow now, but a production-installable payload requires the later A/B image/layout builder. Do not wrap today's whole single-root disk image and call that a proven A/B update.
 
 ### Inspect/verify locally
 
 ```bash
 python3 tools/greia_update.py inspect \
-  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate \
-  --public-key ./out/greia-update-ed25519-public.pem
+  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate
 ```
 
-This verifies the bundle structure, payload digest and Ed25519 signature against the supplied public key. It must succeed before distribution.
+This verifies the bundle structure and the payload digest/size against the
+manifest. It must succeed before distribution. There is no signature to
+check and no public key to supply.
 
 ### Push to a Greia on the LAN
 
@@ -225,21 +262,26 @@ layout = bios-single-ext4
 and does not select the reserved `system-update` package set. Therefore the correct current status is:
 
 ```text
-signed bundle creation           source implemented
-bundle inspection/signature API  source implemented
+unsigned v3 bundle creation      source implemented
+bundle inspection API            source implemented
+real ext4 slot payload builder   source implemented (SOURCE-level; build-host artifact run pending)
+shared slot completeness gate    source implemented
 Parent update status             source implemented
 Parent developer upload/queue    source implemented
-single-candidate bounded inbox   source implemented
-A/B slot payload builder         NOT implemented
-trusted key installation         NOT enabled on current profiles
+single fixed-candidate inbox     source implemented
 privileged A/B slot activation   unavailable
 boot health confirmation         unavailable
 automatic rollback               unavailable
 normal online channel download   not implemented yet
-USB/SD update discovery          not implemented yet
+USB/SD update delivery           not implemented yet
 ```
 
-The Parent inbox validates archive structure and the signed manifest's declared payload hash/size before storing exact bytes, but intentionally reports `signature_verified = false`: receiving bytes in an unprivileged HTTP process is not the release-trust boundary. The future privileged `SystemUpdateService` re-verifies the Ed25519 signature against installed trusted Greia public keys and checks exact machine/profile compatibility before any inactive-slot write.
+The Parent inbox validates archive structure and the manifest's declared
+payload hash/size before publishing exact bytes under one fixed
+Greia-owned candidate name, but intentionally performs no signature
+check: there is no signature in v3. The future privileged
+`SystemUpdateService` re-checks exact machine/profile/board compatibility
+and PERSIST schema readability before any inactive-slot write.
 
 The inbox is content-addressed, keeps only the current untrusted candidate, cleans stale receive temporaries and preserves a free-space reserve. A newly received candidate cannot overwrite the bytes of an existing content-addressed artifact.
 
@@ -272,7 +314,7 @@ stable/<platform-family>/<architecture>/channel.json
 stable/<platform-family>/<architecture>/<release>.greiaupdate
 ```
 
-Channel metadata advertises the latest compatible release, size, release notes and bundle URL. The bundle's own trusted signature remains the release-authenticity boundary.
+Channel metadata advertises the latest compatible release, size, release notes and bundle URL. The bundle's own manifest digest/size checks remain ordinary transfer/integrity aids; compatibility (profile, architecture, board, PERSIST schema) is enforced before any slot write. There is no release signature and no signing-key trust to check.
 
 No cloud account is required merely to obtain a public Greia system update.
 
@@ -296,9 +338,8 @@ Release notes should be parent-facing and short. They are not executable instruc
 
 Production system-update capability remains false until Greia has evidence for:
 
-- trusted-key provisioning/revocation strategy;
-- exact bundle/signature verification;
-- canonical A/B slot payload generation;
+- exact bundle/integrity verification;
+- canonical real-ext4 slot payload generation;
 - A/B layout creation by canonical installer/builders;
 - inactive-slot write bounds;
 - GRUB/board-specific boot selection;

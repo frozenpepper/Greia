@@ -245,7 +245,6 @@ class ActualBootIdentity:
     booted_slot: str
     root_partuuid: str
     release_id: str
-    release_sequence: int
 
     def __post_init__(self) -> None:
         if self.booted_slot not in ("A", "B"):
@@ -255,12 +254,6 @@ class ActualBootIdentity:
             _require_root_partuuid(self.root_partuuid, field_name="observed root PARTUUID"),
         )
         _require_identifier(self.release_id, field_name="release_id", maximum=96)
-        if (
-            isinstance(self.release_sequence, bool)
-            or not isinstance(self.release_sequence, int)
-            or not 0 <= self.release_sequence <= 2_147_483_647
-        ):
-            raise BootHealthError("observed release_sequence is outside Greia bounds")
 
 
 class ActualBootObserver(Protocol):
@@ -359,8 +352,8 @@ def read_kernel_root_partuuid(cmdline_path: Path | None = None) -> str:
 
 def read_booted_release_identity(
     identity_path: Path | None = None,
-) -> tuple[str, str, int]:
-    """Return ``(slot, release_id, release_sequence)`` from the booted slot.
+) -> tuple[str, str]:
+    """Return ``(slot, release_id)`` from the booted slot.
 
     Reads the ``release-identity.json`` the ``SlotFinalizer`` wrote into the
     booted slot filesystem. The record must be a canonical-JSON regular file
@@ -391,16 +384,9 @@ def read_booted_release_identity(
     release_id = _require_identifier(
         raw.get("release_id"), field_name="release_id", maximum=96
     )
-    release_sequence = raw.get("release_sequence")
-    if (
-        isinstance(release_sequence, bool)
-        or not isinstance(release_sequence, int)
-        or not 0 <= release_sequence <= 2_147_483_647
-    ):
-        raise BootHealthError("booted release_sequence is outside Greia bounds")
     if _canonical_bytes(raw) != raw_bytes:
         raise BootHealthError("booted release identity is not canonical JSON")
-    return str(slot), release_id, release_sequence
+    return str(slot), release_id
 
 
 class ProductionActualBootObserver:
@@ -480,7 +466,7 @@ class ProductionActualBootObserver:
                 "observed root PARTUUID matches no layout slot: "
                 "machine is not running an installed Greia slot"
             )
-        identity_slot, release_id, release_sequence = read_booted_release_identity(
+        identity_slot, release_id = read_booted_release_identity(
             self._release_identity_path
         )
         if identity_slot != booted_slot:
@@ -491,7 +477,6 @@ class ProductionActualBootObserver:
             booted_slot=booted_slot,
             root_partuuid=root_partuuid,
             release_id=release_id,
-            release_sequence=release_sequence,
         )
 
 
@@ -719,7 +704,6 @@ class BootHealthOutcome:
 
     accepted_slot: str
     release_id: str
-    release_sequence: int
     first_install: bool
     recovery_medium_if_failed: str
 
@@ -729,7 +713,6 @@ class BootHealthOutcome:
             "first_install": self.first_install,
             "recovery_medium_if_failed": self.recovery_medium_if_failed,
             "release_id": self.release_id,
-            "release_sequence": self.release_sequence,
         }
 
 
@@ -750,7 +733,6 @@ class BootHealthyProtocol:
         coordinator: object,
         candidate_root_partuuid: str,
         candidate_release_id: str,
-        candidate_release_sequence: int,
         vault: BootHealthCredentialVault,
         observer: ActualBootObserver,
         trusted_bootstrap_path: str,
@@ -771,8 +753,6 @@ class BootHealthyProtocol:
             raise BootHealthError("candidate root PARTUUID does not match the journal")
         if candidate_artifacts.release_id != candidate_release_id:
             raise BootHealthError("candidate release does not match the journal")
-        if candidate_artifacts.release_sequence != candidate_release_sequence:
-            raise BootHealthError("candidate release sequence does not match the journal")
         if not isinstance(vault, BootHealthCredentialVault):
             raise BootHealthError("BOOT_HEALTHY requires a credential vault")
         if not callable(getattr(observer, "observe", None)):
@@ -785,7 +765,6 @@ class BootHealthyProtocol:
         self._coordinator = coordinator
         self._candidate_root_partuuid = candidate_root_partuuid
         self._candidate_release_id = candidate_release_id
-        self._candidate_release_sequence = candidate_release_sequence
         self._vault = vault
         self._observer = observer
         self._trusted_bootstrap_path = trusted_bootstrap_path
@@ -889,10 +868,6 @@ class BootHealthyProtocol:
             raise BootHealthError(
                 "BOOT_HEALTHY refuses: actual release does not match the pending release"
             )
-        if journal.release_sequence != observed.release_sequence:
-            raise BootHealthError(
-                "BOOT_HEALTHY refuses: actual release sequence is not pending"
-            )
         self._vault.consume(
             token=token,
             transaction_id=journal.transaction_id,
@@ -910,7 +885,6 @@ class BootHealthyProtocol:
             "candidate_slot": journal.candidate_slot,
             "first_install": journal.first_install,
             "release_id": observed.release_id,
-            "release_sequence": observed.release_sequence,
             "root_partuuid": observed.root_partuuid,
             "schema_version": BOOT_HEALTH_SCHEMA_VERSION,
             "ticket": ticket.ticket,
@@ -931,7 +905,7 @@ class BootHealthyProtocol:
         )
         expected_keys = {
             "boot_attempt", "booted_slot", "candidate_slot", "first_install",
-            "release_id", "release_sequence", "root_partuuid", "schema_version",
+            "release_id", "root_partuuid", "schema_version",
             "ticket", "transaction_id",
         }
         if set(sidecar) != expected_keys:
@@ -959,10 +933,7 @@ class BootHealthyProtocol:
                 "BOOT_HEALTHY finalize refuses: machine left the candidate slot"
             )
         self._require_candidate_identity(observed)
-        if (
-            observed.release_id != journal.release_id
-            or observed.release_sequence != journal.release_sequence
-        ):
+        if observed.release_id != journal.release_id:
             raise BootHealthError(
                 "BOOT_HEALTHY finalize refuses: actual release moved under commit"
             )
@@ -978,7 +949,6 @@ class BootHealthyProtocol:
         return BootHealthOutcome(
             accepted_slot=committed.default_slot,
             release_id=journal.release_id,
-            release_sequence=journal.release_sequence,
             first_install=first_install,
             recovery_medium_if_failed=(
                 SETUP_MEDIUM if first_install else ACCEPTED_SLOT_MEDIUM
@@ -993,10 +963,6 @@ class BootHealthyProtocol:
         if observed.release_id != self._candidate_release_id:
             raise BootHealthError(
                 "BOOT_HEALTHY refuses: actual release is not the pending release"
-            )
-        if observed.release_sequence != self._candidate_release_sequence:
-            raise BootHealthError(
-                "BOOT_HEALTHY refuses: actual release sequence is not pending"
             )
 
 

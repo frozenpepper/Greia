@@ -1,7 +1,12 @@
 # R13B system-update verifier/runtime dependencies.
 # Selected by the A/B profile (acer-aspire-one-i386-ab), which carries the
 # proven transactional slot backend (legacy-bios-ab-v1 + grub-ab-v1) and whose
-# shipped install/update/recovery entrypoints fail-closed require Ed25519
-# verification via python3-cryptography. C0 footprint delta measured/accepted
+# shipped install/update/recovery entrypoints stage unsigned deterministic
+# .greiaupdate v3 bundles (payload.ext4.zst) per ADR 0036; zstd owns payload
+# decompression. The production streaming path
+# (greia_platform.slot_writer.open_zstd_decompressed_stream) imports the
+# Python `zstandard` module, so the shipped roots need python3-zstandard;
+# the `zstd` CLI remains for inspection/tooling. C0 footprint delta measured/accepted
 # under POSTR1-P5-SYSTEM-UPDATE-INCLUSION; single-root profiles still omit it.
-python3-cryptography
+zstd
+python3-zstandard

@@ -31,13 +31,27 @@ class OwnerRecoveryContractTests(unittest.TestCase):
         self.assertNotIn("password_pbkdf2 greia-recovery", builder)
 
     def test_developer_installer_ssh_is_simple_greia_password_login(self) -> None:
-        builder = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
-        self.assertIn("printf 'greia:greia\\n'", builder)
-        self.assertIn("AuthenticationMethods password", builder)
-        self.assertIn("PasswordAuthentication yes", builder)
-        self.assertIn("KbdInteractiveAuthentication no", builder)
-        self.assertIn("AllowUsers greia", builder)
-        self.assertNotIn("AuthenticationMethods publickey,password", builder)
+        # T02: live-installer SSH composition lives in the shared engine; the
+        # thin installer consumer delegates instead of duplicating it. The
+        # live path stays simple password-only (the target path keeps its
+        # distinct publickey,password floor, so scope the negative there).
+        engine = (ROOT / "build/lib/compose.sh").read_text(encoding="utf-8")
+        live_start = engine.index("compose_provision_developer_ssh_live()")
+        live_end = engine.index("compose_maybe_provision_developer_ssh()", live_start)
+        live = engine[live_start:live_end]
+        self.assertIn("printf 'greia:greia\\n'", live)
+        self.assertIn("AuthenticationMethods password", live)
+        self.assertIn("PasswordAuthentication yes", live)
+        self.assertIn("KbdInteractiveAuthentication no", live)
+        self.assertIn("AllowUsers greia", live)
+        self.assertIn("PermitRootLogin no", live)
+        self.assertIn("DenyUsers root", live)
+        self.assertNotIn("AuthenticationMethods publickey,password", live)
+        installer = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
+        self.assertIn('compose_configure_ssh_base "$LIVE_ROOT"', installer)
+        self.assertIn('compose_maybe_provision_developer_ssh "$LIVE_ROOT" "live-installer"', installer)
+        self.assertNotIn("printf 'greia:greia\\n'", installer)
+        self.assertNotIn("AuthenticationMethods password", installer)
 
     def test_bootstrap_preserves_password_recovery_at_every_ssh_start(self) -> None:
         helper = (

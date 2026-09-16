@@ -261,7 +261,6 @@ class IntegratedLayoutAuthorityTests(unittest.TestCase):
     def _record_dict(self, minted: dict[str, dict[str, str]]) -> dict[str, object]:
         return {
             "accepted_release_id": "greia-release-1",
-            "accepted_release_sequence": 1,
             "accepted_slot": "A",
             "boot_backend": "grub-ab-v1",
             "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},

@@ -40,11 +40,8 @@ from greia_platform.system_updates import (
     UpdateBackendUnavailable,
     UpdateSlotSeams,
     build_live_update_service,
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     load_installed_layout_record,
-    write_accepted_sequence,
 )
 
 
@@ -69,10 +66,8 @@ SOCKET_PATH = (
     / "greia-system-update.socket"
 )
 
-_SIGNER = "greia-release-main"
 _SLOT_BYTES = 1024 * 1024 * 1024
 _HW_BYTES = b"\x28\xb5\x2f\xfd" + b"postr1-red-hw" * 64
-_CONTRACT_BYTES = build_persistent_state_contract_bytes()
 
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
@@ -99,7 +94,6 @@ _R9_SEQ = 9
 def _record_dict() -> dict[str, object]:
     return {
         "accepted_release_id": _R8_ID,
-        "accepted_release_sequence": _R8_SEQ,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -224,15 +218,8 @@ class ShippedDefaultCompositionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
-            key_dir = root / "trusted"
-            key_dir.mkdir(parents=True, exist_ok=True)
             layout_path = root / "installed-layout.json"
             layout_path.write_bytes(_canonical_record(_record_dict()))
-            private_key = root / "release-private.pem"
-            public_key = root / "release-public.pem"
-            generate_ed25519_keypair(private_key, public_key)
-            (key_dir / f"{_SIGNER}.pem").write_bytes(public_key.read_bytes())
-            write_accepted_sequence(state_dir, _R8_SEQ)
             boot_dir = root / "boot-control"
             boot_dir.mkdir(parents=True, exist_ok=True)
             grub = GrubEnvBackend.initialize(boot_dir, default_slot="A")
@@ -250,7 +237,6 @@ class ShippedDefaultCompositionTests(unittest.TestCase):
             ):
                 authority = build_live_update_service(
                     state_dir=state_dir,
-                    trusted_key_dir=key_dir,
                     layout_record_path=layout_path,
                     boot_backend=grub,
                     boot_backend_auto=False,
@@ -286,32 +272,37 @@ class ShippedDefaultCompositionTests(unittest.TestCase):
                     f"production {name} must be bound by default",
                 )
 
-            # Build one signed inbox candidate for the patched identity.
+            # Build one unsigned v3 inbox candidate for the patched identity.
+            import zstandard
+
             work = root / "releases" / "r9"
             work.mkdir(parents=True, exist_ok=True)
-            (work / "slot.img").write_bytes(_payload(220 * 1024, b"postr1-red:"))
+            raw = _payload(220 * 1024, b"postr1-red:")
+            (work / "slot.ext4.zst").write_bytes(
+                zstandard.ZstdCompressor(level=3).compress(raw)
+            )
             (work / "hw.tar.zst").write_bytes(_HW_BYTES)
-            (work / "contract.json").write_bytes(_CONTRACT_BYTES)
             bundle = work / "r9.greiaupdate"
             build_update_bundle(
-                payload_path=work / "slot.img",
+                payload_path=work / "slot.ext4.zst",
                 hardware_support_path=work / "hw.tar.zst",
-                persistent_contract_path=work / "contract.json",
                 output_path=bundle,
                 version=_R9_ID.split("-", 1)[1],
                 release_id=_R9_ID,
-                release_sequence=_R9_SEQ,
                 platform_family=_FAMILY,
                 architecture=_ARCH,
                 profile=_PROFILE,
-                signer=_SIGNER,
-                private_key_path=private_key,
+                payload_uncompressed_bytes=len(raw),
+                minimum_slot_bytes=len(raw),
+                persist_read_schema_min=1,
+                persist_read_schema_max=1,
+                persist_write_schema=1,
                 release_notes="POSTR1-P1-UPDATER-RED characterization release.",
             )
             SystemUpdateInbox(state_dir).receive(bundle)
             verified = authority.verify_current_candidate()
             self.assertTrue(verified.present)
-            self.assertEqual(verified.release_sequence, _R9_SEQ)
+            self.assertEqual(verified.release_id, _R9_ID)
 
             # Requirement 3 spies: record destination-seam demand + writes.
             requested: list[str] = []
@@ -400,13 +391,10 @@ class ShippedUnitContractTests(unittest.TestCase):
             _directive_values(SERVICE_PATH, "ReadWritePaths"),
             {"/var/lib/greia-os", "/run/greia-os", "/etc/greia-os", "/boot/grub"},
         )
-        self.assertIn(
-            "/etc/greia-os/system-update-keys",
-            _directive_values(SERVICE_PATH, "BindReadOnlyPaths"),
-        )
+        # v3 carries no key material: no key trust root is granted.
         raw = SERVICE_PATH.read_text(encoding="utf-8")
-        self.assertIn("GREIA_UPDATE_STATE_DIR", raw)
-        self.assertIn("GREIA_UPDATE_TRUSTED_KEY_DIR", raw)
+        self.assertNotIn("system-update-keys", raw)
+        self.assertNotIn("GREIA_UPDATE_TRUSTED_KEY_DIR", raw)
         self.assertIn("GREIA_INSTALLED_LAYOUT_RECORD", raw)
         self.assertNotIn("GREIA_SYSTEM_VERSION", raw)
         self.assertNotIn("GREIA_SYSTEM_PLATFORM_FAMILY", raw)

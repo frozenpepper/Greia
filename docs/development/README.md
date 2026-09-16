@@ -48,10 +48,11 @@ Historical Acer root-mount/service failures remain documented in `docs/INSTALLED
 
 Read this when creating, inspecting or pushing a `.greiaupdate` release candidate. It gives the concise operator path for:
 
-- one-time Ed25519 release key generation;
 - deriving target identity from a canonical Greia build profile;
-- building one signed `.greiaupdate` bundle;
-- local signature verification;
+- building the real ext4 slot payload from the composed target root;
+- verifying the payload read-only before bundling;
+- building one unsigned `.greiaupdate` v3 bundle;
+- inspecting the bundle locally before distribution;
 - streaming the bundle to a development Greia through the Parent API;
 - reading update status;
 - understanding why upload is not activation authority;

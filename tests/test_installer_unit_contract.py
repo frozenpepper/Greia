@@ -49,7 +49,6 @@ from greia_installer.composition import (
     AB_INSTALL_ENV_BUNDLE,
     AB_INSTALL_ENV_DEVELOPER,
     AB_INSTALL_ENV_FILE_DEFAULT,
-    AB_INSTALL_ENV_KEY_DIR,
     AB_INSTALL_ENV_PASSWORD_HASH,
     AB_INSTALL_ENV_SUPPORT_BOUND,
     AbInstallCompositionError,
@@ -80,7 +79,6 @@ LEGACY_PROFILE = REPO_ROOT / "build" / "profiles" / "acer-aspire-one-i386.toml"
 
 _AB_ENV_NAMES = (
     AB_INSTALL_ENV_BUNDLE,
-    AB_INSTALL_ENV_KEY_DIR,
     AB_INSTALL_ENV_PASSWORD_HASH,
     AB_INSTALL_ENV_DEVELOPER,
     AB_INSTALL_ENV_SUPPORT_BOUND,
@@ -206,12 +204,11 @@ def _write_profile(path: Path, *, profile_id: str, layout: str, backend: str) ->
 
 
 def _write_ab_env_file(
-    path: Path, *, bundle: Path, key_dir: Path, support_bound: int = MIB
+    path: Path, *, bundle: Path, support_bound: int = MIB
 ) -> Path:
     path.write_text(
         "# disposable A/B release facts for the unit-contract suite\n"
         f"{AB_INSTALL_ENV_BUNDLE}={bundle}\n"
-        f"{AB_INSTALL_ENV_KEY_DIR}={key_dir}\n"
         f"{AB_INSTALL_ENV_PASSWORD_HASH}={_AB_PASSWORD_HASH}\n"
         f"{AB_INSTALL_ENV_DEVELOPER}=0\n"
         f"{AB_INSTALL_ENV_SUPPORT_BOUND}={support_bound}\n",
@@ -237,10 +234,8 @@ def _make_ab_tree(prefix: str = "installer-unit-contract-") -> tuple[str, dict[s
     )
     bundle = root / "ab-release.greiaupdate"
     bundle.write_bytes(b"test-release-bundle")
-    key_dir = root / "ab-trusted-keys"
-    key_dir.mkdir()
     env_file = root / "installer-ab.env"
-    _write_ab_env_file(env_file, bundle=bundle, key_dir=key_dir)
+    _write_ab_env_file(env_file, bundle=bundle)
     return directory, {
         "root": root,
         "os_root": os_root,
@@ -249,7 +244,6 @@ def _make_ab_tree(prefix: str = "installer-unit-contract-") -> tuple[str, dict[s
         "digest": digest,
         "profile": profile,
         "bundle": bundle,
-        "key_dir": key_dir,
         "env_file": env_file,
     }
 
@@ -337,7 +331,6 @@ class ImmutableFactsSourceTests(unittest.TestCase):
             state = _ab_state(fix)
             resolved = ab_executor_facts_from_environment(state=state)
         self.assertEqual(resolved.bundle_path, fix["bundle"])
-        self.assertEqual(resolved.trusted_key_dir, fix["key_dir"])
         self.assertEqual(resolved.password_hash, _AB_PASSWORD_HASH)
         self.assertFalse(resolved.developer)
         self.assertEqual(resolved.support_installed_bytes, MIB)
@@ -371,7 +364,6 @@ class ImmutableFactsSourceTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, directory, True)
         fix["env_file"].write_text(
             f"{AB_INSTALL_ENV_BUNDLE}=relative/bundle.greiaupdate\n"
-            f"{AB_INSTALL_ENV_KEY_DIR}={fix['key_dir']}\n"
             f"{AB_INSTALL_ENV_PASSWORD_HASH}={_AB_PASSWORD_HASH}\n"
             f"{AB_INSTALL_ENV_DEVELOPER}=0\n"
             f"{AB_INSTALL_ENV_SUPPORT_BOUND}={MIB}\n",
@@ -575,13 +567,14 @@ class FailClosedBeforeMutationTests(unittest.TestCase):
                     ab_executor_facts_from_environment(state=_ab_state(fix))
         self.assertEqual(before, _snapshot(fix["root"]))
 
-    def test_missing_key_dir_refuses(self) -> None:
+    def test_legacy_key_dir_entry_refuses(self) -> None:
         directory, fix = _make_ab_tree()
         self.addCleanup(shutil.rmtree, directory, True)
-        shutil.rmtree(fix["key_dir"])
+        with fix["env_file"].open("a", encoding="utf-8") as handle:
+            handle.write("GREIA_AB_TRUSTED_KEY_DIR=/no/such/keys\n")
         with _hermetic_env(fix=fix):
             with self.assertRaisesRegex(
-                AbInstallCompositionError, "trusted key dir"
+                AbInstallCompositionError, "unknown key"
             ):
                 ab_executor_facts_from_environment(state=_ab_state(fix))
 

@@ -97,12 +97,18 @@ class BuildProfileTests(unittest.TestCase):
                 BuildProfile.load(path)
 
     def test_builders_never_source_profile_files_and_embed_json_contracts(self) -> None:
-        for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
+        # T01: the thin target consumer delegates profile work to the shared
+        # engine; all three files must use the typed tool, never source.
+        for builder_name in ("build/build-image.sh", "build/build-installer-image.sh", "build/lib/compose.sh"):
             builder = (PROJECT_ROOT / builder_name).read_text()
             self.assertNotIn('source "$PROFILE_PATH"', builder)
             self.assertIn('tools/build_profile.py', builder)
-            self.assertIn('manifest "$PROFILE_PATH"', builder)
             self.assertIn("image-profile.json", builder)
+        for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
+            builder = (PROJECT_ROOT / builder_name).read_text()
+            self.assertIn('manifest "$PROFILE_PATH"', builder)
+        engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
+        self.assertIn('manifest "$COMPOSE_PROFILE_PATH"', engine)
         installer = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
         self.assertNotIn("payload/profile.env", installer)
         self.assertIn("payload/target-image-profile.json", installer)
@@ -123,11 +129,11 @@ class BuildProfileTests(unittest.TestCase):
     def test_ab_profile_selects_system_update_in_both_scopes(self) -> None:
         """Regression: the A/B profile must select `system-update`.
 
-        Shipped install/update/recovery entrypoints fail-closed require
-        Ed25519 verification via ``python3-cryptography``
-        (``_cryptography_ed25519`` in ``greia_platform.system_updates``,
-        reached from ``SystemUpdateService.verify`` on the installed target
-        and from ``fresh_ab_install`` in the live installer). Omitting the
+        Shipped install/update/recovery entrypoints stage unsigned
+        deterministic .greiaupdate v3 bundles (payload.ext4.zst) per
+        ADR 0036, so the set must provide ``zstd`` payload decompression
+        in both scopes. Ed25519/``python3-cryptography`` is retired from
+        the v3 update path and is no longer required. Omitting the
         set from either scope reproduces Gate-P5 D4 on the built artifact.
         """
         profile = BuildProfile.load(
@@ -137,11 +143,11 @@ class BuildProfileTests(unittest.TestCase):
         self.assertIn("system-update", profile.package_set_names("installer"))
         package_root = PROJECT_ROOT / "build/package-sets"
         self.assertIn(
-            "python3-cryptography",
+            "zstd",
             profile.resolve_packages(package_root, "target"),
         )
         self.assertIn(
-            "python3-cryptography",
+            "zstd",
             profile.resolve_packages(package_root, "installer"),
         )
 

@@ -1,27 +1,35 @@
 # Greia System Update Release Workflow
 
-**Status:** developer/release-operator runbook for the current R13B foundation  
-**Date:** 2026-08-19  
-**Architecture:** ADR 0030  
-**Product requirements:** `docs/product/SYSTEM_UPDATES.md`  
-**Tool:** `tools/greia_update.py`
+**Status:** developer/release-operator runbook for the ADR 0036 v3 flow
+**Date:** 2026-09-16
+**Architecture:** ADR 0036 (supersedes the old signed-bundle requirements of ADR 0030 where they conflict)
+**Product requirements:** `docs/product/SYSTEM_UPDATES.md`
+**Tools:** `tools/build_release.py`, `tools/greia_update.py`
+**Implementation state:** Session 02 source scope complete; real-artifact build-host run pending (see `HANDOVER.md` §26)
 
-This is the short practical procedure for **creating, checking and sending a Greia `.greiaupdate` package**.
+This is the short practical procedure for **building, checking and sending a Greia `.greiaupdate` v3 package**.
+
+The v3 bundle is unsigned and compressed. There is no signing key, no signer
+identity, no signature member and no release sequence — and no `payload.bin`
+or tar payload. The payload is a real relocatable ext4 slot image compressed
+with zstd (`payload.ext4.zst`). Any old signed v2 bundle (`manifest.sig`,
+`payload.bin`) is rejected with a rebuild/migration message, not interpreted.
 
 It does not claim that current single-root Greia machines can activate the package. Current `bios-single-ext4` profiles intentionally advertise system-update activation as unavailable until the A/B slot backend is implemented and physically proven.
 
 ## 1. What you need
 
-On the trusted release/operator computer:
+On the build/release host:
 
 - a current Greia repository checkout;
 - Python 3;
-- Python `cryptography` available for Ed25519 signing/verification;
-- the private Greia release signing key, kept **outside Git**;
-- a complete system-slot payload produced by the future/current applicable canonical A/B release builder;
+- `zstd` (payload and hardware-support compression);
+- e2fsprogs (`mkfs.ext4`, `e2fsck`, `resize2fs`, `debugfs`) for the real slot image and its read-only verification;
+- a composed target root for the release profile (see `build/lib/compose.sh`, role `target`), plus the generic kernel and initramfs files seeded into the image;
 - for pushing to a development Greia, a Parent bearer credential or the explicitly allowed development pairing token.
 
-Never place the private release key in:
+There is deliberately no release signing key and no `cryptography`
+requirement. Never place operator credentials in:
 
 ```text
 Greia repository
@@ -31,30 +39,77 @@ Parent app
 USB/SD release directory intended for public distribution
 ```
 
-## 2. One-time key generation
+## 2. Build the real slot payload
 
-For development/release-key setup:
+Real flow (ADR 0036 §4):
 
-```bash
-python3 tools/greia_update.py keygen \
-  --private-key ./local-secrets/greia-update-ed25519-private.pem \
-  --public-key ./out/greia-update-ed25519-public.pem
+```text
+composed target root
+-> populate ext4 image (mkfs.ext4 -d <staging>)
+-> filesystem check (e2fsck -f -y)
+-> shrink filesystem (resize2fs -M)
+-> filesystem re-check (e2fsck -f -y)
+-> Greia completeness smoke (shared slot validator + debugfs path probes)
+-> zstd compression (zstd -19)
+-> payload.ext4.zst
 ```
 
-Expected result: two PEM files. The private file is mode `0600`; the public file is distributable after review.
+Normal command:
 
-For real releases, key custody/rotation/revocation policy must be finalized before production update activation is enabled.
+```bash
+python3 tools/build_release.py build-payload \
+  --staging-dir ./out/composed-target-root \
+  --kernel ./out/vmlinuz-generic \
+  --initramfs ./out/initrd-generic \
+  --output ./out/payload.ext4.zst \
+  --profile-id acer-aspire-one-i386-ab \
+  --release-id greia-0.14.0 \
+  --filesystem-bytes 1073741824 \
+  --minimum-slot-bytes 1073741824
+```
 
-## 3. Build the package
+The producer seeds the generic kernel/initramfs plus the release identity,
+then validates the staging tree with the shared slot completeness validator
+(`src/greia_platform/slot_writer.py`) before any image byte is emitted: a
+skeleton root (for example only `{etc, lost+found, run, var}`) is refused
+before compression, naming the missing userspace paths. It refuses to
+overwrite an existing output path. No privileged operations and no network
+are involved.
+
+### Current payload boundary
+
+Do **not** wrap a whole single-root disk image, a partition table, or a tar
+archive and call that a slot payload. The producer rejects images carrying
+an MBR/GPT signature and rejects legacy tar bodies: the payload must be a
+relocatable ext4 image, and the staging tree must carry real Greia userspace
+including `usr/bin/apt-get`, `usr/bin/dpkg` and `usr/bin/env`.
+
+## 3. Verify the payload before bundling
+
+```bash
+python3 tools/build_release.py verify-payload \
+  --payload ./out/payload.ext4.zst
+```
+
+This decompresses through the build seam and proves, read-only: the zstd
+framing, the ext4 superblock magic, relocatability (no MBR/GPT signature), a
+clean `e2fsck -n` pass, and every required Greia path via `debugfs stat`
+(userspace directories and files, the generic boot pair, build-info and the
+release identity). Do not bundle a payload that fails this check.
+
+## 4. Build the v3 bundle
 
 Normal command:
 
 ```bash
 python3 tools/greia_update.py build \
-  --payload ./out/greia-system-slot.img \
+  --payload ./out/payload.ext4.zst \
+  --payload-uncompressed-bytes <shrunk-image-bytes> \
   --profile-file ./build/profiles/legacy-x86-i686.toml \
   --version 0.14.0 \
-  --private-key ./local-secrets/greia-update-ed25519-private.pem
+  --persist-read-min 1 \
+  --persist-read-max 1 \
+  --persist-write 1
 ```
 
 The tool reads these compatibility facts from the canonical profile:
@@ -69,39 +124,43 @@ It defaults:
 
 ```text
 release ID : greia-0.14.0
-signer     : greia-release-main
 output     : out/greia-0.14.0-legacy-x86-i686.greiaupdate
 ```
+
+`--payload-uncompressed-bytes` is the shrunk image size reported by the
+`build-payload` step; `--minimum-slot-bytes` defaults to it. The three
+`--persist-*` values carry PERSIST schema compatibility in the manifest.
+An optional `--hardware-support <hardware-support.tar.zst>` member may be
+included; it is genuinely optional.
 
 The generated archive contains exactly:
 
 ```text
 manifest.json
-manifest.sig
-payload.bin
+payload.ext4.zst
+hardware-support.tar.zst     # only when supplied
 ```
 
-The tool calculates and signs the canonical manifest containing the payload SHA-256 and exact payload size. It refuses to overwrite an existing output path.
+The outer container is ZIP with the already-compressed `.zst` members
+stored without double compression. The manifest carries practical facts
+only (format version, Greia version, profile id, architecture, platform
+family, board id or none, uncompressed payload bytes, minimum destination
+slot bytes, PERSIST schema integers, optional hardware-support
+presence/size, optional short release notes). The tool refuses to overwrite
+an existing output path.
 
-### Current payload warning
-
-Do **not** use today's complete `bios-single-ext4` disk image as though it were a proven A/B slot image.
-
-The current source has the package format and delivery path; the canonical A/B **slot-payload builder** is still an R13B implementation item. Until that lands, synthetic/test payloads may exercise format/tests, but no resulting bundle is production-installable on current hardware.
-
-## 4. Verify before distributing
+## 5. Verify before distributing
 
 ```bash
 python3 tools/greia_update.py inspect \
-  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate \
-  --public-key ./out/greia-update-ed25519-public.pem
+  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate
 ```
 
-This must report a valid bundle and `signature_verified: true`.
+This reports the manifest facts and validates bundle structure, payload
+digest/size and PERSIST schema fields. There is no signature to verify and
+no public key to supply. Do not distribute a release that fails inspection.
 
-Do not distribute a release if local signature verification fails.
-
-## 5. Push to a development Greia
+## 6. Push to a development Greia
 
 Preferred paired-device credential:
 
@@ -135,13 +194,12 @@ The network-facing Parent daemon remains unprivileged. Successful upload means o
 bundle received
 structure checked
 payload size/hash checked
-selected as the one bounded inbox candidate
+selected as the one fixed inbox candidate
 ```
 
 It does **not** mean:
 
 ```text
-release signature trusted
 system slot written
 boot slot selected
 machine rebooted
@@ -150,7 +208,7 @@ update confirmed
 
 Those effects belong to the future privileged `SystemUpdateService` + proven slot backend.
 
-## 6. Check device status
+## 7. Check device status
 
 ```bash
 python3 tools/greia_update.py status \
@@ -167,7 +225,7 @@ activation_available   = false
 
 That is correct, not an error to bypass.
 
-## 7. Parents HTML app
+## 8. Parents HTML app
 
 When `system.update.upload` is advertised, Greia Parents shows a `.greiaupdate` file picker in the system/overview area and sends the file through the same Parent API endpoint.
 
@@ -175,34 +233,36 @@ When the capability is false, the client must not fake the feature with SSH, raw
 
 Normal future Internet update UX will ask Greia to download the release directly; the phone/browser should not relay the entire system image during an ordinary online update.
 
-## 8. Inbox safety
+## 9. Inbox safety
 
 The current unprivileged inbox:
 
 - validates the bounded ZIP shape;
 - validates manifest/payload size and SHA-256 consistency;
-- stores candidate bytes under a content digest;
-- keeps only one current untrusted candidate;
+- publishes the candidate under one fixed Greia-owned name via atomic rename;
+- keeps only that one current candidate;
 - removes stale receive temporaries;
+- deletes the large candidate after successful inactive-slot staging;
 - preserves a free-space reserve;
 - hides filesystem paths from Parent API status;
-- does not claim signature verification or activation authority.
+- performs no signature verification and claims no activation authority.
 
 The privileged updater must re-open the exact candidate and re-establish:
 
 ```text
-Ed25519 trusted signer
 exact platform family
 exact architecture
 exact profile
-inactive-slot target
+board compatibility
+PERSIST schema readability
+inactive-slot target and capacity
 power/capacity preflight
 rollback-capable boot backend
 ```
 
 before writing a system slot.
 
-## 9. Current verification commands
+## 10. Current verification commands
 
 When running on an owner-controlled current checkout:
 
@@ -210,7 +270,10 @@ When running on an owner-controlled current checkout:
 PYTHONPATH=src python3 -m unittest \
   tests.test_system_updates \
   tests.test_parent_system_updates \
-  tests.test_greia_update_tool -v
+  tests.test_greia_update_tool \
+  tests.test_update_v3_bundle \
+  tests.test_build_release \
+  tests.test_slot_writer -v
 ```
 
 Then run the complete repository gate:
@@ -227,13 +290,23 @@ npm test
 
 Do not label the current update tranche PASS until those commands execute at the exact recorded revisions.
 
-## 10. Next implementation step
+## 11. Next implementation step
 
-The next destructive/update-critical work is **not another HTTP endpoint**. It is:
+The Session 02 source scope (canonical composer roles, real ext4 slot
+producer, shared completeness validator) is complete; the remaining
+Session 02 leg is one privileged Linux build-host
+`build-payload` → `verify-payload` → bundle cycle to promote SOURCE-level
+proof to a real-artifact run. After that, the lifecycle plan's Session 03
+(owner release CLI) and Session 04 (legacy i386 lifecycle with the real
+payload) are next. The next destructive/update-critical work after the
+payload run is **not another HTTP endpoint**. It is:
 
-1. measure RAUC versus a minimal custom backend on the C0/Acer floor;
-2. define the canonical A/B disk layout and persistent-data partition contract;
-3. make the canonical builder emit the exact inactive-slot payload consumed by `.greiaupdate`;
-4. implement the privileged slot backend beneath `SystemUpdateService`;
-5. implement bounded boot-attempt/health confirmation and automatic rollback;
-6. prove it in VM and on physical Acer before enabling `system.update.activate`.
+1. wire the fresh A/B installer to the real just-built bundle;
+2. initialize the PERSIST schema marker and prove schema refusal;
+3. implement the privileged slot backend beneath `SystemUpdateService`;
+4. implement bounded boot-attempt/health confirmation and automatic rollback;
+5. prove install → healthy boot → update → commit → failed candidate → previous release in product-mode QEMU and on physical Acer before enabling `system.update.activate`.
+```
+
+Note: the old signed-bundle `keygen`/`manifest.sig`/Ed25519 workflow (ADR 0030)
+is superseded by ADR 0036 and is historical only; do not use it for new releases.

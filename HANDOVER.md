@@ -1,10 +1,10 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-12  
+**Updated:** 2026-09-16  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)  
 **Version:** `0.13.0-phase0-dev`  
-**Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; V12G RED on new shipped defect D6 (slot payload has no apt-get for the chroot install leg — see §25); product decision required on the D6 repair side before any further closure re-run**
+**Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
@@ -19,9 +19,12 @@ AGENTS.md
 README.md
 docs/DOCUMENTATION.md
 docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
+docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md
 HANDOVER.md
 skills/greia-os-work/SKILL.md
 ```
+
+Current install/update/release route: `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor plan). The old signed `.greiaupdate` v2 / release-signing-key workflow is superseded by ADR 0036 and is historical only; Gate-P5/V12G/D6 closure routing in §§13–25 below is historical evidence, not the current next step.
 
 Before installing/configuring tools also read:
 
@@ -48,7 +51,7 @@ Parent encrypted/authenticated LAN transport: blocked (provisional HTTP)
 historical Acer suite waiver: retained as history until an exact-head rerun replaces it
 ```
 
-The exact next implementation task is **`POSTR1-P1-INSTALLER-RED`** (P1.1 installer composition RED). Do **not** start Raspberry Pi 400/500 work, UEFI work, destructive Acer installation, or R11 backup work in this lane, and do not treat T3 shipped product composition as complete. Do not discard or downgrade T7 evidence.
+The current install/update/release work has completed **Session 02 of `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`** (ADR 0036 successor) for source scope — see §26. The `POSTR1-P1-INSTALLER-RED` (P1.1 installer composition RED) / Gate-P5 / V12G / D6 closure routing is historical and superseded for lifecycle sequencing; §§13–25 below preserve that Gate-P5 evidence as history. Do **not** start Raspberry Pi 400/500 work, UEFI work, destructive Acer installation, or R11 backup work outside the 2026-09-15 plan sequence, and do not treat T3 shipped product composition as complete. Do not discard or downgrade T7 evidence.
 
 Current catalogue assertions must remain discovery-based. Do not freeze a first-party Activity count into new architecture or release gates.
 
@@ -242,13 +245,7 @@ Do not combine their obsolete token instructions with the unified procedure.
 
 ## 8. Current exact next step
 
-The next implementation task is:
-
-```text
-POSTR1-P1-INSTALLER-RED (P1.1 installer composition RED)
-```
-
-— a deterministic failing test pinning the exact shipped installer composition gap, with no production fix yet. P1.2/P1.3 RED tests, P1.4 systemd-sandbox RED proof and all P2+ product-composition work follow as future work.
+The current install/update/release route is **Session 02-complete (source scope) of `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`** (ADR 0036 successor plan — simplify the update bundle/runtime); see §26 for the Session 02 evidence boundary and the exact next step (build-host artifact leg, then Session 03). The `POSTR1-P1-INSTALLER-RED` (P1.1 installer composition RED) / Gate-P5 / V12G / D6 closure sequence is historical and superseded for lifecycle sequencing; §§13–25 preserve it as evidence only.
 
 Before starting, on the owner-controlled checkout:
 
@@ -278,13 +275,26 @@ Stop on the first failure and return the evidence root plus the final report tem
 
 Do not edit source during the frozen attempt.
 
+## Historical Gate-P5 evidence (§§13–25) — superseded lifecycle routing
+
+The sections below (footprint reduction, apt-cache ports, Gate-P5/V11–V12G
+closure attempts, D1–D6 defect records) are preserved historical evidence.
+Their embedded `Next:` lines pointing at `POSTR1-P5-GATE-CLOSURE-*` /
+V12x / D6-repair successors are superseded: current lifecycle sequencing
+comes from `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
+(ADR 0036). Any signed `.greiaupdate` v2 bundle, release signing key,
+`trusted-keys/*.pem`, `seq*/signature-verified`, `verify_update_signature`
+or `python3-cryptography` release-verification wording below describes the
+old experimental signed flow superseded by ADR 0036, not the normal
+production route.
+
 ## 13. Footprint composition reduction (2026-09-13) — `POSTR1-P5-FOOTPRINT-REDUCE`
 
 Build-hygiene-only change, no Phase-0 product scope removed, no bound raised or weakened:
 
 - `build/build-image.sh`: before manifest/footprint capture, purge orphaned build-toolchain `binutils`, prune unused `cc1`, prune base non-`en*` gettext locales, prune base man/info and non-copyright doc files (disposition `POSTR1-P5-FOOTPRINT-DISPOSITION` rows 1–4; row 5 Perl/media-types and row 6 WAV→OGG not applied).
 - Source: worktree commit `4379de64` (only `build/build-image.sh`, +32 lines); profile `acer-aspire-one-i386-ab.toml` unchanged (800 preferred / 1000 required / 1250 review).
-- Measured on the owner-provisioned orbiter lane, official `build/build-installer-image.sh acer-aspire-one-i386-ab` with V8-pinned bundle/key inputs (`greia-release.greiaupdate` sha `e20895a0…`, `trusted-keys/greia-release-main.pem`): target gate **PASSES** with `installed 981 / filesystem-used 981 / accounted 981 MiB < required 1000` (red baseline was 1080; reclaim 99 MiB; preferred ≤800 still unmet by honest disposition — warning only, no child scope cut to chase it). Full installer image built: `greia-os-installer-acer-aspire-one-i386-ab.img` (1257 MiB USB, sha `93c0fda9…`, payload squashfs sha `e5b3818d…`).
+- Measured on the owner-provisioned orbiter lane, official `build/build-installer-image.sh acer-aspire-one-i386-ab` with V8-pinned bundle/key inputs [historical signed v2 flow, superseded by ADR 0036] (`greia-release.greiaupdate` sha `e20895a0…`, `trusted-keys/greia-release-main.pem`): target gate **PASSES** with `installed 981 / filesystem-used 981 / accounted 981 MiB < required 1000` (red baseline was 1080; reclaim 99 MiB; preferred ≤800 still unmet by honest disposition — warning only, no child scope cut to chase it). Full installer image built: `greia-os-installer-acer-aspire-one-i386-ab.img` (1257 MiB USB, sha `93c0fda9…`, payload squashfs sha `e5b3818d…`).
 - Mechanism proved on the shipped payload (mounted read-only): `cc1` absent, `binutils` absent from package manifest (`cpp-12`/`x11-xserver-utils` intact), locales `en*` only, man/info empty, docs copyright-only; preserved scope verified: `xinit`/`xrandr`/`xinput`/`bwrap`, `Xwrapper.config` (`allowed_users=anybody`, `needs_root_rights=yes`), `python3-pygame`/`python3-pil`/`fonts-noto-color-emoji`/`bubblewrap`/`xserver-xorg-legacy`/`openssh-server`/`sudo` in manifest, 41 activities incl. `writing`+`painting`, `import pygame` 2.1.2 OK in payload chroot, A/B bundle + `installer-ab.env` (`DEVELOPER=0`) on the medium.
 - Local `make verify` PASS at the change (3367 tests OK, skipped=3; validate/shell-check/footprint clean).
 - Evidence: T-BAG attempt dir `POSTR1-P5-FOOTPRINT-REDUCE/attempts/implementer-1/` (`evidence.tgz` sha `839192bd…`, orbiter log `/tmp/greia-p5-reduce-build.log`, out `/tmp/greia-p5-reduce-out/`).
@@ -476,3 +486,94 @@ Closure run (`/tmp/greia-p5-v12g5-closure.py`, sha `c4d9cd07…`, V12F two-phase
 New shipped defect D6, forensically closed (read-only loop mount of slot A on the quiescent disposable target): slot A holds ONLY `{etc, lost+found, run, var}` — the raw streamed 64 MiB minted bundle payload — with no `/usr`, no `/bin`, no `apt-get`. `fresh_ab_install` streams `open_bundle_payload_stream(bundle)` verbatim into the slot and `finalize` then `chroot <slot> apt-get update/install/clean`, so with any bundle built by the V12E/V12F/V12G mint procedure the ENOENT is deterministic: nothing in the slot can execute `apt-get`. No in-guest log, manifest, or earlier predicate masked this — V12F died one stage earlier (EPERM), so D6 is new line-of-sight, not a regression. Resolution needs product/architecture authority outside the closure lane's Allowed changes (`src/greia_installer`, `src/greia_platform`, `tools/greia_update.py`, `build/*` all excluded): either release payloads must be full Debian systems carrying apt/dpkg (and the mint must build one — a methodology change with footprint/capacity consequences for the 1 GiB slot), or the install flow must stop assuming `apt-get` inside a payload-only slot. No fixture hack was applied to force green (same principle as the D5 task's refused harness substitution).
 
 Lane left healthy (own loops detached — build-forensics loop43 and diag loop — no stray mounts/processes; diag QEMU SIGTERM'd by the operator only AFTER the decisive traceback was captured at 17:45, so its "QEMU EXITED" line is a driver logging imprecision, not a guest power-off; pre-existing loops + key/sudoers for parent/owner). Evidence: T-BAG `POSTR1-P5-GATE-CLOSURE-V12G/attempts/implementer-5/` (report + `v12g5-status.json` + `closure.log` + `diag-execute-serial.log`); orbiter-side artifacts in `/tmp/greia-p5-v12g5-*` + `/tmp/greia-p5-out-v12g5/` + `/tmp/v12g5-diag-*`. Next: product authority decides the D6 repair side and issues the rebuild + closure re-run successor; do NOT mark T3-P DONE. T3-P remains OPEN/BLOCKING.
+
+## 26. Session 02 source-scope closure (2026-09-16) — composer roles, real ext4 slot, shared validator; D6 resolved at SOURCE level
+
+Current installed phase: Session 02 of `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` is complete for source scope (T01–T04 all reviewer-accepted PASS). Current route: the Session 02 boundary build-host artifact leg, then Session 03 (owner release CLI + compact release outputs).
+
+What was implemented (source scope, all SOURCE-level evidence):
+
+```text
+T01: build/lib/compose.sh role-typed compose_root (target|live-installer); build/build-image.sh thin target consumer
+T02: build/build-installer-image.sh through the same engine with the live-installer role; engine + target consumer byte-unchanged
+T03: shared slot completeness validator in src/greia_platform/slot_writer.py, fail-closed in SlotFinalizer.finalize before any install/build/write
+T04: tools/build_release.py real-ext4 producer (mkfs.ext4 -d -> e2fsck -> resize2fs -M -> e2fsck -> zstd -19, T03 validator before image bytes, debugfs verifier, unsigned v3 bundle round-trip)
+```
+
+D6 status: RESOLVED at SOURCE level. The §25 defect (slot payload with no `apt-get`) is closed by the Session 02 repair side the §25 evidence demanded: release payloads are now complete target-root ext4 images carrying `apt-get`/`dpkg`/`env`, produced from the composed target root and refused as skeletons by the shared validator before compression and before slot finalization. D6 is not a live defect anymore; what remains is the build-host artifact proof, not a product decision.
+
+Evidence boundary (honest): SOURCE-level only. Contract suites green (`test_build_release` 8/8, `test_slot_writer` 45, `test_system_update*` 51, `test_update_v3_bundle` 6, `test_build_*` 45, plus T01/T02 shell-contract/boot suites) with negative/positive/sensitivity probes; real zstd/v3-bundle bytes exercised. No privileged debootstrap/chroot/loop build ran here and no real image or bundle artifact was produced — e2fsprogs behavior was proven through the injected runner seam. This evidence does not certify VM/image or physical-hardware behavior.
+
+Skill/manual disposition: `skills/greia-os-work/SKILL.md` and `docs/agents/GREIA_AGENT_OPERATIONS.md` required no change for Session 02 — the skill already routes lifecycle work to the 2026-09-15 plan and marks the signed v2 flow historical, and the manual's build/update procedure (before-debootstrap apt-cache mounts, capable build-host process rules) is untouched by the composer/slot work.
+
+Next exact step: run one privileged Linux build-host `build-payload` → `verify-payload` → bundle cycle to promote SOURCE-level proof to a real-artifact run (the `mkfs.ext4` size-suffix spelling is pinned by the seam test and confirmed by that run); then Session 03. Do not treat shipped product composition (T3-P) as complete until the lifecycle plan's closure criteria say so.
+
+## 27. T07 documentation correction to ADR 0036 lifecycle reality (2026-09-16)
+
+Docs-only correction of the four residual inconsistencies flagged outside T05's write boundary (T05 reviewer-1 follow-ups). No implementation change; no `src/`, `build/`, `tools/`, `tests/` or Activity file touched.
+
+- `docs/development/README.md` index bullets now describe the unsigned v3 flow, consistent with the rewritten workflow runbook.
+- Gate E in `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md` no longer requires trusted public-key provisioning, signing-key custody/rotation/revocation, or exact signature verification; stale "signed" intro wording fixed and the "bad signature" failure probe restated as corrupt/tampered bundle.
+- `skills/greia-os-work/SKILL.md` routes lifecycle work to Session 02 source-complete with the build-host artifact boundary leg as the current entry point, then Session 03 (routing only).
+- `docs/product/SYSTEM_UPDATES.md` states the Parent client never decides release trust (v3 has no signature).
+- Progress recorded append-only in the 2026-09-15 plan ledger; no earlier plan content modified.
+
+Current route unchanged: Session 02 source-complete for source scope, build-host artifact leg next, then Session 03 (see §26).
+
+## 28. T09 documentation conformance to unsigned v3 outside Gate E (2026-09-16)
+
+Docs-only amendment completing the ADR 0036 pass T07 scoped to Gate E. No implementation change; no `src/`, `build/`, `tools/`, `tests/` or Activity file touched.
+
+- `docs/release/GREIA_PUBLIC_RELEASE_READINESS.md`: reconciled gaps item 5, Gate B release property, 7.1 artifacts, Gate K review, Gate O build record, RC evidence pack, release-track publish step, and section 27 items 7/17 to unsigned `.greiaupdate` v3 reality (no Greia release signing key, no manifest/signature verification, no custody/rotation/revocation, no cryptographic anti-rollback). Legitimate non-release-signature content preserved.
+- `docs/product/SYSTEM_UPDATES.md`: pre-write step now names machine/profile/board compatibility and PERSIST schema readability re-checks, with no signature/trust implication.
+- Progress recorded append-only in the 2026-09-15 plan ledger; no earlier plan content modified.
+
+Current route unchanged: Session 02 source-complete for source scope, build-host artifact leg next, then Session 03 (see sections 26-27).
+
+## 29. R2 Session 02 COMPLETE — real-artifact leg proven on orbiter (2026-09-16)
+
+T-BAG run R2 finished `COMPLETED`: s01 Gate PASS, s02 Gate PASS
+(`TBag/runs/R2/plan/PHASE-s02-GATE-01.md`, auditor independently
+reproduced every exit predicate plus `make verify`). T-BAG run state
+itself is git-ignored and stays local; this section is the durable
+project record.
+
+- **T11 (integrated):** production payload producer
+  (`tools/build_release.py`) now completes a ~1 GiB Acer-class
+  `zstd -19` step inside stated, configurable, observable bounds
+  (600 s commands / 1800 s compression via the runner seam),
+  `zstd -19` output spelling unchanged, ext4/no-signing/`ZIP_STORED`
+  contract intact.
+- **T13 (integrated):** hardware-support producer
+  (`build_hardware_support_set`) fails closed under the same timeout
+  contract (no raw `TimeoutExpired` leak, non-positive bounds refused).
+- **T15 (PASS, accepted):** Session 02 boundary verified with the real
+  artifact leg on the owner-provisioned orbiter lane
+  (`orb@192.168.68.113`): real `acer-aspire-one-i386-ab` target root
+  composed through the production engine, real ext4 `payload.ext4.zst`
+  via the real runner path, `verify-payload` green, v3 bundle
+  round-trip holds. All source-level predicates re-measured at the
+  pinned HEAD, nothing carried on trust.
+- Superseded without execution: T06/T08/T10 (local-container
+  attempts killed by Docker Desktop RAM pressure/daemon stall) and
+  T12/T14 (re-briefs of the same). No predicate was weakened at any
+  replan step; red results stayed red until proven.
+- Evidence boundary: SOURCE + REAL-ARTIFACT (orbiter lane).
+  `make verify` green at the boundary (3415 tests OK, 3 skipped).
+  This does not certify VM/physical-hardware behavior.
+
+Standing constraints from this run (owner-ordered, recorded in
+`TBag/runs/R2/authority/owner-decisions/`, local-only):
+
+- Local-container legs: one container at a time, `--memory=4g --rm`,
+  pre-flight daemon/RAM/disk check with fail-closed BLOCKED, post-leg
+  removal of everything created, never touch foreign containers,
+  never host-wide prune.
+- Orbiter lane: read-only access check first, clean-archive delivery,
+  single unmounts only, never `umount -R` a chroot with host bind
+  mounts, `/dev`+`/proc`+`/sys` verified before and after.
+- T-BAG never launches/quits Docker Desktop itself; only `docker` CLI
+  against the running daemon.
+
+Current route: Session 02 DONE. Next is Session 03 (owner release CLI
++ compact release outputs) per the 2026-09-15 plan.

@@ -372,9 +372,10 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
 
         upload: Path | None = None
         try:
-            # Receive directly on the update-state filesystem. The exact staged
-            # inode is later hard-linked to its content-addressed candidate name,
-            # avoiding a second full-size local copy on the C0/Acer disk floor.
+            # Receive directly on the update-state filesystem. The fixed
+            # temporary (candidate.uploading) is atomically renamed to the
+            # single fixed candidate (candidate.greiaupdate), avoiding a
+            # second full-size local copy on the C0/Acer disk floor.
             upload = self.app.update_inbox.create_receive_staging(length)
             self.connection.settimeout(_UPDATE_UPLOAD_SOCKET_TIMEOUT_SECONDS)
             with upload.open("wb") as handle:
@@ -399,7 +400,6 @@ class UpdateParentApiRequestHandler(PackageParentApiRequestHandler):
             202,
             {
                 "received": queued.manifest.as_json_dict(),
-                "signature_verified": False,
                 "activation_available": False,
                 "status": self.app.system_update_payload(),
             },

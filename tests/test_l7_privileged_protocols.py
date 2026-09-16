@@ -446,9 +446,7 @@ class FakeUpdateAuthority:
         return CurrentCandidateSummary(
             present=True,
             release_id="greia-2026-01",
-            release_sequence=7,
             bundle_sha256=_digest("bundle"),
-            signature_verified=True,
         )
 
     def layout_summary(self) -> dict[str, object]:

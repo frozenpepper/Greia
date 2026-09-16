@@ -96,7 +96,6 @@ def fresh_spec(**overrides):
         "boot_active_slot": "A",
         "accepted_slot": "A",
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "slot_bytes": SLOT_BYTES,
         "system_a": {"partuuid": _UUID_A, "filesystem_uuid": _UUID_A_FS},
         "system_b": {"partuuid": _UUID_B, "filesystem_uuid": _UUID_B_FS},

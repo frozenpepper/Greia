@@ -79,7 +79,6 @@ _INITRAMFS_SHA = "cd" * 32
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": _RELEASE,
-        "accepted_release_sequence": _RELEASE_SEQ,
         "accepted_slot": "A",
         "boot_backend": _BACKEND_ID,
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -122,7 +121,6 @@ def _artifact_sets_for_journal(
         root_partuuid=_UUID_A if journal.candidate_slot == "A" else _UUID_B,
         root_filesystem_uuid=_UUID_A_FS if journal.candidate_slot == "A" else _UUID_B_FS,
         release_id=journal.release_id,
-        release_sequence=journal.release_sequence,
     )
     if journal.first_install:
         return candidate, candidate
@@ -135,7 +133,6 @@ def _artifact_sets_for_journal(
         root_partuuid=_UUID_A if journal.accepted_slot == "A" else _UUID_B,
         root_filesystem_uuid=_UUID_A_FS if journal.accepted_slot == "A" else _UUID_B_FS,
         release_id="greia-0.14.0",
-        release_sequence=7,
     )
     return candidate, accepted
 
@@ -224,7 +221,6 @@ class _Composed:
         )
         self.update_authority = SystemUpdateServiceAuthority(
             self.state_dir,
-            root / "trusted-keys",
             SystemIdentity("0.14.0", "standard-x86-64", "x86-64", "modern-amd64"),
             update_backend,
         )
@@ -252,7 +248,6 @@ class _Composed:
             layout_id=_LAYOUT_ID,
             boot_backend=_BACKEND_ID,
             release_id=_RELEASE,
-            release_sequence=_RELEASE_SEQ,
             candidate_slot="B",
             accepted_slot="A",
         )
@@ -267,7 +262,6 @@ class _Composed:
             layout_id=_LAYOUT_ID,
             boot_backend=_BACKEND_ID,
             release_id=_RELEASE,
-            release_sequence=_RELEASE_SEQ,
             candidate_slot="B",
             accepted_slot="A",
         )
@@ -279,7 +273,6 @@ class _Composed:
             layout_id=_LAYOUT_ID,
             boot_backend=_BACKEND_ID,
             release_id=_RELEASE,
-            release_sequence=_RELEASE_SEQ,
         )
         self.backend.simulate_reboot()
         assert self.backend.observe_booted_slot() == "A"
@@ -321,19 +314,13 @@ class FirstInstallConfirmTests(unittest.TestCase):
             self.assertEqual(
                 GrubEnvBackend.attach(composed.grubenv_dir).inspect().default_slot, "A"
             )
-            # 3. accepted sequence follows the accepted release.
-            accepted = json.loads(
-                (composed.state_dir / "system-updates" / "accepted.json").read_text(
-                    encoding="utf-8"
-                )
-            )
-            self.assertEqual(accepted["release_sequence"], _RELEASE_SEQ)
+            # 3. journal carries the accepted v3 release identity.
+            self.assertEqual(journal.release_id, _RELEASE)
             # 4. layout authority accepts the installed release on A.
             record = load_installed_layout_record(composed.layout_path)
             assert record is not None
             self.assertEqual(record.accepted_slot, "A")
             self.assertEqual(record.accepted_release_id, _RELEASE)
-            self.assertEqual(record.accepted_release_sequence, _RELEASE_SEQ)
             self.assertEqual(record.boot_control.active_slot, "A")
             # 5. exactly one bounded history terminal record.
             history = BootHistory.load(composed.history_dir)
@@ -355,7 +342,6 @@ class UpdateConfirmTests(unittest.TestCase):
             _write_layout(
                 Path(directory),
                 accepted_release_id="greia-0.14.0",
-                accepted_release_sequence=7,
             )
             composed.stage_update_candidate_booted()
             token = composed.verifier.issue("update-token-1")
@@ -370,19 +356,15 @@ class UpdateConfirmTests(unittest.TestCase):
             self.assertEqual(
                 GrubEnvBackend.attach(composed.grubenv_dir).inspect().default_slot, "B"
             )
-            # 3. accepted sequence follows the accepted release.
-            accepted = json.loads(
-                (composed.state_dir / "system-updates" / "accepted.json").read_text(
-                    encoding="utf-8"
-                )
-            )
-            self.assertEqual(accepted["release_sequence"], _RELEASE_SEQ)
+            # 3. journal carries the accepted v3 release identity (the
+            # legacy accepted-sequence file is no longer written on the
+            # update path; T02).
+            self.assertEqual(journal.release_id, _RELEASE)
             # 4. layout authority advanced to the candidate.
             record = load_installed_layout_record(composed.layout_path)
             assert record is not None
             self.assertEqual(record.accepted_slot, "B")
             self.assertEqual(record.accepted_release_id, _RELEASE)
-            self.assertEqual(record.accepted_release_sequence, _RELEASE_SEQ)
             self.assertEqual(record.boot_control.active_slot, "B")
             # 5. exactly one bounded history terminal record.
             history = BootHistory.load(composed.history_dir)
@@ -406,7 +388,6 @@ class AmbiguousOrAbsentJournalTests(unittest.TestCase):
                 layout_id=_LAYOUT_ID,
                 boot_backend=_BACKEND_ID,
                 release_id=_RELEASE,
-                release_sequence=_RELEASE_SEQ,
             )
             before = _snapshot_tree(root)
             token = composed.verifier.issue("ambiguous-token")
@@ -561,7 +542,7 @@ class SelectorAndBootGateTests(unittest.TestCase):
             bad_params = [
                 {"slot": "B"},
                 {"journal": "update"},
-                {"release_sequence": 11},
+                {"release_id": "greia-0.99.0"},
                 {"capability": "t", "slot": "B"},
             ]
             for params in bad_params:
@@ -675,7 +656,6 @@ class ObservationSensitivityTests(unittest.TestCase):
             _write_layout(
                 root,
                 accepted_release_id="greia-0.14.0",
-                accepted_release_sequence=7,
             )
             composed.stage_first_install_booted()
             before = _snapshot_tree(root)
@@ -716,15 +696,15 @@ class NoGenericSurfaceTests(unittest.TestCase):
 
         source = inspect.getsource(service_module)
         # Update journal: delegated to the existing system_updates mutation
-        # path (which internally reconciles, commit_accepts, writes the
-        # accepted sequence and advances layout authority); first install:
-        # shared coordinator/backend/sequence/history primitives.
+        # path (which internally reconciles, commit_accepts and advances
+        # layout authority by release_id); first install: shared
+        # coordinator/backend/layout/history primitives.
         for reused in (
             "self.update_authority.confirm_boot_health()",
             "BootTransactionCoordinator.resume",
             "coordinator.commit()",
             "GrubEnvBackend.attach",
-            "write_accepted_sequence",
+            "load_installed_layout_record",
             "BootHistory",
             "attest_peer_from_connection",
         ):
@@ -754,7 +734,6 @@ class ProductionSeamTests(unittest.TestCase):
                             },
                             "layout_id": _LAYOUT_ID,
                             "release_id": _RELEASE,
-                            "release_sequence": _RELEASE_SEQ,
                             "slot": "A",
                         },
                         sort_keys=True,
@@ -769,7 +748,6 @@ class ProductionSeamTests(unittest.TestCase):
                 layout_id=_LAYOUT_ID,
                 boot_backend=_BACKEND_ID,
                 release_id=_RELEASE,
-                release_sequence=_RELEASE_SEQ,
             )
             resolver = ReceiptBackedArtifactResolver(
                 layout_record_path=layout_path, receipt_path=receipt_path
@@ -790,7 +768,6 @@ class ProductionSeamTests(unittest.TestCase):
                             },
                             "layout_id": _LAYOUT_ID,
                             "release_id": _RELEASE,
-                            "release_sequence": _RELEASE_SEQ,
                             "slot": "B",
                         },
                         sort_keys=True,
@@ -904,7 +881,8 @@ class UnitContractTests(unittest.TestCase):
         self.assertEqual(directives.get("Install.WantedBy"), ["sockets.target"])
 
     def test_image_enables_socket_never_service(self) -> None:
-        text = (_repo_root() / "build" / "build-image.sh").read_text(encoding="utf-8")
+        # T01: service composition lives in the shared engine.
+        text = (_repo_root() / "build" / "lib" / "compose.sh").read_text(encoding="utf-8")
         self.assertIn("greia-boot-health.socket", text)
         for line in text.splitlines():
             stripped = line.strip()

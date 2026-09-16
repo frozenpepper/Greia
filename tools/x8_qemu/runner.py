@@ -20,7 +20,7 @@ Reuse, not duplication (brief hard requirement):
   ``next_entry`` candidate-only one-shot). This module never imports the
   JSON fakes and never calls ``simulate_reboot``: VM behavior is observed
   through :meth:`GrubEnvBackend.inspect` after a real QEMU boot.
-- releases: the signed ``.greiaupdate`` v2 bundle path
+- releases: the unsigned ``.greiaupdate`` v3 bundle path
   (:func:`build_update_bundle` / :func:`inspect_update_bundle`).
 
 QEMU-invocation/evidence discipline mirrors
@@ -87,12 +87,13 @@ PROFILE_PREFERRED_MIB = 800
 PROFILE_REQUIRED_MIB = 1000
 PROFILE_REVIEW_MIB = 1250
 
-#: Test release lineage exercised A -> B -> A (ids/sequences declared;
-#: exact hashes recorded per run in the report).
+#: Test release lineage exercised A -> B -> A (ids declared; exact
+#: hashes recorded per run in the report). No sequence authority under
+#: ADR 0036; lineage order is the launch order only.
 RELEASE_LINEAGE = (
-    {"release_id": "greia-x8qemu-0.20.0", "release_sequence": 20, "slot": "A"},
-    {"release_id": "greia-x8qemu-0.21.0", "release_sequence": 21, "slot": "B"},
-    {"release_id": "greia-x8qemu-0.22.0", "release_sequence": 22, "slot": "A"},
+    {"release_id": "greia-x8qemu-0.20.0", "slot": "A"},
+    {"release_id": "greia-x8qemu-0.21.0", "slot": "B"},
+    {"release_id": "greia-x8qemu-0.22.0", "slot": "A"},
 )
 
 #: Boot-run sequence covering repeated cold boots, one-shot
@@ -125,7 +126,7 @@ HOST_PREREQUISITES = (
     "qemu-system-x86_64 with SeaBIOS firmware for the pc machine",
     "GRUB tooling for the boot-control filesystem (grub-editenv compatible grubenv)",
     "loopback + mount capability for disposable raw-image assembly",
-    "python3 with Greia src on PYTHONPATH and the cryptography package for signed bundles",
+    "python3 with Greia src on PYTHONPATH (v3 bundles need no key material)",
 )
 
 
@@ -161,7 +162,6 @@ def procedure_spec() -> dict[str, object]:
         "qemu_binary": QEMU_BINARY,
         "per_run_evidence": (
             "release_id",
-            "release_sequence",
             "release_sha256",
             "image_sha256",
             "boot_backend_state",
@@ -327,7 +327,7 @@ def footprint_report(
 def staging_memory_report(*, payload_size: int) -> dict[str, object]:
     """Update-staging memory bound: streaming in fixed chunks.
 
-    The shared :class:`SlotWriter` streams the signed payload through
+    The shared :class:`SlotWriter` streams the unsigned v3 payload through
     ``SLOT_WRITE_CHUNK_BYTES`` buffers, so peak staging memory is bounded by
     one chunk plus small constant overhead — never a second payload-sized
     temporary.
@@ -344,14 +344,14 @@ def staging_memory_report(*, payload_size: int) -> dict[str, object]:
 
 
 def release_identity(bundle_path: Path) -> dict[str, object]:
-    """Inspect one signed .greiaupdate v2 bundle (hash + manifest facts)."""
+    """Inspect one unsigned .greiaupdate v3 bundle (hash + manifest facts)."""
     inspected = inspect_update_bundle(Path(bundle_path))
     manifest = inspected.manifest
     return {
         "release_id": manifest.release_id,
-        "release_sequence": manifest.release_sequence,
         "payload_sha256": manifest.payload_sha256,
         "payload_size": manifest.payload_size,
+        "board": manifest.board,
         "bundle_sha256": _sha256_file(Path(bundle_path)),
     }
 
@@ -560,7 +560,7 @@ class X8QemuHarness:
 
         Boot-backend state comes from the real grubenv observation path
         (:func:`observe_guest_boot_state`); release facts come from the
-        signed bundle inspection path. No ``simulate_reboot`` anywhere.
+        unsigned v3 bundle inspection path. No ``simulate_reboot`` anywhere.
         """
         if run not in RUN_SEQUENCE:
             raise X8QemuError(f"unknown boot run: {run!r}")

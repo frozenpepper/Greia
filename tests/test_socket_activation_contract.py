@@ -25,6 +25,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_IMAGE = ROOT / "build" / "build-image.sh"
+# T01: installed-image service composition lives in the shared engine; the
+# thin consumer invokes it through compose_root --role target.
+COMPOSE_ENGINE = ROOT / "build" / "lib" / "compose.sh"
 
 # (service unit, activating socket unit, Python entry, entry log name)
 CONTRACTS: tuple[tuple[str, str, str, str], ...] = (
@@ -79,16 +82,20 @@ def _parse_unit(path: Path) -> configparser.ConfigParser:
 
 
 def _installed_enable_tokens() -> set[str]:
-    """Tokens of the installed-image ``systemctl enable`` list in build-image.sh."""
+    """Tokens of the installed-image ``systemctl enable`` list in the engine."""
     tokens: set[str] = set()
-    lines = BUILD_IMAGE.read_text(encoding="utf-8").splitlines()
+    lines = COMPOSE_ENGINE.read_text(encoding="utf-8").splitlines()
     for index, line in enumerate(lines):
-        if line.strip() == 'systemctl --root="$ROOTFS" enable \\':
+        if line.strip() == 'systemctl --root="$rootfs" enable \\':
             for follow in lines[index + 1:]:
                 tokens.update(follow.strip().rstrip("\\").split())
                 if not follow.strip().endswith("\\"):
                     break
             break
+    consumer = BUILD_IMAGE.read_text(encoding="utf-8")
+    assert 'compose_root --profile "$PROFILE_PATH" --role target' in consumer, (
+        "thin consumer must compose the installed image through the engine"
+    )
     return tokens
 
 

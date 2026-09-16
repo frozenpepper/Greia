@@ -65,15 +65,13 @@ from greia_platform.system_updates import (
     UpdateSlotSeams,
     attest_peer_from_connection,
     build_live_update_service,
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     handle_update_connection,
+    inspect_update_bundle,
     production_boot_backend,
-    read_accepted_sequence,
-    write_accepted_sequence,
     SystemUpdateInbox,
 )
+from greia_platform.persistent_layout import emit_persist_schema_marker
 from greia_platform.update_privileged import (
     UpdatePrivilegedEndpoint,
     UpdatePrivilegedError,
@@ -96,10 +94,9 @@ def _patched_env(**overrides: str):
 ROOT = Path(__file__).resolve().parents[1]
 SHIPPED_PROFILE = ROOT / "build" / "profiles" / "legacy-x86-i686.toml"
 
-_SIGNER = "greia-release-main"
 _SLOT_BYTES = 1024 * 1024 * 1024
 _HW_BYTES = b"\x28\xb5\x2f\xfd" + b"t3-update-hw" * 64
-_CONTRACT_BYTES = build_persistent_state_contract_bytes()
+_PERSIST_MARKER = emit_persist_schema_marker(1)
 
 _UUID_A = "11111111-2222-3333-4444-555555555555"
 _UUID_A_FS = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
@@ -143,7 +140,6 @@ def _payload(size: int, tag: bytes) -> bytes:
 def _record_dict(family: str, profile: str, **overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": _R8_ID,
-        "accepted_release_sequence": _R8_SEQ,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -182,6 +178,25 @@ class _FakeSlotFilesystem:
 
     def mount(self) -> Path:
         self.mounted = True
+        self.mount_dir.mkdir(parents=True, exist_ok=True)
+        # Simulate a staged slot carrying real Greia userspace so the
+        # shared completeness smoke passes (uses the shared path set).
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (self.mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = self.mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
         return self.mount_dir
 
     def unmount(self) -> None:
@@ -198,6 +213,11 @@ class _FakeSlotFilesystem:
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
 
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        check_slot_completeness(self.mount_dir)
+
     def check_health(self) -> None:
         pass
 
@@ -212,14 +232,12 @@ class _FakeSlotPackageInstaller:
 class _LoopSeams:
     """Destination factories: sparse loopback stores (deployment parameter)."""
 
-    def __init__(self, root: Path, contract_bytes: bytes) -> None:
+    def __init__(self, root: Path) -> None:
         self._root = root
-        self._contract_bytes = contract_bytes
         self.slots_dir = root / "slots"
         self.slots_dir.mkdir(parents=True, exist_ok=True)
         self.contacts: list[str] = []
         self.filesystem = _FakeSlotFilesystem(root / "mnt")
-        (root / "installed-contract.json").write_bytes(contract_bytes)
 
     def slot_store_factory(self, destination: object) -> object:
         self.contacts.append(f"store:{getattr(destination, 'role', '?')}")
@@ -255,7 +273,7 @@ class _LoopSeams:
 
     def installed_contract_factory(self) -> bytes:
         self.contacts.append("contract")
-        return (self._root / "installed-contract.json").read_bytes()
+        return _PERSIST_MARKER
 
     def seams(self) -> UpdateSlotSeams:
         return UpdateSlotSeams(
@@ -273,25 +291,19 @@ class _ProductionRig:
 
     def __init__(self, root: Path, family: str, arch: str, profile: str) -> None:
         self.root = root
+        root.mkdir(parents=True, exist_ok=True)
         self.state_dir = root / "state"
-        self.key_dir = root / "trusted"
-        self.key_dir.mkdir(parents=True, exist_ok=True)
         self.layout_path = root / "installed-layout.json"
         self.layout_path.write_bytes(
             _canonical_record(_record_dict(family, profile))
         )
-        self.private_key = root / "release-private.pem"
-        self.public_key = root / "release-public.pem"
-        generate_ed25519_keypair(self.private_key, self.public_key)
-        (self.key_dir / f"{_SIGNER}.pem").write_bytes(self.public_key.read_bytes())
         self.family = family
         self.arch = arch
         self.profile = profile
-        write_accepted_sequence(self.state_dir, _R8_SEQ)
         boot_dir = root / "boot-control"
         boot_dir.mkdir(parents=True, exist_ok=True)
         self.grub = GrubEnvBackend.initialize(boot_dir, default_slot="A")
-        self.seams = _LoopSeams(root, _CONTRACT_BYTES)
+        self.seams = _LoopSeams(root)
         shipped_env = {
             "GREIA_SYSTEM_VERSION": "0.16.0",
             "GREIA_SYSTEM_PLATFORM_FAMILY": family,
@@ -301,40 +313,48 @@ class _ProductionRig:
         with _patched_env(**shipped_env):
             self.authority = build_live_update_service(
                 state_dir=self.state_dir,
-                trusted_key_dir=self.key_dir,
                 layout_record_path=self.layout_path,
                 boot_backend=self.grub,
                 boot_backend_auto=False,
                 seams=self.seams.seams(),
             )
+        # No shape adapter: the v3 authority summary already carries
+        # exactly {present, release_id, bundle_sha256}, so the endpoint
+        # drives the real production authority directly.
         self.endpoint = UpdatePrivilegedEndpoint(self.authority)  # type: ignore[arg-type]
         self.peer = PeerCredential(uid=0)
 
     def build_release(
-        self, name: str, *, release_id: str, sequence: int, profile: str | None = None
+        self, name: str, *, release_id: str, sequence: int = 0,
+        profile: str | None = None,
     ) -> Path:
+        """Build one unsigned v3 bundle (``sequence`` is retired, ignored)."""
+        import zstandard
+
         work = self.root / "releases" / name
         work.mkdir(parents=True, exist_ok=True)
-        payload = work / "slot.img"
-        payload.write_bytes(_payload(220 * 1024, f"t3-{name}:".encode()))
+        raw = _payload(220 * 1024, f"t3-{name}:".encode())
+        payload = work / "slot.ext4.zst"
+        payload.write_bytes(zstandard.ZstdCompressor(level=3).compress(raw))
         hardware = work / "hw.tar.zst"
         hardware.write_bytes(_HW_BYTES)
-        contract = work / "contract.json"
-        contract.write_bytes(_CONTRACT_BYTES)
         bundle = work / f"{name}.greiaupdate"
+        if bundle.exists():
+            bundle.unlink()
         build_update_bundle(
             payload_path=payload,
             hardware_support_path=hardware,
-            persistent_contract_path=contract,
             output_path=bundle,
             version=release_id.split("-", 1)[1],
             release_id=release_id,
-            release_sequence=sequence,
             platform_family=self.family,
             architecture=self.arch,
             profile=self.profile if profile is None else profile,
-            signer=_SIGNER,
-            private_key_path=self.private_key,
+            payload_uncompressed_bytes=len(raw),
+            minimum_slot_bytes=len(raw),
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
             release_notes=f"T3-UPDATE production proof release {name}.",
         )
         return bundle
@@ -383,7 +403,6 @@ def _write_production_identity_files(
                 "boot_backend": "grub-ab-v1",
                 "layout_id": "legacy-bios-ab-v1",
                 "release_id": release_id,
-                "release_sequence": sequence,
                 "role": f"system-{slot.lower()}",
                 "slot": slot,
             }
@@ -408,8 +427,6 @@ class ProductionServiceCompositionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
-            key_dir = root / "trusted"
-            key_dir.mkdir(parents=True, exist_ok=True)
             layout_path = root / "installed-layout.json"
             layout_path.write_bytes(_canonical_record(_record_dict(family, profile)))
             boot_dir = root / "boot-control"
@@ -424,7 +441,6 @@ class ProductionServiceCompositionTests(unittest.TestCase):
             ):
                 authority = build_live_update_service(
                     state_dir=state_dir,
-                    trusted_key_dir=key_dir,
                     layout_record_path=layout_path,
                 )
             backend = authority.backend
@@ -437,15 +453,12 @@ class ProductionServiceCompositionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
-            key_dir = root / "trusted"
-            key_dir.mkdir(parents=True, exist_ok=True)
             layout_path = root / "installed-layout.json"
             layout_path.write_bytes(_canonical_record(_record_dict(family, profile)))
             with _patched_env(GREIA_GRUBENV_DIR=str(root / "no-such-boot-control")):
                 self.assertIsNone(production_boot_backend())
                 authority = build_live_update_service(
                     state_dir=state_dir,
-                    trusted_key_dir=key_dir,
                     layout_record_path=layout_path,
                 )
             with self.assertRaises(Exception):
@@ -488,8 +501,10 @@ class ProductionUpdateFlowTests(unittest.TestCase):
                 self.assertEqual(op, "STATUS")
                 self.assertTrue(status["candidate"]["present"])
                 self.assertEqual(
-                    status["candidate"]["release_sequence"], _R9_SEQ
+                    set(status["candidate"].keys()),
+                    {"present", "release_id", "bundle_sha256"},
                 )
+                self.assertEqual(status["candidate"]["release_id"], _R9_ID)
                 op, verified = rig.op("VERIFY_CURRENT_CANDIDATE")
                 self.assertEqual(verified["status"], "VERIFIED")
                 self.assertEqual(rig.grub.inspect().default_slot, "A")
@@ -512,12 +527,10 @@ class ProductionUpdateFlowTests(unittest.TestCase):
                 self.assertEqual(detail["state"], "accepted")
                 self.assertEqual(detail["booted_slot"], "B")
                 self.assertEqual(rig.grub.inspect().default_slot, "B")
-                self.assertEqual(read_accepted_sequence(rig.state_dir), _R9_SEQ)
                 record = rig.record()
                 self.assertEqual(record.accepted_slot, "B")
                 self.assertEqual(record.boot_control.active_slot, "B")
                 self.assertEqual(record.accepted_release_id, _R9_ID)
-                self.assertEqual(record.accepted_release_sequence, _R9_SEQ)
 
     def test_foreign_profile_bundle_rejected_before_slot_contact(self) -> None:
         family, arch, profile = _shipped_identity()
@@ -549,10 +562,9 @@ class ProductionUpdateFlowTests(unittest.TestCase):
             self.assertFalse(detail["confirmed"])
             self.assertEqual(detail["state"], "rolled_back")
             self.assertEqual(rig.grub.inspect().default_slot, "A")
-            self.assertEqual(read_accepted_sequence(rig.state_dir), _R8_SEQ)
             record = rig.record()
             self.assertEqual(record.accepted_slot, "A")
-            self.assertEqual(record.accepted_release_sequence, _R8_SEQ)
+            self.assertEqual(record.accepted_release_id, _R8_ID)
             journal = BootTransactionJournal.load(rig.authority.backend.journal_dir)
             self.assertEqual(journal.state, BootTransactionState.ROLLED_BACK)
 
@@ -574,7 +586,6 @@ class ProductionObserverTests(unittest.TestCase):
             self.assertEqual(observed.booted_slot, "B")
             self.assertEqual(observed.root_partuuid, _UUID_B)
             self.assertEqual(observed.release_id, _R9_ID)
-            self.assertEqual(observed.release_sequence, _R9_SEQ)
 
     def test_observer_rejects_unknown_root(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -628,7 +639,6 @@ class ProductionObserverTests(unittest.TestCase):
                         "boot_backend": "grub-ab-v1",
                         "layout_id": "legacy-bios-ab-v1",
                         "release_id": _R8_ID,
-                        "release_sequence": _R8_SEQ,
                         "role": "system-a",
                         "slot": "A",
                     }
@@ -674,7 +684,6 @@ class InstallFollowHealthTests(unittest.TestCase):
             schema_version=1,
             finalizer_version=FINALIZER_VERSION,
             release_id=_R8_ID,
-            release_sequence=_R8_SEQ,
             slot="A",
             role="system-a",
             base_sha256=_KERNEL,
@@ -713,7 +722,6 @@ class InstallFollowHealthTests(unittest.TestCase):
             coordinator=coordinator,
             candidate_root_partuuid=_UUID_A,
             candidate_release_id=_R8_ID,
-            candidate_release_sequence=_R8_SEQ,
             vault=BootHealthCredentialVault(root / "vault"),
             observer=observer,
             trusted_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,
@@ -926,17 +934,11 @@ class DefaultCompositionFailClosedTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
-            key_dir = root / "trusted"
-            key_dir.mkdir(parents=True, exist_ok=True)
             layout_path = root / "installed-layout.json"
             layout_path.write_bytes(_canonical_record(_record_dict(family, profile)))
             boot_dir = root / "boot-control"
             boot_dir.mkdir(parents=True, exist_ok=True)
             GrubEnvBackend.initialize(boot_dir, default_slot="A")
-            private_key = root / "release-private.pem"
-            public_key = root / "release-public.pem"
-            generate_ed25519_keypair(private_key, public_key)
-            (key_dir / f"{_SIGNER}.pem").write_bytes(public_key.read_bytes())
             with _patched_env(
                 GREIA_SYSTEM_VERSION="0.16.0",
                 GREIA_SYSTEM_PLATFORM_FAMILY=family,
@@ -949,31 +951,35 @@ class DefaultCompositionFailClosedTests(unittest.TestCase):
                 # is the image-integration destination factories.
                 authority = build_live_update_service(
                     state_dir=state_dir,
-                    trusted_key_dir=key_dir,
                     layout_record_path=layout_path,
                 )
                 self.assertIsInstance(authority.backend.boot_backend, GrubEnvBackend)
                 status = authority.backend.status_payload()
                 self.assertTrue(status["available"])
+                import zstandard
+
                 work = root / "releases" / "r9"
                 work.mkdir(parents=True, exist_ok=True)
-                (work / "slot.img").write_bytes(_payload(220 * 1024, b"t3-r9:"))
+                raw = _payload(220 * 1024, b"t3-r9:")
+                (work / "slot.ext4.zst").write_bytes(
+                    zstandard.ZstdCompressor(level=3).compress(raw)
+                )
                 (work / "hw.tar.zst").write_bytes(_HW_BYTES)
-                (work / "contract.json").write_bytes(_CONTRACT_BYTES)
                 bundle = work / "r9.greiaupdate"
                 build_update_bundle(
-                    payload_path=work / "slot.img",
+                    payload_path=work / "slot.ext4.zst",
                     hardware_support_path=work / "hw.tar.zst",
-                    persistent_contract_path=work / "contract.json",
                     output_path=bundle,
                     version=_R9_ID.split("-", 1)[1],
                     release_id=_R9_ID,
-                    release_sequence=_R9_SEQ,
                     platform_family=family,
                     architecture=arch,
                     profile=profile,
-                    signer=_SIGNER,
-                    private_key_path=private_key,
+                    payload_uncompressed_bytes=len(raw),
+                    minimum_slot_bytes=len(raw),
+                    persist_read_schema_min=1,
+                    persist_read_schema_max=1,
+                    persist_write_schema=1,
                     release_notes="T3-UPDATE2 fail-closed proof release.",
                 )
                 SystemUpdateInbox(state_dir).receive(bundle)
@@ -998,8 +1004,6 @@ class DefaultCompositionFailClosedTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
-            key_dir = root / "trusted"
-            key_dir.mkdir(parents=True, exist_ok=True)
             with _patched_env(
                 GREIA_SYSTEM_VERSION="0.16.0",
                 GREIA_SYSTEM_PLATFORM_FAMILY=family,
@@ -1008,7 +1012,6 @@ class DefaultCompositionFailClosedTests(unittest.TestCase):
             ):
                 authority = build_live_update_service(
                     state_dir=state_dir,
-                    trusted_key_dir=key_dir,
                     layout_record_path=root / "no-such-layout.json",
                     boot_backend=None,
                     boot_backend_auto=False,
@@ -1184,7 +1187,6 @@ class LauncherProductionCallTests(unittest.TestCase):
                     "boot_backend": "grub-ab-v1",
                     "layout_id": "legacy-bios-ab-v1",
                     "release_id": _R8_ID,
-                    "release_sequence": _R8_SEQ,
                     "role": "system-a",
                     "slot": "A",
                 }
@@ -1197,7 +1199,6 @@ class LauncherProductionCallTests(unittest.TestCase):
             schema_version=1,
             finalizer_version=FINALIZER_VERSION,
             release_id=_R8_ID,
-            release_sequence=_R8_SEQ,
             slot="A",
             role="system-a",
             base_sha256=_KERNEL,
@@ -1445,7 +1446,9 @@ class LauncherProductionCallTests(unittest.TestCase):
                 self.assertNotEqual(journal_after.state, BootTransactionState.ACCEPTED)
                 self.assertFalse(launcher_health.default_vault().credential_live())
                 self.assertEqual(rig.grub.inspect().default_slot, "A")
-                self.assertEqual(read_accepted_sequence(rig.state_dir), _R8_SEQ)
+                record = rig.record()
+                self.assertEqual(record.accepted_slot, "A")
+                self.assertEqual(record.accepted_release_id, _R8_ID)
 
     def test_update_flow_accepts_via_launcher_seam_with_production_observer(
         self,
@@ -1518,11 +1521,9 @@ class LauncherProductionCallTests(unittest.TestCase):
                 journal = BootTransactionJournal.load(rig.authority.backend.journal_dir)
                 self.assertEqual(journal.state, BootTransactionState.ACCEPTED)
                 self.assertEqual(rig.grub.inspect().default_slot, "B")
-                self.assertEqual(read_accepted_sequence(rig.state_dir), _R9_SEQ)
                 record = rig.record()
                 self.assertEqual(record.accepted_slot, "B")
                 self.assertEqual(record.accepted_release_id, _R9_ID)
-                self.assertEqual(record.accepted_release_sequence, _R9_SEQ)
             server.join(timeout=10)
             self.assertFalse(server.is_alive())
 

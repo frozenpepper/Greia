@@ -54,7 +54,6 @@ _SLOT_BYTES = 1024 * 1024 * 1024
 def _record(**overrides: object) -> InstalledLayoutRecord:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -137,9 +136,9 @@ def _member(payload: bytes) -> VerifiedReleaseMember:
     hw = b"hwset-member"
     return VerifiedReleaseMember(
         release_id="greia-0.15.0",
-        release_sequence=11,
         payload_sha256=hashlib.sha256(payload).hexdigest(),
         payload_size=len(payload),
+        payload_uncompressed_bytes=len(payload),
         minimum_slot_bytes=len(payload),
         hardware_support_sha256=hashlib.sha256(hw).hexdigest(),
         hardware_support_size=len(hw),
@@ -250,6 +249,12 @@ class BusyAwareSlotFilesystem:
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
 
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        self.events.append("completeness")
+        check_slot_completeness(self.mount_dir)
+
     def check_health(self) -> None:
         self.events.append("health")
 
@@ -289,6 +294,22 @@ def _finalize_through_seam(
         root = Path(directory)
         pool = VerifiedHardwareSupportPool.load(_make_pool(root))
         mount_dir = root / "slot-b"
+        mount_dir.mkdir(parents=True, exist_ok=True)
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+            try:
+                candidate.chmod(0o755)
+            except OSError:
+                pass
         mounted: list[Path] = []
         events: list[str] = []
         runner.events = events

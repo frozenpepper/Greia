@@ -6,7 +6,7 @@ Covers the brief's install acceptance without QEMU/loop/mount contact:
   (InstallTransactionClient/socket_transport + prepare/execute with the
   observed identity, profile and nonce/digest), triggers/acks only;
 - fail-closed negatives refuse before any slot payload write (missing
-  bundle, missing key, profile mismatch, identity changed, no
+  bundle, corrupt bundle, profile mismatch, identity changed, no
   legacy/single-root fallback) with a recording-runner positive control
   proving no boot/mutation follows a refusal;
 - QEMU argv keeps read-only installer media + disposable writable target
@@ -68,15 +68,32 @@ def _hex_identity(seed: str) -> str:
 
 
 def _valid_fixtures(tmp: Path) -> dict[str, object]:
+    import zstandard
+
+    from greia_platform.system_updates import build_update_bundle
+
+    raw = bytes((index * 31 + 7) % 256 for index in range(64 * 1024))
+    payload = tmp / "payload.ext4.zst"
+    payload.write_bytes(zstandard.ZstdCompressor(level=3).compress(raw))
     bundle = tmp / "greia-release.greiaupdate"
-    bundle.write_bytes(b"signed-release" * 64)
-    key_dir = tmp / "keys"
-    key_dir.mkdir(parents=True, exist_ok=True)
-    (key_dir / "release.pem").write_text("public-key\n", encoding="utf-8")
+    build_update_bundle(
+        payload_path=payload,
+        hardware_support_path=None,
+        output_path=bundle,
+        version="0.20.0",
+        release_id="greia-0.20.0",
+        platform_family="legacy-x86",
+        architecture="i386",
+        profile=INSTALL_PROFILE_ID,
+        payload_uncompressed_bytes=len(raw),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
+        release_notes="P5.2 install-leg test release.",
+    )
     identity = _hex_identity("disposable-target")
     return {
         "bundle": bundle,
-        "key_dir": key_dir,
         "identity": identity,
     }
 
@@ -140,7 +157,7 @@ class PreflightNegativeTests(unittest.TestCase):
                     profile_id=INSTALL_PROFILE_ID,
                     expected_target_identity=str(fixtures["identity"]),
                     release_bundle=base / "absent.greiaupdate",
-                    trusted_key_dir=Path(str(fixtures["key_dir"])),
+
                     clone_fn=lambda: calls.append("clone"),
                     boot_fn=lambda phase, _doc: calls.append(f"boot:{phase}"),
                     observe_fn=lambda: {"default_slot": "A"},
@@ -149,38 +166,61 @@ class PreflightNegativeTests(unittest.TestCase):
             self.assertIn("release bundle", str(caught.exception))
             self.assertEqual(calls, [])
 
-    def test_missing_key_blocked_before_mutation(self) -> None:
+    def test_corrupt_bundle_blocked_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             fixtures = _valid_fixtures(base)
             calls: list[str] = []
+            corrupt = base / "corrupt.greiaupdate"
+            corrupt.write_bytes(b"not-a-greiaupdate-bundle")
             with self.assertRaises(LifecycleHarnessError) as caught:
                 preflight_install_composition(
-                    release_bundle=Path(str(fixtures["bundle"])),
-                    trusted_key_dir=base / "absent-keys",
+                    release_bundle=corrupt,
                     expected_profile_id=INSTALL_PROFILE_ID,
                     prepare_identity=str(fixtures["identity"]),
                     execute_identity=str(fixtures["identity"]),
                 )
             self.assertIn("BLOCKED", str(caught.exception))
-            self.assertIn("trusted key", str(caught.exception))
+            self.assertIn("inspection", str(caught.exception))
             self.assertEqual(calls, [])
 
-    def test_empty_key_dir_blocked(self) -> None:
+    def test_tampered_payload_digest_blocked(self) -> None:
+        import zipfile
+
+        from greia_platform.system_updates import MANIFEST_NAME, PAYLOAD_NAME
+
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             fixtures = _valid_fixtures(base)
-            empty = base / "empty-keys"
-            empty.mkdir()
+            tampered = base / "tampered.greiaupdate"
+            with zipfile.ZipFile(
+                Path(str(fixtures["bundle"])), "r"
+            ) as src:
+                manifest_raw = src.read(MANIFEST_NAME)
+                payload = bytearray(src.read(PAYLOAD_NAME))
+            payload[10] ^= 0xFF
+            with zipfile.ZipFile(
+                tampered, "w", compression=zipfile.ZIP_STORED
+            ) as dst:
+                info = zipfile.ZipInfo(
+                    filename=MANIFEST_NAME, date_time=(1980, 1, 1, 0, 0, 0)
+                )
+                info.compress_type = zipfile.ZIP_DEFLATED
+                dst.writestr(info, manifest_raw)
+                info2 = zipfile.ZipInfo(
+                    filename=PAYLOAD_NAME, date_time=(1980, 1, 1, 0, 0, 0)
+                )
+                info2.compress_type = zipfile.ZIP_STORED
+                dst.writestr(info2, bytes(payload))
             with self.assertRaises(LifecycleHarnessError) as caught:
                 preflight_install_composition(
-                    release_bundle=Path(str(fixtures["bundle"])),
-                    trusted_key_dir=empty,
+                    release_bundle=tampered,
                     expected_profile_id=INSTALL_PROFILE_ID,
                     prepare_identity=str(fixtures["identity"]),
                     execute_identity=str(fixtures["identity"]),
                 )
-            self.assertIn("trusted key", str(caught.exception))
+            self.assertIn("BLOCKED", str(caught.exception))
+            self.assertIn("inspection", str(caught.exception))
 
     def test_profile_mismatch_refused_before_mutation(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -196,7 +236,7 @@ class PreflightNegativeTests(unittest.TestCase):
                     profile_id="acer-aspire-one-i386",
                     expected_target_identity=str(fixtures["identity"]),
                     release_bundle=Path(str(fixtures["bundle"])),
-                    trusted_key_dir=Path(str(fixtures["key_dir"])),
+
                     clone_fn=lambda: calls.append("clone"),
                     boot_fn=lambda phase, _doc: calls.append(f"boot:{phase}"),
                     observe_fn=lambda: {"default_slot": "A"},
@@ -211,7 +251,7 @@ class PreflightNegativeTests(unittest.TestCase):
             with self.assertRaises(LifecycleHarnessError) as caught:
                 preflight_install_composition(
                     release_bundle=Path(str(fixtures["bundle"])),
-                    trusted_key_dir=Path(str(fixtures["key_dir"])),
+
                     expected_profile_id=INSTALL_PROFILE_ID,
                     prepare_identity=str(fixtures["identity"]),
                     execute_identity=_hex_identity("different-target"),
@@ -225,7 +265,7 @@ class PreflightNegativeTests(unittest.TestCase):
             with self.assertRaises(LifecycleHarnessError) as caught:
                 preflight_install_composition(
                     release_bundle=Path(str(fixtures["bundle"])),
-                    trusted_key_dir=Path(str(fixtures["key_dir"])),
+
                     expected_profile_id=INSTALL_PROFILE_ID,
                     prepare_identity=str(fixtures["identity"]),
                     execute_identity=str(fixtures["identity"]),
@@ -240,7 +280,7 @@ class PreflightNegativeTests(unittest.TestCase):
             fixtures = _valid_fixtures(base)
             proof = preflight_install_composition(
                 release_bundle=Path(str(fixtures["bundle"])),
-                trusted_key_dir=Path(str(fixtures["key_dir"])),
+
                 expected_profile_id=INSTALL_PROFILE_ID,
                 prepare_identity=str(fixtures["identity"]),
                 execute_identity=str(fixtures["identity"]),
@@ -364,7 +404,6 @@ class HostInspectionTests(unittest.TestCase):
         record = InstalledLayoutRecord.from_dict(
             {
                 "accepted_release_id": "greia-0.20.0",
-                "accepted_release_sequence": 20,
                 "accepted_slot": "A",
                 "boot_backend": "grub-ab-v1",
                 "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -407,7 +446,6 @@ class HostInspectionTests(unittest.TestCase):
             layout_id="legacy-bios-ab-v1",
             boot_backend="grub-ab-v1",
             release_id="greia-0.20.0",
-            release_sequence=20,
         )
         return {
             "boot_control": boot_control,
@@ -565,7 +603,7 @@ class PhasedLegTests(unittest.TestCase):
                 profile_id=INSTALL_PROFILE_ID,
                 expected_target_identity=str(fixtures["identity"]),
                 release_bundle=Path(str(fixtures["bundle"])),
-                trusted_key_dir=Path(str(fixtures["key_dir"])),
+
                 clone_fn=lambda: seen.append("clone"),
                 boot_fn=_boot,
                 observe_fn=lambda: {
@@ -693,7 +731,7 @@ class RunProductWiringTests(unittest.TestCase):
                 with self.assertRaises(LifecycleHarnessError) as caught:
                     harness.run_product(
                         release_bundle=base / "absent.greiaupdate",
-                        trusted_key_dir=Path(str(fixtures["key_dir"])),
+    
                         target_fn=lambda p: calls.append("target") or {},
                         clone_fn=lambda s, d: calls.append("clone") or {},
                         inject_fn=lambda c: calls.append("inject") or {},
@@ -705,11 +743,13 @@ class RunProductWiringTests(unittest.TestCase):
             self.assertIn("release bundle", str(caught.exception))
             self.assertEqual(calls, [])
 
-    def test_missing_key_refused_before_any_scratch_or_boot(self) -> None:
+    def test_corrupt_bundle_refused_before_any_scratch_or_boot(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             fixtures = _valid_fixtures(base)
             calls: list[str] = []
+            corrupt = base / "corrupt.greiaupdate"
+            corrupt.write_bytes(b"not-a-greiaupdate-bundle")
             gate, qemu = _capable_host()
             with gate, qemu:
                 harness = ProductHarness(
@@ -719,8 +759,7 @@ class RunProductWiringTests(unittest.TestCase):
                 (base / "installer.img").write_bytes(b"installer" * 64)
                 with self.assertRaises(LifecycleHarnessError) as caught:
                     harness.run_product(
-                        release_bundle=Path(str(fixtures["bundle"])),
-                        trusted_key_dir=base / "absent-keys",
+                        release_bundle=corrupt,
                         target_fn=lambda p: calls.append("target") or {},
                         clone_fn=lambda s, d: calls.append("clone") or {},
                         inject_fn=lambda c: calls.append("inject") or {},
@@ -729,7 +768,7 @@ class RunProductWiringTests(unittest.TestCase):
                         observe_fn=lambda t: calls.append("observe") or {},
                     )
             self.assertIn("BLOCKED", str(caught.exception))
-            self.assertIn("trusted key", str(caught.exception))
+            self.assertIn("inspection", str(caught.exception))
             self.assertEqual(calls, [])
 
     def test_non_a_observation_refuses_before_closure(self) -> None:
@@ -747,7 +786,7 @@ class RunProductWiringTests(unittest.TestCase):
                 with self.assertRaises(LifecycleHarnessError):
                     harness.run_product(
                         release_bundle=Path(str(fixtures["bundle"])),
-                        trusted_key_dir=Path(str(fixtures["key_dir"])),
+    
                         target_fn=lambda p: {
                             "target": str(p),
                             "size_bytes": DISPOSABLE_TARGET_BYTES,
@@ -781,7 +820,7 @@ class RunProductWiringTests(unittest.TestCase):
 
                 result = harness.run_product(
                     release_bundle=Path(str(fixtures["bundle"])),
-                    trusted_key_dir=Path(str(fixtures["key_dir"])),
+
                     target_fn=None,  # real sparse target via truncate
                     clone_fn=lambda s, d: {
                         "source_sha256": _product.sha256_file(Path(s)),
@@ -1096,7 +1135,6 @@ class GatherObservationTests(unittest.TestCase):
         record = InstalledLayoutRecord.from_dict(
             {
                 "accepted_release_id": "greia-0.20.0",
-                "accepted_release_sequence": 20,
                 "accepted_slot": "A",
                 "boot_backend": "grub-ab-v1",
                 "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -1139,7 +1177,6 @@ class GatherObservationTests(unittest.TestCase):
             layout_id="legacy-bios-ab-v1",
             boot_backend="grub-ab-v1",
             release_id="greia-0.20.0",
-            release_sequence=20,
         )
         return boot, persist
 

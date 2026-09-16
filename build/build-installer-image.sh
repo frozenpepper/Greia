@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# Greia OS live-installer image builder (thin role consumer).
+#
+# This script owns only live-installer media assembly: target-build
+# delegation and squashfs payload/digest, the live root composed through the
+# shared composition engine for role `live-installer`, plus the live-only
+# steps that remain here by construction — pool cache + hardware-support
+# pool + live firmware, live-media-id, installer-ab.env/A-B bundle handling,
+# live squashfs, MBR media assembly and live GRUB. All generic composition
+# blocks (profile resolve/validate, debootstrap, virtual mounts, package
+# install, installer overlay, Greia content subset, early framebuffer, base
+# SSH + developer provision, metadata, hygiene) live in
+# build/lib/compose.sh behind the explicit role-typed composition contract,
+# shared with the target role consumer (build/build-image.sh).
 set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,10 +20,11 @@ PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 source "$SCRIPT_DIR/lib/safe-cleanup.sh"
 # shellcheck source=lib/apt-cache.sh
 source "$SCRIPT_DIR/lib/apt-cache.sh"
+# shellcheck source=lib/compose.sh
+source "$SCRIPT_DIR/lib/compose.sh"
 
 PROFILE_TOOL="$PROJECT_ROOT/tools/build_profile.py"
 PACKAGE_SET_ROOT="$SCRIPT_DIR/package-sets"
-DEBIAN_ARCHIVE_KEYRING="$PROJECT_ROOT/build/trust/debian-archive-keyring-2025.1.gpg"
 
 usage() {
   cat <<'USAGE'
@@ -36,16 +50,13 @@ fi
   echo "Build profiles are declarative TOML; executable .env profiles are no longer accepted: $PROFILE_PATH" >&2
   exit 1
 }
-profile_assignments="$(python3 "$PROFILE_TOOL" shell "$PROFILE_PATH")"
-eval "$profile_assignments"
-python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" validate "$PROFILE_PATH" >/dev/null
-python3 "$PROFILE_TOOL" check-phase0-builder "$PROFILE_PATH" --scope installer >/dev/null
-if [[ "${PIP_RELEASE_BUILD:-0}" == "1" ]]; then
-  if ! release_error="$(python3 "$PROFILE_TOOL" check-release "$PROFILE_PATH" 2>&1)"; then
-    echo "Release build refused: $release_error" >&2
-    exit 1
-  fi
-fi
+
+# Full typed profile resolution/validation plus the release gate and
+# support-date guard run inside the shared composition engine before any disk
+# mutation, so the live-installer consumer and the target consumer share one
+# implementation. This also exports PROFILE_ID and the installer-scope
+# package-set inputs used below.
+compose_resolve_profile "$PROFILE_PATH" "live-installer" "$PROJECT_ROOT"
 
 OUTPUT_DIR="${2:-$PROJECT_ROOT/out}"
 mkdir -p "$OUTPUT_DIR"
@@ -97,15 +108,7 @@ for command_name in "${required[@]}"; do
   }
 done
 
-host_arch="$(uname -m)"
-case "$ARCH:$host_arch" in
-  i386:x86_64|i386:i?86|amd64:x86_64) ;;
-  *)
-    echo "Profile architecture $ARCH cannot be executed safely on build host $host_arch." >&2
-    echo "Use an x86_64 Debian/Ubuntu VM for installer image builds." >&2
-    exit 1
-    ;;
-esac
+compose_check_host_arch
 
 mkdir -p "$TARGET_OUT" "$TARGET_MOUNT" "$LIVE_ROOT" "$USB_MOUNT"
 "$SCRIPT_DIR/build-image.sh" "$PROFILE_PATH" "$TARGET_OUT"
@@ -126,56 +129,49 @@ TARGET_PAYLOAD_DIGEST="$BUILD_DIR/pip-rootfs.squashfs.sha256"
 mksquashfs "$TARGET_MOUNT" "$TARGET_PAYLOAD" -comp xz -b 256K -noappend >/dev/null
 payload_sha256="$(sha256sum "$TARGET_PAYLOAD" | awk '{print $1}')"
 printf '%s  %s\n' "$payload_sha256" 'pip-rootfs.squashfs' > "$TARGET_PAYLOAD_DIGEST"
+target_payload_sha256="$payload_sha256"
 umount "$TARGET_MOUNT"
 MOUNTS=()
 losetup -d "$TARGET_LOOP"
 TARGET_LOOP=""
 
-# Build the live installer environment. It is allowed to be substantially
-# larger than the installed target because broad hardware support belongs on
-# removable installation media, not permanently on low-storage child devices.
+# Compose the live installer root through the shared engine with live-only
+# inserts at their required positions. The engine owns profile validation
+# (already performed above, idempotent re-resolve), debootstrap, overlay,
+# packages, Greia content, framebuffer, systemd, SSH, metadata and hygiene;
+# this consumer keeps only the live-installer-specific assembly around it:
+# pool cache, live-media-id (before the package install so the kernel
+# postinst initramfs hook embeds it), hardware-support pool + live firmware
+# (after packages, before initramfs), payload linkage, A/B facts, live
+# squashfs, MBR media assembly and live GRUB.
+#
+# The live installer environment is allowed to be substantially larger than
+# the installed target because broad hardware support belongs on removable
+# installation media, not permanently on low-storage child devices.
+# The live root must not gain target-only Activity content or the full target
+# asset set: the engine's live-installer content subset installs only src +
+# runtime + icons + fonts.
+export COMPOSE_DECLARED_MANIFEST="$INSTALLER_PROFILE_MANIFEST"
+# The live root is a live medium, never a fixed-UUID installed root: ensure
+# the engine skips the installed fstab identity path.
+unset GREIA_ROOT_UUID || true
 # Persistent host apt + pool caches: bind-mount BEFORE the live debootstrap so
 # base downloads land in the persistent host caches instead of the real live
 # directory (a post-debootstrap mount would shadow them and they would survive
 # into the squashfs). Released by cleanup() and the explicit pre-mksquashfs
 # safe_unmount_paths before compression; never clear the caches.
-LIVE_APT_CACHE_MOUNT="$(mount_apt_archives_cache "$LIVE_ROOT")"; MOUNTS+=("$LIVE_APT_CACHE_MOUNT")
+compose_mount_apt_cache "$LIVE_ROOT"
 LIVE_POOL_CACHE_MOUNT="$(mount_pool_cache "$LIVE_ROOT")"; MOUNTS+=("$LIVE_POOL_CACHE_MOUNT")
-[[ -r "$DEBIAN_ARCHIVE_KEYRING" ]] || { echo "Pinned Debian archive keyring is missing: $DEBIAN_ARCHIVE_KEYRING" >&2; exit 1; }
-debootstrap --arch="$ARCH" --variant=minbase --include=ca-certificates --keyring="$DEBIAN_ARCHIVE_KEYRING" --force-check-gpg "$SUITE" "$LIVE_ROOT" "$MIRROR"
-live_arch="$(chroot "$LIVE_ROOT" /usr/bin/dpkg --print-architecture)"
-[[ "$live_arch" == "$ARCH" ]] || { echo "Live root architecture $live_arch does not match profile $ARCH." >&2; exit 1; }
-# Repository checkout ownership is never live-image filesystem authority.
-rsync -a --chown=root:root "$SCRIPT_DIR/installer-overlay/" "$LIVE_ROOT/"
-[[ "$(stat -c '%u:%g' "$LIVE_ROOT")" == "0:0" ]] || {
-  echo "Greia installer overlay changed live root ownership away from root:root." >&2
-  exit 1
-}
-cat > "$LIVE_ROOT/etc/apt/sources.list" <<SOURCES
-deb $MIRROR $SUITE main non-free-firmware
-deb $MIRROR $SUITE-updates main non-free-firmware
-deb $SECURITY_MIRROR $SUITE-security main non-free-firmware
-SOURCES
-printf '%s\n' greia-installer > "$LIVE_ROOT/etc/hostname"
-cat > "$LIVE_ROOT/etc/hosts" <<'HOSTS'
-127.0.0.1 localhost
-127.0.1.1 greia-installer
-::1 localhost ip6-localhost ip6-loopback
-HOSTS
-for virtual in dev proc sys run; do mkdir -p "$LIVE_ROOT/$virtual"; done
-mount --rbind /dev "$LIVE_ROOT/dev"; MOUNTS+=("$LIVE_ROOT/dev"); mount --make-rslave "$LIVE_ROOT/dev"
-mount -t proc proc "$LIVE_ROOT/proc"; MOUNTS+=("$LIVE_ROOT/proc")
-mount --rbind /sys "$LIVE_ROOT/sys"; MOUNTS+=("$LIVE_ROOT/sys"); mount --make-rslave "$LIVE_ROOT/sys"
-# /run is always tmpfs at runtime; a fresh mount here avoids carrying the
-# build host's desktop-session mounts (for example gvfs/portal under
-# /run/user/1000) into the live root, which would keep the build busy and
-# block teardown. Seed a resolver stub so chroot apt/DNS still works while
-# the build shares the host network namespace.
-mount -t tmpfs tmpfs "$LIVE_ROOT/run"; MOUNTS+=("$LIVE_ROOT/run")
-install -d -m 0755 "$LIVE_ROOT/run/systemd/resolve"
-cat /etc/resolv.conf > "$LIVE_ROOT/run/systemd/resolve/stub-resolv.conf" 2>/dev/null || true
-# NOTE: the persistent apt + pool caches are already bind-mounted above
-# (before the live debootstrap); no second mount here.
+compose_debootstrap "$LIVE_ROOT"
+compose_apply_overlay "$LIVE_ROOT" "live-installer"
+compose_write_build_info "$LIVE_ROOT" "live-installer"
+# The live installer is a second Debian root carrying the target payload
+# reference: record the expected payload digest and the target manifest
+# beside the live build-info before any package install.
+install -m 0644 "$TARGET_PAYLOAD_DIGEST" "$LIVE_ROOT/etc/greia-os/expected-payload.sha256"
+install -m 0644 "$TARGET_PROFILE_MANIFEST" "$LIVE_ROOT/etc/greia-os/target-image-profile.json"
+compose_write_sources_hostname_hosts "$LIVE_ROOT" "live-installer"
+compose_mount_virtual "$LIVE_ROOT"
 
 # The live-media UUID must exist before the kernel package postinst runs
 # update-initramfs during the apt install below: the installer overlay's
@@ -193,24 +189,14 @@ PYUUID
 printf '%s\n' "$live_media_id" > "$LIVE_ROOT/etc/greia-os/live-media-id"
 chmod 0644 "$LIVE_ROOT/etc/greia-os/live-media-id"
 
-APT_ACQUIRE_OPTIONS=(
-  -o Acquire::Retries=3
-  -o Acquire::http::Timeout=20
-  -o Acquire::https::Timeout=20
-)
-
-package_output="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" packages "$PROFILE_PATH" --scope installer)"
-mapfile -t packages <<< "$package_output"
-(( ${#packages[@]} > 0 )) || { echo "Resolved installer package set is empty." >&2; exit 1; }
-chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
-# Keep intentionally pre-seeded Greia conffiles without any dpkg prompt.
-chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-  apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold install -y --no-install-recommends "${packages[@]}"
+compose_install_packages "$LIVE_ROOT" "live-installer"
 
 # ADR 0021: freeze a broad signed Debian firmware/microcode repository on the
 # installer while APT metadata is current, then install the verified firmware
 # class into the live root for reliable coldplug. The final target later gets
 # only machine-specific packages selected from the same frozen repository.
+# Local-only install with no network; pool populate before live firmware
+# before initramfs before squashfs.
 "$SCRIPT_DIR/populate-hardware-support-pool.sh" "$LIVE_ROOT" "$SUITE" "$ARCH"
 "$SCRIPT_DIR/install-live-hardware-firmware.sh" "$LIVE_ROOT" "$SUITE" "$ARCH"
 cp "$LIVE_ROOT/opt/greia-hardware-support/manifest.json" "$HARDWARE_SUPPORT_REPORT"
@@ -229,200 +215,28 @@ print(json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["package_count"]
 PY
 )"
 
-install -d -m 0755 "$LIVE_ROOT/opt/greia-os"
-rsync -a --delete --exclude '__pycache__' "$PROJECT_ROOT/src" "$PROJECT_ROOT/runtime" "$LIVE_ROOT/opt/greia-os/"
-install -d -m 0755 "$LIVE_ROOT/opt/greia-os/assets/icons/core/v1/256"
-rsync -a "$PROJECT_ROOT/assets/icons/core/v1/256/" "$LIVE_ROOT/opt/greia-os/assets/icons/core/v1/256/"
-install -d -m 0755 "$LIVE_ROOT/opt/greia-os/assets/fonts"
-rsync -a "$PROJECT_ROOT/assets/fonts/" "$LIVE_ROOT/opt/greia-os/assets/fonts/"
-install -d -m 0755 "$LIVE_ROOT/usr/lib/python3/dist-packages"
-printf '%s\n' /opt/greia-os/src > "$LIVE_ROOT/usr/lib/python3/dist-packages/pip_os.pth"
-chown -R root:root "$LIVE_ROOT/opt/greia-os"
-chmod -R a-w "$LIVE_ROOT/opt/greia-os"
-
-# Build the Greia-owned early framebuffer boot cover for the TARGET
-# architecture inside the live root. Build-only libklibc-dev is removed again
-# before package-manifest/footprint capture.
-build_early_framebuffer() {
-  local rootfs="$1"
-  # klcc needs the matching native compiler (e.g. i686-linux-gnu-gcc) which is
-  # provided by the gcc package; install it together with libklibc-dev so the
-  # target toolchain can actually compile. Both are removed again afterwards.
-  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
-    install -y --no-install-recommends libklibc-dev gcc >/dev/null
-  install -d -m 0755 "$rootfs/usr/lib/greia-boot"
-  install -d -m 0755 "$rootfs/usr/src/greia-boot"
-  cp "$PROJECT_ROOT/build/early-boot/greia-fb-splash.c" \
-    "$rootfs/usr/src/greia-boot/greia-fb-splash.c"
-  local klcc_path
-  klcc_path="$(chroot "$rootfs" /bin/sh -c 'command -v klcc')" || {
-    echo "klcc not found in live root after libklibc-dev install." >&2
-    exit 1
-  }
-  chroot "$rootfs" "$klcc_path" -static -Os -s \
-    -o /usr/lib/greia-boot/greia-fb-splash \
-    /usr/src/greia-boot/greia-fb-splash.c
-  rm -rf "$rootfs/usr/src/greia-boot"
-  chmod 0755 "$rootfs/usr/lib/greia-boot/greia-fb-splash"
-  elf_machine="$(readelf -h "$rootfs/usr/lib/greia-boot/greia-fb-splash" 2>/dev/null \
-    | awk '/Machine:/{print $2, $3}')"
-  case "$ARCH" in
-    i386)
-      [ "$elf_machine" = "Intel 80386" ] || {
-        echo "Early framebuffer helper architecture ($elf_machine) does not match i386 target." >&2
-        exit 1
-      }
-      ;;
-    amd64)
-      [ "$elf_machine" = "Advanced Micro" ] || [ "$elf_machine" = "AMD x86-64" ] || {
-        echo "Early framebuffer helper architecture ($elf_machine) does not match amd64 target." >&2
-        exit 1
-      }
-      ;;
-  esac
-  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge libklibc-dev gcc >/dev/null
-  chroot "$rootfs" apt-get -y autoremove >/dev/null 2>&1 || true
-}
-
-build_early_framebuffer "$LIVE_ROOT"
-systemctl --root="$LIVE_ROOT" enable greia-installer.service
-systemctl --root="$LIVE_ROOT" mask getty@.service autovt@.service console-getty.service debug-shell.service emergency.service rescue.service console-shell.service kbrequest.target getty@tty1.service getty@tty2.service getty@tty3.service getty@tty4.service getty@tty5.service getty@tty6.service
-systemctl --root="$LIVE_ROOT" set-default graphical.target
-
-# The canonical live-installer builder fails closed for normal/release profiles:
-# SSH is disabled and no password is minted. For an explicit developer-remote
-# profile the owner policy requires the greia/greia development login to be
-# reachable after boot, so the builder provisions it here (root stays denied).
-# This makes the owner-approved developer installer reproducible instead of
-# depending on a separate manual provisioning step.
-systemctl --root="$LIVE_ROOT" disable ssh.service 2>/dev/null || true
-install -d -m 0755 "$LIVE_ROOT/etc/ssh/sshd_config.d"
-cat > "$LIVE_ROOT/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'SSH'
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-AuthenticationMethods publickey
-PermitRootLogin no
-X11Forwarding no
-AllowTcpForwarding no
-PermitTunnel no
-SSH
-
-provision_developer_ssh() {
-  local rootfs="$1"
-  # Create the managed greia development account if absent.
-  if ! chroot "$rootfs" /usr/bin/id -u greia >/dev/null 2>&1; then
-    chroot "$rootfs" /usr/sbin/useradd --create-home --home-dir /var/lib/greia \
-      --shell /bin/bash --groups sudo greia
-  fi
-  printf 'greia:greia\n' | chroot "$rootfs" /usr/sbin/chpasswd
-  # Rewrite the shared security floor so the owner-approved greia/greia login
-  # works while root stays denied. This is the dev-image floor from the
-  # provisioning tools, applied at build time for developer profiles.
-  cat > "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf" <<'FLOOR'
-# Live-installer development security floor (owner-approved greia/greia).
-# Enables the development/test SSH identity greia/greia; root stays denied.
-PasswordAuthentication yes
-KbdInteractiveAuthentication no
-PermitRootLogin no
-AuthenticationMethods password
-DenyUsers root
-AllowUsers greia
-FLOOR
-  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/00-greia-security-floor.conf"
-  # Also make the later-sorted 20-greia-parent.conf consistent. sshd_config.d
-  # is included in glob order with first-value-wins; the base builder writes
-  # 20-greia-parent.conf with PasswordAuthentication no / publickey-only, which
-  # would otherwise defeat the developer floor.
-  cat > "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf" <<'DEVSSH'
-# Development live-installer SSH policy (owner-approved greia/greia).
-PasswordAuthentication yes
-KbdInteractiveAuthentication no
-PermitRootLogin no
-AuthenticationMethods password
-AllowUsers greia
-X11Forwarding no
-AllowTcpForwarding no
-PermitTunnel no
-DEVSSH
-  chmod 0644 "$rootfs/etc/ssh/sshd_config.d/20-greia-parent.conf"
-  systemctl --root="$rootfs" enable ssh.service
-}
-
-installer_sets="$(python3 "$PROFILE_TOOL" --package-root "$PACKAGE_SET_ROOT" package-sets "$PROFILE_PATH" --scope installer 2>/dev/null)"
-if [[ "$installer_sets" == *developer-remote* ]]; then
-  echo "Developer installer profile: enabling greia/greia SSH (root denied)."
-  provision_developer_ssh "$LIVE_ROOT"
-fi
-
-# The live installer is a second Debian root, not merely a wrapper around the
-# target payload. Record and audit its exact resolved package/kernel base too.
-PROJECT_VERSION="$(tr -d '\r\n' < "$PROJECT_ROOT/VERSION")"
-[[ -n "$PROJECT_VERSION" ]] || { echo "VERSION is empty." >&2; exit 1; }
-install -d -m 0755 "$LIVE_ROOT/etc/greia-os"
-install -m 0644 "$TARGET_PAYLOAD_DIGEST" "$LIVE_ROOT/etc/greia-os/expected-payload.sha256"
-cat > "$LIVE_ROOT/etc/greia-os/build-info" <<BUILDINFO
-GREIA_OS_VERSION=$PROJECT_VERSION
-PIP_RUNTIME_API=0.1
-PIP_BUILD_PHASE=phase0-live-installer
-PIP_BUILD_PROFILE=$PROFILE_ID
-PIP_PLATFORM_FAMILY=$PLATFORM_FAMILY
-PIP_COMPATIBILITY_CLASS=$COMPATIBILITY_CLASS
-PIP_RUNTIME_FAMILIES=$RUNTIME_FAMILIES
-PIP_DISPLAY_ADAPTER=$DISPLAY_ADAPTER
-PIP_BOOT_ADAPTER=$INSTALLER_BOOT_ADAPTER
-PIP_BOOT_COVER_BACKEND=$BOOT_COVER_BACKEND
-BUILDINFO
-install -m 0644 "$INSTALLER_PROFILE_MANIFEST" "$LIVE_ROOT/etc/greia-os/image-profile.json"
-install -m 0644 "$TARGET_PROFILE_MANIFEST" "$LIVE_ROOT/etc/greia-os/target-image-profile.json"
-chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}\t${Version}\t${Architecture}\t${Installed-Size}\n' \
-  | LC_ALL=C sort > "$LIVE_ROOT/etc/greia-os/package-manifest.tsv"
+compose_install_greia_content "$LIVE_ROOT" "live-installer"
+compose_build_early_framebuffer "$LIVE_ROOT"
+compose_configure_systemd "$LIVE_ROOT" "live-installer"
+compose_configure_ssh_base "$LIVE_ROOT"
+compose_maybe_provision_developer_ssh "$LIVE_ROOT" "live-installer"
+compose_footprint_prune "$LIVE_ROOT"
+compose_write_metadata_manifests "$LIVE_ROOT" "live-installer"
+# The engine's base-system manifest carries the exact resolved package/kernel
+# base; append the live-only hardware-support pool size so the produced
+# medium records the frozen repository it carries.
 {
-  echo "profile=$PROFILE_ID"
-  echo "certification_state=$CERTIFICATION_STATE"
-  echo "platform_family=$PLATFORM_FAMILY"
-  echo "compatibility_class=$COMPATIBILITY_CLASS"
-  echo "image_layout=$IMAGE_LAYOUT"
-  echo "installer_boot_adapter=$INSTALLER_BOOT_ADAPTER"
-  echo "display_adapter=$DISPLAY_ADAPTER"
-  echo "enabled_runtime_families=$RUNTIME_FAMILIES"
-  echo "suite=$SUITE"
-  echo "architecture=$ARCH"
-  echo "kernel_meta_package=$KERNEL_PACKAGE"
-  echo "declared_support_end_date=$SUPPORT_END_DATE"
-  echo "debian_version=$(cat "$LIVE_ROOT/etc/debian_version")"
-  echo "resolved_kernel_packages=$(chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}=${Version} ' 'linux-image-*' 2>/dev/null || true)"
-  echo "resolved_xorg_packages=$(chroot "$LIVE_ROOT" dpkg-query -W -f='${Package}=${Version} ' 'xserver-xorg-*' 2>/dev/null || true)"
   echo "hardware_support_pool_packages=$hardware_support_package_count"
   echo "hardware_support_pool_bytes=$hardware_support_pool_bytes"
-  echo "build_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "mirror=$MIRROR"
-  echo "security_mirror=$SECURITY_MIRROR"
-} > "$LIVE_ROOT/etc/greia-os/base-system-manifest"
-live_support_status_exit=0
-chroot "$LIVE_ROOT" check-support-status --no-heading \
-  > "$LIVE_ROOT/etc/greia-os/security-support-status.txt" 2>&1 || live_support_status_exit=$?
-if (( live_support_status_exit != 0 )); then
-  live_security_support_state="probe-failed"
-  echo "WARNING: live-installer security-support probe failed with exit $live_support_status_exit." >&2
-elif [[ -s "$LIVE_ROOT/etc/greia-os/security-support-status.txt" ]]; then
-  live_security_support_state="alerts-present"
-  echo "WARNING: live installer includes packages with limited or ended security support." >&2
-else
-  live_security_support_state="no-alerts"
-fi
-{
-  echo "security_support_state=$live_security_support_state"
-  echo "security_support_probe_exit=$live_support_status_exit"
 } >> "$LIVE_ROOT/etc/greia-os/base-system-manifest"
-chmod 0644 "$LIVE_ROOT/etc/greia-os/build-info" \
-  "$LIVE_ROOT/etc/greia-os/package-manifest.tsv" \
-  "$LIVE_ROOT/etc/greia-os/base-system-manifest" \
-  "$LIVE_ROOT/etc/greia-os/security-support-status.txt"
+# Live-role probe outcome for the USB/media report below (mirrors the target
+# consumer carrying the engine result into its footprint report).
+live_support_status_exit="$COMPOSE_SECURITY_SUPPORT_EXIT"
+live_security_support_state="$COMPOSE_SECURITY_SUPPORT_STATE"
 cp "$LIVE_ROOT/etc/greia-os/package-manifest.tsv" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-package-manifest.tsv"
 cp "$LIVE_ROOT/etc/greia-os/base-system-manifest" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-base-system-manifest.txt"
 cp "$LIVE_ROOT/etc/greia-os/security-support-status.txt" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-live-security-support-status.txt"
+compose_footprint_hygiene "$LIVE_ROOT"
 
 # POSTR1-P2: immutable image-owned A/B release facts (installer-ab.env).
 # For A/B target profiles the installer medium carries one small typed
@@ -432,41 +246,22 @@ cp "$LIVE_ROOT/etc/greia-os/security-support-status.txt" "$OUTPUT_DIR/greia-os-i
 # greia_installer.composition parses/validates it centrally. Single-root
 # recovery profiles ship no A/B facts (the unit's EnvironmentFile entry is
 # optional and Python refuses an A/B profile with missing facts fail-closed).
-# Build-time assertion (P2 requirement 2): the referenced signed release
-# bundle and trusted key directory must actually be present on the installer
-# medium, otherwise the build fails here — before any disk mutation.
+# Build-time assertion (P2 requirement 2): the referenced unsigned v3 release
+# bundle must actually be present on the installer medium, otherwise the
+# build fails here — before any disk mutation.
 if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
   echo "A/B target profile ($STORAGE_LAYOUT_ADAPTER): generating installer A/B release facts."
   AB_RELEASE_SRC="${GREIA_AB_RELEASE_BUNDLE_SRC:-}"
-  AB_KEYS_SRC="${GREIA_AB_TRUSTED_KEY_SRC:-}"
   [[ -n "$AB_RELEASE_SRC" ]] || {
-    echo "A/B installer build refused: set GREIA_AB_RELEASE_BUNDLE_SRC to the signed deterministic .greiaupdate v2 release artifact." >&2
+    echo "A/B installer build refused: set GREIA_AB_RELEASE_BUNDLE_SRC to the unsigned deterministic .greiaupdate v3 release artifact." >&2
     exit 1
   }
   [[ -f "$AB_RELEASE_SRC" && ! -L "$AB_RELEASE_SRC" ]] || {
     echo "A/B installer build refused: release bundle is not a regular file: $AB_RELEASE_SRC" >&2
     exit 1
   }
-  [[ -n "$AB_KEYS_SRC" ]] || {
-    echo "A/B installer build refused: set GREIA_AB_TRUSTED_KEY_SRC to the release signer public-key directory." >&2
-    exit 1
-  }
-  [[ -d "$AB_KEYS_SRC" && ! -L "$AB_KEYS_SRC" ]] || {
-    echo "A/B installer build refused: trusted key dir is not a real directory: $AB_KEYS_SRC" >&2
-    exit 1
-  }
-  AB_KEY_COUNT="$(find "$AB_KEYS_SRC" -maxdepth 1 -type f -name '*.pem' | wc -l)"
-  (( AB_KEY_COUNT > 0 )) || {
-    echo "A/B installer build refused: no trusted release keys (*.pem) in $AB_KEYS_SRC" >&2
-    exit 1
-  }
-  # Trusted keys live read-only on the medium next to the other release
-  # facts; the bundle itself travels in the USB payload beside the target
+  # The bundle itself travels in the USB payload beside the target
   # squashfs (copied at USB assembly below) and is re-asserted there.
-  install -d -m 0755 "$LIVE_ROOT/etc/greia-os/system-update-keys"
-  cp "$AB_KEYS_SRC"/*.pem "$LIVE_ROOT/etc/greia-os/system-update-keys/"
-  chmod 0644 "$LIVE_ROOT/etc/greia-os/system-update-keys/"*.pem
-  chown root:root "$LIVE_ROOT/etc/greia-os/system-update-keys" "$LIVE_ROOT/etc/greia-os/system-update-keys/"*.pem
   # Dedicated GRUB secret for the installed target's fixed boot entries. This
   # is deliberately distinct from the USB boot-menu recovery hash generated
   # at USB assembly: sharing one secret would let the installer recovery
@@ -478,7 +273,7 @@ if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
     "$AB_GRUB_SECURITY_ROOT" --copy-code-to "$AB_GRUB_RECOVERY_CODE"
   ab_grub_hash="$(cat "$AB_GRUB_SECURITY_ROOT/etc/greia-os/grub-recovery.pbkdf2")"
   [[ -n "$ab_grub_hash" ]] || { echo "A/B installer build refused: GRUB secret generation failed." >&2; exit 1; }
-  if [[ "${installer_sets:-}" == *developer-remote* ]]; then
+  if [[ "${COMPOSE_ROLE_SETS:-}" == *developer-remote* ]]; then
     ab_developer=1
   else
     ab_developer=0
@@ -487,7 +282,6 @@ if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
 # Greia OS installer A/B release facts (generated, do not hand-edit).
 # Profile $PROFILE_ID / layout $STORAGE_LAYOUT_ADAPTER / backend $UPDATES_BOOT_BACKEND.
 GREIA_AB_RELEASE_BUNDLE=/run/live/medium/payload/greia-release.greiaupdate
-GREIA_AB_TRUSTED_KEY_DIR=/etc/greia-os/system-update-keys
 GREIA_AB_GRUB_PASSWORD_HASH=$ab_grub_hash
 GREIA_AB_DEVELOPER=$ab_developer
 GREIA_AB_SUPPORT_INSTALLED_BYTES=$hardware_support_pool_bytes
@@ -499,11 +293,6 @@ ABENV
     echo "A/B installer build refused: generated installer-ab.env is missing." >&2
     exit 1
   }
-  ab_live_keys="$(find "$LIVE_ROOT/etc/greia-os/system-update-keys" -maxdepth 1 -type f -name '*.pem' | wc -l)"
-  (( ab_live_keys > 0 )) || {
-    echo "A/B installer build refused: trusted keys missing on the installer medium." >&2
-    exit 1
-  }
   cp "$LIVE_ROOT/etc/greia-os/installer-ab.env" "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-installer-ab.env"
   chmod 0644 "$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}-installer-ab.env"
 else
@@ -511,9 +300,6 @@ else
   rm -f "$LIVE_ROOT/etc/greia-os/installer-ab.env"
 fi
 
-chroot "$LIVE_ROOT" apt-get autoclean
-rm -rf "$LIVE_ROOT/var/lib/apt/lists/"*
-find "$LIVE_ROOT" -xdev -type d -name __pycache__ -prune -exec rm -rf '{}' +
 chroot "$LIVE_ROOT" update-initramfs -u -k all
 kernel_name="$(find "$LIVE_ROOT/boot" -maxdepth 1 -type f -name 'vmlinuz-*' -printf '%f\n' | sort -V | tail -1)"
 [[ -n "$kernel_name" ]] || { echo "Live kernel missing." >&2; exit 1; }
@@ -565,12 +351,12 @@ cp "$KERNEL_PATH" "$USB_MOUNT/live/vmlinuz"
 cp "$INITRD_PATH" "$USB_MOUNT/live/initrd.img"
 cp "$TARGET_PAYLOAD" "$USB_MOUNT/payload/pip-rootfs.squashfs"
 cp "$TARGET_PAYLOAD_DIGEST" "$USB_MOUNT/payload/pip-rootfs.squashfs.sha256"
-# POSTR1-P2: the signed A/B release bundle travels in the USB payload beside
+# POSTR1-P2: the unsigned v3 A/B release bundle travels in the USB payload beside
 # the target squashfs and is re-asserted here — the installer-ab.env reference
 # above must resolve on the booted medium.
 if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
   [[ -n "${AB_RELEASE_SRC:-}" && -f "$AB_RELEASE_SRC" && ! -L "$AB_RELEASE_SRC" ]] || {
-    echo "A/B installer build refused: signed release bundle missing for USB payload." >&2
+    echo "A/B installer build refused: release bundle missing for USB payload." >&2
     exit 1
   }
   cp "$AB_RELEASE_SRC" "$USB_MOUNT/payload/greia-release.greiaupdate"

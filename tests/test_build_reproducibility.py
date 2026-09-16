@@ -8,20 +8,24 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class BuildReproducibilityTests(unittest.TestCase):
+    # T02: live-installer overlay/content composition lives in the shared
+    # engine; the thin installer consumer delegates instead of duplicating.
     def test_checkout_ownership_cannot_leak_into_image_roots(self) -> None:
-        target = (PROJECT_ROOT / "build/build-image.sh").read_text(encoding="utf-8")
+        target = (PROJECT_ROOT / "build/lib/compose.sh").read_text(encoding="utf-8")
         installer = (PROJECT_ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
         self.assertIn("rsync -a --chown=root:root", target)
-        self.assertIn("rsync -a --chown=root:root", installer)
         self.assertIn("target root ownership away from root:root", target)
-        self.assertIn("live root ownership away from root:root", installer)
+        self.assertIn("live root ownership away from root:root", target)
+        self.assertIn('compose_apply_overlay "$LIVE_ROOT" "live-installer"', installer)
+        self.assertNotIn("rsync -a --chown=root:root", installer)
 
     def test_product_conffiles_are_kept_without_dpkg_prompt(self) -> None:
-        target = (PROJECT_ROOT / "build/build-image.sh").read_text(encoding="utf-8")
+        target = (PROJECT_ROOT / "build/lib/compose.sh").read_text(encoding="utf-8")
         installer = (PROJECT_ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
-        for builder in (target, installer):
-            self.assertIn("DEBIAN_FRONTEND=noninteractive", builder)
-            self.assertIn("Dpkg::Options::=--force-confold", builder)
+        self.assertIn("DEBIAN_FRONTEND=noninteractive", target)
+        self.assertIn("Dpkg::Options::=--force-confold", target)
+        self.assertIn('compose_install_packages "$LIVE_ROOT" "live-installer"', installer)
+        self.assertNotIn("Dpkg::Options::=--force-confold", installer)
 
     def test_cleanup_walks_bind_submounts_and_retries_loop_detach(self) -> None:
         helper = (PROJECT_ROOT / "build/lib/safe-cleanup.sh").read_text(encoding="utf-8")

@@ -64,7 +64,7 @@ def pool_to_support_set(
 ) -> ReleaseSupportSet:
     """Convert an already-verified pool into the release-bound support set.
 
-    ``support_digest``/``support_size`` are the signed hardware-support member
+    ``support_digest``/``support_size`` are the release-bound hardware-support member
     facts from the release manifest; the pool itself was verified at load.
     Package classes come from the pool's own verified classification, so
     firmware can never be reclassified as microcode here.

@@ -27,18 +27,27 @@ def read(relative: str) -> str:
 
 
 class SingleReleaseAuthorityGuardTests(unittest.TestCase):
-    """No second system authority beside the signed release bundle."""
+    """Single unsigned v3 bundle authority; no signing/key authority."""
 
-    def test_single_signature_verifier(self) -> None:
+    def test_no_signing_verifier_authority(self) -> None:
         source = read("src/greia_platform/system_updates.py")
-        self.assertEqual(len(re.findall(r"def verify_update_signature", source)), 1)
-        self.assertEqual(len(re.findall(r"def _verify_ed25519", source)), 1)
+        self.assertEqual(len(re.findall(r"def verify_update_signature", source)), 0)
+        self.assertEqual(len(re.findall(r"def _verify_ed25519", source)), 0)
+        self.assertNotIn("SignatureEnvelope", source)
+        self.assertNotIn("generate_ed25519_keypair", source)
+        self.assertNotIn("SIGNATURE_NAME", source)
 
-    def test_single_trusted_key_dir_param(self) -> None:
+    def test_no_trusted_key_dir_authority(self) -> None:
         source = read("src/greia_platform/system_updates.py")
-        self.assertIn("trusted_key_dir", source)
+        self.assertNotIn("trusted_key_dir", source)
         self.assertNotIn("trusted_key_dirs", source)
         self.assertNotIn("trusted_key_root", source)
+
+    def test_single_unsigned_bundle_authority(self) -> None:
+        source = read("src/greia_platform/system_updates.py")
+        self.assertEqual(len(re.findall(r"def build_update_bundle", source)), 1)
+        self.assertEqual(len(re.findall(r"def inspect_update_bundle", source)), 1)
+        self.assertIn("SCHEMA_VERSION = 3", source)
 
     def test_no_signature_bypass_strings(self) -> None:
         for relative in (

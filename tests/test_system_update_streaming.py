@@ -9,66 +9,59 @@ from unittest.mock import patch
 
 from greia_platform.system_updates import (
     HARDWARE_SUPPORT_NAME,
+    INBOX_CANDIDATE_NAME,
     MANIFEST_NAME,
     MIN_INBOX_FREE_BYTES,
     PAYLOAD_NAME,
-    PERSISTENT_CONTRACT_NAME,
     SCHEMA_VERSION,
-    SIGNATURE_NAME,
-    SignatureEnvelope,
     SystemUpdateInbox,
     UpdateBundleError,
     UpdateManifest,
-    build_persistent_state_contract_bytes,
+    build_update_bundle,
+    inspect_update_bundle,
 )
 
+_ZSTD = b"\x28\xb5\x2f\xfd"
 
-_HW_BYTES = b"\x28\xb5\x2f\xfd" + b"hwset" * 32
-_CONTRACT_BYTES = build_persistent_state_contract_bytes()
+
+def _zst_bytes(seed: bytes, size: int = 4096) -> bytes:
+    assert size > 4
+    body = (seed * ((size // len(seed)) + 1))[: size - 4]
+    return _ZSTD + body
+
+
+_HW_BYTES = _zst_bytes(b"hwset-", size=2048)
+_UNCOMPRESSED = 8 * 1024 * 1024
 
 
 class SystemUpdateStreamingTests(unittest.TestCase):
     def _bundle(self, root: Path) -> Path:
-        payload = b"synthetic-slot-image" * 64
-        hw_sha = hashlib.sha256(_HW_BYTES).hexdigest()
-        contract_sha = hashlib.sha256(_CONTRACT_BYTES).hexdigest()
-        manifest = UpdateManifest(
-            schema_version=SCHEMA_VERSION,
-            release_id="greia-0.14.0",
+        payload = _zst_bytes(b"synthetic-slot-image-")
+        payload_path = root / "payload.ext4.zst"
+        payload_path.write_bytes(payload)
+        hw_path = root / "hw.tar.zst"
+        hw_path.write_bytes(_HW_BYTES)
+        out = root / "source.greiaupdate"
+        if out.exists():
+            out.unlink()
+        build_update_bundle(
+            payload_path=payload_path,
+            hardware_support_path=hw_path,
+            output_path=out,
             version="0.14.0",
-            release_sequence=7,
+            release_id="greia-0.14.0",
             platform_family="legacy-x86",
             architecture="i386",
             profile="legacy-x86-i686",
-            signer="greia-release-main",
-            payload_sha256=hashlib.sha256(payload).hexdigest(),
-            payload_size=len(payload),
-            payload_filesystem_bytes=len(payload),
-            payload_minimum_slot_bytes=len(payload),
-            hardware_support_name=HARDWARE_SUPPORT_NAME,
-            hardware_support_schema_version=1,
-            hardware_support_sha256=hw_sha,
-            hardware_support_size=len(_HW_BYTES),
-            persistent_contract_schema_version=1,
-            persistent_contract_sha256=contract_sha,
-            persistent_contract_size=len(_CONTRACT_BYTES),
+            payload_uncompressed_bytes=_UNCOMPRESSED,
+            minimum_slot_bytes=_UNCOMPRESSED,
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
         )
-        signature = SignatureEnvelope(
-            schema_version=SCHEMA_VERSION,
-            algorithm="ed25519",
-            signer=manifest.signer,
-            signature=b"x" * 64,
-        )
-        path = root / "source.greiaupdate"
-        with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr(MANIFEST_NAME, manifest.canonical_bytes())
-            archive.writestr(SIGNATURE_NAME, signature.as_json_bytes())
-            archive.writestr(PAYLOAD_NAME, payload)
-            archive.writestr(HARDWARE_SUPPORT_NAME, _HW_BYTES)
-            archive.writestr(PERSISTENT_CONTRACT_NAME, _CONTRACT_BYTES)
-        return path
+        return out
 
-    def test_stream_staging_publishes_same_inode_without_second_local_copy(self) -> None:
+    def test_stream_staging_publishes_via_atomic_rename_without_copy(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = self._bundle(root)
@@ -80,12 +73,16 @@ class SystemUpdateStreamingTests(unittest.TestCase):
             queued = inbox.receive_staged(staging)
             queued_stat = queued.path.stat()
 
+            self.assertEqual(queued.path.name, INBOX_CANDIDATE_NAME)
             self.assertEqual(staged_stat.st_dev, queued_stat.st_dev)
             self.assertEqual(staged_stat.st_ino, queued_stat.st_ino)
-            self.assertTrue(staging.exists())
-            staging.unlink()
+            # The temporary is consumed by the atomic rename: only the
+            # fixed candidate remains, no second local copy.
+            self.assertFalse(staging.exists())
             self.assertTrue(queued.path.is_file())
             self.assertEqual(len(list(inbox.inbox_dir.glob("*.greiaupdate"))), 1)
+            inspected = inspect_update_bundle(queued.path)
+            self.assertEqual(inspected.manifest.schema_version, SCHEMA_VERSION)
 
     def test_receive_staged_rejects_file_outside_owned_inbox(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -112,6 +109,43 @@ class SystemUpdateStreamingTests(unittest.TestCase):
             ):
                 with self.assertRaisesRegex(UpdateBundleError, "not enough free space"):
                     inbox.create_receive_staging(1)
+
+    def test_old_signed_staging_rejected_with_migration_message(self) -> None:
+        import json
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            inbox = SystemUpdateInbox(root / "state")
+            manifest = {
+                "schema_version": 2,
+                "release_id": "greia-0.14.0",
+                "version": "0.14.0",
+                "platform_family": "legacy-x86",
+                "architecture": "i386",
+                "profile": "legacy-x86-i686",
+                "payload": {
+                    "name": "payload.bin",
+                    "sha256": "0" * 64,
+                    "size": 4,
+                    "kind": "system-slot-image",
+                },
+                "release_notes": "",
+            }
+            fake = root / "fake.greiaupdate"
+            with zipfile.ZipFile(fake, "w", compression=zipfile.ZIP_STORED) as archive:
+                archive.writestr(
+                    MANIFEST_NAME,
+                    (json.dumps(manifest, sort_keys=True, separators=(",", ":")) + "\n").encode(),
+                )
+                archive.writestr("manifest.sig", b"{}")
+                archive.writestr("payload.bin", b"data")
+            staging = inbox.create_receive_staging(fake.stat().st_size)
+            staging.write_bytes(fake.read_bytes())
+            with self.assertRaises(UpdateBundleError) as ctx:
+                inbox.receive_staged(staging)
+            message = str(ctx.exception).lower()
+            self.assertIn("v3", message)
+            self.assertTrue("rebuild" in message or "migration" in message)
 
 
 if __name__ == "__main__":

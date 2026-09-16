@@ -197,15 +197,19 @@ class EarlyBootArchitectureScaffoldTests(unittest.TestCase):
                     self.assertIn("|| true", script_text)
 
     def test_builders_compile_early_framebuffer_for_target_arch_and_remove_klibc(self) -> None:
-        for builder_name in ("build/build-image.sh", "build/build-installer-image.sh"):
-            with self.subTest(builder=builder_name):
-                builder = (ROOT / builder_name).read_text(encoding="utf-8")
-                self.assertIn("libklibc-dev", builder)
-                self.assertIn("klcc", builder)
-                self.assertIn("greia-fb-splash.c", builder)
-                self.assertIn("remove --purge libklibc-dev", builder)
-                self.assertIn("readelf -h", builder)
-                self.assertIn("Intel 80386", builder)
+        # T02: live-installer framebuffer build lives in the shared engine;
+        # the thin installer consumer delegates instead of duplicating it.
+        builder = (ROOT / "build/lib/compose.sh").read_text(encoding="utf-8")
+        self.assertIn("libklibc-dev", builder)
+        self.assertIn("klcc", builder)
+        self.assertIn("greia-fb-splash.c", builder)
+        self.assertIn("remove --purge libklibc-dev", builder)
+        self.assertIn("readelf -h", builder)
+        self.assertIn("Intel 80386", builder)
+        installer = (ROOT / "build/build-installer-image.sh").read_text(encoding="utf-8")
+        self.assertIn('compose_build_early_framebuffer "$LIVE_ROOT"', installer)
+        self.assertNotIn("libklibc-dev", installer)
+        self.assertNotIn("greia-fb-splash.c", installer)
 
     def test_profiles_use_early_framebuffer_and_no_plymouth_runtime(self) -> None:
         for profile in (ROOT / "build" / "profiles").glob("*.toml"):

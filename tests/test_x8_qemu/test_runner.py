@@ -11,7 +11,6 @@ SeaBIOS execution stays RED/deferred per the source-first amendment.
 from __future__ import annotations
 
 import hashlib
-import importlib.util
 import json
 import subprocess
 import tempfile
@@ -26,9 +25,7 @@ from greia_platform.grub_ab import (
 )
 from greia_platform.slot_writer import SLOT_WRITE_CHUNK_BYTES
 from greia_platform.system_updates import (
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     load_installed_layout_record,
 )
 from tools.x8_qemu.runner import (
@@ -53,8 +50,6 @@ from tools.x8_qemu.runner import (
     validate_guest_grub_config,
 )
 
-HAS_CRYPTOGRAPHY = importlib.util.find_spec("cryptography") is not None
-
 _UUID_A = "11111111-2222-3333-4444-555555555555"
 _UUID_A_FS = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 _UUID_B = "22222222-3333-4444-5555-666666666666"
@@ -68,7 +63,6 @@ _PASSWORD_HASH = "grub.pbkdf2.sha512.10000.ABCDEF0123456789"
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-x8qemu-0.20.0",
-        "accepted_release_sequence": 20,
         "accepted_slot": "A",
         "boot_backend": BOOT_BACKEND_ID,
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -335,6 +329,14 @@ class HarnessBoundaryTests(unittest.TestCase):
         self.assertNotIn("class SlotFinalizer", text)
         self.assertNotIn("def render_grub_ab_config", text)
         self.assertNotIn("def build_update_bundle", text)
+        # v3: no key material or signature verification in the harness.
+        for banned in (
+            "generate_ed25519_keypair",
+            "private_key",
+            "trusted_key_dir",
+            "verify_update_signature",
+        ):
+            self.assertNotIn(banned, text)
         for required in (
             "from greia_installer.layout import",
             "from greia_platform.grub_ab import",
@@ -395,35 +397,31 @@ class FootprintTests(unittest.TestCase):
             staging_memory_report(payload_size=0)
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "cryptography is required for signed bundles")
 class RunEvidenceTests(unittest.TestCase):
-    def _bundle(self, root: Path, name: str, release_id: str, sequence: int) -> Path:
+    def _bundle(self, root: Path, name: str, release_id: str) -> Path:
+        import zstandard
+
         work = root / "releases" / name
         work.mkdir(parents=True, exist_ok=True)
-        payload = work / "slot.img"
-        payload.write_bytes(_payload(64 * 1024, f"x8q-{name}:".encode()))
-        hardware = work / "hw.tar.zst"
-        hardware.write_bytes(b"\x28\xb5\x2f\xfd" + b"x8q-hw" * 64)
-        contract = work / "contract.json"
-        contract.write_bytes(build_persistent_state_contract_bytes())
-        private = root / "release-private.pem"
-        public = root / "release-public.pem"
-        if not private.exists():
-            generate_ed25519_keypair(private, public)
+        raw = _payload(64 * 1024, f"x8q-{name}:".encode())
+        payload = work / "payload.ext4.zst"
+        payload.write_bytes(zstandard.ZstdCompressor(level=3).compress(raw))
+        hardware = work / "hardware-support.tar.zst"
+        hardware.write_bytes(zstandard.ZstdCompressor(level=3).compress(b"x8q-hw" * 64))
         bundle = work / f"{name}.greiaupdate"
         build_update_bundle(
             payload_path=payload,
             hardware_support_path=hardware,
-            persistent_contract_path=contract,
             output_path=bundle,
             version=release_id.split("-", 1)[1],
             release_id=release_id,
-            release_sequence=sequence,
             platform_family="legacy-x86",
             architecture="x86-64",
             profile="legacy-x86-i686",
-            signer="greia-release-main",
-            private_key_path=private,
+            payload_uncompressed_bytes=len(raw),
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
             release_notes=f"X8-QEMU test release {name}.",
         )
         return bundle
@@ -447,10 +445,10 @@ class RunEvidenceTests(unittest.TestCase):
             markers_dir.mkdir(parents=True, exist_ok=True)
             (markers_dir / "profile.json").write_bytes(b'{"schema":1}\n')
 
-            bundle = self._bundle(root, "r21", "greia-x8qemu-0.21.0", 21)
+            bundle = self._bundle(root, "r21", "greia-x8qemu-0.21.0")
             identity = release_identity(bundle)
             self.assertEqual(identity["release_id"], "greia-x8qemu-0.21.0")
-            self.assertEqual(identity["release_sequence"], 21)
+            self.assertIn("payload_sha256", identity)
 
             evidence = harness.collect_run_evidence(
                 run="boot-B-commit",
@@ -468,7 +466,7 @@ class RunEvidenceTests(unittest.TestCase):
             self.assertEqual(evidence["image_sha256"], expected_image_sha)
             release = evidence["release"]
             assert isinstance(release, dict)
-            self.assertEqual(release["release_sequence"], 21)
+            self.assertEqual(release["release_id"], "greia-x8qemu-0.21.0")
             self.assertEqual(release["bundle_sha256"], identity["bundle_sha256"])
 
     def test_stage_source_scope_proves_plan_identities_and_grub(self) -> None:

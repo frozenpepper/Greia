@@ -72,7 +72,6 @@ _INITRAMFS_SHA = "cd" * 32
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": _BACKEND_ID,
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -104,14 +103,14 @@ def _artifacts() -> tuple[BootArtifactSet, BootArtifactSet]:
         generic_kernel_sha256=_KERNEL_SHA,
         generic_initramfs_sha256=_INITRAMFS_SHA,
         root_partuuid=_UUID_B, root_filesystem_uuid=_UUID_B_FS,
-        release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+        release_id=_RELEASE,
     )
     accepted = BootArtifactSet(
         slot="A", layout_id=_LAYOUT_ID, boot_backend=_BACKEND_ID,
         generic_kernel_sha256=_KERNEL_SHA,
         generic_initramfs_sha256=_INITRAMFS_SHA,
         root_partuuid=_UUID_A, root_filesystem_uuid=_UUID_A_FS,
-        release_id="greia-0.14.0", release_sequence=7,
+        release_id="greia-0.14.0",
     )
     return candidate, accepted
 
@@ -132,7 +131,7 @@ def _deadline_rig(root: Path):
     coordinator = BootTransactionCoordinator.begin_update(
         journal_dir=journal_dir, backend=backend,
         candidate_artifacts=candidate, accepted_artifacts=accepted,
-        release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+        release_id=_RELEASE,
     )
     coordinator.arm()
     assert backend.simulate_reboot() == "B"
@@ -158,7 +157,6 @@ def _deadline_rig(root: Path):
         "boot_backend": _BACKEND_ID,
         "layout_id": _LAYOUT_ID,
         "release_id": _RELEASE,
-        "release_sequence": _RELEASE_SEQ,
         "role": "system-b",
         "slot": "B",
     }))

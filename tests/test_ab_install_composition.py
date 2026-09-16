@@ -79,9 +79,7 @@ from greia_platform.grub_ab import GrubEnvBackend, validate_grub_ab_text
 from greia_platform.privileged_channel import PeerCredential
 from greia_platform.slot_writer import SlotFinalizeError
 from greia_platform.system_updates import (
-    build_persistent_state_contract_bytes,
     build_update_bundle,
-    generate_ed25519_keypair,
     inspect_update_bundle,
 )
 
@@ -93,7 +91,6 @@ MIB = 1024 * 1024
 _PROFILE = "legacy-x86-i686-ab"
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
-_SIGNER = "greia-release-main"
 _PASSWORD_HASH = "grub.pbkdf2.sha512.10000." + "A" * 128
 _HW_BYTES = b"\x28\xb5\x2f\xfd" + b"hwset-payload" * 64
 _SUPPORT_BOUND = 1 * MIB
@@ -211,6 +208,24 @@ class FakeSlotFilesystem:
             raise SlotFinalizeError("slot is already mounted")
         self.mounted = True
         self.mount_dir.mkdir(parents=True, exist_ok=True)
+        # Simulate a staged slot carrying real Greia userspace so the
+        # shared completeness smoke passes (uses the shared path set).
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (self.mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = self.mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
         return self.mount_dir
 
     def unmount(self) -> None:
@@ -225,6 +240,11 @@ class FakeSlotFilesystem:
 
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return ()
+
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        check_slot_completeness(self.mount_dir)
 
     def check_health(self) -> None:
         return None
@@ -271,9 +291,8 @@ class _Resolver:
         return LiveMediaAncestry.empty()
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "signed bundles need cryptography")
 class AbInstallCompositionProofTests(unittest.TestCase):
-    """Shipped builder -> socket -> signed release -> layout -> A -> ACCEPTED."""
+    """Shipped builder -> socket -> unsigned v3 release -> layout -> A -> ACCEPTED."""
 
     def _write_ab_profile(self, root: Path) -> Path:
         profile = root / "target-image-profile.json"
@@ -297,35 +316,32 @@ class AbInstallCompositionProofTests(unittest.TestCase):
         return profile
 
     def _write_bundle(self, root: Path):
-        private = root / "priv.pem"
-        public = root / "pub.pem"
-        generate_ed25519_keypair(private, public)
-        (root / "payload.bin").write_bytes(_payload())
+        import zstandard
+
+        raw = _payload()
+        compressed = zstandard.ZstdCompressor(level=3).compress(raw)
+        (root / "payload.ext4.zst").write_bytes(compressed)
         (root / "hw.tar.zst").write_bytes(_HW_BYTES)
-        (root / "contract.json").write_bytes(
-            build_persistent_state_contract_bytes()
-        )
         bundle = root / "r11.greiaupdate"
+        if bundle.exists():
+            bundle.unlink()
         build_update_bundle(
-            payload_path=root / "payload.bin",
+            payload_path=root / "payload.ext4.zst",
             hardware_support_path=root / "hw.tar.zst",
-            persistent_contract_path=root / "contract.json",
             output_path=bundle,
             version="0.15.0",
             release_id="greia-0.15.0",
-            release_sequence=11,
             platform_family=_FAMILY,
             architecture=_ARCH,
             profile=_PROFILE,
-            signer=_SIGNER,
-            private_key_path=private,
-            minimum_slot_bytes=len(_payload()) + MIB,
+            payload_uncompressed_bytes=len(raw),
+            minimum_slot_bytes=len(raw) + MIB,
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
         )
-        key_dir = root / "trusted"
-        key_dir.mkdir(exist_ok=True)
-        (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
         manifest = inspect_update_bundle(bundle).manifest
-        return bundle, key_dir, manifest
+        return bundle, None, manifest
 
     def _composition(self, root: Path):
         """Assemble the shipped service; return service + seam handles."""
@@ -342,8 +358,8 @@ class AbInstallCompositionProofTests(unittest.TestCase):
         project_root = Path(__file__).resolve().parents[1]
         state = ServiceState.from_target_profile(
             profile_path,
-            payload=root / "payload.bin",
-            payload_digest=root / "contract.json",
+            payload=root / "payload.ext4.zst",
+            payload_digest=root / "hw.tar.zst",
             project_root=project_root,
             hardware_support_pool=None,
         )
@@ -391,7 +407,6 @@ class AbInstallCompositionProofTests(unittest.TestCase):
             state=state,
             authority=authority,
             ab_release_bundle=bundle,
-            ab_trusted_key_dir=key_dir,
             ab_password_hash=_PASSWORD_HASH,
             ab_developer=False,
             ab_support_installed_bytes=_SUPPORT_BOUND,
@@ -464,7 +479,6 @@ class AbInstallCompositionProofTests(unittest.TestCase):
         self.assertEqual(journal.layout_id, "legacy-bios-ab-v1")
         self.assertEqual(journal.boot_backend, "grub-ab-v1")
         self.assertEqual(journal.release_id, "greia-0.15.0")
-        self.assertEqual(journal.release_sequence, 11)
         self.assertEqual(journal.candidate_slot, "A")
 
         # Observed boot -> trusted health -> accepted A (production backend).
@@ -481,7 +495,6 @@ class AbInstallCompositionProofTests(unittest.TestCase):
                     root_partuuid=observed["system-a"]["partuuid"],
                     root_filesystem_uuid=observed["system-a"]["filesystem_uuid"],
                     release_id="greia-0.15.0",
-                    release_sequence=11,
                 ),
             )
         self.assertEqual(backend.simulate_reboot(), "A")
@@ -497,7 +510,6 @@ class AbInstallCompositionProofTests(unittest.TestCase):
                 root_partuuid=observed["system-a"]["partuuid"],
                 root_filesystem_uuid=observed["system-a"]["filesystem_uuid"],
                 release_id="greia-0.15.0",
-                release_sequence=11,
             ),
         )
         self.assertEqual(accepted.state, BootTransactionState.ACCEPTED)
@@ -507,7 +519,6 @@ class AbInstallCompositionProofTests(unittest.TestCase):
         )
 
 
-@unittest.skipUnless(HAS_CRYPTOGRAPHY, "signed bundles need cryptography")
 class AbInstallCompositionNegativeTests(unittest.TestCase):
     """Each missing element fails closed pre-destruction; never legacy fallback."""
 
@@ -526,8 +537,8 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
         project_root = Path(__file__).resolve().parents[1]
         state = ServiceState.from_target_profile(
             profile_path,
-            payload=root / "payload.bin",
-            payload_digest=root / "contract.json",
+            payload=root / "payload.ext4.zst",
+            payload_digest=root / "hw.tar.zst",
             project_root=project_root,
             hardware_support_pool=None,
         )
@@ -577,7 +588,6 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
             state=parts["state"],
             authority=parts["authority"],
             ab_release_bundle=parts["bundle"],
-            ab_trusted_key_dir=parts["key_dir"],
             ab_password_hash=_PASSWORD_HASH,
             ab_developer=False,
             ab_support_installed_bytes=_SUPPORT_BOUND,
@@ -594,12 +604,12 @@ class AbInstallCompositionNegativeTests(unittest.TestCase):
         with self.assertRaises(AbInstallCompositionError):
             build_install_service(**kwargs)  # type: ignore[arg-type]
 
-    def test_missing_key_dir_fails_closed(self) -> None:
+    def test_missing_support_bound_fails_closed(self) -> None:
         directory = tempfile.mkdtemp(prefix="t3-neg-")
         self.addCleanup(shutil.rmtree, directory, True)
         parts = self._parts(Path(directory))
         kwargs = self._base_kwargs(parts)
-        kwargs["ab_trusted_key_dir"] = parts["root"] / "no-such-keys"
+        kwargs["ab_support_installed_bytes"] = None
         with self.assertRaises(AbInstallCompositionError):
             build_install_service(**kwargs)  # type: ignore[arg-type]
 

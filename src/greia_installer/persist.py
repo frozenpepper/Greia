@@ -277,7 +277,6 @@ class FreshPersistSpec:
     boot_active_slot: str
     accepted_slot: str | None
     accepted_release_id: str
-    accepted_release_sequence: int
     slot_bytes: int
     system_a: Mapping[str, str]
     system_b: Mapping[str, str] | None
@@ -382,7 +381,6 @@ def initialize_fresh_persist(
         record = InstalledLayoutRecord.from_dict(
             {
                 "accepted_release_id": spec.accepted_release_id,
-                "accepted_release_sequence": spec.accepted_release_sequence,
                 "accepted_slot": spec.accepted_slot,
                 "boot_backend": plan.boot_backend,
                 "boot_control": {

@@ -17,7 +17,7 @@ Covers the brief's boot-health acceptance without QEMU/loop/mount contact:
   the test unit), with pre/post SHA + injected-file list for P5.3;
 - host-side inspection uses production parsers (GrubEnvBackend
   default/one-shot/last_booted, BootTransactionJournal ACCEPTED,
-  read_accepted_sequence, InstalledLayoutRecord) and proves only the
+  InstalledLayoutRecord) and proves only the
   inactive slot changed;
 - the phased leg drives wait-health → update ×4 → wait-health in order
   and closes through assert_lifecycle_transitions; run_boot_health_product
@@ -264,7 +264,7 @@ def _full_boot_observation() -> dict[str, object]:
     """Full gather-shaped observation for the P5.3 identity fold.
 
     Carries the same keys ``gather_boot_health_observation`` returns
-    (MBR/PARTUUID/filesystem/journal/sequence/layout facts) so the
+    (MBR/PARTUUID/filesystem/journal/release/layout facts) so the
     entry-point identity fold can close GREEN without loop/mount
     contact.
     """
@@ -290,7 +290,7 @@ def _full_boot_observation() -> dict[str, object]:
             },
         },
         "default_slot": "B",
-        "accepted_sequence": 21,
+        "accepted_release_id": "greia-0.21.0",
         "committed_slot": "B",
         "last_booted": "B",
         "journal_state": "accepted",
@@ -486,7 +486,7 @@ class CloneSerialConsoleTests(unittest.TestCase):
 
 
 class InspectBootHealthTests(unittest.TestCase):
-    def _green_dirs(self, base: Path, *, slot: str = "B", sequence: int = 21):
+    def _green_dirs(self, base: Path, *, slot: str = "B"):
         from greia_platform.boot_transaction import (
             BootArtifactSet,
             BootTransactionCoordinator,
@@ -494,7 +494,6 @@ class InspectBootHealthTests(unittest.TestCase):
         )
         from greia_platform.grub_ab import GrubEnvBackend
         from greia_platform.persistent_layout import InstalledLayoutRecord
-        from greia_platform.system_updates import write_accepted_sequence
 
         # Production GRUB backend: default + observer-reconciled last_booted.
         backend_state = base / "grubenv"
@@ -507,18 +506,18 @@ class InspectBootHealthTests(unittest.TestCase):
             slot="B", layout_id="legacy-bios-ab-v1", boot_backend="grub-ab-v1",
             generic_kernel_sha256="cd" * 32, generic_initramfs_sha256="ef" * 32,
             root_partuuid="1a2b3c4d-03", root_filesystem_uuid="bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
-            release_id="greia-0.21.0", release_sequence=sequence,
+            release_id="greia-0.21.0",
         )
         accepted = BootArtifactSet(
             slot="A", layout_id="legacy-bios-ab-v1", boot_backend="grub-ab-v1",
             generic_kernel_sha256="cd" * 32, generic_initramfs_sha256="ef" * 32,
             root_partuuid="1a2b3c4d-02", root_filesystem_uuid="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-            release_id="greia-0.20.0", release_sequence=20,
+            release_id="greia-0.20.0",
         )
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir, backend=fake_backend,
             candidate_artifacts=candidate, accepted_artifacts=accepted,
-            release_id="greia-0.21.0", release_sequence=sequence,
+            release_id="greia-0.21.0",
         )
         coordinator.arm()
         fake_backend.simulate_reboot()
@@ -528,15 +527,14 @@ class InspectBootHealthTests(unittest.TestCase):
         )
         resumed.observe_boot()
         resumed.commit()
-        # Accepted sequence state.
+        # Accepted state: layout authority accepting the committed release.
         accepted_state = base / "update-state"
-        write_accepted_sequence(accepted_state, sequence)
-        # Layout authority accepting the committed slot/sequence.
+        accepted_state.mkdir(parents=True, exist_ok=True)
+        # Layout authority accepting the committed slot/release.
         layout_path = base / "installed-layout.json"
         record = InstalledLayoutRecord.from_dict(
             {
                 "accepted_release_id": "greia-0.21.0",
-                "accepted_release_sequence": sequence,
                 "accepted_slot": slot,
                 "boot_backend": "grub-ab-v1",
                 "boot_control": {"active_slot": slot, "kind": "grub-env-v1"},
@@ -580,13 +578,12 @@ class InspectBootHealthTests(unittest.TestCase):
             observed = inspect_boot_health_roots(
                 backend_state_dir=roots["backend_state"],
                 journal_dir=roots["journal"],
-                accepted_state_dir=roots["accepted_state"],
                 layout_record_path=roots["layout"],
                 expected_slot="B",
-                expected_sequence=21,
+                expected_release_id="greia-0.21.0",
             )
             self.assertEqual(observed["committed_slot"], "B")
-            self.assertEqual(observed["accepted_sequence"], 21)
+            self.assertEqual(observed["accepted_release_id"], "greia-0.21.0")
             self.assertEqual(observed["last_booted"], "B")
             self.assertEqual(observed["journal_state"], "accepted")
 
@@ -602,20 +599,18 @@ class InspectBootHealthTests(unittest.TestCase):
                 inspect_boot_health_roots(
                     backend_state_dir=roots["backend_state"],
                     journal_dir=roots["journal"],
-                    accepted_state_dir=roots["accepted_state"],
                     layout_record_path=roots["layout"],
                     expected_slot="B",
-                    expected_sequence=21,
+                    expected_release_id="greia-0.21.0",
                 )
             self.assertIn("last_booted", str(caught.exception))
             GrubEnvBackend.attach(roots["backend_state"]).reconcile("B")
             back = inspect_boot_health_roots(
                 backend_state_dir=roots["backend_state"],
                 journal_dir=roots["journal"],
-                accepted_state_dir=roots["accepted_state"],
                 layout_record_path=roots["layout"],
                 expected_slot="B",
-                expected_sequence=21,
+                expected_release_id="greia-0.21.0",
             )
             self.assertEqual(back["committed_slot"], "B")
 
@@ -691,7 +686,7 @@ class LegOrderingTests(unittest.TestCase):
                 clone_fn=lambda: seen.append("clone"),
                 inject_fn=lambda clone, slot: injections.append(slot),
                 boot_fn=_boot,
-                observe_fn=lambda: {"default_slot": "B", "accepted_sequence": 21},
+                observe_fn=lambda: {"default_slot": "B", "accepted_release_id": "greia-0.21.0"},
                 slot_digest_fn=digests,
             )
             self.assertEqual(seen, ["clone"])
@@ -913,7 +908,7 @@ class RunProductWiringTests(unittest.TestCase):
                 result["release_bundle_sha256"],
             )
             self.assertEqual(identity["boot_observation"]["default_slot"], "B")
-            self.assertEqual(identity["boot_observation"]["accepted_sequence"], 21)
+            self.assertEqual(identity["boot_observation"]["accepted_release_id"], "greia-0.21.0")
 
     def test_run_boot_health_product_active_mutation_refuses(self) -> None:
         # Entry-point wiring proof: scripted digests showing an active-slot
@@ -968,7 +963,7 @@ class RunProductWiringTests(unittest.TestCase):
         seam = (PROJECT_ROOT / "src/greia_launcher/boot_health.py").read_text(
             encoding="utf-8"
         )
-        for denied in ("GrubEnvBackend", "write_accepted_sequence", "SlotWriter"):
+        for denied in ("GrubEnvBackend", "SlotWriter"):
             self.assertNotIn(denied, seam)
         self.assertIn("maybe_accept_production_boot", seam)
 
@@ -978,8 +973,8 @@ class GatherRealShapeTests(unittest.TestCase):
 
     No fake observe_fn: the MBR file is real bytes, the mounted
     boot/persist trees carry production-committed state (GrubEnvBackend
-    reconciled to B, ACCEPTED update journal binding B, accepted sequence
-    21, layout record B/21 at the production on-persist paths), and only
+    reconciled to B, ACCEPTED update journal binding B, accepted release
+    greia-0.21.0, layout record B/greia-0.21.0 at the production on-persist paths), and only
     the loop/mount transport is faked (recording runner + copy-tree
     mount, the same precedent as the install leg). Closure runs through
     the frozen assert_lifecycle_transitions on the observed default.
@@ -998,7 +993,7 @@ class GatherRealShapeTests(unittest.TestCase):
         return target
 
     def _seed_boot_health_trees(
-        self, base: Path, *, slot: str = "B", sequence: int = 21
+        self, base: Path, *, slot: str = "B"
     ) -> tuple[Path, Path]:
         import json as _json
 
@@ -1009,7 +1004,6 @@ class GatherRealShapeTests(unittest.TestCase):
         )
         from greia_platform.grub_ab import GrubEnvBackend
         from greia_platform.persistent_layout import InstalledLayoutRecord
-        from greia_platform.system_updates import write_accepted_sequence
 
         boot_seed = base / "boot-seed"
         persist_seed = base / "persist-seed"
@@ -1030,18 +1024,18 @@ class GatherRealShapeTests(unittest.TestCase):
             slot="B", layout_id="legacy-bios-ab-v1", boot_backend="grub-ab-v1",
             generic_kernel_sha256="cd" * 32, generic_initramfs_sha256="ef" * 32,
             root_partuuid="1a2b3c4d-03", root_filesystem_uuid="bbbbbbbb-cccc-dddd-eeee-ffffffffffff",
-            release_id="greia-0.21.0", release_sequence=sequence,
+            release_id="greia-0.21.0",
         )
         accepted = BootArtifactSet(
             slot="A", layout_id="legacy-bios-ab-v1", boot_backend="grub-ab-v1",
             generic_kernel_sha256="cd" * 32, generic_initramfs_sha256="ef" * 32,
             root_partuuid="1a2b3c4d-02", root_filesystem_uuid="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-            release_id="greia-0.20.0", release_sequence=20,
+            release_id="greia-0.20.0",
         )
         coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=journal_dir, backend=fake_backend,
             candidate_artifacts=candidate, accepted_artifacts=accepted,
-            release_id="greia-0.21.0", release_sequence=sequence,
+            release_id="greia-0.21.0",
         )
         coordinator.arm()
         fake_backend.simulate_reboot()
@@ -1051,13 +1045,11 @@ class GatherRealShapeTests(unittest.TestCase):
         )
         resumed.observe_boot()
         resumed.commit()
-        # Accepted-sequence state beside the journal (same state dir).
-        write_accepted_sequence(state_root, sequence)
+        # No accepted-sequence file: release identity lives in journal/layout.
         # Layout authority: authoritative on-persist copy.
         record = InstalledLayoutRecord.from_dict(
             {
                 "accepted_release_id": "greia-0.21.0",
-                "accepted_release_sequence": sequence,
                 "accepted_slot": slot,
                 "boot_backend": "grub-ab-v1",
                 "boot_control": {"active_slot": slot, "kind": "grub-env-v1"},
@@ -1108,10 +1100,10 @@ class GatherRealShapeTests(unittest.TestCase):
         ):
             return gather_boot_health_observation(
                 target, work_dir=base / "work", runner=runner, which=_fake_which,
-                expected_slot="B", expected_sequence=21,
+                expected_slot="B", expected_release_id="greia-0.21.0",
             ), runner
 
-    def test_gather_returns_observed_default_and_sequence_then_closes(self) -> None:
+    def test_gather_returns_observed_default_and_release_then_closes(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             boot_seed, persist_seed = self._seed_boot_health_trees(base / "seeds")
@@ -1119,7 +1111,7 @@ class GatherRealShapeTests(unittest.TestCase):
             # Every slot/journal/sequence/default/layout fact is observed,
             # never minted: the closure below reads these keys.
             self.assertEqual(observed["default_slot"], "B")
-            self.assertEqual(observed["accepted_sequence"], 21)
+            self.assertEqual(observed.get("accepted_release_id", observed.get("inspection", {}).get("accepted_release_id")), "greia-0.21.0")
             self.assertEqual(observed["committed_slot"], "B")
             self.assertEqual(observed["last_booted"], "B")
             self.assertEqual(observed["journal_state"], "accepted")
@@ -1133,7 +1125,7 @@ class GatherRealShapeTests(unittest.TestCase):
             )
             self.assertTrue(observed["file_cross_check"]["executed"])
             self.assertTrue(observed["file_cross_check"]["green"])
-            self.assertIn("accepted_state_dir", observed["resolved_paths"])
+            self.assertIn("layout_record_dir", observed["resolved_paths"])
             self.assertIn("layout_record", observed["resolved_paths"])
             self.assertEqual(len(runner.argv0("blkid")), 3)
             # Real closure on the observed default: no fake observe_fn
@@ -1163,17 +1155,16 @@ class GatherRealShapeTests(unittest.TestCase):
             GrubEnvBackend.attach(boot_seed / "grub").reconcile("B")
             observed, _runner = self._gather_with_seeds(base, boot_seed, persist_seed)
             self.assertEqual(observed["default_slot"], "B")
-            self.assertEqual(observed["accepted_sequence"], 21)
+            self.assertEqual(observed.get("accepted_release_id", observed.get("inspection", {}).get("accepted_release_id")), "greia-0.21.0")
 
-    def test_gather_red_when_accepted_state_missing(self) -> None:
+    def test_gather_red_when_layout_missing(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             boot_seed, persist_seed = self._seed_boot_health_trees(base / "seeds")
-            (persist_seed / "greia" / "namespaces" / "parent-credentials"
-             / "system-updates" / "accepted.json").unlink()
+            (persist_seed / "greia" / "installed-layout.json").unlink()
             with self.assertRaises(LifecycleHarnessError) as caught:
                 self._gather_with_seeds(base, boot_seed, persist_seed)
-            self.assertIn("accepted release state", str(caught.exception))
+            self.assertIn("installed layout record", str(caught.exception))
 
 
 class HashSlotPartitionTests(unittest.TestCase):

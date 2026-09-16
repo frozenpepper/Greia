@@ -25,10 +25,8 @@ file (``/etc/greia-os/installer-ab.env``, loaded through the unit's
 ``GREIA_AB_*`` variable wins per key so tests/harnesses can override a
 single fact without copying the file:
 
-- ``GREIA_AB_RELEASE_BUNDLE``: absolute path to the signed deterministic
-  ``.greiaupdate`` v2 release artifact;
-- ``GREIA_AB_TRUSTED_KEY_DIR``: absolute real directory holding the release
-  signer public keys;
+- ``GREIA_AB_RELEASE_BUNDLE``: absolute path to the unsigned deterministic
+  ``.greiaupdate`` v3 release artifact;
 - ``GREIA_AB_GRUB_PASSWORD_HASH``: stored GRUB PBKDF2 token rendered into
   the fixed boot entries;
 - ``GREIA_AB_DEVELOPER``: ``1``/``true`` for developer images, else false;
@@ -85,7 +83,6 @@ AB_INSTALL_BOOT_BACKENDS = frozenset({"grub-ab-v1", "pi-tryboot-ab-v1"})
 #: Environment contract for live A/B composition (Setup authority owns the
 #: values; validated by :func:`ab_executor_facts_from_environment`).
 AB_INSTALL_ENV_BUNDLE = "GREIA_AB_RELEASE_BUNDLE"
-AB_INSTALL_ENV_KEY_DIR = "GREIA_AB_TRUSTED_KEY_DIR"
 AB_INSTALL_ENV_PASSWORD_HASH = "GREIA_AB_GRUB_PASSWORD_HASH"
 AB_INSTALL_ENV_DEVELOPER = "GREIA_AB_DEVELOPER"
 AB_INSTALL_ENV_SUPPORT_BOUND = "GREIA_AB_SUPPORT_INSTALLED_BYTES"
@@ -112,7 +109,6 @@ AB_INSTALL_ENV_FILE_MAX_BYTES = 8 * 1024
 AB_INSTALL_ENV_FILE_KEYS = frozenset(
     {
         AB_INSTALL_ENV_BUNDLE,
-        AB_INSTALL_ENV_KEY_DIR,
         AB_INSTALL_ENV_PASSWORD_HASH,
         AB_INSTALL_ENV_DEVELOPER,
         AB_INSTALL_ENV_SUPPORT_BOUND,
@@ -201,20 +197,19 @@ def resolve_ab_executor_facts(
     *,
     state: object,
     release_bundle: object,
-    trusted_key_dir: object,
     password_hash: object,
     developer: object = False,
     support_installed_bytes: object,
 ) -> AbExecutorFacts:
     """Bind device-owned/profile-owned configuration into executor facts.
 
-    Every element is required: a missing bundle, key directory, password
+    Every element is required: a missing bundle, password
     hash, support bound or non-A/B profile fails closed here, before any
     service or destructive work exists to fall back from.
     """
+
     sizing = ab_sizing_for_state(state)
     bundle = _require_existing_file(release_bundle, field_name="release bundle")
-    key_dir = _require_real_dir(trusted_key_dir, field_name="trusted key dir")
     if not isinstance(password_hash, str) or not password_hash:
         raise AbInstallCompositionError("A/B GRUB password hash must be non-empty text")
     if not isinstance(developer, bool):
@@ -238,7 +233,6 @@ def resolve_ab_executor_facts(
     try:
         return AbExecutorFacts(
             bundle_path=bundle,
-            trusted_key_dir=key_dir,
             expected_profile_id=profile_id,
             expected_platform_family=platform_family,
             expected_architecture=architecture,
@@ -360,7 +354,6 @@ def _merged_ab_assignments() -> dict[str, str]:
         merged.update(read_ab_env_file(candidate))
     for key in (
         AB_INSTALL_ENV_BUNDLE,
-        AB_INSTALL_ENV_KEY_DIR,
         AB_INSTALL_ENV_PASSWORD_HASH,
         AB_INSTALL_ENV_DEVELOPER,
         AB_INSTALL_ENV_SUPPORT_BOUND,
@@ -399,7 +392,7 @@ def ab_executor_facts_from_environment(*, state: object) -> AbExecutorFacts:
     (``/etc/greia-os/installer-ab.env`` via the unit's ``EnvironmentFile``,
     or ``GREIA_AB_CONFIG`` in tests) supplies the release baseline and an
     explicitly exported ``GREIA_AB_*`` variable wins per key. A missing
-    bundle, key directory, password hash, support bound or non-A/B profile
+    bundle, password hash, support bound or non-A/B profile
     fails closed here, before any service or destructive work exists.
     """
     merged = _merged_ab_assignments()
@@ -435,7 +428,6 @@ def ab_executor_facts_from_environment(*, state: object) -> AbExecutorFacts:
     return resolve_ab_executor_facts(
         state=state,
         release_bundle=merged.get(AB_INSTALL_ENV_BUNDLE, ""),
-        trusted_key_dir=merged.get(AB_INSTALL_ENV_KEY_DIR, ""),
         password_hash=password_hash,
         developer=developer,
         support_installed_bytes=support_bound,
@@ -484,7 +476,6 @@ def build_install_service(
     state: object,
     authority: object,
     ab_release_bundle: object = None,
-    ab_trusted_key_dir: object = None,
     ab_password_hash: object = None,
     ab_developer: object = False,
     ab_support_installed_bytes: object = None,
@@ -524,7 +515,6 @@ def build_install_service(
         facts = resolve_ab_executor_facts(
             state=state,
             release_bundle=ab_release_bundle,
-            trusted_key_dir=ab_trusted_key_dir,
             password_hash=ab_password_hash,
             developer=ab_developer,
             support_installed_bytes=ab_support_installed_bytes,
@@ -550,7 +540,6 @@ __all__ = [
     "AB_INSTALL_ENV_FILE_DEFAULT",
     "AB_INSTALL_ENV_FILE_KEYS",
     "AB_INSTALL_ENV_FILE_MAX_BYTES",
-    "AB_INSTALL_ENV_KEY_DIR",
     "AB_INSTALL_ENV_PASSWORD_HASH",
     "AB_INSTALL_ENV_SUPPORT_BOUND",
     "AbInstallCompositionError",

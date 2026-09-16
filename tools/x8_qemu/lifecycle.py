@@ -100,7 +100,7 @@ LAUNCHER_ACCEPTANCE_LEGS = (
 #: Frozen T7-ATTEST leg definition (verbatim): the 8-step lifecycle
 #: comprises 3 non-boot transitions and 5 boot-outcome legs. Every
 #: transition records per-transition evidence (default/one-shot/
-#: last-booted, journal, accepted slot/release/sequence, PERSIST marker,
+#: last-booted, journal, accepted slot/release, PERSIST marker,
 #: release hashes, image SHA), but only the 5 boot-outcome legs assert a
 #: guest-observed boot outcome through the frozen attestation seam
 #: (grubenv-on-image with post-boot loop remount/read via
@@ -131,18 +131,19 @@ BOOT_OUTCOME_EXPECTED_SLOT = {
     "reverse-update-B-to-A": "A",
 }
 
-#: Release lineage: ids/sequences declared; hashes recorded per run.
+#: Release lineage: v3 identities declared; hashes recorded per run.
+#: There is no sequence authority under ADR 0036 (no signer, no
+#: anti-rollback ordering); lineage order is the launch order only.
 RELEASE_LINEAGE = (
-    {"release_id": "greia-0.20.0", "release_sequence": 20, "slot": "A"},
-    {"release_id": "greia-0.21.0", "release_sequence": 21, "slot": "B"},
-    {"release_id": "greia-0.21.1", "release_sequence": 22, "slot": "B",
+    {"release_id": "greia-0.20.0", "slot": "A"},
+    {"release_id": "greia-0.21.0", "slot": "B"},
+    {"release_id": "greia-0.21.1", "slot": "B",
      "broken": True},
-    {"release_id": "greia-0.22.0", "release_sequence": 23, "slot": "A"},
+    {"release_id": "greia-0.22.0", "slot": "A"},
 )
 
 QEMU_BINARY = "qemu-system-x86_64"
 
-_SIGNER = "greia-release-main"
 _UUID_A = "11111111-2222-3333-4444-555555555555"
 _UUID_A_FS = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 _UUID_B = "22222222-3333-4444-5555-666666666666"
@@ -415,6 +416,10 @@ class ImageIntegrationSeams:
     def __init__(self, root: Path, contract_bytes: bytes) -> None:
         from greia_platform.slot_writer import LoopbackSlotFile
 
+        # v3 PERSIST preflight: callers supply canonical schema-marker bytes
+        # (persistent_layout.emit_persist_schema_marker), mirroring the
+        # production installed-contract factory; the retired
+        # persistent-state-contract document is rejected by the marker seam.
         self._root = Path(root)
         self._contract_bytes = bytes(contract_bytes)
         self._loopback = LoopbackSlotFile
@@ -513,6 +518,24 @@ class _RecordingSlotFilesystem:
 
     def mount(self) -> Path:
         self.mounted = True
+        # Simulate a staged slot carrying real Greia userspace so the
+        # shared completeness smoke passes (uses the shared path set).
+        from greia_platform.slot_writer import (
+            REQUIRED_SLOT_COMPLETENESS_DIRS,
+            REQUIRED_SLOT_COMPLETENESS_FILES,
+        )
+
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+            (self._mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+        for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+            candidate = self._mount_dir / rel_path
+            candidate.parent.mkdir(parents=True, exist_ok=True)
+            if candidate.is_symlink() or not candidate.is_file():
+                candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                try:
+                    candidate.chmod(0o755)
+                except OSError:
+                    pass
         return self._mount_dir
 
     def unmount(self) -> None:
@@ -528,6 +551,11 @@ class _RecordingSlotFilesystem:
 
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self._files)
+
+    def check_completeness(self) -> None:
+        from greia_platform.slot_writer import check_slot_completeness
+
+        check_slot_completeness(self._mount_dir)
 
     def check_health(self) -> None:
         pass
@@ -546,7 +574,6 @@ class _RecordingPackageInstaller:
 def shipped_update_authority(
     *,
     state_dir: Path,
-    trusted_key_dir: Path,
     layout_record_path: Path,
     boot_backend: object,
     seams: ImageIntegrationSeams,
@@ -563,7 +590,8 @@ def shipped_update_authority(
     backend is supplied attached (on device it attaches via
     ``GREIA_GRUBENV_DIR``; at source scope the caller attaches the
     disposable ``GrubEnvBackend`` explicitly so the attach seam is still
-    the production one).
+    the production one). ADR 0036: no trusted-key dir — v3 bundles carry
+    no provenance.
     """
     import os as _os
 
@@ -581,7 +609,6 @@ def shipped_update_authority(
     try:
         return build_live_update_service(
             state_dir=Path(state_dir),
-            trusted_key_dir=Path(trusted_key_dir),
             layout_record_path=Path(layout_record_path),
             boot_backend=boot_backend,
             boot_backend_auto=False,
@@ -595,7 +622,6 @@ def shipped_update_authority(
 def default_shipped_authority_with_production_seams(
     *,
     state_dir: Path,
-    trusted_key_dir: Path,
     layout_record_path: Path,
     boot_backend: object,
 ):  # type: ignore[no-untyped-def]
@@ -613,7 +639,6 @@ def default_shipped_authority_with_production_seams(
 
     return build_live_update_service(
         state_dir=Path(state_dir),
-        trusted_key_dir=Path(trusted_key_dir),
         layout_record_path=Path(layout_record_path),
         boot_backend=boot_backend,
         boot_backend_auto=False,
@@ -621,7 +646,8 @@ def default_shipped_authority_with_production_seams(
 
 
 # ---------------------------------------------------------------------------
-# Release bundles (signed .greiaupdate v2, validly signed even when broken)
+# Release bundles (unsigned .greiaupdate v3; unhealthy candidates stay
+# constructible from the v3 member/manifest contract, never from signing)
 # ---------------------------------------------------------------------------
 
 
@@ -636,58 +662,55 @@ def _payload_bytes(size: int, tag: bytes) -> bytes:
     return bytes(fixed)
 
 
+def _compress_zstd_for_harness(raw: bytes) -> bytes:
+    """Compress harness payload bytes to real zstd frames (no key material).
+
+    v3 stages genuinely decompress ``payload.ext4.zst`` through the
+    production ``open_zstd_decompressed_stream`` path, so the harness
+    must emit real frames, not magic-prefixed filler.
+    """
+    import zstandard
+
+    return zstandard.ZstdCompressor(level=3).compress(raw)
+
+
 def build_test_release(
     root: Path,
     *,
     name: str,
     release_id: str,
-    sequence: int,
-    private_key: Path,
     platform_family: str = "legacy-x86",
     architecture: str = "i386",
     profile: str = REFERENCE_PROFILE_ID,
     payload_size: int = 220 * 1024,
 ) -> Path:
-    """Build one signed .greiaupdate v2 bundle for the lifecycle lineage."""
-    from greia_platform.system_updates import (
-        build_persistent_state_contract_bytes,
-        build_update_bundle,
-    )
+    """Build one unsigned .greiaupdate v3 bundle for the lifecycle lineage."""
+    from greia_platform.system_updates import build_update_bundle
 
     work = Path(root) / "releases" / name
     work.mkdir(parents=True, exist_ok=True)
-    (work / "slot.img").write_bytes(_payload_bytes(payload_size, f"t6-{name}:".encode()))
-    (work / "hw.tar.zst").write_bytes(b"\x28\xb5\x2f\xfd" + b"t6-hw" * 64)
-    (work / "contract.json").write_bytes(build_persistent_state_contract_bytes())
+    raw = _payload_bytes(payload_size, f"t6-{name}:".encode())
+    (work / "payload.ext4.zst").write_bytes(_compress_zstd_for_harness(raw))
+    (work / "hardware-support.tar.zst").write_bytes(
+        _compress_zstd_for_harness(b"t6-hw" * 64)
+    )
     bundle = work / f"{name}.greiaupdate"
     build_update_bundle(
-        payload_path=work / "slot.img",
-        hardware_support_path=work / "hw.tar.zst",
-        persistent_contract_path=work / "contract.json",
+        payload_path=work / "payload.ext4.zst",
+        hardware_support_path=work / "hardware-support.tar.zst",
         output_path=bundle,
         version=release_id.split("-", 1)[1],
         release_id=release_id,
-        release_sequence=sequence,
         platform_family=platform_family,
         architecture=architecture,
         profile=profile,
-        signer=_SIGNER,
-        private_key_path=private_key,
+        payload_uncompressed_bytes=len(raw),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
         release_notes=f"T6-HARNESS3 lifecycle release {name}.",
     )
     return bundle
-
-
-def mint_signing_keys(root: Path, key_dir: Path) -> tuple[Path, Path]:
-    """Mint one disposable ed25519 release keypair into the trusted dir."""
-    from greia_platform.system_updates import generate_ed25519_keypair
-
-    private_key = Path(root) / "release-private.pem"
-    public_key = Path(root) / "release-public.pem"
-    generate_ed25519_keypair(private_key, public_key)
-    Path(key_dir).mkdir(parents=True, exist_ok=True)
-    (Path(key_dir) / f"{_SIGNER}.pem").write_bytes(public_key.read_bytes())
-    return private_key, public_key
 
 
 # ---------------------------------------------------------------------------
@@ -698,7 +721,6 @@ def mint_signing_keys(root: Path, key_dir: Path) -> tuple[Path, Path]:
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.20.0",
-        "accepted_release_sequence": 20,
         "accepted_slot": "A",
         "boot_backend": BOOT_BACKEND_ID,
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -729,9 +751,12 @@ def write_layout_record(path: Path, **overrides: object) -> Path:
 
 
 def fresh_machine_state(root: Path) -> dict[str, Path]:
-    """Assemble one disposable machine: layout record, boot state, dirs."""
+    """Assemble one disposable machine: layout record, boot state, dirs.
+
+    ADR 0036: no trusted-key dir (v3 bundles carry no provenance). The
+    release identity lives in the journal/layout release_id only.
+    """
     from greia_platform.grub_ab import GrubEnvBackend
-    from greia_platform.system_updates import write_accepted_sequence
 
     root = Path(root)
     root.mkdir(parents=True, exist_ok=True)
@@ -743,9 +768,6 @@ def fresh_machine_state(root: Path) -> dict[str, Path]:
     _ = grub
     state_dir = root / "update-state"
     state_dir.mkdir(parents=True, exist_ok=True)
-    write_accepted_sequence(state_dir, 20)
-    key_dir = root / "trusted-keys"
-    key_dir.mkdir(parents=True, exist_ok=True)
     persist_dir = root / "persist"
     persist_dir.mkdir(parents=True, exist_ok=True)
     (persist_dir / "profile.json").write_bytes(b'{"schema":1}\n')
@@ -753,7 +775,6 @@ def fresh_machine_state(root: Path) -> dict[str, Path]:
         "layout": layout_path,
         "boot_control": boot_dir,
         "state": state_dir,
-        "keys": key_dir,
         "persist": persist_dir,
     }
 
@@ -2062,36 +2083,29 @@ def prove_install_composition(
     )
 
     from greia_platform.system_updates import (
-        build_persistent_state_contract_bytes,
         build_update_bundle,
         inspect_update_bundle,
     )
 
-    (work / "payload.bin").write_bytes(_payload_bytes(64 * 1024, b"t6-proof:"))
-    (work / "hw.tar.zst").write_bytes(b"\x28\xb5\x2f\xfd" + b"t6-proof-hw" * 64)
-    (work / "contract.json").write_bytes(build_persistent_state_contract_bytes())
-    private = work / "priv.pem"
-    public = work / "pub.pem"
-    from greia_platform.system_updates import generate_ed25519_keypair
-
-    generate_ed25519_keypair(private, public)
-    key_dir = work / "trusted"
-    key_dir.mkdir(exist_ok=True)
-    (key_dir / f"{_SIGNER}.pem").write_bytes(public.read_bytes())
+    proof_raw = _payload_bytes(64 * 1024, b"t6-proof:")
+    (work / "payload.ext4.zst").write_bytes(_compress_zstd_for_harness(proof_raw))
+    (work / "hardware-support.tar.zst").write_bytes(
+        _compress_zstd_for_harness(b"t6-proof-hw" * 64)
+    )
     bundle = work / "proof.greiaupdate"
     build_update_bundle(
-        payload_path=work / "payload.bin",
-        hardware_support_path=work / "hw.tar.zst",
-        persistent_contract_path=work / "contract.json",
+        payload_path=work / "payload.ext4.zst",
+        hardware_support_path=work / "hardware-support.tar.zst",
         output_path=bundle,
         version="0.20.0",
         release_id="greia-0.20.0",
-        release_sequence=20,
         platform_family="legacy-x86",
         architecture="i386",
         profile="greia-lifecycle-proof",
-        signer=_SIGNER,
-        private_key_path=private,
+        payload_uncompressed_bytes=len(proof_raw),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
     )
     manifest = inspect_update_bundle(bundle).manifest
 
@@ -2156,6 +2170,24 @@ def prove_install_composition(
         def mount(self) -> Path:
             self.mounted = True
             self._mount_dir.mkdir(parents=True, exist_ok=True)
+            # Simulate a staged slot carrying real Greia userspace so the
+            # shared completeness smoke passes (uses the shared path set).
+            from greia_platform.slot_writer import (
+                REQUIRED_SLOT_COMPLETENESS_DIRS,
+                REQUIRED_SLOT_COMPLETENESS_FILES,
+            )
+
+            for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+                (self._mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+            for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+                candidate = self._mount_dir / rel_path
+                candidate.parent.mkdir(parents=True, exist_ok=True)
+                if candidate.is_symlink() or not candidate.is_file():
+                    candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+                    try:
+                        candidate.chmod(0o755)
+                    except OSError:
+                        pass
             return self._mount_dir
 
         def unmount(self) -> None:
@@ -2170,6 +2202,11 @@ def prove_install_composition(
 
         def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
             return ()
+
+        def check_completeness(self) -> None:
+            from greia_platform.slot_writer import check_slot_completeness
+
+            check_slot_completeness(self._mount_dir)
 
         def check_health(self) -> None:
             pass
@@ -2226,7 +2263,6 @@ def prove_install_composition(
         state=state,
         authority=authority,
         ab_release_bundle=bundle,
-        ab_trusted_key_dir=key_dir,
         ab_password_hash=password_hash,
         ab_developer=False,
         ab_support_installed_bytes=0,
@@ -2236,7 +2272,7 @@ def prove_install_composition(
     if service.install_mode != "ab" or service.ab_executor is None:
         raise LifecycleHarnessError("install service did not compose in ab mode")
     # Execute through the shipped installer protocol (PREPARE then EXECUTE):
-    # the signed release must flow into destruction through the composed
+    # the unsigned v3 release must flow into destruction through the composed
     # path, landing grub.cfg + grubenv default A + FIRST_INSTALL_PENDING.
     from greia_installer.transaction_client import InstallTransactionClient
     from greia_platform.grub_ab import GrubEnvBackend as _Backend
@@ -2296,7 +2332,6 @@ def prove_install_composition(
             state=state,
             authority=authority,
             ab_release_bundle=bundle,
-            ab_trusted_key_dir=key_dir,
             ab_password_hash=password_hash,
             ab_developer=False,
             ab_support_installed_bytes=0,
@@ -2880,7 +2915,7 @@ def snapshot_device_collect_state(
     """Best-effort disk-state snapshot for one diagnostics entry.
 
     Records image SHA plus host backend slot state, journal state,
-    accepted slot/release/sequence, and the PERSIST marker; any
+    accepted slot/release, and the PERSIST marker; any
     unreadable part records None (never raises, never synthesizes).
     """
     snapshot: dict[str, object] = {
@@ -2892,7 +2927,6 @@ def snapshot_device_collect_state(
         "journal_candidate": None,
         "accepted_slot": None,
         "accepted_release": None,
-        "accepted_sequence": None,
         "persist_marker": None,
     }
     try:
@@ -2925,13 +2959,6 @@ def snapshot_device_collect_state(
                 snapshot["accepted_release"] = record.accepted_release_id
             except Exception as exc:
                 snapshot["record_error"] = f"{type(exc).__name__}: {exc}"
-            try:
-                from greia_platform.system_updates import read_accepted_sequence
-
-                snapshot["accepted_sequence"] = read_accepted_sequence(
-                    Path(machine["state"]))
-            except Exception as exc:
-                snapshot["sequence_error"] = f"{type(exc).__name__}: {exc}"
             try:
                 persist_profile = Path(machine["persist"]) / "profile.json"
                 if persist_profile.is_file():
@@ -3150,11 +3177,11 @@ class LifecycleHarness:
         )
         from greia_platform.grub_ab import GrubEnvBackend
         from greia_platform.privileged_channel import PeerCredential
-        from greia_platform.system_updates import (
-            SystemUpdateInbox,
-            build_persistent_state_contract_bytes,
-            read_accepted_sequence,
+        from greia_platform.persistent_layout import (
+            PERSIST_SCHEMA_CURRENT,
+            emit_persist_schema_marker,
         )
+        from greia_platform.system_updates import SystemUpdateInbox
         from greia_platform.update_privileged import (
             UpdatePrivilegedEndpoint,
             build_request,
@@ -3164,23 +3191,19 @@ class LifecycleHarness:
         out = Path(self.config.output_dir)
         out.mkdir(parents=True, exist_ok=True)
         machine = fresh_machine_state(self.machine_root)
-        contract_bytes = build_persistent_state_contract_bytes()
+        contract_bytes = emit_persist_schema_marker(PERSIST_SCHEMA_CURRENT)
         factory = self.seams_factory or ImageIntegrationSeams
         seams = factory(self.machine_root / "integration", contract_bytes)
-        private_key, _ = mint_signing_keys(self.machine_root, machine["keys"])
 
         lineage = {
-            ("greia-0.21.0", 21): build_test_release(
+            "greia-0.21.0": build_test_release(
                 self.machine_root, name="r21", release_id="greia-0.21.0",
-                sequence=21, private_key=private_key,
             ),
-            ("greia-0.21.1", 22): build_test_release(
+            "greia-0.21.1": build_test_release(
                 self.machine_root, name="r22broken", release_id="greia-0.21.1",
-                sequence=22, private_key=private_key,
             ),
-            ("greia-0.22.0", 23): build_test_release(
+            "greia-0.22.0": build_test_release(
                 self.machine_root, name="r23", release_id="greia-0.22.0",
-                sequence=23, private_key=private_key,
             ),
         }
         _ = lineage
@@ -3200,10 +3223,6 @@ class LifecycleHarness:
                 journal_state = None
                 candidate = None
             record = _load_record(machine["layout"])
-            try:
-                accepted_seq: object = read_accepted_sequence(machine["state"])
-            except Exception:
-                accepted_seq = None
             persist_marker = sha256_file(machine["persist"] / "profile.json")
             return {
                 "step": step,
@@ -3214,7 +3233,6 @@ class LifecycleHarness:
                 "journal_candidate": candidate,
                 "accepted_slot": record.accepted_slot,
                 "accepted_release": record.accepted_release_id,
-                "accepted_sequence": accepted_seq,
                 "persist_marker": persist_marker,
             }
 
@@ -3233,7 +3251,7 @@ class LifecycleHarness:
 
         # Step 2: boot A accepted (launcher acceptance, plain boot no-op).
         launcher_a = self._launcher_boot(
-            machine, booted_slot="A", release_id="greia-0.20.0", sequence=20,
+            machine, booted_slot="A", release_id="greia-0.20.0",
         )
         launcher_legs_used.append("boot-A-accepted")
         obs = _observe("boot-A-accepted")
@@ -3245,7 +3263,6 @@ class LifecycleHarness:
         # through the shipped socket endpoint with a kernel-attested peer.
         authority = shipped_update_authority(
             state_dir=machine["state"],
-            trusted_key_dir=machine["keys"],
             layout_record_path=machine["layout"],
             boot_backend=GrubEnvBackend.attach(machine["boot_control"]),
             seams=seams,
@@ -3298,7 +3315,7 @@ class LifecycleHarness:
             raise LifecycleContractError("one-shot state wrong before commit")
         shipped_legs_used.append("boot-B-commit")
         launcher_b = self._launcher_boot(
-            machine, booted_slot="B", release_id="greia-0.21.0", sequence=21,
+            machine, booted_slot="B", release_id="greia-0.21.0",
             filesystem_files=seams.files,
             update_authority=authority,
         )
@@ -3308,12 +3325,12 @@ class LifecycleHarness:
         obs = _observe("boot-B-commit")
         if obs["default_slot"] != "B" or obs["accepted_slot"] != "B":
             raise LifecycleContractError("persistent default/accepted record not on B")
-        if obs["accepted_sequence"] != 21:
-            raise LifecycleContractError("accepted sequence did not advance to 21")
+        if obs["accepted_release"] != "greia-0.21.0":
+            raise LifecycleContractError("accepted release did not advance to greia-0.21.0")
         steps.append({**obs, "launcher": launcher_b})
         leg_samples.append(dict(_record_leg_sample("boot-B-commit")))
 
-        # Step 5: stage deliberately broken candidate (validly signed).
+        # Step 5: stage deliberately broken candidate (structurally valid v3).
         # The accepted slot is B now, so the inactive target is system-a.
         broken_bundle = self.machine_root / "releases" / "r22broken" / "r22broken.greiaupdate"
         SystemUpdateInbox(machine["state"]).receive(broken_bundle)
@@ -3342,8 +3359,8 @@ class LifecycleHarness:
         coordinator = BootTransactionCoordinator.resume(
             journal_dir=journal_dir,
             backend=GrubEnvBackend.attach(machine["boot_control"]),
-            candidate_artifacts=_artifact_set("A", "greia-0.21.1", 22),
-            accepted_artifacts=_artifact_set("B", "greia-0.21.0", 21),
+            candidate_artifacts=_artifact_set("A", "greia-0.21.1"),
+            accepted_artifacts=_artifact_set("B", "greia-0.21.0"),
         )
         observed_booted, _decision = coordinator.observe_boot()
         if observed_booted != "A":
@@ -3366,7 +3383,7 @@ class LifecycleHarness:
         # slot with a terminal FAILED journal, so acceptance is a bounded
         # no-op and reconcile stays owned by the privileged service.
         launcher_r = self._launcher_boot(
-            machine, booted_slot="B", release_id="greia-0.21.0", sequence=21,
+            machine, booted_slot="B", release_id="greia-0.21.0",
             expect_no_acceptance=True,
             update_authority=authority,
         )
@@ -3393,7 +3410,7 @@ class LifecycleHarness:
         GrubEnvBackend.attach(machine["boot_control"]).reconcile("A")
         shipped_legs_used.append("reverse-update-B-to-A")
         launcher_rev = self._launcher_boot(
-            machine, booted_slot="A", release_id="greia-0.22.0", sequence=23,
+            machine, booted_slot="A", release_id="greia-0.22.0",
             filesystem_files=seams.files,
             update_authority=authority,
         )
@@ -3401,8 +3418,8 @@ class LifecycleHarness:
         if launcher_rev["accepted_slot"] != "A":
             raise LifecycleContractError("reverse update did not accept A")
         obs = _observe("reverse-update-B-to-A")
-        if obs["default_slot"] != "A" or obs["accepted_sequence"] != 23:
-            raise LifecycleContractError("reverse update did not land on A/23")
+        if obs["default_slot"] != "A" or obs["accepted_release"] != "greia-0.22.0":
+            raise LifecycleContractError("reverse update did not land on A/greia-0.22.0")
         steps.append({**obs, "launcher": launcher_rev})
         leg_samples.append(dict(_record_leg_sample("reverse-update-B-to-A")))
 
@@ -3460,7 +3477,7 @@ class LifecycleHarness:
 
     def _launcher_boot(
         self, machine: Mapping[str, Path], *, booted_slot: str,
-        release_id: str, sequence: int,
+        release_id: str,
         filesystem_files: Mapping[str, bytes] | None = None,
         expect_accepted_slot: str | None = None,
         expect_no_acceptance: bool = False,
@@ -3501,7 +3518,6 @@ class LifecycleHarness:
                         "boot_backend": BOOT_BACKEND_ID,
                         "layout_id": LAYOUT_ADAPTER_ID,
                         "release_id": release_id,
-                        "release_sequence": sequence,
                         "role": f"system-{booted_slot.lower()}",
                         "slot": booted_slot,
                     }, sort_keys=True) + "\n").encode()
@@ -3513,7 +3529,6 @@ class LifecycleHarness:
                 receipt.write_bytes(
                     (json.dumps({
                         "release_id": release_id,
-                        "release_sequence": sequence,
                         "slot": booted_slot,
                         "layout_id": LAYOUT_ADAPTER_ID,
                         "artifact_digests": {
@@ -3796,11 +3811,11 @@ class LifecycleHarness:
         )
         from greia_platform.grub_ab import GrubEnvBackend
         from greia_platform.privileged_channel import PeerCredential
-        from greia_platform.system_updates import (
-            SystemUpdateInbox,
-            build_persistent_state_contract_bytes,
-            read_accepted_sequence,
+        from greia_platform.persistent_layout import (
+            PERSIST_SCHEMA_CURRENT,
+            emit_persist_schema_marker,
         )
+        from greia_platform.system_updates import SystemUpdateInbox
         from greia_platform.update_privileged import (
             UpdatePrivilegedEndpoint,
             build_request,
@@ -3822,18 +3837,16 @@ class LifecycleHarness:
         bind_gate_to_install(gate, install_proof)
 
         machine = fresh_machine_state(self.machine_root)
-        contract_bytes = build_persistent_state_contract_bytes()
+        contract_bytes = emit_persist_schema_marker(PERSIST_SCHEMA_CURRENT)
         factory = self.seams_factory or ImageIntegrationSeams
         seams = factory(self.machine_root / "integration", contract_bytes)
-        private_key, _ = mint_signing_keys(self.machine_root, machine["keys"])
-        for name, release_id, sequence in (
-            ("r21", "greia-0.21.0", 21),
-            ("r22broken", "greia-0.21.1", 22),
-            ("r23", "greia-0.22.0", 23),
+        for name, release_id in (
+            ("r21", "greia-0.21.0"),
+            ("r22broken", "greia-0.21.1"),
+            ("r23", "greia-0.22.0"),
         ):
             build_test_release(
                 self.machine_root, name=name, release_id=release_id,
-                sequence=sequence, private_key=private_key,
             )
         steps: list[dict[str, object]] = []
         shipped_legs_used: list[str] = []
@@ -3852,10 +3865,6 @@ class LifecycleHarness:
                 journal_state = None
                 candidate = None
             record = _load_record(machine["layout"])
-            try:
-                accepted_seq: object = read_accepted_sequence(machine["state"])
-            except Exception:
-                accepted_seq = None
             return {
                 "step": step,
                 "default_slot": backend.default_slot,
@@ -3865,7 +3874,6 @@ class LifecycleHarness:
                 "journal_candidate": candidate,
                 "accepted_slot": record.accepted_slot,
                 "accepted_release": record.accepted_release_id,
-                "accepted_sequence": accepted_seq,
                 "persist_marker": sha256_file(machine["persist"] / "profile.json"),
                 "image_sha256": sha256_file(image),
             }
@@ -3916,7 +3924,7 @@ class LifecycleHarness:
         boot_a = _device_boot_leg("boot-A-accepted")
         launcher_a = self._launcher_boot(
             machine, booted_slot=str(boot_a["observed_slot"]),
-            release_id="greia-0.20.0", sequence=20,
+            release_id="greia-0.20.0",
         )
         launcher_legs_used.append("boot-A-accepted")
         obs = _observe("boot-A-accepted")
@@ -3929,7 +3937,6 @@ class LifecycleHarness:
         # armed block to the image, boot B, launcher accepts, commit.
         authority = shipped_update_authority(
             state_dir=machine["state"],
-            trusted_key_dir=machine["keys"],
             layout_record_path=machine["layout"],
             boot_backend=GrubEnvBackend.attach(machine["boot_control"]),
             seams=seams,
@@ -3976,7 +3983,7 @@ class LifecycleHarness:
         boot_b = _device_boot_leg("boot-B-commit")
         launcher_b = self._launcher_boot(
             machine, booted_slot=str(boot_b["observed_slot"]),
-            release_id="greia-0.21.0", sequence=21,
+            release_id="greia-0.21.0",
             filesystem_files=seams.files,
             update_authority=authority,
         )
@@ -3986,8 +3993,8 @@ class LifecycleHarness:
         obs = _observe("boot-B-commit")
         if obs["default_slot"] != "B" or obs["accepted_slot"] != "B":
             raise LifecycleContractError("persistent default/accepted record not on B")
-        if obs["accepted_sequence"] != 21:
-            raise LifecycleContractError("accepted sequence did not advance to 21")
+        if obs["accepted_release"] != "greia-0.21.0":
+            raise LifecycleContractError("accepted release did not advance to greia-0.21.0")
         steps.append({**obs, "launcher": launcher_b,
                        "device_boot": boot_b["image_sha256_post"]})
         leg_samples.append(dict(_record_leg_sample("boot-B-commit", surface="DEVICE")))
@@ -4016,8 +4023,8 @@ class LifecycleHarness:
         coordinator = BootTransactionCoordinator.resume(
             journal_dir=journal_dir,
             backend=GrubEnvBackend.attach(machine["boot_control"]),
-            candidate_artifacts=_artifact_set("A", "greia-0.21.1", 22),
-            accepted_artifacts=_artifact_set("B", "greia-0.21.0", 21),
+            candidate_artifacts=_artifact_set("A", "greia-0.21.1"),
+            accepted_artifacts=_artifact_set("B", "greia-0.21.0"),
         )
         observed_booted, _decision = coordinator.observe_boot()
         if observed_booted != str(boot_broken["observed_slot"]):
@@ -4042,7 +4049,7 @@ class LifecycleHarness:
         boot_rec = _device_boot_leg("recovery-boot-B")
         launcher_r = self._launcher_boot(
             machine, booted_slot=str(boot_rec["observed_slot"]),
-            release_id="greia-0.21.0", sequence=21,
+            release_id="greia-0.21.0",
             expect_no_acceptance=True,
             update_authority=authority,
         )
@@ -4072,7 +4079,7 @@ class LifecycleHarness:
         boot_rev = _device_boot_leg("reverse-update-B-to-A")
         launcher_rev = self._launcher_boot(
             machine, booted_slot=str(boot_rev["observed_slot"]),
-            release_id="greia-0.22.0", sequence=23,
+            release_id="greia-0.22.0",
             filesystem_files=seams.files,
             update_authority=authority,
         )
@@ -4080,8 +4087,8 @@ class LifecycleHarness:
         if launcher_rev["accepted_slot"] != "A":
             raise LifecycleContractError("reverse update did not accept A")
         obs = _observe("reverse-update-B-to-A")
-        if obs["default_slot"] != "A" or obs["accepted_sequence"] != 23:
-            raise LifecycleContractError("reverse update did not land on A/23")
+        if obs["default_slot"] != "A" or obs["accepted_release"] != "greia-0.22.0":
+            raise LifecycleContractError("reverse update did not land on A/greia-0.22.0")
         steps.append({**obs, "launcher": launcher_rev,
                        "device_boot": boot_rev["image_sha256_post"]})
         leg_samples.append(dict(_record_leg_sample("reverse-update-B-to-A", surface="DEVICE")))
@@ -4336,11 +4343,11 @@ class LifecycleHarness:
         )
         from greia_platform.grub_ab import GrubEnvBackend
         from greia_platform.privileged_channel import PeerCredential
-        from greia_platform.system_updates import (
-            SystemUpdateInbox,
-            build_persistent_state_contract_bytes,
-            read_accepted_sequence,
+        from greia_platform.persistent_layout import (
+            PERSIST_SCHEMA_CURRENT,
+            emit_persist_schema_marker,
         )
+        from greia_platform.system_updates import SystemUpdateInbox
         from greia_platform.update_privileged import (
             UpdatePrivilegedEndpoint,
             build_request,
@@ -4461,18 +4468,16 @@ class LifecycleHarness:
             }
 
         machine = fresh_machine_state(self.machine_root)
-        contract_bytes = build_persistent_state_contract_bytes()
+        contract_bytes = emit_persist_schema_marker(PERSIST_SCHEMA_CURRENT)
         factory = self.seams_factory or ImageIntegrationSeams
         seams = factory(self.machine_root / "integration", contract_bytes)
-        private_key, _ = mint_signing_keys(self.machine_root, machine["keys"])
-        for name, release_id, sequence in (
-            ("r21", "greia-0.21.0", 21),
-            ("r22broken", "greia-0.21.1", 22),
-            ("r23", "greia-0.22.0", 23),
+        for name, release_id in (
+            ("r21", "greia-0.21.0"),
+            ("r22broken", "greia-0.21.1"),
+            ("r23", "greia-0.22.0"),
         ):
             build_test_release(
                 self.machine_root, name=name, release_id=release_id,
-                sequence=sequence, private_key=private_key,
             )
         steps: list[dict[str, object]] = []
         shipped_legs_used: list[str] = []
@@ -4493,10 +4498,6 @@ class LifecycleHarness:
                 journal_state = None
                 candidate = None
             record = _load_record(machine["layout"])
-            try:
-                accepted_seq: object = read_accepted_sequence(machine["state"])
-            except Exception:
-                accepted_seq = None
             return {
                 "step": step,
                 "default_slot": backend.default_slot,
@@ -4506,7 +4507,6 @@ class LifecycleHarness:
                 "journal_candidate": candidate,
                 "accepted_slot": record.accepted_slot,
                 "accepted_release": record.accepted_release_id,
-                "accepted_sequence": accepted_seq,
                 "persist_marker": sha256_file(machine["persist"] / "profile.json"),
                 "image_sha256": sha256_file(image),
             }
@@ -4614,7 +4614,7 @@ class LifecycleHarness:
             boot_a_capture.clean_exit = True
             launcher_a = self._launcher_boot(
                 machine, booted_slot=str(boot["observed_slot"]),
-                release_id="greia-0.20.0", sequence=20,
+                release_id="greia-0.20.0",
             )
             launcher_legs_used.append("boot-A-accepted")
             obs = _observe("boot-A-accepted")
@@ -4645,7 +4645,6 @@ class LifecycleHarness:
         def _build_collect_authority() -> tuple[object, object]:
             authority = shipped_update_authority(
                 state_dir=machine["state"],
-                trusted_key_dir=machine["keys"],
                 layout_record_path=machine["layout"],
                 boot_backend=GrubEnvBackend.attach(machine["boot_control"]),
                 seams=seams,
@@ -4746,7 +4745,7 @@ class LifecycleHarness:
             boot_b_capture.clean_exit = True
             launcher_b = self._launcher_boot(
                 machine, booted_slot=str(boot["observed_slot"]),
-                release_id="greia-0.21.0", sequence=21,
+                release_id="greia-0.21.0",
                 filesystem_files=seams.files,
                 update_authority=_require_collect_authority(
                     leg="boot-B-commit"),
@@ -4758,8 +4757,9 @@ class LifecycleHarness:
             if obs["default_slot"] != "B" or obs["accepted_slot"] != "B":
                 raise LifecycleContractError(
                     "persistent default/accepted record not on B")
-            if obs["accepted_sequence"] != 21:
-                raise LifecycleContractError("accepted sequence did not advance to 21")
+            if obs["accepted_release"] != "greia-0.21.0":
+                raise LifecycleContractError(
+                    "accepted release did not advance to greia-0.21.0")
             steps.append({**obs, "launcher": launcher_b,
                            "device_boot": boot["image_sha256_post"]})
             leg_samples.append(dict(_record_leg_sample("boot-B-commit",
@@ -4820,8 +4820,8 @@ class LifecycleHarness:
             coordinator = BootTransactionCoordinator.resume(
                 journal_dir=journal_dir,
                 backend=GrubEnvBackend.attach(machine["boot_control"]),
-                candidate_artifacts=_artifact_set("A", "greia-0.21.1", 22),
-                accepted_artifacts=_artifact_set("B", "greia-0.21.0", 21),
+                candidate_artifacts=_artifact_set("A", "greia-0.21.1"),
+                accepted_artifacts=_artifact_set("B", "greia-0.21.0"),
             )
             observed_booted, _decision = coordinator.observe_boot()
             if observed_booted != str(boot_broken["observed_slot"]):
@@ -4866,7 +4866,7 @@ class LifecycleHarness:
             recovery_capture.clean_exit = True
             launcher_r = self._launcher_boot(
                 machine, booted_slot=str(boot_rec["observed_slot"]),
-                release_id="greia-0.21.0", sequence=21,
+                release_id="greia-0.21.0",
                 expect_no_acceptance=True,
             )
             launcher_legs_used.append("recovery-boot-B")
@@ -4925,16 +4925,16 @@ class LifecycleHarness:
             reverse_capture.clean_exit = True
             launcher_rev = self._launcher_boot(
                 machine, booted_slot=str(boot_rev["observed_slot"]),
-                release_id="greia-0.22.0", sequence=23,
+                release_id="greia-0.22.0",
                 filesystem_files=seams.files,
                 update_authority=_authority,
             )
             launcher_legs_used.append("reverse-update-B-to-A")
             if launcher_rev["accepted_slot"] != "A":
                 raise LifecycleContractError("reverse update did not accept A")
-            obs = _observe("reverse-update-B-to-A")
-            if obs["default_slot"] != "A" or obs["accepted_sequence"] != 23:
-                raise LifecycleContractError("reverse update did not land on A/23")
+        obs = _observe("reverse-update-B-to-A")
+        if obs["default_slot"] != "A" or obs["accepted_release"] != "greia-0.22.0":
+            raise LifecycleContractError("reverse update did not land on A/greia-0.22.0")
             steps.append({**obs, "launcher": launcher_rev,
                            "device_boot": boot_rev["image_sha256_post"]})
             leg_samples.append(dict(_record_leg_sample("reverse-update-B-to-A",
@@ -5120,7 +5120,7 @@ def assert_lifecycle_transitions(report: Mapping[str, object]) -> None:
             raise LifecycleContractError(f"launcher leg {leg} bypassed acceptance")
 
 
-def _artifact_set(slot: str, release_id: str, sequence: int, *, active: bool = False):  # type: ignore[no-untyped-def]
+def _artifact_set(slot: str, release_id: str, *, active: bool = False):  # type: ignore[no-untyped-def]
     from greia_platform.boot_transaction import BootArtifactSet
 
     number = "02" if slot == "A" else "03"
@@ -5134,5 +5134,4 @@ def _artifact_set(slot: str, release_id: str, sequence: int, *, active: bool = F
         root_partuuid=f"{_MBR_SIGNATURE}-{number}",
         root_filesystem_uuid=fs_uuid,
         release_id=release_id,
-        release_sequence=sequence,
     )

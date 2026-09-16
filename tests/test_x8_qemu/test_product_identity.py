@@ -54,16 +54,29 @@ def _write_image(base: Path, name: str = "installer.img") -> Path:
 
 
 def _write_bundle(base: Path, name: str = "greia-release.greiaupdate") -> Path:
+    import zstandard
+
+    from greia_platform.system_updates import build_update_bundle
+
+    raw = bytes((index * 31 + 7) % 256 for index in range(64 * 1024))
+    payload = base / "payload.ext4.zst"
+    payload.write_bytes(zstandard.ZstdCompressor(level=3).compress(raw))
     path = base / name
-    path.write_bytes(b"signed-release-bundle" * 64)
+    build_update_bundle(
+        payload_path=payload,
+        hardware_support_path=None,
+        output_path=path,
+        version="0.20.0",
+        release_id="greia-0.20.0",
+        platform_family="legacy-x86",
+        architecture="i386",
+        profile="acer-aspire-one-i386-ab",
+        payload_uncompressed_bytes=len(raw),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
+    )
     return path
-
-
-def _write_keys(base: Path) -> Path:
-    key_dir = base / "keys"
-    key_dir.mkdir(parents=True, exist_ok=True)
-    (key_dir / "release.pem").write_text("public-key\n", encoding="utf-8")
-    return key_dir
 
 
 def _provenance() -> dict[str, object]:
@@ -188,7 +201,6 @@ class IdentityGreenTests(unittest.TestCase):
             base = Path(tmp)
             official = _write_image(base, "official.img")
             bundle = _write_bundle(base)
-            keys = _write_keys(base)
             seen: dict[str, object] = {}
             gate = _mock.patch.object(
                 _product, "require_product_host", lambda **kwargs: None
@@ -205,7 +217,6 @@ class IdentityGreenTests(unittest.TestCase):
                 )
                 result = harness.run_product(
                     release_bundle=bundle,
-                    trusted_key_dir=keys,
                     target_fn=lambda p: {
                         "target": str(p),
                         "size_bytes": _product.DISPOSABLE_TARGET_BYTES,
@@ -378,7 +389,6 @@ class IdentityNegativeTests(unittest.TestCase):
         def _run_with_flat_flag(base: Path, flag: object) -> dict[str, object]:
             official = _write_image(base, "official.img")
             bundle = _write_bundle(base)
-            keys = _write_keys(base)
             gate = _mock.patch.object(
                 _product, "require_product_host", lambda **kwargs: None
             )
@@ -394,7 +404,6 @@ class IdentityNegativeTests(unittest.TestCase):
                 )
                 return harness.run_product(
                     release_bundle=bundle,
-                    trusted_key_dir=keys,
                     target_fn=lambda p: {
                         "target": str(p),
                         "size_bytes": _product.DISPOSABLE_TARGET_BYTES,

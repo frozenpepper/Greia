@@ -54,7 +54,6 @@ def _canonical(payload: dict) -> bytes:
 def _layout_dict(**overrides: object) -> dict:
     base: dict = {
         "accepted_release_id": "greia-r8",
-        "accepted_release_sequence": 8,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -78,7 +77,6 @@ def _identity_dict(**overrides: object) -> dict:
         "boot_backend": "grub-ab-v1",
         "layout_id": "legacy-bios-ab-v1",
         "release_id": "greia-r9",
-        "release_sequence": 9,
         "role": "system-b",
         "slot": "B",
     }
@@ -348,8 +346,6 @@ class ReleaseIdentityAuthorityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
-            key_dir = root / "keys"
-            key_dir.mkdir(parents=True, exist_ok=True)
             (root / "release-identity.json").write_bytes(
                 _canonical(_identity_dict())
             )
@@ -369,7 +365,6 @@ class ReleaseIdentityAuthorityTests(unittest.TestCase):
             ):
                 authority = build_live_update_service(
                     state_dir=state_dir,
-                    trusted_key_dir=key_dir,
                     layout_record_path=root / "installed-layout.json",
                 )
         self.assertEqual(
@@ -408,9 +403,13 @@ class UpdateUnitSandboxTests(unittest.TestCase):
         for broad in ("/", "/etc", "/boot", "/run", "/var", "/var/lib", "/opt"):
             self.assertNotIn(broad, paths)
 
-    def test_trust_root_stays_read_only(self) -> None:
+    def test_no_key_trust_root_in_shipped_unit(self) -> None:
+        # v3 carries no key material: the shipped unit must not grant any
+        # key trust root (read-only or otherwise).
         bound = _directive_values(SERVICE_PATH, "BindReadOnlyPaths")
-        self.assertIn("/etc/greia-os/system-update-keys", bound)
+        self.assertNotIn("/etc/greia-os/system-update-keys", bound)
+        raw = SERVICE_PATH.read_text(encoding="utf-8")
+        self.assertNotIn("system-update-keys", raw)
 
     def test_no_env_identity_in_shipped_units(self) -> None:
         for path in (SERVICE_PATH, SOCKET_PATH):

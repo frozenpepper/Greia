@@ -5,8 +5,9 @@ release composition root) or ``InstallTransactionService.handle_request``
 (the exact socket-protocol framing) — and proves refusal happens for its
 intended reason with zero destructive effect:
 
-- missing signed bundle → ``AbInstallCompositionError`` naming the bundle;
-- missing trusted key dir → ``AbInstallCompositionError`` naming the key dir;
+- missing unsigned v3 bundle → ``AbInstallCompositionError`` naming the bundle;
+- legacy trusted-key-dir entry → ``AbInstallCompositionError`` naming the
+  unknown key (v3 carries no key material);
 - mismatched (mixed A/B + single-root) profile → composition error naming
   the mix, never a silent ``legacy-single`` fallback;
 - A/B composition missing → ``TransactionServiceError`` naming ``GREIA_AB_``,
@@ -78,7 +79,6 @@ _SHIPPED_ENV_NAMES = (
 )
 _AB_ENV_NAMES = (
     "GREIA_AB_RELEASE_BUNDLE",
-    "GREIA_AB_TRUSTED_KEY_DIR",
     "GREIA_AB_GRUB_PASSWORD_HASH",
     "GREIA_AB_DEVELOPER",
     "GREIA_AB_SUPPORT_INSTALLED_BYTES",
@@ -112,11 +112,10 @@ def _write_profile(path: Path, *, profile_id: str, layout: str, backend: str) ->
     return path
 
 
-def _write_ab_env_file(path: Path, *, bundle: Path, key_dir: Path) -> Path:
+def _write_ab_env_file(path: Path, *, bundle: Path) -> Path:
     path.write_text(
         "# disposable A/B facts for the Gate-P2 negatives\n"
         f"GREIA_AB_RELEASE_BUNDLE={bundle}\n"
-        f"GREIA_AB_TRUSTED_KEY_DIR={key_dir}\n"
         f"GREIA_AB_GRUB_PASSWORD_HASH={_AB_PASSWORD_HASH}\n"
         "GREIA_AB_DEVELOPER=0\n"
         f"GREIA_AB_SUPPORT_INSTALLED_BYTES={_AB_SUPPORT_BOUND}\n",
@@ -142,10 +141,8 @@ def _make_ab_tree(prefix: str = "installer-negatives-") -> tuple[str, dict[str, 
     )
     bundle = root / "ab-release.greiaupdate"
     bundle.write_bytes(b"test-release-bundle")
-    key_dir = root / "ab-trusted-keys"
-    key_dir.mkdir()
     env_file = root / "installer-ab.env"
-    _write_ab_env_file(env_file, bundle=bundle, key_dir=key_dir)
+    _write_ab_env_file(env_file, bundle=bundle)
     return directory, {
         "root": root,
         "os_root": os_root,
@@ -154,7 +151,6 @@ def _make_ab_tree(prefix: str = "installer-negatives-") -> tuple[str, dict[str, 
         "digest": digest,
         "profile": profile,
         "bundle": bundle,
-        "key_dir": key_dir,
         "env_file": env_file,
     }
 
@@ -238,7 +234,7 @@ class _FakeResolver:
 class ConstructionNegativesTests(unittest.TestCase):
     """Missing/mismatched composition refuses before any disk mutation."""
 
-    def test_missing_signed_bundle_fails_before_mutation(self) -> None:
+    def test_missing_unsigned_bundle_fails_before_mutation(self) -> None:
         directory, fix = _make_ab_tree()
         self.addCleanup(shutil.rmtree, directory, True)
         fix["bundle"].unlink()
@@ -252,16 +248,17 @@ class ConstructionNegativesTests(unittest.TestCase):
                     build_live_service()
         self.assertEqual(before, _snapshot(fix["root"]))
 
-    def test_missing_trusted_key_dir_fails_before_mutation(self) -> None:
+    def test_legacy_key_dir_entry_rejected_before_mutation(self) -> None:
         directory, fix = _make_ab_tree()
         self.addCleanup(shutil.rmtree, directory, True)
-        shutil.rmtree(fix["key_dir"])
+        with open(fix["env_file"], "a", encoding="utf-8") as handle:
+            handle.write("GREIA_AB_TRUSTED_KEY_DIR=/no/such/keys\n")
         before = _snapshot(fix["root"])
         with _shipped_env(fix=fix):
             with _no_block_commands():
                 with self.assertRaisesRegex(
                     (AbInstallCompositionError, TransactionServiceError),
-                    "trusted key dir",
+                    "unknown key",
                 ):
                     build_live_service()
         self.assertEqual(before, _snapshot(fix["root"]))

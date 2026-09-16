@@ -67,7 +67,6 @@ _ACTIVITY_PEER = "activity.runtime:ActivityRuntime"
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": _ACCEPTED_RELEASE,
-        "accepted_release_sequence": _ACCEPTED_SEQ,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -91,7 +90,6 @@ def _receipt(slot: str) -> FinalizationReceipt:
         schema_version=1,
         finalizer_version=FINALIZER_VERSION,
         release_id=_RELEASE,
-        release_sequence=_RELEASE_SEQ,
         slot=slot,
         role=f"system-{slot.lower()}",
         base_sha256=_KERNEL,
@@ -122,7 +120,6 @@ def _candidate_identity() -> ActualBootIdentity:
         booted_slot="B",
         root_partuuid=_UUID_B,
         release_id=_RELEASE,
-        release_sequence=_RELEASE_SEQ,
     )
 
 
@@ -147,7 +144,7 @@ class _Harness:
         self.coordinator = BootTransactionCoordinator.begin_update(
             journal_dir=root / "journal", backend=self.backend,
             candidate_artifacts=candidate, accepted_artifacts=accepted,
-            release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+            release_id=_RELEASE,
         )
         self.coordinator.arm()
         self.backend.simulate_reboot()
@@ -165,7 +162,6 @@ class _Harness:
             coordinator=self.coordinator,
             candidate_root_partuuid=_UUID_B,
             candidate_release_id=_RELEASE,
-            candidate_release_sequence=_RELEASE_SEQ,
             vault=self.vault,
             observer=self.observer,
             trusted_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,
@@ -252,14 +248,12 @@ class BootHealthySuccessTests(unittest.TestCase):
                     booted_slot="A",
                     root_partuuid=_UUID_A,
                     release_id=_RELEASE,
-                    release_sequence=_RELEASE_SEQ,
                 )
             )
             protocol = BootHealthyProtocol(
                 coordinator=coordinator,
                 candidate_root_partuuid=_UUID_A,
                 candidate_release_id=_RELEASE,
-                candidate_release_sequence=_RELEASE_SEQ,
                 vault=vault,
                 observer=observer,
                 trusted_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,
@@ -350,7 +344,7 @@ class BootHealthyNegativeTests(unittest.TestCase):
             coordinator2 = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal2", backend=backend2,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                release_id=_RELEASE,
             )
             self.assertNotEqual(
                 coordinator2.journal.transaction_id,
@@ -360,7 +354,6 @@ class BootHealthyNegativeTests(unittest.TestCase):
                 coordinator=coordinator2,
                 candidate_root_partuuid=_UUID_B,
                 candidate_release_id=_RELEASE,
-                candidate_release_sequence=_RELEASE_SEQ,
                 vault=harness.vault,
                 observer=harness.observer,
                 trusted_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,
@@ -382,7 +375,6 @@ class BootHealthyNegativeTests(unittest.TestCase):
                 booted_slot="A",
                 root_partuuid=_UUID_A,
                 release_id=_RELEASE,
-                release_sequence=_RELEASE_SEQ,
             )
             with self.assertRaises(BootHealthError):
                 harness.protocol.confirm(
@@ -401,7 +393,6 @@ class BootHealthyNegativeTests(unittest.TestCase):
                 booted_slot="B",
                 root_partuuid=_UUID_B,
                 release_id=_ACCEPTED_RELEASE,
-                release_sequence=_ACCEPTED_SEQ,
             )
             with self.assertRaises(BootHealthError):
                 harness.protocol.confirm(
@@ -420,7 +411,6 @@ class BootHealthyNegativeTests(unittest.TestCase):
                 booted_slot="B",
                 root_partuuid=_UUID_A,
                 release_id=_RELEASE,
-                release_sequence=_RELEASE_SEQ,
             )
             with self.assertRaises(BootHealthError):
                 harness.protocol.confirm(
@@ -535,7 +525,6 @@ class BootHealthyNegativeTests(unittest.TestCase):
                 booted_slot="A",
                 root_partuuid=_UUID_A,
                 release_id=_RELEASE,
-                release_sequence=_RELEASE_SEQ,
             )
             with self.assertRaises(BootHealthError):
                 harness.protocol.finalize(ticket)
@@ -548,13 +537,12 @@ class BootHealthyNegativeTests(unittest.TestCase):
             coordinator = BootTransactionCoordinator.begin_update(
                 journal_dir=root / "journal", backend=backend,
                 candidate_artifacts=candidate, accepted_artifacts=accepted,
-                release_id=_RELEASE, release_sequence=_RELEASE_SEQ,
+                release_id=_RELEASE,
             )
             protocol = BootHealthyProtocol(
                 coordinator=coordinator,
                 candidate_root_partuuid=_UUID_B,
                 candidate_release_id=_RELEASE,
-                candidate_release_sequence=_RELEASE_SEQ,
                 vault=BootHealthCredentialVault(root / "vault"),
                 observer=FakeActualBootIdentity(_candidate_identity()),
                 trusted_bootstrap_path=TRUSTED_BOOTSTRAP_PATH,

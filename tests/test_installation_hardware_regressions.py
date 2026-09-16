@@ -126,28 +126,32 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
             "greia-passwd-entry",
             "$6$greia$",
         )
-        for builder_path in (
-            "build/build-image.sh",
-            "build/build-installer-image.sh",
-        ):
-            with self.subTest(builder=builder_path):
-                builder = self.read(builder_path)
-                for token in forbidden:
-                    self.assertNotIn(token, builder)
-                self.assertIn("PasswordAuthentication no", builder)
-                self.assertIn("AuthenticationMethods publickey", builder)
-                self.assertIn("PermitRootLogin no", builder)
-                self.assertIn("disable ssh.service", builder)
-                self.assertIn("developer-remote", builder)
-                self.assertIn("provision_developer_ssh", builder)
-                self.assertIn("DenyUsers root", builder)
-                self.assertIn("AllowUsers greia", builder)
-                self.assertIn("PasswordAuthentication yes", builder)
-                self.assertTrue(
-                    "AuthenticationMethods publickey,password" in builder
-                    or "AuthenticationMethods password" in builder
-                )
-                self.assertIn("20-greia-parent.conf", builder)
+        # T02: live-installer SSH policy lives in the shared engine; the thin
+        # installer consumer delegates instead of duplicating it.
+        builder = self.read("build/lib/compose.sh")
+        for token in forbidden:
+            self.assertNotIn(token, builder)
+        self.assertIn("PasswordAuthentication no", builder)
+        self.assertIn("AuthenticationMethods publickey", builder)
+        self.assertIn("PermitRootLogin no", builder)
+        self.assertIn("disable ssh.service", builder)
+        self.assertIn("developer-remote", builder)
+        self.assertIn("provision_developer_ssh", builder)
+        self.assertIn("DenyUsers root", builder)
+        self.assertIn("AllowUsers greia", builder)
+        self.assertIn("PasswordAuthentication yes", builder)
+        self.assertTrue(
+            "AuthenticationMethods publickey,password" in builder
+            or "AuthenticationMethods password" in builder
+        )
+        self.assertIn("20-greia-parent.conf", builder)
+        installer = self.read("build/build-installer-image.sh")
+        for token in forbidden:
+            self.assertNotIn(token, installer)
+        self.assertIn('compose_configure_ssh_base "$LIVE_ROOT"', installer)
+        self.assertIn('compose_maybe_provision_developer_ssh "$LIVE_ROOT" "live-installer"', installer)
+        self.assertNotIn("PasswordAuthentication no", installer)
+        self.assertNotIn("PermitRootLogin no", installer)
 
         developer_builder = self.read("build/build-developer-image.sh")
         self.assertIn("verify-development-target-image.sh", developer_builder)
@@ -166,7 +170,11 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         self.assertIn('"root_login": False', live_provisioner)
 
     def test_canonical_builder_passwordless_surface_is_only_greia_devctl(self) -> None:
-        builder = self.read("build/build-image.sh")
+        # T01: the sudoers rule lives in the shared engine; the thin consumer
+        # must not mint privilege surface.
+        consumer = self.read("build/build-image.sh")
+        self.assertNotIn("NOPASSWD:", consumer)
+        builder = self.read("build/lib/compose.sh")
         nopasswd_lines = [
             line.strip()
             for line in builder.splitlines()
@@ -179,7 +187,7 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         )
         # The single rule is emitted only on the developer-remote path; the
         # shared overlay gains no new sudo surface for release profiles.
-        self.assertIn("provision_developer_ssh", builder)
+        self.assertIn("compose_provision_developer_ssh", builder)
         self.assertIn("developer-remote", builder)
         self.assertFalse(
             (PROJECT_ROOT / "build/overlay/etc/sudoers.d/greia-developer-remote").exists()

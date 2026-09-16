@@ -20,14 +20,15 @@ Mutation ownership per journal kind:
 - update journal: delegated to the existing ``system_updates`` mutation
   path (``SystemUpdateServiceAuthority.confirm_boot_health`` over
   ``SlotBackedSystemUpdateBackend``: reconcile, ``commit_accepted``,
-  ``write_accepted_sequence``, journal ``ACCEPTED``, layout-authority
-  advancement). This module adds no second writer or health state machine.
+  journal ``ACCEPTED``, layout-authority advancement). This module adds no
+  second writer or health state machine.
 - first-install journal: composed from the same reused primitives the
   update backend is built on (``BootTransactionCoordinator.resume`` +
   ``observe_boot`` + ``commit`` over the attached ``GrubEnvBackend``,
-  ``write_accepted_sequence``, layout-authority convergence check,
-  ``BootHistory``). There is no pre-existing first-install service path;
-  the primitives are shared, not reimplemented.
+  layout-authority convergence check, ``BootHistory``). There is no
+  pre-existing first-install service path; the primitives are shared,
+  not reimplemented. No standalone accepted-sequence file is written;
+  release identity stays in the journal/layout records.
 
 Both paths finish with one bounded boot-history terminal record
 (``committed`` milestone, ``confirmed`` health result, ``accepted``
@@ -87,7 +88,6 @@ from .system_updates import (
     installed_layout_record_path,
     load_installed_layout_record,
     resolve_grubenv_dir,
-    write_accepted_sequence,
 )
 
 
@@ -338,7 +338,6 @@ class ReceiptBackedArtifactResolver:
         for field_name, receipt_value, journal_value in (
             ("slot", receipt.slot, journal.candidate_slot),
             ("release_id", receipt.release_id, journal.release_id),
-            ("release_sequence", receipt.release_sequence, journal.release_sequence),
             ("layout_id", receipt.layout_id, journal.layout_id),
         ):
             if receipt_value != journal_value:
@@ -393,25 +392,15 @@ class ReceiptBackedArtifactResolver:
                 raise BootHealthServiceError(
                     f"finalization receipt digest {key} is not authoritative"
                 )
-        for key in ("release_id", "release_sequence", "slot", "layout_id"):
+        for key in ("release_id", "slot", "layout_id"):
             if raw.get(key) is None:
                 raise BootHealthServiceError(
                     f"finalization receipt is missing authoritative field {key}"
                 )
-        sequence = raw["release_sequence"]
-        if (
-            isinstance(sequence, bool)
-            or not isinstance(sequence, int)
-            or not 0 <= sequence <= 2_147_483_647
-        ):
-            raise BootHealthServiceError(
-                "finalization receipt release_sequence is outside Greia bounds"
-            )
         return _ReceiptView(
             slot=str(raw["slot"]),
             layout_id=str(raw["layout_id"]),
             release_id=str(raw["release_id"]),
-            release_sequence=int(sequence),
             generic_kernel_sha256=str(digests["generic_kernel_sha256"]),
             host_initramfs_sha256=str(digests["host_initramfs_sha256"]),
         )
@@ -424,7 +413,6 @@ class _ReceiptView:
     slot: str
     layout_id: str
     release_id: str
-    release_sequence: int
     generic_kernel_sha256: str
     host_initramfs_sha256: str
 
@@ -527,7 +515,6 @@ class BootHealthService:
         # confirmed/state/booted_slot.
         detail.setdefault("accepted_slot", journal.candidate_slot)
         detail.setdefault("release_id", journal.release_id)
-        detail.setdefault("release_sequence", journal.release_sequence)
         detail.setdefault("first_install", False)
         return detail
 
@@ -563,12 +550,6 @@ class BootHealthService:
             raise BootHealthServiceError(
                 f"first-install health commit refused: {exc}"
             ) from exc
-        try:
-            write_accepted_sequence(self.update_state_dir, journal.release_sequence)
-        except (SystemUpdateError, OSError, ValueError) as exc:
-            raise BootHealthServiceError(
-                f"accepted-sequence update refused: {exc}"
-            ) from exc
         self._record_history_committed(journal, transaction_type="first-install")
         return {
             "journal": "first-install",
@@ -577,7 +558,6 @@ class BootHealthService:
             "state": BootTransactionState.ACCEPTED.value,
             "accepted_slot": committed.default_slot,
             "release_id": journal.release_id,
-            "release_sequence": journal.release_sequence,
         }
 
     def _attach_boot_backend(self) -> object:
@@ -615,7 +595,6 @@ class BootHealthService:
         if (
             record.accepted_slot != journal.candidate_slot
             or record.accepted_release_id != journal.release_id
-            or record.accepted_release_sequence != journal.release_sequence
             or record.boot_control.active_slot != journal.candidate_slot
         ):
             raise BootHealthServiceError(
@@ -652,7 +631,6 @@ class BootHealthService:
                     started_at_unix=int(time.time()),
                     slot=journal.candidate_slot,
                     release_id=journal.release_id,
-                    release_sequence=journal.release_sequence,
                     transaction_id=journal.transaction_id,
                     transaction_type=transaction_type,
                     backend_default=backend_default,

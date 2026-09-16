@@ -37,12 +37,27 @@ For current evidence/test routing use:
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
-## Current blocking route: post-R1 product-composition closure
+## Current blocking route: post-R1 product-composition closure + multiplatform lifecycle plan
 
-The next executable task is **`POSTR1-P1-INSTALLER-RED`** (P1.1 installer
-composition RED). Source composition primitives (T3-S) are done; exact
+Install/update/release/multiplatform lifecycle work routes to
+`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
+(the ADR 0036 successor plan), not to signed-bundle or Gate-P5/V12G/D6
+closure. That plan owns lifecycle sequencing and closure criteria; the
+2026-08-08 architecture-remediation plan remains blocking only for its
+remaining non-lifecycle obligations. Session 02 of the 2026-09-15 plan is
+complete for source scope; the Session 02 build-host artifact boundary leg is
+the current lifecycle entry point.
+
+The old signed `.greiaupdate` v2 flow and release signing keys are
+superseded by ADR 0036 and are not the normal production route; older
+references to them are historical only.
+
+The next lifecycle work comes from the 2026-09-15 plan (Session 02
+boundary build-host payload run, then Session 03: owner release CLI). The `POSTR1-P1-INSTALLER-RED` /
+Gate-P5/V12G/D6 closure routing below is historical and superseded for
+lifecycle sequencing. Source composition primitives (T3-S) are done; exact
 shipped installer/update/boot-health product composition (T3-P) is
-OPEN/BLOCKING. T7 remains valid only in its disposable/device-harness
+OPEN/BLOCKING until closed through the 2026-09-15 plan. T7 remains valid only in its disposable/device-harness
 scope. See `HANDOVER.md` §2/§8, the active-plan entry of 2026-09-12, and
 `docs/plans/GREIA_BOOT_INSTALL_LIFECYCLE_TAKEOVER_2026-09-08.md` (post-R1
 correction) for the exact disposition.
@@ -325,7 +340,16 @@ Because these files changed after the last physically tested Home candidate, use
 
 ## System update mechanism
 
-Read:
+Current lifecycle authority is ADR 0036 plus the 2026-09-15 lifecycle plan:
+
+```text
+docs/adr/0036-unified-system-slot-releases-and-platform-install-media.md
+docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md
+```
+
+Historical context only (signing requirements superseded by ADR 0036; the
+signed `.greiaupdate` v2 / release-key workflow is not the normal
+production route):
 
 ```text
 docs/adr/0030-platform-owned-transactional-system-updates.md

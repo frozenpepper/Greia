@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import hashlib
 import json
 import os
@@ -19,39 +18,40 @@ from typing import TYPE_CHECKING, Callable, NoReturn, Protocol
 BUNDLE_SUFFIX = ".greiaupdate"
 BUNDLE_MEDIA_TYPE = "application/vnd.greia.system-update+zip"
 MANIFEST_NAME = "manifest.json"
-SIGNATURE_NAME = "manifest.sig"
-PAYLOAD_NAME = "payload.bin"
+PAYLOAD_NAME = "payload.ext4.zst"
 HARDWARE_SUPPORT_NAME = "hardware-support.tar.zst"
-PERSISTENT_CONTRACT_NAME = "persistent-state-contract.json"
-BUNDLE_MEMBERS_V2 = (
-    MANIFEST_NAME,
-    SIGNATURE_NAME,
-    PAYLOAD_NAME,
-    HARDWARE_SUPPORT_NAME,
-    PERSISTENT_CONTRACT_NAME,
-)
-# Historical v1 triple. No shipped v1 bundle was found in the repository
-# (assigned-view `find . -name "*.greiaupdate"` is empty); v1 is rejected
-# fail-closed with an explicit message, not silently accepted.
-BUNDLE_MEMBERS_V1 = (MANIFEST_NAME, SIGNATURE_NAME, PAYLOAD_NAME)
-SCHEMA_VERSION = 2
+BUNDLE_MEMBERS_V3 = (MANIFEST_NAME, PAYLOAD_NAME)
+BUNDLE_MEMBERS_V3_WITH_HW = (MANIFEST_NAME, PAYLOAD_NAME, HARDWARE_SUPPORT_NAME)
+# ADR 0036 §3: v3 is the only accepted container. Historical v1/v2 signed
+# layouts are rejected fail-closed with an explicit v3 rebuild/migration
+# message (see _migration_error()); their member constants are intentionally
+# absent so new code cannot rebuild them.
+SCHEMA_VERSION = 3
 V1_SCHEMA_VERSION = 1
-HARDWARE_SUPPORT_SCHEMA_VERSION = 1
-PERSISTENT_CONTRACT_SCHEMA_VERSION = 1
+V2_SCHEMA_VERSION = 2
 MAX_MANIFEST_BYTES = 64 * 1024
-MAX_SIGNATURE_BYTES = 16 * 1024
 MAX_PAYLOAD_BYTES = 1536 * 1024 * 1024
 MAX_HARDWARE_SUPPORT_BYTES = 512 * 1024 * 1024
-MAX_PERSISTENT_CONTRACT_BYTES = 64 * 1024
 MAX_BUNDLE_BYTES = 2 * 1024 * 1024 * 1024
-MIN_INBOX_FREE_BYTES = 128 * 1024 * 1024
+#: ADR 0036 §7 / A10: compressed candidate plus a 256 MiB operating reserve.
+MIN_INBOX_FREE_BYTES = 256 * 1024 * 1024
+#: A10 fixed inbox names: exactly one Greia-owned candidate, published by
+#: atomic rename from the same-directory temporary name.
+INBOX_CANDIDATE_NAME = "candidate.greiaupdate"
+INBOX_UPLOADING_NAME = "candidate.uploading"
 _MAX_RELEASE_ID = 96
 _MAX_VERSION = 64
 _MAX_NOTES = 4096
-_MAX_RELEASE_SEQUENCE = 2_147_483_647
+_MAX_BOARD = 64
+_MAX_PERSIST_SCHEMA = 2_147_483_647
 _ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
 _DETERMINISTIC_ZIP_DATE = (1980, 1, 1, 0, 0, 0)
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+#: Installed PERSIST contract schema (not a bundle member in v3; the bundle
+#: carries only the three readable/writable schema integers). Kept so the
+#: installed-state helpers below stay importable for persistent_layout.
+PERSISTENT_CONTRACT_SCHEMA_VERSION = 1
+MAX_PERSISTENT_CONTRACT_BYTES = 64 * 1024
 # L7-PERSIST audit owner: greia_platform.persistent_layout.PERSISTENT_NAMESPACE_ORDER.
 # This tuple must stay identical (names and order); the sync test enforces it.
 _PERSISTENT_NAMESPACES = (
@@ -80,14 +80,6 @@ class UpdateBundleError(SystemUpdateError):
     pass
 
 
-class UpdateSignatureError(UpdateBundleError):
-    pass
-
-
-class UpdateSequenceError(UpdateBundleError):
-    pass
-
-
 class UpdateCompatibilityError(SystemUpdateError):
     pass
 
@@ -111,106 +103,112 @@ class UpdateState(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class UpdateManifest:
+    """ADR 0036 §3 v3 manifest: practical facts only, no provenance.
+
+    ``release_id`` is a bounded non-security bookkeeping identity (journal /
+    layout); there is no signer, key id, or anti-rollback sequence.
+    ``board`` is a bounded board id or None. ``hardware_support_*`` are None
+    when the optional member is absent. PERSIST compatibility is carried as
+    three schema integers; there is no separate contract member.
+    """
+
     schema_version: int
     release_id: str
     version: str
-    release_sequence: int
     platform_family: str
     architecture: str
     profile: str
-    signer: str
+    board: str | None
     payload_sha256: str
     payload_size: int
-    payload_filesystem_bytes: int
+    payload_uncompressed_bytes: int
     payload_minimum_slot_bytes: int
-    hardware_support_name: str
-    hardware_support_schema_version: int
-    hardware_support_sha256: str
-    hardware_support_size: int
-    persistent_contract_schema_version: int
-    persistent_contract_sha256: str
-    persistent_contract_size: int
+    hardware_support_sha256: str | None
+    hardware_support_size: int | None
+    persist_read_schema_min: int
+    persist_read_schema_max: int
+    persist_write_schema: int
     release_notes: str = ""
 
     def __post_init__(self) -> None:
+        if self.schema_version in (V1_SCHEMA_VERSION, V2_SCHEMA_VERSION):
+            raise UpdateBundleError(_migration_error())
         if self.schema_version != SCHEMA_VERSION:
             raise UpdateBundleError(
                 f"unsupported system-update schema {self.schema_version}"
             )
         _validate_identifier(self.release_id, "release_id", _MAX_RELEASE_ID)
         _validate_text(self.version, "version", _MAX_VERSION)
-        _validate_sequence(self.release_sequence)
         _validate_identifier(self.platform_family, "platform_family", 64)
         _validate_identifier(self.architecture, "architecture", 32)
         _validate_identifier(self.profile, "profile", 96)
-        _validate_identifier(self.signer, "signer", 96)
+        _validate_board(self.board)
         if not re.fullmatch(r"[0-9a-f]{64}", self.payload_sha256):
             raise UpdateBundleError("payload_sha256 must be lower-case SHA-256 hex")
         if self.payload_size <= 0 or self.payload_size > MAX_PAYLOAD_BYTES:
             raise UpdateBundleError("payload_size is outside Greia bounds")
-        if self.payload_filesystem_bytes <= 0 or self.payload_filesystem_bytes > MAX_PAYLOAD_BYTES:
-            raise UpdateBundleError("payload filesystem_bytes is outside Greia bounds")
-        if self.payload_size != self.payload_filesystem_bytes:
-            raise UpdateBundleError("payload size must equal relocatable filesystem bytes")
         if (
-            self.payload_minimum_slot_bytes < self.payload_filesystem_bytes
+            self.payload_uncompressed_bytes <= 0
+            or self.payload_uncompressed_bytes > MAX_PAYLOAD_BYTES
+        ):
+            raise UpdateBundleError("payload uncompressed_bytes is outside Greia bounds")
+        if (
+            self.payload_minimum_slot_bytes < self.payload_uncompressed_bytes
             or self.payload_minimum_slot_bytes <= 0
             or self.payload_minimum_slot_bytes > MAX_BUNDLE_BYTES
         ):
-            raise UpdateBundleError("payload minimum_slot_bytes must cover the filesystem image")
-        if self.hardware_support_name != HARDWARE_SUPPORT_NAME:
-            raise UpdateBundleError("hardware-support member name is invalid")
-        if self.hardware_support_schema_version != HARDWARE_SUPPORT_SCHEMA_VERSION:
-            raise UpdateBundleError("hardware-support schema is unsupported")
-        if not re.fullmatch(r"[0-9a-f]{64}", self.hardware_support_sha256):
-            raise UpdateBundleError("hardware-support sha256 must be lower-case SHA-256 hex")
-        if (
-            self.hardware_support_size <= 0
-            or self.hardware_support_size > MAX_HARDWARE_SUPPORT_BYTES
-        ):
-            raise UpdateBundleError("hardware-support size is outside Greia bounds")
-        if self.persistent_contract_schema_version != PERSISTENT_CONTRACT_SCHEMA_VERSION:
-            raise UpdateBundleError("persistent-state contract schema is unsupported")
-        if not re.fullmatch(r"[0-9a-f]{64}", self.persistent_contract_sha256):
-            raise UpdateBundleError("persistent-state contract digest must be lower-case SHA-256 hex")
-        if (
-            self.persistent_contract_size <= 0
-            or self.persistent_contract_size > MAX_PERSISTENT_CONTRACT_BYTES
-        ):
-            raise UpdateBundleError("persistent-state contract size is outside Greia bounds")
+            raise UpdateBundleError(
+                "payload minimum_slot_bytes must cover the uncompressed image"
+            )
+        hw_sha = self.hardware_support_sha256
+        hw_size = self.hardware_support_size
+        if (hw_sha is None) != (hw_size is None):
+            raise UpdateBundleError(
+                "hardware-support sha256/size must be present together or absent together"
+            )
+        if hw_sha is not None and hw_size is not None:
+            if not re.fullmatch(r"[0-9a-f]{64}", hw_sha):
+                raise UpdateBundleError(
+                    "hardware-support sha256 must be lower-case SHA-256 hex"
+                )
+            if hw_size <= 0 or hw_size > MAX_HARDWARE_SUPPORT_BYTES:
+                raise UpdateBundleError("hardware-support size is outside Greia bounds")
+        _validate_persist_schema(
+            self.persist_read_schema_min,
+            self.persist_read_schema_max,
+            self.persist_write_schema,
+        )
         if not isinstance(self.release_notes, str) or len(self.release_notes) > _MAX_NOTES:
             raise UpdateBundleError("release_notes exceeds Greia bound")
 
     def as_json_dict(self) -> dict[str, object]:
+        if self.hardware_support_sha256 is None or self.hardware_support_size is None:
+            hardware: dict[str, object] | None = None
+        else:
+            hardware = {
+                "name": HARDWARE_SUPPORT_NAME,
+                "sha256": self.hardware_support_sha256,
+                "size": self.hardware_support_size,
+            }
         return {
             "schema_version": self.schema_version,
             "release_id": self.release_id,
             "version": self.version,
-            "release_sequence": self.release_sequence,
             "platform_family": self.platform_family,
             "architecture": self.architecture,
             "profile": self.profile,
-            "signer": self.signer,
+            "board": self.board,
             "payload": {
                 "name": PAYLOAD_NAME,
                 "sha256": self.payload_sha256,
                 "size": self.payload_size,
-                "kind": "system-slot-image",
-                "filesystem_bytes": self.payload_filesystem_bytes,
+                "uncompressed_bytes": self.payload_uncompressed_bytes,
                 "minimum_slot_bytes": self.payload_minimum_slot_bytes,
             },
-            "hardware_support": {
-                "name": self.hardware_support_name,
-                "schema_version": self.hardware_support_schema_version,
-                "sha256": self.hardware_support_sha256,
-                "size": self.hardware_support_size,
-            },
-            "persistent_state_contract": {
-                "name": PERSISTENT_CONTRACT_NAME,
-                "schema_version": self.persistent_contract_schema_version,
-                "sha256": self.persistent_contract_sha256,
-                "size": self.persistent_contract_size,
-            },
+            "hardware_support": hardware,
+            "persist_read_schema_min": self.persist_read_schema_min,
+            "persist_read_schema_max": self.persist_read_schema_max,
+            "persist_write_schema": self.persist_write_schema,
             "release_notes": self.release_notes,
         }
 
@@ -225,178 +223,105 @@ class UpdateManifest:
             "schema_version",
             "release_id",
             "version",
-            "release_sequence",
             "platform_family",
             "architecture",
             "profile",
-            "signer",
+            "board",
             "payload",
             "hardware_support",
-            "persistent_state_contract",
+            "persist_read_schema_min",
+            "persist_read_schema_max",
+            "persist_write_schema",
             "release_notes",
         }
         if set(raw) != expected:
             raise UpdateBundleError("manifest has unknown or missing top-level fields")
-        if raw.get("schema_version") == V1_SCHEMA_VERSION:
-            raise UpdateBundleError(
-                "v1 system-update bundle is not accepted: no shipped v1 bundle "
-                "exists in the repository; rebuild the release as schema v2"
-            )
+        schema_version = raw.get("schema_version")
+        if schema_version in (V1_SCHEMA_VERSION, V2_SCHEMA_VERSION):
+            raise UpdateBundleError(_migration_error())
         payload = raw.get("payload")
         if not isinstance(payload, dict) or set(payload) != {
             "name",
             "sha256",
             "size",
-            "kind",
-            "filesystem_bytes",
+            "uncompressed_bytes",
             "minimum_slot_bytes",
         }:
             raise UpdateBundleError("manifest payload object is invalid")
-        if payload.get("name") != PAYLOAD_NAME or payload.get("kind") != "system-slot-image":
+        if payload.get("name") != PAYLOAD_NAME:
             raise UpdateBundleError("unsupported system-update payload contract")
         hardware = raw.get("hardware_support")
-        if not isinstance(hardware, dict) or set(hardware) != {
-            "name",
-            "schema_version",
-            "sha256",
-            "size",
-        }:
-            raise UpdateBundleError("manifest hardware-support object is invalid")
-        contract = raw.get("persistent_state_contract")
-        if not isinstance(contract, dict) or set(contract) != {
-            "name",
-            "schema_version",
-            "sha256",
-            "size",
-        }:
-            raise UpdateBundleError("manifest persistent-state contract object is invalid")
-        values = {
-            "schema_version": raw.get("schema_version"),
+        if hardware is not None:
+            if not isinstance(hardware, dict) or set(hardware) != {
+                "name",
+                "sha256",
+                "size",
+            }:
+                raise UpdateBundleError("manifest hardware-support object is invalid")
+            if hardware.get("name") != HARDWARE_SUPPORT_NAME:
+                raise UpdateBundleError("hardware-support member name is invalid")
+        board = raw.get("board")
+        if board is not None and not isinstance(board, str):
+            raise UpdateBundleError("board must be text or null")
+        values: dict[str, object] = {
+            "schema_version": schema_version,
             "release_id": raw.get("release_id"),
             "version": raw.get("version"),
-            "release_sequence": raw.get("release_sequence"),
             "platform_family": raw.get("platform_family"),
             "architecture": raw.get("architecture"),
             "profile": raw.get("profile"),
-            "signer": raw.get("signer"),
+            "board": board,
             "payload_sha256": payload.get("sha256"),
             "payload_size": payload.get("size"),
-            "payload_filesystem_bytes": payload.get("filesystem_bytes"),
+            "payload_uncompressed_bytes": payload.get("uncompressed_bytes"),
             "payload_minimum_slot_bytes": payload.get("minimum_slot_bytes"),
-            "hardware_support_name": hardware.get("name"),
-            "hardware_support_schema_version": hardware.get("schema_version"),
-            "hardware_support_sha256": hardware.get("sha256"),
-            "hardware_support_size": hardware.get("size"),
-            "persistent_contract_schema_version": contract.get("schema_version"),
-            "persistent_contract_sha256": contract.get("sha256"),
-            "persistent_contract_size": contract.get("size"),
+            "hardware_support_sha256": hardware.get("sha256") if isinstance(hardware, dict) else None,
+            "hardware_support_size": hardware.get("size") if isinstance(hardware, dict) else None,
+            "persist_read_schema_min": raw.get("persist_read_schema_min"),
+            "persist_read_schema_max": raw.get("persist_read_schema_max"),
+            "persist_write_schema": raw.get("persist_write_schema"),
             "release_notes": raw.get("release_notes"),
         }
-        if isinstance(values["schema_version"], bool) or not isinstance(values["schema_version"], int):
-            raise UpdateBundleError("schema_version must be an integer")
-        if isinstance(values["release_sequence"], bool) or not isinstance(
-            values["release_sequence"], int
+        if isinstance(values["schema_version"], bool) or not isinstance(
+            values["schema_version"], int
         ):
-            raise UpdateBundleError("release_sequence must be an integer")
+            raise UpdateBundleError("schema_version must be an integer")
         for int_key in (
             "payload_size",
-            "payload_filesystem_bytes",
+            "payload_uncompressed_bytes",
             "payload_minimum_slot_bytes",
-            "hardware_support_schema_version",
-            "hardware_support_size",
-            "persistent_contract_schema_version",
-            "persistent_contract_size",
+            "persist_read_schema_min",
+            "persist_read_schema_max",
+            "persist_write_schema",
         ):
             if isinstance(values[int_key], bool) or not isinstance(values[int_key], int):
                 raise UpdateBundleError(f"{int_key} must be an integer")
+        hw_size = values["hardware_support_size"]
+        if hw_size is not None and (
+            isinstance(hw_size, bool) or not isinstance(hw_size, int)
+        ):
+            raise UpdateBundleError("hardware_support_size must be an integer or null")
         for key in (
             "release_id",
             "version",
             "platform_family",
             "architecture",
             "profile",
-            "signer",
             "payload_sha256",
-            "hardware_support_name",
-            "hardware_support_sha256",
-            "persistent_contract_sha256",
             "release_notes",
         ):
             if not isinstance(values[key], str):
                 raise UpdateBundleError(f"{key} must be text")
+        hw_sha = values["hardware_support_sha256"]
+        if hw_sha is not None and not isinstance(hw_sha, str):
+            raise UpdateBundleError("hardware_support_sha256 must be text or null")
         return cls(**values)  # type: ignore[arg-type]
-
-
-@dataclass(frozen=True, slots=True)
-class SignatureEnvelope:
-    schema_version: int
-    algorithm: str
-    signer: str
-    signature: bytes
-
-    def __post_init__(self) -> None:
-        if self.schema_version != SCHEMA_VERSION:
-            raise UpdateSignatureError("unsupported signature schema")
-        if self.algorithm != "ed25519":
-            raise UpdateSignatureError("only ed25519 signatures are supported")
-        _validate_identifier(self.signer, "signature signer", 96)
-        if len(self.signature) != 64:
-            raise UpdateSignatureError("invalid Ed25519 signature length")
-
-    def as_json_bytes(self) -> bytes:
-        return canonical_json(
-            {
-                "schema_version": self.schema_version,
-                "algorithm": self.algorithm,
-                "signer": self.signer,
-                "signature": base64.b64encode(self.signature).decode("ascii"),
-            }
-        )
-
-    @classmethod
-    def from_json_bytes(cls, raw: bytes) -> "SignatureEnvelope":
-        if len(raw) > MAX_SIGNATURE_BYTES:
-            raise UpdateSignatureError("signature envelope exceeds Greia bound")
-        try:
-            value = json.loads(raw.decode("utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise UpdateSignatureError("signature envelope is not valid JSON") from exc
-        if not isinstance(value, dict) or set(value) != {
-            "schema_version",
-            "algorithm",
-            "signer",
-            "signature",
-        }:
-            raise UpdateSignatureError("signature envelope fields are invalid")
-        schema_version = value.get("schema_version")
-        algorithm = value.get("algorithm")
-        signer = value.get("signer")
-        encoded_signature = value.get("signature")
-        if isinstance(schema_version, bool) or not isinstance(schema_version, int):
-            raise UpdateSignatureError("signature schema_version must be an integer")
-        if schema_version == V1_SCHEMA_VERSION:
-            raise UpdateSignatureError("v1 signatures are not accepted; rebuild as schema v2")
-        if not isinstance(algorithm, str) or not isinstance(signer, str):
-            raise UpdateSignatureError("signature algorithm/signer must be text")
-        if not isinstance(encoded_signature, str):
-            raise UpdateSignatureError("signature must be base64 text")
-        try:
-            signature = base64.b64decode(encoded_signature, validate=True)
-        except ValueError as exc:
-            raise UpdateSignatureError("signature is not valid base64") from exc
-        return cls(
-            schema_version=schema_version,
-            algorithm=algorithm,
-            signer=signer,
-            signature=signature,
-        )
 
 
 @dataclass(frozen=True, slots=True)
 class InspectedUpdateBundle:
     path: Path
     manifest: UpdateManifest
-    signature: SignatureEnvelope
 
     def as_json_dict(self) -> dict[str, object]:
         payload = self.manifest.as_json_dict()
@@ -411,6 +336,7 @@ class SystemIdentity:
     platform_family: str = "unknown"
     architecture: str = "unknown"
     profile: str = "unknown"
+    board: str | None = None
 
     @property
     def compatibility_known(self) -> bool:
@@ -428,6 +354,18 @@ class SystemIdentity:
             raise UpdateCompatibilityError("update architecture does not match this Greia")
         if manifest.profile != self.profile:
             raise UpdateCompatibilityError("update build profile does not match this Greia")
+        candidate_board = manifest.board
+        if candidate_board is not None:
+            installed_board = self.board
+            if not isinstance(installed_board, str) or not installed_board:
+                raise UpdateCompatibilityError(
+                    "update board does not match this Greia: "
+                    "installed board identity is incomplete"
+                )
+            if candidate_board != installed_board:
+                raise UpdateCompatibilityError(
+                    "update board does not match this Greia"
+                )
 
 
 class SystemUpdateBackend(Protocol):
@@ -473,72 +411,19 @@ class UnavailableSystemUpdateBackend:
         return {"available": False, "reason": self.reason}
 
 
-def decide_release_sequence(candidate_sequence: int, accepted_sequence: int) -> str:
-    """Classify a signed candidate against the accepted sequence.
-
-    Display version strings are never a security boundary; only the signed
-    monotonic integer decides. Returns "update" / "no-update" / "rejected".
-    """
-
-    _validate_sequence(candidate_sequence)
-    if isinstance(accepted_sequence, bool) or not isinstance(accepted_sequence, int):
-        raise UpdateSequenceError("accepted release_sequence must be an integer")
-    if accepted_sequence < 0 or accepted_sequence > _MAX_RELEASE_SEQUENCE:
-        raise UpdateSequenceError("accepted release_sequence is outside Greia bounds")
-    if candidate_sequence > accepted_sequence:
-        return "update"
-    if candidate_sequence == accepted_sequence:
-        return "no-update"
-    return "rejected"
-
-
-def authorize_release_sequence(candidate_sequence: int, accepted_sequence: int) -> str:
-    """Enforce anti-rollback: lower sequences are rejected even when signed."""
-
-    decision = decide_release_sequence(candidate_sequence, accepted_sequence)
-    if decision == "rejected":
-        raise UpdateSequenceError(
-            f"release_sequence {candidate_sequence} is older than accepted {accepted_sequence}"
-        )
-    return decision
-
-
-def read_accepted_sequence(state_dir: Path) -> int:
-    path = Path(state_dir) / "system-updates" / "accepted.json"
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except FileNotFoundError:
-        return 0
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise UpdateBundleError("accepted release state is unreadable") from exc
-    if not isinstance(raw, dict):
-        raise UpdateBundleError("accepted release state is invalid")
-    sequence = raw.get("release_sequence", 0)
-    if isinstance(sequence, bool) or not isinstance(sequence, int):
-        raise UpdateBundleError("accepted release_sequence must be an integer")
-    if sequence < 0 or sequence > _MAX_RELEASE_SEQUENCE:
-        raise UpdateBundleError("accepted release_sequence is outside Greia bounds")
-    return sequence
-
-
-def write_accepted_sequence(state_dir: Path, sequence: int) -> None:
-    _validate_sequence(sequence, allow_zero=True)
-    _atomic_json(
-        Path(state_dir) / "system-updates" / "accepted.json",
-        {"schema_version": 1, "release_sequence": sequence},
-    )
-
-
 class SystemUpdateInbox:
     """Unprivileged single-candidate inbox for Parent-delivered update bytes.
 
-    Receiving a bundle is not activation authority. This layer validates archive
-    structure and payload integrity, stores the selected candidate by content
-    digest and removes older untrusted inbox candidates. Network receivers can
-    stage directly inside this inbox and publish the same inode content-addressably
-    so a large update never needs a second full-size local copy. Cryptographic
-    trust and inactive-slot activation are re-established by the privileged
-    SystemUpdateService before any system write.
+    ADR 0036 §7 / A10: the running device holds at most one compressed
+    candidate under the fixed Greia-owned name ``candidate.greiaupdate``.
+    Uploads stream into the same-directory temporary
+    ``candidate.uploading`` and become visible only through one atomic
+    rename. The large candidate is deleted after successful inactive-slot
+    staging/boot-asset preparation; only small status/journal state
+    remains. Receiving a bundle is not activation authority. Compatibility
+    and inactive-slot activation are re-established by the privileged
+    SystemUpdateService before any system write. There are no
+    content-addressed filenames and no bundle-digest authority.
     """
 
     def __init__(self, state_dir: Path) -> None:
@@ -546,47 +431,46 @@ class SystemUpdateInbox:
         self.inbox_dir = self.state_dir / "system-updates" / "inbox"
         self.status_path = self.state_dir / "system-updates" / "status.json"
 
+    @property
+    def candidate_path(self) -> Path:
+        """Fixed Greia-owned candidate name (A10)."""
+
+        return self.inbox_dir / INBOX_CANDIDATE_NAME
+
+    @property
+    def uploading_path(self) -> Path:
+        """Fixed same-directory temporary upload name (A10)."""
+
+        return self.inbox_dir / INBOX_UPLOADING_NAME
+
     def create_receive_staging(self, incoming_size: int) -> Path:
-        """Create one private same-filesystem staging file for streamed input."""
+        """Create the fixed same-filesystem staging file for streamed input."""
 
         if isinstance(incoming_size, bool) or incoming_size <= 0 or incoming_size > MAX_BUNDLE_BYTES:
             raise UpdateBundleError("incoming update size is outside Greia bounds")
         self._prepare_inbox()
         self._assert_receive_capacity(incoming_size)
-        descriptor, raw_path = tempfile.mkstemp(
-            prefix=".incoming-",
-            suffix=".tmp",
-            dir=self.inbox_dir,
-        )
-        os.close(descriptor)
-        staging = Path(raw_path)
+        staging = self.uploading_path
+        with staging.open("wb"):
+            pass
         os.chmod(staging, 0o600)
         return staging
 
     def receive_staged(self, staged_path: Path) -> InspectedUpdateBundle:
-        """Validate and publish a Greia-owned inbox staging file without copying."""
+        """Validate and publish the fixed temporary file via atomic rename."""
 
         staged = Path(staged_path)
         self._prepare_inbox(clean_temporaries=False)
         self._require_owned_staging(staged)
         inspected = inspect_update_bundle(staged)
         source_digest = sha256_file(staged)
-        destination = self.inbox_dir / (
-            f"{inspected.manifest.release_id}-{source_digest}{BUNDLE_SUFFIX}"
-        )
-        if destination.exists():
-            if not destination.is_file() or sha256_file(destination) != source_digest:
-                raise UpdateBundleError("content-addressed update inbox collision")
-        else:
-            try:
-                os.link(staged, destination)
-            except FileExistsError:
-                if not destination.is_file() or sha256_file(destination) != source_digest:
-                    raise UpdateBundleError("content-addressed update inbox collision")
-            os.chmod(destination, 0o600)
+        destination = self.candidate_path
+        os.replace(staged, destination)
+        os.chmod(destination, 0o600)
         self._prune_other_candidates(destination)
+        self._remove_stale_temporaries()
         self._record_received(inspected, destination, source_digest)
-        return InspectedUpdateBundle(destination, inspected.manifest, inspected.signature)
+        return InspectedUpdateBundle(destination, inspected.manifest)
 
     def receive(self, bundle_path: Path) -> InspectedUpdateBundle:
         """Receive a file source through the same staged-publication contract.
@@ -618,7 +502,6 @@ class SystemUpdateInbox:
             return {
                 "state": UpdateState.IDLE.value,
                 "queued": None,
-                "signature_verified": False,
                 "activation_available": False,
             }
         if not isinstance(raw, dict):
@@ -641,7 +524,8 @@ class SystemUpdateInbox:
         free_bytes = shutil.disk_usage(self.inbox_dir).free
         if free_bytes < incoming_size + MIN_INBOX_FREE_BYTES:
             raise UpdateBundleError(
-                "not enough free space to receive update while preserving Greia reserve"
+                "not enough free space to receive update: "
+                "need incoming bundle bytes plus the 256 MiB Greia reserve"
             )
 
     def _require_owned_staging(self, staged: Path) -> None:
@@ -653,7 +537,7 @@ class SystemUpdateInbox:
             raise UpdateBundleError("update receive staging file is unavailable") from exc
         if parent != inbox or not stat.S_ISREG(info.st_mode) or stat.S_ISLNK(info.st_mode):
             raise UpdateBundleError("update receive staging must be a regular inbox file")
-        if not staged.name.startswith(".incoming-") or not staged.name.endswith(".tmp"):
+        if staged.name != INBOX_UPLOADING_NAME:
             raise UpdateBundleError("update receive staging name is invalid")
         if info.st_size <= 0 or info.st_size > MAX_BUNDLE_BYTES:
             raise UpdateBundleError("staged update size is outside Greia bounds")
@@ -669,84 +553,130 @@ class SystemUpdateInbox:
             "release": inspected.manifest.as_json_dict(),
             "bundle_path": str(destination),
             "bundle_sha256": source_digest,
-            "signature_verified": False,
+            "activation_available": False,
+        }
+        _atomic_json(self.status_path, payload)
+
+    def discard_candidate_after_stage(
+        self,
+        inspected: InspectedUpdateBundle,
+        source_digest: str,
+    ) -> None:
+        """Delete the large fixed candidate after successful staging.
+
+        Keeps only bounded status/journal metadata (release facts plus the
+        bundle digest). Called only after the backend confirms the
+        inactive slot and boot assets are prepared; staging failures must
+        never reach this path so the candidate is preserved for retry.
+        """
+
+        try:
+            self.candidate_path.unlink(missing_ok=True)
+        except OSError as exc:
+            raise UpdateBundleError("unable to discard staged update candidate") from exc
+        payload = {
+            "state": UpdateState.STAGING.value,
+            "release": inspected.manifest.as_json_dict(),
+            "bundle_sha256": source_digest,
+            "staged": True,
             "activation_available": False,
         }
         _atomic_json(self.status_path, payload)
 
     def _remove_stale_temporaries(self) -> None:
         try:
+            self.uploading_path.unlink(missing_ok=True)
             for candidate in self.inbox_dir.glob(".incoming-*.tmp"):
                 candidate.unlink(missing_ok=True)
         except OSError as exc:
             raise UpdateBundleError("unable to clean stale update inbox temporary") from exc
 
     def _prune_other_candidates(self, keep: Path) -> None:
+        """Keep exactly the fixed candidate; remove legacy duplicates."""
+
         try:
             for candidate in self.inbox_dir.glob(f"*{BUNDLE_SUFFIX}"):
                 if candidate != keep:
                     candidate.unlink(missing_ok=True)
+            uploading = self.uploading_path
+            if uploading.exists():
+                uploading.unlink(missing_ok=True)
         except OSError as exc:
             raise UpdateBundleError("unable to bound update inbox candidates") from exc
 
 
 class SystemUpdateService:
-    """Privileged trust/compatibility/backend coordinator for queued bundles."""
+    """Privileged compatibility/backend coordinator for queued bundles.
+
+    ADR 0036: no provenance trust. Verification is archive structure,
+    manifest validity, member integrity (digests), and platform
+    compatibility. PERSIST readability and slot staging belong to T02.
+    """
 
     def __init__(
         self,
         state_dir: Path,
-        trusted_key_dir: Path,
         identity: SystemIdentity,
         backend: SystemUpdateBackend | None = None,
-        accepted_sequence: int = 0,
     ) -> None:
         self.state_dir = Path(state_dir)
-        self.trusted_key_dir = Path(trusted_key_dir)
         self.identity = identity
         self.backend = backend or UnavailableSystemUpdateBackend()
-        if isinstance(accepted_sequence, bool) or not isinstance(accepted_sequence, int):
-            raise UpdateSequenceError("accepted release_sequence must be an integer")
-        if accepted_sequence < 0 or accepted_sequence > _MAX_RELEASE_SEQUENCE:
-            raise UpdateSequenceError("accepted release_sequence is outside Greia bounds")
-        self.accepted_sequence = accepted_sequence
 
     def verify(self, bundle_path: Path) -> InspectedUpdateBundle:
         inspected = inspect_update_bundle(bundle_path)
-        verify_update_signature(inspected, self.trusted_key_dir)
         self.identity.assert_compatible(inspected.manifest)
         return inspected
 
     def verify_for_activation(
-        self, bundle_path: Path, accepted_sequence: int | None = None
+        self, bundle_path: Path
     ) -> tuple[InspectedUpdateBundle, str]:
-        """Verify trust/compatibility and classify the signed sequence.
+        """Verify compatibility; always classifies usable candidates as update.
 
-        Returns (inspected, decision) where decision is "update" or "no-update".
-        Older correctly signed candidates raise UpdateSequenceError. Display
-        version strings are never compared as a security boundary.
+        There is no signed anti-rollback authority in v3. Older bundles are
+        refused at inspection with the v3 migration message.
         """
 
         inspected = self.verify(bundle_path)
-        accepted = self.accepted_sequence if accepted_sequence is None else accepted_sequence
-        decision = authorize_release_sequence(
-            inspected.manifest.release_sequence, accepted
-        )
-        return inspected, decision
+        return inspected, "update"
 
-    def stage(
-        self, bundle_path: Path, accepted_sequence: int | None = None
-    ) -> InspectedUpdateBundle:
-        accepted = self.accepted_sequence if accepted_sequence is None else accepted_sequence
-        inspected, decision = self.verify_for_activation(bundle_path, accepted)
-        if decision == "no-update":
-            return inspected
+    def stage(self, bundle_path: Path) -> InspectedUpdateBundle:
+        inspected, _decision = self.verify_for_activation(bundle_path)
         if not self.backend.available:
             raise UpdateBackendUnavailable(
                 str(self.backend.status_payload().get("reason", "update backend unavailable"))
             )
         self.backend.stage(inspected)
+        self._discard_inbox_candidate_after_stage(inspected)
         return inspected
+
+    def _discard_inbox_candidate_after_stage(
+        self, inspected: InspectedUpdateBundle
+    ) -> None:
+        """Remove the large inbox candidate only after successful staging.
+
+        Staging failures raise before this point, so the candidate is
+        preserved for retry and never reported as success. Only an
+        inbox-owned fixed candidate is discarded; out-of-inbox bundle
+        paths used by offline tooling are left untouched.
+        """
+
+        inbox = SystemUpdateInbox(self.state_dir)
+        try:
+            base = inbox.inbox_dir.resolve(strict=False)
+            candidate = inbox.candidate_path.resolve(strict=False)
+            staged = Path(inspected.path).resolve(strict=False)
+            staged.relative_to(base)
+            candidate.relative_to(base)
+        except (OSError, ValueError):
+            return
+        if staged != candidate:
+            return
+        try:
+            digest = sha256_file(candidate)
+        except OSError:
+            return
+        inbox.discard_candidate_after_stage(inspected, digest)
 
     def status_payload(self) -> dict[str, object]:
         return {
@@ -755,9 +685,9 @@ class SystemUpdateService:
                 "platform_family": self.identity.platform_family,
                 "architecture": self.identity.architecture,
                 "profile": self.identity.profile,
+                "board": self.identity.board,
             },
             "activation": self.backend.status_payload(),
-            "accepted_release_sequence": self.accepted_sequence,
         }
 
     def arm(self) -> dict[str, object]:
@@ -818,80 +748,73 @@ def verify_persistent_state_contract_bytes(raw: bytes) -> dict[str, object]:
 def build_update_bundle(
     *,
     payload_path: Path,
-    hardware_support_path: Path,
-    persistent_contract_path: Path,
+    hardware_support_path: Path | None,
     output_path: Path,
     version: str,
     release_id: str,
-    release_sequence: int,
     platform_family: str,
     architecture: str,
     profile: str,
-    signer: str,
-    private_key_path: Path,
+    board: str | None = None,
+    payload_uncompressed_bytes: int,
     minimum_slot_bytes: int | None = None,
+    persist_read_schema_min: int,
+    persist_read_schema_max: int,
+    persist_write_schema: int,
     release_notes: str = "",
 ) -> UpdateManifest:
+    """Build one unsigned v3 bundle with no key material.
+
+    ``payload_path`` must be ``payload.ext4.zst`` (zstd bytes, stored without
+    double compression). ``hardware_support_path`` is optional. There is no
+    separate persistent-state contract member; PERSIST compatibility travels
+    as three manifest integers.
+    """
+
     payload_path = Path(payload_path)
-    hardware_support_path = Path(hardware_support_path)
-    persistent_contract_path = Path(persistent_contract_path)
     output_path = Path(output_path)
-    for path, label in (
-        (payload_path, "payload"),
-        (hardware_support_path, "hardware-support"),
-        (persistent_contract_path, "persistent-state contract"),
-    ):
-        if path.is_symlink() or not path.is_file():
-            raise UpdateBundleError(f"{label} is not a regular file")
+    hw_path = Path(hardware_support_path) if hardware_support_path is not None else None
+    if payload_path.is_symlink() or not payload_path.is_file():
+        raise UpdateBundleError("payload is not a regular file")
+    if hw_path is not None and (hw_path.is_symlink() or not hw_path.is_file()):
+        raise UpdateBundleError("hardware-support is not a regular file")
     payload_size = payload_path.stat().st_size
-    hardware_size = hardware_support_path.stat().st_size
-    contract_size = persistent_contract_path.stat().st_size
     if payload_size <= 0 or payload_size > MAX_PAYLOAD_BYTES:
         raise UpdateBundleError("payload size is outside Greia bounds")
-    if hardware_size <= 0 or hardware_size > MAX_HARDWARE_SUPPORT_BYTES:
-        raise UpdateBundleError("hardware-support size is outside Greia bounds")
-    if contract_size <= 0 or contract_size > MAX_PERSISTENT_CONTRACT_BYTES:
-        raise UpdateBundleError("persistent-state contract size is outside Greia bounds")
-    _assert_relocatable_payload(payload_path)
-    _assert_hardware_support_magic(hardware_support_path)
-    contract_raw = persistent_contract_path.read_bytes()
-    verify_persistent_state_contract_bytes(contract_raw)
-    minimum = minimum_slot_bytes if minimum_slot_bytes is not None else payload_size
+    _assert_zstd_file(payload_path, "payload")
+    hardware_size: int | None = None
+    hardware_sha: str | None = None
+    if hw_path is not None:
+        hardware_size = hw_path.stat().st_size
+        if hardware_size <= 0 or hardware_size > MAX_HARDWARE_SUPPORT_BYTES:
+            raise UpdateBundleError("hardware-support size is outside Greia bounds")
+        _assert_zstd_file(hw_path, "hardware-support")
+        hardware_sha = sha256_file(hw_path)
+    if isinstance(payload_uncompressed_bytes, bool) or not isinstance(
+        payload_uncompressed_bytes, int
+    ):
+        raise UpdateBundleError("payload_uncompressed_bytes must be an integer")
+    minimum = minimum_slot_bytes if minimum_slot_bytes is not None else payload_uncompressed_bytes
     if isinstance(minimum, bool) or not isinstance(minimum, int):
         raise UpdateBundleError("minimum_slot_bytes must be an integer")
     manifest = UpdateManifest(
         schema_version=SCHEMA_VERSION,
         release_id=release_id,
         version=version,
-        release_sequence=release_sequence,
         platform_family=platform_family,
         architecture=architecture,
         profile=profile,
-        signer=signer,
+        board=board,
         payload_sha256=sha256_file(payload_path),
         payload_size=payload_size,
-        payload_filesystem_bytes=payload_size,
+        payload_uncompressed_bytes=payload_uncompressed_bytes,
         payload_minimum_slot_bytes=minimum,
-        hardware_support_name=HARDWARE_SUPPORT_NAME,
-        hardware_support_schema_version=HARDWARE_SUPPORT_SCHEMA_VERSION,
-        hardware_support_sha256=sha256_file(hardware_support_path),
+        hardware_support_sha256=hardware_sha,
         hardware_support_size=hardware_size,
-        persistent_contract_schema_version=PERSISTENT_CONTRACT_SCHEMA_VERSION,
-        persistent_contract_sha256=hashlib.sha256(contract_raw).hexdigest(),
-        persistent_contract_size=contract_size,
+        persist_read_schema_min=persist_read_schema_min,
+        persist_read_schema_max=persist_read_schema_max,
+        persist_write_schema=persist_write_schema,
         release_notes=release_notes,
-    )
-    private = Path(private_key_path)
-    if private.is_symlink() or not private.is_file():
-        raise UpdateSignatureError(
-            "release signing key is missing; refusing to build "
-            "(missing production key is a hard build failure)"
-        )
-    signature = SignatureEnvelope(
-        schema_version=SCHEMA_VERSION,
-        algorithm="ed25519",
-        signer=signer,
-        signature=_sign_ed25519(private, manifest.canonical_bytes()),
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     if output_path.exists():
@@ -910,19 +833,11 @@ def build_update_bundle(
             _writestr_deterministic(
                 archive, MANIFEST_NAME, manifest.canonical_bytes(), compress=True
             )
-            _writestr_deterministic(
-                archive, SIGNATURE_NAME, signature.as_json_bytes(), compress=True
-            )
             _write_file_deterministic(archive, PAYLOAD_NAME, payload_path, compress=False)
-            _write_file_deterministic(
-                archive, HARDWARE_SUPPORT_NAME, hardware_support_path, compress=False
-            )
-            _write_file_deterministic(
-                archive,
-                PERSISTENT_CONTRACT_NAME,
-                persistent_contract_path,
-                compress=True,
-            )
+            if hw_path is not None:
+                _write_file_deterministic(
+                    archive, HARDWARE_SUPPORT_NAME, hw_path, compress=False
+                )
         if temporary.stat().st_size <= 0 or temporary.stat().st_size > MAX_BUNDLE_BYTES:
             raise UpdateBundleError("generated update bundle exceeds Greia bound")
         temporary.replace(output_path)
@@ -941,95 +856,107 @@ def inspect_update_bundle(path: Path) -> InspectedUpdateBundle:
         with zipfile.ZipFile(path, "r") as archive:
             infos = archive.infolist()
             names = [info.filename for info in infos]
-            if names == list(BUNDLE_MEMBERS_V1):
-                raise UpdateBundleError(
-                    "v1 system-update bundle is not accepted: no shipped v1 bundle "
-                    "exists in the repository; rebuild the release as schema v2"
-                )
-            if names != list(BUNDLE_MEMBERS_V2):
+            if names != list(BUNDLE_MEMBERS_V3) and names != list(
+                BUNDLE_MEMBERS_V3_WITH_HW
+            ):
+                _raise_for_legacy_members(archive, names)
                 raise UpdateBundleError("update bundle members/order are invalid")
             _reject_unsafe_members(infos)
-            manifest_info, signature_info, payload_info, hw_info, contract_info = infos
+            by_name = {info.filename: info for info in infos}
+            manifest_info = by_name[MANIFEST_NAME]
+            payload_info = by_name[PAYLOAD_NAME]
+            hw_info = by_name.get(HARDWARE_SUPPORT_NAME)
             if manifest_info.file_size <= 0 or manifest_info.file_size > MAX_MANIFEST_BYTES:
                 raise UpdateBundleError("manifest exceeds Greia bound")
-            if signature_info.file_size <= 0 or signature_info.file_size > MAX_SIGNATURE_BYTES:
-                raise UpdateBundleError("signature envelope exceeds Greia bound")
             if payload_info.file_size <= 0 or payload_info.file_size > MAX_PAYLOAD_BYTES:
                 raise UpdateBundleError("payload exceeds Greia bound")
-            if hw_info.file_size <= 0 or hw_info.file_size > MAX_HARDWARE_SUPPORT_BYTES:
-                raise UpdateBundleError("hardware-support exceeds Greia bound")
-            if (
-                contract_info.file_size <= 0
-                or contract_info.file_size > MAX_PERSISTENT_CONTRACT_BYTES
-            ):
-                raise UpdateBundleError("persistent-state contract exceeds Greia bound")
+            if payload_info.compress_type != zipfile.ZIP_STORED:
+                raise UpdateBundleError("payload member must be stored without recompression")
+            if hw_info is not None:
+                if hw_info.file_size <= 0 or hw_info.file_size > MAX_HARDWARE_SUPPORT_BYTES:
+                    raise UpdateBundleError("hardware-support exceeds Greia bound")
+                if hw_info.compress_type != zipfile.ZIP_STORED:
+                    raise UpdateBundleError(
+                        "hardware-support member must be stored without recompression"
+                    )
             manifest_raw = archive.read(MANIFEST_NAME)
             try:
                 manifest_json = json.loads(manifest_raw.decode("utf-8"))
             except (UnicodeDecodeError, json.JSONDecodeError) as exc:
                 raise UpdateBundleError("manifest is not valid JSON") from exc
+            if isinstance(manifest_json, dict) and manifest_json.get(
+                "schema_version"
+            ) in (V1_SCHEMA_VERSION, V2_SCHEMA_VERSION):
+                raise UpdateBundleError(_migration_error())
             manifest = UpdateManifest.from_json_dict(manifest_json)
             if manifest_raw != manifest.canonical_bytes():
                 raise UpdateBundleError("manifest is not canonical JSON")
-            signature = SignatureEnvelope.from_json_bytes(archive.read(SIGNATURE_NAME))
-            if signature.signer != manifest.signer:
-                raise UpdateSignatureError("manifest/signature signer mismatch")
             if payload_info.file_size != manifest.payload_size:
-                raise UpdateBundleError("payload size does not match signed manifest")
-            if hw_info.file_size != manifest.hardware_support_size:
-                raise UpdateBundleError("hardware-support size does not match signed manifest")
-            if contract_info.file_size != manifest.persistent_contract_size:
-                raise UpdateBundleError(
-                    "persistent-state contract size does not match signed manifest"
-                )
-            contract_raw = archive.read(PERSISTENT_CONTRACT_NAME)
-            verify_persistent_state_contract_bytes(contract_raw)
-            if hashlib.sha256(contract_raw).hexdigest() != manifest.persistent_contract_sha256:
-                raise UpdateBundleError(
-                    "persistent-state contract digest does not match signed manifest"
-                )
+                raise UpdateBundleError("payload size does not match manifest")
+            if hw_info is None:
+                if (
+                    manifest.hardware_support_sha256 is not None
+                    or manifest.hardware_support_size is not None
+                ):
+                    raise UpdateBundleError(
+                        "hardware-support manifest facts require the member"
+                    )
+            else:
+                if (
+                    manifest.hardware_support_sha256 is None
+                    or manifest.hardware_support_size is None
+                ):
+                    raise UpdateBundleError(
+                        "hardware-support member requires manifest facts"
+                    )
+                if hw_info.file_size != manifest.hardware_support_size:
+                    raise UpdateBundleError(
+                        "hardware-support size does not match manifest"
+                    )
             _verify_member_digest(archive, PAYLOAD_NAME, manifest.payload_sha256)
-            _verify_member_digest(
-                archive, HARDWARE_SUPPORT_NAME, manifest.hardware_support_sha256
-            )
-            _assert_member_relocatable(archive, payload_info)
-            _assert_member_zstd_magic(archive, hw_info)
+            if hw_info is not None and manifest.hardware_support_sha256 is not None:
+                _verify_member_digest(
+                    archive, HARDWARE_SUPPORT_NAME, manifest.hardware_support_sha256
+                )
+            _assert_member_zstd_magic(archive, payload_info)
+            if hw_info is not None:
+                _assert_member_zstd_magic(archive, hw_info)
     except (zipfile.BadZipFile, OSError) as exc:
-        if isinstance(exc, UpdateBundleError | UpdateSignatureError):
+        if isinstance(exc, UpdateBundleError):
             raise
         raise UpdateBundleError("update bundle is not a valid Greia ZIP artifact") from exc
-    return InspectedUpdateBundle(path, manifest, signature)
+    return InspectedUpdateBundle(path, manifest)
 
 
-def verify_update_signature(bundle: InspectedUpdateBundle, trusted_key_dir: Path) -> None:
-    key_path = Path(trusted_key_dir) / f"{bundle.manifest.signer}.pem"
-    if not key_path.is_file():
-        raise UpdateSignatureError(
-            f"no trusted system-update key for signer {bundle.manifest.signer}"
-        )
-    _verify_ed25519(key_path, bundle.manifest.canonical_bytes(), bundle.signature.signature)
-
-
-def generate_ed25519_keypair(private_key_path: Path, public_key_path: Path) -> None:
-    Ed25519PrivateKey, _, serialization = _cryptography_ed25519()
-    private = Ed25519PrivateKey.generate()
-    private_bytes = private.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption(),
+def _migration_error() -> str:
+    return (
+        "v1/v2 signed system-update bundle is not accepted: "
+        "rebuild the release as v3 (.greiaupdate v3 migration required; "
+        "see ADR 0036 §3)"
     )
-    public_bytes = private.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    )
-    for path in (Path(private_key_path), Path(public_key_path)):
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if path.exists():
-            raise UpdateSignatureError(f"refusing to overwrite key: {path}")
-    Path(private_key_path).write_bytes(private_bytes)
-    os.chmod(private_key_path, 0o600)
-    Path(public_key_path).write_bytes(public_bytes)
-    os.chmod(public_key_path, 0o644)
+
+
+def _raise_for_legacy_members(
+    archive: zipfile.ZipFile, names: list[str]
+) -> None:
+    """Reject old signed layouts with the explicit v3 migration message."""
+
+    for name in names:
+        if name.endswith(".sig"):
+            raise UpdateBundleError(_migration_error())
+    try:
+        raw = archive.read(MANIFEST_NAME)
+    except KeyError:
+        return
+    try:
+        document = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+        return
+    if isinstance(document, dict) and document.get("schema_version") in (
+        V1_SCHEMA_VERSION,
+        V2_SCHEMA_VERSION,
+    ):
+        raise UpdateBundleError(_migration_error())
 
 
 def canonical_json(value: object) -> bytes:
@@ -1050,47 +977,6 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _sign_ed25519(private_key_path: Path, data: bytes) -> bytes:
-    Ed25519PrivateKey, _, serialization = _cryptography_ed25519()
-    try:
-        private = serialization.load_pem_private_key(
-            Path(private_key_path).read_bytes(), password=None
-        )
-    except (OSError, ValueError, TypeError) as exc:
-        raise UpdateSignatureError("unable to load Ed25519 private key") from exc
-    if not isinstance(private, Ed25519PrivateKey):
-        raise UpdateSignatureError("private key is not Ed25519")
-    return private.sign(data)
-
-
-def _verify_ed25519(public_key_path: Path, data: bytes, signature: bytes) -> None:
-    _, Ed25519PublicKey, serialization = _cryptography_ed25519()
-    try:
-        public = serialization.load_pem_public_key(Path(public_key_path).read_bytes())
-    except (OSError, ValueError, TypeError) as exc:
-        raise UpdateSignatureError("unable to load trusted Ed25519 public key") from exc
-    if not isinstance(public, Ed25519PublicKey):
-        raise UpdateSignatureError("trusted key is not Ed25519")
-    try:
-        public.verify(signature, data)
-    except Exception as exc:  # cryptography exposes InvalidSignature across versions
-        raise UpdateSignatureError("system-update signature verification failed") from exc
-
-
-def _cryptography_ed25519():
-    try:
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives.asymmetric.ed25519 import (
-            Ed25519PrivateKey,
-            Ed25519PublicKey,
-        )
-    except ImportError as exc:
-        raise UpdateSignatureError(
-            "Ed25519 system-update signing/verification requires python3-cryptography"
-        ) from exc
-    return Ed25519PrivateKey, Ed25519PublicKey, serialization
-
-
 def _validate_identifier(value: str, name: str, maximum: int) -> None:
     if not isinstance(value, str) or not value or len(value) > maximum or not _IDENTIFIER.fullmatch(value):
         raise UpdateBundleError(f"{name} must be a bounded ASCII identifier")
@@ -1101,12 +987,24 @@ def _validate_text(value: str, name: str, maximum: int) -> None:
         raise UpdateBundleError(f"{name} must be bounded printable text")
 
 
-def _validate_sequence(value: int, *, allow_zero: bool = False) -> None:
-    minimum = 0 if allow_zero else 1
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise UpdateBundleError("release_sequence must be an integer")
-    if value < minimum or value > _MAX_RELEASE_SEQUENCE:
-        raise UpdateBundleError("release_sequence is outside Greia bounds")
+def _validate_board(value: str | None) -> None:
+    if value is None:
+        return
+    _validate_identifier(value, "board", _MAX_BOARD)
+
+
+def _validate_persist_schema(read_min: int, read_max: int, write: int) -> None:
+    for name, value in (
+        ("persist_read_schema_min", read_min),
+        ("persist_read_schema_max", read_max),
+        ("persist_write_schema", write),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int):
+            raise UpdateBundleError(f"{name} must be an integer")
+        if value < 0 or value > _MAX_PERSIST_SCHEMA:
+            raise UpdateBundleError(f"{name} is outside Greia bounds")
+    if read_min > read_max:
+        raise UpdateBundleError("persist readable schema range is inverted")
 
 
 def _reject_unsafe_members(infos: list[zipfile.ZipInfo]) -> None:
@@ -1149,34 +1047,14 @@ def _verify_member_digest(
                 break
             digest.update(chunk)
     if digest.hexdigest() != expected_hex:
-        raise UpdateBundleError(f"{name} digest does not match signed manifest")
+        raise UpdateBundleError(f"{name} digest does not match manifest")
 
 
-def _assert_relocatable_payload(path: Path) -> None:
-    with Path(path).open("rb") as handle:
-        header = handle.read(1024)
-    if len(header) >= 512 and header[510:512] == b"\x55\xaa":
-        raise UpdateBundleError("payload must be a relocatable image without an MBR")
-    if len(header) >= 520 and header[512:520] == b"EFI PART":
-        raise UpdateBundleError("payload must be a relocatable image without a GPT")
-
-
-def _assert_member_relocatable(
-    archive: zipfile.ZipFile, info: zipfile.ZipInfo
-) -> None:
-    with archive.open(info.filename, "r") as handle:
-        header = handle.read(1024)
-    if len(header) >= 512 and header[510:512] == b"\x55\xaa":
-        raise UpdateBundleError("payload must be a relocatable image without an MBR")
-    if len(header) >= 520 and header[512:520] == b"EFI PART":
-        raise UpdateBundleError("payload must be a relocatable image without a GPT")
-
-
-def _assert_hardware_support_magic(path: Path) -> None:
+def _assert_zstd_file(path: Path, label: str) -> None:
     with Path(path).open("rb") as handle:
         magic = handle.read(4)
     if magic != _ZSTD_MAGIC:
-        raise UpdateBundleError("hardware-support must be zstd-compressed tar (.tar.zst)")
+        raise UpdateBundleError(f"{label} must be zstd-compressed bytes")
 
 
 def _assert_member_zstd_magic(
@@ -1185,7 +1063,7 @@ def _assert_member_zstd_magic(
     with archive.open(info.filename, "r") as handle:
         magic = handle.read(4)
     if magic != _ZSTD_MAGIC:
-        raise UpdateBundleError("hardware-support must be zstd-compressed tar (.tar.zst)")
+        raise UpdateBundleError(f"{info.filename} must be zstd-compressed bytes")
 
 
 def _writestr_deterministic(
@@ -1233,7 +1111,7 @@ def _atomic_json(path: Path, payload: dict[str, object]) -> None:
 # ``greia-system-update`` service (separate from
 # ``greia-install-transaction``):
 #
-#   inbox candidate -> SystemUpdateService trust -> SlotBackedSystemUpdateBackend
+#   inbox candidate -> SystemUpdateService compatibility -> SlotBackedSystemUpdateBackend
 #   -> common SlotWriter stream -> common SlotFinalizer bind -> shared
 #   BootTransactionJournal -> boot-backend one-shot arm -> health commit.
 #
@@ -1272,8 +1150,6 @@ UPDATE_SERVICE_ALLOWED_UIDS = (0,)
 #: device or a raw command.
 UPDATE_STATE_DIR_ENV = "GREIA_UPDATE_STATE_DIR"
 UPDATE_STATE_DIR_DEFAULT = "/var/lib/greia-os"
-UPDATE_TRUSTED_KEY_DIR_ENV = "GREIA_UPDATE_TRUSTED_KEY_DIR"
-UPDATE_TRUSTED_KEY_DIR_DEFAULT = "/etc/greia-os/system-update-keys"
 INSTALLED_LAYOUT_RECORD_ENV = "GREIA_INSTALLED_LAYOUT_RECORD"
 INSTALLED_LAYOUT_RECORD_DEFAULT = "/etc/greia-os/installed-layout.json"
 #: Installed product identity: the single image-owned release authority written
@@ -1301,6 +1177,7 @@ UPDATE_SYSTEM_VERSION_ENV = "GREIA_SYSTEM_VERSION"
 UPDATE_SYSTEM_PLATFORM_ENV = "GREIA_SYSTEM_PLATFORM_FAMILY"
 UPDATE_SYSTEM_ARCH_ENV = "GREIA_SYSTEM_ARCHITECTURE"
 UPDATE_SYSTEM_PROFILE_ENV = "GREIA_SYSTEM_PROFILE"
+UPDATE_SYSTEM_BOARD_ENV = "GREIA_SYSTEM_BOARD"
 #: Test-only identity fallbacks. The shipped ``greia-system-update.service``
 #: sets none of these: on device the identity resolves from the installed
 #: release authority above. They remain so offline unit/proof harnesses can
@@ -1421,14 +1298,6 @@ def load_installed_release_identity(
         or not _IDENTIFIER.fullmatch(release_id)
     ):
         raise UpdateLayoutError("installed release identity release_id is invalid")
-    sequence = document.get("release_sequence")
-    if (
-        isinstance(sequence, bool)
-        or not isinstance(sequence, int)
-        or sequence < 0
-        or sequence > _MAX_RELEASE_SEQUENCE
-    ):
-        raise UpdateLayoutError("installed release identity release_sequence is invalid")
     for key, maximum in (
         ("platform_family", 64),
         ("architecture", 32),
@@ -1454,6 +1323,14 @@ def load_installed_release_identity(
         or any(ord(character) < 32 for character in version)
     ):
         raise UpdateLayoutError("installed release identity version is invalid")
+    board = document.get("board")
+    if board is not None and (
+        not isinstance(board, str)
+        or not board
+        or len(board) > _MAX_BOARD
+        or not _IDENTIFIER.fullmatch(board)
+    ):
+        raise UpdateLayoutError("installed release identity board is invalid")
     canonical = (
         json.dumps(document, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         + "\n"
@@ -1548,6 +1425,10 @@ def resolve_installed_system_identity(
         if release is not None
         else {}
     )
+    board_raw = (
+        release_text.get("board")
+        or os.environ.get(UPDATE_SYSTEM_BOARD_ENV, "").strip()
+    )
     return SystemIdentity(
         version=_first(
             release_text.get("version"),
@@ -1570,7 +1451,42 @@ def resolve_installed_system_identity(
             profile_facts.get("profile"),
             os.environ.get(UPDATE_SYSTEM_PROFILE_ENV, "").strip(),
         ),
+        board=board_raw or None,
     )
+
+
+def _assert_persist_preflight(installed: object, manifest: UpdateManifest) -> int:
+    """Coerce the PERSIST preflight seam and enforce the readable range.
+
+    Accepts the installed schema as an int or as canonical marker bytes
+    (see ``persistent_layout.emit_persist_schema_marker``). Failures raise
+    :class:`UpdateCompatibilityError` with a compatibility/migration message
+    so callers report data compatibility, never a generic staging error.
+    """
+    from .persistent_layout import (
+        PersistentLayoutError,
+        assert_persist_schema_compatible,
+        parse_persist_schema_marker,
+    )
+
+    try:
+        if isinstance(installed, bool):
+            raise PersistentLayoutError("installed PERSIST schema must be an integer")
+        if isinstance(installed, int):
+            schema = installed
+        elif isinstance(installed, (bytes, bytearray)):
+            if not installed:
+                raise PersistentLayoutError(
+                    "installed PERSIST schema marker is not authoritative"
+                )
+            schema = parse_persist_schema_marker(bytes(installed))
+        else:
+            raise PersistentLayoutError(
+                "installed PERSIST schema marker is not authoritative"
+            )
+        return assert_persist_schema_compatible(schema, manifest)
+    except (PersistentLayoutError, UpdateBundleError) as exc:
+        raise UpdateCompatibilityError(str(exc)) from exc
 
 
 def inactive_slot_for(record: "_LayoutRecord") -> str | None:
@@ -1607,9 +1523,9 @@ def _default_slot_profile_policy(record: "_LayoutRecord") -> object:
 
 
 def _bind_release_facts_to_policy(policy: object, manifest: UpdateManifest) -> object:
-    """Bind the signed release compatibility facts onto a profile policy.
+    """Bind the v3 release compatibility facts onto a profile policy.
 
-    The signed manifest is authoritative for ``architecture``/
+    The v3 manifest is authoritative for ``architecture``/
     ``platform_family``/``profile``/``version``; layout facts
     (``layout_id``/slot bytes/boot backend) stay exactly as the caller's
     policy factory derived them. A plain non-``SlotProfilePolicy`` object
@@ -1641,9 +1557,12 @@ class UpdateSlotSeams:
     :class:`UpdateBackendUnavailable`, so a minimally composed service
     reports unavailable instead of guessing at destination access.
     ``installed_contract_factory`` is the PERSIST-side preflight: it returns
-    the installed persistent-state contract bytes so staging can prove the
-    candidate binds them (previously accepted slot keeps reading shared
-    state) before any inactive-slot write.
+    the installed PERSIST schema marker bytes (see
+    ``persistent_layout.emit_persist_schema_marker``) so staging can prove
+    the current schema falls within the candidate's readable range
+    (previously accepted slot keeps reading shared state) before any
+    inactive-slot write. An int schema is also accepted for harness
+    convenience and coerced through the same marker path.
 
     An empty ``UpdateSlotSeams()`` stays a deliberate fail-closed degraded
     construction (direct ``SlotBackedSystemUpdateBackend`` default). It is
@@ -1666,8 +1585,8 @@ class SlotBackedSystemUpdateBackend:
     """Privileged staging/arm/confirm over the common slot/journal seams.
 
     Reuses :class:`SlotWriter`, :class:`SlotFinalizer` and
-    :class:`BootTransactionJournal` as shared libraries: trust stays in
-    :class:`SystemUpdateService` (signature, compatibility, anti-rollback),
+    :class:`BootTransactionJournal` as shared libraries: compatibility stays in
+    :class:`SystemUpdateService` (structure, integrity, compatibility),
     while this backend owns the inactive slot, the destination seams, the
     journal and the boot-backend one-shot. Single-root layouts and missing
     records stay unavailable; the active/accepted slot is never writable
@@ -1721,17 +1640,20 @@ class SlotBackedSystemUpdateBackend:
             payload["journal_state"] = journal.state.value
             payload["candidate_slot"] = journal.candidate_slot
             payload["release_id"] = journal.release_id
-            payload["release_sequence"] = journal.release_sequence
         return payload
 
     def stage(self, bundle: InspectedUpdateBundle) -> None:
-        """Verify-then-write the inbox candidate into the inactive slot.
+        """Stage the v3 candidate into the inactive slot (ADR 0036 §4/§8).
 
-        Trust (signature/compatibility/sequence) is established by
-        :class:`SystemUpdateService` before this call; this method re-binds
-        the signed digest at the byte layer (``SlotWriter`` readback),
-        refuses live slots and single-root layouts, then records the shared
-        journal. Any refusal raises before the first destination mutation.
+        Compatibility (architecture/platform/profile/board) is established by
+        :class:`SystemUpdateService` before this call; this method enforces
+        the PERSIST readability range and destination capacity plus the
+        release-bound support binding before any destination contact, then
+        streams zstd decompression through the shared ``SlotWriter`` (raw
+        byte-count proof, fsync/readback, no uncompressed temp file) and
+        records the shared journal with the non-security release identity.
+        There is no signature verification and no anti-rollback sequence
+        requirement. Any refusal raises before the first destination mutation.
         """
         from .boot_transaction import BootJournalError, BootTransactionError, BootTransactionJournal
         from .slot_writer import (
@@ -1741,6 +1663,7 @@ class SlotBackedSystemUpdateBackend:
             SlotWriteError,
             SlotWriter,
             VerifiedReleaseMember,
+            open_zstd_decompressed_stream,
         )
 
         try:
@@ -1767,34 +1690,51 @@ class SlotBackedSystemUpdateBackend:
                 raise SystemUpdateError(
                     "support set is not the release-bound support member"
                 )
-            # Persistent-state contract preflight while pending: the
-            # candidate must bind the installed contract bytes (same
-            # namespaces/digest), so the previously accepted slot still
-            # reads shared PERSIST state after update and rollback. This
-            # runs before any inactive-slot store is addressed.
-            installed_contract = self._require_seam(
-                "installed persistent-state contract",
-                self.seams.installed_contract_factory,
-            )()
-            if (
-                not isinstance(installed_contract, (bytes, bytearray))
-                or not installed_contract
-            ):
+            if getattr(support_value, "support_size", None) != member.hardware_support_size:
                 raise SystemUpdateError(
-                    "installed persistent-state contract is not authoritative"
+                    "support set size is not the release-bound member size"
                 )
             try:
-                from .persistent_layout import assert_persistent_contract_accepted
-
-                assert_persistent_contract_accepted(
-                    bytes(installed_contract), bundle.manifest
+                support_installed = int(
+                    getattr(support_value, "installed_size_bound", 0)
                 )
+            except (TypeError, ValueError) as exc:
+                raise SystemUpdateError(
+                    "support installed-size bound is not authoritative"
+                ) from exc
+            if isinstance(support_installed, bool) or support_installed < 0:
+                raise SystemUpdateError(
+                    "support installed-size bound is not authoritative"
+                )
+            # PERSIST readability preflight (integer schema range, ADR 0036 §6)
+            # before any inactive-slot store is addressed.
+            installed_marker = self._require_seam(
+                "installed PERSIST schema",
+                self.seams.installed_contract_factory,
+            )()
+            try:
+                _assert_persist_preflight(installed_marker, bundle.manifest)
             except SystemUpdateError:
                 raise
             except Exception as exc:
                 raise SystemUpdateError(
-                    f"persistent-state contract preflight refused: {exc}"
+                    f"PERSIST compatibility preflight refused: {exc}"
                 ) from exc
+            # Destination capacity preflight before any destination contact:
+            # the manifest minimum must fit the layout slot.
+            preflight_writer = SlotWriter()
+            try:
+                required = preflight_writer.required_slot_bytes(
+                    member, support_installed
+                )
+            except (SlotWriteError, SlotFinalizeError) as exc:
+                raise SystemUpdateError(
+                    f"destination slot capacity preflight refused: {exc}"
+                ) from exc
+            if required > destination.slot_capacity_bytes:
+                raise SystemUpdateError(
+                    "candidate minimum slot bytes exceed destination slot capacity"
+                )
             inventory = self._require_seam(
                 "hardware inventory attestation", self.seams.inventory_factory
             )()
@@ -1828,16 +1768,34 @@ class SlotBackedSystemUpdateBackend:
                     "inactive-slot store", self.seams.slot_store_factory
                 )(destination)
                 with zipfile.ZipFile(bundle.path, "r") as archive:
-                    with archive.open(PAYLOAD_NAME, "r") as source:
-                        verified = writer.write(
-                            member=member,
-                            destination=destination,
-                            source=source,
-                            storage=storage,
-                            support_installed_bytes=int(
-                                getattr(support_value, "installed_size_bound", 0)
-                            ),
-                        )
+                    with archive.open(PAYLOAD_NAME, "r") as compressed:
+                        try:
+                            decompressed = open_zstd_decompressed_stream(compressed)
+                        except (SlotWriteError, SlotFinalizeError) as exc:
+                            raise SystemUpdateError(
+                                f"payload decompression refused: {exc}"
+                            ) from exc
+                        try:
+                            verified = writer.write(
+                                member=member,
+                                destination=destination,
+                                source=decompressed,
+                                storage=storage,
+                                support_installed_bytes=support_installed,
+                            )
+                        except (SlotWriteError, SlotFinalizeError) as exc:
+                            if isinstance(exc, SystemUpdateError):
+                                raise
+                            raise SystemUpdateError(
+                                f"update staging failed fail-closed: {exc}"
+                            ) from exc
+                        finally:
+                            closer = getattr(decompressed, "close", None)
+                            if callable(closer):
+                                try:
+                                    closer()
+                                except Exception:
+                                    pass
             finally:
                 closer = getattr(storage, "close", None)
                 if callable(closer):
@@ -1862,14 +1820,12 @@ class SlotBackedSystemUpdateBackend:
                 layout_id=record.layout_id,
                 boot_backend=record.boot_backend,
                 release_id=receipt.release_id,
-                release_sequence=receipt.release_sequence,
                 candidate_slot=inactive,
                 accepted_slot=accepted,
             )
             self._last_staged = {
                 "candidate_slot": inactive,
                 "release_id": receipt.release_id,
-                "release_sequence": receipt.release_sequence,
             }
         except (SlotWriteError, SlotFinalizeError, BootTransactionError, BootJournalError) as exc:
             if isinstance(exc, SystemUpdateError):
@@ -1935,7 +1891,8 @@ class SlotBackedSystemUpdateBackend:
                 and observed == journal.candidate_slot
             ):
                 backend.commit_accepted(journal.candidate_slot)
-                write_accepted_sequence(self.state_dir, journal.release_sequence)
+                # v3 carries no anti-rollback sequence file: acceptance follows
+                # the journal/layout release identity only (T02).
                 journal.record(
                     BootTransactionState.ACCEPTED,
                     "candidate boot confirmed healthy; release accepted",
@@ -2034,7 +1991,6 @@ class SlotBackedSystemUpdateBackend:
             candidate_slot=journal.candidate_slot,
             accepted_slot=journal.accepted_slot,
             release_id=journal.release_id,
-            release_sequence=journal.release_sequence,
         )
 
 
@@ -2044,7 +2000,6 @@ def advance_layout_authority_for_acceptance(
     candidate_slot: str,
     accepted_slot: str,
     release_id: str,
-    release_sequence: int,
 ) -> "_LayoutRecord":
     """Advance the trusted A/B layout authority after a health commit.
 
@@ -2075,10 +2030,7 @@ def advance_layout_authority_for_acceptance(
     if record is None or record.system_b is None:
         raise SystemUpdateError("layout advancement requires an A/B layout authority")
     if record.accepted_slot == candidate_slot:
-        if (
-            record.accepted_release_id != release_id
-            or record.accepted_release_sequence != release_sequence
-        ):
+        if record.accepted_release_id != release_id:
             raise SystemUpdateError(
                 "layout authority already accepts a different release "
                 "for this slot; refusing to advance"
@@ -2098,7 +2050,6 @@ def advance_layout_authority_for_acceptance(
         record,
         accepted_slot=candidate_slot,
         accepted_release_id=release_id,
-        accepted_release_sequence=release_sequence,
         boot_control=_replace(record.boot_control, active_slot=candidate_slot),
     )
     try:
@@ -2134,31 +2085,23 @@ def _bounded_note(note: str, maximum: int = 512) -> str:
 class UpdateCandidateSummary:
     """Bounded public facts for the internally resolved inbox candidate.
 
-    Structural twin of ``update_privileged.CurrentCandidateSummary`` (same
-    attribute names, so the socket endpoint renders it without this module
-    importing the protocol owner); the service resolves it internally and
-    requests never carry selectors.
+    v3 carries no provenance: integrity (digests) is verified at inspection,
+    and only the non-security release identity plus the bundle digest are
+    reported. Shares the v3-minimal shape with
+    ``update_privileged.CurrentCandidateSummary`` (``present``/``release_id``/
+    ``bundle_sha256``); both are owned by their module and carry no release
+    sequence, signer, or signature-verification fact.
     """
 
     present: bool
     release_id: str = ""
-    release_sequence: int = 0
     bundle_sha256: str = ""
-    signature_verified: bool = False
 
     def __post_init__(self) -> None:
         if not isinstance(self.present, bool):
             raise SystemUpdateError("candidate presence must be a boolean")
         if len(self.release_id) > 96:
             raise SystemUpdateError("candidate release_id exceeds Greia bound")
-        if (
-            isinstance(self.release_sequence, bool)
-            or not isinstance(self.release_sequence, int)
-            or self.release_sequence < 0
-        ):
-            raise SystemUpdateError(
-                "candidate release_sequence is outside Greia bounds"
-            )
         if self.bundle_sha256 and (
             len(self.bundle_sha256) != 64
             or any(c not in "0123456789abcdef" for c in self.bundle_sha256)
@@ -2177,34 +2120,23 @@ class SystemUpdateServiceAuthority:
     """
 
     state_dir: Path
-    trusted_key_dir: Path
     identity: SystemIdentity
     backend: SystemUpdateBackend | None = None
-    accepted_sequence: int | None = None
     service: SystemUpdateService = field(init=False)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "state_dir", Path(self.state_dir))
-        object.__setattr__(self, "trusted_key_dir", Path(self.trusted_key_dir))
         if self.backend is None:
             object.__setattr__(
                 self, "backend", SlotBackedSystemUpdateBackend(self.state_dir)
-            )
-        pinned = self.accepted_sequence is not None
-        object.__setattr__(self, "_accepted_sequence_pinned", pinned)
-        if self.accepted_sequence is None:
-            object.__setattr__(
-                self, "accepted_sequence", read_accepted_sequence(self.state_dir)
             )
         object.__setattr__(
             self,
             "service",
             SystemUpdateService(
                 self.state_dir,
-                self.trusted_key_dir,
                 self.identity,
                 self.backend,
-                accepted_sequence=int(self.accepted_sequence),
             ),
         )
 
@@ -2219,22 +2151,16 @@ class SystemUpdateServiceAuthority:
         release = status.get("release")
         if not isinstance(release, dict):
             return UpdateCandidateSummary(present=False)
-        sequence = release.get("release_sequence", 0)
-        if isinstance(sequence, bool) or not isinstance(sequence, int) or sequence < 0:
-            return UpdateCandidateSummary(present=False)
         digest = status.get("bundle_sha256", "")
         if not isinstance(digest, str) or (digest and not re.fullmatch(r"[0-9a-f]{64}", digest)):
             return UpdateCandidateSummary(present=False)
         release_id = release.get("release_id", "")
         if not isinstance(release_id, str) or len(release_id) > 96:
             return UpdateCandidateSummary(present=False)
-        verified = status.get("signature_verified", False)
         return UpdateCandidateSummary(
             present=True,
             release_id=release_id,
-            release_sequence=sequence,
             bundle_sha256=digest,
-            signature_verified=verified is True,
         )
 
     def layout_summary(self) -> dict[str, object]:
@@ -2259,35 +2185,24 @@ class SystemUpdateServiceAuthority:
         }
 
     def verify_current_candidate(self) -> UpdateCandidateSummary:
-        self._refresh_accepted_sequence()
         path = self._current_bundle_path()
         inspected, _decision = self.service.verify_for_activation(path)
         return UpdateCandidateSummary(
             present=True,
             release_id=inspected.manifest.release_id,
-            release_sequence=inspected.manifest.release_sequence,
             bundle_sha256=sha256_file(path),
-            signature_verified=True,
         )
 
     def stage_current_candidate(self) -> dict[str, object]:
-        self._refresh_accepted_sequence()
         path = self._current_bundle_path()
         inspected, decision = self.service.verify_for_activation(path)
-        if decision == "no-update":
-            return {
-                "staged": False,
-                "decision": "no-update",
-                "release_id": inspected.manifest.release_id,
-                "release_sequence": inspected.manifest.release_sequence,
-            }
         staged = self.service.stage(path)
         detail: dict[str, object] = {
             "staged": True,
-            "decision": "update",
+            "decision": decision,
             "release_id": staged.manifest.release_id,
-            "release_sequence": staged.manifest.release_sequence,
         }
+        _ = inspected
         detail.update(self.service.backend.status_payload())
         return detail
 
@@ -2304,19 +2219,6 @@ class SystemUpdateServiceAuthority:
         backend = self.backend
         path = getattr(backend, "layout_record_path", None)
         return Path(path) if path is not None else None
-
-    def _refresh_accepted_sequence(self) -> None:
-        """Re-read the accepted sequence unless explicitly pinned.
-
-        The health commit persists a new accepted sequence to disk; a
-        long-lived (socket-activated) authority must observe it, otherwise
-        an equal-sequence replay would classify as "update" instead of
-        "no-update" and a rolled-back sequence could stage again.
-        Explicitly constructed sequences (tests) stay pinned.
-        """
-        if getattr(self, "_accepted_sequence_pinned", False):
-            return
-        self.service.accepted_sequence = read_accepted_sequence(self.state_dir)
 
     def _status_record(self) -> dict[str, object]:
         inbox = SystemUpdateInbox(self.state_dir)
@@ -2518,11 +2420,11 @@ def handle_update_connection(
 # their ``SlotFinalizeError``/``SystemUpdateError`` shape so ``stage``
 # wraps them as staging failures, never as silent skips.
 #
-# Trust notes (image integration contract):
+# Integration notes (image integration contract):
 # - the hardware-support pool is Greia-owned image state (default
 #   ``/opt/greia-hardware-support``, same location the installer consumes);
 #   it is verified at every load (manifest/payload digests, no
-#   unmanifested payloads) and converted with the signed manifest
+#   unmanifested payloads) and converted with the release manifest
 #   digest/size, so the support set stays release-bound;
 # - the installed persistent-state contract is the canonical registry
 #   contract (identical bytes the release builder embeds); staging proves
@@ -2912,6 +2814,9 @@ class _MountTrackingFilesystem:
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return self._inner.missing_files(required)  # type: ignore[union-attr]
 
+    def check_completeness(self) -> None:
+        self._inner.check_completeness()  # type: ignore[union-attr]
+
     def check_health(self) -> None:
         self._inner.check_health()  # type: ignore[union-attr]
 
@@ -3164,10 +3069,21 @@ def _production_support_set_factory(
 
     def _factory(bundle: object) -> object:
         try:
+            manifest = getattr(bundle, "manifest")
+            if getattr(manifest, "hardware_support_sha256", None) is None:
+                from .slot_writer import ReleaseSupportSet
+
+                return ReleaseSupportSet(
+                    support_digest=None,
+                    support_size=None,
+                    installed_size_bound=0,
+                    provided_firmware=frozenset(),
+                    provided_microcode=frozenset(),
+                    packages=(),
+                )
             from greia_installer.hardware_support import VerifiedHardwareSupportPool
             from greia_installer.slots import pool_to_support_set
 
-            manifest = getattr(bundle, "manifest")
             pool = VerifiedHardwareSupportPool.load(
                 context.paths.hardware_support_pool
             )
@@ -3239,10 +3155,20 @@ def _production_selection_factory(
 
 
 def _production_installed_contract_factory() -> Callable[[], bytes]:
-    """Installed persistent-state contract (canonical registry bytes)."""
+    """Installed PERSIST schema marker (ADR 0036 §6 integer check).
+
+    Returns the canonical marker bytes for the current installed schema.
+    Device integration reads the live PERSIST marker in later sessions;
+    this composition stays importable offline and fail-closed.
+    """
 
     def _factory() -> bytes:
-        return build_persistent_state_contract_bytes()
+        from .persistent_layout import (
+            PERSIST_SCHEMA_CURRENT,
+            emit_persist_schema_marker,
+        )
+
+        return emit_persist_schema_marker(PERSIST_SCHEMA_CURRENT)
 
     return _factory
 
@@ -3250,7 +3176,6 @@ def _production_installed_contract_factory() -> Callable[[], bytes]:
 def build_live_update_service(
     *,
     state_dir: Path | None = None,
-    trusted_key_dir: Path | None = None,
     layout_record_path: Path | None = None,
     boot_backend: object | None = None,
     boot_backend_auto: bool = True,
@@ -3258,28 +3183,22 @@ def build_live_update_service(
 ) -> SystemUpdateServiceAuthority:
     """Compose the production authority from Greia-owned environment state.
 
-    Trust (keys), compatibility (release identity) and layout authority
-    resolve from Greia-owned state on every composition; the boot one-shot
-    backend attaches to the boot-control ``grubenv`` when present (stays
-    unwired fail-closed where there is no boot-control state, e.g.
-    single-root layouts). With ``seams=None`` (the shipped ``main()``
-    path) the inactive-slot destination factories are the production
-    seams from :func:`build_production_update_seams`: the exact installed
-    updater stages only the freshly resolved inactive slot, and reports
-    unavailable fail-closed where no A/B authority or device exists.
-    Explicitly injected seams remain a test/harness feature.
+    Compatibility (release identity) and layout authority resolve from
+    Greia-owned state on every composition; the boot one-shot backend
+    attaches to the boot-control ``grubenv`` when present (stays unwired
+    fail-closed where there is no boot-control state, e.g. single-root
+    layouts). With ``seams=None`` (the shipped ``main()`` path) the
+    inactive-slot destination factories are the production seams from
+    :func:`build_production_update_seams`: the exact installed updater
+    stages only the freshly resolved inactive slot, and reports unavailable
+    fail-closed where no A/B authority or device exists. Explicitly
+    injected seams remain a test/harness feature.
     """
+
     root = (
         Path(state_dir)
         if state_dir is not None
         else Path(os.environ.get(UPDATE_STATE_DIR_ENV, UPDATE_STATE_DIR_DEFAULT))
-    )
-    keys = (
-        Path(trusted_key_dir)
-        if trusted_key_dir is not None
-        else Path(
-            os.environ.get(UPDATE_TRUSTED_KEY_DIR_ENV, UPDATE_TRUSTED_KEY_DIR_DEFAULT)
-        )
     )
     record_path = (
         Path(layout_record_path)
@@ -3302,7 +3221,7 @@ def build_live_update_service(
         else build_production_update_seams(layout_record_path=record_path),
         boot_backend=resolved_boot_backend,
     )
-    return SystemUpdateServiceAuthority(root, keys, identity, backend)
+    return SystemUpdateServiceAuthority(root, identity, backend)
 
 
 def serve_update_forever(
@@ -3336,7 +3255,7 @@ def main(argv: list[str] | None = None) -> int:
     With systemd socket activation (``LISTEN_FDS``) the passed file
     descriptor is the listening socket; without one the service exits
     fail-closed instead of opening any socket itself. The production
-    authority (trust, layout, journal, boot one-shot backend, production
+    authority (compatibility, layout, journal, boot one-shot backend, production
     inactive-slot seams) is composed from Greia-owned state; staging
     reports unavailable rather than guessing at destination access where
     no A/B authority or inactive device exists.

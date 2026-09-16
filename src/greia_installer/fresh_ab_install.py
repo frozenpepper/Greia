@@ -1,4 +1,4 @@
-"""Fresh signed-release install to SYSTEM_A (Phase 8B Step 8B.3 / X8-INSTALL).
+"""Fresh v3-release install to SYSTEM_A (Phase 8B Step 8B.3 / X8-INSTALL).
 
 The privileged ``greia-install-transaction`` service calls
 :func:`execute_fresh_ab_install` after the narrow PREPARE/EXECUTE protocol
@@ -11,19 +11,19 @@ URLs, devices or partition numbers.
 Flow on a disposable target (loop/QEMU image; D50 forbids Acer repartition
 here):
 
-1. verify the deterministic signed release bundle (manifest v2 member order,
-   canonical JSON, per-member digests, Ed25519 signature against the trusted
-   key dir, platform/family/profile compatibility with the service-owned
-   expectation);
+1. verify the deterministic v3 release bundle (manifest v3 member order,
+   canonical JSON, per-member digests, platform/family/profile compatibility
+   with the service-owned expectation);
 2. preflight the finalized-slot capacity bound
    (``max(base, minimum) + support + growth + reserve <= slot``) and prove
    the profile layout plan fits the verified target — both **before** the
    first destructive command;
 3. create MBR A/B/PERSIST through the executable ``legacy-bios-ab-v1``
    adapter (argument arrays, ``shell=False`` by the caller's runner);
-4. stream the signed payload to ``SYSTEM_A`` only through the shared
-   :class:`greia_platform.slot_writer.SlotWriter` (stream + readback digest,
-   single-use write capability);
+4. stream the v3 payload (`payload.ext4.zst` decompressed streaming, no
+   uncompressed temp file) to ``SYSTEM_A`` only through the shared
+   :class:`greia_platform.slot_writer.SlotWriter` (raw byte-count proof +
+   readback, single-use write capability);
 5. role-bind and finalize ``SYSTEM_A`` through the shared
    :class:`greia_platform.slot_writer.SlotFinalizer` (role UUID restore,
    release-bound support set, deterministic boot artifacts, receipt);
@@ -97,9 +97,7 @@ from greia_platform.system_updates import (
     PAYLOAD_NAME,
     SystemUpdateError,
     UpdateBundleError,
-    UpdateSignatureError,
     inspect_update_bundle,
-    verify_update_signature,
 )
 
 from .disk import DeviceObservation
@@ -154,10 +152,10 @@ def _require_regular_file(value: object, *, field_name: str) -> Path:
 class FreshAbInstallRequest:
     """Service-owned fresh-install facts (never UI/Parent bytes).
 
-    ``bundle_path`` is the signed deterministic ``.greiaupdate`` v2 release
-    artifact; ``trusted_key_dir`` holds the release signer public keys.
-    ``expected_*`` are the installer image's own compatibility facts: the
-    manifest must match all three exactly.     ``install_target_sha256`` is the
+    ``bundle_path`` is the unsigned deterministic ``.greiaupdate`` v3 release
+    artifact (ADR 0036 §3). ``expected_*`` are the installer image's own
+    compatibility facts: the manifest must match all three exactly.
+    ``install_target_sha256`` is the
     authorized identity digest the privileged protocol rematerialized from a
     fresh probe (never a ``/dev`` path). ``fresh_identities`` is RETIRED
     (POSTR1-P2): production identity observation happens after the
@@ -170,7 +168,6 @@ class FreshAbInstallRequest:
     """
 
     bundle_path: Path
-    trusted_key_dir: Path
     expected_profile_id: str
     expected_platform_family: str
     expected_architecture: str
@@ -187,10 +184,6 @@ class FreshAbInstallRequest:
         object.__setattr__(
             self, "bundle_path", _require_regular_file(self.bundle_path, field_name="release bundle")
         )
-        key_dir = Path(self.trusted_key_dir) if isinstance(self.trusted_key_dir, (Path, str)) else None
-        if key_dir is None or not key_dir.is_absolute() or key_dir.is_symlink() or not key_dir.is_dir():
-            raise FreshAbInstallError("trusted key dir must be an absolute real directory")
-        object.__setattr__(self, "trusted_key_dir", key_dir)
         for field_name in (
             "expected_profile_id",
             "expected_platform_family",
@@ -240,7 +233,7 @@ class FreshAbInstallSeams:
     ``slot_storage_factory`` is called exactly once with ``"A"`` — the
     orchestrator never addresses ``SYSTEM_B`` storage, so a second-slot
     duplication is inexpressible here. ``payload_stream_factory`` opens the
-    signed payload byte stream (default reads the bundle's payload member);
+    release payload byte stream (default reads the bundle's payload member);
     ``slot_filesystem_factory``/``package_installer_factory`` own the
     destination-slot finalization seam. ``persist_stage_dir`` must be an
     existing empty directory; ``boot_control_dir``/``backend_state_dir``/
@@ -259,8 +252,8 @@ class FreshAbInstallSeams:
     slot_filesystem_factory: Callable[[], SlotFilesystem]
     package_installer_factory: Callable[[], SlotPackageInstaller]
     inventory_token: str
-    support_digest: str
-    support_size: int
+    support_digest: str | None
+    support_size: int | None
     support_installed_bound: int
     support_classes: tuple[tuple[str, str, str, str], ...] = ()
     persist_runner: object = None
@@ -277,8 +270,20 @@ class FreshAbInstallSeams:
 
     def __post_init__(self) -> None:
         _require_hex64(self.inventory_token, field_name="hardware inventory token")
-        _require_hex64(self.support_digest, field_name="release support digest")
-        for field_name in ("support_size", "support_installed_bound"):
+        if (self.support_digest is None) != (self.support_size is None):
+            raise FreshAbInstallError(
+                "support digest/size must be present together or absent together"
+            )
+        if self.support_digest is not None:
+            _require_hex64(self.support_digest, field_name="release support digest")
+        if self.support_size is not None:
+            if (
+                isinstance(self.support_size, bool)
+                or not isinstance(self.support_size, int)
+                or self.support_size < 0
+            ):
+                raise FreshAbInstallError("support_size must be a non-negative integer")
+        for field_name in ("support_installed_bound",):
             value = getattr(self, field_name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise FreshAbInstallError(f"{field_name} must be a non-negative integer")
@@ -300,7 +305,6 @@ class FreshAbInstallResult:
     """Facts of a completed fresh install (SYSTEM_A finalized, B inactive)."""
 
     release_id: str
-    release_sequence: int
     layout_plan: LayoutPlan
     receipt: FinalizationReceipt
     record: InstalledLayoutRecord
@@ -315,14 +319,14 @@ class FreshAbInstallResult:
 
 
 class BundlePayloadStream:
-    """Live streaming view over the bundle's signed payload member (D33).
+    """Live streaming view over the bundle's v3 payload member (D33).
 
     The owning :class:`zipfile.ZipFile` lifetime spans the whole writer
     consumption: the archive stays open until this stream is closed, so the
     shared :class:`SlotWriter` pulls bounded chunks straight from the ZIP
-    member with no full uncompressed ``payload.bin`` allocation and no
+    member with no full uncompressed ``payload.ext4.zst`` allocation and no
     second extracted copy on disk. Manifest-declared uncompressed size is
-    bounded at open time (live ``ZipInfo.file_size`` must equal the signed
+    bounded at open time (live ``ZipInfo.file_size`` must equal the
     manifest ``payload.size`` and the optional ``expected_size``); stream
     errors surface as :class:`FreshAbInstallError` (transaction failure).
     Hash/readback ownership stays with ``SlotWriter`` — this object only
@@ -416,7 +420,7 @@ def _manifest_payload_size(archive: zipfile.ZipFile) -> int:
     try:
         info = archive.getinfo(MANIFEST_NAME)
     except KeyError as exc:
-        raise FreshAbInstallError("release bundle carries no signed manifest") from exc
+        raise FreshAbInstallError("release bundle carries no manifest") from exc
     if info.file_size <= 0 or info.file_size > MAX_MANIFEST_BYTES:
         raise FreshAbInstallError("release manifest exceeds Greia bounds")
     try:
@@ -442,7 +446,7 @@ def _manifest_payload_size(archive: zipfile.ZipFile) -> int:
 def open_bundle_payload_stream(
     bundle_path: Path, *, expected_size: int | None = None
 ) -> BinaryIO:
-    """Open a live read-only stream over the bundle's signed payload member.
+    """Open a live read-only stream over the bundle's v3 payload member.
 
     The returned stream owns both the ZIP member handle and the archive:
     the archive stays open until the caller closes the stream (the
@@ -466,7 +470,7 @@ def open_bundle_payload_stream(
             info = archive.getinfo(PAYLOAD_NAME)
         except KeyError as exc:
             raise FreshAbInstallError(
-                f"release bundle carries no signed payload: {exc}"
+                f"release bundle carries no v3 payload: {exc}"
             ) from exc
         if info.file_size <= 0 or info.file_size > MAX_PAYLOAD_BYTES:
             raise FreshAbInstallError("release payload size is outside Greia bounds")
@@ -474,7 +478,7 @@ def open_bundle_payload_stream(
         if declared <= 0 or declared > MAX_PAYLOAD_BYTES:
             raise FreshAbInstallError("release manifest payload size is outside Greia bounds")
         if info.file_size != declared:
-            raise FreshAbInstallError("payload size does not match signed manifest")
+            raise FreshAbInstallError("payload size does not match manifest")
         if expected_size is not None:
             if (
                 isinstance(expected_size, bool)
@@ -490,7 +494,7 @@ def open_bundle_payload_stream(
             handle = archive.open(PAYLOAD_NAME, "r")
         except (KeyError, zipfile.BadZipFile, OSError) as exc:
             raise FreshAbInstallError(
-                f"release bundle carries no signed payload: {exc}"
+                f"release bundle carries no v3 payload: {exc}"
             ) from exc
         return BundlePayloadStream(archive, handle, info.file_size)
     except Exception:
@@ -515,7 +519,7 @@ def execute_fresh_ab_install(
     """Verify, partition, stream/finalize A, init PERSIST, install GRUB, journal.
 
     Every refusal raises :class:`FreshAbInstallError` with zero acceptance:
-    in particular the finalized-slot capacity preflight, release/signature/
+    in particular the finalized-slot capacity preflight, release/
     compatibility/support binding and layout-fit proof all run **before**
     the first destructive partition command, and ``SYSTEM_B`` storage is
     never addressed.
@@ -537,15 +541,11 @@ def execute_fresh_ab_install(
     if request.target.device_type != "disk":
         raise FreshAbInstallError("fresh install requires a whole-disk target")
 
-    # -- 1. Verified deterministic signed release only ---------------------
+    # -- 1. Verified deterministic v3 release only ---------------------
     try:
         inspected = inspect_update_bundle(request.bundle_path)
-    except (UpdateBundleError, UpdateSignatureError, SystemUpdateError) as exc:
+    except (UpdateBundleError, SystemUpdateError) as exc:
         raise FreshAbInstallError(f"release bundle is not a verified Greia release: {exc}") from exc
-    try:
-        verify_update_signature(inspected, request.trusted_key_dir)
-    except (UpdateSignatureError, UpdateBundleError, SystemUpdateError, OSError) as exc:
-        raise FreshAbInstallError(f"release signature is not trusted: {exc}") from exc
     manifest = inspected.manifest
     if manifest.profile != request.expected_profile_id:
         raise FreshAbInstallError("release profile does not match this installer image")
@@ -556,9 +556,11 @@ def execute_fresh_ab_install(
     try:
         member = VerifiedReleaseMember.from_manifest(manifest)
     except SlotWriteError as exc:
-        raise FreshAbInstallError(f"signed release facts are not installable: {exc}") from exc
+        raise FreshAbInstallError(f"release facts are not installable: {exc}") from exc
 
     # -- Release-bound support set (finalizer re-checks digest binding) -----
+    # v3 hardware support is optional: absent manifest facts require absent
+    # seam facts (None together), present facts must match exactly.
     if seams.support_digest != member.hardware_support_sha256:
         raise FreshAbInstallError("support set is not the release-bound support member")
     if seams.support_size != member.hardware_support_size:
@@ -574,7 +576,7 @@ def execute_fresh_ab_install(
     try:
         require_finalized_slot_capacity(
             slot_bytes=int(request.sizing.slot_bytes),
-            base_bytes=member.payload_size,
+            base_bytes=member.payload_uncompressed_bytes,
             minimum_slot_bytes=member.minimum_slot_bytes,
             support_installed_bytes=request.support_installed_bytes,
         )
@@ -689,14 +691,31 @@ def execute_fresh_ab_install(
     except Exception as exc:
         raise FreshAbInstallError(f"release payload stream is not readable: {exc}") from exc
     try:
+        from greia_platform.slot_writer import (
+            SlotWriteError as _SlotWriteError,
+            open_zstd_decompressed_stream,
+        )
+
         with _closing(source):
-            write = writer.write(
-                member=member,
-                destination=destination_a,
-                source=source,
-                storage=storage,
-                support_installed_bytes=seams.support_installed_bound,
-            )
+            try:
+                decompressed = open_zstd_decompressed_stream(source)
+            except _SlotWriteError as exc:
+                raise FreshAbInstallError(f"payload decompression refused: {exc}") from exc
+            try:
+                write = writer.write(
+                    member=member,
+                    destination=destination_a,
+                    source=decompressed,
+                    storage=storage,
+                    support_installed_bytes=seams.support_installed_bound,
+                )
+            finally:
+                closer = getattr(decompressed, "close", None)
+                if callable(closer):
+                    try:
+                        closer()
+                    except Exception:
+                        pass
     except FreshAbInstallError:
         raise
     except SlotWriteError as exc:
@@ -740,7 +759,6 @@ def execute_fresh_ab_install(
         boot_active_slot="A",
         accepted_slot="A",
         accepted_release_id=member.release_id,
-        accepted_release_sequence=member.release_sequence,
         slot_bytes=int(request.sizing.slot_bytes),
         system_a=dict(observed["system-a"]),
         system_b=dict(observed["system-b"]),
@@ -789,7 +807,6 @@ def execute_fresh_ab_install(
             layout_id=request.sizing.layout_adapter_id,
             boot_backend=request.sizing.boot_backend,
             release_id=member.release_id,
-            release_sequence=member.release_sequence,
         )
     except (BootTransactionError, OSError) as exc:
         raise FreshAbInstallError(f"first-install journal refused: {exc}") from exc
@@ -798,13 +815,12 @@ def execute_fresh_ab_install(
 
     return FreshAbInstallResult(
         release_id=member.release_id,
-        release_sequence=member.release_sequence,
         layout_plan=plan,
         receipt=receipt,
         record=record,
         journal=journal,
         grub_config_text=grub_text,
-        bytes_written=member.payload_size,
+        bytes_written=member.payload_uncompressed_bytes,
     )
 
 
@@ -887,7 +903,6 @@ class AbExecutorFacts:
     """
 
     bundle_path: Path
-    trusted_key_dir: Path
     expected_profile_id: str
     expected_platform_family: str
     expected_architecture: str
@@ -898,9 +913,6 @@ class AbExecutorFacts:
 
     def __post_init__(self) -> None:
         _require_regular_file(self.bundle_path, field_name="release bundle")
-        key_dir = Path(self.trusted_key_dir)
-        if not key_dir.is_absolute() or key_dir.is_symlink() or not key_dir.is_dir():
-            raise FreshAbInstallError("trusted key dir must be an absolute real directory")
         for field_name in (
             "expected_profile_id",
             "expected_platform_family",
@@ -976,7 +988,6 @@ def build_ab_executor(
         seams.post_layout_identity_observer = observer  # type: ignore[union-attr]
         request = FreshAbInstallRequest(
             bundle_path=facts.bundle_path,
-            trusted_key_dir=facts.trusted_key_dir,
             expected_profile_id=facts.expected_profile_id,
             expected_platform_family=facts.expected_platform_family,
             expected_architecture=facts.expected_architecture,
@@ -990,7 +1001,6 @@ def build_ab_executor(
         result = execute_fresh_ab_install(request, seams)
         return _InstallResultShim(
             release_id=result.release_id,
-            release_sequence=result.release_sequence,
         )
 
     return _execute
@@ -1001,7 +1011,6 @@ class _InstallResultShim:
     """Minimal install-result carrying the accepted release identity."""
 
     release_id: str
-    release_sequence: int
 
 
 # ---------------------------------------------------------------------------

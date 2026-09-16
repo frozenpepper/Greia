@@ -34,17 +34,19 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from greia_platform.grub_ab import GrubEnvBackend
+from greia_platform.persistent_layout import (
+    emit_persist_schema_marker,
+    parse_persist_schema_marker,
+)
 from greia_platform.system_updates import (
     SlotBackedSystemUpdateBackend,
     SystemUpdateInbox,
     UpdateBackendUnavailable,
     UpdateSlotSeams,
     build_live_update_service,
-    build_persistent_state_contract_bytes,
     build_production_update_seams,
     build_update_bundle,
-    generate_ed25519_keypair,
-    verify_persistent_state_contract_bytes,
+    inspect_update_bundle,
 )
 
 
@@ -64,10 +66,8 @@ _SOURCE = (_ROOT / "src" / "greia_platform" / "system_updates.py").read_text(
     encoding="utf-8"
 )
 
-_SIGNER = "greia-release-main"
 _SLOT_BYTES = 1024 * 1024 * 1024
 _HW_BYTES = b"\x28\xb5\x2f\xfd" + b"p3-seams-hw" * 64
-_CONTRACT_BYTES = build_persistent_state_contract_bytes()
 
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
@@ -91,7 +91,6 @@ _R9_SEQ = 9
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": _R8_ID,
-        "accepted_release_sequence": _R8_SEQ,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -185,14 +184,8 @@ def _rig(
 ):
     """Disposable A/B machine composed through the shipped default path."""
     state_dir = root / "state"
-    key_dir = root / "trusted"
-    key_dir.mkdir(parents=True, exist_ok=True)
     layout_path = root / "installed-layout.json"
     layout_path.write_bytes(_canonical_record(record or _record_dict()))
-    private_key = root / "release-private.pem"
-    public_key = root / "release-public.pem"
-    generate_ed25519_keypair(private_key, public_key)
-    (key_dir / f"{_SIGNER}.pem").write_bytes(public_key.read_bytes())
     boot_dir = root / "boot-control"
     boot_dir.mkdir(parents=True, exist_ok=True)
     grub = GrubEnvBackend.initialize(boot_dir, default_slot="A")
@@ -210,37 +203,45 @@ def _rig(
     with _patched_env(**env):
         authority = build_live_update_service(
             state_dir=state_dir,
-            trusted_key_dir=key_dir,
             layout_record_path=layout_path,
             boot_backend=grub,
             boot_backend_auto=False,
         )
-    return authority, grub, layout_path, state_dir, private_key, root
+    return authority, grub, layout_path, state_dir, None, root
 
 
-def _signed_bundle(root: Path, private_key: Path) -> Path:
+def _v3_bundle(root: Path, _ignored: object = None) -> Path:
+    import zstandard
+
     work = root / "releases" / "r9"
     work.mkdir(parents=True, exist_ok=True)
-    (work / "slot.img").write_bytes(_payload(220 * 1024, b"p3-seams:"))
+    raw = _payload(220 * 1024, b"p3-seams:")
+    compressed = zstandard.ZstdCompressor(level=3).compress(raw)
+    (work / "slot.ext4.zst").write_bytes(compressed)
     (work / "hw.tar.zst").write_bytes(_HW_BYTES)
-    (work / "contract.json").write_bytes(_CONTRACT_BYTES)
     bundle = work / "r9.greiaupdate"
+    if bundle.exists():
+        bundle.unlink()
     build_update_bundle(
-        payload_path=work / "slot.img",
+        payload_path=work / "slot.ext4.zst",
         hardware_support_path=work / "hw.tar.zst",
-        persistent_contract_path=work / "contract.json",
         output_path=bundle,
         version=_R9_ID.split("-", 1)[1],
         release_id=_R9_ID,
-        release_sequence=_R9_SEQ,
         platform_family=_FAMILY,
         architecture=_ARCH,
         profile=_PROFILE,
-        signer=_SIGNER,
-        private_key_path=private_key,
+        payload_uncompressed_bytes=len(raw),
+        minimum_slot_bytes=len(raw),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
         release_notes="POSTR1-P3-UPDATE-SEAMS composition release.",
     )
     return bundle
+
+
+_signed_bundle = _v3_bundle
 
 
 class DefaultCompositionTests(unittest.TestCase):
@@ -288,20 +289,11 @@ class DefaultCompositionTests(unittest.TestCase):
             self.assertIsNotNone(getattr(seams, name))
 
     def test_empty_seams_stay_fail_closed_at_stage_time(self) -> None:
-        from greia_platform.system_updates import write_accepted_sequence
-
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             state_dir = root / "state"
-            key_dir = root / "trusted"
-            key_dir.mkdir(parents=True, exist_ok=True)
             layout_path = root / "installed-layout.json"
             layout_path.write_bytes(_canonical_record(_record_dict()))
-            private_key = root / "release-private.pem"
-            public_key = root / "release-public.pem"
-            generate_ed25519_keypair(private_key, public_key)
-            (key_dir / f"{_SIGNER}.pem").write_bytes(public_key.read_bytes())
-            write_accepted_sequence(state_dir, _R8_SEQ)
             # Deliberate degraded construction: empty seams, direct backend.
             backend = SlotBackedSystemUpdateBackend(
                 state_dir,
@@ -310,7 +302,7 @@ class DefaultCompositionTests(unittest.TestCase):
                 boot_backend=None,
             )
             self.assertTrue(backend.available)
-            bundle = _signed_bundle(root, private_key)
+            bundle = _v3_bundle(root)
             inspected = SystemUpdateInbox(state_dir).receive(bundle)
             with self.assertRaises(UpdateBackendUnavailable) as raised:
                 backend.stage(inspected)
@@ -382,8 +374,6 @@ class ProductionRefusalTests(unittest.TestCase):
     def test_staging_without_devices_fails_closed_with_no_loop_fallback(
         self,
     ) -> None:
-        from greia_platform.system_updates import write_accepted_sequence
-
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             authority, grub, layout_path, state_dir, private_key, _r = _rig(root)
@@ -392,7 +382,6 @@ class ProductionRefusalTests(unittest.TestCase):
             SystemUpdateInbox(state_dir).receive(bundle)
             verified = authority.verify_current_candidate()
             self.assertTrue(verified.present)
-            write_accepted_sequence(state_dir, _R8_SEQ)
             layout_before = layout_path.read_bytes()
             boot_before = grub.inspect().default_slot
             state_before = sorted(
@@ -422,16 +411,13 @@ class ProductionRefusalTests(unittest.TestCase):
 class ProductionFactoryTypeTests(unittest.TestCase):
     """Contract/policy/inventory/support/selection use the production types."""
 
-    def test_installed_contract_is_canonical(self) -> None:
+    def test_installed_contract_is_canonical_marker(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             authority, _grub, _layout, _state, _key, _r = _rig(root)
             raw = authority.backend.seams.installed_contract_factory()
-            self.assertEqual(raw, build_persistent_state_contract_bytes())
-            self.assertEqual(
-                verify_persistent_state_contract_bytes(raw)["migration_policy"],
-                "backward-compatible-or-transactional",
-            )
+            self.assertEqual(parse_persist_schema_marker(raw), 1)
+            self.assertEqual(raw, emit_persist_schema_marker(1))
 
     def test_profile_policy_derives_from_record(self) -> None:
         from greia_platform.slot_writer import SlotProfilePolicy

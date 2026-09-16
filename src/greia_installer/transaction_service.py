@@ -504,7 +504,7 @@ class InstallTransactionService:
     layout fit and payload from service-held state immediately before
     delegating to :class:`InstallationEngine` (legacy single-partition
     path) or, when :attr:`ab_executor` is configured, to the Phase 8B
-    fresh signed-release A/B installer
+    fresh v3-release A/B installer
     (:mod:`greia_installer.fresh_ab_install`), which performs its own
     release/capacity preflight immediately before the first destructive
     command.
@@ -733,7 +733,7 @@ class InstallTransactionService:
         :meth:`execute_and_install` (single-use nonce + digest + inventory
         re-probe, service-held settings, rematerialized target, layout fit),
         then destruction through the configured :attr:`ab_executor` — the
-        fresh signed-release A/B installer (see
+        fresh v3-release A/B installer (see
         :mod:`greia_installer.fresh_ab_install`) — instead of the legacy
         single-partition engine. Requires :attr:`ab_executor`; without one
         this entry refuses with no destructive command.

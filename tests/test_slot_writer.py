@@ -61,7 +61,6 @@ _UC_PAYLOAD = b"microcode-bytes"
 def _record_dict(**overrides: object) -> dict[str, object]:
     base: dict[str, object] = {
         "accepted_release_id": "greia-0.14.0",
-        "accepted_release_sequence": 7,
         "accepted_slot": "A",
         "boot_backend": "grub-ab-v1",
         "boot_control": {"active_slot": "A", "kind": "grub-env-v1"},
@@ -92,9 +91,9 @@ def _member(payload: bytes, *, minimum: int | None = None) -> VerifiedReleaseMem
     hw = b"hwset-member"
     return VerifiedReleaseMember(
         release_id="greia-0.15.0",
-        release_sequence=11,
         payload_sha256=hashlib.sha256(payload).hexdigest(),
         payload_size=len(payload),
+        payload_uncompressed_bytes=len(payload),
         minimum_slot_bytes=minimum if minimum is not None else len(payload),
         hardware_support_sha256=hashlib.sha256(hw).hexdigest(),
         hardware_support_size=len(hw),
@@ -128,6 +127,37 @@ def _policy(*, slot_bytes: int = 1024 * 1024 * 1024) -> SlotProfilePolicy:
         system_slot_bytes=slot_bytes,
         boot_backend="grub-ab-v1",
     )
+
+
+def _populate_slot_completeness(mount_dir: Path) -> None:
+    """Create the required Greia userspace tree for a passing smoke.
+
+    Uses the shared validator's documented path set so the fake proves
+    the same mechanism as production. Command files are real regular
+    files (executable) to satisfy the usable presence check.
+    """
+    from greia_platform.slot_writer import (
+        REQUIRED_SLOT_COMPLETENESS_DIRS,
+        REQUIRED_SLOT_COMPLETENESS_FILES,
+    )
+
+    for rel_path in REQUIRED_SLOT_COMPLETENESS_DIRS:
+        (mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
+    for rel_path in REQUIRED_SLOT_COMPLETENESS_FILES:
+        candidate = mount_dir / rel_path
+        candidate.parent.mkdir(parents=True, exist_ok=True)
+        if candidate.is_symlink() or not candidate.is_file():
+            candidate.write_bytes(b"#!/bin/sh\nexit 0\n")
+            try:
+                candidate.chmod(0o755)
+            except OSError:
+                pass
+
+
+def _populate_d6_minimal(mount_dir: Path) -> None:
+    """Create the V12G/D6 failure shape: only {etc, lost+found, run, var}."""
+    for rel_path in ("etc", "lost+found", "run", "var"):
+        (mount_dir / rel_path).mkdir(parents=True, exist_ok=True)
 
 
 def _inventory() -> HardwareInventoryAttestation:
@@ -184,6 +214,10 @@ class FakeSlotFilesystem:
 
     def missing_files(self, required: tuple[str, ...]) -> tuple[str, ...]:
         return tuple(name for name in required if name not in self.files)
+
+    def check_completeness(self) -> None:
+        self.ops.append("completeness")
+        slot_module.check_slot_completeness(self.mount_dir)
 
     def check_health(self) -> None:
         self.ops.append("health")
@@ -578,7 +612,7 @@ class SlotWriterTests(unittest.TestCase):
             try:
                 accepted_before = accepted.read_at(0, len(payload))
                 issued_before = len(slot_module._ISSUED_WRITE_TOKENS)
-                with self.assertRaises(OSError):
+                with self.assertRaises(SlotWriteError):
                     SlotWriter().write(
                         member=member,
                         destination=destination,
@@ -621,37 +655,39 @@ class SlotWriterTests(unittest.TestCase):
             with mock.patch("hmac.compare_digest", side_effect=counting):
                 _, _, digest_store, _ = _write_happy(root, payload)
                 digest_store.close()
-            self.assertGreaterEqual(len(calls), 2)
+            # v3 writer proves stream/readback agreement with a single
+            # constant-time comparison (compressed transport digest was
+            # already proven at inspection).
+            self.assertGreaterEqual(len(calls), 1)
             for first, second in calls:
                 self.assertEqual(len(first), 64)
                 self.assertEqual(len(second), 64)
 
-    def test_member_binds_signed_manifest(self) -> None:
+    def test_member_binds_unsigned_v3_manifest(self) -> None:
         payload = _payload(4096)
         manifest = UpdateManifest(
-            schema_version=2,
+            schema_version=3,
             release_id="greia-0.15.0",
             version="0.15.0",
-            release_sequence=11,
             platform_family="standard-x86-64",
             architecture="amd64",
             profile="modern-amd64",
-            signer="greia-release-main",
+            board=None,
             payload_sha256=hashlib.sha256(payload).hexdigest(),
             payload_size=len(payload),
-            payload_filesystem_bytes=len(payload),
+            payload_uncompressed_bytes=len(payload),
             payload_minimum_slot_bytes=len(payload),
-            hardware_support_name="hardware-support.tar.zst",
-            hardware_support_schema_version=1,
             hardware_support_sha256=hashlib.sha256(b"hw").hexdigest(),
             hardware_support_size=2,
-            persistent_contract_schema_version=1,
-            persistent_contract_sha256=hashlib.sha256(b"c").hexdigest(),
-            persistent_contract_size=1,
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
         )
         member = VerifiedReleaseMember.from_manifest(manifest)
         self.assertEqual(member.payload_size, len(payload))
+        self.assertEqual(member.payload_uncompressed_bytes, len(payload))
         self.assertEqual(member.minimum_slot_bytes, len(payload))
+        self.assertEqual(member.release_id, "greia-0.15.0")
 
 
 class SlotFinalizerTests(unittest.TestCase):
@@ -667,6 +703,7 @@ class SlotFinalizerTests(unittest.TestCase):
         try:
             mount_dir = root / "mnt"
             mount_dir.mkdir(exist_ok=True)
+            _populate_slot_completeness(mount_dir)
             filesystem = FakeSlotFilesystem(mount_dir)
             support = _support()
             installer = FakeSlotPackageInstaller(support)
@@ -771,6 +808,7 @@ class SlotFinalizerTests(unittest.TestCase):
                 )
                 mount_dir = second_root / "mnt"
                 mount_dir.mkdir(exist_ok=True)
+                _populate_slot_completeness(mount_dir)
                 filesystem = FakeSlotFilesystem(mount_dir)
                 support = _support()
                 receipt = SlotFinalizer().finalize(
@@ -858,6 +896,7 @@ class SlotFinalizerTests(unittest.TestCase):
             try:
                 mount_dir = root / "mnt"
                 mount_dir.mkdir(exist_ok=True)
+                _populate_slot_completeness(mount_dir)
                 support = _support()
                 SlotFinalizer().finalize(
                     write=write,
@@ -1029,6 +1068,7 @@ class SlotFinalizerTests(unittest.TestCase):
                 # Tampered install records fail closed.
                 tampering = FakeSlotPackageInstaller(support)
                 tampering.tamper["firmware-realtek"] = "0" * 64
+                _populate_slot_completeness(mount_dir)
                 with self.assertRaisesRegex(SlotFinalizeError, "record changed"):
                     SlotFinalizer().finalize(
                         write=write,
@@ -1101,6 +1141,7 @@ class SlotFinalizerTests(unittest.TestCase):
             try:
                 mount_dir = root / "mnt"
                 mount_dir.mkdir(exist_ok=True)
+                _populate_slot_completeness(mount_dir)
                 filesystem = FakeSlotFilesystem(mount_dir)
                 filesystem.healthy = False
                 support = _support()
@@ -1240,6 +1281,7 @@ class SlotFinalizerReleaseTests(unittest.TestCase):
         try:
             mount_dir = root / "mnt"
             mount_dir.mkdir(exist_ok=True)
+            _populate_slot_completeness(mount_dir)
             filesystem = FakeSlotFilesystem(mount_dir)
             receipt = SlotFinalizer().finalize(
                 write=write,
@@ -1503,6 +1545,7 @@ class SlotFinalizerReleaseTests(unittest.TestCase):
             try:
                 mount_dir = root / "mnt"
                 mount_dir.mkdir(exist_ok=True)
+                _populate_slot_completeness(mount_dir)
                 filesystem = FakeSlotFilesystem(mount_dir)
                 with self.assertRaises(SlotFinalizeError):
                     SlotFinalizer().finalize(
@@ -1578,11 +1621,26 @@ class SlotFinalizerReleaseTests(unittest.TestCase):
             "socket",
             "http://",
             "https://",
-            "apt-get",
             "sources.list",
             "Acquire::",
         ):
             self.assertNotIn(forbidden, platform_source)
+        # No APT invocation lives in the shared platform path: the only
+        # apt/dpkg surface is the bounded presence smoke (fixed path
+        # stats, no command run, no sources, no network).
+        self.assertNotIn("subprocess", platform_source)
+        self.assertNotIn("apt-get update", platform_source)
+        self.assertNotIn("apt-get install", platform_source)
+        self.assertNotIn("apt-get clean", platform_source)
+        self.assertNotIn("Dir::Etc::sourcelist", platform_source)
+        # The only apt/dpkg surface in the shared finalizer is the bounded
+        # slot-completeness presence smoke (real userspace incl. usable
+        # apt-get/dpkg files). It stats fixed paths only: no invocation,
+        # no sources, no network.
+        self.assertIn("usr/bin/apt-get", platform_source)
+        self.assertIn("usr/bin/dpkg", platform_source)
+        self.assertIn("REQUIRED_SLOT_COMPLETENESS_FILES", platform_source)
+        self.assertIn("check_slot_completeness", platform_source)
         adapter_source = (repo / "src/greia_installer/slots.py").read_text(
             encoding="utf-8"
         )
@@ -1598,6 +1656,161 @@ class SlotFinalizerReleaseTests(unittest.TestCase):
         self.assertIn("sourceparts=-", installer_source)
         for forbidden in ("http://", "https://", "deb.debian.org", "sources.list.d"):
             self.assertNotIn(forbidden, installer_source)
+
+
+class SlotCompletenessTests(unittest.TestCase):
+    """T03 slot-completeness smoke: V12G-like slot fails before QEMU/boot."""
+
+    def test_d6_minimal_shape_fails_with_named_missing_paths(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "slot"
+            root.mkdir()
+            _populate_d6_minimal(root)
+            missing = slot_module.slot_completeness_missing(root)
+            # No /usr, no apt-get: the D6 failure shape is named exactly.
+            self.assertIn("usr", missing)
+            self.assertIn("usr/bin/apt-get", missing)
+            self.assertIn("usr/bin/dpkg", missing)
+            self.assertIn("opt/greia-os", missing)
+            with self.assertRaisesRegex(
+                SlotFinalizeError, "slot completeness smoke failed"
+            ):
+                slot_module.check_slot_completeness(root)
+            try:
+                slot_module.check_slot_completeness(root)
+            except SlotFinalizeError as exc:
+                self.assertIn("usr/bin/apt-get", str(exc))
+            else:  # pragma: no cover
+                self.fail("D6 skeleton passed the completeness smoke")
+
+    def test_populated_userspace_passes_without_boot_or_qemu(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "slot"
+            root.mkdir()
+            _populate_slot_completeness(root)
+            self.assertEqual(slot_module.slot_completeness_missing(root), ())
+            # No exception, no boot/QEMU surface involved.
+            slot_module.check_slot_completeness(root)
+
+    def test_single_removed_command_is_red(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "slot"
+            root.mkdir()
+            _populate_slot_completeness(root)
+            self.assertEqual(slot_module.slot_completeness_missing(root), ())
+            (root / "usr/bin/apt-get").unlink()
+            missing = slot_module.slot_completeness_missing(root)
+            self.assertEqual(missing, ("usr/bin/apt-get",))
+            with self.assertRaisesRegex(SlotFinalizeError, "usr/bin/apt-get"):
+                slot_module.check_slot_completeness(root)
+
+    def test_symlink_command_leaf_is_invalid(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "slot"
+            root.mkdir()
+            _populate_slot_completeness(root)
+            target = root / "usr/bin/apt-get"
+            target.unlink()
+            target.symlink_to("/bin/true")
+            self.assertIn(
+                "usr/bin/apt-get", slot_module.slot_completeness_missing(root)
+            )
+            with self.assertRaisesRegex(SlotFinalizeError, "usr/bin/apt-get"):
+                slot_module.check_slot_completeness(root)
+
+    def test_finalizer_refuses_incomplete_before_boot_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write, destination, store, _ = _write_happy(root, _payload(4096))
+            try:
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                _populate_d6_minimal(mount_dir)
+                filesystem = FakeSlotFilesystem(mount_dir)
+                support = _support()
+                installer = FakeSlotPackageInstaller(support)
+                with self.assertRaisesRegex(
+                    SlotFinalizeError, "slot completeness smoke failed"
+                ):
+                    SlotFinalizer().finalize(
+                        write=write,
+                        destination=destination,
+                        filesystem=filesystem,
+                        package_installer=installer,
+                        inventory=_inventory(),
+                        support=support,
+                        profile_policy=_policy(),
+                    )
+                # Fail-closed before boot assets: no support install ran,
+                # no finalized files accepted, candidate cannot become bootable.
+                self.assertEqual(installer.calls, [])
+                self.assertNotIn(
+                    "boot/finalized-generic.json", filesystem.files
+                )
+                self.assertNotIn(
+                    "etc/greia-os/release-identity.json", filesystem.files
+                )
+                self.assertNotIn(
+                    "etc/greia-os/finalization-receipt.json", filesystem.files
+                )
+                self.assertIn("completeness", filesystem.ops)
+                self.assertNotIn("health", filesystem.ops)
+                # Mount/install already ran, so cleanup still detaches.
+                self.assertEqual(filesystem.unmount_count, 1)
+                self.assertEqual(filesystem.sync_count, 1)
+                self.assertFalse(filesystem.mounted)
+            finally:
+                store.close()
+
+    def test_completeness_gate_runs_before_support_install(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            write, destination, store, _ = _write_happy(root, _payload(4096))
+            try:
+                mount_dir = root / "mnt"
+                mount_dir.mkdir(exist_ok=True)
+                _populate_slot_completeness(mount_dir)
+                filesystem = FakeSlotFilesystem(mount_dir)
+                support = _support()
+                installer = FakeSlotPackageInstaller(support)
+                SlotFinalizer().finalize(
+                    write=write,
+                    destination=destination,
+                    filesystem=filesystem,
+                    package_installer=installer,
+                    inventory=_inventory(),
+                    support=support,
+                    profile_policy=_policy(),
+                )
+                ops = filesystem.ops
+                self.assertLess(ops.index("completeness"), ops.index("health"))
+                self.assertEqual(len(installer.calls), 1)
+            finally:
+                store.close()
+
+    def test_single_shared_implementation_no_duplicate(self) -> None:
+        repo = Path(slot_module.__file__).resolve().parent.parent.parent
+        platform_source = (repo / "src/greia_platform/slot_writer.py").read_text(
+            encoding="utf-8"
+        )
+        block_source = (repo / "src/greia_platform/block_slots.py").read_text(
+            encoding="utf-8"
+        )
+        # One definition of the required-path set and the check.
+        self.assertEqual(
+            platform_source.count("REQUIRED_SLOT_COMPLETENESS_FILES"), 3
+        )
+        self.assertIn("def check_slot_completeness", platform_source)
+        self.assertIn("def slot_completeness_missing", platform_source)
+        # Production seam delegates to the shared implementation.
+        self.assertIn("check_slot_completeness", block_source)
+        self.assertNotIn("REQUIRED_SLOT_COMPLETENESS_FILES = ", block_source)
+        self.assertNotIn("def check_slot_completeness", block_source)
+        # Build-time staging gate keeps its own distinct payload-identity
+        # paths; it must not duplicate the slot-completeness set.
+        build_source = (repo / "tools/build_release.py").read_text(encoding="utf-8")
+        self.assertNotIn("REQUIRED_SLOT_COMPLETENESS", build_source)
+        self.assertNotIn("slot_completeness_missing", build_source)
 
 
 class _FailingArtifactBuilder:

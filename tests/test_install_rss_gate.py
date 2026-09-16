@@ -112,7 +112,7 @@ def _consume(bundle: Path, kind: str) -> int:
     return total
 
 
-def _whole_install(bundle: Path, key_dir: Path, case: Path) -> int:
+def _whole_install(bundle: Path, case: Path) -> int:
     manifest = inspect_update_bundle(bundle).manifest
     observed = stream_mod._observed_mbr_identities()
     persist_stage = case / "persist-stage"
@@ -150,7 +150,6 @@ def _whole_install(bundle: Path, key_dir: Path, case: Path) -> int:
         )
         request = FreshAbInstallRequest(
             bundle_path=bundle,
-            trusted_key_dir=key_dir,
             expected_profile_id=stream_mod._PROFILE,
             expected_platform_family=stream_mod._FAMILY,
             expected_architecture=stream_mod._ARCH,
@@ -175,9 +174,8 @@ def _child_main() -> int:
         total = _consume(bundle, kind)
         print("RESULT " + json.dumps({"total": total}), flush=True)
     elif mode == "whole-stream":
-        key_dir = Path(sys.argv[4])
-        case = Path(sys.argv[5])
-        written = _whole_install(bundle, key_dir, case)
+        case = Path(sys.argv[4])
+        written = _whole_install(bundle, case)
         print("RESULT " + json.dumps({"written": written}), flush=True)
     else:
         raise ValueError(f"unknown child mode {mode}")
@@ -228,18 +226,20 @@ class InstallRssGateTests(unittest.TestCase):
         large_bundle, _ = stream_mod._build_bundle(
             root, stream_mod._payload(_LARGE), sequence=92
         )
+        small_compressed = inspect_update_bundle(small_bundle).manifest.payload_size
+        large_compressed = inspect_update_bundle(large_bundle).manifest.payload_size
         small_total, small_stream = _run_child(
             ["consume-stream", str(small_bundle)]
         )
-        self.assertEqual(small_total, _SMALL)
+        self.assertEqual(small_total, small_compressed)
         large_total, large_stream = _run_child(
             ["consume-stream", str(large_bundle)]
         )
-        self.assertEqual(large_total, _LARGE)
+        self.assertEqual(large_total, large_compressed)
         buffered_total, large_buffered = _run_child(
             ["consume-buffered", str(large_bundle)]
         )
-        self.assertEqual(buffered_total, _LARGE)
+        self.assertEqual(buffered_total, large_compressed)
         self.assertLess(
             large_stream,
             _STREAM_RSS_BOUND,
@@ -260,13 +260,13 @@ class InstallRssGateTests(unittest.TestCase):
         directory = tempfile.mkdtemp(prefix="t2-rss-whole-")
         self.addCleanup(shutil.rmtree, directory, True)
         root = Path(directory)
-        bundle, key_dir = stream_mod._build_bundle(
+        bundle, _ = stream_mod._build_bundle(
             root, stream_mod._payload(_LARGE), sequence=93
         )
         case = root / "case"
         case.mkdir()
         written, peak = _run_child(
-            ["whole-stream", str(bundle), str(key_dir), str(case)]
+            ["whole-stream", str(bundle), str(case)]
         )
         self.assertEqual(written, _LARGE)
         self.assertLess(

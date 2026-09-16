@@ -127,9 +127,6 @@ MAX_SYSTEM_SLOT_BYTES = 2 * 1024 * 1024 * 1024
 #: PERSIST floor source bound from L7-PROFILES (tools/build_profile.py).
 MIN_PERSIST_BYTES = 256 * 1024 * 1024
 
-#: Release-sequence bound mirrored from system_updates (monotonic int32).
-MAX_RELEASE_SEQUENCE = 2_147_483_647
-
 #: Partition roles addressable by a layout record.
 PARTITION_ROLES = ("system-a", "system-b", "persist")
 
@@ -487,7 +484,6 @@ def _require_record_scheme_binding(
 _LAYOUT_RECORD_FIELDS = frozenset(
     {
         "accepted_release_id",
-        "accepted_release_sequence",
         "accepted_slot",
         "boot_backend",
         "boot_control",
@@ -527,7 +523,6 @@ class InstalledLayoutRecord:
     slot_bytes: int
     accepted_slot: str | None
     accepted_release_id: str
-    accepted_release_sequence: int
 
     @classmethod
     def from_dict(cls, raw: object) -> "InstalledLayoutRecord":
@@ -628,13 +623,6 @@ class InstalledLayoutRecord:
             or installed_at_unix > (1 << 40)
         ):
             raise PersistentLayoutError("installed_at_unix is not a valid timestamp")
-        accepted_release_sequence = raw["accepted_release_sequence"]
-        if (
-            not isinstance(accepted_release_sequence, int)
-            or isinstance(accepted_release_sequence, bool)
-            or not 0 <= accepted_release_sequence <= MAX_RELEASE_SEQUENCE
-        ):
-            raise PersistentLayoutError("accepted_release_sequence is outside Greia bounds")
         return cls(
             schema_version=LAYOUT_RECORD_SCHEMA_VERSION,
             layout_id=layout_id,
@@ -658,13 +646,11 @@ class InstalledLayoutRecord:
             accepted_release_id=_require_identifier(
                 raw["accepted_release_id"], field="accepted_release_id"
             ),
-            accepted_release_sequence=accepted_release_sequence,
         )
 
     def as_dict(self) -> dict[str, object]:
         return {
             "accepted_release_id": self.accepted_release_id,
-            "accepted_release_sequence": self.accepted_release_sequence,
             "accepted_slot": self.accepted_slot,
             "boot_backend": self.boot_backend,
             "boot_control": self.boot_control.as_dict(),
@@ -1163,15 +1149,6 @@ DURABLE_PATH_AUDIT: tuple[DurablePathEntry, ...] = (
         rationale="Platform-owned history/achievement state under "
         "ProfileContext.progress_dir; Activities report facts, never mutate "
         "global progression directly.",
-    ),
-    DurablePathEntry(
-        path="/var/lib/greia-os/system-updates/accepted.json",
-        durability=Durability.PERSISTENT_SHARED,
-        namespace="update-acceptance-state",
-        mount=MountKind.INHERIT,
-        order=None,
-        rationale="Accepted release sequence consumed by rollback checks from "
-        "the registry-emitted contract, never from a Parent-passed boolean.",
     ),
     DurablePathEntry(
         path="/var/lib/greia-os/system-updates/status.json",
@@ -1692,28 +1669,116 @@ def emit_persistent_state_contract(
     return raw
 
 
+# ---------------------------------------------------------------------------
+# PERSIST schema marker + compatibility (ADR 0036 §6, v3 integer check)
+# ---------------------------------------------------------------------------
+
+#: Current installed PERSIST schema written by fresh install (ordinary
+#: small marker, conceptually ``{"schema_version": 1}``). Later sessions
+#: advance it through the normal migration path; the update path only
+#: checks readability, never migrates.
+PERSIST_SCHEMA_CURRENT = 1
+
+#: Upper bound for a PERSIST schema integer (mirrors the manifest bound).
+MAX_PERSIST_SCHEMA_MARKER = 2_147_483_647
+
+#: Upper bound for a stored schema-marker document (small by construction).
+MAX_PERSIST_SCHEMA_MARKER_BYTES = 256
+
+
+def emit_persist_schema_marker(schema: int) -> bytes:
+    """Emit the canonical installed PERSIST schema marker bytes.
+
+    Format owned here and consumed by update staging and later
+    preserve-data reinstall work: canonical JSON ``{"schema_version": N}``
+    plus newline. ``N`` is a non-negative bounded integer.
+    """
+    if isinstance(schema, bool) or not isinstance(schema, int):
+        raise PersistentLayoutError("PERSIST schema must be an integer")
+    if schema < 0 or schema > MAX_PERSIST_SCHEMA_MARKER:
+        raise PersistentLayoutError("PERSIST schema is outside Greia bounds")
+    return _canonical_bytes({"schema_version": schema})
+
+
+def parse_persist_schema_marker(raw: bytes | bytearray) -> int:
+    """Parse installed PERSIST schema marker bytes fail-closed (read-only)."""
+    if not isinstance(raw, (bytes, bytearray)) or not raw:
+        raise PersistentLayoutError(
+            "installed PERSIST schema marker is not authoritative"
+        )
+    if len(raw) > MAX_PERSIST_SCHEMA_MARKER_BYTES:
+        raise PersistentLayoutError("installed PERSIST schema marker exceeds Greia bound")
+    try:
+        document = json.loads(bytes(raw).decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise PersistentLayoutError(
+            "installed PERSIST schema marker is not valid JSON"
+        ) from exc
+    if not isinstance(document, dict) or set(document) != {"schema_version"}:
+        raise PersistentLayoutError(
+            "installed PERSIST schema marker fields are invalid; "
+            "expected canonical {\"schema_version\": N} "
+            "(PERSIST compatibility migration required)"
+        )
+    schema = document.get("schema_version")
+    if isinstance(schema, bool) or not isinstance(schema, int):
+        raise PersistentLayoutError("installed PERSIST schema must be an integer")
+    if schema < 0 or schema > MAX_PERSIST_SCHEMA_MARKER:
+        raise PersistentLayoutError("installed PERSIST schema is outside Greia bounds")
+    if bytes(raw) != _canonical_bytes(document):
+        raise PersistentLayoutError(
+            "installed PERSIST schema marker is not canonical JSON"
+        )
+    return schema
+
+
+def assert_persist_schema_compatible(installed_schema: int, manifest: UpdateManifest) -> int:
+    """PERSIST readability gate (ADR 0036 §6): current schema must be readable.
+
+    Accepts only when ``manifest.persist_read_schema_min <= installed_schema
+    <= manifest.persist_read_schema_max``. Any exclusion fails closed with a
+    compatibility/migration message; no caller-supplied boolean participates.
+    Returns the installed schema for the caller to record.
+    """
+    if not isinstance(manifest, UpdateManifest):
+        raise PersistentLayoutError(
+            "PERSIST compatibility gate requires a v3 release manifest"
+        )
+    if isinstance(installed_schema, bool) or not isinstance(installed_schema, int):
+        raise PersistentLayoutError("installed PERSIST schema must be an integer")
+    if installed_schema < 0 or installed_schema > MAX_PERSIST_SCHEMA_MARKER:
+        raise PersistentLayoutError("installed PERSIST schema is outside Greia bounds")
+    if not (
+        manifest.persist_read_schema_min
+        <= installed_schema
+        <= manifest.persist_read_schema_max
+    ):
+        raise PersistentLayoutError(
+            "candidate release cannot read the installed PERSIST schema "
+            f"{installed_schema} (readable "
+            f"{manifest.persist_read_schema_min}..{manifest.persist_read_schema_max}); "
+            "PERSIST compatibility migration required before update"
+        )
+    return installed_schema
+
+
 def assert_persistent_contract_accepted(
     installed_contract_raw: bytes, manifest: UpdateManifest
 ) -> int:
-    """Rollback gate: accept only when the candidate binds the installed contract.
+    """v3 PERSIST compatibility gate (kept name for existing importers).
 
-    Compares the registry-emitted installed contract digest against the signed
-    release manifest. Any mismatch fails closed; no caller-supplied boolean
-    participates in the decision. Returns the candidate release sequence for
-    the caller to record as accepted after activation.
+    ``installed_contract_raw`` is the installed PERSIST schema marker bytes
+    (see :func:`emit_persist_schema_marker`), not the legacy whole-contract
+    document. The current schema must fall within the candidate's readable
+    range; otherwise a compatibility/migration error is raised. Returns the
+    installed schema integer.
     """
     if not isinstance(manifest, UpdateManifest):
-        raise PersistentLayoutError("rollback gate requires a signed release manifest")
-    verify_persistent_state_contract_bytes(installed_contract_raw)
-    digest = hashlib.sha256(installed_contract_raw).hexdigest()
-    if (
-        digest != manifest.persistent_contract_sha256
-        or len(installed_contract_raw) != manifest.persistent_contract_size
-    ):
         raise PersistentLayoutError(
-            "candidate release does not bind the installed persistent-state contract"
+            "PERSIST compatibility gate requires a v3 release manifest"
         )
-    return manifest.release_sequence
+    installed_schema = parse_persist_schema_marker(installed_contract_raw)
+    return assert_persist_schema_compatible(installed_schema, manifest)
 
 
 # ---------------------------------------------------------------------------
