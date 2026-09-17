@@ -20,7 +20,10 @@ kernel_package = "linux-image-686-pae"
 
 [image]
 layout = "bios-single-ext4"
-size_mib = 3072
+# Installer/live image must cover the A/B layout capacity minimum:
+# 64 MiB layout overhead + 2x1536 MiB system slots + 256 MiB PERSIST
+# minimum = 3392 MiB; 3584 MiB leaves 448 MiB PERSIST headroom.
+size_mib = 3584
 hostname = "greia"
 
 [boot]
@@ -59,7 +62,10 @@ architecture_review_mib = 1250
 # profile never silently routes to the legacy single-partition engine.
 [storage]
 layout_adapter = "legacy-bios-ab-v1"
-system_slot_bytes = 1073741824
+# Lifecycle plan A21 product default: 1536 MiB A/B system slots
+# (1610612736 bytes). PERSIST takes the remainder (minimum 1024 MiB
+# on device; the profile floor below is the install-image minimum).
+system_slot_bytes = 1610612736
 persistent_minimum_bytes = 268435456
 
 [installer]

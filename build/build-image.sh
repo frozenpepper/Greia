@@ -156,12 +156,12 @@ PYTHONPATH="$PROJECT_ROOT/src" python3 -m greia_platform.boot_contract \
   "${BOOT_CONTRACT_ARGS[@]}" "$ROOTFS/boot/grub/grub.cfg"
 chroot "$ROOTFS" grub-install --target=i386-pc --boot-directory=/boot --recheck "$LOOP_DEVICE"
 
-# Raw images and installer payloads are cloned. Leave all identity material empty;
-# first boot creates the machine ID, while SSH keys are generated only when a
-# parent explicitly enables SSH.
-: > "$ROOTFS/etc/machine-id"
-rm -f "$ROOTFS/var/lib/dbus/machine-id" "$ROOTFS/var/lib/systemd/random-seed"
-rm -f "$ROOTFS/etc/ssh/ssh_host_"*
+# Clone-neutral target state is owned by the shared composition engine
+# (compose_prepare_clone_neutral_target in build/lib/compose.sh, run inside
+# compose_root for role=target). This thin consumer keeps no second
+# implementation so disk-image packaging and release-payload staging share one
+# canonical target state; first boot creates the machine ID and SSH host keys
+# are generated only when a parent explicitly enables SSH.
 
 sync
 installed_bytes="$(du -sx --block-size=1 "$ROOTFS" | awk '{print $1}')"

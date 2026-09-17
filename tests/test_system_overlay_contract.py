@@ -236,8 +236,15 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertIn("GRUB_DISABLE_RECOVERY=true", installer_grub)
         self.assertIn("greia_platform.boot_contract", image_builder)
         self.assertIn("greia_platform.boot_contract", installer_builder)
-        self.assertIn('rm -f "$ROOTFS/etc/ssh/ssh_host_"*', image_builder)
-        self.assertIn(': > "$ROOTFS/etc/machine-id"', image_builder)
+        # T02 Repair B: clone-neutral target state is owned once by the shared
+        # composer; the thin disk-image consumer carries no duplicate.
+        compose_engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
+        self.assertIn("compose_prepare_clone_neutral_target", compose_engine)
+        self.assertIn(': > "$rootfs/etc/machine-id"', compose_engine)
+        self.assertNotIn(': > "$ROOTFS/etc/machine-id"', image_builder)
+        self.assertNotIn('rm -f "$ROOTFS/etc/ssh/ssh_host_"*', image_builder)
+        self.assertNotIn("var/lib/dbus/machine-id", image_builder)
+        self.assertNotIn("var/lib/systemd/random-seed", image_builder)
         self.assertNotIn("ssh-keygen -A", first_boot)
         self.assertIn("ssh-keygen -A", enable_ssh)
         # T01: fstab composition moved into the shared engine (UUID arrives as

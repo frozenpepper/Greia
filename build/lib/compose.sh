@@ -832,6 +832,27 @@ compose_footprint_hygiene() {
   find "$rootfs/var/log" -type f -exec truncate -s 0 '{}' +
 }
 
+# Clone-neutral target state (single owner for role=target).
+# Raw images and installer/update payloads are cloned: leave all clone/machine
+# identity material empty here so disk-image packaging and the release-payload
+# staging path share one canonical target state. First boot creates the
+# machine ID (overlay first-boot via systemd-machine-id-setup), while SSH host
+# keys are generated only when a parent explicitly enables SSH
+# (greia-enable-ssh via ssh-keygen -A). Runs after developer SSH provisioning
+# on purpose: developer images keep their explicit greia/greia login, marker,
+# sudoers and sshd config; only host-key bytes stay absent in every target
+# root, base or developer. The live-installer role is intentionally excluded
+# here: the live root is an ephemeral live medium, never a cloned installed
+# target; installed identity is personalized at install time by
+# src/greia_installer/engine.py (_personalize_target).
+compose_prepare_clone_neutral_target() {
+  local rootfs="$1"
+  mkdir -p "$rootfs/etc"
+  : > "$rootfs/etc/machine-id"
+  rm -f "$rootfs/var/lib/dbus/machine-id" "$rootfs/var/lib/systemd/random-seed"
+  rm -f "$rootfs"/etc/ssh/ssh_host_*
+}
+
 # Main entry point: compose a role root into a caller-provided directory.
 # Partitioning, mkfs, mounting, installed-boot assembly and media assembly
 # remain the caller's responsibility.
@@ -887,6 +908,12 @@ compose_root() {
   compose_footprint_prune "$rootfs" || return 1
   compose_write_metadata_manifests "$rootfs" "$role" || return 1
   compose_footprint_hygiene "$rootfs" || return 1
+  # Clone-neutral target state is composer-owned so both the thin disk-image
+  # consumer and the release-payload staging path share it. The live-installer
+  # role stays role-specific (see compose_prepare_clone_neutral_target).
+  if [[ "$role" == "target" ]]; then
+    compose_prepare_clone_neutral_target "$rootfs" || return 1
+  fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then

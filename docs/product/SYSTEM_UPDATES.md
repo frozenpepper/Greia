@@ -154,8 +154,19 @@ python3 tools/build_release.py build-payload \
   --profile-id acer-aspire-one-i386-ab \
   --release-id greia-0.14.0 \
   --filesystem-bytes 1073741824 \
-  --minimum-slot-bytes 1073741824
+  --minimum-slot-bytes 1074790400
 ```
+
+`--minimum-slot-bytes` is the candidate's minimum base filesystem size,
+not the destination slot size: it must cover the actual shrunk ext4 size
+reported by the `build-payload` step plus the 1 MiB finalization headroom
+(`PAYLOAD_MIN_HEADROOM` in `tools/build_release.py`; 1073741824 + 1048576
+= 1074790400 in this example). Take the shrunk size from the producer
+output for each release; do not copy the destination slot size
+(1536 MiB = 1610612736 for `acer-aspire-one-i386-ab`) by habit, and do not
+raise the manifest minimum to 1536 MiB unless the base OS genuinely needs
+that much space before finalization — an inflated minimum can only refuse
+valid slots, never create capacity.
 
 The producer runs `mkfs.ext4 -d <staging>` → `e2fsck -f -y` →
 `resize2fs -M` → `e2fsck -f -y` → `zstd -19`, validates the staging tree

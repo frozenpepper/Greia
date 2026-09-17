@@ -462,8 +462,10 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
             finally:
                 authority.backend._require_seam = original_require  # type: ignore[method-assign]
             message = str(raised.exception)
-            # No inactive device or support pool exists here, so the first
-            # destination-seam demand (the release support set) refuses
+            # No inactive device exists here and the candidate's own
+            # support member is not a safe pool tree, so the first
+            # destination-seam demand (the release support set,
+            # materialized from the candidate member) refuses
             # fail-closed before any slot contact.
             self.assertIn("release support set is unavailable", message)
             self.assertEqual(demanded, ["release support set"])

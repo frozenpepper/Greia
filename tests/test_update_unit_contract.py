@@ -6,7 +6,8 @@ snapshot: the updater identity resolves from the image-owned
 ``image-profile.json`` as fallbacks for unstated compatibility facts
 (``GREIA_SYSTEM_*`` environment stays a test-only fallback), and the shipped
 unit carries exactly the writable paths and capabilities the P3.2
-implementation requires.
+implementation requires (exactly ``CAP_SYS_ADMIN`` plus ``CAP_SYS_CHROOT``
+for the shared finalize path's ``chroot`` hardware-support install leg).
 """
 
 import configparser
@@ -378,14 +379,95 @@ class ReleaseIdentityAuthorityTests(unittest.TestCase):
 
 
 class UpdateUnitSandboxTests(unittest.TestCase):
-    def test_capability_bound_is_exactly_sys_admin(self) -> None:
+    def test_capabilities_are_exactly_cap_sys_admin_and_cap_sys_chroot(
+        self,
+    ) -> None:
         parser = _parse_unit(SERVICE_PATH)
         self.assertEqual(
-            parser.get("Service", "CapabilityBoundingSet").strip(), "CAP_SYS_ADMIN"
+            parser.get("Service", "CapabilityBoundingSet").strip(),
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
         )
         self.assertEqual(
-            parser.get("Service", "AmbientCapabilities").strip(), "CAP_SYS_ADMIN"
+            parser.get("Service", "AmbientCapabilities").strip(),
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
         )
+
+    def test_chroot_install_leg_requires_declared_capability_and_argv_arrays(
+        self,
+    ) -> None:
+        """Regression: the unit must declare what the chroot install leg needs.
+
+        The shared finalize path installs the verified offline
+        hardware-support set via ``TargetHardwareSupportInstaller.install``,
+        which runs ``chroot <slot> apt-get ...`` (update / install / clean)
+        through the production argv-array runner (``shell=False``).
+        ``chroot(2)`` fails with EPERM without ``CAP_SYS_CHROOT``, so the
+        unit must carry exactly that capability alongside ``CAP_SYS_ADMIN``
+        — and the install path must stay argv arrays, never a shell string.
+        """
+        parser = _parse_unit(SERVICE_PATH)
+        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
+            declared = parser.get("Service", key).split()
+            self.assertIn(
+                "CAP_SYS_CHROOT",
+                declared,
+                f"{key} must declare the capability the chroot install leg needs",
+            )
+            self.assertEqual(
+                sorted(declared),
+                ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
+                f"{key} must declare exactly the evidenced capability set",
+            )
+        install_source = (
+            ROOT / "src" / "greia_installer" / "hardware_support_install.py"
+        ).read_text(encoding="utf-8")
+        self.assertGreaterEqual(
+            install_source.count('"chroot"'),
+            3,
+            "hardware-support install must still run the three chroot legs "
+            "(update / install / clean)",
+        )
+        self.assertIn('"apt-get"', install_source)
+        self.assertNotIn("shell=True", install_source)
+        self.assertNotIn("os.system", install_source)
+        seams_source = (
+            ROOT / "src" / "greia_installer" / "device_seams.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn("shell=False", seams_source)
+        self.assertNotIn("shell=True", seams_source)
+
+    def test_withdraw_cap_sys_chroot_turns_contract_red(self) -> None:
+        """Positive control: the contract predicate (not test syntax) gates GREEN.
+
+        Withdrawing ``CAP_SYS_CHROOT`` from the declared pair must fail the
+        exact-pair predicate (RED); the shipped file with the pair restored
+        must satisfy it (GREEN).
+        """
+        raw = SERVICE_PATH.read_text(encoding="utf-8")
+        self.assertIn(
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
+            raw,
+            "precondition: the shipped unit must carry the pair (GREEN)",
+        )
+        withdrawn = raw.replace(
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT", "CAP_SYS_ADMIN"
+        )
+        parser = configparser.ConfigParser(strict=False, interpolation=None)
+        parser.optionxform = str  # type: ignore[assignment]
+        parser.read_string(withdrawn)
+        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
+            self.assertNotEqual(
+                parser.get("Service", key).split(),
+                ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
+                f"withdrawn {key} must fail the exact-pair predicate (RED)",
+            )
+        shipped = _parse_unit(SERVICE_PATH)
+        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
+            self.assertEqual(
+                shipped.get("Service", key).split(),
+                ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
+                f"restored {key} must satisfy the exact-pair predicate (GREEN)",
+            )
 
     def test_readwritepaths_cover_minimum_grants(self) -> None:
         # Repeated directives are cumulative in systemd; configparser keeps

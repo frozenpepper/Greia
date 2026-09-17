@@ -67,7 +67,6 @@ SOCKET_PATH = (
 )
 
 _SLOT_BYTES = 1024 * 1024 * 1024
-_HW_BYTES = b"\x28\xb5\x2f\xfd" + b"postr1-red-hw" * 64
 
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
@@ -159,13 +158,13 @@ def _assert_no_condition_directive(path: Path) -> None:
         )
 
 
-def _pool_tree(root: Path) -> Path:
+def _pool_tree(root: Path, *, dirname: str = "hw-pool") -> Path:
     """Write a minimal verified hardware-support pool (pure file IO)."""
     import hashlib
 
     fw = b"p3-proof-firmware-bytes"
     uc = b"p3-proof-microcode-bytes"
-    pool = root / "hw-pool"
+    pool = root / dirname
     deb_dir = pool / "pool"
     deb_dir.mkdir(parents=True)
     (deb_dir / "firmware-realtek_1_all.deb").write_bytes(fw)
@@ -209,6 +208,41 @@ def _pool_tree(root: Path) -> Path:
     }
     (pool / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return pool
+
+
+def _hw_archive_from_pool(pool_dir: Path, output: Path) -> None:
+    """Archive a pool tree as the candidate's tar.zst member (Repair D).
+
+    Mirrors ``tools/build_release.py`` ``build_hardware_support_set``:
+    deterministic PAX tar of the exact release tree, zstd-compressed.
+    """
+    import io
+    import tarfile
+
+    import zstandard
+
+    members = [
+        pool_dir / "manifest.json",
+        pool_dir / "Packages",
+        pool_dir / "Packages.gz",
+    ]
+    members.extend(sorted((pool_dir / "pool").glob("*.deb")))
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w", format=tarfile.PAX_FORMAT) as tar:
+        for member in sorted(
+            members, key=lambda p: p.relative_to(pool_dir).as_posix()
+        ):
+            arcname = member.relative_to(pool_dir).as_posix()
+            info = tar.gettarinfo(str(member), arcname=arcname)
+            info.uid = 0
+            info.gid = 0
+            info.uname = ""
+            info.gname = ""
+            info.mtime = 0
+            info.mode = 0o644
+            with member.open("rb") as src:
+                tar.addfile(info, src)
+    output.write_bytes(zstandard.ZstdCompressor(level=3).compress(buffer.getvalue()))
 
 
 class ShippedDefaultCompositionTests(unittest.TestCase):
@@ -281,7 +315,10 @@ class ShippedDefaultCompositionTests(unittest.TestCase):
             (work / "slot.ext4.zst").write_bytes(
                 zstandard.ZstdCompressor(level=3).compress(raw)
             )
-            (work / "hw.tar.zst").write_bytes(_HW_BYTES)
+            # Repair D: the bundle carries the candidate's own pool member.
+            _hw_archive_from_pool(
+                _pool_tree(root, dirname="candidate-pool"), work / "hw.tar.zst"
+            )
             bundle = work / "r9.greiaupdate"
             build_update_bundle(
                 payload_path=work / "slot.ext4.zst",
@@ -380,12 +417,16 @@ class ShippedUnitContractTests(unittest.TestCase):
         self.assertEqual(parser.get("Service", "User").strip(), "root")
         self.assertEqual(parser.get("Service", "ProtectSystem").strip(), "strict")
         # Activated sandbox (POSTR1-P3-UPDATE-UNIT): mount/device
-        # administration only, plus the minimum state/layout/GRUB grants.
+        # administration plus the chroot hardware-support install leg
+        # (CAP_SYS_CHROOT for the shared finalize path's chroot operations),
+        # with the minimum state/layout/GRUB grants.
         self.assertEqual(
-            parser.get("Service", "CapabilityBoundingSet").strip(), "CAP_SYS_ADMIN"
+            parser.get("Service", "CapabilityBoundingSet").strip(),
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
         )
         self.assertEqual(
-            parser.get("Service", "AmbientCapabilities").strip(), "CAP_SYS_ADMIN"
+            parser.get("Service", "AmbientCapabilities").strip(),
+            "CAP_SYS_ADMIN CAP_SYS_CHROOT",
         )
         self.assertEqual(
             _directive_values(SERVICE_PATH, "ReadWritePaths"),

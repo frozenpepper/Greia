@@ -72,11 +72,19 @@ ProtectKernelModules=yes
 ProtectControlGroups=yes
 RestrictSUIDSGID=yes
 LockPersonality=yes
-# Mount/ device administration only: the temporary inactive-slot mount (and
-# the block size/UUID probes around it) requires CAP_SYS_ADMIN and nothing
-# else. No launcher/Parent process carries this bound.
-CapabilityBoundingSet=CAP_SYS_ADMIN
-AmbientCapabilities=CAP_SYS_ADMIN
+# Minimum privilege for the real implementation: the unsigned v3 candidate
+# finalization stages the inbox candidate into the inactive slot (shared
+# SlotWriter/SlotFinalizer path) and installs the verified offline
+# hardware-support set via `chroot <slot>` package operations (update /
+# install / clean in
+# greia_installer.hardware_support_install.TargetHardwareSupportInstaller.install,
+# reached through the shared finalize path via the production argv-array
+# runner with argument arrays only), which requires CAP_SYS_CHROOT:
+# chroot(2) fails with EPERM without it. The temporary inactive-slot mount (and the block size/UUID
+# probes around it) requires CAP_SYS_ADMIN. No other capability is granted.
+# No launcher/Parent process carries this bound.
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT
 RestrictAddressFamilies=AF_UNIX
 SystemCallArchitectures=native
 LimitCORE=0

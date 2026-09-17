@@ -119,11 +119,11 @@ def _payload(size: int = 220 * 1024, tag: bytes = b"p3-proof3:") -> bytes:
     return bytes(fixed)
 
 
-def _pool_tree(root: Path) -> Path:
+def _pool_tree(root: Path, *, dirname: str = "hw-pool") -> Path:
     """Write a minimal verified hardware-support pool (pure file IO)."""
     fw = b"p3-proof3-firmware-bytes"
     uc = b"p3-proof3-microcode-bytes"
-    pool = root / "hw-pool"
+    pool = root / dirname
     deb_dir = pool / "pool"
     deb_dir.mkdir(parents=True)
     (deb_dir / "firmware-realtek_1_all.deb").write_bytes(fw)
@@ -167,6 +167,40 @@ def _pool_tree(root: Path) -> Path:
     }
     (pool / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return pool
+
+
+def _hw_archive_from_pool(pool_dir: Path, output: Path) -> None:
+    """Archive a pool tree as the candidate's tar.zst member (Repair D).
+
+    Mirrors ``tools/build_release.py`` ``build_hardware_support_set``:
+    deterministic PAX tar of the exact release tree, zstd-compressed.
+    """
+    import tarfile
+
+    import zstandard
+
+    members = [
+        pool_dir / "manifest.json",
+        pool_dir / "Packages",
+        pool_dir / "Packages.gz",
+    ]
+    members.extend(sorted((pool_dir / "pool").glob("*.deb")))
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w", format=tarfile.PAX_FORMAT) as tar:
+        for member in sorted(
+            members, key=lambda p: p.relative_to(pool_dir).as_posix()
+        ):
+            arcname = member.relative_to(pool_dir).as_posix()
+            info = tar.gettarinfo(str(member), arcname=arcname)
+            info.uid = 0
+            info.gid = 0
+            info.uname = ""
+            info.gname = ""
+            info.mtime = 0
+            info.mode = 0o644
+            with member.open("rb") as src:
+                tar.addfile(info, src)
+    output.write_bytes(zstandard.ZstdCompressor(level=3).compress(buffer.getvalue()))
 
 
 def _rig(root: Path, *, record: dict[str, object] | None = None,
@@ -254,7 +288,10 @@ def _signed_bundle(root: Path, _ignored: object, name: str, *,
     (work / "slot.ext4.zst").write_bytes(
         zstandard.ZstdCompressor(level=3).compress(raw)
     )
-    (work / "hw.tar.zst").write_bytes(_HW_BYTES)
+    # Repair D: the bundle carries the candidate's own pool as its member.
+    _hw_archive_from_pool(
+        _pool_tree(root, dirname=f"candidate-pool-{name}"), work / "hw.tar.zst"
+    )
     bundle = work / f"{name}.greiaupdate"
     if bundle.exists():
         bundle.unlink()
@@ -650,20 +687,46 @@ class PersistContractNegativeTests(unittest.TestCase):
 
 
 class SupportMemberNegativeTests(unittest.TestCase):
-    """A missing release support member is refused before any slot write."""
+    """A corrupt candidate support member is refused before any slot write."""
 
-    def test_missing_support_pool_refused_before_slot_write(self) -> None:
+    def test_corrupt_candidate_support_refused_before_slot_write(self) -> None:
+        import zipfile
+
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            authority, _grub, _layout, state_dir, key = _rig(
-                root,
-                env_extra={"GREIA_UPDATE_HARDWARE_SUPPORT_POOL": str(root / "no-pool")},
-            )
-            bundle = _signed_bundle(root, key, "no-support")
-            SystemUpdateInbox(state_dir).receive(bundle)
-            with self.assertRaises(UpdateBackendUnavailable) as raised:
+            authority, _grub, _layout, state_dir, key = _rig(root)
+            bundle = _signed_bundle(root, key, "bad-support")
+            inspected = SystemUpdateInbox(state_dir).receive(bundle)
+            # Corrupt the staged inbox candidate after inspection: the
+            # materializer re-verifies the member digest on the exact bytes
+            # it extracts, so staging refuses before any slot contact.
+            staged = inspected.path
+            with zipfile.ZipFile(staged, "r") as source:
+                members = {
+                    info.filename: source.read(info.filename)
+                    for info in source.infolist()
+                }
+            corrupted = bytearray(members["hardware-support.tar.zst"])
+            corrupted[10] ^= 0xFF
+            members["hardware-support.tar.zst"] = bytes(corrupted)
+            with zipfile.ZipFile(
+                staged, "w", compression=zipfile.ZIP_STORED
+            ) as target:
+                for name, payload in members.items():
+                    target.writestr(name, payload)
+            # Activation re-verifies the staged bytes first: the corrupt
+            # member is refused at inspection before any slot contact.
+            from greia_platform.system_updates import UpdateBundleError
+
+            with self.assertRaises(UpdateBundleError) as raised:
                 authority.stage_current_candidate()
-            self.assertIn("support", str(raised.exception))
+            self.assertIn("digest", str(raised.exception))
+            # And the materializer itself refuses the corrupt bytes when
+            # the already-inspected bundle is staged: digest re-verified
+            # on the exact extracted bytes.
+            with self.assertRaises(UpdateBackendUnavailable) as refused:
+                authority.backend.stage(inspected)
+            self.assertIn("support", str(refused.exception))
             _assert_no_slot_residue(self, root, state_dir)
 
 
