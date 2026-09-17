@@ -1,6 +1,6 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-16  
+**Updated:** 2026-09-18  
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`  
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)  
 **Version:** `0.13.0-phase0-dev`  
@@ -274,6 +274,46 @@ docs/testing/2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md
 Stop on the first failure and return the evidence root plus the final report template from that protocol.
 
 Do not edit source during the frozen attempt.
+
+## 8b. Session 02 repair tranche R2 — source complete, physical gates owner-side (2026-09-18)
+
+Run R2 executed `GREIA_SESSION02_REPAIR_LOCAL_AGENT_PLAN.md` (Session 02 review contradictions, Repairs A–J plus triage amendments). All implementation/review/integration closed through the T-BAG loop with fresh reviewers:
+
+```text
+T01 Acer A/B 1536 MiB profile + capacity regression      integrated
+T02 composer-owned clone neutrality                       integrated
+T03 shared fstab renderer + finalizer UUID specialization integrated
+T04 candidate hardware-support archive drives finalization integrated
+T05 Installed-Size (not .deb bytes) capacity accounting   integrated
+T06 updater CAP_SYS_ADMIN+CAP_SYS_CHROOT contract          integrated
+T07 PERSIST fallback marked provisional (Session 04 owns) integrated
+T08 streaming payload compression/verification            integrated
+T09 Acer A/B profile identity in release path             integrated
+T10 retired X-Pip-Token production path                   integrated
+T12 payload-stage clone-neutrality gate                   integrated
+T14 installer-unit stale wording cleanup                  integrated
+T16 fstab mode alignment                                  integrated
+T17 release-workflow headroom docs                        integrated
+T18 final verification sweep                              accepted PASS
+```
+
+Committed as `5bd8c6e3` (wave 1) + `ab3c4c4e` (wave 2) + `e9fe5044` (wave 3);
+tree clean. Phase gate (×3 auditor passes) verdict: source scope consistent,
+exit predicates requiring Orbiter artifact evidence (§16), exact-service
+staging proof (§17) and physical Acer acceptance (§18 + §23 DoD) remain
+UNPROVEN — Session 03 must not begin until the owner completes them.
+
+Exact owner next steps (repair plan §§16–18): Orbiter clean-Linux build of
+the Acer target root + relocatable payload + `.greiaupdate` inspection with
+headroom calculation, then Acer fresh install → A→B update through the
+exact installed service → candidate boot/accept → failure-recovery smoke.
+Return artifact sizes/headroom/service logs per §24; they close the phase.
+
+Run state: `TBag/runs/R2` (active). OpenCode 2 TUI status plugin fixed and
+verified in-project (see `docs/handovers/TBAG-opencode2-plugin-handoff/`);
+autonomous parent wakes never arrive in this setup (heartbeat enrolls, timer
+and prompt delivery unverified host-side — documented there, skill RC60
+committed in the skill dev checkout, not pushed).
 
 ## Historical Gate-P5 evidence (§§13–25) — superseded lifecycle routing
 
