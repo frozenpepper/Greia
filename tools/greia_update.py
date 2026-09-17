@@ -75,19 +75,12 @@ def _parser() -> argparse.ArgumentParser:
     push = sub.add_parser("push", help="upload a bundle through the Greia Parent API")
     push.add_argument("bundle", type=Path)
     push.add_argument("--url", default="http://greia.local:8766")
-    auth = push.add_mutually_exclusive_group(required=True)
-    auth.add_argument("--bearer", help="paired Parent bearer credential")
-    auth.add_argument(
-        "--legacy-token",
-        help="development-only existing Parent pairing token (X-Pip-Token)",
-    )
+    push.add_argument("--bearer", required=True, help="paired Parent bearer credential")
     push.add_argument("--timeout", type=float, default=300.0)
 
     status = sub.add_parser("status", help="read Greia system-update status")
     status.add_argument("--url", default="http://greia.local:8766")
-    auth_status = status.add_mutually_exclusive_group(required=True)
-    auth_status.add_argument("--bearer")
-    auth_status.add_argument("--legacy-token")
+    status.add_argument("--bearer", required=True, help="paired Parent bearer credential")
     status.add_argument("--timeout", type=float, default=20.0)
 
     return parser
@@ -196,9 +189,10 @@ def _build_output(args: argparse.Namespace, target: UpdateTarget) -> Path:
 
 
 def _auth_headers(args: argparse.Namespace) -> dict[str, str]:
-    if getattr(args, "bearer", None):
-        return {"Authorization": f"Bearer {args.bearer}"}
-    return {"X-Pip-Token": str(args.legacy_token)}
+    bearer = getattr(args, "bearer", None)
+    if not bearer:
+        raise SystemUpdateError("push/status requires --bearer (paired Parent bearer credential)")
+    return {"Authorization": f"Bearer {bearer}"}
 
 
 def _base_url(value: str) -> str:

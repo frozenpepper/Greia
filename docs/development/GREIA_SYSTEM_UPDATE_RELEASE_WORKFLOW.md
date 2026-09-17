@@ -26,7 +26,7 @@ On the build/release host:
 - `zstd` (payload and hardware-support compression);
 - e2fsprogs (`mkfs.ext4`, `e2fsck`, `resize2fs`, `debugfs`) for the real slot image and its read-only verification;
 - a composed target root for the release profile (see `build/lib/compose.sh`, role `target`), plus the generic kernel and initramfs files seeded into the image;
-- for pushing to a development Greia, a Parent bearer credential or the explicitly allowed development pairing token.
+- for pushing to a development Greia, a paired Parent bearer credential.
 
 There is deliberately no release signing key and no `cryptography`
 requirement. Never place operator credentials in:
@@ -116,6 +116,7 @@ Normal command:
 python3 tools/greia_update.py build \
   --payload ./out/payload.ext4.zst \
   --payload-uncompressed-bytes <shrunk-image-bytes> \
+  --minimum-slot-bytes 1074790400 \
   --profile-file ./build/profiles/acer-aspire-one-i386-ab.toml \
   --version 0.14.0 \
   --persist-read-min 1 \
@@ -137,7 +138,9 @@ storage.system_slot_bytes # 1610612736 (1536 MiB) destination-slot bound
 Do not substitute the generic single-root `legacy-x86-i686.toml` on the
 Acer path: its 1 GiB slot bound is smaller than a real Acer payload
 minimum, so the normal `--profile-file` path refuses that cross-profile
-bundling before any bundle byte is written. Mixing `--profile-file` with
+bundling before any bundle byte is written (at exactly 1073741824 with no
+explicit minimum the size guard cannot discriminate, so that literal edge
+still bundles). Mixing `--profile-file` with
 explicit `--platform-family`/`--architecture`/`--profile`/`--board` is
 rejected; advanced/test tooling may use the explicit form without a
 profile file (then no profile slot bound is enforced).
@@ -150,7 +153,10 @@ output     : out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 ```
 
 `--payload-uncompressed-bytes` is the shrunk image size reported by the
-`build-payload` step; `--minimum-slot-bytes` defaults to it. The three
+`build-payload` step; pass the headroom-carrying minimum from §2 explicitly
+(`1074790400` in that example: shrunk size plus 1 MiB headroom). `--minimum-slot-bytes`
+defaults to `--payload-uncompressed-bytes`, so the refusal above assumes that
+headroom-carrying minimum from §2. The three
 `--persist-*` values carry PERSIST schema compatibility in the manifest.
 An optional `--hardware-support <hardware-support.tar.zst>` member may be
 included; it is genuinely optional.
@@ -191,15 +197,6 @@ python3 tools/greia_update.py push \
   ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
   --url http://greia.local:8766 \
   --bearer "$GREIA_PARENT_BEARER"
-```
-
-Current development bootstrap alternative:
-
-```bash
-python3 tools/greia_update.py push \
-  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
-  --url http://greia.local:8766 \
-  --legacy-token "$GREIA_PARENT_PAIRING_TOKEN"
 ```
 
 `push` streams the bundle in 1 MiB chunks. It does not load a potentially large OS image into memory.

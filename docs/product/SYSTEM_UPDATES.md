@@ -187,6 +187,7 @@ Given the verified `payload.ext4.zst` produced above, point the tool at the Grei
 python3 tools/greia_update.py build \
   --payload ./out/payload.ext4.zst \
   --payload-uncompressed-bytes <shrunk-image-bytes> \
+  --minimum-slot-bytes 1074790400 \
   --profile-file ./build/profiles/acer-aspire-one-i386-ab.toml \
   --version 0.14.0 \
   --persist-read-min 1 \
@@ -207,7 +208,7 @@ For the example above, the default output is:
 ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 ```
 
-Advanced/test tooling may supply explicit `--platform-family`, `--architecture`, `--profile` and `--board` instead of `--profile-file`, but mixing the two forms is rejected. On the normal `--profile-file` path the tool also derives `platform.board` (`"none"` becomes manifest board null) and enforces the profile-owned `storage.system_slot_bytes` destination bound (1536 MiB = 1610612736 for `acer-aspire-one-i386-ab`): a payload whose shrunk size or minimum does not fit that slot is refused before any bundle byte is written, so an Acer A/B payload cannot be bundled under the smaller generic single-root profile through this path.
+Advanced/test tooling may supply explicit `--platform-family`, `--architecture`, `--profile` and `--board` instead of `--profile-file`, but mixing the two forms is rejected. On the normal `--profile-file` path the tool also derives `platform.board` (`"none"` becomes manifest board null) and enforces the profile-owned `storage.system_slot_bytes` destination bound (1536 MiB = 1610612736 for `acer-aspire-one-i386-ab`): a payload whose shrunk size or minimum does not fit that slot is refused before any bundle byte is written, so an Acer A/B payload carrying the headroom minimum from the payload example above cannot be bundled under the smaller generic single-root profile through this path (`--minimum-slot-bytes` defaults to `--payload-uncompressed-bytes`, so at exactly 1073741824 with no explicit minimum the size guard cannot discriminate).
 
 The tool records the payload size/SHA-256, the shrunk uncompressed size
 and the PERSIST schema integers in the canonical manifest and creates the
@@ -215,7 +216,7 @@ bounded bundle. It refuses to overwrite an existing output file. An
 optional `--hardware-support <hardware-support.tar.zst>` member may be
 included; it is genuinely optional.
 
-**Acer release identity:** the Acer path builds the payload with `--profile-id acer-aspire-one-i386-ab` and bundles it with `--profile-file ./build/profiles/acer-aspire-one-i386-ab.toml` end to end. The generic `legacy-x86-i686` profile (still `bios-single-ext4`) is never the Acer packaging identity; using it for an Acer-sized payload is refused by the normal bundle path. A production-installable payload still requires the A/B image/layout builder. Do not wrap today's whole single-root disk image and call that a proven A/B update.
+**Acer release identity:** the Acer path builds the payload with `--profile-id acer-aspire-one-i386-ab` and bundles it with `--profile-file ./build/profiles/acer-aspire-one-i386-ab.toml` end to end. The generic `legacy-x86-i686` profile (still `bios-single-ext4`) is never the Acer packaging identity; using it for an Acer-sized payload carrying that headroom minimum is refused by the normal bundle path. A production-installable payload still requires the A/B image/layout builder. Do not wrap today's whole single-root disk image and call that a proven A/B update.
 
 ### Inspect/verify locally
 
@@ -237,15 +238,6 @@ python3 tools/greia_update.py push \
   ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
   --url http://greia.local:8766 \
   --bearer "$GREIA_PARENT_BEARER"
-```
-
-For the current development bootstrap, the tool may instead send the owner-controlled Parent pairing token through the existing legacy header:
-
-```bash
-python3 tools/greia_update.py push \
-  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
-  --url http://greia.local:8766 \
-  --legacy-token "$GREIA_PARENT_PAIRING_TOKEN"
 ```
 
 The CLI streams the file in bounded chunks rather than reading a large system image into RAM.
