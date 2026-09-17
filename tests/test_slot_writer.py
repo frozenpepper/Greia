@@ -1917,6 +1917,7 @@ def _make_pool(root: Path) -> Path:
         "architecture": "amd64",
         "package_count": 2,
         "total_bytes": len(_FW_PAYLOAD) + len(_UC_PAYLOAD),
+        "total_installed_bytes": len(_FW_PAYLOAD) + len(_UC_PAYLOAD) + 2 * 32 * 1024,
         "provided_candidate_packages": ["firmware-realtek", "amd64-microcode"],
         "provided_firmware_packages": ["firmware-realtek"],
         "provided_microcode_packages": ["amd64-microcode"],
@@ -1932,6 +1933,7 @@ def _make_pool(root: Path) -> Path:
                 "size": len(_FW_PAYLOAD),
                 "sha256": _sha(_FW_PAYLOAD),
                 "candidate": True,
+                "installed_bytes": len(_FW_PAYLOAD) + 32 * 1024,
             },
             {
                 "package": "amd64-microcode",
@@ -1941,6 +1943,7 @@ def _make_pool(root: Path) -> Path:
                 "size": len(_UC_PAYLOAD),
                 "sha256": _sha(_UC_PAYLOAD),
                 "candidate": True,
+                "installed_bytes": len(_UC_PAYLOAD) + 32 * 1024,
             },
         ],
         "repository_indexes": {

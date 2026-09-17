@@ -187,7 +187,7 @@ Given the verified `payload.ext4.zst` produced above, point the tool at the Grei
 python3 tools/greia_update.py build \
   --payload ./out/payload.ext4.zst \
   --payload-uncompressed-bytes <shrunk-image-bytes> \
-  --profile-file ./build/profiles/legacy-x86-i686.toml \
+  --profile-file ./build/profiles/acer-aspire-one-i386-ab.toml \
   --version 0.14.0 \
   --persist-read-min 1 \
   --persist-read-max 1 \
@@ -204,10 +204,10 @@ output     = ./out/greia-<version>-<profile-id>.greiaupdate
 For the example above, the default output is:
 
 ```text
-./out/greia-0.14.0-legacy-x86-i686.greiaupdate
+./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 ```
 
-Advanced/test tooling may supply explicit `--platform-family`, `--architecture` and `--profile` instead of `--profile-file`, but mixing the two forms is rejected.
+Advanced/test tooling may supply explicit `--platform-family`, `--architecture`, `--profile` and `--board` instead of `--profile-file`, but mixing the two forms is rejected. On the normal `--profile-file` path the tool also derives `platform.board` (`"none"` becomes manifest board null) and enforces the profile-owned `storage.system_slot_bytes` destination bound (1536 MiB = 1610612736 for `acer-aspire-one-i386-ab`): a payload whose shrunk size or minimum does not fit that slot is refused before any bundle byte is written, so an Acer A/B payload cannot be bundled under the smaller generic single-root profile through this path.
 
 The tool records the payload size/SHA-256, the shrunk uncompressed size
 and the PERSIST schema integers in the canonical manifest and creates the
@@ -215,13 +215,13 @@ bounded bundle. It refuses to overwrite an existing output file. An
 optional `--hardware-support <hardware-support.tar.zst>` member may be
 included; it is genuinely optional.
 
-**Important current boundary:** today's canonical `legacy-x86-i686` profile is still `bios-single-ext4`; its normal builder does not yet produce an installable A/B slot payload. The commands above define the release packaging workflow now, but a production-installable payload requires the later A/B image/layout builder. Do not wrap today's whole single-root disk image and call that a proven A/B update.
+**Acer release identity:** the Acer path builds the payload with `--profile-id acer-aspire-one-i386-ab` and bundles it with `--profile-file ./build/profiles/acer-aspire-one-i386-ab.toml` end to end. The generic `legacy-x86-i686` profile (still `bios-single-ext4`) is never the Acer packaging identity; using it for an Acer-sized payload is refused by the normal bundle path. A production-installable payload still requires the A/B image/layout builder. Do not wrap today's whole single-root disk image and call that a proven A/B update.
 
 ### Inspect/verify locally
 
 ```bash
 python3 tools/greia_update.py inspect \
-  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate
+  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 ```
 
 This verifies the bundle structure and the payload digest/size against the
@@ -234,7 +234,7 @@ Using a paired Parent bearer credential:
 
 ```bash
 python3 tools/greia_update.py push \
-  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate \
+  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
   --url http://greia.local:8766 \
   --bearer "$GREIA_PARENT_BEARER"
 ```
@@ -243,7 +243,7 @@ For the current development bootstrap, the tool may instead send the owner-contr
 
 ```bash
 python3 tools/greia_update.py push \
-  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate \
+  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
   --url http://greia.local:8766 \
   --legacy-token "$GREIA_PARENT_PAIRING_TOKEN"
 ```

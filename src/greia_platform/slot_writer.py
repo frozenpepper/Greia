@@ -60,6 +60,7 @@ from .hardware_enablement import (
     SupportDisposition,
     SupportKind,
 )
+from .fstab import FSTAB_FILE_MODE, FSTAB_REL_PATH, render_fstab
 from .persistent_layout import InstalledLayoutRecord
 
 try:
@@ -106,10 +107,13 @@ SLOT_PROFILE_REL_PATH = "etc/greia-os/slot-profile.json"
 FINALIZED_GENERIC_REL_PATH = "boot/finalized-generic.json"
 
 #: Files the finalizer must prove present before writing the receipt.
+#: ``etc/fstab`` carries the single-owner canonical policy specialized to
+#: the destination role UUID (same renderer as fresh target assembly).
 REQUIRED_FINALIZED_FILES = (
     FINALIZED_GENERIC_REL_PATH,
     RELEASE_IDENTITY_REL_PATH,
     SLOT_PROFILE_REL_PATH,
+    FSTAB_REL_PATH,
 )
 
 #: Bounded slot-completeness smoke: directories proving a staged slot carries
@@ -1315,6 +1319,7 @@ class SlotFinalizer:
             RELEASE_IDENTITY_REL_PATH,
             SLOT_PROFILE_REL_PATH,
             RECEIPT_REL_PATH,
+            FSTAB_REL_PATH,
         ):
             _check_relative_path(rel_path)
 
@@ -1341,6 +1346,51 @@ class SlotFinalizer:
             mounted = True
             if not isinstance(mountpoint, Path):
                 raise SlotFinalizeError("slot mount did not return a path")
+
+            # Destination fstab specialization (Repair C): render the
+            # single-owner canonical policy for the bound role UUID right
+            # after mount, before completeness/health acceptance, so an
+            # updated slot carries the same policy as a fresh install and
+            # no release-builder template UUID can survive.
+            try:
+                fstab_text = render_fstab(filesystem_uuid)
+            except ValueError as exc:
+                raise SlotFinalizeError(
+                    f"destination fstab refused: {exc}"
+                ) from exc
+            try:
+                filesystem.write_file(
+                    FSTAB_REL_PATH, fstab_text.encode("ascii")
+                )
+            except SlotFinalizeError:
+                raise
+            except Exception as exc:
+                raise SlotFinalizeError(
+                    f"destination fstab write failed: {exc}"
+                ) from exc
+            # Canonical fstab mode (Repair T16): the shared block seam
+            # forces ``0o600`` on every finalized file; fstab carries no
+            # secrets and must match fresh assembly at ``FSTAB_FILE_MODE``
+            # (``0o644``). Re-chmod only this path via the mounted
+            # mountpoint already in hand; the block seam keeps its
+            # ``0o600`` default for every other finalized file and gains
+            # no per-file mode parameter. Dict-recording fake seams that
+            # never persist the file carry no on-disk mode and are
+            # skipped; any real on-disk failure fails closed.
+            try:
+                fstab_on_disk = mountpoint / FSTAB_REL_PATH
+                if os.path.islink(fstab_on_disk):
+                    raise SlotFinalizeError(
+                        "destination fstab target may not be a symbolic link"
+                    )
+                if fstab_on_disk.is_file():
+                    os.chmod(fstab_on_disk, FSTAB_FILE_MODE)
+            except SlotFinalizeError:
+                raise
+            except OSError as exc:
+                raise SlotFinalizeError(
+                    f"destination fstab mode refused: {exc}"
+                ) from exc
 
             # Shared post-write completeness smoke (A4/A11): prove the
             # staged slot carries real Greia userspace including the

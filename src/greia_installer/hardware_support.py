@@ -31,6 +31,7 @@ class HardwareSupportPoolPackage:
     size: int
     sha256: str
     candidate: bool
+    installed_bytes: int
 
     def __post_init__(self) -> None:
         if not _PACKAGE_RE.fullmatch(self.package):
@@ -50,6 +51,16 @@ class HardwareSupportPoolPackage:
             raise HardwareSupportPoolError("hardware-support package digest is invalid")
         if not isinstance(self.candidate, bool):
             raise HardwareSupportPoolError("hardware-support candidate flag is invalid")
+        # Installed footprint from Debian `Installed-Size` (KiB) plus the
+        # finalizer's deterministic per-package metadata overhead. Archive
+        # (`size`) bytes measure transfer size and must never substitute
+        # for this installed bound in capacity accounting.
+        if (
+            isinstance(self.installed_bytes, bool)
+            or not isinstance(self.installed_bytes, int)
+            or not 0 <= self.installed_bytes <= _MAX_POOL_BYTES
+        ):
+            raise HardwareSupportPoolError("hardware-support package installed size is invalid")
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,8 +73,21 @@ class VerifiedHardwareSupportPool:
     provided_firmware: frozenset[str]
     provided_microcode: frozenset[str]
     total_bytes: int
+    total_installed_bytes: int
     firmware_providers: tuple[tuple[str, tuple[str, ...]], ...] = ()
     broad_firmware: frozenset[str] = frozenset()
+
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.total_installed_bytes, bool)
+            or not isinstance(self.total_installed_bytes, int)
+            or not 0 <= self.total_installed_bytes <= _MAX_POOL_BYTES
+        ):
+            raise HardwareSupportPoolError("hardware-support installed total size is invalid")
+        if sum(package.installed_bytes for package in self.packages) != self.total_installed_bytes:
+            raise HardwareSupportPoolError(
+                "hardware-support installed total does not match package installed sizes"
+            )
 
     @classmethod
     def load(
@@ -101,9 +125,14 @@ class VerifiedHardwareSupportPool:
         seen_identity: set[tuple[str, str]] = set()
         expected_paths: set[Path] = set()
         total = 0
+        total_installed = 0
         for entry in entries:
             if not isinstance(entry, dict):
                 raise HardwareSupportPoolError("hardware-support package entry is invalid")
+            if "installed_bytes" not in entry:
+                raise HardwareSupportPoolError(
+                    "hardware-support package installed size is missing"
+                )
             try:
                 package = HardwareSupportPoolPackage(
                     package=entry["package"],
@@ -113,6 +142,7 @@ class VerifiedHardwareSupportPool:
                     size=entry["size"],
                     sha256=entry["sha256"],
                     candidate=entry["candidate"],
+                    installed_bytes=entry["installed_bytes"],
                 )
             except (KeyError, TypeError) as exc:
                 raise HardwareSupportPoolError("hardware-support package entry is incomplete") from exc
@@ -135,6 +165,11 @@ class VerifiedHardwareSupportPool:
             total += package.size
             if total > _MAX_POOL_BYTES:
                 raise HardwareSupportPoolError("hardware-support pool exceeds runtime byte bound")
+            total_installed += package.installed_bytes
+            if total_installed > _MAX_POOL_BYTES:
+                raise HardwareSupportPoolError(
+                    "hardware-support pool installed size exceeds runtime byte bound"
+                )
 
         pool_dir = root / "pool"
         if not pool_dir.is_dir() or pool_dir.is_symlink():
@@ -167,6 +202,29 @@ class VerifiedHardwareSupportPool:
         manifest_total = raw.get("total_bytes")
         if not isinstance(manifest_total, int) or manifest_total != total:
             raise HardwareSupportPoolError("hardware-support pool total size does not match manifest")
+        manifest_installed = raw.get("total_installed_bytes")
+        # `total_bytes` stays the compressed archive bound (transfer/storage);
+        # capacity accounting must use `total_installed_bytes` only. Old
+        # manifests without an installed bound are fail-closed here so a
+        # compressed-bytes pool can never be mistaken for an installed-size
+        # pool downstream.
+        if (
+            not isinstance(manifest_installed, int)
+            or isinstance(manifest_installed, bool)
+            or manifest_installed != total_installed
+        ):
+            raise HardwareSupportPoolError(
+                "hardware-support pool installed total does not match manifest"
+            )
+        overhead = raw.get("installed_bytes_overhead_per_package")
+        if overhead is not None and (
+            isinstance(overhead, bool)
+            or not isinstance(overhead, int)
+            or not 0 <= overhead <= _MAX_POOL_BYTES
+        ):
+            raise HardwareSupportPoolError(
+                "hardware-support installed overhead allowance is invalid"
+            )
 
         return cls(
             root,
@@ -177,6 +235,7 @@ class VerifiedHardwareSupportPool:
             firmware,
             microcode,
             total,
+            total_installed,
             providers,
             broad_firmware,
         )

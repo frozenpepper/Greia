@@ -35,6 +35,7 @@ def make_pool(root: Path, *, payload: bytes = b"firmware", extra_deb: bool = Fal
         "architecture": "amd64",
         "package_count": 1,
         "total_bytes": len(payload),
+        "total_installed_bytes": len(payload) + 32 * 1024,
         "provided_candidate_packages": ["firmware-realtek"],
         "provided_firmware_packages": ["firmware-realtek"],
         "provided_microcode_packages": [],
@@ -54,6 +55,7 @@ def make_pool(root: Path, *, payload: bytes = b"firmware", extra_deb: bool = Fal
                 "size": len(payload),
                 "sha256": digest(payload),
                 "candidate": True,
+                "installed_bytes": len(payload) + 32 * 1024,
             }
         ],
         "repository_indexes": {
@@ -110,6 +112,7 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             10,
             "0" * 64,
             True,
+            10 + 32 * 1024,
         )
         large = HardwareSupportPoolPackage(
             "firmware-large",
@@ -119,6 +122,7 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             100,
             "1" * 64,
             True,
+            100 + 32 * 1024,
         )
         pool = VerifiedHardwareSupportPool(
             Path("/verified"),
@@ -129,6 +133,7 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             frozenset({"firmware-large", "firmware-small"}),
             frozenset(),
             110,
+            110 + 2 * 32 * 1024,
             (("shared.bin", ("firmware-large", "firmware-small")),),
         )
         self.assertEqual(pool.packages_for_firmware("shared.bin"), ("firmware-small",))

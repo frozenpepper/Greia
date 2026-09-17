@@ -142,6 +142,7 @@ def _pool_tree(root: Path, *, dirname: str = "hw-pool") -> Path:
         "architecture": "amd64",
         "package_count": 2,
         "total_bytes": len(fw) + len(uc),
+        "total_installed_bytes": len(fw) + len(uc) + 2 * 32 * 1024,
         "provided_candidate_packages": ["firmware-realtek", "amd64-microcode"],
         "provided_firmware_packages": ["firmware-realtek"],
         "provided_microcode_packages": ["amd64-microcode"],
@@ -153,11 +154,13 @@ def _pool_tree(root: Path, *, dirname: str = "hw-pool") -> Path:
                 "package": "firmware-realtek", "version": "1",
                 "architecture": "all", "filename": "pool/firmware-realtek_1_all.deb",
                 "size": len(fw), "sha256": _sha(fw), "candidate": True,
+                "installed_bytes": len(fw) + 32 * 1024,
             },
             {
                 "package": "amd64-microcode", "version": "1",
                 "architecture": "amd64", "filename": "pool/amd64-microcode_1_amd64.deb",
                 "size": len(uc), "sha256": _sha(uc), "candidate": True,
+                "installed_bytes": len(uc) + 32 * 1024,
             },
         ],
         "repository_indexes": {

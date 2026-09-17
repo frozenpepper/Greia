@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Callable, Protocol, Sequence
 
 from greia_platform.boot_contract import GrubContractError, validate_grub_config
+from greia_platform.fstab import FSTAB_FILE_MODE, render_fstab
 from greia_platform.grub_security import (
     GrubPasswordHasher,
     GrubRecoveryCredential,
@@ -435,18 +436,18 @@ class InstallationEngine:
 
     @staticmethod
     def _write_root_fstab(target_root: Path, filesystem_uuid: str) -> None:
+        # Single-owner fstab policy: render through greia_platform.fstab so
+        # fresh installs carry exactly the canonical policy the finalizer
+        # specializes per destination role. Mode is the canonical
+        # FSTAB_FILE_MODE (0o644) regardless of caller umask.
         try:
-            normalized = str(uuid.UUID(filesystem_uuid))
+            text = render_fstab(filesystem_uuid)
         except ValueError as exc:
             raise InstallationError("refusing invalid root filesystem UUID") from exc
         fstab = target_root / "etc/fstab"
         fstab.parent.mkdir(parents=True, exist_ok=True)
-        fstab.write_text(
-            f"UUID={normalized} / ext4 defaults,noatime,errors=remount-ro 0 1\n"
-            "tmpfs /tmp tmpfs nosuid,nodev,noexec,mode=1777,size=64M 0 0\n"
-            "tmpfs /var/tmp tmpfs nosuid,nodev,noexec,mode=1777,size=32M 0 0\n",
-            encoding="ascii",
-        )
+        fstab.write_text(text, encoding="ascii")
+        os.chmod(fstab, FSTAB_FILE_MODE)
 
     @staticmethod
     def _write_grub_root_uuid(target_root: Path, filesystem_uuid: str) -> None:

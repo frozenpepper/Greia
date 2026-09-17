@@ -128,16 +128,36 @@ class ReleaseCommandRunner(Protocol):
     ``timeout_seconds`` is an explicit per-call bound override carried through
     the seam so tests can assert the applied bound; ``None`` means the
     runner's own default (``SubprocessReleaseRunner.timeout_seconds``).
+
+    ``stream_to_file`` streams the command's stdout directly to ``output_path``
+    without retaining the full payload in Python bytes (bounded RAM). It must
+    raise :class:`ReleaseBuildError` on timeout, startup failure, or a
+    non-zero exit status, and leave no partial output behind on failure
+    beyond the (caller-cleaned) ``output_path`` itself.
     """
 
     def run(
         self, command: Sequence[str], *, timeout_seconds: float | None = None
     ) -> ReleaseCommandResult: ...  # pragma: no cover
 
+    def stream_to_file(
+        self,
+        command: Sequence[str],
+        output_path: Path | str,
+        *,
+        timeout_seconds: float | None = None,
+    ) -> None: ...  # pragma: no cover
+
 
 @dataclass(frozen=True, slots=True)
 class SubprocessReleaseRunner:
-    """Production runner: ``shell=False`` subprocess execution."""
+    """Production runner: ``shell=False`` subprocess execution.
+
+    ``stream_to_file`` connects the child stdout file descriptor directly to
+    the output file, so the kernel pipes compressed bytes to disk without
+    Python ever holding the full payload (bounded RAM regardless of the
+    1536 MiB payload ceiling).
+    """
 
     timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS
 
@@ -158,6 +178,55 @@ class SubprocessReleaseRunner:
         except (OSError, subprocess.SubprocessError) as exc:
             raise ReleaseBuildError(f"release command is unavailable: {exc}") from exc
         return ReleaseCommandResult(stdout=completed.stdout, returncode=completed.returncode)
+
+    def stream_to_file(
+        self,
+        command: Sequence[str],
+        output_path: Path | str,
+        *,
+        timeout_seconds: float | None = None,
+    ) -> None:
+        effective = self.timeout_seconds if timeout_seconds is None else timeout_seconds
+        target = Path(output_path)
+        try:
+            with target.open("wb") as out_handle:
+                try:
+                    proc = subprocess.Popen(
+                        list(command),
+                        stdin=subprocess.DEVNULL,
+                        stdout=out_handle,
+                        stderr=subprocess.PIPE,
+                        shell=False,
+                    )
+                except OSError as exc:
+                    raise ReleaseBuildError(
+                        f"release command is unavailable: {exc}"
+                    ) from exc
+                try:
+                    _, stderr = proc.communicate(timeout=effective)
+                except subprocess.TimeoutExpired as exc:
+                    proc.kill()
+                    try:
+                        proc.wait(timeout=30)
+                    except (OSError, subprocess.SubprocessError):
+                        pass
+                    raise ReleaseBuildError(
+                        f"release command is unavailable: timed out after {effective}s"
+                    ) from exc
+                except (OSError, subprocess.SubprocessError) as exc:
+                    raise ReleaseBuildError(
+                        f"release command is unavailable: {exc}"
+                    ) from exc
+        except ReleaseBuildError:
+            raise
+        except OSError as exc:
+            raise ReleaseBuildError(f"payload staging write failed: {exc}") from exc
+        if proc.returncode != 0:
+            detail = (stderr or b"").decode("utf-8", "replace").strip()
+            suffix = f": {detail}" if detail else ""
+            raise ReleaseBuildError(
+                f"streaming command failed ({' '.join(list(command)[:2])}){suffix}"
+            )
 
 
 def _runner_or_default(runner: ReleaseCommandRunner | None) -> ReleaseCommandRunner:
@@ -191,6 +260,103 @@ def _run_capture(
         suffix = f": {detail}" if detail else ""
         raise ReleaseBuildError(f"{label} failed ({' '.join(list(command)[:2])}){suffix}")
     return result.stdout
+
+
+# Chunk size for bounded-RAM file hashing (64 KiB: small vs the 1536 MiB
+# payload ceiling, large enough to keep sha256 throughput reasonable).
+_HASH_CHUNK_BYTES = 64 * 1024
+
+
+def _sha256_file(path: Path) -> str:
+    """Hash a file with bounded RAM (chunked reads, never ``read_bytes``)."""
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as handle:
+            while True:
+                chunk = handle.read(_HASH_CHUNK_BYTES)
+                if not chunk:
+                    break
+                digest.update(chunk)
+    except OSError as exc:
+        raise ReleaseBuildError(f"payload digest read failed: {exc}") from exc
+    return digest.hexdigest()
+
+
+def _stream_checked(
+    runner: ReleaseCommandRunner,
+    command: Sequence[str],
+    output_path: Path,
+    *,
+    label: str,
+    timeout_seconds: float | None = None,
+) -> None:
+    """Stream ``command`` stdout to ``output_path`` through the runner seam.
+
+    Small-command ``runner.run`` stays for bounded control output (e2fsck,
+    debugfs probes); every full-payload byte transfer goes through this
+    streaming seam so no ``_run_capture``/``.read()`` ever holds the whole
+    payload in Python bytes.
+    """
+    try:
+        runner.stream_to_file(command, output_path, timeout_seconds=timeout_seconds)
+    except ReleaseBuildError:
+        raise
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ReleaseBuildError(f"{label} is unavailable: {exc}") from exc
+
+
+def _assert_clone_neutral_staging(staging: Path) -> None:
+    """Fail closed unless the staging tree is clone-neutral (T12 gate).
+
+    Mirrors the four composer predicates owned by
+    ``build/lib/compose.sh:compose_prepare_clone_neutral_target``
+    (read-only here): ``etc/machine-id`` exists as an empty regular file;
+    ``var/lib/dbus/machine-id`` absent; ``var/lib/systemd/random-seed``
+    absent; ``etc/ssh/ssh_host_*`` absent. This is verification only:
+    never repairs the tree, only refuses with :class:`ReleaseBuildError`.
+    Symlinks at the checked paths are refused rather than followed.
+    """
+
+    def _lexists(path: Path) -> bool:
+        return path.is_symlink() or path.exists()
+
+    machine_id = staging / "etc" / "machine-id"
+    if machine_id.is_symlink() or not machine_id.is_file():
+        raise ReleaseBuildError(
+            "staging is not clone-neutral: etc/machine-id must exist as an empty regular file"
+        )
+    try:
+        if machine_id.stat().st_size != 0:
+            raise ReleaseBuildError(
+                "staging is not clone-neutral: etc/machine-id must be empty"
+            )
+    except OSError as exc:
+        raise ReleaseBuildError(
+            f"staging is not clone-neutral: cannot stat etc/machine-id: {exc}"
+        ) from exc
+    for rel in ("var/lib/dbus/machine-id", "var/lib/systemd/random-seed"):
+        if _lexists(staging / rel):
+            raise ReleaseBuildError(f"staging is not clone-neutral: {rel} must be absent")
+    ssh_dir = staging / "etc" / "ssh"
+    if _lexists(ssh_dir) and not ssh_dir.is_dir():
+        # A non-directory etc/ssh cannot hold host keys, but a symlinked or
+        # regular-file etc/ssh at the identity path is itself unexpected
+        # staging state: refuse rather than glob through it.
+        raise ReleaseBuildError(
+            "staging is not clone-neutral: etc/ssh must be a directory or absent"
+        )
+    try:
+        host_keys = sorted(ssh_dir.glob("ssh_host_*")) if ssh_dir.is_dir() else []
+    except OSError as exc:
+        raise ReleaseBuildError(
+            f"staging is not clone-neutral: cannot inspect etc/ssh: {exc}"
+        ) from exc
+    offenders = [path for path in host_keys if _lexists(path)]
+    if offenders:
+        raise ReleaseBuildError(
+            "staging is not clone-neutral: etc/ssh/ssh_host_* must be absent "
+            f"({len(offenders)} present)"
+        )
 
 
 def _assert_relocatable(head: bytes) -> None:
@@ -325,7 +491,7 @@ def build_hardware_support_set(
             tmp_out.unlink(missing_ok=True)
     finally:
         tar_tmp.unlink(missing_ok=True)
-    digest = hashlib.sha256(output.read_bytes()).hexdigest()
+    digest = _sha256_file(output)
     return {
         "output": str(output),
         "size": output.stat().st_size,
@@ -355,9 +521,13 @@ def build_release_payload(
     Standard e2fsprogs sequence through the injectable runner seam:
     ``mkfs.ext4 -d <staging>`` (populate) -> ``e2fsck -f -y`` (clean) ->
     ``resize2fs -M`` (shrink to practical minimum) -> ``e2fsck -f -y``
-    (clean) -> ``zstd -19`` (compress). The staging tree is validated with
+    (clean) -> ``zstd -19`` (compress, streamed stdout-to-file with bounded
+    RAM). The staging tree is validated with
     the shared T03 slot validator before any image byte is emitted, so a
-    skeleton root is refused before compression. Returns the post-shrink
+    skeleton root is refused before compression. A fail-closed
+    clone-neutrality gate re-verifies the four composer predicates on the
+    seeded staging tree before any image byte is emitted, so a hand-built
+    dirty tree is refused before compression. Returns the post-shrink
     image size as ``uncompressed_bytes``.
 
     Command-bound policy: populate/check/shrink run under
@@ -408,6 +578,14 @@ def build_release_payload(
     (etc_dir / "release-identity.json").write_text(
         json.dumps(identity, sort_keys=True, indent=2) + "\n", encoding="utf-8"
     )
+    # Fail-closed clone-neutrality gate (T12): the composer owns producing
+    # neutrality; this seam only re-verifies the four predicates on the exact
+    # seeded tree that populate would consume. The seeding writes above
+    # (boot/vmlinuz-generic, boot/initrd-generic,
+    # etc/greia-os/release-identity.json) touch disjoint paths, so they can
+    # neither satisfy nor bypass the check. Runs before any runner call, so
+    # refusal emits no image byte and leaves no temp image behind.
+    _assert_clone_neutral_staging(staging)
     for required in REQUIRED_PAYLOAD_PATHS:
         candidate = staging / required
         if required.endswith("src"):
@@ -473,27 +651,43 @@ def build_release_payload(
             raise ReleaseBuildError(
                 "minimum_slot_bytes must cover the shrunk image plus finalization headroom"
             )
-        compressed = _run_capture(
-            active,
-            ["zstd", "-19", "-c", "--", str(tmp_img)],
-            label="payload compression",
-            timeout_seconds=compression_timeout_seconds,
-        )
-        if not compressed.startswith(_ZSTD_MAGIC):
-            raise ReleaseBuildError("payload compressor did not emit zstd bytes")
+        # Stream `zstd -19` stdout directly to the temp output file: the
+        # child fd writes to disk while Python holds no payload bytes
+        # (bounded RAM even at the 1536 MiB payload ceiling). Single-threaded
+        # `-19` output policy unchanged; the finite compression bound still
+        # applies through the streaming seam.
         with tempfile.NamedTemporaryFile(
             prefix=f".{out_path.name}.", suffix=".tmp", dir=str(out_path.parent), delete=False
         ) as handle:
             tmp_out = Path(handle.name)
         try:
-            tmp_out.write_bytes(compressed)
+            _stream_checked(
+                active,
+                ["zstd", "-19", "-c", "--", str(tmp_img)],
+                tmp_out,
+                label="payload compression",
+                timeout_seconds=compression_timeout_seconds,
+            )
+            try:
+                compressed_size = tmp_out.stat().st_size
+            except OSError as exc:
+                raise ReleaseBuildError("compressed payload is unavailable") from exc
+            if compressed_size <= 0:
+                raise ReleaseBuildError("payload compressor emitted no bytes")
+            try:
+                with tmp_out.open("rb") as handle:
+                    compressed_magic = handle.read(len(_ZSTD_MAGIC))
+            except OSError as exc:
+                raise ReleaseBuildError("compressed payload is unreadable") from exc
+            if compressed_magic != _ZSTD_MAGIC:
+                raise ReleaseBuildError("payload compressor did not emit zstd bytes")
             os.chmod(tmp_out, 0o644)
             tmp_out.replace(out_path)
         finally:
             tmp_out.unlink(missing_ok=True)
     finally:
         tmp_img.unlink(missing_ok=True)
-    digest = hashlib.sha256(out_path.read_bytes()).hexdigest()
+    digest = _sha256_file(out_path)
     return {
         "output": str(out_path),
         "filesystem_bytes": filesystem_bytes,
@@ -509,11 +703,12 @@ def verify_release_payload(
 ) -> dict[str, object]:
     """Verify a real ext4 slot payload plus Greia completeness (read-only).
 
-    Decompresses ``payload.ext4.zst`` through the runner seam, proves the
-    ext4 superblock magic and relocatability (no MBR/GPT signature), runs a
-    read-only ``e2fsck -n`` through the seam, then proves every required
-    Greia path with read-only ``debugfs -R "stat <path>"`` probes. Any
-    tar-body payload is rejected as not-a-real-ext4-image.
+    Stream-decompresses ``payload.ext4.zst`` directly into a temp file (no
+    mount, no full-payload bytes in Python RAM), proves the ext4 superblock
+    magic and relocatability (no MBR/GPT signature) from a bounded 2048-byte
+    head read, runs a read-only ``e2fsck -n`` through the seam, then proves
+    every required Greia path with read-only ``debugfs -R "stat <path>"``
+    probes. Any tar-body payload is rejected as not-a-real-ext4-image.
     """
     active = _runner_or_default(runner)
     path = Path(payload)
@@ -523,19 +718,29 @@ def verify_release_payload(
         magic = handle.read(4)
     if magic != _ZSTD_MAGIC:
         raise ReleaseBuildError("payload.ext4.zst must be zstd-compressed bytes")
-    raw_image = _run_capture(active, ["zstd", "-d", "-c", "--", str(path)], label="payload decompression")
-    if not raw_image or len(raw_image) > MAX_PAYLOAD_BYTES:
-        raise ReleaseBuildError("decompressed payload is outside Greia bounds")
-    _assert_ext4_magic(raw_image[:2048])
-    _assert_relocatable(raw_image[:2048])
     fd, tmp_name = tempfile.mkstemp(prefix=".verify-slot.", suffix=".ext4")
     os.close(fd)
     tmp_img = Path(tmp_name)
     try:
+        _stream_checked(
+            active,
+            ["zstd", "-d", "-c", "--", str(path)],
+            tmp_img,
+            label="payload decompression",
+        )
         try:
-            tmp_img.write_bytes(raw_image)
+            decompressed_size = tmp_img.stat().st_size
         except OSError as exc:
             raise ReleaseBuildError("payload staging write failed") from exc
+        if decompressed_size <= 0 or decompressed_size > MAX_PAYLOAD_BYTES:
+            raise ReleaseBuildError("decompressed payload is outside Greia bounds")
+        try:
+            with tmp_img.open("rb") as handle:
+                head = handle.read(2048)
+        except OSError as exc:
+            raise ReleaseBuildError("payload staging write failed") from exc
+        _assert_ext4_magic(head)
+        _assert_relocatable(head)
         _run_checked(active, ["e2fsck", "-n", "-f", "--", str(tmp_img)], label="payload read-only check")
         required = (
             *_IMAGE_COMPLETENESS_DIRS,
@@ -554,7 +759,7 @@ def verify_release_payload(
     return {
         "payload": str(path),
         "size": path.stat().st_size,
-        "uncompressed_bytes": len(raw_image),
+        "uncompressed_bytes": decompressed_size,
         "checked_paths": len(required),
     }
 

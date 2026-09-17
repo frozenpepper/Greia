@@ -116,26 +116,37 @@ Normal command:
 python3 tools/greia_update.py build \
   --payload ./out/payload.ext4.zst \
   --payload-uncompressed-bytes <shrunk-image-bytes> \
-  --profile-file ./build/profiles/legacy-x86-i686.toml \
+  --profile-file ./build/profiles/acer-aspire-one-i386-ab.toml \
   --version 0.14.0 \
   --persist-read-min 1 \
   --persist-read-max 1 \
   --persist-write 1
 ```
 
-The tool reads these compatibility facts from the canonical profile:
+The tool reads these compatibility facts from the one canonical profile
+(`build/profiles/acer-aspire-one-i386-ab.toml`):
 
 ```text
 profile.id
 platform.family
 base.architecture
+platform.board            # "none" becomes manifest board null
+storage.system_slot_bytes # 1610612736 (1536 MiB) destination-slot bound
 ```
+
+Do not substitute the generic single-root `legacy-x86-i686.toml` on the
+Acer path: its 1 GiB slot bound is smaller than a real Acer payload
+minimum, so the normal `--profile-file` path refuses that cross-profile
+bundling before any bundle byte is written. Mixing `--profile-file` with
+explicit `--platform-family`/`--architecture`/`--profile`/`--board` is
+rejected; advanced/test tooling may use the explicit form without a
+profile file (then no profile slot bound is enforced).
 
 It defaults:
 
 ```text
 release ID : greia-0.14.0
-output     : out/greia-0.14.0-legacy-x86-i686.greiaupdate
+output     : out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 ```
 
 `--payload-uncompressed-bytes` is the shrunk image size reported by the
@@ -164,7 +175,7 @@ an existing output path.
 
 ```bash
 python3 tools/greia_update.py inspect \
-  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate
+  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 ```
 
 This reports the manifest facts and validates bundle structure, payload
@@ -177,7 +188,7 @@ Preferred paired-device credential:
 
 ```bash
 python3 tools/greia_update.py push \
-  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate \
+  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
   --url http://greia.local:8766 \
   --bearer "$GREIA_PARENT_BEARER"
 ```
@@ -186,7 +197,7 @@ Current development bootstrap alternative:
 
 ```bash
 python3 tools/greia_update.py push \
-  ./out/greia-0.14.0-legacy-x86-i686.greiaupdate \
+  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
   --url http://greia.local:8766 \
   --legacy-token "$GREIA_PARENT_PAIRING_TOKEN"
 ```

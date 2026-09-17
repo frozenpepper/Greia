@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -600,6 +601,54 @@ class FailClosedBeforeMutationTests(unittest.TestCase):
                 ):
                     build_live_service()
         self.assertEqual(before, _snapshot(fix["root"]))
+
+
+# ---------------------------------------------------------------------------
+# Stale signed-release / trusted-key terminology (T14)
+# ---------------------------------------------------------------------------
+
+
+_STALE_TERMINOLOGY_PATTERNS = (
+    re.compile(r"signed[-\s_]*release", re.IGNORECASE),
+    re.compile(r"trusted[-\s_]*keys?", re.IGNORECASE),
+)
+
+
+def find_stale_terminology(text: str) -> list[str]:
+    """Return stale unsigned-v3 terminology hits in installer-unit text."""
+    hits: list[str] = []
+    for pattern in _STALE_TERMINOLOGY_PATTERNS:
+        hits.extend(match.group(0) for match in pattern.finditer(text))
+    return hits
+
+
+class StaleTerminologyTests(unittest.TestCase):
+    def test_unit_has_no_stale_signed_release_or_trusted_key_wording(self) -> None:
+        text = UNIT_PATH.read_text(encoding="utf-8")
+        self.assertEqual(
+            find_stale_terminology(text),
+            [],
+            "installer unit must use unsigned-v3 wording "
+            "(no signed-release / trusted-key terms)",
+        )
+
+    def test_stale_terminology_detector_positive_control(self) -> None:
+        # TEST-FIXTURE strings: known-bad wording the detector must flag RED.
+        bad_signed = "the fresh signed-release installer mounts the slots"
+        bad_signed_space = "the fresh signed release installer mounts the slots"
+        bad_trusted = "payload digest, target profile, trusted keys"
+        for bad in (bad_signed, bad_signed_space, bad_trusted):
+            self.assertNotEqual(
+                find_stale_terminology(bad),
+                [],
+                f"detector must flag known-bad fixture: {bad!r}",
+            )
+        self.assertEqual(
+            find_stale_terminology(
+                "the unsigned setup-release fresh install mounts the slots"
+            ),
+            [],
+        )
 
 
 # ---------------------------------------------------------------------------

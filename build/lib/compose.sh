@@ -496,17 +496,33 @@ compose_install_live_content() {
 }
 
 # Root filesystem table. The filesystem UUID is disk identity owned by the
-# caller (partition/mkfs assembly); pass it via GREIA_ROOT_UUID.
+# caller (partition/mkfs assembly); pass it via GREIA_ROOT_UUID. Single-owner
+# policy: this shell seam only forwards to greia_platform.fstab, the one
+# canonical renderer also used by the installer engine and SlotFinalizer.
 compose_write_fstab() {
   local rootfs="$1"
   local root_uuid="${GREIA_ROOT_UUID:-}"
   [[ -n "$root_uuid" ]] || { echo "compose_write_fstab: GREIA_ROOT_UUID is not set." >&2; return 1; }
-  # Root filesystem and volatile working storage.
-  cat > "$rootfs/etc/fstab" <<FSTAB
-UUID=$root_uuid / ext4 defaults,noatime,errors=remount-ro 0 1
-tmpfs /tmp tmpfs nosuid,nodev,noexec,mode=1777,size=64M 0 0
-tmpfs /var/tmp tmpfs nosuid,nodev,noexec,mode=1777,size=32M 0 0
-FSTAB
+  local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
+  PYTHONPATH="$project_root/src" python3 - "$rootfs" "$root_uuid" <<'GREIA_FSTAB_EOF'
+import os
+import sys
+from pathlib import Path
+
+from greia_platform.fstab import FSTAB_FILE_MODE, render_fstab
+
+rootfs = Path(sys.argv[1])
+root_uuid = sys.argv[2]
+try:
+    text = render_fstab(root_uuid)
+except ValueError as exc:
+    print(f"compose_write_fstab: {exc}", file=sys.stderr)
+    sys.exit(1)
+target = rootfs / "etc/fstab"
+target.parent.mkdir(parents=True, exist_ok=True)
+target.write_text(text, encoding="ascii")
+os.chmod(target, FSTAB_FILE_MODE)
+GREIA_FSTAB_EOF
 }
 
 # Build the Greia-owned early framebuffer boot cover for the TARGET

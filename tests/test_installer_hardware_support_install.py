@@ -27,6 +27,7 @@ def pool(root: Path) -> VerifiedHardwareSupportPool:
         frozenset({"firmware-realtek"}),
         frozenset({"intel-microcode"}),
         0,
+        0,
     )
 
 

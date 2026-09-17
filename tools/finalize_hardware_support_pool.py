@@ -17,6 +17,24 @@ _MAX_DEBS = 1024
 _MAX_FIRMWARE_PROVIDERS = 65536
 _MAX_FIRMWARE_PATH_BYTES = 1024
 _DEFAULT_MAX_BYTES = 2 * 1024 * 1024 * 1024
+#: Debian `Installed-Size` is expressed in KiB (1024-byte units).
+_INSTALLED_SIZE_SCALE_BYTES = 1024
+#: Deterministic per-package metadata overhead added to every
+#: `installed_bytes = Installed-Size * 1024 + overhead`.
+#:
+#: `Installed-Size` counts only the unpacked payload files. The allowance
+#: covers dpkg bookkeeping (`/var/lib/dpkg/status` entry plus per-package
+#: info files such as `.list`/`.md5sums`), amortised `Packages` index cost
+#: and 4 KiB-block rounding, without depending on target filesystem
+#: geometry. 32 KiB is modest against typical firmware/microcode payloads
+#: (MiBs) yet keeps the capacity bound conservative (fail-closed: the slot
+#: gate must see *at least* the real installed footprint).
+_INSTALLED_BYTES_OVERHEAD_PER_PACKAGE = 32 * 1024
+#: Fail-closed hard cap for the pool-level installed bound. Compressed
+#: archive bytes stay bounded by the caller-supplied `max_bytes`; the
+#: installed bound is bounded by this fixed cap so a corrupt/huge
+#: `Installed-Size` cannot produce an unbounded capacity claim.
+_MAX_INSTALLED_BYTES = 2 * 1024 * 1024 * 1024
 
 
 class PoolFinalizeError(RuntimeError):
@@ -96,6 +114,38 @@ def _field(control: str, name: str) -> str:
     return ""
 
 
+def _installed_bytes(control: str, deb_name: str) -> int:
+    """Normalize one package's installed footprint from its control data.
+
+    Reads the Debian `Installed-Size` (KiB) field and returns
+    `Installed-Size * 1024 + _INSTALLED_BYTES_OVERHEAD_PER_PACKAGE`.
+    Compressed `.deb` bytes are never used here: they measure transfer
+    size, not the unpacked slot footprint. A missing/malformed/negative
+    or absurdly large field is a hard failure (fail-closed).
+    """
+    raw = _field(control, "Installed-Size")
+    if not raw:
+        raise PoolFinalizeError(
+            f"Debian package Installed-Size is missing: {deb_name}"
+        )
+    try:
+        kib = int(raw, 10)
+    except ValueError as exc:
+        raise PoolFinalizeError(
+            f"Debian package Installed-Size is malformed: {deb_name}"
+        ) from exc
+    if kib < 0 or kib > _MAX_INSTALLED_BYTES // _INSTALLED_SIZE_SCALE_BYTES:
+        raise PoolFinalizeError(
+            f"Debian package Installed-Size is out of bounds: {deb_name}"
+        )
+    installed = kib * _INSTALLED_SIZE_SCALE_BYTES + _INSTALLED_BYTES_OVERHEAD_PER_PACKAGE
+    if not 0 <= installed <= _MAX_INSTALLED_BYTES:
+        raise PoolFinalizeError(
+            f"Debian package installed size is out of bounds: {deb_name}"
+        )
+    return installed
+
+
 def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> dict[str, object]:
     if max_bytes <= 0:
         raise PoolFinalizeError("pool byte bound must be positive")
@@ -153,6 +203,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         seen_identity.add(identity)
         provided_names.add(package)
         size = path.stat().st_size
+        installed_bytes = _installed_bytes(control, path.name)
         package_sizes[package] = min(size, package_sizes.get(package, size))
         digest = _sha256(path)
         packages.append(
@@ -164,6 +215,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
                 "size": size,
                 "sha256": digest,
                 "candidate": package in candidate_set,
+                "installed_bytes": installed_bytes,
             }
         )
         repository_stanzas.append(
@@ -203,6 +255,14 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         }
     )
     unavailable_candidates = sorted(candidate_set - provided_names)
+    total_installed_bytes = sum(
+        int(entry["installed_bytes"]) for entry in packages
+    )
+    if total_installed_bytes > _MAX_INSTALLED_BYTES:
+        raise PoolFinalizeError(
+            f"hardware-support pool installed size {total_installed_bytes} bytes "
+            f"is above bound {_MAX_INSTALLED_BYTES}"
+        )
     manifest = {
         "schema_version": 1,
         "suite": candidates.get("suite", "unknown"),
@@ -212,6 +272,8 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         "metadata_suite_fallback": bool(candidates.get("metadata_suite_fallback", False)),
         "package_count": len(packages),
         "total_bytes": total_bytes,
+        "total_installed_bytes": total_installed_bytes,
+        "installed_bytes_overhead_per_package": _INSTALLED_BYTES_OVERHEAD_PER_PACKAGE,
         "provided_candidate_packages": provided_candidates,
         "provided_firmware_packages": provided_firmware,
         "provided_microcode_packages": provided_microcode,

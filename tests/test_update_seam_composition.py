@@ -149,6 +149,7 @@ def _pool_tree(root: Path, *, dirname: str = "hw-pool") -> Path:
         "architecture": "amd64",
         "package_count": 2,
         "total_bytes": len(fw) + len(uc),
+        "total_installed_bytes": len(fw) + len(uc) + 2 * 32 * 1024,
         "provided_candidate_packages": ["firmware-realtek", "amd64-microcode"],
         "provided_firmware_packages": ["firmware-realtek"],
         "provided_microcode_packages": ["amd64-microcode"],
@@ -160,11 +161,13 @@ def _pool_tree(root: Path, *, dirname: str = "hw-pool") -> Path:
                 "package": "firmware-realtek", "version": "1",
                 "architecture": "all", "filename": "pool/firmware-realtek_1_all.deb",
                 "size": len(fw), "sha256": _sha(fw), "candidate": True,
+                "installed_bytes": len(fw) + 32 * 1024,
             },
             {
                 "package": "amd64-microcode", "version": "1",
                 "architecture": "amd64", "filename": "pool/amd64-microcode_1_amd64.deb",
                 "size": len(uc), "sha256": _sha(uc), "candidate": True,
+                "installed_bytes": len(uc) + 32 * 1024,
             },
         ],
         "repository_indexes": {
@@ -455,6 +458,21 @@ class ProductionFactoryTypeTests(unittest.TestCase):
             raw = authority.backend.seams.installed_contract_factory()
             self.assertEqual(parse_persist_schema_marker(raw), 1)
             self.assertEqual(raw, emit_persist_schema_marker(1))
+
+    def test_installed_contract_factory_is_provisional_session04(self) -> None:
+        """T07: constant fallback reads as provisional, never a live read."""
+        import inspect
+
+        from greia_platform import system_updates
+
+        source = inspect.getsource(
+            system_updates._production_installed_contract_factory
+        )
+        self.assertIn("PROVISIONAL", source)
+        self.assertIn("Session 04", source)
+        self.assertIn("NOT a live PERSIST read", source)
+        factory = system_updates._production_installed_contract_factory()
+        self.assertIn("provisional", factory.__name__)
 
     def test_profile_policy_derives_from_record(self) -> None:
         from greia_platform.slot_writer import SlotProfilePolicy

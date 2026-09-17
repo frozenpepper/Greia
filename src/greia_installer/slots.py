@@ -68,6 +68,10 @@ def pool_to_support_set(
     facts from the release manifest; the pool itself was verified at load.
     Package classes come from the pool's own verified classification, so
     firmware can never be reclassified as microcode here.
+    The capacity bound is the pool's verified installed-size total
+    (`total_installed_bytes` from Debian `Installed-Size` plus overhead),
+    never the compressed archive total (`total_bytes`, kept only for
+    transfer/storage bounds).
     """
     records: list[InstalledPackage] = []
     for entry in pool.packages:
@@ -90,7 +94,7 @@ def pool_to_support_set(
     return ReleaseSupportSet(
         support_digest=support_digest,
         support_size=support_size,
-        installed_size_bound=pool.total_bytes,
+        installed_size_bound=pool.total_installed_bytes,
         provided_firmware=frozenset(pool.provided_firmware),
         provided_microcode=frozenset(pool.provided_microcode),
         packages=tuple(records),

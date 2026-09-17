@@ -3230,22 +3230,32 @@ def _production_selection_factory(
 
 
 def _production_installed_contract_factory() -> Callable[[], bytes]:
-    """Installed PERSIST schema marker (ADR 0036 §6 integer check).
+    """PROVISIONAL installed PERSIST schema marker (ADR 0036 §6 integer check).
 
-    Returns the canonical marker bytes for the current installed schema.
-    Device integration reads the live PERSIST marker in later sessions;
-    this composition stays importable offline and fail-closed.
+    Synthesized constant fallback only — NOT a live PERSIST read. Fresh
+    PERSIST init does not create the marker yet; Session 04 owns real
+    marker init, the live device read, and migration/recovery. The
+    physical update path has NOT proved PERSIST compatibility through
+    this seam. This composition stays importable offline and fail-closed.
     """
 
-    def _factory() -> bytes:
+    # TODO(Session 04): replace this synthesized constant with a read of
+    # the already-mounted PERSIST marker (or a required injected/read
+    # marker once A/B activation is genuinely enabled) plus
+    # migration/recovery. Do NOT mount PERSIST here: that mount
+    # lifecycle belongs to Session 04, not this tranche.
+
+    def _provisional_fallback_factory() -> bytes:
         from .persistent_layout import (
             PERSIST_SCHEMA_CURRENT,
             emit_persist_schema_marker,
         )
 
+        # Provisional: synthesizes the marker from the constant; performs
+        # no PERSIST mount, read, or migration.
         return emit_persist_schema_marker(PERSIST_SCHEMA_CURRENT)
 
-    return _factory
+    return _provisional_fallback_factory
 
 
 def build_live_update_service(

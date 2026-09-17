@@ -47,6 +47,7 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
                 "Package: firmware-realtek\n"
                 "Version: 1\n"
                 "Architecture: all\n"
+                "Installed-Size: 100\n"
                 "Description: test firmware\n"
             )
             with mock.patch("tools.finalize_hardware_support_pool._control", return_value=control):
@@ -71,6 +72,16 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             self.assertTrue(entry["candidate"])
             self.assertEqual(entry["filename"], "pool/firmware-realtek_1_all.deb")
             self.assertEqual(len(entry["sha256"]), 64)
+            # Installed-size accounting: Installed-Size KiB * 1024 + overhead,
+            # archive bytes kept separately for transfer bounds.
+            self.assertEqual(entry["installed_bytes"], 100 * 1024 + 32 * 1024)
+            self.assertEqual(
+                manifest["total_installed_bytes"], 100 * 1024 + 32 * 1024
+            )
+            self.assertEqual(
+                manifest["installed_bytes_overhead_per_package"], 32 * 1024
+            )
+            self.assertEqual(manifest["total_bytes"], len(b"fake-debian-package"))
             packages_text = (pool / "Packages").read_text(encoding="utf-8")
             self.assertIn("Package: firmware-realtek", packages_text)
             self.assertIn("Filename: pool/firmware-realtek_1_all.deb", packages_text)
@@ -105,8 +116,8 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
                 encoding="utf-8",
             )
             controls = {
-                "firmware-large_1_all.deb": "Package: firmware-large\nVersion: 1\nArchitecture: all\n",
-                "firmware-small_1_all.deb": "Package: firmware-small\nVersion: 1\nArchitecture: all\n",
+                "firmware-large_1_all.deb": "Package: firmware-large\nVersion: 1\nArchitecture: all\nInstalled-Size: 50\n",
+                "firmware-small_1_all.deb": "Package: firmware-small\nVersion: 1\nArchitecture: all\nInstalled-Size: 10\n",
             }
 
             def control(path: Path) -> str:
@@ -142,7 +153,7 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             )
             package = deb_dir / "firmware-realtek_1_all.deb"
             package.write_bytes(b"package")
-            control = "Package: firmware-realtek\nVersion: 1\nArchitecture: all\n"
+            control = "Package: firmware-realtek\nVersion: 1\nArchitecture: all\nInstalled-Size: 20\n"
             with mock.patch("tools.finalize_hardware_support_pool._control", return_value=control):
                 manifest = finalize_pool(pool, candidates, 1024 * 1024)
         self.assertEqual(
@@ -172,8 +183,8 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             (deb_dir / "firmware-realtek_2_all.deb").write_bytes(b"two")
             candidates = self.make_candidate_manifest(root)
             controls = [
-                "Package: firmware-realtek\nVersion: 1\nArchitecture: all\n",
-                "Package: firmware-realtek\nVersion: 2\nArchitecture: all\n",
+                "Package: firmware-realtek\nVersion: 1\nArchitecture: all\nInstalled-Size: 10\n",
+                "Package: firmware-realtek\nVersion: 2\nArchitecture: all\nInstalled-Size: 10\n",
             ]
             with mock.patch("tools.finalize_hardware_support_pool._control", side_effect=controls):
                 with self.assertRaises(PoolFinalizeError):

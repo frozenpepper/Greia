@@ -68,6 +68,7 @@ def _make_hw_pool(root: Path, *, payload: bytes = b"firmware") -> Path:
         "architecture": "amd64",
         "package_count": 1,
         "total_bytes": len(payload),
+        "total_installed_bytes": len(payload) + 32 * 1024,
         "provided_candidate_packages": ["firmware-realtek"],
         "provided_firmware_packages": ["firmware-realtek"],
         "provided_microcode_packages": [],
@@ -83,6 +84,7 @@ def _make_hw_pool(root: Path, *, payload: bytes = b"firmware") -> Path:
                 "size": len(payload),
                 "sha256": _sha(payload),
                 "candidate": True,
+                "installed_bytes": len(payload) + 32 * 1024,
             }
         ],
         "repository_indexes": {
@@ -98,11 +100,20 @@ def _make_hw_pool(root: Path, *, payload: bytes = b"firmware") -> Path:
 
 
 class FakeExt4Runner:
-    """Seam fake: simulates e2fsprogs/debugfs, delegates zstd to the real binary."""
+    """Seam fake: simulates e2fsprogs/debugfs, delegates zstd to the real binary.
+
+    Small control commands go through ``run``; full-payload zstd transfers go
+    through ``stream_to_file`` (stdout-to-file, bounded RAM), mirroring the
+    production seam split. ``run`` retains a zstd branch only so a regression
+    (payload capture reintroduced) surfaces as a routable assertion instead
+    of a bare AttributeError.
+    """
 
     def __init__(self) -> None:
         self.commands: list[list[str]] = []
         self.timeouts: list[float | None] = []
+        self.streamed_commands: list[list[str]] = []
+        self.streamed_timeouts: list[float | None] = []
 
     def run(self, command, *, timeout_seconds=None) -> object:
         argv = list(command)
@@ -166,6 +177,29 @@ class FakeExt4Runner:
             )
         raise AssertionError(f"unexpected command: {argv}")
 
+    def stream_to_file(self, command, output_path, *, timeout_seconds=None) -> None:
+        """Fake streaming seam: real zstd with stdout wired to the file."""
+        argv = list(command)
+        self.streamed_commands.append(argv)
+        self.streamed_timeouts.append(timeout_seconds)
+        prog = Path(argv[0]).name
+        if prog != "zstd":
+            raise AssertionError(f"unexpected streamed command: {argv}")
+        target = Path(output_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("wb") as out_handle:
+            completed = subprocess.run(
+                argv,
+                check=False,
+                shell=False,
+                stdin=subprocess.DEVNULL,
+                stdout=out_handle,
+                stderr=subprocess.PIPE,
+                timeout=timeout_seconds if timeout_seconds is not None else 120,
+            )
+        if completed.returncode != 0:
+            raise AssertionError(f"fake zstd streaming failed: {argv}")
+
 
 class BuildReleaseTests(unittest.TestCase):
     def _staging(self, root: Path) -> Path:
@@ -174,6 +208,9 @@ class BuildReleaseTests(unittest.TestCase):
         (staging / "etc" / "greia-os" / "build-info").write_text(
             "GREIA_OS_VERSION=0.15.0\n", encoding="utf-8"
         )
+        # Clone-neutral identity state (composer-owned; the payload gate only
+        # re-verifies): empty etc/machine-id, no dbus/random-seed/ssh_host_*.
+        (staging / "etc" / "machine-id").write_text("", encoding="utf-8")
         (staging / "opt" / "greia-os" / "src").mkdir(parents=True)
         (staging / "opt" / "greia-os" / "src" / "placeholder.py").write_text(
             "# placeholder\n", encoding="utf-8"
@@ -210,15 +247,22 @@ class BuildReleaseTests(unittest.TestCase):
                 runner=runner,
             )
             kinds = [cmd[0] for cmd in runner.commands]
-            self.assertEqual(kinds, ["mkfs.ext4", "e2fsck", "resize2fs", "e2fsck", "zstd"])
+            self.assertEqual(kinds, ["mkfs.ext4", "e2fsck", "resize2fs", "e2fsck"])
+            # Payload compression streams through the file seam, never the
+            # capture seam: exactly one streamed `zstd -19 -c`.
+            streamed_kinds = [cmd[0] for cmd in runner.streamed_commands]
+            self.assertEqual(streamed_kinds, ["zstd"])
+            self.assertEqual(runner.streamed_commands[0][:3], ["zstd", "-19", "-c"])
+            self.assertNotIn("-T", runner.streamed_commands[0])
             # Exact ordered commands: populate -> check -> shrink-min -> re-check.
             self.assertEqual(runner.commands[0][:2], ["mkfs.ext4", "-d"])
             self.assertEqual(runner.commands[1][:3], ["e2fsck", "-f", "-y"])
             self.assertNotIn("-n", runner.commands[1])
             self.assertEqual(runner.commands[2][:2], ["resize2fs", "-M"])
             self.assertEqual(runner.commands[3][:3], ["e2fsck", "-f", "-y"])
-            self.assertEqual(runner.commands[4][:3], ["zstd", "-19", "-c"])
             for cmd in runner.commands:
+                self.assertNotIn("shell", [str(c) for c in cmd])
+            for cmd in runner.streamed_commands:
                 self.assertNotIn("shell", [str(c) for c in cmd])
             # Shrink post-condition: reported size is the post-shrink image,
             # strictly smaller than the populated size, and covers headroom.
@@ -261,19 +305,19 @@ class BuildReleaseTests(unittest.TestCase):
                 runner=runner,
             )
             kinds = [cmd[0] for cmd in runner.commands]
-            self.assertEqual(kinds, ["mkfs.ext4", "e2fsck", "resize2fs", "e2fsck", "zstd"])
+            self.assertEqual(kinds, ["mkfs.ext4", "e2fsck", "resize2fs", "e2fsck"])
             # First four steps run under the default command bound; the
-            # zstd -19 step over the ~1 GiB-class image runs under the
-            # larger compression bound with real headroom.
+            # streamed zstd -19 step over the ~1 GiB-class image runs under
+            # the larger compression bound with real headroom.
             self.assertEqual(
-                runner.timeouts[:4], [module.DEFAULT_COMMAND_TIMEOUT_SECONDS] * 4
+                runner.timeouts, [module.DEFAULT_COMMAND_TIMEOUT_SECONDS] * 4
             )
             self.assertEqual(
-                runner.timeouts[4], module.PAYLOAD_COMPRESSION_TIMEOUT_SECONDS
+                runner.streamed_timeouts, [module.PAYLOAD_COMPRESSION_TIMEOUT_SECONDS]
             )
             self.assertGreaterEqual(module.DEFAULT_COMMAND_TIMEOUT_SECONDS, 600.0)
             self.assertGreaterEqual(module.PAYLOAD_COMPRESSION_TIMEOUT_SECONDS, 1800.0)
-            self.assertEqual(runner.commands[4][:3], ["zstd", "-19", "-c"])
+            self.assertEqual(runner.streamed_commands[0][:3], ["zstd", "-19", "-c"])
             # Custom overrides propagate through the same seam.
             runner2 = FakeExt4Runner()
             module.build_release_payload(
@@ -289,8 +333,8 @@ class BuildReleaseTests(unittest.TestCase):
                 command_timeout_seconds=11.0,
                 compression_timeout_seconds=22.0,
             )
-            self.assertEqual(runner2.timeouts[:4], [11.0] * 4)
-            self.assertEqual(runner2.timeouts[4], 22.0)
+            self.assertEqual(runner2.timeouts, [11.0] * 4)
+            self.assertEqual(runner2.streamed_timeouts, [22.0])
             # Production runner defaults stay finite and match the constants.
             self.assertEqual(
                 module.SubprocessReleaseRunner().timeout_seconds,
@@ -416,7 +460,11 @@ class BuildReleaseTests(unittest.TestCase):
             payload = module.verify_release_payload(output, runner=verify_runner)
             self.assertEqual(payload["uncompressed_bytes"], result["uncompressed_bytes"])
             verify_kinds = [cmd[0] for cmd in verify_runner.commands]
-            self.assertEqual(verify_kinds[0], "zstd")
+            verify_streamed = [cmd[0] for cmd in verify_runner.streamed_commands]
+            # Decompression streams through the file seam (no capture).
+            self.assertEqual(verify_streamed, ["zstd"])
+            self.assertEqual(verify_runner.streamed_commands[0][:3], ["zstd", "-d", "-c"])
+            self.assertNotIn("zstd", verify_kinds)
             self.assertIn("e2fsck", verify_kinds)
             self.assertIn("debugfs", verify_kinds)
             self.assertGreaterEqual(payload["checked_paths"], 10)
@@ -448,6 +496,122 @@ class BuildReleaseTests(unittest.TestCase):
             for text in ("signer", "signature", "key", "sequence"):
                 self.assertNotIn(text, json.dumps(manifest.as_json_dict()).lower())
 
+    def _payload_kwargs(self, root: Path, staging: Path) -> dict:
+        kernel = root / "vmlinuz"
+        kernel.write_bytes(b"k")
+        initramfs = root / "initrd"
+        initramfs.write_bytes(b"i")
+        return {
+            "staging_dir": staging,
+            "kernel_path": kernel,
+            "initramfs_path": initramfs,
+            "output": root / "payload.ext4.zst",
+            "profile_id": "legacy-x86-i686",
+            "release_id": "greia-0.15.0",
+            "filesystem_bytes": 2 * 1024 * 1024,
+            "minimum_slot_bytes": 2 * 1024 * 1024,
+        }
+
+    def _assert_gate_refusal(self, root: Path, staging: Path, needle: str) -> None:
+        """The gate refuses before populate/compression: no runner call, no output."""
+        runner = FakeExt4Runner()
+        with self.assertRaises(module.ReleaseBuildError) as ctx:
+            module.build_release_payload(runner=runner, **self._payload_kwargs(root, staging))
+        self.assertIn(needle, str(ctx.exception).lower())
+        self.assertFalse((root / "payload.ext4.zst").exists())
+        self.assertEqual(runner.commands, [])
+        self.assertEqual(runner.streamed_commands, [])
+
+    def test_clone_neutral_gate_refuses_nonempty_machine_id(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            (staging / "etc" / "machine-id").write_text("9f1b2c\n", encoding="utf-8")
+            self._assert_gate_refusal(root, staging, "machine-id")
+
+    def test_clone_neutral_gate_refuses_missing_machine_id(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            (staging / "etc" / "machine-id").unlink()
+            self._assert_gate_refusal(root, staging, "machine-id")
+
+    def test_clone_neutral_gate_refuses_dbus_machine_id(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            dbus_id = staging / "var" / "lib" / "dbus" / "machine-id"
+            dbus_id.parent.mkdir(parents=True, exist_ok=True)
+            dbus_id.write_text("9f1b2c\n", encoding="utf-8")
+            self._assert_gate_refusal(root, staging, "dbus")
+
+    def test_clone_neutral_gate_refuses_random_seed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            seed = staging / "var" / "lib" / "systemd" / "random-seed"
+            seed.parent.mkdir(parents=True, exist_ok=True)
+            seed.write_bytes(b"\x00\x01\x02\x03" * 128)
+            self._assert_gate_refusal(root, staging, "random-seed")
+
+    def test_clone_neutral_gate_refuses_ssh_host_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            ssh_dir = staging / "etc" / "ssh"
+            ssh_dir.mkdir(parents=True, exist_ok=True)
+            (ssh_dir / "ssh_host_ed25519_key").write_bytes(b"fake-host-key")
+            (ssh_dir / "ssh_host_ed25519_key.pub").write_bytes(b"fake-host-key-pub")
+            self._assert_gate_refusal(root, staging, "ssh_host")
+
+    def test_clone_neutral_gate_clean_tree_still_builds(self) -> None:
+        """Positive control: a clone-neutral tree builds through the real
+        function seam (fake runner only stands in for e2fsprogs/zstd)."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            kernel = root / "vmlinuz"
+            kernel.write_bytes(b"generic-kernel" * 64)
+            initramfs = root / "initrd"
+            initramfs.write_bytes(b"generic-initramfs" * 64)
+            output = root / "payload.ext4.zst"
+            runner = FakeExt4Runner()
+            result = module.build_release_payload(
+                staging_dir=staging,
+                kernel_path=kernel,
+                initramfs_path=initramfs,
+                output=output,
+                profile_id="legacy-x86-i686",
+                release_id="greia-0.15.0",
+                filesystem_bytes=4 * 1024 * 1024,
+                minimum_slot_bytes=5 * 1024 * 1024,
+                runner=runner,
+            )
+            self.assertTrue(output.exists())
+            self.assertGreater(result["uncompressed_bytes"], 0)
+            # Seeding writes are disjoint from the gate: boot assets and the
+            # release identity exist on the consumed tree, and the gate still
+            # holds on the seeded state.
+            self.assertTrue((staging / "boot" / "vmlinuz-generic").is_file())
+            self.assertTrue((staging / "boot" / "initrd-generic").is_file())
+            self.assertTrue(
+                (staging / "etc" / "greia-os" / "release-identity.json").is_file()
+            )
+            module._assert_clone_neutral_staging(staging)
+
+    def test_clone_neutral_gate_never_repairs_dirty_tree(self) -> None:
+        """The gate is verification, not cleanup: the dirty file survives refusal."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            (staging / "etc" / "machine-id").write_text("9f1b2c\n", encoding="utf-8")
+            runner = FakeExt4Runner()
+            with self.assertRaises(module.ReleaseBuildError):
+                module.build_release_payload(runner=runner, **self._payload_kwargs(root, staging))
+            self.assertEqual(
+                (staging / "etc" / "machine-id").read_text(encoding="utf-8"), "9f1b2c\n"
+            )
+
     def test_minimal_skeleton_root_is_refused_before_compression(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -473,6 +637,7 @@ class BuildReleaseTests(unittest.TestCase):
                 )
             self.assertFalse((root / "payload.ext4.zst").exists())
             self.assertNotIn("zstd", [cmd[0] for cmd in runner.commands])
+            self.assertEqual(runner.streamed_commands, [])
 
     def test_missing_apt_get_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -520,6 +685,132 @@ class BuildReleaseTests(unittest.TestCase):
             with self.assertRaises(module.ReleaseBuildError) as ctx:
                 module.verify_release_payload(legacy, runner=FakeExt4Runner())
             self.assertIn("real ext4", str(ctx.exception))
+
+    def test_payload_streaming_never_holds_full_bytes_in_capture_seam(self) -> None:
+        """Streaming regression: payload zstd must stream, never capture.
+
+        Fails if unbounded ``.read()``/full-payload bytes retention is
+        reintroduced: a strict runner refuses any payload ``zstd`` through
+        the capture seam, the build→verify round trip must still produce
+        byte-identical-valid results through the streaming seam, and the
+        production source must contain no capture/whole-file read in the
+        payload transfer path.
+        """
+        import inspect
+
+        class StrictStreamingRunner(FakeExt4Runner):
+            def run(self, command, *, timeout_seconds=None) -> object:
+                if list(command)[0] == "zstd":
+                    raise AssertionError(
+                        "payload zstd must use stream_to_file, not run() capture"
+                    )
+                return super().run(command, timeout_seconds=timeout_seconds)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            kernel = root / "vmlinuz"
+            kernel.write_bytes(b"generic-kernel" * 64)
+            initramfs = root / "initrd"
+            initramfs.write_bytes(b"generic-initramfs" * 64)
+            output = root / "payload.ext4.zst"
+            runner = StrictStreamingRunner()
+            result = module.build_release_payload(
+                staging_dir=staging,
+                kernel_path=kernel,
+                initramfs_path=initramfs,
+                output=output,
+                profile_id="legacy-x86-i686",
+                release_id="greia-0.15.0",
+                filesystem_bytes=4 * 1024 * 1024,
+                minimum_slot_bytes=5 * 1024 * 1024,
+                runner=runner,
+            )
+            # Compression streamed exactly once; capture seam never saw zstd.
+            self.assertEqual(
+                [cmd[:3] for cmd in runner.streamed_commands], [["zstd", "-19", "-c"]]
+            )
+            self.assertNotIn("zstd", [cmd[0] for cmd in runner.commands])
+            verify_runner = StrictStreamingRunner()
+            payload = module.verify_release_payload(output, runner=verify_runner)
+            self.assertEqual(
+                [cmd[:3] for cmd in verify_runner.streamed_commands],
+                [["zstd", "-d", "-c"]],
+            )
+            self.assertNotIn("zstd", [cmd[0] for cmd in verify_runner.commands])
+            # Byte-identical-valid results through the streaming path.
+            self.assertEqual(payload["uncompressed_bytes"], result["uncompressed_bytes"])
+            raw = subprocess.run(
+                ["zstd", "-d", "-c", "--", str(output)],
+                check=True,
+                capture_output=True,
+                shell=False,
+            ).stdout
+            self.assertEqual(len(raw), result["uncompressed_bytes"])
+            self.assertEqual(raw[1080:1082], b"\x53\xef")
+            # Static call-graph guard: the payload transfer path holds no
+            # capture helper, whole-file read, unbounded read, or zstd call
+            # through the capture seam. Bounded head reads (size argument)
+            # and small debugfs control-probe stdout stay allowed.
+            for fn in (module.build_release_payload, module.verify_release_payload):
+                source = inspect.getsource(fn)
+                self.assertNotIn("_run_capture", source)
+                self.assertNotIn("read_bytes", source)
+                self.assertNotIn(".read()", source)
+                self.assertNotIn('run(["zstd"', source)
+                self.assertNotIn("run(['zstd'", source)
+                self.assertIn("stream", source)
+
+    def test_streaming_primitive_holds_bounded_ram(self) -> None:
+        """Production proof: the streaming primitive holds bounded RAM.
+
+        Streams a 32 MiB payload through the real
+        ``SubprocessReleaseRunner.stream_to_file`` (the exact production
+        mechanism, child fd wired to the file) while tracing Python
+        allocations: peak traced RAM must stay far below the payload size,
+        which a capture-into-bytes implementation could never satisfy.
+        """
+        import tracemalloc
+
+        payload_bytes = 32 * 1024 * 1024
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "input.bin"
+            with source.open("wb") as handle:
+                row = b"greia-streaming-proof-row-0123456789\n"
+                remaining = payload_bytes
+                while remaining > 0:
+                    chunk = row * min(4096, (remaining + len(row) - 1) // len(row))
+                    chunk = chunk[:remaining]
+                    handle.write(chunk)
+                    remaining -= len(chunk)
+            self.assertEqual(source.stat().st_size, payload_bytes)
+            streamed = root / "input.bin.zst"
+            runner = module.SubprocessReleaseRunner()
+            tracemalloc.start()
+            try:
+                runner.stream_to_file(
+                    ["zstd", "-19", "-c", "--", str(source)],
+                    streamed,
+                    timeout_seconds=600.0,
+                )
+                _, peak = tracemalloc.get_traced_memory()
+            finally:
+                tracemalloc.stop()
+            self.assertLess(
+                peak,
+                payload_bytes // 4,
+                f"streaming held {peak} traced bytes for a {payload_bytes}-byte payload",
+            )
+            # Streamed bytes are valid: magic + round-trip to the input.
+            self.assertEqual(streamed.read_bytes()[:4], b"\x28\xb5\x2f\xfd")
+            recovered = subprocess.run(
+                ["zstd", "-d", "-c", "--", str(streamed)],
+                check=True,
+                capture_output=True,
+                shell=False,
+            ).stdout
+            self.assertEqual(recovered, source.read_bytes())
 
     def test_no_tar_magic_in_production_source(self) -> None:
         repo = Path(__file__).resolve().parents[1]

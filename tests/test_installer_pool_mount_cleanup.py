@@ -102,6 +102,7 @@ def _make_pool(root: Path) -> Path:
         "architecture": "amd64",
         "package_count": 2,
         "total_bytes": len(_FW) + len(_UC),
+        "total_installed_bytes": len(_FW) + len(_UC) + 2 * 32 * 1024,
         "provided_candidate_packages": [_FIRMWARE, _MICROCODE],
         "provided_firmware_packages": [_FIRMWARE],
         "provided_microcode_packages": [_MICROCODE],
@@ -113,11 +114,13 @@ def _make_pool(root: Path) -> Path:
                 "package": _FIRMWARE, "version": "1",
                 "architecture": "all", "filename": "pool/firmware-realtek_1_all.deb",
                 "size": len(_FW), "sha256": _sha(_FW), "candidate": True,
+                "installed_bytes": len(_FW) + 32 * 1024,
             },
             {
                 "package": _MICROCODE, "version": "1",
                 "architecture": "amd64", "filename": "pool/amd64-microcode_1_amd64.deb",
                 "size": len(_UC), "sha256": _sha(_UC), "candidate": True,
+                "installed_bytes": len(_UC) + 32 * 1024,
             },
         ],
         "repository_indexes": {

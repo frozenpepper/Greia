@@ -57,9 +57,9 @@ PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=strict
 # Minimum privilege for the real A/B implementation (POSTR1-P2 + POSTR1-P5 D5):
-# the fresh signed-release installer mounts/formats the target's slots
+# the unsigned setup-release fresh install mounts/formats the target's slots
 # (mount(2), umount(2), BLKRRPART re-read) and probes device identities
-# (blkid), which requires CAP_SYS_ADMIN, and installs the verified
+# (blkid), which requires CAP_SYS_ADMIN, and installs the verified offline
 # hardware-support set via `chroot <slot>` package operations (update /
 # install / clean in
 # greia_installer.hardware_support_install.TargetHardwareSupportInstaller.install,
@@ -76,7 +76,7 @@ AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT
 # boot-control/grubenv state, first-install journal staging, and the slot
 # mount root (BlockSlotFilesystem mounts SYSTEM_A below it). Everything else
 # stays read-only under ProtectSystem=strict; /etc/greia-os (release facts,
-# payload digest, target profile, trusted keys) is read-only by construction.
+# payload digest, target profile) is read-only by construction.
 ReadWritePaths=/run/greia-os
 ReadWritePaths=/run/greia-install/persist
 ReadWritePaths=/run/greia-install/boot-control

@@ -29,6 +29,8 @@ class UpdateTarget:
     platform_family: str
     architecture: str
     profile: str
+    board: str | None = None
+    system_slot_bytes: int | None = None
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -42,7 +44,7 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument(
         "--profile-file",
         type=Path,
-        help="Greia build profile TOML; derives profile/family/architecture",
+        help="Greia build profile TOML; derives profile/family/architecture/board/slot-size",
     )
     build.add_argument("--platform-family")
     build.add_argument("--architecture")
@@ -113,28 +115,78 @@ def _target_from_profile_file(path: Path) -> UpdateTarget:
         profile = raw["profile"]["id"]
         platform_family = raw["platform"]["family"]
         architecture = raw["base"]["architecture"]
+        board_raw = raw["platform"]["board"]
+        slot_bytes = raw["storage"]["system_slot_bytes"]
     except (KeyError, TypeError) as exc:
         raise SystemUpdateError(
-            "build profile must define profile.id, platform.family and base.architecture"
+            "build profile must define profile.id, platform.family, base.architecture, "
+            "platform.board and storage.system_slot_bytes"
         ) from exc
     if not all(isinstance(value, str) and value for value in (profile, platform_family, architecture)):
         raise SystemUpdateError("build profile update identity fields must be non-empty text")
-    return UpdateTarget(platform_family, architecture, profile)
+    if not isinstance(board_raw, str) or not board_raw:
+        raise SystemUpdateError("build profile platform.board must be non-empty text")
+    board = None if board_raw == "none" else board_raw
+    if isinstance(slot_bytes, bool) or not isinstance(slot_bytes, int) or slot_bytes <= 0:
+        raise SystemUpdateError("build profile storage.system_slot_bytes must be a positive integer")
+    return UpdateTarget(platform_family, architecture, profile, board, slot_bytes)
 
 
 def _resolve_target(args: argparse.Namespace) -> UpdateTarget:
     explicit = (args.platform_family, args.architecture, args.profile)
+    board_explicit = getattr(args, "board", None)
     if args.profile_file is not None:
-        if any(value is not None for value in explicit):
+        if any(value is not None for value in explicit) or board_explicit is not None:
             raise SystemUpdateError(
-                "use --profile-file or explicit --platform-family/--architecture/--profile, not both"
+                "use --profile-file or explicit --platform-family/--architecture/--profile/--board, not both"
             )
         return _target_from_profile_file(args.profile_file)
     if not all(isinstance(value, str) and value for value in explicit):
         raise SystemUpdateError(
             "build requires --profile-file or all of --platform-family, --architecture and --profile"
         )
-    return UpdateTarget(args.platform_family, args.architecture, args.profile)
+    return UpdateTarget(args.platform_family, args.architecture, args.profile, board_explicit, None)
+
+
+def _check_profile_capacity(
+    target: UpdateTarget,
+    *,
+    payload_uncompressed_bytes: int,
+    minimum_slot_bytes: int | None,
+) -> None:
+    """Refuse payloads that cannot fit the profile-owned destination slot.
+
+    The profile file is the single release-identity authority: its
+    ``storage.system_slot_bytes`` bounds the destination slot. The
+    operator-supplied ``--payload-uncompressed-bytes`` (shrunk image size
+    from ``build-payload``) and the effective minimum (explicit
+    ``--minimum-slot-bytes`` or the uncompressed size by default) must both
+    fit. This keeps an Acer A/B sized payload from being bundled under the
+    smaller generic single-root profile through the normal --profile-file
+    path. Explicit-identity builds carry no profile slot bound and skip
+    this check.
+    """
+    if target.system_slot_bytes is None:
+        return
+    effective_minimum = (
+        minimum_slot_bytes if minimum_slot_bytes is not None else payload_uncompressed_bytes
+    )
+    if (
+        isinstance(payload_uncompressed_bytes, bool)
+        or isinstance(effective_minimum, bool)
+        or payload_uncompressed_bytes <= 0
+        or effective_minimum <= 0
+    ):
+        raise SystemUpdateError("payload size facts must be positive integers")
+    if (
+        payload_uncompressed_bytes > target.system_slot_bytes
+        or effective_minimum > target.system_slot_bytes
+    ):
+        raise SystemUpdateError(
+            f"payload does not fit profile {target.profile!r} system slot "
+            f"({target.system_slot_bytes} bytes): uncompressed={payload_uncompressed_bytes} "
+            f"minimum={effective_minimum}; cross-profile bundling refused"
+        )
 
 
 def _build_output(args: argparse.Namespace, target: UpdateTarget) -> Path:
@@ -238,6 +290,11 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "build":
             target = _resolve_target(args)
+            _check_profile_capacity(
+                target,
+                payload_uncompressed_bytes=args.payload_uncompressed_bytes,
+                minimum_slot_bytes=args.minimum_slot_bytes,
+            )
             output = _build_output(args, target)
             release_id = args.release_id or f"greia-{args.version}"
             build_update_bundle(
@@ -249,7 +306,7 @@ def main(argv: list[str] | None = None) -> int:
                 platform_family=target.platform_family,
                 architecture=target.architecture,
                 profile=target.profile,
-                board=args.board,
+                board=target.board,
                 payload_uncompressed_bytes=args.payload_uncompressed_bytes,
                 minimum_slot_bytes=args.minimum_slot_bytes,
                 persist_read_schema_min=args.persist_read_min,

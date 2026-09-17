@@ -72,11 +72,46 @@ class CloneNeutralTargetTests(unittest.TestCase):
 
     def test_payload_producer_path_cannot_bypass_target_policy(self) -> None:
         producer = PRODUCER.read_text()
-        # No second implementation in the payload producer: it inherits the
-        # composed target state instead of fixing up identity itself.
-        self.assertNotIn("machine-id", producer)
-        self.assertNotIn("ssh_host_", producer)
-        self.assertNotIn("random-seed", producer)
+        # The composer stays the sole producer of neutrality; the payload
+        # producer carries only the T12 fail-closed verification gate
+        # (_assert_clone_neutral_staging): it refuses a dirty staging tree
+        # and never repairs identity state itself.
+        gate_def = "def _assert_clone_neutral_staging"
+        self.assertIn(gate_def, producer)
+        self.assertIn("_assert_clone_neutral_staging(staging)", producer)
+        # The gate fires before any image byte: the call precedes the first
+        # e2fsprogs populate step and the temp-image creation.
+        self.assertLess(
+            producer.index("\n    _assert_clone_neutral_staging(staging)"),
+            producer.index('"mkfs.ext4"'),
+        )
+        # Identity markers live only inside the single gate body: no second
+        # implementation scattered elsewhere in the producer.
+        start = producer.index(gate_def)
+        end = producer.index("\ndef ", start + 1)
+        gate_body = producer[start:end]
+        outside = producer[:start] + producer[end:]
+        # The call-site comment names the gate without touching identity
+        # paths; nothing else outside the gate may reference them.
+        for marker in ("machine-id", "ssh_host_", "random-seed"):
+            self.assertIn(marker, gate_body)
+            self.assertNotIn(marker, outside)
+        # Verification, not cleanup: the gate body never mutates identity
+        # state (no truncate/remove/write/keygen of the checked paths).
+        for verb in (
+            "unlink",
+            "write_text",
+            "write_bytes",
+            "truncate",
+            "os.remove",
+            "shutil.rmtree",
+            "ssh-keygen",
+            "systemd-machine-id-setup",
+            '": >"',
+            "rm -f",
+            "rm -rf",
+        ):
+            self.assertNotIn(verb, gate_body)
         # The documented release flow routes payload staging through the
         # composed target root (role target), never around it.
         workflow = WORKFLOW.read_text()

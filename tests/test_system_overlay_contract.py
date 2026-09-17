@@ -247,11 +247,19 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertNotIn("var/lib/systemd/random-seed", image_builder)
         self.assertNotIn("ssh-keygen -A", first_boot)
         self.assertIn("ssh-keygen -A", enable_ssh)
-        # T01: fstab composition moved into the shared engine (UUID arrives as
-        # caller-owned GREIA_ROOT_UUID disk identity); the thin consumer feeds
-        # it and keeps the boot/identity assembly around it.
+        # T03 Repair C: fstab policy has one owner (greia_platform.fstab);
+        # the composer seam only forwards GREIA_ROOT_UUID disk identity to
+        # that renderer, and the thin consumer still feeds the UUID.
         engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
-        self.assertIn("UUID=$root_uuid / ext4", engine)
+        self.assertIn("compose_write_fstab() {", engine)
+        self.assertIn("greia_platform.fstab", engine)
+        self.assertIn("render_fstab", engine)
+        self.assertNotIn("UUID=$root_uuid / ext4", engine)
+        self.assertNotIn("errors=remount-ro", engine)
+        fstab_owner = (
+            PROJECT_ROOT / "src/greia_platform/fstab.py"
+        ).read_text()
+        self.assertIn("errors=remount-ro", fstab_owner)
         self.assertIn('export GREIA_ROOT_UUID="$root_uuid"', image_builder)
         self.assertNotIn("LABEL=PIP_ROOT / ext4", engine)
         self.assertNotIn("LABEL=PIP_ROOT / ext4", image_builder)

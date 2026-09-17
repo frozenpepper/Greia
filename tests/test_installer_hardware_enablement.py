@@ -69,6 +69,7 @@ def pool(
         firmware,
         microcode,
         0,
+        0,
         providers,
     )
 
