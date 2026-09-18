@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import fnmatch
 import hashlib
+import io
 import json
 import re
+import tarfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
@@ -359,6 +361,273 @@ class VerifiedHardwareSupportPool:
         # This source is trusted only after load() has verified the frozen
         # package payloads and both repository indexes against the manifest.
         return "deb [trusted=yes] file:/run/greia-hardware-support ./"
+
+
+#: zstd framing every built hardware-support archive must carry (the same
+#: magic the release bundle seam requires for compressed members).
+_SUPPORT_ARCHIVE_ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
+
+#: Largest hardware-support archive accepted for installed-size inspection.
+#: Production archives are capped far lower (the 512 MiB hardware-support
+#: member bound); this outer bound only keeps inspection fail-closed.
+_MAX_SUPPORT_ARCHIVE_BYTES = _MAX_POOL_BYTES
+
+#: Decompressed-tar slop above the pool byte bound (tar headers/padding for
+#: at most _MAX_POOL_PACKAGES members plus the repository indexes).
+_SUPPORT_ARCHIVE_TAR_SLOP_BYTES = 8 * 1024 * 1024
+
+#: Largest embedded manifest.json accepted from a support archive.
+_MAX_SUPPORT_ARCHIVE_MANIFEST_BYTES = 8 * 1024 * 1024
+
+#: Top-level non-pool members every built archive carries.
+_SUPPORT_ARCHIVE_TOP_MEMBERS = ("manifest.json", "Packages", "Packages.gz")
+
+
+def _normalize_archive_name(name: str) -> str:
+    text = name.strip()
+    while text.startswith("./"):
+        text = text[2:]
+    return text
+
+
+def installed_size_bound_from_support_archive(path: Path) -> int:
+    """Return the verified installed-size bound from a built support archive.
+
+    Inspects ``hardware-support.tar.zst`` (the artifact
+    ``tools/build_release.py build_hardware_support_set`` emits from a
+    verified pool and ``tools/greia_update.py build --hardware-support``
+    embeds as the bundle member): bounded zstd decompression, tar parse,
+    then manifest verification mirroring :meth:`VerifiedHardwareSupportPool.load`
+    for the installed accounting — per-package ``installed_bytes`` validated
+    through :class:`HardwareSupportPoolPackage`, ``sum(installed_bytes)``
+    required to equal ``total_installed_bytes``, every manifest package
+    member proven present with matching size/digest, and unmanifested
+    ``pool/*.deb`` payloads refused. Returns ``total_installed_bytes``:
+    the same bound :func:`greia_installer.slots.pool_to_support_set`
+    carries into ``ReleaseSupportSet.installed_size_bound``. Compressed
+    archive/``.deb`` bytes are transfer size only and never substitute.
+    """
+    location = Path(path)
+    if location.is_symlink() or not location.is_file():
+        raise HardwareSupportPoolError("hardware-support archive is not a regular file")
+    try:
+        archive_size = location.stat().st_size
+    except OSError as exc:
+        raise HardwareSupportPoolError(
+            f"hardware-support archive is unreadable: {exc}"
+        ) from exc
+    if not 1 <= archive_size <= _MAX_SUPPORT_ARCHIVE_BYTES:
+        raise HardwareSupportPoolError(
+            "hardware-support archive size is outside Greia bounds"
+        )
+    try:
+        with location.open("rb") as handle:
+            magic = handle.read(4)
+    except OSError as exc:
+        raise HardwareSupportPoolError(
+            f"hardware-support archive is unreadable: {exc}"
+        ) from exc
+    if magic != _SUPPORT_ARCHIVE_ZSTD_MAGIC:
+        raise HardwareSupportPoolError("hardware-support archive is not zstd-framed")
+    try:
+        import zstandard
+    except ImportError as exc:
+        raise HardwareSupportPoolError(
+            "zstd decompression backend is unavailable; refusing support inspection"
+        ) from exc
+    cap = _MAX_POOL_BYTES + _SUPPORT_ARCHIVE_TAR_SLOP_BYTES
+    pieces: list[bytes] = []
+    total = 0
+    try:
+        with location.open("rb") as handle:
+            reader = zstandard.ZstdDecompressor().stream_reader(handle)
+            while True:
+                piece = reader.read(1024 * 1024)
+                if not piece:
+                    break
+                if not isinstance(piece, (bytes, bytearray)):
+                    raise HardwareSupportPoolError(
+                        "hardware-support archive stream must yield bytes"
+                    )
+                total += len(piece)
+                if total > cap:
+                    raise HardwareSupportPoolError(
+                        "hardware-support archive decompresses beyond Greia bounds"
+                    )
+                pieces.append(bytes(piece))
+    except HardwareSupportPoolError:
+        raise
+    except Exception as exc:
+        raise HardwareSupportPoolError(
+            f"hardware-support archive decompression refused: {exc}"
+        ) from exc
+    try:
+        archive = tarfile.open(fileobj=io.BytesIO(b"".join(pieces)), mode="r:")
+    except (tarfile.TarError, EOFError, OSError) as exc:
+        raise HardwareSupportPoolError(
+            f"hardware-support archive is not a readable tar: {exc}"
+        ) from exc
+    with archive:
+        try:
+            members = archive.getmembers()
+        except (tarfile.TarError, EOFError, OSError) as exc:
+            raise HardwareSupportPoolError(
+                f"hardware-support archive listing refused: {exc}"
+            ) from exc
+        by_name: dict[str, tarfile.TarInfo] = {}
+        for member in members:
+            normalized = _normalize_archive_name(member.name)
+            if not normalized or normalized in (".", "/"):
+                continue
+            if member.isdir():
+                continue
+            if not member.isfile():
+                raise HardwareSupportPoolError(
+                    f"hardware-support archive member is not a regular file: {normalized!r}"
+                )
+            if normalized in by_name:
+                raise HardwareSupportPoolError(
+                    f"hardware-support archive carries a duplicate member: {normalized!r}"
+                )
+            by_name[normalized] = member
+        manifest_info = by_name.get("manifest.json")
+        if manifest_info is None:
+            raise HardwareSupportPoolError(
+                "hardware-support archive carries no manifest.json"
+            )
+        if not 1 <= manifest_info.size <= _MAX_SUPPORT_ARCHIVE_MANIFEST_BYTES:
+            raise HardwareSupportPoolError(
+                "hardware-support archive manifest size is outside Greia bounds"
+            )
+        try:
+            manifest_file = archive.extractfile(manifest_info)
+            manifest_raw = manifest_file.read() if manifest_file is not None else b""
+        except (tarfile.TarError, EOFError, OSError) as exc:
+            raise HardwareSupportPoolError(
+                f"hardware-support archive manifest is unreadable: {exc}"
+            ) from exc
+        try:
+            raw = json.loads(manifest_raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise HardwareSupportPoolError(
+                "hardware-support archive manifest is not valid JSON"
+            ) from exc
+        if not isinstance(raw, dict) or raw.get("schema_version") != 1:
+            raise HardwareSupportPoolError(
+                "unsupported hardware-support archive manifest schema"
+            )
+        entries = raw.get("packages")
+        if not isinstance(entries, list) or len(entries) > _MAX_POOL_PACKAGES:
+            raise HardwareSupportPoolError(
+                "hardware-support archive package list is invalid"
+            )
+        packages: list[HardwareSupportPoolPackage] = []
+        seen_identity: set[tuple[str, str]] = set()
+        for entry in entries:
+            if not isinstance(entry, dict) or "installed_bytes" not in entry:
+                raise HardwareSupportPoolError(
+                    "hardware-support archive package installed size is missing"
+                )
+            try:
+                package = HardwareSupportPoolPackage(
+                    package=entry["package"],
+                    version=entry["version"],
+                    architecture=entry["architecture"],
+                    filename=entry["filename"],
+                    size=entry["size"],
+                    sha256=entry["sha256"],
+                    candidate=entry["candidate"],
+                    installed_bytes=entry["installed_bytes"],
+                )
+            except (KeyError, TypeError) as exc:
+                raise HardwareSupportPoolError(
+                    "hardware-support archive package entry is incomplete"
+                ) from exc
+            identity = (package.package, package.architecture)
+            if identity in seen_identity:
+                raise HardwareSupportPoolError(
+                    "hardware-support archive package identity is duplicated"
+                )
+            seen_identity.add(identity)
+            packages.append(package)
+        total_installed = sum(package.installed_bytes for package in packages)
+        manifest_installed = raw.get("total_installed_bytes")
+        # `total_bytes` stays the compressed archive bound; capacity
+        # accounting uses `total_installed_bytes` only. The sum equality
+        # below is what stops compressed `.deb` bytes from substituting.
+        if (
+            not isinstance(manifest_installed, int)
+            or isinstance(manifest_installed, bool)
+            or manifest_installed != total_installed
+        ):
+            raise HardwareSupportPoolError(
+                "hardware-support archive installed total does not match manifest"
+            )
+        if not 0 <= manifest_installed <= _MAX_POOL_BYTES:
+            raise HardwareSupportPoolError(
+                "hardware-support archive installed total is outside Greia bounds"
+            )
+        manifest_total = raw.get("total_bytes")
+        if (
+            not isinstance(manifest_total, int)
+            or isinstance(manifest_total, bool)
+            or manifest_total != sum(package.size for package in packages)
+        ):
+            raise HardwareSupportPoolError(
+                "hardware-support archive total size does not match manifest"
+            )
+        expected = {_normalize_archive_name(package.filename) for package in packages}
+        for package in packages:
+            name = _normalize_archive_name(package.filename)
+            info = by_name.get(name)
+            if info is None:
+                raise HardwareSupportPoolError(
+                    f"hardware-support archive package is missing: {package.package}"
+                )
+            if info.size != package.size:
+                raise HardwareSupportPoolError(
+                    f"hardware-support archive package size changed: {package.package}"
+                )
+            try:
+                member_file = archive.extractfile(info)
+                member_bytes = member_file.read() if member_file is not None else b""
+            except (tarfile.TarError, EOFError, OSError) as exc:
+                raise HardwareSupportPoolError(
+                    f"hardware-support archive package is unreadable: {package.package}"
+                ) from exc
+            if hashlib.sha256(member_bytes).hexdigest() != package.sha256:
+                raise HardwareSupportPoolError(
+                    f"hardware-support archive package digest changed: {package.package}"
+                )
+        for name in by_name:
+            if name in _SUPPORT_ARCHIVE_TOP_MEMBERS or name in expected:
+                continue
+            if name.startswith("pool/") and name.endswith(".deb"):
+                raise HardwareSupportPoolError(
+                    "hardware-support archive contains unmanifested package payloads"
+                )
+            raise HardwareSupportPoolError(
+                f"hardware-support archive carries an unexpected member: {name!r}"
+            )
+        return manifest_installed
+
+
+def support_installed_size_bound(path: Path | None) -> int:
+    """Return the verified installed-size bound for release capacity proof.
+
+    ``None`` (no ``--hardware-support``) yields 0. A pool directory is
+    verified through :meth:`VerifiedHardwareSupportPool.load`; a built
+    ``hardware-support.tar.zst`` archive file is verified through
+    :func:`installed_size_bound_from_support_archive`. Both routes return
+    ``total_installed_bytes`` from verified metadata — never
+    operator-entered values and never compressed ``.deb`` bytes.
+    """
+    if path is None:
+        return 0
+    location = Path(path)
+    if location.is_dir() and not location.is_symlink():
+        return VerifiedHardwareSupportPool.load(location).total_installed_bytes
+    return installed_size_bound_from_support_archive(location)
 
 
 def _safe_firmware_name(value: object) -> bool:

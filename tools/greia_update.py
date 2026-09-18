@@ -22,6 +22,18 @@ from greia_platform.system_updates import (  # noqa: E402
     build_update_bundle,
     inspect_update_bundle,
 )
+from greia_installer.hardware_support import (  # noqa: E402
+    HardwareSupportPoolError,
+    support_installed_size_bound,
+)
+from greia_installer.layout import (  # noqa: E402
+    LayoutError,
+    require_finalized_slot_capacity,
+)
+from greia_platform.slot_writer import (  # noqa: E402
+    FINALIZATION_GROWTH_BYTES,
+    SLOT_METADATA_RESERVE_BYTES,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,26 +153,54 @@ def _resolve_target(args: argparse.Namespace) -> UpdateTarget:
     return UpdateTarget(args.platform_family, args.architecture, args.profile, board_explicit, None)
 
 
+def _support_installed_bytes(hardware_support: Path | None) -> int:
+    """Return the verified support installed-size bound for the capacity proof.
+
+    Absent support (no ``--hardware-support``) yields 0. Present support is
+    inspected/verified through ``greia_installer.hardware_support`` and the
+    bound is ``total_installed_bytes`` from verified pool metadata — never
+    operator-entered values and never compressed ``.deb`` bytes. An
+    unverifiable support artifact fails closed here, before any bundle byte
+    is written.
+    """
+    try:
+        return support_installed_size_bound(hardware_support)
+    except HardwareSupportPoolError as exc:
+        raise SystemUpdateError(
+            f"hardware-support is not verifiable, refusing bundle: {exc}"
+        ) from exc
+
+
 def _check_profile_capacity(
     target: UpdateTarget,
     *,
     payload_uncompressed_bytes: int,
     minimum_slot_bytes: int | None,
-) -> None:
-    """Refuse payloads that cannot fit the profile-owned destination slot.
+    hardware_support_path: Path | None = None,
+) -> int | None:
+    """Refuse bundles that cannot reach finalization inside the profile slot.
 
     The profile file is the single release-identity authority: its
-    ``storage.system_slot_bytes`` bounds the destination slot. The
-    operator-supplied ``--payload-uncompressed-bytes`` (shrunk image size
-    from ``build-payload``) and the effective minimum (explicit
-    ``--minimum-slot-bytes`` or the uncompressed size by default) must both
-    fit. This keeps an Acer A/B sized payload from being bundled under the
-    smaller generic single-root profile through the normal --profile-file
-    path. Explicit-identity builds carry no profile slot bound and skip
-    this check.
+    ``storage.system_slot_bytes`` bounds the destination slot. The decision
+    is the single owned finalized-slot capacity calculation
+    (``greia_installer.layout.require_finalized_slot_capacity`` — the same
+    bound the installer plan gate and the runtime ``SlotWriter`` enforce)::
+
+        max(base, minimum) + support installed-size bound
+            + finalization growth + metadata/reserve <= slot capacity
+
+    ``base`` is the operator-supplied ``--payload-uncompressed-bytes``
+    (shrunk image size from ``build-payload``); the effective minimum is the
+    explicit ``--minimum-slot-bytes`` or the uncompressed size by default.
+    The support bound comes only from verified hardware-support metadata
+    (see :func:`_support_installed_bytes`); growth/reserve are the
+    platform-owned bounds, never operator flags. Refusal happens before the
+    output bundle is written. Explicit-identity builds carry no profile slot
+    bound and skip this check (returns ``None``); otherwise returns the
+    required finalized bytes.
     """
     if target.system_slot_bytes is None:
-        return
+        return None
     effective_minimum = (
         minimum_slot_bytes if minimum_slot_bytes is not None else payload_uncompressed_bytes
     )
@@ -171,15 +211,31 @@ def _check_profile_capacity(
         or effective_minimum <= 0
     ):
         raise SystemUpdateError("payload size facts must be positive integers")
-    if (
-        payload_uncompressed_bytes > target.system_slot_bytes
-        or effective_minimum > target.system_slot_bytes
-    ):
-        raise SystemUpdateError(
-            f"payload does not fit profile {target.profile!r} system slot "
-            f"({target.system_slot_bytes} bytes): uncompressed={payload_uncompressed_bytes} "
-            f"minimum={effective_minimum}; cross-profile bundling refused"
+    support_bound = _support_installed_bytes(hardware_support_path)
+    try:
+        return require_finalized_slot_capacity(
+            slot_bytes=target.system_slot_bytes,
+            base_bytes=payload_uncompressed_bytes,
+            minimum_slot_bytes=effective_minimum,
+            support_installed_bytes=support_bound,
         )
+    except LayoutError as exc:
+        # Reporting-only display of the required total next to the owner's
+        # verdict; the refuse/accept decision stays entirely with the owner.
+        required = (
+            max(payload_uncompressed_bytes, effective_minimum)
+            + support_bound
+            + FINALIZATION_GROWTH_BYTES
+            + SLOT_METADATA_RESERVE_BYTES
+        )
+        raise SystemUpdateError(
+            f"payload does not fit profile {target.profile!r} finalized system slot "
+            f"({target.system_slot_bytes} bytes): base={payload_uncompressed_bytes} "
+            f"minimum={effective_minimum} support_installed={support_bound} "
+            f"finalization_growth={FINALIZATION_GROWTH_BYTES} "
+            f"metadata_reserve={SLOT_METADATA_RESERVE_BYTES} "
+            f"required={required}; cross-profile bundling refused ({exc})"
+        ) from exc
 
 
 def _build_output(args: argparse.Namespace, target: UpdateTarget) -> Path:
@@ -288,6 +344,7 @@ def main(argv: list[str] | None = None) -> int:
                 target,
                 payload_uncompressed_bytes=args.payload_uncompressed_bytes,
                 minimum_slot_bytes=args.minimum_slot_bytes,
+                hardware_support_path=args.hardware_support,
             )
             output = _build_output(args, target)
             release_id = args.release_id or f"greia-{args.version}"
