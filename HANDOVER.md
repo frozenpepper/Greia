@@ -646,3 +646,14 @@ workers; HW-02 deliberately held, HW-03 parked awaiting owner hardware per
 Session 03 closed. Resume trigger: owner returns the §24 evidence block
 (installer identity, staging verdict + logs, Acer acceptance) — then HW-04
 runs and PHASE-GATE-01 re-audits narrowly.
+
+## 2026-09-18 — R2 RETIRED by owner cancellation (final)
+
+Owner chose "cancel with record". T-BAG R2 is `abandoned`: HW-02/HW-03/HW-04
+cancelled without execution per `TBag/runs/R2/owner-decisions/R2-cancellation.md`;
+gate BLOCKED and all red predicates preserved as history (no waiver, no
+proxy, no successor). Integrated work stands: source tranche, HW-01A Orbiter
+GREEN (`4c571995`), HW-01B/HW-03A STOPs, HW-03B NOT-EXECUTABLE, HW-05.
+Status/runbook `HW-03-PHYSICAL-LEGS.md` remains the hardware handoff should
+evidence ever return under a new run. Lifecycle ledger updated in
+`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`.
