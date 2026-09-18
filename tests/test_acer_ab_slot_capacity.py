@@ -29,7 +29,9 @@ sys.path.insert(0, str(PROJECT_ROOT / "tools"))
 from build_profile import BuildProfile  # noqa: E402
 
 from greia_installer.layout import (  # noqa: E402
+    LABEL_RESERVED_BYTES,
     LayoutError,
+    LegacyBiosAbAdapter,
     ProfileSizing,
     plan_for_profile,
     require_finalized_slot_capacity,
@@ -119,6 +121,38 @@ class AcerAbSlotCapacityTests(unittest.TestCase):
         self.assertEqual(profile.storage.system_slot_bytes, 1610612736)
         self.assertEqual(profile.storage.layout_adapter, "legacy-bios-ab-v1")
         self.assertEqual(profile.updates.boot_backend, "grub-ab-v1")
+
+    def test_real_profile_declares_1024_mib_persist_minimum(self) -> None:
+        profile = BuildProfile.load(ACER_AB_PROFILE)
+        self.assertEqual(profile.storage.persistent_minimum_bytes, 1024 * MIB)
+        self.assertEqual(profile.storage.persistent_minimum_bytes, 1073741824)
+        self.assertNotEqual(
+            profile.storage.persistent_minimum_bytes, 256 * MIB
+        )
+
+    def test_real_planner_enforces_1gib_persist_minimum_and_refusal(self) -> None:
+        profile = BuildProfile.load(ACER_AB_PROFILE)
+        sizing = ProfileSizing(
+            layout_adapter_id=profile.storage.layout_adapter,
+            slot_bytes=profile.storage.system_slot_bytes,
+            persist_minimum_bytes=profile.storage.persistent_minimum_bytes,
+            boot_backend=profile.updates.boot_backend,
+        )
+        self.assertEqual(sizing.persist_minimum_bytes, 1024 * MIB)
+        # Smallest accepted device derived from the production adapter
+        # constants (label reserve + boot-control + both slots + PERSIST),
+        # proven through the real planner rather than hand arithmetic.
+        minimum_device = (
+            LABEL_RESERVED_BYTES
+            + LegacyBiosAbAdapter.BOOT_CONTROL_BYTES
+            + 2 * profile.storage.system_slot_bytes
+            + profile.storage.persistent_minimum_bytes
+        )
+        with self.assertRaisesRegex(LayoutError, "does not fit"):
+            plan_for_profile(sizing, device_size_bytes=minimum_device - 1)
+        plan = plan_for_profile(sizing, device_size_bytes=minimum_device)
+        self.assertGreaterEqual(plan.remainder_bytes(), 1024 * MIB)
+        self.assertEqual(plan.remainder_bytes(), 1024 * MIB)
 
     def test_1536_mib_validates_across_profile_and_layout_owners(self) -> None:
         profile = BuildProfile.load(ACER_AB_PROFILE)

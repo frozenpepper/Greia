@@ -20,10 +20,14 @@ kernel_package = "linux-image-686-pae"
 
 [image]
 layout = "bios-single-ext4"
-# Installer/live image must cover the A/B layout capacity minimum:
-# 64 MiB layout overhead + 2x1536 MiB system slots + 256 MiB PERSIST
-# minimum = 3392 MiB; 3584 MiB leaves 448 MiB PERSIST headroom.
-size_mib = 3584
+# Installer/live image artifact size (MiB) for building the live/installer
+# image itself; it is NOT the target-device minimum. The target device is
+# validated separately at install time by the real layout planner
+# (ProfileSizing/plan_for_profile): 64 MiB layout overhead + 2x1536 MiB
+# system slots + 1024 MiB PERSIST minimum = 4160 MiB layout capacity
+# minimum. image.size_mib must cover that minimum; 4352 MiB leaves 192 MiB
+# headroom above it (PERSIST grows to fill the remainder on larger targets).
+size_mib = 4352
 hostname = "greia"
 
 [boot]
@@ -64,9 +68,10 @@ architecture_review_mib = 1250
 layout_adapter = "legacy-bios-ab-v1"
 # Lifecycle plan A21 product default: 1536 MiB A/B system slots
 # (1610612736 bytes). PERSIST takes the remainder (minimum 1024 MiB
-# on device; the profile floor below is the install-image minimum).
+# on device; the profile floor below is the product PERSIST minimum
+# enforced by the real layout planner, not an installer-image scratch value).
 system_slot_bytes = 1610612736
-persistent_minimum_bytes = 268435456
+persistent_minimum_bytes = 1073741824
 
 [installer]
 target_policy = "pc-internal-v1"
