@@ -1563,6 +1563,10 @@ class UpdateSlotSeams:
     (previously accepted slot keeps reading shared state) before any
     inactive-slot write. An int schema is also accepted for harness
     convenience and coerced through the same marker path.
+    ``support_stage_cleanup`` closes the production context's current
+    stage-owned candidate-support stage; the backend calls it in a
+    ``finally`` so one stage's temp root is removed on success and on
+    every failure path. Test/harness seams leave it unset (no stage).
 
     An empty ``UpdateSlotSeams()`` stays a deliberate fail-closed degraded
     construction (direct ``SlotBackedSystemUpdateBackend`` default). It is
@@ -1579,6 +1583,7 @@ class UpdateSlotSeams:
     profile_policy_factory: Callable[[object], object] | None = None
     selection_factory: Callable[[object, str], object | None] | None = None
     installed_contract_factory: Callable[[], bytes] | None = None
+    support_stage_cleanup: Callable[[], None] | None = None
 
 
 class SlotBackedSystemUpdateBackend:
@@ -1721,20 +1726,28 @@ class SlotBackedSystemUpdateBackend:
                     f"PERSIST compatibility preflight refused: {exc}"
                 ) from exc
             # Destination capacity preflight before any destination contact:
-            # the manifest minimum must fit the layout slot.
-            preflight_writer = SlotWriter()
+            # the single-owner finalized-slot capacity bound (T02:
+            # ``greia_installer.layout.require_finalized_slot_capacity``,
+            # the same bound ``SlotWriter`` enforces at write time and the
+            # finalizer re-checks) refuses an over-full support-carrying
+            # candidate before the first destination mutation. No second
+            # formula lives here.
             try:
-                required = preflight_writer.required_slot_bytes(
-                    member, support_installed
+                from greia_installer.layout import (
+                    LayoutError,
+                    require_finalized_slot_capacity,
                 )
-            except (SlotWriteError, SlotFinalizeError) as exc:
+
+                require_finalized_slot_capacity(
+                    slot_bytes=destination.slot_capacity_bytes,
+                    base_bytes=member.payload_uncompressed_bytes,
+                    minimum_slot_bytes=member.minimum_slot_bytes,
+                    support_installed_bytes=support_installed,
+                )
+            except LayoutError as exc:
                 raise SystemUpdateError(
                     f"destination slot capacity preflight refused: {exc}"
                 ) from exc
-            if required > destination.slot_capacity_bytes:
-                raise SystemUpdateError(
-                    "candidate minimum slot bytes exceed destination slot capacity"
-                )
             inventory = self._require_seam(
                 "hardware inventory attestation", self.seams.inventory_factory
             )()
@@ -1831,6 +1844,17 @@ class SlotBackedSystemUpdateBackend:
             if isinstance(exc, SystemUpdateError):
                 raise
             raise SystemUpdateError(f"update staging failed fail-closed: {exc}") from exc
+        finally:
+            # One stage owns one support stage: the temp root is removed on
+            # success and on every failure path (selection failure,
+            # installation failure, capacity refusal). Test/harness seams
+            # leave the hook unset. Cleanup never masks the stage outcome.
+            closer = getattr(self.seams, "support_stage_cleanup", None)
+            if callable(closer):
+                try:
+                    closer()
+                except Exception:
+                    pass
 
     def arm(self) -> dict[str, object]:
         """Arm the staged candidate one-shot (SCHEDULE phase)."""
@@ -2491,6 +2515,65 @@ def _candidate_staging_parent(context: _ProductionUpdateContext) -> Path:
     return staging_parent_for(Path(context.layout_record_path).parent)
 
 
+def _support_stage_identity(bundle: object) -> tuple[str, str | None, int | None]:
+    """Bundle identity a support stage is bound to (restage comparison)."""
+    manifest = getattr(bundle, "manifest", None)
+    return (
+        str(getattr(bundle, "path", "")),
+        getattr(manifest, "hardware_support_sha256", None),
+        getattr(manifest, "hardware_support_size", None),
+    )
+
+
+def _acquire_support_stage(context: _ProductionUpdateContext, bundle: object) -> object:
+    """Return the stage-owned support stage for this bundle (one extraction).
+
+    The first call for a candidate opens exactly one
+    ``CandidateSupportStage`` (metadata inspection, PERSIST preflight,
+    single streaming extraction, single verified pool load) and keeps it
+    on the context so the support-set factory and the lazy package
+    installer of the same stage share the identical pool instance. A
+    repeat call for the same candidate reuses the open stage without a
+    second extraction; a different candidate closes the previous stage
+    first so no stale pool survives a restage. A null manifest support
+    declaration closes any open stage and returns ``None`` without
+    opening a new stage.
+    """
+    from .candidate_support import CandidateSupportStage
+
+    manifest = getattr(bundle, "manifest", None)
+    if manifest is None or getattr(manifest, "hardware_support_sha256", None) is None:
+        _close_support_stage(context)
+        return None
+    identity = _support_stage_identity(bundle)
+    current = context.support_stage
+    if current is not None and isinstance(current, CandidateSupportStage):
+        if not current.closed and current.stage_identity() == identity:
+            return current
+    _close_support_stage(context)
+    stage = CandidateSupportStage.open(
+        Path(getattr(bundle, "path")),
+        manifest,
+        _candidate_staging_parent(context),
+    )
+    context.support_stage = stage
+    return stage
+
+
+def _close_support_stage(context: _ProductionUpdateContext) -> None:
+    """Close and forget the current support stage (cleanup never raises)."""
+    stage = context.support_stage
+    context.support_stage = None
+    if stage is None:
+        return
+    closer = getattr(stage, "close", None)
+    if callable(closer):
+        try:
+            closer()
+        except Exception:
+            pass
+
+
 def _bounded_reason(exc: BaseException, maximum: int = 200) -> str:
     raw = str(exc) if str(exc) else exc.__class__.__name__
     encoded = raw.encode("utf-8")[:maximum].decode("utf-8", "ignore")
@@ -2512,17 +2595,20 @@ class _ProductionUpdateContext:
     mounted inactive slot the finalizer owns; they are refreshed on every
     filesystem-factory call, so a restage after rollback cannot reuse a
     stale mountpoint. ``state_dir`` is the update service's writable area
-    owning candidate-support staging; ``candidate_bundle`` carries the
-    inspected candidate from the support-set factory to the lazy package
-    installer of the same stage (``support(bundle)`` always runs before
-    ``package_installer_factory()`` in ``SlotBackedSystemUpdateBackend``),
-    so both factories materialize the same candidate member.
+    owning candidate-support staging; ``support_stage`` is the one
+    stage-owned ``CandidateSupportStage`` of the current stage (single
+    streaming extraction, single verified pool instance shared by the
+    support-set factory and the lazy package installer of the same
+    stage). A restage with a different candidate closes the previous
+    stage first, so no stale pool survives across restages, and the
+    backend ``finally`` (via the ``support_stage_cleanup`` seam) closes
+    the stage on success and on every failure path.
     """
 
     layout_record_path: Path
     paths: _ProductionUpdatePaths
     state_dir: Path | None = None
-    candidate_bundle: object | None = None
+    support_stage: object | None = None
     filesystem_tracker: "_MountTrackingFilesystem | None" = None
     mounted: list[Path] = field(default_factory=list)
 
@@ -2893,14 +2979,17 @@ class _LazyTargetPackageInstaller:
     Construction happens before the finalizer mounts the slot, so the
     target cannot be fixed then. At :meth:`install` time (called by the
     finalizer while mounted) the target resolves from the mount-tracking
-    filesystem of the same stage, the candidate's own hardware-support
-    member re-materializes fresh from the staged bundle (Repair D: the
-    running image pool never satisfies candidate finalization), and
-    installation delegates to the existing installer path
-    (``InstallerSlotPackageInstaller``/``TargetHardwareSupportInstaller``):
-    no package logic is copied here. Bind mounts the installer records are
-    detached before returning so the slot unmount never sees a busy target.
-    The materialized temp root is removed on success and on failure.
+    filesystem of the same stage, and installation delegates to the
+    existing installer path
+    (``InstallerSlotPackageInstaller``/``TargetHardwareSupportInstaller``)
+    over the stage-owned pool the support-set factory already materialized
+    exactly once (Repair T03: the running image pool never satisfies
+    candidate finalization, and the candidate member is never
+    re-materialized here): no package logic is copied here. Bind mounts
+    the installer records are detached before returning so the slot
+    unmount never sees a busy target. Stage cleanup stays with the stage
+    owner (backend ``finally`` via the ``support_stage_cleanup`` seam),
+    never with this installer.
     """
 
     def __init__(self, context: _ProductionUpdateContext) -> None:
@@ -2909,6 +2998,7 @@ class _LazyTargetPackageInstaller:
     def install(
         self, firmware: tuple[str, ...], microcode: tuple[str, ...]
     ) -> tuple[object, ...]:
+        from .candidate_support import CandidateSupportStage
         from .slot_writer import SlotFinalizeError
 
         tracker = self._context.filesystem_tracker
@@ -2918,42 +3008,33 @@ class _LazyTargetPackageInstaller:
                 "slot package install requires the mounted inactive slot"
             )
         try:
-            from .candidate_support import materialized_candidate_support
-            from greia_installer.hardware_support import VerifiedHardwareSupportPool
             from greia_installer.slots import InstallerSlotPackageInstaller
 
-            bundle = self._context.candidate_bundle
-            manifest = getattr(bundle, "manifest", None)
-            if manifest is None or getattr(
-                manifest, "hardware_support_sha256", None
-            ) is None:
+            stage = self._context.support_stage
+            if stage is None or not isinstance(stage, CandidateSupportStage):
                 if tuple(firmware) or tuple(microcode):
                     raise SlotFinalizeError(
                         "slot package install requires the candidate "
                         "hardware-support member"
                     )
                 return ()
-            with materialized_candidate_support(
-                Path(getattr(bundle, "path")),
-                manifest,
-                _candidate_staging_parent(self._context),
-            ) as support_root:
-                if support_root is None:  # pragma: no cover - guarded above
-                    raise SlotFinalizeError(
-                        "candidate hardware-support did not materialize"
-                    )
-                pool = VerifiedHardwareSupportPool.load(support_root)
-                adapter = InstallerSlotPackageInstaller(
-                    runner=_PlatformCommandAdapter(),  # type: ignore[arg-type]
-                    target_root=mountpoint,
-                    pool=pool,
-                    mounted=self._context.mounted,
+            if stage.closed:
+                raise SlotFinalizeError(
+                    "slot package install requires the staged candidate "
+                    "hardware-support member"
                 )
-                before = len(self._context.mounted)
-                try:
-                    return adapter.install(tuple(firmware), tuple(microcode))  # type: ignore[return-value]
-                finally:
-                    self._detach_added_mounts(before)
+            pool = stage.pool
+            adapter = InstallerSlotPackageInstaller(
+                runner=_PlatformCommandAdapter(),  # type: ignore[arg-type]
+                target_root=mountpoint,
+                pool=pool,
+                mounted=self._context.mounted,
+            )
+            before = len(self._context.mounted)
+            try:
+                return adapter.install(tuple(firmware), tuple(microcode))  # type: ignore[return-value]
+            finally:
+                self._detach_added_mounts(before)
         except SlotFinalizeError:
             raise
         except UpdateBackendUnavailable:
@@ -2998,6 +3079,10 @@ def build_production_update_seams(
         paths=_production_paths(),
         state_dir=Path(state_dir) if state_dir is not None else None,
     )
+
+    def _close_current_stage() -> None:
+        _close_support_stage(context)
+
     return UpdateSlotSeams(
         slot_store_factory=_production_slot_store_factory(context),
         filesystem_factory=_production_filesystem_factory(context),
@@ -3007,6 +3092,7 @@ def build_production_update_seams(
         profile_policy_factory=_production_profile_policy_factory(),
         selection_factory=_production_selection_factory(context),
         installed_contract_factory=_production_installed_contract_factory(),
+        support_stage_cleanup=_close_current_stage,
     )
 
 
@@ -3120,16 +3206,20 @@ def _production_inventory_factory(
 def _production_support_set_factory(
     context: _ProductionUpdateContext,
 ) -> Callable[[object], object]:
-    """Release-bound support set from the candidate's own support member.
+    """Release-bound support set from the candidate's own stage-owned pool.
 
-    Repair D: the exact inspected candidate's ``hardware-support.tar.zst``
-    member materializes to a temp root, loads as the verified pool, and
-    converts with the manifest digest/size — so the digest/size always
+    Repair T03: the exact inspected candidate's ``hardware-support.tar.zst``
+    member streams once into one stage-owned ``CandidateSupportStage``
+    (digest-verified metadata inspection, PERSIST preflight, single
+    streaming extraction, single verified pool load) kept on the context
+    for the whole stage. The support set converts from that same pool
+    instance with the manifest digest/size — so the digest/size always
     travel alongside the bytes they describe, never alongside the running
-    image's unrelated pool. The temp root is removed before returning, on
-    both success and failure. A null manifest support declaration is a
-    no-op extracting nothing. The staged bundle is shared with the lazy
-    package installer of the same stage.
+    image's unrelated pool — and the lazy package installer of the same
+    stage installs from the identical pool without re-materializing. A
+    null manifest support declaration is a no-op extracting nothing.
+    Cleanup stays with the stage owner (backend ``finally`` via the
+    ``support_stage_cleanup`` seam), never with this factory.
     """
 
     def _factory(bundle: object) -> object:
@@ -3146,27 +3236,20 @@ def _production_support_set_factory(
                     provided_microcode=frozenset(),
                     packages=(),
                 )
-            from .candidate_support import materialized_candidate_support
-            from greia_installer.hardware_support import VerifiedHardwareSupportPool
             from greia_installer.slots import pool_to_support_set
 
-            context.candidate_bundle = bundle
-            with materialized_candidate_support(
-                Path(getattr(bundle, "path")),
-                manifest,
-                _candidate_staging_parent(context),
-            ) as support_root:
-                if support_root is None:  # pragma: no cover - guarded above
-                    raise UpdateBackendUnavailable(
-                        "release support set is unavailable: "
-                        "candidate hardware-support did not materialize"
-                    )
-                pool = VerifiedHardwareSupportPool.load(support_root)
-                return pool_to_support_set(
-                    pool,
-                    support_digest=manifest.hardware_support_sha256,
-                    support_size=manifest.hardware_support_size,
+            stage = _acquire_support_stage(context, bundle)
+            pool = getattr(stage, "pool", None)
+            if pool is None:
+                raise UpdateBackendUnavailable(
+                    "release support set is unavailable: "
+                    "candidate hardware-support did not materialize"
                 )
+            return pool_to_support_set(
+                pool,
+                support_digest=manifest.hardware_support_sha256,
+                support_size=manifest.hardware_support_size,
+            )
         except UpdateBackendUnavailable:
             raise
         except Exception as exc:
