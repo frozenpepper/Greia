@@ -637,3 +637,12 @@ staging with logs, (3) Acer §18 acceptance. Orbiter lane: key-only ssh
 provisioned (`orb@192.168.68.113`); password nowhere stored. No further
 worker attempts until the §24 evidence block returns; HW-02 deliberately
 held (re-running only re-proves NOT-EXECUTABLE).
+
+## 2026-09-18 — R2 run paused by owner
+
+Owner stopped the plan. T-BAG R2 status: `paused-by-user` (zero live
+workers; HW-02 deliberately held, HW-03 parked awaiting owner hardware per
+`HW-03-PHYSICAL-LEGS.md`, HW-04 pending evidence). Gate GATE-04 BLOCKED;
+Session 03 closed. Resume trigger: owner returns the §24 evidence block
+(installer identity, staging verdict + logs, Acer acceptance) — then HW-04
+runs and PHASE-GATE-01 re-audits narrowly.
