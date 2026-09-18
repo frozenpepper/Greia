@@ -617,3 +617,23 @@ Standing constraints from this run (owner-ordered, recorded in
 
 Current route: Session 02 DONE. Next is Session 03 (owner release CLI
 + compact release outputs) per the 2026-09-15 plan.
+
+## 2026-09-18 — R2 repair: worker lanes exhausted, owner hardware legs pending
+
+T-BAG R2 `repair` (analyst + grunt pinned to
+`opencode / opencode-go/muse-spark-1.3-contributor`; launches serialized —
+parallel workers collide on the shared 6.9 GB opencode.db). Integrated with
+reviewer PASS: source tranche T01–T18, HW-01A Orbiter payload leg (headroom
+1196425216 ≤ 1610612736 GREEN at `4c571995`), HW-01B (STOP), HW-05 comment
+reword, HW-03A (STOP), HW-03B (NOT-EXECUTABLE). Recorded BLOCKED (red
+preserved): HW-02 (NOT-EXECUTABLE, proof carried by HW-03), HW-03 (needs
+owner hardware). Queued: HW-04 §24 close. Gate GATE-04 BLOCKED; Session 03
+closed until §23 physical predicates go green.
+
+Precise status + owner runbook: `HW-03-PHYSICAL-LEGS.md` (repo root). Three
+owner-operated executions owed, in order: (1) disposable-Linux installer
+build from `4c571995` reusing the HW-01A bundle, (2) QEMU exact-service
+staging with logs, (3) Acer §18 acceptance. Orbiter lane: key-only ssh
+provisioned (`orb@192.168.68.113`); password nowhere stored. No further
+worker attempts until the §24 evidence block returns; HW-02 deliberately
+held (re-running only re-proves NOT-EXECUTABLE).
