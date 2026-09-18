@@ -210,7 +210,7 @@ _RELEASE_FACT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _MAX_SLOT_CONFIG_ENTRIES = 32
 _MAX_SLOT_CONFIG_VALUE_BYTES = 256
 
-#: Bounds for the signed release-identity facts the finalizer may state.
+#: Bounds for the unsigned-v3 release-identity facts the finalizer may state.
 #: They mirror the ``load_installed_release_identity`` acceptance bounds in
 #: ``greia_platform.system_updates`` so every written document reloads there.
 _MAX_RELEASE_ARCHITECTURE = 32

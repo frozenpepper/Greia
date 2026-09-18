@@ -22,11 +22,11 @@ always ``"platform"``, and no backend method accepts a Parent-provided boot
 entry or partition path — only semantic slots ``"A"``/``"B"`` resolved from
 the trusted layout record.
 
-Initramfs roles: ``BASE`` is deterministic build input bound by the signed
-release; ``FINALIZED_GENERIC`` is the required SlotFinalizer-generated
-artifact every accepted slot keeps; ``HOST_FAST`` is an optional later
-derivative generated on accepted actual hardware and never the sole
-recovery path.
+Initramfs roles: ``BASE`` is deterministic build input bound by the
+unsigned-v3 release identity; ``FINALIZED_GENERIC`` is the required
+SlotFinalizer-generated artifact every accepted slot keeps; ``HOST_FAST``
+is an optional later derivative generated on accepted actual hardware and
+never the sole recovery path.
 """
 
 from __future__ import annotations
@@ -431,7 +431,7 @@ class InitramfsRole(StrEnum):
     HOST_FAST = "host-fast"
 
 
-#: Producer binding the deterministic BASE initramfs (signed release input).
+#: Producer binding the deterministic BASE initramfs (unsigned-v3 release input).
 BASE_INITRAMFS_PRODUCER = "release-builder-v1"
 
 #: Producer binding the required FINALIZED_GENERIC artifact (SlotFinalizer).
