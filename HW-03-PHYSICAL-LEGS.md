@@ -45,6 +45,14 @@ needs owner-operated hardware. This file is the precise handoff.
 - §17 exact-service staging: HW-02 NOT-EXECUTABLE in every authorized lane;
   HW-03B NOT-EXECUTABLE (no QEMU/disposable Linux lane; harness pinned to
   `legacy-x86-i686`, Acer gap recorded). No staging verdict, no service logs.
+  Correction (T04): `tools/x8_qemu/runner.py` never invokes
+  `SystemUpdateService`, `build_live_update_service`, or the shipped
+  `greia-system-update.service` path — it exercises `SlotWriter`/
+  `SlotFinalizer` capacity bounds only — so it is not exact-service staging
+  proof. Autonomous orchestration proof is
+  `tests/test_system_update_service_orchestration.py` (source/integration,
+  completed here, no owner action needed); privileged/physical acceptance
+  stays deferred under §4.
 - §18 Acer acceptance (all seven predicate groups): entirely unexecuted.
 - Repair DoD §23 physical predicates: UNPROVEN. **Session 03 must not begin.**
 
@@ -71,12 +79,29 @@ by design.
 
 ## 4. Owner execution 2 — exact-service staging (HW-03B re-attempt)
 
+> T04 status split (2026-09-18): AUTONOMOUS SOURCE/INTEGRATION is completed
+> by `tests/test_system_update_service_orchestration.py` — real
+> `SystemUpdateService` compatibility, `backend.stage`, PERSIST preflight,
+> candidate support stage, support resolution, full capacity calculation,
+> inactive semantic destination, `SlotWriter`/`SlotFinalizer`, canonical
+> fstab specialization, package installer seam, journal/status, inbox
+> deletion only after success, single materialization instrumented
+> (`extract_count == 1`, no intermediate compressed copy, resolver/installer
+> pool identity equal, cleanup true). Orchestration only: no kernel/systemd
+> capability behavior is claimed. No owner action is the next step for this
+> proof. PRIVILEGED/PHYSICAL ACCEPTANCE below stays deferred: the exact
+> shipped service sandbox against a real inactive block/filesystem target
+> remains unexecuted in every authorized lane.
+
 Host: Linux x86_64, root, `qemu-system-x86_64` + SeaBIOS, `losetup`, `mount`,
 `partprobe`, `udevadm`, `mkfs.ext4` (per `tools/x8_qemu/runner.py`
-`require_host`). Run the harness **unmodified** (profile stays
-`legacy-x86-i686`; do NOT adapt it to Acer, do NOT add Docker).
+`require_host`). `tools/x8_qemu/runner.py` run unmodified (profile stays
+`legacy-x86-i686`; do NOT adapt it to Acer, do NOT add Docker) does NOT
+prove exact installed-service staging: it never invokes
+`SystemUpdateService`, `build_live_update_service`, or the shipped
+`greia-system-update.service` path.
 
-Stage the §3 bundle through the exact shipped `greia-system-update.service`
+When a capable host is scheduled, stage the §3 bundle through the exact shipped `greia-system-update.service`
 sandbox (`CAP_SYS_ADMIN CAP_SYS_CHROOT`, exact production update composition)
 against a real disposable inactive block/filesystem target: real zstd stream,
 candidate support extraction (bundle declares `hardware_support: null`, so
