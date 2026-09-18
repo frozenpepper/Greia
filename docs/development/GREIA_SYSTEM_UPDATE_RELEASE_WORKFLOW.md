@@ -15,7 +15,7 @@ or tar payload. The payload is a real relocatable ext4 slot image compressed
 with zstd (`payload.ext4.zst`). Any old signed v2 bundle (`manifest.sig`,
 `payload.bin`) is rejected with a rebuild/migration message, not interpreted.
 
-It does not claim that current single-root Greia machines can activate the package. Current `bios-single-ext4` profiles intentionally advertise system-update activation as unavailable until the A/B slot backend is implemented and physically proven.
+It does not claim that current single-root Greia machines can activate the package. Current `bios-single-ext4` profiles intentionally advertise system-update activation as unavailable until the A/B slot backend is implemented and physically proven. That physical proof is DEFERRED certification evidence for a later binary release, not an immediate owner task for this tranche.
 
 ## 1. What you need
 
@@ -29,7 +29,10 @@ On the build/release host:
 - for pushing to a development Greia, a paired Parent bearer credential.
 
 There is deliberately no release signing key and no `cryptography`
-requirement. Never place operator credentials in:
+requirement. Docker is not required and is not part of the preferred
+workflow for this tranche: run the commands below directly on an
+owner-controlled Linux build/release host. Historical Docker mentions
+elsewhere are history only and never route future agents to Docker. Never place operator credentials in:
 
 ```text
 Greia repository
@@ -139,8 +142,10 @@ Do not substitute the generic single-root `legacy-x86-i686.toml` on the
 Acer path: its 1 GiB slot bound is smaller than a real Acer payload
 minimum, so the normal `--profile-file` path refuses that cross-profile
 bundling before any bundle byte is written (at exactly 1073741824 with no
-explicit minimum the size guard cannot discriminate, so that literal edge
-still bundles). Mixing `--profile-file` with
+explicit minimum the finalized-slot capacity gate still refuses before
+publication: the `tools/greia_update.py` profile-capacity gate via the
+shared finalized-slot calculation counts growth and metadata reserves, so
+the required total exceeds the 1 GiB slot). Mixing `--profile-file` with
 explicit `--platform-family`/`--architecture`/`--profile`/`--board` is
 rejected; advanced/test tooling may use the explicit form without a
 profile file (then no profile slot bound is enforced).
@@ -324,7 +329,7 @@ payload run is **not another HTTP endpoint**. It is:
 2. initialize the PERSIST schema marker and prove schema refusal;
 3. implement the privileged slot backend beneath `SystemUpdateService`;
 4. implement bounded boot-attempt/health confirmation and automatic rollback;
-5. prove install → healthy boot → update → commit → failed candidate → previous release in product-mode QEMU and on physical Acer before enabling `system.update.activate`.
+5. prove install → healthy boot → update → commit → failed candidate → previous release in product-mode QEMU and on physical Acer before enabling `system.update.activate`. That QEMU/physical-Acer proof is DEFERRED certification evidence for a later binary-release requirement: it is not an immediate owner task and does not gate this tranche.
 ```
 
 Note: the old signed-bundle `keygen`/`manifest.sig`/Ed25519 workflow (ADR 0030)
