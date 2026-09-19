@@ -16,8 +16,10 @@ board/space + PERSIST-schema-range gating.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import socket
+import tarfile
 import tempfile
 import unittest
 import zipfile
@@ -53,7 +55,46 @@ from greia_platform.system_updates import (
 )
 
 
-_HW_BYTES = b"\x28\xb5\x2f\xfd" + b"hwset" * 32
+def _valid_hw_bytes() -> bytes:
+    import zstandard
+
+    packages = b""
+    packages_gz = b""
+    manifest = {
+        "schema_version": 1,
+        "suite": "trixie",
+        "architecture": "amd64",
+        "package_count": 0,
+        "total_bytes": 0,
+        "total_installed_bytes": 0,
+        "provided_candidate_packages": [],
+        "provided_firmware_packages": [],
+        "provided_microcode_packages": [],
+        "broad_firmware_packages": [],
+        "firmware_providers": {},
+        "unavailable_candidate_packages": [],
+        "packages": [],
+        "repository_indexes": {
+            "Packages": {"size": 0, "sha256": hashlib.sha256(packages).hexdigest()},
+            "Packages.gz": {"size": 0, "sha256": hashlib.sha256(packages_gz).hexdigest()},
+        },
+    }
+    raw_tar = io.BytesIO()
+    with tarfile.open(fileobj=raw_tar, mode="w", format=tarfile.PAX_FORMAT) as archive:
+        for name, payload in (
+            ("manifest.json", json.dumps(manifest).encode("utf-8")),
+            ("Packages", packages),
+            ("Packages.gz", packages_gz),
+        ):
+            info = tarfile.TarInfo(name=name)
+            info.size = len(payload)
+            info.mode = 0o644
+            info.mtime = 0
+            archive.addfile(info, io.BytesIO(payload))
+    return zstandard.ZstdCompressor(level=3).compress(raw_tar.getvalue())
+
+
+_HW_BYTES = _valid_hw_bytes()
 _PERSIST_MARKER = emit_persist_schema_marker(1)
 
 _UUID_A = "11111111-2222-3333-4444-555555555555"
