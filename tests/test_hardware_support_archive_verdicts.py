@@ -28,6 +28,7 @@ import json
 import tarfile
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 from unittest import mock
 
@@ -39,7 +40,7 @@ from greia_installer.hardware_support import (
 from greia_platform import candidate_support as _runtime
 from greia_platform.system_updates import (
     MAX_HARDWARE_SUPPORT_BYTES,
-    SystemUpdateInbox,
+    UpdateBundleError,
     build_update_bundle,
 )
 
@@ -149,7 +150,13 @@ def _mutate(
 
 
 def _build_verdicts(raw_compressed: bytes, root: Path) -> tuple[bool, bool]:
-    """Return (build_accepts, runtime_accepts) for the same bytes."""
+    """Return (build_accepts, runtime_accepts) for the same support bytes.
+
+    Runtime inspection receives the exact bytes in a minimal synthetic ZIP
+    member rather than calling the production bundle builder. This keeps
+    malformed-fixture testing from requiring production to publish invalid
+    hardware-support artifacts.
+    """
     hw_path = root / "case.tar.zst"
     hw_path.write_bytes(raw_compressed)
     try:
@@ -157,46 +164,20 @@ def _build_verdicts(raw_compressed: bytes, root: Path) -> tuple[bool, bool]:
         build_ok = True
     except HardwareSupportPoolError:
         build_ok = False
-    import zstandard
 
-    work = root / "bundle-work"
-    work.mkdir(parents=True, exist_ok=True)
-    payload_path = work / "slot.ext4.zst"
-    payload_path.write_bytes(zstandard.ZstdCompressor(level=3).compress(b"payload"))
-    bundle = work / "candidate.greiaupdate"
-    if bundle.exists():
-        bundle.unlink()
-    build_update_bundle(
-        payload_path=payload_path,
-        hardware_support_path=hw_path,
-        output_path=bundle,
-        version="0.99.0",
-        release_id="greia-parser-verdicts",
-        platform_family="verdicts",
-        architecture="verdictarch",
-        profile="verdictprofile",
-        payload_uncompressed_bytes=len(b"payload"),
-        minimum_slot_bytes=len(b"payload"),
-        persist_read_schema_min=1,
-        persist_read_schema_max=1,
-        persist_write_schema=1,
-        release_notes="parser verdict probe",
-    )
-    inspected = SystemUpdateInbox(root / "state").receive(bundle)
-    manifest = inspected.manifest
-    assert manifest.hardware_support_sha256 is not None
-    assert manifest.hardware_support_size is not None
+    bundle = root / "candidate.greiaupdate"
+    with zipfile.ZipFile(bundle, "w", compression=zipfile.ZIP_STORED) as archive:
+        archive.writestr("hardware-support.tar.zst", raw_compressed)
     try:
         _runtime.inspect_support_metadata(
-            inspected.path,
-            expected_sha=manifest.hardware_support_sha256,
-            expected_size=manifest.hardware_support_size,
+            bundle,
+            expected_sha=_sha(raw_compressed),
+            expected_size=len(raw_compressed),
         )
         runtime_ok = True
     except _runtime.CandidateSupportError:
         runtime_ok = False
     return build_ok, runtime_ok
-
 
 class IdenticalVerdictTests(unittest.TestCase):
     def _assert_same_verdict(self, raw: bytes, *, expect_accept: bool) -> None:
@@ -336,6 +317,54 @@ class IdenticalVerdictTests(unittest.TestCase):
             ),
         ):
             self._assert_same_verdict(raw, expect_accept=False)
+
+
+class BundleProducerFailClosedTests(unittest.TestCase):
+    def test_invalid_support_archive_is_refused_before_bundle_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload_path = root / "payload.ext4.zst"
+            payload_path.write_bytes(b"\\x28\\xb5\\x2f\\xfdpayload")
+            members = _valid_members() + [_reg("unexpected-top-level.txt", b"x")]
+            hw_path = root / "hardware-support.tar.zst"
+            hw_path.write_bytes(_compress(_tar_bytes(members)))
+            output = root / "invalid-support.greiaupdate"
+            with self.assertRaises(UpdateBundleError) as raised:
+                build_update_bundle(
+                    payload_path=payload_path,
+                    hardware_support_path=hw_path,
+                    output_path=output,
+                    version="0.99.0",
+                    release_id="greia-fail-closed",
+                    platform_family="verdicts",
+                    architecture="verdictarch",
+                    profile="verdictprofile",
+                    payload_uncompressed_bytes=4096,
+                    minimum_slot_bytes=4096,
+                    persist_read_schema_min=1,
+                    persist_read_schema_max=1,
+                    persist_write_schema=1,
+                )
+            self.assertIn("hardware-support archive refused", str(raised.exception))
+            self.assertFalse(output.exists())
+
+    def test_expected_archive_facts_are_both_or_neither(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            raw = _compress(_tar_bytes(_valid_members()))
+            path = root / "valid.tar.zst"
+            path.write_bytes(raw)
+            digest = _sha(raw)
+            with self.assertRaises(_shared.HardwareSupportArchiveError):
+                _shared.inspect_archive_file(path, expected_sha256=digest)
+            with self.assertRaises(_shared.HardwareSupportArchiveError):
+                _shared.inspect_archive_file(path, expected_compressed_bytes=len(raw))
+            metadata = _shared.inspect_archive_file(
+                path,
+                expected_compressed_bytes=len(raw),
+                expected_sha256=digest,
+            )
+            self.assertEqual(metadata.support_size, len(raw))
 
 
 class SingleProductionBoundTests(unittest.TestCase):
