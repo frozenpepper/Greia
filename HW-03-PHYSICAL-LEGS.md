@@ -1,3 +1,12 @@
+# HISTORICAL — DO NOT EXECUTE
+
+This is the retired Session 02/R2 owner-operated hardware runbook. It is
+preserved only as historical evidence. **It is not current Greia routing and
+must not be used to ask the owner for hardware work.** R4 source closure is
+autonomous; current routing lives in `HANDOVER.md`, the active lifecycle
+plan, and `docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md`. Physical
+Acer/install/update/rollback work remains deferred certification evidence for
+a later binary release.
 # HW-03 physical legs — exact status and owner runbook (2026-09-18)
 
 Repair tranche (Session 02, R2 `repair` phase) is **source-complete and
@@ -54,7 +63,7 @@ needs owner-operated hardware. This file is the precise handoff.
   completed here, no owner action needed); privileged/physical acceptance
   stays deferred under §4.
 - §18 Acer acceptance (all seven predicate groups): entirely unexecuted.
-- Repair DoD §23 physical predicates: UNPROVEN. **Session 03 must not begin.**
+- Repair DoD §23 physical predicates were UNPROVEN in this historical R2 run. The old R2 verdict that Session 03 must not begin is superseded by the current lifecycle plan and later R4 closeout.
 
 ## 3. Owner execution 1 — installer build (HW-03A re-attempt)
 
