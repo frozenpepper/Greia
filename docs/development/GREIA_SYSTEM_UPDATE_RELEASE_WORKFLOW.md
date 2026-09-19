@@ -60,15 +60,19 @@ composed target root
 Normal command:
 
 ```bash
+: "${VERSION:?set VERSION for this release}"
+: "${RELEASE_BUILD_FILESYSTEM_BYTES:?set release-specific build filesystem bytes}"
+: "${RELEASE_MINIMUM_SLOT_BYTES:?set release-specific minimum slot bytes}"
+
 python3 tools/build_release.py build-payload \
   --staging-dir ./out/composed-target-root \
   --kernel ./out/vmlinuz-generic \
   --initramfs ./out/initrd-generic \
   --output ./out/payload.ext4.zst \
   --profile-id acer-aspire-one-i386-ab \
-  --release-id greia-<VERSION> \
-  --filesystem-bytes <RELEASE_BUILD_FILESYSTEM_BYTES> \
-  --minimum-slot-bytes <RELEASE_MINIMUM_SLOT_BYTES> \
+  --release-id "greia-${VERSION}" \
+  --filesystem-bytes "${RELEASE_BUILD_FILESYSTEM_BYTES}" \
+  --minimum-slot-bytes "${RELEASE_MINIMUM_SLOT_BYTES}" \
   --receipt-output ./out/payload-receipt.json
 ```
 
@@ -166,8 +170,8 @@ seam with manually typed sizes.
 It defaults:
 
 ```text
-release ID : greia-0.14.0
-output     : out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
+release ID : greia-<VERSION>
+output     : out/greia-<VERSION>-acer-aspire-one-i386-ab.greiaupdate
 ```
 
 The receipt carries the shrunk image size reported by the
@@ -204,7 +208,7 @@ an existing output path.
 
 ```bash
 python3 tools/greia_update.py inspect \
-  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
+  ./out/greia-<VERSION>-acer-aspire-one-i386-ab.greiaupdate
 ```
 
 This reports the manifest facts and validates bundle structure, payload
@@ -217,7 +221,7 @@ Preferred paired-device credential:
 
 ```bash
 python3 tools/greia_update.py push \
-  ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate \
+  ./out/greia-<VERSION>-acer-aspire-one-i386-ab.greiaupdate \
   --url http://greia.local:8766 \
   --bearer "$GREIA_PARENT_BEARER"
 ```
