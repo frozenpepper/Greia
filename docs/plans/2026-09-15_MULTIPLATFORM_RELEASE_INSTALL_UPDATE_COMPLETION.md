@@ -1467,3 +1467,35 @@ remains open and the exact next step.
 - Worktree-divergence note: the authoring R4-H-FINAL worktree (baseline `b7854246`) carries a 7-file host-divergence delta vs the Linux-proven tree on exactly the routed surface; that delta is UNPROVEN on Linux and unclaimed here, owned by follow-up triage lanes.
 - Deferred-physical list (per §12): no mounts/loop/install/destructive work on either lane; Acer install, A/B writes, exact-service staging, boot/health/rollback, PERSIST survival, USB boot, 4161 MiB reproof, hardware footprint/timing — required before binary/family release, not before R4 source closure.
 - Session 03 status: CLOSED under this plan's sequencing until this plan opens it; the gate re-evaluates against the Linux-bound evidence above.
+
+## 2026-09-20 — R4 post-review closure patch landed; local validation pending
+
+- Independent review of `67c7c445` found five closure issues, not a new
+  architecture failure: low-level bundle production still tolerated malformed
+  supplied hardware support; support archive inspection accepted partial
+  expected facts until an internal assertion; the active release runbook still
+  showed stale 1 GiB Acer payload numbers; the root HW-03 file still looked like
+  current owner routing; and the handover/ledger state did not yet describe the
+  final post-review closure path consistently.
+- Source fixes landed on `main`: `4f5d4ae9` makes
+  `build_update_bundle()` fail closed on any canonical support-parser refusal;
+  `5bb58d7b` makes expected support size/SHA an explicit both-or-neither
+  contract. Regression fixtures were updated through `04adb6ed` so valid
+  producer tests carry real valid support archives and malformed parity cases
+  no longer depend on production publishing invalid support.
+- Documentation/routing fixes landed: active release instructions use
+  release-specific sizing placeholders rather than stale 1 GiB constants;
+  `HW-03-PHYSICAL-LEGS.md` is explicitly historical/do-not-execute; the
+  release workflow now routes to local closure validation and then Session 03.
+- Fresh validation is deliberately **PENDING**, not inferred from older R4
+  evidence. The exact autonomous brief is
+  `docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md`: py_compile,
+  focused update/support suites, baseline-relative diff check, full
+  `make verify`, doc-routing checks, clean tree before/after. No source edits,
+  Acer, Orbiter, Docker, mounts, destructive storage work, or owner intervention
+  are part of that validation.
+- Session 03 opens when that current-HEAD local validation returns green. If it
+  fails, repair the demonstrated source/test defect only. Physical Acer
+  install/update/rollback acceptance remains deferred certification evidence
+  before a binary/family release and does not route this closure patch.
+
