@@ -334,24 +334,27 @@ Do not label the current update tranche PASS until those commands execute at the
 
 ## 11. Next implementation step
 
-The Session 02 source scope (canonical composer roles, real ext4 slot
-producer, shared completeness validator) is complete and the earlier
-real-artifact legs already ran (R2 T15 orbiter boundary; HW-01A payload leg
-at `4c571995` — see `HANDOVER.md` §§29–30). The remaining Session 02 leg is
-the R4-bound reproof at the current SHA: one privileged Linux build-host
-`build-payload` → `verify-payload` → bundle cycle (owned by the R4 verify
-lane, not by this runbook's reader) to bind the R4 source repairs to a fresh
-real artifact. After that, the lifecycle plan's Session 03
-(owner release CLI) and Session 04 (legacy i386 lifecycle with the real
-payload) are next. The next destructive/update-critical work after the
-payload run is **not another HTTP endpoint**. It is:
+The Session 02/R4 source architecture is complete. The current post-R4 closure
+patch makes the low-level bundle producer fail closed on invalid supplied
+hardware support, tightens the shared archive-inspection argument contract,
+updates support-carrying tests to use valid artifacts, and retires stale
+owner-hardware/current-sizing instructions.
 
-1. wire the fresh A/B installer to the real just-built bundle;
-2. initialize the PERSIST schema marker and prove schema refusal;
-3. implement the privileged slot backend beneath `SystemUpdateService`;
-4. implement bounded boot-attempt/health confirmation and automatic rollback;
-5. prove install → healthy boot → update → commit → failed candidate → previous release in product-mode QEMU and on physical Acer before enabling `system.update.activate`. That QEMU/physical-Acer proof is DEFERRED certification evidence for a later binary-release requirement: it is not an immediate owner task and does not gate this tranche.
-```
+The immediate next action is **local, non-destructive validation only** using:
+
+`docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md`
+
+No Acer, Orbiter, Docker, mount, repartition, or owner-operated hardware work is
+required for that validation. If the focused suites and `make verify` are
+green at the returned HEAD, Session 02 source closure is complete and
+**Session 03 — owner release CLI + compact release outputs** is the next
+engineering session.
+
+Session 04 remains responsible for wiring the release CLI's real bundle into
+the legacy i386 A/B lifecycle and proving install → healthy boot → update →
+commit → failed candidate → previous release. Physical Acer acceptance remains
+deferred certification evidence before a binary/family release; it is not a
+precondition for beginning Session 03.
 
 Note: the old signed-bundle `keygen`/`manifest.sig`/Ed25519 workflow (ADR 0030)
 is superseded by ADR 0036 and is historical only; do not use it for new releases.
