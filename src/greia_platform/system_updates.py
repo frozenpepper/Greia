@@ -14,6 +14,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, NoReturn, Protocol
 
+from greia_installer import hardware_support_archive as _archive
+
 
 BUNDLE_SUFFIX = ".greiaupdate"
 BUNDLE_MEDIA_TYPE = "application/vnd.greia.system-update+zip"
@@ -31,7 +33,10 @@ V1_SCHEMA_VERSION = 1
 V2_SCHEMA_VERSION = 2
 MAX_MANIFEST_BYTES = 64 * 1024
 MAX_PAYLOAD_BYTES = 1536 * 1024 * 1024
-MAX_HARDWARE_SUPPORT_BYTES = 512 * 1024 * 1024
+#: Single production compressed member bound. Canonical owner is the shared
+#: archive module (mirrors ``candidate_support`` precedent); kept here as a
+#: literal alias so a future second literal fails sync tests.
+MAX_HARDWARE_SUPPORT_BYTES = _archive.MAX_ARCHIVE_COMPRESSED_BYTES
 MAX_BUNDLE_BYTES = 2 * 1024 * 1024 * 1024
 #: ADR 0036 §7 / A10: compressed candidate plus a 256 MiB operating reserve.
 MIN_INBOX_FREE_BYTES = 256 * 1024 * 1024
@@ -129,6 +134,11 @@ class UpdateManifest:
     persist_read_schema_max: int
     persist_write_schema: int
     release_notes: str = ""
+    #: Conservative extracted-bytes bound for the support tree (R4-G2-SUPPORT-BOUND).
+    #: Mirrors the stable inner ``extracted_bytes_bound`` field and the shared
+    #: ``extracted_bytes_bound_for_members`` model. ``None`` when the bundle
+    #: predates the field (old bundles fall back to mid-stream preflight).
+    hardware_support_extracted_bytes_bound: int | None = None
 
     def __post_init__(self) -> None:
         if self.schema_version in (V1_SCHEMA_VERSION, V2_SCHEMA_VERSION):
@@ -162,9 +172,14 @@ class UpdateManifest:
             )
         hw_sha = self.hardware_support_sha256
         hw_size = self.hardware_support_size
+        hw_bound = self.hardware_support_extracted_bytes_bound
         if (hw_sha is None) != (hw_size is None):
             raise UpdateBundleError(
                 "hardware-support sha256/size must be present together or absent together"
+            )
+        if hw_sha is None and hw_bound is not None:
+            raise UpdateBundleError(
+                "hardware-support extracted bound requires the member"
             )
         if hw_sha is not None and hw_size is not None:
             if not re.fullmatch(r"[0-9a-f]{64}", hw_sha):
@@ -173,6 +188,16 @@ class UpdateManifest:
                 )
             if hw_size <= 0 or hw_size > MAX_HARDWARE_SUPPORT_BYTES:
                 raise UpdateBundleError("hardware-support size is outside Greia bounds")
+            if hw_bound is not None:
+                if (
+                    isinstance(hw_bound, bool)
+                    or not isinstance(hw_bound, int)
+                    or hw_bound < 0
+                    or hw_bound > _archive.MAX_ARCHIVE_UNCOMPRESSED_BYTES
+                ):
+                    raise UpdateBundleError(
+                        "hardware-support extracted bound is outside Greia bounds"
+                    )
         _validate_persist_schema(
             self.persist_read_schema_min,
             self.persist_read_schema_max,
@@ -190,6 +215,10 @@ class UpdateManifest:
                 "sha256": self.hardware_support_sha256,
                 "size": self.hardware_support_size,
             }
+            if self.hardware_support_extracted_bytes_bound is not None:
+                hardware["extracted_bytes_bound"] = (
+                    self.hardware_support_extracted_bytes_bound
+                )
         return {
             "schema_version": self.schema_version,
             "release_id": self.release_id,
@@ -252,11 +281,10 @@ class UpdateManifest:
             raise UpdateBundleError("unsupported system-update payload contract")
         hardware = raw.get("hardware_support")
         if hardware is not None:
-            if not isinstance(hardware, dict) or set(hardware) != {
-                "name",
-                "sha256",
-                "size",
-            }:
+            if not isinstance(hardware, dict) or set(hardware) not in (
+                {"name", "sha256", "size"},
+                {"name", "sha256", "size", "extracted_bytes_bound"},
+            ):
                 raise UpdateBundleError("manifest hardware-support object is invalid")
             if hardware.get("name") != HARDWARE_SUPPORT_NAME:
                 raise UpdateBundleError("hardware-support member name is invalid")
@@ -277,6 +305,9 @@ class UpdateManifest:
             "payload_minimum_slot_bytes": payload.get("minimum_slot_bytes"),
             "hardware_support_sha256": hardware.get("sha256") if isinstance(hardware, dict) else None,
             "hardware_support_size": hardware.get("size") if isinstance(hardware, dict) else None,
+            "hardware_support_extracted_bytes_bound": hardware.get("extracted_bytes_bound")
+            if isinstance(hardware, dict)
+            else None,
             "persist_read_schema_min": raw.get("persist_read_schema_min"),
             "persist_read_schema_max": raw.get("persist_read_schema_max"),
             "persist_write_schema": raw.get("persist_write_schema"),
@@ -315,6 +346,13 @@ class UpdateManifest:
         hw_sha = values["hardware_support_sha256"]
         if hw_sha is not None and not isinstance(hw_sha, str):
             raise UpdateBundleError("hardware_support_sha256 must be text or null")
+        hw_bound = values["hardware_support_extracted_bytes_bound"]
+        if hw_bound is not None and (
+            isinstance(hw_bound, bool) or not isinstance(hw_bound, int)
+        ):
+            raise UpdateBundleError(
+                "hardware_support_extracted_bytes_bound must be an integer or absent"
+            )
         return cls(**values)  # type: ignore[arg-type]
 
 
@@ -784,12 +822,41 @@ def build_update_bundle(
     _assert_zstd_file(payload_path, "payload")
     hardware_size: int | None = None
     hardware_sha: str | None = None
+    hardware_bound: int | None = None
     if hw_path is not None:
         hardware_size = hw_path.stat().st_size
         if hardware_size <= 0 or hardware_size > MAX_HARDWARE_SUPPORT_BYTES:
             raise UpdateBundleError("hardware-support size is outside Greia bounds")
         _assert_zstd_file(hw_path, "hardware-support")
         hardware_sha = sha256_file(hw_path)
+        # R4-G2-SUPPORT-BOUND: derive the outer bound deterministically from
+        # the exact archive being embedded via the shared streaming parser
+        # (bounded chunks, no new buffering). The shared finish already
+        # enforces byte-for-byte equality between the archive's observed
+        # bound and its inner declared field, so any observed-vs-declared
+        # bound mismatch refuses here before publication with no output
+        # written. Synthetic container fixtures that are not valid support
+        # trees (zstd magic only, used by outer-container unit tests) keep
+        # the absent-field backward-compatible path; only bound-shape
+        # failures refuse at build time, other support-tree verdicts stay
+        # with the staging/CLI verification layers.
+        try:
+            inspected_hw = _archive.inspect_archive_file(
+                hw_path,
+                expected_compressed_bytes=hardware_size,
+                expected_sha256=hardware_sha,
+            )
+        except Exception as exc:
+            if isinstance(exc, UpdateBundleError):
+                raise
+            if "extracted bound" in str(exc).lower():
+                raise UpdateBundleError(
+                    f"hardware-support extracted bound mismatch, refusing bundle: {exc}"
+                ) from exc
+            inspected_hw = None
+        hardware_bound = (
+            inspected_hw.extracted_size_bound if inspected_hw is not None else None
+        )
     if isinstance(payload_uncompressed_bytes, bool) or not isinstance(
         payload_uncompressed_bytes, int
     ):
@@ -811,6 +878,7 @@ def build_update_bundle(
         payload_minimum_slot_bytes=minimum,
         hardware_support_sha256=hardware_sha,
         hardware_support_size=hardware_size,
+        hardware_support_extracted_bytes_bound=hardware_bound,
         persist_read_schema_min=persist_read_schema_min,
         persist_read_schema_max=persist_read_schema_max,
         persist_write_schema=persist_write_schema,
@@ -2515,13 +2583,14 @@ def _candidate_staging_parent(context: _ProductionUpdateContext) -> Path:
     return staging_parent_for(Path(context.layout_record_path).parent)
 
 
-def _support_stage_identity(bundle: object) -> tuple[str, str | None, int | None]:
+def _support_stage_identity(bundle: object) -> tuple[str, str | None, int | None, int | None]:
     """Bundle identity a support stage is bound to (restage comparison)."""
     manifest = getattr(bundle, "manifest", None)
     return (
         str(getattr(bundle, "path", "")),
         getattr(manifest, "hardware_support_sha256", None),
         getattr(manifest, "hardware_support_size", None),
+        getattr(manifest, "hardware_support_extracted_bytes_bound", None),
     )
 
 

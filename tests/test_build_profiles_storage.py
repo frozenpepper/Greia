@@ -93,23 +93,36 @@ class StorageLifecycleAdapterTests(unittest.TestCase):
                 "system_slot_bytes = 134217728",
             )
 
-    def test_insufficient_layout_capacity_fails_closed(self) -> None:
-        with self.assertRaisesRegex(BuildProfileError, "layout capacity"):
-            _load_mutated(
-                "acer-aspire-one-i386.toml",
-                "size_mib = 2048",
-                "size_mib = 1001",
-            )
+    def test_small_image_size_mib_is_not_installed_capacity(self) -> None:
+        # R4-B-CAPACITY: image.size_mib sizes the intermediate single-root
+        # build artifact, never the installed-device minimum, so shrinking
+        # it below the old layout-capacity bound keeps a valid profile valid
+        # (1001 MiB still exceeds the 1000 MiB resource floor).
+        profile = _load_mutated(
+            "acer-aspire-one-i386.toml",
+            "size_mib = 2048",
+            "size_mib = 1001",
+        )
+        self.assertEqual(1001, profile.image.size_mib)
 
-    def test_target_minimum_below_overhead_plus_persist_fails_closed(self) -> None:
-        with self.assertRaisesRegex(BuildProfileError, "overhead \\+"):
+    def test_image_at_resource_floor_and_persist_below_schema_floor_fail_closed(self) -> None:
+        # R4-B-CAPACITY: the remaining artifact-relevant image gates are the
+        # resource floor (image must exceed required_core_mib) and the
+        # generic PERSIST schema floor (exact installed sizing stays with
+        # the real layout planner via plan_for_profile).
+        with self.assertRaisesRegex(
+            BuildProfileError, "must exceed resources.required_core_mib"
+        ):
             _load_mutated(
                 "acer-aspire-one-i386.toml",
                 "size_mib = 2048",
-                "size_mib = 1001",
-                [("preferred_core_mib = 800", "preferred_core_mib = 100"),
-                 ("required_core_mib = 1000", "required_core_mib = 150"),
-                 ("persistent_minimum_bytes = 268435456", "persistent_minimum_bytes = 2147483648")],
+                "size_mib = 1000",
+            )
+        with self.assertRaisesRegex(BuildProfileError, "below the PERSIST"):
+            _load_mutated(
+                "acer-aspire-one-i386.toml",
+                "persistent_minimum_bytes = 268435456",
+                "persistent_minimum_bytes = 134217728",
             )
 
     def test_unknown_arm_board_fallback_fails_closed(self) -> None:

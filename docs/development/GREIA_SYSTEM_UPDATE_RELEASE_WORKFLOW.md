@@ -5,7 +5,7 @@
 **Architecture:** ADR 0036 (supersedes the old signed-bundle requirements of ADR 0030 where they conflict)
 **Product requirements:** `docs/product/SYSTEM_UPDATES.md`
 **Tools:** `tools/build_release.py`, `tools/greia_update.py`
-**Implementation state:** Session 02 source scope complete; real-artifact build-host run pending (see `HANDOVER.md` §26)
+**Implementation state:** Session 02 source scope complete with earlier real-artifact proof (R2 T15 orbiter boundary leg; HW-01A payload leg at `4c571995`); R4-bound reproof at the current SHA is pending (see `HANDOVER.md` §30)
 
 This is the short practical procedure for **building, checking and sending a Greia `.greiaupdate` v3 package**.
 
@@ -68,8 +68,17 @@ python3 tools/build_release.py build-payload \
   --profile-id acer-aspire-one-i386-ab \
   --release-id greia-0.14.0 \
   --filesystem-bytes 1073741824 \
-  --minimum-slot-bytes 1074790400
+  --minimum-slot-bytes 1074790400 \
+  --receipt-output ./out/payload-receipt.json
 ```
+
+`--receipt-output` writes the machine-readable payload receipt measured
+from the finished artifact (`schema_version`, `payload_sha256`,
+`payload_compressed_bytes`, `payload_uncompressed_bytes`,
+`minimum_slot_bytes`, `profile_id`, `release_id`). The normal bundle path
+consumes that receipt via `greia_update.py build --payload-receipt`
+(§4), which verifies it against the payload artifact before any bundle
+byte is written. Field and flag names are stable for Session 03.
 
 `--minimum-slot-bytes` is the candidate's minimum base filesystem size,
 not the destination slot size: it must cover the actual shrunk ext4 size
@@ -113,19 +122,28 @@ release identity). Do not bundle a payload that fails this check.
 
 ## 4. Build the v3 bundle
 
-Normal command:
+Normal command (verified receipt flow):
 
 ```bash
 python3 tools/greia_update.py build \
   --payload ./out/payload.ext4.zst \
-  --payload-uncompressed-bytes <shrunk-image-bytes> \
-  --minimum-slot-bytes 1074790400 \
+  --payload-receipt ./out/payload-receipt.json \
   --profile-file ./build/profiles/acer-aspire-one-i386-ab.toml \
   --version 0.14.0 \
   --persist-read-min 1 \
   --persist-read-max 1 \
   --persist-write 1
 ```
+
+The normal `--profile-file` build derives size facts from
+`build-payload --receipt-output` via `--payload-receipt` and verifies the
+receipt against the payload artifact in full (shape → profile/release
+identity → sha256 → compressed size → streamed decompressed length →
+manual-vs-receipt equality) before any bundle byte is written. Bare
+`--payload-uncompressed-bytes` / `--minimum-slot-bytes` without
+`--payload-receipt` are a DEVELOPER-ONLY low-level seam
+(`--developer-allow-unverified-payload-facts`): test/low-level usage only,
+never normal production.
 
 The tool reads these compatibility facts from the one canonical profile
 (`build/profiles/acer-aspire-one-i386-ab.toml`):
@@ -147,8 +165,12 @@ publication: the `tools/greia_update.py` profile-capacity gate via the
 shared finalized-slot calculation counts growth and metadata reserves, so
 the required total exceeds the 1 GiB slot). Mixing `--profile-file` with
 explicit `--platform-family`/`--architecture`/`--profile`/`--board` is
-rejected; advanced/test tooling may use the explicit form without a
-profile file (then no profile slot bound is enforced).
+rejected; the explicit-identity flag form is a DEVELOPER-ONLY low-level
+seam without a profile file and carries no profile slot bound, so it is
+never normal production. It still requires `--payload-receipt` deriving
+size facts from the payload artifact with the same full artifact
+verification, or the DEVELOPER-ONLY `--developer-allow-unverified-payload-facts`
+seam with manually typed sizes.
 
 It defaults:
 
@@ -157,10 +179,15 @@ release ID : greia-0.14.0
 output     : out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 ```
 
-`--payload-uncompressed-bytes` is the shrunk image size reported by the
-`build-payload` step; pass the headroom-carrying minimum from §2 explicitly
-(`1074790400` in that example: shrunk size plus 1 MiB headroom). `--minimum-slot-bytes`
-defaults to `--payload-uncompressed-bytes`, so the refusal above assumes that
+The receipt carries the shrunk image size reported by the
+`build-payload` step as `payload_uncompressed_bytes` and the
+headroom-carrying minimum from §2 as `minimum_slot_bytes`
+(`1074790400` in that example: shrunk size plus 1 MiB headroom). A manually
+typed `--minimum-slot-bytes` alongside `--payload-receipt` must equal the
+receipt, otherwise the build refuses. Bare `--payload-uncompressed-bytes`
+/ `--minimum-slot-bytes` without `--payload-receipt` are DEVELOPER-ONLY
+(`--developer-allow-unverified-payload-facts`) test/low-level usage only;
+`--minimum-slot-bytes` defaults to `--payload-uncompressed-bytes`, so the refusal above assumes that
 headroom-carrying minimum from §2. The three
 `--persist-*` values carry PERSIST schema compatibility in the manifest.
 An optional `--hardware-support <hardware-support.tar.zst>` member may be
@@ -317,10 +344,13 @@ Do not label the current update tranche PASS until those commands execute at the
 ## 11. Next implementation step
 
 The Session 02 source scope (canonical composer roles, real ext4 slot
-producer, shared completeness validator) is complete; the remaining
-Session 02 leg is one privileged Linux build-host
-`build-payload` → `verify-payload` → bundle cycle to promote SOURCE-level
-proof to a real-artifact run. After that, the lifecycle plan's Session 03
+producer, shared completeness validator) is complete and the earlier
+real-artifact legs already ran (R2 T15 orbiter boundary; HW-01A payload leg
+at `4c571995` — see `HANDOVER.md` §§29–30). The remaining Session 02 leg is
+the R4-bound reproof at the current SHA: one privileged Linux build-host
+`build-payload` → `verify-payload` → bundle cycle (owned by the R4 verify
+lane, not by this runbook's reader) to bind the R4 source repairs to a fresh
+real artifact. After that, the lifecycle plan's Session 03
 (owner release CLI) and Session 04 (legacy i386 lifecycle with the real
 payload) are next. The next destructive/update-critical work after the
 payload run is **not another HTTP endpoint**. It is:

@@ -447,9 +447,10 @@ class LegacyBiosAbAdapter(LayoutAdapter):
     GRUB configuration/environment outside both replaceable system slots.
     """
 
-    #: Boot-control filesystem size; keeps total fixed overhead
-    #: (1 MiB reserve + 32 MiB) inside the 64 MiB profile layout headroom.
-    BOOT_CONTROL_BYTES = 32 * MIB
+    #: Boot-control filesystem size; lifecycle plan A21 fixed product default
+    #: (1 MiB label/GRUB reservation + 64 MiB boot-control, not configurable
+    #: per machine).
+    BOOT_CONTROL_BYTES = 64 * MIB
 
     @property
     def adapter_id(self) -> str:
@@ -1466,6 +1467,38 @@ def plan_for_profile(
     )
 
 
+#: Probe capacity used only to derive fixed-partition sizes from the real
+#: adapter model (far above any valid slot/PERSIST combination, so the
+#: probe plan always fits; never a real device size).
+_MINIMUM_PROBE_DEVICE_BYTES = 1 << 40
+
+
+def minimum_device_bytes_for_profile(sizing: ProfileSizing) -> int:
+    """Return the canonical installed-target minimum for profile sizing.
+
+    Single layout-owned formula: ``LABEL_RESERVED_BYTES + sum(fixed
+    partition sizes) + persist_minimum_bytes``, where the fixed sizes come
+    from the real registered adapter's own :meth:`LayoutAdapter.plan`
+    (proven at a probe capacity), never from a per-layout overhead table.
+    Static profile validation calls this owner instead of duplicating the
+    formula; install-time fit stays with :func:`plan_for_profile` and
+    :func:`validate_layout_plan`.
+    """
+    if not isinstance(sizing, ProfileSizing):
+        raise LayoutError("minimum device sizing requires profile-owned sizing facts")
+    adapter = adapter_for(sizing.layout_adapter_id)
+    if sizing.boot_backend != adapter.boot_backend:
+        raise LayoutError("profile boot_backend does not match the layout adapter")
+    probe = adapter.plan(
+        device_size_bytes=_MINIMUM_PROBE_DEVICE_BYTES,
+        slot_bytes=int(sizing.slot_bytes),
+        persist_minimum_bytes=int(sizing.persist_minimum_bytes),
+    )
+    return int(
+        LABEL_RESERVED_BYTES + probe.fixed_bytes() + int(sizing.persist_minimum_bytes)
+    )
+
+
 def require_finalized_slot_capacity(
     *,
     slot_bytes: int,
@@ -1621,6 +1654,7 @@ __all__ = [
     "build_observed_mbr_topology",
     "build_post_layout_mbr_observer",
     "mint_fresh_partition_identities",
+    "minimum_device_bytes_for_profile",
     "observe_legacy_mbr_identities",
     "observe_partition_identities",
     "parse_dos_partition_table",

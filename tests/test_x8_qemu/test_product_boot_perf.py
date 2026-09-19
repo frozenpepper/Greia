@@ -264,8 +264,14 @@ class BootPerfEntryTest(unittest.TestCase):
             out = Path(tmp) / "out"
             out.mkdir()
             config = LifecycleConfig(output_dir=out)
-            image = Path(tmp) / "installed.img"
-            image.write_bytes(b"installed-bytes")
+            # Capability-aware BLOCKED proof without spawning QEMU: the
+            # installed image is absent, so the real entry stays BLOCKED
+            # on every host. On a host without the Linux/QEMU facility
+            # the facility gate fires first (proving no-qemu blocking);
+            # on a capable host the absent-image gate fires (proving
+            # no-mint blocking). Either way nothing is fabricated and no
+            # disposable boot runs.
+            image = Path(tmp) / "missing-installed.img"
             bundle = Path(tmp) / "candidate.greiaupdate"
             bundle.write_bytes(b"bundle-bytes")
             with self.assertRaises(LifecycleHarnessError) as ctx:

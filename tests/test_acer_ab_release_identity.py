@@ -52,9 +52,11 @@ def _profile_slot_bytes(path: Path) -> int:
 
 
 def _make_payload(directory: Path) -> Path:
-    # The bundle tool trusts the producer-reported uncompressed/minimum
-    # facts for capacity (it cannot weigh a 1 GiB image in a unit test);
-    # the file itself only needs valid zstd framing for the bundle seam.
+    # Tiny fixture: only valid zstd framing for the bundle seam. Real sizes
+    # travel via the payload receipt in production; these tests exercise the
+    # capacity owner with producer-typed facts through the explicit
+    # DEVELOPER-ONLY unverified seam (--developer-allow-unverified-
+    # payload-facts), never the normal production path.
     payload = directory / "payload.ext4.zst"
     payload.write_bytes(_ZSTD_MAGIC + b"\x00" * 4096)
     return payload
@@ -106,6 +108,7 @@ class AcerAbReleaseIdentityTests(unittest.TestCase):
                     str(ACER_UNCOMPRESSED_BYTES),
                     "--minimum-slot-bytes",
                     str(ACER_MINIMUM_BYTES),
+                    "--developer-allow-unverified-payload-facts",
                     "--profile-file",
                     str(GENERIC_PROFILE),
                     "--version",
@@ -146,6 +149,7 @@ class AcerAbReleaseIdentityTests(unittest.TestCase):
                     str(ACER_UNCOMPRESSED_BYTES),
                     "--minimum-slot-bytes",
                     str(ACER_MINIMUM_BYTES),
+                    "--developer-allow-unverified-payload-facts",
                     "--profile-file",
                     str(ACER_PROFILE),
                     "--version",

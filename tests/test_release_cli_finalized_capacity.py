@@ -78,8 +78,10 @@ def _sha(data: bytes) -> str:
 
 
 def _make_payload(directory: Path) -> Path:
-    # The bundle tool trusts the producer-reported uncompressed/minimum
-    # facts for capacity; the file itself only needs valid zstd framing.
+    # Tiny fixture for the DEVELOPER-ONLY unverified seam: the file itself
+    # only needs valid zstd framing. Production facts travel via the payload
+    # receipt (see test_payload_receipt_binding.py); every profile-based
+    # argv below carries --developer-allow-unverified-payload-facts.
     payload = directory / "payload.ext4.zst"
     payload.write_bytes(_ZSTD_MAGIC + b"\x00" * 4096)
     return payload
@@ -109,10 +111,21 @@ def _write_support_archive(
 def _support_manifest(
     deb_payload: bytes, installed_bytes: int, *, deb_name: str = "pool/firmware-test_1_all.deb"
 ) -> dict:
+    packages_payload = b"Package: firmware-test\n"
+    packages_gzip_payload = b"gzip-placeholder"
     return {
         "schema_version": 1,
+        "suite": "trixie",
+        "architecture": "amd64",
+        "package_count": 1,
         "total_bytes": len(deb_payload),
         "total_installed_bytes": installed_bytes,
+        "provided_candidate_packages": ["firmware-test"],
+        "provided_firmware_packages": ["firmware-test"],
+        "provided_microcode_packages": [],
+        "broad_firmware_packages": ["firmware-test"],
+        "firmware_providers": {"rtl.bin": ["firmware-test"]},
+        "unavailable_candidate_packages": [],
         "packages": [
             {
                 "package": "firmware-test",
@@ -125,6 +138,16 @@ def _support_manifest(
                 "installed_bytes": installed_bytes,
             }
         ],
+        "repository_indexes": {
+            "Packages": {
+                "size": len(packages_payload),
+                "sha256": _sha(packages_payload),
+            },
+            "Packages.gz": {
+                "size": len(packages_gzip_payload),
+                "sha256": _sha(packages_gzip_payload),
+            },
+        },
     }
 
 
@@ -222,6 +245,7 @@ def _build_argv(
         str(payload),
         "--payload-uncompressed-bytes",
         str(base),
+        "--developer-allow-unverified-payload-facts",
         "--profile-file",
         str(profile),
         "--version",
@@ -490,6 +514,9 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
     def test_explicit_identity_builds_skip_profile_capacity_proof(self) -> None:
         # No --profile-file means no profile slot bound: even facts that
         # would fail the generic profile check must still build (no guessing).
+        # Explicit identity is a DEVELOPER-ONLY low-level seam
+        # (R4-G3-RECEIPT-HARDENING): bare typed sizes now require the
+        # developer seam flag, receipt verification otherwise applies.
         base = minimum = 1600000000
         target = module.UpdateTarget("legacy-x86", "i386", "legacy-x86-i686", None, None)
         self.assertIsNone(
@@ -502,6 +529,38 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             tmp = Path(directory)
             payload = _make_payload(tmp)
+            # Bare typed sizes without receipt and without the developer
+            # seam now refuse with no output.
+            refused = tmp / "explicit-refused.greiaupdate"
+            rc = module.main(
+                [
+                    "build",
+                    "--payload",
+                    str(payload),
+                    "--payload-uncompressed-bytes",
+                    str(base),
+                    "--minimum-slot-bytes",
+                    str(minimum),
+                    "--platform-family",
+                    "legacy-x86",
+                    "--architecture",
+                    "i386",
+                    "--profile",
+                    "legacy-x86-i686",
+                    "--version",
+                    "0.14.0",
+                    "--persist-read-min",
+                    "1",
+                    "--persist-read-max",
+                    "1",
+                    "--persist-write",
+                    "1",
+                    "--output",
+                    str(refused),
+                ]
+            )
+            self.assertEqual(rc, 2)
+            self.assertFalse(refused.exists())
             output = tmp / "explicit.greiaupdate"
             rc = module.main(
                 [
@@ -512,6 +571,7 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
                     str(base),
                     "--minimum-slot-bytes",
                     str(minimum),
+                    "--developer-allow-unverified-payload-facts",
                     "--platform-family",
                     "legacy-x86",
                     "--architecture",

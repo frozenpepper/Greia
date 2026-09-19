@@ -277,6 +277,17 @@ Do not edit source during the frozen attempt.
 
 ## 8b. Session 02 repair tranche R2 — source complete, physical gates owner-side (2026-09-18)
 
+> HISTORICAL — NOT CURRENT ROUTING. The R2 owner-operated hardware path below
+> was cancelled by explicit owner decision ("cancel with record", T-BAG R2
+> `abandoned`; see §§"2026-09-18 — R2 RETIRED" below). No owner hardware run
+> is required to finish R4: R4 is an autonomous source-only repair tranche and
+> all physical acceptance stays DEFERRED under the new authoritative closeout
+> in §30. The `docs/handovers/TBAG-opencode2-plugin-handoff/` directory
+> referenced below has been deleted; that reference is retained as history
+> only. "Session 03 must not begin until the owner completes them" and "Exact
+> owner next steps" are superseded by §30 — Session 03 status is owned by the
+> lifecycle plan ledger, not by this section.
+
 Run R2 executed `GREIA_SESSION02_REPAIR_LOCAL_AGENT_PLAN.md` (Session 02 review contradictions, Repairs A–J plus triage amendments). All implementation/review/integration closed through the T-BAG loop with fresh reviewers:
 
 ```text
@@ -310,7 +321,8 @@ exact installed service → candidate boot/accept → failure-recovery smoke.
 Return artifact sizes/headroom/service logs per §24; they close the phase.
 
 Run state: `TBag/runs/R2` (active). OpenCode 2 TUI status plugin fixed and
-verified in-project (see `docs/handovers/TBAG-opencode2-plugin-handoff/`);
+verified in-project (see the deleted `docs/handovers/TBAG-opencode2-plugin-handoff/`
+— HISTORICAL reference only, directory removed);
 autonomous parent wakes never arrive in this setup (heartbeat enrolls, timer
 and prompt delivery unverified host-side — documented there, skill RC60
 committed in the skill dev checkout, not pushed).
@@ -620,6 +632,12 @@ Current route: Session 02 DONE. Next is Session 03 (owner release CLI
 
 ## 2026-09-18 — R2 repair: worker lanes exhausted, owner hardware legs pending
 
+> HISTORICAL — NOT CURRENT ROUTING. The "owner hardware legs pending" path
+> below was parked and then cancelled by explicit owner decision the same day
+> (see "R2 run paused" and "R2 RETIRED" below); the "Three owner-operated
+> executions owed" are not owed for R4. Retained as history only — §30 owns
+> current R4 routing and requires no owner hardware run.
+
 T-BAG R2 `repair` (analyst + grunt pinned to
 `opencode / opencode-go/muse-spark-1.3-contributor`; launches serialized —
 parallel workers collide on the shared 6.9 GB opencode.db). Integrated with
@@ -640,6 +658,11 @@ held (re-running only re-proves NOT-EXECUTABLE).
 
 ## 2026-09-18 — R2 run paused by owner
 
+> HISTORICAL — NOT CURRENT ROUTING. This pause was superseded the same day by
+> the owner cancellation recorded immediately below; the "resume trigger"
+> asking the owner for a §24 evidence block no longer routes anything. R4
+> requires no owner hardware run (§30).
+
 Owner stopped the plan. T-BAG R2 status: `paused-by-user` (zero live
 workers; HW-02 deliberately held, HW-03 parked awaiting owner hardware per
 `HW-03-PHYSICAL-LEGS.md`, HW-04 pending evidence). Gate GATE-04 BLOCKED;
@@ -657,3 +680,285 @@ GREEN (`4c571995`), HW-01B/HW-03A STOPs, HW-03B NOT-EXECUTABLE, HW-05.
 Status/runbook `HW-03-PHYSICAL-LEGS.md` remains the hardware handoff should
 evidence ever return under a new run. Lifecycle ledger updated in
 `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`.
+
+## 30. Session 02 R4 autonomous repair — authoritative closeout (2026-09-19)
+
+This section is the single authoritative R4 closeout. It supersedes all
+active-looking owner-routing text above (§8b "Session 03 must not begin until
+the owner completes them" / "Exact owner next steps", the paused-run "resume
+trigger", and the dangling `docs/handovers/TBAG-opencode2-plugin-handoff/`
+references — that directory is deleted). **No owner hardware work is required
+to finish R4.** R4 is an autonomous source-only repair tranche; every
+physical/Orbiter predicate below that is not yet proven stays DEFERRED, never
+an owner task.
+
+- **R2 hardware owner-run path: HISTORICAL / CANCELLED.** Owner chose "cancel
+  with record" (T-BAG R2 `abandoned`); HW-02/HW-03/HW-04 closed without
+  execution, gate BLOCKED preserved as history. `HW-03-PHYSICAL-LEGS.md`
+  remains a historical handoff outside the R4 write boundary, not a current
+  instruction.
+- **R3 landed, but review found R4 defects.** At the R4 baseline the
+  executable source still carried: (A) `LegacyBiosAbAdapter.BOOT_CONTROL_BYTES
+  = 32 * MIB` against the binding A21 64 MiB contract
+  (`src/greia_installer/layout.py`); (B) Acer `image.size_mib = 4352`
+  inflated by installed-disk capacity via `BuildProfile`
+  duplicate-overhead validation (`tools/build_profile.py`,
+  `build/profiles/acer-aspire-one-i386-ab.toml`); (C)
+  `refuse_unless_persist_fits` double-counting the resident bundle against
+  PERSIST free space (`src/greia_platform/candidate_support.py`); (D) split
+  build/runtime hardware-support parsers with divergent verdicts and no
+  shared module; (EF) whole-artifact buffering plus two-pass candidate
+  staging; (G) operator-typed `--payload-uncompressed-bytes` trusted without
+  artifact verification (`tools/greia_update.py build`). Repair ownership:
+  sibling R4 code lanes R4-A-BOOT / R4-B-CAPACITY / R4-C-PERSIST /
+  R4-D-PARSER / R4-EF-STAGE / R4-G-RECEIPT; integration acceptance belongs to
+  R4-V-VERIFY at the final integrated HEAD, not to this docs tranche.
+- **R4 final SHA (docs tranche):** base `c58051c2` with an uncommitted
+  docs-only delta at report time (`HANDOVER.md`,
+  `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md`,
+  `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`;
+  `git diff --check` clean). The final integrated SHA is owned by
+  lane integration + R4-V-VERIFY, which re-binds all evidence to it.
+- **Focused test results (this tranche, autonomous):** 129 tests OK,
+  1 skipped, across `test_acer_ab_slot_capacity` (6),
+  `test_release_cli_finalized_capacity` (11), `test_candidate_support` (19),
+  `test_system_update_service_orchestration` (7, 1 skipped),
+  `test_build_profiles` (9), `test_build_release` (20), `test_slot_writer`
+  (45), `test_system_updates` (12); `git diff --check` clean;
+  `make shell-check` clean. Full `make verify` exceeds this lane's execution
+  budget (full-suite discovery >300 s); complete-gate verification is owned
+  by R4-V-VERIFY at the integrated HEAD.
+- **Orbiter evidence:** earlier real-artifact proofs stand and are NOT
+  re-claimed at this SHA — R2 T15 Session 02 boundary (orbiter lane,
+  `make verify` 3415 OK / 3 skipped) and HW-01A payload leg at `4c571995`
+  (383798895 B compressed / 1111490560 B uncompressed, headroom 1196425216
+  ≤ 1610612736 GREEN). **R4-bound Orbiter reproof at the current SHA is
+  PENDING** (no Orbiter run from this docs worktree; autonomous-only lane:
+  no mounts, no loop devices, no installs).
+- **Deferred physical acceptance:** installer disk assembly, exact-service
+  staging against a real inactive target, Acer fresh-install / update /
+  rollback / PERSIST-survival acceptance, and Pi/UEFI hardware legs remain
+  UNPROVEN and DEFERRED — listed here, not executed, never waived.
+- **Session 03 status:** CLOSED until the R4 code lanes integrate and
+  R4-V-VERIFY accepts the final HEAD; opening it is a lifecycle-plan
+  decision, never an owner hardware errand arising from R4.
+
+Cross-references: lifecycle ledger entry in
+`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
+(2026-09-19 R4 docs closeout); payload/bundle procedure in
+`docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` (R4-bound
+reproof wording).
+
+## 31. R4 SHA-bound closeout — final integrated HEAD `c4ab45aa` (2026-09-19)
+
+Append-only closeout bound by R4-V-VERIFY5 to the final integrated HEAD.
+§30 above is preserved as the docs-tranche record (base `c58051c2` + delta,
+full verify and Orbiter reproof PENDING at that point); this section, not
+§30, carries the final SHA binding. Existing `HISTORICAL — NOT CURRENT
+ROUTING` banners above are kept as-is. No owner hardware errand is added
+by this entry; every unproven physical predicate below stays DEFERRED.
+
+- **Final integrated SHA:** `c4ab45aaea5968d5a1bf911e2b883b012dd8cc3e`
+  (`git rev-parse HEAD`; `git status --short` empty before and after all
+  runs; `git diff --check` exit 0; `git log --oneline -3` →
+  `c4ab45aa` checkpoint / `bf192072` baseline / `23c76572` debris removal).
+- **Focused-suite results (all OK at that SHA, `PYTHONPATH=src python3 -m
+  unittest discover -s tests -p <file>`):** `test_acer_ab_slot_capacity` 6;
+  `test_release_cli_finalized_capacity` 11; `test_candidate_support` 19;
+  `test_system_update_service_orchestration` 7 (1 skipped —
+  systemd-analyze absent); `test_build_profiles` 9; `test_build_release`
+  20; `test_slot_writer` 45; `test_system_updates` 12;
+  `test_payload_receipt_binding` 17; `test_hardware_support_archive_verdicts`
+  22; `test_candidate_support_streaming` 15; `test_candidate_support_persist`
+  5; `test_support_outer_bound` 7; `test_installer_layout` 15;
+  `test_installer_legacy_ab_layout` 16; `test_legacy_boot_control_contract`
+  3; `test_ab_capacity_separation` 6; `test_build_profiles_storage` 11;
+  `test_persistent_layout` 40; `test_hardware_support_pool_build_script` 3;
+  `test_hardware_support_pool_finalize` 7;
+  `test_hardware_support_pool_manifest` 6;
+  `test_hardware_support_installed_size` 3;
+  `test_installer_hardware_support_install` 3;
+  `test_installer_hardware_support_pool` 13;
+  `test_installer_hardware_support_service` 3;
+  `test_installer_builder_hardware_support` 4;
+  `test_acer_ab_release_identity` 5; `test_greia_update_tool` 4;
+  `test_update_v3_bundle` 6; `test_system_update_service` 35;
+  `test_system_update_streaming` 4; `test_clone_neutral_target` 6;
+  `test_installer_persist` 20; `test_release_v2` 13. Named legs confirmed
+  by test name: explicit typed-without-receipt refusal,
+  explicit missing-sizes refusal, explicit+seam success, explicit
+  correct-receipt build, explicit 5-way mismatch refusal, single-schema-owner
+  pin, strengthened full-bundle compressed-overflow leg, single-production-bound
+  assertion, shared+runtime `read(-1)` refusal, single-open-per-member,
+  outer-bound round-trip/mismatch/pre-stream, order-lift both directions.
+- **`make verify` result:** `make validate` exit 0; `make shell-check`
+  exit 0 (no output); `make footprint` exit 0; `make test` → Ran 3587,
+  FAILED errors=11 skipped=4. The 11 errors are preserved red, pre-existing
+  and environmental: all `OSError: AF_UNIX path too long` at
+  `tools/x8_qemu/lifecycle.py:926 listener.bind(socket_path)` (1 in
+  `test_boot_health_product_composition`, 2 in `test_t3_update_production`,
+  8 in `test_x8_qemu.*`; mandated TMPDIR alone 125 chars, typical child
+  socket path 149 chars vs the 104-char darwin `sun_path` limit). All 11
+  failing files sit outside the R4 delta surface; identical signature to
+  accepted R4-V-VERIFY4 (3587/11/4). The 4 skips are preserved
+  environmental: 'no category targets at root view', 'no category targets',
+  'no sfdisk/blkid on this host', systemd-analyze-absent skip. Not re-run
+  under a shorter TMPDIR: the scratch boundary is launcher-mandated.
+- **Orbiter §§11.1–11.8 (same SHA):** §11.1 identity PROVEN (above). §11.2
+  unit legs + `make verify` stages PROVEN (above). §11.5 CLI-level positive
+  bundle PROVEN (real CLI `tools/greia_update.py build`,
+  `--profile-file build/profiles/acer-aspire-one-i386-ab.toml`, synthetic
+  64 KiB zstd payload + producer-measured receipt, synthetic 2-package pool
+  via production `build_hardware_support_set`): rc 0, bundle 1753 B,
+  manifest schema 3, profile `acer-aspire-one-i386-ab`, release
+  `greia-0.14.0`, payload compressed 282 / uncompressed 65536 / minimum
+  65536 (sha `5b6f4784…`), support compressed 750 / extracted bound 88576
+  (sha `c66418ea…`); slot capacity 1610612736 (1536 MiB), payload base
+  65536, payload minimum 65536, support installed 65536, finalization growth
+  67108864, metadata reserve 16777216, required total 84017152, remaining
+  headroom 1526595584. §11.6 CLI-level over-capacity refusal PROVEN (same
+  path, per-package installed 900 MiB → support installed 1887436800):
+  rc 2, stderr `required=1971388416 exceeds slot capacity 1610612736`,
+  output file absent. §11.7 PERSIST sensitivity incl. pre-stream outer-bound
+  leg PROVEN. §11.8 single-traversal/single-extraction/cleanup
+  instrumentation PROVEN (1 traversal / 1 extraction per stage, 2 payload
+  writes, 0 compressed tmp files, shared pool identity, cleanup after
+  success+failure via `test_candidate_support_streaming` 15/15 +
+  `test_support_outer_bound` 7/7). Preserved reds (never waived): strict
+  artifact legs needing a Linux build host — real target-root compose via
+  debootstrap, real relocatable ext4 payload via mkfs.ext4, real dpkg-built
+  `.deb` pool, `systemd-analyze verify`, mounts/loop — are UNPROVEN on the
+  darwin host (`which debootstrap mkfs.ext4 dpkg-deb systemd-analyze` all
+  absent) and stay DEFERRED; `test_clone_neutral_target` 6/6 stands as unit
+  proxy only.
+- **Deferred-physical list (per §12):** no Greia install, repartition,
+  mounts/loop mounts, destructive block tests, Docker, QEMU-physical runs,
+  or Acer hardware work executed. Deferred, required before binary/family
+  release but not before R4 source closure: Acer fresh install; real
+  installed A/B partition write; real service under exact systemd capability
+  sandbox using `chroot apt-get`; candidate boot; health commit; rollback
+  after failed boot; PERSIST survival across real install/update; physical
+  USB installer boot; 4161 MiB device-boundary reproof on hardware;
+  hardware-measured footprint/timing.
+- **Session 03 status:** CLOSED under the lifecycle plan's sequencing until
+  the lifecycle plan opens it; opening Session 03 is a lifecycle-plan
+  decision, never an owner hardware errand arising from R4. R4 source
+  closure is bound here; the owner/Linux lane owns any deferred-physical
+  Orbiter legs.
+
+Cross-reference: lifecycle ledger R4 closeout entry in
+`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
+(2026-09-19, final SHA `c4ab45aa`); verification evidence in
+R4-V-VERIFY5 (`make-test.log`, `make-validate.log`, `make-shellcheck.log`,
+`make-footprint.log`, `scratch/orbiter-cli/`).
+
+## 32. R4 Linux-lane closeout — R4-V-LINUX verification-8 at `762d4ebd` (2026-09-19)
+
+Append-only rebinding of gaps G1–G3 after Linux proof. §§30–31 above are
+preserved as the docs-tranche (`c58051c2` + delta) and darwin-bound
+(`c4ab45aa`, carried numbers, strict legs UNPROVEN) records; this section,
+not §30/§31, carries the Linux-bound numbers. No earlier section is
+rewritten. No owner hardware errand is added by this entry; every unproven
+predicate below stays DEFERRED or preserved red, never waived.
+
+- **Linux-proven SHA:** `762d4ebdfa11d2f0c560cc990c68ecef3985bb14`
+  (R4-V-LINUX verification-8; `git bundle` of the assigned view cloned on
+  Orbiter → `git rev-parse HEAD` exact match, `git status --short` clean,
+  `git diff --check` exit 0 both sides; zero project writes —
+  `Allowed source changes: NONE` honored). Source-tree equivalence:
+  `git diff c4ab45aa..762d4ebd` touches only `HANDOVER.md` (§31) and the
+  lifecycle ledger (R4-H-DOCS2 entry) — no `src/`/`build/`/`tools/`/`tests/`
+  delta — so the Linux numbers below apply to the `c4ab45aa` source content.
+- **Focused-suite results (Orbiter, short remote TMPDIR `/tmp/gv8/tmp`,
+  never the 123-char launcher scratch):** §10 focused 129/129 OK; extra
+  layout/support/persist/receipt/bound coverage 127/127 OK; emoji re-run
+  38/38 OK (after host-level `python3-regex` install); PERSIST/streaming/
+  outer-bound 27/27 OK; `make validate` exit 0; full `make shell-check`
+  exit 0; `make footprint` exit 0.
+- **`make verify` result (Orbiter, full `make test`):** Ran 3557 in 2049 s,
+  FAILED failures=2 errors=11 skipped=8 (`make verify` stopped at the test
+  stage; validate/shell-check/footprint were run separately, all PASS).
+  Eight of the 11 errors are a host-prerequisite gap (missing `regex`
+  backend), resolved green at host level (`apt-get install python3-zstandard
+  python3-regex`, non-destructive) with the 38/38 emoji re-run. The
+  remaining 5 reds (2 failures + 3 errors) are preserved red with
+  host-divergence mechanisms, each reproduced in isolation (5-test rerun,
+  same 2F+3E) and each outside the R4 delta (`git log 23c76572..HEAD`
+  touches none of the 5 test files or their production owners):
+  forged-peer socket RST on Linux vs clean close on darwin; the
+  `/nonexistent-probe` assumption vs qemu-present Orbiter; the
+  `_host_which` PATH fallback finding Orbiter `losetup` vs absent on
+  darwin; MBR part-UUID `sfdisk` rc 1 (SKIPPED on darwin); the
+  qemu-presence assumption in the boot-perf blocked-host test. Denominator
+  3557 vs the darwin 3587 is host-conditional collection, not a waived
+  comparison. Not re-run under another TMPDIR: the short remote TMPDIR was
+  already used throughout.
+- **Orbiter §§11.1–11.8 (same SHA `762d4ebd`):** §11.1 identity PROVEN
+  (above). §11.2 `systemd-analyze verify` on both service units exit 0
+  PROVEN (one informational note: install-transaction.socket special-user
+  `nobody` warning, systemd 255); `make verify` stages per the reds above.
+  §11.3 real Acer target-root compose via debootstrap RED (preserved):
+  `compose_root --role target` requires root debootstrap/chroot/mounts and
+  the brief prohibits mounts/loop/install/destructive work;
+  `compose_resolve_profile acer-aspire-one-i386-ab target` succeeds; the
+  §16 target-root numbers below come from the minimal clone-neutral staging
+  used for the real-payload leg (apparent 207 B, allocated 77824 B;
+  clone-neutrality proven: etc/machine-id exists+empty, no
+  var/lib/dbus/machine-id, no var/lib/systemd/random-seed, etc/ssh empty)
+  — labeled minimal staging, not a real debootstrap root. §11.4 real
+  relocatable ext4 payload PROVEN (production `build-payload` +
+  `verify-payload`, real mkfs.ext4 path): compressed 1668 B, uncompressed
+  8646656 B, minimum 67108864 B, profile `acer-aspire-one-i386-ab`,
+  release `greia-strict-v8`, sha `979cff63…`, `checked_paths: 13`, both
+  exit 0. §11.5 positive support-carrying bundle PROVEN (real dpkg-built
+  `.deb` pool `greia-strict-leg 1.0`, Installed-Size 16 KiB via
+  `dpkg-deb -f`; production `build-hardware-support` + `greia_update.py
+  build` with real profile/receipt facts): support compressed 1508 B /
+  extracted bound 83968 / sha `aa7df2bc…`; bundle 3911 B rc 0, schema 3,
+  inspect OK; required finalized slot 151011328 B (= 67108864 minimum +
+  16384 support installed + 67108864 growth + 16777216 reserve), headroom
+  1459601408 B under the 1610612736 B (1536 MiB) slot. §11.6 negative
+  over-capacity refusal PROVEN (same path, Installed-Size 1600000 KiB →
+  support installed 1638400000): rc 2,
+  `required=1789394944 exceeds slot capacity 1610612736`, output file
+  absent — REFUSED before publication. §11.7 PERSIST sensitivity incl.
+  pre-stream outer-bound leg PROVEN. §11.8
+  single-traversal/single-extraction/cleanup instrumentation PROVEN (1
+  traversal / 1 extraction per stage, zero compressed tmp files, shared
+  pool identity, cleanup after success+failure).
+- **Gap rebinding (G1–G3):** G1 (strict Orbiter legs) — substantially
+  PROVEN except full-debootstrap target-root compose, which stays RED per
+  the no-mount boundary above. G2 (`make verify` green) — NOT green; 5
+  host-divergence reds preserved with mechanism (never waived); fixing them
+  means changing host-sensitive tests or close semantics, owned by
+  implementation follow-ups outside the verification mandate. G3
+  (SHA-bound closeout) — bound here, append-only.
+- **Worktree-divergence note:** this closeout was authored from the
+  R4-H-FINAL worktree (baseline `b7854246`), which carries a 7-file delta
+  vs the Linux-proven tree (`tests/test_candidate_support.py`,
+  `tests/test_mbr_observed_identity.py`,
+  `tests/test_system_update_service.py`,
+  `tests/test_update_activation_contract.py`,
+  `tests/test_x8_qemu/test_product_boot_perf.py`,
+  `tools/x8_qemu/preintro_timing.py`, `tools/x8_qemu/product.py` — exactly
+  the host-divergence surface the Linux lane routed to implementation).
+  That delta is not covered by the Linux run, is UNPROVEN on Linux, and is
+  not claimed here; it is owned by the follow-up triage lanes.
+- **Deferred-physical list (per §12):** no mounts/loop, no install, no
+  destructive work executed on either lane. Deferred, required before
+  binary/family release but not before R4 source closure: Acer fresh
+  install; real installed A/B partition write; real service under exact
+  systemd capability sandbox using `chroot apt-get`; candidate boot;
+  health commit; rollback after failed boot; PERSIST survival across real
+  install/update; physical USB installer boot; 4161 MiB device-boundary
+  reproof on hardware; hardware-measured footprint/timing.
+- **Session 03 status:** CLOSED under the lifecycle plan's sequencing until
+  the lifecycle plan opens it; opening Session 03 is a lifecycle-plan
+  decision, never an owner hardware errand arising from R4. The gate
+  re-evaluates against the Linux-bound evidence above.
+
+Cross-reference: lifecycle ledger R4 Linux-lane closeout entry in
+`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
+(2026-09-19, Linux-proven SHA `762d4ebd`); verification evidence in
+R4-V-LINUX verification-8 (report + `/tmp/gv8/logs/make_verify.log`;
+short-TMPDIR `/tmp/gv8/*` retained on Orbiter).

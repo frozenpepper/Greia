@@ -1,23 +1,21 @@
 from __future__ import annotations
 
 import fnmatch
-import hashlib
-import io
 import json
-import re
-import tarfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from greia_installer import hardware_support_archive as _archive
 
-_PACKAGE_RE = re.compile(r"^[a-z0-9][a-z0-9+.-]*$")
-_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
-_MAX_POOL_PACKAGES = 1024
-_MAX_POOL_BYTES = 2 * 1024 * 1024 * 1024
-_MAX_INDEX_BYTES = 32 * 1024 * 1024
-_MAX_FIRMWARE_PROVIDERS = 65536
-_MAX_FIRMWARE_PATH_BYTES = 1024
+
+_PACKAGE_RE = _archive._PACKAGE_RE
+_SHA256_RE = _archive._SHA256_RE
+_MAX_POOL_PACKAGES = _archive.MAX_ARCHIVE_POOL_PACKAGES
+_MAX_POOL_BYTES = _archive.MAX_ARCHIVE_POOL_BYTES
+_MAX_INDEX_BYTES = _archive.MAX_ARCHIVE_INDEX_BYTES
+_MAX_FIRMWARE_PROVIDERS = _archive.MAX_ARCHIVE_FIRMWARE_PROVIDERS
+_MAX_FIRMWARE_PATH_BYTES = _archive.MAX_ARCHIVE_FIRMWARE_PATH_BYTES
 
 
 class HardwareSupportPoolError(RuntimeError):
@@ -36,33 +34,21 @@ class HardwareSupportPoolPackage:
     installed_bytes: int
 
     def __post_init__(self) -> None:
-        if not _PACKAGE_RE.fullmatch(self.package):
-            raise HardwareSupportPoolError("hardware-support package name is invalid")
-        path = Path(self.filename)
-        if path.is_absolute() or ".." in path.parts or path.parts[:1] != ("pool",):
-            raise HardwareSupportPoolError("hardware-support package filename is unsafe")
-        if path.name != self.filename.split("/")[-1] or not path.name.endswith(".deb"):
-            raise HardwareSupportPoolError("hardware-support package filename is invalid")
-        if not self.version or len(self.version) > 256:
-            raise HardwareSupportPoolError("hardware-support package version is invalid")
-        if not self.architecture or len(self.architecture) > 32:
-            raise HardwareSupportPoolError("hardware-support package architecture is invalid")
-        if not 0 <= self.size <= _MAX_POOL_BYTES:
-            raise HardwareSupportPoolError("hardware-support package size is invalid")
-        if not _SHA256_RE.fullmatch(self.sha256):
-            raise HardwareSupportPoolError("hardware-support package digest is invalid")
-        if not isinstance(self.candidate, bool):
-            raise HardwareSupportPoolError("hardware-support candidate flag is invalid")
-        # Installed footprint from Debian `Installed-Size` (KiB) plus the
-        # finalizer's deterministic per-package metadata overhead. Archive
-        # (`size`) bytes measure transfer size and must never substitute
-        # for this installed bound in capacity accounting.
-        if (
-            isinstance(self.installed_bytes, bool)
-            or not isinstance(self.installed_bytes, int)
-            or not 0 <= self.installed_bytes <= _MAX_POOL_BYTES
-        ):
-            raise HardwareSupportPoolError("hardware-support package installed size is invalid")
+        # Single-owner field validation lives in the shared archive module;
+        # translate its verdict into the pool error type.
+        try:
+            _archive.validate_package_fields(
+                package=self.package,
+                version=self.version,
+                architecture=self.architecture,
+                filename=self.filename,
+                size=self.size,
+                sha256=self.sha256,
+                candidate=self.candidate,
+                installed_bytes=self.installed_bytes,
+            )
+        except _archive.HardwareSupportArchiveError as exc:
+            raise HardwareSupportPoolError(str(exc)) from exc
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,51 +93,38 @@ class VerifiedHardwareSupportPool:
             raw = json.loads(manifest_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             raise HardwareSupportPoolError("hardware-support manifest is unreadable") from exc
-        if raw.get("schema_version") != 1:
-            raise HardwareSupportPoolError("unsupported hardware-support manifest schema")
+        # Single-owner manifest semantics (schema, suite/arch, packages,
+        # totals, candidate sets, providers, index shape) live in the
+        # shared archive module; filesystem proof below stays here.
+        try:
+            validated = _archive.parse_manifest_dict(raw)
+        except _archive.HardwareSupportArchiveError as exc:
+            raise HardwareSupportPoolError(str(exc)) from exc
         suite = raw.get("suite")
         architecture = raw.get("architecture")
-        if not isinstance(suite, str) or not suite or len(suite) > 64:
-            raise HardwareSupportPoolError("hardware-support suite is invalid")
-        if not isinstance(architecture, str) or not architecture or len(architecture) > 32:
-            raise HardwareSupportPoolError("hardware-support architecture is invalid")
         if expected_suite is not None and suite != expected_suite:
             raise HardwareSupportPoolError("hardware-support suite does not match installer")
         if expected_architecture is not None and architecture != expected_architecture:
             raise HardwareSupportPoolError("hardware-support architecture does not match installer")
 
-        entries = raw.get("packages")
-        if not isinstance(entries, list) or len(entries) > _MAX_POOL_PACKAGES:
-            raise HardwareSupportPoolError("hardware-support package list is invalid")
         packages: list[HardwareSupportPoolPackage] = []
-        seen_identity: set[tuple[str, str]] = set()
         expected_paths: set[Path] = set()
         total = 0
         total_installed = 0
-        for entry in entries:
-            if not isinstance(entry, dict):
-                raise HardwareSupportPoolError("hardware-support package entry is invalid")
-            if "installed_bytes" not in entry:
-                raise HardwareSupportPoolError(
-                    "hardware-support package installed size is missing"
-                )
+        for item in validated.packages:
             try:
                 package = HardwareSupportPoolPackage(
-                    package=entry["package"],
-                    version=entry["version"],
-                    architecture=entry["architecture"],
-                    filename=entry["filename"],
-                    size=entry["size"],
-                    sha256=entry["sha256"],
-                    candidate=entry["candidate"],
-                    installed_bytes=entry["installed_bytes"],
+                    package=item.package,
+                    version=item.version,
+                    architecture=item.architecture,
+                    filename=item.filename,
+                    size=item.size,
+                    sha256=item.sha256,
+                    candidate=item.candidate,
+                    installed_bytes=item.installed_bytes,
                 )
             except (KeyError, TypeError) as exc:
                 raise HardwareSupportPoolError("hardware-support package entry is incomplete") from exc
-            identity = (package.package, package.architecture)
-            if identity in seen_identity:
-                raise HardwareSupportPoolError("hardware-support package identity is duplicated")
-            seen_identity.add(identity)
             path = root / package.filename
             if path.is_symlink() or not path.is_file():
                 raise HardwareSupportPoolError(f"hardware-support package is missing: {package.package}")
@@ -185,47 +158,17 @@ class VerifiedHardwareSupportPool:
 
         cls._verify_repository_indexes(root, raw)
 
-        manifest_candidates = {package.package for package in packages if package.candidate}
-        provided = cls._validated_package_set(raw, "provided_candidate_packages")
-        firmware = cls._validated_package_set(raw, "provided_firmware_packages")
-        microcode = cls._validated_package_set(raw, "provided_microcode_packages")
-        broad_firmware = cls._validated_package_set(raw, "broad_firmware_packages")
-        providers = cls._validated_firmware_providers(raw, firmware)
-        if not firmware.isdisjoint(microcode):
-            raise HardwareSupportPoolError("hardware-support firmware/microcode classes overlap")
-        if firmware | microcode != provided:
-            raise HardwareSupportPoolError("hardware-support candidate classes do not match candidate set")
-        if not broad_firmware <= firmware:
-            raise HardwareSupportPoolError("broad live firmware references non-firmware package")
-        if any(not (set(provider_packages) & broad_firmware) for _, provider_packages in providers):
-            raise HardwareSupportPoolError("broad live firmware does not cover every mapped firmware file")
-        if not provided <= manifest_candidates:
-            raise HardwareSupportPoolError("hardware-support candidate list references non-candidate payloads")
-        manifest_total = raw.get("total_bytes")
-        if not isinstance(manifest_total, int) or manifest_total != total:
-            raise HardwareSupportPoolError("hardware-support pool total size does not match manifest")
-        manifest_installed = raw.get("total_installed_bytes")
-        # `total_bytes` stays the compressed archive bound (transfer/storage);
-        # capacity accounting must use `total_installed_bytes` only. Old
-        # manifests without an installed bound are fail-closed here so a
-        # compressed-bytes pool can never be mistaken for an installed-size
-        # pool downstream.
-        if (
-            not isinstance(manifest_installed, int)
-            or isinstance(manifest_installed, bool)
-            or manifest_installed != total_installed
-        ):
+        # Manifest semantics (totals, candidate sets, providers, broad
+        # coverage) already proven by the shared parser above; reuse its
+        # verdict instead of re-implementing it here.
+        provided = validated.provided_candidates
+        firmware = validated.provided_firmware
+        microcode = validated.provided_microcode
+        broad_firmware = validated.broad_firmware
+        providers = validated.firmware_providers
+        if validated.total_bytes != total or validated.total_installed_bytes != total_installed:
             raise HardwareSupportPoolError(
                 "hardware-support pool installed total does not match manifest"
-            )
-        overhead = raw.get("installed_bytes_overhead_per_package")
-        if overhead is not None and (
-            isinstance(overhead, bool)
-            or not isinstance(overhead, int)
-            or not 0 <= overhead <= _MAX_POOL_BYTES
-        ):
-            raise HardwareSupportPoolError(
-                "hardware-support installed overhead allowance is invalid"
             )
 
         return cls(
@@ -244,37 +187,21 @@ class VerifiedHardwareSupportPool:
 
     @staticmethod
     def _validated_package_set(raw: dict[str, object], field: str) -> frozenset[str]:
-        value = raw.get(field)
-        if not isinstance(value, list) or not all(
-            isinstance(item, str) and _PACKAGE_RE.fullmatch(item) for item in value
-        ):
-            raise HardwareSupportPoolError(f"hardware-support {field} is invalid")
-        if len(value) != len(set(value)):
-            raise HardwareSupportPoolError(f"hardware-support {field} contains duplicates")
-        return frozenset(value)
+        # Thin compat shim: set semantics ownership lives in shared module.
+        try:
+            return _archive._validated_package_set(raw, field)
+        except _archive.HardwareSupportArchiveError as exc:
+            raise HardwareSupportPoolError(str(exc)) from exc
 
     @staticmethod
     def _validated_firmware_providers(
         raw: dict[str, object], firmware_packages: frozenset[str]
     ) -> tuple[tuple[str, tuple[str, ...]], ...]:
-        value = raw.get("firmware_providers")
-        if not isinstance(value, dict) or len(value) > _MAX_FIRMWARE_PROVIDERS:
-            raise HardwareSupportPoolError("hardware-support firmware provider map is invalid")
-        result: list[tuple[str, tuple[str, ...]]] = []
-        for firmware_name, package_names in value.items():
-            if not _safe_firmware_name(firmware_name):
-                raise HardwareSupportPoolError("hardware-support firmware provider path is invalid")
-            if not isinstance(package_names, list) or not package_names or not all(
-                isinstance(item, str) and _PACKAGE_RE.fullmatch(item) for item in package_names
-            ):
-                raise HardwareSupportPoolError("hardware-support firmware provider packages are invalid")
-            unique = tuple(dict.fromkeys(package_names))
-            if len(unique) != len(package_names):
-                raise HardwareSupportPoolError("hardware-support firmware provider packages contain duplicates")
-            if any(package not in firmware_packages for package in unique):
-                raise HardwareSupportPoolError("hardware-support firmware provider references non-firmware package")
-            result.append((firmware_name, unique))
-        return tuple(sorted(result))
+        # Thin compat shim: provider-map ownership lives in shared module.
+        try:
+            return _archive._validated_firmware_providers(raw, firmware_packages)
+        except _archive.HardwareSupportArchiveError as exc:
+            raise HardwareSupportPoolError(str(exc)) from exc
 
     @staticmethod
     def _verify_repository_indexes(root: Path, raw: dict[str, object]) -> None:
@@ -287,7 +214,11 @@ class VerifiedHardwareSupportPool:
                 raise HardwareSupportPoolError("hardware-support repository index metadata is invalid")
             size = metadata.get("size")
             digest = metadata.get("sha256")
-            if not isinstance(size, int) or not 0 <= size <= _MAX_INDEX_BYTES:
+            if (
+                not isinstance(size, int)
+                or isinstance(size, bool)
+                or not 0 <= size <= _MAX_INDEX_BYTES
+            ):
                 raise HardwareSupportPoolError("hardware-support repository index size is invalid")
             if not isinstance(digest, str) or not _SHA256_RE.fullmatch(digest):
                 raise HardwareSupportPoolError("hardware-support repository index digest is invalid")
@@ -365,251 +296,47 @@ class VerifiedHardwareSupportPool:
 
 #: zstd framing every built hardware-support archive must carry (the same
 #: magic the release bundle seam requires for compressed members).
-_SUPPORT_ARCHIVE_ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
+#: Canonical owner is the shared archive module; kept here as an alias.
+_SUPPORT_ARCHIVE_ZSTD_MAGIC = _archive.ARCHIVE_ZSTD_MAGIC
 
-#: Largest hardware-support archive accepted for installed-size inspection.
-#: Production archives are capped far lower (the 512 MiB hardware-support
-#: member bound); this outer bound only keeps inspection fail-closed.
-_MAX_SUPPORT_ARCHIVE_BYTES = _MAX_POOL_BYTES
+#: Single production compressed bound for ``hardware-support.tar.zst``
+#: (512 MiB). The historical 2 GiB outer bound is retired; the shared
+#: archive module owns the canonical value and both build and runtime
+#: wrappers enforce it identically.
+_MAX_SUPPORT_ARCHIVE_BYTES = _archive.MAX_ARCHIVE_COMPRESSED_BYTES
 
-#: Decompressed-tar slop above the pool byte bound (tar headers/padding for
-#: at most _MAX_POOL_PACKAGES members plus the repository indexes).
-_SUPPORT_ARCHIVE_TAR_SLOP_BYTES = 8 * 1024 * 1024
+#: Decompressed-tar bound owned by the shared module (streaming cap).
+#: Kept as an alias; the old whole-artifact buffering cap is retired.
+_SUPPORT_ARCHIVE_TAR_SLOP_BYTES = _archive.MAX_ARCHIVE_UNCOMPRESSED_BYTES
 
 #: Largest embedded manifest.json accepted from a support archive.
-_MAX_SUPPORT_ARCHIVE_MANIFEST_BYTES = 8 * 1024 * 1024
+#: Canonical owner is the shared archive module; kept here as an alias.
+_MAX_SUPPORT_ARCHIVE_MANIFEST_BYTES = _archive.MAX_ARCHIVE_MANIFEST_BYTES
 
 #: Top-level non-pool members every built archive carries.
-_SUPPORT_ARCHIVE_TOP_MEMBERS = ("manifest.json", "Packages", "Packages.gz")
+#: Canonical owner is the shared archive module; kept here as an alias.
+_SUPPORT_ARCHIVE_TOP_MEMBERS = tuple(sorted(_archive.TOP_FILES))
 
 
 def _normalize_archive_name(name: str) -> str:
-    text = name.strip()
-    while text.startswith("./"):
-        text = text[2:]
-    return text
+    # Thin alias: naming/shape ownership lives in the shared module.
+    return _archive.normalize_archive_name(name)
 
 
 def installed_size_bound_from_support_archive(path: Path) -> int:
     """Return the verified installed-size bound from a built support archive.
 
-    Inspects ``hardware-support.tar.zst`` (the artifact
-    ``tools/build_release.py build_hardware_support_set`` emits from a
-    verified pool and ``tools/greia_update.py build --hardware-support``
-    embeds as the bundle member): bounded zstd decompression, tar parse,
-    then manifest verification mirroring :meth:`VerifiedHardwareSupportPool.load`
-    for the installed accounting — per-package ``installed_bytes`` validated
-    through :class:`HardwareSupportPoolPackage`, ``sum(installed_bytes)``
-    required to equal ``total_installed_bytes``, every manifest package
-    member proven present with matching size/digest, and unmanifested
-    ``pool/*.deb`` payloads refused. Returns ``total_installed_bytes``:
-    the same bound :func:`greia_installer.slots.pool_to_support_set`
-    carries into ``ReleaseSupportSet.installed_size_bound``. Compressed
-    archive/``.deb`` bytes are transfer size only and never substitute.
+    Thin build-side wrapper: delegates every header/member/manifest
+    verdict to the shared streaming parser
+    (``hardware_support_archive.inspect_archive_file``) and returns
+    ``total_installed_bytes``. Compressed archive/``.deb`` bytes are
+    transfer size only and never substitute.
     """
-    location = Path(path)
-    if location.is_symlink() or not location.is_file():
-        raise HardwareSupportPoolError("hardware-support archive is not a regular file")
     try:
-        archive_size = location.stat().st_size
-    except OSError as exc:
-        raise HardwareSupportPoolError(
-            f"hardware-support archive is unreadable: {exc}"
-        ) from exc
-    if not 1 <= archive_size <= _MAX_SUPPORT_ARCHIVE_BYTES:
-        raise HardwareSupportPoolError(
-            "hardware-support archive size is outside Greia bounds"
-        )
-    try:
-        with location.open("rb") as handle:
-            magic = handle.read(4)
-    except OSError as exc:
-        raise HardwareSupportPoolError(
-            f"hardware-support archive is unreadable: {exc}"
-        ) from exc
-    if magic != _SUPPORT_ARCHIVE_ZSTD_MAGIC:
-        raise HardwareSupportPoolError("hardware-support archive is not zstd-framed")
-    try:
-        import zstandard
-    except ImportError as exc:
-        raise HardwareSupportPoolError(
-            "zstd decompression backend is unavailable; refusing support inspection"
-        ) from exc
-    cap = _MAX_POOL_BYTES + _SUPPORT_ARCHIVE_TAR_SLOP_BYTES
-    pieces: list[bytes] = []
-    total = 0
-    try:
-        with location.open("rb") as handle:
-            reader = zstandard.ZstdDecompressor().stream_reader(handle)
-            while True:
-                piece = reader.read(1024 * 1024)
-                if not piece:
-                    break
-                if not isinstance(piece, (bytes, bytearray)):
-                    raise HardwareSupportPoolError(
-                        "hardware-support archive stream must yield bytes"
-                    )
-                total += len(piece)
-                if total > cap:
-                    raise HardwareSupportPoolError(
-                        "hardware-support archive decompresses beyond Greia bounds"
-                    )
-                pieces.append(bytes(piece))
-    except HardwareSupportPoolError:
-        raise
-    except Exception as exc:
-        raise HardwareSupportPoolError(
-            f"hardware-support archive decompression refused: {exc}"
-        ) from exc
-    try:
-        archive = tarfile.open(fileobj=io.BytesIO(b"".join(pieces)), mode="r:")
-    except (tarfile.TarError, EOFError, OSError) as exc:
-        raise HardwareSupportPoolError(
-            f"hardware-support archive is not a readable tar: {exc}"
-        ) from exc
-    with archive:
-        try:
-            members = archive.getmembers()
-        except (tarfile.TarError, EOFError, OSError) as exc:
-            raise HardwareSupportPoolError(
-                f"hardware-support archive listing refused: {exc}"
-            ) from exc
-        by_name: dict[str, tarfile.TarInfo] = {}
-        for member in members:
-            normalized = _normalize_archive_name(member.name)
-            if not normalized or normalized in (".", "/"):
-                continue
-            if member.isdir():
-                continue
-            if not member.isfile():
-                raise HardwareSupportPoolError(
-                    f"hardware-support archive member is not a regular file: {normalized!r}"
-                )
-            if normalized in by_name:
-                raise HardwareSupportPoolError(
-                    f"hardware-support archive carries a duplicate member: {normalized!r}"
-                )
-            by_name[normalized] = member
-        manifest_info = by_name.get("manifest.json")
-        if manifest_info is None:
-            raise HardwareSupportPoolError(
-                "hardware-support archive carries no manifest.json"
-            )
-        if not 1 <= manifest_info.size <= _MAX_SUPPORT_ARCHIVE_MANIFEST_BYTES:
-            raise HardwareSupportPoolError(
-                "hardware-support archive manifest size is outside Greia bounds"
-            )
-        try:
-            manifest_file = archive.extractfile(manifest_info)
-            manifest_raw = manifest_file.read() if manifest_file is not None else b""
-        except (tarfile.TarError, EOFError, OSError) as exc:
-            raise HardwareSupportPoolError(
-                f"hardware-support archive manifest is unreadable: {exc}"
-            ) from exc
-        try:
-            raw = json.loads(manifest_raw.decode("utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise HardwareSupportPoolError(
-                "hardware-support archive manifest is not valid JSON"
-            ) from exc
-        if not isinstance(raw, dict) or raw.get("schema_version") != 1:
-            raise HardwareSupportPoolError(
-                "unsupported hardware-support archive manifest schema"
-            )
-        entries = raw.get("packages")
-        if not isinstance(entries, list) or len(entries) > _MAX_POOL_PACKAGES:
-            raise HardwareSupportPoolError(
-                "hardware-support archive package list is invalid"
-            )
-        packages: list[HardwareSupportPoolPackage] = []
-        seen_identity: set[tuple[str, str]] = set()
-        for entry in entries:
-            if not isinstance(entry, dict) or "installed_bytes" not in entry:
-                raise HardwareSupportPoolError(
-                    "hardware-support archive package installed size is missing"
-                )
-            try:
-                package = HardwareSupportPoolPackage(
-                    package=entry["package"],
-                    version=entry["version"],
-                    architecture=entry["architecture"],
-                    filename=entry["filename"],
-                    size=entry["size"],
-                    sha256=entry["sha256"],
-                    candidate=entry["candidate"],
-                    installed_bytes=entry["installed_bytes"],
-                )
-            except (KeyError, TypeError) as exc:
-                raise HardwareSupportPoolError(
-                    "hardware-support archive package entry is incomplete"
-                ) from exc
-            identity = (package.package, package.architecture)
-            if identity in seen_identity:
-                raise HardwareSupportPoolError(
-                    "hardware-support archive package identity is duplicated"
-                )
-            seen_identity.add(identity)
-            packages.append(package)
-        total_installed = sum(package.installed_bytes for package in packages)
-        manifest_installed = raw.get("total_installed_bytes")
-        # `total_bytes` stays the compressed archive bound; capacity
-        # accounting uses `total_installed_bytes` only. The sum equality
-        # below is what stops compressed `.deb` bytes from substituting.
-        if (
-            not isinstance(manifest_installed, int)
-            or isinstance(manifest_installed, bool)
-            or manifest_installed != total_installed
-        ):
-            raise HardwareSupportPoolError(
-                "hardware-support archive installed total does not match manifest"
-            )
-        if not 0 <= manifest_installed <= _MAX_POOL_BYTES:
-            raise HardwareSupportPoolError(
-                "hardware-support archive installed total is outside Greia bounds"
-            )
-        manifest_total = raw.get("total_bytes")
-        if (
-            not isinstance(manifest_total, int)
-            or isinstance(manifest_total, bool)
-            or manifest_total != sum(package.size for package in packages)
-        ):
-            raise HardwareSupportPoolError(
-                "hardware-support archive total size does not match manifest"
-            )
-        expected = {_normalize_archive_name(package.filename) for package in packages}
-        for package in packages:
-            name = _normalize_archive_name(package.filename)
-            info = by_name.get(name)
-            if info is None:
-                raise HardwareSupportPoolError(
-                    f"hardware-support archive package is missing: {package.package}"
-                )
-            if info.size != package.size:
-                raise HardwareSupportPoolError(
-                    f"hardware-support archive package size changed: {package.package}"
-                )
-            try:
-                member_file = archive.extractfile(info)
-                member_bytes = member_file.read() if member_file is not None else b""
-            except (tarfile.TarError, EOFError, OSError) as exc:
-                raise HardwareSupportPoolError(
-                    f"hardware-support archive package is unreadable: {package.package}"
-                ) from exc
-            if hashlib.sha256(member_bytes).hexdigest() != package.sha256:
-                raise HardwareSupportPoolError(
-                    f"hardware-support archive package digest changed: {package.package}"
-                )
-        for name in by_name:
-            if name in _SUPPORT_ARCHIVE_TOP_MEMBERS or name in expected:
-                continue
-            if name.startswith("pool/") and name.endswith(".deb"):
-                raise HardwareSupportPoolError(
-                    "hardware-support archive contains unmanifested package payloads"
-                )
-            raise HardwareSupportPoolError(
-                f"hardware-support archive carries an unexpected member: {name!r}"
-            )
-        return manifest_installed
+        metadata = _archive.inspect_archive_file(Path(path))
+    except _archive.HardwareSupportArchiveError as exc:
+        raise HardwareSupportPoolError(str(exc)) from exc
+    return metadata.total_installed_bytes
 
 
 def support_installed_size_bound(path: Path | None) -> int:
@@ -631,20 +358,9 @@ def support_installed_size_bound(path: Path | None) -> int:
 
 
 def _safe_firmware_name(value: object) -> bool:
-    if not isinstance(value, str) or not value or "\x00" in value:
-        return False
-    try:
-        encoded = value.encode("utf-8")
-    except UnicodeError:
-        return False
-    if len(encoded) > _MAX_FIRMWARE_PATH_BYTES or value.startswith("/"):
-        return False
-    return ".." not in Path(value).parts
+    # Single owner lives in the shared archive module.
+    return _archive._safe_firmware_name(value)
 
 
 def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+    return _archive._sha256_file(Path(path))

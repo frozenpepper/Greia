@@ -26,7 +26,7 @@ from greia_installer.layout import (
 SLOT_BYTES = 1024**3
 PERSIST_MINIMUM_BYTES = 256 * 1024**2
 DEVICE_BYTES = 8 * 1024**3
-LEGACY_BOOT_CONTROL_MIB = 32
+LEGACY_BOOT_CONTROL_MIB = 64
 
 
 def disposable_target(
@@ -116,7 +116,7 @@ class LegacyPlanValidationTests(unittest.TestCase):
             [(item.number, item.role) for item in plan.partitions],
             [(1, "boot-control"), (2, "system-a"), (3, "system-b"), (4, "persist")],
         )
-        self.assertEqual(plan.by_role("boot-control").size_bytes, 32 * 1024**2)
+        self.assertEqual(plan.by_role("boot-control").size_bytes, 64 * 1024**2)
         self.assertEqual(
             plan.remainder_bytes(),
             DEVICE_BYTES - 1024**2 - LEGACY_BOOT_CONTROL_MIB * 1024**2 - 2 * SLOT_BYTES,
@@ -181,7 +181,7 @@ class LegacyPlanValidationTests(unittest.TestCase):
                     PlannedPartition(
                         number=1,
                         role="boot-control",
-                        size_bytes=32 * 1024**2,
+                        size_bytes=64 * 1024**2,
                         filesystem="ext4",
                         label="GREIA_BOOT",
                         flags=("boot",),
@@ -236,7 +236,7 @@ class LegacyPlanValidationTests(unittest.TestCase):
                 **base,  # type: ignore[arg-type]
                 partitions=(
                     PlannedPartition(
-                        number=1, role="boot-control", size_bytes=32 * 1024**2,
+                        number=1, role="boot-control", size_bytes=64 * 1024**2,
                         filesystem="ext4", label="GREIA_BOOT", flags=("boot",),
                     ),
                     PlannedPartition(
@@ -270,10 +270,10 @@ class LegacyExecutionTests(unittest.TestCase):
         expected = [
             ["wipefs", "--all", "--force", device],
             ["parted", "--script", device, "mklabel", "msdos"],
-            ["parted", "--script", device, "mkpart", "primary", "ext4", "1MiB", "33MiB"],
-            ["parted", "--script", device, "mkpart", "primary", "ext4", "33MiB", "1057MiB"],
-            ["parted", "--script", device, "mkpart", "primary", "ext4", "1057MiB", "2081MiB"],
-            ["parted", "--script", device, "mkpart", "primary", "ext4", "2081MiB", "100%"],
+            ["parted", "--script", device, "mkpart", "primary", "ext4", "1MiB", "65MiB"],
+            ["parted", "--script", device, "mkpart", "primary", "ext4", "65MiB", "1089MiB"],
+            ["parted", "--script", device, "mkpart", "primary", "ext4", "1089MiB", "2113MiB"],
+            ["parted", "--script", device, "mkpart", "primary", "ext4", "2113MiB", "100%"],
             ["parted", "--script", device, "set", "1", "boot", "on"],
             ["partprobe", device],
             ["udevadm", "settle"],
@@ -397,8 +397,8 @@ class LegacyExecutionTests(unittest.TestCase):
         mkparts = [argv for argv in commands if argv[0] == "parted" and "mkpart" in argv]
         self.assertEqual(len(mkparts), 4)
         # Fixed partitions keep their proven extents; only the remainder grows.
-        self.assertEqual(mkparts[0][-2:], ("1MiB", "33MiB"))
-        self.assertEqual(mkparts[-1][-2:], ("2081MiB", "100%"))
+        self.assertEqual(mkparts[0][-2:], ("1MiB", "65MiB"))
+        self.assertEqual(mkparts[-1][-2:], ("2113MiB", "100%"))
 
 
 class PartitionNumberPathTests(unittest.TestCase):

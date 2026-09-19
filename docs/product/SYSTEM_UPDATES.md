@@ -154,8 +154,17 @@ python3 tools/build_release.py build-payload \
   --profile-id acer-aspire-one-i386-ab \
   --release-id greia-0.14.0 \
   --filesystem-bytes 1073741824 \
-  --minimum-slot-bytes 1074790400
+  --minimum-slot-bytes 1074790400 \
+  --receipt-output ./out/payload-receipt.json
 ```
+
+`--receipt-output` writes the machine-readable payload receipt measured
+from the finished artifact (`schema_version`, `payload_sha256`,
+`payload_compressed_bytes`, `payload_uncompressed_bytes`,
+`minimum_slot_bytes`, `profile_id`, `release_id`). The normal bundle path
+consumes that receipt via `greia_update.py build --payload-receipt`, which
+verifies it against the payload artifact before any bundle byte is
+written. Field and flag names are stable for Session 03.
 
 `--minimum-slot-bytes` is the candidate's minimum base filesystem size,
 not the destination slot size: it must cover the actual shrunk ext4 size
@@ -179,21 +188,30 @@ python3 tools/build_release.py verify-payload \
   --payload ./out/payload.ext4.zst
 ```
 
-### Build an update bundle — normal path
+### Build an update bundle — normal path (verified receipt flow)
 
-Given the verified `payload.ext4.zst` produced above, point the tool at the Greia build profile. The tool derives `profile.id`, `platform.family` and `base.architecture` from that file so the operator does not retype compatibility identity by hand:
+Given the verified `payload.ext4.zst` and its `build-payload --receipt-output`
+receipt produced above, point the tool at the Greia build profile. The tool derives `profile.id`, `platform.family` and `base.architecture` from that file so the operator does not retype compatibility identity by hand:
 
 ```bash
 python3 tools/greia_update.py build \
   --payload ./out/payload.ext4.zst \
-  --payload-uncompressed-bytes <shrunk-image-bytes> \
-  --minimum-slot-bytes 1074790400 \
+  --payload-receipt ./out/payload-receipt.json \
   --profile-file ./build/profiles/acer-aspire-one-i386-ab.toml \
   --version 0.14.0 \
   --persist-read-min 1 \
   --persist-read-max 1 \
   --persist-write 1
 ```
+
+The normal `--profile-file` build derives size facts from the receipt and
+verifies it against the payload artifact in full (shape → profile/release
+identity → sha256 → compressed size → streamed decompressed length →
+manual-vs-receipt equality) before any bundle byte is written. Bare
+`--payload-uncompressed-bytes` / `--minimum-slot-bytes` without
+`--payload-receipt` are a DEVELOPER-ONLY low-level seam
+(`--developer-allow-unverified-payload-facts`): test/low-level usage only,
+never normal production.
 
 Defaults deliberately reduce release-command ceremony:
 
@@ -208,7 +226,7 @@ For the example above, the default output is:
 ./out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 ```
 
-Advanced/test tooling may supply explicit `--platform-family`, `--architecture`, `--profile` and `--board` instead of `--profile-file`, but mixing the two forms is rejected. On the normal `--profile-file` path the tool also derives `platform.board` (`"none"` becomes manifest board null) and enforces the profile-owned `storage.system_slot_bytes` destination bound (1536 MiB = 1610612736 for `acer-aspire-one-i386-ab`): a payload whose shrunk size or minimum does not fit that slot is refused before any bundle byte is written, so an Acer A/B payload carrying the headroom minimum from the payload example above cannot be bundled under the smaller generic single-root profile through this path (`--minimum-slot-bytes` defaults to `--payload-uncompressed-bytes`, so at exactly 1073741824 with no explicit minimum the size guard cannot discriminate).
+The explicit `--platform-family`, `--architecture`, `--profile` and `--board` flag form is a DEVELOPER-ONLY low-level seam without a profile file: mixing it with `--profile-file` is rejected, and it carries no profile slot bound, so it is never normal production. It still requires `--payload-receipt` deriving size facts from the payload artifact with the same full artifact verification, or the DEVELOPER-ONLY `--developer-allow-unverified-payload-facts` seam with manually typed sizes. On the normal `--profile-file` path the tool also derives `platform.board` (`"none"` becomes manifest board null) and enforces the profile-owned `storage.system_slot_bytes` destination bound (1536 MiB = 1610612736 for `acer-aspire-one-i386-ab`): a payload whose shrunk size or minimum does not fit that slot is refused before any bundle byte is written, so an Acer A/B payload carrying the headroom minimum from the payload example above cannot be bundled under the smaller generic single-root profile through this path (`--minimum-slot-bytes` defaults to `--payload-uncompressed-bytes`, so at exactly 1073741824 with no explicit minimum the size guard cannot discriminate).
 
 The tool records the payload size/SHA-256, the shrunk uncompressed size
 and the PERSIST schema integers in the canonical manifest and creates the

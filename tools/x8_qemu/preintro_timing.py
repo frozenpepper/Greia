@@ -285,8 +285,14 @@ def measure_boot(
         raise PreIntroTimingError(
             f"refusing to reuse an existing serial log: {serial_log}"
         )
-    serial_log.parent.mkdir(parents=True, exist_ok=True)
-    serial_log.touch()
+    try:
+        serial_log.parent.mkdir(parents=True, exist_ok=True)
+        serial_log.touch()
+    except OSError as exc:
+        raise PreIntroTimingError(
+            f"BLOCKED: pre-intro timing cannot stage the serial log "
+            f"({serial_log}: {exc})"
+        ) from exc
     found: dict[str, float | None] = {name: None for name in compiled}
     start = time.monotonic()
     process = subprocess.Popen(

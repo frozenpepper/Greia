@@ -37,6 +37,10 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from greia_installer.hardware_support import VerifiedHardwareSupportPool
+from greia_installer import hardware_support_archive as _archive
+from greia_platform.payload_receipt import (  # noqa: E402
+    PAYLOAD_RECEIPT_SCHEMA_VERSION,
+)
 from greia_platform.slot_writer import SlotFinalizeError, check_slot_completeness
 from greia_platform.system_updates import (
     MAX_HARDWARE_SUPPORT_BYTES,
@@ -384,6 +388,92 @@ def build_persistent_contract(output: Path) -> bytes:
     return raw
 
 
+# Machine-readable payload receipt (R4-G-RECEIPT).
+#
+# `build-payload` computes the real post-shrink image facts
+# (`uncompressed_bytes`, compressed size, sha256) from the actual artifact.
+# The receipt binds those facts to the release identity (profile/release)
+# so `tools/greia_update.py build --payload-receipt` can derive capacity
+# facts from the artifact instead of trusting operator-typed sizes. Schema
+# and field names are stable for Session 03 release CLI work. The schema
+# version constant lives in `greia_platform.payload_receipt` (single owner;
+# R4-G3-RECEIPT-HARDENING) and is imported above.
+
+
+def build_payload_receipt(
+    *,
+    payload_path: Path,
+    uncompressed_bytes: int,
+    minimum_slot_bytes: int,
+    profile_id: str,
+    release_id: str,
+) -> dict[str, object]:
+    """Build the machine-readable receipt dict for a finished payload artifact.
+
+    All size facts except the compressed size come from the real
+    ``build_release_payload`` result; the compressed size and sha256 are
+    measured from the finished ``payload.ext4.zst`` file itself (chunked
+    reads, bounded RAM). Refuses empty identities, non-positive sizes, or
+    a minimum that does not cover the uncompressed image. Never reads the
+    whole payload into RAM.
+    """
+    path = Path(payload_path)
+    if path.is_symlink() or not path.is_file():
+        raise ReleaseBuildError("payload artifact is not a regular file")
+    if not isinstance(profile_id, str) or not profile_id:
+        raise ReleaseBuildError("payload receipt profile_id must be non-empty text")
+    if not isinstance(release_id, str) or not release_id:
+        raise ReleaseBuildError("payload receipt release_id must be non-empty text")
+    for label, value in (
+        ("payload uncompressed_bytes", uncompressed_bytes),
+        ("payload minimum_slot_bytes", minimum_slot_bytes),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+            raise ReleaseBuildError(f"payload receipt {label} must be a positive integer")
+    if minimum_slot_bytes < uncompressed_bytes:
+        raise ReleaseBuildError(
+            "payload receipt minimum_slot_bytes must cover uncompressed_bytes"
+        )
+    try:
+        compressed_bytes = path.stat().st_size
+    except OSError as exc:
+        raise ReleaseBuildError(f"payload artifact is unreadable: {exc}") from exc
+    if compressed_bytes <= 0 or compressed_bytes > MAX_PAYLOAD_BYTES:
+        raise ReleaseBuildError("payload artifact size is outside Greia bounds")
+    digest = _sha256_file(path)
+    return {
+        "schema_version": PAYLOAD_RECEIPT_SCHEMA_VERSION,
+        "payload_sha256": digest,
+        "payload_compressed_bytes": compressed_bytes,
+        "payload_uncompressed_bytes": uncompressed_bytes,
+        "minimum_slot_bytes": minimum_slot_bytes,
+        "profile_id": profile_id,
+        "release_id": release_id,
+    }
+
+
+def write_payload_receipt(receipt_path: Path, receipt: dict[str, object]) -> Path:
+    """Write a canonical payload receipt JSON file (refuses overwrite)."""
+    target = Path(receipt_path)
+    if receipt.get("schema_version") != PAYLOAD_RECEIPT_SCHEMA_VERSION:
+        raise ReleaseBuildError("payload receipt schema_version is unsupported")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        raise ReleaseBuildError(f"output already exists: {target}")
+    try:
+        blob = (json.dumps(receipt, sort_keys=True, indent=2) + "\n").encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        raise ReleaseBuildError(
+            f"payload receipt is not serializable: {exc}"
+        ) from exc
+    try:
+        target.write_bytes(blob)
+    except OSError as exc:
+        raise ReleaseBuildError(f"payload receipt write failed: {exc}") from exc
+    os.chmod(target, 0o644)
+    return target
+
+
 def _pool_layout(pool_root: Path) -> tuple[Path, list[Path]]:
     root = pool_root.resolve()
     manifest = root / "manifest.json"
@@ -415,6 +505,66 @@ def _assert_no_hooks(root: Path) -> None:
         raise ReleaseBuildError(f"unexpected pool top-level files: {sorted(unexpected)}")
 
 
+def _manifest_with_extracted_bound(
+    manifest_path: Path, *, other_member_sizes: list[int]
+) -> bytes:
+    """Return canonical archived ``manifest.json`` bytes with the bound field.
+
+    Repair R4-EF-STAGE: the builder declares the authoritative
+    ``extracted_bytes_bound`` derived deterministically from the exact
+    archived files with the shared conservative allocation model
+    (:func:`hardware_support_archive.extracted_bytes_bound_for_members`:
+    ``ceil(size/4096)*4096`` per file plus per-member headers plus the
+    bounded metadata allowance — never a bare byte sum). The field value
+    covers the rewritten manifest itself, so the size is resolved by a
+    tiny deterministic fixed-point loop (converges: one iteration unless
+    the field digits cross a 4096-byte block boundary, bounded at four).
+    Serialization is canonical (sorted keys, fixed indent) so identical
+    pools produce identical archived bytes. The pool directory copy is
+    never modified — only the archived bytes carry the declaration. The
+    field name and bound semantics are stable for R4-G-RECEIPT-era
+    release flows reading this builder artifact manifest.
+    """
+    try:
+        document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ReleaseBuildError(
+            f"hardware-support pool manifest is unreadable: {exc}"
+        ) from exc
+    if not isinstance(document, dict):
+        raise ReleaseBuildError("hardware-support pool manifest is invalid")
+    try:
+        manifest_size = manifest_path.stat().st_size
+    except OSError as exc:
+        raise ReleaseBuildError(
+            f"hardware-support pool manifest is unreadable: {exc}"
+        ) from exc
+    blob = b""
+    for _ in range(4):
+        try:
+            bound = _archive.extracted_bytes_bound_for_members(
+                [*other_member_sizes, manifest_size],
+                member_count=len(other_member_sizes) + 1,
+            )
+        except _archive.HardwareSupportArchiveError as exc:
+            raise ReleaseBuildError(f"hardware-support staging bound refused: {exc}") from exc
+        candidate = dict(document)
+        candidate["extracted_bytes_bound"] = bound
+        blob = (json.dumps(candidate, sort_keys=True, indent=2) + "\n").encode("utf-8")
+        if len(blob) == manifest_size:
+            break
+        manifest_size = len(blob)
+    else:
+        raise ReleaseBuildError(
+            "hardware-support extracted bound did not converge"
+        )
+    if len(blob) > _archive.MAX_ARCHIVE_MANIFEST_BYTES:
+        raise ReleaseBuildError(
+            "hardware-support archive manifest size is outside Greia bounds"
+        )
+    return blob
+
+
 def build_hardware_support_set(
     pool_root: Path,
     output: Path,
@@ -435,62 +585,110 @@ def build_hardware_support_set(
         raise ReleaseBuildError("hardware-support pool exceeds release byte bound")
     root, debs = _pool_layout(pool_root)
     _assert_no_hooks(root)
-    members: list[Path] = [root / "manifest.json", root / "Packages", root / "Packages.gz"]
-    members.extend(debs)
-    for member in members:
+    on_disk: list[tuple[str, Path]] = [
+        ("Packages", root / "Packages"),
+        ("Packages.gz", root / "Packages.gz"),
+    ]
+    on_disk.extend((f"pool/{deb.name}", deb) for deb in debs)
+    for arcname, member in on_disk:
         if member.is_symlink() or not member.is_file():
-            raise ReleaseBuildError(f"hardware-support member is missing: {member.name}")
+            raise ReleaseBuildError(f"hardware-support member is missing: {arcname}")
+    # Repair R4-EF-STAGE: the builder artifact manifest declares the
+    # authoritative conservative extracted-bytes bound derived
+    # deterministically from the exact archived files (shared allocation
+    # model). The archived manifest.json copy carries the same field so
+    # runtime staging can preflight and verify against it.
+    try:
+        other_sizes = [member.stat().st_size for _, member in on_disk]
+    except OSError as exc:
+        raise ReleaseBuildError(f"hardware-support member is unreadable: {exc}") from exc
+    manifest_blob = _manifest_with_extracted_bound(
+        root / "manifest.json", other_member_sizes=other_sizes
+    )
+    try:
+        declared = json.loads(manifest_blob.decode("utf-8"))["extracted_bytes_bound"]
+    except (ValueError, KeyError) as exc:
+        raise ReleaseBuildError(
+            "hardware-support staging bound declaration is invalid"
+        ) from exc
+    if not isinstance(declared, int) or isinstance(declared, bool) or declared <= 0:
+        raise ReleaseBuildError(
+            "hardware-support staging bound declaration is invalid"
+        )
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
         raise ReleaseBuildError(f"output already exists: {output}")
     zstd = shutil.which("zstd")
     if zstd is None:
         raise ReleaseBuildError("zstd is required to build hardware-support.tar.zst")
-    with tempfile.NamedTemporaryFile(prefix=".hwset.", suffix=".tar", delete=False) as handle:
-        tar_tmp = Path(handle.name)
+    with tempfile.NamedTemporaryFile(
+        prefix=".hwmanifest.", suffix=".json", dir=output.parent, delete=False
+    ) as handle:
+        manifest_tmp = Path(handle.name)
     try:
-        with tar_tmp.open("wb") as raw:
-            with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as tar:
-                for member in sorted(members, key=lambda p: p.relative_to(root).as_posix()):
-                    arcname = member.relative_to(root).as_posix()
-                    info = tar.gettarinfo(str(member), arcname=arcname)
-                    info.uid = 0
-                    info.gid = 0
-                    info.uname = ""
-                    info.gname = ""
-                    info.mtime = 0
-                    if info.isdir():
-                        info.mode = 0o755
-                    elif info.isfile():
-                        info.mode = 0o644
-                    else:
-                        raise ReleaseBuildError(f"unsupported pool member type: {arcname}")
-                    if info.issym() or info.islnk():
-                        raise ReleaseBuildError(f"symlink archive member forbidden: {arcname}")
-                    with member.open("rb") as src:
-                        tar.addfile(info, src)
-        result = active.run(
-            [zstd, "-19", "-c", "--rm", str(tar_tmp)],
-            timeout_seconds=command_timeout_seconds,
-        )
-        if result.returncode != 0:
-            raise ReleaseBuildError("zstd compression of hardware-support set failed")
-        if not result.stdout.startswith(_ZSTD_MAGIC):
-            raise ReleaseBuildError("hardware-support compressor did not emit zstd bytes")
-        with tempfile.NamedTemporaryFile(
-            prefix=f".{output.name}.", suffix=".tmp", dir=output.parent, delete=False
-        ) as handle:
-            tmp_out = Path(handle.name)
+        manifest_tmp.write_bytes(manifest_blob)
+        os.chmod(manifest_tmp, 0o644)
+        members: list[tuple[str, Path]] = [("manifest.json", manifest_tmp)]
+        members.extend(on_disk)
+        with tempfile.NamedTemporaryFile(prefix=".hwset.", suffix=".tar", delete=False) as handle:
+            tar_tmp = Path(handle.name)
         try:
-            tmp_out.write_bytes(result.stdout)
-            os.chmod(tmp_out, 0o644)
-            if tmp_out.stat().st_size > max_bytes:
-                raise ReleaseBuildError("hardware-support.tar.zst exceeds release byte bound")
-            tmp_out.replace(output)
+            with tar_tmp.open("wb") as raw:
+                with tarfile.open(fileobj=raw, mode="w", format=tarfile.PAX_FORMAT) as tar:
+                    for arcname, member in sorted(members, key=lambda item: item[0]):
+                        info = tar.gettarinfo(str(member), arcname=arcname)
+                        info.uid = 0
+                        info.gid = 0
+                        info.uname = ""
+                        info.gname = ""
+                        info.mtime = 0
+                        if info.isdir():
+                            info.mode = 0o755
+                        elif info.isfile():
+                            info.mode = 0o644
+                        else:
+                            raise ReleaseBuildError(f"unsupported pool member type: {arcname}")
+                        if info.issym() or info.islnk():
+                            raise ReleaseBuildError(f"symlink archive member forbidden: {arcname}")
+                        with member.open("rb") as src:
+                            tar.addfile(info, src)
+            # Bounded-RAM compression: the compressor streams stdout
+            # straight to the temp output file through the runner seam, so
+            # Python never holds the whole compressed archive (up to
+            # 512 MiB) the way a captured ``run`` stdout would.
+            with tempfile.NamedTemporaryFile(
+                prefix=f".{output.name}.", suffix=".tmp", dir=output.parent, delete=False
+            ) as handle:
+                tmp_out = Path(handle.name)
+            try:
+                _stream_checked(
+                    active,
+                    [zstd, "-19", "-c", "--rm", str(tar_tmp)],
+                    tmp_out,
+                    label="hardware-support compression",
+                    timeout_seconds=command_timeout_seconds,
+                )
+                try:
+                    with tmp_out.open("rb") as probe:
+                        emitted_magic = probe.read(len(_ZSTD_MAGIC))
+                except OSError as exc:
+                    raise ReleaseBuildError(
+                        f"compressed support is unreadable: {exc}"
+                    ) from exc
+                if emitted_magic != _ZSTD_MAGIC:
+                    raise ReleaseBuildError(
+                        "hardware-support compressor did not emit zstd bytes"
+                    )
+                if tmp_out.stat().st_size > max_bytes:
+                    raise ReleaseBuildError("hardware-support.tar.zst exceeds release byte bound")
+                os.chmod(tmp_out, 0o644)
+                tmp_out.replace(output)
+            finally:
+                tmp_out.unlink(missing_ok=True)
         finally:
-            tmp_out.unlink(missing_ok=True)
+            tar_tmp.unlink(missing_ok=True)
     finally:
-        tar_tmp.unlink(missing_ok=True)
+        manifest_tmp.unlink(missing_ok=True)
     digest = _sha256_file(output)
     return {
         "output": str(output),
@@ -499,6 +697,7 @@ def build_hardware_support_set(
         "pool_suite": pool.suite,
         "pool_architecture": pool.architecture,
         "pool_total_bytes": pool.total_bytes,
+        "extracted_bytes_bound": declared,
     }
 
 
@@ -789,6 +988,16 @@ def _parser() -> argparse.ArgumentParser:
     payload.add_argument("--filesystem-bytes", type=int, required=True)
     payload.add_argument("--minimum-slot-bytes", type=int, required=True)
     payload.add_argument(
+        "--receipt-output",
+        type=Path,
+        default=None,
+        help=(
+            "Write the machine-readable payload receipt JSON "
+            "(schema_version, payload sha256/sizes, minimum_slot_bytes, "
+            "profile_id, release_id) measured from the finished artifact."
+        ),
+    )
+    payload.add_argument(
         "--command-timeout-seconds",
         type=float,
         default=DEFAULT_COMMAND_TIMEOUT_SECONDS,
@@ -814,23 +1023,33 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "build-hardware-support":
             print(json.dumps(build_hardware_support_set(args.pool_root, args.output, max_bytes=args.max_bytes, command_timeout_seconds=args.command_timeout_seconds), indent=2))
         elif args.command == "build-payload":
-            print(
-                json.dumps(
-                    build_release_payload(
-                        staging_dir=args.staging_dir,
-                        kernel_path=args.kernel,
-                        initramfs_path=args.initramfs,
-                        output=args.output,
-                        profile_id=args.profile_id,
-                        release_id=args.release_id,
-                        filesystem_bytes=args.filesystem_bytes,
-                        minimum_slot_bytes=args.minimum_slot_bytes,
-                        command_timeout_seconds=args.command_timeout_seconds,
-                        compression_timeout_seconds=args.compression_timeout_seconds,
-                    ),
-                    indent=2,
-                )
+            result = build_release_payload(
+                staging_dir=args.staging_dir,
+                kernel_path=args.kernel,
+                initramfs_path=args.initramfs,
+                output=args.output,
+                profile_id=args.profile_id,
+                release_id=args.release_id,
+                filesystem_bytes=args.filesystem_bytes,
+                minimum_slot_bytes=args.minimum_slot_bytes,
+                command_timeout_seconds=args.command_timeout_seconds,
+                compression_timeout_seconds=args.compression_timeout_seconds,
             )
+            if args.receipt_output is not None:
+                receipt = build_payload_receipt(
+                    payload_path=Path(str(result["output"])),
+                    uncompressed_bytes=int(result["uncompressed_bytes"]),
+                    minimum_slot_bytes=int(result["minimum_slot_bytes"]),
+                    profile_id=args.profile_id,
+                    release_id=args.release_id,
+                )
+                write_payload_receipt(args.receipt_output, receipt)
+                result = {
+                    **result,
+                    "receipt_output": str(args.receipt_output),
+                    "receipt": receipt,
+                }
+            print(json.dumps(result, indent=2))
         elif args.command == "verify-payload":
             print(json.dumps(verify_release_payload(args.payload), indent=2))
         else:  # pragma: no cover

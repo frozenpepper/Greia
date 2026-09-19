@@ -485,6 +485,7 @@ class _Harness:
             str(getattr(bundle, "path", "")),
             getattr(manifest, "hardware_support_sha256", None),
             getattr(manifest, "hardware_support_size", None),
+            getattr(manifest, "hardware_support_extracted_bytes_bound", None),
         )
         current = self.support_stage
         if (

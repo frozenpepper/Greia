@@ -17,6 +17,17 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_SRC_ROOT = _PROJECT_ROOT / "src"
+if str(_SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SRC_ROOT))
+
+from greia_installer.layout import (  # noqa: E402
+    LayoutError,
+    ProfileSizing,
+    minimum_device_bytes_for_profile,
+)
+
 
 class BuildProfileError(ValueError):
     """Raised when a build profile or package set violates the image contract."""
@@ -76,10 +87,13 @@ _PHASE0_DISPLAY_ADAPTERS = frozenset({"xorg"})
 # secs 8-14 (layout authority, A/B target layouts, Pi tryboot, PERSIST
 # contract, declarative storage/profile extensions) and secs 23-24
 # (regression guards: no single-root+updates, no GRUB Pi backend, no unknown
-# ARM fallback, no global allow_mmc shortcut). Numeric floors are R0 source
-# bounds covering the L7-RELEASE base release + finalization upper bound
-# (build_release PAYLOAD_MIN_HEADROOM plus support/initramfs growth); they are
-# tightened by on-device measurement later, never loosened by guessing.
+# ARM fallback, no global allow_mmc shortcut). Numeric floors below are
+# generic schema floors only, never exact installed-layout sizing: the exact
+# slot/PERSIST bounds are owned by greia_platform.persistent_layout and the
+# exact installed-target minimum is owned by
+# greia_installer.layout.minimum_device_bytes_for_profile (called from
+# _validate_storage_lifecycle). They are tightened by on-device measurement
+# later, never loosened by guessing.
 _MIB = 1024 * 1024
 _MIN_SYSTEM_SLOT_BYTES = 1024 * _MIB
 _MAX_SYSTEM_SLOT_BYTES = 2 * 1024 * 1024 * 1024
@@ -99,12 +113,6 @@ _PI_LAYOUT_ADAPTERS = frozenset({"pi-mbr-tryboot-ab-v1"})
 _X86_LAYOUT_ADAPTERS = frozenset(
     {"bios-single-ext4", "legacy-bios-ab-v1", "modern-gpt-ab-v1"}
 )
-_LAYOUT_OVERHEAD_BYTES: Mapping[str, int] = {
-    "bios-single-ext4": 16 * _MIB,
-    "legacy-bios-ab-v1": 64 * _MIB,
-    "modern-gpt-ab-v1": 128 * _MIB,
-    "pi-mbr-tryboot-ab-v1": 256 * _MIB,
-}
 _ALLOWED_TARGET_POLICIES = frozenset({"pc-internal-v1", "pi-builtin-microsd-v1"})
 _ALLOWED_BOOT_BACKENDS = frozenset({"grub-ab-v1", "pi-tryboot-ab-v1", "none-v1"})
 _ALLOWED_LIVE_BOOT_ADAPTERS = frozenset({"pc-live-syslinux-v1", "pi-live-usb-v1"})
@@ -510,27 +518,31 @@ class BuildProfile:
                 f"({self.storage.persistent_minimum_bytes}) is below the PERSIST "
                 f"minimum ({_MIN_PERSISTENT_BYTES})"
             )
-        # Target capacity: complete layout overhead + slots + PERSIST minimum.
-        overhead = _LAYOUT_OVERHEAD_BYTES[layout]
-        slot_count = 2 if is_ab else 1
-        minimum_target = (
-            overhead
-            + slot_count * self.storage.system_slot_bytes
-            + self.storage.persistent_minimum_bytes
-        )
-        image_bytes = self.image.size_mib * _MIB
-        if image_bytes < overhead + self.storage.persistent_minimum_bytes:
-            raise BuildProfileError(
-                f"image.size_mib ({self.image.size_mib} MiB) is below layout overhead + "
-                "PERSIST minimum "
-                f"({(overhead + self.storage.persistent_minimum_bytes) // _MIB} MiB)"
-            )
-        if image_bytes < minimum_target:
-            raise BuildProfileError(
-                f"image.size_mib ({self.image.size_mib} MiB) is below the layout capacity "
-                f"minimum ({minimum_target // _MIB} MiB = overhead + "
-                f"{slot_count}x slot + PERSIST minimum)"
-            )
+        # Installed-target capacity: the canonical minimum is owned by the
+        # real installer layout adapter
+        # (greia_installer.layout.minimum_device_bytes_for_profile:
+        # LABEL_RESERVED + fixed partitions + PERSIST minimum from the
+        # actual partition model). image.size_mib is deliberately NOT
+        # compared against it: it sizes the intermediate single-root build
+        # artifact (build/build-image.sh truncates IMAGE_SIZE_MIB for one
+        # root filesystem), while installed-disk fit is proven at install
+        # time by plan_for_profile. This static gate only proves the
+        # profile's storage facts are coherent under the real adapter.
+        if is_ab:
+            try:
+                minimum_device_bytes_for_profile(
+                    ProfileSizing(
+                        layout_adapter_id=layout,
+                        slot_bytes=self.storage.system_slot_bytes,
+                        persist_minimum_bytes=self.storage.persistent_minimum_bytes,
+                        boot_backend=self.updates.boot_backend,
+                    )
+                )
+            except LayoutError as exc:
+                raise BuildProfileError(
+                    "storage facts do not yield an installed-target minimum "
+                    f"under the real layout adapter: {exc}"
+                ) from exc
 
     def check_phase0_builder_support(self, scope: str) -> None:
         if self.base.architecture not in _PHASE0_TARGET_ARCHITECTURES:

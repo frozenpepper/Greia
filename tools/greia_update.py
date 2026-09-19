@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import shutil
+import subprocess
 import sys
 import tomllib
 import urllib.error
@@ -15,9 +18,13 @@ SRC = PROJECT_ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from greia_platform.payload_receipt import (  # noqa: E402
+    PAYLOAD_RECEIPT_SCHEMA_VERSION,
+)
 from greia_platform.system_updates import (  # noqa: E402
     BUNDLE_MEDIA_TYPE,
     MAX_BUNDLE_BYTES,
+    MAX_PAYLOAD_BYTES,
     SystemUpdateError,
     build_update_bundle,
     inspect_update_bundle,
@@ -45,6 +52,19 @@ class UpdateTarget:
     system_slot_bytes: int | None = None
 
 
+# Payload receipt contract (R4-G-RECEIPT, R4-G3-RECEIPT-HARDENING). The
+# schema version constant lives in ``greia_platform.payload_receipt``
+# (single owner, imported above); the shape/field contract mirrors the
+# producer side in ``tools/build_release.py``:
+# schema_version, payload_sha256, payload_compressed_bytes,
+# payload_uncompressed_bytes, minimum_slot_bytes, profile_id, release_id.
+# Field names are stable for Session 03 release CLI work.
+_RECEIPT_MAX_BYTES = 64 * 1024
+_HASH_CHUNK_BYTES = 64 * 1024
+_DECOMPRESS_TIMEOUT_SECONDS = 600.0
+_ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Create, inspect and push unsigned Greia .greiaupdate v3 bundles."
@@ -58,14 +78,64 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         help="Greia build profile TOML; derives profile/family/architecture/board/slot-size",
     )
-    build.add_argument("--platform-family")
-    build.add_argument("--architecture")
-    build.add_argument("--profile")
-    build.add_argument("--board", default=None)
+    build.add_argument(
+        "--platform-family",
+        help="DEVELOPER-ONLY low-level seam: explicit identity without a profile file (no slot bound, no normal production use)",
+    )
+    build.add_argument(
+        "--architecture",
+        help="DEVELOPER-ONLY low-level seam: explicit identity without a profile file (no slot bound, no normal production use)",
+    )
+    build.add_argument(
+        "--profile",
+        help="DEVELOPER-ONLY low-level seam: explicit identity without a profile file (no slot bound, no normal production use)",
+    )
+    build.add_argument(
+        "--board",
+        default=None,
+        help="DEVELOPER-ONLY low-level seam: explicit identity without a profile file (no slot bound, no normal production use)",
+    )
     build.add_argument("--version", required=True)
     build.add_argument("--hardware-support", type=Path, default=None)
-    build.add_argument("--payload-uncompressed-bytes", type=int, required=True)
-    build.add_argument("--minimum-slot-bytes", type=int, default=None)
+    build.add_argument(
+        "--payload-uncompressed-bytes",
+        type=int,
+        default=None,
+        help=(
+            "DEVELOPER-ONLY low-level seam: manually typed size without artifact "
+            "verification; refused unless --payload-receipt or "
+            "--developer-allow-unverified-payload-facts is given"
+        ),
+    )
+    build.add_argument(
+        "--minimum-slot-bytes",
+        type=int,
+        default=None,
+        help=(
+            "DEVELOPER-ONLY low-level seam: manually typed size without artifact "
+            "verification; refused unless --payload-receipt or "
+            "--developer-allow-unverified-payload-facts is given"
+        ),
+    )
+    build.add_argument(
+        "--payload-receipt",
+        type=Path,
+        default=None,
+        help=(
+            "Machine-readable payload receipt JSON from "
+            "build-payload --receipt-output; profile-based builds derive "
+            "size facts from it and verify it against the payload artifact."
+        ),
+    )
+    build.add_argument(
+        "--developer-allow-unverified-payload-facts",
+        action="store_true",
+        help=(
+            "DEVELOPER-ONLY: allow manually typed --payload-uncompressed-bytes "
+            "without artifact verification (tiny test fixtures, low-level "
+            "developer builds). Never used by normal profile-based production."
+        ),
+    )
     build.add_argument("--persist-read-min", type=int, required=True)
     build.add_argument("--persist-read-max", type=int, required=True)
     build.add_argument("--persist-write", type=int, required=True)
@@ -148,7 +218,8 @@ def _resolve_target(args: argparse.Namespace) -> UpdateTarget:
         return _target_from_profile_file(args.profile_file)
     if not all(isinstance(value, str) and value for value in explicit):
         raise SystemUpdateError(
-            "build requires --profile-file or all of --platform-family, --architecture and --profile"
+            "build requires --profile-file or all of --platform-family, --architecture and --profile "
+            "(explicit identity is a DEVELOPER-ONLY low-level seam, not normal production)"
         )
     return UpdateTarget(args.platform_family, args.architecture, args.profile, board_explicit, None)
 
@@ -171,6 +242,315 @@ def _support_installed_bytes(hardware_support: Path | None) -> int:
         ) from exc
 
 
+def _sha256_file(path: Path) -> str:
+    """Hash a file with bounded RAM (chunked reads, never ``read_bytes``)."""
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as handle:
+            while True:
+                chunk = handle.read(_HASH_CHUNK_BYTES)
+                if not chunk:
+                    break
+                digest.update(chunk)
+    except OSError as exc:
+        raise SystemUpdateError(f"payload digest read failed: {exc}") from exc
+    return digest.hexdigest()
+
+
+def _measured_uncompressed_bytes(payload: Path) -> int:
+    """Return the real decompressed byte length of a zstd payload artifact.
+
+    Streams ``zstd -d -c`` stdout and counts bytes in bounded chunks (never
+    the whole payload in RAM, no mounts). Falls back to the ``zstandard``
+    module when the ``zstd`` binary is unavailable. Any decompression
+    failure, bound violation, or missing tooling refuses fail-closed.
+    """
+    path = Path(payload)
+    if path.is_symlink() or not path.is_file():
+        raise SystemUpdateError("payload is not a regular file")
+    try:
+        compressed_size = path.stat().st_size
+    except OSError as exc:
+        raise SystemUpdateError(f"payload is unreadable: {exc}") from exc
+    if compressed_size <= 0 or compressed_size > MAX_PAYLOAD_BYTES:
+        raise SystemUpdateError("payload size is outside Greia bounds")
+    try:
+        with path.open("rb") as handle:
+            magic = handle.read(len(_ZSTD_MAGIC))
+    except OSError as exc:
+        raise SystemUpdateError(f"payload is unreadable: {exc}") from exc
+    if magic != _ZSTD_MAGIC:
+        raise SystemUpdateError(
+            "payload receipt verification refused: "
+            "payload is not zstd-compressed bytes"
+        )
+    zstd = shutil.which("zstd")
+    total = 0
+    if zstd is not None:
+        try:
+            proc = subprocess.Popen(
+                [zstd, "-d", "-c", "--", str(path)],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=False,
+            )
+        except OSError as exc:
+            raise SystemUpdateError(
+                f"payload receipt verification is unavailable: {exc}"
+            ) from exc
+        try:
+            assert proc.stdout is not None
+            while True:
+                chunk = proc.stdout.read(_HASH_CHUNK_BYTES)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_PAYLOAD_BYTES:
+                    proc.kill()
+                    try:
+                        proc.wait(timeout=30)
+                    except (OSError, subprocess.SubprocessError):
+                        pass
+                    raise SystemUpdateError(
+                        "payload receipt verification refused: "
+                        "decompressed payload is outside Greia bounds"
+                    )
+            _, _stderr = proc.communicate(timeout=_DECOMPRESS_TIMEOUT_SECONDS)
+        except subprocess.TimeoutExpired as exc:
+            proc.kill()
+            try:
+                proc.wait(timeout=30)
+            except (OSError, subprocess.SubprocessError):
+                pass
+            raise SystemUpdateError(
+                "payload receipt verification timed out, refusing bundle"
+            ) from exc
+        except SystemUpdateError:
+            raise
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise SystemUpdateError(
+                f"payload receipt verification failed: {exc}"
+            ) from exc
+        if proc.returncode != 0:
+            raise SystemUpdateError(
+                "payload receipt verification refused: "
+                "payload does not decompress as zstd"
+            )
+        return total
+    try:
+        import zstandard
+    except ImportError as exc:
+        raise SystemUpdateError(
+            "payload receipt verification is unavailable: "
+            "neither zstd nor the zstandard module is present"
+        ) from exc
+    try:
+        with path.open("rb") as handle:
+            stream = zstandard.ZstdDecompressor().stream_reader(handle)
+            try:
+                while True:
+                    chunk = stream.read(_HASH_CHUNK_BYTES)
+                    if not chunk:
+                        break
+                    total += len(chunk)
+                    if total > MAX_PAYLOAD_BYTES:
+                        raise SystemUpdateError(
+                            "payload receipt verification refused: "
+                            "decompressed payload is outside Greia bounds"
+                        )
+            finally:
+                try:
+                    stream.close()
+                except (OSError, ValueError):
+                    pass
+    except SystemUpdateError:
+        raise
+    except Exception as exc:
+        raise SystemUpdateError(
+            "payload receipt verification refused: "
+            f"payload does not decompress as zstd ({exc})"
+        ) from exc
+    return total
+
+
+def _load_payload_receipt(path: Path) -> dict[str, object]:
+    """Load and shape-validate a payload receipt JSON document."""
+    receipt_path = Path(path)
+    if receipt_path.is_symlink() or not receipt_path.is_file():
+        raise SystemUpdateError("payload receipt is not a regular file")
+    try:
+        if receipt_path.stat().st_size <= 0 or receipt_path.stat().st_size > _RECEIPT_MAX_BYTES:
+            raise SystemUpdateError("payload receipt size is outside Greia bounds")
+    except OSError as exc:
+        raise SystemUpdateError(f"payload receipt is unreadable: {exc}") from exc
+    try:
+        raw = receipt_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as exc:
+        raise SystemUpdateError(f"payload receipt is unreadable: {exc}") from exc
+    try:
+        document = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise SystemUpdateError(
+            f"payload receipt is not valid JSON: {exc}"
+        ) from exc
+    if not isinstance(document, dict):
+        raise SystemUpdateError("payload receipt must be a JSON object")
+    if document.get("schema_version") != PAYLOAD_RECEIPT_SCHEMA_VERSION:
+        raise SystemUpdateError(
+            "payload receipt schema_version is unsupported, refusing bundle"
+        )
+    for field in (
+        "payload_sha256",
+        "payload_compressed_bytes",
+        "payload_uncompressed_bytes",
+        "minimum_slot_bytes",
+        "profile_id",
+        "release_id",
+    ):
+        if field not in document:
+            raise SystemUpdateError(
+                f"payload receipt is missing {field!r}, refusing bundle"
+            )
+    return document
+
+
+def _resolve_payload_facts(
+    args: argparse.Namespace,
+    target: UpdateTarget,
+    *,
+    release_id: str,
+) -> tuple[int, int]:
+    """Derive (base, minimum) size facts from the artifact, never bare typing.
+
+    Both production paths (``--profile-file`` and explicit-identity) require
+    ``--payload-receipt``: facts come from the receipt after it is verified
+    against the real payload file (shape, profile/release identity, sha256,
+    compressed size, decompressed length) in that order. A manually
+    typed ``--payload-uncompressed-bytes``/``--minimum-slot-bytes`` alongside
+    a receipt must equal the receipt facts, otherwise the build refuses
+    (understated/mismatched facts). Without a receipt, both paths refuse
+    unless the explicit developer-only seam
+    ``--developer-allow-unverified-payload-facts`` is set with manually typed
+    facts. The explicit-identity path (no profile file) is a DEVELOPER-ONLY
+    low-level seam: it carries no profile slot bound and skips the capacity
+    check, so it must never be usable as normal production.
+    """
+    payload_path = Path(args.payload)
+    receipt_path = getattr(args, "payload_receipt", None)
+    developer_unverified = bool(
+        getattr(args, "developer_allow_unverified_payload_facts", False)
+    )
+    manual_base = getattr(args, "payload_uncompressed_bytes", None)
+    manual_minimum = getattr(args, "minimum_slot_bytes", None)
+    profile_based = target.system_slot_bytes is not None
+
+    if receipt_path is not None:
+        receipt = _load_payload_receipt(receipt_path)
+        for field in ("payload_compressed_bytes", "payload_uncompressed_bytes", "minimum_slot_bytes"):
+            value = receipt[field]
+            if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+                raise SystemUpdateError(
+                    f"payload receipt {field!r} must be a positive integer, "
+                    "refusing bundle"
+                )
+        for field in ("payload_sha256", "profile_id", "release_id"):
+            value = receipt[field]
+            if not isinstance(value, str) or not value:
+                raise SystemUpdateError(
+                    f"payload receipt {field!r} must be non-empty text, "
+                    "refusing bundle"
+                )
+        receipt_base = int(receipt["payload_uncompressed_bytes"])
+        receipt_minimum = int(receipt["minimum_slot_bytes"])
+        if receipt_base > MAX_PAYLOAD_BYTES:
+            raise SystemUpdateError(
+                "payload receipt uncompressed size is outside Greia bounds, "
+                "refusing bundle"
+            )
+        if receipt_minimum < receipt_base or receipt_minimum > MAX_BUNDLE_BYTES:
+            raise SystemUpdateError(
+                "payload receipt minimum_slot_bytes must cover the uncompressed "
+                "image, refusing bundle"
+            )
+        if str(receipt["profile_id"]) != target.profile:
+            raise SystemUpdateError(
+                f"payload receipt profile {str(receipt['profile_id'])!r} does not match "
+                f"build profile {target.profile!r}, refusing bundle"
+            )
+        if str(receipt["release_id"]) != release_id:
+            raise SystemUpdateError(
+                f"payload receipt release {str(receipt['release_id'])!r} does not match "
+                f"build release {release_id!r}, refusing bundle"
+            )
+        actual_sha = _sha256_file(payload_path)
+        if actual_sha != str(receipt["payload_sha256"]):
+            raise SystemUpdateError(
+                "payload receipt digest does not match the payload artifact, "
+                "refusing bundle"
+            )
+        try:
+            actual_compressed = payload_path.stat().st_size
+        except OSError as exc:
+            raise SystemUpdateError(f"payload is unreadable: {exc}") from exc
+        if actual_compressed != int(receipt["payload_compressed_bytes"]):
+            raise SystemUpdateError(
+                "payload receipt compressed size does not match the payload "
+                "artifact, refusing bundle"
+            )
+        measured = _measured_uncompressed_bytes(payload_path)
+        if measured != receipt_base:
+            raise SystemUpdateError(
+                f"payload receipt uncompressed size ({receipt_base}) does not match "
+                f"the payload artifact ({measured}), refusing bundle"
+            )
+        if manual_base is not None and manual_base != receipt_base:
+            raise SystemUpdateError(
+                f"manually typed --payload-uncompressed-bytes ({manual_base}) does not "
+                f"match the payload receipt ({receipt_base}), refusing bundle"
+            )
+        if manual_minimum is not None and manual_minimum != receipt_minimum:
+            raise SystemUpdateError(
+                f"manually typed --minimum-slot-bytes ({manual_minimum}) does not "
+                f"match the payload receipt ({receipt_minimum}), refusing bundle"
+            )
+        return receipt_base, receipt_minimum
+
+    if profile_based:
+        if not developer_unverified:
+            raise SystemUpdateError(
+                "profile-based build requires --payload-receipt deriving size facts "
+                "from the payload artifact; manually typed "
+                "--payload-uncompressed-bytes without artifact verification is "
+                "refused (developer-only seam: "
+                "--developer-allow-unverified-payload-facts)"
+            )
+        if manual_base is None:
+            raise SystemUpdateError(
+                "developer-only unverified build still requires "
+                "--payload-uncompressed-bytes"
+            )
+        return manual_base, manual_minimum if manual_minimum is not None else manual_base
+
+    if manual_base is None:
+        raise SystemUpdateError(
+            "explicit-identity (DEVELOPER-ONLY low-level seam) build requires "
+            "--payload-receipt deriving size facts from the payload artifact; "
+            "manually typed --payload-uncompressed-bytes without artifact "
+            "verification is refused (developer-only seam: "
+            "--developer-allow-unverified-payload-facts)"
+        )
+    if not developer_unverified:
+        raise SystemUpdateError(
+            "explicit-identity (DEVELOPER-ONLY low-level seam) build requires "
+            "--payload-receipt deriving size facts from the payload artifact; "
+            "manually typed --payload-uncompressed-bytes without artifact "
+            "verification is refused (developer-only seam: "
+            "--developer-allow-unverified-payload-facts)"
+        )
+    return manual_base, manual_minimum if manual_minimum is not None else manual_base
+
+
 def _check_profile_capacity(
     target: UpdateTarget,
     *,
@@ -189,10 +569,11 @@ def _check_profile_capacity(
         max(base, minimum) + support installed-size bound
             + finalization growth + metadata/reserve <= slot capacity
 
-    ``base`` is the operator-supplied ``--payload-uncompressed-bytes``
-    (shrunk image size from ``build-payload``); the effective minimum is the
-    explicit ``--minimum-slot-bytes`` or the uncompressed size by default.
-    The support bound comes only from verified hardware-support metadata
+    ``base`` is the receipt-derived uncompressed size (profile-based
+    production) or a developer-allowed manually typed fact; the effective
+    minimum is the receipt-derived minimum or the explicit
+    ``--minimum-slot-bytes`` (which must equal the receipt when both are
+    given) or the uncompressed size by default. The support bound comes only from verified hardware-support metadata
     (see :func:`_support_installed_bytes`); growth/reserve are the
     platform-owned bounds, never operator flags. Refusal happens before the
     output bundle is written. Explicit-identity builds carry no profile slot
@@ -340,14 +721,17 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "build":
             target = _resolve_target(args)
+            release_id = args.release_id or f"greia-{args.version}"
+            payload_base, payload_minimum = _resolve_payload_facts(
+                args, target, release_id=release_id
+            )
             _check_profile_capacity(
                 target,
-                payload_uncompressed_bytes=args.payload_uncompressed_bytes,
-                minimum_slot_bytes=args.minimum_slot_bytes,
+                payload_uncompressed_bytes=payload_base,
+                minimum_slot_bytes=payload_minimum,
                 hardware_support_path=args.hardware_support,
             )
             output = _build_output(args, target)
-            release_id = args.release_id or f"greia-{args.version}"
             build_update_bundle(
                 payload_path=args.payload,
                 hardware_support_path=args.hardware_support,
@@ -358,8 +742,8 @@ def main(argv: list[str] | None = None) -> int:
                 architecture=target.architecture,
                 profile=target.profile,
                 board=target.board,
-                payload_uncompressed_bytes=args.payload_uncompressed_bytes,
-                minimum_slot_bytes=args.minimum_slot_bytes,
+                payload_uncompressed_bytes=payload_base,
+                minimum_slot_bytes=payload_minimum,
                 persist_read_schema_min=args.persist_read_min,
                 persist_read_schema_max=args.persist_read_max,
                 persist_write_schema=args.persist_write,

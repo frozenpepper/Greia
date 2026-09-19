@@ -383,20 +383,30 @@ class BuildReleaseTests(unittest.TestCase):
                     )
                 self.assertFalse(target.exists())
             # Bound expiry fails closed through the production runner seam:
-            # the hardware step routes its zstd command through the seam with
-            # the configured bound, and the real SubprocessReleaseRunner wraps
+            # the hardware step routes its zstd command through the
+            # streaming seam (stdout-to-file, bounded RAM) with the
+            # configured bound, and the real SubprocessReleaseRunner wraps
             # the expiry into ReleaseBuildError (never raw TimeoutExpired).
             class RecordingExpiringRunner:
                 def __init__(self) -> None:
                     self.commands: list[list[str]] = []
                     self.timeouts: list[float | None] = []
+                    self.streamed_commands: list[list[str]] = []
+                    self.streamed_timeouts: list[float | None] = []
 
                 def run(self, command, *, timeout_seconds=None) -> object:
+                    raise AssertionError(
+                        "hardware-support compression must stream, not capture"
+                    )
+
+                def stream_to_file(
+                    self, command, output_path, *, timeout_seconds=None
+                ) -> None:
                     argv = list(command)
-                    self.commands.append(argv)
-                    self.timeouts.append(timeout_seconds)
-                    return module.SubprocessReleaseRunner().run(
-                        ["sleep", "5"], timeout_seconds=0.05
+                    self.streamed_commands.append(argv)
+                    self.streamed_timeouts.append(timeout_seconds)
+                    module.SubprocessReleaseRunner().stream_to_file(
+                        ["sleep", "5"], output_path, timeout_seconds=0.05
                     )
 
             output = root / "hardware-support.tar.zst"
@@ -410,10 +420,11 @@ class BuildReleaseTests(unittest.TestCase):
                 )
             self.assertNotIsInstance(ctx.exception, subprocess.TimeoutExpired)
             self.assertIn("unavailable", str(ctx.exception).lower())
-            self.assertEqual(len(runner.commands), 1)
-            self.assertEqual(Path(runner.commands[0][0]).name, "zstd")
-            self.assertEqual(runner.commands[0][1:4], ["-19", "-c", "--rm"])
-            self.assertEqual(runner.timeouts, [600.0])
+            self.assertEqual(runner.commands, [])
+            self.assertEqual(len(runner.streamed_commands), 1)
+            self.assertEqual(Path(runner.streamed_commands[0][0]).name, "zstd")
+            self.assertEqual(runner.streamed_commands[0][1:4], ["-19", "-c", "--rm"])
+            self.assertEqual(runner.streamed_timeouts, [600.0])
             self.assertFalse(output.exists())
             # Positive path through the same seam preserves the contract.
             result = module.build_hardware_support_set(

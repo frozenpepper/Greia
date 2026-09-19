@@ -412,7 +412,11 @@ class InstallThroughRealSeamsTests(unittest.TestCase):
             self.assertEqual(stage_before.pool.root, stage_before.root.resolve())
             self.assertTrue(
                 str(bind_source).startswith(
-                    str(state_dir / "system-updates" / "candidate-support")
+                    str(
+                        (
+                            state_dir / "system-updates" / "candidate-support"
+                        ).resolve()
+                    )
                 )
             )
             apt_install = [cmd for cmd in commands if "install" in cmd]
@@ -709,6 +713,7 @@ class ContractSyncTests(unittest.TestCase):
     """Stager constants track the bundle contract."""
 
     def test_member_name_and_bounds_track_system_updates(self) -> None:
+        from greia_installer import hardware_support_archive as _shared
         from greia_platform import candidate_support
         from greia_platform import system_updates
 
@@ -721,6 +726,20 @@ class ContractSyncTests(unittest.TestCase):
             system_updates.MAX_HARDWARE_SUPPORT_BYTES,
         )
         self.assertEqual(STAGING_OPERATING_RESERVE_BYTES, 256 * 1024 * 1024)
+        # Single ownership: both wrappers alias the shared canonical, so a
+        # future value-matched second literal fails.
+        self.assertEqual(
+            system_updates.MAX_HARDWARE_SUPPORT_BYTES,
+            _shared.MAX_ARCHIVE_COMPRESSED_BYTES,
+        )
+        self.assertIs(
+            MAX_CANDIDATE_SUPPORT_COMPRESSED_BYTES,
+            _shared.MAX_ARCHIVE_COMPRESSED_BYTES,
+        )
+        self.assertIs(
+            system_updates.MAX_HARDWARE_SUPPORT_BYTES,
+            _shared.MAX_ARCHIVE_COMPRESSED_BYTES,
+        )
 
     def test_null_manifest_is_noop_without_filesystem_touch(self) -> None:
         from greia_platform.candidate_support import CandidateSupportError

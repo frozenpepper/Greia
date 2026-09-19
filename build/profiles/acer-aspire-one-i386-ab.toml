@@ -20,14 +20,17 @@ kernel_package = "linux-image-686-pae"
 
 [image]
 layout = "bios-single-ext4"
-# Installer/live image artifact size (MiB) for building the live/installer
-# image itself; it is NOT the target-device minimum. The target device is
-# validated separately at install time by the real layout planner
-# (ProfileSizing/plan_for_profile): 64 MiB layout overhead + 2x1536 MiB
-# system slots + 1024 MiB PERSIST minimum = 4160 MiB layout capacity
-# minimum. image.size_mib must cover that minimum; 4352 MiB leaves 192 MiB
-# headroom above it (PERSIST grows to fill the remainder on larger targets).
-size_mib = 4352
+# Build-artifact size (MiB): the intermediate single-root image truncated by
+# build/build-image.sh ("truncate -s ${IMAGE_SIZE_MIB}M") to hold one composed
+# target root. It is NOT the installed-device minimum. Measured artifact need
+# is ~985 MiB accounted (official Acer target-root footprint incl. the
+# system-update set); 2048 MiB matches the proven single-root Acer profiles
+# and leaves ~1 GiB filesystem/headroom above it. The installed-device
+# minimum (4161 MiB = 1 MiB label/GRUB reservation + 64 MiB boot-control +
+# 2x1536 MiB slots + 1024 MiB PERSIST) is enforced separately at install time
+# by the real layout planner (ProfileSizing/plan_for_profile); PERSIST grows
+# to fill the remainder on larger targets.
+size_mib = 2048
 hostname = "greia"
 
 [boot]

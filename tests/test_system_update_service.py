@@ -1020,6 +1020,22 @@ class AuthoritySocketTests(unittest.TestCase):
             try:
                 forged_left.sendall(build_request("STATUS"))
                 forged_left.shutdown(socket.SHUT_WR)
+                # Linux sends RST when a socket closes with unread request
+                # bytes; darwin closes cleanly. Drain the production side's
+                # inbound request bytes before the refused close so the
+                # REFUSED frame survives on both hosts. The refusal happens
+                # before any request byte is served, so draining does not
+                # change what the test proves.
+                forged_right.settimeout(2.0)
+                try:
+                    while True:
+                        drained = forged_right.recv(4096)
+                        if not drained:
+                            break
+                        if drained.endswith(b"\n"):
+                            break
+                except OSError:
+                    pass
                 handle_update_connection(
                     forged_right,
                     authority=authority,
@@ -1027,7 +1043,10 @@ class AuthoritySocketTests(unittest.TestCase):
                 )
                 frames = []
                 while True:
-                    chunk = forged_left.recv(65536)
+                    try:
+                        chunk = forged_left.recv(65536)
+                    except OSError:
+                        break
                     if not chunk:
                         break
                     frames.append(chunk)

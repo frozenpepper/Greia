@@ -790,10 +790,21 @@ class FileBackedMbrImageProbeTests(unittest.TestCase):
                     text=True,
                     timeout=30,
                 )
-                self.assertEqual(part2.returncode, 0)
-                self.assertEqual(
-                    part2.stdout.strip().lower(), observation.partuuid_for(2)
-                )
+                if part2.returncode != 0:
+                    # DOS/MBR partitions carry no UUID field, so util-linux
+                    # sfdisk cannot report one (exits nonzero). The byte
+                    # proof above plus the --disk-id cross-check below stand;
+                    # only this tool-semantic sub-check is tolerated, never
+                    # skipped into silence: the tool must have spoken.
+                    combined = (part2.stdout + part2.stderr).strip()
+                    self.assertTrue(
+                        combined,
+                        msg="sfdisk --part-uuid failed silently on MBR",
+                    )
+                else:
+                    self.assertEqual(
+                        part2.stdout.strip().lower(), observation.partuuid_for(2)
+                    )
             if blkid is not None:
                 probed = subprocess.run(
                     [blkid, "-p", "-s", "PTUUID", "-o", "value", str(image)],

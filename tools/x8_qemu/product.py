@@ -679,9 +679,19 @@ def require_product_host(
 
 
 def _host_which(name: str, which=None):
-    """Resolve a host tool via the lifecycle resolver, then ``PATH``."""
-    resolve = which or resolve_device_host_tool
-    found = resolve(name)
+    """Resolve a host tool via the lifecycle resolver, then ``PATH``.
+
+    An explicitly injected ``which`` resolver is authoritative: when it
+    returns ``None`` the tool stays missing (fail-closed) instead of
+    falling back to the ambient ``PATH``. The ``PATH`` fallback applies
+    only to the default production resolution path (``which is None``),
+    so production behavior without injection is unchanged while unit
+    doubles can hermetically simulate a missing tool on any host.
+    """
+    if which is not None:
+        found = which(name)
+        return str(found) if found is not None else None
+    found = resolve_device_host_tool(name)
     if found is not None:
         return str(found)
     return shutil.which(name)

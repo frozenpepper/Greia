@@ -671,24 +671,56 @@ class PreIntroInstrumentAlignmentTests(unittest.TestCase):
         # The advertised flag must parse: on a host without the QEMU
         # facility the run must reach the facility gate (BLOCKED, return 2),
         # not die in argparse with "unrecognized arguments" (SystemExit).
-        captured = io.StringIO()
-        with redirect_stderr(captured):
-            code = module.main(
-                [
-                    "measure",
-                    "--label",
-                    "probe",
-                    "--serial-log",
-                    "/nonexistent-probe/serial.log",
-                    "--output",
-                    "/nonexistent-probe/out.json",
-                    "--marker",
-                    "interactive_ready=ready",
-                    "true",
-                ]
-            )
-        self.assertEqual(code, 2)
-        self.assertIn("BLOCKED", captured.getvalue())
+        # On a host WITH the facility the same flag must still parse and
+        # the marker override must be accepted (return 0 with tmp paths),
+        # so the test never depends on a no-QEMU/host-path assumption.
+        try:
+            module.require_timing_host()
+            has_facility = True
+        except module.PreIntroTimingError:
+            has_facility = False
+        if not has_facility:
+            captured = io.StringIO()
+            with redirect_stderr(captured):
+                code = module.main(
+                    [
+                        "measure",
+                        "--label",
+                        "probe",
+                        "--serial-log",
+                        "/nonexistent-probe/serial.log",
+                        "--output",
+                        "/nonexistent-probe/out.json",
+                        "--marker",
+                        "interactive_ready=ready",
+                        "true",
+                    ]
+                )
+            self.assertEqual(code, 2)
+            self.assertIn("BLOCKED", captured.getvalue())
+        else:
+            with tempfile.TemporaryDirectory() as directory:
+                serial_log = str(Path(directory) / "serial.log")
+                output = str(Path(directory) / "out.json")
+                captured = io.StringIO()
+                with redirect_stderr(captured):
+                    code = module.main(
+                        [
+                            "measure",
+                            "--label",
+                            "probe",
+                            "--serial-log",
+                            serial_log,
+                            "--output",
+                            output,
+                            "--marker",
+                            "interactive_ready=ready",
+                            "true",
+                        ]
+                    )
+                self.assertEqual(code, 0)
+                record = json.loads(Path(output).read_text(encoding="utf-8"))
+                self.assertEqual(record["label"], "probe")
 
     def test_compare_still_interprets_canonical_pair(self) -> None:
         module = self.preintro
