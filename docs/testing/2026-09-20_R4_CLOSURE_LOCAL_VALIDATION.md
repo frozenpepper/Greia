@@ -143,8 +143,10 @@ Expected:
 
 - HW-03 has the retirement banner at the top;
 - the release workflow uses release-specific placeholders;
-- the old 1 GiB / 1 GiB+1 MiB example values are absent from the active
-  release workflow.
+- the old Acer payload flags `--filesystem-bytes 1073741824` and
+  `--minimum-slot-bytes 1074790400` are absent from the active release
+  workflow. A legitimate mention of a separate 1 GiB profile slot bound is
+  not a failure.
 
 ## 7. Evidence to return
 
