@@ -962,3 +962,56 @@ Cross-reference: lifecycle ledger R4 Linux-lane closeout entry in
 (2026-09-19, Linux-proven SHA `762d4ebd`); verification evidence in
 R4-V-LINUX verification-8 (report + `/tmp/gv8/logs/make_verify.log`;
 short-TMPDIR `/tmp/gv8/*` retained on Orbiter).
+
+## 33. R4 post-review closure patch — local validation pending (2026-09-20)
+
+This entry supersedes §32 for **current routing** while preserving §30–§32 as
+historical evidence. It records the small closure patch made after the
+independent review of `67c7c445f4be6b7173070ddf1cdace4e434b04bd`.
+No hardware or owner-operated acceptance is part of this patch.
+
+### Source corrections landed
+
+- `4f5d4ae9` — `build_update_bundle()` now fails closed when a supplied
+  `hardware-support.tar.zst` fails the canonical shared parser. Production no
+  longer publishes a bundle that the device is guaranteed to reject merely to
+  accommodate synthetic malformed test fixtures.
+- `5bb58d7b` — `hardware_support_archive.inspect_archive_file()` now requires
+  expected compressed size and SHA-256 together or neither; partial expected
+  facts are an explicit API error rather than an internal assertion state.
+- Support-carrying tests were updated so normal producer tests use valid support
+  archives, while malformed parser-parity tests construct a minimal synthetic
+  ZIP member directly instead of weakening production:
+  `4728ff24`, `d8eb6453`, `0a7336ce`, `98ff6a8d`, `04adb6ed`.
+
+### Routing/documentation corrections landed
+
+- `docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md` no longer presents
+  the old 1 GiB / 1 GiB+1 MiB Acer payload values as canonical release facts.
+  Low-level filesystem/minimum values are explicitly release-specific until
+  Session 03 hides them behind the owner release CLI.
+- `HW-03-PHYSICAL-LEGS.md` now begins with
+  **HISTORICAL — DO NOT EXECUTE**. The R2 owner-operated hardware route is
+  retired evidence, not current instructions.
+- Current release routing is: validate this closure patch locally, then begin
+  Session 03 if green. Acer/install/update/rollback hardware acceptance remains
+  deferred certification evidence before a binary/family release.
+
+### Validation status
+
+**Not yet claimed PASS in this entry.** Fresh execution is intentionally handed
+to the local agent through:
+
+`docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md`
+
+That brief requires syntax/import smoke, eight focused update/support suites,
+`git diff --check 67c7c445..HEAD`, full `make verify`, documentation-routing
+checks, and a clean tree before/after. It explicitly forbids source edits,
+Docker, mounts, Acer work, and owner intervention during the validation run.
+
+If the returned current-HEAD evidence is green, Session 02/R4 source closure is
+complete and Session 03 — owner release CLI + compact release outputs — is the
+next engineering session. If validation fails, preserve the exact failure and
+repair only the demonstrated defect; do not revive the retired R2 hardware
+route or invent a new gate hierarchy.
+
