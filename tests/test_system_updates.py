@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
+import tarfile
 import tempfile
 import unittest
 import zipfile
@@ -42,7 +44,46 @@ def _zst_bytes(seed: bytes, size: int = 4096) -> bytes:
     return _ZSTD + body
 
 
-_HW_BYTES = _zst_bytes(b"hwset-", size=2048)
+def _valid_hw_bytes() -> bytes:
+    import zstandard
+
+    packages = b""
+    packages_gz = b""
+    manifest = {
+        "schema_version": 1,
+        "suite": "trixie",
+        "architecture": "i386",
+        "package_count": 0,
+        "total_bytes": 0,
+        "total_installed_bytes": 0,
+        "provided_candidate_packages": [],
+        "provided_firmware_packages": [],
+        "provided_microcode_packages": [],
+        "broad_firmware_packages": [],
+        "firmware_providers": {},
+        "unavailable_candidate_packages": [],
+        "packages": [],
+        "repository_indexes": {
+            "Packages": {"size": 0, "sha256": hashlib.sha256(packages).hexdigest()},
+            "Packages.gz": {"size": 0, "sha256": hashlib.sha256(packages_gz).hexdigest()},
+        },
+    }
+    raw_tar = io.BytesIO()
+    with tarfile.open(fileobj=raw_tar, mode="w", format=tarfile.PAX_FORMAT) as archive:
+        for name, payload in (
+            ("manifest.json", json.dumps(manifest).encode("utf-8")),
+            ("Packages", packages),
+            ("Packages.gz", packages_gz),
+        ):
+            info = tarfile.TarInfo(name=name)
+            info.size = len(payload)
+            info.mode = 0o644
+            info.mtime = 0
+            archive.addfile(info, io.BytesIO(payload))
+    return zstandard.ZstdCompressor(level=3).compress(raw_tar.getvalue())
+
+
+_HW_BYTES = _valid_hw_bytes()
 _UNCOMPRESSED = 8 * 1024 * 1024
 
 
