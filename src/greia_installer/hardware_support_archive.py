@@ -961,9 +961,15 @@ def inspect_archive_file(
 ) -> HardwareSupportArchiveMetadata:
     """Inspect one standalone ``hardware-support.tar.zst`` file (streaming).
 
-    When the expected facts are omitted they are derived from the file
-    itself (size + streamed SHA-256); when supplied they are enforced.
+    Expected compressed size and SHA-256 are a paired contract: callers
+    either provide both or neither. When omitted, both facts are derived
+    from the file itself; partial expected facts are refused explicitly.
     """
+    if (expected_compressed_bytes is None) != (expected_sha256 is None):
+        raise HardwareSupportArchiveError(
+            "hardware-support expected compressed size and sha256 must be "
+            "provided together or omitted together"
+        )
     location = Path(path)
     try:
         file_stat = location.lstat()
@@ -977,7 +983,8 @@ def inspect_archive_file(
         )
     archive_size = file_stat.st_size
     if expected_compressed_bytes is not None:
-        _check_expected_facts(expected_compressed_bytes, expected_sha256 or "ab" * 32)
+        assert expected_sha256 is not None
+        _check_expected_facts(expected_compressed_bytes, expected_sha256)
         if archive_size != expected_compressed_bytes:
             raise HardwareSupportArchiveError(
                 "hardware-support archive size does not match manifest"
