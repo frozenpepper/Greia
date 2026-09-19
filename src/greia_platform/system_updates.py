@@ -829,34 +829,24 @@ def build_update_bundle(
             raise UpdateBundleError("hardware-support size is outside Greia bounds")
         _assert_zstd_file(hw_path, "hardware-support")
         hardware_sha = sha256_file(hw_path)
-        # R4-G2-SUPPORT-BOUND: derive the outer bound deterministically from
-        # the exact archive being embedded via the shared streaming parser
-        # (bounded chunks, no new buffering). The shared finish already
-        # enforces byte-for-byte equality between the archive's observed
-        # bound and its inner declared field, so any observed-vs-declared
-        # bound mismatch refuses here before publication with no output
-        # written. Synthetic container fixtures that are not valid support
-        # trees (zstd magic only, used by outer-container unit tests) keep
-        # the absent-field backward-compatible path; only bound-shape
-        # failures refuse at build time, other support-tree verdicts stay
-        # with the staging/CLI verification layers.
+        # A supplied hardware-support member is a production artifact, not
+        # an opaque container fixture. The canonical shared parser must
+        # accept the exact bytes before the bundle can be published; this
+        # keeps producer and runtime verdicts identical and prevents a
+        # release from carrying support that the device is guaranteed to
+        # reject later. Tests that need malformed ZIP members construct
+        # those containers directly instead of weakening this producer.
         try:
             inspected_hw = _archive.inspect_archive_file(
                 hw_path,
                 expected_compressed_bytes=hardware_size,
                 expected_sha256=hardware_sha,
             )
-        except Exception as exc:
-            if isinstance(exc, UpdateBundleError):
-                raise
-            if "extracted bound" in str(exc).lower():
-                raise UpdateBundleError(
-                    f"hardware-support extracted bound mismatch, refusing bundle: {exc}"
-                ) from exc
-            inspected_hw = None
-        hardware_bound = (
-            inspected_hw.extracted_size_bound if inspected_hw is not None else None
-        )
+        except _archive.HardwareSupportArchiveError as exc:
+            raise UpdateBundleError(
+                f"hardware-support archive refused, refusing bundle: {exc}"
+            ) from exc
+        hardware_bound = inspected_hw.extracted_size_bound
     if isinstance(payload_uncompressed_bytes, bool) or not isinstance(
         payload_uncompressed_bytes, int
     ):
