@@ -5,7 +5,7 @@
 **Architecture:** ADR 0036 (supersedes the old signed-bundle requirements of ADR 0030 where they conflict)
 **Product requirements:** `docs/product/SYSTEM_UPDATES.md`
 **Tools:** `tools/build_release.py`, `tools/greia_update.py`
-**Implementation state:** Session 02 source scope complete with earlier real-artifact proof (R2 T15 orbiter boundary leg; HW-01A payload leg at `4c571995`); R4-bound reproof at the current SHA is pending (see `HANDOVER.md` §30)
+**Implementation state:** R4 source architecture is complete; the current closure patch tightens fail-closed support bundling and routing. Fresh local validation is defined in `docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md`. Physical Acer acceptance remains deferred and is not required for this source closure.
 
 This is the short practical procedure for **building, checking and sending a Greia `.greiaupdate` v3 package**.
 
@@ -66,9 +66,9 @@ python3 tools/build_release.py build-payload \
   --initramfs ./out/initrd-generic \
   --output ./out/payload.ext4.zst \
   --profile-id acer-aspire-one-i386-ab \
-  --release-id greia-0.14.0 \
-  --filesystem-bytes 1073741824 \
-  --minimum-slot-bytes 1074790400 \
+  --release-id greia-<VERSION> \
+  --filesystem-bytes <RELEASE_BUILD_FILESYSTEM_BYTES> \
+  --minimum-slot-bytes <RELEASE_MINIMUM_SLOT_BYTES> \
   --receipt-output ./out/payload-receipt.json
 ```
 
@@ -80,16 +80,7 @@ consumes that receipt via `greia_update.py build --payload-receipt`
 (§4), which verifies it against the payload artifact before any bundle
 byte is written. Field and flag names are stable for Session 03.
 
-`--minimum-slot-bytes` is the candidate's minimum base filesystem size,
-not the destination slot size: it must cover the actual shrunk ext4 size
-reported by the `build-payload` step plus the 1 MiB finalization headroom
-(`PAYLOAD_MIN_HEADROOM` in `tools/build_release.py`; 1073741824 + 1048576
-= 1074790400 in this example). Take the shrunk size from the producer
-output for each release; do not copy the destination slot size
-(1536 MiB = 1610612736 for `acer-aspire-one-i386-ab`) by habit, and do not
-raise the manifest minimum to 1536 MiB unless the base OS genuinely needs
-that much space before finalization — an inflated minimum can only refuse
-valid slots, never create capacity.
+`--filesystem-bytes` and `--minimum-slot-bytes` are **release-specific build facts**, not fixed Acer constants. The earlier real Acer proof already produced a shrunk payload larger than 1 GiB, so do not copy old 1 GiB examples. `--minimum-slot-bytes` must cover the actual shrunk ext4 image plus the 1 MiB producer headroom (`PAYLOAD_MIN_HEADROOM` in `tools/build_release.py`), while `--filesystem-bytes` is only the temporary image size used to create and shrink that payload. Until Session 03 hides these low-level flags behind `greia_release.py`, obtain them from the current release build/sizing step and record them with the payload receipt. The installed Acer destination slot remains 1536 MiB; do not use that slot size as the manifest minimum by habit, because an inflated minimum can only reject otherwise-valid slots.
 
 The producer seeds the generic kernel/initramfs plus the release identity,
 then validates the staging tree with the shared slot completeness validator
@@ -182,7 +173,7 @@ output     : out/greia-0.14.0-acer-aspire-one-i386-ab.greiaupdate
 The receipt carries the shrunk image size reported by the
 `build-payload` step as `payload_uncompressed_bytes` and the
 headroom-carrying minimum from §2 as `minimum_slot_bytes`
-(`1074790400` in that example: shrunk size plus 1 MiB headroom). A manually
+(the release-specific shrunk size plus 1 MiB headroom). A manually
 typed `--minimum-slot-bytes` alongside `--payload-receipt` must equal the
 receipt, otherwise the build refuses. Bare `--payload-uncompressed-bytes`
 / `--minimum-slot-bytes` without `--payload-receipt` are DEVELOPER-ONLY
