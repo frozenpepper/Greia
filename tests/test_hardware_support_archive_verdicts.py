@@ -324,7 +324,7 @@ class BundleProducerFailClosedTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             payload_path = root / "payload.ext4.zst"
-            payload_path.write_bytes(b"\\x28\\xb5\\x2f\\xfdpayload")
+            payload_path.write_bytes(_shared.ARCHIVE_ZSTD_MAGIC + b"payload")
             members = _valid_members() + [_reg("unexpected-top-level.txt", b"x")]
             hw_path = root / "hardware-support.tar.zst"
             hw_path.write_bytes(_compress(_tar_bytes(members)))
