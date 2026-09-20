@@ -48,6 +48,8 @@ import unittest
 import zipfile
 from dataclasses import replace as _replace
 from pathlib import Path
+
+from support_artifacts import valid_hardware_support_archive_bytes
 from unittest import mock as _mock
 
 import zstandard
@@ -379,7 +381,9 @@ class _Rig:
         payload = work / "payload.ext4.zst"
         payload.write_bytes(_compress(raw))
         hardware = work / "hardware-support.tar.zst"
-        hardware.write_bytes(_compress(b"x8-update-hw" * 64))
+        hardware.write_bytes(
+            valid_hardware_support_archive_bytes(architecture=_ARCH)
+        )
         bundle = work / f"{name}.greiaupdate"
         build_update_bundle(
             payload_path=payload,
