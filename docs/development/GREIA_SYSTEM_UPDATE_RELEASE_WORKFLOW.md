@@ -4,10 +4,32 @@
 **Date:** 2026-09-16
 **Architecture:** ADR 0036 (supersedes the old signed-bundle requirements of ADR 0030 where they conflict)
 **Product requirements:** `docs/product/SYSTEM_UPDATES.md`
-**Tools:** `tools/build_release.py`, `tools/greia_update.py`
-**Implementation state:** Session 02/R4 source closure is GREEN. Exact validated source/test HEAD: `44927e37dcb150d9fb6cbad7226a52c35c41bf91`; `make verify` passed with 3589 tests OK and 4 skipped. Session 03 — owner release CLI + compact release outputs — is the next engineering session. Physical Acer acceptance remains deferred binary-release certification evidence and is not required to begin Session 03.
+**Normal owner tool:** `tools/greia_release.py`
+**Low-level implementation tools:** `tools/build_release.py`, `tools/greia_update.py`
+**Implementation state:** Session 02/R4 is GREEN. Session 03 owner-release CLI source implementation is now present and awaiting the source-only validation in `docs/testing/2026-09-20_SESSION03_RELEASE_CLI_LOCAL_VALIDATION.md`. A real release build is deliberately not part of owner-host validation; it belongs on the supported x86_64 Linux build host after source acceptance.
 
 This is the short practical procedure for **building, checking and sending a Greia `.greiaupdate` v3 package**.
+
+For normal release operation, Session 03 makes the owner-facing entry point:
+
+```bash
+sudo python3 tools/greia_release.py build \
+  --version "$(cat VERSION)" \
+  --output ./out
+```
+
+That command owns profile selection, target/live composition orchestration,
+persistent build caches, payload sizing/receipt generation, hardware-support
+packing, finalized-slot capacity checks, bundle creation, atomic publication
+and `release-report.json`. The detailed commands below remain useful for
+developer diagnosis, but they are no longer the normal release workflow and
+their size/path parameters must not be hand-carried into an ordinary release.
+
+Session 03 currently publishes the Acer profile bundle under
+`out/greia-<version>/updates/` plus compact developer intermediates/report.
+The universal Setup image and additional platform bundles are added by their
+later owning sessions; the output/report schema already represents them
+without fabricating artifacts that do not yet exist.
 
 The v3 bundle is unsigned and compressed. There is no signing key, no signer
 identity, no signature member and no release sequence — and no `payload.bin`
@@ -336,33 +358,38 @@ npm test
 
 Do not label the current update tranche PASS until those commands execute at the exact recorded revisions.
 
-## 11. Next implementation step
+## 11. Current Session 03 state
 
-Session 02/R4 source closure is complete.
+The owner release CLI source path is implemented through:
 
-The exact validated source/test HEAD is:
+```text
+tools/greia_release.py
+  -> build/compose-release-profile.sh
+       -> build/lib/compose.sh (target + live-installer)
+       -> build/populate-hardware-support-pool.sh
+  -> tools/build_release.py build-payload / verify-payload
+  -> tools/build_release.py build-hardware-support
+  -> tools/greia_update.py build
+  -> atomic out/greia-<version>/ publication + release-report.json
+```
 
-`44927e37dcb150d9fb6cbad7226a52c35c41bf91`
+The composition adapter owns mount lifetime and teardown. The Python layer does
+not duplicate debootstrap/chroot/mount logic. Payload minimum size is derived by
+the payload producer from the real shrunk ext4 image; the bundle builder
+consumes the payload receipt and profile facts. Failed release builds do not
+publish a final release directory and preserve their scratch tree for
+diagnosis.
 
-The local source-only validation passed all focused regression suites,
-`git diff --check`, documentation-routing checks, and the complete
-`make verify` run: 3589 tests OK, 4 skipped, exit 0. No installer/image/root
-build, debootstrap, real QEMU, mount/loop, media write, Docker, Orbiter or
-physical hardware work was performed.
+Source validation is pending through
+`docs/testing/2026-09-20_SESSION03_RELEASE_CLI_LOCAL_VALIDATION.md`. That
+validation is source/test-only and explicitly must **not** run
+`greia_release.py build`, root composition, debootstrap, QEMU, mounts, media
+writes or other artifact builds on the owner's local machine.
 
-The next engineering session is therefore:
-
-**Session 03 — owner release CLI + compact release outputs.**
-
-Session 03 should remove low-level release parameter archaeology from normal
-operator use and make the release CLI the single owner-facing entry point for
-the release outputs defined by the active lifecycle plan.
-
-Session 04 remains responsible for wiring the release CLI's real bundle into
-the legacy i386 A/B lifecycle and proving install → healthy boot → update →
-commit → failed candidate → previous release. Physical Acer acceptance remains
-deferred certification evidence before a binary/family release and does not
-block Session 03.
+After source validation is green, the remaining Session 03 acceptance is one
+real Acer release invocation on the appropriate supported x86_64 Linux build
+host, followed by inspection of the produced report/bundle. Session 04 then
+owns the real legacy i386 install/update/rollback lifecycle using that bundle.
 
 Note: the old signed-bundle `keygen`/`manifest.sig`/Ed25519 workflow (ADR 0030)
 is superseded by ADR 0036 and is historical only; do not use it for new releases.
