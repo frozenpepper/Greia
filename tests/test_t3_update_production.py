@@ -32,6 +32,7 @@ import threading
 import tomllib
 import unittest
 from contextlib import contextmanager
+from dataclasses import replace
 from pathlib import Path
 
 from support_artifacts import valid_hardware_support_archive_bytes
@@ -958,6 +959,17 @@ class DefaultCompositionFailClosedTests(unittest.TestCase):
                 self.assertIsInstance(authority.backend.boot_backend, GrubEnvBackend)
                 status = authority.backend.status_payload()
                 self.assertTrue(status["available"])
+                # This test is specifically about the absent inactive device,
+                # not about host sysfs completeness. Satisfy only the
+                # inventory prerequisite; keep the real production
+                # filesystem/device resolver so it must fail on the
+                # deliberately non-existent PARTUUIDs in the layout.
+                authority.backend.seams = replace(
+                    authority.backend.seams,
+                    inventory_factory=lambda: HardwareInventoryAttestation(
+                        token="cd" * 32
+                    ),
+                )
                 import zstandard
 
                 work = root / "releases" / "r9"
@@ -990,8 +1002,12 @@ class DefaultCompositionFailClosedTests(unittest.TestCase):
                 journal_file = (
                     state_dir / "system-updates" / "journal" / "boot-journal.json"
                 )
-                with self.assertRaises(UpdateBackendUnavailable):
+                with self.assertRaises(UpdateBackendUnavailable) as raised:
                     authority.stage_current_candidate()
+                self.assertIn(
+                    "inactive-slot filesystem is unavailable",
+                    str(raised.exception),
+                )
                 # Fail-closed: no journal write, no default move, and the
                 # backend still reports the A/B composition (no silent
                 # single-root fallback).
