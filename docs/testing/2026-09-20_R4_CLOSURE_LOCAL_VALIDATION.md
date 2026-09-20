@@ -5,9 +5,11 @@ bundle production fail closed, tightens archive-inspection arguments, updates
 fixtures to use real valid support archives, and retires stale release/hardware
 routing.
 
-This validation is **fully local and non-destructive**. Do not ask the owner to
-boot the Acer, flash media, use Orbiter, run Docker, mount images, repartition
-storage, or perform any other manual hardware action.
+This validation is **source/test execution only**. Do not build an installer,
+compose a Greia root, create release images, run debootstrap, invoke
+`greia_release.py build`, run QEMU, mount/loop images, repartition storage,
+flash media, boot the Acer, use Orbiter, run Docker, or perform any other
+installer/image/hardware build operation on the owner's system.
 
 ## 1. Preconditions
 
@@ -23,8 +25,9 @@ git log --oneline -12
 Requirements:
 
 - working tree must be clean before testing;
-- HEAD must contain commit `242d49453bdaa07f9f567e0501e1cfcccdbcc4c3`
-  or a later descendant on `main`;
+- HEAD must contain the current closure-repair commits, including
+  `865f8ae73fd0476dda6e1c7018bd96c0d7c9cf9a`, or a later descendant on
+  `main`;
 - do not edit source or tests during this validation run;
 - use the repository's existing Python environment/dependencies.
 
@@ -67,6 +70,22 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_candidate_support.
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_release_cli_finalized_capacity.py' -v
 
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_greia_update_tool.py' -v
+
+# High-fanout stale-fixture regressions found by the first validation attempt.
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_ab_install_composition.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_fresh_ab_install.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_persistent_layout.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_installed_release_identity.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_release_v2.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_system_update_streaming.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_install_streaming_memory.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_installer_identity_sequencing.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_t3_update_production.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_update_activation_contract.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_update_product_negatives.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_x8_sequenced_update.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests/test_x8_qemu -p 'test_runner.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests/test_x8_qemu -p 'test_product_recovery_d31_reverse.py' -v
 ```
 
 The important new predicates are:
@@ -106,7 +125,11 @@ Run:
 make verify
 ```
 
-Do not shorten this to a subset if the command is runnable locally.
+Do not shorten this to a subset if the command is runnable locally. `make verify`
+for this repository runs tests/validation/shell syntax/source-footprint checks;
+it does **not** authorize building an installer or release image. If the local
+Makefile changes so that `make verify` would invoke installer/image/root
+composition work, STOP before running it and report that change.
 
 If it passes, record:
 
@@ -173,6 +196,7 @@ test_support_outer_bound: <result>
 test_candidate_support: <result>
 test_release_cli_finalized_capacity: <result>
 test_greia_update_tool: <result>
+high-fanout stale-fixture regression set: <result>
 
 DIFF_CHECK:
 PASS/FAIL
@@ -191,4 +215,4 @@ FAILURE DETAILS:
 <only if any>
 ```
 
-No physical acceptance is part of this validation.
+No installer/image build and no physical acceptance are part of this validation.
