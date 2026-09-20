@@ -1498,3 +1498,26 @@ remains open and the exact next step.
   fails, repair the demonstrated source/test defect only. Physical Acer
   install/update/rollback acceptance remains deferred certification evidence
   before a binary/family release and does not route this closure patch.
+
+## 2026-09-20 — First closure validation failed; test-contract migration repaired
+
+- Source-only validation at `749584b9` kept the owner machine within the
+  intended boundary: no installer/image build and no hardware action.
+- Production fail-closed support bundling was correct, but the test suite had
+  widespread stale fixtures that still passed arbitrary zstd-looking bytes to
+  `build_update_bundle()`. Focused candidate-support tests produced 6 errors;
+  full `make verify` produced 147 errors from the same fixture class. The
+  first `test_ab_install_composition` failure reproduced in isolation.
+- The repair keeps production strict. Tests that need valid support now use the
+  shared valid artifact from `tests/support_artifacts.py`; tests explicitly
+  proving runtime rejection of malformed support construct the outer candidate
+  directly in tests rather than asking the production producer to emit an
+  invalid release.
+- EOF whitespace defects reported by `git diff --check` were fixed.
+- The local validation contract now explicitly forbids installer/root/release
+  artifact builds, debootstrap, QEMU, mounts/loops, media writes, Docker,
+  Orbiter, or physical hardware work on the owner system.
+- Fresh current-HEAD validation remains pending. Session 03 starts only after
+  the source/test validation returns green; physical Acer acceptance remains a
+  later binary-release certification activity.
+
