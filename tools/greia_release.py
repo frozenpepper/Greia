@@ -95,6 +95,7 @@ class ReleaseCommandRunner(Protocol):
         env: Mapping[str, str] | None = None,
         log_path: Path | None = None,
         capture: bool = False,
+        interactive: bool = False,
     ) -> CommandResult: ...  # pragma: no cover
 
 
@@ -115,6 +116,7 @@ class SubprocessReleaseCommandRunner:
         env: Mapping[str, str] | None = None,
         log_path: Path | None = None,
         capture: bool = False,
+        interactive: bool = False,
     ) -> CommandResult:
         argv = [str(item) for item in command]
         child_env = dict(os.environ)
@@ -137,6 +139,26 @@ class SubprocessReleaseCommandRunner:
                     stdout=completed.stdout,
                     stderr=completed.stderr,
                     returncode=completed.returncode,
+                )
+
+            if interactive:
+                if log_path is not None:
+                    raise ReleaseCliError(
+                        "interactive release command cannot redirect to a build log"
+                    )
+                completed = subprocess.run(
+                    argv,
+                    cwd=str(cwd),
+                    env=child_env,
+                    stdin=None,
+                    stdout=None,
+                    stderr=None,
+                    text=True,
+                    check=False,
+                    shell=False,
+                )
+                return CommandResult(
+                    stdout="", stderr="", returncode=completed.returncode
                 )
 
             if log_path is None:
@@ -611,6 +633,10 @@ def _build_one_profile(
         )
     if not bundle.is_file():
         raise ReleaseCliError(f"{plan.profile_id} bundle output is missing")
+    durable_log = intermediate / "build.log"
+    if log_path.is_file():
+        shutil.copyfile(log_path, durable_log)
+        os.chmod(durable_log, 0o644)
 
     return {
         "profile_id": plan.profile_id,
@@ -641,7 +667,11 @@ def _build_one_profile(
             "sha256": _sha256_file(bundle),
             "manifest": bundle_doc,
         },
-        "build_log": str(log_path),
+        "build_log": (
+            str(durable_log.relative_to(publish_root))
+            if durable_log.is_file()
+            else None
+        ),
     }
 
 
@@ -662,6 +692,7 @@ def _build_release(
     runner: ReleaseCommandRunner | None = None,
     keep_work: bool = False,
     release_notes_file: Path | None = None,
+    doctor_result: dict[str, object] | None = None,
 ) -> dict[str, object]:
     version = _validate_version(version)
     if not profile_ids:
@@ -673,7 +704,11 @@ def _build_release(
     paths.output_parent.mkdir(parents=True, exist_ok=True)
     paths.work_parent.mkdir(parents=True, exist_ok=True)
 
-    doctor = _doctor(profile_ids)
+    if release_notes_file is not None:
+        notes = Path(release_notes_file)
+        if notes.is_symlink() or not notes.is_file():
+            raise ReleaseCliError("release notes file is not a regular file")
+    doctor = _doctor(profile_ids) if doctor_result is None else doctor_result
     if not bool(doctor["ok"]):
         failed = [
             str(item["name"])
@@ -820,8 +855,8 @@ def _write_media(
         command,
         cwd=PROJECT_ROOT,
         env={},
-        log_path=Path("/dev/stderr"),
         capture=False,
+        interactive=True,
     )
     if result.returncode != 0:
         raise ReleaseCliError(f"write-media failed with exit {result.returncode}")
