@@ -84,8 +84,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_t3_update_producti
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_update_activation_contract.py' -v
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_update_product_negatives.py' -v
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_x8_sequenced_update.py' -v
-PYTHONPATH=src python3 -m unittest discover -s tests/test_x8_qemu -p 'test_runner.py' -v
-PYTHONPATH=src python3 -m unittest discover -s tests/test_x8_qemu -p 'test_product_recovery_d31_reverse.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_runner.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_product_recovery_d31_reverse.py' -v
 ```
 
 The important new predicates are:
