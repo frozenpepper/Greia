@@ -1142,3 +1142,47 @@ Repairs:
 
 Fresh current-HEAD validation remains required; no PASS is inferred from older
 runs.
+
+## 37. R4 closure — GREEN at validated source HEAD (2026-09-20)
+
+Session 02/R4 source closure is complete.
+
+The local agent validated exact source/test HEAD:
+
+`44927e37dcb150d9fb6cbad7226a52c35c41bf91`
+
+with a clean working tree before and after and **no source/test edits during
+validation**.
+
+Recorded evidence:
+
+- Python compile smoke: PASS.
+- Core focused update/support suites: PASS.
+- High-fanout stale-fixture regression set: PASS (14/14 suites).
+- Second-validation regression set: PASS (candidate-support streaming,
+  bootchain, devproof, devrun3).
+- Full `test_lifecycle.py`: PASS (74 tests).
+- `git diff --check 67c7c445..44927e37`: PASS.
+- documentation-routing checks: PASS.
+- `make verify`: **PASS**, exit 0.
+- Full suite result: **3589 tests OK, 4 skipped**, 451.024 s.
+- validate, shell-check, footprint and final clean-bytecode stages: PASS.
+- Full local log was captured at
+  `/tmp/greia-r4-closure-make-verify.log` on the validation host.
+
+No installer, Greia root, release image, debootstrap, real QEMU, mount/loop,
+media write, Docker, Orbiter, or physical hardware action was part of this
+closure validation.
+
+The commits after `44927e37` that record this result are documentation-only
+closeout commits; the validated source/test tree itself is exactly
+`44927e37dcb150d9fb6cbad7226a52c35c41bf91`.
+
+### Current routing
+
+**Session 03 — owner release CLI + compact release outputs is now the next
+engineering session.**
+
+Do not reopen R4 unless a new concrete regression is found. Physical Acer
+install/update/rollback acceptance remains later binary-release certification
+evidence; it is not a prerequisite for Session 03.
