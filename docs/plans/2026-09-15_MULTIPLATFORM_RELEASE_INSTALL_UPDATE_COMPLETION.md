@@ -1521,3 +1521,23 @@ remains open and the exact next step.
   the source/test validation returns green; physical Acer acceptance remains a
   later binary-release certification activity.
 
+## 2026-09-20 — Second closure validation: core green, final fixture classes repaired
+
+- Validation at `76361d724fe16a761695160f5cc42dd9f4557f62` had all eight core
+  focused suites green and 12/14 high-fanout suites green.
+- Remaining focused failures were ordering/setup drift, not product failures:
+  valid candidate support allowed T3/update-activation staging to advance to
+  incomplete host inventory before their intended missing-device predicate.
+- Full `make verify` reported 49 errors, led by one truncated-support runtime
+  negative still routed through the strict producer and shared x8 lifecycle
+  helpers that still manufactured arbitrary compressed support bytes.
+- Repairs preserve the production contract: malformed runtime candidates use a
+  tests-only outer constructor; no-device tests satisfy only the inventory
+  prerequisite and retain the production device resolver; x8 A/B lifecycle
+  bundles use optional-null support because those tests do not exercise
+  hardware-support installation.
+- The validation brief now targets candidate-support streaming plus x8
+  bootchain/devproof/devrun3 source-scope tests before full `make verify`.
+- Owner-host boundary remains source/test execution only. No real installer,
+  root/release image, debootstrap, QEMU execution, mount/loop, media-write,
+  Docker, Orbiter, or physical-device action is authorized by this closure.
