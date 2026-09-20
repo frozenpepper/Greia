@@ -691,13 +691,13 @@ def build_test_release(
     work.mkdir(parents=True, exist_ok=True)
     raw = _payload_bytes(payload_size, f"t6-{name}:".encode())
     (work / "payload.ext4.zst").write_bytes(_compress_zstd_for_harness(raw))
-    (work / "hardware-support.tar.zst").write_bytes(
-        _compress_zstd_for_harness(b"t6-hw" * 64)
-    )
+    # This lifecycle harness proves A/B staging/boot/rollback, not hardware
+    # support installation. Use the v3 optional-null support path instead of
+    # inventing zstd-looking bytes that production correctly rejects.
     bundle = work / f"{name}.greiaupdate"
     build_update_bundle(
         payload_path=work / "payload.ext4.zst",
-        hardware_support_path=work / "hardware-support.tar.zst",
+        hardware_support_path=None,
         output_path=bundle,
         version=release_id.split("-", 1)[1],
         release_id=release_id,
@@ -2089,13 +2089,10 @@ def prove_install_composition(
 
     proof_raw = _payload_bytes(64 * 1024, b"t6-proof:")
     (work / "payload.ext4.zst").write_bytes(_compress_zstd_for_harness(proof_raw))
-    (work / "hardware-support.tar.zst").write_bytes(
-        _compress_zstd_for_harness(b"t6-proof-hw" * 64)
-    )
     bundle = work / "proof.greiaupdate"
     build_update_bundle(
         payload_path=work / "payload.ext4.zst",
-        hardware_support_path=work / "hardware-support.tar.zst",
+        hardware_support_path=None,
         output_path=bundle,
         version="0.20.0",
         release_id="greia-0.20.0",
