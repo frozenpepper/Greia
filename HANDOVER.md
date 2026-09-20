@@ -1,9 +1,9 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-18  
-**Canonical repository/branch:** `frozenpepper/Greia` / `main`  
-**Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)  
-**Version:** `0.13.0-phase0-dev`  
+**Updated:** 2026-09-18
+**Canonical repository/branch:** `frozenpepper/Greia` / `main`
+**Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
+**Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
@@ -1014,4 +1014,3 @@ complete and Session 03 — owner release CLI + compact release outputs — is t
 next engineering session. If validation fails, preserve the exact failure and
 repair only the demonstrated defect; do not revive the retired R2 hardware
 route or invent a new gate hierarchy.
-
