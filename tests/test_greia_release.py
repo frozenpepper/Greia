@@ -280,6 +280,16 @@ class ReleaseCliTests(unittest.TestCase):
             )
             self.assertEqual(report["setup_image"]["status"], "deferred")
             self.assertEqual(report["setup_image"]["session"], 8)
+            serialized = json.dumps(report, sort_keys=True)
+            self.assertNotIn(".greia-work", serialized)
+            self.assertNotIn('"output":', json.dumps(report["profiles"][0]["payload"]["producer"]))
+            self.assertNotIn(
+                '"output":',
+                json.dumps(report["profiles"][0]["hardware_support"]["producer"]),
+            )
+            self.assertNotIn(
+                '"output":', json.dumps(report["profiles"][0]["bundle"]["manifest"])
+            )
             self.assertTrue(
                 (release_root / "updates" / f"{PROFILE}.greiaupdate").is_file()
             )
@@ -288,6 +298,14 @@ class ReleaseCliTests(unittest.TestCase):
             self.assertTrue((intermediate / "payload-receipt.json").is_file())
             self.assertTrue((intermediate / "hardware-support.tar.zst").is_file())
             self.assertTrue((intermediate / "build.log").is_file())
+            self.assertEqual(
+                report["media_accounting"]["updates_total_bytes"],
+                module._tree_bytes(release_root / "updates"),
+            )
+            self.assertEqual(
+                report["media_accounting"]["intermediate_total_bytes"],
+                module._tree_bytes(release_root / "intermediate"),
+            )
 
             flat = [" ".join(command) for command in runner.commands]
             release_compose = [
