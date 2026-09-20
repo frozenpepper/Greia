@@ -1,5 +1,7 @@
 # R4 closure patch — local validation
 
+**Validation result:** PASS at source/test HEAD `44927e37dcb150d9fb6cbad7226a52c35c41bf91` — 3589 tests OK, 4 skipped; `make verify` exit 0. This file is retained as the reproducible validation procedure/evidence, not as pending routing. Session 03 is now open.
+
 **Purpose:** validate the small post-R4 closure patch that makes hardware-support
 bundle production fail closed, tightens archive-inspection arguments, updates
 fixtures to use real valid support archives, and retires stale release/hardware
