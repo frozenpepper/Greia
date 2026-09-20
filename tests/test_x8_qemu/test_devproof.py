@@ -205,7 +205,9 @@ class ResourceEnvelopeTests(unittest.TestCase):
             with self.assertRaises(DevproofPreflightError):
                 check_storage_preflight(
                     Path(tmp),
-                    required_bytes=disk.free + 1024,
+                    # Total capacity is invariant while free space can move
+                    # as unrelated full-suite temporary files are deleted.
+                    required_bytes=disk.total + 1,
                     reserved_bytes=1024,
                 )
 
