@@ -965,7 +965,10 @@ def prove_near_full_preflight(workdir: Path) -> dict[str, object]:
     try:
         check_storage_preflight(
             workdir,
-            required_bytes=disk["free"] + 1024 * 1024,
+            # Deterministic even while other tests create/delete temporary
+            # files on the same filesystem: no free-space race can make a
+            # requirement larger than total capacity suddenly fit.
+            required_bytes=disk["total"] + 1,
             reserved_bytes=PREFLIGHT_RESERVED_BYTES,
         )
     except DevproofPreflightError as exc:
