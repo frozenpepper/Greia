@@ -933,5 +933,23 @@ compose_root() {
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  # Direct execution is a public composition seam. Unlike sourced consumers,
+  # it has no outer image-builder cleanup trap, so it must own the mounts it
+  # creates. Sourced callers keep their existing lifecycle unchanged.
+  MOUNTS=()
+  _compose_direct_cleanup() {
+    local original_status=$?
+    trap - EXIT INT TERM
+    set +e
+    safe_unmount_paths "${MOUNTS[@]}"
+    local cleanup_status=$?
+    if (( cleanup_status != 0 && original_status == 0 )); then
+      exit 1
+    fi
+    exit "$original_status"
+  }
+  trap _compose_direct_cleanup EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
   compose_root "$@"
 fi
