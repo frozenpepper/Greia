@@ -86,6 +86,13 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_update_product_neg
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_x8_sequenced_update.py' -v
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_runner.py' -v
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_product_recovery_d31_reverse.py' -v
+
+# Second-validation regressions: malformed-runtime boundary, real missing
+# device ordering, and x8 source-scope lifecycle harness.
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_candidate_support_streaming.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_bootchain.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_devproof.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_devrun3.py' -v
 ```
 
 The important new predicates are:
@@ -102,6 +109,17 @@ The important new predicates are:
    green.
 
 Do not weaken an assertion to obtain PASS.
+
+
+### Safety boundary for x8 source-scope tests
+
+The named x8 tests above are permitted only as ordinary `unittest` source-scope
+fixtures executed by the existing test suite. They must not invoke a real QEMU
+run, product installer build, debootstrap/root composition, mount/loop device,
+or media write. If any named test attempts such an operation on this host,
+STOP that test and report it rather than granting privileges or changing the
+host. Tiny disposable files created under Python temporary directories by unit
+test fixtures are ordinary test state, not authorization to build Greia media.
 
 ## 4. Source-diff hygiene
 
@@ -197,6 +215,7 @@ test_candidate_support: <result>
 test_release_cli_finalized_capacity: <result>
 test_greia_update_tool: <result>
 high-fanout stale-fixture regression set: <result>
+second-validation regression set: <result>
 
 DIFF_CHECK:
 PASS/FAIL
