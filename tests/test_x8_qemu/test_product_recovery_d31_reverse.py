@@ -32,6 +32,8 @@ import tempfile
 import unittest
 import zipfile as _zipfile
 from pathlib import Path
+
+from support_artifacts import valid_hardware_support_archive_bytes
 from unittest import mock as _mock
 
 from tools.x8_qemu import product as _product
@@ -80,7 +82,9 @@ def _base_inputs(work: Path) -> dict[str, object]:
     payload = Path(work) / "base-payload.img"
     payload.write_bytes(_payload_bytes(64 * 1024, b"recovery-base:"))
     hw = work / "hw.tar.zst"
-    hw.write_bytes(b"\x28\xb5\x2f\xfd" + b"recovery-hw" * 64)
+    hw.write_bytes(
+        valid_hardware_support_archive_bytes(architecture="x86-64")
+    )
     return {
         "payload": payload,
         "hw": hw,
