@@ -1107,3 +1107,38 @@ the complete candidate-support-streaming suite and the x8 bootchain/devproof/
 devrun3 source-scope suites. It continues to forbid real QEMU runs, installer
 or release-image builds, root composition/debootstrap, mounts/loops, media
 writes, Docker, Orbiter, and physical hardware work on the owner machine.
+
+## 36. Third closure validation: focused green, two final full-suite defects isolated (2026-09-20)
+
+Validation at `545f7a45175eeff36ee0851b794e41b31a13ce21` had every
+declared focused regression green, `git diff --check` green, documentation
+routing green, and a clean tree before/after.
+
+Full-suite execution exposed two remaining issues:
+
+1. `test_x8_qemu.test_lifecycle.ShippedLifecycleTests.test_default_construction_without_seams_fails_closed`
+   reproducibly failed for the same prerequisite-order reason already fixed in
+   the T3/update-activation tests: valid support allowed staging to reach host
+   hardware inventory before its intended absent-inactive-device predicate.
+2. `test_x8_qemu.test_devproof.ResourceEnvelopeTests.test_preflight_refuses_before_staging_work`
+   failed once in a long full-suite run but passed in isolation and in the
+   focused devproof suite. Root cause is a real race in the test: it sampled
+   mutable free space and then required only `free + 1 KiB`; deletion of an
+   unrelated temporary file between the two disk-usage reads could make that
+   requirement fit.
+
+Repairs:
+
+- lifecycle default-seams negative now satisfies only the inventory prerequisite
+  with a complete synthetic attestation, retaining the shipped production
+  inactive-slot filesystem/device resolver and asserting that exact refusal;
+- devproof's direct test and `prove_near_full_preflight()` now demand
+  `disk.total + 1`, an impossible requirement independent of concurrent
+  free-space changes and exactly matching the helper's documented "more than
+  the disk holds" predicate;
+- validation now includes the full `test_lifecycle.py` suite and captures the
+  complete `make verify` output with a >=1200 s allowance. No installer/image/
+  root/debootstrap/QEMU/mount/media operation is authorized.
+
+Fresh current-HEAD validation remains required; no PASS is inferred from older
+runs.
