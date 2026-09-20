@@ -5,6 +5,8 @@ import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+
+from support_artifacts import valid_hardware_support_archive_bytes
 from unittest.mock import patch
 
 from greia_platform.system_updates import (
@@ -30,7 +32,7 @@ def _zst_bytes(seed: bytes, size: int = 4096) -> bytes:
     return _ZSTD + body
 
 
-_HW_BYTES = _zst_bytes(b"hwset-", size=2048)
+_HW_BYTES = valid_hardware_support_archive_bytes(architecture="i386")
 _UNCOMPRESSED = 8 * 1024 * 1024
 
 
