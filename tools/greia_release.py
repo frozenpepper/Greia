@@ -217,6 +217,7 @@ class ProfilePlan:
     architecture: str
     board: str | None
     suite: str
+    build_image_bytes: int
     system_slot_bytes: int
     persistent_minimum_bytes: int
     minimum_device_bytes: int
@@ -258,6 +259,7 @@ def _load_profile_plan(profile_id: str) -> tuple[BuildProfile, ProfilePlan]:
         architecture=profile.base.architecture,
         board=board,
         suite=profile.base.suite,
+        build_image_bytes=profile.image.size_mib * 1024 * 1024,
         system_slot_bytes=profile.storage.system_slot_bytes,
         persistent_minimum_bytes=profile.storage.persistent_minimum_bytes,
         minimum_device_bytes=minimum,
@@ -399,6 +401,20 @@ def _discover_boot_pair(target_root: Path) -> tuple[Path, Path]:
     return pairs[0]
 
 
+def _existing_filesystem_path(path: Path) -> Path:
+    """Return path or its nearest existing parent for disk-usage probing."""
+
+    candidate = Path(path).expanduser().resolve()
+    while not candidate.exists():
+        parent = candidate.parent
+        if parent == candidate:
+            raise ReleaseCliError(
+                f"cannot find an existing filesystem parent for {path}"
+            )
+        candidate = parent
+    return candidate
+
+
 def _doctor(
     profile_ids: Sequence[str],
     *,
@@ -463,24 +479,30 @@ def _doctor(
 
     valid_profiles = [item for item in profile_details if bool(item.get("ok"))]
     if valid_profiles:
-        # Lower-bound workspace derived only from product layout facts: one
-        # complete installed-device footprint plus one additional system-slot
-        # image while target/live roots and compressed artifacts coexist. It
-        # is intentionally a preflight floor, not a claim about final media
-        # size; low-level tools still fail closed on their exact allocations.
+        # Conservative build-work floor derived from product/profile facts:
+        # installed-layout minimum + two root working copies at the declared
+        # build-image ceiling + one full slot image while shrink/compression is
+        # in flight. This is a preflight floor, not a final-media-size claim;
+        # low-level producers retain their exact allocation/capacity checks.
         required_workspace = max(
-            int(item["minimum_device_bytes"]) + int(item["system_slot_bytes"])
+            int(item["minimum_device_bytes"])
+            + 2 * int(item["build_image_bytes"])
+            + int(item["system_slot_bytes"])
             for item in valid_profiles
         )
+        measured_at = _existing_filesystem_path(Path(workspace_path))
         free_bytes = (
-            shutil.disk_usage(Path(workspace_path)).free
+            shutil.disk_usage(measured_at).free
             if disk_free_bytes is None
             else int(disk_free_bytes)
         )
         add(
             "workspace",
             free_bytes >= required_workspace,
-            f"required>={required_workspace} free={free_bytes}",
+            (
+                f"required>={required_workspace} free={free_bytes} "
+                f"filesystem={measured_at}"
+            ),
         )
 
     return {
@@ -667,6 +689,7 @@ def _build_one_profile(
         "platform_family": plan.platform_family,
         "architecture": plan.architecture,
         "board": plan.board,
+        "build_image_bytes": plan.build_image_bytes,
         "system_slot_bytes": plan.system_slot_bytes,
         "persistent_minimum_bytes": plan.persistent_minimum_bytes,
         "minimum_device_bytes": plan.minimum_device_bytes,
