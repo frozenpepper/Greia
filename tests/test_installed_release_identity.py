@@ -20,6 +20,8 @@ import unittest
 import uuid
 from io import BytesIO
 from pathlib import Path
+
+from support_artifacts import valid_hardware_support_archive_bytes
 from unittest import mock
 
 from greia_platform.slot_writer import (
@@ -469,7 +471,9 @@ class ProductionPathProofTests(unittest.TestCase):
         payload_path = root / "payload.ext4.zst"
         payload_path.write_bytes(compressed)
         hw_path = root / "hw.tar.zst"
-        hw_path.write_bytes(b"\x28\xb5\x2f\xfd" + b"hwset-payload" * 64)
+        hw_path.write_bytes(
+            valid_hardware_support_archive_bytes(architecture="i386")
+        )
         bundle = root / "r11.greiaupdate"
         if bundle.exists():
             bundle.unlink()
