@@ -1186,3 +1186,66 @@ engineering session.**
 Do not reopen R4 unless a new concrete regression is found. Physical Acer
 install/update/rollback acceptance remains later binary-release certification
 evidence; it is not a prerequisite for Session 03.
+
+## 38. Session 03 owner release CLI — source implementation ready for local validation (2026-09-20)
+
+Session 03 has moved from planning into implementation. The current source
+tranche introduces the one-command owner release architecture while preserving
+all lower-level owners rather than forking another build pipeline.
+
+### Implemented
+
+- `tools/greia_release.py` with `build`, `doctor`, `build-profile`,
+  `inspect` and `write-media`.
+- Current release matrix contains only the real
+  `acer-aspire-one-i386-ab` profile; the output/report schema is already
+  multi-platform compatible.
+- Normal build version must match repository `VERSION`, preventing composed
+  root metadata and bundle version drift.
+- `doctor` checks Linux/x86_64/root status, required host tools, typed profile
+  + package-set/builder support, and workspace capacity on the selected output
+  filesystem.
+- Persistent apt/pool caches live beside the chosen output under
+  `.greia-cache`; per-attempt scratch lives under `.greia-work`.
+- `build/compose-release-profile.sh` owns target + live composition,
+  hardware-support population while the live chroot environment is active,
+  and bounded mount teardown. Python owns no mount bookkeeping.
+- Direct `build/lib/compose.sh` execution was also corrected to own teardown;
+  sourced image-builder consumers keep their existing outer cleanup.
+- `tools/build_release.py build-payload` may now omit the low-level
+  `--minimum-slot-bytes`; the producer derives it from the real shrunk ext4
+  bytes plus `PAYLOAD_MIN_HEADROOM`. The explicit parameter remains a
+  developer/test override.
+- The owner CLI passes the resulting payload receipt into
+  `tools/greia_update.py build`; it does not hand-copy payload
+  uncompressed/minimum facts.
+- Successful publication is atomic from a scratch `publish` directory into
+  `out/greia-<version>/`. Failure preserves scratch and never creates the
+  final release directory.
+- `release-report.json` records source commit, profile/layout facts,
+  target/live apparent bytes, bundle/payload/support sizes and SHA-256,
+  portable producer facts, exact published-directory byte accounting, and an
+  explicit deferred universal-Setup entry rather than a fake image.
+- Durable per-profile build log and compact payload/support intermediates live
+  under `intermediate/<profile>/`.
+- `write-media` delegates to the existing safe writer and preserves its
+  interactive exact-device confirmation; Session 03 itself produces no Setup
+  image.
+
+### Validation boundary
+
+No real release/root/installer build has been run as part of this source
+implementation. The exact local-agent brief is:
+
+`docs/testing/2026-09-20_SESSION03_RELEASE_CLI_LOCAL_VALIDATION.md`
+
+It permits only py_compile, bash syntax/static checks, fake-runner/unit suites,
+diff hygiene and the existing source-level `make verify`. It explicitly
+forbids `greia_release.py build` / `build-profile`, direct composition,
+debootstrap, real QEMU, mounts/loops, media writes, Docker, Orbiter and physical
+hardware work on the owner's local machine.
+
+Current routing: run that source validation. If green, Session 03 still needs
+one real one-command Acer release build on the appropriate supported x86_64
+Linux build host before Session 03 can be called fully complete. Do not move
+the real artifact build onto the owner's local machine.
