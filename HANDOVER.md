@@ -1249,3 +1249,50 @@ Current routing: run that source validation. If green, Session 03 still needs
 one real one-command Acer release build on the appropriate supported x86_64
 Linux build host before Session 03 can be called fully complete. Do not move
 the real artifact build onto the owner's local machine.
+
+## 39. Session 03 first source validation — canonical-path test repaired; rerun pending (2026-09-20)
+
+The first Session 03 source validation ran at exact HEAD
+`8dd2d8c436202555a7d5966130c2846aea8804b8` with a clean tree before and
+after and no prohibited build commands.
+
+Evidence from that run:
+
+- py_compile: PASS;
+- bash syntax: PASS;
+- 7/8 declared focused suites PASS;
+- `test_greia_release.py`: 10/11 PASS with one deterministic failure;
+- `git diff --check`: PASS;
+- `make shell-check`: PASS;
+- full `make verify`: 3601 tests run, failures=1, skipped=4;
+- the same single test failed in both focused and full execution.
+
+The failure was not a release-orchestration defect. On macOS,
+`tempfile.TemporaryDirectory()` may expose a path under `/var/...` while
+`Path.resolve()` canonicalizes it through the system symlink to
+`/private/var/...`. Production `ReleasePaths.for_release()` intentionally
+canonicalizes the selected output root with `expanduser().resolve()`, so the
+CLI correctly returned the canonical output path while the test compared it
+against the unresolved temporary-path spelling.
+
+Repair commit:
+
+`dc36cfc93f01d5a9a3085421c499aa5b6d3c3e62`
+
+The repair changes tests only:
+
+- `test_paths_use_final_release_schema` now explicitly asserts that
+  `output_parent` is canonicalized;
+- the normal-build orchestration test compares the returned output path to
+  `release_root.resolve()`.
+
+No production source/build behavior was weakened or changed.
+
+Fresh execution against `dc36cfc9...` is still required before Session 03
+source validation is called green. The owner-machine boundary is unchanged:
+no real release/root/installer build, debootstrap, real QEMU, mounts/loops,
+media writes, Docker, Orbiter or physical hardware work.
+
+If the corrected source validation is green, the remaining Session 03 closure
+step is one real owner-CLI Acer release build on an appropriate supported
+x86_64 Linux build host. Session 04 remains closed until that artifact exists.
