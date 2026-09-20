@@ -40,6 +40,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 
+from support_artifacts import build_unchecked_support_bundle
+
 from greia_installer import hardware_support_archive as _shared
 from greia_installer.hardware_support import (
     HardwareSupportPoolError,
@@ -772,7 +774,16 @@ class MidStreamFailureCleanupTests(unittest.TestCase):
             broken.write_bytes(
                 zstandard.ZstdCompressor(level=3).compress(cut)
             )
-            bundle = _bundle_for_hw(root, broken, tag=b"ef-trunc:")
+            bundle = build_unchecked_support_bundle(
+                output_path=root / "candidate-truncated.greiaupdate",
+                raw_payload=_payload_bytes(b"ef-trunc:"),
+                raw_support=broken.read_bytes(),
+                version="0.99.0",
+                release_id="greia-ef-truncated",
+                platform_family=_FAMILY,
+                architecture=_ARCH,
+                profile=_PROFILE,
+            )
             inspected = SystemUpdateInbox(root / "state").receive(bundle)
             seams, state_dir = _rig(root)
             with self.assertRaises(UpdateBackendUnavailable):
