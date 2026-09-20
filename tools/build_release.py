@@ -404,7 +404,7 @@ def build_payload_receipt(
     *,
     payload_path: Path,
     uncompressed_bytes: int,
-    minimum_slot_bytes: int | None,
+    minimum_slot_bytes: int,
     profile_id: str,
     release_id: str,
 ) -> dict[str, object]:
@@ -710,7 +710,7 @@ def build_release_payload(
     profile_id: str,
     release_id: str,
     filesystem_bytes: int,
-    minimum_slot_bytes: int,
+    minimum_slot_bytes: int | None,
     runner: ReleaseCommandRunner | None = None,
     command_timeout_seconds: float = DEFAULT_COMMAND_TIMEOUT_SECONDS,
     compression_timeout_seconds: float = PAYLOAD_COMPRESSION_TIMEOUT_SECONDS,
