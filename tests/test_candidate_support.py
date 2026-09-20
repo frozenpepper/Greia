@@ -45,6 +45,8 @@ from greia_platform.candidate_support import (
     STAGING_OPERATING_RESERVE_BYTES,
     CandidateSupportStage,
 )
+from support_artifacts import build_unchecked_support_bundle
+
 from greia_platform.system_updates import (
     HARDWARE_SUPPORT_NAME,
     SystemUpdateInbox,
@@ -630,7 +632,16 @@ class CleanupTests(unittest.TestCase):
             hw_path = root / "hw-bad.tar.zst"
             hw_path.write_bytes(bad)
             raw = _payload_bytes(b"t04-bad:")
-            bundle = _candidate_bundle(root, raw, hw_path=hw_path)
+            bundle = build_unchecked_support_bundle(
+                output_path=root / "candidate-bad.greiaupdate",
+                raw_payload=raw,
+                raw_support=bad,
+                version="0.99.0",
+                release_id="greia-t04-bad",
+                platform_family=_FAMILY,
+                architecture=_ARCH,
+                profile=_PROFILE,
+            )
             inspected = SystemUpdateInbox(root / "state").receive(bundle)
             seams, state_dir = _rig(root)
             counter = _ExtractionCounter()
@@ -667,7 +678,16 @@ class CleanupTests(unittest.TestCase):
                         zstandard.ZstdCompressor(level=3).compress(buffer.getvalue())
                     )
                     raw = _payload_bytes(b"t04-unsafe:")
-                    bundle = _candidate_bundle(root, raw, hw_path=hw_path)
+                    bundle = build_unchecked_support_bundle(
+                        output_path=root / f"candidate-{label}.greiaupdate",
+                        raw_payload=raw,
+                        raw_support=hw_path.read_bytes(),
+                        version="0.99.0",
+                        release_id=f"greia-t04-{label}",
+                        platform_family=_FAMILY,
+                        architecture=_ARCH,
+                        profile=_PROFILE,
+                    )
                     inspected = SystemUpdateInbox(root / "state").receive(bundle)
                     seams, state_dir = _rig(root)
                     counter = _ExtractionCounter()
@@ -697,7 +717,16 @@ class CleanupTests(unittest.TestCase):
                 zstandard.ZstdCompressor(level=3).compress(buffer.getvalue())
             )
             raw = _payload_bytes(b"t04-link:")
-            bundle = _candidate_bundle(root, raw, hw_path=hw_path)
+            bundle = build_unchecked_support_bundle(
+                output_path=root / "candidate-link.greiaupdate",
+                raw_payload=raw,
+                raw_support=hw_path.read_bytes(),
+                version="0.99.0",
+                release_id="greia-t04-link",
+                platform_family=_FAMILY,
+                architecture=_ARCH,
+                profile=_PROFILE,
+            )
             inspected = SystemUpdateInbox(root / "state").receive(bundle)
             seams, state_dir = _rig(root)
             counter = _ExtractionCounter()
