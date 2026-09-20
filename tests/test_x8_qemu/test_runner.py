@@ -16,6 +16,8 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+
+from support_artifacts import valid_hardware_support_archive_bytes
 from unittest.mock import patch
 
 from greia_platform.boot_transaction import BootTransactionError
@@ -407,7 +409,9 @@ class RunEvidenceTests(unittest.TestCase):
         payload = work / "payload.ext4.zst"
         payload.write_bytes(zstandard.ZstdCompressor(level=3).compress(raw))
         hardware = work / "hardware-support.tar.zst"
-        hardware.write_bytes(zstandard.ZstdCompressor(level=3).compress(b"x8q-hw" * 64))
+        hardware.write_bytes(
+            valid_hardware_support_archive_bytes(architecture="x86-64")
+        )
         bundle = work / f"{name}.greiaupdate"
         build_update_bundle(
             payload_path=payload,
