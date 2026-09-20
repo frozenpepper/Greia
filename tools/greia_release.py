@@ -514,24 +514,20 @@ def _build_one_profile(
     intermediate.mkdir(parents=True, exist_ok=True)
     updates.mkdir(parents=True, exist_ok=True)
 
-    compose = PROJECT_ROOT / "build" / "lib" / "compose.sh"
-    for role, root in (("target", target_root), ("live-installer", live_root)):
-        _run_checked(
-            runner,
-            [
-                "bash",
-                str(compose),
-                "--profile",
-                str(plan.profile_path),
-                "--role",
-                role,
-                "--root",
-                str(root),
-            ],
-            env=env,
-            log_path=log_path,
-            label=f"{plan.profile_id} {role} composition",
-        )
+    compose_adapter = PROJECT_ROOT / "build" / "compose-release-profile.sh"
+    _run_checked(
+        runner,
+        [
+            "bash",
+            str(compose_adapter),
+            str(plan.profile_path),
+            str(target_root),
+            str(live_root),
+        ],
+        env=env,
+        log_path=log_path,
+        label=f"{plan.profile_id} release-root composition",
+    )
 
     kernel, initramfs = _discover_boot_pair(target_root)
     target_root_bytes = _tree_bytes(target_root)
@@ -586,21 +582,11 @@ def _build_one_profile(
         raise ReleaseCliError(
             f"{plan.profile_id} composed target is missing var/lib/dpkg/status"
         )
-    _run_checked(
-        runner,
-        [
-            "bash",
-            str(PROJECT_ROOT / "build" / "populate-hardware-support-pool.sh"),
-            str(live_root),
-            plan.suite,
-            plan.architecture,
-            str(target_status),
-        ],
-        env=env,
-        log_path=log_path,
-        label=f"{plan.profile_id} hardware-support pool",
-    )
     pool_root = live_root / "opt" / "greia-hardware-support"
+    if not (pool_root / "manifest.json").is_file():
+        raise ReleaseCliError(
+            f"{plan.profile_id} release composition did not produce hardware support"
+        )
     hardware_support = intermediate / "hardware-support.tar.zst"
     hardware_doc = _run_json(
         runner,
