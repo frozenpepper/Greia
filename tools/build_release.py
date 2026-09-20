@@ -404,7 +404,7 @@ def build_payload_receipt(
     *,
     payload_path: Path,
     uncompressed_bytes: int,
-    minimum_slot_bytes: int,
+    minimum_slot_bytes: int | None,
     profile_id: str,
     release_id: str,
 ) -> dict[str, object]:
@@ -729,6 +729,11 @@ def build_release_payload(
     dirty tree is refused before compression. Returns the post-shrink
     image size as ``uncompressed_bytes``.
 
+    When ``minimum_slot_bytes`` is omitted the producer derives it after the
+    shrink from the real ext4 byte size plus ``PAYLOAD_MIN_HEADROOM``. The
+    explicit value remains a low-level override and must cover that derived
+    minimum; callers no longer need to guess a pre-shrink number.
+
     Command-bound policy: populate/check/shrink run under
     ``command_timeout_seconds`` (default 600 s); the ``zstd -19`` step over
     the ~1 GiB post-shrink image runs under ``compression_timeout_seconds``
@@ -745,12 +750,16 @@ def build_release_payload(
             raise ReleaseBuildError(f"generic {label} input is not a regular file")
     if isinstance(filesystem_bytes, bool) or filesystem_bytes <= 0 or filesystem_bytes > MAX_PAYLOAD_BYTES:
         raise ReleaseBuildError("filesystem_bytes is outside Greia bounds")
-    if (
-        isinstance(minimum_slot_bytes, bool)
-        or minimum_slot_bytes < filesystem_bytes
-        or minimum_slot_bytes > 2 * 1024 * 1024 * 1024
-    ):
-        raise ReleaseBuildError("minimum_slot_bytes must cover filesystem_bytes")
+    if minimum_slot_bytes is not None:
+        if (
+            isinstance(minimum_slot_bytes, bool)
+            or not isinstance(minimum_slot_bytes, int)
+            or minimum_slot_bytes <= 0
+            or minimum_slot_bytes > 2 * 1024 * 1024 * 1024
+        ):
+            raise ReleaseBuildError(
+                "minimum_slot_bytes must be a positive bounded integer or omitted"
+            )
     for label, bound in (
         ("command_timeout_seconds", command_timeout_seconds),
         ("compression_timeout_seconds", compression_timeout_seconds),
@@ -846,7 +855,10 @@ def build_release_payload(
             raise ReleaseBuildError("slot image is unreadable") from exc
         _assert_ext4_magic(head)
         _assert_relocatable(head)
-        if minimum_slot_bytes < shrunk_bytes + PAYLOAD_MIN_HEADROOM:
+        derived_minimum = shrunk_bytes + PAYLOAD_MIN_HEADROOM
+        if minimum_slot_bytes is None:
+            minimum_slot_bytes = derived_minimum
+        elif minimum_slot_bytes < derived_minimum:
             raise ReleaseBuildError(
                 "minimum_slot_bytes must cover the shrunk image plus finalization headroom"
             )
@@ -986,7 +998,15 @@ def _parser() -> argparse.ArgumentParser:
     payload.add_argument("--profile-id", required=True)
     payload.add_argument("--release-id", required=True)
     payload.add_argument("--filesystem-bytes", type=int, required=True)
-    payload.add_argument("--minimum-slot-bytes", type=int, required=True)
+    payload.add_argument(
+        "--minimum-slot-bytes",
+        type=int,
+        default=None,
+        help=(
+            "Optional low-level override. When omitted, the producer derives "
+            "the minimum from the real shrunk ext4 size plus PAYLOAD_MIN_HEADROOM."
+        ),
+    )
     payload.add_argument(
         "--receipt-output",
         type=Path,
