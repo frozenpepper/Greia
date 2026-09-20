@@ -190,6 +190,7 @@ class ReleaseCliTests(unittest.TestCase):
     def test_paths_use_final_release_schema(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = module.ReleasePaths.for_release(Path(directory), VERSION)
+            self.assertEqual(paths.output_parent, Path(directory).resolve())
             self.assertEqual(paths.release_root.name, f"greia-{VERSION}")
             self.assertEqual(paths.updates_dir, paths.release_root / "updates")
             self.assertEqual(
@@ -267,7 +268,7 @@ class ReleaseCliTests(unittest.TestCase):
             )
             release_root = out / f"greia-{VERSION}"
             self.assertTrue(release_root.is_dir())
-            self.assertEqual(result["output"], str(release_root))
+            self.assertEqual(Path(result["output"]), release_root.resolve())
             report = json.loads(
                 (release_root / "release-report.json").read_text(encoding="utf-8")
             )
