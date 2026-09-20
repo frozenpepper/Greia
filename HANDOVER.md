@@ -1067,3 +1067,43 @@ Current next action: rerun
 `docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md` at the new `main`
 HEAD. Do not infer PASS from the first run or from older R4 evidence.
 
+## 35. Second closure validation narrowed remaining fixture drift (2026-09-20)
+
+Local source/test validation at
+`76361d724fe16a761695160f5cc42dd9f4557f62` again used a clean tree and made
+no source edits. All eight core focused suites were green. Twelve of fourteen
+high-fanout regression suites were green.
+
+The remaining failures were three test-contract classes:
+
+1. `test_candidate_support_streaming.test_truncated_member_refuses_and_cleans_up`
+   still asked the strict production producer to emit deliberately truncated
+   support before testing runtime cleanup.
+2. The T3 default-composition and update-activation "no inactive device"
+   tests now carried valid support, so staging advanced to host inventory and
+   failed there before reaching the predicate those tests claimed to prove.
+3. x8 source-scope lifecycle helpers still created zstd-compressed arbitrary
+   support bytes; many bootchain/devproof/devrun3 tests share that helper,
+   producing the remaining full-suite error cluster.
+
+Repairs keep production unchanged:
+
+- truncated-support runtime rejection now uses the tests-only unchecked outer
+  candidate helper;
+- the two no-device tests inject only a complete inventory attestation, then
+  retain the real production inactive-slot filesystem/device resolver and
+  assert its refusal;
+- the x8 lifecycle harness now uses the v3 optional-null hardware-support path
+  because those lifecycle tests prove A/B staging/boot/rollback, not support
+  installation. Support behavior remains covered by the dedicated support
+  suites.
+
+The second run also reported the same two documentation EOF whitespace
+failures. This entry and the lifecycle ledger are normalized to exactly one
+terminal newline after recording the evidence.
+
+Fresh current-HEAD validation remains required. The validation brief now adds
+the complete candidate-support-streaming suite and the x8 bootchain/devproof/
+devrun3 source-scope suites. It continues to forbid real QEMU runs, installer
+or release-image builds, root composition/debootstrap, mounts/loops, media
+writes, Docker, Orbiter, and physical hardware work on the owner machine.
