@@ -1014,3 +1014,56 @@ complete and Session 03 — owner release CLI + compact release outputs — is t
 next engineering session. If validation fails, preserve the exact failure and
 repair only the demonstrated defect; do not revive the retired R2 hardware
 route or invent a new gate hierarchy.
+
+## 34. First closure validation failed cleanly; stale test fixtures repaired (2026-09-20)
+
+The first local source-only closure validation ran at
+`749584b9bba6bea330a12f8e6671adc9bb3a0895` with a clean tree and no source
+edits. Its result is preserved here because it exposed a real test-contract
+migration problem rather than a product regression:
+
+- py_compile: PASS;
+- seven of eight original focused suites: PASS;
+- `test_candidate_support.py`: 6 errors because runtime-negative tests still
+  asked production `build_update_bundle()` to publish deliberately malformed
+  hardware support;
+- full `make verify`: 3589 tests, 147 errors, 4 skipped. The first isolated
+  failure in `test_ab_install_composition.py` reproduced and had the same
+  root cause: many historical tests used "zstd magic + arbitrary bytes" as a
+  stand-in support archive, which the new fail-closed producer correctly
+  refuses;
+- `git diff --check 67c7c445..HEAD`: failed only on two blank EOF lines in
+  HANDOVER/lifecycle-plan additions;
+- documentation-routing checks: PASS;
+- working tree remained clean.
+
+### Repair after that evidence
+
+Production fail-closed behavior was **not weakened**.
+
+A shared tests-only fixture module, `tests/support_artifacts.py`, now owns:
+
+1. a genuinely valid small hardware-support archive for tests that only need
+   support to be present; and
+2. a deliberately unchecked outer-bundle constructor used only by tests whose
+   purpose is to feed malformed support into the runtime parser. Production
+   code never imports or exposes that helper.
+
+The malformed `test_candidate_support.py` cases now use the test-only outer
+constructor, while historical producer fixtures across A/B install, fresh
+install, streaming memory, installer identity, persistent-layout, installed
+release identity, release-v3 migration, update activation, product negatives,
+T3 update production, sequenced update, and x8 QEMU/recovery tests use valid
+support archives.
+
+The two EOF whitespace defects were normalized. The current validation brief
+was also strengthened to forbid **all installer/image/root/release builds on the
+owner machine**: no installer build, no Greia root composition, no debootstrap,
+no `greia_release.py build`, no QEMU, no mounts/loops, no media write, no
+Docker, no Orbiter, and no physical hardware action. Validation is source/test
+execution only.
+
+Current next action: rerun
+`docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md` at the new `main`
+HEAD. Do not infer PASS from the first run or from older R4 evidence.
+
