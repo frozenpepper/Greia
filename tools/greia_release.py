@@ -237,6 +237,8 @@ def _load_profile_plan(profile_id: str) -> tuple[BuildProfile, ProfilePlan]:
         package_root = PROJECT_ROOT / "build" / "package-sets"
         profile.resolve_packages(package_root, "target")
         profile.resolve_packages(package_root, "installer")
+        profile.check_phase0_builder_support("target")
+        profile.check_phase0_builder_support("installer")
     except BuildProfileError as exc:
         raise ReleaseCliError(f"release profile is invalid: {exc}") from exc
     board = None if profile.platform.board == "none" else profile.platform.board
@@ -393,6 +395,7 @@ def _doctor(
     machine: str | None = None,
     euid: int | None = None,
     which: Callable[[str], str | None] = shutil.which,
+    disk_free_bytes: int | None = None,
 ) -> dict[str, object]:
     actual_system = platform.system() if system_name is None else system_name
     actual_machine = platform.machine() if machine is None else machine
@@ -445,6 +448,28 @@ def _doctor(
         all(bool(item.get("ok")) for item in profile_details),
         f"{sum(bool(item.get('ok')) for item in profile_details)}/{len(profile_details)} valid",
     )
+
+    valid_profiles = [item for item in profile_details if bool(item.get("ok"))]
+    if valid_profiles:
+        # Lower-bound workspace derived only from product layout facts: one
+        # complete installed-device footprint plus one additional system-slot
+        # image while target/live roots and compressed artifacts coexist. It
+        # is intentionally a preflight floor, not a claim about final media
+        # size; low-level tools still fail closed on their exact allocations.
+        required_workspace = max(
+            int(item["minimum_device_bytes"]) + int(item["system_slot_bytes"])
+            for item in valid_profiles
+        )
+        free_bytes = (
+            shutil.disk_usage(PROJECT_ROOT).free
+            if disk_free_bytes is None
+            else int(disk_free_bytes)
+        )
+        add(
+            "workspace",
+            free_bytes >= required_workspace,
+            f"required>={required_workspace} free={free_bytes}",
+        )
 
     return {
         "schema_version": 1,
