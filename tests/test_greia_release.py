@@ -57,38 +57,34 @@ class FakeRunner:
         if argv[:3] == ["git", "rev-parse", "HEAD"]:
             return module.CommandResult(FULL_SHA + "\n", "", 0)
 
-        if len(argv) >= 2 and argv[0] == "bash" and argv[1].endswith("compose.sh"):
-            role = argv[argv.index("--role") + 1]
-            root = Path(argv[argv.index("--root") + 1])
-            root.mkdir(parents=True, exist_ok=True)
-            (root / "etc").mkdir(exist_ok=True)
-            (root / "etc" / f"{role}.txt").write_text(role, encoding="utf-8")
-            if role == "target":
-                boot = root / "boot"
-                boot.mkdir(parents=True)
-                (boot / "vmlinuz-6.1-greia").write_bytes(b"kernel")
-                (boot / "initrd.img-6.1-greia").write_bytes(b"initramfs")
-                status = root / "var" / "lib" / "dpkg"
-                status.mkdir(parents=True)
-                (status / "status").write_text("Package: base\n", encoding="utf-8")
-            else:
-                (root / "usr" / "share" / "isenkram").mkdir(parents=True)
-            if log_path is not None:
-                Path(log_path).parent.mkdir(parents=True, exist_ok=True)
-                Path(log_path).write_text("compose ok\n", encoding="utf-8")
-            return module.CommandResult("", "", 0)
-
         if len(argv) >= 2 and argv[0] == "bash" and argv[1].endswith(
-            "populate-hardware-support-pool.sh"
+            "compose-release-profile.sh"
         ):
-            live = Path(argv[2])
+            target = Path(argv[3])
+            live = Path(argv[4])
+            target.mkdir(parents=True, exist_ok=True)
+            live.mkdir(parents=True, exist_ok=True)
+            (target / "etc").mkdir(exist_ok=True)
+            (target / "etc" / "target.txt").write_text("target", encoding="utf-8")
+            boot = target / "boot"
+            boot.mkdir(parents=True)
+            (boot / "vmlinuz-6.1-greia").write_bytes(b"kernel")
+            (boot / "initrd.img-6.1-greia").write_bytes(b"initramfs")
+            status = target / "var" / "lib" / "dpkg"
+            status.mkdir(parents=True)
+            (status / "status").write_text("Package: base\n", encoding="utf-8")
+            (live / "etc").mkdir(exist_ok=True)
+            (live / "etc" / "live-installer.txt").write_text(
+                "live-installer", encoding="utf-8"
+            )
             pool = live / "opt" / "greia-hardware-support"
             (pool / "pool").mkdir(parents=True, exist_ok=True)
             (pool / "manifest.json").write_text("{}\n", encoding="utf-8")
             (pool / "Packages").write_bytes(b"")
             (pool / "Packages.gz").write_bytes(b"")
             if log_path is not None:
-                Path(log_path).write_text("pool ok\n", encoding="utf-8")
+                Path(log_path).parent.mkdir(parents=True, exist_ok=True)
+                Path(log_path).write_text("release roots ok\n", encoding="utf-8")
             return module.CommandResult("", "", 0)
 
         if any(part.endswith("build_release.py") for part in argv):
@@ -294,9 +290,11 @@ class ReleaseCliTests(unittest.TestCase):
             self.assertTrue((intermediate / "build.log").is_file())
 
             flat = [" ".join(command) for command in runner.commands]
-            self.assertTrue(any("compose.sh" in item and "--role target" in item for item in flat))
-            self.assertTrue(any("compose.sh" in item and "--role live-installer" in item for item in flat))
-            self.assertTrue(any("populate-hardware-support-pool.sh" in item for item in flat))
+            release_compose = [
+                item for item in flat if "compose-release-profile.sh" in item
+            ]
+            self.assertEqual(len(release_compose), 1)
+            self.assertNotIn("populate-hardware-support-pool.sh", " ".join(flat))
             payload_cmd = next(
                 command
                 for command in runner.commands
@@ -329,7 +327,7 @@ class ReleaseCliTests(unittest.TestCase):
     def test_failed_build_never_publishes_final_release_and_preserves_work(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory) / "out"
-            runner = FakeRunner(fail_label="populate-hardware-support-pool.sh")
+            runner = FakeRunner(fail_label="compose-release-profile.sh")
             with self.assertRaises(module.ReleaseCliError) as raised:
                 module._build_release(
                     version=VERSION,
@@ -358,6 +356,20 @@ class ReleaseCliTests(unittest.TestCase):
                     doctor_result=self._doctor_green(),
                 )
             self.assertEqual(runner.commands, [])
+
+    def test_release_composition_adapter_and_direct_composer_own_cleanup(self) -> None:
+        adapter = (ROOT / "build" / "compose-release-profile.sh").read_text(
+            encoding="utf-8"
+        )
+        compose = (ROOT / "build" / "lib" / "compose.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('safe_unmount_paths "${MOUNTS[@]}"', adapter)
+        self.assertIn("trap cleanup EXIT", adapter)
+        self.assertIn("populate-hardware-support-pool.sh", adapter)
+        self.assertIn("mount_pool_cache", adapter)
+        self.assertIn("_compose_direct_cleanup", compose)
+        self.assertIn('safe_unmount_paths "${MOUNTS[@]}"', compose)
 
     def test_requested_version_must_match_repository_metadata(self) -> None:
         with self.assertRaises(module.ReleaseCliError) as raised:
