@@ -1627,3 +1627,25 @@ remains open and the exact next step.
   If source validation is green, complete Session 03 with one real one-command
   Acer release build on the appropriate supported x86_64 Linux build host.
   Session 04 remains closed until that real release artifact exists.
+
+## 2026-09-20 — Session 03 first source validation found one macOS path-spelling test defect; repaired
+
+- Source validation at `8dd2d8c436202555a7d5966130c2846aea8804b8`
+  stayed inside the source-only host boundary: no release/root/installer build,
+  debootstrap, real QEMU, mounts/loops, media writes, Docker, Orbiter or
+  physical-device work.
+- py_compile, bash syntax, 7/8 focused suites, diff check and shell-check were
+  green. `test_greia_release.py` had one deterministic failure; full
+  `make verify` ran 3601 tests with the same single failure and 4 skips.
+- Root cause: production intentionally canonicalizes `--output` through
+  `Path.resolve()`. On macOS, TemporaryDirectory can be spelled under
+  `/var/...` while canonical resolution returns `/private/var/...`. The
+  test compared those two equivalent spellings as raw strings.
+- Repair `dc36cfc93f01d5a9a3085421c499aa5b6d3c3e62` changes tests only:
+  the path-schema test now explicitly asserts canonical output ownership and
+  the build test compares against `release_root.resolve()`.
+- Production release orchestration remains unchanged. Fresh corrected-HEAD
+  validation is pending; no PASS is inferred from the failed run.
+- If corrected source validation is green, Session 03 still requires one real
+  one-command Acer release build on a supported x86_64 Linux build host before
+  Session 04 opens.
