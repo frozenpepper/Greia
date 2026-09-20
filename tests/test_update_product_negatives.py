@@ -32,6 +32,8 @@ import unittest
 from collections import namedtuple
 from contextlib import contextmanager
 from pathlib import Path
+
+from support_artifacts import valid_hardware_support_archive_bytes
 from types import SimpleNamespace
 from unittest import mock
 
@@ -62,7 +64,7 @@ def _patched_env(**overrides: str):
 
 
 _SLOT_BYTES = 1024 * 1024 * 1024
-_HW_BYTES = b"\x28\xb5\x2f\xfd" + b"p3-proof3-hw" * 64
+_HW_BYTES = valid_hardware_support_archive_bytes(architecture="i386")
 
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
