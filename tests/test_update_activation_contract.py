@@ -32,10 +32,13 @@ import sys
 import tempfile
 import unittest
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
+from dataclasses import replace
 from pathlib import Path
 
 from support_artifacts import valid_hardware_support_archive_bytes
 from unittest import mock
+
+from greia_platform.slot_writer import HardwareInventoryAttestation
 
 ROOT = Path(__file__).resolve().parents[1]
 UNIT_DIR = ROOT / "build/overlay/etc/systemd/system"
@@ -442,6 +445,16 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
                 release_notes="POSTR1-P3-UPDATE-ACTIVATION sensitivity control.",
             )
             SystemUpdateInbox(state_dir).receive(bundle)
+            # Isolate the predicate named by this test: provide a complete
+            # inventory attestation, but keep the shipped production
+            # filesystem/device resolver. The fake PARTUUIDs have no backing
+            # device, so staging must fail at that destination seam.
+            authority.backend.seams = replace(
+                authority.backend.seams,
+                inventory_factory=lambda: HardwareInventoryAttestation(
+                    token="cd" * 32
+                ),
+            )
             demanded: list[str] = []
             original_require = authority.backend._require_seam  # type: ignore[attr-defined]
 
@@ -466,13 +479,20 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
             finally:
                 authority.backend._require_seam = original_require  # type: ignore[method-assign]
             message = str(raised.exception)
-            # No inactive device exists here and the candidate's own
-            # support member is not a safe pool tree, so the first
-            # destination-seam demand (the release support set,
-            # materialized from the candidate member) refuses
-            # fail-closed before any slot contact.
-            self.assertIn("release support set is unavailable", message)
-            self.assertEqual(demanded, ["release support set"])
+            # Support + PERSIST + inventory prerequisites are valid. The
+            # shipped production resolver must now reach the inactive-slot
+            # filesystem seam and refuse because the layout's PARTUUID has no
+            # backing device. This proves the intended no-device predicate.
+            self.assertIn("inactive-slot filesystem is unavailable", message)
+            self.assertEqual(
+                demanded,
+                [
+                    "release support set",
+                    "installed PERSIST schema",
+                    "hardware inventory attestation",
+                    "slot filesystem",
+                ],
+            )
             journal_file = (
                 state_dir / "system-updates" / "journal" / "boot-journal.json"
             )
