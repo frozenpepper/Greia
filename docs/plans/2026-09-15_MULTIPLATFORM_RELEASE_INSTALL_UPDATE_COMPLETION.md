@@ -1560,3 +1560,24 @@ remains open and the exact next step.
   or release builds, Greia root composition, debootstrap, real QEMU, mounts,
   loop devices, media writes, Docker, Orbiter and physical hardware remain out
   of scope.
+
+## 2026-09-20 — R4 source closure GREEN; Session 03 open
+
+- Exact validated source/test HEAD:
+  `44927e37dcb150d9fb6cbad7226a52c35c41bf91`.
+- Validation ran source/static/unit/integration checks only; no installer/root/
+  release-image build, debootstrap, real QEMU, mount/loop, media write, Docker,
+  Orbiter or physical-device operation occurred.
+- All declared focused suites passed, including 14/14 high-fanout regression
+  suites, candidate-support streaming, bootchain, devproof, devrun3 and the
+  complete 74-test lifecycle suite.
+- `git diff --check 67c7c445..44927e37`: PASS.
+- `make verify`: PASS, exit 0 — 3589 tests OK, 4 skipped, 451.024 s; validate,
+  shell-check, footprint and final clean-bytecode stages also completed.
+- Tree was clean before and after; no source/test edits occurred during the
+  validation.
+- Session 02/R4 source closure is therefore complete.
+- **Session 03 — owner release CLI + compact release outputs is OPEN and is the
+  next engineering session.**
+- Physical Acer install/update/rollback remains deferred binary-release
+  certification evidence and does not block Session 03.
