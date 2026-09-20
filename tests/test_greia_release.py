@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,6 +23,7 @@ SPEC = importlib.util.spec_from_file_location(
 )
 assert SPEC is not None and SPEC.loader is not None
 module = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = module
 SPEC.loader.exec_module(module)
 
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
@@ -207,6 +209,7 @@ class ReleaseCliTests(unittest.TestCase):
             machine="x86_64",
             euid=0,
             which=lambda name: f"/usr/bin/{name}",
+            disk_free_bytes=100 * 1024**3,
         )
         self.assertTrue(report["ok"])
         checks = {item["name"]: item for item in report["checks"]}
@@ -223,6 +226,22 @@ class ReleaseCliTests(unittest.TestCase):
             report["profiles"][0]["persistent_minimum_bytes"], 1024 * 1024 * 1024
         )
 
+    def test_doctor_refuses_insufficient_workspace_from_profile_facts(self) -> None:
+        report = module._doctor(
+            (PROFILE,),
+            system_name="Linux",
+            machine="x86_64",
+            euid=0,
+            which=lambda name: f"/usr/bin/{name}",
+            disk_free_bytes=1,
+        )
+        self.assertFalse(report["ok"])
+        workspace = next(
+            item for item in report["checks"] if item["name"] == "workspace"
+        )
+        self.assertFalse(workspace["ok"])
+        self.assertIn("required>=", workspace["detail"])
+
     def test_doctor_fails_closed_on_wrong_host_and_missing_tools(self) -> None:
         report = module._doctor(
             (PROFILE,),
@@ -230,6 +249,7 @@ class ReleaseCliTests(unittest.TestCase):
             machine="arm64",
             euid=501,
             which=lambda name: None if name == "debootstrap" else f"/bin/{name}",
+            disk_free_bytes=100 * 1024**3,
         )
         self.assertFalse(report["ok"])
         failed = {item["name"] for item in report["checks"] if not item["ok"]}
