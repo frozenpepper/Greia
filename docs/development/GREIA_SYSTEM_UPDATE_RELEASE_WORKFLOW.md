@@ -5,7 +5,7 @@
 **Architecture:** ADR 0036 (supersedes the old signed-bundle requirements of ADR 0030 where they conflict)
 **Product requirements:** `docs/product/SYSTEM_UPDATES.md`
 **Tools:** `tools/build_release.py`, `tools/greia_update.py`
-**Implementation state:** R4 source architecture is complete; the current closure patch tightens fail-closed support bundling and routing. Fresh local validation is defined in `docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md`. Physical Acer acceptance remains deferred and is not required for this source closure.
+**Implementation state:** Session 02/R4 source closure is GREEN. Exact validated source/test HEAD: `44927e37dcb150d9fb6cbad7226a52c35c41bf91`; `make verify` passed with 3589 tests OK and 4 skipped. Session 03 — owner release CLI + compact release outputs — is the next engineering session. Physical Acer acceptance remains deferred binary-release certification evidence and is not required to begin Session 03.
 
 This is the short practical procedure for **building, checking and sending a Greia `.greiaupdate` v3 package**.
 
@@ -338,27 +338,31 @@ Do not label the current update tranche PASS until those commands execute at the
 
 ## 11. Next implementation step
 
-The Session 02/R4 source architecture is complete. The current post-R4 closure
-patch makes the low-level bundle producer fail closed on invalid supplied
-hardware support, tightens the shared archive-inspection argument contract,
-updates support-carrying tests to use valid artifacts, and retires stale
-owner-hardware/current-sizing instructions.
+Session 02/R4 source closure is complete.
 
-The immediate next action is **local, non-destructive validation only** using:
+The exact validated source/test HEAD is:
 
-`docs/testing/2026-09-20_R4_CLOSURE_LOCAL_VALIDATION.md`
+`44927e37dcb150d9fb6cbad7226a52c35c41bf91`
 
-No Acer, Orbiter, Docker, mount, repartition, or owner-operated hardware work is
-required for that validation. If the focused suites and `make verify` are
-green at the returned HEAD, Session 02 source closure is complete and
-**Session 03 — owner release CLI + compact release outputs** is the next
-engineering session.
+The local source-only validation passed all focused regression suites,
+`git diff --check`, documentation-routing checks, and the complete
+`make verify` run: 3589 tests OK, 4 skipped, exit 0. No installer/image/root
+build, debootstrap, real QEMU, mount/loop, media write, Docker, Orbiter or
+physical hardware work was performed.
+
+The next engineering session is therefore:
+
+**Session 03 — owner release CLI + compact release outputs.**
+
+Session 03 should remove low-level release parameter archaeology from normal
+operator use and make the release CLI the single owner-facing entry point for
+the release outputs defined by the active lifecycle plan.
 
 Session 04 remains responsible for wiring the release CLI's real bundle into
 the legacy i386 A/B lifecycle and proving install → healthy boot → update →
 commit → failed candidate → previous release. Physical Acer acceptance remains
-deferred certification evidence before a binary/family release; it is not a
-precondition for beginning Session 03.
+deferred certification evidence before a binary/family release and does not
+block Session 03.
 
 Note: the old signed-bundle `keygen`/`manifest.sig`/Ed25519 workflow (ADR 0030)
 is superseded by ADR 0036 and is historical only; do not use it for new releases.
