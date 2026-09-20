@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from tools.x8_qemu.lifecycle import (
@@ -222,6 +223,18 @@ class ShippedLifecycleTests(unittest.TestCase):
                         f"production {factory_name} must be bound",
                     )
                 SystemUpdateInbox(machine["state"]).receive(bundle)
+                # This negative is about the absent inactive device. Host
+                # sysfs completeness is an unrelated prerequisite, so make
+                # only that prerequisite deterministic while leaving the real
+                # production filesystem/device resolver intact.
+                from greia_platform.slot_writer import HardwareInventoryAttestation
+
+                authority.backend.seams = replace(
+                    authority.backend.seams,
+                    inventory_factory=lambda: HardwareInventoryAttestation(
+                        token="cd" * 32
+                    ),
+                )
                 verified = authority.verify_current_candidate()
                 self.assertTrue(verified.present)
                 journal_file = (
@@ -237,9 +250,10 @@ class ShippedLifecycleTests(unittest.TestCase):
                 with self.assertRaises(UpdateBackendUnavailable) as raised:
                     authority.stage_current_candidate()
                 message = str(raised.exception)
-                # Production refusal names the unavailable production path,
-                # never the retired empty-seam marker and never single-root.
-                self.assertIn("is unavailable", message)
+                # Production refusal reaches the real inactive-slot
+                # filesystem/device resolver, never the retired empty-seam
+                # marker and never single-root.
+                self.assertIn("inactive-slot filesystem is unavailable", message)
                 self.assertNotIn("destination seam is not configured", message)
                 self.assertNotIn("single-root", message)
             self.assertFalse(journal_file.exists())
