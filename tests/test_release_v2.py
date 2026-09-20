@@ -8,6 +8,8 @@ import unittest
 import zipfile
 from pathlib import Path
 
+from support_artifacts import valid_hardware_support_archive_bytes
+
 from greia_platform.persistent_layout import (
     PersistentLayoutError,
     assert_persist_schema_compatible,
@@ -43,7 +45,7 @@ def _zst_bytes(seed: bytes, size: int = 4096) -> bytes:
     return _ZSTD + body
 
 
-_HW_BYTES = _zst_bytes(b"hwset-payload-", size=4096)
+_HW_BYTES = valid_hardware_support_archive_bytes(architecture="i386")
 
 
 def _make_inputs(root: Path, payload: bytes):
