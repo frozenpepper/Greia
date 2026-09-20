@@ -1541,3 +1541,22 @@ remains open and the exact next step.
 - Owner-host boundary remains source/test execution only. No real installer,
   root/release image, debootstrap, QEMU execution, mount/loop, media-write,
   Docker, Orbiter, or physical-device action is authorized by this closure.
+
+## 2026-09-20 — Third closure validation: final deterministic test defects repaired
+
+- At `545f7a45`, every focused regression, diff check and documentation-routing
+  check was green; full `make verify` still exposed one reproducible lifecycle
+  ordering error plus one non-reproducible devproof storage-preflight failure.
+- The lifecycle negative now provides only the complete inventory prerequisite
+  so the shipped production path reaches and proves its intended missing-device
+  refusal.
+- The devproof race was caused by comparing against a mutable free-space
+  snapshot. Both helper and direct test now request `total capacity + 1 byte`,
+  which cannot become satisfiable when unrelated suite cleanup frees blocks.
+- Future closure validation captures the entire full-suite output and uses a
+  >=1200 s execution allowance; the suite currently takes approximately
+  14–16 minutes on the owner host.
+- Owner-host scope remains source/static/unit/integration testing only. Installer
+  or release builds, Greia root composition, debootstrap, real QEMU, mounts,
+  loop devices, media writes, Docker, Orbiter and physical hardware remain out
+  of scope.
