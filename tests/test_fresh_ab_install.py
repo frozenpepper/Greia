@@ -32,6 +32,8 @@ import uuid
 from io import BytesIO
 from pathlib import Path
 
+from support_artifacts import valid_hardware_support_archive_bytes
+
 from greia_installer.disk import (
     DeviceObservation,
     DiskInventory,
@@ -89,7 +91,7 @@ _ARCH = "i386"
 _INSTALL_SHA = "ab" * 32
 _PASSWORD_HASH = "grub.pbkdf2.sha512.10000." + "A" * 128
 _HW_BODY = b"hwset-payload" * 64
-_HW_BYTES = b"\x28\xb5\x2f\xfd" + _HW_BODY
+_HW_BYTES = valid_hardware_support_archive_bytes(architecture="i386")
 _SUPPORT_BOUND = 1 * MIB
 
 
