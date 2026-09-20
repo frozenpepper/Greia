@@ -1581,3 +1581,49 @@ remains open and the exact next step.
   next engineering session.**
 - Physical Acer install/update/rollback remains deferred binary-release
   certification evidence and does not block Session 03.
+
+## 2026-09-20 — Session 03 owner release CLI source implementation landed; source validation pending
+
+- Added `tools/greia_release.py` as the single owner-facing release
+  orchestration entry point with `build`, `doctor`, `build-profile`,
+  `inspect` and `write-media`.
+- Session 03 matrix intentionally contains only
+  `acer-aspire-one-i386-ab`; final multi-platform output/report structure is
+  established without fabricating the universal Setup image or future
+  amd64/Pi bundles.
+- The CLI reuses the established authorities instead of reimplementing them:
+  shared `compose_root`, `build_release.py` payload/receipt/support producer,
+  and `greia_update.py` profile-bound v3 bundle/capacity path.
+- Added `build/compose-release-profile.sh` as the shell-owned composition
+  lifecycle adapter: compose target, tear its mounts down, compose live,
+  populate exact hardware support while the live chroot is active, then bounded
+  cleanup. Python owns no mount/chroot cleanup. Direct `compose.sh` execution
+  was also made self-cleaning; sourced image builders retain their existing
+  cleanup ownership.
+- Removed normal release minimum-size archaeology:
+  `build_release_payload(... minimum_slot_bytes=None)` derives the minimum
+  after real ext4 shrink as `shrunk_bytes + PAYLOAD_MIN_HEADROOM`; explicit
+  values remain low-level overrides. The owner CLI passes the resulting
+  payload receipt to `greia_update.py build`.
+- Version must equal repository `VERSION`; release scratch/cache paths are
+  centralized; final publication is atomic; failed builds preserve scratch and
+  never publish the final release directory.
+- `release-report.json` records source SHA, profile/layout facts,
+  target/live/bundle sizing, payload/support/bundle hashes, portable producer
+  facts and exact published-directory media accounting. Universal Setup is
+  explicitly `deferred` to Session 08.
+- `doctor` checks official Linux/x86_64/root/tool/profile/builder/workspace
+  prerequisites using the selected output filesystem. `write-media` delegates
+  to the existing safe writer and retains its exact-device interactive
+  confirmation.
+- Source-level regression coverage added in `tests/test_greia_release.py`
+  plus producer-derived-minimum coverage in `tests/test_build_release.py`.
+- **No real artifact build has been run in this source tranche.** Owner-host
+  validation is strictly source/static/unit/integration only; no
+  `greia_release.py build`, root composition, debootstrap, QEMU, mounts/loops,
+  media write, Docker, Orbiter or physical hardware action is authorized.
+- Next: execute
+  `docs/testing/2026-09-20_SESSION03_RELEASE_CLI_LOCAL_VALIDATION.md`.
+  If source validation is green, complete Session 03 with one real one-command
+  Acer release build on the appropriate supported x86_64 Linux build host.
+  Session 04 remains closed until that real release artifact exists.
