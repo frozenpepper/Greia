@@ -34,6 +34,8 @@ import unittest
 from contextlib import contextmanager
 from pathlib import Path
 
+from support_artifacts import valid_hardware_support_archive_bytes
+
 import greia_launcher.boot_health as launcher_health
 from greia_launcher.boot_health import TRUSTED_BOOTSTRAP_PATH
 from greia_launcher.bootstrap import BootLifecycleGuard
@@ -95,7 +97,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SHIPPED_PROFILE = ROOT / "build" / "profiles" / "legacy-x86-i686.toml"
 
 _SLOT_BYTES = 1024 * 1024 * 1024
-_HW_BYTES = b"\x28\xb5\x2f\xfd" + b"t3-update-hw" * 64
+_HW_BYTES = valid_hardware_support_archive_bytes(architecture="i386")
 _PERSIST_MARKER = emit_persist_schema_marker(1)
 
 _UUID_A = "11111111-2222-3333-4444-555555555555"
