@@ -10,6 +10,8 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
+from support_artifacts import valid_hardware_support_archive_bytes
+
 from greia_platform import persistent_layout as persist
 from greia_platform.persistent_layout import (
     AB_LAYOUT_ADAPTERS,
@@ -680,7 +682,9 @@ class ContractTests(unittest.TestCase):
             payload_path = root / "payload.ext4.zst"
             payload_path.write_bytes(payload)
             hw_path = root / "hw.tar.zst"
-            hw_path.write_bytes(b"\x28\xb5\x2f\xfd" + b"hw" * 64)
+            hw_path.write_bytes(
+                valid_hardware_support_archive_bytes(architecture="amd64")
+            )
             manifest = build_update_bundle(
                 payload_path=payload_path,
                 hardware_support_path=hw_path,
