@@ -283,6 +283,42 @@ class BuildReleaseTests(unittest.TestCase):
             self.assertNotEqual(raw[510:512], b"\x55\xaa")
             self.assertNotEqual(raw[512:520], b"EFI PART")
 
+    def test_payload_minimum_is_derived_from_real_shrunk_image_when_omitted(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            kernel = root / "vmlinuz"
+            kernel.write_bytes(b"generic-kernel" * 64)
+            initramfs = root / "initrd"
+            initramfs.write_bytes(b"generic-initramfs" * 64)
+            output = root / "payload.ext4.zst"
+            runner = FakeExt4Runner()
+            result = module.build_release_payload(
+                staging_dir=staging,
+                kernel_path=kernel,
+                initramfs_path=initramfs,
+                output=output,
+                profile_id="legacy-x86-i686",
+                release_id="greia-0.15.0",
+                filesystem_bytes=4 * 1024 * 1024,
+                minimum_slot_bytes=None,
+                runner=runner,
+            )
+            self.assertEqual(
+                result["minimum_slot_bytes"],
+                result["uncompressed_bytes"] + module.PAYLOAD_MIN_HEADROOM,
+            )
+            receipt = module.build_payload_receipt(
+                payload_path=output,
+                uncompressed_bytes=int(result["uncompressed_bytes"]),
+                minimum_slot_bytes=int(result["minimum_slot_bytes"]),
+                profile_id="legacy-x86-i686",
+                release_id="greia-0.15.0",
+            )
+            self.assertEqual(
+                receipt["minimum_slot_bytes"], result["minimum_slot_bytes"]
+            )
+
     def test_payload_compression_runs_with_intended_bound(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
