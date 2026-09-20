@@ -41,6 +41,7 @@ for _path in (str(TOOLS_ROOT), str(SRC_ROOT)):
 
 from build_profile import BuildProfile, BuildProfileError  # noqa: E402
 from greia_installer.layout import (  # noqa: E402
+    LayoutError,
     ProfileSizing,
     minimum_device_bytes_for_profile,
 )
@@ -239,7 +240,7 @@ def _load_profile_plan(profile_id: str) -> tuple[BuildProfile, ProfilePlan]:
         profile.resolve_packages(package_root, "installer")
         profile.check_phase0_builder_support("target")
         profile.check_phase0_builder_support("installer")
-    except BuildProfileError as exc:
+    except (BuildProfileError, LayoutError) as exc:
         raise ReleaseCliError(f"release profile is invalid: {exc}") from exc
     board = None if profile.platform.board == "none" else profile.platform.board
     minimum = minimum_device_bytes_for_profile(
@@ -330,6 +331,16 @@ def _json_result(result: CommandResult, label: str) -> dict[str, object]:
     return value
 
 
+def _stable_producer_facts(document: Mapping[str, object]) -> dict[str, object]:
+    """Drop low-level scratch output paths before the atomic publish rename."""
+
+    return {
+        key: value
+        for key, value in document.items()
+        if key not in {"output", "receipt_output"}
+    }
+
+
 def _run_checked(
     runner: ReleaseCommandRunner,
     command: Sequence[str],
@@ -396,6 +407,7 @@ def _doctor(
     euid: int | None = None,
     which: Callable[[str], str | None] = shutil.which,
     disk_free_bytes: int | None = None,
+    workspace_path: Path = PROJECT_ROOT,
 ) -> dict[str, object]:
     actual_system = platform.system() if system_name is None else system_name
     actual_machine = platform.machine() if machine is None else machine
@@ -461,7 +473,7 @@ def _doctor(
             for item in valid_profiles
         )
         free_bytes = (
-            shutil.disk_usage(PROJECT_ROOT).free
+            shutil.disk_usage(Path(workspace_path)).free
             if disk_free_bytes is None
             else int(disk_free_bytes)
         )
@@ -664,19 +676,19 @@ def _build_one_profile(
             "path": str(payload.relative_to(publish_root)),
             "compressed_bytes": payload.stat().st_size,
             "sha256": _sha256_file(payload),
-            "producer": payload_doc,
+            "producer": _stable_producer_facts(payload_doc),
         },
         "hardware_support": {
             "path": str(hardware_support.relative_to(publish_root)),
             "compressed_bytes": hardware_support.stat().st_size,
             "sha256": _sha256_file(hardware_support),
-            "producer": hardware_doc,
+            "producer": _stable_producer_facts(hardware_doc),
         },
         "bundle": {
             "path": str(bundle.relative_to(publish_root)),
             "bytes": bundle.stat().st_size,
             "sha256": _sha256_file(bundle),
-            "manifest": bundle_doc,
+            "manifest": _stable_producer_facts(bundle_doc),
         },
         "build_log": (
             str(durable_log.relative_to(publish_root))
@@ -716,10 +728,15 @@ def _build_release(
     paths.work_parent.mkdir(parents=True, exist_ok=True)
 
     if release_notes_file is not None:
-        notes = Path(release_notes_file)
+        notes = Path(release_notes_file).expanduser().resolve()
         if notes.is_symlink() or not notes.is_file():
             raise ReleaseCliError("release notes file is not a regular file")
-    doctor = _doctor(profile_ids) if doctor_result is None else doctor_result
+        release_notes_file = notes
+    doctor = (
+        _doctor(profile_ids, workspace_path=paths.output_parent)
+        if doctor_result is None
+        else doctor_result
+    )
     if not bool(doctor["ok"]):
         failed = [
             str(item["name"])
@@ -764,14 +781,8 @@ def _build_release(
         if not re.fullmatch(r"[0-9a-f]{40}", source_commit):
             raise ReleaseCliError("release source commit is not a full git SHA")
 
-        updates_total = sum(
-            int(profile["bundle"]["bytes"])  # type: ignore[index]
-            for profile in profiles
-        )
-        intermediate_total = 0
-        for profile in profiles:
-            intermediate_total += int(profile["payload"]["compressed_bytes"])  # type: ignore[index]
-            intermediate_total += int(profile["hardware_support"]["compressed_bytes"])  # type: ignore[index]
+        updates_total = _tree_bytes(publish_root / "updates")
+        intermediate_total = _tree_bytes(publish_root / "intermediate")
         report: dict[str, object] = {
             "schema_version": REPORT_SCHEMA_VERSION,
             "version": version,
@@ -848,6 +859,8 @@ def _write_media(
     if not erase_device:
         raise ReleaseCliError("write-media requires explicit --erase-device")
     source = Path(image).expanduser().resolve()
+    if source.is_symlink() or not source.is_file():
+        raise ReleaseCliError("write-media image is not a regular file")
     if source.suffix != ".img":
         raise ReleaseCliError(
             "write-media currently accepts a raw .img only; compressed universal "
@@ -892,6 +905,12 @@ def _parser() -> argparse.ArgumentParser:
 
     doctor = sub.add_parser("doctor", help="check the official build host")
     doctor.add_argument(
+        "--output",
+        type=Path,
+        default=PROJECT_ROOT,
+        help="Filesystem that will hold release work/output for space preflight.",
+    )
+    doctor.add_argument(
         "--profile",
         action="append",
         choices=DEFAULT_PROFILE_IDS,
@@ -915,7 +934,10 @@ def main(argv: list[str] | None = None) -> int:
     runner = SubprocessReleaseCommandRunner()
     try:
         if args.command == "doctor":
-            result = _doctor(tuple(args.profiles or DEFAULT_PROFILE_IDS))
+            result = _doctor(
+                tuple(args.profiles or DEFAULT_PROFILE_IDS),
+                workspace_path=args.output.expanduser().resolve(),
+            )
             print(json.dumps(result, indent=2, sort_keys=True))
             return 0 if bool(result["ok"]) else 2
         if args.command == "build":
