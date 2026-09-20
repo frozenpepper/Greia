@@ -93,6 +93,7 @@ PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_candidate_support_
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_bootchain.py' -v
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_devproof.py' -v
 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_devrun3.py' -v
+PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_lifecycle.py' -v
 ```
 
 The important new predicates are:
@@ -137,11 +138,18 @@ Expected:
 
 ## 5. Full repository verification
 
-Run:
+Run with enough wall-clock allowance for the current suite (the previous
+successful-to-completion runs took roughly 14–16 minutes). Capture the **entire**
+output so a late error identity is never lost:
 
 ```bash
-make verify
+set -o pipefail
+make verify 2>&1 | tee /tmp/greia-r4-closure-make-verify.log
 ```
+
+Use a command timeout of at least 1200 seconds if the local agent/runtime imposes
+one. A timeout is not a test failure; rerun with a sufficient timeout rather than
+changing source.
 
 Do not shorten this to a subset if the command is runnable locally. `make verify`
 for this repository runs tests/validation/shell syntax/source-footprint checks;
@@ -216,6 +224,7 @@ test_release_cli_finalized_capacity: <result>
 test_greia_update_tool: <result>
 high-fanout stale-fixture regression set: <result>
 second-validation regression set: <result>
+test_lifecycle: <result>
 
 DIFF_CHECK:
 PASS/FAIL
