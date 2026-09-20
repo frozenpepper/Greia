@@ -33,6 +33,8 @@ import tempfile
 import unittest
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from pathlib import Path
+
+from support_artifacts import valid_hardware_support_archive_bytes
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -419,7 +421,9 @@ class CandidateAbsentNoOpTests(unittest.TestCase):
             (work / "slot.ext4.zst").write_bytes(
                 zstandard.ZstdCompressor(level=3).compress(raw)
             )
-            (work / "hw.tar.zst").write_bytes(b"\x28\xb5\x2f\xfd" + b"p34-hw" * 64)
+            (work / "hw.tar.zst").write_bytes(
+                valid_hardware_support_archive_bytes(architecture=_ARCH)
+            )
             bundle = work / "r9.greiaupdate"
             build_update_bundle(
                 payload_path=work / "slot.ext4.zst",
