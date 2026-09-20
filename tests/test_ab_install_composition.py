@@ -46,6 +46,8 @@ import unittest
 import uuid
 from pathlib import Path
 
+from support_artifacts import valid_hardware_support_archive_bytes
+
 from greia_installer.composition import (
     AbInstallCompositionError,
     build_install_service,
@@ -92,7 +94,7 @@ _PROFILE = "legacy-x86-i686-ab"
 _FAMILY = "legacy-x86"
 _ARCH = "i386"
 _PASSWORD_HASH = "grub.pbkdf2.sha512.10000." + "A" * 128
-_HW_BYTES = b"\x28\xb5\x2f\xfd" + b"hwset-payload" * 64
+_HW_BYTES = valid_hardware_support_archive_bytes(architecture="i386")
 _SUPPORT_BOUND = 1 * MIB
 _MBR_SIGNATURE = "a1b2c3d4"
 _PERSIST_FS_UUID = "cccccccc-cccc-cccc-cccc-ccccccccccc3"
