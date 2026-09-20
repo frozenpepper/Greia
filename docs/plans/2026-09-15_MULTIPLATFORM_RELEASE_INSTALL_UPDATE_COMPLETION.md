@@ -1,11 +1,11 @@
 # Greia — Final Multiplatform Release / Universal Installer / Update Completion Plan
 
-**Status:** ACTIVE — authoritative successor plan  
-**Created:** 2026-09-15  
-**Adversarial review:** 2026-09-15 — architecture attacked twice and revised after owner corrections  
-**Owner requirement:** one universal Greia Setup image is mandatory  
-**Normative architecture:** ADR 0036  
-**Execution style:** direct implementation -> focused tests -> full verification only at sensible milestones -> QEMU/physical tests only when they answer something source tests cannot  
+**Status:** ACTIVE — authoritative successor plan
+**Created:** 2026-09-15
+**Adversarial review:** 2026-09-15 — architecture attacked twice and revised after owner corrections
+**Owner requirement:** one universal Greia Setup image is mandatory
+**Normative architecture:** ADR 0036
+**Execution style:** direct implementation -> focused tests -> full verification only at sensible milestones -> QEMU/physical tests only when they answer something source tests cannot
 **Explicit process rule:** do not add security/governance machinery unless it prevents a concrete product failure.
 
 ---
@@ -1498,4 +1498,3 @@ remains open and the exact next step.
   fails, repair the demonstrated source/test defect only. Physical Acer
   install/update/rollback acceptance remains deferred certification evidence
   before a binary/family release and does not route this closure patch.
-
