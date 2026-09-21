@@ -1350,3 +1350,56 @@ exist.
 
 Session 04 remains closed until the Session 03 Linux owner-command build is
 green.
+
+## 41. Session 03 first Linux owner build exposed live-media identity ordering defect; repair pending rerun (2026-09-21)
+
+The first real Session 03 owner-command build ran on the Orbiter x86_64 Linux
+host at exact source:
+
+`65af8805faf00f1218abb5dbf0bd562a692426bd`
+
+Pre-build evidence was clean:
+
+- HEAD == origin/main;
+- tree clean;
+- focused `test_greia_release.py`: 11/11 PASS;
+- `greia_release.py doctor`: PASS, all 6 checks green;
+- no prohibited actions.
+
+The owner command failed before publication while composing the live-installer
+root. The Debian i386 kernel postinst invoked `update-initramfs`; the
+Greia-owned fail-closed
+`build/installer-overlay/etc/initramfs-tools/hooks/greia-live-media-id`
+correctly refused because `/etc/greia-os/live-media-id` did not yet exist.
+The resulting kernel/meta-package dpkg errors were downstream consequences.
+
+Root cause: the older `build/build-installer-image.sh` consumer already knew
+that live-media identity must be seeded before kernel package installation,
+but the shared `compose_root(... role=live-installer)` path introduced by the
+Session 02/03 refactor had not absorbed that prerequisite. The release adapter
+uses the shared composer, so the hidden consumer-only ordering dependency
+surfaced only in the first real owner build.
+
+Repair commits on current main:
+
+- `05d058c3` — add shared `compose_prepare_live_media_identity` and invoke it
+  in the generic live-installer composition path before package installation;
+- `9a187baf` — make `build/build-installer-image.sh` use the same helper
+  instead of owning a second UUID-generation implementation;
+- `1c5bb376` — add source-contract regression coverage for shared ownership and
+  pre-kernel-postinst ordering;
+- `a6fd434a` — tighten the helper so identity is root-local: repeated calls
+  preserve a valid existing root identity, while a fresh root gets a fresh
+  UUID; the exported shell variable is output only for immediate outer-media
+  assembly.
+
+The hook remains fail-closed. No package postinst is bypassed, no hook is
+weakened, and no Session-03-specific special case was added to the release CLI.
+
+The failed build scratch/evidence at the old SHA was intentionally preserved;
+there were no leftover build mounts and the source tree remained clean.
+
+Current state: **repair implemented, validation pending**. On Orbiter, pull
+current main, run shell syntax plus focused system-overlay/release tests and
+`make verify`. If green, start a **fresh** Session 03 owner-build acceptance
+at the new exact HEAD; do not reuse the preserved failed work root.
