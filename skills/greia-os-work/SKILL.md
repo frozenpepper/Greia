@@ -23,6 +23,7 @@ This file tells an agent **what to read for the task**. It is deliberately not a
 9. New prerecorded Greia speech is authoring-time work through `tools/greia_voice.py`; OS/Activity/shared-library code must not grow a parallel TTS/ASR backend.
 10. Launcher spoken labels are Shell-owned prerecorded assets; no child-runtime TTS and no Activity-owned hover/focus speech.
 11. Display/session/input abstraction must preserve direct safe Activity SDL/Pygame rendering and high-rate input paths; do not introduce avoidable full-frame copies or generic high-rate IPC merely for abstraction symmetry.
+12. Repository verification must not traverse arbitrary git-ignored build/evidence/cache state. Privileged release attempts may legitimately leave root-owned preserved evidence under ignored paths; source cleanup/footprint gates must stay scoped to source-owned/tracked material rather than requiring deletion/chown of retained evidence.
 
 Before installing/configuring anything also read:
 
