@@ -253,28 +253,19 @@ compose_apt_options() {
 # identity prerequisite belongs to the shared live-role composition layer,
 # not to one particular image consumer.
 #
-# Idempotent by design: a caller that has already selected an identity may set
-# COMPOSE_LIVE_MEDIA_ID, and a repeated call preserves the existing valid file.
-# A disagreement between those two authorities is rejected rather than
-# silently regenerating an initramfs identity mid-build.
+# Idempotent by design: the root itself is the identity authority. A repeated
+# call preserves its existing valid identifier; a fresh root gets a fresh UUID.
+# COMPOSE_LIVE_MEDIA_ID is output only, for consumers that need to reuse the
+# exact value when assembling the outer boot medium.
 compose_prepare_live_media_identity() {
   local rootfs="$1"
   local identity_path="$rootfs/etc/greia-os/live-media-id"
-  local configured_id="${COMPOSE_LIVE_MEDIA_ID:-}"
-  local existing_id=""
+  local live_media_id=""
 
   install -d -m 0755 "$rootfs/etc/greia-os"
   if [[ -s "$identity_path" ]]; then
-    existing_id="$(tr -d '\r\n' < "$identity_path")"
-  fi
-
-  if [[ -n "$configured_id" && -n "$existing_id" && "$configured_id" != "$existing_id" ]]; then
-    echo "Live-media identity mismatch between COMPOSE_LIVE_MEDIA_ID and $identity_path." >&2
-    return 1
-  fi
-
-  local live_media_id="${configured_id:-$existing_id}"
-  if [[ -z "$live_media_id" ]]; then
+    live_media_id="$(tr -d '\r\n' < "$identity_path")"
+  else
     live_media_id="$(python3 - <<'PYUUID'
 import uuid
 print(uuid.uuid4())
