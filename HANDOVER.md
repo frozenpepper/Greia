@@ -1,6 +1,6 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-18
+**Updated:** 2026-09-21
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
 **Version:** `0.13.0-phase0-dev`
@@ -245,35 +245,53 @@ Do not combine their obsolete token instructions with the unified procedure.
 
 ## 8. Current exact next step
 
-The current install/update/release route is **Session 02-complete (source scope) of `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`** (ADR 0036 successor plan — simplify the update bundle/runtime); see §26 for the Session 02 evidence boundary and the exact next step (build-host artifact leg, then Session 03). The `POSTR1-P1-INSTALLER-RED` (P1.1 installer composition RED) / Gate-P5 / V12G / D6 closure sequence is historical and superseded for lifecycle sequencing; §§13–25 preserve it as evidence only.
+Session 03 source implementation and source validation are complete for the
+current owner-release CLI tranche. The corrected validation reported:
 
-Before starting, on the owner-controlled checkout:
+```text
+3601 tests OK
+4 skipped
+make verify PASS
+project validation PASS
+footprint PASS
+clean-bytecode PASS
+```
+
+The source/test delta that fixed the only first-run failure is
+`dc36cfc93f01d5a9a3085421c499aa5b6d3c3e62`; the following commits before
+the validation-routing update were documentation-only. No production release
+or build behavior changed after that fix.
+
+The exact current lifecycle step is the **Session 03 Linux owner-release build
+acceptance**:
+
+```text
+docs/testing/2026-09-21_SESSION03_LINUX_RELEASE_BUILD_ACCEPTANCE.md
+```
+
+Run it only on an owner-approved x86_64 Linux build host. It intentionally
+permits the production build command's debootstrap/chroot/mount activity but
+forbids physical-media writes, manual mount/loop surgery, QEMU, Docker,
+physical Acer installation, and source edits during the frozen run.
+
+The acceptance-defining operation is the single owner command:
 
 ```bash
-git fetch origin
-git pull --ff-only
-git status --short
-git rev-parse HEAD
-git rev-parse origin/main
+sudo python3 tools/greia_release.py build \
+  --version "$(cat VERSION)" \
+  --output <project-local-output>
 ```
 
-Require a clean relevant tree and `HEAD == origin/main`.
+It must produce the current Greia release directory with the real
+`acer-aspire-one-i386-ab.greiaupdate`, compact intermediates and a
+source-bound `release-report.json`. The universal Setup image remains
+explicitly deferred to Session 08; Session 03 is not an installer-image
+acceptance.
 
-The Parent unified acceptance below remains the execution authority for the Parent authentication/runtime tranche, but it is not the current blocking implementation task. When executing it, keep the Parent repository at exactly:
-
-```text
-01301d285c6ba2a9a1f2948a9768b821d2536729
-```
-
-Then execute from the beginning:
-
-```text
-docs/testing/2026-09-08_PARENT_UNIFIED_AUTH_RUNTIME_ACCEPTANCE.md
-```
-
-Stop on the first failure and return the evidence root plus the final report template from that protocol.
-
-Do not edit source during the frozen attempt.
+If that Linux owner-command build is green, Session 03 closes and Session 04
+opens. Session 04 then proves the legacy i386 lifecycle using the real bundle.
+The Parent unified acceptance remains its own cross-cutting release-readiness
+tranche and is not the current blocking lifecycle step.
 
 ## 8b. Session 02 repair tranche R2 — source complete, physical gates owner-side (2026-09-18)
 
@@ -1296,3 +1314,39 @@ media writes, Docker, Orbiter or physical hardware work.
 If the corrected source validation is green, the remaining Session 03 closure
 step is one real owner-CLI Acer release build on an appropriate supported
 x86_64 Linux build host. Session 04 remains closed until that artifact exists.
+
+## 40. Session 03 corrected source validation GREEN; Linux owner-build acceptance next (2026-09-21)
+
+The owner returned the corrected Session 03 source-validation result after the
+portable canonical-path test repair:
+
+- full source suite: **3601 tests OK, 4 skipped**;
+- `make verify`: PASS;
+- project validation: PASS;
+- all 41 Activity validations shown by the project validator: PASS;
+- source footprint completed;
+- final clean-bytecode completed.
+
+The original single failure was therefore isolated to the macOS
+`/var` -> `/private/var` path-spelling assertion and is closed by
+`dc36cfc93f01d5a9a3085421c499aa5b6d3c3e62`. Production
+`ReleasePaths.for_release()` continues to canonicalize owner output paths;
+the test now asserts that intended contract.
+
+No real release/root/installer build was part of this source validation.
+Session 03 now has one remaining closure predicate: execute the real owner
+release command on a supported x86_64 Linux build host and inspect the
+resulting release report/bundle without manually reconstructing the low-level
+pipeline.
+
+Canonical procedure:
+
+`docs/testing/2026-09-21_SESSION03_LINUX_RELEASE_BUILD_ACCEPTANCE.md`
+
+That procedure deliberately calls the result a **Greia release directory with
+the current Acer-only matrix**, not an Acer installer. The one universal Setup
+image remains a later Session 08 product after amd64 and ARM/Pi boot paths
+exist.
+
+Session 04 remains closed until the Session 03 Linux owner-command build is
+green.
