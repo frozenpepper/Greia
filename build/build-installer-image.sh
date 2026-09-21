@@ -174,20 +174,11 @@ compose_write_sources_hostname_hosts "$LIVE_ROOT" "live-installer"
 compose_mount_virtual "$LIVE_ROOT"
 
 # The live-media UUID must exist before the kernel package postinst runs
-# update-initramfs during the apt install below: the installer overlay's
-# greia-live-media-id initramfs hook embeds it and fails closed when absent.
-install -d -m 0755 "$LIVE_ROOT/etc/greia-os"
-live_media_id="$(python3 - <<'PYUUID'
-import uuid
-print(uuid.uuid4())
-PYUUID
-)"
-[[ "$live_media_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || {
-  echo "Generated live-media identifier is invalid." >&2
-  exit 1
-}
-printf '%s\n' "$live_media_id" > "$LIVE_ROOT/etc/greia-os/live-media-id"
-chmod 0644 "$LIVE_ROOT/etc/greia-os/live-media-id"
+# update-initramfs during the apt install below. The shared composer owns this
+# invariant so direct live-root composition and this installer consumer cannot
+# drift on ordering or identity semantics.
+compose_prepare_live_media_identity "$LIVE_ROOT"
+live_media_id="$COMPOSE_LIVE_MEDIA_ID"
 
 compose_install_packages "$LIVE_ROOT" "live-installer"
 
