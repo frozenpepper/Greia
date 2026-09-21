@@ -247,6 +247,53 @@ compose_apt_options() {
   )
 }
 
+# Live-installer media identity must exist before any kernel package postinst
+# can invoke update-initramfs. The installer overlay ships a fail-closed
+# greia-live-media-id hook that embeds this value in conf/uuid.conf, so the
+# identity prerequisite belongs to the shared live-role composition layer,
+# not to one particular image consumer.
+#
+# Idempotent by design: a caller that has already selected an identity may set
+# COMPOSE_LIVE_MEDIA_ID, and a repeated call preserves the existing valid file.
+# A disagreement between those two authorities is rejected rather than
+# silently regenerating an initramfs identity mid-build.
+compose_prepare_live_media_identity() {
+  local rootfs="$1"
+  local identity_path="$rootfs/etc/greia-os/live-media-id"
+  local configured_id="${COMPOSE_LIVE_MEDIA_ID:-}"
+  local existing_id=""
+
+  install -d -m 0755 "$rootfs/etc/greia-os"
+  if [[ -s "$identity_path" ]]; then
+    existing_id="$(tr -d '\r\n' < "$identity_path")"
+  fi
+
+  if [[ -n "$configured_id" && -n "$existing_id" && "$configured_id" != "$existing_id" ]]; then
+    echo "Live-media identity mismatch between COMPOSE_LIVE_MEDIA_ID and $identity_path." >&2
+    return 1
+  fi
+
+  local live_media_id="${configured_id:-$existing_id}"
+  if [[ -z "$live_media_id" ]]; then
+    live_media_id="$(python3 - <<'PYUUID'
+import uuid
+print(uuid.uuid4())
+PYUUID
+)"
+  fi
+
+  [[ "$live_media_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]] || {
+    echo "Live-media identifier is invalid: $live_media_id" >&2
+    return 1
+  }
+
+  printf '%s\n' "$live_media_id" > "$identity_path"
+  chmod 0644 "$identity_path"
+  chown root:root "$identity_path"
+  COMPOSE_LIVE_MEDIA_ID="$live_media_id"
+  export COMPOSE_LIVE_MEDIA_ID
+}
+
 # Package-set resolution + install for the role scope. Keeps intentionally
 # pre-seeded Greia conffiles without any dpkg prompt.
 compose_install_packages() {
@@ -908,6 +955,9 @@ compose_root() {
   compose_apply_overlay "$rootfs" "$role" || return 1
   compose_write_build_info "$rootfs" "$role" || return 1
   compose_write_sources_hostname_hosts "$rootfs" "$role" || return 1
+  if [[ "$role" == "live-installer" ]]; then
+    compose_prepare_live_media_identity "$rootfs" || return 1
+  fi
   compose_mount_virtual "$rootfs" || return 1
   compose_install_packages "$rootfs" "$role" || return 1
   if compose_role_manages_appliance_users "$role"; then
