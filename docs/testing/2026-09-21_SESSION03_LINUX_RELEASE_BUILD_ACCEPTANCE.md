@@ -64,16 +64,28 @@ printf '%s\n' "$VERSION" > "$EVIDENCE/version.txt"
 ## 3. Pre-build source validation
 
 The first Linux owner-build attempt exposed a real shared-composer defect and
-the composer has since changed. Therefore the repaired checkout requires a
-fresh source gate before another privileged build attempt. Do not reuse a
-PASS from the pre-repair SHA.
+the composer has since changed. Its preserved root-owned failure evidence also
+exposed a verification-hygiene defect: ordinary source verification must not
+walk arbitrary ignored build/cache trees.
+
+Do **not** delete, chown, move, or otherwise alter the old failed Session 03
+evidence/work root. Its continued presence is part of this validation.
 
 Run:
 
 ~~~bash
 set -o pipefail
 
-bash -n build/lib/compose.sh build/build-installer-image.sh
+bash -n build/lib/compose.sh build/build-installer-image.sh build/footprint-source.sh
+
+PYTHONPATH=src:tools python3 -m unittest discover \
+  -s tests \
+  -p 'test_makefile_hygiene.py' \
+  -v 2>&1 | tee "$EVIDENCE/test_makefile_hygiene.log"
+
+make clean-bytecode 2>&1 | tee "$EVIDENCE/clean-bytecode.log"
+
+build/footprint-source.sh 2>&1 | tee "$EVIDENCE/footprint-source.log"
 
 PYTHONPATH=src:tools python3 -m unittest discover \
   -s tests \
@@ -95,15 +107,21 @@ git status --short
 Expected:
 
 - shell syntax PASS;
+- Makefile/footprint hygiene suite PASS;
+- `make clean-bytecode` PASS while the old root-owned failed evidence still
+  exists untouched;
+- source footprint PASS and reports tracked source files rather than the whole
+  checkout;
 - release CLI suite PASS (11 tests at the time this procedure was updated);
 - system-overlay contract suite PASS;
 - `git diff --check` exit 0;
-- `make verify` exit 0 with no FAIL/ERROR;
+- `make verify` exit 0 with no genuine FAIL/ERROR;
 - tree remains clean.
 
 If any check fails, STOP before the privileged build. After a subsequent
-source/build-script repair, this full source gate becomes required again for
-the new SHA; documentation-only commits do not invalidate a source PASS.
+source/build-script/verification-hygiene repair, this full source gate becomes
+required again for the new SHA; documentation-only commits do not invalidate a
+source PASS.
 
 ## 4. Run the owner-facing doctor
 
