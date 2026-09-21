@@ -1678,3 +1678,42 @@ remains open and the exact next step.
   amd64 and ARM/Pi boot paths are real.
 - Session 04 opens only after the Linux owner-command build acceptance is
   green.
+
+## 2026-09-21 — Session 03 real Linux build attempt failed on live-media identity ordering; shared-composer repair implemented
+
+- First owner-command build ran on Orbiter at exact source
+  `65af8805faf00f1218abb5dbf0bd562a692426bd`.
+- Preflight was green: current `main`, clean tree, focused release CLI 11/11
+  PASS, and `greia_release.py doctor` PASS with all 6 checks green.
+- The build correctly failed before publication while composing the
+  live-installer root. Kernel package configuration invoked
+  `update-initramfs`; the Greia
+  `greia-live-media-id` hook refused because
+  `/etc/greia-os/live-media-id` was absent. The linux-image and meta-package
+  dpkg failures were consequences of that first hook failure.
+- Root cause is composition ownership/order drift: the traditional
+  `build/build-installer-image.sh` path seeded the live-media identifier
+  before package installation, but the shared
+  `compose_root(... role=live-installer)` route used by Session 03 did not
+  own that prerequisite.
+- Repair moves that invariant into the shared composition layer through
+  `compose_prepare_live_media_identity`. Generic live-root composition calls
+  it before package installation; the traditional installer-image consumer
+  delegates to the same helper.
+- The helper is root-local and idempotent: a valid existing identity is
+  preserved for repeated operations on one root; a fresh root receives a
+  fresh UUID. `COMPOSE_LIVE_MEDIA_ID` is only an output used by the outer
+  installer-media assembly.
+- The fail-closed initramfs hook remains unchanged. No update-initramfs,
+  dpkg, or release-CLI bypass was introduced.
+- Regression coverage now locks shared ownership and ordering before the
+  kernel postinst boundary.
+- Repair commits:
+  `05d058c3`, `9a187baf`, `1c5bb376`, `a6fd434a`.
+- Failed-build evidence/scratch at the old SHA remains preserved and there
+  were no leftover mounts.
+- Next: validate the repaired current `main` on Orbiter with shell syntax,
+  focused build/release suites and `make verify`. If green, rerun the
+  Session 03 Linux owner-build acceptance from a fresh SHA-derived work root.
+  Session 04 remains closed until that build succeeds and publishes/inspects
+  the release artifacts.
