@@ -1717,3 +1717,28 @@ remains open and the exact next step.
   Session 03 Linux owner-build acceptance from a fresh SHA-derived work root.
   Session 04 remains closed until that build succeeds and publishes/inspects
   the release artifacts.
+
+## 2026-09-22 — Session 03 repair validation hit verification-hygiene boundary; cleanup/footprint scope corrected
+
+- Validation at `99f9588d62380e01537adc4eff09cbd93c065769`
+  passed shell syntax, release CLI focused tests (11/11), system-overlay focused
+  tests (23/23), and `git diff --check`.
+- `make verify` stopped before unit tests because its initial
+  `clean-bytecode` target recursively walked the entire checkout and hit the
+  intentionally preserved, root-owned failed release scratch/cache tree under
+  ignored `tmp/`.
+- This is not a product regression and the preserved failure evidence must not
+  be deleted/chowned as a prerequisite for ordinary source verification.
+- `clean-bytecode` now traverses only source-owned Python trees
+  (`src tests tools activities`) and the repository root non-recursively.
+- The source-footprint stage had the same conceptual defect: “source
+  archive-relevant” used `du` over the whole checkout, counting ignored build
+  evidence and risking the same permission failure. In Git checkouts it now
+  sums tracked-file sizes only; explicit runtime-payload measurements remain
+  unchanged.
+- Regression coverage locks both boundaries.
+- Repair commits: `51ec3aba`, `dfbf8dc8`, `71375f55`, `d1f60390`.
+- Next: pull current main; with the old failed root still present and untouched,
+  prove `make clean-bytecode` and `build/footprint-source.sh` succeed, run
+  the hygiene-focused test and full `make verify`; only then run doctor and a
+  fresh Session 03 owner build. Session 04 remains closed.
