@@ -61,23 +61,49 @@ printf '%s\n' "$SOURCE_HEAD" > "$EVIDENCE/source-head.txt"
 printf '%s\n' "$VERSION" > "$EVIDENCE/version.txt"
 ~~~
 
-## 3. Small pre-build source sanity check
+## 3. Pre-build source validation
 
-Do not rerun the whole source suite merely as ceremony. Confirm the Session 03 owner seam on this Linux checkout:
+The first Linux owner-build attempt exposed a real shared-composer defect and
+the composer has since changed. Therefore the repaired checkout requires a
+fresh source gate before another privileged build attempt. Do not reuse a
+PASS from the pre-repair SHA.
+
+Run:
 
 ~~~bash
 set -o pipefail
+
+bash -n build/lib/compose.sh build/build-installer-image.sh
 
 PYTHONPATH=src:tools python3 -m unittest discover \
   -s tests \
   -p 'test_greia_release.py' \
   -v 2>&1 | tee "$EVIDENCE/test_greia_release.log"
 
+PYTHONPATH=src:tools python3 -m unittest discover \
+  -s tests \
+  -p 'test_system_overlay_contract.py' \
+  -v 2>&1 | tee "$EVIDENCE/test_system_overlay_contract.log"
+
 git diff --check
+
+make verify 2>&1 | tee "$EVIDENCE/make-verify.log"
+
 git status --short
 ~~~
 
-Expected: 11 tests PASS, diff-check exit 0, tree clean. If any check fails, STOP before the privileged build.
+Expected:
+
+- shell syntax PASS;
+- release CLI suite PASS (11 tests at the time this procedure was updated);
+- system-overlay contract suite PASS;
+- `git diff --check` exit 0;
+- `make verify` exit 0 with no FAIL/ERROR;
+- tree remains clean.
+
+If any check fails, STOP before the privileged build. After a subsequent
+source/build-script repair, this full source gate becomes required again for
+the new SHA; documentation-only commits do not invalidate a source PASS.
 
 ## 4. Run the owner-facing doctor
 
