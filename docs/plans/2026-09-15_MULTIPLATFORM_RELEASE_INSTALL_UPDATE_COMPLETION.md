@@ -1649,3 +1649,32 @@ remains open and the exact next step.
 - If corrected source validation is green, Session 03 still requires one real
   one-command Acer release build on a supported x86_64 Linux build host before
   Session 04 opens.
+
+## 2026-09-21 — Session 03 corrected source validation GREEN; real owner build is the remaining closure step
+
+- The corrected Session 03 source validation is green after the canonical-path
+  test repair: full `make verify` PASS with **3601 tests OK, 4 skipped**;
+  project validation, Activity validation, source footprint and final
+  clean-bytecode also completed successfully.
+- The first-run failure is closed as a test-only macOS path-spelling issue:
+  production intentionally canonicalizes release output paths, while the old
+  assertion compared unresolved `/var/...` against resolved
+  `/private/var/...`. Repair `dc36cfc93f01d5a9a3085421c499aa5b6d3c3e62`
+  leaves production release behavior unchanged and asserts the canonical-path
+  contract explicitly.
+- Session 03 source scope is therefore green. No release/root/installer build,
+  debootstrap, real QEMU, mount/loop, media write, Docker, Orbiter or physical
+  hardware operation was part of that owner-workstation validation.
+- The remaining Session 03 done-condition is now one real execution of the
+  **single owner release command** on a supported x86_64 Linux build host,
+  proving the current Acer-only matrix produces a complete Greia release
+  directory, source-bound report, profile-specific update bundle and compact
+  intermediates without manual low-level parameter plumbing.
+- Canonical procedure:
+  `docs/testing/2026-09-21_SESSION03_LINUX_RELEASE_BUILD_ACCEPTANCE.md`.
+- Terminology correction: this is a **Greia release build with the current
+  Acer-only matrix**, not an Acer installer image. The one universal
+  `greia-setup-<version>.img.xz` remains a Session 08 output after the
+  amd64 and ARM/Pi boot paths are real.
+- Session 04 opens only after the Linux owner-command build acceptance is
+  green.
