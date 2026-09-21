@@ -346,6 +346,7 @@ class SystemOverlayContractTests(unittest.TestCase):
 
     def test_live_boot_is_bounded_nonpersistent_and_uuid_matched(self) -> None:
         builder = (PROJECT_ROOT / "build/build-installer-image.sh").read_text()
+        composer = (PROJECT_ROOT / "build/lib/compose.sh").read_text()
         for argument in (
             "greia.live_media_id=",
             "live-media-timeout=15",
@@ -366,6 +367,20 @@ class SystemOverlayContractTests(unittest.TestCase):
         ).read_text()
         self.assertIn("$DESTDIR/conf/uuid.conf", hook)
         self.assertIn("/etc/greia-os/live-media-id", hook)
+
+        # Session 03 real-build regression: the hook above executes from a
+        # kernel package postinst. Therefore the live-media identity must be a
+        # shared composition prerequisite, not a late installer-only insert.
+        self.assertIn("compose_prepare_live_media_identity() {", composer)
+        self.assertIn('identity_path="$rootfs/etc/greia-os/live-media-id"', composer)
+        self.assertIn("uuid.uuid4()", composer)
+        self.assertIn(
+            'compose_prepare_live_media_identity "$rootfs" || return 1',
+            composer,
+        )
+        self.assertIn('compose_prepare_live_media_identity "$LIVE_ROOT"', builder)
+        self.assertIn('live_media_id="$COMPOSE_LIVE_MEDIA_ID"', builder)
+        self.assertNotIn("uuid.uuid4()", builder)
 
     def test_https_bootstrap_includes_ca_and_requires_executable_target_architecture(self) -> None:
         # T02: live-installer bootstrap lives in the shared engine; both thin
@@ -480,6 +495,7 @@ class SystemOverlayContractTests(unittest.TestCase):
         engine_calls = [
             'compose_mount_apt_cache "$rootfs" || return 1',
             'compose_debootstrap "$rootfs" || return 1',
+            'compose_prepare_live_media_identity "$rootfs" || return 1',
             'compose_mount_virtual "$rootfs" || return 1',
             'compose_install_packages "$rootfs" "$role" || return 1',
         ]
@@ -501,7 +517,7 @@ class SystemOverlayContractTests(unittest.TestCase):
             'compose_mount_apt_cache "$LIVE_ROOT"',
             'compose_debootstrap "$LIVE_ROOT"',
             'compose_mount_virtual "$LIVE_ROOT"',
-            'greia-live-media-id initramfs hook',
+            'compose_prepare_live_media_identity "$LIVE_ROOT"',
             'compose_install_packages "$LIVE_ROOT" "live-installer"',
         ]
         installer_positions = [builder.index(call) for call in installer_calls]
