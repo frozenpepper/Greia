@@ -6,7 +6,7 @@ description: Task router for substantive Greia OS/platform/Shell/Parent/installe
 # Greia OS Work — task router
 
 **Status:** LIVING derived contributor router  
-**Reviewed:** 2026-09-04
+**Reviewed:** 2026-09-21
 
 This file tells an agent **what to read for the task**. It is deliberately not a second architecture manual.
 
@@ -44,23 +44,30 @@ Install/update/release/multiplatform lifecycle work routes to
 (the ADR 0036 successor plan), not to signed-bundle or Gate-P5/V12G/D6
 closure. That plan owns lifecycle sequencing and closure criteria; the
 2026-08-08 architecture-remediation plan remains blocking only for its
-remaining non-lifecycle obligations. Session 02 of the 2026-09-15 plan is
-complete for source scope; the Session 02 build-host artifact boundary leg is
-the current lifecycle entry point.
+remaining non-lifecycle obligations.
+
+Session 03's owner-release CLI implementation and source validation are green.
+The current lifecycle entry point is the **real Linux owner-command release
+build acceptance**:
+
+`docs/testing/2026-09-21_SESSION03_LINUX_RELEASE_BUILD_ACCEPTANCE.md`
+
+Run that only on an owner-approved x86_64 Linux build host. It proves the
+single owner command against the current Acer-only release matrix; it does not
+create or certify the universal Setup image, which remains Session 08 work.
 
 The old signed `.greiaupdate` v2 flow and release signing keys are
 superseded by ADR 0036 and are not the normal production route; older
 references to them are historical only.
 
-The next lifecycle work comes from the 2026-09-15 plan (Session 02
-boundary build-host payload run, then Session 03: owner release CLI). The `POSTR1-P1-INSTALLER-RED` /
-Gate-P5/V12G/D6 closure routing below is historical and superseded for
-lifecycle sequencing. Source composition primitives (T3-S) are done; exact
-shipped installer/update/boot-health product composition (T3-P) is
-OPEN/BLOCKING until closed through the 2026-09-15 plan. T7 remains valid only in its disposable/device-harness
-scope. See `HANDOVER.md` §2/§8, the active-plan entry of 2026-09-12, and
-`docs/plans/GREIA_BOOT_INSTALL_LIFECYCLE_TAKEOVER_2026-09-08.md` (post-R1
-correction) for the exact disposition.
+After the Session 03 Linux owner-command build is green, Session 04 owns the
+real legacy-i386 fresh-install/update/rollback lifecycle. The
+`POSTR1-P1-INSTALLER-RED` / Gate-P5/V12G/D6 routing below is historical and
+superseded for lifecycle sequencing. Source composition primitives (T3-S) are
+done; exact shipped installer/update/boot-health product composition (T3-P)
+remains OPEN/BLOCKING until closed through the 2026-09-15 plan. T7 remains
+valid only in its disposable/device-harness scope. See `HANDOVER.md` §2/§8
+and the active lifecycle plan for current disposition.
 
 Do not start Raspberry Pi 400/500 work, UEFI work, destructive Acer
 installation, or backup work in this lane, and do not treat shipped
