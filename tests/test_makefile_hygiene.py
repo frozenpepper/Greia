@@ -32,5 +32,13 @@ class MakefileHygieneTests(unittest.TestCase):
         self.assertIn('find . -maxdepth 1 -type f -name "*.py[co]" -delete', clean_block)
 
 
+    def test_source_footprint_ignores_ignored_build_evidence_in_git_checkouts(self) -> None:
+        script = (PROJECT_ROOT / "build/footprint-source.sh").read_text(encoding="utf-8")
+        self.assertIn('git -C "$root" rev-parse --is-inside-work-tree', script)
+        self.assertIn('["git", "-C", str(root), "ls-files", "-z"]', script)
+        self.assertIn("tracked source files", script)
+        self.assertNotIn('echo "Source archive-relevant footprint:"\ndu -sh "$root"', script)
+
+
 if __name__ == "__main__":
     unittest.main()
