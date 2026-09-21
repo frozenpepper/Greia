@@ -1403,3 +1403,40 @@ Current state: **repair implemented, validation pending**. On Orbiter, pull
 current main, run shell syntax plus focused system-overlay/release tests and
 `make verify`. If green, start a **fresh** Session 03 owner-build acceptance
 at the new exact HEAD; do not reuse the preserved failed work root.
+
+## 42. Session 03 repaired-source validation blocked by repo-wide verification hygiene; source-hygiene repair pending rerun (2026-09-22)
+
+The first validation of the live-media identity repair at
+`99f9588d62380e01537adc4eff09cbd93c065769` stopped correctly before
+doctor/build. Shell syntax, the focused release CLI suite (11/11), the focused
+system-overlay suite (23/23), and `git diff --check` were green.
+
+`make verify` did not reach the unittest suite. Its initial
+`clean-bytecode` target ran repo-wide `find .` commands and descended into
+the preserved, root-owned failed Session 03 evidence/work tree under
+`tmp/session03-linux-release-65af8805.../out/`. That produced permission
+errors in `.greia-cache/apt/partial` and the preserved `.greia-work`
+directory. The source tree itself remained clean and unchanged.
+
+This is verification-hygiene fallout, not a product/source test failure.
+Deleting/chowning the preserved failed evidence is intentionally not the
+solution. Repository verification must tolerate ignored privileged build
+evidence living under the checkout.
+
+Repairs on current main:
+
+- `51ec3aba`: bound `clean-bytecode` to source-owned Python trees
+  (`src tests tools activities`) plus non-recursive repository-root cleanup;
+  it no longer traverses arbitrary ignored build/evidence directories.
+- `dfbf8dc8`: regression test preventing restoration of repo-wide bytecode
+  traversal.
+- `71375f55`: make `build/footprint-source.sh` compute Git-checkout
+  “source archive-relevant” footprint from tracked files only, rather than
+  `du` over the entire checkout; explicit runtime-payload measurements remain
+  unchanged. This also makes the reported footprint semantically accurate.
+- `d1f60390`: regression coverage for tracked-only source-footprint behavior.
+
+The old failed Session 03 root must remain untouched. Next validation should
+pull current main, prove `make clean-bytecode` and `build/footprint-source.sh`
+succeed while that old root still exists, run the focused hygiene test and full
+`make verify`, then proceed to doctor + a fresh owner build only if green.
