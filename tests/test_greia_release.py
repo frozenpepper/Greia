@@ -199,6 +199,25 @@ class ReleaseCliTests(unittest.TestCase):
             self.assertEqual(paths.cache_dir.name, ".greia-cache")
             self.assertEqual(paths.work_parent.name, ".greia-work")
 
+    def test_release_environment_disables_bytecode_for_privileged_children(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = module.ReleasePaths.for_release(Path(directory), VERSION)
+            env = module._release_environment(paths)
+            self.assertEqual(env["PYTHONDONTWRITEBYTECODE"], "1")
+
+    def test_privileged_cli_disables_bytecode_before_project_imports(self) -> None:
+        source = (ROOT / "tools" / "greia_release.py").read_text(encoding="utf-8")
+        env_assignment = 'os.environ["PYTHONDONTWRITEBYTECODE"] = "1"'
+        interpreter_assignment = "sys.dont_write_bytecode = True"
+        first_project_import = "from build_profile import BuildProfile"
+        self.assertIn(env_assignment, source)
+        self.assertIn(interpreter_assignment, source)
+        self.assertLess(source.index(env_assignment), source.index(first_project_import))
+        self.assertLess(
+            source.index(interpreter_assignment),
+            source.index(first_project_import),
+        )
+
     def test_doctor_is_explicit_about_host_root_commands_and_profile(self) -> None:
         report = module._doctor(
             (PROFILE,),
