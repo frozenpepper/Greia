@@ -19,6 +19,10 @@ SOURCE_ROOTS = ("src", "tests", "tools", "activities")
 BYTECODE_SUFFIXES = {".pyc", ".pyo"}
 
 
+def _raise_walk_error(error: OSError) -> None:
+    raise error
+
+
 def _clean_tree(root: Path) -> int:
     if not root.is_dir():
         return 0
@@ -27,6 +31,7 @@ def _clean_tree(root: Path) -> int:
     for current, directory_names, file_names in os.walk(
         root,
         topdown=True,
+        onerror=_raise_walk_error,
         followlinks=False,
     ):
         current_path = Path(current)
