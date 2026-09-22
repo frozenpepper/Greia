@@ -18,15 +18,25 @@ added by later sessions without changing the owner-facing entry point.
 
 from __future__ import annotations
 
+import os
+import sys
+
+# Owner release commands run as root, but the repository checkout remains
+# developer-owned source. Prevent the privileged release process and every
+# child it launches from creating root-owned __pycache__ / .pyc artifacts in
+# source trees. Set the interpreter flag before any project-local imports; the
+# environment variable is inherited by shell/Python descendants.
+if hasattr(os, "geteuid") and os.geteuid() == 0:
+    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+    sys.dont_write_bytecode = True
+
 import argparse
 import hashlib
 import json
-import os
 import platform
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -522,6 +532,9 @@ def _release_environment(paths: ReleasePaths) -> dict[str, str]:
     return {
         "GREIA_APT_CACHE": str(apt_cache),
         "GREIA_POOL_CACHE": str(pool_cache),
+        # Keep the entire privileged release subprocess tree from writing
+        # bytecode into the developer-owned checkout.
+        "PYTHONDONTWRITEBYTECODE": "1",
     }
 
 
