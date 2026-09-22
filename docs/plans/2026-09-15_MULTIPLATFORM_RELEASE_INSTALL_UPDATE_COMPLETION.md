@@ -1763,3 +1763,20 @@ remains open and the exact next step.
 - Next: rerun the hygiene test, direct cleanup/footprint proofs and full
   `make verify`; only if green proceed to doctor and a fresh Session 03 owner
   build. Session 04 remains closed.
+
+## 2026-09-22 — Hygiene regression corrected to avoid connector-sensitive dollar literals
+
+- Validation at `d5530b78d9c4bde7e7b302fb3a9d37204c5369a7`
+  confirmed the Makefile itself was correct (`$$root` in all three loop
+  references) but the focused regression still asserted the buggy
+  single-dollar spelling.
+- The repeated mismatch came from the GitHub contents write path collapsing
+  literal `$$` sequences inside the Python test source.
+- `5f7aaa19` removes those connector-sensitive literals from the test and
+  constructs the expected escaped Make variable at runtime with
+  `chr(36) * 2 + "root"`; it also explicitly rejects the single-dollar form.
+- The committed test blob and Makefile were re-fetched and verified after the
+  write.
+- Next: rerun the focused hygiene test only; if green, proceed directly through
+  the direct cleanup/footprint proofs, full `make verify`, doctor, and the
+  owner build. Session 04 remains closed.
