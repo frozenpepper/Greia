@@ -71,6 +71,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# This operation is a standalone APT consumer. Callers are allowed to have
+# already applied image-footprint hygiene, which deliberately removes
+# /var/lib/apt/lists. Refresh repository metadata here so candidate discovery
+# and dependency resolution never depend on a caller's incidental APT state.
+APT_NETWORK_OPTIONS=(
+  -o Acquire::Retries=3
+  -o Acquire::http::Timeout=20
+  -o Acquire::https::Timeout=20
+)
+chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive   apt-get "${APT_NETWORK_OPTIONS[@]}" update
+
 python3 "$PROJECT_ROOT/tools/build_hardware_support_pool_manifest.py" \
   --isenkram-dir "$LIVE_ROOT/usr/share/isenkram" \
   --suite "$SUITE" \
@@ -105,9 +116,7 @@ for package in "${available_packages[@]}"; do
   # local repository instead of being re-fetched on every build.
   chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
     apt-get \
-      -o Acquire::Retries=3 \
-      -o Acquire::http::Timeout=20 \
-      -o Acquire::https::Timeout=20 \
+      "${APT_NETWORK_OPTIONS[@]}" \
       -o Dir::State::status=/tmp/greia-target-dpkg-status \
       -o Dir::Cache::archives="$POOL_CACHE_IN_CHROOT" \
       --download-only install -y --no-install-recommends \
@@ -120,9 +129,7 @@ done
 for package in "${available_packages[@]}"; do
   chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
     apt-get \
-      -o Acquire::Retries=3 \
-      -o Acquire::http::Timeout=20 \
-      -o Acquire::https::Timeout=20 \
+      "${APT_NETWORK_OPTIONS[@]}" \
       -o Dir::Cache::archives="$POOL_CACHE_IN_CHROOT" \
       --download-only install -y --no-install-recommends \
       "$package"
@@ -157,5 +164,10 @@ python3 "$PROJECT_ROOT/tools/finalize_hardware_support_pool.py" \
 chown -R root:root "$POOL_ROOT"
 find "$POOL_ROOT" -type d -exec chmod 0755 '{}' +
 find "$POOL_ROOT" -type f -exec chmod 0644 '{}' +
+
+# Restore image hygiene on success. The pool is now self-contained and later
+# live-firmware installation uses its own verified local APT source, so remote
+# package indexes are no longer required in the composed live root.
+rm -rf "$LIVE_ROOT/var/lib/apt/lists/"*
 
 echo "Hardware support pool: $POOL_ROOT"
