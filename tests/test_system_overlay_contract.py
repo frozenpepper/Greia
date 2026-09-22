@@ -550,6 +550,29 @@ class SystemOverlayContractTests(unittest.TestCase):
         finalize = pool_builder.index('finalize_hardware_support_pool.py')
         self.assertLess(pool_copy, finalize)
 
+        # Session 03 real-build regression: compose_root is allowed to finish
+        # with image hygiene already applied, including removal of remote APT
+        # lists. The hardware-pool producer is a standalone APT consumer and
+        # must therefore refresh the metadata it needs before apt-cache
+        # candidate discovery / dependency resolution, then restore hygiene
+        # after it has finalized the self-contained pool.
+        self.assertIn('rm -rf "$rootfs/var/lib/apt/lists/"*', image_builder)
+        pool_refresh = pool_builder.index(
+            'apt-get "${APT_NETWORK_OPTIONS[@]}" update'
+        )
+        candidate_probe = pool_builder.index(
+            'apt-cache show --no-all-versions "$package"'
+        )
+        download_resolve = pool_builder.index('--download-only install')
+        pool_finalize = pool_builder.index('finalize_hardware_support_pool.py')
+        pool_hygiene = pool_builder.index(
+            'rm -rf "$LIVE_ROOT/var/lib/apt/lists/"*'
+        )
+        self.assertLess(pool_refresh, candidate_probe)
+        self.assertLess(candidate_probe, download_resolve)
+        self.assertLess(download_resolve, pool_finalize)
+        self.assertLess(pool_finalize, pool_hygiene)
+
     def test_installer_powers_off_before_parent_removes_live_usb(self) -> None:
         installer = (PROJECT_ROOT / "src/greia_installer/main.py").read_text()
         self.assertIn('["systemctl", "poweroff"]', installer)
