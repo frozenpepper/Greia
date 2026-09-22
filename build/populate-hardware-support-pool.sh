@@ -80,7 +80,8 @@ APT_NETWORK_OPTIONS=(
   -o Acquire::http::Timeout=20
   -o Acquire::https::Timeout=20
 )
-chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive   apt-get "${APT_NETWORK_OPTIONS[@]}" update
+chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+  apt-get "${APT_NETWORK_OPTIONS[@]}" update
 
 python3 "$PROJECT_ROOT/tools/build_hardware_support_pool_manifest.py" \
   --isenkram-dir "$LIVE_ROOT/usr/share/isenkram" \
