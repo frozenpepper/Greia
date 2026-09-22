@@ -1742,3 +1742,24 @@ remains open and the exact next step.
   prove `make clean-bytecode` and `build/footprint-source.sh` succeed, run
   the hygiene-focused test and full `make verify`; only then run doctor and a
   fresh Session 03 owner build. Session 04 remains closed.
+
+## 2026-09-22 — Hygiene gate caught Make recipe escaping defect; repaired
+
+- Validation at `e9ba8f01e16ae3d9912e9d2396e90068eef591d0`
+  stopped in the focused hygiene test before any cleanup traversal, doctor, or
+  release build.
+- The source-bounded `clean-bytecode` design was correct, but the Make recipe
+  used shell loop references as `$root` instead of `$$root`. GNU make would
+  consume `$r` before the shell, so the loop would not clean the intended
+  source roots.
+- The focused test correctly caught this before execution.
+- `972aeb7e` fixes all three Make recipe references to `$$root`.
+- `30c47909` strengthens the regression contract to require the escaped
+  directory guard and both escaped `find` calls.
+- `05cd356f` was a connector-side no-op commit (same Makefile blob); it was
+  detected immediately by re-fetching the file and carries no behavioral
+  change.
+- Old privileged build evidence remains preserved and untouched.
+- Next: rerun the hygiene test, direct cleanup/footprint proofs and full
+  `make verify`; only if green proceed to doctor and a fresh Session 03 owner
+  build. Session 04 remains closed.
