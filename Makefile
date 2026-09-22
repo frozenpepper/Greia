@@ -1,7 +1,5 @@
 PYTHON ?= python3
 PYTHONPATH := src
-PYTHON_SOURCE_ROOTS := src tests tools activities
-
 .PHONY: verify test validate assets visual-assets visual-assets-check footprint shell-check clean-bytecode
 
 verify: clean-bytecode test validate shell-check footprint
