@@ -19,35 +19,25 @@ class MakefileHygieneTests(unittest.TestCase):
         end = makefile.index("\ntest:", start)
         clean_block = makefile[start:end]
 
-        # Cleanup failures must propagate to make instead of being printed and
-        # then hidden by a later successful loop iteration/root-level find.
-        self.assertIn("@set -e; for root in $(PYTHON_SOURCE_ROOTS); do", clean_block)
+        # Keep cleanup directly scoped to source-owned Python trees. Avoid a
+        # shell loop entirely so Make/shell variable escaping cannot silently
+        # redirect cleanup away from the intended roots.
+        self.assertNotIn("for root in", clean_block)
+        self.assertNotIn("$root", clean_block)
+        self.assertIn(
+            "find $(PYTHON_SOURCE_ROOTS) -type d -name __pycache__",
+            clean_block,
+        )
+        self.assertIn(
+            'find $(PYTHON_SOURCE_ROOTS) -type f -name "*.py[co]" -delete',
+            clean_block,
+        )
 
         # Build/evidence/cache roots such as tmp/ and out/ may legitimately be
         # root-owned after privileged release work. Repository verification
-        # must not traverse arbitrary ignored state merely to remove bytecode.
+        # must not recursively traverse arbitrary ignored state.
         self.assertNotIn("find . -type", clean_block)
-        make_shell_root = chr(36) * 2 + "root"
-        bad_make_root = chr(36) + "root"
-        self.assertIn(f'if [ -d "{make_shell_root}" ]; then', clean_block)
-        self.assertIn(
-            f'find "{make_shell_root}" -type d -name __pycache__',
-            clean_block,
-        )
-        self.assertIn(
-            f'find "{make_shell_root}" -type f -name "*.py[co]" -delete',
-            clean_block,
-        )
-        self.assertEqual(clean_block.count(make_shell_root), 3)
-        self.assertNotIn(f'if [ -d "{bad_make_root}" ]; then', clean_block)
-        self.assertNotIn(
-            f'find "{bad_make_root}" -type d -name __pycache__',
-            clean_block,
-        )
-        self.assertNotIn(
-            f'find "{bad_make_root}" -type f -name "*.py[co]" -delete',
-            clean_block,
-        )
+
         # Root-level Python bytecode is still cleaned without recursively
         # descending into unrelated ignored directories.
         self.assertIn("find . -maxdepth 1 -type d -name __pycache__", clean_block)
