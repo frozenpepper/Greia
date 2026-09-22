@@ -1717,7 +1717,7 @@ receipt before touching support-capacity semantics.
 
 ## 50. Hardware-support selected-set capacity semantics implemented, source scope (2026-09-22)
 
-- Uncommitted source tranche splits the finalized-slot proof into two
+- Committed source tranche (`6c58601e`) splits the finalized-slot proof into two
   stages over one formula owner
   (`require_finalized_slot_capacity`): bundle time proves base +
   reserves with support term 0 (metadata still fail-closed verified);
@@ -1755,3 +1755,49 @@ Next: commit/push on quiet remote, then
 owner-build rerun to re-measure the real payload receipt and exercise
 the selected-set path. Session 04 remains closed.
 - Pre-commit `make verify`: 3618 tests OK (skipped=8), exit 0.
+
+## 51. Session 03 CLOSED on real owner release build (2026-09-23)
+
+- Successful source SHA: `6c58601eaad32ad2bba30acb24e33333b9c4bbf3`
+  (`origin/main` in sync, ahead/behind 0 0, tracked tree clean before).
+- Version: `0.13.0-phase0-dev`. Evidence root:
+  `tmp/session03-linux-release-6c58601eaad32ad2bba30acb24e33333b9c4bbf3/`
+  (new SHA-specific root; no earlier evidence deleted; no earlier
+  `.greia-work` reused).
+- Doctor: exit 0, `ok=true`, all checks green,
+  `acer-aspire-one-i386-ab` present. No root-owned source bytecode after
+  doctor.
+- Owner build: exit 0, `status=complete`,
+  `source_commit == SOURCE_HEAD`. No bounded defect encountered; no
+  repair loop needed.
+- Payload (real, proves the flex_bg/geometry repair):
+  compressed=383881888, uncompressed=1110081536,
+  minimum=1111130112,
+  sha256=c9b58aee72e058c288204e1bb1136859a8d8d8807f21a66178789982a4b3f543.
+  Old broken uncompressed 1610612736 is gone from the production
+  artifact.
+- Bundle `updates/acer-aspire-one-i386-ab.greiaupdate`: 540126645 bytes,
+  sha256=6b5cf05f6ad81979fc9bd53c4f1ae1491da024eaf436aabe31e35779f4860a67.
+- Hardware support: packages=58, compressed=156244008,
+  whole-pool-installed=710070272 (ceiling only, not the machine
+  footprint), dependency-closures=37, pool suite=bookworm arch=i386,
+  archive sha256=f228a314383bec838aed06fc808bd564dc85c96ac70537a3163918313842c24e.
+  Archive top levels are exactly `manifest.json`, `Packages`,
+  `Packages.gz`, `pool/` (no `candidates.json` /
+  `available-candidates.txt` leakage). Build log has no live-media-id
+  or APT-candidate regression markers.
+- Inspect report: PASS (exit 0). Inspect bundle: PASS via privileged
+  read (exit 0); the bundle publishes root-owned mode 600, so the
+  unprivileged acceptance-draft command cannot read it — inspect content
+  itself is valid v3 with matching payload/support hashes.
+- Consistency: PASS (status, source_commit, public artifacts, deferred
+  setup session 8, all five Acer artifacts present and SHA256-matched,
+  no `.greia-work` in portable report data).
+- Transient work: clean (no entries under `$OUT/.greia-work`).
+  Leftover mounts: none. Tree: clean, HEAD unchanged
+  (`6c58601eaad32ad2bba30acb24e33333b9c4bbf3`). No root-owned source
+  bytecode after build.
+- Universal Setup image remains deferred to Session 08. No QEMU, no
+  Setup image, no physical media (out of Session 03 scope).
+
+Session 03: CLOSED. Session 04: OPEN.

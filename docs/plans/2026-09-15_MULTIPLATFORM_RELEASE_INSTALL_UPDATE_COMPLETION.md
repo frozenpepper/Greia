@@ -1934,3 +1934,27 @@ remains open and the exact next step.
   payload receipt and exercise the selected-set path on a real release.
   Session 04 remains closed.
 - Pre-commit `make verify`: 3618 tests OK (skipped=8), exit 0, clean tree.
+
+## 2026-09-23 — Session 03 CLOSED on real owner release build
+
+- Successful source SHA: `6c58601eaad32ad2bba30acb24e33333b9c4bbf3`
+  (HEAD = origin/main, ahead/behind 0 0, tracked tree clean).
+- Doctor exit 0 (`ok=true`, Acer profile present); no root-owned source
+  bytecode after doctor or after build.
+- Owner build exit 0, `status=complete`, `source_commit == SOURCE_HEAD`.
+- Payload real: compressed=383881888, uncompressed=1110081536,
+  minimum=1111130112,
+  sha256=c9b58aee72e058c288204e1bb1136859a8d8d8807f21a66178789982a4b3f543
+  (old broken 1610612736 gone — flex_bg/geometry repair proven in the
+  production artifact).
+- Bundle: 540126645 bytes,
+  sha256=6b5cf05f6ad81979fc9bd53c4f1ae1491da024eaf436aabe31e35779f4860a67.
+- Hardware support: packages=58, compressed=156244008,
+  whole-pool-installed=710070272 (ceiling), dependency-closures=37,
+  archive sha256=f228a314383bec838aed06fc808bd564dc85c96ac70537a3163918313842c24e.
+  Archive allowlist intact; no live-media-id / APT-candidate regressions.
+- Inspect report PASS; inspect bundle PASS (privileged read; bundle
+  publishes root-owned mode 600). Consistency PASS. Transient
+  `.greia-work` clean, no leftover mounts, tree clean, HEAD unchanged.
+- Universal Setup image stays deferred to Session 08.
+- Session 03 CLOSED; Session 04 OPEN.
