@@ -1497,3 +1497,57 @@ Next: pull current main, rerun only the focused hygiene test first. If green,
 continue with the already-defined direct `make clean-bytecode` and
 `build/footprint-source.sh` proofs, then full `make verify`, doctor, and the
 fresh Session 03 owner build. Prior privileged evidence remains untouched.
+
+## 45. Session 03 owner build reached hardware-pool population; missing APT metadata ownership repaired (2026-09-22)
+
+The owner build at
+`821934af4e387b7b1278a3a2c6736cd5d48db447` passed:
+
+- focused hygiene test;
+- direct bytecode cleanup with preserved root-owned evidence;
+- tracked-source footprint reporting;
+- full `make verify` (3603 tests, OK, 8 skipped);
+- release doctor (6/6 checks green).
+
+The previous live-media-id failure did **not** recur. Kernel package postinst and
+`update-initramfs` completed successfully, proving the shared live-media
+identity repair.
+
+The next real failure occurred later during hardware-support pool population:
+APT reported `alsa-topology-conf` had no installation candidate. Debian
+Bookworm still publishes `alsa-topology-conf` (Architecture: all,
+1.2.5.1-2), so this was not an upstream package removal.
+
+Root cause: `compose_root()` intentionally ends with
+`compose_footprint_hygiene()`, which removes `/var/lib/apt/lists/*`.
+Session 03 then invokes `populate-hardware-support-pool.sh` after
+`compose_root()` returns. That pool producer used `apt-cache` and APT
+dependency resolution but implicitly assumed repository metadata was still
+present. The traditional installer-image path populated the pool before
+footprint hygiene, so the hidden ordering dependency had not been exposed.
+
+The package that surfaced the bug is plausible hardware metadata input:
+`alsa-topology-conf` itself owns a file under `/lib/firmware`, so Debian
+firmware Contents metadata can classify it as a candidate. The generic issue
+is nevertheless missing APT metadata ownership, not that one package.
+
+Repair:
+
+- `70729300` — make `populate-hardware-support-pool.sh` explicitly refresh
+  the remote APT metadata it requires before candidate discovery/resolution;
+  reuse one bounded network-option set for update/download operations; after
+  successful pool finalization restore image hygiene by removing remote APT
+  lists again.
+- `93675ba1` — readability-only formatting of the refresh command.
+- `cf2f0068` — regression coverage locks the lifecycle:
+  composer hygiene may remove lists; pool producer refreshes before
+  `apt-cache`/download resolution; finalization completes before lists are
+  removed again.
+
+This makes the hardware-pool producer a self-contained APT consumer rather
+than coupling it to caller ordering. Persistent Greia package caches remain
+untouched.
+
+Next: pull current main; run shell syntax plus the focused system-overlay
+contract, then full `make verify`. If green, doctor and a fresh owner build
+under the new exact SHA. Preserve all previous failed work/evidence roots.
