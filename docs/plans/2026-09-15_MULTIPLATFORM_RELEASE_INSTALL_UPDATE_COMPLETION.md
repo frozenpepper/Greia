@@ -1780,3 +1780,24 @@ remains open and the exact next step.
 - Next: rerun the focused hygiene test only; if green, proceed directly through
   the direct cleanup/footprint proofs, full `make verify`, doctor, and the
   owner build. Session 04 remains closed.
+
+## 2026-09-22 — Session 03 reached hardware-support pool; pool now owns required APT metadata
+
+- Owner build at `821934af4e387b7b1278a3a2c6736cd5d48db447`
+  passed the repaired source gate (3603 tests, 8 skipped) and doctor (6/6).
+- The previous live-media-id/kernel-postinst failure did not recur.
+- The next failure was APT exit 100 while resolving
+  `alsa-topology-conf` during hardware-support pool population.
+- Debian Bookworm still publishes that package; the failure was caused by
+  internal sequencing, not package removal.
+- `compose_root()` legitimately applies footprint hygiene and clears remote
+  APT lists before Session 03 calls the separate pool producer. The pool
+  producer incorrectly depended on those caller-owned lists remaining present.
+- The traditional installer-image path populated the pool before hygiene, which
+  hid this dependency.
+- The pool producer now owns its APT metadata lifecycle: refresh before
+  availability/dependency resolution, finalize the self-contained pool, then
+  remove remote lists again on success.
+- Repair commits: `70729300`, `93675ba1`, `cf2f0068`.
+- Next: validate current main, doctor, then run a fresh owner build. Session 04
+  remains closed until Session 03 publishes and inspects the release.
