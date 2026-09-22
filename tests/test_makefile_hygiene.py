@@ -19,6 +19,10 @@ class MakefileHygieneTests(unittest.TestCase):
         end = makefile.index("\ntest:", start)
         clean_block = makefile[start:end]
 
+        # Cleanup failures must propagate to make instead of being printed and
+        # then hidden by a later successful loop iteration/root-level find.
+        self.assertIn("@set -e; for root in $(PYTHON_SOURCE_ROOTS); do", clean_block)
+
         # Build/evidence/cache roots such as tmp/ and out/ may legitimately be
         # root-owned after privileged release work. Repository verification
         # must not traverse arbitrary ignored state merely to remove bytecode.
