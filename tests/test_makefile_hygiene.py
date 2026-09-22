@@ -23,8 +23,10 @@ class MakefileHygieneTests(unittest.TestCase):
         # root-owned after privileged release work. Repository verification
         # must not traverse arbitrary ignored state merely to remove bytecode.
         self.assertNotIn("find . -type", clean_block)
-        self.assertIn('find "$$root" -type d -name __pycache__', clean_block)
-        self.assertIn('find "$$root" -type f -name "*.py[co]" -delete', clean_block)
+        self.assertIn('if [ -d "$root" ]; then', clean_block)
+        self.assertIn('find "$root" -type d -name __pycache__', clean_block)
+        self.assertIn('find "$root" -type f -name "*.py[co]" -delete', clean_block)
+        self.assertEqual(clean_block.count("$root"), 3)
 
         # Root-level Python bytecode is still cleaned without recursively
         # descending into unrelated ignored directories.
