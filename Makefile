@@ -9,9 +9,9 @@ verify: clean-bytecode test validate shell-check footprint
 
 clean-bytecode:
 	@for root in $(PYTHON_SOURCE_ROOTS); do \
-		if [ -d "$root" ]; then \
-			find "$root" -type d -name __pycache__ -prune -exec rm -rf {} +; \
-			find "$root" -type f -name "*.py[co]" -delete; \
+		if [ -d "$$root" ]; then \
+			find "$$root" -type d -name __pycache__ -prune -exec rm -rf {} +; \
+			find "$$root" -type f -name "*.py[co]" -delete; \
 		fi; \
 	done
 	find . -maxdepth 1 -type d -name __pycache__ -prune -exec rm -rf {} +
