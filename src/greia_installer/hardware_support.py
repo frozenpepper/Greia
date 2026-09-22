@@ -64,6 +64,7 @@ class VerifiedHardwareSupportPool:
     total_installed_bytes: int
     firmware_providers: tuple[tuple[str, tuple[str, ...]], ...] = ()
     broad_firmware: frozenset[str] = frozenset()
+    dependency_closures: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
     def __post_init__(self) -> None:
         if (
@@ -183,6 +184,7 @@ class VerifiedHardwareSupportPool:
             total_installed,
             providers,
             broad_firmware,
+            validated.dependency_closures,
         )
 
     @staticmethod
@@ -252,6 +254,60 @@ class VerifiedHardwareSupportPool:
         if any(package not in self.provided_microcode for package in requested):
             raise HardwareSupportPoolError("requested hardware package is not verified microcode")
         return requested
+
+    def selected_installed_bytes(
+        self, firmware: Iterable[str], microcode: Iterable[str]
+    ) -> int:
+        """Conservative installed-size bound for exactly the selected sets.
+
+        Unions the verified per-candidate dependency closures (each closure
+        holds the candidate plus every recursively mentioned
+        Depends/Pre-Depends alternative present in this frozen pool, so it
+        conservatively covers whatever APT actually installs for the
+        selection), de-duplicates shared dependencies, and sums verified
+        per-package installed sizes. Selected names must be release-approved
+        firmware/microcode; a selection without verified closures, or a
+        selected package without one, fails closed instead of falling back
+        to the whole-pool total. An empty selection binds zero bytes.
+        """
+        selected_firmware = self.require_firmware(firmware)
+        selected_microcode = self.require_microcode(microcode)
+        if not selected_firmware and not selected_microcode:
+            return 0
+        closures = dict(self.dependency_closures)
+        if not closures:
+            raise HardwareSupportPoolError(
+                "hardware-support pool carries no dependency closures; "
+                "refusing selected capacity bound"
+            )
+        union: set[str] = set()
+        for package in (*selected_firmware, *selected_microcode):
+            closure = closures.get(package)
+            if closure is None:
+                raise HardwareSupportPoolError(
+                    "hardware-support selection has no verified dependency "
+                    f"closure: {package}"
+                )
+            union.update(closure)
+        installed_by_name: dict[str, int] = {}
+        for package in self.packages:
+            previous = installed_by_name.get(package.package)
+            if previous is None or package.installed_bytes > previous:
+                installed_by_name[package.package] = package.installed_bytes
+        total = 0
+        for package in sorted(union):
+            try:
+                total += installed_by_name[package]
+            except KeyError as exc:
+                raise HardwareSupportPoolError(
+                    "hardware-support closure references an unmanifested "
+                    f"package: {package}"
+                ) from exc
+            if total > _MAX_POOL_BYTES:
+                raise HardwareSupportPoolError(
+                    "hardware-support selected installed size exceeds runtime byte bound"
+                )
+        return total
 
     def packages_for_firmware(self, firmware_pattern: str) -> tuple[str, ...]:
         """Return a minimal deterministic package set covering matched firmware.

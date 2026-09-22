@@ -231,6 +231,10 @@ def _pool_tree(root: Path) -> tuple[Path, int]:
         "broad_firmware_packages": [_FIRMWARE],
         "firmware_providers": {"t04-firmware.bin": [_FIRMWARE]},
         "unavailable_candidate_packages": [],
+        "dependency_closures": {
+            _FIRMWARE: [_FIRMWARE],
+            _MICROCODE: [_MICROCODE],
+        },
         "packages": [
             {
                 "package": _FIRMWARE, "version": "1",
@@ -560,6 +564,12 @@ class _Harness:
         self.contacts.append("contract")
         return emit_persist_schema_marker(1)
 
+    def support_pool_factory(self, bundle: object) -> object | None:
+        stage = self.support_stage
+        if stage is None or getattr(stage, "closed", True):
+            return None
+        return getattr(stage, "pool", None)
+
     def support_stage_cleanup(self) -> None:
         stage = self.support_stage
         self.support_stage = None
@@ -583,6 +593,7 @@ class _Harness:
             selection_factory=self.selection_factory,
             installed_contract_factory=self.installed_contract_factory,
             support_stage_cleanup=self.support_stage_cleanup,
+            support_pool_factory=self.support_pool_factory,
         )
 
 

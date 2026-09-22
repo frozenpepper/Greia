@@ -364,6 +364,29 @@ def build_production_seam_pair(
         )
         firmware_packages = tuple(sorted(pool.provided_firmware))
         microcode_packages = tuple(sorted(pool.provided_microcode))
+        # Machine-specific selection from the same attested snapshot: the
+        # finalizer installs exactly these sets, so the capacity bound below
+        # covers their verified dependency closures instead of the whole
+        # pool the release merely carries. Planner infrastructure failure
+        # refuses fail-closed here; unattestable inventory is still gated
+        # at finalization, and pool-missing wants stay diagnostic-only as
+        # before (they were never installable).
+        try:
+            from .hardware_enablement import InstallerHardwareEnablementPlanner
+
+            enablement = InstallerHardwareEnablementPlanner.linux_default(
+                pool=pool,
+                inventory_snapshot=snapshot,
+            ).plan()
+            firmware_packages = tuple(enablement.required_firmware)
+            microcode_packages = tuple(enablement.required_microcode)
+            selected_installed_bound = pool.selected_installed_bytes(
+                firmware_packages, microcode_packages
+            )
+        except Exception as exc:
+            raise FreshAbInstallError(
+                f"machine hardware selection is not authoritative: {exc}"
+            ) from exc
 
         # Staging roots exist before the orchestrator needs them (EXECUTE-time
         # staging writes, never valued-disk destruction). Symlinks refused.
@@ -508,7 +531,7 @@ def build_production_seam_pair(
             inventory_token=inventory_token,
             support_digest=support_digest,
             support_size=support_size,
-            support_installed_bound=int(config.support_installed_bound),
+            support_installed_bound=selected_installed_bound,
             support_classes=support_classes,
             persist_runner=SubprocessPersistRunner(),
             persist_stage_dir=Path(config.persist_stage_dir),

@@ -573,9 +573,14 @@ def _check_profile_capacity(
     production) or a developer-allowed manually typed fact; the effective
     minimum is the receipt-derived minimum or the explicit
     ``--minimum-slot-bytes`` (which must equal the receipt when both are
-    given) or the uncompressed size by default. The support bound comes only from verified hardware-support metadata
-    (see :func:`_support_installed_bytes`); growth/reserve are the
-    platform-owned bounds, never operator flags. Refusal happens before the
+    given) or the uncompressed size by default. Bundle time has no machine
+    inventory, so the support term is zero here: this proves the base
+    payload plus generic finalization reserves fit the profile slot, while
+    the hardware-support metadata itself is still fail-closed verified
+    (see :func:`_support_installed_bytes`). The exact machine-selected
+    support capacity is enforced later, pre-mutation, by the
+    installer/updater gates on the verified selected-set bound through the
+    same formula owner. Refusal happens before the
     output bundle is written. Explicit-identity builds carry no profile slot
     bound and skip this check (returns ``None``); otherwise returns the
     required finalized bytes.
@@ -592,7 +597,8 @@ def _check_profile_capacity(
         or effective_minimum <= 0
     ):
         raise SystemUpdateError("payload size facts must be positive integers")
-    support_bound = _support_installed_bytes(hardware_support_path)
+    _support_installed_bytes(hardware_support_path)  # fail-closed pool verification only
+    support_bound = 0
     try:
         return require_finalized_slot_capacity(
             slot_bytes=target.system_slot_bytes,

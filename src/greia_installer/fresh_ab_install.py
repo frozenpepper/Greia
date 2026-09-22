@@ -565,20 +565,40 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError("support set is not the release-bound support member")
     if seams.support_size != member.hardware_support_size:
         raise FreshAbInstallError("support set size is not the release-bound member size")
-    if seams.support_installed_bound != request.support_installed_bytes:
-        raise FreshAbInstallError("support installed-size bound skews the capacity preflight")
+    # The seams bound is derived post-inventory from the verified pool for
+    # exactly the machine-selected firmware/microcode, while the request
+    # facts predate inventory (image-authorized whole-pool ceiling). The
+    # selected bound must fit inside the authorized ceiling; anything else
+    # means the facts and the machine selection disagree about the release
+    # support, and the capacity preflight below must not run on either
+    # number alone.
+    if not isinstance(seams.support_installed_bound, int) or isinstance(
+        seams.support_installed_bound, bool
+    ):
+        raise FreshAbInstallError("support installed-size bound is not authoritative")
+    if not isinstance(request.support_installed_bytes, int) or isinstance(
+        request.support_installed_bytes, bool
+    ):
+        raise FreshAbInstallError("request support installed-size bound is not authoritative")
+    if seams.support_installed_bound < 0 or request.support_installed_bytes < 0:
+        raise FreshAbInstallError("support installed-size bound is not authoritative")
+    if seams.support_installed_bound > request.support_installed_bytes:
+        raise FreshAbInstallError("support installed-size bound exceeds the authorized release bound")
     try:
         support = _support_set_from_seams(seams)
     except SlotFinalizeError as exc:
         raise FreshAbInstallError(f"support set is not installable: {exc}") from exc
 
     # -- 2. Capacity + layout-fit preflight BEFORE any destructive command --
+    # Proved on the machine-selected bound (verified pool + inventory
+    # selection), already ceiling-checked against the image-authorized
+    # facts above — never on the whole-pool total the release carries.
     try:
         require_finalized_slot_capacity(
             slot_bytes=int(request.sizing.slot_bytes),
             base_bytes=member.payload_uncompressed_bytes,
             minimum_slot_bytes=member.minimum_slot_bytes,
-            support_installed_bytes=request.support_installed_bytes,
+            support_installed_bytes=seams.support_installed_bound,
         )
         plan = plan_for_profile(
             request.sizing, device_size_bytes=int(request.target.size_bytes)
@@ -741,6 +761,7 @@ def execute_fresh_ab_install(
             profile_policy=policy,
             firmware_packages=tuple(seams.firmware_packages),
             microcode_packages=tuple(seams.microcode_packages),
+            support_installed_bytes=seams.support_installed_bound,
         )
     except (SlotFinalizeError, SlotWriteError) as exc:
         raise FreshAbInstallError(f"SYSTEM_A finalization refused: {exc}") from exc

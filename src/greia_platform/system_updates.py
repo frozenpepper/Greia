@@ -1625,6 +1625,10 @@ class UpdateSlotSeams:
     stage-owned candidate-support stage; the backend calls it in a
     ``finally`` so one stage's temp root is removed on success and on
     every failure path. Test/harness seams leave it unset (no stage).
+    ``support_pool_factory`` returns the staged verified hardware-support
+    pool (or ``None``) so staging can derive the selected-set installed
+    capacity bound for exactly the resolved firmware/microcode; without a
+    pool only an empty selection binds zero, anything selected refuses.
 
     An empty ``UpdateSlotSeams()`` stays a deliberate fail-closed degraded
     construction (direct ``SlotBackedSystemUpdateBackend`` default). It is
@@ -1642,6 +1646,7 @@ class UpdateSlotSeams:
     selection_factory: Callable[[object, str], object | None] | None = None
     installed_contract_factory: Callable[[], bytes] | None = None
     support_stage_cleanup: Callable[[], None] | None = None
+    support_pool_factory: Callable[[InspectedUpdateBundle], object | None] | None = None
 
 
 class SlotBackedSystemUpdateBackend:
@@ -1705,6 +1710,53 @@ class SlotBackedSystemUpdateBackend:
             payload["release_id"] = journal.release_id
         return payload
 
+    def _selected_support_installed_bytes(
+        self,
+        bundle: InspectedUpdateBundle,
+        firmware: tuple[str, ...],
+        microcode: tuple[str, ...],
+    ) -> int:
+        """Verified installed-size bound for exactly the selected sets.
+
+        Resolves the staged pool through the ``support_pool_factory`` seam
+        (same open stage the support set came from; no second extraction)
+        and sums its verified per-package sizes over the union of the
+        selected dependency closures. Without a staged pool only an empty
+        selection binds zero bytes; anything selected refuses fail-closed
+        instead of falling back to the whole-pool total.
+        """
+        pool = None
+        if self.seams.support_pool_factory is not None:
+            try:
+                pool = self.seams.support_pool_factory(bundle)
+            except UpdateBackendUnavailable:
+                raise
+            except Exception as exc:
+                raise UpdateBackendUnavailable(
+                    f"release support pool is unavailable: {exc}"
+                ) from exc
+        if pool is None:
+            if firmware or microcode:
+                raise SystemUpdateError(
+                    "support pool is unavailable for the selected capacity bound"
+                )
+            return 0
+        try:
+            bound = pool.selected_installed_bytes(firmware, microcode)
+        except AttributeError as exc:
+            raise SystemUpdateError(
+                "staged support pool cannot prove a selected capacity bound"
+            ) from exc
+        except Exception as exc:
+            raise SystemUpdateError(
+                f"selected support capacity bound is not authoritative: {exc}"
+            ) from exc
+        if isinstance(bound, bool) or not isinstance(bound, int) or bound < 0:
+            raise SystemUpdateError(
+                "selected support capacity bound is not authoritative"
+            )
+        return bound
+
     def stage(self, bundle: InspectedUpdateBundle) -> None:
         """Stage the v3 candidate into the inactive slot (ADR 0036 §4/§8).
 
@@ -1757,18 +1809,6 @@ class SlotBackedSystemUpdateBackend:
                 raise SystemUpdateError(
                     "support set size is not the release-bound member size"
                 )
-            try:
-                support_installed = int(
-                    getattr(support_value, "installed_size_bound", 0)
-                )
-            except (TypeError, ValueError) as exc:
-                raise SystemUpdateError(
-                    "support installed-size bound is not authoritative"
-                ) from exc
-            if isinstance(support_installed, bool) or support_installed < 0:
-                raise SystemUpdateError(
-                    "support installed-size bound is not authoritative"
-                )
             # PERSIST readability preflight (integer schema range, ADR 0036 §6)
             # before any inactive-slot store is addressed.
             installed_marker = self._require_seam(
@@ -1783,29 +1823,10 @@ class SlotBackedSystemUpdateBackend:
                 raise SystemUpdateError(
                     f"PERSIST compatibility preflight refused: {exc}"
                 ) from exc
-            # Destination capacity preflight before any destination contact:
-            # the single-owner finalized-slot capacity bound (T02:
-            # ``greia_installer.layout.require_finalized_slot_capacity``,
-            # the same bound ``SlotWriter`` enforces at write time and the
-            # finalizer re-checks) refuses an over-full support-carrying
-            # candidate before the first destination mutation. No second
-            # formula lives here.
-            try:
-                from greia_installer.layout import (
-                    LayoutError,
-                    require_finalized_slot_capacity,
-                )
-
-                require_finalized_slot_capacity(
-                    slot_bytes=destination.slot_capacity_bytes,
-                    base_bytes=member.payload_uncompressed_bytes,
-                    minimum_slot_bytes=member.minimum_slot_bytes,
-                    support_installed_bytes=support_installed,
-                )
-            except LayoutError as exc:
-                raise SystemUpdateError(
-                    f"destination slot capacity preflight refused: {exc}"
-                ) from exc
+            # Inventory attestation, policy/filesystem/installer seams and
+            # hardware selection resolve before any destination contact and
+            # before the capacity proof, so the support term below covers
+            # exactly the firmware/microcode this staging will install.
             inventory = self._require_seam(
                 "hardware inventory attestation", self.seams.inventory_factory
             )()
@@ -1829,6 +1850,35 @@ class SlotBackedSystemUpdateBackend:
                 if selection is not None:
                     firmware = tuple(selection.firmware)
                     microcode = tuple(selection.microcode)
+            # Destination capacity preflight before the first destination
+            # mutation: the single-owner finalized-slot capacity bound (T02:
+            # ``greia_installer.layout.require_finalized_slot_capacity``,
+            # the same bound ``SlotWriter`` enforces at write time and the
+            # finalizer re-checks) refuses an over-full support-carrying
+            # candidate before the first destination mutation. The support
+            # term is the verified selected-set bound for exactly the
+            # firmware/microcode resolved above — never the whole-pool
+            # total, which reserves every candidate the release merely
+            # carries. No second formula lives here.
+            selected_installed = self._selected_support_installed_bytes(
+                bundle, firmware, microcode
+            )
+            try:
+                from greia_installer.layout import (
+                    LayoutError,
+                    require_finalized_slot_capacity,
+                )
+
+                require_finalized_slot_capacity(
+                    slot_bytes=destination.slot_capacity_bytes,
+                    base_bytes=member.payload_uncompressed_bytes,
+                    minimum_slot_bytes=member.minimum_slot_bytes,
+                    support_installed_bytes=selected_installed,
+                )
+            except LayoutError as exc:
+                raise SystemUpdateError(
+                    f"destination slot capacity preflight refused: {exc}"
+                ) from exc
             writer = SlotWriter()
             # The backend owns the store lifetime: it is closed on every path
             # once the verified range is written, so loop files and later
@@ -1852,7 +1902,7 @@ class SlotBackedSystemUpdateBackend:
                                 destination=destination,
                                 source=decompressed,
                                 storage=storage,
-                                support_installed_bytes=support_installed,
+                                support_installed_bytes=selected_installed,
                             )
                         except (SlotWriteError, SlotFinalizeError) as exc:
                             if isinstance(exc, SystemUpdateError):
@@ -1885,6 +1935,7 @@ class SlotBackedSystemUpdateBackend:
                 firmware_packages=firmware,
                 microcode_packages=microcode,
                 selection=selection,
+                support_installed_bytes=selected_installed,
             )
             BootTransactionJournal.begin_update(
                 self.journal_dir,
@@ -3152,6 +3203,7 @@ def build_production_update_seams(
         selection_factory=_production_selection_factory(context),
         installed_contract_factory=_production_installed_contract_factory(),
         support_stage_cleanup=_close_current_stage,
+        support_pool_factory=_production_support_pool_factory(context),
     )
 
 
@@ -3258,6 +3310,26 @@ def _production_inventory_factory(
             raise UpdateBackendUnavailable(
                 f"hardware inventory is not attestable: {_bounded_reason(exc)}"
             ) from exc
+
+    return _factory
+
+
+def _production_support_pool_factory(
+    context: _ProductionUpdateContext,
+) -> Callable[[object], object | None]:
+    """Staged verified pool behind the selected-set capacity bound.
+
+    Returns the same open stage-owned pool the support set converts from
+    (repeat acquisition reuses the open stage; no second extraction), or
+    ``None`` when the candidate declares no hardware support. Staging
+    derives the selected installed bound from this pool instance.
+    """
+
+    def _factory(bundle: object) -> object | None:
+        stage = _acquire_support_stage(context, bundle)
+        if stage is None:
+            return None
+        return getattr(stage, "pool", None)
 
     return _factory
 

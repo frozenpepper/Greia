@@ -337,9 +337,13 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
         ):
             self.assertIn(token, message)
 
-    def test_fits_without_support_but_fails_with_support_refused(self) -> None:
-        # Acer candidate sized so the finalized total fits with bound 0 but
-        # exceeds the slot once a 100 MiB verified support bound applies.
+    def test_support_accepted_at_bundle_time_with_machine_check_deferred(self) -> None:
+        # Acer candidate sized so the finalized total fits with support
+        # term 0 but would exceed the slot under the old whole-pool term.
+        # Bundle time has no machine inventory: it proves base payload plus
+        # generic reserves fit and verifies the support metadata, while the
+        # exact machine-selected capacity is enforced pre-mutation by the
+        # installer/updater gates through the same formula owner.
         base = minimum = 1500000000
         support_bound = 100 * MIB
         without = minimum + FINALIZATION_GROWTH_BYTES + SLOT_METADATA_RESERVE_BYTES
@@ -351,8 +355,8 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
             support = _make_support_archive(
                 tmp, deb_payload=b"tiny-deb", installed_bytes=support_bound
             )
-            # Compressed bytes stay tiny: the refusal must come from the
-            # verified installed bound, not the archive size.
+            # Compressed bytes stay tiny: acceptance must not depend on the
+            # archive size either way.
             self.assertLess(support.stat().st_size, MIB)
             accepted = tmp / "accepted.greiaupdate"
             rc = module.main(
@@ -367,6 +371,27 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
             )
             self.assertEqual(rc, 0)
             self.assertTrue(accepted.is_file())
+            bundled = tmp / "bundled-with-support.greiaupdate"
+            rc = module.main(
+                _build_argv(
+                    tmp,
+                    payload,
+                    base=base,
+                    minimum=minimum,
+                    profile=ACER_PROFILE,
+                    output=bundled,
+                    hardware_support=support,
+                )
+            )
+            self.assertEqual(rc, 0)
+            self.assertTrue(bundled.is_file())
+            # Corrupt support metadata is still refused at bundle time: the
+            # verification side effect stays even though the capacity term
+            # no longer uses the whole-pool total.
+            tampered = tmp / "tampered.tar.zst"
+            raw = bytearray(support.read_bytes())
+            raw[len(raw) // 2] ^= 0xFF
+            tampered.write_bytes(bytes(raw))
             refused = tmp / "refused.greiaupdate"
             rc = module.main(
                 _build_argv(
@@ -376,7 +401,7 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
                     minimum=minimum,
                     profile=ACER_PROFILE,
                     output=refused,
-                    hardware_support=support,
+                    hardware_support=tampered,
                 )
             )
             self.assertEqual(rc, 2)
@@ -474,9 +499,11 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
             with self.assertRaises(HardwareSupportPoolError):
                 installed_size_bound_from_support_archive(tmp / "missing.tar.zst")
 
-    def test_cli_agrees_exactly_with_slot_writer(self) -> None:
-        # Passing facts with support: all three routes must report the
-        # identical required total for the identical (base, minimum, bound).
+    def test_cli_proves_base_reserves_while_writer_proves_selected_support(self) -> None:
+        # Bundle time has no machine inventory: the CLI proves base payload
+        # plus generic reserves against the profile slot (support term 0),
+        # while the writer/owner formula proves the same base plus the
+        # verified selected-set bound. One formula owner, two stages.
         base = minimum = 1400000000
         support_bound = 100 * MIB
         with tempfile.TemporaryDirectory() as directory:
@@ -502,14 +529,13 @@ class ReleaseCliFinalizedCapacityTests(unittest.TestCase):
                 minimum_slot_bytes=minimum,
                 hardware_support_path=support,
             )
-            self.assertEqual(cli_required, writer_required)
             self.assertEqual(
                 cli_required,
                 max(base, minimum)
-                + support_bound
                 + FINALIZATION_GROWTH_BYTES
                 + SLOT_METADATA_RESERVE_BYTES,
             )
+            self.assertEqual(cli_required, writer_required - support_bound)
 
     def test_explicit_identity_builds_skip_profile_capacity_proof(self) -> None:
         # No --profile-file means no profile slot bound: even facts that

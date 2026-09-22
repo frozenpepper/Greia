@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 _PACKAGE_RE = re.compile(r"^[a-z0-9][a-z0-9+.-]*$")
+_DEPENDENCY_SPLIT_RE = re.compile(r"[,|]")
 _MAX_DEBS = 1024
 _MAX_FIRMWARE_PROVIDERS = 65536
 _MAX_FIRMWARE_PATH_BYTES = 1024
@@ -114,6 +115,36 @@ def _field(control: str, name: str) -> str:
     return ""
 
 
+def _dependency_names(control: str, deb_name: str) -> set[str]:
+    """Pool-member dependency alternatives from Depends/Pre-Depends.
+
+    Returns every alternative package name mentioned by either field, with
+    version constraints and architecture qualifiers removed. Taking *all*
+    alternatives (instead of resolving which one APT would pick against a
+    particular base) keeps the result a conservative superset of any
+    actual install set, so capacity bounds derived from it stay
+    fail-closed without reimplementing Debian dependency solving.
+    Recommends/Suggests are excluded: installation uses
+    ``--no-install-recommends``. Anything unparseable fails closed.
+    """
+    names: set[str] = set()
+    for field_name in ("Depends", "Pre-Depends"):
+        raw = _field(control, field_name)
+        if not raw:
+            continue
+        for alternative in _DEPENDENCY_SPLIT_RE.split(raw):
+            token = alternative.strip().split("(", 1)[0].strip()
+            token = token.split(":", 1)[0].strip()
+            if not token:
+                continue
+            if not _PACKAGE_RE.fullmatch(token):
+                raise PoolFinalizeError(
+                    f"Debian package dependency is invalid: {deb_name} -> {token!r}"
+                )
+            names.add(token)
+    return names
+
+
 def _installed_bytes(control: str, deb_name: str) -> int:
     """Normalize one package's installed footprint from its control data.
 
@@ -188,6 +219,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
     seen_identity: set[tuple[str, str]] = set()
     provided_names: set[str] = set()
     candidate_set = set(candidate_packages)
+    direct_dependencies: dict[str, set[str]] = {}
     for path in debs:
         control = _control(path)
         package = _field(control, "Package")
@@ -204,6 +236,9 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         provided_names.add(package)
         size = path.stat().st_size
         installed_bytes = _installed_bytes(control, path.name)
+        direct_dependencies.setdefault(package, set()).update(
+            _dependency_names(control, path.name)
+        )
         package_sizes[package] = min(size, package_sizes.get(package, size))
         digest = _sha256(path)
         packages.append(
@@ -255,6 +290,22 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         }
     )
     unavailable_candidates = sorted(candidate_set - provided_names)
+    # Frozen per-candidate dependency closures: the candidate itself plus
+    # every recursively mentioned Depends/Pre-Depends alternative present
+    # in this pool. A superset of any actual APT install set (alternatives
+    # are never resolved away), so selected-set capacity bounds derived
+    # from it stay conservative without a Debian solver here.
+    dependency_closures: dict[str, list[str]] = {}
+    for candidate in sorted(candidate_set & provided_names):
+        seen = {candidate}
+        stack = [candidate]
+        while stack:
+            current = stack.pop()
+            for dependency in direct_dependencies.get(current, ()):
+                if dependency in provided_names and dependency not in seen:
+                    seen.add(dependency)
+                    stack.append(dependency)
+        dependency_closures[candidate] = sorted(seen)
     total_installed_bytes = sum(
         int(entry["installed_bytes"]) for entry in packages
     )
@@ -280,6 +331,7 @@ def finalize_pool(pool_root: Path, candidate_manifest: Path, max_bytes: int) -> 
         "broad_firmware_packages": broad_firmware,
         "firmware_providers": filtered_providers,
         "unavailable_candidate_packages": unavailable_candidates,
+        "dependency_closures": dependency_closures,
         "packages": packages,
         "repository_indexes": {
             "Packages": {

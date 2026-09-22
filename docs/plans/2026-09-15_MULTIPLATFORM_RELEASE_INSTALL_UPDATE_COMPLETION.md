@@ -1890,3 +1890,47 @@ remains open and the exact next step.
 - Still open: re-measure the real payload receipt via owner rebuild, then
   the hardware-support selected-set capacity semantics (§5-8 of the
   capacity mission). No slot/product change authorized yet.
+
+## 2026-09-22 — Hardware-support selected-set capacity semantics implemented (source scope)
+
+- Bundle time has no machine inventory: `tools/greia_update.py`
+  `_check_profile_capacity` proves base payload + generic reserves against
+  the profile slot with support term 0, while still fail-closed verifying
+  the support metadata. Corrupt support still refuses (`rc=2`).
+- `tools/finalize_hardware_support_pool.py` now freezes verified
+  per-candidate `dependency_closures` (candidate + recursive
+  Depends/Pre-Depends alternatives present in the pool; conservative
+  superset, `--no-install-recommends` scope). Validated by
+  `hardware_support_archive.py` (`sorted/unique/self-member/pool-member/
+  candidate-key` checks) and carried on `VerifiedHardwareSupportPool`.
+- `VerifiedHardwareSupportPool.selected_installed_bytes(firmware, microcode)`
+  is the new bound owner: union of selected closures, de-duplicated,
+  summed over verified per-package installed sizes. Empty selection binds
+  0; missing closures or unknown selection refuse fail-closed (never falls
+  back to the whole-pool total).
+- Fresh install: `device_seams.py` resolves the machine selection from the
+  same attested snapshot via `InstallerHardwareEnablementPlanner`
+  (`inventory_snapshot` replay seam, no second racy snapshot) and proves
+  capacity on the selected bound; `fresh_ab_install.py` ceiling-checks the
+  selected bound against the image-authorized whole-pool
+  `GREIA_AB_SUPPORT_INSTALLED_BYTES` (`total_installed_bytes`, never
+  compressed bytes) and passes the selected bound into
+  `SlotFinalizer.finalize()` (`support_installed_bytes` override, same
+  formula re-check).
+- System update staging: new `support_pool_factory` seam reuses the open
+  candidate stage pool (no second extraction); capacity preflight runs
+  after inventory/selection on the verified selected bound and threads the
+  same number through `SlotWriter` and finalization. Without a staged pool
+  only an empty selection binds 0.
+- Single formula owner unchanged:
+  `greia_installer.layout.require_finalized_slot_capacity`
+  (`base + support + FINALIZATION_GROWTH_BYTES + SLOT_METADATA_RESERVE_BYTES`).
+- Tests: closure finalize/validation/selection suites, release-CLI
+  bundle-accept + tamper-refusal rewrite, orchestration harness
+  `dependency_closures` + `support_pool_factory`, seam-composition pool
+  closures + `support_pool_factory` production assertion + selected-bound
+  regression.
+- Next: full `make verify`, then owner rebuild to re-measure the real
+  payload receipt and exercise the selected-set path on a real release.
+  Session 04 remains closed.
+- Pre-commit `make verify`: 3618 tests OK (skipped=8), exit 0, clean tree.

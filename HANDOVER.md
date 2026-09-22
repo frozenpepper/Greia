@@ -1714,3 +1714,44 @@ against the repaired pool producer.
 
 Next: commit/push, then owner-build rerun to re-measure the real payload
 receipt before touching support-capacity semantics.
+
+## 50. Hardware-support selected-set capacity semantics implemented, source scope (2026-09-22)
+
+- Uncommitted source tranche splits the finalized-slot proof into two
+  stages over one formula owner
+  (`require_finalized_slot_capacity`): bundle time proves base +
+  reserves with support term 0 (metadata still fail-closed verified);
+  fresh-install and update staging prove pre-mutation on the verified
+  machine-selected bound.
+- New bound owner: frozen per-candidate `dependency_closures` from
+  `finalize_hardware_support_pool.py`, validated in
+  `hardware_support_archive.py`, summed by
+  `VerifiedHardwareSupportPool.selected_installed_bytes` (union,
+  de-duplicated; empty binds 0; missing/unknown refuses, never
+  whole-pool fallback).
+- Fresh install resolves selection from the same attested snapshot
+  (`InstallerHardwareEnablementPlanner` `inventory_snapshot` replay),
+  ceiling-checks selected <= image-authorized whole-pool
+  `GREIA_AB_SUPPORT_INSTALLED_BYTES` (`total_installed_bytes`), threads
+  selected bound through `SlotFinalizer`. Installer image reports
+  `total_installed_bytes`, not compressed bytes.
+- Update staging adds `support_pool_factory` (same open stage, no second
+  extraction); preflight runs after selection and threads the selected
+  number through `SlotWriter` + finalization.
+- Tests updated: closure finalize/selection suites,
+  `test_release_cli_finalized_capacity.py` (bundle-accept +
+  tamper-refusal, base/reserves vs selected split),
+  `test_system_update_service_orchestration.py` harness
+  (`dependency_closures` + `support_pool_factory`),
+  `test_update_seam_composition.py` (closure pool, production
+  `support_pool_factory` assertion, selected-bound regression).
+- Targeted suites green: `test_update_*.py` 104 OK,
+  `test_system_update*.py` 58 OK, `test_installer_*.py` 251 OK,
+  `test_fresh_ab_install.py` 29 OK,
+  `test_release_cli_finalized_capacity.py` 11 OK,
+  `test_update_seam_composition.py` 17 OK.
+
+Next: commit/push on quiet remote, then
+owner-build rerun to re-measure the real payload receipt and exercise
+the selected-set path. Session 04 remains closed.
+- Pre-commit `make verify`: 3618 tests OK (skipped=8), exit 0.

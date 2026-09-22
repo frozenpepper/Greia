@@ -276,6 +276,56 @@ class ValidatedManifest:
     #: :func:`extracted_bytes_bound_for_members` from the exact archived
     #: files; R4-G-RECEIPT-era release flows read the same field name.
     extracted_bound: int | None = None
+    #: Verified per-candidate dependency closures
+    #: (``dependency_closures`` inner-manifest field): candidate package
+    #: name to the sorted frozen pool members that installing it can pull
+    #: in (itself plus every recursively mentioned Depends/Pre-Depends
+    #: alternative present in the pool). ``()`` when the builder predates
+    #: the field; capacity proofs requiring a selected-set bound refuse
+    #: pools without it instead of falling back to the whole-pool total.
+    dependency_closures: tuple[tuple[str, tuple[str, ...]], ...] = ()
+
+
+def _validated_dependency_closures(
+    raw: dict[str, object],
+    candidates: frozenset[str],
+    members: frozenset[str],
+) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    """Validate the optional ``dependency_closures`` manifest map."""
+    value = raw.get("dependency_closures")
+    if value is None:
+        return ()
+    if not isinstance(value, dict) or len(value) > MAX_ARCHIVE_POOL_PACKAGES:
+        raise HardwareSupportArchiveError(
+            "hardware-support dependency closures are invalid"
+        )
+    parsed: list[tuple[str, tuple[str, ...]]] = []
+    for package, closure in value.items():
+        if not isinstance(package, str) or not _PACKAGE_RE.fullmatch(package):
+            raise HardwareSupportArchiveError(
+                "hardware-support dependency closure package is invalid"
+            )
+        if package not in candidates:
+            raise HardwareSupportArchiveError(
+                "hardware-support dependency closure references a non-candidate package"
+            )
+        if (
+            not isinstance(closure, list)
+            or not closure
+            or len(closure) > MAX_ARCHIVE_POOL_PACKAGES
+            or any(
+                not isinstance(item, str) or not _PACKAGE_RE.fullmatch(item)
+                for item in closure
+            )
+            or list(closure) != sorted(set(closure))
+            or package not in closure
+            or any(item not in members for item in closure)
+        ):
+            raise HardwareSupportArchiveError(
+                f"hardware-support dependency closure is invalid: {package}"
+            )
+        parsed.append((package, tuple(closure)))
+    return tuple(sorted(parsed))
 
 
 def _validated_package_set(raw: dict[str, object], field: str) -> frozenset[str]:
@@ -457,6 +507,11 @@ def parse_manifest_dict(raw: object) -> ValidatedManifest:
         raise HardwareSupportArchiveError(
             "hardware-support extracted bound declaration is invalid"
         )
+    closures = _validated_dependency_closures(
+        raw,
+        provided,
+        {item.package for item in packages},
+    )
     return ValidatedManifest(
         packages=tuple(packages),
         total_bytes=total,
@@ -469,6 +524,7 @@ def parse_manifest_dict(raw: object) -> ValidatedManifest:
         repository_indexes={k: dict(v) for k, v in indexes.items()},  # type: ignore[union-attr]
         installed_overhead=overhead,  # type: ignore[arg-type]
         extracted_bound=declared_bound,  # type: ignore[arg-type]
+        dependency_closures=closures,
     )
 
 

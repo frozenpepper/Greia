@@ -156,6 +156,10 @@ def _pool_tree(root: Path, *, dirname: str = "hw-pool") -> Path:
         "broad_firmware_packages": ["firmware-realtek"],
         "firmware_providers": {"rtl.bin": ["firmware-realtek"]},
         "unavailable_candidate_packages": [],
+        "dependency_closures": {
+            "firmware-realtek": ["firmware-realtek"],
+            "amd64-microcode": ["amd64-microcode"],
+        },
         "packages": [
             {
                 "package": "firmware-realtek", "version": "1",
@@ -302,6 +306,7 @@ class DefaultCompositionTests(unittest.TestCase):
                 "profile_policy_factory",
                 "selection_factory",
                 "installed_contract_factory",
+                "support_pool_factory",
             ):
                 self.assertIsNotNone(
                     getattr(seams, name), f"production {name} must be bound"
@@ -325,6 +330,7 @@ class DefaultCompositionTests(unittest.TestCase):
             "profile_policy_factory",
             "selection_factory",
             "installed_contract_factory",
+            "support_pool_factory",
         ):
             self.assertIsNotNone(getattr(seams, name))
 
@@ -616,6 +622,29 @@ class ProductionFactoryTypeTests(unittest.TestCase):
                 )
             with self.assertRaises(Exception):
                 authority.backend.seams.selection_factory(support, "00" * 32)
+
+    def test_support_pool_factory_proves_selected_bound(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            authority, _grub, _layout, state_dir, private_key, _r = _rig(root)
+            bundle = _signed_bundle(root, private_key)
+            inspected = SystemUpdateInbox(state_dir).receive(bundle)
+            pool = authority.backend.seams.support_pool_factory(inspected)
+            self.assertIsNotNone(pool)
+            # Staged pool carries verified closures (not a legacy pool).
+            self.assertEqual(
+                dict(pool.dependency_closures),
+                {
+                    "firmware-realtek": ("firmware-realtek",),
+                    "amd64-microcode": ("amd64-microcode",),
+                },
+            )
+            # Empty selection binds zero without touching the whole-pool
+            # total; single-class selections bind only their own closure.
+            self.assertEqual(pool.selected_installed_bytes([], []), 0)
+            single = pool.selected_installed_bytes(["firmware-realtek"], [])
+            self.assertGreater(single, 0)
+            self.assertLess(single, pool.total_installed_bytes)
 
 
 class NoParallelMechanismTests(unittest.TestCase):

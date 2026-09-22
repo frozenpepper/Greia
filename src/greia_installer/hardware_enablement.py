@@ -180,6 +180,21 @@ class BoundDriverFirmwareResolver:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class _FixedInventoryProvider:
+    """Replay one already-taken inventory snapshot (single-snapshot authority).
+
+    Lets callers that already attested a snapshot (fresh-install seams)
+    resolve hardware selection against that exact snapshot instead of
+    taking a second racy one.
+    """
+
+    snapshot_value: HardwareInventory
+
+    def snapshot(self) -> HardwareInventory:
+        return self.snapshot_value
+
+
 class InstallerHardwareEnablementPlanner:
     """Resolve the current machine against one already-verified support pool."""
 
@@ -259,6 +274,7 @@ class InstallerHardwareEnablementPlanner:
         machine: str | None = None,
         sysfs_devices: Path = Path("/sys/devices"),
         cpuinfo: Path = Path("/proc/cpuinfo"),
+        inventory_snapshot: HardwareInventory | None = None,
     ) -> "InstallerHardwareEnablementPlanner":
         machine_id = (machine or platform.machine() or "unknown").lower()
         resolvers: list[HardwareSupportResolver] = [
@@ -267,8 +283,14 @@ class InstallerHardwareEnablementPlanner:
         ]
         if machine_id in {"i386", "i486", "i586", "i686", "x86_64", "amd64"}:
             resolvers.append(X86MicrocodeResolver(cpuinfo))
+        if inventory_snapshot is not None:
+            provider: HardwareInventoryProvider = _FixedInventoryProvider(
+                inventory_snapshot
+            )
+        else:
+            provider = LinuxSysfsHardwareInventory(sysfs_devices)
         return cls(
-            inventory_provider=LinuxSysfsHardwareInventory(sysfs_devices),
+            inventory_provider=provider,
             resolver=CompositeHardwareSupportResolver(tuple(resolvers)),
             pool=pool,
         )

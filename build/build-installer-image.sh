@@ -191,11 +191,15 @@ compose_install_packages "$LIVE_ROOT" "live-installer"
 "$SCRIPT_DIR/populate-hardware-support-pool.sh" "$LIVE_ROOT" "$SUITE" "$ARCH"
 "$SCRIPT_DIR/install-live-hardware-firmware.sh" "$LIVE_ROOT" "$SUITE" "$ARCH"
 cp "$LIVE_ROOT/opt/greia-hardware-support/manifest.json" "$HARDWARE_SUPPORT_REPORT"
+# The installer-authorized support bound is the verified INSTALLED total
+# (unpacked slot footprint), never compressed transfer bytes: fresh-install
+# capacity authorizes at most the whole frozen pool, while the machine
+# selection enforced at install time can only come in under it.
 hardware_support_pool_bytes="$(python3 - "$HARDWARE_SUPPORT_REPORT" <<'PY'
 import json
 import sys
 from pathlib import Path
-print(json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["total_bytes"])
+print(json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["total_installed_bytes"])
 PY
 )"
 hardware_support_package_count="$(python3 - "$HARDWARE_SUPPORT_REPORT" <<'PY'

@@ -1270,6 +1270,7 @@ class SlotFinalizer:
         slot_config: Mapping[str, str] | None = None,
         selection: ResolvedHardwareSelection | None = None,
         artifact_builder: SlotBootArtifactBuilder | None = None,
+        support_installed_bytes: int | None = None,
     ) -> FinalizationReceipt:
         """Run the bounded destination-only finalization transaction."""
         if destination != write.destination:
@@ -1286,10 +1287,25 @@ class SlotFinalizer:
             raise SlotFinalizeError("support set is not the release-bound support member")
         if support.support_size != write.member.hardware_support_size:
             raise SlotFinalizeError("support set size is not the release-bound member size")
+        # Headroom re-check uses the caller-provided selected-set bound when
+        # given (the exact firmware/microcode being installed); otherwise it
+        # falls back to the release set's whole-pool bound. Callers proving
+        # capacity pre-write must pass the same selected number they proved.
+        selected_bound = (
+            support.installed_size_bound
+            if support_installed_bytes is None
+            else support_installed_bytes
+        )
+        if (
+            isinstance(selected_bound, bool)
+            or not isinstance(selected_bound, int)
+            or selected_bound < 0
+        ):
+            raise SlotFinalizeError("support installed-size bound is not authoritative")
         required = _required_slot_bytes(
             base_bytes=write.member.payload_uncompressed_bytes,
             minimum_slot_bytes=write.member.minimum_slot_bytes,
-            support_installed_bytes=support.installed_size_bound,
+            support_installed_bytes=selected_bound,
             growth_bytes=self.growth_bytes,
             metadata_reserve_bytes=self.metadata_reserve_bytes,
         )

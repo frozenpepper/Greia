@@ -223,6 +223,95 @@ class HardwareSupportPoolFinalizeTests(unittest.TestCase):
             with self.assertRaisesRegex(PoolFinalizeError, "union"):
                 finalize_pool(pool, manifest, 1024 * 1024)
 
+    def test_finalize_records_dependency_closures(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            pool = root / "support"
+            deb_dir = pool / "pool"
+            deb_dir.mkdir(parents=True)
+            for name in (
+                "firmware-realtek_1_all.deb",
+                "libhelper_1_i386.deb",
+                "libalt_1_i386.deb",
+            ):
+                (deb_dir / name).write_bytes(b"x")
+            candidates = root / "candidates.json"
+            candidates.write_text(
+                json.dumps(
+                    {
+                        "firmware_packages": ["firmware-realtek"],
+                        "microcode_packages": ["intel-microcode"],
+                        "candidate_packages": ["firmware-realtek", "intel-microcode"],
+                        "firmware_providers": {"rtl.bin": ["firmware-realtek"]},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            controls = {
+                # Alternatives, version constraints and arch qualifiers all
+                # resolve to pool-member names; base-only names are dropped.
+                "firmware-realtek_1_all.deb": (
+                    "Package: firmware-realtek\nVersion: 1\nArchitecture: all\n"
+                    "Installed-Size: 100\n"
+                    "Depends: libhelper (>= 1) | libalt, libc6 (>= 2.34)\n"
+                    "Pre-Depends: libalt:i386\n"
+                ),
+                # Transitive edge: helper itself needs the alternative.
+                "libhelper_1_i386.deb": (
+                    "Package: libhelper\nVersion: 1\nArchitecture: i386\n"
+                    "Installed-Size: 10\n"
+                    "Depends: libalt\n"
+                ),
+                "libalt_1_i386.deb": (
+                    "Package: libalt\nVersion: 1\nArchitecture: i386\n"
+                    "Installed-Size: 10\n"
+                ),
+            }
+
+            def control(path: Path) -> str:
+                return controls[path.name]
+
+            with mock.patch(
+                "tools.finalize_hardware_support_pool._control", side_effect=control
+            ):
+                manifest = finalize_pool(pool, candidates, 1024 * 1024)
+            # Unavailable intel-microcode carries no closure; the candidate
+            # closure is the fixpoint over pool members (libc6 lives in the
+            # base, not the pool, so it contributes nothing).
+            self.assertEqual(
+                manifest["dependency_closures"],
+                {
+                    "firmware-realtek": [
+                        "firmware-realtek",
+                        "libalt",
+                        "libhelper",
+                    ]
+                },
+            )
+            persisted = json.loads((pool / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                persisted["dependency_closures"], manifest["dependency_closures"]
+            )
+
+    def test_finalize_rejects_malformed_dependency(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            pool = root / "support"
+            deb_dir = pool / "pool"
+            deb_dir.mkdir(parents=True)
+            (deb_dir / "firmware-realtek_1_all.deb").write_bytes(b"x")
+            candidates = self.make_candidate_manifest(root)
+            control = (
+                "Package: firmware-realtek\nVersion: 1\nArchitecture: all\n"
+                "Installed-Size: 100\n"
+                "Depends: Totally_Bogus!!!\n"
+            )
+            with mock.patch(
+                "tools.finalize_hardware_support_pool._control", return_value=control
+            ):
+                with self.assertRaisesRegex(PoolFinalizeError, "dependency is invalid"):
+                    finalize_pool(pool, candidates, 1024 * 1024)
+
 
 if __name__ == "__main__":
     unittest.main()

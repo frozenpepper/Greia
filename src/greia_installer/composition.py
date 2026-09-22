@@ -30,8 +30,11 @@ single fact without copying the file:
 - ``GREIA_AB_GRUB_PASSWORD_HASH``: stored GRUB PBKDF2 token rendered into
   the fixed boot entries;
 - ``GREIA_AB_DEVELOPER``: ``1``/``true`` for developer images, else false;
-- ``GREIA_AB_SUPPORT_INSTALLED_BYTES``: release support-set installed-size
-  bound in bytes (non-negative integer).
+- ``GREIA_AB_SUPPORT_INSTALLED_BYTES``: image-authorized whole-pool
+  installed-size ceiling in bytes (non-negative integer). The machine
+  selection resolved at install time must fit inside it; the capacity
+  proof itself runs on the verified selected-set bound, never on this
+  ceiling or the whole-pool total.
 
 Block-effect seams (partition runner, slot storage/filesystem, persist
 staging, observed-identity observation) resolve on the device-execution

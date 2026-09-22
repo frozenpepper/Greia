@@ -214,6 +214,131 @@ class InstallerHardwareSupportPoolTests(unittest.TestCase):
             with self.assertRaisesRegex(HardwareSupportPoolError, "not available"):
                 pool.require_candidates(["firmware-iwlwifi"])
 
+    def test_dependency_closures_accepted_and_selected_bound_sums_union(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pool_root = make_closure_pool(Path(temporary))
+            pool = VerifiedHardwareSupportPool.load(pool_root)
+            self.assertEqual(
+                dict(pool.dependency_closures),
+                {
+                    "firmware-a": ("dep-x", "firmware-a"),
+                    "ucode-b": ("dep-x", "ucode-b"),
+                },
+            )
+            # Union de-duplicates the shared dependency: 100 + 200 + 50 KiB
+            # payloads plus the per-package overhead each.
+            unit = 1024
+            expected = (100 + 200 + 50) * unit + 3 * 32 * unit
+            self.assertEqual(
+                pool.selected_installed_bytes(["firmware-a"], ["ucode-b"]),
+                expected,
+            )
+            # Single-class selections bind only their own closure.
+            self.assertEqual(
+                pool.selected_installed_bytes(["firmware-a"], []),
+                (100 + 50) * unit + 2 * 32 * unit,
+            )
+            # Empty selection binds zero without requiring closures.
+            self.assertEqual(pool.selected_installed_bytes([], []), 0)
+
+    def test_selected_bound_refuses_unknown_and_missing_closures(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            pool = VerifiedHardwareSupportPool.load(
+                make_closure_pool(Path(temporary))
+            )
+            with self.assertRaisesRegex(HardwareSupportPoolError, "not available"):
+                pool.selected_installed_bytes(["firmware-zzz"], [])
+            with self.assertRaisesRegex(HardwareSupportPoolError, "not available"):
+                pool.selected_installed_bytes(["dep-x"], [])
+            with self.assertRaisesRegex(HardwareSupportPoolError, "not verified microcode"):
+                pool.selected_installed_bytes([], ["firmware-a"])
+            legacy = VerifiedHardwareSupportPool.load(make_pool(Path(temporary)))
+            with self.assertRaisesRegex(HardwareSupportPoolError, "no dependency closures"):
+                legacy.selected_installed_bytes(["firmware-realtek"], [])
+
+    def test_malformed_dependency_closures_rejected(self) -> None:
+        variants = [
+            {"firmware-a": ["firmware-a", "dep-x", "dep-x"]},  # duplicates
+            {"firmware-a": ["firmware-a", "dep-x"]},  # unsorted
+            {"firmware-a": ["dep-x"]},  # missing self-membership
+            {"firmware-a": ["firmware-a", "ghost-pkg"]},  # unknown member
+            {"ghost-pkg": ["ghost-pkg"]},  # non-candidate key
+            {"firmware-a": "firmware-a"},  # not a list
+        ]
+        for index, closures in enumerate(variants):
+            with tempfile.TemporaryDirectory() as temporary:
+                pool_root = make_closure_pool(Path(temporary), closures=closures)
+                with self.assertRaisesRegex(
+                    HardwareSupportPoolError, "dependency closure"
+                ):
+                    VerifiedHardwareSupportPool.load(pool_root)
+
+
+def make_closure_pool(root: Path, *, closures: dict | None = None) -> Path:
+    """Three-package pool with verified dependency closures."""
+    pool = root / "closure-support"
+    deb_dir = pool / "pool"
+    deb_dir.mkdir(parents=True)
+    members = {
+        "firmware-a": (100 * 1024, True),
+        "ucode-b": (200 * 1024, True),
+        "dep-x": (50 * 1024, False),
+    }
+    for name, (size, _candidate) in members.items():
+        (deb_dir / f"{name}_1_all.deb").write_bytes(b"x" * size)
+    packages_text = "".join(f"Package: {name}\n" for name in sorted(members))
+    packages_payload = packages_text.encode("utf-8")
+    packages_gzip_payload = b"gzip-placeholder"
+    (pool / "Packages").write_bytes(packages_payload)
+    (pool / "Packages.gz").write_bytes(packages_gzip_payload)
+    if closures is None:
+        closures = {
+            "firmware-a": ["dep-x", "firmware-a"],
+            "ucode-b": ["dep-x", "ucode-b"],
+        }
+    total = sum(size for size, _ in members.values())
+    installed = total + 3 * 32 * 1024
+    manifest = {
+        "schema_version": 1,
+        "suite": "trixie",
+        "architecture": "amd64",
+        "package_count": 3,
+        "total_bytes": total,
+        "total_installed_bytes": installed,
+        "provided_candidate_packages": ["firmware-a", "ucode-b"],
+        "provided_firmware_packages": ["firmware-a"],
+        "provided_microcode_packages": ["ucode-b"],
+        "broad_firmware_packages": ["firmware-a"],
+        "firmware_providers": {"a.bin": ["firmware-a"]},
+        "unavailable_candidate_packages": [],
+        "dependency_closures": closures,
+        "packages": [
+            {
+                "package": name,
+                "version": "1",
+                "architecture": "all",
+                "filename": f"pool/{name}_1_all.deb",
+                "size": size,
+                "sha256": digest(b"x" * size),
+                "candidate": candidate,
+                "installed_bytes": size + 32 * 1024,
+            }
+            for name, (size, candidate) in sorted(members.items())
+        ],
+        "repository_indexes": {
+            "Packages": {
+                "size": len(packages_payload),
+                "sha256": digest(packages_payload),
+            },
+            "Packages.gz": {
+                "size": len(packages_gzip_payload),
+                "sha256": digest(packages_gzip_payload),
+            },
+        },
+    }
+    (pool / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    return pool
+
 
 if __name__ == "__main__":
     unittest.main()
