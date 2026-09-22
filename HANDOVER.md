@@ -1551,3 +1551,48 @@ untouched.
 Next: pull current main; run shell syntax plus the focused system-overlay
 contract, then full `make verify`. If green, doctor and a fresh owner build
 under the new exact SHA. Preserve all previous failed work/evidence roots.
+
+## 46. Privileged release bytecode contamination and false-green cleanup fixed (2026-09-22)
+
+Validation at `3a8a1a221e316230bb507aacccaa56b74261a867` reached full
+`make verify`. The unit/validation suite itself was green (3603 tests, 8
+skipped), but the final `clean-bytecode` emitted 64 permission errors while
+trying to remove root-owned `__pycache__` / `.pyc` files inside
+`src/` and `tools/`.
+
+The root-owned bytecode had been created by the prior privileged owner
+`doctor/build` invocation: the release CLI imports project modules as root,
+and its child shell/Python process tree also inherits the privileged uid.
+
+Two defects were exposed:
+
+1. privileged release tooling was allowed to write generated Python bytecode
+   into the developer-owned source checkout;
+2. `clean-bytecode` did not propagate failures inside its shell loop, so
+   `make verify` returned exit 0 even though final cleanup had failed.
+
+Repairs:
+
+- `712d351a` — privileged `tools/greia_release.py` sets
+  `PYTHONDONTWRITEBYTECODE=1` and `sys.dont_write_bytecode=True` before any
+  project-local import; the release subprocess environment also explicitly
+  carries `PYTHONDONTWRITEBYTECODE=1`, so shell/Python descendants cannot
+  recreate root-owned bytecode in the checkout.
+- `ed61ddfd` — `clean-bytecode` runs its source-root loop under `set -e`,
+  making deletion failures fail the Make target and therefore `make verify`.
+- `b106980b` — regression coverage requires cleanup failure propagation.
+- `2d5f8645` — release tests lock both early privileged bytecode suppression
+  and child-environment propagation.
+
+The already-existing root-owned bytecode is historical generated state, not
+source. One explicitly authorized one-time `sudo make clean-bytecode` is
+required after pulling this repair. It is scoped by the repaired Make target to
+`src tests tools activities` plus non-recursive repository-root bytecode and
+must not touch preserved `tmp/`/release evidence.
+
+After that one-time cleanup, ordinary non-root `make verify` must be fully
+green. A subsequent privileged doctor/build must be checked to confirm it does
+not recreate root-owned source bytecode.
+
+The hardware-pool APT-metadata repair remains implemented but still requires
+end-to-end owner-build proof.
