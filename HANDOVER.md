@@ -1440,3 +1440,32 @@ The old failed Session 03 root must remain untouched. Next validation should
 pull current main, prove `make clean-bytecode` and `build/footprint-source.sh`
 succeed while that old root still exists, run the focused hygiene test and full
 `make verify`, then proceed to doctor + a fresh owner build only if green.
+
+## 43. Session 03 hygiene validation caught Make shell-variable escaping defect; corrected before privileged rerun (2026-09-22)
+
+Validation at `e9ba8f01e16ae3d9912e9d2396e90068eef591d0` stopped correctly in the
+focused hygiene suite before `make clean-bytecode`, doctor, or the owner
+build. The new `clean-bytecode` recipe had the right source-bounded design
+but used single-dollar shell variables (`$root`) inside a Make recipe.
+GNU make therefore consumed `$r` before the shell saw it, so the loop would
+not have operated on `src/tests/tools/activities` as intended.
+
+The regression test correctly exposed the mismatch by requiring the literal
+Make spelling `$$root`.
+
+Repair:
+- `972aeb7e` — actual Makefile correction: all three loop references use
+  `$$root`, which make passes to the shell as `$root`;
+- `30c47909` — strengthen the hygiene regression to assert the directory
+  guard plus both `find` calls and exactly three `$$root` references.
+
+An earlier connector write attempt `05cd356f` was a no-op tree-wise because
+the patching helper treated `$$` as replacement syntax; it was detected by
+re-fetching the blob and did not change source behavior. The effective source
+fix is `972aeb7e`.
+
+The preserved root-owned Session 03 evidence remains untouched. Next: pull
+current main, rerun the hygiene-focused test, then directly prove
+`make clean-bytecode` and `build/footprint-source.sh` succeed with the old
+root-owned evidence still present. If green, continue with full
+`make verify`, doctor, and a fresh owner build under the new exact SHA.
