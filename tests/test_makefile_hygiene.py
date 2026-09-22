@@ -20,19 +20,19 @@ SPEC.loader.exec_module(clean_bytecode)
 class MakefileHygieneTests(unittest.TestCase):
     def test_makefile_delegates_bytecode_cleanup_without_shell_traversal(self) -> None:
         makefile = (PROJECT_ROOT / "Makefile").read_text(encoding="utf-8")
-        self.assertIn(
-            "PYTHON_SOURCE_ROOTS := src tests tools activities",
-            makefile,
+        self.assertEqual(
+            clean_bytecode.SOURCE_ROOTS,
+            ("src", "tests", "tools", "activities"),
         )
 
         start = makefile.index("clean-bytecode:")
         end = makefile.index("\ntest:", start)
         clean_block = makefile[start:end]
 
-        self.assertIn("$(PYTHON) tools/clean_bytecode.py", clean_block)
-        self.assertNotIn("find ", clean_block)
-        self.assertNotIn("for root in", clean_block)
-        self.assertNotIn("$root", clean_block)
+        self.assertEqual(
+            clean_block.strip(),
+            "clean-bytecode:\n\t$(PYTHON) tools/clean_bytecode.py",
+        )
 
     def test_clean_bytecode_helper_stays_inside_source_owned_trees(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -64,6 +64,11 @@ class MakefileHygieneTests(unittest.TestCase):
             self.assertFalse(root_cache.exists())
             self.assertTrue(ignored_bytecode.is_file())
             self.assertEqual(ignored_bytecode.read_bytes(), b"preserved")
+
+    def test_clean_bytecode_helper_fails_closed_on_walk_errors(self) -> None:
+        error = PermissionError("simulated walk denial")
+        with self.assertRaises(PermissionError):
+            clean_bytecode._raise_walk_error(error)
 
     def test_clean_bytecode_helper_propagates_deletion_failure(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
