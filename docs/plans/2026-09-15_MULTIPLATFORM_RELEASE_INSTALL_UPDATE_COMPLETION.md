@@ -1824,3 +1824,31 @@ remains open and the exact next step.
   root-owned source bytecode reappears; then a fresh owner build to exercise
   the pending hardware-pool APT-metadata repair.
 - Session 04 remains closed.
+
+## 2026-09-22 — Bytecode cleanup single-owner repair; local acceptance agent given bounded repair authority
+
+- The `8717db49` cleanup attempt exposed another single-dollar Make-loop
+  regression and removed nothing.
+- Root cause of the repeated `$$ -> $` mutation was corrected: it came from
+  JavaScript `String.replace` replacement-string semantics in this session's
+  patch tooling, not from the GitHub connector.
+- The shell loop has been eliminated rather than patched again.
+- `tools/clean_bytecode.py` now solely owns source-bytecode cleanup; Make
+  delegates directly to it. The helper is source-scoped, preserves ignored
+  evidence, raises on deletion failures, and raises on unreadable traversal.
+- Focused tests exercise scoping and failure propagation.
+- Effective repair commits:
+  `c19757a0`, `0ee7e44a`, `a45e4879`, `d8888c1e`, `5a23a49b`,
+  `02ef7c18`.
+- The privileged release bytecode-prevention repair from `712d351a` remains
+  required and still awaits post-doctor/build live proof.
+- For the remainder of Session 03, the local Linux acceptance agent may make,
+  test and commit bounded obvious repairs in the active release/verification
+  path instead of stopping on every source-local defect. It must stop for
+  destructive-device/media actions, security/trust weakening, broad
+  architectural decisions, package-policy changes with product impact,
+  evidence deletion, or genuinely ambiguous fixes.
+- Next: one-time privileged cleanup via the new owner; focused tests; full
+  non-root verify; doctor + root-bytecode contamination check; fresh owner
+  build to exercise the pending hardware-pool APT metadata repair.
+- Session 04 remains closed until Session 03 publishes/inspects a real release.
