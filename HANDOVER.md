@@ -1469,3 +1469,31 @@ current main, rerun the hygiene-focused test, then directly prove
 `make clean-bytecode` and `build/footprint-source.sh` succeed with the old
 root-owned evidence still present. If green, continue with full
 `make verify`, doctor, and a fresh owner build under the new exact SHA.
+
+## 44. Session 03 hygiene test expectation corrected after connector dollar-literal mutation (2026-09-22)
+
+Validation at `d5530b78d9c4bde7e7b302fb3a9d37204c5369a7` stopped correctly in the
+focused hygiene test. The Makefile was functionally correct and visibly used
+three `$$root` references, but the committed Python regression test had been
+rewritten to assert the buggy single-dollar spelling.
+
+Root cause of the repeated mismatch was the GitHub contents write path used by
+this session: literal `$$` sequences embedded in the Python test source were
+collapsed during the write. The Makefile blob itself retained its intended
+`$$root` spelling.
+
+Effective test repair:
+- `5f7aaa19` removes literal double-dollar tokens from the Python test source;
+  it constructs the expected Make shell variable at runtime with
+  `chr(36) * 2 + "root"`, constructs the forbidden single-dollar form with
+  `chr(36) + "root"`, asserts all three required escaped references, and
+  asserts the three buggy single-dollar forms are absent.
+
+The committed blob was re-fetched after the write and verified to contain the
+runtime constructor rather than connector-sensitive literal `$$root` text.
+The Makefile remains unchanged and correct.
+
+Next: pull current main, rerun only the focused hygiene test first. If green,
+continue with the already-defined direct `make clean-bytecode` and
+`build/footprint-source.sh` proofs, then full `make verify`, doctor, and the
+fresh Session 03 owner build. Prior privileged evidence remains untouched.
