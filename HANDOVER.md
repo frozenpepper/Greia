@@ -1651,3 +1651,35 @@ new Python owner, prove historical root bytecode is gone, run focused cleanup
 and release tests + full `make verify`, then doctor/build. If a small,
 unambiguous implementation defect appears, the local agent is authorized to
 repair/test/commit it rather than stopping immediately.
+
+## 48. Session 03 owner build reached hardware-support archiving; pool-intermediate ownership repaired (2026-09-22)
+
+- Real owner build on `6935a411` progressed past both old failures with no
+  repair needed for them: no `greia-live-media-id` hook failure anywhere in
+  the 236K+ build log (live-media identity ordering holds), and the
+  hardware-pool APT refresh resolved all candidates including the former
+  `alsa-topology-conf` gap (pool population + downloads completed).
+- New first failure at the hardware-support archive stage:
+  `build-release: unexpected pool top-level files:
+  ['available-candidates.txt', 'candidates.json']`.
+- Root cause: the repaired pool producer left its candidate-discovery
+  working intermediates at the pool top level, while
+  `tools/build_release.py::_assert_no_hooks` enforces the fail-closed
+  allowlist `{manifest.json, Packages, Packages.gz}` (+ `pool/`).
+  Nothing downstream reads those intermediates from the pool root;
+  `finalize_hardware_support_pool.py` only consumes the manifest.
+- Bounded repair (no validator weakening): `populate-hardware-support-pool.sh`
+  now removes `$CANDIDATE_MANIFEST`/`$AVAILABLE_LIST` right after successful
+  finalization; overlay regression extended with finalize < cleanup <
+  APT-lists-hygiene ordering.
+- Validation before commit: `bash -n`, focused overlay suite 23/23 OK, full
+  `make verify` 3608 tests OK (skipped=8), exit 0, no FAIL/ERROR/permission
+  issues.
+- No root-owned source bytecode recreated by doctor or the failed build
+  (0 entries after each); prevention repair holds end to end.
+- Prior Session 03 evidence roots (65af/99f/e9ba/821934/3a8a1a22) preserved
+  untouched.
+
+Next: commit this repair on `main`, push after confirming no concurrent
+remote advance, then fresh SHA evidence root, doctor, and owner-build rerun
+against the repaired pool producer.

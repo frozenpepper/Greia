@@ -162,6 +162,13 @@ python3 "$PROJECT_ROOT/tools/finalize_hardware_support_pool.py" \
   --pool-root "$POOL_ROOT" \
   --candidate-manifest "$CANDIDATE_MANIFEST"
 
+# The candidate manifest and availability list are working intermediates for
+# candidate discovery above. Finalization has consumed the manifest, and the
+# release archive enforces a fail-closed top-level allowlist
+# (manifest.json, Packages, Packages.gz, pool/), so remove the intermediates
+# here instead of widening the archive check.
+rm -f "$CANDIDATE_MANIFEST" "$AVAILABLE_LIST"
+
 chown -R root:root "$POOL_ROOT"
 find "$POOL_ROOT" -type d -exec chmod 0755 '{}' +
 find "$POOL_ROOT" -type f -exec chmod 0644 '{}' +

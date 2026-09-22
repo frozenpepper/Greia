@@ -572,6 +572,16 @@ class SystemOverlayContractTests(unittest.TestCase):
         self.assertLess(candidate_probe, download_resolve)
         self.assertLess(download_resolve, pool_finalize)
         self.assertLess(pool_finalize, pool_hygiene)
+        # The finalized pool must match the fail-closed release archive
+        # allowlist (manifest.json, Packages, Packages.gz, pool/): the
+        # producer removes its candidate-discovery intermediates after
+        # finalization consumes the manifest instead of widening the
+        # archive check.
+        pool_intermediate_cleanup = pool_builder.index(
+            'rm -f "$CANDIDATE_MANIFEST" "$AVAILABLE_LIST"'
+        )
+        self.assertLess(pool_finalize, pool_intermediate_cleanup)
+        self.assertLess(pool_intermediate_cleanup, pool_hygiene)
 
     def test_installer_powers_off_before_parent_removes_live_usb(self) -> None:
         installer = (PROJECT_ROOT / "src/greia_installer/main.py").read_text()

@@ -1852,3 +1852,22 @@ remains open and the exact next step.
   non-root verify; doctor + root-bytecode contamination check; fresh owner
   build to exercise the pending hardware-pool APT metadata repair.
 - Session 04 remains closed until Session 03 publishes/inspects a real release.
+
+## 2026-09-22 — Hardware-pool intermediate ownership repair; archive allowlist preserved
+
+- The real owner build on `6935a411` cleared the live-media identity and
+  APT-metadata stages and failed later at hardware-support archiving:
+  `unexpected pool top-level files: ['available-candidates.txt',
+  'candidates.json']`.
+- The pool producer's candidate-discovery intermediates were left at the pool
+  top level after finalization consumed the manifest. Repaired at the
+  ownership seam: the producer removes both intermediates right after
+  successful finalization, keeping the fail-closed archive allowlist
+  (`manifest.json`, `Packages`, `Packages.gz`, `pool/`) intact instead of
+  widening it. Overlay regression now locks finalize < cleanup < hygiene
+  ordering.
+- Pre-commit validation: focused overlay 23/23 OK; full `make verify` 3608
+  tests OK (skipped=8), exit 0, no permission errors. Doctor and the failed
+  build recreated zero root-owned source bytecode.
+- Next: commit, push if remote is quiet, fresh owner build against the
+  repaired producer.
