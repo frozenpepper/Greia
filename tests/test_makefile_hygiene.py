@@ -27,6 +27,9 @@ class MakefileHygieneTests(unittest.TestCase):
         self.assertIn('find "$root" -type d -name __pycache__', clean_block)
         self.assertIn('find "$root" -type f -name "*.py[co]" -delete', clean_block)
         self.assertEqual(clean_block.count("$root"), 3)
+        self.assertNotIn('if [ -d "$root" ]; then', clean_block)
+        self.assertNotIn('find "$root" -type d -name __pycache__', clean_block)
+        self.assertNotIn('find "$root" -type f -name "*.py[co]" -delete', clean_block)
 
         # Root-level Python bytecode is still cleaned without recursively
         # descending into unrelated ignored directories.
