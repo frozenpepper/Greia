@@ -1871,3 +1871,22 @@ remains open and the exact next step.
   build recreated zero root-owned source bytecode.
 - Next: commit, push if remote is quiet, fresh owner build against the
   repaired producer.
+
+## 2026-09-22 — Payload shrink defect repaired (flex_bg); support semantics still open
+
+- Bundle capacity refusal on `248ab0df` (required 2405617664 > slot
+  1610612736) traced to a real producer defect, not product sizing: the
+  shipped payload filesystem spans the full slot with ~472 MiB free
+  because default flex_bg (one flex group over all 12 block groups) makes
+  e2fsprogs `resize2fs -M` report the current size as the minimum.
+  Bisected empirically (200M/512M shrink, 1G/1.5G refuse; identical 1.5G
+  without flex_bg shrinks 393216 -> 257690 blocks).
+- Repair: payload mkfs uses `-O ^flex_bg`; post-shrink size is now derived
+  from authoritative `dumpe2fs -h` geometry with a fail-closed
+  container==extent check. Locked by command-shape, strict-parse,
+  mismatch-refusal, and real-e2fsprogs regression tests (new
+  `test_payload_shrink_real.py`, Linux-gated). Pre-commit `make verify`:
+  3612 tests OK, exit 0.
+- Still open: re-measure the real payload receipt via owner rebuild, then
+  the hardware-support selected-set capacity semantics (§5-8 of the
+  capacity mission). No slot/product change authorized yet.

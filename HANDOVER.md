@@ -1683,3 +1683,34 @@ repair/test/commit it rather than stopping immediately.
 Next: commit this repair on `main`, push after confirming no concurrent
 remote advance, then fresh SHA evidence root, doctor, and owner-build rerun
 against the repaired pool producer.
+
+## 49. Session 03 payload capacity defect diagnosed: flex_bg pins resize2fs -M; shrink-capable producer repaired (2026-09-22)
+
+- Real owner build on `248ab0df` cleared pool/archiving (intermediate
+  cleanup confirmed in production) and failed only at final bundle
+  capacity: required 2405617664 > slot 1610612736.
+- Payload-size investigation (read-only on preserved `payload.ext4.zst`):
+  container == filesystem extent (1610612736; no dead tail), but the
+  filesystem itself spans the full slot with ~472 MiB free while
+  `resize2fs -M`/`-P` insist the minimum is the current size.
+- Bisected on disposable scratch: 200M/512M images shrink normally, 1G/1.5G
+  images refuse any shrink; identical 1.5G image with `-O ^flex_bg`
+  shrinks 393216 -> 257690 blocks. Root cause: default flex_bg packs all
+  block groups into one flex group and e2fsprogs 1.47 cannot shrink that
+  layout, so the producer's shrink step was a silent no-op and the receipt
+  recorded full slot size.
+- Bounded repair in `tools/build_release.py`: mkfs gains `-O ^flex_bg`;
+  new single-owner `_ext4_filesystem_bytes` helper derives the authoritative
+  post-shrink extent from `dumpe2fs -h` (strict field validation, fail
+  closed) and the producer refuses a container/extent mismatch instead of
+  recording `st_size`. No validator weakening; installer-created
+  on-device filesystems untouched (never need shrinking).
+- Regression: mkfs-argv shape + 5-step command order + strict geometry
+  parsing + container-mismatch refusal in `test_build_release.py`;
+  new `test_payload_shrink_real.py` (Linux/e2fsprogs-gated) proves a real
+  1 GiB image shrinks and the real producer pipeline shrinks a real image
+  end to end. Pre-commit `make verify`: 3612 tests OK, exit 0, clean tree.
+- No root-owned source bytecode recreated at any stage.
+
+Next: commit/push, then owner-build rerun to re-measure the real payload
+receipt before touching support-capacity semantics.

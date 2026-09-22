@@ -151,6 +151,18 @@ class FakeExt4Runner:
             with image.open("r+b") as handle:
                 handle.truncate(shrunk)
             return module.ReleaseCommandResult(stdout=b"", returncode=0)
+        if prog == "dumpe2fs":
+            image = Path(argv[-1])
+            try:
+                size = image.stat().st_size
+            except OSError:
+                return module.ReleaseCommandResult(stdout=b"missing image", returncode=1)
+            report = (
+                "Filesystem volume name:   <none>\n"
+                f"Block count:              {size // 4096}\n"
+                f"Block size:               4096\n"
+            )
+            return module.ReleaseCommandResult(stdout=report.encode("utf-8"), returncode=0)
         if prog == "zstd":
             completed = subprocess.run(
                 argv,
@@ -247,7 +259,9 @@ class BuildReleaseTests(unittest.TestCase):
                 runner=runner,
             )
             kinds = [cmd[0] for cmd in runner.commands]
-            self.assertEqual(kinds, ["mkfs.ext4", "e2fsck", "resize2fs", "e2fsck"])
+            self.assertEqual(
+                kinds, ["mkfs.ext4", "e2fsck", "resize2fs", "e2fsck", "dumpe2fs"]
+            )
             # Payload compression streams through the file seam, never the
             # capture seam: exactly one streamed `zstd -19 -c`.
             streamed_kinds = [cmd[0] for cmd in runner.streamed_commands]
@@ -256,10 +270,18 @@ class BuildReleaseTests(unittest.TestCase):
             self.assertNotIn("-T", runner.streamed_commands[0])
             # Exact ordered commands: populate -> check -> shrink-min -> re-check.
             self.assertEqual(runner.commands[0][:2], ["mkfs.ext4", "-d"])
+            # Payload images must stay shrink-to-minimum capable: flex_bg
+            # packs slot-sized images into one flex group that resize2fs -M
+            # cannot shrink, so the producer disables it at creation.
+            self.assertIn("-O", runner.commands[0])
+            self.assertIn("^flex_bg", runner.commands[0])
             self.assertEqual(runner.commands[1][:3], ["e2fsck", "-f", "-y"])
             self.assertNotIn("-n", runner.commands[1])
             self.assertEqual(runner.commands[2][:2], ["resize2fs", "-M"])
             self.assertEqual(runner.commands[3][:3], ["e2fsck", "-f", "-y"])
+            # Post-shrink geometry authority reads the real filesystem
+            # extent; the recorded size must equal the container file.
+            self.assertEqual(runner.commands[4][:3], ["dumpe2fs", "-h", "--"])
             for cmd in runner.commands:
                 self.assertNotIn("shell", [str(c) for c in cmd])
             for cmd in runner.streamed_commands:
@@ -319,6 +341,62 @@ class BuildReleaseTests(unittest.TestCase):
                 receipt["minimum_slot_bytes"], result["minimum_slot_bytes"]
             )
 
+    def test_ext4_geometry_authority_is_strict(self) -> None:
+        report = (
+            "Filesystem volume name:   <none>\n"
+            "Block count:              257690\n"
+            "Blocks per group:         32768\n"
+            "Block size:               4096\n"
+        )
+        self.assertEqual(
+            module._parse_dumpe2fs_field(report, "Block count"), 257690
+        )
+        self.assertEqual(module._parse_dumpe2fs_field(report, "Block size"), 4096)
+        # "Blocks per group" must not satisfy a "Block count" lookup.
+        with self.assertRaises(module.ReleaseBuildError):
+            module._parse_dumpe2fs_field("Blocks per group: 32768\n", "Block count")
+        for bad in (
+            "Block size: 4096\n",  # missing count
+            "Block count: 10\nBlock count: 20\nBlock size: 4096\n",  # duplicated
+            "Block count: many\nBlock size: 4096\n",  # non-numeric
+            "Block count: 0\nBlock size: 4096\n",  # non-positive
+        ):
+            with self.assertRaises(module.ReleaseBuildError):
+                module._parse_dumpe2fs_field(bad, "Block count")
+
+    def test_payload_container_mismatch_fails_closed(self) -> None:
+        class _LyingGeometryRunner(FakeExt4Runner):
+            def run(self, command, *, timeout_seconds=None):
+                if list(command)[0] == "dumpe2fs":
+                    self.commands.append(list(command))
+                    self.timeouts.append(timeout_seconds)
+                    return module.ReleaseCommandResult(
+                        stdout=b"Block count: 1\nBlock size: 4096\n",
+                        returncode=0,
+                    )
+                return super().run(command, timeout_seconds=timeout_seconds)
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            staging = self._staging(root)
+            kernel = root / "vmlinuz"
+            kernel.write_bytes(b"k")
+            initramfs = root / "initrd"
+            initramfs.write_bytes(b"i")
+            with self.assertRaises(module.ReleaseBuildError) as ctx:
+                module.build_release_payload(
+                    staging_dir=staging,
+                    kernel_path=kernel,
+                    initramfs_path=initramfs,
+                    output=root / "payload.ext4.zst",
+                    profile_id="legacy-x86-i686",
+                    release_id="greia-0.15.0",
+                    filesystem_bytes=4 * 1024 * 1024,
+                    minimum_slot_bytes=None,
+                    runner=_LyingGeometryRunner(),
+                )
+            self.assertIn("container does not match", str(ctx.exception))
+
     def test_payload_compression_runs_with_intended_bound(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -341,12 +419,14 @@ class BuildReleaseTests(unittest.TestCase):
                 runner=runner,
             )
             kinds = [cmd[0] for cmd in runner.commands]
-            self.assertEqual(kinds, ["mkfs.ext4", "e2fsck", "resize2fs", "e2fsck"])
-            # First four steps run under the default command bound; the
+            self.assertEqual(
+                kinds, ["mkfs.ext4", "e2fsck", "resize2fs", "e2fsck", "dumpe2fs"]
+            )
+            # First five steps run under the default command bound; the
             # streamed zstd -19 step over the ~1 GiB-class image runs under
             # the larger compression bound with real headroom.
             self.assertEqual(
-                runner.timeouts, [module.DEFAULT_COMMAND_TIMEOUT_SECONDS] * 4
+                runner.timeouts, [module.DEFAULT_COMMAND_TIMEOUT_SECONDS] * 5
             )
             self.assertEqual(
                 runner.streamed_timeouts, [module.PAYLOAD_COMPRESSION_TIMEOUT_SECONDS]
@@ -369,7 +449,7 @@ class BuildReleaseTests(unittest.TestCase):
                 command_timeout_seconds=11.0,
                 compression_timeout_seconds=22.0,
             )
-            self.assertEqual(runner2.timeouts, [11.0] * 4)
+            self.assertEqual(runner2.timeouts, [11.0] * 5)
             self.assertEqual(runner2.streamed_timeouts, [22.0])
             # Production runner defaults stay finite and match the constants.
             self.assertEqual(

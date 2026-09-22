@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -377,6 +378,61 @@ def _assert_ext4_magic(head: bytes) -> None:
         raise ReleaseBuildError("payload is not a real ext4 image (bad superblock magic)")
 
 
+_EXT4_GEOMETRY_FIELDS = ("Block count", "Block size")
+
+
+def _parse_dumpe2fs_field(report: str, label: str) -> int:
+    """Extract one strictly-validated integer field from ``dumpe2fs -h`` text.
+
+    The label must occur exactly once as a full ``Label: <int>`` line;
+    anything else (missing, duplicated, non-numeric) fails closed so a
+    localized or truncated tool report can never silently yield a wrong
+    filesystem size.
+    """
+    matches = re.findall(rf"^{re.escape(label)}:\s+(\d+)\s*$", report, re.MULTILINE)
+    if len(matches) != 1:
+        raise ReleaseBuildError(
+            f"ext4 geometry report has no single {label!r} field"
+        )
+    value = int(matches[0])
+    if value <= 0:
+        raise ReleaseBuildError(f"ext4 geometry field {label!r} is not positive")
+    return value
+
+
+def _ext4_filesystem_bytes(
+    runner: ReleaseCommandRunner,
+    image: Path,
+    *,
+    timeout_seconds: float | None = None,
+) -> int:
+    """Return the authoritative post-shrink ext4 filesystem extent in bytes.
+
+    Single owner for payload geometry: ``dumpe2fs -h`` ``Block count`` times
+    ``Block size`` through the injectable runner seam (argument array, no
+    shell). Both fields are strictly validated; the product is bounded like
+    any other payload size fact. Callers compare this against the container
+    file size so a dead tail beyond the filesystem end fails closed instead
+    of being recorded as payload bytes.
+    """
+    raw = _run_capture(
+        runner,
+        ["dumpe2fs", "-h", "--", str(image)],
+        label="ext4 geometry",
+        timeout_seconds=timeout_seconds,
+    )
+    try:
+        report = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ReleaseBuildError("ext4 geometry report is not decodable") from exc
+    block_count = _parse_dumpe2fs_field(report, "Block count")
+    block_size = _parse_dumpe2fs_field(report, "Block size")
+    geometry_bytes = block_count * block_size
+    if geometry_bytes <= 0 or geometry_bytes > MAX_PAYLOAD_BYTES:
+        raise ReleaseBuildError("ext4 filesystem extent is outside Greia bounds")
+    return geometry_bytes
+
+
 def build_persistent_contract(output: Path) -> bytes:
     raw = build_persistent_state_contract_bytes()
     verify_persistent_state_contract_bytes(raw)
@@ -718,16 +774,20 @@ def build_release_payload(
     """Build a real relocatable ext4 slot image from the composed target root.
 
     Standard e2fsprogs sequence through the injectable runner seam:
-    ``mkfs.ext4 -d <staging>`` (populate) -> ``e2fsck -f -y`` (clean) ->
+    ``mkfs.ext4 -d <staging> -O ^flex_bg`` (populate without flex_bg so the
+    image stays shrink-to-minimum capable) -> ``e2fsck -f -y`` (clean) ->
     ``resize2fs -M`` (shrink to practical minimum) -> ``e2fsck -f -y``
-    (clean) -> ``zstd -19`` (compress, streamed stdout-to-file with bounded
-    RAM). The staging tree is validated with
+    (clean) -> ``dumpe2fs -h`` geometry authority (``Block count`` times
+    ``Block size`` must equal the container file size, so a dead tail fails
+    closed instead of being recorded) -> ``zstd -19`` (compress, streamed
+    stdout-to-file with bounded RAM). The staging tree is validated with
     the shared T03 slot validator before any image byte is emitted, so a
     skeleton root is refused before compression. A fail-closed
     clone-neutrality gate re-verifies the four composer predicates on the
     seeded staging tree before any image byte is emitted, so a hand-built
-    dirty tree is refused before compression. Returns the post-shrink
-    image size as ``uncompressed_bytes``.
+    dirty tree is refused before compression. Returns the authoritative
+    post-shrink filesystem extent (geometry, verified equal to the container
+    file size) as ``uncompressed_bytes``.
 
     When ``minimum_slot_bytes`` is omitted the producer derives it after the
     shrink from the real ext4 byte size plus ``PAYLOAD_MIN_HEADROOM``. The
@@ -816,9 +876,26 @@ def build_release_payload(
     tmp_img = Path(tmp_name)
     try:
         kib = max(1, filesystem_bytes // 1024)
+        # flex_bg packs all block groups of a slot-sized image into one flex
+        # group, after which e2fsprogs resize2fs -M/-P reports the full size
+        # as the minimum and the shrink step below becomes a silent no-op
+        # (measured: 12-group image with ~30% free refuses any shrink, while
+        # the identical image without flex_bg shrinks normally). Payload
+        # images must stay shrink-to-minimum capable, so the feature stays
+        # off here; read-mostly slot images do not need flex packing.
         _run_checked(
             active,
-            ["mkfs.ext4", "-d", str(staging), "-L", _SLOT_LABEL, str(tmp_img), f"{kib}K"],
+            [
+                "mkfs.ext4",
+                "-d",
+                str(staging),
+                "-O",
+                "^flex_bg",
+                "-L",
+                _SLOT_LABEL,
+                str(tmp_img),
+                f"{kib}K",
+            ],
             label="ext4 population",
             timeout_seconds=command_timeout_seconds,
         )
@@ -840,10 +917,18 @@ def build_release_payload(
             label="ext4 re-check",
             timeout_seconds=command_timeout_seconds,
         )
+        geometry_bytes = _ext4_filesystem_bytes(
+            active, tmp_img, timeout_seconds=command_timeout_seconds
+        )
         try:
-            shrunk_bytes = tmp_img.stat().st_size
+            container_bytes = tmp_img.stat().st_size
         except OSError as exc:
             raise ReleaseBuildError("shrunk slot image is unavailable") from exc
+        if container_bytes != geometry_bytes:
+            raise ReleaseBuildError(
+                "slot image container does not match ext4 filesystem extent"
+            )
+        shrunk_bytes = geometry_bytes
         if shrunk_bytes <= 0 or shrunk_bytes > MAX_PAYLOAD_BYTES:
             raise ReleaseBuildError("shrunk slot image is outside Greia bounds")
         if shrunk_bytes > filesystem_bytes:
