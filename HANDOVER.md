@@ -1596,3 +1596,58 @@ not recreate root-owned source bytecode.
 
 The hardware-pool APT-metadata repair remains implemented but still requires
 end-to-end owner-build proof.
+
+## 47. Bytecode cleanup moved to a Python owner; prior dollar-collapse diagnosis corrected (2026-09-22)
+
+Validation at `8717db49fa181c696cdd6be65be17301f3747b4b`
+showed that the historical root-owned bytecode was still not removed by
+`sudo make clean-bytecode`. The Make recipe had again regressed to
+single-dollar `$root` shell references, so GNU make consumed `$r` and the
+loop silently operated on `oot`.
+
+A retrospective review identified the actual mechanism behind the repeated
+regressions: the GitHub connector was **not** rewriting `$$`. This session's
+JavaScript patch code repeatedly used `String.replace(old, replacement)`;
+inside a JavaScript replacement string, `$$` is interpreted as a literal
+single dollar. That was the source of the mutation. Earlier handover/plan notes
+that blamed connector-side dollar collapsing are therefore superseded by this
+correction.
+
+Rather than patching the same Make/shell escaping again, cleanup ownership is
+now structurally simplified:
+
+- `tools/clean_bytecode.py` is the sole owner of the cleanup root set
+  (`src`, `tests`, `tools`, `activities`) plus non-recursive repository
+  root bytecode;
+- `Makefile: clean-bytecode` delegates directly to that Python owner;
+- ignored `tmp/` / `out/` / release evidence is outside its traversal;
+- deletion failures raise and therefore fail `make clean-bytecode`;
+- unreadable source-tree traversal also raises rather than being silently
+  skipped;
+- regression tests exercise source scoping, preserved ignored evidence,
+  deletion-failure propagation, and walk-error propagation.
+
+Effective commits in this repair tranche:
+`c19757a0`, `0ee7e44a`, `a45e4879`, `d8888c1e`, `5a23a49b`,
+`02ef7c18`. Earlier transitional direct-`find` commits
+`1a931c5c`/`70f6c43a` are superseded by the Python cleanup owner.
+
+The prior privileged-release bytecode prevention remains in place:
+`greia_release.py` disables bytecode before project imports and its release
+subprocess environment carries `PYTHONDONTWRITEBYTECODE=1`.
+
+Local-agent authority for the remainder of Session 03 should be broader than
+the previous passive stop-on-any-defect scripts: the agent may diagnose and
+apply bounded, obvious source-local repairs in the active release/verification
+path, add/update focused regression tests, run the relevant gates, commit the
+coherent repair directly on `main`, and continue. It must still stop and ask
+for owner direction before destructive media/device actions, broad
+architecture changes, dependency/package-policy changes with product impact,
+security/trust weakening, evidence deletion, or ambiguous multi-system design
+choices.
+
+Next: pull current main, perform the one-time privileged cleanup through the
+new Python owner, prove historical root bytecode is gone, run focused cleanup
+and release tests + full `make verify`, then doctor/build. If a small,
+unambiguous implementation defect appears, the local agent is authorized to
+repair/test/commit it rather than stopping immediately.
