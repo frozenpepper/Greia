@@ -23,14 +23,27 @@ class MakefileHygieneTests(unittest.TestCase):
         # root-owned after privileged release work. Repository verification
         # must not traverse arbitrary ignored state merely to remove bytecode.
         self.assertNotIn("find . -type", clean_block)
-        self.assertIn('if [ -d "$root" ]; then', clean_block)
-        self.assertIn('find "$root" -type d -name __pycache__', clean_block)
-        self.assertIn('find "$root" -type f -name "*.py[co]" -delete', clean_block)
-        self.assertEqual(clean_block.count("$root"), 3)
-        self.assertNotIn('if [ -d "$root" ]; then', clean_block)
-        self.assertNotIn('find "$root" -type d -name __pycache__', clean_block)
-        self.assertNotIn('find "$root" -type f -name "*.py[co]" -delete', clean_block)
-
+        make_shell_root = chr(36) * 2 + "root"
+        bad_make_root = chr(36) + "root"
+        self.assertIn(f'if [ -d "{make_shell_root}" ]; then', clean_block)
+        self.assertIn(
+            f'find "{make_shell_root}" -type d -name __pycache__',
+            clean_block,
+        )
+        self.assertIn(
+            f'find "{make_shell_root}" -type f -name "*.py[co]" -delete',
+            clean_block,
+        )
+        self.assertEqual(clean_block.count(make_shell_root), 3)
+        self.assertNotIn(f'if [ -d "{bad_make_root}" ]; then', clean_block)
+        self.assertNotIn(
+            f'find "{bad_make_root}" -type d -name __pycache__',
+            clean_block,
+        )
+        self.assertNotIn(
+            f'find "{bad_make_root}" -type f -name "*.py[co]" -delete',
+            clean_block,
+        )
         # Root-level Python bytecode is still cleaned without recursively
         # descending into unrelated ignored directories.
         self.assertIn("find . -maxdepth 1 -type d -name __pycache__", clean_block)
