@@ -28,18 +28,55 @@ PACKAGE_SET_ROOT="$SCRIPT_DIR/package-sets"
 
 usage() {
   cat <<'USAGE'
-Usage: sudo build/build-installer-image.sh PROFILE [OUTPUT_DIR]
+Usage: sudo build/build-installer-image.sh PROFILE [OUTPUT_DIR] [--release-bundle PATH]
 
 Builds a BIOS-bootable USB image that starts the graphical Greia OS
 installer automatically and carries a compressed target-system payload.
+For A/B target profiles the release bundle is a required explicit input:
+pass --release-bundle with the validated unsigned deterministic
+.greiaupdate v3 release artifact. GREIA_AB_RELEASE_BUNDLE_SRC remains
+available as an explicit override (tests/harness), but normal production
+composition must use the --release-bundle flag.
 Run only on a Debian/Ubuntu x86 build host or VM.
 USAGE
 }
 
-[[ $# -ge 1 && $# -le 2 ]] || { usage >&2; exit 2; }
+RELEASE_BUNDLE_FLAG=""
+positional=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --release-bundle)
+      [[ $# -ge 2 ]] || { echo "--release-bundle requires a PATH argument." >&2; exit 2; }
+      RELEASE_BUNDLE_FLAG="$2"
+      shift 2
+      ;;
+    --release-bundle=*)
+      RELEASE_BUNDLE_FLAG="${1#--release-bundle=}"
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do positional+=("$1"); shift; done
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      positional+=("$1")
+      shift
+      ;;
+  esac
+done
+[[ ${#positional[@]} -ge 1 && ${#positional[@]} -le 2 ]] || { usage >&2; exit 2; }
 [[ ${EUID:-$(id -u)} -eq 0 ]] || { echo "Run as root." >&2; exit 1; }
 
-profile_input="$1"
+profile_input="${positional[0]}"
 if [[ -f "$profile_input" ]]; then
   PROFILE_PATH="$(realpath "$profile_input")"
 else
@@ -58,7 +95,46 @@ fi
 # package-set inputs used below.
 compose_resolve_profile "$PROFILE_PATH" "live-installer" "$PROJECT_ROOT"
 
-OUTPUT_DIR="${2:-$PROJECT_ROOT/out}"
+# A/B release-bundle authority: one explicit typed input, validated before
+# any disk mutation. Precedence is the --release-bundle flag, then the
+# GREIA_AB_RELEASE_BUNDLE_SRC explicit override (retained for tests and
+# harness wiring). Nothing searches directories; nothing hardcodes a
+# release path. The bundle is inspected here (v3 validity + profile
+# identity match) and re-asserted byte-identical at USB assembly below.
+AB_RELEASE_SRC=""
+if [[ -n "$RELEASE_BUNDLE_FLAG" ]]; then
+  AB_RELEASE_SRC="$RELEASE_BUNDLE_FLAG"
+elif [[ -n "${GREIA_AB_RELEASE_BUNDLE_SRC:-}" ]]; then
+  AB_RELEASE_SRC="${GREIA_AB_RELEASE_BUNDLE_SRC}"
+fi
+if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
+  [[ -n "$AB_RELEASE_SRC" ]] || {
+    echo "A/B installer build refused: pass --release-bundle with the unsigned deterministic .greiaupdate v3 release artifact." >&2
+    exit 1
+  }
+  [[ -f "$AB_RELEASE_SRC" && ! -L "$AB_RELEASE_SRC" ]] || {
+    echo "A/B installer build refused: release bundle is not a regular file: $AB_RELEASE_SRC" >&2
+    exit 1
+  }
+  AB_RELEASE_PROFILE="$(PYTHONPATH="$PROJECT_ROOT/src" python3 - "$AB_RELEASE_SRC" <<'PY'
+import sys
+sys.path.insert(0, "src")
+from greia_platform.system_updates import inspect_update_bundle
+print(inspect_update_bundle(sys.argv[1]).manifest.profile)
+PY
+)" || {
+    echo "A/B installer build refused: release bundle failed v3 inspection: $AB_RELEASE_SRC" >&2
+    exit 1
+  }
+  [[ "$AB_RELEASE_PROFILE" == "$PROFILE_ID" ]] || {
+    echo "A/B installer build refused: bundle profile $AB_RELEASE_PROFILE does not match image profile $PROFILE_ID." >&2
+    exit 1
+  }
+  echo "A/B release bundle validated: profile $AB_RELEASE_PROFILE."
+fi
+export AB_RELEASE_SRC
+
+OUTPUT_DIR="${positional[1]:-$PROJECT_ROOT/out}"
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 OUTPUT_IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
@@ -246,9 +322,11 @@ compose_footprint_hygiene "$LIVE_ROOT"
 # build fails here — before any disk mutation.
 if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
   echo "A/B target profile ($STORAGE_LAYOUT_ADAPTER): generating installer A/B release facts."
-  AB_RELEASE_SRC="${GREIA_AB_RELEASE_BUNDLE_SRC:-}"
-  [[ -n "$AB_RELEASE_SRC" ]] || {
-    echo "A/B installer build refused: set GREIA_AB_RELEASE_BUNDLE_SRC to the unsigned deterministic .greiaupdate v3 release artifact." >&2
+  # AB_RELEASE_SRC was resolved and v3-validated (regular file, profile
+  # identity match) before any disk mutation above; re-assert presence
+  # here since the env-override form could theoretically change mid-build.
+  [[ -n "${AB_RELEASE_SRC:-}" ]] || {
+    echo "A/B installer build refused: validated --release-bundle input missing." >&2
     exit 1
   }
   [[ -f "$AB_RELEASE_SRC" && ! -L "$AB_RELEASE_SRC" ]] || {

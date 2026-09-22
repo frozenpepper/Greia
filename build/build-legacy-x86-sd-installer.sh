@@ -4,12 +4,44 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 PROFILE="legacy-x86-i686"
-PROFILE="${1:-$PROFILE}"
-OUTPUT_DIR="${2:-$PROJECT_ROOT/out}"
+RELEASE_BUNDLE_ARGS=()
+positional=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --release-bundle)
+      [[ $# -ge 2 ]] || { echo "--release-bundle requires a PATH argument." >&2; exit 2; }
+      RELEASE_BUNDLE_ARGS=(--release-bundle "$2")
+      shift 2
+      ;;
+    --release-bundle=*)
+      RELEASE_BUNDLE_ARGS=(--release-bundle "${1#--release-bundle=}")
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do positional+=("$1"); shift; done
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      positional+=("$1")
+      shift
+      ;;
+  esac
+done
+PROFILE="${positional[0]:-$PROFILE}"
+OUTPUT_DIR="${positional[1]:-$PROJECT_ROOT/out}"
 
 usage() {
   cat <<'USAGE'
-Usage: sudo build/build-legacy-x86-sd-installer.sh [PROFILE] [OUTPUT_DIR]
+Usage: sudo build/build-legacy-x86-sd-installer.sh [PROFILE] [OUTPUT_DIR] [--release-bundle PATH]
 
 Build a Greia legacy-x86 graphical installer and place the one-shot AntiX boot
 helper plus optional hardware-evidence collector directly on the installer
@@ -18,10 +50,12 @@ media. This command intentionally does NOT inspect a target PC before building.
 PROFILE defaults to legacy-x86-i686 (the generic release-compatible image).
 A developer profile (for example legacy-x86-i686-dev) additionally enables
 default-on SSH and mDNS discovery for remote operator access.
+For A/B target profiles pass --release-bundle with the validated .greiaupdate
+v3 artifact (forwarded to the canonical builder).
 USAGE
 }
 
-[[ $# -le 2 ]] || { usage >&2; exit 2; }
+[[ ${#positional[@]} -le 2 ]] || { usage >&2; exit 2; }
 [[ ${EUID:-$(id -u)} -eq 0 ]] || {
   echo "Run as root: sudo build/build-legacy-x86-sd-installer.sh [PROFILE] [OUTPUT_DIR]" >&2
   exit 1
@@ -140,7 +174,7 @@ BOOT_TARGET_PPM_SHA="$(sha256sum "$PROJECT_ROOT/build/overlay/etc/greia-boot/boo
 BOOT_INSTALLER_PPM_SHA="$(sha256sum "$PROJECT_ROOT/build/installer-overlay/etc/greia-boot/boot-logo.ppm" | awk '{print $1}')"
 BOOT_THEME_SHA="$(sha256sum "$PROJECT_ROOT/build/overlay/boot/grub/greia-theme.txt" | awk '{print $1}')"
 
-"$SCRIPT_DIR/build-installer-image.sh" "$PROFILE" "$OUTPUT_DIR"
+"$SCRIPT_DIR/build-installer-image.sh" "$PROFILE" "$OUTPUT_DIR" ${RELEASE_BUNDLE_ARGS[@]+"${RELEASE_BUNDLE_ARGS[@]}"}
 
 # The finished image now owns its copies.  Restore the checkout before any
 # post-build media finalisation so later steps cannot accidentally depend on

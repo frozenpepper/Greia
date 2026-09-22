@@ -315,10 +315,17 @@ Developer-image convenience must not leak into normal/release profiles.
 
 ### Capable build-host process rules (2026-09-15 — `POSTR1-P5-GATE-CLOSURE-V12E`, R01-03)
 
-- Pass `GREIA_AB_*` (`GREIA_AB_RELEASE_BUNDLE_SRC`, `GREIA_AB_TRUSTED_KEY_SRC`)
-  on the `sudo` command line. Exported environment does not survive sudo
-  `env_reset`, so an export-then-`sudo build/...` launch fail-closes on the
-  missing A/B inputs.
+- Pass the A/B release bundle as an explicit builder input:
+  `sudo build/build-installer-image.sh <profile> <out> --release-bundle
+  <path-to-validated-.greiaupdate-v3>` (forwarded through
+  `build-legacy-x86-sd-installer.sh` / `tools/build-development-installer.sh`
+  with the same flag). `GREIA_AB_RELEASE_BUNDLE_SRC` remains available as
+  an explicit override for tests/harness wiring, and `GREIA_AB_TRUSTED_KEY_SRC`
+  where still consumed, but normal production composition must use the
+  `--release-bundle` flag: the builder v3-inspects the bundle and refuses
+  a profile mismatch before any disk mutation. Note: exported environment
+  does not survive sudo `env_reset`, so an export-then-`sudo build/...`
+  launch fail-closes on missing A/B inputs; prefer the flag form.
 - Never `umount -R` a build chroot that holds host bind mounts. The chroot
   bind-mounts propagate as shared, so a recursive unmount escapes onto the
   host and can take down host `/dev`+`/proc`+`/sys` (observed: sshd unable to

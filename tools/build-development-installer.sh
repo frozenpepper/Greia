@@ -11,7 +11,7 @@ VERIFIER="$PROJECT_ROOT/tools/verify-development-installer.sh"
 
 usage() {
   cat >&2 <<'EOF'
-Usage: sudo bash tools/build-development-installer.sh PROFILE [OUTPUT_DIR]
+Usage: sudo bash tools/build-development-installer.sh PROFILE [OUTPUT_DIR] [--release-bundle PATH]
 
 Build a Greia development installer only when BOTH the live installer and the
 installed-system payload explicitly include the developer-remote capability.
@@ -19,13 +19,48 @@ Legacy-x86 profiles are routed through the physically proven legacy installer
 builder without changing its boot-critical artwork/media recipe. Afterward the
 finished image and both embedded squashfs artifacts are checked for the
 SSH/network recovery contract.
+For A/B target profiles pass --release-bundle (forwarded to the installer
+builder with the validated .greiaupdate v3 artifact).
 EOF
 }
 
-[[ $# -ge 1 && $# -le 2 ]] || { usage; exit 2; }
+RELEASE_BUNDLE_ARGS=()
+positional=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --release-bundle)
+      [[ $# -ge 2 ]] || { echo "--release-bundle requires a PATH argument." >&2; exit 2; }
+      RELEASE_BUNDLE_ARGS=(--release-bundle "$2")
+      shift 2
+      ;;
+    --release-bundle=*)
+      RELEASE_BUNDLE_ARGS=(--release-bundle "${1#--release-bundle=}")
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      while [[ $# -gt 0 ]]; do positional+=("$1"); shift; done
+      ;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage
+      exit 2
+      ;;
+    *)
+      positional+=("$1")
+      shift
+      ;;
+  esac
+done
+
+[[ ${#positional[@]} -ge 1 && ${#positional[@]} -le 2 ]] || { usage; exit 2; }
 [[ ${EUID:-$(id -u)} -eq 0 ]] || { echo "Run as root." >&2; exit 1; }
 
-profile_input="$1"
+profile_input="${positional[0]}"
 if [[ -f "$profile_input" ]]; then
   PROFILE_PATH="$(realpath "$profile_input")"
 else
@@ -60,7 +95,7 @@ TARGET_HOSTNAME="${PROFILE_FACTS[2]}"
   exit 1
 }
 
-OUTPUT_DIR="${2:-$PROJECT_ROOT/out}"
+OUTPUT_DIR="${positional[1]:-$PROJECT_ROOT/out}"
 mkdir -p "$OUTPUT_DIR"
 OUTPUT_DIR="$(realpath "$OUTPUT_DIR")"
 
@@ -71,12 +106,12 @@ case "$PLATFORM_FAMILY" in
     # Syslinux/FAT32 writer documented in INSTALLATION_USB_BOOT_POSTMORTEM.md.
     # Do not insert boot-art or console-cleanup experiments into this front door
     # without a new physical acceptance pass.
-    bash "$LEGACY_BUILDER" "$PROFILE_ID" "$OUTPUT_DIR"
+    bash "$LEGACY_BUILDER" "$PROFILE_ID" "$OUTPUT_DIR" ${RELEASE_BUNDLE_ARGS[@]+"${RELEASE_BUNDLE_ARGS[@]}"}
     ;;
   *)
     # Other families currently use the generic builder. Their physical boot
     # evidence remains profile-specific; the post-build SSH verifier still runs.
-    bash "$CANONICAL_BUILDER" "$PROFILE_PATH" "$OUTPUT_DIR"
+    bash "$CANONICAL_BUILDER" "$PROFILE_PATH" "$OUTPUT_DIR" ${RELEASE_BUNDLE_ARGS[@]+"${RELEASE_BUNDLE_ARGS[@]}"}
     ;;
 esac
 
