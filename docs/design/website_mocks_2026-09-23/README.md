@@ -1,29 +1,31 @@
-# Greia public website explorations — 23 September 2026
+# Greia public website concepts — third design pass, 23 September 2026
 
-**Evidence:** DESIGN SPEC / DESKTOP VISUAL REVIEW. These are standalone, local website concepts for discussion. They are not the Greia child Shell, Parent app, a release website, or proof of current device behavior.
+**Evidence:** DESIGN SPEC / DESKTOP VISUAL REVIEW. These are local, interactive website studies for owner review. They do not change the Greia Shell, Parent app, boot sequence, Activities or release state.
 
-Open [the comparison page](index.html), then enter any of the three directions. Each opens on Greia's actual boot identity: [`frame_0051.png`](../../../assets/boot/frames/frame_0051.png) or its canonical [white 1024×600 boot composition](../../../assets/boot/static/greia-boot-logo.png). The narrow, vertical constellation is intentionally preserved rather than stretched into a substitute logo.
+Open [the animated three-door chooser](index.html). The previous Portal / Orbit / Play Lab page structures were discarded after owner review. All three new pages use Greia's real final boot artwork, accepted cast and historical development Simulator captures, but now have distinct interaction models and stronger art direction.
 
-| Direction | Visual language | Visitor operation |
+| Concept | How it works | Visual direction |
 |---|---|---|
-| [01 The Portal](storybook.html) | Luminous white editorial entrance, oversized type, a moving ribbon, cream product story, deep navy conclusion | Replay the 52 real boot frames, then scroll through four chapters; the product capture and cast member change with the chapter. On a phone, each chapter carries its own capture. |
-| [02 Orbit](constellation.html) | Dark spatial field, moving orbit, character nodes, a central image portal | Choose one of six cast stars in any order. The central Greia capture, story, colour and selected node change together. Use the arrow controls, keyboard arrows, or drag across the map. |
-| [03 Play Lab](activity-fair.html) | A white boot-screen start that opens into a bold coral interactive canvas | Press Start, draw on the page with a pointer, change drawing colours, clear marks, and switch between Create, Play, Learn and Explore. Keys 1–4 also change worlds; Back returns to the boot entrance. |
+| [01 Worlds in Motion](storybook.html) | Five full-screen illustrated scenes replace conventional sections. Scroll, use the scene dots or arrow keys. The opening card replays Greia's real boot frames when tapped. | Kinetic comic/poster: hard cuts between yellow, coral, violet, mint and navy; giant words, layered product captures and characters. |
+| [02 The Wonder Map](constellation.html) | Drag the map, scroll or use ± to zoom, and open any of four Activity worlds. Each world opens a large, informative, colour-matched detail sheet. Arrow keys pan; Escape closes. | Playful spatial atlas: wandering dotted routes, illustrated islands, authentic screenshots, a central Greia boot mark, and no fixed reading order. |
+| [03 The Scribble Machine](activity-fair.html) | Draw across the whole page, including over its type and artwork. Select ink colours, stamp the accepted characters, clear marks, and switch between Create, Play, Learn and Explore. Number keys 1–4 change worlds. | Sketch-first digital playground: a loud lime canvas, handwritten-feeling strokes, oversized type, a taped real Greia screenshot and floating product note. |
 
-## Greia sources and boundaries
+## Drawing interaction and text-selection fix
 
-- Product story: repository [`README.md`](../../../README.md), [`CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`](../../product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md), [`PHASE0_CORE_CREATION_ACTIVITIES.md`](../../product/PHASE0_CORE_CREATION_ACTIVITIES.md), and [`ACTIVITY_SYSTEM_NAVIGATION.md`](../../product/ACTIVITY_SYSTEM_NAVIGATION.md).
-- Boot identity: [`assets/boot/frames/`](../../../assets/boot/frames/) and [`GREIA_BOOT_EXPERIENCE.md`](../GREIA_BOOT_EXPERIENCE.md). The original white-screen presentation grounds all three entrances.
-- Cast: [`GREIA_CANONICAL_CAST_SYSTEM.md`](../GREIA_CANONICAL_CAST_SYSTEM.md) and existing accepted runtime PNGs under [`assets/visual/runtime/v1/characters/`](../../../assets/visual/runtime/v1/characters/).
-- Type and palette: the existing Nunito Sans files under [`assets/fonts/nunito-sans/`](../../../assets/fonts/nunito-sans/) and Greia theme values in [`runtime/theme-defaults.toml`](../../../runtime/theme-defaults.toml).
-- Product imagery: historical **development Greia Simulator captures**, from the visual reviews of the child Shell, Painting, Magic Aquarium, Magic Maze, Shape Garden, Bridge Building and Momo's Faces under [`docs/reviews/visual/`](../../reviews/visual/). They show actual test-run screens; they are not fresh release or physical-device evidence. The specific paths are referenced directly by each page.
+The Scribble Machine deliberately puts its drawing canvas above the surrounding artwork and words, with controls above the canvas. The page and its descendants use `user-select: none` and `-webkit-user-select: none`; the studio cancels `selectstart` and `dragstart`. Pointer drawing calls `preventDefault`, uses pointer capture and `touch-action: none`. This lets a stroke cross large headlines without selecting text or dragging an image. Clear removes both ink and character stickers. The only content unavailable to draw over is the raised control bar and navigation, so those controls remain usable.
 
-The concepts are local HTML/CSS/JavaScript and reuse existing files by relative path. No canonical art or Greia runtime source is modified. Website copy is conceptual, and all pages identify the project as pre-public development.
+## Greia grounding
 
-## External design research
+- [`frame_0051.png`](../../../assets/boot/frames/frame_0051.png) is the authentic final raw Greia boot frame; [`greia-boot-logo.png`](../../../assets/boot/static/greia-boot-logo.png) is its generated white 1024×600 presentation canvas. The artwork is shown proportionally and never recoloured or replaced. The source contract is [`GREIA_BOOT_EXPERIENCE.md`](../GREIA_BOOT_EXPERIENCE.md).
+- Character images are the accepted six-member runtime cast from [`GREIA_CANONICAL_CAST_SYSTEM.md`](../GREIA_CANONICAL_CAST_SYSTEM.md).
+- Product claims are grounded in the repository [`README.md`](../../../README.md), [`CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md`](../../product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md), [`PHASE0_CORE_CREATION_ACTIVITIES.md`](../../product/PHASE0_CORE_CREATION_ACTIVITIES.md), and [`ACTIVITY_SYSTEM_NAVIGATION.md`](../../product/ACTIVITY_SYSTEM_NAVIGATION.md).
+- In-page product images link to historical development Greia Simulator captures under [`docs/reviews/visual/`](../../reviews/visual/): the child Shell, Painting, Magic Maze, Magic Aquarium and Shape Garden. They are not fresh production or physical-hardware evidence.
+- The pages reuse the licensed Nunito Sans files already in [`assets/fonts/nunito-sans/`](../../../assets/fonts/nunito-sans/). No shared Greia art source or runtime implementation was modified.
 
-The [Awwwards current Sites of the Month](https://www.awwwards.com/websites/sites_of_the_month/) list was reviewed on 23 September 2026. The [Lama Lama Awwwards entry](https://www.awwwards.com/sites/lama-lama-2) informed the idea of starting from a distinctive identity and letting it transform into content. The [Ponpon Mania entry](https://www.awwwards.com/sites/ponpon-mania) informed direct scene interaction and chapter-like movement. These are interaction references, not copied layouts, artwork or code.
+## External design research and translation
 
-## Review and interaction check
+I reviewed the live [Awwwards Sites of the Month list](https://www.awwwards.com/websites/sites_of_the_month/), the [Ponpon Mania award entry](https://www.awwwards.com/sites/ponpon-mania) and live comic, the [Lama Lama award entry](https://www.awwwards.com/sites/lama-lama-2) and live site, and the [Anime.js award entry](https://www.awwwards.com/sites/anime-js). The useful ideas were **art-led full-screen scenes and chapter movement**, **identity as an active part of the entrance**, and **interaction as the page's content rather than a decorative hover**. Greia's own mark, characters, screenshots, product structure and copy determine the implementations here. No layout, artwork or code was copied from those sites.
 
-The three `*-preview.png` files are 1440×900 Chromium desktop captures. All three pages and the comparison page were also rendered at 390×844 and 320×700. At those sizes, loaded images resolved, there were no JavaScript page errors, and the document width did not exceed the viewport. The Portal boot replay returned to frame 0051 and the scroll chapter changed the stage; Orbit node selection and arrow-key movement changed the story; Play Lab's Start, category keys, pointer drawing, Clear and Back controls were exercised. This is browser-mock verification only.
+## Review evidence
+
+The `*-preview.png` files and `index-preview.png` are 1440×900 Chromium captures. I inspected the opening screens, interior illustrated scenes, map detail sheets and responsive phone layouts. Chromium checks at 1440×900, 390×844 and 320×700 found no missing loaded images, page errors or horizontal overflow. Tests exercised scene navigation, map dragging/opening/closing, sketch drawing across headline text, colour changes, stamping, world switching and clearing. A drawn stroke produced canvas pixels while `window.getSelection()` remained empty. This verifies the website mocks only.
