@@ -109,6 +109,17 @@ chroot "$LIVE_ROOT" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
   apt-get "${APT_LOCAL_OPTIONS[@]}" install -y --no-install-recommends \
   "${firmware_packages[@]}"
 
+# Restore full APT list state before anything else runs apt: the local-only
+# update above leaves the live root seeing just this pool, so a later plain
+# install (for example the early-framebuffer klibc toolchain) would fail
+# with "no installation candidate", and autoclean would treat every cached
+# bookworm .deb as obsolete and wipe the shared persistent host cache.
+# Remove the override first, re-update from the configured sources, and only
+# then autoclean. The EXIT trap keeps the removal idempotent.
+rm -f "$source_path"
+chroot "$LIVE_ROOT" apt-get update
+trap - EXIT
+
 # The live installer intentionally carries broad firmware for coldplug support;
 # package archives remain in /opt/greia-hardware-support for selective target
 # installation. Only APT's ordinary cache is cleaned here; autoclean keeps the

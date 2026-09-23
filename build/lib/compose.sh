@@ -578,6 +578,11 @@ compose_build_early_framebuffer() {
     # klcc needs the matching native compiler (e.g. i686-linux-gnu-gcc) which is
     # provided by the gcc package; install it together with libklibc-dev so the
     # target toolchain can actually compile. Both are removed again afterwards.
+    # Own the list state first: an earlier live-root step may have updated
+    # from a restricted source set, and this install must resolve from the
+    # configured archives regardless of what ran before.
+    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+      apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
     chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
       apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
       install -y --no-install-recommends libklibc-dev gcc >/dev/null

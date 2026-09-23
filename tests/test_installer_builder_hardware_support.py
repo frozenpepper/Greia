@@ -35,6 +35,33 @@ class InstallerBuilderHardwareSupportTests(unittest.TestCase):
         )
         self.assertIn("dpkg-deb", source)
 
+    def test_live_firmware_restores_full_apt_lists_before_autoclean(self) -> None:
+        # Session 04 repair: the local-pool-only update left the live root
+        # seeing just the frozen pool, so the later klibc-toolchain install
+        # failed with "no installation candidate" and autoclean wiped the
+        # shared host .deb cache. The override must be removed and the
+        # configured archives re-updated before autoclean runs.
+        source = (PROJECT_ROOT / "build/install-live-hardware-firmware.sh").read_text(
+            encoding="utf-8"
+        )
+        local_install = source.index('"${firmware_packages[@]}"')
+        restore_update = source.index('chroot "$LIVE_ROOT" apt-get update')
+        autoclean = source.index('chroot "$LIVE_ROOT" apt-get autoclean')
+        self.assertLess(local_install, restore_update)
+        self.assertLess(restore_update, autoclean)
+        self.assertIn('rm -f "$source_path"', source)
+
+    def test_framebuffer_toolchain_owns_apt_list_state(self) -> None:
+        # The klibc-toolchain install must not assume whatever ran before
+        # left main-archive lists intact: update first, then install.
+        engine = (PROJECT_ROOT / "build/lib/compose.sh").read_text(encoding="utf-8")
+        framebuffer = engine.index("compose_build_early_framebuffer()")
+        update = engine.index(
+            'apt-get "${APT_ACQUIRE_OPTIONS[@]}" update', framebuffer
+        )
+        install = engine.index("install -y --no-install-recommends libklibc-dev gcc")
+        self.assertLess(update, install)
+
     def test_installer_base_explicitly_contains_resolver_and_modinfo_dependencies(self) -> None:
         packages = {
             line.strip()
