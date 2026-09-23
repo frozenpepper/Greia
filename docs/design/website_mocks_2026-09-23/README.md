@@ -1,8 +1,10 @@
 # Greia public website studies — 23 September 2026
 
-**Evidence:** DESIGN SPEC / DESKTOP VISUAL REVIEW. These are local website studies for owner review, not a released Greia website or new OS acceptance evidence.
+**Evidence:** DESIGN SPEC / DESKTOP VISUAL REVIEW. These are historical local website studies, not a Greia OS acceptance result.
 
-Open [the three-concept chooser](index.html). The first direction, [Greia for parents](storybook.html), is the current refinement target. The Wonder Map and Scribble Machine preserve the distinct spatial and drawing-led alternatives from the third pass.
+**Current website:** The owner promoted the first direction to the [official site work in progress](../../../website/index.html). The former `storybook.html` URL redirects there; [the last mock version](storybook-historical.html) remains available for historical comparison. The other two concepts remain studies.
+
+Open [the three-concept chooser](index.html). Its first door now leads to the official site. The Wonder Map and Scribble Machine preserve the distinct spatial and drawing-led alternatives from the third pass.
 
 | Concept | Visitor operation | Direction |
 |---|---|---|

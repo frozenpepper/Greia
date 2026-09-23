@@ -45,6 +45,8 @@ skills/greia-voice-production/SKILL.md
 
 Repository-wide contributor/agent rules are in `AGENTS.md`.
 
+The [official Greia website work in progress](website/index.html) is a standalone static site in `website/`. It includes the parent-facing OS story, [installer release-status page](website/downloads.html) and [individual Activity library](website/library.html). Its public downloads remain disabled until reviewed artifacts exist; see [website/README.md](website/README.md) for asset provenance and publication boundaries.
+
 For current implementation/evidence state, read `HANDOVER.md`. Do not infer current truth from a dated review or old test result.
 
 ## Core product model
