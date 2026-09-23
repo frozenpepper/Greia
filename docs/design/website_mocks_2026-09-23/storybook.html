@@ -1,49 +1,112 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f6d44b"><title>Greia — Worlds in Motion</title><meta name="description" content="An illustrated, scene-driven website concept for Greia OS."><link rel="stylesheet" href="shared.css"><style>
-:root{--ink:#18233d;--cream:#fffaf0}html{scroll-snap-type:y mandatory}body{overflow-x:hidden;color:var(--ink)}button{border:0}.top{position:fixed;z-index:40;inset:0 0 auto;height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 3.4vw;pointer-events:none}.top>*{pointer-events:auto}.identity{display:flex;align-items:center;gap:11px;text-decoration:none;font-size:22px;font-weight:900;letter-spacing:-.07em}.identity img{width:25px;height:52px;object-fit:cover}.toplinks{display:flex;gap:10px;align-items:center}.toplinks a,.toplinks button{background:#fff;border:2px solid var(--ink);border-radius:100px;padding:10px 15px;text-decoration:none;text-transform:uppercase;font-size:11px;font-weight:900;letter-spacing:.11em;box-shadow:4px 4px 0 var(--ink)}.scene{position:relative;min-height:100svh;scroll-snap-align:start;overflow:hidden;isolation:isolate;display:flex;align-items:center}.scene:before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.25;background-image:radial-gradient(#17213a 1px,transparent 1px);background-size:25px 25px;mask-image:linear-gradient(90deg,transparent,#000,transparent)}.s0{background:#f6d44b}.s1{background:#ff7771}.s2{background:#7b7ff4;color:#fff}.s3{background:#75dcca}.s4{background:#17213a;color:#fff}.splash{position:absolute;width:72vw;height:72vw;max-width:1050px;max-height:1050px;border:3px solid currentColor;border-radius:43% 57% 59% 41%;left:51%;top:55%;transform:translate(-50%,-50%) rotate(-17deg);opacity:.13;animation:blob 12s ease-in-out infinite alternate}.splash:after{content:'';position:absolute;inset:7%;border:3px solid currentColor;border-radius:60% 40% 42% 58%}.s2 .splash{left:49%;opacity:.22}.s3 .splash{left:70%}@keyframes blob{to{border-radius:60% 40% 36% 64%;transform:translate(-50%,-50%) rotate(22deg)}}.scene-no{position:absolute;left:3.4vw;bottom:26px;z-index:6;font-size:11px;text-transform:uppercase;letter-spacing:.18em;font-weight:900}.scene-no b{font-size:24px;letter-spacing:-.04em;margin-right:10px}.story-progress{position:fixed;z-index:45;right:3vw;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:9px}.story-progress button{width:13px;height:13px;background:#fff;border:2px solid var(--ink);border-radius:50%;padding:0;transition:transform .3s,background .3s}.story-progress button[aria-current=true]{background:var(--ink);transform:scale(1.55)}.s2~.story-progress button{color:white}.big{font-size:clamp(100px,16vw,260px);font-weight:900;letter-spacing:-.11em;line-height:.75;margin:0;text-transform:uppercase}.copy{position:absolute;z-index:7;left:3.4vw;top:19%;width:min(48vw,700px)}.copy p{font-size:clamp(17px,1.55vw,25px);max-width:420px;line-height:1.3;font-weight:700;margin:28px 0}.eyebrow{font-size:11px;letter-spacing:.21em;font-weight:900;text-transform:uppercase}.copy .big{font-size:clamp(92px,13vw,220px)}.cutout{position:absolute;z-index:6;filter:drop-shadow(15px 27px 0 #17213a21);animation:float 5s ease-in-out infinite alternate;will-change:transform}.cutout img{width:100%;height:100%;object-fit:contain}.cutout.a{width:18vw;height:18vw;right:5%;top:13%;transform:rotate(13deg)}.cutout.b{width:15vw;height:15vw;right:37%;bottom:4%;animation-delay:-2s}.cutout.c{width:12vw;height:12vw;right:1%;bottom:9%;animation-delay:-3s}@keyframes float{to{translate:0 -21px;rotate:7deg}}.boot-card{position:absolute;z-index:4;left:54%;top:16%;width:min(33vw,450px);aspect-ratio:1024/600;background:white;box-shadow:24px 24px 0 #17213a,0 40px 80px #17213a30;transform:rotate(-11deg);transition:transform .5s;cursor:pointer}.boot-card:hover{transform:rotate(-4deg) scale(1.05)}.boot-card img{width:100%;height:100%;object-fit:contain}.boot-card:after{content:'THE REAL GREIA BOOT  ↻';position:absolute;left:0;bottom:-48px;font-weight:900;font-size:11px;letter-spacing:.15em}.burst{position:absolute;pointer-events:none;font-size:clamp(100px,18vw,250px);font-weight:900;line-height:1;color:#fff6;z-index:0}.burst.one{right:-15px;top:0}.burst.two{right:6%;bottom:-80px;transform:rotate(27deg);color:#17213a12}.jump{position:absolute;z-index:9;left:3.4vw;bottom:83px;background:var(--ink);color:#fff;border-radius:100px;padding:14px 22px;font-size:12px;text-transform:uppercase;letter-spacing:.13em;font-weight:900;box-shadow:6px 6px 0 #fff}.scene .tag{position:absolute;z-index:8;right:3.5vw;bottom:35px;background:#fff;color:var(--ink);padding:10px 14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:900;transform:rotate(-4deg)}.s1 .copy,.s2 .copy,.s3 .copy{top:18%}.s1 .copy h2,.s2 .copy h2,.s3 .copy h2{margin:15px 0}.worldshot{position:absolute;z-index:3;width:min(58vw,840px);left:43%;top:26%;aspect-ratio:1024/600;background:#fff;padding:12px;border:3px solid var(--ink);box-shadow:20px 25px 0 var(--ink);transform:perspective(1000px) rotateY(-11deg) rotateZ(5deg);transition:transform .6s}.worldshot:hover{transform:perspective(1000px) rotateY(0) rotateZ(0)}.worldshot img{width:100%;height:100%;object-fit:cover}.s2 .worldshot{left:4%;top:37%;width:57vw;transform:perspective(1000px) rotateY(10deg) rotateZ(-4deg)}.s2 .copy{left:61%;width:36vw}.s2 .copy .big{font-size:clamp(100px,14vw,210px)}.s2 .cutout.a{left:13%;top:9%;width:16vw}.s2 .cutout.b{right:2%;bottom:7%;width:12vw}.s3 .worldshot{left:40%;top:20%;transform:rotate(8deg)}.s3 .cutout.a{width:19vw;right:2%;top:5%}.s3 .cutout.b{left:30%;bottom:2%}.s1 .cutout.a{width:22vw;right:1%;top:4%}.s1 .cutout.b{width:11vw;right:49%;bottom:3%}.s1 .copy h2{max-width:900px}.s4 .final{position:relative;z-index:4;padding:100px 5vw;width:100%}.s4 h2{font-size:clamp(100px,17vw,260px);line-height:.77;letter-spacing:-.12em;margin:0;text-transform:uppercase;max-width:1000px}.s4 h2 span{color:#ff7771}.s4 p{font-size:clamp(18px,2vw,28px);line-height:1.35;max-width:520px;margin:40px 0 30px}.facts{display:flex;flex-wrap:wrap;gap:10px;max-width:650px}.facts span{border:1px solid #ffffff80;border-radius:100px;padding:10px 15px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.1em}.s4 .last-crew{position:absolute;right:-3%;bottom:5%;display:grid;grid-template-columns:repeat(2,1fr);width:36vw;transform:rotate(-8deg)}.s4 .last-crew img{width:100%;filter:drop-shadow(8px 13px 0 #0003)}.scene .enter{opacity:0;transform:translateY(60px) rotate(3deg);transition:opacity .7s,transform .7s}.scene.in .enter{opacity:1;transform:translateY(0) rotate(0)}.scene.in .worldshot.enter{transform:perspective(1000px) rotateY(-11deg) rotateZ(5deg)}.s2.in .worldshot.enter{transform:perspective(1000px) rotateY(10deg) rotateZ(-4deg)}.scene.in .enter.delay{transition-delay:.18s}.note{position:absolute;z-index:8;left:3.4vw;bottom:85px;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.14em}.note:before{content:'↓';display:inline-grid;place-items:center;width:42px;height:42px;border:2px solid currentColor;border-radius:50%;font-size:25px;margin-right:12px}.scene .boing{position:absolute;font-size:80px;color:#fff;right:5%;top:7%;animation:spin 17s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:800px){html{scroll-snap-type:y proximity}.top{height:65px;padding:0 18px}.toplinks a:first-child{display:none}.toplinks a,.toplinks button{font-size:9px;padding:8px}.identity{font-size:17px}.identity img{height:39px;width:16px}.scene{min-height:900px}.copy{left:20px;top:100px;width:calc(100% - 40px)}.copy .big{font-size:clamp(75px,20vw,130px)}.copy p{font-size:17px;max-width:330px;margin:17px 0}.boot-card{left:21%;top:46%;width:67%;transform:rotate(-7deg)}.cutout.a{width:39vw;height:39vw;right:0;top:57%}.cutout.b{width:33vw;height:33vw;right:54%;bottom:11%}.cutout.c{width:26vw;height:26vw;right:3%;bottom:8%}.jump{left:20px;bottom:66px}.story-progress{right:14px}.s1 .copy,.s2 .copy,.s3 .copy{top:93px;left:20px;width:calc(100% - 40px)}.s1 .copy .big,.s2 .copy .big,.s3 .copy .big{font-size:clamp(80px,24vw,135px)}.worldshot,.s2 .worldshot,.s3 .worldshot{left:11%;top:45%;width:78%;padding:7px;box-shadow:11px 14px 0 var(--ink)}.s1 .cutout.a,.s2 .cutout.a,.s3 .cutout.a{width:37vw;height:37vw;left:auto;right:-4%;top:66%}.s1 .cutout.b,.s2 .cutout.b,.s3 .cutout.b{width:28vw;height:28vw;left:0;right:auto;bottom:6%}.s4 .final{padding:92px 20px 58px}.s4 h2{font-size:clamp(72px,17vw,125px)}.s4 p{font-size:19px;max-width:320px}.s4 .last-crew{width:65vw;right:-13%;bottom:1%}.facts{max-width:250px}.facts span{font-size:9px}.scene-no{left:20px}.scene .tag{right:20px;font-size:8px}.note{left:20px;bottom:70px;font-size:9px}.splash{width:130vw;height:130vw}}
-@media(max-width:430px){.scene{min-height:760px}.copy .big{font-size:22vw}.s1 .copy .big,.s2 .copy .big,.s3 .copy .big{font-size:23vw}.copy p{font-size:15px;max-width:280px}.boot-card{top:46%;width:73%;left:12%}.s1 .worldshot,.s2 .worldshot,.s3 .worldshot{top:45%;width:80%;left:8%}.s2 .copy p{max-width:300px}.s4{min-height:100svh}.s4 .final{padding:76px 20px 42px}.s4 h2{font-size:17vw}.s4 p{font-size:16px;margin:20px 0}.s4 .facts{gap:6px}.s4 .facts span{padding:7px 10px}.s4 .jump{margin-top:14px!important}.s4 .scene-no{display:none}.s4 .last-crew{bottom:4%;opacity:.6}.s2 .copy .big{font-size:19vw}.s2 .worldshot{top:51%}}
-body.last-scene .identity{color:#fff}
-@media(prefers-reduced-motion:reduce){.splash,.cutout,.boing{animation:none}.scene .enter{opacity:1;transform:none}}
-</style></head><body>
-<header class="top"><a class="identity" href="index.html"><img src="../../../assets/boot/frames/frame_0051.png" alt="Greia boot mark">greia<span aria-hidden="true">✳</span></a><div class="toplinks"><a href="index.html">Three directions ↗</a><button type="button" id="skip">Skip to the good stuff ↓</button></div></header><nav class="story-progress" aria-label="Scenes"><button type="button" data-go="0" aria-label="Opening" aria-current="true"></button><button type="button" data-go="1" aria-label="Create" aria-current="false"></button><button type="button" data-go="2" aria-label="Play" aria-current="false"></button><button type="button" data-go="3" aria-label="Explore" aria-current="false"></button><button type="button" data-go="4" aria-label="What makes Greia different" aria-current="false"></button></nav>
-<main>
-<section class="scene s0 in" id="scene-0"><div class="splash"></div><span class="burst one">✳</span><span class="burst two">✽</span><div class="copy"><div class="eyebrow">01 / A different kind of computer</div><h1 class="big enter">HELLO,<br>CURIOUS.</h1><p class="enter delay">A real world to create, play, learn and explore. Made for little hands and big questions.</p></div><button class="boot-card" id="boot" type="button" aria-label="Replay the real Greia boot animation"><img id="boot-image" src="../../../assets/boot/static/greia-boot-logo.png" alt="The canonical Greia boot artwork centered on white"></button><div class="cutout a"><img src="../../../assets/visual/runtime/v1/characters/lilli_happy.png" alt="Lilli"></div><div class="cutout b"><img src="../../../assets/visual/runtime/v1/characters/flash_happy.png" alt="Flash"></div><div class="cutout c"><img src="../../../assets/visual/runtime/v1/characters/momo_happy.png" alt="Momo"></div><button type="button" class="jump" data-go="1">Let's go ↓</button><div class="scene-no"><b>01</b> / 05 — Hello Greia</div><div class="tag">Tap the real boot artwork to replay it</div></section>
-<section class="scene s1" id="scene-1"><div class="splash"></div><div class="boing">✳</div><div class="copy"><div class="eyebrow">02 / Create</div><h2 class="big enter">MAKE<br>STUFF.</h2><p class="enter delay">Paint a place. Write a story. Keep both in your own profile. The first Greia experience begins with making.</p></div><div class="worldshot enter"><img src="../../../docs/reviews/visual/2026-08-22_painting-visual-productization/06-best-product-proof.png" alt="Historical Greia Painting Simulator capture"></div><div class="cutout a"><img src="../../../assets/visual/runtime/v1/characters/lilli_happy.png" alt="Lilli"></div><div class="cutout b"><img src="../../../assets/visual/runtime/v1/characters/dani_happy.png" alt="Dani"></div><div class="scene-no"><b>02</b> / 05 — Make something</div><div class="tag">Actual development capture</div></section>
-<section class="scene s2" id="scene-2"><div class="splash"></div><div class="copy"><div class="eyebrow">03 / Play</div><h2 class="big enter">TRY.<br>JUMP.<br>AGAIN.</h2><p class="enter delay">Puzzles and little worlds invite action. Clear controls let the play begin without a lesson in computers.</p></div><div class="worldshot enter"><img src="../../../docs/reviews/visual/2026-08-22_first-party-batch-1/labirinto_magico/04-best-product-proof.png" alt="Historical Greia Magic Maze Simulator capture"></div><div class="cutout a"><img src="../../../assets/visual/runtime/v1/characters/flash_happy.png" alt="Flash"></div><div class="cutout b"><img src="../../../assets/visual/runtime/v1/characters/momo_happy.png" alt="Momo"></div><div class="scene-no"><b>03</b> / 05 — Find your way</div><div class="tag">Actual development capture</div></section>
-<section class="scene s3" id="scene-3"><div class="splash"></div><div class="copy"><div class="eyebrow">04 / Explore</div><h2 class="big enter">WHAT<br>IF?</h2><p class="enter delay">Follow a question underwater, into a garden, or wherever curiosity points next.</p></div><div class="worldshot enter"><img src="../../../docs/reviews/visual/2026-08-22_first-party-batch-1/acquario_magico/04-best-product-proof.png" alt="Historical Greia Magic Aquarium Simulator capture"></div><div class="cutout a"><img src="../../../assets/visual/runtime/v1/characters/tito_happy.png" alt="Tito"></div><div class="cutout b"><img src="../../../assets/visual/runtime/v1/characters/leo_happy.png" alt="Leo"></div><div class="scene-no"><b>04</b> / 05 — Follow wonder</div><div class="tag">Actual development capture</div></section>
-<section class="scene s4" id="scene-4"><div class="splash"></div><div class="final"><div class="eyebrow">05 / Thoughtful under the fun</div><h2 class="enter">THEIR<br>WORLD.<br><span>THEIR<br>WAY.</span></h2><p class="enter delay">One profile for every child. Offline-first activities. A familiar way Home. Greia is the child's graphical world, with grown-up management kept separate.</p><div class="facts"><span>Profiles of their own</span><span>Works offline</span><span>Home belongs to Greia</span><span>Writing + painting from the start</span></div><a class="jump" href="index.html" style="position:relative;display:inline-block;left:auto;bottom:auto;margin-top:35px;text-decoration:none">See all three concepts ↗</a></div><div class="last-crew"><img src="../../../assets/visual/runtime/v1/characters/leo_happy.png" alt=""><img src="../../../assets/visual/runtime/v1/characters/dani_happy.png" alt=""><img src="../../../assets/visual/runtime/v1/characters/tito_happy.png" alt=""><img src="../../../assets/visual/runtime/v1/characters/momo_happy.png" alt=""></div><div class="scene-no"><b>05</b> / 05 — Greia is in pre-public development</div></section>
-</main><script>
-const scenes=[...document.querySelectorAll('.scene')];
-const dots=[...document.querySelectorAll('[data-go]')];
-const reduced=matchMedia('(prefers-reduced-motion:reduce)').matches;
-function go(i){scenes[i]?.scrollIntoView({behavior:reduced?'instant':'smooth'})}
-dots.forEach(button=>button.addEventListener('click',()=>go(+button.dataset.go)));
-document.getElementById('skip').addEventListener('click',()=>go(1));
-const observer=new IntersectionObserver(entries=>{
-  entries.forEach(entry=>{
-    if(!entry.isIntersecting)return;
-    entry.target.classList.add('in');
-    const current=scenes.indexOf(entry.target);
-    document.body.classList.toggle('last-scene',current===4);
-    document.querySelectorAll('.story-progress button').forEach((button,index)=>button.setAttribute('aria-current',String(index===current)));
-  });
-},{threshold:.54});
-scenes.forEach(scene=>observer.observe(scene));
-document.addEventListener('keydown',event=>{
-  if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;
-  const current=+document.querySelector('.story-progress [aria-current="true"]').dataset.go;
-  go(Math.max(0,Math.min(4,current+(event.key==='ArrowDown'?1:-1))));
-});
-let replayTimer;
-document.getElementById('boot').addEventListener('click',()=>{
-  if(reduced)return;
-  clearInterval(replayTimer);
-  let frame=0;
-  const image=document.getElementById('boot-image');
-  replayTimer=setInterval(()=>{
-    image.src='../../../assets/boot/frames/frame_'+String(frame).padStart(4,'0')+'.png';
-    frame++;
-    if(frame>51){clearInterval(replayTimer);image.src='../../../assets/boot/static/greia-boot-logo.png'}
-  },75);
-});
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#14213a">
+  <meta name="description" content="Meet Greia: a child-first computer for old and new hardware, with parents shaping the experience.">
+  <title>Greia — a little computer, a bigger world</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="storybook.css">
+</head>
+<body>
+  <div class="intro" id="intro" aria-label="Greia opening animation">
+    <div class="intro-top"><span>THE GREIA INTRO</span><button type="button" id="skip-intro">Skip intro ↗</button></div>
+    <div class="intro-art"><img id="intro-frame" src="../../../assets/boot/frames/frame_0000.png" alt="The original Greia constellation and wordmark animation"></div>
+    <div class="intro-bottom"><span>A small light becomes a world.</span><div class="intro-track" aria-hidden="true"><i id="intro-progress"></i></div><span id="intro-count">00 / 52</span></div>
+  </div>
+
+  <header class="site-header">
+    <a class="brand" href="#welcome" aria-label="Greia, back to the beginning"><img src="assets/greia-lockup-light.svg" alt="Greia"></a>
+    <nav class="top-nav" id="top-nav" aria-label="Main navigation">
+      <a href="#mission">The mission</a><a href="#architecture">How it works</a><a href="#parents">For parents</a><a href="#create">Make it theirs</a><a href="#voices">Voices</a>
+    </nav>
+    <div class="header-actions"><button type="button" id="replay-intro" class="replay">↻ <span>Replay intro</span></button><button type="button" id="menu-toggle" class="menu-toggle" aria-expanded="false" aria-controls="top-nav">Menu</button></div>
+  </header>
+  <nav class="chapter-nav" aria-label="Story chapters">
+    <button type="button" data-go="0" aria-label="Welcome" aria-current="true"><span>01</span></button>
+    <button type="button" data-go="1" aria-label="Why old hardware matters"><span>02</span></button>
+    <button type="button" data-go="2" aria-label="How Greia works"><span>03</span></button>
+    <button type="button" data-go="3" aria-label="Greia Parents"><span>04</span></button>
+    <button type="button" data-go="4" aria-label="Personal Activities"><span>05</span></button>
+    <button type="button" data-go="5" aria-label="Character voices"><span>06</span></button>
+    <button type="button" data-go="6" aria-label="The invitation"><span>07</span></button>
+  </nav>
+
+  <main>
+    <section class="chapter hero is-visible" id="welcome" data-chapter="0">
+      <div class="hero-stars" aria-hidden="true"></div>
+      <div class="hero-copy reveal">
+        <p class="overline"><span class="tiny-star">✳</span> CHILD-FIRST COMPUTING / PARENT-SHAPED</p>
+        <h1>A little<br>computer.<br><em>A bigger</em><br>world.</h1>
+        <p class="lede">Greia turns a computer into a place for a child to make, discover and grow. Parents shape the experience. Old hardware gets a new purpose.</p>
+        <div class="hero-actions"><button class="round-cta" type="button" data-go="1">Discover the idea <span>↘</span></button><span class="status-note">A living, pre-public project</span></div>
+      </div>
+      <div class="hero-identity" aria-hidden="true"><div class="hero-orbit"></div><img src="assets/greia-mark-light.svg" alt=""></div>
+      <div class="chapter-bottom"><span>01 / 07 — GREIA, IN ONE BREATH</span><span>SCROLL TO EXPLORE ↓</span></div>
+    </section>
+
+    <section class="chapter mission" id="mission" data-chapter="1">
+      <div class="chapter-grid">
+        <div class="narrative reveal">
+          <p class="overline">01 / WHY GREIA EXISTS</p>
+          <h2>Good ideas<br>deserve a<br><em>second life.</em></h2>
+          <p class="section-copy">The first-generation Acer Aspire One is Greia's toughest reference point. Raspberry Pi 400 and 500 are equal design targets. The mission is one welcoming child experience across computers with very different ages and resources.</p>
+          <div class="mission-facts"><span>OLD DEVICES, USEFUL AGAIN</span><span>ONE GREIA EXPERIENCE</span><span>OFFLINE AT THE CORE</span></div>
+          <p class="evidence-note">Hardware and release acceptance are still underway. This is the design mission, not a claim that every device is release-ready.</p>
+        </div>
+        <div class="device-stage reveal">
+          <div class="orbit-label">BUILT FOR THE COMPUTER ALREADY IN THE ROOM ↗</div>
+          <div class="device" id="device"><div class="device-screen"><img src="../../../docs/reviews/visual/2026-08-22_activity-card-titles-and-unique-icons/05-unique-icons-grid-1024x600.png" alt="Historical Greia child Shell development capture"><span class="screen-glass"></span></div><div class="device-hinge"></div><div class="device-base"></div></div>
+          <div class="device-controls" role="group" aria-label="Explore Greia reference devices"><button type="button" data-device="acer" aria-pressed="true">Acer Aspire One</button><button type="button" data-device="pi400" aria-pressed="false">Pi 400</button><button type="button" data-device="pi500" aria-pressed="false">Pi 500</button></div>
+          <div class="device-caption"><strong id="device-title">The extreme reference floor</strong><p id="device-description">The original little Acer keeps Greia honest about memory, storage and screen space.</p></div>
+        </div>
+      </div>
+      <div class="chapter-bottom"><span>02 / 07 — THE HARDWARE MISSION</span><span>KEEP GOING ↓</span></div>
+    </section>
+
+    <section class="chapter architecture" id="architecture" data-chapter="2">
+      <div class="chapter-grid">
+        <div class="narrative reveal"><p class="overline">02 / THE IDEA UNDER THE SURFACE</p><h2>Play on top.<br><em>Purpose</em><br>underneath.</h2><p class="section-copy">Greia is the child's graphical world, not a desktop with distractions hidden away. Every Activity uses the same trusted foundations, so a new game, story or creative tool feels at home.</p><div class="architecture-text" aria-live="polite"><span id="architecture-kicker">THE CHILD SEES</span><h3 id="architecture-title">A world of Activities.</h3><p id="architecture-description">One familiar way to choose, play, create and go Home. Greia's own navigation stays available above every Activity.</p></div></div>
+        <div class="architecture-stage reveal">
+          <div class="architecture-constellation" aria-hidden="true"><span>✦</span><span>✳</span><span>✧</span></div>
+          <div class="architecture-layers" role="group" aria-label="Explore Greia architecture">
+            <button type="button" data-layer="activity" class="layer is-active" aria-pressed="true"><b>01</b><span><strong>ACTIVITIES</strong><small>play · learn · make</small></span><span>↗</span></button>
+            <button type="button" data-layer="core" class="layer" aria-pressed="false"><b>02</b><span><strong>GREIA'S SHARED CORE</strong><small>profiles · saves · Home · permissions</small></span><span>↗</span></button>
+            <button type="button" data-layer="hardware" class="layer" aria-pressed="false"><b>03</b><span><strong>THE COMPUTER BELOW</strong><small>old Acer · Raspberry Pi · modern PC</small></span><span>↗</span></button>
+          </div>
+          <div class="architecture-foot">ONE ACTIVITY CONTRACT. DIFFERENT RUNTIMES. SAME CHILD'S WORLD.</div>
+        </div>
+      </div>
+      <div class="chapter-bottom"><span>03 / 07 — GREIA IS A REAL OS EXPERIENCE</span><span>KEEP GOING ↓</span></div>
+    </section>
+
+    <section class="chapter parents" id="parents" data-chapter="3">
+      <div class="chapter-grid parent-grid">
+        <div class="parent-visual reveal"><div class="parent-ribbon">THE GROWN-UP SIDE OF THE STORY ↗</div><div class="browser-shell"><div class="browser-top"><i></i><i></i><i></i><span>Greia Parents / local to your Greia</span></div><img src="assets/parent-app-2026-09-02.png" alt="Actual Greia Parents development screenshot showing the This Greia management page"></div><div class="parent-sticker">REAL DEVELOPMENT<br>CAPTURE ✳</div></div>
+        <div class="narrative reveal"><p class="overline">03 / GREIA PARENTS</p><h2>Their world.<br><em>Your say.</em></h2><p class="section-copy">A separate Parent app keeps the grown-up decisions out of the child's way. Give each child a profile, choose which Activities appear, set a comfortable challenge level and manage the device from a browser.</p><div class="parent-topics" role="group" aria-label="Explore Parent app features"><button type="button" data-parent="children" aria-pressed="true">Children</button><button type="button" data-parent="activities" aria-pressed="false">Activities</button><button type="button" data-parent="device" aria-pressed="false">This Greia</button></div><div class="parent-detail" aria-live="polite"><strong id="parent-title">One space for each child</strong><p id="parent-description">Profiles keep creations and progress personal. Parents can tune discovery and visibility for each child.</p></div><p class="evidence-note">The screenshot is a development capture. Parent installation is capability-gated while the release transport and package lifecycle are completed.</p></div>
+      </div>
+      <div class="chapter-bottom"><span>04 / 07 — THE PARENT APP</span><span>KEEP GOING ↓</span></div>
+    </section>
+
+    <section class="chapter create" id="create" data-chapter="4">
+      <div class="chapter-grid">
+        <div class="narrative reveal"><p class="overline">04 / MAKE IT PERSONAL</p><h2>What if an<br>Activity were<br><em>about them?</em></h2><p class="section-copy">A child obsessed with trains. A family garden. Their own story characters. Greia's Activity model is built for experiences that can be shaped around a real child, then checked and installed with parent authority.</p><div class="create-flow"><span>YOUR IDEA</span><i>→</i><span>CREATION PACK</span><i>→</i><span>VALIDATE + SIMULATE</span><i>→</i><span>PARENT-APPROVED INSTALL</span></div><p class="evidence-note">Today: contributor guides, validation, Simulator and a controlled install path. A guided family Creation Pack and ordinary-release installation are still in development.</p></div>
+        <div class="make-stage reveal"><div class="make-label">CHOOSE A SPARK / SEE THE IDEA CHANGE</div><div class="interest-switch" role="group" aria-label="Activity idea examples"><button type="button" data-interest="garden" aria-pressed="true">The family garden</button><button type="button" data-interest="trains" aria-pressed="false">Trains!</button><button type="button" data-interest="stars" aria-pressed="false">The night sky</button></div><div class="idea-card" id="idea-card"><span class="card-corner">A GREIA ACTIVITY IDEA / ILLUSTRATIVE</span><img id="idea-image" src="../../../assets/visual/runtime/v1/characters/tito_happy.png" alt="Tito"><div><span>MADE AROUND A CHILD</span><h3 id="idea-title">Our little garden</h3><p id="idea-description">Plant, notice, return tomorrow. A familiar place becomes a curious little world.</p></div><span class="card-doodle">✳</span></div><div class="make-bottom">PERSONAL IS A DESIGN DIRECTION — THIS CARD DOES NOT GENERATE OR INSTALL AN ACTIVITY.</div></div>
+      </div>
+      <div class="chapter-bottom"><span>05 / 07 — ACTIVITY CREATION</span><span>KEEP GOING ↓</span></div>
+    </section>
+
+    <section class="chapter voices" id="voices" data-chapter="5">
+      <div class="chapter-grid"><div class="narrative reveal"><p class="overline">05 / VOICES WITH CHARACTER</p><h2>A voice can<br>make a world<br><em>feel known.</em></h2><p class="section-copy">Greia's character voices are made and reviewed before an Activity ships. The child's computer plays lightweight recordings; it does not need to run a speech model while they play.</p><div class="voice-quote" aria-live="polite"><span>LISTEN TO A REAL ACCEPTED INTRODUCTION</span><p id="voice-quote">“Hi! I'm Lilli! I love making up stories, drawing colorful things, and finding a little magic everywhere.”</p></div><p class="evidence-note">These clips are accepted authoring assets. Their placement throughout the live child experience is still being integrated.</p></div>
+      <div class="voice-stage reveal"><div class="voice-waves" id="voice-waves" aria-hidden="true"></div><div class="voice-pick" role="group" aria-label="Hear a Greia character"><button type="button" data-voice="lilli" aria-pressed="true"><img src="../../../assets/visual/runtime/v1/characters/lilli_happy.png" alt=""><span>▶ Lilli</span></button><button type="button" data-voice="flash" aria-pressed="false"><img src="../../../assets/visual/runtime/v1/characters/flash_happy.png" alt=""><span>▶ Flash</span></button><button type="button" data-voice="momo" aria-pressed="false"><img src="../../../assets/visual/runtime/v1/characters/momo_happy.png" alt=""><span>▶ Momo</span></button></div><span class="voice-help" id="voice-help">Select a character to hear the accepted English voice sample.</span><audio id="character-audio" preload="none"></audio></div></div>
+      <div class="chapter-bottom"><span>06 / 07 — HEAR GREIA</span><span>KEEP GOING ↓</span></div>
+    </section>
+
+    <section class="chapter finale" id="future" data-chapter="6">
+      <div class="finale-halo" aria-hidden="true">✳</div><div class="finale-content reveal"><p class="overline">06 / THE WORLD WE ARE BUILDING</p><h2>More wonder.<br><em>Less waste.</em><br>More theirs.</h2><p>Offline-first. Profile-owned creations. Parent-shaped choices. A platform built to welcome older computers and new ideas alike.</p><div class="finale-links"><a href="https://github.com/frozenpepper/Greia" target="_blank" rel="noopener">Explore the open project ↗</a><button type="button" data-go="0">Back to the beginning ↑</button></div><span class="finale-status">Greia is in pre-public development. Website exploration, September 2026.</span></div><img class="finale-mark" src="assets/greia-mark-ink.svg" alt="Greia's isolated G and wordmark"><div class="chapter-bottom"><span>07 / 07 — HELP SHAPE WHAT COMES NEXT</span><span>GREIA ✳</span></div>
+    </section>
+  </main>
+  <script src="storybook.js" defer></script>
+</body>
+</html>
