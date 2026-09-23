@@ -100,6 +100,7 @@ CONTROL_PHASES: tuple[str, ...] = (
     "update-verify",
     "update-stage",
     "update-arm",
+    "update-stage-expect-refused",
     "wait-health-poweroff",
 )
 
@@ -271,7 +272,7 @@ def control_runner_text() -> str:
         "case \"$PHASE\" in\n"
         "  install-prepare|install-execute)\n"
         f"    SOCK=\"{INSTALL_SOCKET_PATH}\"; test -S \"$SOCK\" || exit 1;;\n"
-        "  update-status|update-verify|update-stage|update-arm)\n"
+        "  update-status|update-verify|update-stage|update-arm|update-stage-expect-refused)\n"
         f"    SOCK=\"{UPDATE_SOCKET_PATH}\"; test -S \"$SOCK\" || exit 1;;\n"
         "  wait-health-poweroff)\n"
         f"    SOCK=\"{BOOT_HEALTH_SOCKET_PATH}\"; test -S \"$SOCK\" || exit 1;;\n"
@@ -310,7 +311,7 @@ def control_runner_text() -> str:
         "    )\n"
         "PYEOF\n"
         "fi\n"
-        "if [ \"$PHASE\" = \"update-status\" ] || [ \"$PHASE\" = \"update-verify\" ] || [ \"$PHASE\" = \"update-stage\" ] || [ \"$PHASE\" = \"update-arm\" ]; then\n"
+        "if [ \"$PHASE\" = \"update-status\" ] || [ \"$PHASE\" = \"update-verify\" ] || [ \"$PHASE\" = \"update-stage\" ] || [ \"$PHASE\" = \"update-arm\" ] || [ \"$PHASE\" = \"update-stage-expect-refused\" ]; then\n"
         "  python3 - \"$PHASE_FILE\" \"$SOCK\" \"$CTL_MNT\" <<'PYEOF'\n"
         "import json\n"
         "import shutil\n"
@@ -327,6 +328,7 @@ def control_runner_text() -> str:
         "    \"update-status\": \"STATUS\",\n"
         "    \"update-verify\": \"VERIFY_CURRENT_CANDIDATE\",\n"
         "    \"update-stage\": \"STAGE_CURRENT_CANDIDATE\",\n"
+        "    \"update-stage-expect-refused\": \"STAGE_CURRENT_CANDIDATE\",\n"
         "    \"update-arm\": \"ARM_CURRENT_CANDIDATE\",\n"
         "}\n"
         "op = ops.get(str(phase))\n"
@@ -361,7 +363,10 @@ def control_runner_text() -> str:
         "    \"STAGE_CURRENT_CANDIDATE\": \"STAGED\",\n"
         "    \"ARM_CURRENT_CANDIDATE\": \"ARMED\",\n"
         "}[op]\n"
-        "if returned_op != op or payload.get(\"status\") != expected_status:\n"
+        "if phase == \"update-stage-expect-refused\":\n"
+        "    if returned_op != op or payload.get(\"status\") == \"STAGED\":\n"
+        "        raise SystemExit(f\"x8-control: expected stage refusal, got: {payload!r}\")\n"
+        "elif returned_op != op or payload.get(\"status\") != expected_status:\n"
         "    raise SystemExit(f\"x8-control: update {op} refused: {payload!r}\")\n"
         "PYEOF\n"
         "fi\n"
@@ -4468,6 +4473,867 @@ class ProductHarness:
             "qemu_binary": qemu_binary,
         }
 
+    def run_first_boot_product(
+        self,
+        *,
+        installed_image: Path | None = None,
+        release_bundle: Path | None = None,
+        expected_release_id: str,
+        clone_fn=None,
+        inject_fn=None,
+        materialize_fn=None,
+        boot_fn=None,
+        observe_fn=None,
+        slot_digest_fn=None,
+    ) -> dict[str, object]:
+        """Boot the freshly installed SYSTEM_A to first acceptance (real services).
+
+        Clones the install-leg target into the disposable output root,
+        injects the control seam into slot A, drives one
+        ``wait-health-poweroff`` boot through the shipped boot-health
+        socket (the first-install CONFIRM path), then proves host-side
+        that A booted and accepted: default A, accepted release,
+        first-install pending cleared, PERSIST valid, both slots
+        byte-identical to their pre-boot digests. The clone feeds the
+        healthy-update leg; the install-leg origin is never booted.
+        """
+        from .lifecycle import assert_lifecycle_transitions
+
+        self.config.validate()
+        assert_control_absent_from_production()
+        if not self.control_enabled:
+            raise LifecycleHarnessError(
+                "control seam disabled: product mode fails closed, never "
+                "claims a boot by silent no-op"
+            )
+        origin = Path(installed_image) if installed_image is not None else None
+        if origin is None and self.official_image is not None:
+            origin = Path(self.official_image)
+        require_product_host(official_image=origin)
+        if origin is None or not origin.is_file():
+            raise LifecycleHarnessError(
+                "BLOCKED product mode: absent installed image "
+                f"({origin}); the install leg output feeds this leg; "
+                "never synthesize one"
+            )
+        installed_sha = sha256_file(origin)
+        if release_bundle is not None:
+            bundle = Path(release_bundle)
+        elif self.release_bundle is not None:
+            bundle = Path(self.release_bundle)
+        else:
+            bundle = None
+        if bundle is None or bundle.is_symlink() or not bundle.is_file():
+            raise LifecycleHarnessError(
+                "BLOCKED product mode: no installed release bundle was "
+                "provided; refusing before the first boot"
+            )
+        if not expected_release_id or isinstance(expected_release_id, bool):
+            raise LifecycleHarnessError(
+                "first-boot refused: expected release identity is missing"
+            )
+        bundle_sha = sha256_file(bundle)
+        root = self.product_root
+        root.mkdir(parents=True, exist_ok=True)
+        clone_path = root / "firstboot-clone.img"
+        control_dir = root / "control-disk"
+        control_dir.mkdir(parents=True, exist_ok=True)
+        observe_work = root / "observe-work"
+        observe_work.mkdir(parents=True, exist_ok=True)
+
+        if clone_fn is not None:
+            clone_proof = dict(clone_fn(origin, clone_path))
+        else:
+            clone_proof = clone_product_image(origin, clone_path)
+
+        qemu_binary = select_install_qemu_binary()
+        shipped_units = record_shipped_boot_units()
+
+        if inject_fn is not None:
+            slot_a_injection = dict(inject_fn(clone_path, "A"))
+        else:
+            slot_a_injection = inject_boot_slot(clone_path, "A")
+
+        digest_fn = slot_digest_fn or hash_slot_partition
+        inactive_before = str(digest_fn(clone_path, "B"))
+        active_before = str(digest_fn(clone_path, "A"))
+        boots: list[str] = []
+        control_image = root / "control-disk.img"
+        for phase in FIRST_BOOT_LEG_PHASES:
+            write_control_phase(control_dir, phase=phase, inputs={})
+            if materialize_fn is not None:
+                materialize_fn(control_dir, control_image)
+            else:
+                materialize_control_disk(control_dir, control_image)
+            argv, serial_log, host_log = product_boot_qemu_argv(
+                installed_clone=clone_path,
+                control_image=control_image,
+                output_dir=root,
+                memory_mib=self.config.memory_mib,
+                cpus=self.config.cpus,
+                qemu_binary=qemu_binary,
+                leg=f"first-boot-{phase}",
+            )
+            if boot_fn is not None:
+                boot_fn(phase, argv, serial_log, host_log)
+            else:
+                self._boot_installed_phase(
+                    phase=phase, argv=argv, serial_log=serial_log, host_log=host_log
+                )
+            boots.append(phase)
+
+        if observe_fn is not None:
+            observed = dict(observe_fn(clone_path))
+        else:
+            observed = self._observe_boot_health_target(
+                target_path=clone_path,
+                work_dir=observe_work,
+                expected_slot="A",
+                expected_release_id=expected_release_id,
+            )
+        active_after = str(digest_fn(clone_path, "A"))
+        inactive_after = str(digest_fn(clone_path, "B"))
+        if active_before != active_after:
+            raise LifecycleHarnessError(
+                "first-boot slot isolation violated: slot A changed across "
+                "its own acceptance boot"
+            )
+        if inactive_before != inactive_after:
+            raise LifecycleHarnessError(
+                "first-boot slot isolation violated: untouched slot B changed"
+            )
+        report = build_first_boot_lifecycle_report(
+            observed_default=str(observed.get("default_slot", ""))
+        )
+        assert_lifecycle_transitions(report)
+        return {
+            "ok": True,
+            "leg": "first-boot-product",
+            "installed_image": str(origin.resolve()),
+            "installed_image_sha256": installed_sha,
+            "release_bundle": str(bundle),
+            "release_bundle_sha256": bundle_sha,
+            "clone": clone_proof,
+            "slot_a_injection": slot_a_injection,
+            "shipped_units": shipped_units,
+            "qemu_binary": qemu_binary,
+            "phases": boots,
+            "slot_digests": {
+                "active_before": active_before,
+                "active_after": active_after,
+                "inactive_before": inactive_before,
+                "inactive_after": inactive_after,
+            },
+            "observed": observed,
+            "lifecycle_report": report,
+            "source_image_mutated": False,
+        }
+
+    def run_userspace_failure_product(
+        self,
+        *,
+        installed_image: Path | None = None,
+        unhealthy_bundle: Path | None = None,
+        accepted_slot: str = "B",
+        accepted_release_id: str,
+        candidate_release_id: str,
+        clone_fn=None,
+        materialize_fn=None,
+        boot_fn=None,
+        observe_fn=None,
+        slot_digest_fn=None,
+        serial_fn=None,
+    ) -> dict[str, object]:
+        """Stage a genuinely unhealthy candidate and recover (real services).
+
+        Userspace-failure half of the recovery path without the gate
+        reverse update: the structurally-valid unhealthy candidate stages
+        and arms through the shipped update socket, boots far enough for
+        userspace health machinery, withholds health, and the real
+        candidate-recovery deadline marks FAILED and reboots to the
+        accepted slot, which stays accepted and default throughout. Host
+        attestation comes from the production stage inspectors; the
+        accepted slot must stay byte-identical while the candidate slot
+        moves.
+        """
+        from .lifecycle import assert_lifecycle_transitions
+
+        self.config.validate()
+        assert_control_absent_from_production()
+        if not self.control_enabled:
+            raise LifecycleHarnessError(
+                "control seam disabled: product mode fails closed, never "
+                "claims a boot by silent no-op"
+            )
+        origin = Path(installed_image) if installed_image is not None else None
+        if origin is None and self.official_image is not None:
+            origin = Path(self.official_image)
+        require_product_host(official_image=origin)
+        if origin is None or not origin.is_file():
+            raise LifecycleHarnessError(
+                "BLOCKED product mode: absent health-committed installed image "
+                f"({origin}); the boot-health leg output feeds this leg; "
+                "never synthesize one"
+            )
+        installed_sha = sha256_file(origin)
+        unhealthy = Path(unhealthy_bundle) if unhealthy_bundle is not None else None
+        if unhealthy is None or unhealthy.is_symlink() or not unhealthy.is_file():
+            raise LifecycleHarnessError(
+                "BLOCKED product mode: missing unhealthy candidate bundle "
+                f"({unhealthy}); refusing before any slot payload write"
+            )
+        unhealthy_sha = sha256_file(unhealthy)
+        if accepted_slot not in ("A", "B"):
+            raise LifecycleHarnessError(
+                f"userspace-failure refused: unknown accepted slot {accepted_slot!r}"
+            )
+        candidate_slot = "A" if accepted_slot == "B" else "B"
+        for label, value in (
+            ("accepted release", accepted_release_id),
+            ("candidate release", candidate_release_id),
+        ):
+            if not value or isinstance(value, bool):
+                raise LifecycleHarnessError(
+                    f"userspace-failure refused: {label} identity is missing"
+                )
+        if accepted_release_id == candidate_release_id:
+            raise LifecycleHarnessError(
+                "userspace-failure refused: candidate must differ from accepted"
+            )
+        root = self.product_root
+        root.mkdir(parents=True, exist_ok=True)
+        clone_path = root / "userspace-failure-clone.img"
+        control_dir = root / "control-disk"
+        control_dir.mkdir(parents=True, exist_ok=True)
+        observe_work = root / "observe-work"
+        observe_work.mkdir(parents=True, exist_ok=True)
+
+        if clone_fn is not None:
+            clone_proof = dict(clone_fn(origin, clone_path))
+        else:
+            clone_proof = clone_product_image(origin, clone_path)
+
+        if serial_fn is not None:
+            serial_proof = dict(serial_fn(clone_path))
+        else:
+            serial_proof = enable_installed_clone_serial_console(clone_path)
+
+        qemu_binary = select_install_qemu_binary()
+        shipped_units = record_shipped_recovery_units()
+        digest_fn = slot_digest_fn or (
+            lambda slot, when: hash_slot_partition(clone_path, slot)
+        )
+        active_before = str(digest_fn(accepted_slot, "before"))
+        inactive_before = str(digest_fn(candidate_slot, "before"))
+        control_image = root / "control-disk.img"
+        boots: list[str] = []
+        candidate_staged = False
+        for phase in USERSPACE_FAILURE_LEG_PHASES:
+            inputs: dict[str, object] = {}
+            if phase in RECOVERY_D31_REVERSE_UPDATE_PHASES:
+                inputs = {"candidate_bundle": CANDIDATE_BUNDLE_FILE}
+            write_control_phase(control_dir, phase=phase, inputs=inputs)
+            if phase == "update-stage" and not candidate_staged:
+                self._stage_candidate_onto_control(
+                    control_dir, unhealthy, control_image=None
+                )
+                candidate_staged = True
+            if materialize_fn is not None:
+                materialize_fn(control_dir, control_image)
+            else:
+                materialize_control_disk(control_dir, control_image)
+            argv, serial_log, host_log = product_boot_qemu_argv(
+                installed_clone=clone_path,
+                control_image=control_image,
+                output_dir=root,
+                memory_mib=self.config.memory_mib,
+                cpus=self.config.cpus,
+                qemu_binary=qemu_binary,
+                leg=f"userspace-failure-{phase}-{len(boots)}",
+            )
+            if boot_fn is not None:
+                boot_fn(phase, argv, serial_log, host_log)
+            else:
+                self._boot_installed_phase(
+                    phase=phase, argv=argv, serial_log=serial_log, host_log=host_log
+                )
+            boots.append(phase)
+
+        def _observe_stage(stage: str) -> dict[str, object]:
+            if observe_fn is not None:
+                return dict(observe_fn(stage))
+            return gather_recovery_stage_observation(
+                clone_path,
+                stage,
+                work_dir=observe_work,
+                accepted_slot=accepted_slot,
+                candidate_slot=candidate_slot,
+                expected_release_id=candidate_release_id,
+            )
+
+        stages: dict[str, object] = {}
+        for stage in USERSPACE_FAILURE_STAGES:
+            stages[stage] = _observe_stage(stage)
+        active_after = str(digest_fn(accepted_slot, "after"))
+        inactive_after = str(digest_fn(candidate_slot, "after"))
+        isolation = verify_update_slot_isolation(
+            active_slot=accepted_slot,
+            active_before_digest=active_before,
+            active_after_digest=active_after,
+            inactive_before_digest=inactive_before,
+            inactive_after_digest=inactive_after,
+        )
+        recovered = dict(stages.get("recovery-boot-accepted", {}))
+        report = build_userspace_failure_lifecycle_report(
+            observed_default=str(recovered.get("default_slot", ""))
+        )
+        assert_lifecycle_transitions(report)
+        return {
+            "ok": True,
+            "leg": "userspace-failure-product",
+            "installed_image": str(origin.resolve()),
+            "installed_image_sha256": installed_sha,
+            "unhealthy_bundle": str(unhealthy),
+            "unhealthy_bundle_sha256": unhealthy_sha,
+            "accepted_slot": accepted_slot,
+            "candidate_slot": candidate_slot,
+            "accepted_release_id": accepted_release_id,
+            "candidate_release_id": candidate_release_id,
+            "clone": clone_proof,
+            "serial_console": serial_proof,
+            "shipped_units": shipped_units,
+            "qemu_binary": qemu_binary,
+            "phases": boots,
+            "stages": stages,
+            "slot_digests": {
+                "active_before": active_before,
+                "active_after": active_after,
+                "inactive_before": inactive_before,
+                "inactive_after": inactive_after,
+            },
+            "slot_isolation": isolation,
+            "lifecycle_report": report,
+            "source_image_mutated": False,
+        }
+
+    def _boot_attempt_phase(
+        self,
+        *,
+        phase: str,
+        argv: list[str],
+        serial_log: Path,
+        host_log: Path,
+        timeout_seconds: int,
+    ) -> dict[str, object]:
+        """Run one expected-failing boot attempt under a bounded timeout.
+
+        The nonbooting candidate must never reach userspace, so this boot
+        cannot end in a runner-driven poweroff: QEMU either exits on the
+        GRUB failure or hangs at the GRUB menu until the attempt timeout
+        kills it. Both are orchestration detail; the attempt outcome is
+        decided afterwards from disk state (ARMED journal with a consumed
+        one-shot). A clean runner-driven poweroff here would mean the
+        candidate actually booted, which the disk asserts will catch as
+        RED. Returns the orchestration outcome for evidence only.
+        """
+        binary = Path(argv[0]).name if argv else ""
+        if resolve_device_host_tool(binary) is None and shutil.which(binary) is None:
+            raise LifecycleHarnessError(
+                f"BLOCKED product mode: missing product host tool: {binary} "
+                f"(phase {phase})"
+            )
+        try:
+            completed = subprocess.run(
+                [str(part) for part in argv],
+                capture_output=True,
+                timeout=max(60, int(timeout_seconds)),
+            )
+        except subprocess.TimeoutExpired as exc:
+            return {
+                "phase": phase,
+                "outcome": "attempt-timeout",
+                "detail": f"QEMU killed after {timeout_seconds}s without poweroff",
+                "partial_stdout_tail": str(exc.stdout)[-500:] if exc.stdout else "",
+            }
+        return {
+            "phase": phase,
+            "outcome": "qemu-exit",
+            "returncode": completed.returncode,
+            "detail": f"QEMU exited with code {completed.returncode}",
+        }
+
+    def run_nonboot_failure_product(
+        self,
+        *,
+        installed_image: Path | None = None,
+        nonboot_bundle: Path | None = None,
+        accepted_slot: str = "B",
+        accepted_release_id: str,
+        candidate_release_id: str,
+        attempt_timeout_seconds: int = 300,
+        clone_fn=None,
+        materialize_fn=None,
+        boot_fn=None,
+        observe_fn=None,
+        slot_digest_fn=None,
+        serial_fn=None,
+    ) -> dict[str, object]:
+        """Stage a kernel-less candidate, fail the attempt, reset to accepted.
+
+        The structurally-valid nonbooting candidate stages and arms
+        through the shipped update socket (GRUB one-shot set). The bounded
+        boot attempt must never reach Greia userspace (GRUB consumes the
+        one-shot at menu load, then fails on the missing kernel); one
+        reset/power-cycle boots the previous accepted slot, whose
+        boot-health CONFIRM reconciles the journal to ROLLED_BACK with
+        the accepted release as normal default. Every outcome is decided
+        from disk state through the production parsers, never from the
+        QEMU exit mode.
+        """
+        from .lifecycle import assert_lifecycle_transitions
+
+        self.config.validate()
+        assert_control_absent_from_production()
+        if not self.control_enabled:
+            raise LifecycleHarnessError(
+                "control seam disabled: product mode fails closed, never "
+                "claims a boot by silent no-op"
+            )
+        origin = Path(installed_image) if installed_image is not None else None
+        if origin is None and self.official_image is not None:
+            origin = Path(self.official_image)
+        require_product_host(official_image=origin)
+        if origin is None or not origin.is_file():
+            raise LifecycleHarnessError(
+                "BLOCKED product mode: absent accepted installed image "
+                f"({origin}); the previous leg output feeds this leg; "
+                "never synthesize one"
+            )
+        installed_sha = sha256_file(origin)
+        nonboot = Path(nonboot_bundle) if nonboot_bundle is not None else None
+        if nonboot is None or nonboot.is_symlink() or not nonboot.is_file():
+            raise LifecycleHarnessError(
+                "BLOCKED product mode: missing nonbooting candidate bundle "
+                f"({nonboot}); refusing before any slot payload write"
+            )
+        nonboot_sha = sha256_file(nonboot)
+        if accepted_slot not in ("A", "B"):
+            raise LifecycleHarnessError(
+                f"nonboot-failure refused: unknown accepted slot {accepted_slot!r}"
+            )
+        candidate_slot = "A" if accepted_slot == "B" else "B"
+        for label, value in (
+            ("accepted release", accepted_release_id),
+            ("candidate release", candidate_release_id),
+        ):
+            if not value or isinstance(value, bool):
+                raise LifecycleHarnessError(
+                    f"nonboot-failure refused: {label} identity is missing"
+                )
+        if accepted_release_id == candidate_release_id:
+            raise LifecycleHarnessError(
+                "nonboot-failure refused: candidate must differ from accepted"
+            )
+        root = self.product_root
+        root.mkdir(parents=True, exist_ok=True)
+        clone_path = root / "nonboot-failure-clone.img"
+        control_dir = root / "control-disk"
+        control_dir.mkdir(parents=True, exist_ok=True)
+        observe_work = root / "observe-work"
+        observe_work.mkdir(parents=True, exist_ok=True)
+
+        if clone_fn is not None:
+            clone_proof = dict(clone_fn(origin, clone_path))
+        else:
+            clone_proof = clone_product_image(origin, clone_path)
+
+        if serial_fn is not None:
+            serial_proof = dict(serial_fn(clone_path))
+        else:
+            serial_proof = enable_installed_clone_serial_console(clone_path)
+
+        qemu_binary = select_install_qemu_binary()
+        shipped_units = record_shipped_boot_units()
+        digest_fn = slot_digest_fn or (
+            lambda slot, when: hash_slot_partition(clone_path, slot)
+        )
+        active_before = str(digest_fn(accepted_slot, "before"))
+        inactive_before = str(digest_fn(candidate_slot, "before"))
+        control_image = root / "control-disk.img"
+        boots: list[str] = []
+        candidate_staged = False
+
+        def _boot_update_phase(phase: str) -> None:
+            nonlocal candidate_staged
+            inputs: dict[str, object] = {"candidate_bundle": CANDIDATE_BUNDLE_FILE}
+            write_control_phase(control_dir, phase=phase, inputs=inputs)
+            if phase == "update-stage" and not candidate_staged:
+                self._stage_candidate_onto_control(
+                    control_dir, nonboot, control_image=None
+                )
+                candidate_staged = True
+            if materialize_fn is not None:
+                materialize_fn(control_dir, control_image)
+            else:
+                materialize_control_disk(control_dir, control_image)
+            argv, serial_log, host_log = product_boot_qemu_argv(
+                installed_clone=clone_path,
+                control_image=control_image,
+                output_dir=root,
+                memory_mib=self.config.memory_mib,
+                cpus=self.config.cpus,
+                qemu_binary=qemu_binary,
+                leg=f"nonboot-failure-{phase}-{len(boots)}",
+            )
+            if boot_fn is not None:
+                boot_fn(phase, argv, serial_log, host_log)
+            else:
+                self._boot_installed_phase(
+                    phase=phase, argv=argv, serial_log=serial_log, host_log=host_log
+                )
+            boots.append(phase)
+
+        for phase in NONBOOT_LEG_UPDATE_PHASES:
+            _boot_update_phase(phase)
+
+        def _observe_nonboot(stage: str) -> dict[str, object]:
+            if observe_fn is not None:
+                return dict(observe_fn(stage))
+            return gather_nonboot_stage_observation(
+                clone_path,
+                stage,
+                work_dir=observe_work,
+                accepted_slot=accepted_slot,
+                candidate_slot=candidate_slot,
+                accepted_release_id=accepted_release_id,
+            )
+
+        staged = _observe_nonboot("stage-nonboot-candidate")
+        if staged.get("journal_state") != "one_shot_armed":
+            raise LifecycleHarnessError(
+                "nonboot-failure refused: candidate did not arm "
+                f"({staged.get('journal_state')!r})"
+            )
+
+        write_control_phase(control_dir, phase="wait-health-poweroff", inputs={})
+        if materialize_fn is not None:
+            materialize_fn(control_dir, control_image)
+        else:
+            materialize_control_disk(control_dir, control_image)
+        argv, serial_log, host_log = product_boot_qemu_argv(
+            installed_clone=clone_path,
+            control_image=control_image,
+            output_dir=root,
+            memory_mib=self.config.memory_mib,
+            cpus=self.config.cpus,
+            qemu_binary=qemu_binary,
+            leg="nonboot-failure-boot-attempt",
+        )
+        if boot_fn is not None:
+            boot_fn("boot-attempt", argv, serial_log, host_log)
+            attempt: dict[str, object] = {
+                "phase": "boot-attempt",
+                "outcome": "injected-boot",
+            }
+        else:
+            attempt = self._boot_attempt_phase(
+                phase="boot-attempt",
+                argv=argv,
+                serial_log=serial_log,
+                host_log=host_log,
+                timeout_seconds=attempt_timeout_seconds,
+            )
+        boots.append("boot-attempt")
+        attempted = _observe_nonboot("boot-attempt-failed")
+
+        write_control_phase(control_dir, phase="wait-health-poweroff", inputs={})
+        if materialize_fn is not None:
+            materialize_fn(control_dir, control_image)
+        else:
+            materialize_control_disk(control_dir, control_image)
+        reset_argv, reset_serial, reset_host = product_boot_qemu_argv(
+            installed_clone=clone_path,
+            control_image=control_image,
+            output_dir=root,
+            memory_mib=self.config.memory_mib,
+            cpus=self.config.cpus,
+            qemu_binary=qemu_binary,
+            leg="nonboot-failure-reset-boot",
+        )
+        if boot_fn is not None:
+            boot_fn("reset-boot", reset_argv, reset_serial, reset_host)
+        else:
+            self._boot_installed_phase(
+                phase="reset-boot",
+                argv=reset_argv,
+                serial_log=reset_serial,
+                host_log=reset_host,
+            )
+        boots.append("reset-boot")
+        reset = _observe_nonboot("reset-boot-accepted")
+
+        active_after = str(digest_fn(accepted_slot, "after"))
+        inactive_after = str(digest_fn(candidate_slot, "after"))
+        isolation = verify_update_slot_isolation(
+            active_slot=accepted_slot,
+            active_before_digest=active_before,
+            active_after_digest=active_after,
+            inactive_before_digest=inactive_before,
+            inactive_after_digest=inactive_after,
+        )
+        report = build_nonboot_failure_lifecycle_report(
+            observed_default=str(reset.get("default_slot", ""))
+        )
+        assert_lifecycle_transitions(report)
+        return {
+            "ok": True,
+            "leg": "nonboot-failure-product",
+            "installed_image": str(origin.resolve()),
+            "installed_image_sha256": installed_sha,
+            "nonboot_bundle": str(nonboot),
+            "nonboot_bundle_sha256": nonboot_sha,
+            "accepted_slot": accepted_slot,
+            "candidate_slot": candidate_slot,
+            "accepted_release_id": accepted_release_id,
+            "candidate_release_id": candidate_release_id,
+            "clone": clone_proof,
+            "serial_console": serial_proof,
+            "shipped_units": shipped_units,
+            "qemu_binary": qemu_binary,
+            "phases": boots,
+            "attempt": attempt,
+            "staged": staged,
+            "attempted": attempted,
+            "reset": reset,
+            "slot_digests": {
+                "active_before": active_before,
+                "active_after": active_after,
+                "inactive_before": inactive_before,
+                "inactive_after": inactive_after,
+            },
+            "slot_isolation": isolation,
+            "lifecycle_report": report,
+            "source_image_mutated": False,
+        }
+
+    def run_persist_refusal_product(
+        self,
+        *,
+        installed_image: Path | None = None,
+        refused_bundle: Path | None = None,
+        accepted_slot: str = "B",
+        accepted_release_id: str,
+        clone_fn=None,
+        materialize_fn=None,
+        boot_fn=None,
+        observe_fn=None,
+        slot_digest_fn=None,
+    ) -> dict[str, object]:
+        """Prove a PERSIST-incompatible candidate is refused pre-mutation.
+
+        The valid candidate (manifest range excludes the installed
+        schema) travels the shipped update socket through
+        update-status/update-verify and the refusal-expecting stage
+        phase. The guest stage preflight must refuse with a compatibility
+        error; host attestation proves the inactive slot digest and the
+        journal are unchanged, the accepted default holds, and no
+        one-shot was armed.
+        """
+        from .lifecycle import assert_lifecycle_transitions
+
+        self.config.validate()
+        assert_control_absent_from_production()
+        if not self.control_enabled:
+            raise LifecycleHarnessError(
+                "control seam disabled: product mode fails closed, never "
+                "claims a refusal by silent no-op"
+            )
+        origin = Path(installed_image) if installed_image is not None else None
+        if origin is None and self.official_image is not None:
+            origin = Path(self.official_image)
+        require_product_host(official_image=origin)
+        if origin is None or not origin.is_file():
+            raise LifecycleHarnessError(
+                "BLOCKED product mode: absent accepted installed image "
+                f"({origin}); the previous leg output feeds this leg; "
+                "never synthesize one"
+            )
+        installed_sha = sha256_file(origin)
+        refused = Path(refused_bundle) if refused_bundle is not None else None
+        if refused is None or refused.is_symlink() or not refused.is_file():
+            raise LifecycleHarnessError(
+                "BLOCKED product mode: missing refusal candidate bundle "
+                f"({refused}); refusing without evidence"
+            )
+        refused_sha = sha256_file(refused)
+        if accepted_slot not in ("A", "B"):
+            raise LifecycleHarnessError(
+                f"persist-refusal refused: unknown accepted slot {accepted_slot!r}"
+            )
+        candidate_slot = "A" if accepted_slot == "B" else "B"
+        if not accepted_release_id or isinstance(accepted_release_id, bool):
+            raise LifecycleHarnessError(
+                "persist-refusal refused: accepted release identity is missing"
+            )
+        root = self.product_root
+        root.mkdir(parents=True, exist_ok=True)
+        clone_path = root / "persist-refusal-clone.img"
+        control_dir = root / "control-disk"
+        control_dir.mkdir(parents=True, exist_ok=True)
+        observe_work = root / "observe-work"
+        observe_work.mkdir(parents=True, exist_ok=True)
+
+        if clone_fn is not None:
+            clone_proof = dict(clone_fn(origin, clone_path))
+        else:
+            clone_proof = clone_product_image(origin, clone_path)
+
+        qemu_binary = select_install_qemu_binary()
+        shipped_units = record_shipped_boot_units()
+        digest_fn = slot_digest_fn or (
+            lambda slot, when: hash_slot_partition(clone_path, slot)
+        )
+        inactive_before = str(digest_fn(candidate_slot, "before"))
+        journal_before = self._read_journal_state(
+            clone_path, observe_work, tag="before"
+        )
+        control_image = root / "control-disk.img"
+        boots: list[str] = []
+        candidate_staged = False
+        for phase in PERSIST_REFUSAL_LEG_PHASES:
+            inputs: dict[str, object] = {}
+            if phase in RECOVERY_D31_REVERSE_UPDATE_PHASES + (
+                "update-stage-expect-refused",
+            ):
+                inputs = {"candidate_bundle": CANDIDATE_BUNDLE_FILE}
+            write_control_phase(control_dir, phase=phase, inputs=inputs)
+            if phase == "update-stage-expect-refused" and not candidate_staged:
+                self._stage_candidate_onto_control(
+                    control_dir, refused, control_image=None
+                )
+                candidate_staged = True
+            if materialize_fn is not None:
+                materialize_fn(control_dir, control_image)
+            else:
+                materialize_control_disk(control_dir, control_image)
+            argv, serial_log, host_log = product_boot_qemu_argv(
+                installed_clone=clone_path,
+                control_image=control_image,
+                output_dir=root,
+                memory_mib=self.config.memory_mib,
+                cpus=self.config.cpus,
+                qemu_binary=qemu_binary,
+                leg=f"persist-refusal-{phase}-{len(boots)}",
+            )
+            if boot_fn is not None:
+                boot_fn(phase, argv, serial_log, host_log)
+            else:
+                self._boot_installed_phase(
+                    phase=phase, argv=argv, serial_log=serial_log, host_log=host_log
+                )
+            boots.append(phase)
+
+        inactive_after = str(digest_fn(candidate_slot, "after"))
+        if inactive_before != inactive_after:
+            raise LifecycleHarnessError(
+                "persist-refusal violated: inactive slot changed across "
+                "a refused stage"
+            )
+        journal_after = self._read_journal_state(
+            clone_path, observe_work, tag="after"
+        )
+        if journal_before != journal_after:
+            raise LifecycleHarnessError(
+                "persist-refusal violated: journal moved across a refused "
+                f"stage ({journal_before!r} -> {journal_after!r})"
+            )
+        if observe_fn is not None:
+            observed = dict(observe_fn(clone_path))
+        else:
+            observed = gather_persist_refusal_observation(
+                clone_path,
+                work_dir=observe_work,
+                accepted_slot=accepted_slot,
+                accepted_release_id=accepted_release_id,
+            )
+        report = build_persist_refusal_lifecycle_report(
+            observed_default=str(observed.get("default_slot", ""))
+        )
+        assert_lifecycle_transitions(report)
+        return {
+            "ok": True,
+            "leg": "persist-refusal-product",
+            "installed_image": str(origin.resolve()),
+            "installed_image_sha256": installed_sha,
+            "refused_bundle": str(refused),
+            "refused_bundle_sha256": refused_sha,
+            "accepted_slot": accepted_slot,
+            "candidate_slot": candidate_slot,
+            "accepted_release_id": accepted_release_id,
+            "clone": clone_proof,
+            "shipped_units": shipped_units,
+            "qemu_binary": qemu_binary,
+            "phases": boots,
+            "inactive_unchanged": True,
+            "journal_before": journal_before,
+            "journal_after": journal_after,
+            "observed": observed,
+            "lifecycle_report": report,
+            "source_image_mutated": False,
+        }
+
+    @staticmethod
+    def _read_journal_state(
+        clone_path: Path, work_dir: Path, *, tag: str
+    ) -> dict[str, object]:
+        """Read the pending journal state from a clone (host-side).
+
+        Mounts boot-control (p1) plus persist (p4) read-only and resolves
+        the evidence dirs through the shared
+        :func:`_resolve_boot_evidence_dirs` owner (the journal lives on
+        persist, never on boot alone).
+        """
+        import tempfile as _tempfile
+
+        from greia_installer.disk import partition_number_path
+
+        work = Path(work_dir)
+        work.mkdir(parents=True, exist_ok=True)
+        boot_mnt = Path(_tempfile.mkdtemp(prefix=f"greia-x8-journal-{tag}-b-"))
+        persist_mnt = Path(_tempfile.mkdtemp(prefix=f"greia-x8-journal-{tag}-p-"))
+        loopdev = ""
+        mounted_boot = False
+        mounted_persist = False
+        try:
+            loopdev = _loop_attach_partscan(clone_path)
+            base = Path(loopdev)
+            node_boot = str(partition_number_path(base, 1))
+            node_persist = str(partition_number_path(base, 4))
+            _mount_fs(node_boot, boot_mnt, read_only=True)
+            mounted_boot = True
+            _mount_fs(node_persist, persist_mnt, read_only=True)
+            mounted_persist = True
+            resolved = _resolve_boot_evidence_dirs(boot_mnt, persist_mnt)
+            from greia_platform.boot_transaction import BootTransactionJournal
+
+            journal = BootTransactionJournal.load(resolved["journal_dir"])
+            return {
+                "state": journal.state.value,
+                "candidate_slot": journal.candidate_slot,
+                "accepted_slot": journal.accepted_slot,
+                "release_id": journal.release_id,
+                "transitions": len(list(journal.transitions)),
+            }
+        finally:
+            if mounted_boot:
+                _umount_fs(boot_mnt)
+            if mounted_persist:
+                _umount_fs(persist_mnt)
+            if loopdev:
+                _loop_detach(loopdev)
+            shutil.rmtree(boot_mnt, ignore_errors=True)
+            shutil.rmtree(persist_mnt, ignore_errors=True)
+
     def _observe_recovery_stage(
         self,
         *,
@@ -5316,6 +6182,731 @@ def build_recovery_d31_reverse_lifecycle_report(
     }
     assert_lifecycle_transitions(report)
     return report
+
+
+# ---------------------------------------------------------------------------
+# Session 04 real-lifecycle legs (legacy i386 product path).
+#
+# The install leg (run_product) and the healthy A->B leg
+# (run_boot_health_product) already exist; Session 04 adds the legs its
+# mission requires around them: first-boot acceptance of A, userspace
+# failure without the gate reverse update, pre-kernel nonboot failure
+# with reset, and PERSIST-incompatible refusal. Sequencing, observation,
+# attestation and closure machinery stay owned by LifecycleHarness and
+# the production parsers; this section adds only leg orchestration over
+# the same shipped sockets, the same control seam and the same
+# host-side evidence readers.
+# ---------------------------------------------------------------------------
+
+#: First-boot leg: one installed boot confirming A through boot-health.
+FIRST_BOOT_LEG_PHASES: tuple[str, ...] = ("wait-health-poweroff",)
+FIRST_BOOT_OBSERVED_STEPS: tuple[str, ...] = ("boot-A-accepted",)
+
+#: Userspace-failure leg: the recovery leg's first half only (no reverse
+#: update); the accepted slot stays accepted throughout.
+USERSPACE_FAILURE_LEG_PHASES: tuple[str, ...] = (
+    "update-status",
+    "update-verify",
+    "update-stage",
+    "update-arm",
+    "wait-health-poweroff",
+    "wait-health-poweroff",
+)
+USERSPACE_FAILURE_STAGES: tuple[str, ...] = (
+    "stage-broken-candidate",
+    "boot-broken-candidate",
+    "recovery-boot-accepted",
+)
+USERSPACE_FAILURE_OBSERVED_STEPS: tuple[str, ...] = (
+    "stage-broken-candidate",
+    "boot-broken-candidate",
+    "recovery-boot-B",
+)
+
+#: Pre-kernel nonboot mechanism: delete every kernel image from a
+#: disposable payload copy (initrd stays; without a kernel no userspace
+#: can run by construction).
+NONBOOT_CANDIDATE_MECHANISM = "remove-slot-kernel"
+
+#: Nonboot leg: real stage+arm, one bounded boot attempt that must never
+#: reach userspace, then a reset boot back to the accepted slot.
+NONBOOT_LEG_UPDATE_PHASES: tuple[str, ...] = (
+    "update-status",
+    "update-verify",
+    "update-stage",
+    "update-arm",
+)
+NONBOOT_STAGES: tuple[str, ...] = (
+    "stage-nonboot-candidate",
+    "boot-attempt-failed",
+    "reset-boot-accepted",
+)
+NONBOOT_FAILURE_OBSERVED_STEPS: tuple[str, ...] = (
+    "stage-broken-candidate",
+    "boot-broken-candidate",
+    "recovery-boot-B",
+)
+
+#: PERSIST-refusal leg: the candidate is valid but its manifest range
+#: excludes the installed schema, so the shipped stage preflight must
+#: refuse before any slot write or activation.
+PERSIST_REFUSAL_LEG_PHASES: tuple[str, ...] = (
+    "update-status",
+    "update-verify",
+    "update-stage-expect-refused",
+)
+#: The refusal proves a negative (no transition); no frozen step is
+#: claimed as observed. Shape closure still carries the full sequence.
+PERSIST_REFUSAL_OBSERVED_STEPS: tuple[str, ...] = ()
+
+
+def _session04_report(
+    *, observed_default: str, observed_steps: tuple[str, ...]
+) -> dict[str, object]:
+    """Contract-shaped Session 04 report with per-leg observed steps."""
+    from .lifecycle import (
+        BOOT_OUTCOME_EXPECTED_SLOT,
+        LAUNCHER_ACCEPTANCE_LEGS,
+        LIFECYCLE_SEQUENCE,
+        SHIPPED_UPDATE_LEGS,
+        assert_lifecycle_transitions,
+    )
+
+    steps = [
+        {
+            "step": name,
+            "default_slot": BOOT_OUTCOME_EXPECTED_SLOT.get(name, observed_default)
+            if name
+            not in (
+                "fresh-install-A",
+                "stage-B-one-shot",
+                "stage-broken-candidate",
+            )
+            else observed_default,
+            "observed": name in observed_steps,
+        }
+        for name in LIFECYCLE_SEQUENCE
+    ]
+    report: dict[str, object] = {
+        "steps": steps,
+        "shipped_update_legs": list(SHIPPED_UPDATE_LEGS),
+        "launcher_acceptance_legs": list(LAUNCHER_ACCEPTANCE_LEGS),
+        "observed_steps": list(observed_steps),
+    }
+    assert_lifecycle_transitions(report)
+    return report
+
+
+def build_first_boot_lifecycle_report(*, observed_default: str) -> dict[str, object]:
+    """First-boot leg observes ``boot-A-accepted`` (A health-committed)."""
+    if observed_default != "A":
+        raise LifecycleHarnessError(
+            f"first-boot leg observed default {observed_default!r}, expected 'A'"
+        )
+    return _session04_report(
+        observed_default="A", observed_steps=FIRST_BOOT_OBSERVED_STEPS
+    )
+
+
+def build_userspace_failure_lifecycle_report(
+    *, observed_default: str
+) -> dict[str, object]:
+    """Userspace-failure leg: broken staged, health withheld, B recovered."""
+    if observed_default != "B":
+        raise LifecycleHarnessError(
+            f"userspace-failure leg observed default {observed_default!r}, "
+            "expected 'B' (accepted slot stays accepted)"
+        )
+    return _session04_report(
+        observed_default="B", observed_steps=USERSPACE_FAILURE_OBSERVED_STEPS
+    )
+
+
+def build_nonboot_failure_lifecycle_report(
+    *, observed_default: str
+) -> dict[str, object]:
+    """Nonboot leg: staged/armed, attempt never reaches userspace, reset to B."""
+    if observed_default != "B":
+        raise LifecycleHarnessError(
+            f"nonboot-failure leg observed default {observed_default!r}, "
+            "expected 'B' (reset lands on the accepted slot)"
+        )
+    return _session04_report(
+        observed_default="B", observed_steps=NONBOOT_FAILURE_OBSERVED_STEPS
+    )
+
+
+def build_persist_refusal_lifecycle_report(
+    *, observed_default: str
+) -> dict[str, object]:
+    """PERSIST-refusal leg: valid candidate refused before slot mutation."""
+    if observed_default != "B":
+        raise LifecycleHarnessError(
+            f"persist-refusal leg observed default {observed_default!r}, "
+            "expected 'B' (accepted slot untouched)"
+        )
+    report = _session04_report(
+        observed_default="B", observed_steps=PERSIST_REFUSAL_OBSERVED_STEPS
+    )
+    report["refused_op"] = "STAGE_CURRENT_CANDIDATE"
+    return report
+
+
+def _remove_kernel_files(root: Path) -> list[str]:
+    """Delete every kernel image under a host-side payload copy.
+
+    Removes ``boot/vmlinuz*`` and root-level ``vmlinuz*`` files/symlinks
+    (never directories, never following symlinks outside root). Initrd
+    files stay: without a kernel no userspace can run, which is exactly
+    the pre-kernel failure under test. An empty result means the base
+    rootfs carries no kernel image and the mutation would not be genuine.
+    """
+    base = Path(root)
+    removed: list[str] = []
+    for parent_rel, prefix in (("boot", "vmlinuz"), ("", "vmlinuz")):
+        parent = base if not parent_rel else base / parent_rel
+        if not parent.is_dir() or parent.is_symlink():
+            continue
+        for child in sorted(parent.iterdir()):
+            if not child.name.startswith(prefix):
+                continue
+            if child.is_symlink():
+                child.unlink()
+                removed.append(str(Path(parent_rel) / child.name) if parent_rel else child.name)
+            elif child.is_file():
+                child.unlink()
+                removed.append(str(Path(parent_rel) / child.name) if parent_rel else child.name)
+    return sorted(removed)
+
+
+def build_nonbooting_candidate_bundle(
+    *,
+    base_payload: Path,
+    base_hardware_support: Path,
+    output_path: Path,
+    work_dir: Path,
+    release_id: str,
+    platform_family: str,
+    architecture: str,
+    profile: str,
+    board: str | None = None,
+    attach_fn=None,
+    mount_fn=None,
+    unmount_fn=None,
+    detach_fn=None,
+    which=None,
+) -> dict[str, object]:
+    """Build a structurally-valid genuinely non-booting candidate bundle.
+
+    Same shape as :func:`build_unhealthy_candidate_bundle` (real base
+    slot payload copy, real zstd recompress, production
+    :func:`build_update_bundle`), but the disposable-copy mutation is
+    :func:`_remove_kernel_files` instead of the health-issuer removal:
+    the candidate stages and arms through the real services, then fails
+    before Greia userspace can run. The base payload is never mutated
+    (byte-compared before/after).
+    """
+    from greia_platform.system_updates import build_update_bundle
+
+    base = Path(base_payload)
+    if base.is_symlink() or not base.is_file():
+        raise LifecycleHarnessError(
+            "BLOCKED product mode: no real base slot payload is available "
+            f"({base}); the nonbooting candidate derives from the install "
+            "leg payload, never synthesized"
+        )
+    hw = Path(base_hardware_support)
+    if hw.is_symlink() or not hw.is_file():
+        raise LifecycleHarnessError(
+            "BLOCKED product mode: no base hardware-support bytes for the "
+            f"candidate ({hw}); STAGE requires the release-bound member"
+        )
+    _assert_relocatable_payload_bytes(base)
+    work = Path(work_dir)
+    work.mkdir(parents=True, exist_ok=True)
+    base_sha_before = sha256_file(base)
+    payload_copy = work / "nonbooting-candidate-payload.img"
+    if payload_copy.exists():
+        raise LifecycleHarnessError(
+            f"nonbooting candidate refused: work payload already exists ({payload_copy})"
+        )
+    shutil.copy2(base, payload_copy)
+    pre_sha = sha256_file(payload_copy)
+
+    do_attach = attach_fn or _loop_attach
+    do_detach = detach_fn or _loop_detach
+
+    def _do_mount(node: str, mnt: Path) -> None:
+        if mount_fn is not None:
+            mount_fn(node, mnt, read_only=False)
+        else:
+            _mount_fs(node, mnt, read_only=False, which=which)
+
+    def _do_unmount(mnt: Path) -> None:
+        if unmount_fn is not None:
+            unmount_fn(mnt)
+        else:
+            _umount_fs(mnt)
+
+    import tempfile as _tempfile
+
+    mountpoint = Path(_tempfile.mkdtemp(prefix="greia-x8-nonboot-mnt-"))
+    loopdev = ""
+    removed: list[str] = []
+    try:
+        loopdev = str(do_attach(payload_copy))
+        _do_mount(loopdev, mountpoint)
+        try:
+            removed = _remove_kernel_files(mountpoint)
+        finally:
+            _do_unmount(mountpoint)
+    finally:
+        if loopdev:
+            try:
+                do_detach(loopdev)
+            except TypeError:
+                do_detach(loopdev, runner=None)
+        shutil.rmtree(mountpoint, ignore_errors=True)
+    if not removed:
+        raise LifecycleHarnessError(
+            "nonbooting candidate refused: base rootfs carries no kernel "
+            "image; removing nothing would not produce a genuine "
+            "pre-kernel boot failure"
+        )
+    post_sha = sha256_file(payload_copy)
+    if post_sha == pre_sha:
+        raise LifecycleHarnessError(
+            "nonbooting candidate refused: payload copy shows no staged change"
+        )
+    if sha256_file(base) != base_sha_before:
+        raise LifecycleHarnessError(
+            "nonbooting candidate refused: base payload was mutated"
+        )
+    import zstandard
+
+    mutated_raw = payload_copy.read_bytes()
+    compressed_payload = work / "payload.ext4.zst"
+    if compressed_payload.exists():
+        compressed_payload.unlink()
+    compressed_payload.write_bytes(
+        zstandard.ZstdCompressor(level=3).compress(mutated_raw)
+    )
+    out = Path(output_path)
+    manifest = build_update_bundle(
+        payload_path=compressed_payload,
+        hardware_support_path=hw,
+        output_path=out,
+        version=str(release_id).split("-", 1)[1] if "-" in str(release_id) else str(release_id),
+        release_id=release_id,
+        platform_family=platform_family,
+        architecture=architecture,
+        profile=profile,
+        board=board,
+        payload_uncompressed_bytes=len(mutated_raw),
+        persist_read_schema_min=1,
+        persist_read_schema_max=1,
+        persist_write_schema=1,
+        release_notes=(
+            "Session 04 deliberately non-booting candidate "
+            f"({NONBOOT_CANDIDATE_MECHANISM})."
+        ),
+    )
+    return {
+        "bundle": str(out),
+        "bundle_sha256": sha256_file(out),
+        "release_id": manifest.release_id,
+        "platform_family": manifest.platform_family,
+        "architecture": manifest.architecture,
+        "profile": manifest.profile,
+        "board": manifest.board,
+        "payload_sha256": manifest.payload_sha256,
+        "hardware_support_sha256": manifest.hardware_support_sha256,
+        "payload_pre_sha256": pre_sha,
+        "payload_post_sha256": post_sha,
+        "removed_files": list(removed),
+        "mechanism": NONBOOT_CANDIDATE_MECHANISM,
+        "base_payload_sha256": base_sha_before,
+    }
+
+
+def verify_nonbooting_candidate_bundle(
+    bundle: Path | str,
+    *,
+    platform_family: str,
+    architecture: str,
+    profile: str,
+    expected_hardware_sha256: str,
+    board: str | None = None,
+) -> dict[str, object]:
+    """Verify the nonbooting candidate through the production owners."""
+    from greia_platform.system_updates import (
+        SystemIdentity,
+        UpdateCompatibilityError,
+        inspect_update_bundle,
+    )
+
+    inspected = inspect_update_bundle(Path(bundle))
+    manifest = inspected.manifest
+    try:
+        SystemIdentity(
+            version=manifest.version,
+            platform_family=platform_family,
+            architecture=architecture,
+            profile=profile,
+            board=board,
+        ).assert_compatible(manifest)
+    except UpdateCompatibilityError as exc:
+        raise LifecycleHarnessError(
+            f"nonbooting candidate bundle compatibility is RED ({exc})"
+        ) from exc
+    if manifest.hardware_support_sha256 != expected_hardware_sha256:
+        raise LifecycleHarnessError(
+            "nonbooting candidate refused: hardware-support member is not "
+            "the release-bound one"
+        )
+    if board is not None and manifest.board != board:
+        raise LifecycleHarnessError(
+            "nonbooting candidate refused: board identity drifted"
+        )
+    return {
+        "release_id": manifest.release_id,
+        "bundle_sha256": sha256_file(Path(bundle)),
+        "payload_sha256": manifest.payload_sha256,
+        "mechanism": NONBOOT_CANDIDATE_MECHANISM,
+    }
+
+
+def inspect_nonboot_attempt_roots(
+    *, backend_state_dir: Path, journal_dir: Path, accepted_slot: str, candidate_slot: str
+) -> dict[str, object]:
+    """Prove the boot attempt never reached Greia userspace (production parsers).
+
+    Requires: accepted default untouched, GRUB one-shot already consumed
+    (GRUB unsets next_entry at menu load, before any kernel runs), and a
+    non-terminal ARMED journal with no candidate-boot transition (the
+    reconcile that marks CANDIDATE_BOOTING only runs in userspace). Any
+    userspace contact would have moved the journal; a consumed one-shot
+    with an ARMED journal is exactly "attempted but never booted".
+    """
+    from greia_platform.boot_transaction import BootTransactionJournal, BootTransactionState
+    from greia_platform.grub_ab import GrubEnvBackend
+
+    backend = GrubEnvBackend.attach(Path(backend_state_dir))
+    state = backend.inspect()
+    if state.default_slot != accepted_slot:
+        raise LifecycleHarnessError(
+            f"nonboot attempt moved default {state.default_slot!r}, "
+            f"expected accepted {accepted_slot!r}"
+        )
+    if state.one_shot_slot is not None:
+        raise LifecycleHarnessError(
+            "nonboot attempt left a one-shot armed; GRUB must consume "
+            "next_entry at menu load"
+        )
+    journal = BootTransactionJournal.load(Path(journal_dir))
+    if journal.is_terminal:
+        raise LifecycleHarnessError(
+            f"nonboot attempt journal is terminal ({journal.state.value}); "
+            "userspace must never have been reached"
+        )
+    if journal.state is not BootTransactionState.ONE_SHOT_ARMED:
+        raise LifecycleHarnessError(
+            f"nonboot attempt journal state {journal.state.value!r}, "
+            "expected one-shot-armed"
+        )
+    if journal.candidate_slot != candidate_slot:
+        raise LifecycleHarnessError(
+            "nonboot attempt journal candidate drifted "
+            f"({journal.candidate_slot!r})"
+        )
+    if journal.accepted_slot != accepted_slot:
+        raise LifecycleHarnessError(
+            "nonboot attempt journal accepted slot drifted "
+            f"({journal.accepted_slot!r})"
+        )
+    return {
+        "default_slot": state.default_slot,
+        "one_shot_slot": None,
+        "last_booted": state.last_booted_slot,
+        "journal_state": journal.state.value,
+        "candidate_slot": journal.candidate_slot,
+        "accepted_slot": journal.accepted_slot,
+    }
+
+
+def inspect_nonboot_postreset_roots(
+    *, backend_state_dir: Path, journal_dir: Path, accepted_slot: str, accepted_release_id: str
+) -> dict[str, object]:
+    """Prove the reset boot landed on the previous accepted release."""
+    from greia_platform.boot_transaction import BootTransactionJournal, BootTransactionState
+    from greia_platform.grub_ab import GrubEnvBackend
+
+    backend = GrubEnvBackend.attach(Path(backend_state_dir))
+    state = backend.inspect()
+    if state.default_slot != accepted_slot:
+        raise LifecycleHarnessError(
+            f"post-reset default {state.default_slot!r}, expected {accepted_slot!r}"
+        )
+    if state.last_booted_slot != accepted_slot:
+        raise LifecycleHarnessError(
+            "post-reset observer must establish the accepted boot "
+            f"(last_booted={state.last_booted_slot!r})"
+        )
+    if state.one_shot_slot is not None:
+        raise LifecycleHarnessError("post-reset one-shot is not clean")
+    journal = BootTransactionJournal.load(Path(journal_dir))
+    if journal.state is not BootTransactionState.ROLLED_BACK:
+        raise LifecycleHarnessError(
+            f"post-reset journal state {journal.state.value!r}, "
+            "expected rolled-back"
+        )
+    if journal.accepted_slot != accepted_slot:
+        raise LifecycleHarnessError("post-reset journal accepted slot drifted")
+    if journal.release_id != accepted_release_id:
+        raise LifecycleHarnessError(
+            "post-reset journal release drifted "
+            f"({journal.release_id!r}, expected {accepted_release_id!r})"
+        )
+    return {
+        "default_slot": state.default_slot,
+        "last_booted": state.last_booted_slot,
+        "journal_state": journal.state.value,
+        "accepted_slot": journal.accepted_slot,
+        "accepted_release_id": journal.release_id,
+    }
+
+
+def gather_nonboot_stage_observation(
+    target_path: Path,
+    stage: str,
+    *,
+    work_dir: Path,
+    runner=None,
+    which=None,
+    accepted_slot: str,
+    candidate_slot: str,
+    accepted_release_id: str,
+) -> dict[str, object]:
+    """Observe one nonboot-failure stage from disposable target bytes."""
+    import tempfile as _tempfile
+
+    from greia_installer.disk import partition_number_path
+
+    from .lifecycle import run_file_cross_check
+
+    if stage not in NONBOOT_STAGES:
+        raise LifecycleHarnessError(
+            f"nonboot observation refused: unknown stage {stage!r}"
+        )
+    if accepted_slot not in ("A", "B") or candidate_slot not in ("A", "B"):
+        raise LifecycleHarnessError(
+            "nonboot observation refused: unknown accepted/candidate slot "
+            f"({accepted_slot!r}/{candidate_slot!r})"
+        )
+    target = Path(target_path)
+    if str(target).startswith("/dev/"):
+        raise LifecycleHarnessError(
+            f"refusing block-device path {target}: product mode takes regular files only"
+        )
+    if not target.is_file():
+        raise LifecycleHarnessError(
+            f"BLOCKED product mode: nonboot target is absent ({target})"
+        )
+    with target.open("rb") as stream:
+        mbr = stream.read(512)
+    disk_identities = observe_disk_identities_from_mbr(bytes(mbr))
+    cross = run_file_cross_check(
+        target, expected_signature=str(disk_identities["disk_signature"])
+    )
+    if not bool(cross.get("executed")):
+        raise LifecycleHarnessError(
+            "BLOCKED product mode: file cross-check is tool-less "
+            f"({cross.get('detail')}); refusing an unchecked observation"
+        )
+    if not bool(cross.get("green")):
+        raise LifecycleHarnessError(
+            f"nonboot target cross-check is RED ({cross.get('detail')}); "
+            "refusing a contradicted observation"
+        )
+    _require_loop_tools("losetup", "mount", "umount", "blkid", which=which)
+    work = Path(work_dir)
+    work.mkdir(parents=True, exist_ok=True)
+    boot_mnt = Path(_tempfile.mkdtemp(prefix="greia-x8-nboot-", dir=str(work)))
+    persist_mnt = Path(_tempfile.mkdtemp(prefix="greia-x8-npersist-", dir=str(work)))
+    loopdev = ""
+    mounted_boot = False
+    mounted_persist = False
+    try:
+        loopdev = _loop_attach_partscan(target, runner=runner, which=which)
+        base = Path(loopdev)
+        try:
+            node_boot = str(partition_number_path(base, 1))
+            node_persist = str(partition_number_path(base, 4))
+        except Exception as exc:
+            raise LifecycleHarnessError(
+                f"nonboot target has no boot/persist nodes on {loopdev} ({exc})"
+            ) from exc
+        _mount_fs(node_boot, boot_mnt, read_only=True, runner=runner, which=which)
+        mounted_boot = True
+        _mount_fs(
+            node_persist, persist_mnt, read_only=True, runner=runner, which=which
+        )
+        mounted_persist = True
+        resolved = _resolve_boot_evidence_dirs(boot_mnt, persist_mnt)
+        if stage in ("stage-nonboot-candidate", "boot-attempt-failed"):
+            observed = inspect_nonboot_attempt_roots(
+                backend_state_dir=resolved["backend_state_dir"],
+                journal_dir=resolved["journal_dir"],
+                accepted_slot=accepted_slot,
+                candidate_slot=candidate_slot,
+            )
+        else:
+            post = inspect_nonboot_postreset_roots(
+                backend_state_dir=resolved["backend_state_dir"],
+                journal_dir=resolved["journal_dir"],
+                accepted_slot=accepted_slot,
+                accepted_release_id=accepted_release_id,
+            )
+            observed = dict(post)
+    finally:
+        if mounted_boot:
+            _umount_fs(boot_mnt, runner=runner)
+        if mounted_persist:
+            _umount_fs(persist_mnt, runner=runner)
+        if loopdev:
+            _loop_detach(loopdev, runner=runner)
+        shutil.rmtree(boot_mnt, ignore_errors=True)
+        shutil.rmtree(persist_mnt, ignore_errors=True)
+    return observed
+
+
+def inspect_persist_refusal_roots(
+    *, backend_state_dir: Path, journal_dir: Path, accepted_slot: str, accepted_release_id: str
+) -> dict[str, object]:
+    """Prove a refused candidate changed nothing (production parsers).
+
+    Requires: accepted default untouched, no one-shot armed, and the
+    journal still terminal-ACCEPTED for the previously accepted release
+    (staging never opened a transaction, arming never ran).
+    """
+    from greia_platform.boot_transaction import BootTransactionJournal, BootTransactionState
+    from greia_platform.grub_ab import GrubEnvBackend
+
+    backend = GrubEnvBackend.attach(Path(backend_state_dir))
+    state = backend.inspect()
+    if state.default_slot != accepted_slot:
+        raise LifecycleHarnessError(
+            f"refusal moved default {state.default_slot!r}, "
+            f"expected accepted {accepted_slot!r}"
+        )
+    if state.one_shot_slot is not None:
+        raise LifecycleHarnessError(
+            "refused candidate armed a one-shot; refusal must precede activation"
+        )
+    journal = BootTransactionJournal.load(Path(journal_dir))
+    if journal.state is not BootTransactionState.ACCEPTED:
+        raise LifecycleHarnessError(
+            f"refusal journal state {journal.state.value!r}, expected accepted"
+        )
+    if journal.accepted_slot != accepted_slot:
+        raise LifecycleHarnessError("refusal journal accepted slot drifted")
+    if journal.release_id != accepted_release_id:
+        raise LifecycleHarnessError(
+            "refusal journal release drifted "
+            f"({journal.release_id!r}, expected {accepted_release_id!r})"
+        )
+    return {
+        "default_slot": state.default_slot,
+        "one_shot_slot": None,
+        "last_booted": state.last_booted_slot,
+        "journal_state": journal.state.value,
+        "accepted_slot": journal.accepted_slot,
+        "accepted_release_id": journal.release_id,
+    }
+
+
+def gather_persist_refusal_observation(
+    target_path: Path,
+    *,
+    work_dir: Path,
+    runner=None,
+    which=None,
+    accepted_slot: str,
+    accepted_release_id: str,
+) -> dict[str, object]:
+    """Observe the persist-refusal end state from disposable target bytes."""
+    import tempfile as _tempfile
+
+    from greia_installer.disk import partition_number_path
+
+    from .lifecycle import run_file_cross_check
+
+    target = Path(target_path)
+    if str(target).startswith("/dev/"):
+        raise LifecycleHarnessError(
+            f"refusing block-device path {target}: product mode takes regular files only"
+        )
+    if not target.is_file():
+        raise LifecycleHarnessError(
+            f"BLOCKED product mode: refusal target is absent ({target})"
+        )
+    with target.open("rb") as stream:
+        mbr = stream.read(512)
+    disk_identities = observe_disk_identities_from_mbr(bytes(mbr))
+    cross = run_file_cross_check(
+        target, expected_signature=str(disk_identities["disk_signature"])
+    )
+    if not bool(cross.get("executed")):
+        raise LifecycleHarnessError(
+            "BLOCKED product mode: file cross-check is tool-less "
+            f"({cross.get('detail')}); refusing an unchecked observation"
+        )
+    if not bool(cross.get("green")):
+        raise LifecycleHarnessError(
+            f"refusal target cross-check is RED ({cross.get('detail')}); "
+            "refusing a contradicted observation"
+        )
+    _require_loop_tools("losetup", "mount", "umount", "blkid", which=which)
+    work = Path(work_dir)
+    work.mkdir(parents=True, exist_ok=True)
+    boot_mnt = Path(_tempfile.mkdtemp(prefix="greia-x8-fboot-", dir=str(work)))
+    persist_mnt = Path(_tempfile.mkdtemp(prefix="greia-x8-fpersist-", dir=str(work)))
+    loopdev = ""
+    mounted_boot = False
+    mounted_persist = False
+    try:
+        loopdev = _loop_attach_partscan(target, runner=runner, which=which)
+        base = Path(loopdev)
+        try:
+            node_boot = str(partition_number_path(base, 1))
+            node_persist = str(partition_number_path(base, 4))
+        except Exception as exc:
+            raise LifecycleHarnessError(
+                f"refusal target has no boot/persist nodes on {loopdev} ({exc})"
+            ) from exc
+        _mount_fs(node_boot, boot_mnt, read_only=True, runner=runner, which=which)
+        mounted_boot = True
+        _mount_fs(
+            node_persist, persist_mnt, read_only=True, runner=runner, which=which
+        )
+        mounted_persist = True
+        resolved = _resolve_boot_evidence_dirs(boot_mnt, persist_mnt)
+        observed = inspect_persist_refusal_roots(
+            backend_state_dir=resolved["backend_state_dir"],
+            journal_dir=resolved["journal_dir"],
+            accepted_slot=accepted_slot,
+            accepted_release_id=accepted_release_id,
+        )
+    finally:
+        if mounted_boot:
+            _umount_fs(boot_mnt, runner=runner)
+        if mounted_persist:
+            _umount_fs(persist_mnt, runner=runner)
+        if loopdev:
+            _loop_detach(loopdev, runner=runner)
+        shutil.rmtree(boot_mnt, ignore_errors=True)
+        shutil.rmtree(persist_mnt, ignore_errors=True)
+    return observed
 
 
 def run_recovery_d31_reverse_leg(
