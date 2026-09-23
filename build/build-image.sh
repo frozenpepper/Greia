@@ -9,6 +9,9 @@
 # `compose_root --profile <id> --role target --root <path>` contract, shared
 # with the T04 slot producer (and, via role `live-installer`, with T02).
 set -Eeuo pipefail
+# Privileged builders must never leave root-owned bytecode in the source
+# tree: every Python invocation below inherits this (cf. greia_release.py).
+export PYTHONDONTWRITEBYTECODE=1
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"

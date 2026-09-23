@@ -13,6 +13,9 @@
 # build/lib/compose.sh behind the explicit role-typed composition contract,
 # shared with the target role consumer (build/build-image.sh).
 set -Eeuo pipefail
+# Privileged builders must never leave root-owned bytecode in the source
+# tree: every Python invocation below inherits this (cf. greia_release.py).
+export PYTHONDONTWRITEBYTECODE=1
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
@@ -402,6 +405,15 @@ LIVE_SQUASH="$BUILD_DIR/live-filesystem.squashfs"
 mksquashfs "$LIVE_ROOT" "$LIVE_SQUASH" -comp xz -b 256K -noappend >/dev/null
 
 payload_mib="$(( ($(stat -c %s "$TARGET_PAYLOAD") + $(stat -c %s "$LIVE_SQUASH") + 1048575) / 1048576 ))"
+# A/B media also carry the full release bundle in the USB payload: size it
+# or the bundle copy fails with ENOSPC once bundles outgrow the headroom.
+if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
+  [[ -n "${AB_RELEASE_SRC:-}" && -f "${AB_RELEASE_SRC:-}" ]] || {
+    echo "A/B installer build refused: validated release bundle missing for media sizing." >&2
+    exit 1
+  }
+  payload_mib="$(( payload_mib + ($(stat -c %s "$AB_RELEASE_SRC") + 1048575) / 1048576 ))"
+fi
 image_mib="$(( payload_mib + 256 ))"
 (( image_mib < 1024 )) && image_mib=1024
 rm -f "$OUTPUT_IMAGE" "$REPORT"

@@ -62,6 +62,33 @@ class InstallerBundleInterfaceTests(unittest.TestCase):
         )
         self.assertIn("installer_ab_bundle_sha256=${ab_bundle_sha256", builder)
 
+    def test_usb_media_sizes_the_embedded_bundle(self) -> None:
+        # Session 04 repair: the 540 MB release bundle overflowed USB media
+        # sized for the squashfs payloads only (ENOSPC on the bundle copy).
+        builder = self.read("build/build-installer-image.sh")
+        sizing = builder.index('payload_mib="$(( ($(stat -c %s "$TARGET_PAYLOAD")')
+        bundle_term = builder.index('$(stat -c %s "$AB_RELEASE_SRC")')
+        truncate = builder.index('truncate -s "${image_mib}M"')
+        self.assertLess(sizing, bundle_term)
+        self.assertLess(bundle_term, truncate)
+
+    def test_privileged_builders_suppress_source_bytecode(self) -> None:
+        # Session 04 repair: root builder Python importing project modules
+        # left root-owned __pycache__ under src/ (cf. greia_release.py
+        # PYTHONDONTWRITEBYTECODE precedent). Every root builder exports it.
+        for relative in (
+            "build/build-installer-image.sh",
+            "build/build-image.sh",
+            "build/build-legacy-x86-sd-installer.sh",
+            "build/populate-hardware-support-pool.sh",
+            "build/install-live-hardware-firmware.sh",
+            "tools/build-development-installer.sh",
+        ):
+            with self.subTest(relative):
+                self.assertIn(
+                    "export PYTHONDONTWRITEBYTECODE=1",
+                    self.read(relative),
+                )
     def test_wrappers_forward_release_bundle_without_recipe_change(self) -> None:
         legacy = self.read("build/build-legacy-x86-sd-installer.sh")
         self.assertIn("--release-bundle", legacy)
