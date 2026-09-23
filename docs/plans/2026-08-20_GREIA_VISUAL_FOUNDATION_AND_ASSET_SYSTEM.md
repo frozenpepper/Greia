@@ -298,6 +298,7 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Generic library | full source harvest complete; Batch A owner-reviewed selectively |
 | Generic Batch B rule | remains unauthorized; Encyclopedia topic-specific art should normally stay Activity-local |
 | Canonical cast | six-character v0.1 runtime family accepted; integrate intentionally rather than tiny corner stamps |
+| Public website exploration | three standalone DESIGN SPEC / DESKTOP VISUAL REVIEW mocks at `docs/design/website_mocks_2026-09-23/`; no Greia runtime or Encyclopedia phase change |
 | Prior first-party Batch 1 | `treno_numeri`, `labirinto_magico`, `acquario_magico` accepted historical productization evidence |
 | Next exact action | Build/check/commit the exact current 11-PNG Encyclopedia art pack, run focused tests + required verification on the committed SHA, then capture/review Home + all six sections through the Git-bound real Simulator harness. E4 stays blocked. |
 
@@ -680,3 +681,10 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Added/updated focused regressions for section hit geometry, exact-SHA review tooling, non-occluding focus treatment and opaque scene surfaces.
 - A recoverable nine-PNG maintainer-local staging bundle exists for the four changed golden masters + five E3 sections, with later Earth/Body renders refreshed. It is explicitly **not** Simulator or committed-art evidence.
 - **Current gate:** E4 remains blocked. Build/check/commit the exact eleven-PNG current art pack on a real checkout, run focused tests + required verification, then capture Home + six sections through the Git-bound real Simulator harness and visually review the resulting family before E3 can close.
+
+## 2026-09-23 — Public website concept exploration
+
+- Added three standalone, reviewable webpage concepts under `docs/design/website_mocks_2026-09-23/`: a scroll-led Storybook, a choice-led Constellation atlas, and a searchable/filterable Activity Fair. These differ in both visual style and visitor operation.
+- Reused canonical v0.1 cast PNGs, existing first-party Activity icons, Greia Nunito font and source palette; no shared art source was changed or promoted.
+- Chromium desktop previews were inspected at 1440×900. Mobile pages were rendered at 390×844 and checked for horizontal overflow; Constellation selection and Activity Fair filtering/detail opening were exercised.
+- Evidence is **DESIGN SPEC / DESKTOP VISUAL REVIEW** for website mocks only. There is no Greia Shell, Parent API, Simulator, physical-device, release, or Encyclopedia E4 acceptance in this tranche. The active visual/runtime checkpoint remains unchanged.

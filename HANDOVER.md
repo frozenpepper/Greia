@@ -1801,3 +1801,7 @@ the selected-set path. Session 04 remains closed.
   Setup image, no physical media (out of Session 03 scope).
 
 Session 03: CLOSED. Session 04: OPEN.
+
+## 52. Public website concept exploration (2026-09-23)
+
+Three standalone website mocks were added under `docs/design/website_mocks_2026-09-23/`: Storybook, Constellation, and Activity Fair. They use existing canonical cast art, Activity icons, Greia's Nunito font and source palette. The pages are DESIGN SPEC / DESKTOP VISUAL REVIEW only; they do not change the child Shell, Greia Parents, Activity runtime, release readiness, active architecture-remediation phase, Encyclopedia E4 route, or Session 04 lifecycle route. Chromium desktop and mobile mock rendering and the two interactive controls were checked as recorded in the mock README.

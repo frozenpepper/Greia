@@ -354,3 +354,5 @@ Post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, 
 - no Generic Batch B by inertia;
 - no narration integration in this visual lane;
 - no R7/hardware claims from Activity visual work.
+
+The standalone public website explorations at `docs/design/website_mocks_2026-09-23/` are DESIGN SPEC / DESKTOP VISUAL REVIEW only. They reuse existing Greia art and do not alter the current Encyclopedia E4 or R7 continuation route.
