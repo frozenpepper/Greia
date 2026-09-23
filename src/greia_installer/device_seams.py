@@ -351,19 +351,6 @@ def build_production_seam_pair(
             raise FreshAbInstallError(
                 f"hardware support pool is not authoritative: {exc}"
             ) from exc
-        provided = frozenset(pool.provided_firmware) | frozenset(pool.provided_microcode)
-        support_classes = tuple(
-            sorted(
-                (
-                    (entry.package, entry.version, entry.architecture, entry.sha256)
-                    for entry in pool.packages
-                    if entry.package in provided
-                ),
-                key=lambda item: item[0],
-            )
-        )
-        firmware_packages = tuple(sorted(pool.provided_firmware))
-        microcode_packages = tuple(sorted(pool.provided_microcode))
         # Machine-specific selection from the same attested snapshot: the
         # finalizer installs exactly these sets, so the capacity bound below
         # covers their verified dependency closures instead of the whole
@@ -387,6 +374,22 @@ def build_production_seam_pair(
             raise FreshAbInstallError(
                 f"machine hardware selection is not authoritative: {exc}"
             ) from exc
+        # The support-set classes cover exactly the machine-selected
+        # packages (never the whole pool): the finalizer installs the
+        # selected sets, and the release-support record must describe the
+        # installed reality so unselected pool members (for example
+        # dependency-only packages) cannot fail the class binding.
+        provided = frozenset(firmware_packages) | frozenset(microcode_packages)
+        support_classes = tuple(
+            sorted(
+                (
+                    (entry.package, entry.version, entry.architecture, entry.sha256)
+                    for entry in pool.packages
+                    if entry.package in provided
+                ),
+                key=lambda item: item[0],
+            )
+        )
 
         # Staging roots exist before the orchestrator needs them (EXECUTE-time
         # staging writes, never valued-disk destruction). Symlinks refused.

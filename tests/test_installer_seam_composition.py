@@ -457,5 +457,131 @@ class NoSubstituteImplementationTests(unittest.TestCase):
         self.assertIn("FreshAbInstallSeams", seams_source)
 
 
+class PartialSelectionSupportClassTests(unittest.TestCase):
+    """Session 04 QEMU discovery: support classes cover the selection.
+
+    A pool carrying a dependency-only package plus candidates, resolved
+    to a strict subset on the installing machine, must bind without the
+    unselected members failing the class check. The seams record the
+    installed reality (exactly the selected sets), never the whole pool.
+    """
+
+    def _seams(self, **overrides):  # type: ignore[no-untyped-def]
+        base = dict(
+            partition_runner=None,
+            slot_storage_factory=None,
+            slot_filesystem_factory=None,
+            package_installer_factory=None,
+            inventory_token="ab" * 32,
+            support_digest="ab" * 32,
+            support_size=1,
+            support_installed_bound=1,
+        )
+        base.update(overrides)
+        return FreshAbInstallSeams(**base)  # type: ignore[arg-type]
+
+    def test_strict_subset_selection_binds(self) -> None:
+        from greia_installer.fresh_ab_install import _support_set_from_seams
+
+        seams = self._seams(
+            support_classes=(("firmware-a", "1", "all", "cd" * 32),),
+            firmware_packages=("firmware-a",),
+            microcode_packages=(),
+        )
+        support = _support_set_from_seams(seams)
+        self.assertEqual(set(support.provided_firmware), {"firmware-a"})
+        self.assertEqual(set(support.provided_microcode), set())
+
+    def test_production_seams_cover_exactly_the_machine_selection(self) -> None:
+        import zstandard
+
+        from greia_installer.fresh_ab_install import (
+            AbExecutorFacts,
+            _support_set_from_seams,
+        )
+        from greia_installer.hardware_support import VerifiedHardwareSupportPool
+        from greia_installer.layout import ProfileSizing
+        from greia_platform.system_updates import build_update_bundle
+        from test_installer_hardware_support_pool import make_closure_pool
+
+        directory = tempfile.mkdtemp(prefix="installer-seams-partial-")
+        self.addCleanup(shutil.rmtree, directory, True)
+        root = Path(directory)
+        pool = make_closure_pool(root)
+        verified = VerifiedHardwareSupportPool.load(pool)
+        # Minimal real v3 bundle (no hardware-support member needed: the
+        # pool under test arrives through the seam configuration, exactly
+        # as the installer media carries it beside the release).
+        raw = b"s04-partial-payload:" + bytes(1024)
+        payload = root / "payload.ext4.zst"
+        payload.write_bytes(zstandard.ZstdCompressor(level=3).compress(raw))
+        bundle = root / "test.greiaupdate"
+        build_update_bundle(
+            payload_path=payload,
+            hardware_support_path=None,
+            output_path=bundle,
+            version="0.0.1-s04",
+            release_id="greia-0.0.1-s04",
+            platform_family=_AB_FAMILY,
+            architecture=_AB_ARCH,
+            profile=_AB_PROFILE_ID,
+            board=None,
+            payload_uncompressed_bytes=len(raw),
+            minimum_slot_bytes=len(raw),
+            persist_read_schema_min=1,
+            persist_read_schema_max=1,
+            persist_write_schema=1,
+        )
+        facts = AbExecutorFacts(
+            bundle_path=bundle,
+            expected_profile_id=_AB_PROFILE_ID,
+            expected_platform_family=_AB_FAMILY,
+            expected_architecture=_AB_ARCH,
+            sizing=ProfileSizing(
+                layout_adapter_id=_AB_LAYOUT,
+                slot_bytes=1 * GIB,
+                persist_minimum_bytes=256 * MIB,
+                boot_backend=_AB_BACKEND,
+            ),
+            support_installed_bytes=verified.total_installed_bytes,
+            password_hash=_AB_PASSWORD_HASH,
+            developer=False,
+        )
+        staging = root / "staging"
+        for name in ("persist", "boot-control", "backend-state", "journal", "mounts"):
+            (staging / name).mkdir(parents=True)
+        config = config_from_facts_and_state(
+            facts=facts,
+            hardware_support_pool=pool,
+            persist_stage_dir=staging / "persist",
+            boot_control_dir=staging / "boot-control",
+            backend_state_dir=staging / "backend-state",
+            journal_dir=staging / "journal",
+            mount_root=staging / "mounts",
+        )
+        seams_factory, _ = build_production_seam_pair(config)
+        seams = seams_factory(_whole_disk_target())
+        selected = set(seams.firmware_packages) | set(seams.microcode_packages)
+        classes = {name for name, _v, _a, _d in seams.support_classes}
+        # The invariant the QEMU leg broke: classes == selection exactly,
+        # so dependency-only pool members never reach the class binding.
+        self.assertEqual(classes, selected)
+        self.assertLessEqual(selected, {"firmware-a", "ucode-b"})
+        self.assertNotIn("dep-x", classes)
+        self.assertEqual(
+            seams.support_installed_bound,
+            verified.selected_installed_bytes(
+                seams.firmware_packages, seams.microcode_packages
+            ),
+        )
+        support = _support_set_from_seams(seams)
+        self.assertEqual(
+            set(support.provided_firmware), set(seams.firmware_packages)
+        )
+        self.assertEqual(
+            set(support.provided_microcode), set(seams.microcode_packages)
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
