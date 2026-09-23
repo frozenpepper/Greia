@@ -112,6 +112,11 @@ class RunnerExactInvocationTests(unittest.TestCase):
             "transaction_nonce",
             "plan_digest",
             "read_compatible_profile_id",
+            # EXECUTE must wait out the synchronous install exactly like
+            # the shipped graphical installer (short default would fake
+            # a service outage on every real install).
+            "execute_transport",
+            "EXECUTE_TIMEOUT_SECONDS",
         ):
             self.assertIn(required, text)
         # Control still triggers/acks only: ack carries phase/socket, never
