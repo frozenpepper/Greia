@@ -56,6 +56,42 @@ class RunnerRefusalTests(unittest.TestCase):
         self.assertIn('"STAGE_CURRENT_CANDIDATE": "STAGED"', text)
 
 
+class ExecuteSamplerTests(unittest.TestCase):
+    """The install-execute diagnostic sampler is test-harness-only."""
+
+    def test_sampler_present_in_runner(self) -> None:
+        from tools.x8_qemu import product as _product
+
+        text = _product.control_runner_text()
+        for required in (
+            "s04-diag-sampler",
+            "TasksCurrent",
+            "TasksMax",
+            "install-transaction.service",
+            "greia-slots",
+            "S04_DIAG_PID",
+        ):
+            self.assertIn(required, text)
+
+    def test_sampler_absent_from_production(self) -> None:
+        project_root = Path(__file__).resolve().parents[2]
+        offenders: list[str] = []
+        for relative in ("src", "build/overlay", "build/installer-overlay"):
+            root = project_root / relative
+            if not root.is_dir():
+                continue
+            for path in sorted(root.rglob("*")):
+                if not path.is_file() or path.is_symlink():
+                    continue
+                try:
+                    text = path.read_text(encoding="utf-8")
+                except (OSError, UnicodeDecodeError):
+                    continue
+                if "s04-diag-sampler" in text:
+                    offenders.append(str(path.relative_to(project_root)))
+        self.assertEqual(offenders, [])
+
+
 class ReportShapeTests(unittest.TestCase):
     def test_first_boot_observes_acceptance(self) -> None:
         report = build_first_boot_lifecycle_report(observed_default="A")
