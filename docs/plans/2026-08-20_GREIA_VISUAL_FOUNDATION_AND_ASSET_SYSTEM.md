@@ -298,7 +298,7 @@ Evidence class: **SIMULATOR VISUAL REVIEW**.
 | Generic library | full source harvest complete; Batch A owner-reviewed selectively |
 | Generic Batch B rule | remains unauthorized; Encyclopedia topic-specific art should normally stay Activity-local |
 | Canonical cast | six-character v0.1 runtime family accepted; integrate intentionally rather than tiny corner stamps |
-| Public website exploration | three standalone DESIGN SPEC / DESKTOP VISUAL REVIEW mocks at `docs/design/website_mocks_2026-09-23/`; no Greia runtime or Encyclopedia phase change |
+| Public website exploration | revised three-direction DESIGN SPEC / DESKTOP VISUAL REVIEW set at `docs/design/website_mocks_2026-09-23/`; actual boot constellation, historical Simulator captures and distinct interactive journeys; no Greia runtime or Encyclopedia phase change |
 | Prior first-party Batch 1 | `treno_numeri`, `labirinto_magico`, `acquario_magico` accepted historical productization evidence |
 | Next exact action | Build/check/commit the exact current 11-PNG Encyclopedia art pack, run focused tests + required verification on the committed SHA, then capture/review Home + all six sections through the Git-bound real Simulator harness. E4 stays blocked. |
 
@@ -688,3 +688,11 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Reused canonical v0.1 cast PNGs, existing first-party Activity icons, Greia Nunito font and source palette; no shared art source was changed or promoted.
 - Chromium desktop previews were inspected at 1440×900. Mobile pages were rendered at 390×844 and checked for horizontal overflow; Constellation selection and Activity Fair filtering/detail opening were exercised.
 - Evidence is **DESIGN SPEC / DESKTOP VISUAL REVIEW** for website mocks only. There is no Greia Shell, Parent API, Simulator, physical-device, release, or Encyclopedia E4 acceptance in this tranche. The active visual/runtime checkpoint remains unchanged.
+
+## 2026-09-23 — Public website concepts revised after owner review
+
+- Owner judged the initial set insufficiently modern, dynamic and fun, and identified a missing primary brand source: `assets/boot/frames/frame_0051.png` on the canonical white boot screen. The earlier three mock versions are superseded as a website direction; the earlier ledger entry remains as history.
+- Reworked all three around the real boot constellation and its white-screen composition: The Portal replays actual boot frames and changes Simulator captures through scroll chapters; Orbit changes a spatial portal through cast-star selection, keyboard arrows and dragging; Play Lab opens from the boot screen into a drawable, colour-changing world switcher. The comparison page now explains these three different visitor operations.
+- Reused the six accepted cast renditions and historical development Simulator captures of the Shell and Activities. Reviewed the current Awwwards Sites of the Month and interaction references for identity-led transitions and direct scene interaction. No external layout, artwork or code was copied.
+- Chromium visual and interaction checks covered 1440×900 desktop, 390×844 mobile and 320×700 narrow mobile; loaded images resolved and no page errors or horizontal overflow were observed. Portal replay and chapter switching, Orbit selection and keyboard arrows, and Play Lab scene keys, pointer drawing, clearing and return were exercised.
+- Evidence remains **DESIGN SPEC / DESKTOP VISUAL REVIEW** for local website mocks. There is no new Greia Simulator run, physical-device proof, production web deployment, Encyclopedia E4 progress or release acceptance.

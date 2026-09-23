@@ -1805,3 +1805,9 @@ Session 03: CLOSED. Session 04: OPEN.
 ## 52. Public website concept exploration (2026-09-23)
 
 Three standalone website mocks were added under `docs/design/website_mocks_2026-09-23/`: Storybook, Constellation, and Activity Fair. They use existing canonical cast art, Activity icons, Greia's Nunito font and source palette. The pages are DESIGN SPEC / DESKTOP VISUAL REVIEW only; they do not change the child Shell, Greia Parents, Activity runtime, release readiness, active architecture-remediation phase, Encyclopedia E4 route, or Session 04 lifecycle route. Chromium desktop and mobile mock rendering and the two interactive controls were checked as recorded in the mock README.
+
+## 53. Public website concepts revised after owner feedback (2026-09-23)
+
+The first three mock versions were superseded after the owner requested a more dynamic, modern and playful result and identified the missing canonical Greia boot logo. The current comparison page at `docs/design/website_mocks_2026-09-23/index.html` leads to three rewritten concepts: The Portal (actual boot-frame replay and scroll-linked product chapters), Orbit (six-character spatial selector with keys/drag), and Play Lab (boot-screen entrance, drawable canvas and four switchable worlds). All use `assets/boot/frames/frame_0051.png` or the canonical white boot composition; the product images are historical development Simulator captures, not new acceptance evidence.
+
+Chromium visual and interaction checks covered desktop 1440×900 and mobile 390×844 and 320×700. Images loaded, page errors and horizontal overflow were absent, and the main controls were exercised. Evidence is DESIGN SPEC / DESKTOP VISUAL REVIEW only. No Greia OS implementation, runtime gate, install/update/release state, Encyclopedia E4 state or hardware proof changed. The visual workstream's next runtime action remains the existing E4 continuation when that route resumes; the current lifecycle route remains Session 04.

@@ -355,4 +355,4 @@ Post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, 
 - no narration integration in this visual lane;
 - no R7/hardware claims from Activity visual work.
 
-The standalone public website explorations at `docs/design/website_mocks_2026-09-23/` are DESIGN SPEC / DESKTOP VISUAL REVIEW only. They reuse existing Greia art and do not alter the current Encyclopedia E4 or R7 continuation route.
+The standalone public website explorations at `docs/design/website_mocks_2026-09-23/` were revised after owner feedback: The Portal, Orbit and Play Lab now start from the actual Greia boot constellation/white composition and use historical development Simulator captures. They are DESIGN SPEC / DESKTOP VISUAL REVIEW only and do not alter the current Encyclopedia E4 or R7 continuation route. The comparison page and mock README are the current review entry points.
