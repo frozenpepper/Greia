@@ -72,8 +72,12 @@ UNIT_PATH = (
     / "system"
     / "greia-install-transaction.service"
 )
-ENTRYPOINT_PATH = REPO_ROOT / "src" / "greia_installer" / "transaction_service_entrypoint.py"
-SERVICE_IMPL_PATH = REPO_ROOT / "src" / "greia_installer" / "transaction_service.py"
+ENTRYPOINT_PATH = (
+    REPO_ROOT / "src" / "greia_installer" / "transaction_service_entrypoint.py"
+)
+SERVICE_IMPL_PATH = (
+    REPO_ROOT / "src" / "greia_installer" / "transaction_service.py"
+)
 TMPFILES_PATH = (
     REPO_ROOT / "build" / "installer-overlay" / "etc" / "tmpfiles.d" / "greia-installer.conf"
 )
@@ -442,9 +446,10 @@ class BoundedPrivilegeTests(unittest.TestCase):
         ``TargetHardwareSupportInstaller.install`` runs ``chroot <slot>
         apt-get ...`` (update / install / clean) through the production
         argv-array runner (``shell=False``). ``chroot(2)`` fails with EPERM
-        without ``CAP_SYS_CHROOT``, so the unit must carry exactly that
-        capability alongside ``CAP_SYS_ADMIN`` — and the install path must
-        stay argv arrays, never a shell string.
+        without ``CAP_SYS_CHROOT``. Session-04 QEMU also proved apt needs
+        ``CAP_SETUID``/``CAP_SETGID`` for its normal privilege drop, so the
+        unit must carry exactly those four evidenced capabilities — and the
+        install path must stay argv arrays, never a shell string.
         """
         facts = parse_unit(UNIT_PATH)
         for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
@@ -456,12 +461,14 @@ class BoundedPrivilegeTests(unittest.TestCase):
             )
             self.assertEqual(
                 sorted(declared),
-                sorted([
-                    "CAP_SYS_ADMIN",
-                    "CAP_SYS_CHROOT",
-                    "CAP_SETUID",
-                    "CAP_SETGID",
-                ]),
+                sorted(
+                    [
+                        "CAP_SYS_ADMIN",
+                        "CAP_SYS_CHROOT",
+                        "CAP_SETUID",
+                        "CAP_SETGID",
+                    ]
+                ),
                 f"{key} must declare exactly the evidenced capability set",
             )
         install_source = (
