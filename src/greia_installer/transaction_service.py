@@ -94,6 +94,30 @@ class TransactionServiceError(RuntimeError):
     """Root-side service check failed fail-closed (no destructive work)."""
 
 
+def _s04_diag_faulthandler() -> None:
+    """TEMPORARY Session-04 diagnostic: crash/hang tracebacks to serial.
+
+    When the test-only marker ``/run/greia-x8-debug`` exists, enables
+    faulthandler dumping to the guest serial console (fatal signals get
+    a traceback; a 1500 s repeating dump names hangs). Production never
+    creates the marker. Removed before Session 04 closure.
+    """
+    try:
+        import os
+
+        if not os.path.exists("/run/greia-x8-debug"):
+            return
+        import faulthandler
+
+        handle = open("/dev/ttyS0", "a")  # noqa: PTH123
+        faulthandler.enable(file=handle)
+        faulthandler.dump_traceback_later(1500, exit=False, repeat=True, file=handle)
+        handle.write("s04-svc: faulthandler armed\n")
+        handle.flush()
+    except OSError:
+        pass
+
+
 def _require_absolute_owned_path(value: object, *, field_name: str) -> Path:
     if not isinstance(value, Path):
         raise TransactionServiceError(f"service {field_name} must be a Path")
@@ -741,6 +765,7 @@ class InstallTransactionService:
         authorization, settings, locale, target = self._consume_authorized_plan(
             transaction_nonce=transaction_nonce, plan_digest=plan_digest
         )
+        _s04_diag_faulthandler()
         executor = self.ab_executor
         if executor is None:
             raise TransactionServiceError(
