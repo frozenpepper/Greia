@@ -1984,8 +1984,13 @@ remains open and the exact next step.
   `ProtectSystem=strict` or `NoNewPrivileges=yes` avoided that host-only
   failure, but this does not explain the guest apt failure and is not authority
   to weaken the shipped unit.
-- No product repair has been applied. Session 04 remains OPEN, blocked on the
-  explicit security decision: add narrowly scoped `CAP_SETUID`/`CAP_SETGID`, or
-  choose an explicit root apt-sandbox policy. Temporary diagnostics and
-  evidence remain until that decision; owned mounts, loops, and scratch were
-  removed and host disk had approximately 84 GB free at cleanup.
+- Follow-up review selected and landed the narrow repair: keep
+  `NoNewPrivileges=yes` / `ProtectSystem=strict` and add only `CAP_SETUID` and
+  `CAP_SETGID` to the existing `CAP_SYS_ADMIN` / `CAP_SYS_CHROOT` contract.
+  It also found and repaired a second service-topology defect: executing
+  `transaction_service` itself with `python -m` while composition re-imported
+  it canonically could split `__main__` and package module/class identity. A
+  thin `transaction_service_entrypoint` now owns execution and the service
+  implementation is library-only. Permanent contract tests pin both repairs.
+  Session 04 remains OPEN pending Orbiter focused tests, installer rebuild and
+  product-mode QEMU; temporary diagnostics remain until a confirming install.
