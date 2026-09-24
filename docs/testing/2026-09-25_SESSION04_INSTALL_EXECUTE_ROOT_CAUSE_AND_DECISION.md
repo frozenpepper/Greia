@@ -3,8 +3,8 @@
 **Date:** 2026-09-25
 **Repository:** `/home/orb/Works/Greia`
 **Branch:** `main`
-**Working HEAD:** `e8180956c7f27d7b712fdfec16d3ba56d3a91a43`
-**Status:** **Session 04 OPEN — fresh install is not green; no lifecycle closure is claimed.**
+**Evidence-producing working HEAD:** `e8180956c7f27d7b712fdfec16d3ba56d3a91a43`
+**Status:** **Session 04 OPEN — source repairs are now landed on `main`, but fresh-install/QEMU validation has not yet been rerun and no lifecycle closure is claimed.**
 
 ## 1. Executive conclusion
 
@@ -371,7 +371,7 @@ This is a deliberate security tradeoff and must be documented
 
 Not recommended. It is broader than the demonstrated missing operation and weakens the accepted service posture.
 
-No option has been selected or implemented yet.
+Follow-up review selected **Option A**: retain the existing sandbox and add only `CAP_SETUID` and `CAP_SETGID`. This repair is now landed on `main`; Orbiter must still rebuild the installer and prove the capability set in product-mode QEMU.
 
 ## 11. Required next steps after the decision
 
@@ -408,7 +408,7 @@ temporary sandbox/host diagnostics
 
 ## 12. Current repository and host state
 
-The repository is intentionally not clean because the temporary diagnostic changes and two new evidence files are present. No product repair has been applied.
+The diagnostic scaffolding and evidence are committed. Product source repairs are now landed on `main`, but have not yet been executed on Orbiter: the service has a separate canonical entrypoint and the unit has the narrowly expanded four-capability set.
 
 Current owned scratch cleanup completed:
 
@@ -420,4 +420,40 @@ no owned sandbox root remains
 approximately 84 GB free on /
 ```
 
-The next action is blocked only on the security decision in section 10. Session 04 is not closed.
+The next action is Linux validation: run the focused source suites, rebuild and inspect the installer, then rerun the fresh-install QEMU leg. Session 04 is not closed.
+
+
+## 13. Follow-up architecture review and landed source repair
+
+A post-report review found a second production defect in the service execution topology. The shipped unit executed:
+
+```text
+python3 -m greia_installer.transaction_service
+```
+
+while `composition.build_install_service()` lazily imports
+`greia_installer.transaction_service`. Executing the implementation itself
+with `-m` can therefore place one copy under `__main__` and a second copy
+under the canonical package name. That splits module globals and class identity
+inside one process. Attempt 13's duplicate faulthandler arming and the escaped
+`greia_installer.transaction_service.TransactionServiceError` despite an
+apparently matching handler are consistent with this defect.
+
+The source repair now on `main` is structural rather than a `sys.modules`
+alias or broader exception catch:
+
+- new thin executable module
+  `greia_installer.transaction_service_entrypoint`;
+- shipped unit executes that wrapper;
+- `transaction_service.py` is library-only and remains the single canonical
+  owner of service classes/exceptions;
+- unit-contract tests pin the wrapper and canonical class identity;
+- the capability contract is exactly
+  `CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID`;
+- `NoNewPrivileges=yes` and `ProtectSystem=strict` remain unchanged.
+
+These source changes were made through GitHub and have **not** yet been executed
+on Orbiter. The temporary Session-04 diagnostics remain intentionally present
+until one diagnostic fresh-install confirms both the canonical service behavior
+and successful apt privilege dropping. They must still be removed before final
+Session-04 acceptance.
