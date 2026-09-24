@@ -1,6 +1,6 @@
 # Session 04 — post-GitHub repair Orbiter validation
 
-**Source HEAD to validate:** `36089d69cb7e0066042dde96c548f631d93caf8e`
+**Required repair ancestor:** `822a1ce4653e4c3604940169122c3c9e7730b152`
 
 This file begins where the GitHub-side repair ends. Do not redesign the source
 before running these checks unless a focused test proves a defect.
@@ -13,11 +13,12 @@ git fetch origin
 git pull --ff-only
 git rev-parse HEAD
 git rev-parse origin/main
+git merge-base --is-ancestor 822a1ce4653e4c3604940169122c3c9e7730b152 HEAD
 git status --short
 df -h /
 ```
 
-Require HEAD == origin/main == `36089d69cb7e0066042dde96c548f631d93caf8e` and a clean tracked tree.
+Require HEAD == origin/main, a clean tracked tree, and `822a1ce4653e4c3604940169122c3c9e7730b152` to be an ancestor of HEAD. Do not pin to an older docs-only HEAD if origin/main has legitimately advanced.
 
 Immutable S03 bundle:
 
