@@ -38,8 +38,10 @@ from __future__ import annotations
 import json
 import os
 import re
+import runpy
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from contextlib import contextmanager
@@ -423,6 +425,21 @@ class BoundedPrivilegeTests(unittest.TestCase):
         self.assertIs(entrypoint_module.main, service_module.main)
         implementation = SERVICE_IMPL_PATH.read_text(encoding="utf-8")
         self.assertNotIn('if __name__ == "__main__"', implementation)
+    def test_entrypoint_executes_canonical_main_as_main_module(self) -> None:
+        import greia_installer.transaction_service as service_module
+
+        with (
+            mock.patch.object(service_module, "main", return_value=23) as main_call,
+            mock.patch.object(sys, "argv", ["transaction_service_entrypoint"]),
+            self.assertRaises(SystemExit) as raised,
+        ):
+            runpy.run_module(
+                "greia_installer.transaction_service_entrypoint",
+                run_name="__main__",
+            )
+        self.assertEqual(raised.exception.code, 23)
+        main_call.assert_called_once_with([])
+
 
     def test_capabilities_are_exactly_evidenced_installer_set(self) -> None:
         expected = [
