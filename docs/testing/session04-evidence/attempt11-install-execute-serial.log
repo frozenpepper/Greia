@@ -1,0 +1,116 @@
+x8-control: phase install-execute starting
+x8-control: socket /run/greia-os/install-transaction.sock present
+s04-diag-sampler 2026-09-24T03:52:35Z
+MainPID=0
+Result=success
+NRestarts=0
+ExecMainStatus=0
+TasksCurrent=[not set]
+TasksMax=8
+ActiveState=inactive
+SubState=dead
+MemAvailable:    1796592 kB
+SwapFree:              0 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+Slab:              20228 kB
+PageTables:         2008 kB
+SecPageTables:         0 kB
+WritebackTmp:          0 kB
+Committed_AS:      53552 kB
+0.16 0.03 0.01 2/95 440
+[    0.365582] acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended PCI configuration space under this bridge.
+[    2.413146] mce: Unable to init MCE device (rc: -5)
+[   21.646710] device-mapper: core: CONFIG_IMA_DISABLE_HTABLE is disabled. Duplicate IMA measurements will not be recorded in the IMA log.
+x8-control: install install-execute: prepare starting
+Sep 24 03:52:36.586452 greia-installer systemd[1]: Started greia-install-transaction.service - Greia OS install-transaction service.
+x8-control: install install-execute: prepared ok
+x8-control: install-execute: execute starting
+s04-svc: faulthandler armed
+
+Debian GNU/Linux 12 greia-installer ttyS0
+
+greia-installer login: s04-svc: inspected
+s04-svc: support-bound
+s04-svc: capacity-planned
+s04-svc: partitioned
+s04-svc: identities-bound
+s04-diag-sampler 2026-09-24T03:53:05Z
+MainPID=446
+Result=success
+NRestarts=0
+ExecMainStatus=0
+TasksCurrent=2
+TasksMax=8
+ActiveState=active
+SubState=running
+MemAvailable:    1747508 kB
+SwapFree:              0 kB
+Dirty:             65676 kB
+Writeback:             0 kB
+Slab:              26088 kB
+PageTables:         1016 kB
+SecPageTables:         0 kB
+WritebackTmp:          0 kB
+Committed_AS:      76652 kB
+0.56 0.14 0.05 2/83 678
+[    0.365582] acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended PCI configuration space under this bridge.
+[    2.413146] mce: Unable to init MCE device (rc: -5)
+[   21.646710] device-mapper: core: CONFIG_IMA_DISABLE_HTABLE is disabled. Duplicate IMA measurements will not be recorded in the IMA log.
+[   39.359099] printk: dmesg (586): Attempt to access syslog with CAP_SYS_ADMIN but no CAP_SYSLOG (deprecated).
+s04-diag-sampler 2026-09-24T03:53:35Z
+MainPID=446
+Result=success
+NRestarts=0
+ExecMainStatus=0
+TasksCurrent=2
+TasksMax=8
+ActiveState=active
+SubState=running
+MemAvailable:    1742456 kB
+SwapFree:              0 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+Slab:              36264 kB
+PageTables:          780 kB
+SecPageTables:         0 kB
+WritebackTmp:          0 kB
+Committed_AS:      72108 kB
+0.73 0.23 0.08 1/79 695
+[    0.365582] acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended PCI configuration space under this bridge.
+[    2.413146] mce: Unable to init MCE device (rc: -5)
+[   21.646710] device-mapper: core: CONFIG_IMA_DISABLE_HTABLE is disabled. Duplicate IMA measurements will not be recorded in the IMA log.
+[   39.359099] printk: dmesg (586): Attempt to access syslog with CAP_SYS_ADMIN but no CAP_SYSLOG (deprecated).
+s04-diag-sampler 2026-09-24T03:54:06Z
+MainPID=446
+Result=success
+NRestarts=0
+ExecMainStatus=0
+TasksCurrent=2
+TasksMax=8
+ActiveState=active
+SubState=running
+MemAvailable:    1767604 kB
+SwapFree:              0 kB
+Dirty:                 0 kB
+Writeback:             0 kB
+Slab:              24136 kB
+PageTables:          780 kB
+SecPageTables:         0 kB
+WritebackTmp:          0 kB
+Committed_AS:      72108 kB
+0.84 0.30 0.11 2/79 712
+[    0.365582] acpi PNP0A03:00: fail to add MMCONFIG information, can't access extended PCI configuration space under this bridge.
+[    2.413146] mce: Unable to init MCE device (rc: -5)
+[   21.646710] device-mapper: core: CONFIG_IMA_DISABLE_HTABLE is disabled. Duplicate IMA measurements will not be recorded in the IMA log.
+[   39.359099] printk: dmesg (586): Attempt to access syslog with CAP_SYS_ADMIN but no CAP_SYSLOG (deprecated).
+s04-svc: streamed
+s04-svc: finalize-fstab
+s04-svc: finalize-completeness
+x8-control: install failed: TransactionClientError: transaction response is outside Greia bounds
+  File "<stdin>", line 49, in <module>
+  File "/opt/greia-os/src/greia_installer/transaction_client.py", line 241, in execute
+    payload = self._round_trip(
+              ^^^^^^^^^^^^^^^^^
+  File "/opt/greia-os/src/greia_installer/transaction_client.py", line 187, in _round_trip
+    raise TransactionClientError("transaction response is outside Greia bounds")
