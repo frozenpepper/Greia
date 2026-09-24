@@ -70,9 +70,12 @@ sudo env PYTHONDONTWRITEBYTECODE=1 S04_HEAD=<sha> S04_QEMU_TIMEOUT=3600 \
 - LifecycleConfig: `output_dir=<session>/s04legs`, `memory_mib=2048`
   (4096 in one attempt), `cpus=2`, timeout configurable (60–3600).
 - After each attempt the driver dir was preserved as
-  `s04legs-attempt<N>-*` under `/tmp/greia-session04-45c3d283…/` (NOT in
-  git — host-only evidence; the serial + measurements needed from them
-  are committed here).
+  `s04legs-attempt<N>-*` for forensics; after diagnosis these bulky
+  per-attempt dirs (~29 GB total) were deleted during 2026-09-24 disk
+  cleanup — everything needed from them (attempt-11 serial, measurements)
+  is committed under `docs/testing/session04-evidence/`. The four test
+  candidates and the instrumented installer image in `/tmp` were kept
+  (needed to continue; rebuildable via the commands above).
 - QEMU (product-mode, disposable images only):
   `qemu-system-i386 -name greia-product-install-execute -machine
   pc,accel=kvm:tcg -cpu qemu32 -m 2048 -smp 2` with the installer clone
