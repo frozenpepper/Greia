@@ -42,7 +42,7 @@ Environment=GREIA_INSTALL_PAYLOAD=/run/live/medium/payload/pip-rootfs.squashfs
 Environment=GREIA_INSTALL_PAYLOAD_DIGEST=/etc/greia-os/expected-payload.sha256
 Environment=GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json
 Environment=GREIA_HARDWARE_SUPPORT_POOL=/opt/greia-hardware-support
-ExecStart=/usr/bin/python3 -m greia_installer.transaction_service
+ExecStart=/usr/bin/python3 -m greia_installer.transaction_service_entrypoint
 Restart=no
 TimeoutStartSec=5
 TimeoutStopSec=5
@@ -67,10 +67,11 @@ ProtectSystem=strict
 # with shell=False), which requires CAP_SYS_CHROOT: chroot(2) fails with EPERM
 # without it. Added only with executable evidence (disposable-loop/tmpfs
 # mount/write proof for CAP_SYS_ADMIN; V12F EPERM traceback plus the
-# disposable-loop chroot proof for CAP_SYS_CHROOT). No other capability is
-# granted.
-CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT
-AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT
+# disposable-loop chroot proof for CAP_SYS_CHROOT). Session-04 product-mode
+# QEMU then proved apt's normal privilege drop requires CAP_SETUID (seteuid)
+# and CAP_SETGID (setegid/setgroups). No other capability is granted.
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID
 # Exact writable staging/mount paths the implementation needs — nothing
 # more. Socket directory (privileged-channel endpoint), PERSIST staging,
 # boot-control/grubenv state, first-install journal staging, and the slot
