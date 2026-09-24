@@ -1237,6 +1237,22 @@ def _check_slot_config(config: Mapping[str, str]) -> dict[str, str]:
     return checked
 
 
+def _s04_diag_stage(name: str) -> None:
+    """TEMPORARY Session-04 diagnostic: serial emit when marker present.
+
+    Writes one line to the guest serial console iff the test-only marker
+    ``/run/greia-x8-debug`` exists (touched by the test control runner;
+    production never creates it). Removed before Session 04 closure.
+    """
+    try:
+        if not os.path.exists("/run/greia-x8-debug"):
+            return
+        with open("/dev/ttyS0", "a") as handle:
+            handle.write(f"s04-svc: finalize-{name}\n")
+    except OSError:
+        pass
+
+
 @dataclass(frozen=True, slots=True)
 class SlotFinalizer:
     """Bind, expand, mount, support-install and receipt one verified slot.
@@ -1407,6 +1423,7 @@ class SlotFinalizer:
                 raise SlotFinalizeError(
                     f"destination fstab mode refused: {exc}"
                 ) from exc
+            _s04_diag_stage("fstab")
 
             # Shared post-write completeness smoke (A4/A11): prove the
             # staged slot carries real Greia userspace including the
@@ -1421,6 +1438,7 @@ class SlotFinalizer:
                 raise SlotFinalizeError(
                     f"slot completeness smoke failed: {exc}"
                 ) from exc
+            _s04_diag_stage("completeness")
 
             installed = package_installer.install(firmware, microcode)
             expected = {*(firmware), *(microcode)}
@@ -1437,6 +1455,7 @@ class SlotFinalizer:
                         f"installed support record changed: {package.name}"
                     )
 
+            _s04_diag_stage("hw-installed")
             packages_digest = self._packages_digest(installed)
             builder = artifact_builder or DeterministicBootArtifactBuilder()
             try:
@@ -1455,6 +1474,7 @@ class SlotFinalizer:
                 raise SlotFinalizeError(
                     "boot artifact builder returned an invalid result"
                 )
+            _s04_diag_stage("artifacts")
             filesystem.write_file(
                 FINALIZED_GENERIC_REL_PATH,
                 _canonical_bytes(artifacts.as_dict()),
@@ -1504,6 +1524,7 @@ class SlotFinalizer:
                 slot_capacity_bytes=destination.slot_capacity_bytes,
             )
             filesystem.write_file(RECEIPT_REL_PATH, receipt.canonical_bytes())
+            _s04_diag_stage("receipt")
 
             missing = filesystem.missing_files(
                 (*REQUIRED_FINALIZED_FILES, RECEIPT_REL_PATH)
@@ -1513,6 +1534,7 @@ class SlotFinalizer:
                     "finalized slot is missing files: " + ", ".join(missing)
                 )
             filesystem.check_health()
+            _s04_diag_stage("health")
             return receipt
         finally:
             if mounted:

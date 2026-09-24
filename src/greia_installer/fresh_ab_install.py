@@ -510,6 +510,22 @@ def open_bundle_payload_stream(
 # ---------------------------------------------------------------------------
 
 
+def _s04_diag_stage(name: str) -> None:
+    """TEMPORARY Session-04 diagnostic: serial emit when marker present.
+
+    Writes one line to the guest serial console iff the test-only marker
+    ``/run/greia-x8-debug`` exists (touched by the test control runner;
+    production never creates it). Removed before Session 04 closure.
+    """
+    try:
+        if not os.path.exists("/run/greia-x8-debug"):
+            return
+        with open("/dev/ttyS0", "a") as handle:
+            handle.write(f"s04-svc: {name}\n")
+    except OSError:
+        pass
+
+
 def execute_fresh_ab_install(
     request: FreshAbInstallRequest,
     seams: FreshAbInstallSeams,
@@ -557,6 +573,7 @@ def execute_fresh_ab_install(
         member = VerifiedReleaseMember.from_manifest(manifest)
     except SlotWriteError as exc:
         raise FreshAbInstallError(f"release facts are not installable: {exc}") from exc
+    _s04_diag_stage("inspected")
 
     # -- Release-bound support set (finalizer re-checks digest binding) -----
     # v3 hardware support is optional: absent manifest facts require absent
@@ -584,6 +601,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError("support installed-size bound is not authoritative")
     if seams.support_installed_bound > request.support_installed_bytes:
         raise FreshAbInstallError("support installed-size bound exceeds the authorized release bound")
+    _s04_diag_stage("support-bound")
     try:
         support = _support_set_from_seams(seams)
     except SlotFinalizeError as exc:
@@ -607,6 +625,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError(f"release does not fit this target: {exc}") from exc
     if plan.boot_backend != request.sizing.boot_backend:
         raise FreshAbInstallError("layout boot backend does not match the profile sizing")
+    _s04_diag_stage("capacity-planned")
 
     # -- Post-layout observer wiring (checked BEFORE destruction) ---------
     # Caller-supplied pre-layout identities are retired: a blank target
@@ -659,6 +678,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError(f"disk partitioning failed fail-closed: {exc}") from exc
     except Exception as exc:
         raise FreshAbInstallError(f"disk partitioning failed fail-closed: {exc}") from exc
+    _s04_diag_stage("partitioned")
 
     # -- 3b. Observe + bind identities AFTER the layout effects -----------
     # MBR PARTUUID authority is observed from the partitioned target, never
@@ -680,6 +700,7 @@ def execute_fresh_ab_install(
             f"post-layout identity observation is not authoritative: {exc}"
         ) from exc
     observed = _bind_post_layout_identities(plan, raw_observed)
+    _s04_diag_stage("identities-bound")
 
     # -- 4./5. Stream + finalize SYSTEM_A only (B never addressed) ---------
     destination_a = DestinationSlot(
@@ -744,6 +765,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError(f"SYSTEM_A streaming failed: {exc}") from exc
     except Exception as exc:
         raise FreshAbInstallError(f"SYSTEM_A streaming failed: {exc}") from exc
+    _s04_diag_stage("streamed")
     try:
         filesystem = seams.slot_filesystem_factory()
         package_installer = seams.package_installer_factory()
@@ -767,6 +789,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError(f"SYSTEM_A finalization refused: {exc}") from exc
     if receipt.slot != "A":
         raise FreshAbInstallError("finalization receipt does not bind SYSTEM_A")
+    _s04_diag_stage("finalized")
 
     # -- 6. PERSIST exactly once (layout authority bound to receipt A) ------
     installed_at = request.installed_at_unix or (now_unix if now_unix is not None else int(time.time()))
@@ -804,6 +827,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError("layout authority does not boot-accept SYSTEM_A")
     if record.system_b is None:
         raise FreshAbInstallError("A/B layout authority requires the inactive SYSTEM_B identity")
+    _s04_diag_stage("persist-done")
 
     # -- 7. Stable GRUB backend (fixed entries + grubenv default A) --------
     try:
@@ -820,6 +844,7 @@ def execute_fresh_ab_install(
         GrubEnvBackend.initialize(Path(seams.backend_state_dir), default_slot="A")
     except (BootTransactionError, GrubAbConfigError, OSError) as exc:
         raise FreshAbInstallError(f"boot backend install failed: {exc}") from exc
+    _s04_diag_stage("grub-done")
 
     # -- 8. FIRST_INSTALL_PENDING (acceptance owns the commit, not this) ----
     try:
@@ -833,6 +858,7 @@ def execute_fresh_ab_install(
         raise FreshAbInstallError(f"first-install journal refused: {exc}") from exc
     if journal.state is not BootTransactionState.FIRST_INSTALL_PENDING:
         raise FreshAbInstallError("first-install journal is not pending acceptance")
+    _s04_diag_stage("journal-done")
 
     return FreshAbInstallResult(
         release_id=member.release_id,
