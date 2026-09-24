@@ -73,6 +73,7 @@ UNIT_PATH = (
     / "greia-install-transaction.service"
 )
 ENTRYPOINT_PATH = REPO_ROOT / "src" / "greia_installer" / "transaction_service_entrypoint.py"
+SERVICE_IMPL_PATH = REPO_ROOT / "src" / "greia_installer" / "transaction_service.py"
 TMPFILES_PATH = (
     REPO_ROOT / "build" / "installer-overlay" / "etc" / "tmpfiles.d" / "greia-installer.conf"
 )
@@ -413,6 +414,8 @@ class BoundedPrivilegeTests(unittest.TestCase):
         import greia_installer.transaction_service_entrypoint as entrypoint_module
 
         self.assertIs(entrypoint_module.main, service_module.main)
+        implementation = SERVICE_IMPL_PATH.read_text(encoding="utf-8")
+        self.assertNotIn('if __name__ == "__main__"', implementation)
 
     def test_capabilities_are_exactly_evidenced_installer_set(self) -> None:
         expected = [
