@@ -13,10 +13,11 @@ privilege/writable-path contract the real implementation needs — no more:
 - ``greia_installer.composition.ab_executor_facts_from_environment`` is the
   single central parser (file baseline, explicit ``GREIA_AB_*`` wins per
   key for tests/overrides);
-- capabilities are exactly ``CAP_SYS_ADMIN`` (mounts) plus ``CAP_SYS_CHROOT``
--   (hardware-support ``chroot`` install leg) and ``ReadWritePaths``
--   are exactly the socket dir + the four ``/run/greia-install/*`` staging
--   dirs + the slot mount root, all pre-created by tmpfiles;
+- capabilities are exactly ``CAP_SYS_ADMIN`` (mounts), ``CAP_SYS_CHROOT``
+  (hardware-support ``chroot`` install leg), ``CAP_SETUID`` and
+  ``CAP_SETGID`` (apt privilege drop), while ``ReadWritePaths`` are exactly
+  the socket dir + the four ``/run/greia-install/*`` staging dirs + the slot
+  mount root, all pre-created by tmpfiles;
 - filesystem stays strict, network stays ``AF_UNIX``-only, no shell API, the
   semantic ``PREPARE_PLAN``/``EXECUTE`` protocol with kernel peer
   credentials is untouched;
