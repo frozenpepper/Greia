@@ -47,7 +47,6 @@ import json
 import os
 import re
 import socket
-import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Mapping, NoReturn, Sequence, TextIO
