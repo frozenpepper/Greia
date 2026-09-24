@@ -3,7 +3,8 @@ const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// The original 52 PNGs remain the animation authority; the wide SVG only extends their landscape.
+// The original 52 PNGs remain the animation authority; the high-resolution
+// final frame replaces the small playback frame once the opening ends.
 const frames = Array.from({length: 52}, (_, index) => {
   const image = new Image();
   image.src = `assets/boot/frame_${String(index).padStart(4, '0')}.png`;
@@ -14,7 +15,7 @@ let openingFrame = 0;
 function finishOpening(run) {
   if (run !== openingRun) return;
   cancelAnimationFrame(openingFrame);
-  $('#boot-frame').src = frames[51].src;
+  $('#boot-frame').src = 'assets/boot/frame_0051-hires.png';
   $('#intro-counter').textContent = '52 / 52';
   document.body.classList.remove('is-opening');
   document.body.classList.add('is-ready');

@@ -44,3 +44,13 @@ html{scroll-padding-top:83px}body{background:var(--cream);color:var(--ink);overf
 .opening h1,.section h2,.mission-head h2,.gallery-story h3,.hardware-copy h3,.architecture-detail h3,.parent-controls h3,.pack-panel h3,.impact-grid h3,.next-steps h2,.footer-mark p,.os-flow strong{letter-spacing:0}
 @media(min-width:901px){.boot-window{left:72%}.opening-interface{max-width:610px}.opening h1{font-size:clamp(73px,6.2vw,100px)}}
 @media(min-width:621px) and (max-width:900px){.boot-window{top:31%;left:62%;width:min(40vw,390px)}.opening-interface{max-width:510px}.opening h1{font-size:clamp(63px,8vw,78px)}}
+
+/* Website panorama follows the original 1080×2922 boot art's palette and silhouettes. */
+.opening{background:#020512}
+.wide-landscape{object-position:center bottom}
+.boot-window{mask-image:linear-gradient(90deg,transparent 0%,#000 18%,#000 82%,transparent 100%)}
+.boot-window img{mask-image:linear-gradient(to bottom,#000 0%,#000 68%,transparent 94%)}
+.opening-vignette{background:linear-gradient(90deg,#020512a3 0%,#02051226 45%,transparent 78%),linear-gradient(0deg,#020512a8 0%,transparent 29%)}
+@media(max-width:620px){.boot-window{top:1%}.boot-window img{mask-image:linear-gradient(to bottom,#000 0%,#000 82%,transparent 100%)}.opening-vignette{background:linear-gradient(0deg,#020512 0%,#020512e0 29%,#0205121c 70%,transparent 100%)}}
+@media(min-width:901px){.boot-window{left:50%}}
+@media(min-width:901px) and (max-width:1200px){.boot-window{left:70%}}
