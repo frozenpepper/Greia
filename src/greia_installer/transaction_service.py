@@ -1070,6 +1070,3 @@ def main(argv: Sequence[str] | None = None) -> int:
     serve_forever(listener, service=service)
     return 0  # pragma: no cover - serve_forever never returns
 
-
-if __name__ == "__main__":  # pragma: no cover - service entry
-    raise SystemExit(main(sys.argv[1:]))
