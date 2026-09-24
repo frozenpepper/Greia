@@ -57,6 +57,7 @@ from greia_installer.composition import (
     read_ab_env_file,
 )
 from greia_installer.transaction_service import (
+    InstallTransactionService,
     ServiceState,
     TransactionServiceError,
     build_live_service,
@@ -362,6 +363,7 @@ class ImmutableFactsSourceTests(unittest.TestCase):
                 subprocess, "run", side_effect=AssertionError("no block commands")
             ):
                 service = build_live_service()
+        self.assertIs(type(service), InstallTransactionService)
         self.assertEqual(service.install_mode, "ab")
         self.assertIsNotNone(service.ab_executor)
         self.assertEqual(before, _snapshot(fix["root"]))
