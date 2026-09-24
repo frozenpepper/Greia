@@ -123,6 +123,12 @@ class ControlSeamTextTests(unittest.TestCase):
         ):
             self.assertIn(service, text)
 
+    def test_unit_disables_start_timeout_for_long_legs(self) -> None:
+        # Product legs legitimately outlast systemd's 90 s start timeout
+        # (a full install streams gigabytes); the test seam must not let
+        # the manager SIGTERM the runner mid-leg.
+        self.assertIn("TimeoutStartSec=0", control_unit_text())
+
     def test_runner_drives_real_sockets_and_refuses_unknown_phase(self) -> None:
         text = control_runner_text()
         for socket in (
