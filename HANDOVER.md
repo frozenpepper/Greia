@@ -1,6 +1,6 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-21
+**Updated:** 2026-09-25
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
 **Version:** `0.13.0-phase0-dev`
@@ -1865,3 +1865,11 @@ Source checks: the copied high-resolution final frame has the same SHA-256 as th
 Session 04 remains OPEN, blocked on the fresh-install EXECUTE leg in product-mode QEMU: the install service stops responding (empty socket response, never a refusal) after streaming slot A and writing fstab, before GRUB/persist/journal work. Same signature across attempts 5–11 at 2 GB and 4 GB guest RAM. Host-side full service-stack reproduction with the exact Session-03 artifacts completes in ~66 s, so this is environmental, not a product-logic defect found so far. Two real product bugs were found and fixed along the way (support-classes narrowing, `1ecba9de`; installer USB sizing/bytecode, `6c13abea`).
 
 Full evidence, ruled-out theories, open hypotheses (ranked) and exact next steps are recorded in `docs/testing/2026-09-24_SESSION04_INSTALL_EXECUTE_FAILURE_DIAGNOSIS.md` with machine-readable facts and the serial log in `docs/testing/session04-evidence/`. HEAD carries two TEMPORARY diagnostic commits (`3f101b1c`, `0acc0f05`) that must be reverted before closure. Next agent: fix the faulthandler fd lifetime, try the sandboxed host repro, then strace-via-unit if needed — details in the report §8.
+
+## 60. Session 04 root cause and security decision (2026-09-25)
+
+The faulthandler file-handle lifetime is now corrected with a module-owned serial reference and a 120-second repeating interval. Marker-gated socket-boundary logging and a test-only final service-status capture were added. Focused evidence passed: 45 transaction-service tests, 20 Session-04 harness tests, and 38 product-install harness tests.
+
+The rebuilt diagnostic installer was inspected from its live SquashFS and matched the S03 bundle/support facts. A final product-mode QEMU install reached `finalize-completeness` with the service active, 2/8 tasks, and approximately 1.74 GiB available. The final guest journal proved the failure at `src/greia_installer/hardware_support_install.py:61`: apt in the mounted slot failed `setgroups`, `setegid`, and `seteuid` with `Operation not permitted`; systemd recorded `Result=exit-code`, `ExecMainStatus=1`. The client empty response is a consequence of that failed service request, not a proven external SIGKILL.
+
+The full decision record is `docs/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`. No capability, `NoNewPrivileges`, or apt sandbox repair has been selected or applied. Session 04 remains OPEN and blocked on that security decision. Temporary diagnostics and evidence remain in the working tree until the repair is chosen. Owned QEMU/sandbox scratch, mounts, and loops were removed; approximately 84 GB was free at the last hygiene check.

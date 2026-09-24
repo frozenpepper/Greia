@@ -18,12 +18,14 @@ constructed here.
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import socket
 import tempfile
 import unittest
 from pathlib import Path
 from typing import Mapping
+from unittest.mock import patch
 
 from greia_installer.disk import (
     DeviceObservation,
@@ -51,7 +53,12 @@ from greia_installer.transaction_service import (
     checked_service_settings,
     hardware_settings_from_snapshot,
 )
-from greia_platform.privileged_channel import PeerCredential, decode_response, encode_request
+from greia_platform.privileged_channel import (
+    PeerCredential,
+    PrivilegedChannelError,
+    decode_response,
+    encode_request,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -710,6 +717,43 @@ class ServiceStateTests(unittest.TestCase):
                 read_compatible_profile_id(root / "absent.json")
 
 
+class MemoryConnection:
+    def __init__(self, request: bytes) -> None:
+        self._request = request
+        self.sent = bytearray()
+        self.closed = False
+
+    def settimeout(self, _timeout: float) -> None:
+        return None
+
+    def recv(self, _size: int) -> bytes:
+        request = self._request
+        self._request = b""
+        return request
+
+    def sendall(self, data: bytes) -> None:
+        self.sent.extend(data)
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class FailingSendConnection(MemoryConnection):
+    def sendall(self, _data: bytes) -> None:
+        raise BrokenPipeError("peer closed")
+
+
+class RaisingService:
+    def __init__(self, result: bytes | BaseException) -> None:
+        self._result = result
+
+    def handle_request(self, _raw: bytes, *, peer: PeerCredential, boot_state: str) -> bytes:
+        _ = peer, boot_state
+        if isinstance(self._result, BaseException):
+            raise self._result
+        return self._result
+
+
 class SocketServeTests(unittest.TestCase):
     def test_prepare_and_execute_round_trip_over_a_socket(self) -> None:
         from greia_installer.transaction_service import handle_connection
@@ -758,6 +802,118 @@ class SocketServeTests(unittest.TestCase):
         self.assertEqual(receipt["status"], "INSTALLED")
         self.assertEqual(receipt["target_identity"], digest)
         self.assertEqual(len(harness.engine.requests), 1)
+
+    def _run_connection(self, service: object, request: bytes) -> MemoryConnection:
+        from greia_installer.transaction_service import handle_connection
+
+        connection = MemoryConnection(request)
+        handle_connection(connection, service=service, peer_uid=INSTALLER_UI_UID)  # type: ignore[arg-type]
+        return connection
+
+    def test_faulthandler_handle_is_module_owned_and_armed_once(self) -> None:
+        import greia_installer.transaction_service as service_module
+
+        handle = io.StringIO()
+        original_handle = service_module._S04_DIAG_SERIAL_HANDLE
+        try:
+            service_module._S04_DIAG_SERIAL_HANDLE = None
+            with (
+                patch("greia_installer.transaction_service.os.path.exists", return_value=True),
+                patch("builtins.open", return_value=handle),
+                patch("faulthandler.enable") as enable,
+                patch("faulthandler.dump_traceback_later") as dump,
+            ):
+                service_module._s04_diag_faulthandler()
+                service_module._s04_diag_faulthandler()
+            self.assertIs(service_module._S04_DIAG_SERIAL_HANDLE, handle)
+            self.assertIn("s04-svc: faulthandler armed", handle.getvalue())
+            enable.assert_called_once_with(file=handle)
+            dump.assert_called_once()
+            self.assertEqual(dump.call_args.args[0], 120)
+            self.assertIs(dump.call_args.kwargs["file"], handle)
+        finally:
+            service_module._S04_DIAG_SERIAL_HANDLE = original_handle
+            handle.close()
+
+    def test_marker_absent_preserves_normal_and_refusal_semantics(self) -> None:
+        harness = ServiceHarness([make_disk()])
+        prepare_raw = encode_request(
+            "PREPARE_PLAN",
+            {
+                "expected_target_identity": eligible_digest(harness),
+                "compatible_profile_id": "profile-test",
+                "settings_snapshot": harness.prepare_snapshot(),
+            },
+        )
+        with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
+            normal_connection = self._run_connection(harness.service, prepare_raw)
+            refusal_connection = self._run_connection(
+                harness.service, encode_request("FORMAT_DISK", {})
+            )
+        _, normal_op, normal_payload = decode_response(bytes(normal_connection.sent))
+        _, refusal_op, refusal_payload = decode_response(bytes(refusal_connection.sent))
+        self.assertEqual(normal_op, "PREPARE_PLAN")
+        self.assertEqual(normal_payload["status"], "PREPARED")
+        self.assertEqual(refusal_op, "ERROR")
+        self.assertEqual(refusal_payload["status"], "REFUSED")
+        self.assertTrue(normal_connection.closed)
+        self.assertTrue(refusal_connection.closed)
+
+    def test_expected_refusal_types_are_bounded(self) -> None:
+        for exception in (
+            TransactionServiceError("unicode π\nnewline"),
+            InstallTransactionError("install refusal"),
+            PrivilegedChannelError("channel refusal"),
+        ):
+            with self.subTest(exception=type(exception).__name__):
+                with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
+                    connection = self._run_connection(RaisingService(exception), b"request\n")
+                _, op, payload = decode_response(bytes(connection.sent))
+                self.assertEqual(op, "ERROR")
+                self.assertEqual(payload["status"], "REFUSED")
+                self.assertTrue(connection.closed)
+
+    def test_awkward_refusal_reason_is_bounded_and_portable(self) -> None:
+        reason = "π-line\n" + "x" * 4096
+        with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
+            connection = self._run_connection(
+                RaisingService(TransactionServiceError(reason)), b"request\n"
+            )
+        _, op, payload = decode_response(bytes(connection.sent))
+        self.assertEqual(op, "ERROR")
+        self.assertEqual(payload["status"], "REFUSED")
+        self.assertIn("π", payload["reason"])
+        self.assertIn("\n", payload["reason"])
+        self.assertEqual(len(payload["reason"]), 256)
+
+    def test_base_exception_escape_is_reraised(self) -> None:
+        with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
+            with self.assertRaises(SystemExit):
+                self._run_connection(RaisingService(SystemExit("forced")), b"request\n")
+
+    def test_error_response_encoding_failure_escapes(self) -> None:
+        with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
+            with patch(
+                "greia_installer.transaction_service.encode_response",
+                side_effect=RuntimeError("forced encode failure"),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "forced encode failure"):
+                    self._run_connection(
+                        RaisingService(TransactionServiceError("refusal")), b"request\n"
+                    )
+
+    def test_sendall_failure_escapes(self) -> None:
+        from greia_installer.transaction_service import handle_connection
+
+        connection = FailingSendConnection(b"request\n")
+        with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
+            with self.assertRaises(BrokenPipeError):
+                handle_connection(
+                    connection,
+                    service=RaisingService(b"response\n"),
+                    peer_uid=INSTALLER_UI_UID,  # type: ignore[arg-type]
+                )
+        self.assertTrue(connection.closed)
 
 
 class UiAuthorityGuardTests(unittest.TestCase):

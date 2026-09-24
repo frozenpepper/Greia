@@ -270,3 +270,31 @@ hardening — socket poll, serial tracing, journal-follow, execute timeout —
 - Tests: `tests/test_x8_qemu/test_session04_legs.py` (20 tests),
   `tests/test_installer_seam_composition.py`
   (`PartialSelectionSupportClassTests`).
+
+## 11. Follow-up evidence and current decision state (2026-09-25)
+
+The faulthandler file-handle lifetime was corrected, the repeating interval was
+reduced to 120 seconds, and marker-gated socket-boundary diagnostics were added
+temporarily. The focused transaction-service suite passed 45 tests and the
+Session-04 harness suite passed 20 tests.
+
+The final instrumented QEMU install run captured the missing service journal.
+The service did not disappear for an unexplained reason: apt inside the mounted
+slot failed at `hardware_support_install.py:61` while attempting its normal
+privilege drop:
+
+```text
+setgroups(65534): Operation not permitted
+setegid(65534): Operation not permitted
+seteuid(42): Operation not permitted
+```
+
+The service then exited with `Result=exit-code` and `ExecMainStatus=1`. The
+client's empty response is a consequence of the failed service request, not
+evidence of a proven external SIGKILL. The exact call graph, host sandbox
+bisect, cleanup state, and the required security decision are recorded in
+`docs/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`.
+
+Session 04 remains OPEN. No capability, `NoNewPrivileges`, or apt sandbox
+repair has been selected or applied. The temporary diagnostics and the final
+journal evidence remain in the working tree for the next authorized step.

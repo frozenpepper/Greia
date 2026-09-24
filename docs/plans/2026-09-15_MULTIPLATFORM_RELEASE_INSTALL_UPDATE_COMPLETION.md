@@ -1958,3 +1958,34 @@ remains open and the exact next step.
   `.greia-work` clean, no leftover mounts, tree clean, HEAD unchanged.
 - Universal Setup image stays deferred to Session 08.
 - Session 03 CLOSED; Session 04 OPEN.
+
+## 2026-09-25 — Session 04 EXECUTE root cause found; security decision pending
+
+- Corrected the temporary faulthandler lifetime with a module-owned serial
+  handle and reduced the repeating interval to 120 seconds. Added marker-gated
+  socket-boundary diagnostics and focused regression coverage. The transaction
+  service suite passed 45 tests; Session-04 harness tests passed 20; product
+  install harness tests passed 38.
+- Rebuilt the instrumented legacy i386 installer through the canonical builder
+  and inspected the built live SquashFS. Profile, embedded S03 bundle SHA, and
+  58-package/710070272 support facts matched the recorded Session-03 inputs.
+- Final product-mode QEMU evidence is captured in
+  `docs/testing/session04-evidence/attempt13-install-execute-serial.log` and
+  summarized in
+  `docs/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`.
+  The service remained active through `finalize-completeness`, then apt in the
+  mounted slot failed `setgroups`, `setegid`, and `seteuid` with
+  `Operation not permitted`; systemd recorded `Result=exit-code` and
+  `ExecMainStatus=1`. The client empty response is downstream of that service
+  refusal; no external SIGKILL is claimed.
+- Host sandbox reproduction was completed as a separate diagnostic: the
+  unsandboxed exact-artifact service stack passed, while the host full sandbox
+  hit a distinct early e2fsck SIGSEGV. Bisect showed that removing
+  `ProtectSystem=strict` or `NoNewPrivileges=yes` avoided that host-only
+  failure, but this does not explain the guest apt failure and is not authority
+  to weaken the shipped unit.
+- No product repair has been applied. Session 04 remains OPEN, blocked on the
+  explicit security decision: add narrowly scoped `CAP_SETUID`/`CAP_SETGID`, or
+  choose an explicit root apt-sandbox policy. Temporary diagnostics and
+  evidence remain until that decision; owned mounts, loops, and scratch were
+  removed and host disk had approximately 84 GB free at cleanup.

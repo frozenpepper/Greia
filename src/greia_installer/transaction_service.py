@@ -50,7 +50,7 @@ import socket
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Mapping, NoReturn, Sequence
+from typing import Callable, Mapping, NoReturn, Sequence, TextIO
 
 from greia_platform.hardware import HardwareDefaults, HardwareSettings
 from greia_platform.persistent_layout import ALLOWED_LAYOUT_ADAPTERS
@@ -94,28 +94,59 @@ class TransactionServiceError(RuntimeError):
     """Root-side service check failed fail-closed (no destructive work)."""
 
 
+_S04_DIAG_SERIAL_HANDLE: TextIO | None = None
+_S04_DIAG_FAULTHANDLER_SECONDS = 120
+
+
 def _s04_diag_faulthandler() -> None:
     """TEMPORARY Session-04 diagnostic: crash/hang tracebacks to serial.
 
     When the test-only marker ``/run/greia-x8-debug`` exists, enables
     faulthandler dumping to the guest serial console (fatal signals get
-    a traceback; a 1500 s repeating dump names hangs). Production never
-    creates the marker. Removed before Session 04 closure.
+    a traceback; a repeating dump names hangs). Production never creates
+    the marker. Removed before Session 04 closure.
     """
+    global _S04_DIAG_SERIAL_HANDLE
+    if _S04_DIAG_SERIAL_HANDLE is not None:
+        return
+    if not os.path.exists("/run/greia-x8-debug"):
+        return
     try:
-        import os
-
-        if not os.path.exists("/run/greia-x8-debug"):
-            return
         import faulthandler
 
         handle = open("/dev/ttyS0", "a")  # noqa: PTH123
+        _S04_DIAG_SERIAL_HANDLE = handle
         faulthandler.enable(file=handle)
-        faulthandler.dump_traceback_later(1500, exit=False, repeat=True, file=handle)
+        faulthandler.dump_traceback_later(
+            _S04_DIAG_FAULTHANDLER_SECONDS,
+            exit=False,
+            repeat=True,
+            file=handle,
+        )
         handle.write("s04-svc: faulthandler armed\n")
         handle.flush()
-    except OSError:
-        pass
+    except Exception:
+        return
+
+
+def _s04_diag_detail(exc: BaseException) -> str:
+    try:
+        reason = str(exc).replace("\r", "\\r").replace("\n", "\\n")
+    except Exception:
+        reason = "unprintable"
+    return f"{type(exc).__name__}: {reason[:192]}"
+
+
+def _s04_diag_boundary(label: str, *, detail: str | None = None) -> None:
+    handle = _S04_DIAG_SERIAL_HANDLE
+    if handle is None:
+        return
+    try:
+        suffix = "" if detail is None else f": {detail}"
+        handle.write(f"s04-svc: {label}{suffix}\n")
+        handle.flush()
+    except (OSError, ValueError):
+        return
 
 
 def _require_absolute_owned_path(value: object, *, field_name: str) -> Path:
@@ -866,15 +897,36 @@ def handle_connection(
             if chunk.endswith(b"\n"):
                 break
         raw = b"".join(chunks)
+        _s04_diag_faulthandler()
+        _s04_diag_boundary("handle_request entered")
         try:
             response = service.handle_request(raw, peer=peer, boot_state="installer_ready")
         except (InstallTransactionError, TransactionServiceError, PrivilegedChannelError) as exc:
-            from greia_platform.privileged_channel import encode_response, new_transaction_id
-
-            response = encode_response(
-                new_transaction_id(), "ERROR", {"status": "REFUSED", "reason": str(exc)[:256]}
+            _s04_diag_boundary("expected exception caught", detail=_s04_diag_detail(exc))
+            try:
+                _s04_diag_boundary("error response encode starting")
+                response = encode_response(
+                    new_transaction_id(), "ERROR", {"status": "REFUSED", "reason": str(exc)[:256]}
+                )
+                _s04_diag_boundary("error response encoded")
+            except BaseException as encode_exc:
+                _s04_diag_boundary(
+                    "error response encode failed", detail=_s04_diag_detail(encode_exc)
+                )
+                raise
+        except BaseException as exc:
+            _s04_diag_boundary(
+                "UNEXPECTED BASEEXCEPTION ESCAPE", detail=_s04_diag_detail(exc)
             )
-        connection.sendall(response)
+            raise
+        _s04_diag_boundary("handle_request normal response ready")
+        try:
+            _s04_diag_boundary("sendall starting")
+            connection.sendall(response)
+            _s04_diag_boundary("sendall completed")
+        except BaseException as exc:
+            _s04_diag_boundary("sendall failed", detail=_s04_diag_detail(exc))
+            raise
     finally:
         try:
             connection.close()
