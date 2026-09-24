@@ -72,6 +72,7 @@ UNIT_PATH = (
     / "system"
     / "greia-install-transaction.service"
 )
+ENTRYPOINT_PATH = REPO_ROOT / "src" / "greia_installer" / "transaction_service_entrypoint.py"
 TMPFILES_PATH = (
     REPO_ROOT / "build" / "installer-overlay" / "etc" / "tmpfiles.d" / "greia-installer.conf"
 )
@@ -399,15 +400,35 @@ class ImmutableFactsSourceTests(unittest.TestCase):
 
 
 class BoundedPrivilegeTests(unittest.TestCase):
-    def test_capabilities_are_exactly_cap_sys_admin_and_cap_sys_chroot(self) -> None:
+    def test_unit_uses_canonical_transaction_service_entrypoint(self) -> None:
+        facts = parse_unit(UNIT_PATH)
+        self.assertEqual(
+            facts.get("exec_start"),
+            "/usr/bin/python3 -m greia_installer.transaction_service_entrypoint",
+        )
+        source = ENTRYPOINT_PATH.read_text(encoding="utf-8")
+        self.assertIn("from .transaction_service import main", source)
+        self.assertNotIn("class InstallTransactionService", source)
+        import greia_installer.transaction_service as service_module
+        import greia_installer.transaction_service_entrypoint as entrypoint_module
+
+        self.assertIs(entrypoint_module.main, service_module.main)
+
+    def test_capabilities_are_exactly_evidenced_installer_set(self) -> None:
+        expected = [
+            "CAP_SYS_ADMIN",
+            "CAP_SYS_CHROOT",
+            "CAP_SETUID",
+            "CAP_SETGID",
+        ]
         facts = parse_unit(UNIT_PATH)
         self.assertEqual(
             (facts.get("CapabilityBoundingSet") or "").split(),
-            ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
+            expected,
         )
         self.assertEqual(
             (facts.get("AmbientCapabilities") or "").split(),
-            ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
+            expected,
         )
 
     def test_chroot_install_leg_requires_declared_capability_and_argv_arrays(
@@ -432,7 +453,12 @@ class BoundedPrivilegeTests(unittest.TestCase):
             )
             self.assertEqual(
                 sorted(declared),
-                ["CAP_SYS_ADMIN", "CAP_SYS_CHROOT"],
+                sorted([
+                    "CAP_SYS_ADMIN",
+                    "CAP_SYS_CHROOT",
+                    "CAP_SETUID",
+                    "CAP_SETGID",
+                ]),
                 f"{key} must declare exactly the evidenced capability set",
             )
         install_source = (
