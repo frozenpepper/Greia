@@ -1927,3 +1927,14 @@ The apt-ownership decision at `bf1b08e1` was too strong. The preserved QEMU refu
 No fifth capability is authorized. GitHub follow-up changed the bounded package failure detail to preserve both stderr head and fatal tail. It also replaced the newly added normal-then-lazy chroot cleanup with one shared recursive fail-closed cleanup owner used by the fresh installer, legacy installer and update package path; failed roots remain tracked instead of being erased.
 
 Next Orbiter action: pull current `main`, run the focused installer/update suites, rebuild the diagnostic installer from the unchanged S03 bundle, and rerun **fresh install only**. The next decision must be based on the actual fatal stderr tail. Session 04 remains OPEN and temporary diagnostics remain until the confirming install is green.
+
+
+## 64. Orbiter hardware stop — failing /dev/sda (2026-09-25)
+
+Session 04 validation is paused for infrastructure safety. At source HEAD `c8054717844840e2268d9abecd62da818ad60ef6`, all nine focused suites passed and the immutable S03 bundle plus all four Session-04 candidate digests re-verified. The diagnostic installer rebuild then failed after `mksquashfs` reported success but `unsquashfs` could not read a valid SquashFS superblock.
+
+Orbiter kernel logs show repeated current `Medium Error` reports from its only disk, `/dev/sda` (SAMSUNG HN-M500MBB), including errors during the 2026-09-25 build and earlier bursts. Treat Orbiter's root disk as failing hardware. Do not run further debootstrap, mksquashfs, QEMU lifecycle, destructive disk diagnostics, or other heavy Session-04 I/O against that disk.
+
+The Git repository is preserved remotely on GitHub at `c8054717`. The irreplaceable local evidence that must be copied to healthy storage before more work is the exact Session-03 release root (including bundle/payload/hardware-support intermediates if present), the four verified Session-04 candidate bundles, and any uncommitted local-only Session-04 evidence. After copying, re-hash against the recorded SHA-256 values before resuming. Prefer a fresh clone from GitHub on healthy storage rather than copying the working tree from the failing disk.
+
+Session 04 remains OPEN. The current software next step remains the fatal-tail fresh-install rerun, but only from healthy storage/build media.
