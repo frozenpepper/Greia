@@ -8,9 +8,9 @@
 
 ## 1. Executive conclusion
 
-The install failure is no longer an unexplained QEMU disappearance.
+The install failure is no longer an unexplained QEMU disappearance. Follow-up review established that **two independent production defects** were involved: the QEMU install itself failed because the installer service lacked the capabilities apt needs for its normal privilege drop, and the service's `python -m` execution topology could load `transaction_service` twice under different module identities, allowing the resulting ordinary refusal to escape the handler instead of being framed back to the client.
 
-The final diagnostic run captured the guest service journal and proved this exact failure:
+The final diagnostic run captured the guest service journal and proved the install-side failure:
 
 ```text
 TargetHardwareSupportInstaller.install()
@@ -40,9 +40,9 @@ ExecMainStatus=1
 ActiveState=failed
 ```
 
-This is a product sandbox/capability decision, not corruption, RAM exhaustion, guest reboot, systemd-oomd, a client timeout, or a proven external SIGKILL.
+The install-side root cause is therefore a product sandbox/capability defect, not corruption, RAM exhaustion, guest reboot, systemd-oomd, a client timeout, or a proven external SIGKILL. The empty client response additionally exposed the module-identity/service-entrypoint defect described in section 13.
 
-No security repair has been applied. Session 04 remains open pending the decision in section 10.
+The narrow repair has now been selected and landed on `main`: retain the existing sandbox, add only `CAP_SETUID`/`CAP_SETGID`, and execute the canonical service implementation through a thin separate entrypoint. Session 04 remains open pending Linux/QEMU validation and removal of temporary diagnostics.
 
 ## 2. Immutable inputs
 
@@ -312,7 +312,7 @@ A standalone e2fsck probe under the same full restriction pair passed on both a 
 
 The QEMU guest evidence is stronger for the product path: it reaches the same finalizer boundary and then records the apt privilege-drop EPERM directly.
 
-## 10. Security decision required
+## 10. Security decision and selected repair
 
 The accepted unit currently declares:
 
@@ -373,12 +373,12 @@ Not recommended. It is broader than the demonstrated missing operation and weake
 
 Follow-up review selected **Option A**: retain the existing sandbox and add only `CAP_SETUID` and `CAP_SETGID`. This repair is now landed on `main`; Orbiter must still rebuild the installer and prove the capability set in product-mode QEMU.
 
-## 11. Required next steps after the decision
+## 11. Required next steps after the landed repair
 
-1. Apply the selected repair in the service unit and its capability contract tests.
+1. Pull current `main` and run the focused source suites that cover the canonical entrypoint, refusal survival, installer unit contract, seam composition and Session-04 harness.
 2. Rebuild the Session-04 installer from the unchanged S03 bundle.
-3. Inspect the built live root and shipped unit artifact.
-4. Run one fresh-install QEMU leg and require `EXECUTE INSTALLED`.
+3. Inspect the built live root and shipped unit artifact, including the exact four-capability contract and canonical entrypoint.
+4. Run one diagnostic fresh-install QEMU leg and require `EXECUTE INSTALLED`.
 5. Continue only after fresh install is green:
 
 ```text
@@ -393,7 +393,7 @@ reset/power-cycle
 PERSIST-incompatible refusal
 ```
 
-6. Remove all temporary diagnostics, including:
+6. After the diagnostic install is green, remove all temporary diagnostics, including:
 
 ```text
 faulthandler handle and marker
