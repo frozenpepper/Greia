@@ -435,7 +435,7 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
         self.assertNotIn("target is busy", str(error))
         events = outcome["events"]
         assert isinstance(events, list)
-        self.assertIn("detach:greia-hardware-support", events)
+        self.assertIn("detach:run", events)
         self.assertNotIn("slot-unmount-busy", events)
         self.assertEqual(outcome["mounted"], [])
 
