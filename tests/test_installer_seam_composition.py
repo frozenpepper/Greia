@@ -223,6 +223,22 @@ class ProductionSeamCompositionTests(unittest.TestCase):
         after = {str(p.relative_to(fix["root"])) for p in fix["root"].rglob("*")}
         self.assertEqual(before, after, "construction must not write beside fixtures")
 
+    def test_hardware_support_failure_preserves_fatal_stderr_tail(self) -> None:
+        stderr = "early apt warning\n" + ("x" * 400) + "\nFATAL package configuration failed"
+        completed = subprocess.CompletedProcess(
+            args=["apt-get", "install"],
+            returncode=100,
+            stdout="",
+            stderr=stderr,
+        )
+        with mock.patch("subprocess.run", return_value=completed):
+            with self.assertRaises(FreshAbInstallError) as ctx:
+                SubprocessHardwareSupportRunner().run(["apt-get", "install"])
+        reason = str(ctx.exception)
+        self.assertIn("early apt warning", reason)
+        self.assertIn("FATAL package configuration failed", reason)
+        self.assertLessEqual(len(reason), 320)
+
     def test_partition_and_support_runners_stay_arg_array_shell_false(self) -> None:
         import inspect as _inspect
 
