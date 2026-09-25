@@ -3142,9 +3142,22 @@ class _LazyTargetPackageInstaller:
             )
             before = len(self._context.mounted)
             try:
-                return adapter.install(tuple(firmware), tuple(microcode))  # type: ignore[return-value]
-            finally:
-                self._detach_added_mounts(before)
+                result = adapter.install(tuple(firmware), tuple(microcode))  # type: ignore[assignment]
+            except BaseException as exc:
+                failed = self._detach_added_mounts(before)
+                if failed:
+                    exc.add_note(
+                        "update mount cleanup also failed: "
+                        + ", ".join(str(path) for path in failed)
+                    )
+                raise
+            failed = self._detach_added_mounts(before)
+            if failed:
+                raise SlotFinalizeError(
+                    "update mount cleanup could not detach: "
+                    + ", ".join(str(path) for path in failed)
+                )
+            return result  # type: ignore[return-value]
         except SlotFinalizeError:
             raise
         except UpdateBackendUnavailable:
@@ -3154,15 +3167,13 @@ class _LazyTargetPackageInstaller:
                 f"slot package install failed fail-closed: {_bounded_reason(exc)}"
             ) from exc
 
-    def _detach_added_mounts(self, before: int) -> None:
+    def _detach_added_mounts(self, before: int) -> tuple[Path, ...]:
+        from greia_installer.hardware_support_install import detach_recorded_mounts
+
         runner = _PlatformCommandAdapter(timeout_seconds=30.0)
-        added = self._context.mounted[before:]
-        for mountpoint in reversed(added):
-            try:
-                runner.run(["umount", "--", str(mountpoint)], check=False)
-            except Exception:
-                pass
-        del self._context.mounted[before:]
+        return detach_recorded_mounts(
+            runner, self._context.mounted, before=before  # type: ignore[arg-type]
+        )
 
 
 def build_production_update_seams(
