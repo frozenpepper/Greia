@@ -1,6 +1,6 @@
 # Session 04 — post-GitHub repair Orbiter validation
 
-**Required repair ancestor:** `06341ad49cc6b7ff9ed5bda4ad8919051bceb9d4`
+**Required repair ancestor:** `8a317d1833f378ed77092d918a20d3a6460d01aa`
 
 This file begins where the GitHub-side repair ends. Do not redesign the source
 before running these checks unless a focused test proves a defect.
@@ -13,12 +13,12 @@ git fetch origin
 git pull --ff-only
 git rev-parse HEAD
 git rev-parse origin/main
-git merge-base --is-ancestor 06341ad49cc6b7ff9ed5bda4ad8919051bceb9d4 HEAD
+git merge-base --is-ancestor 8a317d1833f378ed77092d918a20d3a6460d01aa HEAD
 git status --short
 df -h /
 ```
 
-Require HEAD == origin/main, a clean tracked tree, and `06341ad49cc6b7ff9ed5bda4ad8919051bceb9d4` to be an ancestor of HEAD. Do not pin to an older docs-only HEAD if origin/main has legitimately advanced.
+Require HEAD == origin/main, a clean tracked tree, and `8a317d1833f378ed77092d918a20d3a6460d01aa` to be an ancestor of HEAD. Do not pin to an older docs-only HEAD if origin/main has legitimately advanced.
 
 Immutable S03 bundle:
 
@@ -226,3 +226,40 @@ Do not stop for ordinary implementation defects. Stop for owner input only if
 new evidence requires a security/product change broader than the already
 authorized exact four-capability contract or changes storage/rollback/PERSIST
 policy.
+
+
+## 11. Revised apt evidence step after bf1b08e1 review
+
+Do **not** add `CAP_CHOWN` before this run. Debian APT's observed
+`SetupAPTPartialDirectory` chown failure is warning-level and the earlier
+Greia runner preserved only the stderr prefix, so the true fatal reason may
+have been later.
+
+Current source now:
+- preserves bounded package stderr head **and fatal tail**;
+- removes lazy chroot detach;
+- uses shared recursive fail-closed cleanup across fresh installer, legacy
+  installer and update staging;
+- retains failed mount roots in bookkeeping instead of erasing them.
+
+Before the next build run these focused suites at minimum:
+
+```bash
+python3 -m unittest tests.test_installer_seam_composition
+python3 -m unittest tests.test_installer_pool_mount_cleanup
+python3 -m unittest tests.test_installer_engine
+python3 -m unittest tests.test_installer_hardware_support_install
+python3 -m unittest tests.test_installer_unit_contract
+python3 -m unittest tests.test_install_transaction_service
+python3 -m unittest tests.test_x8_qemu.test_session04_legs
+python3 -m unittest tests.test_x8_qemu.test_product_install
+```
+
+Then rebuild the diagnostic installer from the unchanged S03 bundle and run
+**fresh install only**. If it refuses, preserve the complete bounded refusal
+reason and identify both the stderr head and stderr tail. Do not infer a new
+capability from a warning line. Return the exact fatal tail before making any
+further security-contract change.
+
+If fresh install succeeds, continue the existing diagnostic-cleanup -> clean
+rebuild -> clean fresh-install -> remaining Session-04 lifecycle procedure.
