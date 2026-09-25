@@ -194,26 +194,37 @@ class InstallerEngineTests(unittest.TestCase):
                 engine._mount_chroot_filesystems(Path(temporary), mounted)
             self.assertEqual(mounted, [Path(temporary) / "dev"])
 
-    def test_cleanup_tries_normal_unmount_before_lazy_fallback(self) -> None:
+    def test_cleanup_recursively_unmounts_exact_recorded_target(self) -> None:
         runner = RecordingRunner()
         engine = InstallationEngine(project_root=PROJECT_ROOT, runner=runner)
         mountpoint = Path("/tmp/greia-test-mount")
-        with mock.patch.object(engine, "_is_mountpoint", side_effect=[True, False]):
-            error = engine._cleanup_mounts([mountpoint])
+        mounted = [mountpoint]
+        error = engine._cleanup_mounts(mounted)
         self.assertIsNone(error)
         self.assertEqual(
             runner.commands,
-            [["umount", str(mountpoint)], ["umount", "-l", str(mountpoint)]],
+            [["umount", "--recursive", "--", str(mountpoint)]],
         )
+        self.assertEqual(mounted, [])
 
-    def test_cleanup_reports_surviving_mount_and_never_recursively_deletes_it(self) -> None:
-        runner = RecordingRunner()
+    def test_cleanup_reports_and_retains_failed_mount(self) -> None:
+        class FailingUnmountRunner(RecordingRunner):
+            def run(self, command, *, check=True):
+                self.commands.append(list(command))
+                return subprocess.CompletedProcess(command, 1, "", "busy")
+
+        runner = FailingUnmountRunner()
         engine = InstallationEngine(project_root=PROJECT_ROOT, runner=runner)
         mountpoint = Path("/tmp/greia-test-mount")
-        with mock.patch.object(engine, "_is_mountpoint", side_effect=[True, True]):
-            error = engine._cleanup_mounts([mountpoint])
+        mounted = [mountpoint]
+        error = engine._cleanup_mounts(mounted)
         self.assertIsInstance(error, InstallationError)
         self.assertIn("temporary directory was preserved", str(error))
+        self.assertEqual(mounted, [mountpoint])
+        self.assertEqual(
+            runner.commands,
+            [["umount", "--recursive", "--", str(mountpoint)]],
+        )
 
     def test_root_fstab_uses_verified_uuid_not_shared_label(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
