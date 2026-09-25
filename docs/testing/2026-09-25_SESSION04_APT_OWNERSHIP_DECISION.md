@@ -2,12 +2,11 @@
 
 **Date:** 2026-09-25
 **Repository HEAD:** `7eb2be23e27a67a28d5c42bace65eb0be0c92bd8`
-**Status:** Session 04 OPEN. Fresh install is blocked at an explicit security decision. No option has been applied.
+**Status:** Session 04 OPEN. Follow-up review found that the recorded `CAP_CHOWN` conclusion was premature: APT reports the observed `chown` failure as a warning and continues. No fifth capability is authorized. The next blocker is to capture the actual fatal package-command tail.
 
-## 1. Decision requested
+## 1. Decision status after follow-up review
 
-The post-GitHub Orbiter validation reached a new, real product failure after the
-authorized four-capability repair:
+The post-GitHub Orbiter validation reached a real non-zero package-command failure after the authorized four-capability repair:
 
 ```text
 W: chown to _apt:root of directory /var/cache/apt/archives/partial failed
@@ -23,12 +22,9 @@ NoNewPrivileges=yes
 ProtectSystem=strict
 ```
 
-The decision is whether to authorize `CAP_CHOWN` as a fifth capability or to
-change apt's ownership/privilege behavior while retaining the current four
-capabilities.
+The first report interpreted that warning as the cause of the non-zero `apt-get` exit. Follow-up review of Debian APT source shows that this inference is not proven: `SetupAPTPartialDirectory()` emits `WarningE` on failed `chown()` and continues. Greia's production runner then compounded the ambiguity by keeping only the first 256 stderr characters, which preserved the early warning and discarded any later fatal apt/dpkg/postinst reason.
 
-This is not an ordinary implementation defect. It changes the privileged
-service's security contract and requires explicit owner authorization.
+Therefore **no `CAP_CHOWN` decision should be made yet**. The current exact four-capability contract remains authoritative until a rerun exposes the actual fatal tail.
 
 ## 2. Validation state before the decision
 
@@ -114,7 +110,7 @@ not an unexplained process death. The test-only control trace exposed the
 underlying apt reason that the ordinary client intentionally hides behind its
 wrong-op guard.
 
-## 4. Why the current four capabilities are insufficient
+## 4. Why `CAP_CHOWN` is not yet justified
 
 `CAP_SETUID` and `CAP_SETGID` allow apt to transition from root to its `_apt`
 sandbox user. They do not allow the root-owned installer service to change
@@ -126,15 +122,11 @@ The failing operation is an ownership change, not a process credential change:
 chown(_apt, root, /var/cache/apt/archives/partial)
 ```
 
-Therefore the direct capability required by the current apt behavior is
-`CAP_CHOWN`.
+APT does attempt `chown()` under the current sandbox, but its own acquisition setup treats that failure as a warning. The observed warning is therefore evidence that `CAP_CHOWN` is absent, **not evidence that the missing capability caused the command's non-zero exit**. A later stderr line may carry the real fatal reason.
 
-The current service deliberately grants only the capabilities required by the
-mount, chroot, and apt privilege-drop operations. Adding a capability must
-therefore be treated as a deliberate security decision, not silently folded
-into an ordinary bug fix.
+The current service deliberately grants only the capabilities already proven necessary. Adding another capability remains a deliberate security decision and is deferred until executable evidence identifies an operation that is actually fatal.
 
-## 5. Option A — add CAP_CHOWN
+## 5. Deferred option — add CAP_CHOWN only if the fatal tail proves it
 
 ### Change
 
@@ -189,7 +181,7 @@ ReadWritePaths=...
 6. Verify no `CAP_CHOWN`-related cleanup or ownership error remains.
 7. Only then remove temporary diagnostics and run clean acceptance.
 
-## 6. Option B — retain four capabilities and change apt ownership behavior
+## 6. Deferred option — change apt ownership behavior only if required
 
 ### Change
 
@@ -298,9 +290,10 @@ no owned mounts/loops/bytecode
 Session 04 CLOSED only after all legs
 ```
 
-## 10. Decision record
+## 10. Revised decision record
 
-No option has been selected. The next agent should review Sections 4–7, choose
-Option A or Option B, update the capability/ownership authority documents, and
-resume at the fresh-install leg. Do not treat the current four-capability
-contract as silently extensible.
+No fifth capability is authorized. Follow-up source review proved the evidence boundary was insufficient: the package runner retained only the stderr prefix while APT's observed chown failure is warning-level. GitHub source repair now preserves both bounded stderr head and fatal tail, and the chroot/update cleanup was also corrected from lazy best-effort detach to shared recursive fail-closed cleanup.
+
+Required next action: validate current `main` on Orbiter, rebuild the diagnostic installer from the unchanged S03 bundle, and rerun **fresh install only**. Use the new refusal reason to identify the actual fatal tail. Only if that tail proves a capability/ownership failure should the capability contract be reconsidered.
+
+GitHub repair head at the time of this revision: `ec7cbe29fe13a7a25861ac893080dedd53494179`.
