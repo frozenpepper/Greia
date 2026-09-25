@@ -2040,3 +2040,14 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
 - GitHub repair now preserves bounded stderr head + fatal tail so the next refusal can identify the real failure.
 - Replaced lazy/best-effort chroot detach with shared recursive fail-closed cleanup across fresh install, legacy install and update staging. Nested binds collapse to exact minimal tracked roots; failed roots remain recorded.
 - Next: focused Orbiter tests -> rebuild diagnostic installer from unchanged S03 bundle -> fresh-install leg only -> inspect the actual fatal tail. Reconsider capabilities only from that evidence. Session 04 remains OPEN.
+
+
+## 2026-09-25 — Session 04 infrastructure stop: Orbiter root disk failure
+
+- All focused Session-04 suites were green at `c8054717`; S03 and all candidate digests re-verified.
+- The next installer build failed with an unreadable SquashFS immediately after `mksquashfs` success.
+- Kernel logs on Orbiter's sole `/dev/sda` report repeated current ATA/SCSI medium errors, including during the failed build. Treat this as hardware failure, not a Greia source defect.
+- **Do not resume heavy build/QEMU I/O on this disk.**
+- Preserve local-only immutable artifacts to healthy storage first. Clone source fresh from GitHub rather than copying the repo from the failing disk.
+- Re-hash the copied Session-03 release and four candidate bundles before accepting them as continuity evidence.
+- Once on healthy storage/build media, resume exactly at: focused validation if environment changed -> diagnostic installer rebuild -> fresh-install-only rerun -> inspect true apt fatal tail. Do not add `CAP_CHOWN` without that proof.
