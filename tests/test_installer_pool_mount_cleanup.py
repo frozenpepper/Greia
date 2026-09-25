@@ -29,6 +29,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from greia_installer.hardware_support import VerifiedHardwareSupportPool
+from greia_installer.hardware_support_install import detach_recorded_mounts
 from greia_installer.slots import InstallerPoolBindCleanupPackageInstaller
 from greia_platform.block_slots import SharedSlotPackageInstaller
 from greia_platform.persistent_layout import InstalledLayoutRecord
@@ -503,10 +504,9 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
             "production seam must thread an owned mounted list, not a throwaway",
         )
         # The wrapper detaches via umount argv arrays; the runner stays shell-free.
-        wrapper_source = inspect.getsource(
-            InstallerPoolBindCleanupPackageInstaller.detach_added_mounts
-        )
-        self.assertIn('["umount", "--recursive", "--"', wrapper_source)
+        cleanup_source = inspect.getsource(detach_recorded_mounts)
+        self.assertIn('["umount", "--recursive", "--"', cleanup_source)
+        self.assertNotIn('"-l"', cleanup_source)
         runner_source = inspect.getsource(seams_mod.SubprocessHardwareSupportRunner.run)
         self.assertIn("shell=False", runner_source)
         self.assertNotIn("shell=True", runner_source)
