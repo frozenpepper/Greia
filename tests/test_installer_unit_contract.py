@@ -425,6 +425,7 @@ class BoundedPrivilegeTests(unittest.TestCase):
         self.assertIs(entrypoint_module.main, service_module.main)
         implementation = SERVICE_IMPL_PATH.read_text(encoding="utf-8")
         self.assertNotIn('if __name__ == "__main__"', implementation)
+
     def test_entrypoint_executes_canonical_main_as_main_module(self) -> None:
         import greia_installer.transaction_service as service_module
 
@@ -436,6 +437,7 @@ class BoundedPrivilegeTests(unittest.TestCase):
             runpy.run_module(
                 "greia_installer.transaction_service_entrypoint",
                 run_name="__main__",
+                alter_sys=True,
             )
         self.assertEqual(raised.exception.code, 23)
         main_call.assert_called_once_with([])
