@@ -69,6 +69,28 @@ DEFAULT_MOUNT_ROOT = Path("/run/greia-slots")
 _SHELL_METACHARACTERS = (";", "&", "|", "$", "`", "(", ")", "<", ">", "\n")
 
 
+_COMMAND_FAILURE_DETAIL_BYTES = 240
+
+
+def _bounded_command_failure_detail(value: str | None) -> str:
+    """Keep both the start and end of bounded child-process diagnostics.
+
+    Apt/dpkg frequently emits warnings before the fatal reason. Keeping only
+    the prefix can therefore misidentify a warning as the root cause. The
+    returned text is deliberately small enough to survive the privileged
+    channel's bounded refusal reason while preserving the final diagnostic.
+    """
+    detail = (value or "").strip()
+    if not detail:
+        return "command failed"
+    if len(detail) <= _COMMAND_FAILURE_DETAIL_BYTES:
+        return detail
+    marker = "\n...\n"
+    head = 80
+    tail = _COMMAND_FAILURE_DETAIL_BYTES - head - len(marker)
+    return detail[:head] + marker + detail[-tail:]
+
+
 def _check_arg_array(command: Sequence[str], *, owner: str) -> list[str]:
     """Reject shell-string-shaped commands; return a plain argument list."""
     if not isinstance(command, (list, tuple)) or not command:
@@ -139,7 +161,7 @@ class SubprocessHardwareSupportRunner:
                 f"hardware-support command failed to execute: {exc}"
             ) from exc
         if check and completed.returncode != 0:
-            detail = (completed.stderr or "").strip()[:256] or "command failed"
+            detail = _bounded_command_failure_detail(completed.stderr or completed.stdout)
             raise FreshAbInstallError(f"hardware-support command failed: {detail}")
         return completed
 
