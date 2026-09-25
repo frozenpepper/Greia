@@ -213,7 +213,97 @@ completion.)
 - Prior Session-04 evidence: `docs/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md`,
   `docs/testing/session04-evidence/`.
 
-## 8. Completion addendum
+## 8. Completion addendum (appended 2026-09-25, migration complete)
 
-_Appended after migration finishes: rsync pass results, any unreadable-file
-list, fsck output, final verification, swap/boot outcome._
+### 8.1 Transfer results
+
+- `rsync -aHAX --numeric-ids --info=progress2` of `/` to `/mnt/newroot`
+  (excludes `/dev /proc /sys /run /mnt /media /lost+found`), run detached.
+- **Pass 1: 18:05–20:58 (2 h 53 m), 376,342,209,141 bytes, 1,063,266 files
+  transferred, 1,381,940 items walked. Exit code 23** with exactly two error
+  causes, both accounted for below.
+- **Pass 2 (catch-up): 20:59–21:18 (19 m), +6,442,610,343 bytes / 92 files**
+  of live-changed data. Exit 23, same two causes only.
+- Error list, complete:
+  1. `opendir "/home/orb/Mounted/Argh" failed: No such device (19)` — the
+     unattached exFAT automount stub (fstab `noauto,x-systemd.automount`).
+     Not data. The stub directory was mirrored afterwards with attributes.
+  2. `read errors mapping ".../Long-John-Silver/data/ljs.db": Input/output
+     error` — the single real casualty; full account in §8.2.
+- Pre-transfer USB event: before pass 1, the target enclosure logged one
+  UAS link drop (buffer error on `sdb` sector 536, `device offline error`,
+  `uas_eh_device_reset_handler FAILED to get lock`, device re-enumerated
+  17:49:18). The mount and target filesystem survived; **zero further `sdb`
+  errors** were observed for the remainder of the migration.
+
+### 8.2 The one casualty: `ljs.db` and its recovery
+
+File: `~/Works/Long-John-Silver/data/ljs.db`, 1,008,160,768 bytes, SQLite 3,
+heavily fragmented (73 extents), data spanning the failing source region.
+
+- rsync cannot tolerate a sender EIO, so the file was skipped (exit 23).
+- Recovery attempt 1: `dd bs=512 conv=noerror,sync` — stalled >10 min in
+  kernel retry grind; killed, partial output discarded.
+- Recovery attempt 2: `dd bs=1M conv=noerror,sync` — completed in 55 s but
+  short-read + sync-padding zeroed two 1 MiB blocks → a **2 MiB hole at file
+  offsets 4,194,304–6,291,458** (the source of every integrity error seen).
+- The hole's pages were also poisoned in the page cache (instant EIO on
+  re-read). `posix_fadvise(POSIX_FADV_DONTNEED)` cleared the poison and
+  proved the zone largely readable again.
+- Block-level refill (4 KiB reads with per-block timeout) restored
+  **495 of 513 blocks**. **16 contiguous blocks (64 KiB) at offsets
+  4,521,984–4,587,520 are physically unreadable** (kernel:
+  "Unrecovered read error - auto reallocate failed") and remain
+  zero-filled. Repaired file is at the exact source size; its
+  `PRAGMA integrity_check` errors are confined to that zone.
+- Per-table salvage produced `ljs.recovered.db`
+  (1,002,643,456 bytes): **`PRAGMA integrity_check` = ok, 49 tables,
+  446,119 rows copied.** Exceptions:
+  - `vec_embeddings` and `vec_embeddings_r1` need the app's `sqlite-vec`
+    (`vec0`) extension to even open; their shadow tables
+    (`*_info`, `*_chunks`, `*_rowids`) were all recovered, so the app can
+    likely rebuild the vector indexes.
+  - `vec_embeddings_vector_chunks00`: "database disk image is malformed" —
+    its pages lived in the dead 64 KiB zone; that chunk table is the only
+    confirmed unrecoverable data.
+- **Both files are kept side by side**, `orb:orb`:
+  `ljs.db` (original name, repaired, one zeroed zone) and
+  `ljs.recovered.db` (clean, salvaged). The owner/app decides which to use.
+
+### 8.3 Final verification (all passed)
+
+- `diff /etc/fstab` source vs target: **byte-identical**.
+- `diff -rq /boot/efi` source vs target: **byte-identical** (ESP).
+- Repo spot checks (`AGENTS.md`, `HANDOVER.md`), Session-04 candidates
+  (`/tmp/greia-session04-…/candidates/`), and the S03 bundle directory
+  (`~/Works/Greia/tmp/session03-linux-release-6c58601e…/`) all present.
+- `fsck -nf /dev/sdb2` **on cleanly unmounted filesystem**: passes 1–5,
+  no errors (1,346,555 files, 94,900,890 blocks used).
+- `dosfsck -n /dev/sdb1`: **clean** (11 files).
+- Both filesystems cleanly unmounted after verification.
+- Final SMART: source `S2R7J9HB601575` — Reallocated 0,
+  Current_Pending **1** (down from 2); target `S2R7J9HB601552` — PASSED,
+  0 pending, 0 reallocated.
+- Incidental observation: an unidentified reader periodically re-read
+  source sector 962589320 through the evening (journal, ~every 10–30 min);
+  it did not affect the migration and is moot once the source disk is out.
+
+### 8.4 Owner swap procedure
+
+1. Power off completely (all writes flushed; both target filesystems are
+   unmounted and fsck-clean).
+2. Physically swap the failing Samsung `S2R7J9HB601575` out of the Mac mini
+   for the prepared `S2R7J9HB601552` (or, if keeping the USB enclosure
+   attached instead, treat it as the primary boot disk only if its firmware
+   allows — the prepared disk is intended as the internal replacement).
+3. Boot. Expected: GRUB/NVRAM `Boot0001* Ubuntu` resolves via the cloned
+   GPT GUIDs, fstab mounts the cloned UUIDs, the system comes up unchanged.
+   The 17 stale `PIP_ROOT` loops (deleted backings) are cleared by this
+   reboot; `/home/orb/Mounted/Argh` remounts on demand from fstab.
+4. Post-boot checks: `smartctl -a /dev/sda` (now the healthy drive) shows
+   PASSED/0 pending; verify the Long-John-Silver project against `ljs.db`
+   vs `ljs.recovered.db` and keep the better one; `git -C ~/Works/Greia
+   pull` and resume Session-04 at procedure §3.
+
+Swap/boot outcome itself is recorded in `HANDOVER.md` when the owner
+executes it; nothing in this report depends on it retroactively.
