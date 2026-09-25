@@ -67,6 +67,7 @@ def detach_recorded_mounts(
         del mounted[before:]
     return tuple(failed_roots)
 
+
 def mount_chroot_filesystems(
     root: Path, runner: HardwareSupportCommandRunner, mounted: list[Path]
 ) -> None:
