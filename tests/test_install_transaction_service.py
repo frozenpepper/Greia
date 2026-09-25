@@ -873,6 +873,32 @@ class SocketServeTests(unittest.TestCase):
                 self.assertEqual(payload["status"], "REFUSED")
                 self.assertTrue(connection.closed)
 
+    def test_expected_refusal_does_not_poison_subsequent_connection(self) -> None:
+        harness = ServiceHarness([make_disk()])
+        with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
+            refusal_connection = self._run_connection(
+                harness.service, encode_request("FORMAT_DISK", {})
+            )
+            prepare_connection = self._run_connection(
+                harness.service,
+                encode_request(
+                    "PREPARE_PLAN",
+                    {
+                        "expected_target_identity": eligible_digest(harness),
+                        "compatible_profile_id": "profile-test",
+                        "settings_snapshot": harness.prepare_snapshot(),
+                    },
+                ),
+            )
+        _, refusal_op, refusal_payload = decode_response(bytes(refusal_connection.sent))
+        _, prepare_op, prepare_payload = decode_response(bytes(prepare_connection.sent))
+        self.assertEqual(refusal_op, "ERROR")
+        self.assertEqual(refusal_payload["status"], "REFUSED")
+        self.assertEqual(prepare_op, "PREPARE_PLAN")
+        self.assertEqual(prepare_payload["status"], "PREPARED")
+        self.assertTrue(refusal_connection.closed)
+        self.assertTrue(prepare_connection.closed)
+
     def test_awkward_refusal_reason_is_bounded_and_portable(self) -> None:
         reason = "π-line\n" + "x" * 4096
         with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
