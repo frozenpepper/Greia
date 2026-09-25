@@ -2030,3 +2030,13 @@ post-GitHub Orbiter evidence and the explicit decision between adding
 four-capability contract as the current authority, documents the proven
 `chown _apt:root` failure, and forbids silently extending the sandbox. No
 option has been applied; Session 04 remains OPEN pending owner/agent review.
+
+
+## 2026-09-25 — Session 04 apt ownership conclusion deferred pending fatal-tail proof
+
+- Reviewed `docs/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` and the committed QEMU refusal.
+- The visible `chown _apt:root ... SetupAPTPartialDirectory` line is warning-level in APT; the prior runner kept only the first 256 stderr characters, so a later fatal apt/dpkg/postinst reason could be hidden.
+- Do **not** add `CAP_CHOWN` yet. The exact four-capability contract remains authoritative.
+- GitHub repair now preserves bounded stderr head + fatal tail so the next refusal can identify the real failure.
+- Replaced lazy/best-effort chroot detach with shared recursive fail-closed cleanup across fresh install, legacy install and update staging. Nested binds collapse to exact minimal tracked roots; failed roots remain recorded.
+- Next: focused Orbiter tests -> rebuild diagnostic installer from unchanged S03 bundle -> fresh-install leg only -> inspect the actual fatal tail. Reconsider capabilities only from that evidence. Session 04 remains OPEN.
