@@ -182,7 +182,9 @@ class InstallerPoolBindCleanupPackageInstaller:
         added = self.mounted[before:]
         for mountpoint in reversed(added):
             try:
-                self.runner.run(["umount", "--", str(mountpoint)], check=False)
+                result = self.runner.run(["umount", "--", str(mountpoint)], check=False)
+                if result is not None and getattr(result, "returncode", 0) != 0:
+                    self.runner.run(["umount", "-l", "--", str(mountpoint)], check=False)
             except Exception:
                 pass
         del self.mounted[before:]

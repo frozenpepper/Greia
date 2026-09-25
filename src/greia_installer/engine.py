@@ -39,7 +39,7 @@ from .hardware_enablement import (
     TargetImageHardwareIdentity,
 )
 from .hardware_support import HardwareSupportPoolError, VerifiedHardwareSupportPool
-from .hardware_support_install import TargetHardwareSupportInstaller
+from .hardware_support_install import TargetHardwareSupportInstaller, mount_chroot_filesystems
 from .power import PowerSupplyProbe
 from .wifi import IwdNetworkProfile
 
@@ -503,18 +503,7 @@ class InstallationEngine:
                 )
 
     def _mount_chroot_filesystems(self, root: Path, mounted: list[Path]) -> None:
-        for name in ("dev", "proc", "sys", "run"):
-            target = root / name
-            target.mkdir(parents=True, exist_ok=True)
-            if name in {"dev", "sys", "run"}:
-                self.runner.run(["mount", "--rbind", f"/{name}", str(target)])
-                # Record immediately after mount succeeds. If propagation setup
-                # fails, cleanup must still know about this live bind mount.
-                mounted.append(target)
-                self.runner.run(["mount", "--make-rslave", str(target)])
-            else:
-                self.runner.run(["mount", "-t", "proc", "proc", str(target)])
-                mounted.append(target)
+        mount_chroot_filesystems(root, self.runner, mounted)
 
     def _cleanup_mounts(self, mounted: list[Path]) -> InstallationError | None:
         remaining: list[Path] = []

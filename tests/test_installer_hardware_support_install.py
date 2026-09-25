@@ -61,13 +61,31 @@ class TargetHardwareSupportInstallerTests(unittest.TestCase):
             self.assertFalse(source.exists())
 
         self.assertEqual(result, ("firmware-realtek", "intel-microcode"))
-        self.assertEqual(mounted, [target / "run/greia-hardware-support"])
         self.assertEqual(
-            runner.commands[0],
+            mounted,
+            [
+                target / "dev",
+                target / "proc",
+                target / "sys",
+                target / "run",
+                target / "run/greia-hardware-support",
+            ],
+        )
+        self.assertEqual(
+            runner.commands[:4],
+            [
+                ["mount", "--rbind", "/dev", str(target / "dev")],
+                ["mount", "--make-rslave", str(target / "dev")],
+                ["mount", "-t", "proc", "proc", str(target / "proc")],
+                ["mount", "--rbind", "/sys", str(target / "sys")],
+            ],
+        )
+        self.assertEqual(
+            runner.commands[7],
             ["mount", "--bind", "/verified-pool", str(target / "run/greia-hardware-support")],
         )
         self.assertEqual(
-            runner.commands[1],
+            runner.commands[8],
             ["mount", "-o", "remount,bind,ro", str(target / "run/greia-hardware-support")],
         )
         flattened = "\n".join(" ".join(command) for command in runner.commands)

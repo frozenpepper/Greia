@@ -1994,3 +1994,30 @@ remains open and the exact next step.
   implementation is library-only. Permanent contract tests pin both repairs.
   Session 04 remains OPEN pending Orbiter focused tests, installer rebuild and
   product-mode QEMU; temporary diagnostics remain until a confirming install.
+
+## 2026-09-25 — Post-GitHub Orbiter validation blocked at apt ownership
+
+- The repair ancestor was verified in `46a654fdc27acd20193285c702fb2761911c8936`,
+  with `HEAD == origin/main`, clean tree, immutable S03 bundle SHA, and 84 GB
+  free. Focused validation passed: 23 unit-contract, 46 transaction-service,
+  13 seam-composition, 20 Session-04 legs, and 38 ProductHarness install tests.
+- A new diagnostic installer was built from S03 and its live SquashFS was
+  inspected. The canonical entrypoint, library-only service, exact four
+  capabilities, `NoNewPrivileges=yes`, `ProtectSystem=strict`, embedded bundle
+  SHA, 58 support packages, 710070272 support ceiling, and no bytecode all
+  matched the repair contract.
+- The first post-repair QEMU run exposed missing target-chroot `/dev/pts`.
+  A shared `dev/proc/sys/run` chroot mount helper was added. The next run
+  reached package configuration but recursive binds left the slot busy; normal
+  then lazy detach cleanup was added and regression-covered.
+- The latest clean diagnostic run is preserved at
+  `docs/testing/session04-evidence/post-repair-04-cap-chown-refusal.log`.
+  Apt now reaches package configuration and fails only at
+  `chown _apt:root /var/cache/apt/archives/partial` with
+  `SetupAPTPartialDirectory (1: Operation not permitted)`.
+- This requires an explicit decision beyond the authorized exact four-
+  capability contract: add `CAP_CHOWN` or change apt ownership/privilege
+  behavior. No such change was applied. The QEMU attempt was stopped cleanly;
+  no Session-04 mounts or loops remain, and approximately 73 GB was free at
+  cleanup. Session 04 remains OPEN; no lifecycle leg or clean-build acceptance
+  has started.

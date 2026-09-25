@@ -1873,3 +1873,39 @@ The faulthandler file-handle lifetime is now corrected with a module-owned seria
 The rebuilt diagnostic installer was inspected from its live SquashFS and matched the S03 bundle/support facts. A final product-mode QEMU install reached `finalize-completeness` with the service active, 2/8 tasks, and approximately 1.74 GiB available. The final guest journal proved the failure at `src/greia_installer/hardware_support_install.py:61`: apt in the mounted slot failed `setgroups`, `setegid`, and `seteuid` with `Operation not permitted`; systemd recorded `Result=exit-code`, `ExecMainStatus=1`. The client empty response is a consequence of that failed service request, not a proven external SIGKILL.
 
 The full decision record is `docs/testing/2026-09-25_SESSION04_INSTALL_EXECUTE_ROOT_CAUSE_AND_DECISION.md`. Follow-up review found a second service-topology defect: the shipped unit executed `transaction_service` with `python -m` while composition re-imported that same implementation canonically, allowing split `__main__`/package module and exception identities. The repair is now landed: a thin `transaction_service_entrypoint` executes the canonical library module, the implementation is library-only, and the unit adds only `CAP_SETUID`/`CAP_SETGID` alongside the existing `CAP_SYS_ADMIN`/`CAP_SYS_CHROOT`; `NoNewPrivileges=yes` and `ProtectSystem=strict` stay intact. Permanent unit-contract tests pin this architecture. These source changes still require Orbiter focused tests, installer rebuild/inspection and product-mode QEMU. Session 04 remains OPEN; temporary diagnostics stay until one confirming install and must be removed before closure.
+
+## 61. Post-GitHub Orbiter validation reached a new security boundary (2026-09-25)
+
+The repair ancestor `06341ad49cc6b7ff9ed5bda4ad8919051bceb9d4` is present in
+`46a654fdc27acd20193285c702fb2761911c8936`; `HEAD == origin/main`, the tree was
+clean before validation, the immutable S03 bundle SHA matched, and Orbiter had
+84 GB free. The required focused suites passed: 23 unit-contract, 46
+transaction-service, 13 seam-composition, 20 Session-04 legs, and 38
+ProductHarness install tests.
+
+A new diagnostic installer was built from the unchanged S03 bundle and
+verified in the built live SquashFS: canonical entrypoint, library-only service
+implementation, exact four-capability unit, `NoNewPrivileges=yes`,
+`ProtectSystem=strict`, embedded bundle SHA, 58 support packages, 710070272
+support ceiling, and no bytecode. The first confirming run then exposed a
+missing target-chroot `/dev/pts`; the shared `dev/proc/sys/run` mount helper
+was added. The next run reached apt package configuration but cleanup left
+recursive binds busy; normal-then-lazy detach was added and regression-covered.
+The latest clean diagnostic run is captured in
+`docs/testing/session04-evidence/post-repair-04-cap-chown-refusal.log`.
+
+The latest run now fails after apt package configuration with:
+
+```text
+chown to _apt:root of directory /var/cache/apt/archives/partial failed
+SetupAPTPartialDirectory (1: Operation not permitted)
+```
+
+This is beyond the already authorized exact four-capability contract. The next
+repair requires an explicit decision to add `CAP_CHOWN` or change apt's
+privilege/ownership behavior; no such change has been applied. The temporary
+control response trace, diagnostic service code, and chroot mount repair remain
+in the working tree for the decision handoff. The blocked QEMU was stopped; no
+Session-04 mounts or loops remain, and approximately 73 GB was free at the
+last cleanup. Session 04 remains OPEN; no lifecycle leg or clean-build
+acceptance has started.

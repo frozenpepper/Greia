@@ -15,6 +15,24 @@ class HardwareSupportCommandRunner(Protocol):
     def run(self, command: Sequence[str], *, check: bool = True): ...
 
 
+def mount_chroot_filesystems(
+    root: Path, runner: HardwareSupportCommandRunner, mounted: list[Path]
+) -> None:
+    """Mount the minimal Linux filesystems required by apt in a target chroot."""
+    for name in ("dev", "proc", "sys", "run"):
+        target = root / name
+        target.mkdir(parents=True, exist_ok=True)
+        if target in mounted:
+            continue
+        if name in {"dev", "sys", "run"}:
+            runner.run(["mount", "--rbind", f"/{name}", str(target)])
+            mounted.append(target)
+            runner.run(["mount", "--make-rslave", str(target)])
+        else:
+            runner.run(["mount", "-t", "proc", "proc", str(target)])
+            mounted.append(target)
+
+
 @dataclass(slots=True)
 class TargetHardwareSupportInstaller:
     """Install a verified machine-specific support plan into one mounted target.
@@ -38,6 +56,7 @@ class TargetHardwareSupportInstaller:
         if not requested:
             return ()
 
+        mount_chroot_filesystems(target_root, self.runner, mounted)
         mountpoint = target_root / "run/greia-hardware-support"
         mountpoint.mkdir(parents=True, exist_ok=True)
         self.runner.run(["mount", "--bind", str(pool.root), str(mountpoint)])

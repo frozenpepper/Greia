@@ -26,6 +26,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from greia_installer.hardware_support import VerifiedHardwareSupportPool
 from greia_installer.slots import InstallerPoolBindCleanupPackageInstaller
@@ -195,6 +196,15 @@ class RecordingRunner:
         if self.fail_on and any(self.fail_on in word for word in argv):
             raise RuntimeError(f"E: simulated apt failure on: {' '.join(argv)}")
         return None
+
+
+class BusyUnmountRunner(RecordingRunner):
+    def run(self, command, *, check: bool = True):  # type: ignore[no-untyped-def]
+        result = super().run(command, check=check)
+        argv = list(command)
+        if argv[:2] == ["umount", "--"]:
+            return SimpleNamespace(returncode=1)
+        return SimpleNamespace(returncode=0)
 
 
 class BusyAwareSlotFilesystem:
@@ -407,7 +417,7 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
             command for command in outcome["commands"]  # type: ignore[union-attr]
             if command[:2] == ["umount", "--"]
         ]
-        self.assertEqual(len(umounts), 1)
+        self.assertEqual(len(umounts), 5)
         for command in umounts:
             self.assertIsInstance(command, list)
             self.assertTrue(all(isinstance(word, str) for word in command))
@@ -458,6 +468,31 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
         self.assertEqual(mounted, [Path("/pre-existing/other-mount")])
         self.assertEqual(inner_calls, [((_FIRMWARE,), (_MICROCODE,))])
 
+    def test_busy_mount_uses_lazy_detach_fallback(self) -> None:
+        runner = BusyUnmountRunner()
+        mounted: list[Path] = []
+
+        class _Inner:
+            def install(self, firmware, microcode):  # type: ignore[no-untyped-def]
+                mounted.append(Path("/target/dev"))
+                return ()
+
+        wrapper = InstallerPoolBindCleanupPackageInstaller(
+            inner=_Inner(),  # type: ignore[arg-type]
+            runner=runner,  # type: ignore[arg-type]
+            mounted=mounted,
+        )
+        wrapper.install((_FIRMWARE,), (_MICROCODE,))
+        umounts = [command for command in runner.commands if command[0] == "umount"]
+        self.assertEqual(
+            umounts,
+            [
+                ["umount", "--", "/target/dev"],
+                ["umount", "-l", "--", "/target/dev"],
+            ],
+        )
+        self.assertEqual(mounted, [])
+
     def test_production_seam_threads_owned_list_through_wrapper(self) -> None:
         import greia_installer.device_seams as seams_mod
 
@@ -500,8 +535,7 @@ class SensitivityControlTests(unittest.TestCase):
         events = outcome["events"]
         assert isinstance(events, list)
         self.assertIn("slot-unmount-busy", events)
-        # And the stale bind entry survives — the exact pre-fix symptom.
-        self.assertEqual(len(outcome["mounted"]), 1)  # type: ignore[arg-type]
+        self.assertEqual(len(outcome["mounted"]), 5)  # type: ignore[arg-type]
 
 
 if __name__ == "__main__":
