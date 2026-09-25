@@ -21,32 +21,51 @@ def detach_recorded_mounts(
     *,
     before: int = 0,
 ) -> tuple[Path, ...]:
-    """Recursively detach mounts added after before and retain failures.
+    """Recursively detach the minimal roots added after before.
 
-    Recursive bind mounts carry nested mounts such as dev/pts. A plain
-    unmount of the parent can therefore report EBUSY even when the install
-    itself is healthy. Cleanup uses util-linux recursive unmount on the exact
-    recorded target, never a host-wide recursive operation. Failed detaches
-    remain tracked so callers cannot erase evidence or falsely report clean.
+    Recursive bind mounts carry nested mounts such as dev/pts, and the support
+    pool itself is nested below the recorded run bind. Cleanup therefore
+    collapses the recorded slice to its minimal roots and recursively unmounts
+    only those exact targets. Failed roots and their descendants remain tracked
+    so callers cannot erase evidence or falsely report a clean slot.
     """
     added = list(mounted[before:])
-    failed: list[Path] = []
-    for mountpoint in reversed(added):
+
+    def _below(path: Path, parent: Path) -> bool:
+        if path == parent:
+            return False
+        try:
+            path.relative_to(parent)
+        except ValueError:
+            return False
+        return True
+
+    roots = [
+        path
+        for path in added
+        if not any(_below(path, candidate) for candidate in added)
+    ]
+    failed_roots: list[Path] = []
+    for mountpoint in reversed(roots):
         try:
             result = runner.run(
                 ["umount", "--recursive", "--", str(mountpoint)], check=False
             )
         except Exception:
-            failed.append(mountpoint)
+            failed_roots.append(mountpoint)
             continue
         if result is not None and getattr(result, "returncode", 0) != 0:
-            failed.append(mountpoint)
-    if failed:
-        failed_set = set(failed)
-        mounted[before:] = [path for path in added if path in failed_set]
+            failed_roots.append(mountpoint)
+
+    if failed_roots:
+        mounted[before:] = [
+            path
+            for path in added
+            if any(path == root or _below(path, root) for root in failed_roots)
+        ]
     else:
         del mounted[before:]
-    return tuple(failed)
+    return tuple(failed_roots)
 
 def mount_chroot_filesystems(
     root: Path, runner: HardwareSupportCommandRunner, mounted: list[Path]
