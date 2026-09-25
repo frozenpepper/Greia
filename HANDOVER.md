@@ -1909,3 +1909,12 @@ in the working tree for the decision handoff. The blocked QEMU was stopped; no
 Session-04 mounts or loops remain, and approximately 73 GB was free at the
 last cleanup. Session 04 remains OPEN; no lifecycle leg or clean-build
 acceptance has started.
+
+## 62. Session 04 apt ownership decision report (2026-09-25)
+
+The detailed decision brief is `docs/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md`.
+It records the exact four-capability contract, the proven `chown _apt:root`
+failure, Option A (`CAP_CHOWN`), Option B (apt ownership/privilege policy), the
+security tradeoffs, acceptance criteria, and the explicit requirement not to
+silently extend the capability contract. No option has been applied. Another
+agent should review that report before authorizing the next repair.

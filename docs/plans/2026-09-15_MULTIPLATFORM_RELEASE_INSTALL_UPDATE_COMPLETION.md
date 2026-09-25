@@ -2021,3 +2021,12 @@ remains open and the exact next step.
   no Session-04 mounts or loops remain, and approximately 73 GB was free at
   cleanup. Session 04 remains OPEN; no lifecycle leg or clean-build acceptance
   has started.
+
+## 2026-09-25 — Apt ownership decision brief prepared
+
+`docs/testing/2026-09-25_SESSION04_APT_OWNERSHIP_DECISION.md` records the
+post-GitHub Orbiter evidence and the explicit decision between adding
+`CAP_CHOWN` and changing apt's ownership/privilege behavior. It preserves the
+four-capability contract as the current authority, documents the proven
+`chown _apt:root` failure, and forbids silently extending the sandbox. No
+option has been applied; Session 04 remains OPEN pending owner/agent review.
