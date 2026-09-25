@@ -15,6 +15,39 @@ class HardwareSupportCommandRunner(Protocol):
     def run(self, command: Sequence[str], *, check: bool = True): ...
 
 
+def detach_recorded_mounts(
+    runner: HardwareSupportCommandRunner,
+    mounted: list[Path],
+    *,
+    before: int = 0,
+) -> tuple[Path, ...]:
+    """Recursively detach mounts added after before and retain failures.
+
+    Recursive bind mounts carry nested mounts such as dev/pts. A plain
+    unmount of the parent can therefore report EBUSY even when the install
+    itself is healthy. Cleanup uses util-linux recursive unmount on the exact
+    recorded target, never a host-wide recursive operation. Failed detaches
+    remain tracked so callers cannot erase evidence or falsely report clean.
+    """
+    added = list(mounted[before:])
+    failed: list[Path] = []
+    for mountpoint in reversed(added):
+        try:
+            result = runner.run(
+                ["umount", "--recursive", "--", str(mountpoint)], check=False
+            )
+        except Exception:
+            failed.append(mountpoint)
+            continue
+        if result is not None and getattr(result, "returncode", 0) != 0:
+            failed.append(mountpoint)
+    if failed:
+        failed_set = set(failed)
+        mounted[before:] = [path for path in added if path in failed_set]
+    else:
+        del mounted[before:]
+    return tuple(failed)
+
 def mount_chroot_filesystems(
     root: Path, runner: HardwareSupportCommandRunner, mounted: list[Path]
 ) -> None:
