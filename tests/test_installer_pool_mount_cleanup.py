@@ -403,8 +403,8 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
         self.assertIsNotNone(outcome["receipt"])
         events = outcome["events"]
         assert isinstance(events, list)
-        # The pool bind was detached before the slot unmount ran.
-        detach_at = events.index("detach:greia-hardware-support")
+        # The tracked /run root recursively owns the nested support-pool bind.
+        detach_at = events.index("detach:run")
         unmount_at = events.index("slot-unmount")
         self.assertLess(
             detach_at, unmount_at,
@@ -418,7 +418,7 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
             command for command in outcome["commands"]  # type: ignore[union-attr]
             if command and command[0] == "umount"
         ]
-        self.assertEqual(len(umounts), 5)
+        self.assertEqual(len(umounts), 4)
         for command in umounts:
             self.assertIsInstance(command, list)
             self.assertTrue(all(isinstance(word, str) for word in command))
@@ -462,8 +462,8 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
         umounts = [c for c in runner.commands if c and c[0] == "umount"]
         self.assertEqual(
             [c[-1] for c in umounts],
-            ["/target/run/greia-hardware-support/nested", "/target/run/greia-hardware-support"],
-            "added mounts detach in reverse order",
+            ["/target/run/greia-hardware-support"],
+            "nested recorded mounts collapse to one recursive root",
         )
         # Only the added slice is truncated; the pre-existing entry survives.
         self.assertEqual(mounted, [Path("/pre-existing/other-mount")])
