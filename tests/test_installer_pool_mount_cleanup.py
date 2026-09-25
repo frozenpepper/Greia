@@ -191,8 +191,8 @@ class RecordingRunner:
             "installer commands must be non-empty text argv arrays"
         )
         self.commands.append(argv)
-        if argv[:2] == ["umount", "--"] and self.events is not None:
-            self.events.append(f"detach:{Path(argv[2]).name}")
+        if argv and argv[0] == "umount" and self.events is not None:
+            self.events.append(f"detach:{Path(argv[-1]).name}")
         if self.fail_on and any(self.fail_on in word for word in argv):
             raise RuntimeError(f"E: simulated apt failure on: {' '.join(argv)}")
         return None
@@ -202,7 +202,7 @@ class BusyUnmountRunner(RecordingRunner):
     def run(self, command, *, check: bool = True):  # type: ignore[no-untyped-def]
         result = super().run(command, check=check)
         argv = list(command)
-        if argv[:2] == ["umount", "--"]:
+        if argv and argv[0] == "umount":
             return SimpleNamespace(returncode=1)
         return SimpleNamespace(returncode=0)
 
@@ -415,7 +415,7 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
         # Detach used umount argv arrays (never a shell string).
         umounts = [
             command for command in outcome["commands"]  # type: ignore[union-attr]
-            if command[:2] == ["umount", "--"]
+            if command and command[0] == "umount"
         ]
         self.assertEqual(len(umounts), 5)
         for command in umounts:
@@ -458,9 +458,9 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
             mounted=mounted,
         )
         wrapper.install((_FIRMWARE,), (_MICROCODE,))
-        umounts = [c for c in runner.commands if c[:2] == ["umount", "--"]]
+        umounts = [c for c in runner.commands if c and c[0] == "umount"]
         self.assertEqual(
-            [c[2] for c in umounts],
+            [c[-1] for c in umounts],
             ["/target/run/greia-hardware-support/nested", "/target/run/greia-hardware-support"],
             "added mounts detach in reverse order",
         )
@@ -468,7 +468,7 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
         self.assertEqual(mounted, [Path("/pre-existing/other-mount")])
         self.assertEqual(inner_calls, [((_FIRMWARE,), (_MICROCODE,))])
 
-    def test_busy_mount_uses_lazy_detach_fallback(self) -> None:
+    def test_failed_recursive_detach_fails_closed_and_retains_mount(self) -> None:
         runner = BusyUnmountRunner()
         mounted: list[Path] = []
 
@@ -482,16 +482,13 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
             runner=runner,  # type: ignore[arg-type]
             mounted=mounted,
         )
-        wrapper.install((_FIRMWARE,), (_MICROCODE,))
-        umounts = [command for command in runner.commands if command[0] == "umount"]
+        with self.assertRaisesRegex(Exception, "cleanup could not detach"):
+            wrapper.install((_FIRMWARE,), (_MICROCODE,))
         self.assertEqual(
-            umounts,
-            [
-                ["umount", "--", "/target/dev"],
-                ["umount", "-l", "--", "/target/dev"],
-            ],
+            [command for command in runner.commands if command[0] == "umount"],
+            [["umount", "--recursive", "--", "/target/dev"]],
         )
-        self.assertEqual(mounted, [])
+        self.assertEqual(mounted, [Path("/target/dev")])
 
     def test_production_seam_threads_owned_list_through_wrapper(self) -> None:
         import greia_installer.device_seams as seams_mod
@@ -509,7 +506,7 @@ class InstallerPoolMountCleanupTests(unittest.TestCase):
         wrapper_source = inspect.getsource(
             InstallerPoolBindCleanupPackageInstaller.detach_added_mounts
         )
-        self.assertIn('["umount", "--"', wrapper_source)
+        self.assertIn('["umount", "--recursive", "--"', wrapper_source)
         runner_source = inspect.getsource(seams_mod.SubprocessHardwareSupportRunner.run)
         self.assertIn("shell=False", runner_source)
         self.assertNotIn("shell=True", runner_source)
