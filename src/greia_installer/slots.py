@@ -25,7 +25,9 @@ from greia_platform.slot_writer import (
 from .hardware_support import VerifiedHardwareSupportPool
 from .hardware_support_install import (
     HardwareSupportCommandRunner,
+    HardwareSupportInstallError,
     TargetHardwareSupportInstaller,
+    detach_recorded_mounts,
 )
 
 
@@ -157,10 +159,11 @@ class InstallerPoolBindCleanupPackageInstaller:
     The caller owns ``mounted`` (one per-EXECUTE list threaded through the
     installer seam); this wrapper only detaches the slice it adds
     (``mounted[before:]``) in reverse order via ``umount`` argv arrays
-    (the runner enforces ``shell=False``), truncates that slice in a
-    ``finally`` so no stale entry survives, and never masks the install's
-    real result: detach runs best-effort (``check=False`` + swallowed)
-    while an install failure still propagates after cleanup.
+    (the runner enforces ``shell=False``). Recursive bind trees are detached
+    recursively on their exact recorded target; successful entries are removed
+    from tracking while failed entries remain recorded and fail closed. An
+    install failure remains primary and receives cleanup context rather than
+    being replaced by a cleanup exception.
     """
 
     inner: SlotPackageInstallInner
@@ -174,17 +177,29 @@ class InstallerPoolBindCleanupPackageInstaller:
     ) -> tuple[InstalledPackage, ...]:
         before = len(self.mounted)
         try:
-            return self.inner.install(tuple(firmware), tuple(microcode))
-        finally:
-            self.detach_added_mounts(before)
+            result = self.inner.install(tuple(firmware), tuple(microcode))
+        except BaseException as exc:
+            failed = detach_recorded_mounts(
+                self.runner, self.mounted, before=before
+            )
+            if failed:
+                exc.add_note(
+                    "installer mount cleanup also failed: "
+                    + ", ".join(str(path) for path in failed)
+                )
+            raise
+        failed = detach_recorded_mounts(self.runner, self.mounted, before=before)
+        if failed:
+            raise HardwareSupportInstallError(
+                "installer mount cleanup could not detach: "
+                + ", ".join(str(path) for path in failed)
+            )
+        return result
 
     def detach_added_mounts(self, before: int) -> None:
-        added = self.mounted[before:]
-        for mountpoint in reversed(added):
-            try:
-                result = self.runner.run(["umount", "--", str(mountpoint)], check=False)
-                if result is not None and getattr(result, "returncode", 0) != 0:
-                    self.runner.run(["umount", "-l", "--", str(mountpoint)], check=False)
-            except Exception:
-                pass
-        del self.mounted[before:]
+        failed = detach_recorded_mounts(self.runner, self.mounted, before=before)
+        if failed:
+            raise HardwareSupportInstallError(
+                "installer mount cleanup could not detach: "
+                + ", ".join(str(path) for path in failed)
+            )
