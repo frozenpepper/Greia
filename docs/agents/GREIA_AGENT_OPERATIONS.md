@@ -365,6 +365,36 @@ drops obsolete entries; `rm -rf` of the `archives/*.deb` cache and `apt-get
 clean` are forbidden in the builders). Deleting them only forces a full
 re-download of the package set on the next build.
 
+### Build-host disk health and loop-device hygiene (2026-09-25 — Orbiter disk failure)
+
+The Orbiter root disk died mid-Session-04 with SMART
+`FAILED / "Drive failure expected in less than 24 hours"`; agent build
+practice (retry storms without health checks, 17 leaked attached loops with
+deleted backing files, build debris) amplified load, pinned ~35–45 GB and left
+standing desktop probe volume against the failing disk. Full evidence and
+causation analysis: `docs/agents/2026-09-25_ORBITER_DISK_FAILURE_INVESTIGATION.md`.
+Binding rules:
+
+- Disk-health preflight before heavy image churn: `sudo smartctl -a
+  <root-disk>` and `sudo journalctl -k -p err --since -1d`. Not `PASSED`, a
+  growing pending-sector count, or any `Medium Error` → stop disk-heavy work
+  and escalate to the owner. Never "just retry".
+- On a build I/O error (`Read failed because Input/output error`,
+  unexpected squashfs-superblock failure after a clean `mksquashfs`), check
+  `sudo dmesg | grep -i 'I/O error'` before touching source; treat it as a
+  disk fault until proven otherwise.
+- Loop audit after every build/run (success, failure, interrupt):
+  `sudo losetup -a | grep greia` must be empty. Detach BEFORE deleting image
+  files (`losetup -d` → verify gone → `rm`); never delete a backing file while
+  attached. A loop stuck with `autoclear=1` plus partition mappings clears
+  only on reboot — record it, do not accumulate more.
+- Clean `/tmp/greia-installer-build.*` and stale `/tmp/greia-session04-*`
+  run dirs after each run.
+- Keep the build root filesystem below ~80 % during image churn; stale loops
+  count as used space.
+- Do not leave unmounted attached loops for desktop volume monitors to probe;
+  every stale loop partition triggers re-reads of its backing disk.
+
 ---
 
 ## 13. Source verification defaults
