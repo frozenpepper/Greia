@@ -1918,3 +1918,12 @@ failure, Option A (`CAP_CHOWN`), Option B (apt ownership/privilege policy), the
 security tradeoffs, acceptance criteria, and the explicit requirement not to
 silently extend the capability contract. No option has been applied. Another
 agent should review that report before authorizing the next repair.
+
+
+## 63. Session 04 CAP_CHOWN decision corrected after APT source review (2026-09-25)
+
+The apt-ownership decision at `bf1b08e1` was too strong. The preserved QEMU refusal showed an early `SetupAPTPartialDirectory` chown warning, but the production package runner truncated stderr to its first 256 characters. Debian APT treats that failed chown as a warning and continues, so it did not prove that missing `CAP_CHOWN` caused the non-zero package command.
+
+No fifth capability is authorized. GitHub follow-up changed the bounded package failure detail to preserve both stderr head and fatal tail. It also replaced the newly added normal-then-lazy chroot cleanup with one shared recursive fail-closed cleanup owner used by the fresh installer, legacy installer and update package path; failed roots remain tracked instead of being erased.
+
+Next Orbiter action: pull current `main`, run the focused installer/update suites, rebuild the diagnostic installer from the unchanged S03 bundle, and rerun **fresh install only**. The next decision must be based on the actual fatal stderr tail. Session 04 remains OPEN and temporary diagnostics remain until the confirming install is green.
