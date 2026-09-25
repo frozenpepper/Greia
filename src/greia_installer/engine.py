@@ -39,7 +39,11 @@ from .hardware_enablement import (
     TargetImageHardwareIdentity,
 )
 from .hardware_support import HardwareSupportPoolError, VerifiedHardwareSupportPool
-from .hardware_support_install import TargetHardwareSupportInstaller, mount_chroot_filesystems
+from .hardware_support_install import (
+    TargetHardwareSupportInstaller,
+    detach_recorded_mounts,
+    mount_chroot_filesystems,
+)
 from .power import PowerSupplyProbe
 from .wifi import IwdNetworkProfile
 
@@ -506,13 +510,7 @@ class InstallationEngine:
         mount_chroot_filesystems(root, self.runner, mounted)
 
     def _cleanup_mounts(self, mounted: list[Path]) -> InstallationError | None:
-        remaining: list[Path] = []
-        for mountpoint in reversed(mounted):
-            self.runner.run(["umount", str(mountpoint)], check=False)
-            if self._is_mountpoint(mountpoint):
-                self.runner.run(["umount", "-l", str(mountpoint)], check=False)
-            if self._is_mountpoint(mountpoint):
-                remaining.append(mountpoint)
+        remaining = detach_recorded_mounts(self.runner, mounted)
         if remaining:
             return InstallationError(
                 "installer cleanup could not detach: "
@@ -520,12 +518,6 @@ class InstallationEngine:
                 + "; the temporary directory was preserved"
             )
         return None
-
-    def _is_mountpoint(self, path: Path) -> bool:
-        # os.path.ismount cannot reliably identify Linux bind mounts. The live
-        # installer uses util-linux mountpoint, which checks mountinfo correctly.
-        completed = self.runner.run(["mountpoint", "-q", str(path)], check=False)
-        return completed.returncode == 0
 
     def _personalize_target(self, target_root: Path) -> GrubRecoveryCredential:
         # Keep cloned identity material empty. First boot creates the machine ID;
