@@ -12,6 +12,8 @@ set -Eeuo pipefail
 #   sudo bash tools/verify-live-usb.sh <installer.img> <whole-usb-device>
 
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=tools/verify-live-usb-fsck-policy.sh
+source "$PROJECT_ROOT/tools/verify-live-usb-fsck-policy.sh"
 
 usage() {
   cat >&2 <<'EOF'
@@ -72,16 +74,11 @@ case ",$PART1_FLAGS," in
     ;;
 esac
 
-# Read-only filesystem check. fsck.vfat -n never repairs/writes.
-fsck.vfat -n "$USB_PART" >/dev/null || {
-  echo "USB FAT32 filesystem did not pass read-only fsck." >&2
-  exit 1
-}
-
 WORK="$(mktemp -d -p "${TMPDIR:-/tmp}" greia-live-usb-verify.XXXXXX)"
 IMG_MOUNT="$WORK/image"
 USB_MOUNT="$WORK/usb"
 EXPECTED_CFG="$WORK/syslinux.cfg"
+FSCK_OUT="$WORK/fsck.out"
 IMG_LOOP=""
 mkdir -p "$IMG_MOUNT" "$USB_MOUNT"
 
@@ -96,6 +93,33 @@ cleanup() {
   exit "$status"
 }
 trap cleanup EXIT INT TERM
+
+# Read-only filesystem check. fsck.vfat -n never repairs/writes.
+#
+# Status 1 is NOT automatically fatal: the proven Syslinux writer patches the
+# primary FAT32 VBR (so it can find /boot/syslinux/ldlinux.sys) without
+# updating the backup boot sector, and leaves minor free-cluster/FSInfo drift
+# after the large squashfs/payload copies. fsck.vfat reports both and calls
+# them harmless, so treating every status 1 as fatal made this verifier unable
+# to accept any media produced by the proven writer.
+#
+# The policy is a narrow allowlist for exactly those two conditions and fails
+# closed on any other diagnostic. LC_ALL=C keeps the classifier stable.
+set +e
+LC_ALL=C fsck.vfat -n "$USB_PART" > "$FSCK_OUT" 2>&1
+FSCK_STATUS=$?
+set -e
+
+if ! greia_fat_fsck_acceptable "$FSCK_STATUS" "$FSCK_OUT"; then
+  {
+    echo "USB FAT32 filesystem did not pass read-only fsck (status=$FSCK_STATUS)."
+    sed 's/^/  fsck: /' "$FSCK_OUT"
+  } >&2
+  exit 1
+fi
+if [[ "$FSCK_STATUS" -eq 1 ]]; then
+  echo "  fsck_note=accepted post-Syslinux FAT32 metadata conditions only"
+fi
 
 IMG_LOOP="$(losetup --find --show --partscan --read-only "$IMAGE")"
 IMG_PART="${IMG_LOOP}p1"

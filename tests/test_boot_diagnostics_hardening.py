@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -292,6 +293,100 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         self.assertIn("KbdInteractiveAuthentication no", security_floor)
         self.assertIn("PermitRootLogin no", security_floor)
         self.assertIn("DenyUsers root", security_floor)
+
+
+    def test_read_only_usb_verifier_accepts_only_syslinux_fat_metadata_conditions(self) -> None:
+        """The read-only media verifier must not be unable to pass proven media.
+
+        The proven Syslinux/FAT32 writer runs `syslinux --install`, which patches
+        the primary FAT32 VBR without updating the backup boot sector, and
+        leaves minor free-cluster/FSInfo drift. fsck.vfat reports both as
+        harmless yet exits 1, so a bare `fsck.vfat -n || exit 1` made the
+        verifier reject every stick the proven recipe produced.
+
+        The repaired policy is a narrow allowlist: those two conditions may
+        continue, and everything else still fails closed. fsck must stay
+        read-only.
+        """
+        policy = ROOT / "tools/verify-live-usb-fsck-policy.sh"
+        verifier = (ROOT / "tools/verify-live-usb.sh").read_text(encoding="utf-8")
+
+        self.assertIn("verify-live-usb-fsck-policy.sh", verifier)
+        self.assertIn("greia_fat_fsck_acceptable", verifier)
+        # Read-only, locale-stable, and still fatal on invocation failure.
+        self.assertIn("LC_ALL=C fsck.vfat -n", verifier)
+        self.assertNotIn("fsck.vfat -a", verifier)
+        self.assertNotIn("fsck.vfat -r", verifier)
+        self.assertNotIn("fsck.vfat -w", verifier)
+
+        # Captured verbatim from fsck.fat 4.2 on the real reference stick.
+        syslinux_benign = (
+            "fsck.fat 4.2 (2021-01-31)\n"
+            "There are differences between boot sector and its backup.\n"
+            "This is mostly harmless. Differences: (offset:original/backup)\n"
+            "  3:53/6d, 4:59/6b, 5:53/66, 6:4c/73, 7:49/2e, 8:4e/66, 9:55/61, 10:58/74\n"
+            "  , 90:fa/0e, 91:fc/1f, 92:31/be, 93:c9/77, 94:8e/7c, 95:d1/ac, 96:bc/22\n"
+            "  , 97:76/c0, 98:7b/74, 99:52/0b, 100:06/56\n"
+            "  Not automatically fixing this.\n"
+            "Reclaimed 29 unused clusters (118784 bytes).\n"
+            "Checking free cluster summary.\n"
+            "Free cluster summary wrong (1707929 vs. really 1707958)\n"
+            "  Auto-correcting.\n"
+            "\n"
+            "Leaving filesystem unchanged.\n"
+            "/dev/sdb1: 74 files, 262200/1970158 clusters\n"
+        )
+        # An unrelated, genuinely dirty filesystem must still be refused.
+        dirty = (
+            "fsck.fat 4.2 (2021-01-31)\n"
+            "Reclaimed 29 unused clusters (118784 bytes).\n"
+            "Checking free cluster summary.\n"
+            "Free cluster summary wrong (1707929 vs. really 1707958)\n"
+            "  Auto-correcting.\n"
+            "Dirty bit is set.  Fs was not properly unmounted and may be further corrupted.\n"
+            "File system is dirty - Bit 8 is set in the reserved area\n"
+            "There are differences between boot sector and its backup.\n"
+            "This is mostly harmless. Differences: (offset:original/backup)\n"
+            "  3:53/6d\n"
+            "  Not automatically fixing this.\n"
+            "\n"
+            "Leaving filesystem unchanged.\n"
+            "/dev/sdb1: 74 files, 262200/1970158 clusters\n"
+        )
+
+        cases = [
+            ("clean fsck accepted", "0", "fsck.fat 4.2 (2021-01-31)\n", 0),
+            (
+                "syslinux fat metadata conditions may continue",
+                "1",
+                syslinux_benign,
+                0,
+            ),
+            ("dirty filesystem rejected", "1", dirty, 1),
+            ("fsck invocation failure rejected", "2", "", 1),
+        ]
+        for name, status, payload, expected in cases:
+            with self.subTest(name=name):
+                with tempfile.TemporaryDirectory() as directory:
+                    sample = Path(directory) / "fsck.out"
+                    sample.write_text(payload, encoding="utf-8")
+                    completed = subprocess.run(
+                        [
+                            "bash",
+                            "-c",
+                            'source "$1"; greia_fat_fsck_acceptable "$2" "$3"',
+                            "bash",
+                            str(policy),
+                            status,
+                            str(sample),
+                        ],
+                        check=False,
+                        capture_output=True,
+                        text=True,
+                    )
+                self.assertEqual(
+                    completed.returncode, expected, f"{name}: {completed.stderr}"
+                )
 
 
 if __name__ == "__main__":
