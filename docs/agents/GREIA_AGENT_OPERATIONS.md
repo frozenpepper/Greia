@@ -311,6 +311,8 @@ Then read the task-specific ADR/product documents named by `skills/greia-os-work
 
 Do not perform destructive physical installation from memory. The exact named procedure must permit it and revalidate target identity before destructive work.
 
+For the reference Acer, do not substitute the generic raw GRUB/MBR installer for the named Syslinux/FAT32 physical procedure. Accepted Acer boot evidence in `docs/INSTALLATION_USB_BOOT_POSTMORTEM.md` establishes active FAT32 + Syslinux as the proven removable-media first stage; the GRUB/MBR USB route is unproven/negative on that device. When a task is a reference-Acer physical boot test, read that postmortem before choosing the media path.
+
 Developer-image convenience must not leak into normal/release profiles.
 
 ### Capable build-host process rules (2026-09-15 — `POSTR1-P5-GATE-CLOSURE-V12E`, R01-03)
