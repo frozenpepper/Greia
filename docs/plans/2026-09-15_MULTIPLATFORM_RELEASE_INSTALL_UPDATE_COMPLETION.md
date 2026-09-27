@@ -2051,3 +2051,53 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
 - Preserve local-only immutable artifacts to healthy storage first. Clone source fresh from GitHub rather than copying the repo from the failing disk.
 - Re-hash the copied Session-03 release and four candidate bundles before accepting them as continuity evidence.
 - Once on healthy storage/build media, resume exactly at: focused validation if environment changed -> diagnostic installer rebuild -> fresh-install-only rerun -> inspect true apt fatal tail. Do not add `CAP_CHOWN` without that proof.
+
+## 2026-09-27 — A/B GRUB installer fails to boot on the reference Acer (PHYSICAL, negative)
+
+- Built `acer-aspire-one-i386-ab` from the verified S03 bundle `6b5cf05f…` at HEAD
+  `b3bccfb4` (docs-only ahead of `c8054717`; note `git pull` could not authenticate in
+  this environment, so no sync actually occurred). Image
+  `greia-os-installer-acer-aspire-one-i386-ab.img`, 1818230784 bytes, SHA-256
+  `f75b7c4f105420fbf11323062f5a50ba59c4516d66de48b9e3e09782b414f6d7`, digest re-verified
+  before and after flashing.
+- Flashed to `/dev/sdb` (LaCie iamaKey, serial `eca3505216d7d3`, 8086618112 B) with
+  `tools/greia_release.py write-media --erase-device`. Write verified: MBR present, GRUB
+  boot sector `eb 63 90`, `sdb1` ext4 `PIP_INSTALL`, first 64 MiB byte-identical to the
+  image. `sgdisk --zap-all` was required first, under explicit owner authorisation,
+  because the safe writer refuses already-partitioned media (see below).
+- **PHYSICAL result: negative at the earliest stage.** Owner reports black screen with a
+  brief blinking cursor, then black. No Greia boot screen, no graphical installer,
+  installation not startable. First physical evidence for this artifact; it is a failure.
+- **Cause class is a known, already-accepted constraint, not a new discovery.**
+  `build/live-syslinux/syslinux.cfg.in` records that GRUB's MBR does not work on the
+  reference Acer firmware+stick combination; the proven path is
+  `legacy-x86-i686-dev` on Syslinux/FAT32. The A/B release route is GRUB. The image also
+  ships `quiet splash loglevel=0 console=null panic=0`, the diagnostic suppression that
+  `docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` §3.1 prohibits, which is
+  why the failure presented without a readable error. The removed GRUB theme and the
+  1600x900 full-colour boot-canvas regeneration were reintroduced 2026-08-20..24 and are
+  in the shipped image.
+- **The A/B GRUB route has no positive physical evidence on the reference device and now
+  has one negative result. Treat it as UNPROVEN there** until a physical pass exists; the
+  2026-08-20 record's "physical re-acceptance pending" was never closed.
+- Two hypotheses tested and **refuted** — do not re-propose: PAE (four-way QEMU CPU
+  cross-test; `core2duo`, `n270`, `qemu32` all boot to the live squashfs;
+  `WARNING: PAE disabled` in zero runs) and UEFI-only firmware (a real support limit of a
+  provably BIOS-only image, but not established as this failure). QEMU does prove the
+  GRUB→kernel→initramfs chain is sound on emulated legacy-BIOS x86.
+- **New tooling defect, real and separable:** `build/write-image.sh:51` demands exactly one
+  `lsblk --json <device>` entry, but util-linux 2.39.3 returns disk plus partitions as flat
+  siblings, so the safe writer **cannot flash any already-partitioned USB stick**. This
+  forced the authorised out-of-writer erase and blocks routine re-flashing of used media.
+- Uninvestigated per owner instruction: 982 MiB accounted installed size against a ≤800 MiB
+  profile preferred target (required target <1000 MiB).
+- Decisions D1–D8 for the lead agent are in
+  `docs/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`. Chief: which
+  boot path is the product path for the reference device, and whether `console=null` /
+  `panic=0` may ship in a product installer.
+- Next action: owner returns the stick, then
+  `sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdX`,
+  requiring both installer-artifact and final read-only USB verification to report PASS,
+  then record the last visible boot stage per the 2026-08-20 review §8. Do not rebuild or
+  reflash `acer-aspire-one-i386-ab` onto the reference Acer until the boot-path and
+  console-suppression decisions are made.

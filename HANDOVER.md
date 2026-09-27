@@ -1950,3 +1950,61 @@ Migration is **complete and verified** (owner-ordered): replacement drive serial
 **Next exact step: owner powers off and physically swaps the disk in the Mac mini** (procedure in report §8.4), then per below.
 
 **Next exact step after reboot on the new disk:** confirm SMART of the installed drive, detach any state, pull `main`, then resume the Session-04 procedure at its §3 (rebuild diagnostic installer from the unchanged S03 bundle; fresh install only with fatal-tail evidence). Do not reopen the capability question without a fatal tail.
+
+## 66. Acer A/B GRUB installer physical boot failure (2026-09-27)
+
+The Acer/legacy-i386 installer built and flashed on 2026-09-26 **does not boot on the
+reference Acer**. Owner physical result: black screen with a brief blinking cursor, then
+black; no Greia boot screen, no installer, installation never startable. This is the first
+physical evidence ever obtained for this artifact and it is **negative at the earliest
+stage**. The stick is with the owner.
+
+Flashed artifact (unchanged, still verifiable):
+`out/physical-test-acer/greia-os-installer-acer-aspire-one-i386-ab.img`, 1818230784 bytes,
+SHA-256 `f75b7c4f105420fbf11323062f5a50ba59c4516d66de48b9e3e09782b414f6d7`, built from
+the verified S03 bundle `6b5cf05f…` at HEAD `b3bccfb4` (docs-only ahead of `c8054717`).
+
+**Cause class is already documented and was not respected.** The proven reference path is
+`legacy-x86-i686-dev` on Syslinux/FAT32; `build/live-syslinux/syslinux.cfg.in` states that
+**GRUB's MBR does not work on that Acer firmware+stick combination**. The flashed image is
+the GRUB path (`image_layout=bios-single-ext4`, only `i386-pc` modules, no ESP). It also
+carries the diagnostic-suppression cluster that
+`docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md` §3.1/§3.2/§3.4 removed as
+unaccepted — the live command line is `quiet splash loglevel=0 console=null panic=0`, which
+discards all kernel output and reboots on panic, converting a diagnosable early failure
+into exactly the reported blindness. `console=null` is still live in current source at
+`build/build-installer-image.sh:490` and three other sites, and the removed
+`build/overlay/boot/grub/greia-theme.txt` plus 1600x900 full-colour auto-regeneration were
+reintroduced on 2026-08-20..24 and are in the shipped image.
+
+**Two hypotheses were tested and refuted; do not re-propose them.** PAE is not the boot
+cause: a four-way QEMU CPU cross-test (diagnostic image, no loop devices) showed
+`core2duo`, `n270` and `qemu32` all boot the kernel and reach the live squashfs, with
+`WARNING: PAE disabled` appearing in **zero** runs. UEFI-only firmware is a real support
+limitation (the image is provably BIOS-only) but is not established as this failure. The
+QEMU work does prove the GRUB→kernel→initramfs→squashfs chain is sound on emulated
+legacy-BIOS x86.
+
+**Separate real defect:** `build/write-image.sh:51` requires `lsblk --json <dev>` to return
+exactly one entry, but util-linux 2.39.3 returns the disk plus partitions as flat siblings,
+so the safe writer **cannot flash any already-partitioned USB stick**. Flashing required an
+owner-authorised `sgdisk --zap-all` outside the writer before the writer would accept the
+media. Do not repeat that silently.
+
+**Mark the A/B GRUB route UNPROVEN on the reference Acer** until a positive physical result
+exists; `docs/reviews/2026-08-20…` still records its re-acceptance as pending. Eight
+decisions (D1–D8) are posed in the review, chief among them: which boot path is the
+product path, and whether `console=null`/`panic=0` may ship in a product installer.
+
+**Next exact step:** owner returns the stick, then
+`sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdX`,
+requiring both installer-artifact and final read-only USB verification to report PASS
+before booting, and recording the last visible boot stage per the 2026-08-20 review §8.
+Do **not** rebuild or reflash `acer-aspire-one-i386-ab` onto the reference Acer until D1
+and D2 are decided. Full report: `docs/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`.
+
+**Host residue:** two leaked Greia loops (`/dev/loop2`, `/dev/loop34`, both `autoclear=1`)
+from the build runs; they clear only on reboot. Do not delete
+`/tmp/greia-installer-build.iMc2gy/` before that reboot — its backing file is attached.
+The build-host disk is the **replacement** drive serial `S2R7J9HB601552`, SMART `PASSED`,
+zero error counters; the 2026-09-25 heavy-I/O prohibition no longer applies.
