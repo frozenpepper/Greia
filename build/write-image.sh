@@ -43,16 +43,31 @@ def output(*args: str) -> str:
 try:
     raw = output(
         "lsblk", "--json", "--bytes", "-o",
-        "PATH,TYPE,SIZE,RM,HOTPLUG,TRAN,MODEL,SERIAL,WWN,MOUNTPOINTS", device,
+        "PATH,TYPE,PKNAME,SIZE,RM,HOTPLUG,TRAN,MODEL,SERIAL,WWN,MOUNTPOINTS", device,
     )
     tree = json.loads(raw).get("blockdevices", [])
 except (subprocess.CalledProcessError, json.JSONDecodeError) as exc:
     raise SystemExit(f"Cannot inspect target device: {exc}")
-if len(tree) != 1:
-    raise SystemExit("Target device inspection returned an unexpected device tree")
-root = tree[0]
-if os.path.realpath(str(root.get("path", ""))) != device or root.get("type") != "disk":
+
+roots = [
+    node
+    for node in tree
+    if os.path.realpath(str(node.get("path", ""))) == device
+    and node.get("type") == "disk"
+]
+if len(roots) != 1:
     raise SystemExit("Target must be one whole disk, not a partition or mapper volume")
+root = roots[0]
+
+# util-linux 2.39 can return partitions as flat siblings rather than nested
+# children when lsblk is scoped to one disk. Accept only direct partitions of
+# the confirmed target disk; refuse any unrelated/mapper descendants.
+parent_name = os.path.basename(device)
+for node in tree:
+    if node is root:
+        continue
+    if node.get("type") != "part" or str(node.get("pkname") or "") != parent_name:
+        raise SystemExit("Target device inspection returned an unexpected device tree")
 try:
     device_size = int(root.get("size") or 0)
     image_size = image.stat().st_size
@@ -94,7 +109,9 @@ def walk(node: dict) -> None:
     for child in node.get("children") or []:
         if isinstance(child, dict):
             walk(child)
-walk(root)
+for node in tree:
+    if isinstance(node, dict):
+        walk(node)
 if require_unmounted and mountpoints:
     raise SystemExit("Target still has mounted filesystems: " + ", ".join(mountpoints))
 identity = {
