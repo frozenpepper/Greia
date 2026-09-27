@@ -369,6 +369,43 @@ class InstallerApplication:
             return True
         return any(info.kind is PointerKind.TOUCHPAD for info in infos)
 
+    def _touchpad_supports(self, capability: str) -> bool:
+        """Whether any attached touchpad actually exposes ``capability``.
+
+        Presence of a touchpad is not the same as being able to configure it.
+        The legacy-x backend reports, per device, which properties the X
+        server really exposes. On the reference Acer's touchpad no tapping
+        property is exposed at all, so the backend correctly declines to set
+        it, and the backend's "not available" result was being silently
+        discarded. Because
+        the rows were gated only on "a touchpad exists", the installer offered
+        a tap-to-click toggle that could never do anything: it looked live and
+        changed nothing. Rows that the hardware cannot honour are now gated on
+        the reported capability, and the page says so rather than pretending.
+        """
+        infos = self._pointer_infos()
+        if infos is None:
+            return True
+        return any(
+            info.kind is PointerKind.TOUCHPAD
+            and bool(getattr(info.capabilities, capability, False))
+            for info in infos
+        )
+
+    def _pointer_unavailable_note(self) -> str:
+        """One-line explanation for pointer controls this machine cannot set."""
+        notes: list[str] = []
+        if self._has_touchpad() and not self._touchpad_supports("supports_tap"):
+            notes.append("tap to click")
+        if (
+            self._has_touchpad()
+            and not self._touchpad_supports("supports_disable_while_typing")
+        ):
+            notes.append("disable while typing")
+        if not notes:
+            return ""
+        return "Not adjustable on this touchpad: " + " · ".join(notes)
+
     def _has_relative_mouse(self) -> bool:
         infos = self._pointer_infos()
         if infos is None:
@@ -381,8 +418,10 @@ class InstallerApplication:
     def pointer_rows(self) -> tuple[str, ...]:
         """Visible pointer-page rows after capability gating (state, not pixels)."""
         rows: list[str] = []
-        if self._has_touchpad():
-            rows.extend(["tap", "disable-while-typing"])
+        if self._touchpad_supports("supports_tap"):
+            rows.append("tap")
+        if self._touchpad_supports("supports_disable_while_typing"):
+            rows.append("disable-while-typing")
         rows.append("natural")
         if self._has_touchpad():
             rows.append("touchpad-preset")
@@ -1614,11 +1653,21 @@ class InstallerApplication:
     POINTER_HEADER_H = 96
     POINTER_ROW_GAP = 4
     POINTER_ROW_MIN = 34
+    # Absolute floor, reached only once a dense pointer inventory has
+    # exhausted the space the test targets are willing to give up.
+    POINTER_ROW_HARD_MIN = 30
     POINTER_ROW_MAX = 54
-    POINTER_STRIP_FIXED = 104
     POINTER_NAV_RESERVE = 68
     POINTER_TARGET_HINT = 64
     POINTER_TARGET_FLOOR = 52
+    POINTER_TARGET_HARD_MIN = 40
+    # Nominal height of the "Try it here" strip label, and the fixed chrome
+    # below the test targets (status line gap + status + reset button). The
+    # label is drawn at its measured height, but the budget is reserved from
+    # this constant so the arithmetic stays independent of the font.
+    POINTER_LABEL_H = 28
+    POINTER_STRIP_LABEL_GAP = 12
+    POINTER_STRIP_TAIL = 72
 
     def _pointer_vertical_budget(
         self, panel_height: int, setting_count: int
@@ -1633,24 +1682,49 @@ class InstallerApplication:
 
         Navigation buttons are centred on ``main.bottom - 40`` and are
         ``BUTTON_HEIGHT`` tall, so the last 63 px of the panel belong to them.
-        The test strip below the final row spans ``104 + target/2`` px: the
-        targets are centred at ``+34``, the status line sits at
-        ``+34 + target/2 + 14`` and the 40 px reset button starts at
-        ``+34 + target/2 + 32``.
+        The test strip below the final row is a label, a gap, the square
+        targets, the status line and the 40 px reset button, so its height is
+        ``label + gap + target + tail``. Drawing the label clear of the
+        targets is why the label height is part of the budget at all.
 
-        The test targets keep the 9 mm physical touch floor because they are
-        what a child aims at. Setting rows are also keyboard-navigable, so they
-        may compress to :attr:`POINTER_ROW_MIN` rather than overflow the panel.
+        The test targets start at the 9 mm physical touch floor because they
+        are what a child aims at, and are only shrunk below it when the row
+        count would otherwise collide with the navigation row. Setting rows are
+        keyboard-navigable, so they may compress to :attr:`POINTER_ROW_MIN`
+        before the targets are reduced, and to :attr:`POINTER_ROW_HARD_MIN`
+        only after the targets have given all they will.
         """
 
         count = max(1, int(setting_count))
         available = panel_height - self.POINTER_HEADER_H - self.POINTER_NAV_RESERVE
+        nav_top = panel_height - self.POINTER_NAV_RESERVE - 5
         floor = min(self.POINTER_TARGET_FLOOR, max(1, available // 4))
         target_size = max(floor, min(self.POINTER_TARGET_HINT, available // 4))
-        room = available - (self.POINTER_STRIP_FIXED + target_size // 2)
-        row_height = int(room / count) - self.POINTER_ROW_GAP
-        row_height = max(self.POINTER_ROW_MIN, min(self.POINTER_ROW_MAX, row_height))
-        return row_height, row_height + self.POINTER_ROW_GAP, target_size
+
+        def layout(target: int) -> tuple[int, int, int]:
+            strip = (
+                self.POINTER_LABEL_H
+                + self.POINTER_STRIP_LABEL_GAP
+                + target
+                + self.POINTER_STRIP_TAIL
+            )
+            room = available - strip
+            row = int(room / count) - self.POINTER_ROW_GAP
+            row = max(self.POINTER_ROW_HARD_MIN, min(self.POINTER_ROW_MAX, row))
+            step = row + self.POINTER_ROW_GAP
+            return row, step, count * step + strip
+
+        # Setting rows are keyboard-navigable and keep their readable floor.
+        # The test targets give way first: they are the least critical control
+        # on this page, because the same test is reachable with 1 2 3. Shrinking
+        # them before any row may fall under its floor means a dense pointer
+        # inventory degrades instead of overlapping the navigation row.
+        while True:
+            row, step, bottom = layout(target_size)
+            if bottom <= nav_top or target_size <= self.POINTER_TARGET_HARD_MIN:
+                break
+            target_size = max(self.POINTER_TARGET_HARD_MIN, target_size - 4)
+        return row, step, target_size
 
     def _draw_pointer_page(
         self,
@@ -1736,12 +1810,19 @@ class InstallerApplication:
             y += step
         # Test strip: three large dispersed targets with click feedback.
         width = screen.get_size()[0]
+        strip_label_h = max(1, small_font.get_linesize())
+        target_mid = y + strip_label_h + 12 + target_size // 2
         centers = (
-            (int(width * 0.24), y + 34),
-            (int(width * 0.50), y + 34),
-            (int(width * 0.76), y + 34),
+            (int(width * 0.24), target_mid),
+            (int(width * 0.50), target_mid),
+            (int(width * 0.76), target_mid),
         )
-        self._center_text(screen, "Try it here", small_font, text, y + 2)
+        # The label used to be centred at y+2, which is exactly where the
+        # target boxes begin, so it overlapped them. Put it clear of the row.
+        strip_label_h = max(1, small_font.get_linesize())
+        self._center_text(
+            screen, "Try it here", small_font, text, y + strip_label_h // 2
+        )
         for index, center in enumerate(centers):
             key = f"test-{index + 1}"
             rect = pygame.Rect(0, 0, target_size, target_size)
@@ -1756,6 +1837,16 @@ class InstallerApplication:
             label = self._text(font, str(index + 1), text)
             screen.blit(label, label.get_rect(center=rect.center))
             self._buttons[key] = rect
+        note = self._pointer_unavailable_note()
+        if note:
+            self._center_fitted_text(
+                screen,
+                note,
+                small_font,
+                text,
+                y + strip_label_h // 2,
+                int(screen.get_width() * 0.86),
+            )
         feedback = self._pointer_test_feedback or "Click a circle, or press 1 2 3"
         status = feedback
         if self._pointer_preview_error:
@@ -1765,7 +1856,7 @@ class InstallerApplication:
             status,
             small_font,
             text,
-            y + 34 + target_size // 2 + 14,
+            target_mid + target_size // 2 + 14,
             int(screen.get_width() * 0.86),
         )
         reset_label = self._text(small_font, "Reset pointer feel", text)
@@ -1773,7 +1864,9 @@ class InstallerApplication:
             screen.get_width() - 80, max(200, reset_label.get_width() + 40)
         )
         reset_rect = pygame.Rect(0, 0, reset_width, 40)
-        reset_rect.midtop = (screen.get_size()[0] // 2, y + 34 + target_size // 2 + 32)
+        reset_rect.midtop = (
+            screen.get_size()[0] // 2, target_mid + target_size // 2 + 32
+        )
         pygame.draw.rect(screen, accent, reset_rect, border_radius=14)
         reset_label = self._fit_text(
             small_font, "Reset pointer feel", text, reset_rect.width - 24

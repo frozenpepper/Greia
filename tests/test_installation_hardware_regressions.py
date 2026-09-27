@@ -103,6 +103,25 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
         engine = self.read("src/greia_installer/engine.py")
         self.assertIn("stdin=subprocess.DEVNULL", engine)
 
+    def test_installer_can_reach_iwd_through_its_designated_group(self) -> None:
+        """The unprivileged installer UI must be allowed to talk to iwd.
+
+        iwd's shipped system-bus policy allows send_destination
+        net.connman.iwd to root and to group netdev, and denies everything
+        else by default. The installer UI runs as an unprivileged identity, so
+        without group netdev the bus refuses it and the installer reports
+        "no wifi card found" even though iwd is running and has already
+        scanned. Reproduced on the reference Acer.
+        """
+
+        unit = self.read(
+            "build/installer-overlay/etc/systemd/system/greia-installer.service"
+        )
+        self.assertIn("netdev", self._supplementary_groups(unit))
+        # Still not root, and still without any privilege over raw disks.
+        self.assertIn("User=nobody", unit)
+        self.assertNotIn("User=root", unit)
+
     @staticmethod
     def _supplementary_groups(unit_text: str) -> list[str]:
         for line in unit_text.splitlines():

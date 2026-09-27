@@ -449,7 +449,12 @@ class InstallerPointerSetupTests(unittest.TestCase):
                 row_h, step, target = app._pointer_vertical_budget(
                     panel, setting_count
                 )
-                strip_h = target // 2 + app.POINTER_STRIP_FIXED
+                strip_h = (
+                    app.POINTER_LABEL_H
+                    + app.POINTER_STRIP_LABEL_GAP
+                    + target
+                    + app.POINTER_STRIP_TAIL
+                )
                 content_bottom = setting_count * step + strip_h
                 nav_top = panel - 63
                 self.assertLessEqual(
@@ -457,9 +462,9 @@ class InstallerPointerSetupTests(unittest.TestCase):
                     nav_top,
                     "pointer page content must stay clear of the navigation row",
                 )
-                self.assertGreaterEqual(row_h, app.POINTER_ROW_MIN)
+                self.assertGreaterEqual(row_h, app.POINTER_ROW_HARD_MIN)
                 self.assertLessEqual(row_h, app.POINTER_ROW_MAX)
-                self.assertGreaterEqual(target, 1)
+                self.assertGreaterEqual(target, app.POINTER_TARGET_HARD_MIN)
 
     def test_pointer_page_layout_grows_on_larger_displays(self) -> None:
         app = self.make_app()
@@ -497,6 +502,52 @@ class InstallerPointerSetupTests(unittest.TestCase):
             app._buttons,
             "the pointer page must register interactive controls",
         )
+
+    def test_rows_are_gated_on_real_capability_not_just_a_touchpad(self) -> None:
+        """A control the backend cannot honour must not be offered.
+
+        The reference Acer's touchpad is driven by libinput and exposes no
+        tapping property at all. The backend correctly declines to set it, but
+        its "not available" result was discarded and the row was gated only on
+        "a touchpad exists". The child was shown a live-looking tap-to-click
+        toggle that could never do anything.
+        """
+        from greia_platform.hardware_session import PointerCapabilities
+
+        class _Fixed(_FakePointerController):
+            def __init__(self, pointers):
+                super().__init__(pointers)
+                self.probe_calls = 0
+
+            def probe_pointers(self):
+                self.probe_calls += 1
+                return self._pointers
+
+        bare_touchpad = PointerDeviceInfo(
+            kind=PointerKind.TOUCHPAD,
+            label="Touchpad",
+            capabilities=PointerCapabilities(),
+        )
+        app = self.make_app(_Fixed((bare_touchpad, _mouse_info())))
+        app.state.page = InstallerPage.POINTER
+        rows = app.pointer_rows()
+        self.assertNotIn("tap", rows)
+        self.assertNotIn("disable-while-typing", rows)
+        self.assertIn("natural", rows)
+        self.assertIn("touchpad-preset", rows)
+        self.assertIn("mouse-preset", rows)
+        note = app._pointer_unavailable_note()
+        self.assertIn("tap to click", note)
+
+        capable = PointerDeviceInfo(
+            kind=PointerKind.TOUCHPAD,
+            label="Touchpad",
+            capabilities=PointerCapabilities(supports_tap=True),
+        )
+        app2 = self.make_app(_Fixed((capable, _mouse_info())))
+        app2.state.page = InstallerPage.POINTER
+        self.assertIn("tap", app2.pointer_rows())
+        self.assertNotIn("tap to click", app2._pointer_unavailable_note())
 
 
 if __name__ == "__main__":
