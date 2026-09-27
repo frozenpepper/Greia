@@ -1013,12 +1013,20 @@ class SplitUnitContractTests(unittest.TestCase):
         self.assertNotIn("User=root", unit)
         self.assertIn("Alias=greia-installer-ui.service", unit)
         self.assertIn("Wants=greia-install-transaction.socket", unit)
-        self.assertIn("-m greia_installer.entrypoint", unit)
-        self.assertIn("--transaction-socket /run/greia-os/install-transaction.sock", unit)
         self.assertIn("xinit", unit)
         self.assertIn(" vt1 ", unit)
         self.assertIn("TTYPath=/dev/tty1", unit)
-        self.assertIn("StandardInput=null", unit)
+        # The X server owns tty1; the graphical client detaches stdin so the
+        # unprivileged UI still never hands the VT to a descendant reader.
+        self.assertIn("StandardInput=tty-fail", unit)
+        client = self._read(
+            "build/installer-overlay/usr/local/lib/greia-os/greia-installer-client"
+        )
+        self.assertIn("exec </dev/null", client)
+        self.assertIn("-m greia_installer.entrypoint", client)
+        self.assertIn(
+            "--transaction-socket /run/greia-os/install-transaction.sock", client
+        )
         # The UI owns no release payload/support facts; those are service env.
         self.assertNotIn("GREIA_HARDWARE_SUPPORT_POOL", unit)
         self.assertNotIn("wipefs", unit)

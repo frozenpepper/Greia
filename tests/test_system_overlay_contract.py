@@ -160,11 +160,38 @@ class SystemOverlayContractTests(unittest.TestCase):
             self.assertIn("TTYPath=/dev/tty1", unit_text)
             self.assertNotIn(" vt2 ", unit_text)
             self.assertNotIn("TTYPath=/dev/tty2", unit_text)
-            # The GUI must never have the VT as stdin: a background process
-            # group reading the tty is SIGTTIN-stopped, freezing the install
-            # (apt-get / grub-mkpasswd-pbkdf2). stdin must be /dev/null.
-            self.assertIn("StandardInput=null", unit_text)
-            self.assertNotIn("StandardInput=tty", unit_text)
+            # The X server must OWN tty1: an unprivileged Xorg cannot activate a
+            # VT it does not control, and the reference Acer proved that with
+            # "xf86OpenConsole: Switching VT failed" behind a repainting cover.
+            # tty-fail, not tty-force, so a terminal another process already
+            # holds fails the unit closed instead of being stolen.
+            self.assertIn("StandardInput=tty-fail", unit_text)
+            self.assertNotIn("StandardInput=tty-force", unit_text)
+        for overlay, client, application in (
+            (
+                "build/overlay",
+                "greia-x-session",
+                "-m greia_launcher.child_shell",
+            ),
+            (
+                "build/installer-overlay",
+                "greia-installer-client",
+                "-m greia_installer.entrypoint",
+            ),
+        ):
+            # The application tree must never inherit the VT as stdin: a
+            # background process group reading the tty is SIGTTIN-stopped,
+            # freezing the install and the child shell. The client detaches
+            # stdin instead of the unit denying itself the terminal.
+            client_path = (
+                PROJECT_ROOT / overlay / "usr/local/lib/greia-os" / client
+            )
+            client_text = client_path.read_text()
+            self.assertIn("exec </dev/null", client_text)
+            self.assertLess(
+                client_text.index("exec </dev/null"),
+                client_text.index(application),
+            )
         for overlay in ("build/overlay", "build/installer-overlay"):
             release = (
                 PROJECT_ROOT / overlay / "usr/local/lib/greia-os/release-boot-cover"
@@ -192,7 +219,16 @@ class SystemOverlayContractTests(unittest.TestCase):
             / "build/installer-overlay/etc/systemd/system/greia-installer.service"
         ).read_text()
         self.assertIn("xinit", unit)
-        self.assertIn("greia_installer.entrypoint", unit)
+        # The graphical application is exec'd by the xinit client wrapper, which
+        # also owns the stdin detach; the unit names that client, not the module.
+        self.assertIn("greia-installer-client", unit)
+        self.assertIn(
+            "greia_installer.entrypoint",
+            (
+                PROJECT_ROOT
+                / "build/installer-overlay/usr/local/lib/greia-os/greia-installer-client"
+            ).read_text(),
+        )
         # T02: live-installer systemd composition lives in the shared engine;
         # the thin installer consumer delegates instead of reimplementing
         # the mask list.

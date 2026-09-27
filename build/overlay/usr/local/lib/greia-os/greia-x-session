@@ -1,5 +1,12 @@
 #!/bin/sh
 set -eu
+# Detach stdin from the controlling terminal immediately, before anything below
+# can spawn a descendant. greia-launcher.service gives this client the VT as its
+# controlling terminal (StandardInput=tty-fail) because the unprivileged X
+# server must own tty1 to activate it. The graphical application must not keep
+# it: any descendant reading the VT as stdin is SIGTTIN-stopped and freezes the
+# child shell. Xorg keeps the terminal; everything spawned from here does not.
+exec </dev/null
 export GREIA_OS_ROOT=/opt/greia-os
 export GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 export GREIA_PROFILES_DIR=/var/lib/greia-profiles

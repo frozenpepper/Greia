@@ -389,6 +389,80 @@ class InstallerPointerSetupTests(unittest.TestCase):
         self.assertIn("speed_to_preset", source)
         self.assertNotIn("+.2f", source)
 
+    def test_pointer_inventory_is_probed_once_per_page_visit_not_per_frame(self) -> None:
+        """Probing shells out to xinput; it must not run per rendered frame.
+
+        ``pointer_rows()`` consults the attached-pointer inventory twice, and
+        the legacy-x backend satisfies each consultation by spawning
+        ``xinput`` (plus one query per device). Asking per frame meant well over
+        a hundred process spawns per second while the pointer page was open,
+        which pinned a full core on the reference Acer and made the page feel
+        frozen. Inventory only changes on hotplug, so it is memoised for the
+        page visit and re-probed when the page changes.
+        """
+
+        class _Counting(_FakePointerController):
+            def __init__(self, pointers):
+                super().__init__(pointers)
+                self.probe_calls = 0
+
+            def probe_pointers(self):
+                self.probe_calls += 1
+                return self._pointers
+
+        controller = _Counting((_touchpad_info(), _mouse_info()))
+        app = self.make_app(controller)
+        app.state.page = InstallerPage.POINTER
+        for _ in range(50):
+            app.pointer_rows()
+        self.assertEqual(
+            controller.probe_calls,
+            1,
+            "50 pointer_rows() calls on one page must not re-probe the hardware",
+        )
+        app.state.page = InstallerPage.DISPLAY
+        app.pointer_rows()
+        self.assertEqual(
+            controller.probe_calls,
+            2,
+            "leaving the page must drop the cache so the inventory is re-read",
+        )
+
+    def test_pointer_page_layout_fits_the_reference_1024x600_display(self) -> None:
+        """The pointer page must fit the panel it is given, by measurement.
+
+        It previously used a hard-coded 56 px step and a hard-coded 64 px test
+        target. Its content is taller than a 600 px display, so rows overlapped
+        and the reset control was drawn outside the panel on the reference Acer.
+        """
+
+        app = self.make_app()
+        # main = 6% inset with 88% height, exactly as _draw computes it.
+        panel = int(600 * 0.88)
+        for setting_count in range(3, 9):
+            with self.subTest(setting_count=setting_count):
+                row_h, step, target = app._pointer_vertical_budget(
+                    panel, setting_count
+                )
+                strip_h = target // 2 + app.POINTER_STRIP_FIXED
+                content_bottom = setting_count * step + strip_h
+                nav_top = panel - 63
+                self.assertLessEqual(
+                    content_bottom,
+                    nav_top,
+                    "pointer page content must stay clear of the navigation row",
+                )
+                self.assertGreaterEqual(row_h, app.POINTER_ROW_MIN)
+                self.assertLessEqual(row_h, app.POINTER_ROW_MAX)
+                self.assertGreaterEqual(target, 1)
+
+    def test_pointer_page_layout_grows_on_larger_displays(self) -> None:
+        app = self.make_app()
+        small = app._pointer_vertical_budget(int(600 * 0.88), 5)
+        large = app._pointer_vertical_budget(int(1080 * 0.88), 5)
+        self.assertLess(small[0], large[0])
+        self.assertEqual(small[2], large[2])
+
 
 if __name__ == "__main__":
     unittest.main()

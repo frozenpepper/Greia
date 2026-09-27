@@ -57,6 +57,33 @@ class GreiaTypographyTests(unittest.TestCase):
             self.assertGreater(font.get_height(), 0)
             self.assertTrue(typography.degraded)
 
+    def test_text_surfaces_are_cached_per_font_and_cleared_with_the_rest(self) -> None:
+        """Identical copy must not be re-rasterized on every frame.
+
+        The graphical installer and the child launcher repaint continuously.
+        Rasterizing the same labels every frame pinned a full core on the
+        reference Acer (Intel GMA 500, software rendering), which the child
+        experiences as an unusable screen. The cache lives here, in the
+        platform owner of text rendering, so neither surface grows its own.
+        """
+
+        typography = GreiaTypography()
+        font = typography.font(FontRole.CONTROL, 27)
+        first = typography.surface(font, "Pointer feel", (61, 44, 31))
+        second = typography.surface(font, "Pointer feel", (61, 44, 31))
+        self.assertIs(first, second, "the same line must reuse one surface")
+        other_text = typography.surface(font, "Touchpad feel", (61, 44, 31))
+        self.assertIsNot(first, other_text)
+        other_colour = typography.surface(font, "Pointer feel", (255, 0, 0))
+        self.assertIsNot(first, other_colour)
+        self.assertEqual(typography.surface_width(font, "Pointer feel"), first.get_width())
+        typography.clear()
+        self.assertIsNot(
+            first,
+            typography.surface(font, "Pointer feel", (61, 44, 31)),
+            "clear() must release renderer-owned surfaces",
+        )
+
     def test_invalid_size_is_rejected(self) -> None:
         with self.assertRaises(ValueError):
             FontSpec(FontRole.BODY, 4)

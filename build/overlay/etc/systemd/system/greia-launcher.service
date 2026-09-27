@@ -22,7 +22,9 @@ Group=greiakid
 # Deterministic audio credentials at exec without per-boot account mutation:
 # image construction plus the versioned first-boot migration own /etc/group
 # truth; this directive resolves the launcher process groups at start.
-SupplementaryGroups=audio
+# Group `tty` is additionally required so the unprivileged X server can open the
+# controlling VT with O_RDWR; the stock tty node is write-only for its group.
+SupplementaryGroups=audio tty
 PAMName=login
 WorkingDirectory=/opt/greia-os
 Environment=GREIA_OS_ROOT=/opt/greia-os
@@ -50,15 +52,30 @@ BindReadOnlyPaths=-/run/greia-os/boot-health
 # /etc/tmpfiles.d/greia-runtime.conf. Do not let an application service chown a
 # shared /run path according to whichever service happens to start first.
 ExecStartPre=+/usr/local/lib/greia-os/prepare-launcher-vt
-ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
+# greia-x-session detaches stdin to /dev/null before it spawns anything, so the
+# child shell, hardware helpers, Activities and their descendants never inherit
+# the controlling VT as stdin. Xorg keeps the VT; only the application tree is
+# detached. /run/greia-os is the already greiakid-owned volatile runtime, so the
+# X server has a log path it may write; without one Xorg aborts with
+# "Cannot open log file /var/log/Xorg.0.log" because /var/log is root-owned.
+ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session -- :0 vt1 -logfile /run/greia-os/Xorg.0.log -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
 Restart=always
 RestartSec=1
+# The X server must own the controlling terminal. TTYPath alone does not make
+# the service the controlling process of that TTY; StandardInput=tty-fail does.
+# `tty-fail` rather than `tty-force` is deliberate: if something genuinely owns
+# tty1 already, fail closed instead of stealing another process's terminal.
+# Proved on the reference Acer: without it an unprivileged Xorg cannot activate
+# VT1 and fails with "xf86OpenConsole: Switching VT failed", which left the
+# branded boot cover repainting forever.
 TTYPath=/dev/tty1
 TTYReset=yes
 TTYVHangup=yes
-# The launcher is a graphical application; stdin must never be the VT, or
-# children (Activities, helpers) reading it would be SIGTTIN-stopped.
-StandardInput=null
+# The launcher is a graphical application, so no descendant may read the VT as
+# stdin: any such read is SIGTTIN-stopped and freezes the child shell. That
+# protection is now provided by greia-x-session detaching stdin, instead of by
+# denying the whole service the terminal, which also denied Xorg its VT.
+StandardInput=tty-fail
 StandardOutput=journal
 StandardError=journal
 # IMPORTANT: this unit currently owns the provisional Xorg display server.

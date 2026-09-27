@@ -206,6 +206,10 @@ class GreiaTypography:
     """
 
     _MAX_CACHE = 64
+    # Bounded text-surface cache for per-frame copy. Kept well inside the
+    # C0 memory floor; cleared wholesale rather than evicted per entry so the
+    # structure cannot grow without bound.
+    _MAX_SURFACE_CACHE = 512
     _MAX_EMOJI_SURFACES = 256
 
     def __init__(
@@ -234,6 +238,7 @@ class GreiaTypography:
         self._emoji_surfaces: BoundedCache[tuple[str, int], Any] = BoundedCache(
             self._MAX_EMOJI_SURFACES
         )
+        self._surface_cache: dict[tuple[int, str, tuple[int, ...]], tuple[Any, Any]] = {}
 
     def _ensure_pygame(self) -> Any:
         import pygame
@@ -266,6 +271,39 @@ class GreiaTypography:
         self._emoji_surfaces.clear()
         self._emoji_font = None
         self._emoji_degraded = False
+        self._surface_cache.clear()
+
+    def surface(self, font: Any, text: str, color: Any) -> Any:
+        """Return a bounded, cached antialiased surface for one text line.
+
+        Callers that draw the same copy every frame must not re-rasterize it
+        every frame. On the reference Acer (Intel GMA 500, software rendering,
+        no GPU) the graphical installer's unconditional 30 fps full repaint
+        re-rendered every label 30 times a second and pinned one core, which
+        the child experiences as a brutally unresponsive screen.
+
+        The cache is keyed by the live font object, so it can never serve a
+        surface belonging to a different typeface or size. The font is held in
+        the value so its ``id`` cannot be recycled onto a different object
+        while an entry is live.
+        """
+
+        if not isinstance(text, str) or not text:
+            return font.render(text, True, color)
+        key = (id(font), text, tuple(color))
+        cached = self._surface_cache.get(key)
+        if cached is not None:
+            return cached[1]
+        if len(self._surface_cache) >= self._MAX_SURFACE_CACHE:
+            self._surface_cache.clear()
+        surface = font.render(text, True, color)
+        self._surface_cache[key] = (font, surface)
+        return surface
+
+    def surface_width(self, font: Any, text: str) -> int:
+        """Width of ``text`` in ``font``, without building a surface."""
+
+        return font.size(text)[0]
 
     def font(self, role: FontRole, size: int) -> Any:
         spec = FontSpec(role, size)

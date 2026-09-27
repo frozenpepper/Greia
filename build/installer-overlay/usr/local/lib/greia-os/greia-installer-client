@@ -1,0 +1,22 @@
+#!/bin/sh
+# Greia installer graphical client for xinit.
+#
+# This is the client half of the controlling-TTY split. greia-installer.service
+# runs the X server and this script as the same unprivileged user with
+# StandardInput=tty-fail, so xinit/Xorg inherit the service's controlling
+# terminal (tty1) and can legitimately activate VT1. That ownership is exactly
+# what an unprivileged X server needs and cannot obtain any other way.
+#
+# The graphical application must NOT inherit that terminal. Any descendant that
+# reads the VT as stdin is SIGTTIN-stopped and freezes the installation, which
+# is the real defect the old StandardInput=null setting worked around. Detaching
+# here keeps the protection while restoring the X server's VT, so neither
+# behaviour regresses.
+set -eu
+
+exec </dev/null
+
+exec /usr/bin/python3 -m greia_installer.entrypoint \
+    --root /opt/greia-os \
+    --transaction-socket /run/greia-os/install-transaction.sock \
+    --target-profile /etc/greia-os/target-image-profile.json

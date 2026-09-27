@@ -13,9 +13,13 @@ X_SESSION = ROOT / "build/overlay/usr/local/lib/greia-os/greia-x-session"
 # The complete launch path: the unit plus every script it invokes.
 LAUNCH_PATH = (SERVICE, PREPARE, X_SESSION)
 
-EXPECTED_EXEC_START = (
-    "ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session"
-    " -- :0 vt1 -keeptty -novtswitch -background none"
+# The X server options are the accepted contract: same VT, no switch back, no
+# root-window repaint, no TCP listener, no reset on exit. The command line also
+# carries an explicit -logfile, because an unprivileged Xorg cannot create
+# /var/log/Xorg.0.log and aborts before opening the display.
+EXPECTED_X_OPTIONS = (
+    " -- :0 vt1 -logfile /run/greia-os/Xorg.0.log"
+    " -keeptty -novtswitch -background none"
     " -quiet -nolisten tcp -noreset"
 )
 
@@ -108,7 +112,8 @@ class VtPrehookMinimalPresenceTests(unittest.TestCase):
 
     def test_exec_start_x_options_untouched(self) -> None:
         service = SERVICE.read_text(encoding="utf-8")
-        self.assertIn(EXPECTED_EXEC_START, service)
+        self.assertIn("ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session", service)
+        self.assertIn(EXPECTED_X_OPTIONS, service)
         self.assertIn("TTYPath=/dev/tty1", service)
 
 

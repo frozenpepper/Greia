@@ -48,17 +48,67 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                     self.assertNotIn(module, module_lines)
                     self.assertIn(module, hook)
 
-    def test_graphical_services_can_never_inherit_the_vt_as_stdin(self) -> None:
-        for unit in (
-            "build/installer-overlay/etc/systemd/system/greia-installer.service",
-            "build/overlay/etc/systemd/system/greia-launcher.service",
+    def test_graphical_xserver_owns_tty1_while_the_application_tree_detaches_stdin(
+        self,
+    ) -> None:
+        """The controlling-TTY split, asserted as behaviour rather than bytes.
+
+        A background process group that reads the controlling VT as stdin is
+        SIGTTIN-stopped, which froze the installer and the child shell. The
+        first fix denied the whole service the terminal with
+        ``StandardInput=null``. That also denied the *X server* its VT, and an
+        unprivileged Xorg cannot activate VT1 it does not own: on the reference
+        Acer it aborted with "Cannot open log file", then "Cannot open virtual
+        console", then "Switching VT failed", and the branded cover repainted
+        forever.
+
+        The invariant is therefore two-sided and both halves are required:
+
+        * the X server owns tty1 as the service's controlling terminal; and
+        * the graphical client detaches stdin to /dev/null before it spawns
+          anything, so no descendant can read that terminal.
+        """
+        for unit, client, application in (
+            (
+                "build/installer-overlay/etc/systemd/system/greia-installer.service",
+                "build/installer-overlay/usr/local/lib/greia-os/greia-installer-client",
+                "-m greia_installer.entrypoint",
+            ),
+            (
+                "build/overlay/etc/systemd/system/greia-launcher.service",
+                "build/overlay/usr/local/lib/greia-os/greia-x-session",
+                "-m greia_launcher.child_shell",
+            ),
         ):
             with self.subTest(unit=unit):
                 text = self.read(unit)
-                self.assertIn("StandardInput=null", text)
-                self.assertNotIn("StandardInput=tty", text)
+                # X server side: owns the controlling terminal, and fails closed
+                # rather than stealing a terminal another process already holds.
+                self.assertIn("TTYPath=/dev/tty1", text)
+                self.assertIn("StandardInput=tty-fail", text)
+                self.assertNotIn("StandardInput=tty-force", text)
+                # An unprivileged Xorg opens the VT O_RDWR and needs a log path
+                # it can actually write; both were reproduced hardware failures.
+                self.assertIn("tty", self._supplementary_groups(text))
+                self.assertIn("-logfile ", text)
+                # Application side: stdin detached before the graphical
+                # application is started, so no descendant can read the VT.
+                client_text = self.read(client)
+                self.assertIn("exec </dev/null", client_text)
+                self.assertLess(
+                    client_text.index("exec </dev/null"),
+                    client_text.index(application),
+                    "stdin must be detached before the graphical application starts",
+                )
         engine = self.read("src/greia_installer/engine.py")
         self.assertIn("stdin=subprocess.DEVNULL", engine)
+
+    @staticmethod
+    def _supplementary_groups(unit_text: str) -> list[str]:
+        for line in unit_text.splitlines():
+            if line.strip().startswith("SupplementaryGroups="):
+                return line.split("=", 1)[1].split()
+        return []
 
     def test_shared_runtime_directories_are_recreated_before_services_every_boot(self) -> None:
         tmpfiles = self.read("build/overlay/etc/tmpfiles.d/greia-runtime.conf")

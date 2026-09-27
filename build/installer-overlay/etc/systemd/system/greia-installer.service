@@ -21,8 +21,17 @@ Type=simple
 User=nobody
 Group=nogroup
 # Xorg needs video/input group access on bare metal; membership is granted
-# declaratively here so no image user database change is required.
-SupplementaryGroups=video input
+# declaratively here so no image user database change is required. Group `tty`
+# is required as well: an unprivileged X server opens the VT with O_RDWR, which
+# the stock `crw--w----` tty node denies a write-only group. Proved on the
+# reference Acer, where the missing group produced
+# "xf86OpenConsole: Cannot open virtual console 1 (Permission denied)".
+SupplementaryGroups=video input tty
+# Service-private runtime root, owned by this unit's unprivileged user, so the
+# X server has a log path it may actually write. Without it Xorg aborts with
+# "Cannot open log file /var/log/Xorg.0.log" because /var/log is root-owned.
+RuntimeDirectory=greia-installer
+RuntimeDirectoryMode=0750
 WorkingDirectory=/opt/greia-os
 Environment=GREIA_OS_ROOT=/opt/greia-os
 Environment=GREIA_TARGET_IMAGE_PROFILE=/etc/greia-os/target-image-profile.json
@@ -33,17 +42,27 @@ Environment=PYTHONDONTWRITEBYTECODE=1
 # root; the '+' prefix keeps that privilege after the UI itself dropped to
 # the unprivileged identity.
 ExecStartPre=+/usr/local/lib/greia-os/prepare-installer-vt
-ExecStart=/usr/bin/xinit /usr/bin/python3 -m greia_installer.entrypoint --root /opt/greia-os --transaction-socket /run/greia-os/install-transaction.sock --target-profile /etc/greia-os/target-image-profile.json -- :0 vt1 -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
+# The client wrapper detaches stdin to /dev/null before exec'ing the graphical
+# application, so no installer descendant can ever read the controlling VT and
+# be SIGTTIN-stopped. Xorg itself keeps the VT; only the application tree is
+# detached. This replaces the old StandardInput=null workaround, which denied
+# the X server its VT and made the graphical installer impossible.
+ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-installer-client -- :0 vt1 -logfile /run/greia-installer/Xorg.0.log -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
 Restart=on-failure
 RestartSec=2
+# The X server must own the controlling terminal. TTYPath alone does not make
+# the service the controlling process of that TTY; StandardInput=tty-fail does.
+# `tty-fail` rather than `tty-force` is deliberate: if something genuinely owns
+# tty1 already, fail closed instead of stealing another process's terminal.
+# Proved on the reference Acer: this is what lets an unprivileged Xorg take VT1
+# instead of failing with "xf86OpenConsole: Switching VT failed".
 TTYPath=/dev/tty1
 TTYReset=yes
 TTYVHangup=yes
-# The installer is a graphical application; it never reads from the terminal.
-# Giving it the VT as stdin makes every child a background process group with
-# the tty as input, so any child read triggers SIGTTIN and freezes the install.
-# stdin must be /dev/null instead.
-StandardInput=null
+StandardInput=tty-fail
+# The installer is a graphical application; its stdin is detached to /dev/null
+# by greia-installer-client rather than denied here, so Xorg still inherits the
+# controlling TTY that VT1 ownership requires.
 StandardOutput=journal
 StandardError=journal
 PrivateTmp=yes

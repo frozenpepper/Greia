@@ -147,7 +147,14 @@ class SystemLanguageTests(unittest.TestCase):
             / "system"
             / "greia-installer.service"
         ).read_text(encoding="utf-8")
-        self.assertIn("-m greia_installer.entrypoint", service)
+        # The installer module is exec'd by the xinit client wrapper, which
+        # also owns the stdin detach; the unit names that client.
+        self.assertIn("greia-installer-client", service)
+        client = (
+            PROJECT_ROOT
+            / "build/installer-overlay/usr/local/lib/greia-os/greia-installer-client"
+        ).read_text(encoding="utf-8")
+        self.assertIn("-m greia_installer.entrypoint", client)
         entrypoint = (
             PROJECT_ROOT / "src" / "greia_installer" / "entrypoint.py"
         ).read_text(encoding="utf-8")

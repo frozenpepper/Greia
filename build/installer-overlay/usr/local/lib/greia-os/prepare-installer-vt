@@ -31,6 +31,14 @@ fi
 # return to VT1 before starting X.
 chvt 1 >/dev/null 2>&1 || true
 
+# The VT node needs no permission change here. With StandardInput=tty-fail
+# systemd makes this service the controlling process of tty1 and assigns the
+# node to the service user, which is what lets an unprivileged Xorg open the
+# console with O_RDWR. A chmod was tried on the reference Acer and never took
+# effect: logind re-asserts the stock `crw--w----` mode, so the console stayed
+# unopenable until systemd's ownership assignment was used instead. Leaving
+# device permissions untouched also keeps this path free of permission weakening.
+
 # Final pre-X installer milestone. Repeated service attempts repaint the same
 # value because retries are recovery, not forward progress.
 renderer=/usr/lib/greia-boot/greia-fb-splash

@@ -50,6 +50,14 @@ fi
 # so service restarts also recover from a parent/recovery VT.
 chvt 1 >/dev/null 2>&1 || true
 
+# The VT node needs no permission change here, and this path must not weaken
+# device permissions. With StandardInput=tty-fail systemd makes this service the
+# controlling process of tty1 and assigns the node to the service user, which is
+# what lets an unprivileged Xorg open the console with O_RDWR. A chmod was tried
+# on the reference Acer and never took effect: logind re-asserts the stock
+# `crw--w----` mode, so the console stayed unopenable until systemd's ownership
+# assignment was used instead.
+
 # This is the final pre-X milestone. It intentionally remains 78% on every
 # launcher restart: a retry is recovery, not progress. The child shell replaces
 # this framebuffer cover only when it has acquired a real graphical surface.

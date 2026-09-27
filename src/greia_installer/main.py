@@ -194,6 +194,14 @@ class InstallerApplication:
         self._pointer_test_hits = 0
         self._pointer_test_feedback = ""
         self._pointer_preview_error = ""
+        # Memoised attached-pointer inventory, valid for one page visit. See
+        # _pointer_infos(): the legacy-x preview seam answers by spawning a
+        # helper process, so probing must not happen once per rendered frame.
+        self._pointer_infos_cache: tuple[PointerDeviceInfo, ...] | None = None
+        self._pointer_infos_page: InstallerPage | None = None
+        self._last_render_signature: tuple[object, ...] | None = None
+        self._cover_released = False
+        self._pointer_seen = False
         self._display_probe_cache: Any = None
         self._display_probe_failed = False
         self._refresh_display_cache()
@@ -320,7 +328,19 @@ class InstallerApplication:
         callers fail open (show every control) rather than trapping the
         parent. An empty tuple from a working seam is also treated as
         unknown: no attached pointer was described.
+
+        The probe is memoised for the lifetime of the current page. The
+        legacy-x backend answers it by spawning a helper process for the
+        device list and again for each device's properties, and
+        ``pointer_rows()`` consults it twice. Asking per frame
+        meant well over a hundred process spawns per second while the pointer
+        page was open, which pinned a full core on the reference Acer and made
+        the page feel frozen. Attached-pointer inventory only changes on
+        hotplug, so caching per page visit is both correct and cheap; leaving
+        the page drops the cache and re-probes.
         """
+        if self._pointer_infos_page is self.state.page:
+            return self._pointer_infos_cache
         controller = self.hardware_controller
         if controller is None:
             if self.demo:
@@ -338,7 +358,10 @@ class InstallerApplication:
         cleaned = tuple(
             info for info in infos if isinstance(info, PointerDeviceInfo)
         )
-        return cleaned if cleaned else None
+        result: tuple[PointerDeviceInfo, ...] | None = cleaned if cleaned else None
+        self._pointer_infos_cache = result
+        self._pointer_infos_page = self.state.page
+        return result
 
     def _has_touchpad(self) -> bool:
         infos = self._pointer_infos()
@@ -707,7 +730,9 @@ class InstallerApplication:
             frame_started = time.monotonic()
             self._drain_worker_events()
             self.wifi.drain()
+            handled_event = False
             for event in pygame.event.get():
+                handled_event = True
                 if event.type == pygame.QUIT and self.windowed:
                     running = False
                 elif event.type == pygame.TEXTINPUT:
@@ -720,9 +745,15 @@ class InstallerApplication:
                 elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     self._handle_mouse_up(event.pos)
             self._update_install_hold(pygame)
-            self._draw(screen, pygame)
-            self._draw_pointer(screen, pygame)
-            pygame.display.flip()
+            # Repaint only when the composed frame could actually differ, or
+            # when this tick handled input. Skipping is a pure optimisation:
+            # any signature that cannot be computed still repaints.
+            signature = self._render_signature(screen)
+            if handled_event or signature != self._last_render_signature:
+                self._draw(screen, pygame)
+                self._draw_pointer(screen, pygame)
+                pygame.display.flip()
+                self._last_render_signature = signature
             if not self.windowed and os.environ.get("PIP_SKIP_BOOT_HANDOFF") != "1":
                 self._release_boot_cover_once()
             clock.tick(30)
@@ -1326,7 +1357,7 @@ class InstallerApplication:
                     border_radius=18,
                 )
                 self._buttons[f"target-{index}"] = rect
-                label = font.render(target.display_name, True, text)
+                label = _text(font, target.display_name, text)
                 screen.blit(label, label.get_rect(midleft=(rect.left + 24, rect.centery)))
             self._navigation(
                 screen,
@@ -1477,7 +1508,7 @@ class InstallerApplication:
                 fill = rect.copy()
                 fill.width = int(rect.width * fraction)
                 pygame.draw.rect(screen, (120, 24, 24), fill, border_radius=18)
-                label = font.render("Keep holding…", True, (255, 255, 255))
+                label = _text(font, "Keep holding…", (255, 255, 255))
                 screen.blit(label, label.get_rect(center=rect.center))
             self._back_button(screen, pygame, font, accent, text, main)
         elif page == InstallerPage.INSTALLING:
@@ -1580,6 +1611,47 @@ class InstallerApplication:
             )
             self._back_button(screen, pygame, font, accent, text, main)
 
+    POINTER_HEADER_H = 96
+    POINTER_ROW_GAP = 4
+    POINTER_ROW_MIN = 34
+    POINTER_ROW_MAX = 54
+    POINTER_STRIP_FIXED = 104
+    POINTER_NAV_RESERVE = 68
+    POINTER_TARGET_HINT = 64
+    POINTER_TARGET_FLOOR = 52
+
+    def _pointer_vertical_budget(
+        self, panel_height: int, setting_count: int
+    ) -> tuple[int, int, int]:
+        """Fit the pointer page into ``panel_height`` by measurement.
+
+        Returns ``(row_height, step, test_target_size)``. The page previously
+        used a hard-coded 56 px step and a hard-coded 64 px test target, and its
+        content is taller than the 600 px reference display: rows overlapped and
+        the reset control fell outside the panel. Everything is now derived from
+        the panel that is actually available.
+
+        Navigation buttons are centred on ``main.bottom - 40`` and are
+        ``BUTTON_HEIGHT`` tall, so the last 63 px of the panel belong to them.
+        The test strip below the final row spans ``104 + target/2`` px: the
+        targets are centred at ``+34``, the status line sits at
+        ``+34 + target/2 + 14`` and the 40 px reset button starts at
+        ``+34 + target/2 + 32``.
+
+        The test targets keep the 9 mm physical touch floor because they are
+        what a child aims at. Setting rows are also keyboard-navigable, so they
+        may compress to :attr:`POINTER_ROW_MIN` rather than overflow the panel.
+        """
+
+        count = max(1, int(setting_count))
+        available = panel_height - self.POINTER_HEADER_H - self.POINTER_NAV_RESERVE
+        floor = min(self.POINTER_TARGET_FLOOR, max(1, available // 4))
+        target_size = max(floor, min(self.POINTER_TARGET_HINT, available // 4))
+        room = available - (self.POINTER_STRIP_FIXED + target_size // 2)
+        row_height = int(room / count) - self.POINTER_ROW_GAP
+        row_height = max(self.POINTER_ROW_MIN, min(self.POINTER_ROW_MAX, row_height))
+        return row_height, row_height + self.POINTER_ROW_GAP, target_size
+
     def _draw_pointer_page(
         self,
         screen: Any,
@@ -1598,50 +1670,72 @@ class InstallerApplication:
         self._center_text(
             screen, "Pointer feel", small_font, text, main.top + 18 + 52
         )
-        y = main.top + 108
-        step = 56
+
+        # Measure the vertical budget instead of assuming it. This page used
+        # to use a hard-coded 56 px step and a hard-coded 64 px test target, and
+        # its content is simply taller than the 600 px reference display: the
+        # reset control fell outside the panel and rows overlapped. The row
+        # height, the gaps and the test target are now derived from the panel
+        # that is actually available, each floored so a child's touch target
+        # never collapses below the physical minimum.
+        setting_count = sum(
+            1
+            for name in rows
+            if name
+            in {
+                "tap",
+                "disable-while-typing",
+                "natural",
+                "touchpad-preset",
+                "mouse-preset",
+                "mouse-preset-labeled",
+            }
+        )
+        row_h, step, target_size = self._pointer_vertical_budget(
+            main.height, setting_count
+        )
+        y = main.top + self.POINTER_HEADER_H
         if "tap" in rows:
             self._toggle_row(
                 screen, pygame, "tap", "Tap touchpad to click",
-                self.state.settings.touchpad_tap, font, text, accent, y,
+                self.state.settings.touchpad_tap, font, text, accent, y, row_h,
             )
             y += step
         if "disable-while-typing" in rows:
             self._toggle_row(
                 screen, pygame, "disable-while-typing", "Disable while typing",
-                self.state.settings.disable_while_typing, font, text, accent, y,
+                self.state.settings.disable_while_typing, font, text, accent, y, row_h,
             )
             y += step
         if "natural" in rows:
             self._toggle_row(
                 screen, pygame, "natural", "Natural scrolling",
-                self.state.settings.natural_scrolling, font, text, accent, y,
+                self.state.settings.natural_scrolling, font, text, accent, y, row_h,
             )
             y += step
         if "touchpad-preset" in rows:
             self._preset_row(
                 screen, pygame, "touch", "Touchpad feel",
                 speed_to_preset(self.state.settings.touchpad_speed),
-                font, text, accent, y,
+                font, text, accent, y, row_h,
             )
             y += step
         if "mouse-preset" in rows:
             self._preset_row(
                 screen, pygame, "mouse", "Mouse feel",
                 speed_to_preset(self.state.settings.mouse_speed),
-                font, text, accent, y,
+                font, text, accent, y, row_h,
             )
             y += step
         elif "mouse-preset-labeled" in rows:
             self._preset_row(
                 screen, pygame, "mouse", "Mouse feel (when a mouse is attached)",
                 speed_to_preset(self.state.settings.mouse_speed),
-                font, text, accent, y,
+                font, text, accent, y, row_h,
             )
             y += step
         # Test strip: three large dispersed targets with click feedback.
         width = screen.get_size()[0]
-        target_size = self.essential_control_px(64)
         centers = (
             (int(width * 0.24), y + 34),
             (int(width * 0.50), y + 34),
@@ -1659,18 +1753,32 @@ class InstallerApplication:
             pygame.draw.rect(
                 screen, text, rect, width=3 if focused else 1, border_radius=16
             )
-            label = font.render(str(index + 1), True, text)
+            label = _text(font, str(index + 1), text)
             screen.blit(label, label.get_rect(center=rect.center))
             self._buttons[key] = rect
         feedback = self._pointer_test_feedback or "Click a circle, or press 1 2 3"
         status = feedback
         if self._pointer_preview_error:
             status = f"{feedback} · {self._pointer_preview_error}"
-        self._center_text(screen, status[:80], small_font, text, y + 34 + target_size // 2 + 14)
-        reset_rect = pygame.Rect(0, 0, 200, 40)
+        self._center_text(
+            screen,
+            self._fit_text(
+                small_font, status, text, int(screen.get_width() * 0.86)
+            ),
+            small_font,
+            text,
+            y + 34 + target_size // 2 + 14,
+        )
+        reset_label = self._text(small_font, "Reset pointer feel", text)
+        reset_width = min(
+            screen.get_width() - 80, max(200, reset_label.get_width() + 40)
+        )
+        reset_rect = pygame.Rect(0, 0, reset_width, 40)
         reset_rect.midtop = (screen.get_size()[0] // 2, y + 34 + target_size // 2 + 32)
         pygame.draw.rect(screen, accent, reset_rect, border_radius=14)
-        reset_label = small_font.render("Reset pointer feel", True, text)
+        reset_label = self._fit_text(
+            small_font, "Reset pointer feel", text, reset_rect.width - 24
+        )
         screen.blit(reset_label, reset_label.get_rect(center=reset_rect.center))
         self._buttons["pointer-reset"] = reset_rect
         self._navigation(screen, pygame, main, font, accent, text, enabled=True)
@@ -1876,7 +1984,7 @@ class InstallerApplication:
             label = layout.label
             if inferred:
                 label = "> " + label
-            image = font.render(label, True, text)
+            image = _text(font, label, text)
             screen.blit(image, (rect.left + 16, rect.top + 8))
         self._center_text(
             screen,
@@ -2074,7 +2182,7 @@ class InstallerApplication:
                 border_radius=15,
             )
             self._buttons[f"wifi-{index}"] = rect
-            label = font.render(network.ssid, True, text)
+            label = _text(font, network.ssid, text)
             screen.blit(label, (rect.left + 16, rect.top + 10))
             if network.security is WifiSecurity.OPEN:
                 security = "Open"
@@ -2083,7 +2191,7 @@ class InstallerApplication:
             else:
                 security = "Enterprise — later"
             strength = _signal_label(network.signal_dbm)
-            detail = small_font.render(f"{security} · {strength}", True, text)
+            detail = _text(small_font, f"{security} · {strength}", text)
             screen.blit(detail, detail.get_rect(midright=(rect.right - 16, rect.centery)))
 
         network = snapshot.selected_network
@@ -2110,9 +2218,9 @@ class InstallerApplication:
                     segments.append(passphrase[-1])
                 else:
                     segments.append("*" * len(passphrase))
-                text_render = small_font.render("".join(segments), True, text)
+                text_render = _text(small_font, "".join(segments), text)
             else:
-                text_render = small_font.render("Wi-Fi password", True, (160, 150, 135))
+                text_render = _text(small_font, "Wi-Fi password", (160, 150, 135))
             screen.blit(
                 text_render,
                 (password_rect.left + 16, password_rect.top + 12),
@@ -2140,11 +2248,7 @@ class InstallerApplication:
                 220,
             )
         else:
-            note = small_font.render(
-                "Enterprise Wi-Fi can be configured later in Greia Parents.",
-                True,
-                danger,
-            )
+            note = _text(small_font, "Enterprise Wi-Fi can be configured later in Greia Parents.", danger)
             screen.blit(note, note.get_rect(center=(main.centerx, controls_y + 24)))
 
     def _bottom_row_y(self, main: Any) -> int:
@@ -2207,18 +2311,33 @@ class InstallerApplication:
         text: tuple[int, int, int],
         accent: tuple[int, int, int],
         y: int,
+        height: int = 54,
     ) -> None:
         rect = pygame.Rect(
-            screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54
+            screen.get_width() * 0.16, y, screen.get_width() * 0.68, height
         )
         pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
-        screen.blit(font.render(label, True, text), (rect.left + 18, rect.top + 13))
-        state_rect = pygame.Rect(rect.right - 116, rect.top + 7, 98, 40)
+        state_h = min(40, max(28, height - 14))
+        state_rect = pygame.Rect(
+            rect.right - 116, rect.centery - state_h // 2, 98, state_h
+        )
+        label_surface = self._fit_text(
+            font, label, text, state_rect.left - rect.left - 36
+        )
+        screen.blit(
+            label_surface,
+            (rect.left + 18, rect.centery - label_surface.get_height() // 2),
+        )
         pygame.draw.rect(
             screen, accent if value else (180, 175, 165), state_rect, border_radius=20
         )
         knob_x = state_rect.right - 20 if value else state_rect.left + 20
-        pygame.draw.circle(screen, (255, 255, 255), (knob_x, state_rect.centery), 15)
+        pygame.draw.circle(
+            screen,
+            (255, 255, 255),
+            (knob_x, state_rect.centery),
+            max(9, state_h // 2 - 5),
+        )
         self._buttons[key] = rect
 
     def _preset_row(
@@ -2232,19 +2351,21 @@ class InstallerApplication:
         text: tuple[int, int, int],
         accent: tuple[int, int, int],
         y: int,
+        height: int = 54,
     ) -> None:
         rect = pygame.Rect(
-            screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54
+            screen.get_width() * 0.16, y, screen.get_width() * 0.68, height
         )
         pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
-        screen.blit(font.render(label, True, text), (rect.left + 18, rect.top + 13))
-        minus = pygame.Rect(rect.right - 268, rect.top + 6, 46, 42)
-        plus = pygame.Rect(rect.right - 58, rect.top + 6, 46, 42)
+        screen.blit(_text(font, label, text), (rect.left + 18, rect.top + 13))
+        btn = min(42, max(26, height - 12))
+        minus = pygame.Rect(rect.right - 268, rect.centery - btn // 2, 46, btn)
+        plus = pygame.Rect(rect.right - 58, rect.centery - btn // 2, 46, btn)
         for button_rect, glyph in ((minus, "−"), (plus, "+")):
             pygame.draw.rect(screen, accent, button_rect, border_radius=14)
-            glyph_image = font.render(glyph, True, text)
+            glyph_image = _text(font, glyph, text)
             screen.blit(glyph_image, glyph_image.get_rect(center=button_rect.center))
-        value_image = font.render(preset_name, True, text)
+        value_image = _text(font, preset_name, text)
         screen.blit(
             value_image, value_image.get_rect(center=(rect.right - 140, rect.centery))
         )
@@ -2262,15 +2383,25 @@ class InstallerApplication:
         text: tuple[int, int, int],
         accent: tuple[int, int, int],
         y: int,
+        height: int = 54,
     ) -> None:
         rect = pygame.Rect(
-            screen.get_width() * 0.16, y, screen.get_width() * 0.68, 54
+            screen.get_width() * 0.16, y, screen.get_width() * 0.68, height
         )
         pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
-        screen.blit(font.render(label, True, text), (rect.left + 18, rect.top + 13))
-        value_rect = pygame.Rect(rect.right - 190, rect.top + 6, 172, 42)
+        value_h = min(42, max(26, height - 12))
+        value_rect = pygame.Rect(
+            rect.right - 190, rect.centery - value_h // 2, 172, value_h
+        )
+        label_surface = self._fit_text(
+            font, label, text, value_rect.left - rect.left - 36
+        )
+        screen.blit(
+            label_surface,
+            (rect.left + 18, rect.centery - label_surface.get_height() // 2),
+        )
         pygame.draw.rect(screen, accent, value_rect, border_radius=14)
-        value_image = font.render(value, True, text)
+        value_image = self._fit_text(font, value, text, value_rect.width - 16)
         screen.blit(value_image, value_image.get_rect(center=value_rect.center))
         self._buttons[key] = rect
 
@@ -2289,7 +2420,7 @@ class InstallerApplication:
         rect = pygame.Rect(0, 0, width, self.BUTTON_HEIGHT)
         rect.center = center
         pygame.draw.rect(screen, background, rect, border_radius=18)
-        image = font.render(label, True, foreground)
+        image = self._fit_text(font, label, foreground, width - 24)
         screen.blit(image, image.get_rect(center=rect.center))
         self._buttons[key] = rect
         return rect
@@ -2396,11 +2527,40 @@ class InstallerApplication:
         screen.blit(image, rect)
 
     def _draw_pointer(self, screen: Any, pygame: Any) -> None:
-        if not pygame.mouse.get_focused():
+        """Draw the Greia pointer.
+
+        The native cursor is hidden at startup, so this is the only pointer a
+        child ever sees. It used to be skipped whenever the mouse was not
+        "focused", which left the pointer-configuration screen with no visible
+        pointer at all — on the one screen whose entire purpose is configuring
+        the pointer. Presence, not focus, decides whether a pointer exists: the
+        cursor is drawn whenever a pointer has been seen, and simply is not
+        invented on a machine that has never reported one.
+        """
+        position = pygame.mouse.get_pos()
+        if not self._pointer_seen and position == (0, 0):
             return
+        self._pointer_seen = True
         size = max(34, min(54, screen.get_height() // 12))
-        x, y = pygame.mouse.get_pos()
+        x, y = position
         self._icon(screen, pygame, "yellow_star", size, (x, y))
+
+    def _text(
+        self,
+        font: Any,
+        text_value: str,
+        color: tuple[int, int, int],
+    ) -> Any:
+        """Render one line through the platform's bounded text-surface cache.
+
+        The installer repaints its pages continuously. Rasterizing identical
+        copy on every frame pinned a full core on the reference Acer and made
+        the pointer page feel frozen. Caching lives in
+        ``greia_platform.typography`` so the installer and the launcher share
+        one owner instead of growing parallel caches.
+        """
+
+        return self._typography.surface(font, text_value, color)
 
     def _center_title(
         self,
@@ -2410,7 +2570,7 @@ class InstallerApplication:
         color: tuple[int, int, int],
         y: int,
     ) -> None:
-        image = font.render(text_value, True, color)
+        image = _text(font, text_value, color)
         screen.blit(image, image.get_rect(midtop=(screen.get_width() // 2, y)))
 
     def _center_text(
@@ -2421,7 +2581,7 @@ class InstallerApplication:
         color: tuple[int, int, int],
         y: int,
     ) -> None:
-        image = font.render(text_value, True, color)
+        image = _text(font, text_value, color)
         screen.blit(image, image.get_rect(center=(screen.get_width() // 2, y)))
 
     def _wrapped_text(
@@ -2438,17 +2598,84 @@ class InstallerApplication:
         for word in words:
             candidate = f"{line} {word}".strip()
             if font.size(candidate)[0] > rect.width and line:
-                screen.blit(font.render(line, True, color), (rect.left, y))
+                screen.blit(_text(font, line, color), (rect.left, y))
                 y += font.get_linesize()
                 line = word
             else:
                 line = candidate
         if line:
-            screen.blit(font.render(line, True, color), (rect.left, y))
+            screen.blit(_text(font, line, color), (rect.left, y))
 
     def _inside(self, key: str, position: tuple[int, int]) -> bool:
         rect = self._buttons.get(key)
         return bool(rect and rect.collidepoint(position))
+
+    def _fit_text(
+        self,
+        font: Any,
+        text_value: str,
+        color: tuple[int, int, int],
+        max_width: int,
+    ) -> Any:
+        """Render one line, ellipsized so it cannot escape ``max_width``.
+
+        Fixed-width buttons with unmeasured copy overflowed on the reference
+        Acer: the reset control is 200 px wide and its Italian label is far
+        longer than the English one, so text ran outside the button it belongs
+        to. Layout here is measured rather than assumed.
+        """
+
+        if max_width <= 0:
+            return _text(font, text_value, color)
+        if self._typography.surface_width(font, text_value) <= max_width:
+            return _text(font, text_value, color)
+        trimmed = text_value
+        while trimmed and self._typography.surface_width(font, trimmed + "…") > max_width:
+            trimmed = trimmed[:-1]
+        return _text(font, (trimmed + "…").rstrip(), color)
+
+    def _render_signature(self, screen: Any) -> tuple[object, ...] | None:
+        """Cheap fingerprint of everything the current frame would draw.
+
+        Returning an unchanged signature means the composed frame would be
+        pixel-identical, so the redraw and the display flip can be skipped.
+        The installer used to repaint and re-flip the whole screen 30 times a
+        second unconditionally, which is a large fixed cost on the reference
+        Acer even once text rasterization and pointer probing are cached.
+
+        The signature is derived from the live scalar state rather than from a
+        hand-maintained dirty flag, so a new piece of state cannot be silently
+        forgotten. Anything unhashable, unexpected or slow is simply excluded,
+        and any failure at all returns ``None``, which forces a redraw. Skipping
+        is therefore only ever an optimisation: it can never leave a stale
+        screen behind.
+        """
+
+        def scalars(source: Any) -> tuple[object, ...]:
+            parts: list[object] = []
+            for name, value in sorted(vars(source).items()):
+                if name.startswith("_typography") or name.startswith("_pointer_infos"):
+                    continue
+                if value is None or isinstance(value, (bool, int, float, str)):
+                    parts.append((name, value))
+                elif isinstance(value, tuple) and all(
+                    item is None or isinstance(item, (bool, int, float, str))
+                    for item in value
+                ):
+                    parts.append((name, value))
+            return tuple(parts)
+
+        try:
+            return (
+                tuple(screen.get_size()),
+                scalars(self),
+                scalars(self.state),
+                scalars(self.wifi),
+                len(self._pointer_infos_cache or ()),
+                tuple(self.state.targets),
+            )
+        except Exception:
+            return None
 
     def _release_boot_cover_once(self) -> None:
         if self._boot_released:
