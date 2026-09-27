@@ -10,6 +10,8 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -452,6 +454,139 @@ class ReleaseCliTests(unittest.TestCase):
             )
             self.assertEqual(len(runner.interactive), 1)
             self.assertIn("--erase-device", runner.interactive[0])
+
+
+class SafeMediaWriterTopologyTests(unittest.TestCase):
+    """Narrow regression for the util-linux 2.39 flat-sibling safe-writer fix.
+
+    util-linux 2.39 can return a disk and its partitions as flat siblings from
+    ``lsblk --json <disk>`` instead of nested children. The pre-fix probe
+    required exactly one entry, so every already-partitioned USB stick was
+    refused as an "unexpected device tree". These tests pin the corrected
+    rule only: direct ``part`` siblings of the confirmed whole disk are
+    accepted, and an unrelated/mapper sibling is still refused.
+
+    The probe is extracted from the shell script and executed against a
+    stubbed ``lsblk``. Each fixture deliberately trips the *next* check after
+    the topology gate so the assertion identifies the topology decision alone,
+    without needing privileged devices, mounts or a real fingerprint.
+    """
+
+    PROBE_BEGIN = "python3 - \"$device\" \"$image\" \"$require_unmounted\" <<'PY'\n"
+    PROBE_END = "\nPY\n"
+    UNEXPECTED_TREE = "Target device inspection returned an unexpected device tree"
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        script = (ROOT / "build" / "write-image.sh").read_text(encoding="utf-8")
+        begin = script.index(cls.PROBE_BEGIN) + len(cls.PROBE_BEGIN)
+        cls.probe_source = script[begin : script.index(cls.PROBE_END, begin)]
+
+    def _run_probe(self, tree: list[dict[str, object]]) -> str:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            stub_dir = workspace / "bin"
+            stub_dir.mkdir()
+            stub = stub_dir / "lsblk"
+            stub.write_text(
+                "#!/bin/sh\ncat <<'JSON'\n"
+                + json.dumps({"blockdevices": tree})
+                + "\nJSON\n",
+                encoding="utf-8",
+            )
+            stub.chmod(0o755)
+            image = workspace / "setup.img"
+            # Deliberately larger than the target so the probe stops at the
+            # size gate that immediately follows the topology gate.
+            image.write_bytes(b"x" * 64)
+            env = dict(os.environ)
+            env["PATH"] = f"{stub_dir}{os.pathsep}{env['PATH']}"
+            completed = subprocess.run(
+                [sys.executable, "-c", self.probe_source, "/dev/sdz", str(image), "no"],
+                capture_output=True,
+                text=True,
+                env=env,
+                check=False,
+            )
+            return completed.stdout + completed.stderr
+
+    @staticmethod
+    def _disk(**overrides: object) -> dict[str, object]:
+        node: dict[str, object] = {
+            "path": "/dev/sdz",
+            "type": "disk",
+            "pkname": None,
+            "size": 8086618112,
+            "rm": True,
+            "hotplug": False,
+            "tran": "usb",
+            "model": "iamaKey",
+            "serial": "eca3505216d7d3",
+            "wwn": None,
+            "mountpoints": [],
+        }
+        node.update(overrides)
+        return node
+
+    @staticmethod
+    def _part(index: int) -> dict[str, object]:
+        return {
+            "path": f"/dev/sdz{index}",
+            "type": "part",
+            "pkname": "sdz",
+            "size": 3549184,
+            "rm": True,
+            "hotplug": False,
+            "tran": None,
+            "model": None,
+            "serial": None,
+            "wwn": None,
+            "mountpoints": [],
+        }
+
+    def test_direct_partition_siblings_accepted_but_unrelated_sibling_refused(self) -> None:
+        # A tiny target makes the 64-byte probe image larger than the disk, so
+        # the run always stops at the size gate directly after the topology
+        # gate. That keeps the test hermetic: findmnt/blkid are never reached,
+        # so the result does not depend on the host's real block devices.
+        partitioned = self._run_probe(
+            [self._disk(size=8), self._part(1), self._part(2)]
+        )
+        self.assertNotIn(
+            self.UNEXPECTED_TREE,
+            partitioned,
+            "a removable whole disk with its own partitions must pass the topology gate",
+        )
+        self.assertIn(
+            "Image does not fit target",
+            partitioned,
+            "the probe must proceed past the topology gate to the size gate",
+        )
+
+        mapper_volume = self._run_probe(
+            [
+                self._disk(),
+                self._part(1),
+                {
+                    "path": "/dev/mapper/greia-slot",
+                    "type": "lvm",
+                    "pkname": "sda2",
+                    "size": 1073741824,
+                    "rm": False,
+                    "hotplug": False,
+                    "tran": None,
+                    "model": None,
+                    "serial": None,
+                    "wwn": None,
+                    "mountpoints": [],
+                },
+            ]
+        )
+        self.assertIn(
+            self.UNEXPECTED_TREE,
+            mapper_volume,
+            "an unrelated/mapper sibling must still be refused",
+        )
 
 
 if __name__ == "__main__":
