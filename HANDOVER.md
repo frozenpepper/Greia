@@ -1962,7 +1962,13 @@ stage**. The stick is with the owner.
 Flashed artifact (unchanged, still verifiable):
 `out/physical-test-acer/greia-os-installer-acer-aspire-one-i386-ab.img`, 1818230784 bytes,
 SHA-256 `f75b7c4f105420fbf11323062f5a50ba59c4516d66de48b9e3e09782b414f6d7`, built from
-the verified S03 bundle `6b5cf05f…` at HEAD `b3bccfb4` (docs-only ahead of `c8054717`).
+the verified S03 bundle `6b5cf05f…` at `b3bccfb4`. **Source-state correction:** the build
+ran one documentation commit behind `main`. `git pull` had failed on credentials, so no
+sync occurred and the checkout was the parent of `7d337d0d`; the owner's stated head
+`7d337d0d` was correct. The missing commit touches only `HANDOVER.md` and the Orbiter disk
+investigation, so no production source or build input was affected. This record was rebased
+onto `7d337d0d`. **A failed `git pull` is not evidence a checkout is current** — verify
+against `origin/main` before asserting a source state.
 
 **Cause class is already documented and was not respected.** The proven reference path is
 `legacy-x86-i686-dev` on Syslinux/FAT32; `build/live-syslinux/syslinux.cfg.in` states that

@@ -2,7 +2,8 @@
 
 **Status:** PHYSICAL BOOT FAILURE on the reference Acer; root cause identified against a
 known-and-closed regression record; no root cause fixed; remediation not started
-**Source HEAD at the time:** `b3bccfb4107465ecf65ef664cd9db81e18d10957`
+**Source HEAD the build actually ran from:** `b3bccfb4107465ecf65ef664cd9db81e18d10957`
+(one documentation commit behind `main`; see §2.1 for the correction and the rebase)
 **Evidence class:** PHYSICAL VISUAL REVIEW (negative) + SOURCE-CLOSED artifact analysis
 **Audience:** lead agent / repository owner. This record exists so a decision can be made
 without re-running anything.
@@ -45,18 +46,37 @@ further QEMU cycle, do not use `--expand-root`.
 
 All of that was carried out. The failure appeared only at the owner's hands-on boot.
 
-### 2.1 Source state deviation (not blocking)
+### 2.1 Source state — the build ran one documentation commit behind `main`
 
-The requested `SOURCE_HEAD` of `7d337d0d01e58e3ee303b43964590a0334f3fbc0` **does not exist
-in this repository** (`git cat-file` fails). Actual HEAD was
-`b3bccfb4107465ecf65ef664cd9db81e18d10957`, which is **docs-only** ahead of the
-already-validated `c8054717` (four documentation files: `HANDOVER.md`, the Orbiter disk
-investigation, `GREIA_AGENT_OPERATIONS.md`, the 2026-09-15 plan). The premise "production
-source unchanged from `c8054717`" therefore **holds**.
+**Correction (appended after the push attempt; the original text of this section was
+wrong).** This section originally claimed that the requested `SOURCE_HEAD`
+`7d337d0d01e58e3ee303b43964590a0334f3fbc0` "does not exist in this repository". **That was
+incorrect, and the fault was a failed fetch, not a bad SHA.** The requested SHA was and is
+the current `origin/main`. What actually happened:
 
-`git pull --ff-only` **failed** — no GitHub credentials are available in this environment.
-The checkout was already level with `origin/main`, so this did not affect the build, but
-**no sync actually occurred** and that should not be assumed by a later agent.
+- `git pull --ff-only` failed with `could not read Username for 'https://github.com': No
+  such device or address` — no GitHub credentials in that shell. **No sync occurred.**
+- Because the fetch never happened, `git cat-file` could not resolve `7d337d0d` and the
+  checkout was one commit behind: the build ran from
+  `b3bccfb4107465ecf65ef664cd9db81e18d10957`, the **parent** of `7d337d0d`.
+- On the later push attempt authentication succeeded and `git fetch` revealed
+  `b3bccfb4..7d337d0d`, i.e. exactly one missing commit:
+  `7d337d0d docs(host): record completed disk migration, ljs.db recovery and swap procedure`.
+
+So the owner's stated source head was **correct**, and the deviation was a stale checkout
+caused by a credential failure that I did not resolve and did not report loudly enough at
+the time. Materiality: the one missing commit touches only `HANDOVER.md` and
+`docs/agents/2026-09-25_ORBITER_DISK_FAILURE_INVESTIGATION.md` — **no production source and
+nothing on the build path**. The build inputs are therefore unaffected, and the premise
+"production source unchanged from the already-tested `c8054717`" **holds** (`b3bccfb4` is
+docs-only ahead of `c8054717` in `HANDOVER.md`, the disk-failure investigation,
+`GREIA_AGENT_OPERATIONS.md` and the 2026-09-15 plan).
+
+This report was then **rebased onto `7d337d0d`** so the result sits on current `main`
+history, per `AGENTS.md` branch policy. Process lesson for later agents: **a failed
+`git pull` is not evidence that the local checkout is current.** Verify against
+`origin/main` before asserting a source state, and treat credential failure as a hard
+stop rather than a footnote.
 
 ### 2.2 Bundle verification — PASS
 
@@ -371,8 +391,12 @@ because the repository has explicit rules that were not followed.
   `S2R7J9HB601552`, SMART `PASSED`, all error counters 0, zero Medium Errors, ~100 h
   power-on. The drive that failed in the 2026-09-25 incident was serial `…1575`. The one
   `I/O error, dev loop34, sector 0 WRITE` in `dmesg` was a loop-teardown artifact, not
-  media. **The heavy-I/O prohibition from the 2026-09-25 incident no longer applies** —
-  that incident is closed by the migration.
+  media. **The heavy-I/O prohibition from the 2026-09-25 incident no longer applies**:
+  `7d337d0d` (the commit §2.1 shows this build was one commit behind) records the
+  migration as **complete and verified** — 376.3 GB / 1,063,266 files transferred,
+  `fsck -nf` and `dosfsck -n` clean, everything unmounted, sole casualty
+  `Long-John-Silver/data/ljs.db` (repaired + `ljs.recovered.db` salvage). Heavy build and
+  QEMU I/O on this host is therefore permitted again.
 - Working tree is **clean**. An aborted build had left
   `build/overlay/boot/grub/greia-theme.txt` modified (a generated file); it was verified
   byte-identical to `HEAD` against the build's own backup and restored.
