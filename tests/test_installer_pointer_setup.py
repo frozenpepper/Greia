@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import os
 import unittest
 from pathlib import Path
+
+os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 from greia_installer.main import InstallerApplication, InstallerPage
 from greia_platform.hardware import DisplayMode, HardwareDefaults, HardwareSettings
@@ -462,6 +467,36 @@ class InstallerPointerSetupTests(unittest.TestCase):
         large = app._pointer_vertical_budget(int(1080 * 0.88), 5)
         self.assertLess(small[0], large[0])
         self.assertEqual(small[2], large[2])
+
+    def test_every_installer_page_renders_headlessly(self) -> None:
+        """Every page must actually paint, not merely have correct state.
+
+        The installer's draw path had no executed coverage at all: state and
+        row tests passed while the real boot crashed on the first page with
+        ``NameError: name '_text' is not defined``. A missing ``self.`` on a
+        helper call is invisible to a state test and fatal to a child holding
+        the installer, so each page is now painted for real against a headless
+        surface at the reference 1024x600.
+        """
+
+        import pygame
+
+        pygame.init()
+        if pygame.display.get_surface() is None:
+            pygame.display.set_mode((1024, 600), pygame.HIDDEN)
+        screen = pygame.display.set_mode((1024, 600))
+
+        app = self.make_app(_FakePointerController((_touchpad_info(), _mouse_info())))
+        for page in InstallerPage:
+            with self.subTest(page=page.name):
+                app.state.page = page
+                app._buttons.clear()
+                app._draw(screen, pygame)
+                app._draw_pointer(screen, pygame)
+        self.assertTrue(
+            app._buttons,
+            "the pointer page must register interactive controls",
+        )
 
 
 if __name__ == "__main__":

@@ -1357,7 +1357,7 @@ class InstallerApplication:
                     border_radius=18,
                 )
                 self._buttons[f"target-{index}"] = rect
-                label = _text(font, target.display_name, text)
+                label = self._text(font, target.display_name, text)
                 screen.blit(label, label.get_rect(midleft=(rect.left + 24, rect.centery)))
             self._navigation(
                 screen,
@@ -1508,7 +1508,7 @@ class InstallerApplication:
                 fill = rect.copy()
                 fill.width = int(rect.width * fraction)
                 pygame.draw.rect(screen, (120, 24, 24), fill, border_radius=18)
-                label = _text(font, "Keep holding…", (255, 255, 255))
+                label = self._text(font, "Keep holding…", (255, 255, 255))
                 screen.blit(label, label.get_rect(center=rect.center))
             self._back_button(screen, pygame, font, accent, text, main)
         elif page == InstallerPage.INSTALLING:
@@ -1753,21 +1753,20 @@ class InstallerApplication:
             pygame.draw.rect(
                 screen, text, rect, width=3 if focused else 1, border_radius=16
             )
-            label = _text(font, str(index + 1), text)
+            label = self._text(font, str(index + 1), text)
             screen.blit(label, label.get_rect(center=rect.center))
             self._buttons[key] = rect
         feedback = self._pointer_test_feedback or "Click a circle, or press 1 2 3"
         status = feedback
         if self._pointer_preview_error:
             status = f"{feedback} · {self._pointer_preview_error}"
-        self._center_text(
+        self._center_fitted_text(
             screen,
-            self._fit_text(
-                small_font, status, text, int(screen.get_width() * 0.86)
-            ),
+            status,
             small_font,
             text,
             y + 34 + target_size // 2 + 14,
+            int(screen.get_width() * 0.86),
         )
         reset_label = self._text(small_font, "Reset pointer feel", text)
         reset_width = min(
@@ -1984,7 +1983,7 @@ class InstallerApplication:
             label = layout.label
             if inferred:
                 label = "> " + label
-            image = _text(font, label, text)
+            image = self._text(font, label, text)
             screen.blit(image, (rect.left + 16, rect.top + 8))
         self._center_text(
             screen,
@@ -2182,7 +2181,7 @@ class InstallerApplication:
                 border_radius=15,
             )
             self._buttons[f"wifi-{index}"] = rect
-            label = _text(font, network.ssid, text)
+            label = self._text(font, network.ssid, text)
             screen.blit(label, (rect.left + 16, rect.top + 10))
             if network.security is WifiSecurity.OPEN:
                 security = "Open"
@@ -2191,7 +2190,7 @@ class InstallerApplication:
             else:
                 security = "Enterprise — later"
             strength = _signal_label(network.signal_dbm)
-            detail = _text(small_font, f"{security} · {strength}", text)
+            detail = self._text(small_font, f"{security} · {strength}", text)
             screen.blit(detail, detail.get_rect(midright=(rect.right - 16, rect.centery)))
 
         network = snapshot.selected_network
@@ -2218,9 +2217,9 @@ class InstallerApplication:
                     segments.append(passphrase[-1])
                 else:
                     segments.append("*" * len(passphrase))
-                text_render = _text(small_font, "".join(segments), text)
+                text_render = self._text(small_font, "".join(segments), text)
             else:
-                text_render = _text(small_font, "Wi-Fi password", (160, 150, 135))
+                text_render = self._text(small_font, "Wi-Fi password", (160, 150, 135))
             screen.blit(
                 text_render,
                 (password_rect.left + 16, password_rect.top + 12),
@@ -2248,7 +2247,7 @@ class InstallerApplication:
                 220,
             )
         else:
-            note = _text(small_font, "Enterprise Wi-Fi can be configured later in Greia Parents.", danger)
+            note = self._text(small_font, "Enterprise Wi-Fi can be configured later in Greia Parents.", danger)
             screen.blit(note, note.get_rect(center=(main.centerx, controls_y + 24)))
 
     def _bottom_row_y(self, main: Any) -> int:
@@ -2357,15 +2356,15 @@ class InstallerApplication:
             screen.get_width() * 0.16, y, screen.get_width() * 0.68, height
         )
         pygame.draw.rect(screen, (247, 235, 203), rect, border_radius=16)
-        screen.blit(_text(font, label, text), (rect.left + 18, rect.top + 13))
+        screen.blit(self._text(font, label, text), (rect.left + 18, rect.top + 13))
         btn = min(42, max(26, height - 12))
         minus = pygame.Rect(rect.right - 268, rect.centery - btn // 2, 46, btn)
         plus = pygame.Rect(rect.right - 58, rect.centery - btn // 2, 46, btn)
         for button_rect, glyph in ((minus, "−"), (plus, "+")):
             pygame.draw.rect(screen, accent, button_rect, border_radius=14)
-            glyph_image = _text(font, glyph, text)
+            glyph_image = self._text(font, glyph, text)
             screen.blit(glyph_image, glyph_image.get_rect(center=button_rect.center))
-        value_image = _text(font, preset_name, text)
+        value_image = self._text(font, preset_name, text)
         screen.blit(
             value_image, value_image.get_rect(center=(rect.right - 140, rect.centery))
         )
@@ -2570,8 +2569,28 @@ class InstallerApplication:
         color: tuple[int, int, int],
         y: int,
     ) -> None:
-        image = _text(font, text_value, color)
+        image = self._text(font, text_value, color)
         screen.blit(image, image.get_rect(midtop=(screen.get_width() // 2, y)))
+
+    def _center_fitted_text(
+        self,
+        screen: Any,
+        text_value: str,
+        font: Any,
+        color: tuple[int, int, int],
+        y: int,
+        max_width: int,
+    ) -> None:
+        """Centre one line that must first be constrained to ``max_width``.
+
+        ``_fit_text`` returns an already-rendered surface, so it must be
+        blitted rather than handed back to ``_center_text``, which renders a
+        string. Keeping the two apart is what stops a status line from being
+        passed a Surface as if it were text.
+        """
+
+        image = self._fit_text(font, text_value, color, max_width)
+        screen.blit(image, image.get_rect(center=(screen.get_width() // 2, y)))
 
     def _center_text(
         self,
@@ -2581,7 +2600,7 @@ class InstallerApplication:
         color: tuple[int, int, int],
         y: int,
     ) -> None:
-        image = _text(font, text_value, color)
+        image = self._text(font, text_value, color)
         screen.blit(image, image.get_rect(center=(screen.get_width() // 2, y)))
 
     def _wrapped_text(
@@ -2598,13 +2617,13 @@ class InstallerApplication:
         for word in words:
             candidate = f"{line} {word}".strip()
             if font.size(candidate)[0] > rect.width and line:
-                screen.blit(_text(font, line, color), (rect.left, y))
+                screen.blit(self._text(font, line, color), (rect.left, y))
                 y += font.get_linesize()
                 line = word
             else:
                 line = candidate
         if line:
-            screen.blit(_text(font, line, color), (rect.left, y))
+            screen.blit(self._text(font, line, color), (rect.left, y))
 
     def _inside(self, key: str, position: tuple[int, int]) -> bool:
         rect = self._buttons.get(key)
@@ -2626,13 +2645,13 @@ class InstallerApplication:
         """
 
         if max_width <= 0:
-            return _text(font, text_value, color)
+            return self._text(font, text_value, color)
         if self._typography.surface_width(font, text_value) <= max_width:
-            return _text(font, text_value, color)
+            return self._text(font, text_value, color)
         trimmed = text_value
         while trimmed and self._typography.surface_width(font, trimmed + "…") > max_width:
             trimmed = trimmed[:-1]
-        return _text(font, (trimmed + "…").rstrip(), color)
+        return self._text(font, (trimmed + "…").rstrip(), color)
 
     def _render_signature(self, screen: Any) -> tuple[object, ...] | None:
         """Cheap fingerprint of everything the current frame would draw.
