@@ -2101,3 +2101,13 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
   then record the last visible boot stage per the 2026-08-20 review §8. Do not rebuild or
   reflash `acer-aspire-one-i386-ab` onto the reference Acer until the boot-path and
   console-suppression decisions are made.
+
+
+## 2026-09-27 — Acer A/B GRUB physical boot failure
+
+- Physical `acer-aspire-one-i386-ab` USB test failed before the Greia boot screen.
+- Existing accepted Acer postmortems already prove this firmware/stick combination does not reliably execute the GRUB/MBR removable-media path; active FAT32 + Syslinux is the proven first-stage path.
+- Mark the current A/B GRUB removable installer **UNPROVEN on the reference Acer**. Do not repeat that physical test unchanged.
+- Immediate physical recovery: build/flash `legacy-x86-i686-dev` with `tools/build-and-flash-development-usb.sh`; capture exact last visible stage. This is a narrow sanity test of the already-proven boot path, not a replacement for A/B lifecycle work.
+- After positive Syslinux boot evidence, reconcile the A/B installer medium with the proven Syslinux/FAT32 first stage while keeping the A/B installed-disk/update semantics separate.
+- The unrelated safe-writer bug that rejected already-partitioned removable disks has been fixed in `build/write-image.sh`; no external `sgdisk --zap-all` workaround should be needed for ordinary reflashing.
