@@ -2014,3 +2014,14 @@ from the build runs; they clear only on reboot. Do not delete
 `/tmp/greia-installer-build.iMc2gy/` before that reboot — its backing file is attached.
 The build-host disk is the **replacement** drive serial `S2R7J9HB601552`, SMART `PASSED`,
 zero error counters; the 2026-09-25 heavy-I/O prohibition no longer applies.
+
+
+## 66. Acer physical boot: A/B GRUB USB route rejected on reference device (2026-09-27)
+
+Physical test of the flashed `acer-aspire-one-i386-ab` raw GRUB/MBR installer failed at the first boot stage on the reference Acer: brief blinking cursor, then black screen; no Greia boot screen or installer. This result is consistent with the already accepted `docs/INSTALLATION_USB_BOOT_POSTMORTEM.md` and `docs/reviews/2026-08-20_ACER_INSTALLER_BOOT_REGRESSION.md`: this Acer + USB combination does not execute Greia's GRUB MBR path reliably, while the physically proven removable-media path is active FAT32 + Syslinux.
+
+Do not use the A/B GRUB raw installer as the next Acer physical test. The A/B route is **UNPROVEN on the reference Acer** and currently has one negative physical result. The next Acer test must use the named `tools/build-and-flash-development-usb.sh legacy-x86-i686-dev <device>` procedure, which preserves visible tty1 diagnostics and the proven Syslinux/FAT32 first stage. Record the last visible boot stage.
+
+The safe raw-image writer also had a separate util-linux compatibility bug: scoped `lsblk --json` can return a disk plus its partitions as flat siblings. `build/write-image.sh` now accepts only direct partition siblings of the confirmed target disk while preserving root-disk/removable/identity safety checks; manual partition-table zapping is no longer the intended workaround.
+
+Do not infer that the A/B storage/update design itself is invalid from this USB first-stage failure. After the Syslinux physical sanity test, the product task is to reconcile the A/B installer medium with the proven Syslinux removable-media first stage rather than asking the Acer to boot the already-refuted GRUB/MBR USB path again.
