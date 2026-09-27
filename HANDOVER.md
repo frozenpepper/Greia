@@ -2025,3 +2025,74 @@ Do not use the A/B GRUB raw installer as the next Acer physical test. The A/B ro
 The safe raw-image writer also had a separate util-linux compatibility bug: scoped `lsblk --json` can return a disk plus its partitions as flat siblings. `build/write-image.sh` now accepts only direct partition siblings of the confirmed target disk while preserving root-disk/removable/identity safety checks; manual partition-table zapping is no longer the intended workaround.
 
 Do not infer that the A/B storage/update design itself is invalid from this USB first-stage failure. After the Syslinux physical sanity test, the product task is to reconcile the A/B installer medium with the proven Syslinux removable-media first stage rather than asking the Acer to boot the already-refuted GRUB/MBR USB path again.
+
+## 67. Acer Syslinux dev USB built; read-only verifier FAT gate fails benignly (2026-09-27)
+
+At HEAD `cadfe4721a34451a03d673176790c02fff1b2a72` the named proven Acer procedure was
+run for real:
+
+```bash
+sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdb
+```
+
+USB confirmed as `/dev/sdb`, LaCie iamaKey, serial `eca3505216d7d3`, 8086618112 B, `RM=1`,
+after unmounting the desktop's `/media/orb/PIP_INSTALL` automount. The build
+(`legacy-x86-i686-dev`, not the A/B GRUB engineering image) produced
+`out/greia-os-installer-legacy-x86-i686-dev.img`, 1289748480 bytes, SHA-256
+`5b8bada7797a363173303978461d0f583cb306c567f29934ec73455e1b214c91`, and reported
+`Developer installer artifact verification: PASS`. The media was written with the
+postmortem-proven writer: active FAT32 `GREIA` spanning the stick, Syslinux VBR patched
+into the partition boot sector (`SYSLINUX` OEM + embedded `ldlinux.sys` path),
+`/usr/lib/syslinux/mbr/mbr.bin` in the MBR first 440 bytes with the `0x55AA` signature,
+and `ldlinux.sys` + `syslinux.cfg` + modules under `/boot/syslinux` via
+`syslinux --install --directory /boot/syslinux`.
+
+**The final read-only USB verification FAILED**, so the stick is **not** cleared for the
+owner's Acer test yet. `tools/verify-live-usb.sh` runs `fsck.vfat -n "$USB_PART"` and
+treats any non-zero exit as failure. The two reported conditions are benign for this recipe:
+
+- `There are differences between boot sector and its backup. This is mostly harmless.`
+  Cause is exact and expected: `syslinux --install` patches partition sector 0 (OEM becomes
+  `SYSLINUX`, `ldlinux.sys` path embedded) and does **not** update the backup boot sector at
+  sector 6, which still reads `mkfs.fat`. Verified by dumping both sectors.
+- `Reclaimed 29 unused clusters (118784 bytes)` / `Free cluster summary wrong
+  (1707929 vs. really 1707958)` — minor FAT accounting drift after the large file copies.
+
+Every substantive check the gate never reached was then run independently and **all
+passed**: partition 1 bootable; `.disk/live-uuid` match
+(`667eed94-5e75-4ff1-ab59-46540e999c9b`); `console=tty1` present; `panic=0` present; no
+`quiet`/`splash`/`console=null`/`loglevel=0`/timed-panic; `vmlinuz`, `initrd.img` and
+`filesystem.squashfs` byte-identical to the image; all three `payload/` files
+byte-identical; `boot/syslinux/syslinux.cfg` identical to the rendered template;
+`ldlinux.sys` present. So the media is content-correct and bootable, and the failure is a
+**verifier gate that is too strict for the proven writer recipe**, not a defective stick.
+Owner decision required: accept the benign fsck condition, or narrow the gate to assert on
+real FAT corruption. Do not simply delete the check.
+
+**Safe-writer fix validated narrowly.** `d4bece31` (`build/write-image.sh`) is present;
+`bash -n build/write-image.sh` passes. One narrow regression was added to the existing
+owner `tests/test_greia_release.py` (`SafeMediaWriterTopologyTests`) pinning exactly the
+corrected rule: a removable whole disk with its own direct `part` siblings passes the
+topology gate, an unrelated mapper/lvm sibling is still refused. 14/14 pass in that module.
+
+**Documentation reconciled.** `docs/architecture/UNIVERSAL_GREIA_SETUP_MEDIA_ARCHITECTURE.md`
+was checked and is **already correct** about the legacy removable first stage
+(`MBR -> active FAT32 -> SYSLINUX`) and already forbids replacing it with GRUB; only its
+authority line lacked ADR 0036, now added. The runbook and handoff sections claiming that
+document "still describes GRUB MBR" were false and are corrected by appended notes. §12 was
+appended to the 2026-09-27 failure review stating the failed artifact was the
+standalone/intermediate Session-04 GRUB engineering installer and that the
+one-universal-image architecture is not invalidated.
+
+**Stale loops: now three, and the build leaks one per run.** `/dev/loop2` (Acer A/B image,
+live backing file), `/dev/loop34` and `/dev/loop35` (backing files already deleted). All are
+`autoclear=1` with lingering partition mappings and clear **only on reboot**. This is
+reproducible, not a one-off: `build/build-installer-image.sh` cleanup reports
+`loop partition mappings remain after bounded partx teardown` on this host, and
+`GREIA_AGENT_OPERATIONS.md` §12 requires `losetup -a | grep greia` to be empty after every
+build, which is currently **not** satisfied. **One Orbiter reboot is owed.** Do not delete
+`/tmp/greia-installer-build.iMc2gy/` before that reboot — `/dev/loop2` is still attached to
+it. Do not use `losetup -D`.
+
+Session 04 remains OPEN and untouched by this turn: no QEMU lifecycle leg was run, no
+transaction/capability source was changed, and `CAP_CHOWN` remains **NOT AUTHORIZED**.

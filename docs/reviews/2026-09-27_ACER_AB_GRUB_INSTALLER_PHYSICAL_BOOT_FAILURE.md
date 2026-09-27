@@ -534,3 +534,64 @@ as not certified. The physical result is consistent with that label.
 - `docs/agents/GREIA_AGENT_OPERATIONS.md` §12 (build/host hygiene and physical-install rules)
 - `HANDOVER.md` §§64–65 (Orbiter disk failure and migration)
 - `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (A/B release lifecycle)
+
+---
+
+## 12. Addendum (2026-09-27, after owner review) — scope of this failure
+
+This addendum was appended after the repository owner reviewed this report, to prevent
+this negative physical result from being over-read. Nothing in §§1–11 is retracted.
+
+**The failed artifact was the standalone / intermediate Session-04 GRUB engineering
+installer.** It was `acer-aspire-one-i386-ab`, built as a Session-04 transaction and
+product-mode-QEMU engineering vehicle. It was **not** the final universal Greia Setup
+image, and it was not a product split.
+
+**This failure does not invalidate the one-universal-image architecture.** The product
+requirement remains exactly one user-facing Greia Setup image, and that requirement is
+unaffected by this failure.
+
+The final universal image **already requires** all of the following first stages on one
+media, which is precisely why a GRUB-only engineering image was never a substitute for it:
+
+```text
+P1 FAT32 active
+  SYSLINUX legacy-BIOS path + i386 live kernel/initramfs
+  UEFI shim/GRUB files + amd64 live kernel/initramfs
+  Pi 400 boot assets
+  Pi 500 boot assets
+  config.txt board filters
+
+P2 ext4
+  i386 / amd64 / arm64 live roots
+  Acer i386, amd64, Pi400, Pi500 A/B releases
+```
+
+"One image" never meant "one bootloader". Per ADR 0036 §9 and the active plan, the Acer
+removable path is `MBR -> active FAT32 -> SYSLINUX -> i386 live kernel/initramfs`, modern
+x86 uses the UEFI path on the same FAT partition, and Pi firmware uses board-filtered
+files on that same FAT partition.
+
+**The two responsibilities must not be conflated again:**
+
+```text
+SETUP USB (removable first stage) : SYSLINUX
+INSTALLED INTERNAL DISK (Acer)    : GRUB A/B
+```
+
+GRUB on the Acer internal disk is valid, has worked physically, and is **not** in question.
+The August postmortem explicitly distinguishes the two paths, and
+`docs/architecture/UNIVERSAL_GREIA_SETUP_MEDIA_ARCHITECTURE.md` states the same
+distinction directly ("The fact that removable USB GRUB failed on the reference Acer does
+not imply internal-disk GRUB is invalid").
+
+**Correction to this document's own §4 framing.** §4 cites
+`build/live-syslinux/syslinux.cfg.in` as saying GRUB's MBR "does not work on that
+firmware+stick combination". That quote is accurate, but it describes the **removable
+first stage only**. It is not a statement about the installed boot backend, and it must
+not be cited as one.
+
+**Authoritative scope of the negative evidence:** the standalone Session-04 A/B GRUB
+engineering image did not boot the reference Acer. That is the whole claim. It says
+nothing about the universal Setup image, which does not exist yet and is Session 08 work
+after Sessions 05–07 provide the real amd64 and Pi boot assets.

@@ -2,7 +2,9 @@
 
 **Status:** REVISED ARCHITECTURAL PLAN & SPECIFICATION  
 **Target:** R8 / Multi-Platform Installer Convergence + update-capable installation baseline  
-**Authority:** subordinate to accepted ADRs; aligned with ADR 0012, ADR 0013, ADR 0014, ADR 0021 and ADR 0030  
+**Authority:** subordinate to accepted ADRs; aligned with ADR 0012, ADR 0013, ADR 0014, ADR 0021, ADR 0030 and **ADR 0036**  
+**Normative owner for the universal Setup image:** ADR 0036 §9 together with the active plan `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`. Where this document and those two disagree, they win. This document remains the detailed design rationale.
+**Reaffirmed here, and unchanged by any 2026-09-27 event:** the legacy-BIOS removable first stage is `MBR -> active FAT32 -> SYSLINUX -> i386 live kernel/initramfs`. UEFI files for modern x86 and Raspberry Pi firmware/config/DTB assets coexist on that same FAT boot partition. Removable USB first stage and installed internal-disk boot are separate owners; the installed Acer uses GRUB A/B and that is not in question.  
 **Product invariant:** Installation is graphical and fail-closed. Whole-disk installation offers only verified eligible targets. Media identity, payload authority, target identity, power state and compatibility are rechecked immediately before destructive work.
 
 ---

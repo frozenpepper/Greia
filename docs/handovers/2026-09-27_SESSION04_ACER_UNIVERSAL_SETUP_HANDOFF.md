@@ -411,3 +411,25 @@ The user can begin the next session with:
 
 > Working on Greia OS. Read `docs/handovers/2026-09-27_SESSION04_ACER_UNIVERSAL_SETUP_HANDOFF.md` and `docs/agents/2026-09-27_SESSION04_ACER_RECOVERY_RUNBOOK.md`. Continue from current GitHub main. Keep the one universal Setup image architecture: Syslinux for legacy BIOS removable boot, UEFI files for modern PC, Pi firmware for Pi, all on one future image. First review the local-agent result/physical Acer result, then continue Session 04 without introducing new scaffolding.
 
+
+---
+
+## 19. Correction to §11 of this handoff (appended after execution)
+
+§11 states that `docs/architecture/UNIVERSAL_GREIA_SETUP_MEDIA_ARCHITECTURE.md` "still
+describes legacy Acer USB boot using GRUB MBR". Checked against source: **this is false.**
+The document already mandates `MBR -> active FAT32 -> SYSLINUX` for the removable legacy
+first stage, already records that the Acer rejected GRUB-on-USB, and already lists
+replacing that SYSLINUX path with GRUB as a forbidden failure mode. Its GRUB references in
+the target-layout section are the **installed internal-disk A/B** layout, which is correct
+and must not be changed.
+
+Only the precedence was genuinely missing; the authority line now names ADR 0036 as the
+normative owner of the universal Setup image, with the active plan. See the correction
+appended to `docs/agents/2026-09-27_SESSION04_ACER_RECOVERY_RUNBOOK.md` §13 and §12 of
+`docs/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`.
+
+Every architectural conclusion in §§3 and 4 of this handoff stands unchanged: one
+universal image, multiple first stages, Syslinux for legacy-BIOS removable boot, UEFI
+files for modern x86, Raspberry firmware for Pi, and GRUB A/B retained on the installed
+Acer internal disk.

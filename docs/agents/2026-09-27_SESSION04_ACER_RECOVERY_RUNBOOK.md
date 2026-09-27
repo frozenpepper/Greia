@@ -355,3 +355,36 @@ clean/dirty
 HEAD == ORIGIN/MAIN:
 yes/no
 ```
+
+---
+
+## 13. Correction to §3 of this runbook (appended after execution)
+
+§3 and the companion handoff §11 both state that
+`docs/architecture/UNIVERSAL_GREIA_SETUP_MEDIA_ARCHITECTURE.md` "still describes the Acer
+universal-media first stage as GRUB MBR". **That claim was checked against the source and
+is false.** The document already states the correct, current rule in several places:
+
+- its §0 locked decision 4: the universal removable medium starts from the proven
+  legacy-BIOS primitive, and the Acer "has already rejected GRUB-on-USB";
+- its evidence table: `GRUB MBR on removable USB -> not a reliable boot path` /
+  `plain MBR + active FAT32 + SYSLINUX -> boots`;
+- its mandatory first-stage list: `MBR partition table` / `active FAT32 first partition` /
+  `SYSLINUX MBR/VBR legacy-BIOS path`;
+- its failure-mode lists, which explicitly forbid "the universal-media composer replacing
+  the accepted legacy removable SYSLINUX path with GRUB" and "abandoning
+  active-FAT32/SYSLINUX on the Acer without explicit replacement physical evidence";
+- its §9 "Legacy BIOS x86 target layout" GRUB references, which are the **installed
+  internal-disk** A/B layout and are correct;
+- its explicit note that "removable USB GRUB failed on the reference Acer does not imply
+  internal-disk GRUB is invalid".
+
+The only genuine gap was precedence: the document's authority line did not name ADR 0036.
+That has been corrected. **Do not "fix" that document by rewriting its boot path** — it is
+already right, and §4 of this runbook still stands: do not replace the installed Acer
+GRUB A/B backend, and do not blanket-replace `grub-pc-bios-live` with Syslinux.
+
+The clarification that *was* genuinely missing has been added as §12 of
+`docs/reviews/2026-09-27_ACER_AB_GRUB_INSTALLER_PHYSICAL_BOOT_FAILURE.md`: the failed
+artifact was the standalone/intermediate Session-04 GRUB engineering installer, and the
+one-universal-image architecture is not invalidated by it.

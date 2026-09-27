@@ -2111,3 +2111,48 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
 - Immediate physical recovery: build/flash `legacy-x86-i686-dev` with `tools/build-and-flash-development-usb.sh`; capture exact last visible stage. This is a narrow sanity test of the already-proven boot path, not a replacement for A/B lifecycle work.
 - After positive Syslinux boot evidence, reconcile the A/B installer medium with the proven Syslinux/FAT32 first stage while keeping the A/B installed-disk/update semantics separate.
 - The unrelated safe-writer bug that rejected already-partitioned removable disks has been fixed in `build/write-image.sh`; no external `sgdisk --zap-all` workaround should be needed for ordinary reflashing.
+
+## 2026-09-27 — Acer Syslinux dev USB built; verifier FAT gate blocks physical test
+
+- Ran the named proven procedure for real at `cadfe472`:
+  `sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdb`
+  (LaCie iamaKey, serial `eca3505216d7d3`, 8086618112 B, `RM=1`; desktop automount
+  `/media/orb/PIP_INSTALL` unmounted first). This is the A16 legacy-BIOS removable path,
+  **not** the A/B GRUB engineering image from the previous entry.
+- Artifact: `out/greia-os-installer-legacy-x86-i686-dev.img`, 1289748480 bytes, SHA-256
+  `5b8bada7797a363173303978461d0f583cb306c567f29934ec73455e1b214c91`.
+  `Developer installer artifact verification: PASS`.
+- Media written with the postmortem-proven writer: active FAT32 `GREIA`, Syslinux VBR
+  patched into the partition boot sector, `syslinux mbr.bin` in the MBR first 440 bytes,
+  `ldlinux.sys`/`syslinux.cfg`/modules under `/boot/syslinux`. Boot diagnostics contract
+  holds: `console=tty1`, `panic=0`, no `quiet`/`splash`/`console=null`/`loglevel=0`/
+  timed panic reboot.
+- **`usb_flash_readback_verification=FAIL`.** `tools/verify-live-usb.sh` gates on
+  `fsck.vfat -n` exit status. Two benign causes, both verified by hand: the patched boot
+  sector vs the stale `mkfs.fat` backup at sector 6 (fsck itself calls this "mostly
+  harmless"), and 29 stale free clusters / free-cluster summary off by 29.
+- Every substantive check the gate never reached was run independently and **all passed**:
+  partition-1 bootable, `.disk/live-uuid` match (`667eed94-…`), `console=tty1`, `panic=0`,
+  no suppression, `vmlinuz`/`initrd.img`/`filesystem.squashfs` byte-identical, all three
+  `payload/` files byte-identical, `syslinux.cfg` identical to template, `ldlinux.sys`
+  present. Conclusion: the media is content-correct and bootable; the **gate** is too strict
+  for this writer recipe. Owner decision pending — do not weaken or delete the check
+  without a decision.
+- Validated the `d4bece31` safe-writer fix narrowly: `bash -n` passes, and one regression
+  added to the existing owner `tests/test_greia_release.py` pins the corrected topology
+  rule (direct `part` siblings accepted, unrelated mapper sibling refused). 14/14 pass.
+- Documentation reconciled: the universal-media architecture document was verified
+  **already correct** about `MBR -> active FAT32 -> SYSLINUX`; only its authority line
+  lacked ADR 0036. The runbook/handoff claims that it prescribed GRUB MBR were false and
+  are corrected by appended notes. §12 appended to the 2026-09-27 failure review confirming
+  the failed artifact was the intermediate Session-04 GRUB engineering installer and that
+  one-universal-image is not invalidated. **Do not replace installed Acer GRUB A/B.**
+- Stale loops now three (`loop2`, `loop34`, `loop35`), all `autoclear=1`, clearing only on
+  reboot. The leak is **reproducible**: `build-installer-image.sh` cleanup reports
+  `loop partition mappings remain after bounded partx teardown` on this host, so §12's
+  "loop audit must be empty" rule fails on every build until a reboot happens. One Orbiter
+  reboot is owed. Never `losetup -D`.
+- Session 04 lifecycle untouched this turn: no QEMU leg, no transaction/capability change,
+  `CAP_CHOWN` still **NOT AUTHORIZED**. Next software step is unchanged: diagnostic Session-04
+  installer rebuild from the unchanged S03 bundle, **fresh install only**, and report the
+  true apt fatal tail before any capability change.
