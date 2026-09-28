@@ -186,6 +186,82 @@ check_runtime_directory_contract() {
   }
 }
 
+check_installed_first_boot_contract() {
+  local launcher xsession xwrapper input supervisor
+  launcher="$(sqcat "$TARGET" etc/systemd/system/greia-launcher.service)" || {
+    echo "installed-system payload: launcher service is missing." >&2
+    exit 1
+  }
+  xsession="$(sqcat "$TARGET" usr/local/lib/greia-os/greia-x-session)" || {
+    echo "installed-system payload: X client session is missing." >&2
+    exit 1
+  }
+  xwrapper="$(sqcat "$TARGET" etc/X11/Xwrapper.config)" || {
+    echo "installed-system payload: Xwrapper policy is missing." >&2
+    exit 1
+  }
+  input="$(sqcat "$TARGET" etc/X11/xorg.conf.d/90-greia-input-defaults.conf)" || {
+    echo "installed-system payload: X input defaults are missing." >&2
+    exit 1
+  }
+  supervisor="$(sqcat "$TARGET" opt/greia-os/src/greia_launcher/supervisor.py)" || {
+    echo "installed-system payload: Activity supervisor is missing." >&2
+    exit 1
+  }
+
+  for required in \
+    "User=greiakid" \
+    "TTYPath=/dev/tty1" \
+    "StandardInput=tty-fail" \
+    "-logfile /run/greia-os/Xorg.0.log"
+  do
+    printf '%s\n' "$launcher" | grep -Fq -- "$required" || {
+      echo "installed-system payload: launcher first-boot contract missing: $required" >&2
+      exit 1
+    }
+  done
+  printf '%s\n' "$launcher" | grep -Eq '^SupplementaryGroups=.*(^|[[:space:]])tty([[:space:]]|$)' || {
+    echo "installed-system payload: launcher does not receive tty group." >&2
+    exit 1
+  }
+  printf '%s\n' "$xsession" | grep -Fq 'exec </dev/null' || {
+    echo "installed-system payload: launcher client does not detach VT stdin." >&2
+    exit 1
+  }
+  printf '%s\n' "$xsession" | grep -Fq '-m greia_launcher.child_shell' || {
+    echo "installed-system payload: launcher child-shell entrypoint is missing." >&2
+    exit 1
+  }
+  printf '%s\n' "$xwrapper" | grep -Fq 'allowed_users=anybody' || {
+    echo "installed-system payload: accepted Xwrapper user policy is missing." >&2
+    exit 1
+  }
+  printf '%s\n' "$xwrapper" | grep -Fq 'needs_root_rights=yes' || {
+    echo "installed-system payload: accepted Xwrapper rights policy is missing." >&2
+    exit 1
+  }
+  printf '%s\n' "$input" | grep -Fq 'MatchDevicePath "/dev/input/mouse*"' || {
+    echo "installed-system payload: legacy mouse compatibility nodes are not ignored." >&2
+    exit 1
+  }
+  printf '%s\n' "$input" | grep -Fq 'Option "Ignore" "true"' || {
+    echo "installed-system payload: legacy mouse ignore policy is incomplete." >&2
+    exit 1
+  }
+  printf '%s\n' "$supervisor" | grep -Fq '"--tmpfs",' || {
+    echo "installed-system payload: Activity sandbox private /run setup is missing." >&2
+    exit 1
+  }
+  printf '%s\n' "$supervisor" | grep -Fq '"/run"' || {
+    echo "installed-system payload: Activity sandbox /run target is missing." >&2
+    exit 1
+  }
+  if printf '%s\n' "$supervisor" | grep -Fq '"--unshare-user"'; then
+    echo "installed-system payload: broken Activity user-namespace mode returned." >&2
+    exit 1
+  fi
+}
+
 check_boot_progress_contract() {
   local stage path text first_boot prepare intro
   for stage in 'init-top:15' 'local-premount:30' 'init-bottom:45'; do
@@ -316,6 +392,7 @@ check_ssh_runtime "$TARGET" "installed-system payload"
 check_network "$TARGET" "installed-system payload"
 check_installed_dev_boot_diagnostics "$TARGET"
 check_runtime_directory_contract
+check_installed_first_boot_contract
 check_boot_progress_contract
 check_boot_artwork
 
@@ -338,6 +415,7 @@ printf '%s\n' "- live installer: password-enabled greia account, sshd bootstrap,
 printf '%s\n' "- installed payload: password-enabled greia account, sshd bootstrap, DHCP policy"
 printf '%s\n' "- installed dev boot: tty1 diagnostics, panic=0 (no timed reboot)"
 printf '%s\n' "- runtime roots: recurring tmpfiles ownership verified; one-time/launcher ownership race rejected"
+printf '%s\n' "- first boot: launcher VT/client split, Xwrapper/input and Activity sandbox contracts verified"
 printf '%s\n' "- boot progress: truthful milestones 15/30/45/55/65/78 + launcher 92 handoff verified"
 printf '%s\n' "- splash: full-colour 1024x600 canvas verified in live PPM, target PPM, GRUB PNG and launcher PNG"
 printf '%s\n' "- GRUB splash: proportional padding + centred; raw stretch path rejected"
