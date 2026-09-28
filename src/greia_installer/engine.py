@@ -267,6 +267,11 @@ class InstallationEngine:
 
             report(InstallProgress(0.78, "bootloader", "Making the disk bootable"))
             self.runner.run(["chroot", str(target_mount), "update-initramfs", "-u", "-k", "all"])
+            # Verify the initramfs that will actually boot. The reference Acer
+            # previously passed source/payload checks, then grey-screened and
+            # rebooted because this target-chroot regeneration dropped its
+            # SATA/AHCI stack.
+            self._verify_installed_initramfs_storage(target_mount)
             self.runner.run(["chroot", str(target_mount), "update-grub"])
             self.runner.run(
                 ["chroot", str(target_mount), "grub-script-check", "/boot/grub/grub.cfg"]
@@ -505,6 +510,81 @@ class InstallationEngine:
                 raise InstallationError(
                     f"installed boot entry {link_name} does not resolve inside the system"
                 )
+
+    def _verify_installed_initramfs_storage(self, target_root: Path) -> None:
+        """Verify target-kernel storage modules in the regenerated initramfs.
+
+        The installed initramfs is regenerated inside the target chroot after
+        hardware finalization. A previous Acer install silently dropped the
+        SATA/AHCI modules at exactly this step even though the payload copy
+        looked correct. Check the final artifact before GRUB is written.
+        """
+        kernel_link = target_root / "vmlinuz"
+        if not kernel_link.exists():
+            raise InstallationError("installed system has no kernel symlink")
+        kernel = kernel_link.resolve()
+        prefix = "vmlinuz-"
+        if not kernel.name.startswith(prefix):
+            raise InstallationError("installed kernel name does not expose its version")
+        version = kernel.name[len(prefix):]
+        if not version:
+            raise InstallationError("installed kernel version is empty")
+
+        initrd_rel = f"/boot/initrd.img-{version}"
+        initrd = target_root / initrd_rel.lstrip("/")
+        if not initrd.is_file():
+            raise InstallationError(
+                f"installed initramfs is missing for kernel {version}"
+            )
+
+        listing = self.runner.run(
+            ["chroot", str(target_root), "lsinitramfs", initrd_rel],
+            check=True,
+        )
+        initrd_names = {
+            Path(line.strip()).name
+            for line in listing.stdout.splitlines()
+            if line.strip()
+        }
+
+        missing: list[str] = []
+        for module in ("ahci", "libata", "sd_mod"):
+            info = self.runner.run(
+                [
+                    "chroot",
+                    str(target_root),
+                    "modinfo",
+                    "-k",
+                    version,
+                    "-F",
+                    "filename",
+                    module,
+                ],
+                check=False,
+            )
+            if info.returncode != 0:
+                # Matches greia-storage-modules: a target kernel that does not
+                # expose this driver as a module needs no initramfs copy.
+                continue
+            filenames = [line.strip() for line in info.stdout.splitlines() if line.strip()]
+            if not filenames:
+                raise InstallationError(
+                    f"could not resolve target-kernel storage module {module}"
+                )
+            module_path = filenames[-1]
+            if module_path in {"(builtin)", "builtin"}:
+                continue
+            leaf = Path(module_path).name
+            if leaf not in initrd_names and not any(
+                name.startswith(leaf + ".") for name in initrd_names
+            ):
+                missing.append(module)
+
+        if missing:
+            raise InstallationError(
+                "installed initramfs is missing required storage modules: "
+                + ", ".join(missing)
+            )
 
     def _mount_chroot_filesystems(self, root: Path, mounted: list[Path]) -> None:
         mount_chroot_filesystems(root, self.runner, mounted)
