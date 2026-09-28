@@ -231,15 +231,19 @@ This still requires physical visual acceptance. It simply removes the previous l
 
 ## 10. Graphical launcher handoff
 
-The systemd/Xorg service keeps the hardware-proven invariants from the Acer bring-up:
+The systemd/Xorg service keeps the hardware-proven invariants from the Acer bring-up, updated by the 2026-09-27 physical VT investigation:
 
-- `RuntimeDirectory=greia-os`;
-- `StandardInput=null`;
-- no desktop-style service namespace blocking Xorg device/path access;
-- the accepted Xwrapper policy;
-- Xorg on VT1.
+- the launcher remains `User=greiakid`;
+- `TTYPath=/dev/tty1` + `StandardInput=tty-fail` gives the X server the controlling VT and fails closed rather than stealing an occupied terminal;
+- `greia-x-session` immediately redirects its own stdin to `/dev/null` before starting the child shell or helpers, preserving the earlier SIGTTIN fix for the application tree;
+- Xorg writes its explicit log to the greiakid-owned `/run/greia-os/Xorg.0.log`;
+- no desktop-style service namespace blocks Xorg device/path access;
+- the accepted Xwrapper and legacy-input policies remain present;
+- Xorg stays on VT1 so the early framebuffer cover and graphical handoff do not deliberately switch VTs.
 
-The newer profile-aware `greia_launcher.child_shell` remains primary. Because it was introduced after the original hardware proof, the X session now falls back once to `greia_launcher.presentation` if the child-shell process exits non-zero. The original error remains in the journal. This protects the graphical boot from a new composition-layer exception without hiding an Xorg failure.
+Shared volatile roots are owned by `systemd-tmpfiles`, not by a launcher-specific `RuntimeDirectory=greia-os`. The launcher is ordered after tmpfiles setup and asserts the required roots before starting.
+
+The profile-aware `greia_launcher.child_shell` remains primary, with the trusted presentation fallback retained for a child-shell composition failure. The original error remains in the journal. This protects graphical boot from a composition-layer exception without hiding an Xorg failure.
 
 ## 11. Repeated rebuilds reuse the persistent host apt/pool caches
 
