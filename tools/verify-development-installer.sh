@@ -110,19 +110,38 @@ check_ssh_runtime() {
 
 check_network() {
   local squash="$1" label="$2" path content
-  for path in \
-    etc/systemd/network/20-greia-wired.network \
-    etc/systemd/network/25-greia-wireless.network
-  do
-    content="$(sqcat "$squash" "$path")" || {
-      echo "$label: missing recovery network policy $path" >&2
-      exit 1
-    }
-    printf '%s\n' "$content" | grep -Fq 'DHCP=yes' || {
-      echo "$label: $path does not enable DHCP." >&2
-      exit 1
-    }
-  done
+
+  # Wired recovery networking is systemd-networkd's job and must keep DHCP.
+  path="etc/systemd/network/20-greia-wired.network"
+  content="$(sqcat "$squash" "$path")" || {
+    echo "$label: missing recovery network policy $path" >&2
+    exit 1
+  }
+  printf '%s\n' "$content" | grep -Fq 'DHCP=yes' || {
+    echo "$label: $path does not enable DHCP." >&2
+    exit 1
+  }
+
+  # Wireless is iwd's job: Greia ships no wpa_supplicant, so iwd is the only
+  # WPA2-capable path. systemd-networkd claiming the link stops iwd entering
+  # station mode, which blinds the Wi-Fi UI and makes the installed iwd profile
+  # unusable on first boot. Assert the ownership boundary, not a DHCP policy.
+  path="etc/systemd/network/25-greia-wireless.network"
+  content="$(sqcat "$squash" "$path")" || {
+    echo "$label: missing wireless ownership policy $path" >&2
+    exit 1
+  }
+  local directives
+  directives="$(printf '%s\n' "$content" | grep -vE '^[[:space:]]*(#|;|$$)' | grep -v '^[[:space:]]*$$')"
+  printf '%s\n' "$directives" | grep -Fq 'Unmanaged=yes' || {
+    echo "$label: $path must leave the wireless link to iwd (Unmanaged=yes)." >&2
+    exit 1
+  }
+  printf '%s\n' "$directives" | grep -Fq 'DHCP=yes' && {
+    echo "$label: $path must not configure DHCP; iwd owns the wireless link." >&2
+    exit 1
+  }
+  return 0
 }
 
 check_installed_dev_boot_diagnostics() {

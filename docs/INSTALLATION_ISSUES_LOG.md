@@ -353,6 +353,66 @@ See `docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md`.
 
 ---
 
+## 13. Installer reported the Wi-Fi card but could never list a network
+
+**Symptom:** on the reference Acer the installer stopped reporting "no wifi card
+found" after the `netdev` group repair, but the network list stayed permanently
+empty. Scanning, joining and the recovery-network path were all unreachable.
+
+**Root cause class: two network managers were configured to own the same link.**
+Greia ships **no `wpa_supplicant`** — `iwd` (in `build/package-sets/installer-base.txt`
+and `build/package-sets/network-basic.txt`) is the only WPA2-capable path in the
+product. Both build overlays also carried `25-greia-wireless.network` with
+`Name=wl*` and `DHCP=yes`, which made `systemd-networkd` claim the adapter. iwd
+only publishes its `Device`/`Station` D-Bus interfaces while it holds the adapter
+in **station mode**, and it will not take a link that `systemd-networkd`
+manages, so the installer's iwd backend saw an `Adapter` and no `Station`.
+
+**Hardware evidence (read over the developer SSH surface on the live Acer):**
+
+```
+/net/connman/iwd/0  ->  only net.connman.iwd.Adapter
+  .Name = "phy0"   .Powered = true   .SupportedModes = "ad-hoc" "station" "ap"
+  no net.connman.iwd.Device, no net.connman.iwd.Station
+networkctl status wlan0: Network File = /etc/systemd/network/25-greia-wireless.network
+                         State = no-carrier (configuring)   wlan0 operstate = down
+```
+
+The `netdev` grant itself was correct and effective: introspecting iwd as the
+service identity (`uid=nobody` **plus group `netdev`**) succeeded. Note that
+`su nobody` is *not* a valid probe — `su` does not inherit systemd's
+`SupplementaryGroups`, so it fails with `Access denied` even when the real
+service can reach the bus.
+
+**Why the old policy could never have worked anyway:** bare `DHCP=yes` on a
+wireless link cannot speak WPA2 without `wpa_supplicant`, so
+`25-greia-wireless.network` could only ever have joined an *open* network. The
+2026-08-20 "wireless recovery networking" intent (`e0eb9cd5`) was therefore
+never functional for an encrypted network, while silently blinding the Wi-Fi UI.
+
+**Fix:** the wireless link is declared explicitly **unmanaged** by
+`systemd-networkd` in both overlays (`Unmanaged=yes`), rather than merely
+failing to match, so a future `wl*` policy cannot silently re-claim it. Wired
+DHCP is unchanged in `20-greia-wired.network`. `Unmanaged=yes` is the documented
+systemd mechanism for exactly this case ("preventing later matching network files
+from interfering with interfaces that are fully controlled by" another manager).
+
+This also aligns the image with what the installer already does: it persists the
+chosen iwd `.psk`/`.open` profile into the installed target
+(`src/greia_installer/engine.py` — `request.wifi_profile.write_to(target_root)`),
+and `iwd.service` is already enabled in the `target` role
+(`build/lib/compose.sh` — `compose_configure_systemd`). Those persisted profiles
+were unusable while `systemd-networkd` held the link.
+
+**Regression-locked** by
+`tests/test_installation_hardware_regressions.py::test_iwd_alone_owns_the_wireless_link_in_every_built_root`
+(no `systemd-networkd` policy may claim a wireless link; wired DHCP must
+survive; `wpa_supplicant` must stay absent) and by
+`tests/test_boot_diagnostics_hardening.py::test_live_installer_explicitly_starts_recovery_network_services`.
+Both were confirmed to fail against the previous `DHCP=yes` policy.
+
+---
+
 ## Regression rule established by this hardware tranche
 
 A real-hardware fix is not complete until all four conditions hold:

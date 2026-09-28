@@ -1,10 +1,11 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-25
+**Updated:** 2026-09-28
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
 **Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
+**Current physical-hardware step:** **Acer Wi-Fi ownership acceptance — source fix landed, awaiting owner hardware evidence (see §8c)**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
@@ -242,6 +243,45 @@ docs/testing/2026-09-02_PARENT_REAL_RUNTIME_FINAL_ACCEPTANCE.md
 ```
 
 Do not combine their obsolete token instructions with the unified procedure.
+
+## 8c. Acer Wi-Fi ownership accepted as an architecture decision; hardware evidence still open (2026-09-28)
+
+Source fix is complete, regression-locked and pushed. The physical acceptance is
+**not** yet obtained.
+
+The defect class is "two network managers configured to own the same link".
+Greia ships no `wpa_supplicant`, so `iwd` is the only WPA2-capable path in the
+product, but both overlays carried `25-greia-wireless.network` with
+`Name=wl*` + `DHCP=yes`, which made `systemd-networkd` claim the adapter. iwd
+only publishes `Device`/`Station` while it holds **station mode**, so the
+installer's Wi-Fi UI could see the card and never list a network — and bare
+`DHCP=yes` on a wireless link could not have joined a WPA2 network regardless.
+
+Root cause and hardware evidence: `docs/INSTALLATION_ISSUES_LOG.md` §13.
+Decision and regression locks: active plan entry `IWD-WIRELESS-OWNERSHIP`.
+
+```text
+changed:   both overlays' 25-greia-wireless.network -> [Network] Unmanaged=yes
+preflight: installer_engine 21 OK / installation_hardware_regressions 15 OK
+           greia_release 14 OK / boot_diagnostics_hardening 18 OK  (68/68)
+           bash -n clean on the three verify/build tools
+evidence:  SOURCE-CLOSED (source + regression locks)
+           the iwd station-mode/list/join behaviour on the Acer is UNPROVEN
+next:      boot the rebuilt legacy-x86-i686-dev Syslinux/FAT32 installer USB on
+           the Acer, confirm it LISTS and JOINS a WPA2 network, install, then
+           confirm the installed first boot reuses the persisted iwd profile
+```
+
+Two Acer defects remain open and are **not** addressed by the above:
+
+```text
+installer UI CPU spin (~97% observed)   UNPROVEN, undiagnosed
+build-host loop leak per image build    OPEN build-host cleanup defect
+```
+
+The second is cosmetic to a correctly flashed USB but should still be fixed: the
+builder leaks an autoclear loop per image build, so repeated builds accumulate
+them until a host reboot.
 
 ## 8. Current exact next step
 

@@ -2229,3 +2229,50 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - No earlier entry rewritten. Full closure re-run on the orbiter lane at HEAD `98b06079` (D5 + D4 + D3 + §24 integrated; prior tree-identical V12G residue treated as ABSENT; fresh HEAD-bound archive tgz `bd8dc86d…`; re-minted seq20 `c66d46bc…` / seq21 `5e2d611d…` / seq23 `1526ce11…`, all signature-verified). Official `acer-aspire-one-i386-ab` image rebuilt (`GREIA_AB_*` on sudo line): 1320157184 B sha `3d3a01de…`, USB bundle == seq20, footprint 985 < 1000 PASS (preferred-≤800 warning retained). Built-artifact proof (read-only loop + unsquashfs): canonical `profile.id`; live AND target manifests carry `python3-cryptography 38.0.4` (D4 intact); built live installer unit declares exactly `CAP_SYS_ADMIN CAP_SYS_CHROOT` (D5 reached the artifact); target payload enables `greia-system-update.socket`. Focused local suites 92/92 GREEN.
 - Live closure (driver sha `c4d9cd07…`, two-phase shape, frozen P5.4 baseline, pinned HEAD, run as root): positive control RED-as-expected (`d31_fn=None` → BLOCKED), then install-execute timed out (1200 s; guest at login, never powers off) — 0/9 predicates GREEN, P5.4 NOT_READY, D31 unexecuted. Journal-to-console diag replay on a disposable run-clone copy shows the V12F-identical chain (`slot_writer.finalize:1159` → `slots:173` → `block_slots:679` → `slots:126` → `hardware_support_install:61` → `device_seams:143`) diverging only at the errno: `chroot: failed to run command 'apt-get': No such file or directory` (was EPERM). D5 effective on the product path; hardware-support leg still red. Forensics (read-only mount of slot A): slot holds ONLY `{etc,lost+found,run,var}` from the streamed 64 MiB bundle payload — no `/usr`, no `apt-get` — because `fresh_ab_install` streams `open_bundle_payload_stream(bundle)` verbatim into the slot and `finalize` then `chroot <slot> apt-get`, so ENOENT is deterministic for any V12E/V12F/V12G-minted bundle. D6 is new line-of-sight (V12F died one stage earlier), not a regression. No fixture hack applied to force green. Lane left healthy (own loops detached, diag QEMU operator-terminated after the decisive traceback, no stray mounts/processes, never `umount -R`; key/sudoers + pre-existing loops for parent/owner).
 - T3-P remains OPEN/BLOCKING. Next: product authority decides the D6 repair side (full-Debian release payloads carrying apt/dpkg with slot-capacity consequences, vs install flow no longer assuming `apt-get` inside a payload-only slot — both outside the closure lane's Allowed changes) and issues the rebuild + closure re-run successor; do NOT mark T3-P DONE (evidence: T-BAG `POSTR1-P5-GATE-CLOSURE-V12G/attempts/implementer-5/`; orbiter `/tmp/greia-p5-v12g5-*`, `/tmp/greia-p5-out-v12g5/`, `/tmp/v12g5-diag-*`).
+
+## 2026-09-28 — Wireless link ownership decided: iwd owns wireless in every built root; `systemd-networkd` no longer claims it (`IWD-WIRELESS-OWNERSHIP`)
+
+- No earlier entry rewritten. Decision taken by the repository owner (option A, explicit
+  "trust your judgement" authorisation) after the evidence below was presented. The premise
+  that settled it: Greia ships **no `wpa_supplicant`** (`iwd` only, in
+  `build/package-sets/installer-base.txt` + `network-basic.txt`), so `iwd` is the only
+  WPA2-capable path in the product; a `Name=wl*` + `DHCP=yes` policy could therefore never
+  have joined an encrypted network even if it had worked. Supporting line-of-sight:
+  `src/greia_installer/engine.py` already persists the chosen iwd `.psk`/`.open` profile
+  into the installed target (`request.wifi_profile.write_to(target_root)`) and
+  `build/lib/compose.sh` (`compose_configure_systemd`) already enables `iwd.service` in
+  the `target` role — both were inert while networkd held the link.
+- Hardware evidence collected over the developer SSH surface on the live reference Acer
+  from the `c5e4d80e` installer image: `/net/connman/iwd/0` exposed **only**
+  `net.connman.iwd.Adapter` (no `Device`, no `Station`) because iwd never held station
+  mode; `networkctl status wlan0` showed `Network File =
+  /etc/systemd/network/25-greia-wireless.network`, `State = no-carrier (configuring)`,
+  `operstate = down`. The `netdev` grant from `c5e4d80e` was confirmed effective
+  (introspection as `uid=nobody` **+ group `netdev`** succeeded); `su nobody` is an
+  invalid probe because `su` does not inherit systemd `SupplementaryGroups`.
+- Shipped-source change: `25-greia-wireless.network` in **both** `build/overlay` and
+  `build/installer-overlay` now declares `[Network] Unmanaged=yes` (the documented systemd
+  mechanism for "preventing later matching files from interfering with an interface fully
+  controlled by" another manager) rather than merely failing to match, so a future `wl*`
+  policy cannot silently re-claim the link. `20-greia-wired.network` is untouched.
+  `25-greia-wireless.network` is retained rather than deleted because the explicit
+  ownership statement is the durable boundary.
+- Regression-locked, not merely asserted: new
+  `test_iwd_alone_owns_the_wireless_link_in_every_built_root` (scans every `*.network` in
+  both overlays; a wireless-matching `Name=` must be `Unmanaged=yes` and must carry no
+  `DHCP`/`DHCPv4`/`DHCPv6`/`IPv6AcceptRA`; wired `DHCP=yes` must survive; `wpa_supplicant`
+  must stay absent from every package set; `iwd.service` must stay enabled). The stale
+  contract in `test_live_installer_explicitly_starts_recovery_network_services` (which
+  asserted `DHCP=yes`/`MulticastDNS=yes` on the wireless policy, i.e. locked the superseded
+  `e0eb9cd5` intent) was corrected to assert the new boundary, and both suites were
+  verified to go RED against the previous policy and GREEN after the change.
+- Focused preflight from HEAD `278fb0ec` + this change: `test_installer_engine` 21 OK,
+  `test_installation_hardware_regressions` 15 OK, `test_greia_release` 14 OK,
+  `test_boot_diagnostics_hardening` 18 OK (68/68); `bash -n` clean on
+  `verify-development-installer.sh`, `verify-live-usb.sh`,
+  `build-and-flash-development-usb.sh`. `make verify` deliberately not run for this USB
+  cycle. Root-cause class recorded in `docs/INSTALLATION_ISSUES_LOG.md` §13.
+- T3-P is **not** addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and
+  flash the physical Acer `legacy-x86-i686-dev` Syslinux/FAT32 installer and obtain owner
+  hardware evidence that the installer now lists and joins a WPA2 network, and that the
+  installed first boot reuses the persisted iwd profile.

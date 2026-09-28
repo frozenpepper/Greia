@@ -217,6 +217,38 @@ docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
 
 Physical device/controller details stay below runtime-neutral semantics. Ordinary Activities do not receive raw `/dev/input` to implement convenience mappings.
 
+## Network / Wi-Fi ownership
+
+Read:
+
+```text
+docs/INSTALLATION_ISSUES_LOG.md            (§13 wireless link ownership)
+src/greia_platform/wifi.py                 (iwd backend: available/scan/connect)
+build/overlay/etc/systemd/network/         (wired vs wireless ownership)
+build/lib/compose.sh                       (compose_configure_systemd enable lists)
+```
+
+**`iwd` owns the wireless link. `systemd-networkd` owns wired DHCP only.** Greia
+ships no `wpa_supplicant`, so iwd is the only WPA2-capable path in the product.
+Three traps, all of which have actually bitten this project:
+
+- **`systemd-networkd` must never claim a wireless interface.** iwd only publishes
+  its `Device`/`Station` D-Bus interfaces while it holds the adapter in *station
+  mode*, and it will not take a link networkd manages. A `Name=wl*` + `DHCP=yes`
+  policy makes the installer report the card while never listing a network, and it
+  cannot join an encrypted network anyway. Wireless policies use
+  `[Network] Unmanaged=yes` to state the boundary explicitly rather than merely
+  failing to match.
+- **Do not probe iwd as `su nobody`.** iwd's bus policy allows `root` and group
+  `netdev`. `su` does not inherit systemd `SupplementaryGroups`, so a `su` probe
+  returns `Access denied` even when the real service reaches the bus fine. Probe
+  with `setpriv --groups=$(getent group netdev | cut -d: -f3)`, or trust the
+  installer's own report.
+- **The installer persists iwd `.psk`/`.open` profiles into the target**
+  (`engine.py` → `request.wifi_profile.write_to`). Changing wireless ownership
+  in a way that starves iwd of station mode silently breaks installed first boot,
+  not just the installer UI.
+
 ## Responsive display / viewport / coordinate-space work
 
 Read:

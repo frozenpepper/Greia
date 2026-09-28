@@ -88,10 +88,31 @@ class BootDiagnosticsHardeningTests(unittest.TestCase):
         wireless = ROOT / "build/installer-overlay/etc/systemd/network/25-greia-wireless.network"
         self.assertTrue(wired.is_file())
         self.assertTrue(wireless.is_file())
-        self.assertIn("DHCP=yes", wired.read_text(encoding="utf-8"))
-        self.assertIn("DHCP=yes", wireless.read_text(encoding="utf-8"))
-        self.assertIn("MulticastDNS=yes", wired.read_text(encoding="utf-8"))
-        self.assertIn("MulticastDNS=yes", wireless.read_text(encoding="utf-8"))
+        # Assert on configuration, not on the prose of the explanatory comment.
+        wired_directives = self._directives_only(wired)
+        wireless_directives = self._directives_only(wireless)
+        # Wired recovery networking is systemd-networkd's job and stays.
+        self.assertIn("DHCP=yes", wired_directives)
+        self.assertIn("MulticastDNS=yes", wired_directives)
+        # Wireless recovery networking is iwd's job. The installer must still
+        # start iwd and networkd, but networkd must not claim the wireless
+        # link: iwd only publishes Device/Station while it holds the adapter in
+        # station mode, so a networkd DHCP policy on wl* left the installer
+        # unable to list or join any network on the reference Acer. The policy
+        # file is retained only to declare that ownership boundary.
+        self.assertIn("Unmanaged=yes", wireless_directives)
+        self.assertNotIn("DHCP=yes", wireless_directives)
+        self.assertNotIn("MulticastDNS=yes", wireless_directives)
+
+    @staticmethod
+    def _directives_only(path: Path) -> str:
+        """Return the .network file with comments and blank lines removed."""
+
+        return "\n".join(
+            line
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.strip().startswith(("#", ";"))
+        )
 
     def test_reference_acer_syslinux_remains_observable_per_postmortem(self) -> None:
         cfg = (ROOT / "build/live-syslinux/syslinux.cfg.in").read_text(

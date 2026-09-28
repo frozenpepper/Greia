@@ -75,11 +75,26 @@ grep -Fq 'ExecStartPre=/usr/sbin/sshd -t' "$DROPIN" || exit 1
   exit 1
 }
 
-for network in 20-greia-wired.network 25-greia-wireless.network; do
-  path="$MOUNT/etc/systemd/network/$network"
-  [[ -f "$path" ]] || { echo "Developer target: missing $network" >&2; exit 1; }
-  grep -Fq 'DHCP=yes' "$path" || { echo "Developer target: $network lacks DHCP." >&2; exit 1; }
-done
+# Wired recovery networking is systemd-networkd's job and must keep DHCP.
+path="$MOUNT/etc/systemd/network/20-greia-wired.network"
+[[ -f "$path" ]] || { echo "Developer target: missing 20-greia-wired.network" >&2; exit 1; }
+grep -Fq 'DHCP=yes' "$path" || { echo "Developer target: wired policy lacks DHCP." >&2; exit 1; }
+
+# Wireless is iwd's job. The installer persists an iwd .psk/.open profile into
+# this target, and iwd.service is enabled in the target role, so systemd-networkd
+# claiming the link would make that profile unusable on first boot. Assert the
+# ownership boundary instead of a DHCP policy on a wireless interface.
+path="$MOUNT/etc/systemd/network/25-greia-wireless.network"
+[[ -f "$path" ]] || { echo "Developer target: missing 25-greia-wireless.network" >&2; exit 1; }
+directives="$(grep -vE '^[[:space:]]*(#|;|$)' "$path")"
+grep -Fq 'Unmanaged=yes' <<<"$directives" || {
+  echo "Developer target: wireless policy must leave the link to iwd (Unmanaged=yes)." >&2
+  exit 1
+}
+if grep -Fq 'DHCP=yes' <<<"$directives"; then
+  echo "Developer target: wireless policy must not configure DHCP; iwd owns it." >&2
+  exit 1
+fi
 
 # Hardware-recovery target images must preserve the postmortem diagnostic
 # channel: tty1 visible, no timed panic reboot, and enough kernel/systemd status

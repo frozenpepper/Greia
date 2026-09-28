@@ -129,6 +129,96 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 return line.split("=", 1)[1].split()
         return []
 
+    def test_iwd_alone_owns_the_wireless_link_in_every_built_root(self) -> None:
+        """No systemd-networkd policy may claim a wireless interface.
+
+        Greia ships no wpa_supplicant, so iwd is the only WPA2-capable path in
+        the product. iwd only publishes its Device/Station D-Bus interfaces
+        while it holds the adapter in station mode, and it will not take a link
+        that systemd-networkd manages. A wireless `[Network] DHCP=yes` policy
+        therefore did two harmful things at once: it blinded the installer's
+        Wi-Fi selection UI, and it prevented the installed system from using
+        the iwd profile the installer persists at first install. It also could
+        not have joined an encrypted network, because bare DHCP-on-wireless
+        cannot speak WPA2 without wpa_supplicant. Reproduced on the Acer, where
+        the card was reported as found but no network could ever be listed.
+        """
+
+        for prefix in ("build/overlay", "build/installer-overlay"):
+            network_dir = PROJECT_ROOT / prefix / "etc/systemd/network"
+            self.assertTrue(network_dir.is_dir(), f"{prefix} has no network policy dir")
+            for policy in sorted(network_dir.glob("*.network")):
+                with self.subTest(policy=f"{prefix}/{policy.name}"):
+                    sections = self._network_sections(policy.read_text(encoding="utf-8"))
+                    matched = (sections.get("Match", {}).get("Name", "") or "").split()
+                    if not any(self._is_wireless_name(name) for name in matched):
+                        continue
+                    network = sections.get("Network", {})
+                    # Ownership must be stated, not merely absent, so that a
+                    # future wireless policy cannot silently re-claim the link.
+                    self.assertEqual(
+                        network.get("Unmanaged"),
+                        "yes",
+                        f"{prefix}/{policy.name} must leave the wireless link to iwd",
+                    )
+                    for key in ("DHCP", "DHCPv4", "DHCPv6", "IPv6AcceptRA"):
+                        self.assertNotIn(
+                            key,
+                            network,
+                            f"{prefix}/{policy.name} must not configure {key} on a "
+                            "wireless link; iwd owns it",
+                        )
+
+        # The premise the ownership decision rests on must stay true.
+        package_sets = list((PROJECT_ROOT / "build/package-sets").glob("*.txt"))
+        self.assertTrue(package_sets)
+        for package_set in package_sets:
+            with self.subTest(package_set=package_set.name):
+                self.assertNotIn(
+                    "wpa_supplicant",
+                    package_set.read_text(encoding="utf-8").split(),
+                    "iwd is the only WPA2 path; adding wpa_supplicant would "
+                    "reintroduce a second wireless owner",
+                )
+        self.assertIn(
+            "iwd.service",
+            (PROJECT_ROOT / "build/lib/compose.sh").read_text(encoding="utf-8"),
+            "iwd must stay enabled in the installed target",
+        )
+
+        # Wired DHCP must survive: only the wireless link changed hands.
+        for prefix in ("build/overlay", "build/installer-overlay"):
+            with self.subTest(prefix=prefix):
+                wired = self._network_sections(
+                    self.read(f"{prefix}/etc/systemd/network/20-greia-wired.network")
+                )
+                self.assertEqual(wired.get("Network", {}).get("DHCP"), "yes")
+
+    @staticmethod
+    def _is_wireless_name(pattern: str) -> bool:
+        """Whether a systemd-networkd Name= pattern targets a wireless link."""
+
+        return any(pattern.startswith(prefix) for prefix in ("wl", "wifi", "ra", "ath"))
+
+    @staticmethod
+    def _network_sections(text: str) -> dict[str, dict[str, str]]:
+        """Parse the simple subset of systemd .network syntax used by Greia."""
+
+        sections: dict[str, dict[str, str]] = {}
+        current = ""
+        for raw in text.splitlines():
+            line = raw.strip()
+            if not line or line.startswith(("#", ";")):
+                continue
+            if line.startswith("[") and line.endswith("]"):
+                current = line[1:-1]
+                sections.setdefault(current, {})
+                continue
+            if "=" in line and current:
+                key, value = line.split("=", 1)
+                sections[current][key.strip()] = value.strip()
+        return sections
+
     def test_shared_runtime_directories_are_recreated_before_services_every_boot(self) -> None:
         tmpfiles = self.read("build/overlay/etc/tmpfiles.d/greia-runtime.conf")
         launcher = self.read("build/overlay/etc/systemd/system/greia-launcher.service")

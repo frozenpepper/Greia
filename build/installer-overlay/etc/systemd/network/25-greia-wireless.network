@@ -1,10 +1,19 @@
+# Greia wireless link is owned by iwd, not systemd-networkd.
+#
+# Greia ships no wpa_supplicant: iwd (build/package-sets/installer-base.txt,
+# build/package-sets/network-basic.txt) is the only WPA2-capable path in the
+# product. iwd only exposes its Device/Station D-Bus interfaces while it holds
+# the adapter in station mode, and it will not claim a link that
+# systemd-networkd manages. A `DHCP=yes` policy here therefore did not merely
+# duplicate iwd: it made the installer's Wi-Fi selection UI permanently blind,
+# and it could never have joined an encrypted network anyway, because bare
+# DHCP-on-wireless cannot speak WPA2 without wpa_supplicant.
+#
+# Unmanaged=yes states the ownership boundary explicitly instead of merely
+# failing to match, so a future `wl*` policy cannot silently re-claim the link.
+# Wired DHCP remains in 20-greia-wired.network.
 [Match]
-Name=wl*
+Name=wl* wlan* wlp* wlx*
 
 [Network]
-DHCP=yes
-IPv6PrivacyExtensions=yes
-MulticastDNS=yes
-
-[DHCPv4]
-UseHostname=yes
+Unmanaged=yes
