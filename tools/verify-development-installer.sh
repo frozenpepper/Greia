@@ -180,10 +180,19 @@ check_runtime_directory_contract() {
     echo "installed-system payload: one-time first boot still owns volatile /run/greia-hardware." >&2
     exit 1
   fi
-  printf '%s\n' "$prepare" | grep -Fq 'Missing Greia runtime root' || {
-    echo "installed-system payload: launcher preflight does not verify recurring runtime roots." >&2
+  for required in \
+    'AssertPathIsDirectory=/run/greia-os' \
+    'AssertPathIsDirectory=/run/greia-hardware'
+  do
+    printf '%s\n' "$launcher" | grep -Fq "$required" || {
+      echo "installed-system payload: launcher runtime-root assertion missing: $required" >&2
+      exit 1
+    }
+  done
+  if printf '%s\n' "$prepare" | grep -Fq 'chown greiakid:pipprofiles /run/greia-os'; then
+    echo "installed-system payload: launcher preflight regained shared /run ownership." >&2
     exit 1
-  }
+  fi
 }
 
 check_installed_first_boot_contract() {
@@ -228,7 +237,7 @@ check_installed_first_boot_contract() {
     echo "installed-system payload: launcher client does not detach VT stdin." >&2
     exit 1
   }
-  printf '%s\n' "$xsession" | grep -Fq '-m greia_launcher.child_shell' || {
+  printf '%s\n' "$xsession" | grep -Fq -- '-m greia_launcher.child_shell' || {
     echo "installed-system payload: launcher child-shell entrypoint is missing." >&2
     exit 1
   }
