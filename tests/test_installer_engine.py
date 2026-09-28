@@ -303,6 +303,96 @@ class InstallerEngineTests(unittest.TestCase):
             )
             InstallationEngine._verify_installed_boot_config(root, uuid_text, Path("/dev/sda1"))
 
+    def test_verify_regenerated_initramfs_keeps_target_storage_modules(self) -> None:
+        class ProbeRunner:
+            def run(self, command, *, check=True):
+                argv = list(command)
+                if "lsinitramfs" in argv:
+                    return subprocess.CompletedProcess(
+                        argv,
+                        0,
+                        "\n".join(
+                            (
+                                "usr/lib/modules/6.1-test/kernel/drivers/ata/ahci.ko.xz",
+                                "usr/lib/modules/6.1-test/kernel/drivers/ata/libata.ko.xz",
+                                "usr/lib/modules/6.1-test/kernel/drivers/scsi/sd_mod.ko.xz",
+                            )
+                        ),
+                        "",
+                    )
+                module = argv[-1]
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    f"/lib/modules/6.1-test/kernel/{module}.ko\n",
+                    "",
+                )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "boot").mkdir()
+            (root / "boot/vmlinuz-6.1-test").write_bytes(b"kernel")
+            (root / "boot/initrd.img-6.1-test").write_bytes(b"initrd")
+            os.symlink("boot/vmlinuz-6.1-test", root / "vmlinuz")
+            engine = InstallationEngine(project_root=PROJECT_ROOT, runner=ProbeRunner())
+            engine._verify_installed_initramfs_storage(root)
+
+    def test_verify_regenerated_initramfs_rejects_missing_target_storage_module(self) -> None:
+        class ProbeRunner:
+            def run(self, command, *, check=True):
+                argv = list(command)
+                if "lsinitramfs" in argv:
+                    return subprocess.CompletedProcess(
+                        argv,
+                        0,
+                        "\n".join(
+                            (
+                                "usr/lib/modules/6.1-test/kernel/drivers/ata/ahci.ko.xz",
+                                "usr/lib/modules/6.1-test/kernel/drivers/ata/libata.ko.xz",
+                            )
+                        ),
+                        "",
+                    )
+                module = argv[-1]
+                return subprocess.CompletedProcess(
+                    argv,
+                    0,
+                    f"/lib/modules/6.1-test/kernel/{module}.ko\n",
+                    "",
+                )
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "boot").mkdir()
+            (root / "boot/vmlinuz-6.1-test").write_bytes(b"kernel")
+            (root / "boot/initrd.img-6.1-test").write_bytes(b"initrd")
+            os.symlink("boot/vmlinuz-6.1-test", root / "vmlinuz")
+            engine = InstallationEngine(project_root=PROJECT_ROOT, runner=ProbeRunner())
+            with self.assertRaisesRegex(
+                InstallationError, "missing required storage modules: sd_mod"
+            ):
+                engine._verify_installed_initramfs_storage(root)
+
+    def test_verify_regenerated_initramfs_allows_nonmodular_target_driver(self) -> None:
+        class ProbeRunner:
+            def run(self, command, *, check=True):
+                argv = list(command)
+                if "lsinitramfs" in argv:
+                    return subprocess.CompletedProcess(argv, 0, "", "")
+                module = argv[-1]
+                if module == "ahci":
+                    return subprocess.CompletedProcess(argv, 0, "(builtin)\n", "")
+                return subprocess.CompletedProcess(argv, 1, "", "module not found")
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "boot").mkdir()
+            (root / "boot/vmlinuz-6.1-test").write_bytes(b"kernel")
+            (root / "boot/initrd.img-6.1-test").write_bytes(b"initrd")
+            os.symlink("boot/vmlinuz-6.1-test", root / "vmlinuz")
+            engine = InstallationEngine(project_root=PROJECT_ROOT, runner=ProbeRunner())
+            engine._verify_installed_initramfs_storage(root)
+
     def test_verify_installed_boot_config_rejects_uuid_mismatch(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
