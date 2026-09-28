@@ -71,8 +71,12 @@ and target overlays.
 **Important correction to the earlier log:** commit `de6299e` added installed
 GRUB/root-UUID/kernel/initrd **boot-config verification**; it did not inspect the
 contents of the generated initramfs. The target-kernel-aware storage policy
-prevents the specific host-probing omission structurally. Generated-image
-acceptance must still inspect the produced initramfs as an artifact-level check.
+prevents the specific host-probing omission structurally. As of 2026-09-28 the
+legacy installer also inspects the **regenerated target initramfs itself** after
+`update-initramfs`: every `ahci`, `libata` or `sd_mod` driver that the
+target kernel exposes as a module must be present in that initrd before GRUB is
+written or the installer may report completion. This turns the historical
+post-install grey-screen/reboot loop into an installer-time failure.
 
 **General lesson:** never let the hardware visible to the build VM/chroot decide
 whether a boot-critical target driver exists, and never solve that mistake by
@@ -98,15 +102,29 @@ the terminal as stdin. A child that attempted to read from it received
 **SIGTTIN** because it belonged to a background process group. The same class of
 failure later affected other command-line helpers.
 
-**Fix / invariant:**
+**Fix / invariant (updated after the 2026-09-27 physical VT proof):**
 
-- graphical installer and launcher units use `StandardInput=null`;
-- installer subprocess execution uses `stdin=subprocess.DEVNULL`;
-- the hardware regression suite forbids reintroducing TTY stdin to these GUI
-  services.
+- the graphical service gives **Xorg**, and only the X-server side of the
+  session, a real controlling tty1 via `TTYPath=/dev/tty1` and
+  `StandardInput=tty-fail`; this is required for the unprivileged service to
+  activate the VT and fails closed rather than stealing an occupied terminal;
+- the xinit graphical client (`greia-installer-client` or
+  `greia-x-session`) immediately redirects its own stdin to `/dev/null`
+  **before** starting the installer/launcher application, so the application
+  tree and every descendant still cannot read the VT and receive SIGTTIN;
+- installer subprocess execution independently keeps
+  `stdin=subprocess.DEVNULL`;
+- hardware regressions require both halves of the invariant: X owns tty1,
+  application descendants do not inherit tty stdin.
 
-**General lesson:** a VT used to own a display session is not implicit stdin for
-graphical application children.
+The earlier `StandardInput=null` unit-level workaround is historical and must
+not be restored: it prevented SIGTTIN but also denied Xorg the controlling VT,
+which the reference Acer later proved makes the graphical service fail before
+the UI appears.
+
+**General lesson:** VT ownership belongs to the display server; terminal stdin
+does not belong to the graphical application tree. Preserve those as separate
+contracts.
 
 ---
 
