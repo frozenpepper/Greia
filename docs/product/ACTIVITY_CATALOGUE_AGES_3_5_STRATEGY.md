@@ -997,3 +997,101 @@ That means balancing:
 - and space for families and creators to add entirely new Activities.
 
 That is the catalogue strategy this review recommends.
+
+
+---
+
+## Appendix A. Current built-in Activity inventory used for this review
+
+This appendix records the manifest-level inventory that informed the September 2026 analysis. Portfolio family is a planning classification, not a new runtime taxonomy.
+
+| Activity | Launcher collections | Planning family | Difficulty | Recommended age | Adaptive range / note |
+|---|---|---|---:|---|---|
+| `acquario_magico` | Explore, Create | Nature & science | 1 | 3+ | Non-adaptive; Create membership deserves review |
+| `alfabeto_leo` | Learn, Play | Language & literacy | 1 | 2–4 | Adaptive 1–3 |
+| `baia_delle_orche` | Play, Explore, Learn | Nature & science | 1 | 3–7 | Marine life, empathy, coordination, rhythm/music |
+| `bosco_numeri` | Learn, Play | Math & numeracy | 1 | 3–5 | Counting / fine motor |
+| `bottega_delle_misure` | Learn, Explore | Math & numeracy | 3 | 5–7 | Adaptive 1–5; measurement/comparison |
+| `casa_del_dieci` | Learn, Play | Math & numeracy | 3 | 5–7 | Adaptive 1–5; number composition/operations |
+| `clinica_cuccioli` | Play, Learn | Care / social-emotional | 2 | 3–7 | Empathy, caregiving, hygiene/health |
+| `costruiamo_ponti` | Create, Play | Logic / spatial / physics | 4 | 5–10 | Adaptive 2–6; engineering/construction |
+| `cucciolo_mio` | Play, Create | Care / social-emotional | 2 | 3–7 | Empathy, routines, creativity |
+| `enciclopedia_greia` | Explore, Learn | Nature & science | 1 | 3–8 | Science curiosity / world knowledge |
+| `faccine_momo` | Play, Learn | Care / social-emotional | 1 | 3+ | Emotion recognition/social learning |
+| `festa_delle_rime` | Learn, Play | Language & literacy | 2 | 4–6 | Adaptive 1–4; rhyme/phonological awareness |
+| `foresta_parole` | Learn, Play | Language & literacy | 3 | 5–8 | Phonics / word-oriented literacy |
+| `il_giardino_dei_numeri` | Learn, Play | Math & numeracy | 1 | 2–4 | Adaptive 1–3; counting/subitizing |
+| `la_discesa_della_biglia` | Play, Learn | Logic / spatial / physics | 2 | 4–7 | Adaptive 1–4; intuitive physics/construction |
+| `labirinto_magico` | Play, Explore | Logic / spatial | 3 | 4–10 | Adaptive 1–6; spatial problem solving |
+| `luci_di_momo` | Learn, Play | Math & numeracy | 2 | 4–6 | Adaptive 1–4; subitizing/quantity comparison |
+| `memory_meraviglie` | Learn, Play | Logic / cognition | 2 | 3–8 | Working memory / visual matching |
+| `mondo_contrari` | Play, Learn | Logic / language concepts | 1 | 3+ | Contrasts / early concepts |
+| `morbidi_mostriciattoli` | Create, Play | Creative arts | 1 | 3+ | Open-ended making/drawing |
+| `nanna_delle_nuvolette` | Play, Explore | Care / calm / early reasoning | 1 | 3+ | Sequencing, cause/effect, matching |
+| `nascondino_bosco` | Explore, Play | Logic / observation | 2 | 3–7 | Visual attention / nature vocabulary |
+| `officina_dei_suoni` | Learn, Play | Language & literacy | 3 | 5–7 | Adaptive 1–3; phonemic awareness / word building |
+| `orchestra_animali` | Play, Learn | Music / rhythm | 2 | 3+ | Only clear dedicated music/rhythm Activity |
+| `painting` | Create | Creative arts | 1 | 3+ | Phase-0 first-party anchor |
+| `pasticceria_magica` | Learn, Create | Math / creative | 3 | 4–8 | Counting, problem solving, making |
+| `piccola_serra` | Explore, Create | Nature & science | 2 | 4–9 | Gardening / nature cycles / cause-effect |
+| `posta_di_leo` | Create, Learn | Creative / literacy | 2 | 5+ | Writing / print concepts / expression |
+| `quattro_stagioni` | Explore, Play, Learn | Nature & science | 1 | 3+ | Seasons / weather / nature cycles |
+| `shape_garden` | Create, Learn | Creative / geometry | 2 | 3+ | Art, geometry, fine motor |
+| `sillabe_magiche` | Learn, Play | Language & literacy | 1 | 5–8 | Difficulty calibration deserves review |
+| `sottomarino_giramondo` | Create, Explore | Nature & science | 1 | 3–8 | Create membership deserves review |
+| `specchi_magici` | Learn, Create | Logic / spatial / geometry | 3 | 5–7 | Adaptive 1–5; symmetry |
+| `stelle_incantate` | Explore, Learn | Math / science crossover | 2 | 4–7 | Numbers, counting, shapes, science curiosity |
+| `storie_della_mia_voce` | Create, Play | Creative / storytelling | 2 | 4–7 | Narrative sequencing / creativity |
+| `teatrino_fiabe` | Create, Play | Creative / storytelling | 2 | 3+ | Storytelling / visual composition |
+| `treno_numeri` | Learn, Play | Math & numeracy | 2 | 4–7 | Counting / fine motor |
+| `viaggio_delfino` | Play, Explore | Nature / action | 2 | 4–8 | Motor skills / reaction / science curiosity |
+| `volo_draghetto` | Play, Explore | Action / motor | 3 | 4–9 | Current challenge/failure model should be expanded |
+| `writing` | Create, Learn | Creative / literacy | 3 | 5+ | Phase-0 first-party anchor |
+| `workshop_settings` | My Greia | System / personalization | 1 | 3+ | Not child-content catalogue material |
+
+### Appendix A.1 Current clusters that deserve close curation
+
+#### Early numeracy cluster
+Potential overlap must be judged from actual gameplay, not names:
+
+- Bosco Numeri
+- Il Giardino dei Numeri
+- Luci di Momo
+- Treno Numeri
+
+More advanced math Activities such as Bottega delle Misure and Casa del Dieci appear more differentiated.
+
+#### Literacy progression
+The current sequence may be complementary rather than redundant:
+
+- Alfabeto Leo
+- Festa delle Rime
+- Sillabe Magiche
+- Officina dei Suoni
+- Foresta Parole
+
+The curation question is whether the implemented loops actually create a meaningful developmental progression.
+
+#### Existing science/nature cluster
+Greia has substantial nature-themed breadth, but much less experimental science and higher challenge. New work should favor **prediction, experimentation, variables, and causal reasoning** over additional passive observation themes.
+
+#### Existing creative anchors
+Painting and Writing are explicit Phase-0 Greia anchors. Other creative/storytelling Activities should be assessed relative to the distinct value they add around those anchors.
+
+### Appendix A.2 Known portfolio holes after inventory
+
+The inventory makes the most obvious gaps visible:
+
+- only one clear dedicated Music/Rhythm Activity;
+- only one clear dedicated Action/Motor Activity;
+- no strong dedicated sorting/patterning progression;
+- little explicit executive-function play;
+- little general spoken-vocabulary/listening-comprehension practice;
+- limited social problem-solving beyond emotion/care recognition;
+- science is primarily observational rather than experimental;
+- little same-device multiplayer or cooperative play;
+- very little true adversarial strategy;
+- few Activities with meaningful mastery/failure loops;
+- weak nominal D4–D6 coverage.
+
+These gaps are the reason the proposed additions in this document prioritize **different forms of cognition and play**, rather than simply adding more first-party Activities.
