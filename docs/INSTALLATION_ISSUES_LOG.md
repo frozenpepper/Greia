@@ -755,3 +755,54 @@ case red on its own.
 **The launcher is unaffected:** it does not use a render signature and repaints
 unconditionally. Worth recording, because the installer is the only surface
 carrying this optimisation.
+
+## 21. First real install died at `update-initramfs`: the install service lacked `CAP_MKNOD`
+
+**Symptom:** the Acer install reached the point of writing the target and then
+failed with the installer's own error, now visible because the repaint defect
+(§20) is fixed:
+
+```
+fatal error: create_inode: failed to create character device
+/tmp/pip-install-target.3vyxk7p2/dev/console. because operation not permitted
+```
+
+**Root cause class: a capability set proved sufficient only by the evidence that
+was cheap to gather.** `greia-install-transaction.service` carried a
+deliberately minimal set, and the unit's own comment says each capability was
+added "only with executable evidence": `CAP_SYS_ADMIN` from a disposable-loop
+mount/write proof, `CAP_SYS_CHROOT` from a Session-04 V12F EPERM traceback, and
+`CAP_SETUID`/`CAP_SETGID` from Session-04 product-mode QEMU. Every piece of that
+evidence came from a harness that stops before the end of a real install.
+
+The step no harness reached is the one that closes an install: after the target
+is written, the engine runs `chroot <target> update-initramfs -u -k all`.
+`mkinitramfs` stages a fresh target under the installed system's `/tmp` and
+creates its device nodes with `mknod`, which needs `CAP_MKNOD`. The service held
+exactly `CAP_SETUID CAP_SETGID CAP_SYS_ADMIN CAP_SYS_CHROOT` and no `MKNOD`.
+
+**Confirmed on the appliance, not inferred:**
+
+```
+CapEff/CapBnd/CapAmb: CAP_SETUID CAP_SETGID CAP_SYS_ADMIN CAP_SYS_CHROOT   (no MKNOD)
+mknod as an unprivileged user : PermissionError [Errno 1] Operation not permitted
+mknod as root                 : OK
+mknod with CAP_MKNOD in the bounding set : OK
+```
+
+The unprivileged failure is byte-for-byte the reported error, which is what
+distinguishes a capability check from a filesystem-permission problem.
+
+**Fix:** `CAP_MKNOD` added to the unit's `CapabilityBoundingSet` and
+`AmbientCapabilities`. It is strictly narrower than the `CAP_SYS_ADMIN` the set
+already carries, so it grants no authority the service did not already hold.
+
+**This is a systemic lesson, not a one-line fix.** The unit was made minimal by
+construction, and the minimality was verified only as far as the evidence
+reached. A capability set proven by a harness that cannot complete an install is
+not proven for an install. The unit comment now records the Acer evidence
+alongside each capability, and `InitramfsDeviceNodeCapabilityTests` locks both
+the name and the stated reason, so a later pass that tidies the set back to the
+QEMU-proven four fails a test instead of breaking every real install silently.
+Two further tests were found asserting the old exact four-capability list and
+were corrected.

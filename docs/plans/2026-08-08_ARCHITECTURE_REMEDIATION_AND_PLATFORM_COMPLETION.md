@@ -2474,3 +2474,32 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   harness quirk, unrelated).
 - T3-P is not addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash, then owner
   confirmation of live repaint, then the install / installed-first-boot run.
+
+## 2026-09-28 — First real Acer install reached the initramfs step and failed for want of `CAP_MKNOD` (`INSTALLER-TRANSACTION-CAP-MKNOD`)
+
+- No earlier entry rewritten. Owner supplied the exact installer error after the §20 repaint fix made it
+  visible: `fatal error: create_inode: failed to create character device
+  /tmp/pip-install-target.3vyxk7p2/dev/console. because operation not permitted`. The target had been written;
+  this is the closing step of a real install and the first time any install has got this far on real hardware.
+- Root cause: `greia-install-transaction.service` carried `CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID`
+  and no `CAP_MKNOD`. Every capability in that set was added with explicit executable evidence, but all of it
+  came from Session-04 QEMU and disposable-loop proofs, which **stop before the end of a real install**. The
+  unevidenced step is `chroot <target> update-initramfs -u -k all`, where `mkinitramfs` stages a target under
+  the installed system's `/tmp` and `mknod`s its device nodes, which requires `CAP_MKNOD`.
+- Confirmed on the appliance rather than inferred: the running service's `CapEff`/`CapBnd`/`CapAmb` were
+  `CAP_SETUID CAP_SETGID CAP_SYS_ADMIN CAP_SYS_CHROOT`; `mknod` as an unprivileged user fails with
+  `PermissionError [Errno 1] Operation not permitted` — byte-for-byte the reported error — and succeeds as
+  root and with `CAP_MKNOD` present. That match is what distinguishes a capability check from a filesystem
+  permission problem.
+- Fix: `CAP_MKNOD` added to both `CapabilityBoundingSet` and `AmbientCapabilities`, and applied to the live
+  Acer service (verified present in all three capability masks). It is strictly narrower than the
+  `CAP_SYS_ADMIN` already granted, so it adds no authority the service did not already hold.
+- Systemic lesson recorded: **a capability set proved only as far as the evidence reached is not proved for
+  the path the evidence could not reach.** The unit comment now carries the Acer evidence beside each
+  capability, and `InitramfsDeviceNodeCapabilityTests` asserts the capability *and* the stated reason, so
+  tidying the set back to the QEMU-proven four now fails a test rather than breaking every real install.
+  Two existing tests that asserted the exact four-capability list were found and corrected.
+- Verification: `installer_unit_contract` 25/25 (4 tests RED when `CAP_MKNOD` is removed from the unit),
+  `install_transaction_service` 49/49, focused preflight 68/68.
+- T3-P is not addressed by this entry and remains OPEN/BLOCKING. Next: owner retries the install on the
+  patched live image; the first proof of the *installed* system follows only if it completes.

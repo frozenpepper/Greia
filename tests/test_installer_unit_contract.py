@@ -449,6 +449,7 @@ class BoundedPrivilegeTests(unittest.TestCase):
             "CAP_SYS_CHROOT",
             "CAP_SETUID",
             "CAP_SETGID",
+            "CAP_MKNOD",
         ]
         facts = parse_unit(UNIT_PATH)
         self.assertEqual(
@@ -481,6 +482,13 @@ class BoundedPrivilegeTests(unittest.TestCase):
                 declared,
                 f"{key} must declare the capability the chroot install leg needs",
             )
+            self.assertIn(
+                "CAP_MKNOD",
+                declared,
+                f"{key} must declare CAP_MKNOD: update-initramfs inside the "
+                "target chroot creates device nodes and fails with EPERM "
+                "without it (reference Acer, first real install)",
+            )
             self.assertEqual(
                 sorted(declared),
                 sorted(
@@ -489,6 +497,7 @@ class BoundedPrivilegeTests(unittest.TestCase):
                         "CAP_SYS_CHROOT",
                         "CAP_SETUID",
                         "CAP_SETGID",
+                        "CAP_MKNOD",
                     ]
                 ),
                 f"{key} must declare exactly the evidenced capability set",
@@ -741,3 +750,50 @@ class SensitivityControlTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InitramfsDeviceNodeCapabilityTests(unittest.TestCase):
+    """The install leg must keep CAP_MKNOD, and must say why it needs it.
+
+    Regression from the first real hardware install on the reference Acer. The
+    installer service carried a deliberately minimal capability set — proved
+    necessary for the chroot leg by Session-04 QEMU — and that evidence was
+    collected only for the steps QEMU could reach. The step it never reached
+    was the one that ends a real install: after the target is written, the
+    engine runs ``chroot <target> update-initramfs -u -k all``, mkinitramfs
+    stages a fresh target under the installed system's /tmp and creates its
+    device nodes with mknod, and mknod needs CAP_MKNOD:
+
+        fatal error: create_inode: failed to create character device
+        /tmp/pip-install-target.3vyxk7p2/dev/console. because operation not
+        permitted
+
+    Nothing in the source-level evidence could have predicted that, which is
+    exactly why the capability is asserted by name *and* the reason is recorded
+    in the unit: a later pass that "tidies" this set back to the QEMU-proven
+    four would otherwise break every real install with no failing test.
+    """
+
+    def test_unit_declares_and_documents_the_mknod_requirement(self) -> None:
+        text = Path(UNIT_PATH).read_text(encoding="utf-8")
+        facts = parse_unit(UNIT_PATH)
+        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
+            self.assertIn("CAP_MKNOD", (facts.get(key) or "").split(), key)
+        self.assertIn("CAP_MKNOD", text)
+        self.assertIn("update-initramfs", text)
+        self.assertIn("create_inode", text)
+        self.assertIn("mknod", text)
+
+    def test_mknod_is_no_wider_than_the_admin_capability_already_granted(self) -> None:
+        """MKNOD must not be the widest privilege in the set.
+
+        The set already carries CAP_SYS_ADMIN, which dominates CAP_MKNOD for
+        risk purposes, so adding it grants no authority the service did not
+        already hold. This records the argument that made the addition
+        acceptable rather than a blanket widening.
+        """
+
+        facts = parse_unit(UNIT_PATH)
+        declared = (facts.get("CapabilityBoundingSet") or "").split()
+        self.assertIn("CAP_SYS_ADMIN", declared)
+        self.assertIn("CAP_MKNOD", declared)

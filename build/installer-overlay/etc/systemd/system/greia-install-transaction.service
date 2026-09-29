@@ -69,9 +69,24 @@ ProtectSystem=strict
 # mount/write proof for CAP_SYS_ADMIN; V12F EPERM traceback plus the
 # disposable-loop chroot proof for CAP_SYS_CHROOT). Session-04 product-mode
 # QEMU then proved apt's normal privilege drop requires CAP_SETUID (seteuid)
-# and CAP_SETGID (setegid/setgroups). No other capability is granted.
-CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID
-AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID
+# and CAP_SETGID (setegid/setgroups).
+#
+# CAP_MKNOD is required by the same install leg, from the first real hardware
+# install on the reference Acer. After the target is written, the engine runs
+# `chroot <target> update-initramfs -u -k all`; mkinitramfs stages a fresh
+# /tmp target on the installed system and creates its device nodes with mknod,
+# which fails with EPERM without CAP_MKNOD:
+#
+#   fatal error: create_inode: failed to create character device
+#   /tmp/pip-install-target.3vyxk7p2/dev/console. because operation not permitted
+#
+# That is a capability check, not a filesystem-permission problem: the same
+# mknod as an unprivileged user fails identically and succeeds as root. It is
+# also strictly narrower than the CAP_SYS_ADMIN this set already carries, so it
+# grants no authority the service did not already hold. No other capability is
+# granted.
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD
 # Exact writable staging/mount paths the implementation needs — nothing
 # more. Socket directory (privileged-channel endpoint), PERSIST staging,
 # boot-control/grubenv state, first-install journal staging, and the slot
