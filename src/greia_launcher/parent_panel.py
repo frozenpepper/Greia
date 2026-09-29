@@ -14,7 +14,10 @@ from greia_platform.hardware_session import (
     speed_preset_names,
     speed_to_preset,
 )
-from greia_platform.main_credential import MainCredentialStore
+from greia_launcher.parent_credential_client import (
+    ParentCredentialUnavailable,
+    ParentPasswordVerifier,
+)
 from greia_platform.ssh_maintenance import SshMaintenanceService, SshStatus
 from greia_platform.system_language import (
     SUPPORTED_SYSTEM_LANGUAGES,
@@ -55,6 +58,14 @@ class PanelHitTarget:
     rect: Any
 
 
+#: Shown when the typed password was rejected. The service answered; the
+#: candidate was wrong.
+_PASSWORD_REJECTED = "Incorrect password"
+
+#: Shown when no verdict could be obtained at all. Distinct from a rejection:
+#: the parent may have typed the right thing.
+_PASSWORD_CHECK_FAILED = "Cannot check the password right now"
+
 class ParentSettingsOverlay:
     """On-device Parent Settings Panel for physical Greia devices.
 
@@ -66,7 +77,7 @@ class ParentSettingsOverlay:
 
     def __init__(
         self,
-        credential_store: MainCredentialStore,
+        credential_verifier: ParentPasswordVerifier,
         *,
         wifi_backend: WifiBackend | None = None,
         ssh_service: SshMaintenanceService | None = None,
@@ -74,11 +85,12 @@ class ParentSettingsOverlay:
         hardware_store: HardwareSettingsStore | None = None,
         pointer_controller: Any | None = None,
     ) -> None:
-        self.credential_store = credential_store
-        try:
-            self.credential_store.ensure_initialized()
-        except Exception:
-            pass
+        # The Parent password is owned by the Parent service identity. The panel
+        # never reads the digest: it asks the service that owns it. Seeding a
+        # local 0600 store here could only fail as the child identity, which is
+        # what made every password look wrong.
+        self.credential_verifier = credential_verifier
+        self._password_problem: str | None = None
 
         if wifi_backend is None:
             backend = (
@@ -117,6 +129,7 @@ class ParentSettingsOverlay:
         self.active_tab = ParentPanelTab.LANGUAGE
         self.password_text = ""
         self.password_error_until = 0.0
+        self._password_problem = None
         self._targets: list[PanelHitTarget] = []
         self._ssh_cached_status: SshStatus | None = None
         self._last_ssh_poll = 0.0
@@ -233,6 +246,7 @@ class ParentSettingsOverlay:
         self.active_tab = ParentPanelTab.LANGUAGE
         self.password_text = ""
         self.password_error_until = 0.0
+        self._password_problem = None
         self._language_message = ""
         self._pointer_message = ""
         self._pointer_focus = 0
@@ -755,15 +769,28 @@ class ParentSettingsOverlay:
         if time.monotonic() < self.password_error_until:
             return
         try:
-            verified = bool(self.credential_store.verify(self.password_text))
+            verified = bool(self.credential_verifier.verify(self.password_text))
+        except ParentCredentialUnavailable:
+            # The check could not be performed. Say so. Reporting this as an
+            # incorrect password is what cost a full diagnosis cycle: an
+            # unreadable credential looked exactly like a typing mistake.
+            self._password_problem = _PASSWORD_CHECK_FAILED
+            self.password_text = ""
+            self.password_error_until = time.monotonic() + 1.2
+            return
         except Exception:
-            verified = False
+            self._password_problem = _PASSWORD_CHECK_FAILED
+            self.password_text = ""
+            self.password_error_until = time.monotonic() + 1.2
+            return
         if verified:
+            self._password_problem = None
             self.state = ParentPanelState.PANEL
             self.password_text = ""
             self._sync_language_selection()
             self.wifi_controller.begin()
         else:
+            self._password_problem = None
             self.password_text = ""
             self.password_error_until = time.monotonic() + 1.2
 
@@ -968,6 +995,16 @@ class ParentSettingsOverlay:
         masked = self._masked_password(max(3, (input_rect.width - 32) // 14)) or "…"
         text_surf = self._get_text(masked, FontRole.CONTROL, 24, (61, 44, 31), typography)
         screen.blit(text_surf, text_surf.get_rect(midleft=(input_rect.left + 16, input_rect.centery)))
+
+        if time.monotonic() < self.password_error_until:
+            reason = self._password_problem or _PASSWORD_REJECTED
+            reason_surf = self._get_text(
+                reason, FontRole.BODY, 15, (181, 46, 46), typography
+            )
+            screen.blit(
+                reason_surf,
+                reason_surf.get_rect(center=(card.centerx, input_rect.bottom + 16)),
+            )
 
         btn_w = (card_w - 80) // 2
         btn_h = 48

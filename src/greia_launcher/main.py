@@ -40,7 +40,6 @@ from greia_platform.hal import (
     StaticRemovableMediaHAL,
 )
 from greia_platform.permissions import PermissionDecisionError
-from greia_platform.main_credential import MainCredentialStore
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.profiles import (
     ChildProfile,
@@ -62,6 +61,7 @@ from .composition import (
 )
 from .key_chord import KeyChordTracker
 from .lifecycle import ActivityResult, ActivitySessionState
+from .parent_credential_client import ParentCredentialClient
 from .parent_panel import ParentSettingsOverlay
 from .shell_input import ShellInputController
 from .supervisor import ActivitySupervisor
@@ -236,7 +236,10 @@ class LauncherApplication:
         self._cached_profiles_key: Any = None
         self._cached_profiles_targets: list[HitTarget] = []
         self._parent_chord = KeyChordTracker({ord("s"), ord("t")}, hold_duration_seconds=5.0)
-        self._parent_panel = ParentSettingsOverlay(MainCredentialStore.from_environment())
+        # The Parent password belongs to the Parent service identity; the
+        # panel asks that service to verify it rather than reading its 0600
+        # digest as the child identity, which could never succeed.
+        self._parent_panel = ParentSettingsOverlay(ParentCredentialClient())
         self._dimmed_underlay: Any = None
         self._dimmed_underlay_key: Any = None
         self._parent_panel_opened_monotonic = 0.0

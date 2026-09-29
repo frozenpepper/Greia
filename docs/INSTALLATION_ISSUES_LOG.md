@@ -1183,3 +1183,94 @@ permissions and attribution are all sound.
 appliance. It is downstream of the boot-health capability, which is correctly
 *not* issued on a plain boot with no pending journal (`NO_PENDING`), so whether
 the observer should fail closed or stay inactive in that case is unresolved.
+
+## 23. First boot, part 2: the "soft reboot" was systemd killing a working Shell
+
+### 23a. What the parent saw was not a reboot
+
+Uptime never reset and PID 1 kept its original start time, so the machine was
+not rebooting. `greia-launcher` was cycling: the splash and login screen returned
+roughly every 90 seconds, on the login screen and inside the Parent panel alike,
+which is exactly why it read as a soft reboot.
+
+### 23b. Cause: the readiness contract could not be satisfied
+
+The unit was `Type=notify` with `NotifyAccess=all`, waiting for the Shell's
+first-frame `READY=1`. Two measured facts explain the failure:
+
+- `systemd-notify` was genuinely spawned, returned `rc=0`, and had
+  `NOTIFY_SOCKET=/run/systemd/notify` in its environment. The datagram was sent.
+- `xinit`, `Xorg` and the child Shell were all in
+  `/user.slice/user-999.slice/session-402.scope`, while the unit's own
+  `ControlGroup` was `/system.slice/greia-launcher.service` and held **zero**
+  tasks.
+
+`PAMName=login` runs `pam_systemd` from `common-session`, which opens a logind
+session and moves the processes into a session scope. systemd attributes a
+`READY=1` datagram to a unit by the *sender's* cgroup, so the readiness landed on
+the session scope and the unit never saw it. The start job then waited out
+`TimeoutStartSec=90` and systemd killed a Shell that was working perfectly, and
+`Restart=always` put the splash back.
+
+An earlier "proof" that the notify mechanism was sound was misleading: the probe
+had been moved into the unit's cgroup by hand, so it was attributed correctly.
+The mechanism was never the problem; the sender's cgroup was.
+
+### 23c. The other half of the conflict, found by fixing it wrongly
+
+Removing the logind session (a dedicated PAM stack without `pam_systemd`) fixed
+the cgroup attribution — `Tasks: 2`, both PIDs in the unit cgroup — and
+immediately broke Xorg:
+
+```
+xf86EnableIO: failed to enable I/O ports 0000-03ff (Operation not permitted)
+vesa: Ignoring device with a bound kernel driver
+(EE) Fatal server error: (EE) no screens found(EE)
+```
+
+So both halves are load-bearing: the logind session is what grants the
+unprivileged X server its seat and device access, and it is also what destroys
+the cgroup attribution. `Type=exec` does not escape the conflict either, because
+systemd still cannot confirm the process against an empty cgroup.
+
+### 23d. Fix: stop asking systemd for a signal it cannot receive
+
+`Type=simple` asks for nothing beyond a successful fork and is immune to the
+cgroup escape. Readiness stays where it already lives and is already
+trustworthy: the Shell owns the branded boot cover and emits the bounded
+`launcher_interactive_ready` boot marker that
+`tools/boot/analyze_boot_markers.py` consumes. systemd never had a reliable
+readiness signal for this unit, and the timeout was destroying the product to
+compensate.
+
+Verified on the reference Acer: `active/running`, `NRestarts=0` sustained for
+150 seconds, past the old 90-second kill, with Xorg up, zero `no screens found`
+errors and the child Shell alive.
+
+A dedicated `/etc/pam.d/greia-launcher` was tried and reverted. It is not shipped:
+it removes device access the X server genuinely needs, and keeping it would be
+dead configuration implying the session is optional.
+
+### 23e. `python3-dbus` was declared only for the installer
+
+The Parent Wi-Fi panel failed with `ModuleNotFoundError: No module named 'dbus'`.
+`python3-dbus` was in `build/package-sets/installer-base.txt` and nowhere else,
+so the installer's own Wi-Fi screen worked and the installed system's did not.
+Same asymmetry as the setuid Xorg wrapper: validated in the installer image,
+absent from the target. Added to `build/package-sets/network-basic.txt`, which
+every target profile already includes.
+
+Not verifiable on the current machine: the target image ships no apt lists, being
+offline-first, so `apt-get install python3-dbus` reports "Unable to locate
+package". The fix is in the composition and lands on the next build, exactly like
+the other image-level fixes.
+
+### 23f. Two parent-reported gaps still open
+
+- **No way to set the Parent password on the device.** The on-device panel's tabs
+  are language, audio, wifi, ssh, info and pointer; none manages the credential,
+  while the API already supports `POST /api/v1/parent-password` via
+  `change_parent_password(current, new)`. Parents must currently use the web app
+  on another device. Not started.
+- **Audio settings layout.** Controls overlap the input-level visualisation,
+  which is too small and does not work. Not yet investigated.

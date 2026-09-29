@@ -1,6 +1,7 @@
 avahi-daemon
 iwd
 libnss-mdns
+python3-dbus
 rfkill
 systemd-resolved
 wireless-regdb

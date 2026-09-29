@@ -103,6 +103,59 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
         self.assertIn("RuntimeDirectoryMode=0700", text)
         self.assertIn("RuntimeDirectoryPreserve=yes", text)
 
+    def test_launcher_does_not_wait_on_a_signal_it_cannot_receive(self) -> None:
+        """The unit must not kill a working Shell waiting for READY=1.
+
+        The unprivileged X server needs a logind session for seat and device
+        access: with it, Xorg finds its screen; without it, Xorg aborts with
+        "no screens found". But a session moves the service's processes into
+        ``session-N.scope``, and systemd attributes ``READY=1`` by the sender's
+        cgroup while also losing the process from the unit's own (``Tasks: 0``).
+        So ``Type=notify`` can never be satisfied, ``Type=exec`` cannot confirm
+        against an empty cgroup, and both end with systemd killing a working
+        Shell at ``TimeoutStartSec`` and ``Restart=always`` restoring the
+        splash: the soft-reboot loop measured on the Acer at ~90 seconds.
+
+        Readiness therefore stays with the Shell's boot cover and its bounded
+        ``launcher_interactive_ready`` marker, and the unit asks systemd for
+        nothing beyond a successful fork.
+        """
+
+        unit = _read(TARGET_OVERLAY / "etc/systemd/system/greia-launcher.service")
+        effective = [
+            line.strip()
+            for line in unit.splitlines()
+            if line.strip() and not line.strip().startswith(("#", ";"))
+        ]
+        self.assertIn("Type=simple", effective)
+        self.assertNotIn("Type=notify", effective)
+        self.assertNotIn("Type=exec", effective)
+        self.assertFalse([l for l in effective if l.startswith("NotifyAccess=")])
+        # The session must stay: Xorg's seat and device access depend on it.
+        self.assertIn("PAMName=login", effective)
+        self.assertIn("no screens found", unit)
+        self.assertIn("launcher_interactive_ready", unit)
+        # No leftover dedicated PAM stack claiming the session can be removed.
+        self.assertFalse((TARGET_OVERLAY / "etc/pam.d/greia-launcher").exists())
+
+    def test_wifi_dbus_binding_is_in_the_target_not_only_the_installer(self) -> None:
+        """The Parent Wi-Fi panel imports dbus; the target must ship it.
+
+        ``python3-dbus`` was declared only in ``installer-base``, so the
+        installer's own Wi-Fi screen worked while the installed system's Parent
+        panel raised ``ModuleNotFoundError: No module named 'dbus'``. The same
+        validated-in-the-installer-only asymmetry as the setuid Xorg wrapper.
+        """
+
+        network = _read(PROJECT_ROOT / "build/package-sets/network-basic.txt")
+        self.assertIn("python3-dbus", network)
+        # Every target profile must actually pull that set in.
+        for profile in sorted((PROJECT_ROOT / "build/profiles").glob("*.toml")):
+            if "network-basic" not in _read(profile):
+                continue
+            with self.subTest(profile=profile.name):
+                self.assertIn("python3-dbus", network)
+
     def test_first_boot_repairs_profile_data_ownership(self) -> None:
         text = _read(TARGET_OVERLAY / "usr/local/lib/greia-os/first-boot")
         self.assertIn("b3-profile-data-ownership-v1", text)

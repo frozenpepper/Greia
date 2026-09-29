@@ -14,8 +14,32 @@ StartLimitIntervalSec=30
 StartLimitBurst=8
 
 [Service]
-Type=notify
-NotifyAccess=all
+# Readiness is deliberately NOT a systemd notification, and the reason is a real
+# conflict on this platform rather than a missing feature.
+#
+# The unprivileged X server needs a logind session for seat and device access.
+# Measured on the reference Acer: with the session, Xorg starts and finds its
+# screen; without it, Xorg aborts with "no screens found" and
+# "xf86EnableIO: failed to enable I/O ports 0000-03ff".
+#
+# But a logind session moves this service's processes into
+# /user.slice/user-<uid>.slice/session-N.scope. systemd attributes a READY=1
+# datagram to a unit by the sender's cgroup, and it loses the process out of the
+# unit's cgroup entirely (Tasks: 0). So Type=notify can never be satisfied here:
+# the start job waits out TimeoutStartSec, systemd kills a perfectly working
+# Shell, Restart=always restores the splash, and the parent sees a soft reboot
+# every ~90 seconds on the login screen and inside the Parent panel alike.
+# Type=exec does not help either, because systemd still cannot confirm the
+# process against an empty cgroup.
+#
+# Type=simple asks systemd for nothing beyond a successful fork, so it is
+# immune to the cgroup escape and this unit stops killing a working Shell.
+# Readiness stays where it already lives and is already trustworthy: the Shell
+# owns the branded boot cover and emits the bounded launcher_interactive_ready
+# boot marker, which tools/boot/analyze_boot_markers.py consumes. systemd never
+# had a reliable readiness signal for this unit, and the timeout was actively
+# destroying the product to compensate.
+Type=simple
 TimeoutStartSec=90
 User=greiakid
 Group=greiakid
