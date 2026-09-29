@@ -806,3 +806,38 @@ the name and the stated reason, so a later pass that tidies the set back to the
 QEMU-proven four fails a test instead of breaking every real install silently.
 Two further tests were found asserting the old exact four-capability list and
 were corrected.
+
+## 21b. The very next install needed a second capability from the same step: `CAP_CHOWN`
+
+**Symptom:** immediately after `CAP_MKNOD` was added and applied, the next Acer
+install failed in the *same* `mkinitramfs` staging step:
+
+```
+fatal error : set_attributes: failed to change UID and gids on
+/tmp/pip-install-target.m5dz4tui/etc/gshadow. because operation not permitted
+```
+
+**Cause:** `mkinitramfs`'s `set_attributes` calls `chown(2)` to restore each
+staged file's original owner and group. Changing owner or group to one the
+caller does not hold requires `CAP_CHOWN`, which — like `CAP_MKNOD` — the
+QEMU-proven capability set never accounted for. `CAP_CHOWN` is bit 0; the
+service's mask was `0x2400c0` (bits 6, 7, 18, 21), so it was provably absent.
+
+**Evidence honesty:** the runtime A/B demonstration did not succeed on the
+appliance. A `prctl(PR_CAPBSET_DROP)` attempt was invalid (the bounding set
+does not remove an already-raised capability) and a `ctypes` `capset` attempt
+segfaulted. The conclusion therefore rests on the capability-mask arithmetic,
+the `chown(2)` semantics, and the error message naming UID/GID — not on a
+constructed before/after run. The fix is nonetheless safe to try because
+`CAP_CHOWN` is strictly narrower than the `CAP_SYS_ADMIN` the set already
+carries.
+
+**The systemic point, which matters more than either line.** Two capabilities
+were needed by one step that no harness could reach. The capability set was
+"minimal" in the sense that nothing unproven had been added, but it was
+**systematically under-specified for the path the evidence could not execute**,
+and each missing capability costs a full install cycle to discover. The correct
+follow-up is not a third one-at-a-time addition: it is to run the real
+`update-initramfs` leg once inside a throwaway chroot with capabilities
+stripped, and enumerate the complete set empirically in a single experiment.
+Recorded in the plan as the required method change.

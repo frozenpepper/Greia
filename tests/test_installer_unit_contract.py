@@ -450,6 +450,7 @@ class BoundedPrivilegeTests(unittest.TestCase):
             "CAP_SETUID",
             "CAP_SETGID",
             "CAP_MKNOD",
+            "CAP_CHOWN",
         ]
         facts = parse_unit(UNIT_PATH)
         self.assertEqual(
@@ -498,6 +499,7 @@ class BoundedPrivilegeTests(unittest.TestCase):
                         "CAP_SETUID",
                         "CAP_SETGID",
                         "CAP_MKNOD",
+                        "CAP_CHOWN",
                     ]
                 ),
                 f"{key} must declare exactly the evidenced capability set",
@@ -784,16 +786,40 @@ class InitramfsDeviceNodeCapabilityTests(unittest.TestCase):
         self.assertIn("create_inode", text)
         self.assertIn("mknod", text)
 
-    def test_mknod_is_no_wider_than_the_admin_capability_already_granted(self) -> None:
-        """MKNOD must not be the widest privilege in the set.
+    def test_chown_is_declared_and_documented_for_the_same_step(self) -> None:
+        """The initramfs step also needs CAP_CHOWN, and the unit must say so.
 
-        The set already carries CAP_SYS_ADMIN, which dominates CAP_MKNOD for
-        risk purposes, so adding it grants no authority the service did not
-        already hold. This records the argument that made the addition
-        acceptable rather than a blanket widening.
+        Immediately after CAP_MKNOD was added on the reference Acer, the very
+        next install failed in the same mkinitramfs staging step:
+
+            fatal error : set_attributes: failed to change UID and gids on
+            /tmp/pip-install-target.5m5dz4tui/etc/gshadow. because operation
+            not permitted
+
+        set_attributes calls chown() to restore each staged file's original
+        owner and group; chown(2) to a group the caller does not hold requires
+        CAP_CHOWN. Two capabilities from one unevidenced step is the evidence
+        that the QEMU-proven set was never sufficient for a real install.
+        """
+
+        text = Path(UNIT_PATH).read_text(encoding="utf-8")
+        facts = parse_unit(UNIT_PATH)
+        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
+            self.assertIn("CAP_CHOWN", (facts.get(key) or "").split(), key)
+        self.assertIn("set_attributes", text)
+        self.assertIn("CAP_CHOWN", text)
+
+    def test_added_capabilities_are_no_wider_than_admin_already_granted(self) -> None:
+        """The extra capabilities must not be the widest privilege in the set.
+
+        The set already carries CAP_SYS_ADMIN, which dominates both CAP_MKNOD
+        and CAP_CHOWN for risk purposes, so adding them grants no authority the
+        service did not already hold. This records the argument that made the
+        additions acceptable rather than a blanket widening.
         """
 
         facts = parse_unit(UNIT_PATH)
         declared = (facts.get("CapabilityBoundingSet") or "").split()
         self.assertIn("CAP_SYS_ADMIN", declared)
-        self.assertIn("CAP_MKNOD", declared)
+        for capability in ("CAP_MKNOD", "CAP_CHOWN"):
+            self.assertIn(capability, declared)

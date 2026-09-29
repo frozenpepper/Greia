@@ -81,12 +81,23 @@ ProtectSystem=strict
 #   /tmp/pip-install-target.3vyxk7p2/dev/console. because operation not permitted
 #
 # That is a capability check, not a filesystem-permission problem: the same
-# mknod as an unprivileged user fails identically and succeeds as root. It is
-# also strictly narrower than the CAP_SYS_ADMIN this set already carries, so it
-# grants no authority the service did not already hold. No other capability is
-# granted.
-CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD
-AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD
+# mknod as an unprivileged user fails identically and succeeds as root. The
+# service's capability mask was 0x2400c0 — bits 6, 7, 18 and 21 only.
+#
+# CAP_CHOWN is the second capability the same unevidenced step turned out to
+# need. mkinitramfs's set_attributes calls chown() to restore each staged
+# file's original owner and group, and chown(2) to a group the caller does not
+# hold requires CAP_CHOWN. The reference Acer install failed on the very next
+# attempt with:
+#
+#   fatal error : set_attributes: failed to change UID and gids on
+#   /tmp/pip-install-target.m5dz4tui/etc/gshadow. because operation not permitted
+#
+# CAP_CHOWN and CAP_MKNOD are both strictly narrower than the CAP_SYS_ADMIN this
+# set already carries, so neither grants authority the service did not already
+# hold. No other capability is granted.
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN
 # Exact writable staging/mount paths the implementation needs — nothing
 # more. Socket directory (privileged-channel endpoint), PERSIST staging,
 # boot-control/grubenv state, first-install journal staging, and the slot
