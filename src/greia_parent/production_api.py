@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import os
 from http.server import HTTPServer
-from pathlib import Path
 from urllib.parse import urlparse
 
 from greia_parent.credentials import ParentCredentialError
@@ -40,16 +38,15 @@ class ProductionParentApiApplication(UpdateParentApiApplication):
         self.password_attempts = ParentPasswordAttemptLimiter()
 
     def _wifi_management_available(self) -> bool:
-        if not self.wifi_backend.available():
-            return False
-        if isinstance(self.wifi_backend, IwdWifiBackend):
-            # R12 owns the future typed privileged broker. Until that exists,
-            # the unprivileged HTTP process must not advertise a write path it
-            # cannot actually complete against root-owned iwd state. Check the
-            # effective mount namespace as well as Unix permission bits because
-            # ProtectSystem=strict can make an otherwise writable path read-only.
-            return _directory_is_effectively_writable(Path(self.wifi_backend.state_dir))
-        return True
+        # Joining a network no longer requires writing into iwd's root-owned
+        # state directory: the passphrase is supplied over iwd's own agent API
+        # and iwd persists the profile itself. This gate previously refused to
+        # advertise network management unless that directory was writable,
+        # which was honest for the old file-based design but would now hide a
+        # capability that genuinely works unprivileged. The backend owns the
+        # decision, so there is no second implementation of the requirement
+        # here.
+        return bool(self.wifi_backend.management_available())
 
     def index_payload(self) -> dict[str, object]:
         payload = super().index_payload()
@@ -135,20 +132,6 @@ class ProductionParentApiHTTPServer(HTTPServer):
         self.app = app
         self.static_client = static_client or ParentStaticClient.from_environment()
         HTTPServer.__init__(self, address, ProductionParentApiRequestHandler)
-
-
-def _directory_is_effectively_writable(path: Path) -> bool:
-    """Return whether *path* is writable in the service's effective namespace."""
-
-    try:
-        if not path.is_dir():
-            return False
-        flags = os.statvfs(path).f_flag
-        if hasattr(os, "ST_RDONLY") and flags & os.ST_RDONLY:
-            return False
-        return os.access(path, os.W_OK | os.X_OK)
-    except OSError:
-        return False
 
 
 def main() -> int:

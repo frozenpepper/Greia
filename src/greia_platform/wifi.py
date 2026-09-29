@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import queue
 import threading
@@ -7,7 +8,7 @@ import time
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Mapping, Protocol, Sequence
+from typing import Any, Iterator, Mapping, Protocol, Sequence
 
 
 IWD_SERVICE = "net.connman.iwd"
@@ -15,8 +16,13 @@ OBJECT_MANAGER_INTERFACE = "org.freedesktop.DBus.ObjectManager"
 PROPERTIES_INTERFACE = "org.freedesktop.DBus.Properties"
 STATION_INTERFACE = "net.connman.iwd.Station"
 NETWORK_INTERFACE = "net.connman.iwd.Network"
+AGENT_INTERFACE = "net.connman.iwd.Agent"
+AGENT_MANAGER_INTERFACE = "net.connman.iwd.AgentManager"
+AGENT_MANAGER_PATH = "/net/connman/iwd"
+AGENT_OBJECT_PATH = "/net/connman/iwd/greia_passphrase_agent"
 IWD_STATE_DIR = Path("/var/lib/iwd")
 _MAX_NETWORKS = 32
+_AGENT_START_TIMEOUT_SECONDS = 10.0
 
 
 class WifiError(RuntimeError):
@@ -108,6 +114,8 @@ class WifiConnection:
 class WifiBackend(Protocol):
     def available(self) -> bool: ...
 
+    def management_available(self) -> bool: ...
+
     def scan(self) -> tuple[WifiNetwork, ...]: ...
 
     def connect(
@@ -151,6 +159,28 @@ class IwdWifiBackend:
             return self._station_path(self._managed_objects()) is not None
         except Exception:
             return False
+
+    def management_available(self) -> bool:
+        """Whether this process can actually join a network, not merely list one.
+
+        Joining used to require writing a profile into iwd's own root-owned
+        state directory, which an unprivileged process could never do, so
+        callers had to gate on that directory being writable. The passphrase
+        agent removes the write entirely, so the real requirement is bus
+        reachability plus the ability to serve a D-Bus agent object. Both are
+        checked without side effects: nothing is registered and no connection
+        is attempted.
+        """
+
+        if not self.available():
+            return False
+        try:
+            import dbus.service  # noqa: F401
+            import dbus.mainloop.glib  # noqa: F401
+            from gi.repository import GLib  # noqa: F401
+        except ImportError:
+            return False
+        return True
 
     def scan(self) -> tuple[WifiNetwork, ...]:
         objects = self._managed_objects()
@@ -203,33 +233,31 @@ class IwdWifiBackend:
         network: WifiNetwork,
         passphrase: str = "",
     ) -> WifiConnection:
+        """Connect by supplying the passphrase over iwd's own agent API.
+
+        The previous implementation wrote the profile straight into
+        ``/var/lib/iwd`` and asked iwd to pick it up. That directory is iwd's
+        own private state, owned ``root`` with mode 0700, and the installer runs
+        unprivileged as ``User=nobody`` — so the write failed with
+        ``[Errno 1] Operation not permitted: '/var/lib/iwd'`` the moment a
+        child tried to join a network. The same defect class as the
+        ``systemd-networkd``/iwd link conflict: two parties reaching for one
+        resource with no declared owner.
+
+        iwd's sanctioned unprivileged path is a passphrase agent, and the
+        installer already holds the group its bus policy admits. Registering
+        the agent also lets iwd keep ownership of its own state directory: it
+        writes the profile itself, and nothing in the installer needs write
+        access to another service's private directory.
+        """
+
         profile = IwdNetworkProfile.for_network(network, passphrase)
-        profile_path = self.state_dir / profile.filename
-        self.state_dir.mkdir(parents=True, exist_ok=True)
-        os.chmod(self.state_dir, 0o700)
-        previous = profile_path.read_bytes() if profile_path.exists() else None
-        created_by_attempt = previous is None
-        try:
-            _atomic_private_write(profile_path, profile.content)
-            time.sleep(self.poll_interval_seconds)
+        if network.security is WifiSecurity.PERSONAL:
+            with _iwd_passphrase_agent(passphrase, network.object_path):
+                self._connect_network(network)
+        else:
             self._connect_network(network)
-            try:
-                saved_content = profile_path.read_text(encoding="utf-8")
-            except OSError as exc:
-                raise WifiError(
-                    "Wi-Fi connected but its saved profile could not be read"
-                ) from exc
-            os.chmod(profile_path, 0o600)
-            return WifiConnection(
-                network,
-                IwdNetworkProfile(network.ssid, profile_path.name, saved_content),
-            )
-        except Exception:
-            if created_by_attempt:
-                profile_path.unlink(missing_ok=True)
-            elif previous is not None:
-                _atomic_private_write_bytes(profile_path, previous)
-            raise
+        return WifiConnection(network, profile)
 
     def _connect_network(self, network: WifiNetwork) -> None:
         interface = self._interface(network.object_path, NETWORK_INTERFACE)
@@ -349,6 +377,9 @@ class DemoWifiBackend:
         )
 
     def available(self) -> bool:
+        return True
+
+    def management_available(self) -> bool:
         return True
 
     def scan(self) -> tuple[WifiNetwork, ...]:
@@ -675,7 +706,7 @@ def _atomic_private_write(path: Path, content: str) -> None:
 
 
 def _atomic_private_write_bytes(path: Path, content: bytes) -> None:
-    temporary = path.with_name(f".{path.name}.greia-wifi.restore.tmp")
+    temporary = path.with_name(f".{path.name}.greia-wifi.tmp")
     try:
         temporary.write_bytes(content)
         os.chmod(temporary, 0o600)
@@ -684,6 +715,147 @@ def _atomic_private_write_bytes(path: Path, content: bytes) -> None:
     finally:
         temporary.unlink(missing_ok=True)
 
+
+def _agent_manager(bus: Any) -> Any:
+    """Return iwd's AgentManager interface.
+
+    ``dbus.Interface`` takes an object proxy, not a bus plus a path, in the
+    python3-dbus build shipped by the reference image. Use the same
+    ``get_object`` then ``Interface`` shape as the rest of this module rather
+    than the newer three-argument form, which raises ``TypeError`` here.
+    """
+
+    import dbus
+
+    return dbus.Interface(
+        bus.get_object("net.connman.iwd", AGENT_MANAGER_PATH),
+        AGENT_MANAGER_INTERFACE,
+    )
+
+
+@contextlib.contextmanager
+def _iwd_passphrase_agent(
+    passphrase: str,
+    allowed_network_path: str,
+) -> Iterator[None]:
+    """Offer ``passphrase`` to iwd for exactly one network, then withdraw.
+
+    iwd asks a registered agent for the passphrase when a network needs one,
+    and it persists the resulting profile into its own state directory as
+    ``root``. Nothing here needs to write into another service's private
+    directory, which is what the previous file-based attempt tried and what
+    made connecting impossible for the unprivileged installer.
+
+    The agent answers only for ``allowed_network_path``. iwd may ask about a
+    different network at any time, and a passphrase must never be handed out
+    for a network the child did not choose; any other request is cancelled.
+
+    The exported object needs a main loop servicing its connection, so the
+    agent is served on a dedicated thread for the lifetime of the context.
+    """
+
+    try:
+        import dbus
+        import dbus.service
+        from dbus.mainloop.glib import DBusGMainLoop
+        from gi.repository import GLib
+    except ImportError as exc:  # pragma: no cover - image dependency
+        raise WifiError(
+            "this system cannot supply a Wi-Fi password to iwd"
+        ) from exc
+
+    ready = threading.Event()
+    state: dict[str, object] = {}
+    failure: list[BaseException] = []
+
+    def serve() -> None:
+        try:
+            DBusGMainLoop(set_as_default=True)
+            # The agent must own a connection that actually has a main loop
+            # attached. ``dbus.SystemBus()`` is a shared singleton that the
+            # scan path has already opened with no main loop, and exporting an
+            # object on it raises "connections must be attached to a main
+            # loop". Open a private connection instead, and close it with the
+            # thread.
+            mainloop = DBusGMainLoop()
+            address = os.environ.get(
+                "DBUS_SYSTEM_BUS_ADDRESS",
+                "unix:path=/run/dbus/system_bus_socket",
+            )
+            connection = dbus.bus.BusConnection(address, mainloop=mainloop)
+            state["connection"] = connection
+            loop = GLib.MainLoop()
+            state["loop"] = loop
+
+            class _PassphraseAgent(dbus.service.Object):
+                """Answers iwd's passphrase request for one chosen network."""
+
+                def __init__(self) -> None:
+                    super().__init__(connection, AGENT_OBJECT_PATH)
+
+                @dbus.service.method(
+                    AGENT_INTERFACE, in_signature="o", out_signature="s"
+                )
+                def RequestPassphrase(self, network: Any) -> str:  # noqa: N802
+                    if str(network) != allowed_network_path:
+                        raise dbus.DBusException(
+                            "net.connman.iwd.Agent.Error.Canceled"
+                        )
+                    return passphrase
+
+                @dbus.service.method(
+                    AGENT_INTERFACE, in_signature="", out_signature=""
+                )
+                def Release(self) -> None:  # noqa: N802
+                    return None
+
+            # Keep a reference for the object's lifetime: letting it be
+            # collected would withdraw the agent while iwd still expects it.
+            state["agent"] = _PassphraseAgent()
+            _agent_manager(connection).RegisterAgent(AGENT_OBJECT_PATH)
+        except BaseException as exc:  # noqa: BLE001
+            failure.append(exc)
+        finally:
+            ready.set()
+
+        loop = state.get("loop")
+        if loop is not None:
+            try:
+                loop.run()
+            finally:
+                loop.quit()
+        connection = state.get("connection")
+        if connection is not None:
+            try:
+                connection.close()  # type: ignore[attr-defined]
+            except Exception:  # noqa: BLE001 - teardown is best effort
+                pass
+
+    thread = threading.Thread(
+        target=serve, name="greia-wifi-agent", daemon=True
+    )
+    thread.start()
+    if not ready.wait(timeout=_AGENT_START_TIMEOUT_SECONDS):
+        raise WifiError("the Wi-Fi passphrase agent did not start in time")
+    if failure:
+        raise WifiError("the Wi-Fi passphrase agent could not start") from failure[0]
+
+    try:
+        yield
+    finally:
+        try:
+            import dbus as _dbus
+
+            _agent_manager(_dbus.SystemBus()).UnregisterAgent(AGENT_OBJECT_PATH)
+        except Exception:  # noqa: BLE001 - withdrawal is best effort
+            pass
+        loop = state.get("loop")
+        if loop is not None:
+            try:
+                loop.quit()
+            except Exception:  # noqa: BLE001 - loop may already be gone
+                pass
+        thread.join(timeout=5.0)
 
 def _bounded_timeout(value: float, minimum: float, maximum: float) -> float:
     number = float(value)

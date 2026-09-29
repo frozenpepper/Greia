@@ -2363,3 +2363,47 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   and `REFERENCE_WIDTH`/`REFERENCE_HEIGHT` are scale denominators/defaults rather than hard
   layout dependencies.
 - No source change in this entry. T3-P remains OPEN/BLOCKING and is not addressed here.
+
+## 2026-09-28 — Wi-Fi connect path rebuilt on iwd's passphrase agent; Parent capability gate corrected (`IWD-PASSPHRASE-AGENT`)
+
+- No earlier entry rewritten. Owner reported that the §14 repair worked (networks listed) but
+  joining failed with `[Errno 1] Operation not permitted: 'var/lib/iwd'`. Confirmed on the live
+  Acer: `/var/lib/iwd` is `root:root 700` and `chmod` as `nobody` fails with exactly that
+  message. This is class **C1** (undeclared resource ownership) recurring for iwd's *state
+  directory* after §13 fixed ownership of the *link* — recorded as a second instance of the same
+  class, not a new class.
+- `IwdWifiBackend.connect` no longer writes a profile into `/var/lib/iwd`, no longer `chmod`s that
+  directory, and no longer needs its create/rollback dance. It registers a `net.connman.iwd.Agent`
+  object, supplies the passphrase over D-Bus when iwd asks, and lets iwd persist the profile as
+  root. The agent answers only for the selected network's object path and cancels every other
+  request, so a passphrase cannot be handed to a network the child did not choose. No new package
+  is required: `python3-gi` and `dbus.mainloop.glib` are already present via `python3-dbus`.
+- Two hardware-only traps are now encoded in the implementation and in the skill: the image's
+  python3-dbus rejects the three-argument `dbus.Interface(bus, path, iface)` form (`TypeError`),
+  and `dbus.SystemBus()` is a shared singleton already opened without a main loop by the scan
+  path, so the agent must own a private `BusConnection` with an explicit main loop. Both were
+  found only by running on the reference Acer.
+- Corrected a second, latent defect: `ProductionParentApiApplication._wifi_management_available`
+  withheld `network.manage` unless `/var/lib/iwd` was writable. That was honest under the old
+  file-based design and is now wrong — it would hide a capability that works unprivileged. Replaced
+  by `WifiBackend.management_available()` (added to the protocol, `IwdWifiBackend` and
+  `DemoWifiBackend`), which checks the actual requirement — bus reachability plus the ability to
+  serve a D-Bus agent object — with no side effects. The dead `_directory_is_effectively_writable`
+  helper and its now-unused `os`/`Path` imports were removed.
+- Two obsolete tests that locked the writability gate were replaced by ones locking the new
+  contract; new `InstallerWifiConnectOwnershipTests` asserts `connect` never creates, chmods or
+  populates iwd's state directory and that an open network registers no agent. Verified RED
+  against the reintroduced write, GREEN after.
+- Live verification on the Acer (deliberately wrong password, so a rejection is the only honest
+  available expectation): `available=True`, `management_available=True`, `WifiError: Wi-Fi
+  connection was rejected`, and iwd logged `4-Way handshake failed for ifindex: 4, reason: 15` —
+  proving iwd received the passphrase from the agent and ran the WPA handshake. No profile written;
+  the agent withdrew cleanly. A **successful** join still requires the real credential and is
+  owner-side evidence, not claimed here.
+- Verification: focused preflight 68/68; affected sweep 87/87 across `installer_wifi` 9,
+  `installer_wifi_setup` 6, `installer_wifi_build_contract` 4, `installer_wifi_persistence` 2,
+  `parent_production_api` 7, `installer_pointer_setup` 28, `installer_state` 7,
+  `installer_hardware_adapter` 4; `bash -n` clean on the four tools. Root cause recorded in
+  `docs/INSTALLATION_ISSUES_LOG.md` §18.
+- T3-P is not addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash, then owner
+  acceptance of a real join, then the Acer install / installed-first-boot run.

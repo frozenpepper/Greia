@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 from greia_installer.wifi import (
@@ -85,3 +87,93 @@ class InstallerWifiProfileTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InstallerWifiConnectOwnershipTests(unittest.TestCase):
+    """Connecting must never write into iwd's own private state directory.
+
+    The first implementation of ``connect`` wrote the iwd profile straight
+    into ``/var/lib/iwd`` and then asked iwd to pick it up. That directory is
+    iwd's, owned root with mode 0700, and the installer runs unprivileged as
+    ``User=nobody``, so every attempt to join a network died with
+    ``[Errno 1] Operation not permitted: '/var/lib/iwd'``. The passphrase is
+    now supplied over iwd's own agent API and iwd persists the profile itself,
+    so nothing in the installer needs that write.
+    """
+
+    def _backend(self, state_dir: Path):
+        from greia_platform.wifi import IwdWifiBackend
+
+        return IwdWifiBackend(state_dir=state_dir)
+
+    def test_connect_does_not_create_or_chmod_the_iwd_state_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            state_dir = Path(temporary) / "iwd"
+            state_dir.mkdir(mode=0o700)
+            backend = self._backend(state_dir)
+            observed: list[str] = []
+            original = os.stat
+
+            def watch(path, *args, **kwargs):
+                observed.append(str(path))
+                return original(path, *args, **kwargs)
+
+            with (
+                unittest.mock.patch(
+                    "greia_platform.wifi._iwd_passphrase_agent",
+                    lambda *a, **k: contextlib.nullcontext(),
+                ),
+                unittest.mock.patch.object(
+                    backend, "_connect_network", lambda network: None
+                ),
+                unittest.mock.patch(
+                    "greia_platform.wifi.os.stat", side_effect=watch
+                ),
+                unittest.mock.patch("greia_platform.wifi.os.chmod") as chmod,
+                unittest.mock.patch(
+                    "greia_platform.wifi.os.makedirs"
+                ) as makedirs,
+            ):
+                connection = backend.connect(network(), "a-good-passphrase")
+
+            self.assertEqual(connection.network.ssid, "Family Wi-Fi")
+            self.assertEqual(connection.profile.filename, "Family Wi-Fi.psk")
+            for call in chmod.call_args_list:
+                self.assertNotEqual(
+                    str(call.args[0]),
+                    str(state_dir),
+                    "connect must not chmod a directory it does not own",
+                )
+            for call in makedirs.call_args_list:
+                self.assertNotEqual(
+                    str(call.args[0]),
+                    str(state_dir),
+                    "connect must not create iwd's state directory",
+                )
+            self.assertEqual(list(state_dir.iterdir()), [])
+
+    def test_open_network_connect_needs_no_passphrase_agent(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            state_dir = Path(temporary) / "iwd"
+            state_dir.mkdir(mode=0o700)
+            backend = self._backend(state_dir)
+            opened = network(security=WifiSecurity.OPEN)
+            agent_used = False
+
+            def agent(*args, **kwargs):
+                nonlocal agent_used
+                agent_used = True
+                return contextlib.nullcontext()
+
+            with (
+                unittest.mock.patch(
+                    "greia_platform.wifi._iwd_passphrase_agent", agent
+                ),
+                unittest.mock.patch.object(
+                    backend, "_connect_network", lambda network: None
+                ),
+            ):
+                backend.connect(opened)
+            self.assertFalse(
+                agent_used, "an open network needs no passphrase to be supplied"
+            )

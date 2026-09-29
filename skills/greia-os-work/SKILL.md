@@ -248,6 +248,21 @@ Three traps, all of which have actually bitten this project:
   (`engine.py` → `request.wifi_profile.write_to`). Changing wireless ownership
   in a way that starves iwd of station mode silently breaks installed first boot,
   not just the installer UI.
+- **iwd owns `/var/lib/iwd`. Never write into it from an unprivileged
+  process.** It is `root:root 0700`; the installer is `User=nobody`, so any
+  attempt fails with `[Errno 1] Operation not permitted`. To hand iwd a
+  passphrase, register a `net.connman.iwd.Agent` and answer
+  `RequestPassphrase(object network) -> string`; iwd persists the profile
+  itself. Same class as the link conflict: the resource belongs to iwd.
+- **Two iwd-agent traps, both found only on real hardware.** The image's
+  python3-dbus rejects the three-argument `dbus.Interface(bus, path, iface)`
+  form with `TypeError` — use `bus.get_object(...)` then
+  `dbus.Interface(proxy, iface)`, the shape the rest of `wifi.py` already uses.
+  And `dbus.SystemBus()` is a shared singleton the scan path already opened
+  with **no main loop**, so exporting an object on it raises "connections must
+  be attached to a main loop"; the agent needs its own `BusConnection` with an
+  explicit main loop, and should answer only for the selected network's object
+  path.
 
 ## Responsive display / viewport / coordinate-space work
 

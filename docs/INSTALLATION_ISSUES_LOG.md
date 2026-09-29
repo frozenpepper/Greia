@@ -568,3 +568,75 @@ Second is **C10, single-machine evidence**: §14 was reported fixed on the stren
 of source tests and a direct backend call, and only a real installer UI run
 exposed that the latch was still consuming the result. Any claim whose subject is
 physical hardware needs physical evidence, not source-closed evidence.
+
+## 18. Installer could list Wi-Fi but could not join: writing into iwd's private state
+
+**Symptom:** after the §14 repair the installer listed real networks, but
+selecting one failed immediately with
+
+```
+[Errno 1] Operation not permitted: 'var/lib/iwd'
+```
+
+**Root cause class: C1 again — undeclared resource ownership, this time over a
+state directory rather than a link.** `IwdWifiBackend.connect` wrote the iwd
+profile straight into `/var/lib/iwd` and then asked iwd to pick it up. That
+directory belongs to iwd:
+
+```
+/var/lib/iwd   root:root 700
+sudo -u nobody chmod 0700 /var/lib/iwd
+  -> chmod: changing permissions of '/var/lib/iwd': Operation not permitted
+```
+
+The installer runs unprivileged as `User=nobody`, so the write was impossible
+by construction. §13 fixed who owns the *wireless link*; this was the same
+mistake about the *state directory*.
+
+**Fix: use iwd's own sanctioned unprivileged path — a passphrase agent.**
+`IwdWifiBackend` now registers a `net.connman.iwd.Agent` object, hands iwd the
+passphrase over D-Bus when it asks, and iwd persists the profile itself. The
+uninstaller-side file write, its `chmod`, and its rollback dance are gone. The
+agent answers **only** for the object path of the network the child selected and
+cancels any other request, so a passphrase is never handed to a network that
+was not chosen.
+
+**A second consequence, found while fixing the first.**
+`ProductionParentApiApplication._wifi_management_available` deliberately
+withheld the `network.manage` capability unless `/var/lib/iwd` was writable.
+That gate was honest under the old design and is now wrong: it would hide a
+capability that genuinely works unprivileged. It is replaced by
+`WifiBackend.management_available()`, which checks the real requirement — bus
+reachability plus the ability to serve a D-Bus agent object — with no side
+effects, so a stripped image missing PyGObject correctly withholds joining
+instead of advertising it.
+
+**Two implementation traps worth recording, both found only on the hardware:**
+
+- `dbus.Interface(bus, path, interface)` is the newer three-argument form and
+  raises `TypeError` on the image's python3-dbus. The module's existing
+  `bus.get_object(...)` then `dbus.Interface(proxy, ...)` shape is the one that
+  works.
+- `dbus.SystemBus()` is a shared singleton that the scan path has already
+  opened **without a main loop**. Exporting an object on it fails with
+  "connections must be attached to a main loop". The agent therefore opens its
+  own private `BusConnection` with an explicit main loop and closes it with the
+  thread.
+
+**Verified on the reference Acer** (deliberately wrong password, so the only
+honest available expectation is a rejection):
+
+```
+available: True   management_available: True
+WifiError: Wi-Fi connection was rejected
+iwd: 4-Way handshake failed for ifindex: 4, reason: 15
+/var/lib/iwd: no profile written
+```
+
+iwd received the passphrase from the agent and ran the WPA 4-way handshake, so
+the agent path is proven end to end; a *successful* join still needs the real
+credential and remains owner-side evidence.
+
+**Regression-locked** by `InstallerWifiConnectOwnershipTests`: `connect` must not
+create, chmod or populate iwd's state directory, and an open network must not
+register a passphrase agent. Verified RED against the reintroduced write.
