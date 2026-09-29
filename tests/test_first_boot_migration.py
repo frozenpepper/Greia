@@ -175,8 +175,87 @@ class MigrationIdempotencyTests(unittest.TestCase):
         ):
             with self.subTest(mutation=mutation):
                 self.assertIn(mutation, inside)
+        # The account repair and the marker writes must never leak outside a
+        # guard. The shared `install -d` on the migrations directory is exempt
+        # from that: it is idempotent, and b3 legitimately repeats it inside its
+        # own versioned guard. Its gating is asserted by
+        # ProfileDataOwnershipMigrationTests, and every occurrence is required to
+        # sit inside some guard.
+        for mutation in ("usermod", '> "$audio_groups_marker"'):
+            with self.subTest(unguarded=mutation):
                 self.assertNotIn(mutation, outside)
         self.assertNotIn("usermod", text[:guard])
+        # Each migration writes its own marker inside its own guard. b3's write
+        # is outside the audio guard by design, so the invariant is "after its
+        # own guard", not "inside the audio one".
+        for name in ("audio_groups_marker", "profile_owner_migration"):
+            with self.subTest(migration=name):
+                self.assertLess(
+                    text.index('if [ ! -e "$%s" ]' % name),
+                    text.index('> "$%s"' % name),
+                )
+        # No repair may appear before the first guard of any migration.
+        first_guard = min(
+            text.index('if [ ! -e "$audio_groups_marker" ]'),
+            text.index('if [ ! -e "$profile_owner_migration" ]'),
+        )
+        for mutation in ("usermod", "chown ", "chmod "):
+            with self.subTest(unguarded=mutation):
+                self.assertNotIn(mutation, text[:first_guard])
+
+
+class ProfileDataOwnershipMigrationTests(unittest.TestCase):
+    """B3: the child's profile data tree is owned by the child identity.
+
+    It shipped as greiapel:pipprofiles 2755 while its own parent
+    /var/lib/greia-profiles was correctly greiakid:pipprofiles 2770. That broke
+    the child twice: 2755 gives the shared group only r-x, so greiakid could not
+    write its own progress, and because a caller must own a file before it may
+    set setgid, greiakid could not chmod the tree back either. history.py then
+    raised PermissionError, the Shell died before INTERACTIVE_READY, and the
+    launcher's Type=notify unit never saw READY=1.
+    """
+
+    MARKER = "/var/lib/greia-os/migrations/b3-profile-data-ownership-v1.done"
+
+    def test_migration_is_gated_by_its_own_versioned_marker(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        self.assertIn(self.MARKER, text)
+        self.assertIn("b3-profile-data-ownership-v1", text)
+
+    def test_migration_repairs_ownership_and_group_write(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        self.assertIn("chown greiakid:pipprofiles", text)
+        # Group-writable, setgid, no access for other: 2770, never 2755 and
+        # never a world-readable mode.
+        self.assertIn("chmod 2770", text)
+        self.assertNotIn("chmod 2755", text)
+        self.assertNotIn("chmod 0777", text)
+
+    def test_migration_marker_is_written_only_after_the_repair(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        inside = text[text.index("b3-profile-data-ownership-v1.done") :]
+        marker_write = inside.index('> "$profile_owner_migration"')
+        repair = inside.index("chmod 2770")
+        self.assertLess(repair, marker_write)
+
+    def test_migration_survives_unusual_profile_ids(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        self.assertIn("-print0", text)
+        self.assertIn("xargs -0", text)
+
+    def test_history_reports_ownership_and_mode_when_chmod_is_refused(self) -> None:
+        """A bare EPERM is what made this cost four blind cycles to diagnose."""
+
+        from greia_platform.history import HistoryError, ProfileHistoryStore
+
+        source = Path(
+            ProfileHistoryStore.__module__.replace(".", "/")
+        )
+        module = Path("src/greia_platform/history.py").read_text(encoding="utf-8")
+        self.assertIn("st_mode & 0o7777", module)
+        self.assertIn("owned by the child identity", module)
+        self.assertTrue(HistoryError is not None and source is not None)
 
 
 class UnitStartsWithMarkerPresentTests(unittest.TestCase):

@@ -28,6 +28,32 @@ if [ ! -e "$audio_groups_marker" ]; then
   fi
   printf '%s\n' "b2-audio-groups-v1" > "$audio_groups_marker"
 fi
+
+# b3-profile-data-ownership-v1: the profile DATA tree is the child's own state
+# and must be owned by the child identity, group-writable by the shared profile
+# group, exactly like its parent /var/lib/greia-profiles (already greiakid:
+# pipprofiles 2770). It shipped as greiapel:pipprofiles 2755, which broke the
+# child twice over: 2755 gives the group only r-x, so greiakid could not write
+# its own progress/history; and because the caller must own a file before it may
+# set setgid (inode_owner_or_capable), greiakid could not even chmod the tree
+# back. history.py's _prepare_root then raised PermissionError on
+# os.chmod(root, 0o2770), the child Shell died before INTERACTIVE_READY, and
+# the launcher's Type=notify unit never saw READY=1.
+#
+# Exactly-once via its own versioned marker; the marker is written only after the
+# repair succeeds, so a failed repair retries through Restart=on-failure.
+profile_owner_migration=/var/lib/greia-os/migrations/b3-profile-data-ownership-v1.done
+if [ ! -e "$profile_owner_migration" ]; then
+  install -d -m 0755 /var/lib/greia-os/migrations
+  if [ -d /var/lib/greia-profiles/data ]; then
+    # -print0/xargs so an unusual profile id cannot break word splitting.
+    find /var/lib/greia-profiles/data -depth -print0 |
+      xargs -0 -r chown greiakid:pipprofiles
+    find /var/lib/greia-profiles/data -depth -type d -print0 |
+      xargs -0 -r chmod 2770
+  fi
+  printf '%s\n' "b3-profile-data-ownership-v1" > "$profile_owner_migration"
+fi
 [ ! -e "$marker" ] || exit 0
 trap - EXIT
 

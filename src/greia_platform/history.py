@@ -637,7 +637,27 @@ class ProfileHistoryStore:
         self._root.mkdir(parents=True, exist_ok=True)
         if not self._root.is_dir():
             raise HistoryError("profile progress path is not a directory")
-        os.chmod(self._root, 0o2770)
+        # Not best-effort, unlike the parent-side normaliser in profiles.py: the
+        # child identity must be able to write its own progress, and a silently
+        # retained wrong mode turns this boot crash into a later write failure.
+        # Setting setgid additionally requires the caller to own the directory
+        # (inode_owner_or_capable), so a parent-owned progress root fails here
+        # even when the shared profile group would permit the mode. Name the
+        # ownership and mode in the error, because a bare EPERM is what made this
+        # cost four blind appliance cycles to diagnose.
+        try:
+            os.chmod(self._root, 0o2770)
+        except PermissionError as exc:
+            try:
+                owner = self._root.stat()
+                actual = f"{owner.st_uid}:{owner.st_gid} mode {owner.st_mode & 0o7777:04o}"
+            except OSError:  # pragma: no cover - stat is only for diagnostics
+                actual = "unreadable"
+            raise HistoryError(
+                "profile progress directory must be owned by the child identity "
+                f"and mode 2770 for the history store to open it; {self._root} is "
+                f"{actual} ({exc.strerror})"
+            ) from exc
 
     def _initialize_schema(self) -> None:
         try:

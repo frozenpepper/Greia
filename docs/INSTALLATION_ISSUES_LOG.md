@@ -1123,3 +1123,63 @@ the installer image's X is not the payload's X. The install leg now has an
 offline harness; first boot needs the equivalent — a first-boot harness that
 runs the *installed* system, not a live medium, with the payload's own X and
 with `main()` reached the way `-m` reaches it.
+
+## 22e. Root cause of the residual loop: the child's own profile data was owned by the parent identity
+
+`child_shell` was exiting non-zero, `greia-x-session` silently fell back to
+`trusted_presentation`, and because only the boot-intro path sends `READY=1`,
+the `Type=notify` launcher unit recorded `Result=protocol` and restarted. A UI was
+on screen the whole time, which is why it looked like a slow splash rather than a
+crash. The Shell's own stdout never reaches the journal — a forwarding loss the
+x-session comments already document — so the reason was invisible until the
+display session was reproduced by hand with output captured.
+
+```
+File "/opt/greia-os/src/greia_platform/history.py", line 640, in _prepare_root
+    os.chmod(self._root, 0o2770)
+PermissionError: [Errno 1] Operation not permitted:
+  '/var/lib/greia-profiles/data/1ec82f21…/progress'
+```
+
+Ownership on the appliance, measured:
+
+| path | owner | mode | group write |
+| --- | --- | --- | --- |
+| `/var/lib/greia-profiles` | `greiakid:pipprofiles` | `2770` | yes — correct |
+| `…/data/<id>/progress` and siblings | `greiapel:pipprofiles` | `2755` | **no** |
+
+Two independent violations, not one:
+
+1. **2755 gives the group only `r-x`**, so `greiakid` could not write its own
+   progress at all.
+2. **Setting setgid requires the caller to own the file** (`inode_owner_or_capable`),
+   so `greiakid` could not chmod the tree back even though `pipprofiles` contains
+   both identities. The child was neither the owner nor able to become one.
+
+The tree's own parent already carried the correct `greiakid:pipprofiles 2770`,
+which is what made the deviation diagnosable: the fix is to make the data subtree
+match the pattern its parent already follows.
+
+Fixed by a versioned first-boot migration `b3-profile-data-ownership-v1`, which
+normalises the data tree to `greiakid:pipprofiles 2770` (depth-first, `-print0`
+so an unusual profile id cannot break word splitting) and writes its marker only
+after the repair succeeds, following the existing `b2-audio-groups-v1` pattern.
+`history.py`'s chmod stays **unguarded** on purpose — unlike the parent-side
+normaliser in `profiles.py`, which swallows `PermissionError` — because a silently
+retained wrong mode would convert this boot crash into a later write failure. It
+now raises a `HistoryError` naming the required ownership and mode and the actual
+ones, because a bare `EPERM` is precisely what cost four blind cycles here.
+
+Two of my own errors are recorded alongside. I dismissed this exact traceback as
+an artifact of `sudo -u` dropping supplementary groups, and reasoned that
+`history_prepare_end` being emitted proved success; it is emitted in a `finally`,
+so it proves nothing. I also treated a `READY=1` sent from *outside* the service
+cgroup as proof the mechanism worked — systemd correctly ignores those, and the
+unit's transition I attributed to it was really just its start timeout expiring.
+The in-cgroup probe is what actually established that the socket, binary,
+permissions and attribution are all sound.
+
+**Not claimed fixed:** `greia-boot-observer.service` remains failed on the
+appliance. It is downstream of the boot-health capability, which is correctly
+*not* issued on a plain boot with no pending journal (`NO_PENDING`), so whether
+the observer should fail closed or stay inactive in that case is unresolved.
