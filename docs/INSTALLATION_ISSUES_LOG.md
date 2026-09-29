@@ -934,3 +934,48 @@ appliance: the live overlay is 128 MiB and `/run` has 95 MiB free, against a
 roughly 1 GB writable payload. Capability grants so far are `MKNOD`, `CHOWN`,
 `FSETID`, `FOWNER`, each strictly narrower than the `CAP_SYS_ADMIN` this set
 already carries.
+
+## 21e. Correction to §21d: `RestrictSUIDSGID`, not a capability, was the cause
+
+§21d attributed the setgid `chmod` failure to a missing capability and granted
+`CAP_FSETID` and `CAP_FOWNER` on that reasoning. The next attempt failed
+identically, with `CapEff = 0x82400d9` live, so that reasoning was wrong. The
+cause is `RestrictSUIDSGID=yes` in the service unit.
+
+The restriction denies mode changes that set SUID/SGID bits. That is precisely
+mkinitramfs's job when it restores each staged file's original mode onto a
+target rootfs that legitimately contains setgid binaries. It is a property of
+the **mount namespace**, not of the capability set, which is why no capability
+could ever have substituted for it and why adding capabilities changed nothing.
+
+A/B on the appliance against the real binary, with `CapEff = 0x82400d9` in both
+runs and the restriction as the only difference:
+
+| `RestrictSUIDSGID` | `chmod 2755` |
+| --- | --- |
+| `yes` | fails, `errno=1` operation not permitted |
+| `no` | succeeds, mode `2755` |
+
+Confirmed inside the **live** service namespace via `nsenter -m`, where the mode
+becomes `2755`, against a control with the restriction re-applied, which fails
+`errno=1`. That comparison held capabilities at full in both runs, so the mount
+namespace is isolated as the only variable.
+
+**What survives from §21d, and what does not.** `CAP_MKNOD` and `CAP_CHOWN` were
+real and are retained. `CAP_FSETID` is retained on independent evidence: with
+the restriction lifted, restoring a setgid mode without it returns success and
+yields `755`, silently dropping the bit. `CAP_FOWNER` remains unproven for any
+observed failure and is retained only as the companion authority for staged
+files the caller does not own, which is recorded as a narrow rationale rather
+than a reproduction.
+
+**A second defect, in the fix itself.** The intended `RestrictSUIDSGID=no` was
+added beside a pre-existing `RestrictSUIDSGID=yes`, and the later assignment
+wins, so the restriction stayed in force while the unit still read correctly.
+The test now requires the directive to be declared exactly once; it fails with
+`['no', 'yes']` when the duplicate is re-added.
+
+This is an accepted reduction in hardening, recorded rather than minimised: the
+installer cannot construct a Debian rootfs without it. The restriction remains in
+force on every other Greia service, and this unit's other mount and system-call
+restrictions are unchanged.

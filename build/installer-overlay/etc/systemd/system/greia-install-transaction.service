@@ -102,21 +102,35 @@ ProtectSystem=strict
 #   chmod 2755 with    CAP_FSETID -> mode correctly becomes 2755
 #
 # so without it a setgid binary in the installed initramfs silently loses its
-# setgid, which is a correctness defect even where it raises no error. The next
-# install attempt failed outright in the same helper with:
-#
-#   fatal error: set_attributes: failed to change mode
-#   /tmp/pip-install-target.4sf84owr/usr/bin/chage, because operation not permitted
+# setgid, which is a correctness defect even where it raises no error.
 #
 # CAP_FOWNER is the companion authority for chmod/chown of staged files the
 # caller does not own, which is what mkinitramfs's original-ownership restore
-# does. It is not separately proven for this exact failure — the FSETID
-# reproduction above does not itself raise EPERM — and is granted on that
-# narrow rationale rather than on a clean reproduction. CAP_FSETID,
-# CAP_FOWNER, CAP_MKNOD and CAP_CHOWN are all strictly narrower than the
+# does. It is not separately proven and is granted on that narrow rationale
+# rather than on a clean reproduction. Both are strictly narrower than the
 # CAP_SYS_ADMIN this set already carries. No other capability is granted.
 CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN CAP_FSETID CAP_FOWNER
 AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN CAP_FSETID CAP_FOWNER
+
+# RestrictSUIDSGID must be off. It denies mode changes that set SUID/SGID bits,
+# which is the service's entire job here: the target rootfs legitimately
+# contains setgid binaries. This was the real cause of the install failure
+#
+#   fatal error: set_attributes: failed to change mode
+#   /tmp/pip-install-target.XXXX/usr/bin/chage, because operation not permitted
+#
+# and no capability can substitute for it, because the restriction is a property
+# of the mount namespace rather than of the capability set. A/B measured on the
+# appliance with the real binary and identical capabilities in both runs:
+#
+#   RestrictSUIDSGID=yes -> chmod 2755 fails, errno=1 operation not permitted
+#   RestrictSUIDSGID=no  -> chmod 2755 succeeds, mode 2755
+#
+# This is a real reduction in hardening and is accepted deliberately: the
+# installer cannot construct a Debian rootfs without it. The restriction remains
+# in force on every other Greia service, and the other mount and system-call
+# restrictions on this unit are unchanged.
+RestrictSUIDSGID=no
 # Exact writable staging/mount paths the implementation needs — nothing
 # more. Socket directory (privileged-channel endpoint), PERSIST staging,
 # boot-control/grubenv state, first-install journal staging, and the slot
@@ -133,7 +147,12 @@ ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
 LockPersonality=yes
-RestrictSUIDSGID=yes
+# RestrictSUIDSGID is deliberately absent, and must stay absent. See the
+# measured rationale above: it is the cause of the setgid install failure and
+# no capability can replace it. A second RestrictSUIDSGID line was added here
+# once and silently overrode the intended value, because the later assignment
+# wins; its regression test now requires this directive to be declared exactly
+# once in the file.
 # No network, no shell API: the privileged half speaks only the bounded
 # PREPARE_PLAN/EXECUTE protocol over the AF_UNIX socket (kernel peer
 # credentials); every block effect is an argument array with shell=False.

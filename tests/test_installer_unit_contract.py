@@ -809,6 +809,54 @@ class InitramfsDeviceNodeCapabilityTests(unittest.TestCase):
         self.assertIn("2755", text)
         self.assertIn("CAP_FSETID", text)
 
+    def test_suid_restriction_is_disabled_with_its_measurement(self) -> None:
+        """RestrictSUIDSGID=yes is the real cause of the setgid install failure.
+
+        It denies mode changes that set SUID/SGID bits, which is precisely what
+        mkinitramfs does to the target's setgid binaries. Measured on the
+        appliance with the real chage and identical capabilities in both runs,
+        the restriction is the only difference: with it, chmod 2755 fails with
+        errno=1; without it, the mode becomes 2755. No capability can substitute
+        for it, because the restriction is a property of the mount namespace
+        rather than of the capability set.
+
+        The declaration is also required to be *unique*. Adding the intended
+        `no` beside a pre-existing `yes` left the restriction in force, because
+        the later assignment wins, and the unit still looked correct on review.
+        Only the surrounding hardening is asserted to survive, since trading
+        this one directive away is deliberate and must not quietly become a
+        trade of the rest.
+        """
+
+        declared = self._service_directive("RestrictSUIDSGID")
+        self.assertEqual(
+            declared, ["no"],
+            "RestrictSUIDSGID must be declared exactly once, and off; a repeated "
+            "declaration silently overrides the intended value: %r" % (declared,),
+        )
+        text = Path(UNIT_PATH).read_text(encoding="utf-8")
+        self.assertIn("errno=1", text)
+        self.assertIn("mount namespace", text)
+        for hardening in ("ProtectSystem=strict", "NoNewPrivileges=yes", "ProtectHome=yes"):
+            self.assertIn(hardening, text)
+
+    def _service_directive(self, key: str) -> list[str]:
+        """Return every value the [Service] section declares for ``key``."""
+
+        values: list[str] = []
+        in_service = False
+        for raw_line in Path(UNIT_PATH).read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if line.startswith("[") and line.endswith("]"):
+                in_service = line == "[Service]"
+                continue
+            if not in_service or not line or line.startswith("#") or "=" not in line:
+                continue
+            name, _, value = line.partition("=")
+            if name.strip() == key:
+                values.append(value.strip())
+        return values
+
     def test_chown_is_declared_and_documented_for_the_same_step(self) -> None:
         """The initramfs step also needs CAP_CHOWN, and the unit must say so.
 
