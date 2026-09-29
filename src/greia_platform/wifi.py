@@ -477,10 +477,20 @@ class WifiSetupController:
         return self._profile
 
     def begin(self) -> None:
+        """Enter the Wi-Fi screen, waiting a bounded time for the adapter.
+
+        This used to latch ``UNAVAILABLE`` the moment ``available()`` was false.
+        iwd only publishes its Station interface once the adapter settles into
+        station mode, so reaching the screen even slightly early produced a
+        permanent "no wireless adapter" verdict that no amount of waiting could
+        undo — the only escape was the Refresh button. That is class C3 again:
+        a transient condition turned into a terminal one, in the one code path
+        that was supposed to be recovering from exactly that. The bounded scan
+        retry now absorbs the settling, and the final state is decided from a
+        real availability check once the budget is spent.
+        """
+
         if self._phase not in {WifiSetupPhase.IDLE, WifiSetupPhase.ERROR}:
-            return
-        if not self._backend.available():
-            self._phase = WifiSetupPhase.UNAVAILABLE
             return
         self.refresh()
 
@@ -589,6 +599,13 @@ class WifiSetupController:
                             daemon=True,
                         ).start()
                         continue
+                    if not payload and not self._backend.available():
+                        # The retry budget is spent and there is genuinely no
+                        # station interface. Say so, rather than claiming the
+                        # area is empty.
+                        self._networks = ()
+                        self._phase = WifiSetupPhase.UNAVAILABLE
+                        return changed
                     self._networks = payload
                     self._phase = WifiSetupPhase.READY
                     self._selected_index = 0

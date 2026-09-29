@@ -640,3 +640,60 @@ credential and remains owner-side evidence.
 **Regression-locked** by `InstallerWifiConnectOwnershipTests`: `connect` must not
 create, chmod or populate iwd's state directory, and an open network must not
 register a passphrase agent. Verified RED against the reintroduced write.
+
+## 19. Wi-Fi screen reported no adapter after a reboot: a latched UNAVAILABLE state
+
+**Symptom:** after §18 the installer could list networks and offer to join, but
+on the next boot of that image the Wi-Fi screen reported no adapter and no
+networking at all.
+
+**This was not caused by §18.** The `scan()` and `drain()` code is byte-identical
+between the two images (verified by comparing SHA-256 over those exact source
+ranges across the two commits), and the backend returned 4–5 networks when run
+directly on the running Acer as the service identity. Only `connect()` and the
+Parent capability gate changed.
+
+**Root cause class: C3 again, in the same function that §14 had already fixed
+once.** `WifiSetupController.begin()` latched `UNAVAILABLE` on its first
+availability check:
+
+```python
+if not self._backend.available():
+    self._phase = WifiSetupPhase.UNAVAILABLE
+    return
+```
+
+`UNAVAILABLE` is not in the `{IDLE, ERROR}` set that `begin()` accepts, so the
+state was **permanent**. iwd publishes its Station interface only once the
+adapter settles into station mode, so reaching the Wi-Fi screen even slightly
+early produced a terminal verdict that no amount of waiting could undo; the
+only escape was the Refresh button. A boot-timing difference is enough to flip
+between "works" and "permanently dead", which is exactly the unreproducibility
+this project has been fighting.
+
+**Fix:** `begin()` no longer decides availability at all. It enters the bounded
+scan-retry loop, and once the budget is spent the final state is derived from a
+real availability check: no station interface after the retries means
+`UNAVAILABLE`, otherwise `READY` with an empty list. A late adapter is therefore
+absorbed, and a genuinely absent adapter is still reported honestly — it just
+takes a few seconds to say so.
+
+**Verified on the reference Acer:**
+
+```
+late-adapter (unavailable twice, then ready): READY, 4 networks
+real adapter, normal path:                    READY, 4 networks, 0 retries
+```
+
+**Regression-locked** by `WifiSetupAdapterReadinessTests`: a late-settling
+adapter must reach `READY`, `begin()` must never latch on a single early check,
+and a genuinely absent adapter must still end `UNAVAILABLE` after exactly
+`SCAN_RETRY_LIMIT + 1` scans. All three were confirmed RED against the restored
+latch. The pre-existing `test_no_adapter_is_nonfatal` also had to be corrected:
+its fake reported "no adapter" while still returning three networks, which was
+only survivable while `begin()` latched before scanning. The fake is now honest.
+
+**Lesson recorded for the class, not the instance:** §14 fixed the empty-scan
+latch and this was the second latch in the same twenty lines. When a class is
+identified, every instance of it in the same code must be enumerated, not just
+the one the current symptom exposed.

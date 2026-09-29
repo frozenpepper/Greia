@@ -2407,3 +2407,34 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   `docs/INSTALLATION_ISSUES_LOG.md` §18.
 - T3-P is not addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash, then owner
   acceptance of a real join, then the Acer install / installed-first-boot run.
+
+## 2026-09-28 — Second C3 latch in the same controller removed; owner-reported Wi-Fi regression triaged (`IWD-ADAPTER-READINESS-LATCH`)
+
+- No earlier entry rewritten. Owner reported the §18 image was worse: the Wi-Fi screen no longer found
+  networks. Triaged rather than assumed. The `scan()` and `drain()` code is **byte-identical** between
+  `671e0e94` and `7d0d787c` — proven by comparing SHA-256 over those exact source ranges across the
+  two commits — and the shipped backend returned 4–5 networks when run directly on the running Acer as
+  the service identity. Only `connect()` and the Parent capability gate differ, so §18 could not have
+  caused this.
+- Real cause: `WifiSetupController.begin()` latched `UNAVAILABLE` on its first availability check, and
+  `UNAVAILABLE` is outside the `{IDLE, ERROR}` set `begin()` accepts, so the state was permanent. iwd
+  publishes its Station interface only once the adapter settles, so a slightly early arrival at the
+  Wi-Fi screen produced a terminal verdict with the Refresh button as the only escape. This is class
+  **C3** again — and it is the *second* latch in the same twenty lines that §14 fixed the first time.
+  Owning that: identifying a class is not enough, every instance of it in the same code must be
+  enumerated.
+- Fix: `begin()` no longer decides availability. It enters the bounded scan-retry loop; once the budget
+  is spent the final state comes from a real availability check — no station interface means
+  `UNAVAILABLE`, otherwise `READY` with an empty list. A late adapter is absorbed; a genuinely absent
+  adapter is still reported honestly, just after a few seconds.
+- Also corrected `test_no_adapter_is_nonfatal`, whose fake claimed no adapter while returning three
+  networks — an inconsistency that only stayed survivable while `begin()` latched before scanning. The
+  fake is now honest and the helper's timeout is explicit about the retry window.
+- Live verification on the Acer: a deliberately late adapter reaches `READY` with 4 networks instead of
+  latching, and the normal path reaches `READY` with 4 networks using 0 retries.
+- Verification: focused preflight 68/68; affected sweep 68/68 across `installer_wifi` 9,
+  `installer_wifi_setup` 9, `installer_wifi_persistence` 2, `installer_wifi_build_contract` 4,
+  `parent_production_api` 7, `installer_state` 7. `WifiSetupAdapterReadinessTests` confirmed RED
+  against the restored latch, GREEN after.
+- T3-P is not addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash, then owner
+  re-test of listing, joining, and finally the install / installed-first-boot run.
