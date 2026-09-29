@@ -841,3 +841,44 @@ follow-up is not a third one-at-a-time addition: it is to run the real
 `update-initramfs` leg once inside a throwaway chroot with capabilities
 stripped, and enumerate the complete set empirically in a single experiment.
 Recorded in the plan as the required method change.
+
+## 21c. Install failures were unreadable except by hand-transcription
+
+**Symptom (process, not a single defect):** every real install failure on the
+Acer had to be diagnosed by the owner reading the framebuffer and typing the
+message. Three separate causes:
+
+1. The privileged service's boundary traces exist but are gated behind the
+   Session-04 test marker `/run/greia-x8-debug` and are written **only to the
+   serial console**, so on real hardware they never fired at all.
+2. The service had no always-on record of a refusal. `format_log_record` is
+   called only on success and its result is discarded (`_ =`), so a failed
+   install left no trace in the journal.
+3. The installer draws its error on the framebuffer and journals nothing.
+
+**Fix, two bounded channels:**
+
+- `transaction_service._greia_log_event` writes one always-on record to stderr
+  (the journal) for refusal (with the service's own bounded reason), unexpected
+  exception escape, client hang-up, and successful install. Nonce, plan digest,
+  settings values and credentials are excluded, matching `format_log_record`'s
+  existing discipline; volume is roughly four lines per install request on a
+  local one-request-per-connection socket.
+- The installer mirrors its visible state to `/run/greia-installer/status.json`
+  (page, progress stage, fraction, detail, error) and `entrypoint.main()`
+  publishes a boot stage before the language chooser, so the file exists from
+  process start rather than only after the first click.
+
+**Two defects in the first version of this, both caught on the appliance before
+any install was attempted:** it read `progress.phase` where the field is
+`progress.stage`, and it caught only `OSError`, so the resulting `AttributeError`
+escaped the frame loop and the installer service exited 1. A diagnostic channel
+that can take down the product it exists to explain is worse than none, so the
+whole body is now wrapped and absorbing, and both failure modes are locked by
+`InstallerStatusRecordTests`.
+
+**Regression-locked** by `RemoteDiagnosableInstallTests` and
+`InstallerBootStatusTests`, including assertions that the logged and written
+content carries no nonce, digest, passphrase or hash, inspected through the AST
+so the functions' own docstrings — which deliberately *name* the excluded
+secrets — cannot satisfy or trip the check.

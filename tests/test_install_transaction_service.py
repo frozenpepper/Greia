@@ -1166,3 +1166,69 @@ class TransactionRefusalAndDisconnectTests(unittest.TestCase):
             tail.split("except BaseException as exc:")[0],
             "a client disconnect must not be re-raised and kill the service",
         )
+
+
+def _function_code(relative: str, name: str) -> str:
+    """Return a function's source with its docstring removed.
+
+    Secret-name assertions must inspect code, not prose: these functions
+    deliberately *document* which secrets they exclude, so a plain text search
+    would match the very sentence that promises the guarantee.
+    """
+
+    import ast
+
+    tree = ast.parse(Path(relative).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == name:
+            body = list(node.body)
+            if (
+                body
+                and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)
+            ):
+                body = body[1:]
+            node.body = body or [ast.Pass()]
+            return ast.unparse(ast.Module(body=node.body, type_ignores=[]))
+    raise AssertionError(f"{name} not found in {relative}")
+
+
+class RemoteDiagnosableInstallTests(unittest.TestCase):
+    """An install failure must be readable without an operator transcribing it.
+
+    Two channels were missing, and both were found the hard way on the reference
+    Acer: a refused install left nothing readable anywhere, so the only way to
+    learn the cause was for a person to read the framebuffer and type it out.
+    The service's boundary traces exist but are gated behind the Session-04 test
+    marker and go only to the serial console; the installer draws its error on
+    the framebuffer and journals nothing.
+    """
+
+    def test_service_records_refusals_with_their_reason(self) -> None:
+        from greia_installer import transaction_service
+
+        self.assertTrue(hasattr(transaction_service, "_greia_log_event"))
+        source = Path(transaction_service.__file__).read_text(encoding="utf-8")
+        self.assertIn('_greia_log_event("refused", reason=', source)
+        self.assertIn("_greia_log_event(\"installed\"", source.replace("'", '"'))
+
+    def test_service_log_record_never_carries_secrets(self) -> None:
+        """Inspect the function's code, not its docstring, for secret names."""
+
+        code = _function_code("src/greia_installer/transaction_service.py", "_greia_log_event")
+        for forbidden in ("transaction_nonce", "plan_digest", "passphrase", "settings"):
+            self.assertNotIn(forbidden, code, f"{forbidden} must never be logged")
+
+    def test_installer_mirrors_its_visible_state_to_a_readable_file(self) -> None:
+        source = Path("src/greia_installer/main.py").read_text(encoding="utf-8")
+        self.assertIn("def _write_status_record", source)
+        self.assertIn("/run/greia-installer/status.json", source)
+        self.assertIn("self._write_status_record()", source)
+
+    def test_installer_status_record_stays_bounded_and_secret_free(self) -> None:
+        code = _function_code("src/greia_installer/main.py", "_write_status_record")
+        for forbidden in ("nonce", "plan_digest", "passphrase", "sha256"):
+            self.assertNotIn(forbidden, code, f"{forbidden} must never be written")
+        self.assertIn("[:256]", code)
+        self.assertIn("[:160]", code)

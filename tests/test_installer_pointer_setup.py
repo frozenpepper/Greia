@@ -778,3 +778,79 @@ class RenderSignatureTests(unittest.TestCase):
         app.wifi._connected_ssid = "Home"
         after = app._render_signature(screen)
         self.assertNotEqual(before, after)
+
+
+class InstallerStatusRecordTests(unittest.TestCase):
+    """The readable status file must work, and must never break the installer.
+
+    This exists because the first version of the status writer was wrong in two
+    ways that only real hardware caught: it read ``progress.phase`` where the
+    field is ``progress.stage``, and it caught only ``OSError`` — so the
+    resulting AttributeError escaped, the frame loop died, and the installer's
+    service exited 1. A diagnostic channel that can take down the product it is
+    meant to explain is worse than no diagnostic channel.
+    """
+
+    def make_app(self):
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        return InstallerApplication(
+            root=Path("/opt/greia-os"),
+            payload=Path("/dev/null"),
+            payload_digest=None,
+            windowed=True,
+            demo=True,
+        )
+
+    def test_writer_uses_the_real_progress_field_names(self) -> None:
+        from greia_installer.engine import InstallProgress
+
+        progress = InstallProgress(fraction=0.5, stage="copy", detail="Copying")
+        self.assertTrue(hasattr(progress, "stage"))
+        self.assertFalse(hasattr(progress, "phase"))
+
+    def test_writer_survives_a_broken_state(self) -> None:
+        app = self.make_app()
+        # A state object whose progress is not an InstallProgress at all: the
+        # writer must absorb it rather than propagate.
+        app.state.progress = object()  # type: ignore[assignment]
+        app._write_status_record()  # must not raise
+
+    def test_writer_never_propagates_even_if_path_fails(self) -> None:
+        app = self.make_app()
+        with unittest.mock.patch.object(
+            Path, "write_text", side_effect=OSError("read-only")
+        ):
+            app._write_status_record()  # must not raise
+
+
+class InstallerBootStatusTests(unittest.TestCase):
+    """The status file must exist from process start, not only after a click.
+
+    The installer's main loop is where the mirrored status is written, but
+    ``entrypoint.main()`` runs the language chooser first and that screen has
+    its own loop. So a reader polling the status file saw nothing at all while
+    the installer sat on the language screen, and could not distinguish
+    "stuck at the language chooser" from "never started".
+    """
+
+    def test_entrypoint_publishes_a_boot_stage_before_the_language_chooser(self) -> None:
+        source = Path("src/greia_installer/entrypoint.py").read_text(encoding="utf-8")
+        self.assertIn("def _write_boot_status", source)
+        self.assertIn('INSTALLER_STATUS_PATH = Path("/run/greia-installer/status.json")', source)
+        boot = source.index('def main() -> int:')
+        chooser = source.index("locale = choose_language(", boot)
+        self.assertLess(
+            source.index('_write_boot_status("language")', boot),
+            chooser,
+            "the language stage must be published before the chooser blocks",
+        )
+
+    def test_boot_status_writer_never_raises(self) -> None:
+        import unittest.mock
+
+        from greia_installer import entrypoint
+
+        with unittest.mock.patch.object(
+            entrypoint.Path, "write_text", side_effect=OSError("read-only")
+        ):
+            entrypoint._write_boot_status("starting")  # must not raise

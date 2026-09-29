@@ -47,6 +47,7 @@ import json
 import os
 import re
 import socket
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Mapping, NoReturn, Sequence, TextIO
@@ -134,6 +135,38 @@ def _s04_diag_detail(exc: BaseException) -> str:
     except Exception:
         reason = "unprintable"
     return f"{type(exc).__name__}: {reason[:192]}"
+
+
+def _greia_log_event(event: str, **fields: object) -> None:
+    """Write one bounded, always-on record of an install-transaction event.
+
+    The Session-04 boundary traces above only reach the serial console and only
+    when a test marker exists, which is why a refused install on real hardware
+    left nothing readable afterwards: the operator had to transcribe the error
+    by hand. This is the minimum always-on record needed to diagnose an
+    install remotely — op, outcome and the service's own refusal reason — and
+    nothing else.
+
+    Deliberately narrow. Nonce, plan digest, settings values and credentials are
+    never included, matching :func:`format_log_record`'s discipline; the reason
+    is the service's own bounded refusal string. Volume is bounded by the
+    request count (roughly four lines per install request), and the endpoint is
+    a local one-request-per-connection socket, not a network service.
+    """
+
+    parts = [event]
+    for key in sorted(fields):
+        value = fields[key]
+        if value is None:
+            continue
+        text = str(value).replace("\r", " ").replace("\n", " ")
+        if len(text) > 192:
+            text = text[:192] + "..."
+        parts.append(f"{key}={text}")
+    try:
+        print("greia-install-tx: " + " ".join(parts), file=sys.stderr, flush=True)
+    except (OSError, ValueError):
+        return
 
 
 def _s04_diag_boundary(label: str, *, detail: str | None = None) -> None:
@@ -682,6 +715,7 @@ class InstallTransactionService:
                     plan_digest=params.get("plan_digest"),
                 )
             _ = format_log_record(transaction_id, op, "INSTALLED")
+            _greia_log_event("installed", target=self._last_installed_identity)
             _ = result
             return encode_response(
                 transaction_id,
@@ -902,6 +936,7 @@ def handle_connection(
             response = service.handle_request(raw, peer=peer, boot_state="installer_ready")
         except (InstallTransactionError, TransactionServiceError, PrivilegedChannelError) as exc:
             _s04_diag_boundary("expected exception caught", detail=_s04_diag_detail(exc))
+            _greia_log_event("refused", reason=str(exc)[:256])
             try:
                 _s04_diag_boundary("error response encode starting")
                 response = encode_response(
@@ -916,6 +951,9 @@ def handle_connection(
         except BaseException as exc:
             _s04_diag_boundary(
                 "UNEXPECTED BASEEXCEPTION ESCAPE", detail=_s04_diag_detail(exc)
+            )
+            _greia_log_event(
+                "unexpected_escape", error=_s04_diag_detail(exc)
             )
             raise
         _s04_diag_boundary("handle_request normal response ready")
@@ -935,6 +973,7 @@ def handle_connection(
                 "client disconnected before reply; request state retained",
                 detail=_s04_diag_detail(exc),
             )
+            _greia_log_event("client_disconnected_before_reply")
         except BaseException as exc:
             _s04_diag_boundary("sendall failed", detail=_s04_diag_detail(exc))
             raise

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
+import time
 from pathlib import Path
 
 from greia_platform.system_language import (
@@ -228,12 +230,45 @@ def _release_boot_cover() -> None:
     )
 
 
+#: Where the installer publishes what it is currently showing, so a failure can
+#: be read over the developer remote surface instead of transcribed by hand
+#: from the framebuffer. Written from process start, because the language
+#: chooser runs its own loop before the installer's, and a reader otherwise
+#: sees an empty runtime directory and cannot tell "stuck at the language
+#: screen" from "not started". Bounded, and carries only what is on screen.
+INSTALLER_STATUS_PATH = Path("/run/greia-installer/status.json")
+
+
+def _write_boot_status(stage: str) -> None:
+    """Publish a one-line boot-stage record; never raise."""
+
+    try:
+        INSTALLER_STATUS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        INSTALLER_STATUS_PATH.write_text(
+            json.dumps(
+                {
+                    "page": stage,
+                    "phase": stage,
+                    "fraction": 0.0,
+                    "detail": "",
+                    "error": "",
+                    "monotonic": round(time.monotonic(), 3),
+                }
+            ),
+            encoding="utf-8",
+        )
+    except Exception:  # noqa: BLE001 - a diagnostic must never break start-up
+        return
+
+
 def main() -> int:
     args = parse_args()
+    _write_boot_status("starting")
     # Step 8A.5: the graphical UI is unprivileged by design (see
     # greia-installer-ui.service); destruction lives only in the root
     # transaction service behind nonce+digest. Use --demo for the
     # zero-disk-contact simulation.
+    _write_boot_status("language")
     locale = choose_language(root=args.root, windowed=args.windowed, demo=args.demo)
     return LanguageFirstInstallerApplication(
         root=args.root,

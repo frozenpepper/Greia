@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import enum
+import json
 import os
 import queue
 import threading
@@ -223,6 +224,7 @@ class InstallerApplication:
         # computed signature, so the first frame always paints and an
         # uncomputable signature always repaints.
         self._last_render_signature: object = _NEVER_RENDERED
+        self._status_record: tuple[object, ...] | None = None
         self._cover_released = False
         self._pointer_seen = False
         self._display_probe_cache: Any = None
@@ -793,6 +795,7 @@ class InstallerApplication:
             frame_started = time.monotonic()
             self._drain_worker_events()
             self.wifi.drain()
+            self._write_status_record()
             handled_event = False
             for event in pygame.event.get():
                 handled_event = True
@@ -2981,6 +2984,58 @@ class InstallerApplication:
             )
         except Exception:
             return None
+
+    def _write_status_record(self) -> None:
+        """Mirror the current screen state to a small readable file.
+
+        The installer draws everything on the framebuffer and the privileged
+        service journals almost nothing, so a failure on real hardware could
+        only be reported by an operator transcribing it by hand. This writes
+        the page, progress phase and error text — nothing else — to the
+        service's own runtime directory, so a failure can be read over the
+        developer remote surface instead.
+
+        Only state the UI already displays is written, the content is bounded,
+        and it carries no nonce, digest, setting value or credential. It is
+        rewritten only when the summary actually changes, so the common case
+        costs one tuple comparison per frame.
+        """
+
+        path = Path("/run/greia-installer/status.json")
+        try:
+            progress = self.state.progress
+            summary = (
+                str(self.state.page),
+                str(progress.stage) if progress is not None else "",
+                round(float(progress.fraction), 4) if progress is not None else 0.0,
+                (progress.detail if progress is not None else "")[:160],
+                (self.state.error or "")[:256],
+            )
+            if summary == self._status_record:
+                return
+            self._status_record = summary
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(
+                json.dumps(
+                    {
+                        "page": summary[0],
+                        "phase": summary[1],
+                        "fraction": summary[2],
+                        "detail": summary[3],
+                        "error": summary[4],
+                        "monotonic": round(time.monotonic(), 3),
+                    }
+                ),
+                encoding="utf-8",
+            )
+        except Exception:  # noqa: BLE001
+            # A diagnostic must never be able to take the installer down. This
+            # already happened once: a wrong attribute raised AttributeError,
+            # which the narrower ``except OSError`` did not catch, and the
+            # frame loop died with the service. Read-only state and a missing
+            # runtime directory are not worth an install.
+            self._status_record = None
+            return
 
     def _release_boot_cover_once(self) -> None:
         """Release the early-boot cover exactly once, with a bounded retry.
