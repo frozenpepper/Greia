@@ -2537,3 +2537,17 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Live on the Acer: exactly one declaration, RestrictSUIDSGID=no as systemd applied it, CapEff=0x82400d9, service active. installer_unit_contract 28/28 with two negative checks (re-added duplicate, in-place flip) both caught.
 - Lesson worth carrying to the UEFI and ARM tranches: on this platform the hardened-unit directives are a larger source of install failure than the capability set, and a capability-shaped fix for a namespace-shaped fault will read as plausible and fail identically. Measure the variable before granting authority.
 - T3-P remains OPEN/BLOCKING. Next: owner retries; the setgid step is the last known blocker in the initramfs regeneration path.
+
+## 2026-09-28 — Whole-process review of the privileged install path; the unit is now sized against its own workload (`INSTALLER-UNIT-SIZING`)
+
+- No earlier entry rewritten. Four appliance cycles were spent granting one capability per error message; each fix was locally correct and each was followed by the same class of failure, so the method was the defect.
+- The privileged half does a full distribution installation on EXECUTE: unsquashfs, update-initramfs, update-grub, `apt-get update`/`install` inside the target chroot, grub-install to the whole disk, grub-script-check. The unit's hardening was authored for a narrower job.
+- Method: the whole leg now runs on Orbiter against the real 352 MiB payload, in a transient unit whose directives are parsed from the shipped unit, against a partitioned loop disk standing in for /dev/sda. An iteration went from ~30 minutes to 2. Harness kept at `tests/integration/install_leg_harness.sh` with its fidelity notes.
+- `TasksMax=8` is below the service's own measured peak of 16 (unit cgroup pids.current). unsquashfs: "FATAL ERROR: Failed to create thread"; mkinitramfs: "100: Cannot fork". Hidden behind the attribute failures, so fixing those alone would have bought another cycle and nothing else. Now 64.
+- The apt leg needs CAP_DAC_OVERRIDE: "rename failed, Permission denied" in /var/lib/apt/lists. CAP_DAC_READ_SEARCH tested and not needed. This leg has never run on any appliance — every attempt died at 0.1, long before the hardware leg at 0.74.
+- CAP_FOWNER is now proven, which the previous entry could only assert: without it unsquashfs cannot unpack the payload at all ("set_attributes: failed to change mode .../security-support.semaphore"). The RestrictSUIDSGID conclusion stands unchanged.
+- All six legs pass with the shipped unit's own parsed values: real package installed from a local pool, "Installation finished" from grub-install, /usr/bin/chage correctly 2755.
+- Two harness versions produced false failures before the loop was trustworthy (pre-mounted target read-only under ProtectSystem=strict; SystemCallArchitectures=native SIGSYS-killing an i386 payload on an x86_64 host). Both recorded in the harness notes.
+- Process lesson, which is the real finding: granting authority named by an error message treats the message as the specification. On this platform the hardened-unit directives, not the capability set, were the larger source of install failure. A unit that runs a distribution package installation must be sized by executing it.
+- Tests: `installer_unit_contract` 30/30, with negatives for TasksMax=8 and for dropping CAP_DAC_OVERRIDE both caught.
+- T3-P remains OPEN/BLOCKING. Next: owner retries once; the offline harness means a further failure should be reproducible in 2 minutes rather than 30.

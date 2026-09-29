@@ -979,3 +979,62 @@ This is an accepted reduction in hardening, recorded rather than minimised: the
 installer cannot construct a Debian rootfs without it. The restriction remains in
 force on every other Greia service, and this unit's other mount and system-call
 restrictions are unchanged.
+
+## 21f. Whole-process review: the unit was never sized against its own workload
+
+Four appliance cycles were spent granting one capability per error message. Each
+fix was locally correct and each was followed by the same class of failure, so
+the approach itself was wrong. This reviews the process rather than the error.
+
+**What the privileged half actually does on EXECUTE.** Not a bounded declarative
+operation. It unpacks the payload with `unsquashfs`, regenerates the target
+initramfs, runs `update-grub`, runs **`apt-get update` and `apt-get install`
+inside the target chroot** to add machine-specific support, installs GRUB to the
+whole disk, and verifies the boot configuration. That is a full distribution
+installation. All of the hardening in the unit — the capability bounding set,
+`TasksMax=8`, `RestrictSUIDSGID`, `RestrictAddressFamilies=AF_UNIX` — was
+authored for a narrower job, and the last two of those three `TasksMax`,
+`RestrictSUIDSGID` and the apt leg's requirement for `CAP_DAC_OVERRIDE` were
+never exercised on any appliance, because every attempt died at 0.1, long before
+the hardware leg at 0.74.
+
+**Method.** Rather than continue one hardware cycle per error, the whole leg was
+reproduced on Orbiter against the real 352 MiB payload in a transient unit whose
+directives are parsed from the shipped unit file, against a partitioned loop disk
+standing in for `/dev/sda`. An iteration went from roughly thirty minutes to two.
+Six legs are exercised: unpack, `update-initramfs`, `update-grub`, apt update,
+apt install, `grub-install`, `grub-script-check`. The harness is kept at
+`tests/integration/install_leg_harness.sh` with its fidelity notes.
+
+**What that found, none of it visible from a single error:**
+
+- `TasksMax=8` is below the service's own peak of 16, sampled from the unit's
+  cgroup `pids.current`. `unsquashfs` dies with `FATAL ERROR: Failed to create
+  thread` and `mkinitramfs` with `100: Cannot fork`. This was a second failure
+  hidden behind the first: it cannot surface until the attribute failures are
+  fixed, so fixing those alone would have bought another cycle and nothing else.
+- The apt leg needs `CAP_DAC_OVERRIDE`, failing as `rename failed, Permission
+  denied` in `/var/lib/apt/lists`. `CAP_DAC_READ_SEARCH` was tested and is not
+  needed.
+- `CAP_FOWNER` is genuinely required, which §21e could only assert. Without it
+  `unsquashfs` cannot unpack the payload at all: `set_attributes: failed to
+  change mode .../security-support.semaphore, because operation not permitted`.
+- With the full set, all six legs pass: a real package installs from a local
+  pool, `grub-install` reports `Installation finished`, and `/usr/bin/chage` is
+  correctly `2755`.
+
+**Correction to §21e's reasoning, kept explicit.** `CAP_FOWNER` was granted then
+as a companion authority "not separately proven". It is now proven, by a
+different phase of the same `set_attributes` helper. The `RestrictSUIDSGID`
+conclusion from §21e stands and is unchanged.
+
+**Process lessons, recorded because they are the actual defect here.** Granting
+authority named by an error message treats the message as the specification; on
+this platform the hardened-unit directives, not the capability set, were the
+larger source of install failure, and a capability-shaped fix for a
+namespace-shaped fault reads as plausible and fails identically. A unit that runs
+a distribution package installation must be sized against that workload by
+executing it, not inferred from whatever error surfaced first. Two harness
+versions also produced false failures before the loop was trustworthy — a
+pre-mounted read-only target, and `SystemCallArchitectures=native` killing an
+i386 payload on an x86_64 host — which is why the fidelity notes are kept with it.

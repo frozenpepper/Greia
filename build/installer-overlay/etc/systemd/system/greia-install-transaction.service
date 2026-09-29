@@ -93,43 +93,65 @@ ProtectSystem=strict
 #   fatal error : set_attributes: failed to change UID and gids on
 #   /tmp/pip-install-target.m5dz4tui/etc/gshadow. because operation not permitted
 #
-# CAP_FSETID and CAP_FOWNER complete the set the same staging step needs. The
-# target's /usr/bin/chage is mode 2755 (setgid, group shadow) and mkinitramfs
-# restores each staged file's original mode. Reproduced on the appliance with
-# the real binary and this service's capability set:
+# The capability set and task limit below are sized against the workload this
+# service actually performs, not guessed from the errors one run at a time.
 #
-#   chmod 2755 without CAP_FSETID -> "succeeds", mode silently becomes 755
-#   chmod 2755 with    CAP_FSETID -> mode correctly becomes 2755
+# This service does not only validate: on EXECUTE it unpacks the payload with
+# unsquashfs, regenerates the target initramfs, runs apt inside the target
+# chroot to add machine-specific support, and installs GRUB to the whole disk.
+# That is a full distribution installation. Each authority below was isolated by
+# removing it and re-running all six legs offline against the real payload in a
+# unit replicating this file, so none of them is granted on plausibility.
 #
-# so without it a setgid binary in the installed initramfs silently loses its
-# setgid, which is a correctness defect even where it raises no error.
+#   CAP_MKNOD         unsquashfs restores /dev/console and friends; mkinitramfs
+#                     mknods device nodes. Without it: "operation not permitted".
+#   CAP_CHOWN         both tools restore original uid/gid. Without it:
+#                     "failed to change UID and gids on .../etc/gshadow".
+#   CAP_FOWNER        both tools chmod files they do not own. Without it:
+#                     "set_attributes: failed to change mode
+#                     .../security-support.semaphore, because operation not
+#                     permitted" and the payload cannot be unpacked at all.
+#   CAP_FSETID        the target's /usr/bin/chage is mode 2755, setgid. Without
+#                     it chmod returns SUCCESS and the mode silently becomes
+#                     755, shipping a binary without the group privilege it
+#                     needs. This one fails silently, which is why it matters
+#                     more than the three that raise.
+#   CAP_DAC_OVERRIDE  the apt leg renames and unlinks inside /var/lib/apt/lists.
+#                     Without it: "rename failed, Permission denied". This leg
+#                     had never run on any appliance, because every prior
+#                     attempt died before reaching it.
 #
-# CAP_FOWNER is the companion authority for chmod/chown of staged files the
-# caller does not own, which is what mkinitramfs's original-ownership restore
-# does. It is not separately proven and is granted on that narrow rationale
-# rather than on a clean reproduction. Both are strictly narrower than the
-# CAP_SYS_ADMIN this set already carries. No other capability is granted.
-CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN CAP_FSETID CAP_FOWNER
-AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN CAP_FSETID CAP_FOWNER
+# CAP_DAC_READ_SEARCH was tested and is not needed. Everything else in the
+# original set is retained. No capability is granted beyond this list.
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN CAP_FOWNER CAP_FSETID CAP_DAC_OVERRIDE
 
 # RestrictSUIDSGID must be off. It denies mode changes that set SUID/SGID bits,
-# which is the service's entire job here: the target rootfs legitimately
-# contains setgid binaries. This was the real cause of the install failure
+# which is this service's entire job: the target rootfs legitimately contains
+# setgid binaries. It caused
 #
 #   fatal error: set_attributes: failed to change mode
 #   /tmp/pip-install-target.XXXX/usr/bin/chage, because operation not permitted
 #
 # and no capability can substitute for it, because the restriction is a property
-# of the mount namespace rather than of the capability set. A/B measured on the
-# appliance with the real binary and identical capabilities in both runs:
+# of the mount namespace rather than of the capability set. A/B on the appliance
+# with the real binary and identical capabilities in both runs:
 #
 #   RestrictSUIDSGID=yes -> chmod 2755 fails, errno=1 operation not permitted
 #   RestrictSUIDSGID=no  -> chmod 2755 succeeds, mode 2755
 #
-# This is a real reduction in hardening and is accepted deliberately: the
-# installer cannot construct a Debian rootfs without it. The restriction remains
-# in force on every other Greia service, and the other mount and system-call
-# restrictions on this unit are unchanged.
+# This is a real reduction in hardening, accepted deliberately: the installer
+# cannot construct a Debian rootfs without it. It remains in force on every
+# other Greia service, and the rest of this unit's restrictions are unchanged.
+
+# TasksMax was 8, which is below what the service needs. unsquashfs dies with
+# "FATAL ERROR: Failed to create thread" and mkinitramfs with
+# "/usr/sbin/mkinitramfs: 100: Cannot fork", which surfaces only once the
+# attribute failures above are fixed, so it was a hidden second failure behind
+# the first. Peak concurrent tasks for the whole leg, sampled from the unit's own
+# cgroup pids.current, is 16. 64 leaves headroom for a slower target without
+# being a limit worth hitting deliberately.
+TasksMax=64
 RestrictSUIDSGID=no
 # Exact writable staging/mount paths the implementation needs — nothing
 # more. Socket directory (privileged-channel endpoint), PERSIST staging,
@@ -147,16 +169,13 @@ ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
 LockPersonality=yes
-# RestrictSUIDSGID is deliberately absent, and must stay absent. See the
-# measured rationale above: it is the cause of the setgid install failure and
-# no capability can replace it. A second RestrictSUIDSGID line was added here
-# once and silently overrode the intended value, because the later assignment
-# wins; its regression test now requires this directive to be declared exactly
-# once in the file.
+# RestrictSUIDSGID=no is declared once, above, with its measurement. A second
+# RestrictSUIDSGID line was added beside it once and silently overrode the
+# intended value, because the later assignment wins while the file still read
+# correctly. The regression test requires this directive to appear exactly once.
 # No network, no shell API: the privileged half speaks only the bounded
 # PREPARE_PLAN/EXECUTE protocol over the AF_UNIX socket (kernel peer
 # credentials); every block effect is an argument array with shell=False.
 RestrictAddressFamilies=AF_UNIX
 SystemCallArchitectures=native
 LimitCORE=0
-TasksMax=8

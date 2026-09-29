@@ -451,8 +451,9 @@ class BoundedPrivilegeTests(unittest.TestCase):
             "CAP_SETGID",
             "CAP_MKNOD",
             "CAP_CHOWN",
-            "CAP_FSETID",
             "CAP_FOWNER",
+            "CAP_FSETID",
+            "CAP_DAC_OVERRIDE",
         ]
         facts = parse_unit(UNIT_PATH)
         self.assertEqual(
@@ -502,8 +503,9 @@ class BoundedPrivilegeTests(unittest.TestCase):
                         "CAP_SETGID",
                         "CAP_MKNOD",
                         "CAP_CHOWN",
-                        "CAP_FSETID",
                         "CAP_FOWNER",
+                        "CAP_FSETID",
+                        "CAP_DAC_OVERRIDE",
                     ]
                 ),
                 f"{key} must declare exactly the evidenced capability set",
@@ -857,6 +859,43 @@ class InitramfsDeviceNodeCapabilityTests(unittest.TestCase):
                 values.append(value.strip())
         return values
 
+    def test_task_limit_exceeds_the_measured_peak(self) -> None:
+        """TasksMax was 8, below the service's own peak of 16.
+
+        unsquashfs died with "Failed to create thread" and mkinitramfs with
+        "100: Cannot fork". Both surface only once the attribute failures are
+        fixed, so the limit was a second failure hiding behind the first, and
+        would have cost another appliance cycle. The peak is sampled from the
+        unit's own cgroup pids.current while running the whole install leg, not
+        estimated, and the declared limit must clear it with headroom.
+        """
+
+        declared = int(self._service_directive("TasksMax")[0])
+        measured_peak = 16
+        self.assertGreater(
+            declared, measured_peak,
+            "TasksMax=%d does not exceed the measured peak of %d"
+            % (declared, measured_peak),
+        )
+        text = Path(UNIT_PATH).read_text(encoding="utf-8")
+        self.assertIn("Cannot fork", text)
+        self.assertIn("pids.current", text)
+
+    def test_dac_override_is_present_for_the_apt_leg(self) -> None:
+        """The apt leg renames inside /var/lib/apt/lists and needs DAC override.
+
+        This leg had never executed on any appliance, because every earlier
+        attempt died before reaching it, so its requirement was invisible. It
+        surfaces as "rename failed, Permission denied" without the capability.
+        CAP_DAC_READ_SEARCH was tested and is deliberately absent.
+        """
+
+        declared = " ".join(self._service_directive("CapabilityBoundingSet"))
+        self.assertIn("CAP_DAC_OVERRIDE", declared)
+        self.assertNotIn("CAP_DAC_READ_SEARCH", declared)
+        text = Path(UNIT_PATH).read_text(encoding="utf-8")
+        self.assertIn("rename failed, Permission denied", text)
+
     def test_chown_is_declared_and_documented_for_the_same_step(self) -> None:
         """The initramfs step also needs CAP_CHOWN, and the unit must say so.
 
@@ -892,5 +931,11 @@ class InitramfsDeviceNodeCapabilityTests(unittest.TestCase):
         facts = parse_unit(UNIT_PATH)
         declared = (facts.get("CapabilityBoundingSet") or "").split()
         self.assertIn("CAP_SYS_ADMIN", declared)
-        for capability in ("CAP_MKNOD", "CAP_CHOWN", "CAP_FSETID", "CAP_FOWNER"):
+        for capability in (
+            "CAP_MKNOD",
+            "CAP_CHOWN",
+            "CAP_FOWNER",
+            "CAP_FSETID",
+            "CAP_DAC_OVERRIDE",
+        ):
             self.assertIn(capability, declared)
