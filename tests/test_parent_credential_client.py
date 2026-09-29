@@ -22,6 +22,8 @@ from pathlib import Path
 
 from greia_launcher.parent_credential_client import (
     DEFAULT_PARENT_API_BASE_URL,
+    ParentRequestFailed,
+    ParentSession,
     ParentCredentialClient,
     ParentCredentialUnavailable,
     ParentPasswordVerifier,
@@ -119,6 +121,64 @@ class RejectionStaysARejectionTests(unittest.TestCase):
     def test_server_error_is_an_outage_not_a_wrong_password(self) -> None:
         with self.assertRaises(ParentCredentialUnavailable):
             self._verify_with_http_error(500)
+
+
+class ServiceReasonReachesTheParentTests(unittest.TestCase):
+    """A refusal must show the service's own reason, not a generic string.
+
+    The API nests its error as ``{"error": {"code", "message"}}``. A flat lookup
+    silently produced "request refused (400)", which is how a real cause such as
+    "unknown profile avatar: fox" stayed invisible while the panel appeared to
+    work. Verified against the running service on the reference Acer.
+    """
+
+    def _reason_for(self, body: bytes) -> str:
+        error = urllib.error.HTTPError(
+            "http://127.0.0.1:8766/api/v1/profiles",
+            400,
+            "bad request",
+            {},
+            io.BytesIO(body),
+        )
+        client = ParentCredentialClient()
+        original = urllib.request.urlopen
+        urllib.request.urlopen = lambda request, timeout=None: (_ for _ in ()).throw(error)
+        try:
+            with self.assertRaises(ParentRequestFailed) as caught:
+                client.add_child_account(
+                    ParentSession(token="t", device_id="d"),
+                    display_name="Kid",
+                    avatar_id="fox",
+                )
+            return str(caught.exception)
+        finally:
+            urllib.request.urlopen = original
+
+    def test_nested_error_message_is_surfaced(self) -> None:
+        reason = self._reason_for(
+            json.dumps(
+                {"error": {"code": "invalid_profile", "message": "unknown profile avatar: fox"}}
+            ).encode()
+        )
+        self.assertIn("unknown profile avatar: fox", reason)
+
+    def test_nested_code_is_used_when_there_is_no_message(self) -> None:
+        reason = self._reason_for(json.dumps({"error": {"code": "invalid_profile"}}).encode())
+        self.assertIn("invalid_profile", reason)
+
+    def test_flat_error_string_is_still_understood(self) -> None:
+        reason = self._reason_for(json.dumps({"error": "plain refusal"}).encode())
+        self.assertIn("plain refusal", reason)
+
+    def test_unparseable_body_falls_back_without_raising(self) -> None:
+        reason = self._reason_for(b"not json at all")
+        self.assertIn("refused", reason)
+
+    def test_reason_is_bounded_in_length(self) -> None:
+        reason = self._reason_for(
+            json.dumps({"error": {"message": "x" * 5000}}).encode()
+        )
+        self.assertLessEqual(len(reason), 200)
 
 
 class CannotCheckIsDistinctFromRejectedTests(unittest.TestCase):
