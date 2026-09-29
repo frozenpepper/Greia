@@ -2330,3 +2330,36 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - T3-P is **not** addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash
   the `legacy-x86-i686-dev` Syslinux/FAT32 installer and obtain owner hardware evidence for
   all three fixes, plus the not-yet-attempted install/initialized-first-boot path.
+
+## 2026-09-28 — Cross-hardware defect classes identified and routed to a dedicated plan (`CROSS-HARDWARE-ROBUSTNESS-PLAN`)
+
+- No earlier entry rewritten. The 2026-09-28 Acer tranche (§§13–16 of the issues log) produced
+  four defects that share no Acer-specific cause, so they were analysed as classes rather than
+  as machine bugs. Ten classes were identified: undeclared resource ownership (C1),
+  environment-metric assumption (C2), latched or unbounded failure (C3), failure masked as a
+  benign state (C4), silent under-provisioning (C5), advertised ≠ real capability (C6), runtime
+  mutation lost on re-enumeration (C7), identity/name instability (C8), probe identity ≠ service
+  identity (C9), and single-machine evidence (C10). Each was researched for known instances on
+  other hardware, and each is recorded with its source.
+- New plan: **`docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md`**. It owns the sequencing
+  and closure criteria; this plan remains the active blocking platform plan.
+- **Structural finding:** `build/profiles/*.toml` contains 11 profiles — 7 i386, 4 amd64, **0
+  arm64**, all legacy-BIOS + Syslinux, all `platform.board = "none"`. The schema anticipates
+  `pi-400-v1`, `pi-500-v1`, `pi-mbr-tryboot-ab-v1`, `pi-tryboot-ab-v1`, `pi-live-usb-v1` and
+  `modern-gpt-ab-v1`, but no profile exercises any of them. No UEFI-only machine can boot a
+  Greia installer at all, and the first-class ARM references named in `AGENTS.md` cannot be
+  built. This is the largest cross-hardware gap and is why the UEFI tranche exists.
+- Highest-value finding still latent: the storage-module set is the fixed triple
+  `("ahci","libata","sd_mod")` in **both** `greia-storage-modules` and
+  `InstallerEngine._verify_installed_initramfs_storage`. Because the hook probes with `modinfo`,
+  on an NVMe, SAS/RAID, Intel RST/VMD, USB-attached or MMC root it adds nothing and the guard
+  passes **vacuously** — the same class (C5) that grey-screened the Acer after installation.
+- Owner decisions recorded: Tranche A before B; UEFI **to be implemented** rather than merely
+  documented; the hardware-assumption lint **advisory, not build-failing**. The Acer
+  end-to-end acceptance was deliberately inserted *between* A and U, ahead of the approved
+  ordering, because the installed path has never been exercised and C5 bites at first boot.
+- Two items explicitly recorded as **already correct** so a later pass does not "fix" them:
+  `hal_legacy_x.py` resolves XInput properties by name rather than by device-specific atom ID,
+  and `REFERENCE_WIDTH`/`REFERENCE_HEIGHT` are scale denominators/defaults rather than hard
+  layout dependencies.
+- No source change in this entry. T3-P remains OPEN/BLOCKING and is not addressed here.

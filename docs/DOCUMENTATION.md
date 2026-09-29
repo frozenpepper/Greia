@@ -95,6 +95,21 @@ The visual workstream plan remains subordinate to the blocking architecture plan
 docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
 ```
 
+A subordinate plan owns cross-hardware robustness sequencing and closure criteria:
+
+```text
+docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md
+```
+
+It owns the removal of recurring hardware defect classes (undeclared resource
+ownership, environment-metric assumption, latched or unbounded failure, failure
+masked as a benign state, silent under-provisioning, advertised-capability
+mismatch, runtime mutation lost on re-enumeration, identity/name instability,
+probe-identity mismatch, single-machine evidence) across the Acer, UEFI and ARM
+reference targets. It is subordinate to the blocking architecture plan and does
+not supersede it. Root-cause instances are recorded in
+`docs/INSTALLATION_ISSUES_LOG.md`.
+
 Plans may be long because historical progress is intentionally retained. Do not copy their entire evidence history into `HANDOVER.md`.
 
 ### 2.7 Current continuation/evidence boundary — `HANDOVER.md`

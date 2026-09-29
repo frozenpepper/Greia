@@ -5,6 +5,7 @@
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
 **Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
+**Cross-hardware plan:** `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md` — Tranche A → Acer end-to-end acceptance → Tranche U (UEFI) → Tranche B (capability matrix) → Tranche L (advisory lint)
 **Current physical-hardware step:** **Acer Wi-Fi ownership acceptance — source fix landed, awaiting owner hardware evidence (see §8c)**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
@@ -20,6 +21,7 @@ AGENTS.md
 README.md
 docs/DOCUMENTATION.md
 docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
+docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md
 docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md
 HANDOVER.md
 skills/greia-os-work/SKILL.md
@@ -283,6 +285,54 @@ build-host loop leak per image build                OPEN build-host cleanup defe
 
 The loop leak accumulates one autoclear loop per image build and only clears on
 a host reboot. It does not affect a correctly flashed USB.
+
+## 8d. Cross-hardware robustness plan created; Acer route continues first (2026-09-28)
+
+The 2026-09-28 Acer defects were analysed as ten recurring **classes** rather
+than machine bugs, each researched for known instances on other hardware and
+sequenced for removal in `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md`.
+
+```text
+C1 undeclared resource ownership      C6 advertised != real capability
+C2 environment-metric assumption      C7 runtime mutation lost on re-enumeration
+C3 latched or unbounded failure       C8 identity / name instability
+C4 failure masked as a benign state   C9 probe identity != service identity
+C5 silent under-provisioning          C10 single-machine evidence
+```
+
+Approved scope and ordering:
+
+```text
+Tranche A  generalise the actively-wrong Acer shapes (A1 storage modules from
+           the real target device, A2 panel-sized boot art, A3 DWT keyboard
+           pairing, A4 pointer property re-application)
+  then     Acer end-to-end acceptance  (inserted ahead of the approved order;
+           the installed path has never been exercised and C5 bites there)
+  then     Tranche U  UEFI, amd64 first (BOOTX64.EFI live + x86_64-efi target),
+           IA32 BOOTIA32.EFI as a legacy-niche follow-on
+  then     Tranche B  synthetic capability matrix: hardware becomes a test input
+  then     Tranche L  advisory lint for hardware-shaped assumptions (report only)
+```
+
+**Biggest latent risk, C5:** the storage-module set is the fixed triple
+`("ahci","libata","sd_mod")` in both `greia-storage-modules` and
+`_verify_installed_initramfs_storage`. Because the hook probes with `modinfo`, an
+NVMe / SAS / Intel RST / USB / MMC root gets nothing added and the install guard
+passes **vacuously** — the same class that grey-screened the Acer after
+installation. Tranche A1.
+
+**Biggest structural gap:** 11 profiles exist — 7 i386, 4 amd64, **0 arm64**, all
+legacy BIOS + Syslinux. `pi-400-v1`, `pi-500-v1`, `pi-mbr-tryboot-ab-v1`,
+`pi-tryboot-ab-v1`, `pi-live-usb-v1` and `modern-gpt-ab-v1` are in the schema but
+no profile exercises them, so **no UEFI-only machine can boot a Greia installer**
+and the first-class ARM references cannot be built. Tranche U.
+
+Recorded as **already correct, do not "fix"**: `hal_legacy_x.py` resolves XInput
+properties by name (atom IDs are device-specific: 275 vs 304 on real touchpads),
+and `REFERENCE_WIDTH`/`REFERENCE_HEIGHT` are scale denominators and defaults, not
+hard layout dependencies.
+
+Evidence: the plan and research are **SOURCE-CLOSED**. No tranche is implemented.
 
 ## 8. Current exact next step
 

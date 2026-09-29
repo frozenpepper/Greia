@@ -549,3 +549,22 @@ backs off**, so no helper failure can ever become a busy loop again.
 **Regression-locked** by `BootCoverHandoffBoundTests`: a failing helper is
 invoked at most `BOOT_HANDOFF_MAX_ATTEMPTS` times across 2000 ticks, and a
 succeeding one latches after a single call.
+
+## 17. Cross-hardware class analysis: what the Acer defects share
+
+The §13–16 defects have no Acer-specific cause. They were re-analysed as ten
+recurring classes, each researched for known instances on other hardware, and
+sequenced for removal in `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md`.
+
+The class that matters most going forward is **C5, silent under-provisioning**:
+the storage-module set is the fixed triple `("ahci", "libata", "sd_mod")` in both
+`greia-storage-modules` and `InstallerEngine._verify_installed_initramfs_storage`.
+Because the hook probes with `modinfo`, a machine whose root sits behind NVMe,
+SAS/RAID, Intel RST/VMD, USB or MMC gets **no** storage module added, and the
+install-time guard then passes **vacuously**. That is the same failure class as
+§2, and it is latent rather than observed.
+
+Second is **C10, single-machine evidence**: §14 was reported fixed on the strength
+of source tests and a direct backend call, and only a real installer UI run
+exposed that the latch was still consuming the result. Any claim whose subject is
+physical hardware needs physical evidence, not source-closed evidence.
