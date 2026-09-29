@@ -830,6 +830,31 @@ def _parse_unit_directives(text: str) -> dict[str, list[str]]:
 
 
 class UnitContractTests(unittest.TestCase):
+    def test_credential_unit_declares_the_authority_runtime_directory(self) -> None:
+        """ReadWritePaths names a directory systemd will not create for it.
+
+        systemd refuses to start a unit whose ReadWritePaths entry is absent, so
+        the generator's own 0700 directory could never be created and the unit
+        failed every boot at the namespacing step. The unit must declare the
+        directory, its 0700 mode, and preservation so the authoritative record
+        outlives the oneshot.
+        """
+
+        unit_path = (
+            _repo_root()
+            / "build"
+            / "overlay"
+            / "etc"
+            / "systemd"
+            / "system"
+            / "greia-boot-health-credential.service"
+        )
+        text = unit_path.read_text(encoding="utf-8")
+        self.assertIn("ReadWritePaths=/run/greia-os /run/greia-boot-health-authority", text)
+        self.assertEqual(text.count("RuntimeDirectory=greia-boot-health-authority"), 1)
+        self.assertIn("RuntimeDirectoryMode=0700", text)
+        self.assertIn("RuntimeDirectoryPreserve=yes", text)
+
     def test_service_is_root_owned_on_demand_with_no_boot_enable(self) -> None:
         text = (
             _repo_root()
@@ -1023,6 +1048,62 @@ class LiveCompositionTests(unittest.TestCase):
         )
         self.assertNotIn("root", supplementary)
         self.assertNotIn("sudo", supplementary)
+
+    def test_module_entry_point_honours_the_units_own_flag(self) -> None:
+        """The service's ``--issue-for-pending`` must actually reach argparse.
+
+        ``greia-boot-health-credential.service`` invokes this module with
+        ``python3 -m greia_platform.boot_health --issue-for-pending``, so
+        ``main()`` is reached with ``argv`` as None. When None was treated as an
+        empty argument list, the unit's own flag was silently discarded: the
+        generator printed its usage text and exited 2 on every boot, so the
+        service never once issued a capability and the failure was invisible
+        because every existing test passed an explicit argument list.
+
+        Driven through ``sys.argv`` with no argument to ``main()``, which is
+        exactly what ``python3 -m`` does.
+        """
+
+        import io
+        import contextlib
+        import sys as _sys
+
+        from greia_platform import boot_health
+
+        saved_argv = _sys.argv
+        _sys.argv = ["boot_health", "--issue-for-pending"]
+        # argparse.print_usage and the ISSUED/NO_PENDING line both go to stdout.
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out):
+                code = boot_health.main()
+        finally:
+            _sys.argv = saved_argv
+
+        self.assertEqual(code, 0, out.getvalue())
+        self.assertNotIn("usage:", out.getvalue())
+        self.assertIn("NO_PENDING", out.getvalue())
+
+    def test_module_entry_point_still_refuses_without_the_flag(self) -> None:
+        """An explicit refusal must survive the argv fix, fail-closed."""
+
+        import io
+        import contextlib
+        import sys as _sys
+
+        from greia_platform import boot_health
+
+        saved_argv = _sys.argv
+        _sys.argv = ["boot_health"]
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out):
+                code = boot_health.main()
+        finally:
+            _sys.argv = saved_argv
+
+        self.assertEqual(code, 2)
+        self.assertIn("usage:", out.getvalue())
 
     @staticmethod
     def _stub_update_authority() -> object:

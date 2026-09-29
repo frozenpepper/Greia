@@ -1558,6 +1558,15 @@ def main(argv: list[str] | None = None) -> int:
     run leaves at most a live record the next verify still gates on).
     """
     import argparse as _argparse
+    import sys as _sys
+
+    # ``argv`` is None when the module is executed with ``-m``, which is how
+    # greia-boot-health-credential.service invokes it. Treating None as an empty
+    # argument list silently discarded the unit's own ``--issue-for-pending``,
+    # so the generator printed its usage and exited 2 on every boot and the
+    # service had never once issued a capability. An explicit empty list from a
+    # caller is still honoured, so tests can drive main() with no arguments.
+    arguments = list(_sys.argv[1:] if argv is None else argv)
 
     parser = _argparse.ArgumentParser(
         prog="greia_platform.boot_health",
@@ -1573,7 +1582,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--boot-journal-dir", default=None)
     parser.add_argument("--update-state-dir", default=None)
     parser.add_argument("--boot-id-path", default=None)
-    args = parser.parse_args(list(argv or []))
+    args = parser.parse_args(arguments)
     if not args.issue_for_pending:
         parser.print_usage()
         return 2

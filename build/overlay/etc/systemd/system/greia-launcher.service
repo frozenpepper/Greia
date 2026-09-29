@@ -37,6 +37,20 @@ Environment=GREIA_ACTIVE_PROFILE_STATUS=/run/greia-os/active-profile.json
 Environment=GREIA_MEDIA_ROOT=/media/greia
 Environment=GREIA_SYSTEM_SETTINGS_DIR=/var/lib/greia-system-settings
 Environment=GREIA_HARDWARE_STATUS=/run/greia-hardware/status.json
+# /usr/lib/xorg/Xorg is named directly rather than reached through
+# /usr/bin/Xorg, because /usr/bin/Xorg execs /usr/lib/xorg/Xorg.wrap and that
+# wrapper is setuid root (mode 4755). Setuid means uid=greiakid with euid=0, and
+# xorg-server refuses -logfile outright on a uid/euid mismatch:
+#
+#   (EE) Fatal server error:
+#   (EE) Invalid argument -logfile with elevated privileges
+#
+# so the server exited immediately and Restart=always turned first boot into a
+# splash loop. greia-x-session already documents the intended design: the
+# unprivileged X server owns tty1 to activate it. Naming the real binary is what
+# makes that true, and it also restores the Xorg log that the refusal prevented.
+# This went unnoticed because the live installer's own X is not setuid-wrapped,
+# so -logfile worked there for hours; only the installed payload's X refused.
 # P4.3 read-only capability delivery: the root generator stages the one-use
 # BOOT_HEALTHY token under /run/greia-os/boot-health before this unit
 # starts. The launcher (greiakid) reads it read-only at INTERACTIVE_READY
@@ -58,7 +72,7 @@ ExecStartPre=+/usr/local/lib/greia-os/prepare-launcher-vt
 # detached. /run/greia-os is the already greiakid-owned volatile runtime, so the
 # X server has a log path it may write; without one Xorg aborts with
 # "Cannot open log file /var/log/Xorg.0.log" because /var/log is root-owned.
-ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session -- :0 vt1 -logfile /run/greia-os/Xorg.0.log -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
+ExecStart=/usr/bin/xinit /usr/local/lib/greia-os/greia-x-session -- /usr/lib/xorg/Xorg :0 vt1 -logfile /run/greia-os/Xorg.0.log -keeptty -novtswitch -background none -quiet -nolisten tcp -noreset
 Restart=always
 RestartSec=1
 # The X server must own the controlling terminal. TTYPath alone does not make

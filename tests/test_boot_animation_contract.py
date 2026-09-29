@@ -43,6 +43,38 @@ class BootAnimationMigrationTests(unittest.TestCase):
                 self.assertNotIn("plymouth-quit.service", builder)
                 self.assertNotIn("plymouth-quit-wait.service", builder)
 
+    def test_launcher_starts_the_unprivileged_x_server(self) -> None:
+        """The launcher must not reach X through Debian's setuid wrapper.
+
+        /usr/bin/Xorg execs /usr/lib/xorg/Xorg.wrap, which is setuid root, so X
+        runs with uid=greiakid and euid=0. xorg-server refuses -logfile on a
+        uid/euid mismatch ("Invalid argument -logfile with elevated
+        privileges"), the server exited at once, and Restart=always turned
+        first boot into a splash loop on the reference Acer.
+
+        This asserts the server is named directly, and that the setuid wrapper
+        is not named anywhere in the unit, so the fix cannot be quietly undone
+        by restoring the shorter ExecStart.
+        """
+
+        unit = (
+            PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-launcher.service"
+        )
+        text = unit.read_text(encoding="utf-8")
+        exec_lines = [
+            line for line in text.splitlines() if line.startswith("ExecStart=")
+        ]
+        self.assertEqual(len(exec_lines), 1, exec_lines)
+        self.assertIn("/usr/lib/xorg/Xorg :0 vt1", exec_lines[0])
+        # The rationale comment deliberately names Xorg.wrap, so only effective
+        # directives are checked for it.
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith(("#", ";")):
+                continue
+            self.assertNotIn("Xorg.wrap", stripped, line)
+            self.assertNotIn("/usr/bin/Xorg", stripped, line)
+
     def test_launcher_and_installer_services_do_not_order_after_plymouth(self) -> None:
         for unit in (
             PROJECT_ROOT / "build/overlay/etc/systemd/system/greia-launcher.service",

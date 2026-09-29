@@ -1038,3 +1038,88 @@ executing it, not inferred from whatever error surfaced first. Two harness
 versions also produced false failures before the loop was trustworthy — a
 pre-mounted read-only target, and `SystemCallArchitectures=native` killing an
 i386 payload on an x86_64 host — which is why the fidelity notes are kept with it.
+
+## 22. First boot from the installed disk: four defects, none of which the install could surface
+
+The install completed and was verified on the disk before reboot: journal
+`installed target=cb506170…`, MBR sector 0 carrying a GRUB boot sector,
+`vmlinuz`/`initrd.img`/`grub.cfg`/`fstab` present, and `/usr/bin/chage` at mode
+`02755` — the setgid bit that `RestrictSUIDSGID` would have silently stripped.
+The system then booted from `/dev/sda1` and failed in four separate ways. None
+was reachable during installation, so no amount of install debugging would have
+found them. They are recorded here as a class: **first boot is a separate
+execution surface and it had never been run.**
+
+### 22a. Boot loop: Xorg reached through Debian's setuid wrapper
+
+`greia-launcher.service` passed `-logfile /run/greia-os/Xorg.0.log`. It reaches X
+through `/usr/bin/Xorg`, which execs `/usr/lib/xorg/Xorg.wrap`, and that wrapper
+is **setuid root** (mode 4755). Setuid means `uid=greiakid` with `euid=0`, and
+xorg-server refuses `-logfile` outright on a uid/euid mismatch:
+
+```
+(EE) Fatal server error:
+(EE) Invalid argument -logfile with elevated privileges
+```
+
+The server exited at once, `Restart=always` re-ran it, and the visible symptom
+was a splash refreshing roughly every minute. Reproduced both ways on the
+appliance: through the wrapper the refusal is immediate; naming
+`/usr/lib/xorg/Xorg` directly the log is written and the server starts.
+
+`greia-x-session` already documented the intended design — *"the unprivileged X
+server must own tty1 to activate it"* — and the unit's own comment records a
+previous proof that an unprivileged Xorg needs the `tty` group. The setuid
+wrapper was quietly defeating both. Fixed by naming the real binary in
+`ExecStart`.
+
+This hid for so long because **the live installer's own X is not setuid-wrapped**,
+so `-logfile` worked there for hours. Only the installed payload's X refuses.
+The launcher had been validated against the wrong X server.
+
+### 22b. `greia-boot-health-credential.service` had never once succeeded
+
+`boot_health.main()` did `parser.parse_args(list(argv or []))` and the module is
+executed as `python3 -m greia_platform.boot_health --issue-for-pending`, which
+reaches `main()` with `argv` as **None**. `None` was treated as an empty argument
+list, so the unit's own flag was silently discarded: the generator printed its
+usage text and exited `2` on every boot, and the service never issued a
+capability. Every existing test passed an explicit argument list, so the suite
+was blind to it by construction.
+
+Fixed to read `sys.argv[1:]` when `argv` is None, while still honouring an
+explicit `[]` from a caller. The service now prints `NO_PENDING` and exits `0` on
+a plain boot, which is the documented behaviour. Regression-locked by driving
+`main()` through `sys.argv` with no argument, exactly as `-m` does, plus a
+negative test that the refusal path still exits `2`.
+
+### 22c. The same service also failed before it reached its own code
+
+`ReadWritePaths=/run/greia-os /run/greia-boot-health-authority`, and systemd
+refuses to start a unit when a `ReadWritePaths` entry does not exist. The
+generator creates that directory itself at mode 0700 — but only after the
+sandbox is applied, so the path was pre-empted and the unit died at the
+namespacing step on every boot. Fixed with `RuntimeDirectory=` plus
+`RuntimeDirectoryMode=0700` and `RuntimeDirectoryPreserve=yes` (the record must
+outlive the oneshot).
+
+### 22d. Residual loop: the Shell exits 0 before INTERACTIVE_READY
+
+Still open, and now much less violent: the Shell starts, initialises pygame,
+sets the display mode, plays the intro, discovers Activities, builds the runtime
+and prepares history — then exits `0` after roughly 25 seconds, before
+`mark_interactive_ready`. Because the unit is `Type=notify` and expects
+`READY=1` after the first frame, systemd records `Result=protocol` and
+`Restart=always` re-runs it. The boot-marker spool is the oracle:
+`intro_first_frame_flipped` = 28, `launcher_interactive_ready` = 0. The Shell's
+own stdout does not reach the journal, which the x-session comments already
+document as a known forwarding loss, so the exit reason is not yet captured.
+
+### Lesson
+
+Four consecutive defects, all invisible to installation and all invisible to
+the unit suite, because the suite drives functions with explicit arguments and
+the installer image's X is not the payload's X. The install leg now has an
+offline harness; first boot needs the equivalent — a first-boot harness that
+runs the *installed* system, not a live medium, with the payload's own X and
+with `main()` reached the way `-m` reaches it.
