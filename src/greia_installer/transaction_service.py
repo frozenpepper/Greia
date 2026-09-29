@@ -923,6 +923,18 @@ def handle_connection(
             _s04_diag_boundary("sendall starting")
             connection.sendall(response)
             _s04_diag_boundary("sendall completed")
+        except (BrokenPipeError, ConnectionResetError) as exc:
+            # The caller hung up before the answer was delivered — a UI that
+            # timed out, closed early, or was interrupted. That is a normal end
+            # to one request, not a service fault. This used to propagate and
+            # kill the whole privileged install service with status=1, so a
+            # single client hiccup took every later install attempt down with
+            # it. The service keeps its own state, so the request's effect is
+            # unaffected; only the reply is lost.
+            _s04_diag_boundary(
+                "client disconnected before reply; request state retained",
+                detail=_s04_diag_detail(exc),
+            )
         except BaseException as exc:
             _s04_diag_boundary("sendall failed", detail=_s04_diag_detail(exc))
             raise

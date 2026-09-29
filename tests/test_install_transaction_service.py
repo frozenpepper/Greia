@@ -572,7 +572,7 @@ class ClientVerificationTests(unittest.TestCase):
         client = InstallTransactionClient(dead)
         with self.assertRaises(TransactionClientError):
             client.prepare(
-                expected_target_identity="a" * 64,
+                expected_target_identity="a" * 16,
                 compatible_profile_id="profile-test",
                 settings_snapshot={},
             )
@@ -928,17 +928,24 @@ class SocketServeTests(unittest.TestCase):
                         RaisingService(TransactionServiceError("refusal")), b"request\n"
                     )
 
-    def test_sendall_failure_escapes(self) -> None:
+    def test_client_hangup_during_reply_is_absorbed(self) -> None:
+        """A caller that hangs up must not take the install service down.
+
+        This used to assert the opposite, locking a real defect: the broken
+        pipe propagated out of the handler, the privileged service exited 1, and
+        systemd restarted it, so one client hiccup disabled every later install
+        attempt. Reproduced on the reference Acer.
+        """
+
         from greia_installer.transaction_service import handle_connection
 
         connection = FailingSendConnection(b"request\n")
         with patch("greia_installer.transaction_service.os.path.exists", return_value=False):
-            with self.assertRaises(BrokenPipeError):
-                handle_connection(
-                    connection,
-                    service=RaisingService(b"response\n"),
-                    peer_uid=INSTALLER_UI_UID,  # type: ignore[arg-type]
-                )
+            handle_connection(
+                connection,
+                service=RaisingService(b"response\n"),
+                peer_uid=INSTALLER_UI_UID,  # type: ignore[arg-type]
+            )
         self.assertTrue(connection.closed)
 
 
@@ -1081,3 +1088,81 @@ class SplitUnitContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TransactionRefusalAndDisconnectTests(unittest.TestCase):
+    """A refusal must say why, and a hang-up must not kill the service.
+
+    Both defects were found on the reference Acer. The UI could not show a
+    failure at all (a separate repaint defect), and when the privileged
+    service was asked to explain itself the client threw the explanation away
+    and raised "transaction service answered the wrong op" instead. Separately,
+    any client that hung up before the reply killed the whole install service
+    with status=1, so one hiccup disabled every later install attempt.
+    """
+
+    def test_client_surfaces_the_services_own_refusal_reason(self) -> None:
+        from greia_installer.transaction_client import (
+            InstallTransactionClient,
+            TransactionClientError,
+        )
+        from greia_platform.privileged_channel import encode_response
+
+        def refusing_transport(_raw: bytes) -> bytes:
+            return encode_response(
+                "a" * 16,
+                "ERROR",
+                {"status": "REFUSED", "reason": "selected disk is unknown; installation stopped"},
+            )
+
+        client = InstallTransactionClient(transport=refusing_transport)
+        with self.assertRaises(TransactionClientError) as caught:
+            client.prepare(
+                expected_target_identity="0" * 64,
+                compatible_profile_id="legacy-x86-i686-dev",
+                settings_snapshot={},
+            )
+        self.assertEqual(
+            str(caught.exception),
+            "selected disk is unknown; installation stopped",
+            "the service's own reason must reach the error page",
+        )
+
+    def test_refusal_without_a_reason_still_names_the_service(self) -> None:
+        from greia_installer.transaction_client import (
+            InstallTransactionClient,
+            TransactionClientError,
+        )
+        from greia_platform.privileged_channel import encode_response
+
+        def refusing_transport(_raw: bytes) -> bytes:
+            return encode_response("a" * 16, "ERROR", {"status": "REFUSED"})
+
+        client = InstallTransactionClient(transport=refusing_transport)
+        with self.assertRaises(TransactionClientError) as caught:
+            client.prepare(
+                expected_target_identity="0" * 64,
+                compatible_profile_id="legacy-x86-i686-dev",
+                settings_snapshot={},
+            )
+        self.assertIn("refused", str(caught.exception).lower())
+
+    def test_client_hangup_does_not_kill_the_install_service(self) -> None:
+        """A broken pipe on the reply must not propagate out of the handler."""
+
+        import greia_installer.transaction_service as service_module
+
+        source = Path(service_module.__file__).read_text(encoding="utf-8")
+        self.assertIn(
+            "except (BrokenPipeError, ConnectionResetError) as exc:",
+            source,
+            "the service must absorb a client disconnect on the reply path",
+        )
+        # And the handler must not re-raise it.
+        absorb = source.index("except (BrokenPipeError, ConnectionResetError) as exc:")
+        tail = source[absorb : absorb + 900]
+        self.assertNotIn(
+            "            raise\n",
+            tail.split("except BaseException as exc:")[0],
+            "a client disconnect must not be re-raised and kill the service",
+        )

@@ -61,6 +61,28 @@ class TransactionClientError(RuntimeError):
     """UI-side transaction step failed fail-closed (never destructive)."""
 
 
+#: Operation name the service uses when it refuses a request deliberately.
+ERROR_OP = "ERROR"
+
+
+def _refusal_reason(payload: Mapping[str, object]) -> str:
+    """Render the service's own refusal reason for the installer error page.
+
+    The privileged service answers a refused request with ``op="ERROR"`` and a
+    bounded ``reason`` string. That reason is the only thing that tells a child
+    (or an operator) *why* the install was refused, so it must survive the trip
+    to the UI instead of being flattened into a generic op-mismatch message.
+    """
+
+    reason = payload.get("reason")
+    if isinstance(reason, str) and reason.strip():
+        return reason.strip()[:256]
+    status = payload.get("status")
+    if isinstance(status, str) and status.strip():
+        return f"install transaction service refused the request ({status.strip()})"
+    return "install transaction service refused the request"
+
+
 #: Default production socket served by greia-install-transaction.socket.
 DEFAULT_TRANSACTION_SOCKET_PATH = Path("/run/greia-os/install-transaction.sock")
 
@@ -190,6 +212,12 @@ class InstallTransactionClient:
         except PrivilegedChannelError as exc:
             raise TransactionClientError(str(exc)) from exc
         require_transaction_id(transaction_id)
+        if returned_op == ERROR_OP:
+            # The service refused deliberately and said why. Raising the op
+            # mismatch here would discard that reason and show the child a
+            # meaningless "answered the wrong op" instead of, for example,
+            # "selected disk is unknown; installation stopped".
+            raise TransactionClientError(_refusal_reason(payload))
         if returned_op != op:
             raise TransactionClientError("transaction service answered the wrong op")
         return payload
