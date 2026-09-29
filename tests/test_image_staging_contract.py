@@ -187,8 +187,25 @@ class RepositorySourceCarriesRuntimeFixesTests(unittest.TestCase):
             _read(PROJECT_ROOT / "src/greia_installer/main.py"),
         )
 
-    def test_no_staged_bytecode_in_the_repository_source(self) -> None:
-        stale = [str(p) for p in (PROJECT_ROOT / "src").rglob("__pycache__")]
+    def test_no_staged_bytecode_is_committed_under_source(self) -> None:
+        """Bytecode must not be committed into the staged source tree.
+
+        This asserts against git's index, not the working tree: running the test
+        suite itself writes ``__pycache__`` under ``src/``, so a working-tree
+        scan fails depending on what ran before it. The staging exclusion is
+        asserted separately in ``test_target_src_is_staged_from_the_repository``.
+        """
+
+        import subprocess
+
+        tracked = subprocess.run(
+            ["git", "ls-files", "--", "src"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.splitlines()
+        stale = [p for p in tracked if "__pycache__" in p or p.endswith(".pyc")]
         self.assertEqual(stale, [])
 
 
