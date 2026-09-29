@@ -113,6 +113,10 @@ class DemoInstallationEngine:
 
 class InstallerApplication:
     HOLD_SECONDS = 2.0
+    # Bounded boot-cover release: at most this many attempts, doubling the
+    # delay each time. A helper that keeps failing must not become a busy loop.
+    BOOT_HANDOFF_MAX_ATTEMPTS = 4
+    BOOT_HANDOFF_RETRY_SECONDS = 0.5
     WIFI_ROWS_PER_PAGE = 3
     BUTTON_HEIGHT = 46
 
@@ -218,6 +222,7 @@ class InstallerApplication:
         self._exit_requested = False
         self._boot_released = False
         self._next_boot_handoff_attempt = 0.0
+        self._boot_handoff_attempts = 0
         self._layout_probe_results: dict[str, tuple[int, bool]] = {}
         self._layout_candidates: tuple[str, ...] = ("us",)
         self._layout_alternative_index = 0
@@ -1651,6 +1656,11 @@ class InstallerApplication:
             self._back_button(screen, pygame, font, accent, text, main)
 
     POINTER_HEADER_H = 96
+    # Vertical padding under the page subtitle before the first setting row.
+    POINTER_HEADER_PAD = 12
+    # Minimum interior padding above and below a setting row's label, so a
+    # taller font never renders outside the pill that owns it.
+    POINTER_ROW_PAD = 7
     POINTER_ROW_GAP = 4
     POINTER_ROW_MIN = 34
     # Absolute floor, reached only once a dense pointer inventory has
@@ -1670,7 +1680,13 @@ class InstallerApplication:
     POINTER_STRIP_TAIL = 72
 
     def _pointer_vertical_budget(
-        self, panel_height: int, setting_count: int
+        self,
+        panel_height: int,
+        setting_count: int,
+        header_height: int = 0,
+        min_row_height: int = 0,
+        strip_label_h: int = 0,
+        strip_tail: int = 0,
     ) -> tuple[int, int, int]:
         """Fit the pointer page into ``panel_height`` by measurement.
 
@@ -1679,6 +1695,12 @@ class InstallerApplication:
         content is taller than the 600 px reference display: rows overlapped and
         the reset control fell outside the panel. Everything is now derived from
         the panel that is actually available.
+
+        ``header_height`` and ``min_row_height`` are measured from the fonts
+        actually in use. The reference Acer renders with taller metrics than the
+        development host, and a fixed header plus a fixed row floor made the
+        title collide with its subtitle and pushed the lower row labels outside
+        their own pills, where the next row covered them.
 
         Navigation buttons are centred on ``main.bottom - 40`` and are
         ``BUTTON_HEIGHT`` tall, so the last 63 px of the panel belong to them.
@@ -1689,41 +1711,71 @@ class InstallerApplication:
 
         The test targets start at the 9 mm physical touch floor because they
         are what a child aims at, and are only shrunk below it when the row
-        count would otherwise collide with the navigation row. Setting rows are
-        keyboard-navigable, so they may compress to :attr:`POINTER_ROW_MIN`
-        before the targets are reduced, and to :attr:`POINTER_ROW_HARD_MIN`
-        only after the targets have given all they will.
+        count would otherwise collide with the navigation row. Setting rows keep
+        their measured readable floor: a label must never render outside its own
+        pill, so the targets give up space before any row may.
         """
 
         count = max(1, int(setting_count))
-        available = panel_height - self.POINTER_HEADER_H - self.POINTER_NAV_RESERVE
+        header = max(self.POINTER_HEADER_H, int(header_height))
+        row_floor = max(self.POINTER_ROW_HARD_MIN, int(min_row_height))
+        label_h = max(1, int(strip_label_h) or self.POINTER_LABEL_H)
+        tail = max(1, int(strip_tail) or self.POINTER_STRIP_TAIL)
+        available = panel_height - header - self.POINTER_NAV_RESERVE
         nav_top = panel_height - self.POINTER_NAV_RESERVE - 5
         floor = min(self.POINTER_TARGET_FLOOR, max(1, available // 4))
         target_size = max(floor, min(self.POINTER_TARGET_HINT, available // 4))
 
         def layout(target: int) -> tuple[int, int, int]:
+            # A target size of zero means the strip is dropped entirely, label
+            # and tail included: leaving a floating "Try it here" caption with
+            # nothing under it is not a usable layout.
             strip = (
-                self.POINTER_LABEL_H
-                + self.POINTER_STRIP_LABEL_GAP
-                + target
-                + self.POINTER_STRIP_TAIL
+                0
+                if target <= 0
+                else label_h + self.POINTER_STRIP_LABEL_GAP + target + tail
             )
             room = available - strip
             row = int(room / count) - self.POINTER_ROW_GAP
-            row = max(self.POINTER_ROW_HARD_MIN, min(self.POINTER_ROW_MAX, row))
+            row = max(row_floor, min(self.POINTER_ROW_MAX, row))
             step = row + self.POINTER_ROW_GAP
-            return row, step, count * step + strip
+            # The content height is measured from the top of the panel, so the
+            # header is part of it. It used to be omitted here, which made every
+            # fit comparison under-count the header by its full height and let
+            # the strip run into the navigation row on the reference Acer.
+            return row, step, header + count * step + strip
 
-        # Setting rows are keyboard-navigable and keep their readable floor.
-        # The test targets give way first: they are the least critical control
-        # on this page, because the same test is reachable with 1 2 3. Shrinking
-        # them before any row may fall under its floor means a dense pointer
-        # inventory degrades instead of overlapping the navigation row.
+        # Setting rows keep their measured floor; the test targets give way
+        # first because they are the least critical control on this page (the
+        # same test is reachable with 1 2 3). Shrinking them before any row may
+        # render its label outside its own pill means a dense pointer inventory
+        # degrades instead of overlapping the navigation row.
         while True:
             row, step, bottom = layout(target_size)
-            if bottom <= nav_top or target_size <= self.POINTER_TARGET_HARD_MIN:
+            fits = bottom <= nav_top and row >= row_floor
+            if fits or target_size <= self.POINTER_TARGET_HARD_MIN:
                 break
             target_size = max(self.POINTER_TARGET_HARD_MIN, target_size - 4)
+        # The strip still may not fit even at its hard minimum. On the 600 px
+        # reference Acer the label font is tall enough that five legible setting
+        # rows plus the targets, the status line and the reset control simply
+        # do not fit inside the panel. Rather than let the strip collide with
+        # Back/Continue or push the reset control off the panel, drop the strip
+        # and give its space to the rows. This removes no capability a child
+        # can reach: the same pointer test is still available from the 1 2 3
+        # keys, which is why those keys exist alongside the targets.
+        row, step, bottom = layout(target_size)
+        if bottom > nav_top or row < row_floor:
+            row, step, _ = layout(0)
+            target_size = 0
+            # Even without the strip, rows sized greedily can still overrun the
+            # navigation row by a pixel or two. Give the row height back to the
+            # navigation reserve until the page genuinely clears it, never
+            # dropping below the measured readable floor.
+            if header + count * (row + self.POINTER_ROW_GAP) > nav_top:
+                room = nav_top - header
+                row = max(row_floor, int(room / count) - self.POINTER_ROW_GAP)
+                step = row + self.POINTER_ROW_GAP
         return row, step, target_size
 
     def _draw_pointer_page(
@@ -1740,10 +1792,17 @@ class InstallerApplication:
         """Deliberate Pointer Setup page: presets, gated toggles, test area."""
         self._clamp_pointer_focus()
         rows = self.pointer_rows()
-        self._center_title(screen, "Pointer setup", title_font, text, main.top + 18)
-        self._center_text(
-            screen, "Pointer feel", small_font, text, main.top + 18 + 52
-        )
+        # Measure the header from the fonts actually in use. The reference Acer
+        # renders taller metrics than the development host, so the old fixed
+        # +52 title gap drew the subtitle on top of the title and the fixed
+        # 96 px header start pushed the first row up into it.
+        title_y = main.top + 18
+        title_h = title_font.get_height()
+        subtitle_y = title_y + title_h + 6
+        subtitle_h = small_font.get_height()
+        header_height = (subtitle_y + subtitle_h + self.POINTER_HEADER_PAD) - main.top
+        self._center_title(screen, "Pointer setup", title_font, text, title_y)
+        self._center_text(screen, "Pointer feel", small_font, text, subtitle_y)
 
         # Measure the vertical budget instead of assuming it. This page used
         # to use a hard-coded 56 px step and a hard-coded 64 px test target, and
@@ -1765,10 +1824,22 @@ class InstallerApplication:
                 "mouse-preset-labeled",
             }
         )
+        # The status line and the reset control below the test targets are
+        # measured too. The reset button used to sit at a fixed +32 px under
+        # the targets, which put it on top of the status line whenever that
+        # font was taller than the development host's.
+        strip_label_h = max(1, small_font.get_linesize())
+        status_h = strip_label_h
+        strip_tail = 14 + status_h + 6 + 40
         row_h, step, target_size = self._pointer_vertical_budget(
-            main.height, setting_count
+            main.height,
+            setting_count,
+            header_height,
+            font.get_height() + 2 * self.POINTER_ROW_PAD,
+            strip_label_h,
+            strip_tail,
         )
-        y = main.top + self.POINTER_HEADER_H
+        y = main.top + header_height
         if "tap" in rows:
             self._toggle_row(
                 screen, pygame, "tap", "Tap touchpad to click",
@@ -1808,9 +1879,17 @@ class InstallerApplication:
                 font, text, accent, y, row_h,
             )
             y += step
-        # Test strip: three large dispersed targets with click feedback.
+        # Test strip: three large dispersed targets with click feedback. The
+        # budget drops the strip entirely (target_size 0) on a panel too short
+        # to hold it and five legible rows, rather than overlapping the
+        # navigation row. The 1 2 3 keys still run the same test.
         width = screen.get_size()[0]
-        strip_label_h = max(1, small_font.get_linesize())
+        if target_size <= 0:
+            # The strip was dropped to keep the rows legible and clear of the
+            # navigation row. The system navigation is platform-owned chrome
+            # and must still be drawn, or the child would be stranded here.
+            self._navigation(screen, pygame, main, font, accent, text, enabled=True)
+            return
         target_mid = y + strip_label_h + 12 + target_size // 2
         centers = (
             (int(width * 0.24), target_mid),
@@ -1819,7 +1898,6 @@ class InstallerApplication:
         )
         # The label used to be centred at y+2, which is exactly where the
         # target boxes begin, so it overlapped them. Put it clear of the row.
-        strip_label_h = max(1, small_font.get_linesize())
         self._center_text(
             screen, "Try it here", small_font, text, y + strip_label_h // 2
         )
@@ -1865,7 +1943,8 @@ class InstallerApplication:
         )
         reset_rect = pygame.Rect(0, 0, reset_width, 40)
         reset_rect.midtop = (
-            screen.get_size()[0] // 2, target_mid + target_size // 2 + 32
+            screen.get_size()[0] // 2,
+            target_mid + target_size // 2 + 14 + status_h + 6,
         )
         pygame.draw.rect(screen, accent, reset_rect, border_radius=14)
         reset_label = self._fit_text(
@@ -2238,13 +2317,27 @@ class InstallerApplication:
     ) -> None:
         snapshot = self.wifi.snapshot
         if not snapshot.networks:
-            self._center_text(
-                screen,
-                "No networks found. Refresh, or continue offline.",
-                font,
-                text,
-                main.centery,
-            )
+            # An empty list is not the same thing as a failed scan. Showing
+            # "No networks found" for both hid the real reason the scan failed
+            # on the reference Acer, so an actual error is now surfaced
+            # instead of being reported as an absence of nearby networks.
+            if snapshot.phase is WifiSetupPhase.ERROR and snapshot.error:
+                self._center_fitted_text(
+                    screen,
+                    f"Wi-Fi could not be checked: {snapshot.error}",
+                    font,
+                    danger,
+                    main.centery,
+                    int(screen.get_width() * 0.82),
+                )
+            else:
+                self._center_text(
+                    screen,
+                    "No networks found. Refresh, or continue offline.",
+                    font,
+                    text,
+                    main.centery,
+                )
             return
 
         rows_top = main.top + 40 + title_font.get_height() + small_font.get_height() + 8
@@ -2790,12 +2883,27 @@ class InstallerApplication:
             return None
 
     def _release_boot_cover_once(self) -> None:
+        """Release the early-boot cover exactly once, with a bounded retry.
+
+        The installer runs unprivileged and the helper writes a marker, so the
+        call can legitimately fail. It used to be retried every 0.5 s for the
+        whole session: because a failure never sets ``_boot_released``, the
+        reference Acer spawned the helper 2754 times in one boot, which is the
+        CPU spin observed there. Retries are now capped and back off, so a
+        helper that cannot succeed costs a bounded number of spawns and then
+        stops rather than burning a core for as long as the page is open.
+        """
+
         if self._boot_released:
             return
+        if self._boot_handoff_attempts >= self.BOOT_HANDOFF_MAX_ATTEMPTS:
+            return
         now = time.monotonic()
+        delay = self.BOOT_HANDOFF_RETRY_SECONDS * (2 ** self._boot_handoff_attempts)
         if now < self._next_boot_handoff_attempt:
             return
-        self._next_boot_handoff_attempt = now + 0.5
+        self._next_boot_handoff_attempt = now + delay
+        self._boot_handoff_attempts += 1
         helper = Path("/usr/local/lib/greia-os/release-boot-cover")
         if helper.exists():
             import subprocess

@@ -244,44 +244,45 @@ docs/testing/2026-09-02_PARENT_REAL_RUNTIME_FINAL_ACCEPTANCE.md
 
 Do not combine their obsolete token instructions with the unified procedure.
 
-## 8c. Acer Wi-Fi ownership accepted as an architecture decision; hardware evidence still open (2026-09-28)
+## 8c. Acer Wi-Fi / installer UI / CPU spin — source fixes landed, awaiting owner hardware evidence (2026-09-28)
 
-Source fix is complete, regression-locked and pushed. The physical acceptance is
-**not** yet obtained.
-
-The defect class is "two network managers configured to own the same link".
-Greia ships no `wpa_supplicant`, so `iwd` is the only WPA2-capable path in the
-product, but both overlays carried `25-greia-wireless.network` with
-`Name=wl*` + `DHCP=yes`, which made `systemd-networkd` claim the adapter. iwd
-only publishes `Device`/`Station` while it holds **station mode**, so the
-installer's Wi-Fi UI could see the card and never list a network — and bare
-`DHCP=yes` on a wireless link could not have joined a WPA2 network regardless.
-
-Root cause and hardware evidence: `docs/INSTALLATION_ISSUES_LOG.md` §13.
-Decision and regression locks: active plan entry `IWD-WIRELESS-OWNERSHIP`.
+Source fixes are complete, regression-locked and pushed. The physical acceptance
+is **not** yet obtained. Root causes: `docs/INSTALLATION_ISSUES_LOG.md` §§14–16.
 
 ```text
-changed:   both overlays' 25-greia-wireless.network -> [Network] Unmanaged=yes
-preflight: installer_engine 21 OK / installation_hardware_regressions 15 OK
-           greia_release 14 OK / boot_diagnostics_hardening 18 OK  (68/68)
-           bash -n clean on the three verify/build tools
-evidence:  SOURCE-CLOSED (source + regression locks)
-           the iwd station-mode/list/join behaviour on the Acer is UNPROVEN
-next:      boot the rebuilt legacy-x86-i686-dev Syslinux/FAT32 installer USB on
-           the Acer, confirm it LISTS and JOINS a WPA2 network, install, then
-           confirm the installed first boot reuses the persisted iwd profile
+§13 wireless ownership   iwd owns wireless; networkd Unmanaged=yes
+§14 Wi-Fi shows nothing  empty scan was latched as READY, and a real scan error
+                         was masked as "No networks found". Empty scans now
+                         retry (limit 4, settle delay) and errors are surfaced.
+                         Proven NOT to be iwd/driver: the backend returned 5 real
+                         networks when run directly on the Acer.
+§15 Pointer page broken  layout assumed font metrics AND the fit arithmetic
+                         omitted the header entirely. Header, row floor, strip
+                         label and tail are now measured; a row can never be
+                         shorter than its own label. At 600 px the test strip is
+                         dropped whole rather than colliding with Back/Continue;
+                         the 1 2 3 keys still run the same test.
+§16 ~97% CPU spin        boot-cover helper retried every 0.5 s forever because it
+                         wrote to root-owned /run/greia-os as User=nobody.
+                         2754 spawns in one boot. Marker moved to the runtime dir
+                         the unit owns; retry now capped with backoff.
+
+preflight:  68/68 focused + 80/80 broader affected sweep
+evidence:   SOURCE-CLOSED (source + regression locks)
+            all three fixes re-verified on the live Acer (render, wifi=5,
+            helper rc=0 as nobody) but NOT yet on a freshly built image
+next:       rebuild + flash legacy-x86-i686-dev, then owner acceptance
 ```
 
-Two Acer defects remain open and are **not** addressed by the above:
+Still open and **not** addressed by this tranche:
 
 ```text
-installer UI CPU spin (~97% observed)   UNPROVEN, undiagnosed
-build-host loop leak per image build    OPEN build-host cleanup defect
+installed first boot from the Acer internal disk   never yet exercised end to end
+build-host loop leak per image build                OPEN build-host cleanup defect
 ```
 
-The second is cosmetic to a correctly flashed USB but should still be fixed: the
-builder leaks an autoclear loop per image build, so repeated builds accumulate
-them until a host reboot.
+The loop leak accumulates one autoclear loop per image build and only clears on
+a host reboot. It does not affect a correctly flashed USB.
 
 ## 8. Current exact next step
 

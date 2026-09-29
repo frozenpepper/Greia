@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import os
+import subprocess
 import unittest
+import unittest.mock
 from pathlib import Path
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -449,29 +451,99 @@ class InstallerPointerSetupTests(unittest.TestCase):
                 row_h, step, target = app._pointer_vertical_budget(
                     panel, setting_count
                 )
-                strip_h = (
-                    app.POINTER_LABEL_H
+                header = max(app.POINTER_HEADER_H, 0)
+                # A zero target means the whole strip was dropped, label and
+                # tail included, because the panel is too short to hold it.
+                strip = (
+                    0
+                    if target <= 0
+                    else app.POINTER_LABEL_H
                     + app.POINTER_STRIP_LABEL_GAP
                     + target
                     + app.POINTER_STRIP_TAIL
                 )
-                content_bottom = setting_count * step + strip_h
-                nav_top = panel - 63
+                # Content height is measured from the top of the panel, so the
+                # header is part of it.
+                content_bottom = header + setting_count * step + strip
+                nav_top = panel - app.POINTER_NAV_RESERVE - 5
                 self.assertLessEqual(
                     content_bottom,
                     nav_top,
                     "pointer page content must stay clear of the navigation row",
                 )
-                self.assertGreaterEqual(row_h, app.POINTER_ROW_HARD_MIN)
+                self.assertGreaterEqual(row_h, app.POINTER_ROW_MIN)
                 self.assertLessEqual(row_h, app.POINTER_ROW_MAX)
-                self.assertGreaterEqual(target, app.POINTER_TARGET_HARD_MIN)
+                if target > 0:
+                    self.assertGreaterEqual(target, app.POINTER_TARGET_HARD_MIN)
 
     def test_pointer_page_layout_grows_on_larger_displays(self) -> None:
+        """A taller panel must never be more cramped than a shorter one.
+
+        The test strip is the part of this page that yields when the panel is
+        short, so it is the strip, not the setting rows, that distinguishes a
+        roomy display from a tight one: the row height is already capped at
+        ``POINTER_ROW_MAX`` on both. The 600 px reference Acer legitimately
+        drops the strip; a 1080 px panel keeps it.
+        """
+
         app = self.make_app()
         small = app._pointer_vertical_budget(int(600 * 0.88), 5)
         large = app._pointer_vertical_budget(int(1080 * 0.88), 5)
-        self.assertLess(small[0], large[0])
-        self.assertEqual(small[2], large[2])
+        self.assertGreaterEqual(large[0], small[0])
+        self.assertEqual(small[2], 0, "the 600 px reference drops the strip")
+        self.assertGreater(large[2], 0, "a 1080 px panel keeps the strip")
+
+    def test_pointer_rows_never_render_a_label_outside_its_own_pill(self) -> None:
+        """A tall font must not push a row label out of the pill that owns it.
+
+        On the reference Acer the label font is materially taller than on the
+        development host. The row budget used to clamp rows to a fixed
+        hard-minimum, so a tall label was centred inside a pill shorter than
+        itself: it bled above and below, and the following row painted over it.
+        The observed result was "Touchpad feel" clipped in half and "Mouse
+        feel" sitting outside its own row entirely.
+        """
+
+        app = self.make_app()
+        panel = int(600 * 0.88)
+        for setting_count in range(3, 9):
+            for label_height in (22, 30, 38, 46):
+                with self.subTest(setting_count=setting_count, label_height=label_height):
+                    min_row = label_height + 2 * app.POINTER_ROW_PAD
+                    row_h, step, target = app._pointer_vertical_budget(
+                        panel, setting_count, 0, min_row
+                    )
+                    self.assertGreaterEqual(
+                        row_h,
+                        min_row,
+                        "a row must be at least as tall as its own label",
+                    )
+                    self.assertLessEqual(target, app.POINTER_TARGET_HARD_MIN * 2)
+
+    def test_pointer_header_is_measured_from_the_fonts_in_use(self) -> None:
+        """The first row must start below the measured title and subtitle.
+
+        The header was a fixed 96 px with a fixed +52 title gap. The Acer's
+        taller title font drew the "Pointer feel" subtitle on top of the
+        "Pointer setup" title and pushed the first setting row up into it.
+        """
+
+        app = self.make_app()
+        # A tall-font header, as measured on the reference Acer, must reserve
+        # strictly more space than the historical constant.
+        tall_header = 18 + 52 + 28 + app.POINTER_HEADER_PAD
+        self.assertGreater(tall_header, app.POINTER_HEADER_H)
+        panel = int(600 * 0.88)
+        row_h, step, _ = app._pointer_vertical_budget(
+            panel, 5, tall_header, 30 + 2 * app.POINTER_ROW_PAD
+        )
+        # A taller header leaves strictly less vertical room for the rows.
+        tall_rows = app._pointer_vertical_budget(
+            panel, 5, tall_header, 30 + 2 * app.POINTER_ROW_PAD
+        )[0]
+        short_rows = app._pointer_vertical_budget(panel, 5, 96, 44)[0]
+        self.assertLessEqual(tall_rows, short_rows)
+        self.assertGreaterEqual(row_h, 30 + 2 * app.POINTER_ROW_PAD)
 
     def test_every_installer_page_renders_headlessly(self) -> None:
         """Every page must actually paint, not merely have correct state.
@@ -552,3 +624,65 @@ class InstallerPointerSetupTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BootCoverHandoffBoundTests(unittest.TestCase):
+    """A failing boot-cover helper must cost a bounded number of spawns.
+
+    The unprivileged installer invokes the helper once per frame tick until it
+    succeeds. Because a failure never latched, the reference Acer respawned it
+    every half second for the whole session: 2754 invocations in a single boot,
+    which is the CPU spin observed on that machine. Nothing asserted the retry
+    was bounded, so this locks it.
+    """
+
+    def make_app(self):
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        return InstallerApplication(
+            root=Path("/opt/greia-os"),
+            payload=Path("/dev/null"),
+            payload_digest=None,
+            windowed=True,
+            demo=True,
+        )
+
+    def test_failing_helper_stops_after_the_attempt_cap(self) -> None:
+        app = self.make_app()
+        calls: list[list[str]] = []
+
+        def fake_run(argv, **kwargs):  # noqa: ANN001, ANN003
+            calls.append(list(argv))
+            return subprocess.CompletedProcess(argv, 2)
+
+        helper = Path("/usr/local/lib/greia-os/release-boot-cover")
+        with unittest.mock.patch.object(Path, "exists", lambda self: self == helper):
+            with unittest.mock.patch("subprocess.run", fake_run):
+                app._next_boot_handoff_attempt = 0.0
+                for _ in range(2000):
+                    app._release_boot_cover_once()
+                    app._next_boot_handoff_attempt = 0.0
+        self.assertFalse(app._boot_released, "a failing helper must not latch")
+        self.assertLessEqual(
+            len(calls),
+            app.BOOT_HANDOFF_MAX_ATTEMPTS,
+            "retries must be capped, not retried every frame",
+        )
+        self.assertEqual(len(calls), app.BOOT_HANDOFF_MAX_ATTEMPTS)
+
+    def test_successful_helper_latches_and_stops_immediately(self) -> None:
+        app = self.make_app()
+        calls: list[list[str]] = []
+
+        def fake_run(argv, **kwargs):  # noqa: ANN001, ANN003
+            calls.append(list(argv))
+            return subprocess.CompletedProcess(argv, 0)
+
+        helper = Path("/usr/local/lib/greia-os/release-boot-cover")
+        with unittest.mock.patch.object(Path, "exists", lambda self: self == helper):
+            with unittest.mock.patch("subprocess.run", fake_run):
+                app._next_boot_handoff_attempt = 0.0
+                for _ in range(2000):
+                    app._release_boot_cover_once()
+                    app._next_boot_handoff_attempt = 0.0
+        self.assertTrue(app._boot_released)
+        self.assertEqual(len(calls), 1, "success must latch after one call")

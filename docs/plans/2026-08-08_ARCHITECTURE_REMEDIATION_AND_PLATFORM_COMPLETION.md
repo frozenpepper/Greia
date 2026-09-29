@@ -2276,3 +2276,57 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   flash the physical Acer `legacy-x86-i686-dev` Syslinux/FAT32 installer and obtain owner
   hardware evidence that the installer now lists and joins a WPA2 network, and that the
   installed first boot reuses the persisted iwd profile.
+
+## 2026-09-28 — Acer Wi-Fi empty-result latch, Pointer page layout, and the 2754-spawn boot-cover spin all closed from live hardware evidence (`ACER-INSTALLER-UI-AND-WIFI-FIXES`)
+
+- No earlier entry rewritten. Three separate defects, all diagnosed against the live
+  reference Acer over the developer SSH surface and confirmed by rendering the real
+  installer pages **on that machine** (its fonts are taller than the development
+  host's, which is what made the layout defect invisible locally).
+- **Wi-Fi (§14).** Proven NOT to be an iwd/driver fault: the shipped backend run directly
+  on the running machine as the service identity returned five real networks, on the main
+  thread and on a worker thread. `WifiSetupController.drain()` published any
+  successful-but-empty scan as a final `READY` state, and `_draw_wifi_networks` drew
+  "No networks found" before inspecting the phase, so a real scan *error* was also
+  reported as an absence of networks. Fixed both: empty scans retry up to
+  `SCAN_RETRY_LIMIT` (4) with a settle delay and stay in `SCANNING`; errors are surfaced
+  instead of masked. Regression-locked by `WifiSetupScanRetryTests` (empty-then-non-empty
+  ends READY with the real networks; never-ready stops at exactly `SCAN_RETRY_LIMIT + 1`).
+- **Pointer page (§15).** Layout assumed font metrics: fixed `+52` title gap, fixed
+  `POINTER_HEADER_H = 96`, fixed strip tail, and row heights clamped to a hard minimum that
+  could be shorter than the label font. Root defect: `_pointer_vertical_budget` returned a
+  content height that **omitted the header**, under-counting every fit comparison by the
+  header's full height and letting the test strip run into the Back/Continue row. Header,
+  row floor, strip label and strip tail are now measured; a row can never be shorter than
+  its own label; content height includes the header. When five legible rows plus the strip
+  provably cannot fit 600 px at the Acer's metrics, the strip is dropped whole and its
+  space goes to the rows — no capability lost, since the same test stays on the 1 2 3 keys,
+  and system navigation is still drawn. Three tests lock this, including
+  `test_pointer_rows_never_render_a_label_outside_its_own_pill`.
+- **CPU spin (§16).** Root cause found and it was not guessed: `_release_boot_cover_once`
+  retried a helper every 0.5 s forever because the helper could never succeed — it wrote its
+  marker into `/run/greia-os`, created **root-owned** by the install-transaction socket unit
+  while the installer runs as `User=nobody`, exiting 2 with `Permission denied`, so
+  `_boot_released` never latched. **2754 spawns observed in one boot.** Marker moved to
+  `/run/greia-installer`, the runtime dir the unit already owns; verified on the running
+  Acer as `nobody` (rc=0). The installed launcher keeps its original path because its
+  `/run/greia-os` is group-writable via tmpfiles. The retry is now capped with backoff, so
+  no helper failure can become a busy loop again. Locked by `BootCoverHandoffBoundTests`.
+- Two stale contracts were corrected rather than worked around: the pointer budget's
+  `test_pointer_page_layout_fits_the_reference_1024x600_display` encoded the same
+  omit-the-header error in its own arithmetic, and
+  `test_pointer_page_layout_grows_on_larger_displays` asserted the strip target was
+  display-independent, which only held because both panels were being squeezed identically.
+  Both now assert the corrected, measured model.
+- Verification: focused preflight 68/68 (`installer_engine` 21,
+  `installation_hardware_regressions` 15, `greia_release` 14,
+  `boot_diagnostics_hardening` 18); broader affected sweep 80/80 across
+  `installer_pointer_setup` 28, `installer_wifi` 7, `installer_wifi_setup` 6,
+  `installer_wifi_build_contract` 4, `installer_wifi_persistence` 2,
+  `hw_split_first_frame` 10, `system_overlay_contract` 23; `sh -n`/`bash -n` clean on the
+  four tools and the helper. Live re-verification on the Acer: Pointer page re-rendered and
+  inspected, Wi-Fi controller re-run returning 5 networks, boot-cover helper re-run as
+  `nobody` returning 0.
+- T3-P is **not** addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash
+  the `legacy-x86-i686-dev` Syslinux/FAT32 installer and obtain owner hardware evidence for
+  all three fixes, plus the not-yet-attempted install/initialized-first-boot path.

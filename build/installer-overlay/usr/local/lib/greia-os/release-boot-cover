@@ -1,11 +1,20 @@
 #!/bin/sh
 set -eu
-marker=/run/greia-os/boot-cover-released
+# The marker lives in the runtime directory the greia-installer.service unit
+# already owns (RuntimeDirectory=greia-installer, mode 0750, chowned to the
+# service's User=nobody). It used to live in /run/greia-os, which on the live
+# installer is created root-owned by the install-transaction socket unit, so
+# this helper failed with "Permission denied" every single time the unprivileged
+# installer invoked it. The installed launcher is unaffected: its
+# /run/greia-os is group-writable through tmpfiles, and its own copy of this
+# helper keeps the original path.
+#
+# The Greia early-framebuffer cover and Xorg share VT1. The installer calls
+# this helper only after its first complete pygame.display.flip(), so no VT
+# transition is needed here. The marker prevents the one-shot intro/chime from
+# repeating on service restart.
+marker=/run/greia-installer/boot-cover-released
 [ -e "$marker" ] && exit 0
-mkdir -p /run/greia-os
-# The Greia early-framebuffer cover and Xorg share VT1. The launcher/installer
-# calls this helper only after its first complete pygame.display.flip(), so no
-# VT transition is needed here. The marker prevents the one-shot intro/chime
-# from repeating on service restart.
+mkdir -p "$(dirname "$marker")"
 : > "$marker"
-chmod 0660 "$marker" 2>/dev/null || true
+chmod 0640 "$marker" 2>/dev/null || true

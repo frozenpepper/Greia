@@ -451,3 +451,101 @@ remove password/root SSH bootstrap behavior from both canonical builders, add
 hardware-independent regression locks, and introduce the richer
 launcher/Activity-package foundation. The repository history is authoritative
 for the exact commit IDs of that follow-up tranche.
+
+---
+
+## 14. Installer Wi-Fi page reported "No networks found" although five were in range
+
+**Symptom:** after the wireless ownership repair (§13), iwd correctly held the
+adapter in station mode, yet the installer still displayed "No networks found.
+Refresh, or continue offline." indefinitely.
+
+**This was not an iwd or driver fault.** Running the shipped backend directly
+on the running machine, as the service identity, returned five real networks
+(`Wireless Pendente`, `Vodafone-C64216910`, `enel-WiFi_75A9E161`,
+`WINDTRE-F4D0A0`, `TP-LINK_5490D2`), from both the main thread and a worker
+thread. The defect was in how the result was *consumed*.
+
+**Root cause class: a startup race whose empty result was latched, with the
+failure mode hidden.** The installer reaches the Wi-Fi page within seconds of
+the language screen. iwd publishes its `Station` interface only once the
+adapter has settled into station mode, so an early scan can legitimately return
+nothing. `WifiSetupController.drain()` treated any successful-but-empty scan as
+a final `READY` state and published it, and the UI's empty-network branch drew
+"No networks found" *before* considering the phase — so a genuine scan **error**
+was also reported as an absence of networks. Both halves had to be fixed: the
+scan had to become retried, and the error had to stop being masked.
+
+**Fix:** an empty scan now re-scans up to `SCAN_RETRY_LIMIT` (4) times with a
+short settle delay, staying in `SCANNING` rather than publishing a false
+negative; and `_draw_wifi_networks` surfaces a real error instead of reporting
+it as "no networks".
+
+**Regression-locked** by
+`WifiSetupScanRetryTests` in `tests/test_installer_wifi_setup.py`: an adapter
+that reports empty then non-empty must end `READY` with the real networks, and
+an adapter that never reports anything must stop at exactly
+`SCAN_RETRY_LIMIT + 1` calls rather than spinning.
+
+## 15. Input settings page was visually broken on the Acer
+
+**Symptom:** on the reference Acer the Pointer Setup page drew the "Pointer
+feel" subtitle on top of the "Pointer setup" title, clipped "Touchpad feel" in
+half, dropped "Mouse feel" outside its own row, and overlapped the rows
+themselves. Reproduced headlessly against the Acer's real fonts, so it was a
+layout defect rather than a perception problem.
+
+**Root cause class: layout measured against assumed font metrics, with a
+height that omitted the header.** The development host's fonts are shorter than
+the Acer's, and the page was laid out with fixed constants: a fixed `+52` title
+gap, a fixed `POINTER_HEADER_H = 96`, a fixed strip tail, and row heights
+clamped to a hard minimum that could be *shorter than the label font itself*.
+Worse, `_pointer_vertical_budget` returned a content height that **omitted the
+header**, so every fit comparison under-counted the panel by the header's full
+height and let the test strip run into the Back/Continue row.
+
+**Fix:** the header, the row floor, the strip label and the strip tail are all
+measured from the fonts in use; a row can never be shorter than its own label;
+and content height includes the header. When five legible rows plus the test
+strip genuinely cannot fit a 600 px panel — which is provably true at the
+Acer's metrics — the **strip is dropped entirely** and its space goes to the
+rows, rather than letting it collide with the system navigation. No capability
+is lost: the same pointer test is still reachable from the `1` `2` `3` keys,
+which is why those keys exist. System navigation is still drawn when the strip
+is dropped, because Home/Back chrome is platform-owned and must never vanish.
+
+**Regression-locked** by `test_pointer_rows_never_render_a_label_outside_its_own_pill`,
+`test_pointer_header_is_measured_from_the_fonts_in_use`, and the corrected
+`test_pointer_page_layout_fits_the_reference_1024x600_display`, which now
+measures content height from the top of the panel including the header.
+
+## 16. ~97% CPU spin on the Acer: a failing helper respawned 2754 times per boot
+
+**Symptom:** the installer pinned a core from boot onward.
+
+**Root cause class: an unbounded retry loop on a permanently failing
+one-shot.** `_release_boot_cover_once()` re-invoked
+`/usr/local/lib/greia-os/release-boot-cover` every 0.5 s until it succeeded.
+It could never succeed: the helper wrote its marker into `/run/greia-os`, which
+on the live installer is created **root-owned** by the install-transaction
+socket unit, while the installer runs unprivileged as `User=nobody`. The helper
+exited 2 with `Permission denied`, `_boot_released` never latched, and the
+retry continued for the whole session.
+
+```
+/run/greia-os           drwxr-xr-x root root       <- not writable by nobody
+release-boot-cover: 10: cannot create /run/greia-os/boot-cover-released
+spawns observed in one boot: 2754
+```
+
+**Fix, in two parts.** The marker moved to `/run/greia-installer`, the runtime
+directory the installer unit already owns (`RuntimeDirectory=greia-installer`,
+mode 0750, chowned to the service's user); verified on the running Acer as
+`nobody`, which now exits 0. The installed launcher is unaffected: its
+`/run/greia-os` is group-writable through tmpfiles and its own copy of the
+helper keeps the original path. Independently, the retry is now **capped and
+backs off**, so no helper failure can ever become a busy loop again.
+
+**Regression-locked** by `BootCoverHandoffBoundTests`: a failing helper is
+invoked at most `BOOT_HANDOFF_MAX_ATTEMPTS` times across 2000 ticks, and a
+succeeding one latches after a single call.

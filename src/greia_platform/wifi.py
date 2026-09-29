@@ -402,6 +402,16 @@ class WifiSetupController:
     """
 
     MAX_PASSWORD_CHARACTERS = 63
+    # iwd publishes its Station interface only once the adapter has settled
+    # into station mode, and the first scan after that can still come back
+    # empty. The installer reached the Wi-Fi page within seconds of the
+    # language screen on the reference Acer, latched that empty result, and
+    # then showed "No networks found" forever even though a scan issued
+    # seconds later returned five real networks. Retry a bounded number of
+    # times before settling on the empty state, so a child is not told there
+    # is no Wi-Fi when the adapter simply was not ready yet.
+    SCAN_RETRY_LIMIT = 4
+    SCAN_RETRY_DELAY_SECONDS = 2.0
 
     def __init__(self, backend: WifiBackend) -> None:
         self._backend = backend
@@ -413,6 +423,7 @@ class WifiSetupController:
         self._connected_ssid = ""
         self._error = ""
         self._generation = 0
+        self._scan_attempts = 0
         self._results: queue.Queue[tuple[int, str, object]] = queue.Queue()
 
     @property
@@ -447,6 +458,7 @@ class WifiSetupController:
         current = self._generation
         self._phase = WifiSetupPhase.SCANNING
         self._error = ""
+        self._scan_attempts = 0
         threading.Thread(
             target=self._run_scan,
             args=(current,),
@@ -532,6 +544,20 @@ class WifiSetupController:
             changed = True
             if kind == "scan":
                 if isinstance(payload, tuple):
+                    if not payload and self._scan_attempts < self.SCAN_RETRY_LIMIT:
+                        # An empty scan this early is usually a not-yet-ready
+                        # adapter rather than an absence of networks. Stay in
+                        # SCANNING and retry instead of publishing a false
+                        # "no networks" result the child would have to guess at.
+                        self._scan_attempts += 1
+                        self._phase = WifiSetupPhase.SCANNING
+                        threading.Thread(
+                            target=self._run_delayed_scan,
+                            args=(generation,),
+                            name="greia-wifi-rescan",
+                            daemon=True,
+                        ).start()
+                        continue
                     self._networks = payload
                     self._phase = WifiSetupPhase.READY
                     self._selected_index = 0
@@ -556,6 +582,14 @@ class WifiSetupController:
             self._results.put((generation, "scan", result))
         except Exception as exc:
             self._results.put((generation, "scan", str(exc)))
+
+    def _run_delayed_scan(self, generation: int) -> None:
+        """Re-scan after a settle delay, discarding a superseded generation."""
+
+        time.sleep(self.SCAN_RETRY_DELAY_SECONDS)
+        if generation != self._generation:
+            return
+        self._run_scan(generation)
 
     def _run_connect(
         self,
