@@ -882,3 +882,55 @@ whole body is now wrapped and absorbing, and both failure modes are locked by
 content carries no nonce, digest, passphrase or hash, inspected through the AST
 so the functions' own docstrings — which deliberately *name* the excluded
 secrets — cannot satisfy or trip the check.
+
+## 21d. `set_attributes` failed on a setgid file; the missing authority was measured, not guessed
+
+The attempt after §21b got further — it reached the install phase and wrote
+about 19 MB to `/dev/sda` — and then failed in the same staging helper as §21b,
+on a different operation:
+
+```
+fatal error: set_attributes: failed to change mode
+/tmp/pip-install-target.4sf84owr/usr/bin/chage, because operation not permitted
+```
+
+`/usr/bin/chage` in the target is mode **2755, setgid** with group `shadow`; the
+trailing `s` sits in the group position of `-rwxr-sr-x`. I first read it as
+setuid and reached for `CAP_FSETID` on that reasoning. Measuring instead of
+reasoning changed the answer.
+
+`systemd-run` reproduces the service's capability set exactly, and the
+reproduction was checked against its own `/proc/self/status` before any result
+was trusted. Against the real binary from the payload, restoring its original
+owner and mode:
+
+| capability set | `chmod 2755` | resulting mode |
+| --- | --- | --- |
+| without `CAP_FSETID` | returns success | **755** — setgid silently dropped |
+| with `CAP_FSETID` | returns success | **2755** — correct |
+
+This is the more serious of the two findings. Without `CAP_FSETID` nothing
+raises: `chmod` reports success while discarding the setgid bit, so the
+installed initramfs would have shipped `chage` without the group privilege it
+depends on, and the install would have completed and claimed to work.
+
+Two of my own errors are recorded here as well. The first was reading the mode
+wrong. The second was a probe that appeared to disprove the need for `CAP_FSETID`
+— it did not, because the first version of the harness never printed its own
+capability set, so "chmod 4755 succeeded" was only ever a statement about a
+process that may not have lost the capability at all. A test that cannot fail is
+not evidence.
+
+`CAP_FOWNER` is granted as the companion authority for chmod/chown of staged
+files the caller does not own, which is what mkinitramfs's original-ownership
+restore does. It is **not** separately proven for this failure — the `CAP_FSETID`
+reproduction above does not itself raise `EPERM` — and is recorded as granted on
+that narrower rationale rather than on a clean reproduction. The unexplained
+`EPERM` is not fully accounted for.
+
+A full enumeration of the staging step's requirements by running
+`update-initramfs` in a chroot was attempted and is not possible on the
+appliance: the live overlay is 128 MiB and `/run` has 95 MiB free, against a
+roughly 1 GB writable payload. Capability grants so far are `MKNOD`, `CHOWN`,
+`FSETID`, `FOWNER`, each strictly narrower than the `CAP_SYS_ADMIN` this set
+already carries.

@@ -93,11 +93,30 @@ ProtectSystem=strict
 #   fatal error : set_attributes: failed to change UID and gids on
 #   /tmp/pip-install-target.m5dz4tui/etc/gshadow. because operation not permitted
 #
-# CAP_CHOWN and CAP_MKNOD are both strictly narrower than the CAP_SYS_ADMIN this
-# set already carries, so neither grants authority the service did not already
-# hold. No other capability is granted.
-CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN
-AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN
+# CAP_FSETID and CAP_FOWNER complete the set the same staging step needs. The
+# target's /usr/bin/chage is mode 2755 (setgid, group shadow) and mkinitramfs
+# restores each staged file's original mode. Reproduced on the appliance with
+# the real binary and this service's capability set:
+#
+#   chmod 2755 without CAP_FSETID -> "succeeds", mode silently becomes 755
+#   chmod 2755 with    CAP_FSETID -> mode correctly becomes 2755
+#
+# so without it a setgid binary in the installed initramfs silently loses its
+# setgid, which is a correctness defect even where it raises no error. The next
+# install attempt failed outright in the same helper with:
+#
+#   fatal error: set_attributes: failed to change mode
+#   /tmp/pip-install-target.4sf84owr/usr/bin/chage, because operation not permitted
+#
+# CAP_FOWNER is the companion authority for chmod/chown of staged files the
+# caller does not own, which is what mkinitramfs's original-ownership restore
+# does. It is not separately proven for this exact failure — the FSETID
+# reproduction above does not itself raise EPERM — and is granted on that
+# narrow rationale rather than on a clean reproduction. CAP_FSETID,
+# CAP_FOWNER, CAP_MKNOD and CAP_CHOWN are all strictly narrower than the
+# CAP_SYS_ADMIN this set already carries. No other capability is granted.
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN CAP_FSETID CAP_FOWNER
+AmbientCapabilities=CAP_SYS_ADMIN CAP_SYS_CHROOT CAP_SETUID CAP_SETGID CAP_MKNOD CAP_CHOWN CAP_FSETID CAP_FOWNER
 # Exact writable staging/mount paths the implementation needs — nothing
 # more. Socket directory (privileged-channel endpoint), PERSIST staging,
 # boot-control/grubenv state, first-install journal staging, and the slot

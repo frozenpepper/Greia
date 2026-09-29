@@ -451,6 +451,8 @@ class BoundedPrivilegeTests(unittest.TestCase):
             "CAP_SETGID",
             "CAP_MKNOD",
             "CAP_CHOWN",
+            "CAP_FSETID",
+            "CAP_FOWNER",
         ]
         facts = parse_unit(UNIT_PATH)
         self.assertEqual(
@@ -500,6 +502,8 @@ class BoundedPrivilegeTests(unittest.TestCase):
                         "CAP_SETGID",
                         "CAP_MKNOD",
                         "CAP_CHOWN",
+                        "CAP_FSETID",
+                        "CAP_FOWNER",
                     ]
                 ),
                 f"{key} must declare exactly the evidenced capability set",
@@ -786,6 +790,25 @@ class InitramfsDeviceNodeCapabilityTests(unittest.TestCase):
         self.assertIn("create_inode", text)
         self.assertIn("mknod", text)
 
+    def test_setgid_capability_is_declared_with_its_reproduction(self) -> None:
+        """Without CAP_FSETID a setgid binary silently loses its setgid bit.
+
+        The target's /usr/bin/chage is mode 2755 (setgid, group shadow) and
+        mkinitramfs restores each staged file's original mode. Measured on the
+        appliance with that real binary: chmod 2755 under the service's
+        capability set "succeeds" but yields 755, so the setgid bit is dropped
+        without any error being raised. That is a silent correctness defect in
+        the installed initramfs, and the unit must carry the capability and the
+        reason so it is not tidied away.
+        """
+
+        text = Path(UNIT_PATH).read_text(encoding="utf-8")
+        facts = parse_unit(UNIT_PATH)
+        for key in ("CapabilityBoundingSet", "AmbientCapabilities"):
+            self.assertIn("CAP_FSETID", (facts.get(key) or "").split(), key)
+        self.assertIn("2755", text)
+        self.assertIn("CAP_FSETID", text)
+
     def test_chown_is_declared_and_documented_for_the_same_step(self) -> None:
         """The initramfs step also needs CAP_CHOWN, and the unit must say so.
 
@@ -821,5 +844,5 @@ class InitramfsDeviceNodeCapabilityTests(unittest.TestCase):
         facts = parse_unit(UNIT_PATH)
         declared = (facts.get("CapabilityBoundingSet") or "").split()
         self.assertIn("CAP_SYS_ADMIN", declared)
-        for capability in ("CAP_MKNOD", "CAP_CHOWN"):
+        for capability in ("CAP_MKNOD", "CAP_CHOWN", "CAP_FSETID", "CAP_FOWNER"):
             self.assertIn(capability, declared)
