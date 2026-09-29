@@ -11,6 +11,7 @@ os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
 os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")
 
 from greia_installer.main import InstallerApplication, InstallerPage
+from greia_installer.wifi_setup import WifiSecurity, WifiSetupPhase, WifiNetwork
 from greia_platform.hardware import DisplayMode, HardwareDefaults, HardwareSettings
 from greia_platform.hardware_session import (
     ApplyResult,
@@ -686,3 +687,94 @@ class BootCoverHandoffBoundTests(unittest.TestCase):
                     app._next_boot_handoff_attempt = 0.0
         self.assertTrue(app._boot_released)
         self.assertEqual(len(calls), 1, "success must latch after one call")
+
+
+class RenderSignatureTests(unittest.TestCase):
+    """The whole installer must repaint when its state changes.
+
+    The render signature exists only as an optimisation: skipping a repaint is
+    allowed when the composed frame could not differ. It must never skip the
+    repaint when the frame *would* differ.
+
+    On the reference Acer it skipped every repaint on every page.
+    ``InstallerState`` is a ``dataclass(slots=True)`` and therefore has no
+    ``__dict__``, so ``vars()`` raised ``TypeError``, the signature was always
+    ``None``, and because the remembered signature also started as ``None`` the
+    comparison was always equal. The installer painted one frame and then
+    nothing changed until the pointer moved: the Wi-Fi list appeared only after
+    a mouse move, and the "Connecting..." screen never advanced on its own.
+    """
+
+    def make_app(self):
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        return InstallerApplication(
+            root=Path("/opt/greia-os"),
+            payload=Path("/dev/null"),
+            payload_digest=None,
+            windowed=True,
+            demo=True,
+        )
+
+    def screen(self):
+        import pygame
+
+        pygame.init()
+        pygame.font.init()
+        return pygame.display.set_mode((1024, 600), pygame.RESIZABLE)
+
+    def test_signature_is_computable_for_a_slots_dataclass_state(self) -> None:
+        app = self.make_app()
+        screen = self.screen()
+        self.assertIsNotNone(
+            app._render_signature(screen),
+            "InstallerState is a slots dataclass; vars() raises TypeError on it",
+        )
+
+    def test_first_frame_always_paints(self) -> None:
+        """A never-rendered app must not compare equal to its own signature."""
+
+        app = self.make_app()
+        self.assertIsNot(
+            app._last_render_signature,
+            None,
+            "an uncomputable signature returns None, so the initial value must "
+            "not be None or the first frame is suppressed",
+        )
+
+    def test_signature_changes_when_the_page_changes(self) -> None:
+        app = self.make_app()
+        screen = self.screen()
+        app.state.page = InstallerPage.WELCOME
+        before = app._render_signature(screen)
+        app.state.page = InstallerPage.POINTER
+        after = app._render_signature(screen)
+        self.assertNotEqual(before, after, "a page change must repaint")
+
+    def test_signature_changes_when_wifi_results_arrive(self) -> None:
+        """The network list is a tuple of dataclasses the scalar walk skips."""
+
+        app = self.make_app()
+        screen = self.screen()
+        app.state.page = InstallerPage.WIFI
+        before = app._render_signature(screen)
+        app.wifi._phase = WifiSetupPhase.READY
+        app.wifi._networks = tuple(
+            WifiNetwork(f"net{i}", WifiSecurity.PERSONAL, -40.0, f"/net/connman/iwd/0/4/n{i}_psk")
+            for i in range(5)
+        )
+        after = app._render_signature(screen)
+        self.assertNotEqual(
+            before, after, "arriving networks must invalidate the screen"
+        )
+
+    def test_signature_changes_when_connection_state_changes(self) -> None:
+        app = self.make_app()
+        screen = self.screen()
+        app.state.page = InstallerPage.WIFI
+        app.wifi._networks = (
+            WifiNetwork("Home", WifiSecurity.PERSONAL, -40.0, "/net/connman/iwd/0/4/h_psk"),
+        )
+        before = app._render_signature(screen)
+        app.wifi._connected_ssid = "Home"
+        after = app._render_signature(screen)
+        self.assertNotEqual(before, after)

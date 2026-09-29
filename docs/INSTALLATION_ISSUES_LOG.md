@@ -697,3 +697,61 @@ only survivable while `begin()` latched before scanning. The fake is now honest.
 latch and this was the second latch in the same twenty lines. When a class is
 identified, every instance of it in the same code must be enumerated, not just
 the one the current symptom exposed.
+
+## 20. The entire installer UI was frozen: state changes never repainted
+
+**Symptom:** on the reference Acer nothing in the installer updated on its own.
+The Wi-Fi list only appeared once the pointer moved, and the "Connecting..."
+screen never advanced until the pointer moved. Owner diagnosis: "it is a view /
+layout refresh issue". That was correct, and it was not Wi-Fi-specific.
+
+**Root cause class: an optimisation whose safety net was inverted.**
+`InstallerApplication.run` skips the redraw and display flip when the render
+signature is unchanged, which is a legitimate optimisation on slow hardware. The
+signature is meant to be uncomputable-safe: its docstring promised that "any
+failure at all returns `None`, which forces a redraw" and that it "can never
+leave a stale screen behind". Both promises were false:
+
+1. `InstallerState` is declared `@dataclass(slots=True)`, so its instances have
+   **no `__dict__`**. The signature walked it with `vars()`, which raised
+   `TypeError: vars() argument must have __dict__ attribute` on **every frame**,
+   so the signature was always `None`.
+2. The remembered signature `_last_render_signature` was also initialised to
+   `None`. The gate is `if handled_event or signature != self._last_render_signature`,
+   and `None != None` is false, so the "forced redraw" never happened. The
+   installer painted one frame and then only ever repainted in response to an
+   input event — which is exactly why moving the pointer fixed it.
+
+**Fix, in two independent parts so neither can regress alone.** Slotted
+dataclasses are read through their declared fields, and a `TypeError` from
+`vars()` now degrades to an empty contribution rather than poisoning the whole
+signature. The initial fingerprint is a unique sentinel that no computed
+signature can equal, so a genuinely uncomputable signature really does force a
+redraw.
+
+**Two further gaps the same fix exposed,** found by measuring rather than
+reasoning. The scalar walk cannot see an `Enum` or a tuple of dataclasses, so
+`page`, `progress`, `settings` and the Wi-Fi network list were all absent from
+the fingerprint — a page change would not have invalidated either. State is now
+fingerprinted field-by-field through a bounded recursive walk, with the network
+list named explicitly.
+
+**Verified on the reference Acer**, after the fix:
+
+```
+signature computable: True    first frame repaints: True
+page change repaints: True    networks arriving repaints: True
+connected state repaints: True
+```
+
+Measured cost on that machine: **0.33 ms per frame against a 33.3 ms budget** at
+30 fps, so the added fidelity is about 1% of a frame.
+
+**Regression-locked** by `RenderSignatureTests` (5 cases). All were confirmed to
+fail against the true original code — injecting the original unguarded `vars()`
+walk plus the original `None` initial value turns 4 of them red, and the sentinel
+case red on its own.
+
+**The launcher is unaffected:** it does not use a render signature and repaints
+unconditionally. Worth recording, because the installer is the only surface
+carrying this optimisation.

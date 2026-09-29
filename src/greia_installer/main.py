@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import dataclasses
+import enum
 import os
 import queue
 import threading
@@ -111,6 +113,18 @@ class DemoInstallationEngine:
         return InstallResult()
 
 
+# Sentinel meaning "no frame has been composed yet". It is deliberately not
+# ``None``: an uncomputable render signature also returns ``None``, and
+# ``None != None`` is false, which would suppress the redraw that the
+# uncomputable case exists to force. See InstallerApplication._render_signature.
+_NEVER_RENDERED = object()
+
+# Bounds for the render signature's recursive fingerprint. This runs every
+# frame, so nested collections are summarised rather than fully walked.
+_SIGNATURE_MAX_DEPTH = 2
+_SIGNATURE_MAX_ITEMS = 4
+
+
 class InstallerApplication:
     HOLD_SECONDS = 2.0
     # Bounded boot-cover release: at most this many attempts, doubling the
@@ -203,7 +217,12 @@ class InstallerApplication:
         # helper process, so probing must not happen once per rendered frame.
         self._pointer_infos_cache: tuple[PointerDeviceInfo, ...] | None = None
         self._pointer_infos_page: InstallerPage | None = None
-        self._last_render_signature: tuple[object, ...] | None = None
+        # A sentinel, not None: a signature that cannot be computed returns
+        # None, and comparing None to None would suppress the very redraw that
+        # the None is supposed to force. A unique object can never equal a
+        # computed signature, so the first frame always paints and an
+        # uncomputable signature always repaints.
+        self._last_render_signature: object = _NEVER_RENDERED
         self._cover_released = False
         self._pointer_seen = False
         self._display_probe_cache: Any = None
@@ -2848,21 +2867,47 @@ class InstallerApplication:
         second unconditionally, which is a large fixed cost on the reference
         Acer even once text rasterization and pointer probing are cached.
 
-        The signature is derived from the live scalar state rather than from a
+        The signature is derived from the live state rather than from a
         hand-maintained dirty flag, so a new piece of state cannot be silently
         forgotten. Anything unhashable, unexpected or slow is simply excluded,
         and any failure at all returns ``None``, which forces a redraw. Skipping
         is therefore only ever an optimisation: it can never leave a stale
         screen behind.
+
+        That last promise was false twice over. ``InstallerState`` is a
+        ``dataclass(slots=True)`` and therefore has no ``__dict__``, so
+        ``vars()`` raised ``TypeError`` on every frame, the signature was
+        always ``None`` — and because ``_last_render_signature`` also started
+        as ``None``, ``None != None`` meant the installer never repainted from
+        a state change on any page. Only an input event could refresh the
+        screen, which is exactly what the reference Acer showed: nothing updated
+        until the pointer moved. Both halves are fixed: slotted dataclasses are
+        read through their declared fields, and the initial fingerprint is a
+        sentinel that no computed signature can equal, so a genuinely
+        uncomputable signature really does force a redraw.
         """
 
         def scalars(source: Any) -> tuple[object, ...]:
+            items: Any
+            if dataclasses.is_dataclass(source) and not isinstance(source, type):
+                # A slots dataclass has no __dict__; vars() raises TypeError.
+                items = (
+                    (spec.name, getattr(source, spec.name, None))
+                    for spec in dataclasses.fields(source)
+                )
+            else:
+                try:
+                    items = vars(source).items()
+                except TypeError:
+                    return ()
             parts: list[object] = []
-            for name, value in sorted(vars(source).items()):
+            for name, value in items:
                 if name.startswith("_typography") or name.startswith("_pointer_infos"):
                     continue
                 if value is None or isinstance(value, (bool, int, float, str)):
                     parts.append((name, value))
+                elif isinstance(value, enum.Enum):
+                    parts.append((name, str(value)))
                 elif isinstance(value, tuple) and all(
                     item is None or isinstance(item, (bool, int, float, str))
                     for item in value
@@ -2870,12 +2915,67 @@ class InstallerApplication:
                     parts.append((name, value))
             return tuple(parts)
 
+        def fingerprint(value: Any, depth: int = 0) -> Any:
+            """Bound a value down to something cheap, stable and comparable.
+
+            The scalar walk above cannot see an Enum, a nested dataclass or a
+            tuple of dataclasses, which is how ``page``, ``progress``,
+            ``settings`` and the network list all fell out of the signature. It
+            is bounded on purpose: this runs every frame, so collections are
+            summarised by length and depth, and anything unrecognised collapses
+            to its type name rather than being walked.
+            """
+
+            if value is None or isinstance(value, (bool, int, float, str)):
+                return value
+            if isinstance(value, enum.Enum):
+                return str(value)
+            if isinstance(value, (tuple, list)):
+                if depth >= _SIGNATURE_MAX_DEPTH:
+                    return (type(value).__name__, len(value))
+                return (
+                    type(value).__name__,
+                    len(value),
+                    tuple(
+                        fingerprint(item, depth + 1)
+                        for item in value[:_SIGNATURE_MAX_ITEMS]
+                    ),
+                )
+            if dataclasses.is_dataclass(value) and not isinstance(value, type):
+                if depth >= _SIGNATURE_MAX_DEPTH:
+                    return type(value).__name__
+                return tuple(
+                    (
+                        spec.name,
+                        fingerprint(getattr(value, spec.name, None), depth + 1),
+                    )
+                    for spec in dataclasses.fields(value)
+                )
+            return type(value).__name__
+
         try:
+            snapshot = self.wifi.snapshot
             return (
                 tuple(screen.get_size()),
                 scalars(self),
-                scalars(self.state),
-                scalars(self.wifi),
+                # Every declared state field, including enums and nested
+                # dataclasses. ``targets`` is covered separately below and is
+                # skipped here so devices are not walked twice per frame.
+                tuple(
+                    (spec.name, fingerprint(getattr(self.state, spec.name, None)))
+                    for spec in dataclasses.fields(self.state)
+                    if spec.name != "targets"
+                ),
+                # The network list is a tuple of dataclasses; its observable
+                # facts are named explicitly rather than left to be forgotten.
+                (
+                    str(snapshot.phase),
+                    len(snapshot.networks),
+                    snapshot.selected_index,
+                    snapshot.connected_ssid,
+                    bool(snapshot.error),
+                    self.wifi.profile is not None,
+                ),
                 len(self._pointer_infos_cache or ()),
                 tuple(self.state.targets),
             )

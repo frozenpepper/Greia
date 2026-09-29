@@ -2438,3 +2438,39 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
   against the restored latch, GREEN after.
 - T3-P is not addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash, then owner
   re-test of listing, joining, and finally the install / installed-first-boot run.
+
+## 2026-09-28 — Whole-installer repaint defect found and closed; the §18 agent fix confirmed working by a real join (`INSTALLER-REPAINT-FROZEN`)
+
+- No earlier entry rewritten. Owner reported the Wi-Fi screen no longer found networks, then identified
+  the real cause: nothing in the UI updated on state change, and only pointer movement refreshed it.
+  This was **not** the §19 latch (a real but separate latent bug, also fixed there) and **not** caused by
+  §18.
+- Root cause: `run()` skips redraw when the render signature is unchanged, and the signature was
+  **always** `None` because `InstallerState` is `@dataclass(slots=True)` and has no `__dict__`, so the
+  unguarded `vars()` walk raised `TypeError` on every frame. The remembered signature also started as
+  `None`, so `None != None` made the documented "forces a redraw" behaviour suppress the redraw
+  instead. The installer painted one frame and thereafter repainted only on input events.
+- Fix has two independent halves so neither can regress alone: slotted dataclasses are read through
+  `dataclasses.fields` and a `TypeError` from `vars()` degrades to an empty contribution; the initial
+  fingerprint is a unique sentinel (`_NEVER_RENDERED`) that no computed signature can equal.
+- Measuring rather than reasoning then exposed two more gaps in the same function: the scalar walk
+  cannot see an `Enum` or a tuple of dataclasses, so `page`, `progress`, `settings` and the Wi-Fi
+  network list were absent from the fingerprint. State is now fingerprinted field-by-field through a
+  bounded recursive walk (`_SIGNATURE_MAX_DEPTH = 2`, `_SIGNATURE_MAX_ITEMS = 4`) with the network
+  list named explicitly, making the docstring's "a new piece of state cannot be silently forgotten"
+  finally true.
+- Verified live on the Acer: signature computable, first frame repaints, and page change, arriving
+  networks and connected state each invalidate. Measured **0.33 ms/frame against a 33.3 ms budget**
+  (~1% of a frame) on the reference hardware.
+- `RenderSignatureTests` (5 cases) added; all confirmed RED against the true original code.
+- **Owner hardware evidence in hand:** the §18 iwd passphrase agent completed a **real successful
+  WPA2 join** on the reference Acer — network selected, correct password entered, connected. That
+  closes the Wi-Fi connect path, which had never previously worked on any machine.
+- The launcher does not use a render signature and repaints unconditionally, so it is unaffected; this
+  is the only surface carrying the optimisation.
+- Verification: focused preflight 68/68; affected sweep 99/99 across `installer_pointer_setup` 33,
+  `installer_wifi` 9, `installer_wifi_setup` 9, `installer_state` 7, `installer_hardware_adapter` 4,
+  `responsive_layout` 13, `persistent_layout` 40 (requires `PYTHONPATH=src:tests`; pre-existing
+  harness quirk, unrelated).
+- T3-P is not addressed by this entry and remains OPEN/BLOCKING. Next: rebuild and flash, then owner
+  confirmation of live repaint, then the install / installed-first-boot run.
