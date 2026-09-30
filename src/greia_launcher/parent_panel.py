@@ -2452,10 +2452,15 @@ class ParentSettingsOverlay:
             readout = f"{text.AUDIO_INPUT_CLIPPING}  {level.rms_dbfs:+.0f} dB"
         value = panel_layout.fit_single_line(
             typography, readout, FontRole.CONTROL, 16,
-            (181, 46, 46) if level.clipping else (61, 44, 31), 200,
+            (181, 46, 46) if level.clipping else (61, 44, 31), meter_w,
         )
+        # Right-aligned inside the meter's own width. It was placed at
+        # card.left + pad + inner_w, which is the far edge of the whole row: it
+        # landed under the noise cancelling column and clamp_ip then shoved it to
+        # the panel edge, leaving a stray "dB" fragment there.
         panel_layout.blit_block(
-            screen, value, pygame, card.left + pad + inner_w, y, bounds=card
+            screen, value, pygame, card.left + pad + meter_w, y,
+            align="right",
         )
 
         bar_h = 16
@@ -2723,17 +2728,23 @@ class ParentSettingsOverlay:
             state = "On" if (is_on and enabled) else (
                 "Unavailable" if not enabled else "Off"
             )
+            # One line, state right-aligned. Two stacked lines never fitted in
+            # the height available beside the meter, and the second line was drawn
+            # over the first.
+            state_w = 96
             t1 = panel_layout.fit_single_line(
-                typography, label, FontRole.BODY, 12, (61, 44, 31), col_w - 12
+                typography, label, FontRole.BODY, 12, (61, 44, 31),
+                max(40, col_w - state_w - 18),
             )
             panel_layout.blit_block(
-                screen, t1, pygame, box.left + 6, box.top + 4, bounds=box
+                screen, t1, pygame, box.left + 6, box.top + 9, bounds=box
             )
             t2 = panel_layout.fit_single_line(
-                typography, state, FontRole.CONTROL, 13, (61, 44, 31), col_w - 12
+                typography, state, FontRole.CONTROL, 12, (61, 44, 31), state_w
             )
             panel_layout.blit_block(
-                screen, t2, pygame, box.left + 6, box.top + 18, bounds=box
+                screen, t2, pygame, box.right - 6, box.top + 9,
+                align="right", bounds=box,
             )
             if enabled:
                 self._targets.append(
