@@ -48,6 +48,17 @@ PUBLISH_INTERVAL_SECONDS = 0.05
 #: Read granularity of the capture stream, in bytes.
 _READ_CHUNK = 1024
 
+#: Measured on the Acer: a meter holding the device continuously gave a
+#: microphone-using Activity 0 of 6 capture attempts; 0.4 s every 1.0 s gave
+#: 3 of 8; 0.2 s every 4.0 s gives 7 of 8. The meter is a diagnostic aid and
+#: must not starve a child Activity, so it samples sparsely. Progressive
+#: backoff and a long yield after a busy open were both tried and did not help
+#: - the meter simply won the gaps. Sparse sampling is what works.
+#:
+#: This is not fully solvable by scheduling: there is one capture device and no
+#: signal yet for "an Activity is recording". Until the platform exposes one,
+#: the meter stays sparse, and that is a real remaining limitation.
+#:
 #: The capture device is exclusive, so a meter that holds it continuously makes
 #: every microphone-using Activity fail to record at all. The service therefore
 #: samples in short bursts and releases the device between them, which leaves real

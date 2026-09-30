@@ -20,11 +20,13 @@ from greia_platform.microphone_level_service import (
 
 
 class _FakeStream:
-    """A capture that yields a fixed sequence of levels and records its close."""
+    """A capture that yields levels and records being opened and closed."""
 
-    def __init__(self, levels, closed: list[bool]) -> None:
+    def __init__(self, levels, closed: list[bool], opened: list[bool] | None = None) -> None:
         self._levels = levels
         self._closed = closed
+        if opened is not None:
+            opened.append(True)
 
     def levels(self):
         import time as _time
@@ -42,12 +44,13 @@ class _FakeStream:
 
 
 class _FakeCapture:
-    def __init__(self, levels, closed: list[bool]) -> None:
+    def __init__(self, levels, closed: list[bool], opened: list[bool] | None = None) -> None:
         self._levels = levels
         self._closed = closed
+        self._opened = opened
 
     def stream(self):
-        return _FakeStream(self._levels, self._closed)
+        return _FakeStream(self._levels, self._closed, self._opened)
 
 
 def _pcm16(samples: int, amplitude: int) -> bytes:
@@ -70,10 +73,11 @@ class ServiceReleasesTheDeviceTests(unittest.TestCase):
         self.addCleanup(self._tmp.cleanup)
         self.socket_path = str(Path(self._tmp.name) / "level.sock")
         self.closed: list[bool] = []
+        self.opened: list[bool] = []
         self.levels = [MicrophoneLevel(True, -12.0, -3.0, False, "hw:0,0") for _ in range(400)]
         self.service = MicrophoneLevelService(
             socket_path=self.socket_path,
-            capture_factory=lambda: _FakeCapture(self.levels, self.closed),
+            capture_factory=lambda: _FakeCapture(self.levels, self.closed, self.opened),
             publish_interval=0.01,
         )
         self.thread = threading.Thread(
@@ -100,18 +104,62 @@ class ServiceReleasesTheDeviceTests(unittest.TestCase):
         self.assertTrue(client.level.available)
         self.assertAlmostEqual(client.level.rms_dbfs, -12.0, places=3)
 
+    def test_the_meter_yields_the_device_between_bursts(self) -> None:
+        """The meter must not hold the exclusive device continuously.
+
+        Holding it made every microphone-using Activity fail to open the device,
+        so Activities recorded nothing at all while the Audio tab was open. The
+        service opens, samples briefly, closes, and waits, so an Activity has real
+        windows to acquire the device.
+        """
+
+        opened: list[bool] = []
+        with tempfile.TemporaryDirectory() as tmp:
+            path = str(Path(tmp) / "burst.sock")
+            service = MicrophoneLevelService(
+                socket_path=path,
+                capture_factory=lambda: _FakeCapture(self.levels, self.closed, opened),
+                publish_interval=0.01,
+            )
+            thread = threading.Thread(target=service.serve_forever, daemon=True)
+            thread.start()
+            client = MicrophoneLevelClient(socket_path=path, connect_retries=10)
+            client.start()
+            # The service samples sparsely by design, so allow for the release gap
+            # before expecting a second burst.
+            deadline = time.monotonic() + 25.0
+            while time.monotonic() < deadline and len(opened) < 3:
+                time.sleep(0.1)
+            client.stop()
+            self.assertGreaterEqual(
+                len(opened),
+                3,
+                "the meter must open and release the device repeatedly, not hold it",
+            )
+            self.assertGreaterEqual(
+                len(self.closed), 2, "each burst must release the device"
+            )
+
     def test_disconnecting_releases_the_capture(self) -> None:
         client = MicrophoneLevelClient(socket_path=self.socket_path, connect_retries=10)
         client.start()
         deadline = time.monotonic() + 5.0
-        while time.monotonic() < deadline and not self.closed:
+        while time.monotonic() < deadline and not self.opened:
             time.sleep(0.02)
-        self.assertFalse(self.closed, "capture was not started")
+        self.assertTrue(self.opened, "capture was never started")
+        before = len(self.opened)
         client.stop()
         deadline = time.monotonic() + 5.0
-        while time.monotonic() < deadline and not self.closed:
+        while time.monotonic() < deadline and len(self.opened) != before:
             time.sleep(0.02)
-        self.assertTrue(self.closed, "capture was not released on disconnect")
+        time.sleep(1.0)
+        # At most one further burst may already be in flight when stop arrives; a
+        # capture that keeps opening is not releasing the device.
+        self.assertLessEqual(
+            len(self.opened),
+            before + 1,
+            "the capture kept restarting after disconnect",
+        )
 
     def test_a_new_client_takes_over_from_a_stale_one(self) -> None:
         """A client that vanished must not wedge the device for everyone else.
@@ -127,16 +175,18 @@ class ServiceReleasesTheDeviceTests(unittest.TestCase):
         )
         stale.start()
         deadline = time.monotonic() + 5.0
-        while time.monotonic() < deadline and not self.closed:
+        while time.monotonic() < deadline and not self.opened:
             time.sleep(0.02)
-        self.assertFalse(self.closed, "capture was not started")
+        self.assertTrue(self.opened, "capture was never started")
         # Abandon the first client the way a killed process would, without stop().
         stale._connection.close()  # type: ignore[union-attr]
         stale._stop.set()
         deadline = time.monotonic() + 5.0
-        while time.monotonic() < deadline and not self.closed:
+        while time.monotonic() < deadline and len(self.closed) < 2:
             time.sleep(0.02)
-        self.assertTrue(self.closed, "stale client did not release the device")
+        self.assertGreaterEqual(
+            len(self.closed), 2, "stale client did not release the device"
+        )
 
         self.closed.clear()
         fresh = MicrophoneLevelClient(
