@@ -65,10 +65,33 @@ def _offline_overlay() -> ParentSettingsOverlay:
     """An overlay wired to inert fakes so nothing touches the machine."""
 
     class _NoWifi:
+        """Inert backend. Screenshots and timing must not touch real hardware."""
+
+        def available(self) -> bool:
+            return False
+
         def list_networks(self) -> list[Any]:
             return []
 
         def status(self) -> Any:
+            return None
+
+        def scan(self) -> None:
+            return None
+
+        def connect(self) -> None:
+            return None
+
+        def select(self, _index: int) -> None:
+            return None
+
+        def refresh(self) -> None:
+            return None
+
+        def backspace_password(self) -> bool:
+            return False
+
+        def append_password(self, _text: str) -> None:
             return None
 
     class _NoSsh:
@@ -76,6 +99,9 @@ def _offline_overlay() -> ParentSettingsOverlay:
             return None
 
     class _NoLanguage:
+        def set(self, _locale: str) -> Any:
+            raise AssertionError("screenshots must not mutate system language")
+
         def read(self) -> Any:
             class _Current:
                 locale = "en-GB"

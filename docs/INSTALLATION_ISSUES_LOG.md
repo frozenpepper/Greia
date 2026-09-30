@@ -1357,3 +1357,99 @@ the policy's name-length limit, avatar cycling, the password mismatch guard, and
 a bare verifier still unlocking without a session. Four negatives were verified
 individually: removing the empty-name guard, the session-on-unlock path, the
 name-length limit, or the password mismatch guard each fails a test.
+
+## 25. The Parent panel was unusable on the reference Acer: 300 ms per frame
+
+### 25a. Two separate causes, one of them mine
+
+Measured on the Acer rather than guessed, with the panel redrawn offscreen at
+1024x600 as `greiakid`:
+
+| tab | before | after |
+| --- | --- | --- |
+| language | 280 ms | 2.3 ms |
+| audio | 351 ms | 15.3 ms |
+| accounts | 344 ms | 2.3 ms |
+| security | 335 ms | 2.3 ms |
+| wifi | 263 ms | 2.3 ms |
+| ssh | 266 ms | 2.3 ms |
+| info | 279 ms | 2.4 ms |
+| pointer | 272 ms | 2.3 ms |
+
+That is 2.8-3.8 fps before, and 43-435 fps after. The display is software
+(`hwaccel=0`), so every large translucent composite is expensive in C.
+
+**Pre-existing, and the real reason it felt unusable.** Profiling attributed 97%
+of the old frame to `Surface.blit`: about 56 large alpha blits per frame, costing
+roughly 156 ms. `_ensure_panel_base` cached the dim and the large rounded chrome,
+but the tab strip and the whole tab content were recomposited every frame. The
+panel was already ~150 ms/frame before this session, which is why it had always
+been painful on an Atom.
+
+**Mine, and it doubled the problem.** The measured layout helpers added in §24
+called `typography.render` and `typography.measure` for every line of every
+string, every frame, with no cache. The old `_get_text` happened to cache; the
+new helpers did not. Profiling showed 74 calls into the typography service per
+frame and 45% of total frame time inside its grapheme segmentation. Measured
+against the pre-change panel: ~150 ms before my changes, ~300 ms after.
+
+### 25b. Fixes
+
+- The layout helpers memoise measurement, wrapping and composed blocks, so text
+  is measured and rendered once instead of 74 times a frame.
+- The panel composes an unchanged frame once and then presents it with a single
+  blit, keyed on a signature of everything the drawing code reads. An animated or
+  externally-driven tab opts out via `_content_animating` rather than being
+  frozen.
+
+### 25c. Three defects the cache introduced, all caught before shipping
+
+A cache that decides what to draw is a correctness risk, not a performance one,
+and it produced three:
+
+1. **The account list was missing from the signature.** Adding and removing a
+   child would not have updated on screen until something else changed.
+2. **The entire pointer tab and the SSH status were missing** — the pointer
+   focus, its message, the test flash and the SSH line. The pointer tab would
+   have been frozen.
+3. **The Wi-Fi tab was invisible to the signature**, because it renders
+   `wifi_controller.snapshot` from an injected collaborator. Excluding the tab
+   restored correctness but cost the whole tab its speed, back to 242 ms, and
+   Wi-Fi is exactly the tab a parent uses to set up a network. The signature now
+   summarises the collaborator's *content*, so the tab is cacheable while idle
+   and re-renders while scanning: 2.3 ms.
+
+`tests/test_panel_frame_cache.py` now audits the draw methods for `self._x` reads
+and fails if any is absent from the signature, so a future field cannot be left
+out silently. `_targets` is exempt by design, and the exemption is written down.
+
+### 25d. A latent cache bug found by an intermittent test
+
+The layout cache was keyed on `id(typography)`. CPython reuses object addresses
+after collection, so a collected typography service and a new one could share an
+address, and the new one would be handed the old one's surfaces: stale text,
+wrong size, wrong colour. This surfaced as a test that passed alone and failed in
+a suite, which is exactly the shape of an address-reuse bug. The caches are now
+held per typography instance in a `WeakKeyDictionary`, which makes it impossible
+and collects an unused service's surfaces with it.
+
+The same investigation found a fault in my own test rather than the code: it
+hardcoded `"rainbow"` as the expected avatar, while the panel deliberately reads
+the avatar list from the shipped profile policy, whose first entry is `unicorn`.
+The code was right and the test was environment-dependent; it now derives the
+expected value from the policy, consistent with not duplicating that list.
+
+### 25e. Verification
+
+`test_panel_frame_cache` 12/12, including the signature audit, the collaborator
+invalidation cases and a served frame keeping its hit targets — a cached frame
+that dropped them would leave the panel visible but dead to clicks.
+`test_panel_layout` 20/20, `test_parent_panel_accounts` 18/18,
+`test_parent_credential_client` 25/25, and the four pre-existing panel suites
+unchanged at 41/41. Verified on the Acer: launcher `active` with 0 restarts,
+child shell alive, no errors.
+
+Not claimed: the audio tab sits at 15.3 ms against a 16.7 ms frame budget. It is
+inside budget and was measured rather than assumed, but it is the one tab with
+little headroom, and the cause is the periodic gain re-read on its draw path. It
+is worth its own look if audio ever feels heavy.

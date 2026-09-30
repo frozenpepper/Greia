@@ -182,6 +182,17 @@ class ParentSettingsOverlay:
         # identity, state and size) and presented with one opaque blit.
         self._panel_base: Any = None
         self._panel_base_key: Any = None
+        # Whole-panel composite cache. The panel is redrawn every frame by the
+        # Shell, and profiling on the reference Acer showed 45 large alpha blits
+        # per frame at ~150 ms, because the display is software (hwaccel=0) and
+        # each composite of a translucent surface is expensive. A static panel
+        # therefore composes once and is then presented with a single blit.
+        self._panel_composite: Any = None
+        self._panel_composite_key: Any = None
+        self._panel_composite_targets: list[PanelHitTarget] = []
+        # Set by the Shell when the tab has something that moves every frame, so
+        # an animated tab is never served from the cache.
+        self._content_animating = False
         self._text_surface_cache: dict[tuple[Any, ...], Any] = {}
         self._sync_language_selection()
         # Pointer tab state. The settings store parses a JSON file on read
@@ -967,8 +978,13 @@ class ParentSettingsOverlay:
         every redraw otherwise dominates frame time on low-resource devices.
         """
 
-        self._targets.clear()
         width, height = screen.get_size()
+        composite_key = self._composite_key(base_key, (width, height))
+        cached = self._serve_composite(screen, composite_key)
+        if cached:
+            return
+
+        self._targets.clear()
 
         chrome_in_base = base_surface is not None and base_key is not None
         if chrome_in_base:
@@ -987,6 +1003,146 @@ class ParentSettingsOverlay:
             self._draw_panel(
                 screen, theme, typography, pygame, load_icon_fn, chrome_in_base
             )
+        self._store_composite(screen, composite_key)
+
+    # --- frame caching -------------------------------------------------
+    #
+    # Everything the panel draws is derived from the values below, so when none of
+    # them has changed the previous frame is still correct. Anything that moves
+    # on its own (a spinner, a level meter, a wifi scan) sets
+    # ``_content_animating`` and opts out, so caching can never freeze motion.
+
+    # Every instance attribute the drawing code reads. This list is audited by
+    # ``tests/test_panel_frame_cache.py``, which scans the draw methods for
+    # ``self._x`` reads and fails if one is missing here. An audit rather than a
+    # comment matters here: an omission does not slow the panel down, it silently
+    # stops that state updating on screen, which is the worse failure.
+    _COMPOSITE_STATE_FIELDS = (
+        "state",
+        "active_tab",
+        "password_text",
+        "password_error_until",
+        "_password_problem",
+        "_language_index",
+        "_language_message",
+        "_audio_message",
+        "_cached_mic_gain",
+        "_accounts",
+        "_accounts_loaded",
+        "_accounts_mode",
+        "_accounts_message",
+        "_accounts_message_is_error",
+        "_account_name",
+        "_account_age",
+        "_account_avatar_index",
+        "_pending_remove",
+        "_security_current",
+        "_security_new",
+        "_security_confirm",
+        "_security_message",
+        "_security_message_is_error",
+        "_text_field",
+        "_pointer_settings",
+        "_pointer_current_preset",
+        "_pointer_focus",
+        "_pointer_focus_items",
+        "_pointer_has_relative",
+        "_pointer_has_touchpad",
+        "_pointer_message",
+        "_pointer_min_touch_px",
+        "_pointer_test_flash",
+        "_pointer_test_flash_at",
+        "_ssh_cached_status",
+        "_ssh_enabled",
+        "_info_lines",
+        "_content_animating",
+    )
+
+    def _composite_key(self, base_key: Any, size: tuple[int, int]) -> Any:
+        """A hashable summary of everything the current frame depends on."""
+
+        parts: list[Any] = [base_key, size, self._content_animating]
+        for name in self._COMPOSITE_STATE_FIELDS:
+            value = getattr(self, name, None)
+            if isinstance(value, (list, set)):
+                value = tuple(str(item) for item in value)
+            elif isinstance(value, dict):
+                value = tuple(sorted((k, str(v)) for k, v in value.items()))
+            else:
+                value = repr(value)
+            parts.append(value)
+        # The password error window is time-based: round it so the red border and
+        # its message disappear on schedule without a per-frame signature change.
+        if getattr(self, "password_error_until", 0.0):
+            parts.append(self.password_error_until > 0.0)
+        parts.append(self._collaborator_signature())
+        return tuple(parts)
+
+    def _collaborator_signature(self) -> Any:
+        """Summarise the injected collaborators the drawing code reads.
+
+        The Wi-Fi tab renders ``wifi_controller.snapshot`` and the SSH tab renders
+        ``ssh_service.status()``. Both live outside this object, so without this
+        the composite cache would freeze a network scan behind a stale frame —
+        the worst kind of wrong, because it looks like the radio is broken.
+        Summarising their *content* rather than excluding the tab keeps the tab
+        cacheable while it is idle, which is where the 240 ms cost was.
+        """
+
+        parts: list[Any] = []
+        try:
+            snapshot = self.wifi_controller.snapshot
+            parts.append(
+                (
+                    str(getattr(snapshot, "phase", "")),
+                    tuple(
+                        (
+                            str(getattr(network, "ssid", "")),
+                            str(getattr(network, "secure", "")),
+                            str(getattr(network, "connected", "")),
+                        )
+                        for network in getattr(snapshot, "networks", ())
+                    ),
+                    str(getattr(snapshot, "selected_index", "")),
+                    str(getattr(snapshot, "connected_ssid", "")),
+                    str(getattr(snapshot, "error", "")),
+                )
+            )
+        except Exception:
+            parts.append("wifi-unavailable")
+        try:
+            status = self.ssh_service.status()
+            parts.append(
+                tuple(sorted((k, str(v)) for k, v in dict(status or {}).items()))
+            )
+        except Exception:
+            parts.append("ssh-unavailable")
+        return tuple(parts)
+
+    def _serve_composite(self, screen: Any, key: Any) -> bool:
+        """Present the cached frame when nothing it depends on has changed."""
+
+        if self._content_animating:
+            return False
+        if self._panel_composite is None or self._panel_composite_key != key:
+            return False
+        if self._panel_composite.get_size() != screen.get_size():
+            return False
+        screen.blit(self._panel_composite, (0, 0))
+        # Click handling needs the hit targets even when nothing was redrawn.
+        self._targets[:] = self._panel_composite_targets
+        return True
+
+    def _store_composite(self, screen: Any, key: Any) -> None:
+        """Keep this frame so the next one can be a single blit."""
+
+        if self._content_animating:
+            self._panel_composite = None
+            self._panel_composite_key = None
+            return
+        self._panel_composite = screen.copy()
+        self._panel_composite_key = key
+        self._panel_composite_targets = list(self._targets)
 
     def _ensure_panel_base(
         self,

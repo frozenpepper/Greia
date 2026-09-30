@@ -101,7 +101,11 @@ class ChildAccountManagementTests(unittest.TestCase):
         panel._account_name = "  Robin  "
         panel._account_age = "7"
         panel._create_account()
-        self.assertEqual(client.added, [("Robin", "rainbow", 7)])
+        # The avatar is the first entry of the shipped profile policy, never a
+        # list duplicated here: the service validates against that same policy,
+        # so a hardcoded id in the test would pass locally and fail on device.
+        expected_avatar = panel._available_avatars()[0]
+        self.assertEqual(client.added, [("Robin", expected_avatar, 7)])
         self.assertEqual(panel._accounts_mode, "list")
         self.assertEqual(panel._account_name, "")
 

@@ -27,6 +27,7 @@ tested headlessly and reused by every panel tab.
 
 from __future__ import annotations
 
+import weakref
 from dataclasses import dataclass
 from typing import Any, Sequence
 
@@ -62,11 +63,72 @@ class TextBlock:
         return not self.clipped
 
 
-def measure(typography: Any, text: str, role: Any, size: int) -> tuple[int, int]:
-    """Return ``(width, line_height)`` for one line, via the shared metrics."""
+#: Bounded cache of measured and laid-out text.
+#:
+#: The panel redraws every frame, and the previous implementation re-measured and
+#: re-rendered every string each time. Profiling the panel on the reference Acer
+#: showed 74 calls into the typography service per frame and 45% of total frame
+#: time inside its grapheme segmentation, because ``render``/``measure`` walk the
+#: string looking for emoji clusters and are not cheap. The old panel avoided this
+#: only because ``_get_text`` happened to cache; the measured layout helpers did
+#: not, and that is what made the panel feel twice as slow.
+#:
+#: Rendered surfaces are immutable once produced, so caching them is safe. The
+#: bound is small and cleared wholesale rather than evicted one-by-one, matching
+#: the existing text cache in the panel.
+# Caches are held per typography instance in a WeakKeyDictionary rather than in
+# module-level dicts keyed by id(). CPython reuses object addresses after
+# collection, so an id-keyed cache can hand a *different* typography service the
+# previous one's surfaces: stale text, wrong colours, wrong size. That is not
+# theoretical, it showed up as an intermittent test failure in the account
+# creation flow, which asserts on an avatar name rendered through this cache.
+# Keying on the instance itself makes that impossible, and the weak reference
+# means an unused service's cached surfaces are collected with it.
+_CACHE_LIMIT = 512
 
-    metrics = typography.measure(text, role, size)
-    return int(metrics.width), int(metrics.line_height)
+
+class _LayoutCaches:
+    """Per-typography measurement and surface caches, all bounded."""
+
+    __slots__ = ("measure", "wrap", "blocks")
+
+    def __init__(self) -> None:
+        self.measure: dict[Any, tuple[int, int]] = {}
+        self.wrap: dict[Any, list[str]] = {}
+        self.blocks: dict[Any, "TextBlock"] = {}
+
+
+_CACHES: "weakref.WeakKeyDictionary[Any, _LayoutCaches]" = weakref.WeakKeyDictionary()
+
+
+def _caches(typography: Any) -> _LayoutCaches:
+    found = _CACHES.get(typography)
+    if found is None:
+        found = _LayoutCaches()
+        _CACHES[typography] = found
+    return found
+
+
+def _cache_store(cache: dict[Any, Any], key: Any, value: Any) -> Any:
+    if len(cache) >= _CACHE_LIMIT:
+        cache.clear()
+    cache[key] = value
+    return value
+
+
+def measure(typography: Any, text: str, role: Any, size: int) -> tuple[int, int]:
+    """Return ``(width, line_height)`` for one line, via the shared metrics.
+
+    Memoised per typography instance on ``(text, role, size)``.
+    """
+
+    cache = _caches(typography).measure
+    key = (text, role, size)
+    cached = cache.get(key)
+    if cached is None:
+        metrics = typography.measure(text, role, size)
+        cached = _cache_store(cache, key, (int(metrics.width), int(metrics.line_height)))
+    return cached
 
 
 def _break_long_token(
@@ -113,6 +175,11 @@ def wrap_text(
 
     if max_width <= 0:
         raise ValueError("max_width must be positive")
+    wrap_cache = _caches(typography).wrap
+    wrap_key = (text, role, size, max_width, max_lines)
+    cached_lines = wrap_cache.get(wrap_key)
+    if cached_lines is not None:
+        return list(cached_lines)
     lines: list[str] = []
     for paragraph in text.split("\n"):
         words = paragraph.split()
@@ -144,6 +211,7 @@ def wrap_text(
         while last and measure(typography, f"{last}{ELLIPSIS}", role, size)[0] > max_width:
             last = last[:-1]
         lines[-1] = f"{last.rstrip()}{ELLIPSIS}" if last else ELLIPSIS
+    _cache_store(wrap_cache, wrap_key, list(lines))
     return lines
 
 
@@ -165,6 +233,11 @@ def fit_text_block(
     when content was dropped, which a test can assert on.
     """
 
+    block_cache = _caches(typography).blocks
+    block_key = (text, role, size, color, max_width, max_lines, line_spacing)
+    cached_block = block_cache.get(block_key)
+    if cached_block is not None:
+        return cached_block
     lines = wrap_text(typography, text, role, size, max_width, max_lines=max_lines)
     clipped = bool(max_lines is not None and len(lines) > 0 and lines[-1].endswith(ELLIPSIS))
     if not lines:
@@ -177,13 +250,17 @@ def fit_text_block(
     surface = pygame.Surface((max(width, 1), max(height, 1)), pygame.SRCALPHA)
     for index, piece in enumerate(rendered):
         surface.blit(piece, (0, index * (line_height + line_spacing)))
-    return TextBlock(
-        surface=surface,
-        width=width,
-        height=height,
-        line_count=len(rendered),
-        clipped=clipped,
-        font_size=size,
+    return _cache_store(
+        block_cache,
+        block_key,
+        TextBlock(
+            surface=surface,
+            width=width,
+            height=height,
+            line_count=len(rendered),
+            clipped=clipped,
+            font_size=size,
+        ),
     )
 
 
@@ -297,6 +374,7 @@ def find_overlaps(rects: Sequence[tuple[str, Any]]) -> list[tuple[str, str]]:
 
 __all__ = [
     "DEFAULT_PADDING",
+    "clear_caches",
     "ELLIPSIS",
     "TextBlock",
     "blit_block",
@@ -309,3 +387,12 @@ __all__ = [
     "total_gap_width",
     "wrap_text",
 ]
+
+
+def clear_caches() -> None:
+    """Drop every cached measurement and surface. For tests and theme changes."""
+
+    for caches in list(_CACHES.values()):
+        caches.measure.clear()
+        caches.wrap.clear()
+        caches.blocks.clear()
