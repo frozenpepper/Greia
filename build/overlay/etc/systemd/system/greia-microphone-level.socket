@@ -1,0 +1,11 @@
+[Unit]
+Description=Greia OS microphone input level socket
+Documentation=file:///opt/greia-os/src/greia_platform/microphone_level_service.py
+
+[Socket]
+ListenStream=/run/greia-os/microphone-level.sock
+SocketMode=0660
+SocketGroup=greiakid
+
+[Install]
+WantedBy=sockets.target

@@ -17,7 +17,7 @@ from greia_platform.hardware_session import (
 from greia_platform.microphone_level import (
     SILENCE_FLOOR_DBFS,
     MicrophoneLevel,
-    MicrophoneLevelReader,
+    MicrophoneLevelClient,
 )
 
 from greia_launcher import panel_layout
@@ -205,7 +205,7 @@ class ParentSettingsOverlay:
         # working mic from a muted one. Measured on the reference Acer's ALC268
         # input: RMS -9.0 dBFS with the peak pinned at 0.0 dBFS, which is
         # clipping, and it was invisible.
-        self._mic_level_reader = MicrophoneLevelReader()
+        self._mic_level_reader = MicrophoneLevelClient()
         self._mic_peak_hold_dbfs = SILENCE_FLOOR_DBFS
         self._mic_peak_hold_until = 0.0
         self._text_surface_cache: dict[tuple[Any, ...], Any] = {}

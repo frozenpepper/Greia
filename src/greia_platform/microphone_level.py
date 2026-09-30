@@ -26,7 +26,9 @@ Design constraints, all from the reference hardware:
 
 from __future__ import annotations
 
+import json
 import math
+import socket
 import shutil
 import struct
 import subprocess
@@ -49,7 +51,14 @@ _RATE = 48000
 _CHANNELS = 2
 _FORMAT_BYTES = 2  # S16_LE
 
-_DEFAULT_DEVICE = "hw:0,0"
+DEFAULT_CAPTURE_DEVICE = "hw:0,0"
+
+#: How long a real reading survives a dropped connection before the input is
+#: reported as gone. A brief disconnect should not blank the meter.
+_DISCONNECT_GRACE_SECONDS = 1.5
+
+#: The capture tool. Present on the image already; no new dependency.
+ARECORD_PATH = "arecord"
 
 #: Pause between capture attempts. The device is exclusive, so a failed open is
 #: retried, not hammered: an unthrottled retry loop turned one busy device into a
@@ -78,7 +87,7 @@ class MicrophoneLevel:
         return self.available and self.rms_dbfs <= _SILENCE_DBFS
 
     @classmethod
-    def unavailable(cls, device: str = _DEFAULT_DEVICE) -> "MicrophoneLevel":
+    def unavailable(cls, device: str = DEFAULT_CAPTURE_DEVICE) -> "MicrophoneLevel":
         return cls(
             available=False,
             rms_dbfs=_SILENCE_DBFS,
@@ -86,6 +95,147 @@ class MicrophoneLevel:
             clipping=False,
             device=device,
         )
+
+
+def _decode_level(line: bytes) -> MicrophoneLevel | None:
+    """Decode one protocol line, or None if it is not a level."""
+
+    try:
+        payload = json.loads(line)
+    except (ValueError, UnicodeDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    try:
+        return MicrophoneLevel(
+            available=bool(payload["available"]),
+            rms_dbfs=float(payload["rms_dbfs"]),
+            peak_dbfs=float(payload["peak_dbfs"]),
+            clipping=bool(payload.get("clipping", False)),
+            device=str(payload.get("device", DEFAULT_CAPTURE_DEVICE)),
+        )
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+class MicrophoneLevelClient:
+    """Read microphone levels from the platform-owned level service.
+
+    The panel is a client of this, not an owner of the microphone. The capture
+    device is exclusive, and letting the panel open it directly is what made the
+    meter unusable: the panel held the device for the session, a retry race
+    orphaned an ``arecord`` that then held it forever, and every later open -
+    including the panel's own - failed with "Device or resource busy". The
+    service is the single owner; this only reads its snapshot.
+    """
+
+    def __init__(
+        self,
+        *,
+        socket_path: str = "/run/greia-os/microphone-level.sock",
+        connect_retries: int = 5,
+    ) -> None:
+        self._socket_path = socket_path
+        self._connect_retries = connect_retries
+        self._lock = threading.Lock()
+        self._level = MicrophoneLevel.unavailable("no service")
+        self._connection: socket.socket | None = None
+        self._thread: threading.Thread | None = None
+        self._stop = threading.Event()
+        self._last_good: float | None = None
+
+    @property
+    def level(self) -> MicrophoneLevel:
+        """The newest level. Never blocks, so a stalled service cannot stall a frame."""
+
+        with self._lock:
+            return self._level
+
+    def _publish(self, level: MicrophoneLevel) -> None:
+        with self._lock:
+            self._level = level
+
+    def start(self) -> None:
+        """Connect to the level service. Idempotent."""
+
+        thread = self._thread
+        if thread is not None and thread.is_alive():
+            return
+        self._stop.clear()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def _connect(self) -> socket.socket | None:
+        for attempt in range(self._connect_retries):
+            if self._stop.is_set():
+                return None
+            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                client.connect(self._socket_path)
+                client.settimeout(1.0)
+                return client
+            except OSError:
+                client.close()
+                # The service is socket-activated, so the first connect is what
+                # makes systemd start it. Bounded: never a retry storm.
+                time.sleep(0.2 * (attempt + 1))
+        return None
+
+    def _run(self) -> None:
+        connection = self._connect()
+        if connection is None:
+            self._publish(MicrophoneLevel.unavailable("no service"))
+            return
+        self._connection = connection
+        buffer = b""
+        try:
+            while not self._stop.is_set():
+                try:
+                    chunk = connection.recv(4096)
+                except socket.timeout:
+                    continue
+                except OSError:
+                    break
+                if not chunk:
+                    break
+                buffer += chunk
+                while b"\n" in buffer:
+                    line, buffer = buffer.split(b"\n", 1)
+                    level = _decode_level(line)
+                    if level is not None:
+                        if level.available:
+                            self._last_good = time.monotonic()
+                        self._publish(level)
+        finally:
+            try:
+                connection.close()
+            except OSError:
+                pass
+            self._connection = None
+            # A dropped connection is not the same as a dead microphone. Keep the
+            # last real reading briefly so a momentary disconnect does not blank a
+            # reading the parent is looking at, and only then report unavailable.
+            if not self._stop.is_set() and self._last_good is not None:
+                if time.monotonic() - self._last_good <= _DISCONNECT_GRACE_SECONDS:
+                    return
+            self._publish(MicrophoneLevel.unavailable("service stopped"))
+
+    def stop(self) -> None:
+        """Disconnect. The service then releases the microphone."""
+
+        self._stop.set()
+        connection = self._connection
+        if connection is not None:
+            for closer in (lambda: connection.shutdown(socket.SHUT_RDWR), connection.close):
+                try:
+                    closer()
+                except OSError:
+                    pass
+            self._connection = None
+        thread = self._thread
+        if thread is not None and thread.is_alive():
+            thread.join(timeout=1.0)
+        self._thread = None
 
 
 class MicrophoneLevelReader:
@@ -98,7 +248,7 @@ class MicrophoneLevelReader:
 
     def __init__(
         self,
-        device: str = _DEFAULT_DEVICE,
+        device: str = DEFAULT_CAPTURE_DEVICE,
         *,
         arecord: str = "arecord",
     ) -> None:
@@ -212,7 +362,7 @@ class MicrophoneLevelReader:
                 chunk = process.stdout.read(_READ_CHUNK)
                 if not chunk:
                     break
-                rms, peak = _measure(chunk)
+                rms, peak = measure_level(chunk)
                 if rms is None:
                     continue
                 self._publish(
@@ -237,7 +387,7 @@ class MicrophoneLevelReader:
             self._process = None
 
 
-def _measure(chunk: bytes) -> tuple[float | None, float | None]:
+def measure_level(chunk: bytes) -> tuple[float | None, float | None]:
     """Return ``(rms_dbfs, peak_dbfs)`` for interleaved stereo S16_LE PCM.
 
     Only the left channel is measured: it is the one a parent is closest to, and

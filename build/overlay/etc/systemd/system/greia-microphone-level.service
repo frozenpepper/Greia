@@ -1,0 +1,27 @@
+[Unit]
+Description=Greia OS microphone input level service
+Documentation=file:///opt/greia-os/src/greia_platform/microphone_level_service.py
+Requires=greia-microphone-level.socket
+After=greia-microphone-level.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m greia_platform.microphone_level_service
+User=greiakid
+Group=audio
+SupplementaryGroups=audio
+Restart=on-failure
+RestartSec=2
+# The capture is a child process, so the unit owns its lifetime: KillMode must
+# reap the whole group or an arecord can outlive the service and keep the
+# exclusive device open.
+KillMode=control-group
+TimeoutStopSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/run/greia-os
+
+[Install]
+WantedBy=multi-user.target
