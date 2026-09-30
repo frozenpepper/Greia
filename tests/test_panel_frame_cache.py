@@ -181,6 +181,7 @@ class SignatureCoversEverythingTheDrawCodeReadsTests(unittest.TestCase):
             # tab, and the band/content origin are geometry recomputed by the draw
             # that produced the frame they are attached to - not state that changes
             # a frame.
+            "_audio_settings_loaded",
             "_meter_band_rect",
             "_content_origin",
             "_panel_composite_meter",
