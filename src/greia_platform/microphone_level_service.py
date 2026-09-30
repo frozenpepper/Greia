@@ -48,6 +48,23 @@ PUBLISH_INTERVAL_SECONDS = 0.05
 #: Read granularity of the capture stream, in bytes.
 _READ_CHUNK = 1024
 
+#: The capture device is exclusive, so a meter that holds it continuously makes
+#: every microphone-using Activity fail to record at all. The service therefore
+#: samples in short bursts and releases the device between them, which leaves real
+#: windows for an Activity to acquire it. Held continuously, the Parent panel's
+#: meter silently starved Activities - they recorded nothing while the Audio tab
+#: was open, which looked like a broken Activity rather than a shared device.
+BURST_SECONDS = 0.25
+RELEASE_GAP_SECONDS = 3.0
+
+#: How long the meter stays out of the way after finding the device busy.
+#: Bursts and progressive backoff were both tried and neither was enough: the
+#: meter won the gaps between an Activity's attempts, so the Activity got the
+#: device 3 times in 8 and recorded almost nothing. An Activity outranks a parent
+#: watching a meter, so one busy open means the meter steps aside for a whole
+#: window and lets the Activity keep the device.
+BUSY_YIELD_SECONDS = 30.0
+
 
 class MicrophoneCapture(Protocol):
     """The one operation this service needs from a capture source.
@@ -112,10 +129,14 @@ class ArecordMicrophoneCapture:
             "raw",
             "-f",
             "S16_LE",
+            # The endpoint's native contract, as declared in /etc/asound.conf:
+            # 48 kHz mono. Opening it at 48 kHz stereo both mismatched the endpoint
+            # and fought an Activity opening it at 16 kHz mono - only one of the
+            # two could hold the device at a time.
             "-r",
             "48000",
             "-c",
-            "2",
+            "1",
         ]
         process = subprocess.Popen(  # noqa: S603 - fixed argv, no shell
             command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
@@ -267,24 +288,44 @@ class MicrophoneLevelService:
             # predecessor cannot block the meter forever.
             previous.stop.set()
             previous.released.wait(timeout=2.0)
-        stream: MicrophoneLevelStream | None = None
         stop = session.stop
+        held: list[MicrophoneLevelStream] = []
         latest: list[MicrophoneLevel] = [MicrophoneLevel.unavailable("starting")]
         pump: threading.Thread | None = None
         try:
-            capture = self._capture_factory()
-            stream = capture.stream()
+            def burst_capture() -> None:
+                """Sample briefly, then let go of the exclusive device."""
 
-            def pump_levels() -> None:
-                try:
-                    for level in stream.levels():  # type: ignore[union-attr]
-                        latest[0] = level
-                except (OSError, ValueError):
-                    latest[0] = MicrophoneLevel.unavailable("read failed")
-                finally:
-                    stop.set()
+                yield_until = 0.0
+                while not stop.is_set():
+                    if time.monotonic() < yield_until:
+                        if stop.wait(min(yield_until - time.monotonic(), 1.0)):
+                            return
+                        continue
+                    try:
+                        capture = self._capture_factory()
+                        stream = capture.stream()
+                        held.append(stream)
+                    except OSError:
+                        # Busy: an Activity has the microphone. Step aside for a
+                        # whole window rather than competing for the gaps.
+                        latest[0] = MicrophoneLevel.unavailable("in use")
+                        yield_until = time.monotonic() + BUSY_YIELD_SECONDS
+                        continue
+                    deadline = time.monotonic() + BURST_SECONDS
+                    try:
+                        for level in stream.levels():  # type: ignore[union-attr]
+                            latest[0] = level
+                            if time.monotonic() >= deadline or stop.is_set():
+                                break
+                    except (OSError, ValueError):
+                        latest[0] = MicrophoneLevel.unavailable("read failed")
+                    finally:
+                        stream.close()
+                    if stop.wait(RELEASE_GAP_SECONDS):
+                        return
 
-            pump = threading.Thread(target=pump_levels, daemon=True)
+            pump = threading.Thread(target=burst_capture, daemon=True)
             pump.start()
             while True:
                 # Send before checking for exit: a capture that ends immediately
@@ -303,7 +344,7 @@ class MicrophoneLevelService:
         except OSError:
             pass
         finally:
-            if stream is not None:
+            for stream in held:
                 stream.close()
             try:
                 connection.close()
