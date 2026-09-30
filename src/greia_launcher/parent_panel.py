@@ -2707,7 +2707,7 @@ class ParentSettingsOverlay:
         )
         panel_layout.blit_block(screen, title, pygame, col_x, top)
         row_y = top + title.height + 4
-        row_h = 30
+        row_h = min(30, max(24, (height - title.height - 4 - 8) // 2))
 
         toggles = [
             (

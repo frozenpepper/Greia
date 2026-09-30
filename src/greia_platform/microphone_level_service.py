@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from greia_platform.audio import AlsaAudioProcessingBackend
 from greia_platform.microphone_level import (
     ARECORD_PATH,
     _CLIP_DBFS,
@@ -74,11 +75,26 @@ class ArecordMicrophoneCapture:
     for an exclusive device and lose.
     """
 
-    def __init__(self, device: str = DEFAULT_CAPTURE_DEVICE) -> None:
-        self._device = device
+    def __init__(self, device: str | None = None) -> None:
+        # Measure the endpoint the audio service actually routes to, not the raw
+        # device. Measuring hw:0,0 bypasses processing entirely, so the meter
+        # showed a signal no Activity would ever hear and noise reduction looked
+        # like it was doing nothing. There is one device and one owner, so the
+        # meter and an Activity cannot both hold it; that is inherent.
+        self._device = device or self._available_device()
         self._process: subprocess.Popen[bytes] | None = None
         self._stop = threading.Event()
         self._lock = threading.Lock()
+
+    @staticmethod
+    def _available_device() -> str:
+        """The endpoint the audio service would route an Activity to."""
+
+        status = AlsaAudioProcessingBackend().status()
+        endpoint = (
+            status.lightweight_capture_device or status.advanced_capture_device
+        )
+        return endpoint or DEFAULT_CAPTURE_DEVICE
 
     def stream(self) -> MicrophoneLevelStream:
         # shutil.which, not os.path.exists: ARECORD_PATH is a bare command name,
