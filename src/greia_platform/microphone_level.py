@@ -57,6 +57,10 @@ DEFAULT_CAPTURE_DEVICE = "hw:0,0"
 #: reported as gone. A brief disconnect should not blank the meter.
 _DISCONNECT_GRACE_SECONDS = 1.5
 
+#: Longest pause between reconnect attempts. Bounded so a stopped service costs
+#: almost nothing and a slow start is still picked up promptly.
+_RECONNECT_BACKOFF_MAX = 2.0
+
 #: The capture tool. Present on the image already; no new dependency.
 ARECORD_PATH = "arecord"
 
@@ -166,27 +170,37 @@ class MicrophoneLevelClient:
         self._thread.start()
 
     def _connect(self) -> socket.socket | None:
-        for attempt in range(self._connect_retries):
-            if self._stop.is_set():
-                return None
-            client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            try:
-                client.connect(self._socket_path)
-                client.settimeout(1.0)
-                return client
-            except OSError:
-                client.close()
-                # The service is socket-activated, so the first connect is what
-                # makes systemd start it. Bounded: never a retry storm.
-                time.sleep(0.2 * (attempt + 1))
-        return None
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            client.connect(self._socket_path)
+            client.settimeout(1.0)
+            return client
+        except OSError:
+            client.close()
+            return None
 
     def _run(self) -> None:
-        connection = self._connect()
-        if connection is None:
-            self._publish(MicrophoneLevel.unavailable("no service"))
-            return
-        self._connection = connection
+        # Keep trying for as long as the client is started. The service is
+        # socket-activated, so the first connect is what starts it and that
+        # connect can lose the race. Giving up after a bounded number of attempts
+        # left the meter with no level, and because only a draw restarts the
+        # client, the level came back only when something moved the pointer.
+        attempt = 0
+        while not self._stop.is_set():
+            connection = self._connect()
+            if connection is None:
+                self._publish(MicrophoneLevel.unavailable("starting"))
+                self._stop.wait(min(0.25 * (attempt + 1), _RECONNECT_BACKOFF_MAX))
+                attempt += 1
+                continue
+            attempt = 0
+            self._connection = connection
+            self._read_until_closed(connection)
+            if self._stop.is_set():
+                return
+
+    def _read_until_closed(self, connection: socket.socket) -> None:
+        """Read levels until the connection ends, publishing the newest."""
         buffer = b""
         try:
             while not self._stop.is_set():
@@ -212,13 +226,17 @@ class MicrophoneLevelClient:
             except OSError:
                 pass
             self._connection = None
-            # A dropped connection is not the same as a dead microphone. Keep the
-            # last real reading briefly so a momentary disconnect does not blank a
-            # reading the parent is looking at, and only then report unavailable.
-            if not self._stop.is_set() and self._last_good is not None:
-                if time.monotonic() - self._last_good <= _DISCONNECT_GRACE_SECONDS:
-                    return
-            self._publish(MicrophoneLevel.unavailable("service stopped"))
+            # A dropped connection is not a dead microphone, and the loop in _run
+            # reconnects on its own. Keep the last real reading rather than
+            # blanking it, so a brief gap does not read as a missing microphone.
+            if (
+                not self._stop.is_set()
+                and self._last_good is not None
+                and time.monotonic() - self._last_good <= _DISCONNECT_GRACE_SECONDS
+            ):
+                return
+            if not self._stop.is_set():
+                self._publish(MicrophoneLevel.unavailable("reconnecting"))
 
     def stop(self) -> None:
         """Disconnect. The service then releases the microphone."""

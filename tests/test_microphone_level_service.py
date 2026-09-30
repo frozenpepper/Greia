@@ -152,6 +152,43 @@ class ServiceReleasesTheDeviceTests(unittest.TestCase):
             "a new client must be able to take the device over",
         )
 
+    def test_client_reconnects_when_the_service_appears_late(self) -> None:
+        """A client that loses the race to start the service must recover alone.
+
+        The service is socket-activated, so the first connect is what starts it
+        and that connect can fail. The client used to give up, and only a draw
+        restarted it - which meant the meter stayed frozen until something moved
+        the pointer.
+        """
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = str(Path(tmp) / "later.sock")
+            client = MicrophoneLevelClient(socket_path=path)
+            client.start()
+            time.sleep(0.4)
+            self.assertFalse(client.level.available)
+
+            closed: list[bool] = []
+            levels = [
+                MicrophoneLevel(True, -14.0, -5.0, False, "hw:0,0")
+                for _ in range(200)
+            ]
+            service = MicrophoneLevelService(
+                socket_path=path,
+                capture_factory=lambda: _FakeCapture(levels, closed),
+                publish_interval=0.01,
+            )
+            thread = threading.Thread(target=service.serve_forever, daemon=True)
+            thread.start()
+            deadline = time.monotonic() + 6.0
+            while time.monotonic() < deadline and not client.level.available:
+                time.sleep(0.02)
+            self.assertTrue(
+                client.level.available,
+                "client did not reconnect once the service appeared",
+            )
+            client.stop()
+
     def test_reading_a_level_never_blocks_the_caller(self) -> None:
         """A stalled service must not be able to stall a frame."""
 
