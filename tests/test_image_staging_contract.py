@@ -148,7 +148,11 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
         """
 
         network = _read(PROJECT_ROOT / "build/package-sets/network-basic.txt")
-        self.assertIn("python3-dbus", network)
+        # dbus alone is not enough: IwdWifiBackend.management_available also
+        # imports gi.repository.GLib, so connecting stayed blocked until
+        # python3-gi and the GLib typelib were present too.
+        for package in ("python3-dbus", "python3-gi", "gir1.2-glib-2.0"):
+            self.assertIn(package, network)
         # Every target profile must actually pull that set in.
         for profile in sorted((PROJECT_ROOT / "build/profiles").glob("*.toml")):
             if "network-basic" not in _read(profile):

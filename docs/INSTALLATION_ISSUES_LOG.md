@@ -1453,3 +1453,28 @@ Not claimed: the audio tab sits at 15.3 ms against a 16.7 ms frame budget. It is
 inside budget and was measured rather than assumed, but it is the one tab with
 little headroom, and the cause is the periodic gain re-read on its draw path. It
 is worth its own look if audio ever feels heavy.
+
+## 26. Wi-Fi on the installed system: two missing runtime packages, not one
+
+§23e added `python3-dbus` to the target's network set and correctly recorded
+that it could not be verified on the appliance, because the offline-first target
+ships no apt lists. The appliance turned out to have working DNS and an open TCP
+connection to `deb.debian.org`, so the lists could simply be fetched and the
+package installed.
+
+`python3-dbus` alone was not enough, and this is why listing networks would have
+looked like progress while the panel still could not connect:
+
+- `IwdWifiBackend.available()` imports `dbus` and became `True`, and a scan
+  returned five networks.
+- `IwdWifiBackend.management_available()` — the gate that decides whether the
+  panel may *join* a network rather than merely list one — additionally imports
+  `gi.repository.GLib`, which was also absent. It stayed `False`.
+
+With `python3-gi` and `gir1.2-glib-2.0` installed, the appliance reports
+`available: True`, `management_available: True`, and enumerates five networks, so
+the panel can both list and connect.
+
+All three packages are now in `build/package-sets/network-basic.txt`, which every
+target profile already includes, and the staging contract asserts all three by
+name so a rebuild cannot ship a target that can list networks but never join one.
