@@ -113,6 +113,45 @@ class ServiceReleasesTheDeviceTests(unittest.TestCase):
             time.sleep(0.02)
         self.assertTrue(self.closed, "capture was not released on disconnect")
 
+    def test_a_new_client_takes_over_from_a_stale_one(self) -> None:
+        """A client that vanished must not wedge the device for everyone else.
+
+        The service used to refuse a second client, so one connection that went
+        away without closing held the capture permanently. Every later client was
+        told the device was busy - including the Parent panel, which then had no
+        level, requested no frames, and sat frozen until the mouse moved.
+        """
+
+        stale = MicrophoneLevelClient(
+            socket_path=self.socket_path, connect_retries=10
+        )
+        stale.start()
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline and not self.closed:
+            time.sleep(0.02)
+        self.assertFalse(self.closed, "capture was not started")
+        # Abandon the first client the way a killed process would, without stop().
+        stale._connection.close()  # type: ignore[union-attr]
+        stale._stop.set()
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline and not self.closed:
+            time.sleep(0.02)
+        self.assertTrue(self.closed, "stale client did not release the device")
+
+        self.closed.clear()
+        fresh = MicrophoneLevelClient(
+            socket_path=self.socket_path, connect_retries=10
+        )
+        fresh.start()
+        self.addCleanup(fresh.stop)
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline and not fresh.level.available:
+            time.sleep(0.02)
+        self.assertTrue(
+            fresh.level.available,
+            "a new client must be able to take the device over",
+        )
+
     def test_reading_a_level_never_blocks_the_caller(self) -> None:
         """A stalled service must not be able to stall a frame."""
 

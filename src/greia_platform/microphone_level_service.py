@@ -174,12 +174,26 @@ def encode_level(level: MicrophoneLevel) -> bytes:
     ).encode()
 
 
+class _Session:
+    """One active client, and the event that ends it."""
+
+    def __init__(self) -> None:
+        self.stop = threading.Event()
+        #: Set once this session has closed its capture and released the device.
+        self.released = threading.Event()
+
+
 class MicrophoneLevelService:
     """Serve microphone levels to one client at a time over a unix socket.
 
-    Only one client is served at a time, because there is only one device. A
-    second connection is refused rather than queued: a second meter would be
-    asking for hardware that cannot be shared.
+    There is one device, so only one client can have it. A new connection takes
+    the device over from the previous one rather than being refused: refusing
+    meant a single client that vanished without closing - a killed process, a
+    panel restarted underneath us - held the capture for good, and every later
+    client was told the device was busy. That included the Parent panel, which
+    then had no level, asked for no frames, and sat frozen. There is no queue to
+    be honest about either: the most recent meter is the one a parent is looking
+    at.
     """
 
     def __init__(
@@ -192,7 +206,8 @@ class MicrophoneLevelService:
         self._socket_path = socket_path
         self._capture_factory = capture_factory or ArecordMicrophoneCapture
         self._publish_interval = publish_interval
-        self._serving = threading.Lock()
+        self._sessions = threading.Lock()
+        self._active: _Session | None = None
 
     def serve_forever(self) -> None:
         """Accept connections until the process is stopped."""
@@ -223,18 +238,21 @@ class MicrophoneLevelService:
     def _serve_client(self, connection: socket.socket) -> None:
         """Stream levels to one client, releasing the device when it goes away."""
 
-        if not self._serving.acquire(blocking=False):
-            # One device, one meter. Refuse rather than pretend to serve.
-            try:
-                connection.sendall(encode_level(MicrophoneLevel.unavailable("busy")))
-                connection.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
-            connection.close()
-            return
-        capture: MicrophoneCapture | None = None
+        session = _Session()
+        with self._sessions:
+            previous = self._active
+            self._active = session
+        if previous is not None:
+            # Take the device over. Signalling the previous session is not enough:
+            # its capture is closed by its own handler, and opening ours before
+            # that happened raced the previous arecord for the exclusive device
+            # and lost, so the new client saw a stream that died instantly. Wait
+            # for the device to be genuinely released, bounded so a wedged
+            # predecessor cannot block the meter forever.
+            previous.stop.set()
+            previous.released.wait(timeout=2.0)
         stream: MicrophoneLevelStream | None = None
-        stop = threading.Event()
+        stop = session.stop
         latest: list[MicrophoneLevel] = [MicrophoneLevel.unavailable("starting")]
         pump: threading.Thread | None = None
         try:
@@ -275,7 +293,10 @@ class MicrophoneLevelService:
                 connection.close()
             except OSError:
                 pass
-            self._serving.release()
+            with self._sessions:
+                if self._active is session:
+                    self._active = None
+            session.released.set()
 
 
 def main(argv: list[str] | None = None) -> int:
