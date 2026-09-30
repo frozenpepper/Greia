@@ -593,6 +593,29 @@ class ParentApiRequestHandler(ParentRequestHandler):
     def do_PUT(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         query = parse_qs(parsed.query)
+
+        rename_id = self._resource_id(parsed.path, f"{API_BASE}/profiles/")
+        if rename_id is not None:
+            if not self._require_api_authorization(query):
+                return
+            try:
+                body = self._read_json_object()
+                # Rename only. Every other profile field has its own considered
+                # route, and a partial update that silently accepted an avatar or
+                # an age here would bypass their validation.
+                profile = self.app.profile_store.update(
+                    rename_id,
+                    display_name=self._json_text(body, "display_name"),
+                )
+            except ProfileError as exc:
+                self._send_api_error(400, "profile_update_rejected", str(exc))
+                return
+            except (TypeError, ValueError) as exc:
+                self._send_api_error(400, "invalid_profile", str(exc))
+                return
+            self._send_json(200, profile.public_dict())
+            return
+
         if parsed.path == f"{API_BASE}/usage-limits":
             if not self._require_api_authorization(query):
                 return

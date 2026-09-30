@@ -233,6 +233,36 @@ class ParentCredentialClient:
             else None,
         )
 
+    def rename_child_account(
+        self, session: ParentSession, profile_id: str, display_name: str
+    ) -> ChildAccount:
+        """Rename a child profile through the service that owns the store.
+
+        Validation, including the policy's name-length bound, stays in the
+        service. The panel deliberately cannot enforce it alone: the limit lives
+        in the same profile policy the service validates against.
+        """
+
+        _status, decoded = self._request(
+            "PUT",
+            f"{API_BASE}/profiles/{profile_id}",
+            {"display_name": display_name},
+            authenticated=True,
+            session=session,
+        )
+        if not isinstance(decoded, dict) or not isinstance(
+            decoded.get("profile_id"), str
+        ):
+            raise ParentCredentialUnavailable("renamed profile had no id")
+        return ChildAccount(
+            profile_id=str(decoded["profile_id"]),
+            display_name=str(decoded.get("display_name", display_name)),
+            avatar_id=str(decoded.get("avatar_id", "")),
+            approximate_age=decoded.get("approximate_age")
+            if isinstance(decoded.get("approximate_age"), int)
+            else None,
+        )
+
     def remove_child_account(self, session: ParentSession, profile_id: str) -> None:
         """Delete a child profile; the service enforces its own guards.
 

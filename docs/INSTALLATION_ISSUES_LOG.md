@@ -1515,3 +1515,39 @@ Verified on the appliance as `greiakid` against the real microphone: RMS tracked
 live between -4.5 and -24.6 dBFS with the peak held, and the device released on
 stop. The audio tab is now excluded from the composite frame cache, because
 caching it would freeze the one number the parent opened the tab to watch.
+
+## 28. Renaming a child account
+
+The Kids tab could add and remove a child but not rename one, so a typo in a name
+was permanent without deleting and recreating the account, which discards that
+child's saved work.
+
+`ProfileStore.update(display_name=...)` already existed and the panel's client
+already spoke to the service; what was missing was the route between them.
+Added `PUT /api/v1/profiles/{id}`, which accepts **only** `display_name`. Every
+other profile field keeps its own considered route, because a partial update that
+silently accepted an avatar or an age here would bypass their validation.
+
+The rename deliberately goes through the service rather than the panel writing
+profile state as the child identity, and that is load-bearing rather than
+ceremonial: the policy's 24-character name bound lives in the same profile policy
+the service validates against, and the panel alone cannot enforce it. Verified
+live on the appliance as `greiakid` — an over-long name was refused with "profile
+name may contain at most 24 characters", a valid rename applied, and the original
+name was restored afterwards.
+
+The panel reuses the add form as an edit mode, pre-filled with the child's
+current name, age and avatar, and the row now carries Rename beside Remove. The
+frame-cache signature audit flagged the new `_renaming` field and it was added
+rather than exempted.
+
+**Still open, and not claimed done:** the microphone processing settings. They
+were never removed. `MicrophoneProcessingMode` (off, lightweight, advanced) and
+`AudioSettingsStore` with `microphone_processing_enabled` and
+`advanced_noise_reduction` have existed in the platform since
+`f350ef3a feat(audio): add typed microphone processing service`, and
+`git log -S"noise" -- src/greia_launcher/parent_panel.py` is empty: the on-device
+panel has never exposed them, and neither does the Parent API. Wiring them needs
+the same treatment as everything else here — a parent-service route, because
+`/var/lib/greia-system-settings` is `greiapel:pipsettings 2750` and the panel
+runs as `greiakid`, which has read but not write access to it.

@@ -141,6 +141,19 @@ def _pose(overlay: ParentSettingsOverlay, tab: ParentPanelTab, variant: str) -> 
         overlay._text_field = "account_name"
         overlay._account_name = "Robin"
         overlay._account_age = "7"
+    elif tab is ParentPanelTab.ACCOUNTS and variant == "rename":
+        from greia_launcher.parent_credential_client import ChildAccount
+
+        overlay._renaming = ChildAccount(  # noqa: SLF001
+            profile_id="1ec82f21c5544a3ab3e694d38fb4248e",
+            display_name="Explorer",
+            avatar_id="unicorn",
+            approximate_age=7,
+        )
+        overlay._accounts_mode = "add"  # noqa: SLF001
+        overlay._text_field = "account_name"  # noqa: SLF001
+        overlay._account_name = "Explorer"  # noqa: SLF001
+        overlay._account_age = "7"  # noqa: SLF001
     elif tab is ParentPanelTab.ACCOUNTS and variant == "confirm":
         from greia_launcher.parent_credential_client import ChildAccount
 
@@ -204,7 +217,7 @@ def main(argv: list[str] | None = None) -> int:
 
     failures = 0
     variants = {
-        ParentPanelTab.ACCOUNTS: ("list", "add", "confirm"),
+        ParentPanelTab.ACCOUNTS: ("list", "add", "rename", "confirm"),
         ParentPanelTab.SECURITY: ("list",),
     }
     for size in SIZES:

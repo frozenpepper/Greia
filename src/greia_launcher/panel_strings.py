@@ -100,6 +100,9 @@ ACCOUNTS_INTRO = (
 )
 ACCOUNTS_ADD = "Add child"
 ACCOUNTS_REMOVE = "Remove"
+ACCOUNTS_RENAME = "Rename"
+ACCOUNTS_EDIT = "Edit child"
+ACCOUNTS_SAVE = "Save changes"
 ACCOUNTS_EMPTY = "No child accounts yet."
 ACCOUNTS_NAME_LABEL = "Name"
 ACCOUNTS_NAME_PLACEHOLDER = "Child's name"

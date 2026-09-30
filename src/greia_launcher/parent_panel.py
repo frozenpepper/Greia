@@ -155,6 +155,7 @@ class ParentSettingsOverlay:
         self._account_age = ""
         self._account_avatar_index = 0
         self._pending_remove = None
+        self._renaming = None
         self._security_current = ""
         self._security_new = ""
         self._security_confirm = ""
@@ -520,10 +521,22 @@ class ParentSettingsOverlay:
                 elif target.action == "account_cancel":
                     self._accounts_mode = "list"
                     self._text_field = None
+                    self._renaming = None
                     self._set_accounts_message(None)
                     return True
                 elif target.action == "account_create":
                     self._create_account()
+                    return True
+                elif target.action == "account_save":
+                    self._save_rename()
+                    return True
+                elif target.action == "account_rename":
+                    found = next(
+                        (a for a in self._accounts if a.profile_id == target.value),
+                        None,
+                    )
+                    if found is not None:
+                        self._start_rename(found)
                     return True
                 elif target.action == "account_avatar":
                     self._cycle_avatar(int(target.value))
@@ -1050,6 +1063,7 @@ class ParentSettingsOverlay:
         "_account_age",
         "_account_avatar_index",
         "_pending_remove",
+        "_renaming",
         "_security_current",
         "_security_new",
         "_security_confirm",
@@ -1621,6 +1635,47 @@ class ParentSettingsOverlay:
         self._set_accounts_message(text.STATUS_SAVED)
         self._refresh_accounts()
 
+    def _start_rename(self, account: ChildAccount) -> None:
+        """Open the add form pre-filled to edit one child instead of adding one."""
+
+        self._renaming = account
+        self._accounts_mode = "add"
+        self._text_field = "account_name"
+        self._account_name = account.display_name
+        avatars = self._available_avatars()
+        if account.avatar_id in avatars:
+            self._account_avatar_index = avatars.index(account.avatar_id)
+        self._account_age = (
+            str(account.approximate_age) if account.approximate_age is not None else ""
+        )
+        self._set_accounts_message(None)
+
+    def _save_rename(self) -> None:
+        client, session = self._parent_client(), self._session
+        target = self._renaming
+        name = self._account_name.strip()
+        if target is None or not name:
+            self._set_accounts_message(text.ACCOUNTS_NAME_LABEL, error=True)
+            return
+        if client is None or session is None:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            return
+        try:
+            client.rename_child_account(session, target.profile_id, name)
+        except ParentRequestFailed as exc:
+            self._set_accounts_message(exc.reason, error=True)
+            return
+        except Exception:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            return
+        self._renaming = None
+        self._account_name = ""
+        self._account_age = ""
+        self._accounts_mode = "list"
+        self._text_field = None
+        self._set_accounts_message(text.STATUS_SAVED)
+        self._refresh_accounts()
+
     def _remove_account(self, account: ChildAccount) -> None:
         client, session = self._parent_client(), self._session
         if client is None or session is None:
@@ -1791,9 +1846,11 @@ class ParentSettingsOverlay:
         inner_w = card.width - pad * 2
 
         if self._accounts_mode == "add":
+            editing = self._renaming is not None
             y = self._draw_card_header(
                 screen, pygame, typography, card, pad,
-                text.ACCOUNTS_ADD, text.ACCOUNTS_INTRO,
+                text.ACCOUNTS_EDIT if editing else text.ACCOUNTS_ADD,
+                text.ACCOUNTS_INTRO,
             )
             # Name and age share a row. Stacked, the form was taller than the
             # card at 600 px with a wrapped tab strip, and the action buttons
@@ -1878,15 +1935,21 @@ class ParentSettingsOverlay:
             half = (inner_w - gap) // 2
             for index, (label, action) in enumerate((
                 (text.ACCOUNTS_CANCEL, "account_cancel"),
-                (text.ACCOUNTS_CREATE, "account_create"),
+                (
+                    text.ACCOUNTS_SAVE if editing else text.ACCOUNTS_CREATE,
+                    "account_save" if editing else "account_create",
+                ),
             )):
                 btn = pygame.Rect(
                     card.left + pad + index * (half + gap), y, half, 48
                 )
                 self._blit_rounded_card(
                     screen, btn, (255, 250, 240),
-                    (241, 185, 35) if action == "account_create" else (246, 236, 209),
-                    pygame, (61, 44, 31), 2 if action == "account_create" else 1,
+                    (241, 185, 35)
+                    if action in {"account_create", "account_save"}
+                    else (246, 236, 209),
+                    pygame, (61, 44, 31),
+                    2 if action in {"account_create", "account_save"} else 1,
                     radius=12,
                 )
                 block = panel_layout.fit_single_line(
@@ -1988,13 +2051,35 @@ class ParentSettingsOverlay:
                 )
                 name = panel_layout.fit_single_line(
                     typography, account.display_name, FontRole.CONTROL, 18,
-                    (61, 44, 31), row.width - 190,
+                    (61, 44, 31),
+                    row.width - (rename_w + remove_w + 38),
                 )
                 panel_layout.blit_block(
                     screen, name, pygame, row.left + 14, row.centery, bounds=row
                 )
-                remove_w = 120
-                remove_rect = pygame.Rect(row.right - 14 - remove_w, row.top + 9, remove_w, row_h - 18)
+                remove_w = 110
+                rename_w = 110
+                remove_rect = pygame.Rect(
+                    row.right - 14 - remove_w, row.top + 9, remove_w, row_h - 18
+                )
+                rename_rect = pygame.Rect(
+                    remove_rect.left - 10 - rename_w, row.top + 9, rename_w, row_h - 18
+                )
+                self._blit_rounded_card(
+                    screen, rename_rect, (255, 250, 240), (246, 236, 209), pygame,
+                    (61, 44, 31), 1, radius=10,
+                )
+                rename_label = panel_layout.fit_single_line(
+                    typography, text.ACCOUNTS_RENAME, FontRole.CONTROL, 16,
+                    (61, 44, 31), rename_w - 12,
+                )
+                panel_layout.blit_block(
+                    screen, rename_label, pygame, rename_rect.centerx,
+                    rename_rect.centery, align="center", bounds=rename_rect,
+                )
+                self._targets.append(
+                    PanelHitTarget("account_rename", account.profile_id, rename_rect)
+                )
                 self._blit_rounded_card(
                     screen, remove_rect, (255, 250, 240), (246, 236, 209), pygame,
                     (181, 46, 46), 1, radius=10,

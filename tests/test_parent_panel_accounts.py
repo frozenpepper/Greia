@@ -28,6 +28,7 @@ class _FakeClient:
         self.added: list[tuple[str, str, int | None]] = []
         self.removed: list[str] = []
         self.password_changes: list[tuple[str, str]] = []
+        self.renamed: list[tuple[str, str]] = []
         self.accounts = [
             ChildAccount("id-one", "Explorer", "unicorn", None),
             ChildAccount("id-two", "Robin", "owl", 7),
@@ -53,6 +54,19 @@ class _FakeClient:
         created = ChildAccount("id-new", display_name, avatar_id, approximate_age)
         self.accounts.append(created)
         return created
+
+    def rename_child_account(self, session, profile_id: str, display_name: str):
+        if self.reject:
+            raise ParentRequestFailed(self.reject)
+        self.renamed.append((profile_id, display_name))
+        # ChildAccount is a frozen slots dataclass, so replace rather than mutate.
+        self.accounts = [
+            a
+            if a.profile_id != profile_id
+            else ChildAccount(a.profile_id, display_name, a.avatar_id, a.approximate_age)
+            for a in self.accounts
+        ]
+        return next(a for a in self.accounts if a.profile_id == profile_id)
 
     def remove_child_account(self, session, profile_id: str) -> None:
         if self.reject:
@@ -166,6 +180,48 @@ class ChildAccountManagementTests(unittest.TestCase):
         self.assertEqual(panel._account_avatar_index, count - 1)
         panel._cycle_avatar(1)
         self.assertEqual(panel._account_avatar_index, 0)
+
+
+class ChildRenameTests(unittest.TestCase):
+    def test_rename_goes_through_the_service(self) -> None:
+        client = _FakeClient()
+        panel = _panel(client)
+        panel._start_rename(client.accounts[1])
+        self.assertEqual(panel._accounts_mode, "add")
+        self.assertEqual(panel._account_name, "Robin")
+        self.assertEqual(panel._account_age, "7")
+        panel._account_name = "Robin II"
+        panel._save_rename()
+        self.assertEqual(client.renamed, [("id-two", "Robin II")])
+        self.assertEqual(panel._accounts_mode, "list")
+        self.assertIsNone(panel._renaming)
+
+    def test_rename_with_a_blank_name_is_refused_before_any_request(self) -> None:
+        client = _FakeClient()
+        panel = _panel(client)
+        panel._start_rename(client.accounts[1])
+        panel._account_name = "   "
+        panel._save_rename()
+        self.assertEqual(client.renamed, [])
+
+    def test_a_rejected_rename_keeps_the_form_open_with_the_reason(self) -> None:
+        client = _FakeClient(reject="profile name may contain at most 24 characters")
+        panel = _panel(client)
+        panel._start_rename(client.accounts[1])
+        panel._save_rename()
+        self.assertEqual(panel._accounts_mode, "add")
+        self.assertIn("at most 24 characters", panel._accounts_message or "")
+
+    def test_cancelling_an_edit_does_not_create_or_rename(self) -> None:
+        client = _FakeClient()
+        panel = _panel(client)
+        panel._start_rename(client.accounts[1])
+        panel._accounts_mode = "list"
+        panel._renaming = None
+        panel._account_name = ""
+        panel._accounts_message = None
+        self.assertEqual(client.added, [])
+        self.assertEqual(client.renamed, [])
 
 
 class ParentPasswordChangeTests(unittest.TestCase):
