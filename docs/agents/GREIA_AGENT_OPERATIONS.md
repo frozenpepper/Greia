@@ -444,3 +444,120 @@ whether concurrent main advanced
 Update the active plan, `HANDOVER.md`, manuals/skills and product/ADR docs only where `AGENTS.md` requires them for the kind of work performed.
 
 Do not rewrite dated historical evidence to make it agree with current source. Append corrections or update the living owner instead.
+
+## Validating on a real Acer Aspire One: what actually catches faults
+
+Recorded 2026-09-30 after a session in which six defects passed source review
+and the desktop harness, and were only caught on the physical reference
+device. Each one below was found by a specific check, so the check is what
+this section exists to preserve.
+
+### The device is not the harness
+
+`tools/panel_screenshots.py` renders a panel headlessly on the development
+host. That host runs as a user who can write system settings, and it has no
+live microphone, so two whole classes of fault are invisible there:
+
+- **Permission faults.** The launcher runs as `greiakid`; system settings live
+  in `greiapel`-owned directories. A control that renders and accepts clicks can
+  be a complete no-op on the appliance and look perfect in the harness.
+- **Live-data layout faults.** With no level available there is no bar to draw,
+  so a bar that is drawn at the wrong width, in the wrong column, or clipped by
+  a neighbour never appears.
+
+Render on the device instead, against the live services:
+
+```
+ssh greia@<device> 'sudo -u greiakid python3 <render script>'
+```
+
+and let the script connect to the real level service so the bar path runs.
+
+### "active" is not health
+
+A unit in a restart loop reports `active` between restarts. Every health check
+that asks only `systemctl is-active` returns healthy on a machine that has
+never reached a usable screen. Always read the counter too:
+
+```
+systemctl show greia-launcher -p NRestarts --value
+```
+
+Two boot loops in this session both presented as `active`. The climb in
+`NRestarts` was the only reliable signal.
+
+### The session swallows the traceback
+
+`greia-x-session` runs `python3 -m greia_launcher.child_shell`, and when it
+exits non-zero the journal records only `exited with status 1` before trying
+`trusted_presentation`. The Python traceback never reaches the journal. To see
+it, redirect the session's own stderr:
+
+```
+sed -i 's#-m greia_launcher.child_shell$#-m greia_launcher.child_shell 2>/run/greia-os/session.err#' \
+  /usr/local/lib/greia-os/greia-x-session
+```
+
+Restore the file afterwards. Boot markers (`GREIA_BOOT event=...`) show how far
+the launcher got before it died and are the right first stop when the unit
+merely exits.
+
+### Read the device's source, not your working copy
+
+Code was deployed by copying files into `/opt/greia-os/src` throughout the
+session, and for a long period the panel on screen was a stale process: the
+change was on disk, the launcher had not been restarted, and the work was
+reported as present. After any direct-to-device copy: restart the unit, and
+confirm the deployed file actually contains the change (`grep` it on the
+device). When a feature is "missing" but present in source, check the running
+process before changing code again.
+
+### Verify against the real service, not a stub
+
+The microphone processing policy already had API routes and tests
+(`tests/test_parent_audio_api.py`). It was reported as "unexposed by the API"
+and duplicate routes were added before the existing ones were found. Locate the
+route and its tests before adding anything.
+
+### Do not claim hardware facts from source
+
+The `greia_mic_light` ALSA ExtPlugin was never built into the image, so the
+endpoint could not open even though `aplay -L` listed it. The availability
+probe correctly refused to write its marker, the backend reported the endpoint
+unavailable, and the audio service routed `off` on `default` with
+`fallback_reason=lightweight_unavailable`. Everything reported itself healthy,
+because fail-closed correctness is indistinguishable from "not installed" until
+the device is asked directly:
+
+```
+arecord -D greia_mic_light -d 2 -f S16_LE -r 16000 -c 1 /dev/null
+ls /run/greia-audio/
+```
+
+### Provisioning gaps are boot faults
+
+Three separate boot loops came from provisioning, not application code:
+
+- `tmpfiles.d` named the group `greiaprofiles`, which `compose.sh` never
+  creates (`pipprofiles` is the real one). `systemd-tmpfiles` failed and left
+  `/run/greia-os` root-owned, so Xorg could not write `Xorg.0.log`.
+- The audio endpoint probe shipped without its executable bit, so its oneshot
+  failed `203/EXEC` and never wrote a marker.
+- `/var/lib/greia-os` was `0750 greiapel:greiapel`, so `greiakid` could not
+  stat its own activity package tree. The missing directory surfaced as
+  `EACCES` rather than `ENOENT`, which presented as a permissions bug and hid a
+  path that nothing had ever created.
+
+Naming an identity that no build step creates must fail the build.
+`tests/test_image_tmpfiles_identities.py` now enforces that, including that
+`/run/greia-os` is owned by `greiakid` and that `greiakid` retains traversal
+into the parent home without read access to it.
+
+### Package hygiene on a live device
+
+Installing and removing build tooling on the appliance is a last resort, not a
+verification method: the target image has been footprint-pruned, so `gcc` is
+present but cannot execute `cc1`. Record what `apt-get autoremove` removed
+from `/var/log/apt/history.log*` afterwards, and prefer building an artifact
+in the image composition step (`build/lib/compose.sh`) where the toolchain is
+installed and removed deliberately.
