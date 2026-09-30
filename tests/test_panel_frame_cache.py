@@ -177,6 +177,14 @@ class SignatureCoversEverythingTheDrawCodeReadsTests(unittest.TestCase):
             "_mic_level_reader",
             "_mic_peak_hold_dbfs",
             "_mic_peak_hold_until",
+            # The live meter is a small overlay repainted on top of a cached audio
+            # tab, and the band/content origin are geometry recomputed by the draw
+            # that produced the frame they are attached to - not state that changes
+            # a frame.
+            "_meter_band_rect",
+            "_content_origin",
+            "_panel_composite_meter",
+            "_typography_for_overlay",
         }
     )
 
@@ -333,11 +341,29 @@ class AudioTabIsNeverCachedTests(unittest.TestCase):
         self.panel = _panel()
         self.panel.active_tab = ParentPanelTab.AUDIO
 
-    def test_audio_tab_is_not_served_from_the_cache(self) -> None:
-        self.panel.draw(self.screen, _Theme(), GreiaTypography(), pygame, _icon)
+    def test_audio_tab_is_served_from_the_cache(self) -> None:
+        """The audio tab is cached and only the meter band is repainted over it.
+
+        Excluding the whole tab from the cache was tried so the meter would move.
+        It cost a full software redraw - about 262 ms a frame on the reference
+        Acer - to change the same few hundred pixels.
+        """
+
+        for _ in range(2):
+            self.panel.draw(self.screen, _Theme(), GreiaTypography(), pygame, _icon)
         self.panel._content_animating = False
-        self.assertFalse(
+        self.assertTrue(
             self.panel._serve_composite(
                 self.screen, self.panel._composite_key(None, (1024, 600))
             )
         )
+
+    def test_cached_audio_frame_still_repaints_the_meter(self) -> None:
+        for _ in range(2):
+            self.panel.draw(self.screen, _Theme(), GreiaTypography(), pygame, _icon)
+        self.assertIsNotNone(self.panel._panel_composite_meter)
+        band = self.panel._panel_composite_meter
+        # The band must be in screen coordinates, not the content-local
+        # coordinates a tab lays out in. Using local coordinates drew the meter
+        # over the tab strip, where a parent could not see it.
+        self.assertGreaterEqual(band.top, self.panel._content_origin[1])

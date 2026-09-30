@@ -4,6 +4,10 @@ import argparse
 import os
 import subprocess
 import time
+
+#: Frame pacing for demand-driven live overlay content such as the microphone
+#: meter. Idle states never take this path, so this costs nothing when unused.
+_LIVE_OVERLAY_FRAME_MS = 33
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -746,6 +750,17 @@ class LauncherApplication:
         self._shell_input.start()
         try:
             while running:
+                if (
+                    self._mode == "parent_panel"
+                    and self._parent_panel.needs_frame()
+                ):
+                    # Bounded, demand-driven repaint for live overlay content.
+                    # Without it the meter only advanced when an event arrived.
+                    # This idles completely whenever nothing is live.
+                    pygame.time.delay(_LIVE_OVERLAY_FRAME_MS)
+                    self._draw(screen, pygame)
+                    pygame.display.flip()
+                    continue
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT and self.allow_exit:
                         running = False

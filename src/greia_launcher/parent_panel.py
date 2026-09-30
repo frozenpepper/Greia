@@ -1,6 +1,7 @@
 import os
 import queue
 import threading
+import sys
 import time
 from dataclasses import dataclass
 from enum import StrEnum
@@ -175,6 +176,10 @@ class ParentSettingsOverlay:
         self._audio_message = ""
         self._backdrop_surface: Any = None
         self._cached_mic_gain: float | None = None
+        self._content_origin: tuple[int, int] = (0, 0)
+        self._meter_band_rect: Any = None
+        self._panel_composite_meter: Any = None
+        self._typography_for_overlay: Any = None
         self._mic_gain_read_at = 0.0
         # Software rounded rects (pygame.draw.rect with border_radius) cost
         # several milliseconds EACH on Atom-class CPUs; a tab rendering ~25 of
@@ -1012,6 +1017,7 @@ class ParentSettingsOverlay:
         # it the panel kept the microphone for the rest of the session and starved
         # every later open, including its own.
         self._ensure_mic_level_running(self.active_tab is ParentPanelTab.AUDIO)
+        self._typography_for_overlay = typography
         cached = self._serve_composite(screen, composite_key)
         if cached:
             return
@@ -1155,9 +1161,7 @@ class ParentSettingsOverlay:
     def _serve_composite(self, screen: Any, key: Any) -> bool:
         """Present the cached frame when nothing it depends on has changed."""
 
-        # The audio tab carries a live input meter, so a cached frame would freeze
-        # the one number the parent opened the tab to watch.
-        if self._content_animating or self.active_tab is ParentPanelTab.AUDIO:
+        if self._content_animating:
             return False
         if self._panel_composite is None or self._panel_composite_key != key:
             return False
@@ -1166,18 +1170,30 @@ class ParentSettingsOverlay:
         screen.blit(self._panel_composite, (0, 0))
         # Click handling needs the hit targets even when nothing was redrawn.
         self._targets[:] = self._panel_composite_targets
+        if self.active_tab is ParentPanelTab.AUDIO:
+            self._repaint_input_meter(screen, self._panel_composite_meter)
         return True
 
     def _store_composite(self, screen: Any, key: Any) -> None:
         """Keep this frame so the next one can be a single blit."""
 
-        if self._content_animating or self.active_tab is ParentPanelTab.AUDIO:
+        if self._content_animating:
             self._panel_composite = None
             self._panel_composite_key = None
+            self._panel_composite_meter = None
             return
         self._panel_composite = screen.copy()
         self._panel_composite_key = key
         self._panel_composite_targets = list(self._targets)
+        # Capture the live meter's band with the frame it belongs to, in screen
+        # coordinates, so a served frame and the band used to top it up can never
+        # disagree. A remembered band from an earlier layout is what put the meter
+        # behind the tab strip, where a parent could not see it at all.
+        self._panel_composite_meter = (
+            self._meter_band_for_current_content()
+            if self.active_tab is ParentPanelTab.AUDIO
+            else None
+        )
 
     def _ensure_panel_base(
         self,
@@ -1426,6 +1442,7 @@ class ParentSettingsOverlay:
         # The content surface is drawn in content-local coordinates, so the
         # hit targets it registered are offset by the same amount before they
         # are used for click hit-testing against screen coordinates.
+        self._content_origin = content_rect.topleft
         self._rebase_targets(content_rect, content_target_start)
         screen.blit(content_surface, content_rect.topleft)
 
@@ -2169,7 +2186,80 @@ class ParentSettingsOverlay:
             self._security_message, self._security_message_is_error,
         )
 
+    #: Height reserved below the readout for the value row, its gap and the bar,
+    #: so a band's height does not depend on which readout is showing.
+    _METER_RESERVED_TAIL = 38
+
+    def needs_frame(self) -> bool:
+        """Whether the overlay has live content that must be repainted.
+
+        The launcher is event driven: it draws when something happens. A live
+        input meter is content that changes with no event behind it, so without
+        this the visualiser only advanced when the pointer happened to move. This
+        asks for a frame only while the meter is actually on screen, so every
+        other state keeps its existing no-redraw-when-nothing-changed behaviour.
+        """
+
+        if self.active_tab is not ParentPanelTab.AUDIO:
+            return False
+        return self._mic_level_reader.level.available
+
+    def _meter_band_for_current_content(self) -> Any:
+        """The meter's band in screen coordinates, or None if there is none.
+
+        Tabs lay out on a content surface whose origin is zero, so the band a tab
+        records is content-local and has to be offset before it can be used on the
+        presented frame. Skipping that offset is what drew the meter over the tab
+        strip when a cached audio frame was topped up.
+        """
+
+        if self._meter_band_rect is None:
+            return None
+        return self._meter_band_rect.move(self._content_origin)
+
     def _draw_input_meter(
+        self,
+        screen: Any,
+        pygame: Any,
+        typography: GreiaTypography,
+        card: Any,
+        pad: int,
+        y: int,
+        inner_w: int,
+    ) -> int:
+        """Draw the live meter and record the band it occupies.
+
+        On a cache hit this is not called at all; the band recorded here is
+        captured into the cache entry and used to repaint just this region.
+        Excluding the whole audio tab from the cache instead was tried, and cost a
+        full software redraw - about 262 ms a frame on the reference Acer - to
+        change the same few hundred pixels.
+        """
+
+        start = y
+        bottom = self._paint_input_meter(
+            screen, pygame, typography, card, pad, y, inner_w
+        )
+        self._meter_band_rect = pygame.Rect(
+            card.left + pad - 4, start, inner_w + 8, max(0, bottom - start) + 6
+        )
+        return bottom
+
+    def _repaint_input_meter(self, screen: Any, band: Any) -> None:
+        """Repaint only the meter on top of an already presented frame."""
+
+        if band is None or band.height <= 0:
+            return
+        pygame = sys.modules["pygame"]
+        typography = self._typography_for_overlay
+        if typography is None:
+            return
+        pygame.draw.rect(screen, (255, 250, 240), band, border_radius=8)
+        self._paint_input_meter(
+            screen, pygame, typography, band, 8, band.top + 3, band.width - 16
+        )
+
+    def _paint_input_meter(
         self,
         screen: Any,
         pygame: Any,
@@ -2212,7 +2302,12 @@ class ParentSettingsOverlay:
                 (150, 138, 126), inner_w,
             )
             panel_layout.blit_block(screen, note, pygame, card.left + pad, y)
-            return y + note.height
+            # Reserve the same height the value row and bar would occupy. The
+            # repaint band is captured from one of these draws and replayed on
+            # cached frames, so a band measured while the input looked unavailable
+            # was shorter than the bar actually needed, and repainting a live
+            # level then painted over the gain controls below.
+            return y + note.height + self._METER_RESERVED_TAIL
 
         readout = f"{level.rms_dbfs:+.0f} dB" if not level.silent else text.AUDIO_INPUT_SILENT
         if level.clipping:
