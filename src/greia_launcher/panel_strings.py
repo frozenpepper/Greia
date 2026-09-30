@@ -156,3 +156,9 @@ AUDIO_NOISE_NOTE = (
 )
 AUDIO_NOISE_PROCESSING = "Noise cancelling"
 AUDIO_NOISE_ADVANCED = "Advanced reduction"
+
+#: Shown when the input level service has not answered yet. The capture device is
+#: exclusive, so anything else opening it briefly starves the meter, and telling
+#: a parent to check the microphone connection then sends them looking for a
+#: fault that is not there.
+AUDIO_INPUT_WAITING = "Reading microphone..."

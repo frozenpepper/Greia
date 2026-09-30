@@ -2435,9 +2435,16 @@ class ParentSettingsOverlay:
         y += title.height + 6
 
         if not level.available:
+            # "No microphone" is only honest when the endpoint itself is gone. The
+            # capture device is exclusive, so another process opening it briefly -
+            # including a diagnostic - starves the meter without there being
+            # anything wrong with the microphone.
+            reason = str(level.device or "")
+            waiting = not reason or reason in {"starting", "reconnecting", "service stopped", "no service"}
             note = panel_layout.fit_text_block(
-                typography, text.AUDIO_INPUT_UNAVAILABLE, FontRole.BODY, 15,
-                (150, 138, 126), meter_w,
+                typography,
+                text.AUDIO_INPUT_WAITING if waiting else text.AUDIO_INPUT_UNAVAILABLE,
+                FontRole.BODY, 15, (150, 138, 126), meter_w,
             )
             panel_layout.blit_block(screen, note, pygame, card.left + pad, y)
             # Reserve the same height the value row and bar would occupy. The
@@ -2742,9 +2749,13 @@ class ParentSettingsOverlay:
             t2 = panel_layout.fit_single_line(
                 typography, state, FontRole.CONTROL, 12, (61, 44, 31), state_w
             )
+            # Blit_block's "right" alignment sets the block's *centre*, not its
+            # right edge, so passing box.right put half the state outside the
+            # button. Place it by its own measured width instead.
+            state_x = box.right - 8 - t2.surface.get_width()
             panel_layout.blit_block(
-                screen, t2, pygame, box.right - 6, box.top + 9,
-                align="right", bounds=box,
+                screen, t2, pygame, max(box.left + 6, state_x), box.top + 9,
+                bounds=box,
             )
             if enabled:
                 self._targets.append(
