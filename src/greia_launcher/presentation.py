@@ -469,6 +469,14 @@ class GreiaLauncherPresentation(LauncherApplication):
                     self._last_input_monotonic = frame_start
                     if any(event.type != pygame.MOUSEMOTION for event in events):
                         _needs_redraw = True
+                # Live overlay content changes with no event behind it. Without
+                # this the microphone meter only advanced when something moved the
+                # pointer. This is the loop that actually runs, so it is the only
+                # place a repaint request has to be honoured; the request itself
+                # is false whenever nothing is live, so idle frames are untouched.
+                parent_panel = getattr(self, "_parent_panel", None)
+                if parent_panel is not None and parent_panel.needs_frame():
+                    _needs_redraw = True
                 _pending_motion_pos: tuple[int, int] | None = None
                 _motion_seen = False
                 for event in events:

@@ -2190,6 +2190,8 @@ class ParentSettingsOverlay:
     #: so a band's height does not depend on which readout is showing.
     _METER_RESERVED_TAIL = 38
 
+    _POINTER_FLASH_SECONDS = 1.2
+
     def needs_frame(self) -> bool:
         """Whether the overlay has live content that must be repainted.
 
@@ -2200,9 +2202,26 @@ class ParentSettingsOverlay:
         other state keeps its existing no-redraw-when-nothing-changed behaviour.
         """
 
-        if self.active_tab is not ParentPanelTab.AUDIO:
-            return False
-        return self._mic_level_reader.level.available
+        # True for as long as the audio tab is the one on screen, not only once a
+        # level has arrived. Gating this on having a level deadlocked: the client
+        # is started from inside draw(), draw() only happens on an event, and the
+        # event loop only redraws when this returns True. No level meant no redraw
+        # meant the client was never started, so the meter only ever appeared when
+        # something moved the pointer. The client starts the level service on its
+        # first connect, so a few frames here is all it takes to come up.
+        if self.active_tab is ParentPanelTab.AUDIO:
+            return True
+        # The pointer test area flashes a marker where the last press landed, and
+        # that flash decays with time. Redraw only while one is visible, so the
+        # test area responds without making the tab repaint continuously.
+        if self.active_tab is ParentPanelTab.POINTER:
+            flash = self._pointer_test_flash
+            if flash is not None:
+                return (
+                    time.monotonic() - self._pointer_test_flash_at
+                    < _POINTER_FLASH_SECONDS
+                )
+        return False
 
     def _meter_band_for_current_content(self) -> Any:
         """The meter's band in screen coordinates, or None if there is none.
