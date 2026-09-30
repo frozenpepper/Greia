@@ -687,15 +687,19 @@ class ParentSettingsOverlay:
             )
 
     def _set_mic_gain(self, value: float) -> None:
-        if self.hardware_store is not None:
-            try:
-                val = max(0.5, min(4.0, round(value, 2)))
-                self.hardware_store.update(mic_gain=val)
-                self._cached_mic_gain = float(val)
-                self._mic_gain_read_at = time.monotonic()
-                self._audio_message = f"Microphone gain set to {int(val * 100)}% ({val:.2f}x Boost)."
-            except Exception as exc:
-                self._audio_message = f"Could not update mic gain: {exc}"
+        val = max(0.5, min(4.0, round(value, 2)))
+        # Through the service, like every other setting. A direct store write
+        # raised PermissionError here too - the panel is greiakid and the
+        # settings directory is greiapel-owned - so the gain steppers and
+        # presets looked live and applied nothing.
+        if self._apply_hardware_change(
+            {"mic_gain": val},
+            f"Microphone gain set to {int(val * 100)}% ({val:.2f}x boost).",
+        ):
+            self._cached_mic_gain = float(val)
+            self._mic_gain_read_at = time.monotonic()
+        else:
+            self._audio_message = self._pointer_message
 
     def _adjust_mic_gain(self, delta: float) -> None:
         current = self._current_mic_gain()
@@ -887,13 +891,10 @@ class ParentSettingsOverlay:
             current = bool(getattr(settings, field, False))
         except Exception:
             current = False
-        try:
-            updated = self.hardware_store.update(**{field: (not current)})
-        except Exception as exc:
-            self._pointer_message = f"Could not update pointer setting: {exc}"
-            return
-        self._cached_pointer_settings = updated
-        self._pointer_settings_read_at = time.monotonic()
+        self._apply_hardware_change(
+            {field: (not current)},
+            f"{'On' if not current else 'Off'} {field.replace('_', ' ')}.",
+        )
         self._pointer_message = f"{'On' if not current else 'Off'}: {field.replace('_', ' ')}."
 
     def _reset_pointer_defaults(self) -> None:
@@ -2374,8 +2375,9 @@ class ParentSettingsOverlay:
         bottom = self._paint_input_meter(
             screen, pygame, typography, card, pad, y, inner_w
         )
+        band_w = inner_w - self._noise_column_width(inner_w) - 12
         self._meter_band_rect = pygame.Rect(
-            card.left + pad - 4, start, inner_w + 8, max(0, bottom - start) + 6
+            card.left + pad - 4, start, band_w + 8, max(0, bottom - start) + 6
         )
         return bottom
 
@@ -2412,6 +2414,8 @@ class ParentSettingsOverlay:
         at 0.0 dBFS, i.e. clipping, with no indication of it anywhere in the UI.
         """
 
+        noise_w = self._noise_column_width(inner_w)
+        meter_w = inner_w - noise_w - 12 if noise_w else inner_w
         level: MicrophoneLevel = self._mic_level_reader.level
         now = time.monotonic()
         if level.available:
@@ -2425,7 +2429,7 @@ class ParentSettingsOverlay:
 
         title = panel_layout.fit_text_block(
             typography, text.AUDIO_INPUT_LABEL, FontRole.CONTROL, 18,
-            (61, 44, 31), inner_w,
+            (61, 44, 31), meter_w,
         )
         panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
         y += title.height + 6
@@ -2433,7 +2437,7 @@ class ParentSettingsOverlay:
         if not level.available:
             note = panel_layout.fit_text_block(
                 typography, text.AUDIO_INPUT_UNAVAILABLE, FontRole.BODY, 15,
-                (150, 138, 126), inner_w,
+                (150, 138, 126), meter_w,
             )
             panel_layout.blit_block(screen, note, pygame, card.left + pad, y)
             # Reserve the same height the value row and bar would occupy. The
@@ -2455,7 +2459,7 @@ class ParentSettingsOverlay:
         )
 
         bar_h = 16
-        track = pygame.Rect(card.left + pad, y + value.height + 4, inner_w, bar_h)
+        track = pygame.Rect(card.left + pad, y + value.height + 4, meter_w, bar_h)
         pygame.draw.rect(screen, (222, 208, 178), track, border_radius=bar_h // 2)
 
         def position(db: float) -> int:
@@ -2641,6 +2645,20 @@ class ParentSettingsOverlay:
             # cannot ride up over the presets.
             panel_layout.blit_block(screen, message, pygame, card.left + pad, y)
 
+    def _noise_column_width(self, inner_w: int) -> int:
+        """Width of the noise cancelling column beside the meter, or 0.
+
+        The meter's bar and the column share one row, so both must agree on where
+        the split is. They did not: the bar was drawn at the full inner width and
+        ran underneath the column, and its readout was clipped. That only ever
+        showed up with a live input - with the microphone unavailable there is no
+        bar to collide.
+        """
+
+        if inner_w < 420:
+            return 0
+        return int(inner_w * 0.34)
+
     def _draw_noise_cancelling(
         self,
         screen: Any,
@@ -2665,11 +2683,11 @@ class ParentSettingsOverlay:
         """
 
         inner_w = card.width - pad * 2
-        col_w = int(inner_w * 0.34)
-        col_x = card.left + pad + inner_w - col_w
-        top = top - 4
+        col_w = self._noise_column_width(inner_w)
         if height <= 0 or col_w < 120:
             return
+        col_x = card.left + pad + inner_w - col_w
+        top = top - 4
 
         title = panel_layout.fit_text_block(
             typography, text.AUDIO_NOISE_TITLE, FontRole.CONTROL, 15,
