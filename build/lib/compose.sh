@@ -573,6 +573,39 @@ compose_build_early_framebuffer() {
   local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
   compose_apt_options
   local rootfs_arg="$rootfs"
+  build_audio_endpoint_plugin() {
+    local rootfs="$1"
+    # The greia_mic_light ALSA ExtPlugin is what makes microphone processing
+    # real. Without it /etc/asound.conf still defines the PCM, but opening it
+    # fails with "No such device or address", the availability probe correctly
+    # declines to write its marker, and the audio service reports both processing
+    # endpoints unavailable - so noise cancelling silently fell back to off on a
+    # machine whose PCM was listed by aplay -L.
+    #
+    # Built with the target toolchain inside the root, like the framebuffer
+    # renderer, because the module must match the image's ABI. The compiler and
+    # headers are development-only and are removed again afterwards.
+    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+      apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
+    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+      apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
+      install -y --no-install-recommends gcc libasound2-dev libspeexdsp-dev >/dev/null
+    install -d -m 0755 "$rootfs/usr/src/greia-audio"
+    cp "$project_root/src/greia_platform/audio_alsa/greia_mic_light.c" \
+      "$rootfs/usr/src/greia-audio/greia_mic_light.c"
+    local multiarch
+    multiarch="$(chroot "$rootfs" dpkg-architecture -qDEB_HOST_MULTIARCH)"
+    chroot "$rootfs" /bin/sh -c \
+      'cd /usr/src/greia-audio && gcc -O2 -Wall -fPIC -shared -o greia_mic_light.so greia_mic_light.c -lasound -lspeexdsp'
+    install -d -m 0755 "$rootfs/usr/lib/$multiarch/alsa-lib"
+    install -m 0755 "$rootfs/usr/src/greia-audio/greia_mic_light.so" \
+      "$rootfs/usr/lib/$multiarch/alsa-lib/libasound_module_pcm_greia_mic_light.so"
+    rm -rf "$rootfs/usr/src/greia-audio"
+    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+      apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge \
+      gcc libasound2-dev libspeexdsp-dev >/dev/null
+  }
+
   build_early_framebuffer() {
     local rootfs="$1"
     # klcc needs the matching native compiler (e.g. i686-linux-gnu-gcc) which is
@@ -633,10 +666,16 @@ compose_build_early_framebuffer() {
 compose_configure_systemd() {
   local rootfs="$1"
   local role="$2"
+  # The audio endpoint probe ships as an overlay file, so the exec bit is not
+  # carried across. Without it the oneshot failed with 203/EXEC, never wrote the
+  # endpoint readiness markers, and the audio service reported both processing
+  # endpoints unavailable - so microphone processing silently fell back to off
+  # and noise cancelling did nothing at all.
+  chmod 0755 "$rootfs/usr/local/lib/greia-os/greia-audio-endpoint-probe"
   if [[ "$role" == "target" ]]; then
     systemctl --root="$rootfs" enable \
       greia-first-boot.service greia-boot-observer.service greia-launcher.service greia-parent.service \
-      greia-boot-health.socket greia-system-update.socket \
+      greia-boot-health.socket greia-system-update.socket greia-audio-endpoints.service \
       systemd-networkd.service systemd-resolved.service iwd.service avahi-daemon.service
     systemctl --root="$rootfs" mask \
       getty@.service autovt@.service console-getty.service debug-shell.service \
@@ -964,6 +1003,7 @@ compose_root() {
     compose_write_fstab "$rootfs" || return 1
   fi
   compose_build_early_framebuffer "$rootfs" || return 1
+  compose_build_audio_endpoint_plugin "$rootfs" || return 1
   compose_configure_systemd "$rootfs" "$role" || return 1
   compose_configure_ssh_base "$rootfs" || return 1
   compose_maybe_provision_developer_ssh "$rootfs" "$role" || return 1
