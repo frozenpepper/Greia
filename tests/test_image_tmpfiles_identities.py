@@ -60,7 +60,19 @@ def _identities_created_by_compose() -> set[str]:
     return created
 
 
+def _tmpfiles_directories() -> dict[str, tuple[str, str, str]]:
+    entries: dict[str, tuple[str, str, str]] = {}
+    for line in TMPFILES.read_text(encoding="utf-8").splitlines():
+        fields = line.split()
+        if len(fields) >= 5 and fields[0] == "d":
+            entries[fields[1]] = (fields[2], fields[3], fields[4])
+    return entries
+
+
 class TmpfilesIdentitiesExistTests(unittest.TestCase):
+    def _entries_helper(self) -> None:
+        """Defined below; see module-level _tmpfiles_directories."""
+
     def test_every_owner_and_group_named_in_tmpfiles_is_created(self) -> None:
         created = _identities_created_by_compose()
         missing: set[str] = set()
@@ -79,6 +91,31 @@ class TmpfilesIdentitiesExistTests(unittest.TestCase):
             "tmpfiles.d names identities compose.sh never creates; "
             "systemd-tmpfiles will fail and leave these paths unowned",
         )
+
+    def test_child_shell_can_traverse_the_parent_home_to_its_own_tree(self) -> None:
+        """greiakid must be able to reach /var/lib/greia-os/activity-packages.
+
+        The launcher runs as greiakid and activity discovery stats that path. With
+        the parent home at 0750 greiapel:greiapel, greiakid got EACCES rather
+        than ENOENT, discovery raised PermissionError, and the launcher
+        restart-looped on every boot. Traversal must be allowed; read access to
+        the parent service's own files must not be.
+        """
+
+        entries = _tmpfiles_directories()
+        mode, owner, _group = entries["/var/lib/greia-os"]
+        others = int(mode[-3:], 8)
+        self.assertTrue(
+            others & 0o001,
+            "/var/lib/greia-os must grant other-execute so greiakid can traverse "
+            "to the activity package tree",
+        )
+        self.assertEqual(owner, "greiapanel")
+        self.assertFalse(
+            others & 0o004,
+            "the parent service's home must stay unreadable to others",
+        )
+        self.assertIn("/var/lib/greia-os/activity-packages", entries)
 
     def test_run_directory_is_owned_by_the_identity_that_writes_it(self) -> None:
         """Xorg runs as greiakid and must be able to write its own log there."""
