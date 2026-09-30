@@ -30,6 +30,7 @@ import math
 import shutil
 import struct
 import subprocess
+import time
 import threading
 from dataclasses import dataclass
 
@@ -50,9 +51,10 @@ _FORMAT_BYTES = 2  # S16_LE
 
 _DEFAULT_DEVICE = "hw:0,0"
 
-#: arecord is asked for a bounded slice; the reader restarts it, so a long-running
-#: capture is not needed and a hung process cannot accumulate memory.
-_CAPTURE_SECONDS = 30
+#: Pause between capture attempts. The device is exclusive, so a failed open is
+#: retried, not hammered: an unthrottled retry loop turned one busy device into a
+#: permanent one and pegged a core, which is what made the whole panel crawl.
+_RETRY_BACKOFF_SECONDS = 0.5
 
 #: Read granularity. Small enough that a level update is visibly live, large
 #: enough not to spin.
@@ -126,15 +128,29 @@ class MicrophoneLevelReader:
         """Stop capture and release the device. Safe to call when not started."""
 
         self._stop.set()
-        process = self._process
-        if process is not None:
-            try:
-                process.terminate()
-            except OSError:
-                pass
         thread = self._thread
-        if thread is not None and thread.is_alive():
-            thread.join(timeout=1.5)
+        # Re-terminate until the thread is actually gone. Terminating once raced
+        # the retry loop: it could open a replacement between our read of
+        # _process and the signal, and that orphan held the ALSA device forever.
+        deadline = time.monotonic() + 2.0
+        while thread is not None and thread.is_alive():
+            process = self._process
+            if process is not None and process.poll() is None:
+                try:
+                    process.terminate()
+                except OSError:
+                    pass
+            thread.join(timeout=0.1)
+            if time.monotonic() > deadline:
+                process = self._process
+                if process is not None and process.poll() is None:
+                    try:
+                        process.kill()
+                    except OSError:
+                        pass
+                break
+        if thread is not None:
+            thread.join(timeout=0.5)
         self._thread = None
         self._process = None
         with self._lock:
@@ -185,8 +201,6 @@ class MicrophoneLevelReader:
             str(_RATE),
             "-c",
             str(_CHANNELS),
-            "-d",
-            str(_CAPTURE_SECONDS),
         ]
         process = subprocess.Popen(  # noqa: S603 - fixed argv, no shell
             command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL

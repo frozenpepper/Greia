@@ -1007,6 +1007,11 @@ class ParentSettingsOverlay:
 
         width, height = screen.get_size()
         composite_key = self._composite_key(base_key, (width, height))
+        # The capture device is exclusive, so hold it only while the tab that shows
+        # the meter is on screen. This call is the only thing that stops it: without
+        # it the panel kept the microphone for the rest of the session and starved
+        # every later open, including its own.
+        self._ensure_mic_level_running(self.active_tab is ParentPanelTab.AUDIO)
         cached = self._serve_composite(screen, composite_key)
         if cached:
             return
