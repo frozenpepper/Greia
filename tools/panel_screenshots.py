@@ -107,7 +107,37 @@ class _RejectingVerifier:
         return False
 
 
-def render_tab(tab: ParentPanelTab, size: tuple[int, int], out_dir: Path) -> dict[str, Any]:
+def _pose(overlay: ParentSettingsOverlay, tab: ParentPanelTab, variant: str) -> None:
+    """Put the overlay into a specific state so sub-screens are reviewable."""
+
+    if tab is ParentPanelTab.ACCOUNTS and variant == "add":
+        overlay._accounts_mode = "add"  # noqa: SLF001
+        overlay._text_field = "account_name"
+        overlay._account_name = "Robin"
+        overlay._account_age = "7"
+    elif tab is ParentPanelTab.ACCOUNTS and variant == "confirm":
+        from greia_launcher.parent_credential_client import ChildAccount
+
+        overlay._accounts_mode = "confirm"  # noqa: SLF001
+        overlay._pending_remove = ChildAccount(  # noqa: SLF001
+            profile_id="1ec82f21c5544a3ab3e694d38fb4248e",
+            display_name="Explorer",
+            avatar_id="unicorn",
+            approximate_age=None,
+        )
+    elif tab is ParentPanelTab.SECURITY:
+        overlay._security_current = "greia"  # noqa: SLF001
+        overlay._security_new = "a-longer-passphrase"  # noqa: SLF001
+        overlay._security_confirm = "a-longer-passphrase"  # noqa: SLF001
+        overlay._text_field = "security_new"  # noqa: SLF001
+
+
+def render_tab(
+    tab: ParentPanelTab,
+    size: tuple[int, int],
+    out_dir: Path,
+    variant: str = "list",
+) -> dict[str, Any]:
     pygame.display.init()
     screen = pygame.display.set_mode(size)
     typography = GreiaTypography()
@@ -118,12 +148,13 @@ def render_tab(tab: ParentPanelTab, size: tuple[int, int], out_dir: Path) -> dic
     # open() resets state and the active tab, so select after it, not before.
     overlay.state = ParentPanelState.PANEL
     overlay.active_tab = tab
+    _pose(overlay, tab, variant)
     overlay._targets.clear()  # noqa: SLF001 - measuring one frame, not accumulating
 
     overlay.draw(screen, _Theme(), typography, pygame, _load_icon)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    name = f"{tab.value}-{size[0]}x{size[1]}.png"
+    name = f"{tab.value}{'' if variant == 'list' else '-' + variant}-{size[0]}x{size[1]}.png"
     path = out_dir / name
     pygame.image.save(screen, str(path))
 
@@ -146,17 +177,23 @@ def main(argv: list[str] | None = None) -> int:
     out_dir = Path(args.out)
 
     failures = 0
+    variants = {
+        ParentPanelTab.ACCOUNTS: ("list", "add", "confirm"),
+        ParentPanelTab.SECURITY: ("list",),
+    }
     for size in SIZES:
         for tab in ParentPanelTab:
-            result = render_tab(tab, size, out_dir)
-            status = "OK " if not result["overlaps"] else "OVERLAP"
-            print(
-                f"  {status} {result['tab']:<10} {size[0]}x{size[1]} "
-                f"targets={result['targets']:<3} {result['path']}"
-            )
-            for pair in result["overlaps"]:
-                print(f"        overlapping targets: {pair[0]} <-> {pair[1]}")
-                failures += 1
+            for variant in variants.get(tab, ("list",)):
+                result = render_tab(tab, size, out_dir, variant)
+                status = "OK " if not result["overlaps"] else "OVERLAP"
+                label = result["tab"] + ("" if variant == "list" else "-" + variant)
+                print(
+                    f"  {status} {label:<18} {size[0]}x{size[1]} "
+                    f"targets={result['targets']:<3} {result['path']}"
+                )
+                for pair in result["overlaps"]:
+                    print(f"        overlapping targets: {pair[0]} <-> {pair[1]}")
+                    failures += 1
     print(f"\n  {failures} overlapping target pair(s)")
     return 1 if failures else 0
 

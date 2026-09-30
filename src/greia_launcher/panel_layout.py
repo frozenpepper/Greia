@@ -244,7 +244,7 @@ def blit_block(
         rect.x = x
     rect.y = y
     if bounds is not None:
-        rect.clip_ip(bounds)
+        rect.clamp_ip(bounds)
     surface.blit(block.surface, rect)
     return rect
 

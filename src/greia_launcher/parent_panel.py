@@ -14,9 +14,15 @@ from greia_platform.hardware_session import (
     speed_preset_names,
     speed_to_preset,
 )
+from greia_launcher import panel_layout
+from greia_launcher import panel_strings as text
 from greia_launcher.parent_credential_client import (
+    ChildAccount,
+    ParentCredentialClient,
     ParentCredentialUnavailable,
     ParentPasswordVerifier,
+    ParentRequestFailed,
+    ParentSession,
 )
 from greia_platform.ssh_maintenance import SshMaintenanceService, SshStatus
 from greia_platform.system_language import (
@@ -45,6 +51,8 @@ class ParentPanelState(StrEnum):
 class ParentPanelTab(StrEnum):
     LANGUAGE = "language"
     AUDIO = "audio"
+    ACCOUNTS = "accounts"
+    SECURITY = "security"
     WIFI = "wifi"
     SSH = "ssh"
     INFO = "info"
@@ -130,6 +138,22 @@ class ParentSettingsOverlay:
         self.password_text = ""
         self.password_error_until = 0.0
         self._password_problem = None
+        self._session = None
+        self._text_field = None
+        self._accounts = []
+        self._accounts_loaded = False
+        self._accounts_mode = "list"
+        self._accounts_message = None
+        self._accounts_message_is_error = False
+        self._account_name = ""
+        self._account_age = ""
+        self._account_avatar_index = 0
+        self._pending_remove = None
+        self._security_current = ""
+        self._security_new = ""
+        self._security_confirm = ""
+        self._security_message = None
+        self._security_message_is_error = False
         self._targets: list[PanelHitTarget] = []
         self._ssh_cached_status: SshStatus | None = None
         self._last_ssh_poll = 0.0
@@ -319,17 +343,25 @@ class ParentSettingsOverlay:
 
         return self._ssh_cached_status
 
-    def handle_text_input(self, text: str) -> None:
+    def handle_text_input(self, value: str) -> None:
         if self.state == ParentPanelState.AUTH:
-            if time.monotonic() < self.password_error_until or not text:
+            if time.monotonic() < self.password_error_until or not value:
                 return
             accepted = "".join(
-                ch for ch in text if ch not in "\r\n\x00" and ch.isprintable()
+                ch for ch in value if ch not in "\r\n\x00" and ch.isprintable()
             )
             if len(self.password_text) < 64:
                 self.password_text += accepted[: 64 - len(self.password_text)]
+        elif (
+            self.state == ParentPanelState.PANEL
+            and self._text_field is not None
+            and self.active_tab
+            in {ParentPanelTab.ACCOUNTS, ParentPanelTab.SECURITY}
+        ):
+            accepted = "".join(ch for ch in value if ch.isprintable())
+            self._set_field_value(self._text_field, self._field_value(self._text_field) + accepted)
         elif self.state == ParentPanelState.PANEL and self.active_tab == ParentPanelTab.WIFI:
-            self.wifi_controller.append_password(text)
+            self.wifi_controller.append_password(value)
 
     def handle_key(self, key: int, pygame: Any) -> bool:
         """Handle key input. Returns True to stay in overlay, False to close."""
@@ -451,6 +483,45 @@ class ParentSettingsOverlay:
                     return True
                 elif target.action == "pointer_test":
                     self._flash_pointer_test_target(int(target.value))
+                    return True
+                elif target.action == "focus_field":
+                    self._text_field = str(target.value)
+                    return True
+                elif target.action == "account_add":
+                    self._accounts_mode = "add"
+                    self._text_field = "account_name"
+                    self._set_accounts_message(None)
+                    return True
+                elif target.action == "account_cancel":
+                    self._accounts_mode = "list"
+                    self._text_field = None
+                    self._set_accounts_message(None)
+                    return True
+                elif target.action == "account_create":
+                    self._create_account()
+                    return True
+                elif target.action == "account_avatar":
+                    self._cycle_avatar(int(target.value))
+                    return True
+                elif target.action == "account_remove":
+                    self._pending_remove = next(
+                        (a for a in self._accounts if a.profile_id == target.value),
+                        None,
+                    )
+                    if self._pending_remove is not None:
+                        self._accounts_mode = "confirm"
+                        self._text_field = None
+                    return True
+                elif target.action == "account_remove_cancel":
+                    self._pending_remove = None
+                    self._accounts_mode = "list"
+                    return True
+                elif target.action == "account_remove_confirm":
+                    if self._pending_remove is not None:
+                        self._remove_account(self._pending_remove)
+                    return True
+                elif target.action == "security_change":
+                    self._change_password()
                     return True
                 elif target.action == "wifi_refresh":
                     self.wifi_controller.refresh()
@@ -768,8 +839,16 @@ class ParentSettingsOverlay:
     def _attempt_auth(self, pygame: Any) -> None:
         if time.monotonic() < self.password_error_until:
             return
+        session_holder = getattr(self.credential_verifier, "authenticate", None)
         try:
-            verified = bool(self.credential_verifier.verify(self.password_text))
+            if callable(session_holder):
+                # Prefer a real session: the account and password operations
+                # below need the device token, and re-verifying separately would
+                # spend a second rate-limited attempt.
+                self._session = session_holder(self.password_text)
+                verified = True
+            else:
+                verified = bool(self.credential_verifier.verify(self.password_text))
         except ParentCredentialUnavailable:
             # The check could not be performed. Say so. Reporting this as an
             # incorrect password is what cost a full diagnosis cycle: an
@@ -785,6 +864,7 @@ class ParentSettingsOverlay:
             return
         if verified:
             self._password_problem = None
+            self._session = self._session  # established above, or None for a bare verifier
             self.state = ParentPanelState.PANEL
             self.password_text = ""
             self._sync_language_selection()
@@ -1062,52 +1142,119 @@ class ParentSettingsOverlay:
         )
 
         tab_y = header_rect.bottom + 8
-        tabs = [
-            (ParentPanelTab.LANGUAGE, "Language"),
-            (ParentPanelTab.AUDIO, "Audio & Mic"),
-            (ParentPanelTab.WIFI, "Wi-Fi"),
-            (ParentPanelTab.SSH, "SSH"),
-            (ParentPanelTab.INFO, "Remote & Pairing"),
-            (ParentPanelTab.POINTER, "Pointer"),
-        ]
         tab_gap = 10
-        tab_w = min(145, (panel_rect.width - 48 - tab_gap * (len(tabs) - 1)) // len(tabs))
-        tab_w = max(80, tab_w)
-        tab_x = panel_rect.left + 24
-
-        for tab_id, label in tabs:
-            is_active = self.active_tab == tab_id
-            tab_rect = pygame.Rect(tab_x, tab_y, tab_w, 38)
-            bg = (241, 185, 35) if is_active else (246, 236, 209)
-            self._blit_rounded_card(
-                screen, tab_rect, (255, 250, 240), bg, pygame,
-                (61, 44, 31), 2 if is_active else 1, radius=12,
+        tab_pad = 24
+        tab_h = 38
+        # Minimum column that still reads as a word. Below this the strip wraps
+        # onto another row rather than shrinking every label into an ellipsis,
+        # which is the same "grow downwards" rule the body text follows and the
+        # only honest answer to a translated label that is wider than English.
+        min_tab_w = 104
+        usable = panel_rect.width - tab_pad * 2
+        per_row = max(1, (usable + tab_gap) // (min_tab_w + tab_gap))
+        rows = -(-len(text.TABS) // per_row)  # ceiling division
+        row_widths = [
+            panel_layout.even_columns(usable, count, tab_gap)
+            for count in (
+                [per_row] * (rows - 1) + [len(text.TABS) - per_row * (rows - 1)]
             )
+        ]
 
-            txt = self._get_text(label, FontRole.CONTROL, 16, (61, 44, 31), typography)
-            screen.blit(txt, txt.get_rect(center=tab_rect.center))
-            self._targets.append(PanelHitTarget("switch_tab", tab_id, tab_rect))
-            tab_x += tab_w + 10
+        tab_x = panel_rect.left + tab_pad
+        tab_row_top = tab_y
+        index = 0
+        for row, row_widths_for_row in enumerate(row_widths):
+            for column, tab_w in enumerate(row_widths_for_row):
+                label, tab_value = text.TABS[index]
+                tab_id = ParentPanelTab(tab_value)
+                is_active = self.active_tab == tab_id
+                tab_rect = pygame.Rect(tab_x, tab_row_top + row * (tab_h + tab_gap), tab_w, tab_h)
+                bg = (241, 185, 35) if is_active else (246, 236, 209)
+                self._blit_rounded_card(
+                    screen, tab_rect, (255, 250, 240), bg, pygame,
+                    (61, 44, 31), 2 if is_active else 1, radius=12,
+                )
+                # Still measured, so an over-long single word shrinks before it
+                # would ever be clipped.
+                block = panel_layout.fit_single_line(
+                    typography, label, FontRole.CONTROL, 16, (61, 44, 31),
+                    tab_w - 12,
+                )
+                panel_layout.blit_block(
+                    screen, block, pygame, tab_rect.centerx, tab_rect.centery,
+                    align="center", bounds=tab_rect,
+                )
+                self._targets.append(PanelHitTarget("switch_tab", tab_id, tab_rect))
+                tab_x += tab_w + tab_gap
+                index += 1
+            tab_x = panel_rect.left + tab_pad
+        tab_strip_bottom = tab_row_top + rows * (tab_h + tab_gap) - tab_gap
 
+        content_top = tab_strip_bottom + 12
         content_rect = pygame.Rect(
             panel_rect.left + 24,
-            tab_y + 50,
+            content_top,
             panel_rect.width - 48,
-            panel_rect.bottom - (tab_y + 66),
+            max(80, panel_rect.bottom - content_top - 12),
         )
 
+        # Tab content is composed on its own surface of exactly the content rect
+        # and then blitted, so a form taller than the card is clipped rather than
+        # spilling over the card edge onto the panel chrome. Surface blits clip
+        # unconditionally, which makes "content can never escape its card" a
+        # property of the structure instead of a thing each tab must remember.
+        content_surface = pygame.Surface(
+            (max(content_rect.width, 1), max(content_rect.height, 1)), pygame.SRCALPHA
+        )
+        _paint = content_surface
+        # Tabs lay out from the surface origin, so they are given a local rect.
+        # Their hit targets are content-local too and are rebased to screen space
+        # after drawing.
+        local_rect = pygame.Rect(0, 0, content_surface.get_width(), content_surface.get_height())
+        # Everything registered before this point (the close control and the tab
+        # strip) is already in screen coordinates and must not be rebased.
+        content_target_start = len(self._targets)
+
         if self.active_tab == ParentPanelTab.LANGUAGE:
-            self._draw_language_tab(screen, content_rect, typography, pygame)
+            self._draw_language_tab(_paint, local_rect, typography, pygame)
         elif self.active_tab == ParentPanelTab.AUDIO:
-            self._draw_audio_tab(screen, content_rect, typography, pygame)
+            self._draw_audio_tab(_paint, local_rect, typography, pygame)
+        elif self.active_tab == ParentPanelTab.ACCOUNTS:
+            self._draw_accounts_tab(_paint, local_rect, typography, pygame)
+        elif self.active_tab == ParentPanelTab.SECURITY:
+            self._draw_security_tab(_paint, local_rect, typography, pygame)
         elif self.active_tab == ParentPanelTab.WIFI:
-            self._draw_wifi_tab(screen, content_rect, typography, pygame, load_icon_fn)
+            self._draw_wifi_tab(_paint, local_rect, typography, pygame, load_icon_fn)
         elif self.active_tab == ParentPanelTab.SSH:
-            self._draw_ssh_tab(screen, content_rect, typography, pygame, load_icon_fn)
+            self._draw_ssh_tab(_paint, local_rect, typography, pygame, load_icon_fn)
         elif self.active_tab == ParentPanelTab.INFO:
-            self._draw_info_tab(screen, content_rect, typography, pygame, load_icon_fn)
+            self._draw_info_tab(_paint, local_rect, typography, pygame, load_icon_fn)
         elif self.active_tab == ParentPanelTab.POINTER:
-            self._draw_pointer_tab(screen, content_rect, typography, pygame)
+            self._draw_pointer_tab(_paint, local_rect, typography, pygame)
+
+        # The content surface is drawn in content-local coordinates, so the
+        # hit targets it registered are offset by the same amount before they
+        # are used for click hit-testing against screen coordinates.
+        self._rebase_targets(content_rect, content_target_start)
+        screen.blit(content_surface, content_rect.topleft)
+
+    def _rebase_targets(self, content_rect: Any, start: int) -> None:
+        """Move content-local hit targets into screen coordinates.
+
+        Tabs are painted onto a surface whose origin is the content rect, so the
+        rectangles they register are relative to that origin. Rebasing keeps click
+        handling correct without every tab knowing it is being painted offscreen.
+        Only targets from ``start`` onwards are content-local; the close control
+        and tab strip are registered earlier, already in screen coordinates, and
+        rebasing them would shift the tab bar out from under its own pixels.
+        """
+
+        offset = (content_rect.left, content_rect.top)
+        for index in range(start, len(self._targets)):
+            target = self._targets[index]
+            self._targets[index] = PanelHitTarget(
+                target.action, target.value, target.rect.move(*offset)
+            )
 
     def _draw_language_tab(
         self,
@@ -1172,6 +1319,581 @@ class ParentSettingsOverlay:
             )
             screen.blit(message, (card.left + 20, card.bottom - 26))
 
+    # --- Child accounts and Parent password -------------------------------
+    #
+    # Both tabs act through the Parent API using the session established at
+    # unlock, so the panel never writes profile or credential storage as the
+    # child identity. The service keeps its own guards: it refuses to remove the
+    # signed-in child or the last remaining account, and it revalidates that a
+    # profile's data path is a managed directory rather than a symlink.
+
+    def _parent_client(self) -> Any:
+        """The verifier when it can also issue API calls, else no client."""
+
+        return self.credential_verifier if hasattr(
+            self.credential_verifier, "list_child_accounts"
+        ) else None
+
+    def _available_avatars(self) -> tuple[str, ...]:
+        """Avatars from the shipped profile policy, never a duplicated list.
+
+        The service validates avatar ids against
+        ``runtime/profile-defaults.toml``; offering anything else produces a
+        refusal the parent cannot act on. An unreadable policy falls back to the
+        store's own default, so the tab still renders.
+        """
+
+        try:
+            from greia_platform.profiles import ProfilePolicy
+
+            root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
+            policy = ProfilePolicy.load(root / "runtime" / "profile-defaults.toml")
+            if policy.avatars:
+                return tuple(policy.avatars)
+            return (policy.default_avatar,)
+        except Exception:
+            return ("rainbow",)
+
+    def _max_profiles(self) -> int:
+        try:
+            from greia_platform.profiles import ProfilePolicy
+
+            root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
+            return int(
+                ProfilePolicy.load(root / "runtime" / "profile-defaults.toml").max_profiles
+            )
+        except Exception:
+            return 8
+
+    def _max_name_characters(self) -> int:
+        try:
+            from greia_platform.profiles import ProfilePolicy
+
+            root = Path(os.environ.get("GREIA_OS_ROOT", "/opt/greia-os"))
+            return int(
+                ProfilePolicy.load(
+                    root / "runtime" / "profile-defaults.toml"
+                ).max_name_characters
+            )
+        except Exception:
+            return 24
+
+    def _refresh_accounts(self) -> None:
+        client, session = self._parent_client(), self._session
+        if client is None or session is None:
+            return
+        try:
+            self._accounts = list(client.list_child_accounts(session))
+            self._accounts_loaded = True
+        except ParentCredentialUnavailable:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+        except Exception:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+
+    def _set_accounts_message(self, message: str | None, *, error: bool = False) -> None:
+        self._accounts_message = message
+        self._accounts_message_is_error = error
+
+    def _set_security_message(self, message: str | None, *, error: bool = False) -> None:
+        self._security_message = message
+        self._security_message_is_error = error
+
+    def _create_account(self) -> None:
+        client, session = self._parent_client(), self._session
+        if client is None or session is None:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            return
+        name = self._account_name.strip()
+        if not name:
+            self._set_accounts_message(text.ACCOUNTS_NAME_LABEL, error=True)
+            return
+        age: int | None = None
+        if self._account_age.strip():
+            try:
+                age = int(self._account_age.strip())
+            except ValueError:
+                self._set_accounts_message(text.ACCOUNTS_AGE_LABEL, error=True)
+                return
+        avatars = self._available_avatars()
+        avatar = avatars[self._account_avatar_index % len(avatars)]
+        try:
+            client.add_child_account(
+                session, display_name=name, avatar_id=avatar, approximate_age=age
+            )
+        except ParentRequestFailed as exc:
+            self._set_accounts_message(exc.reason, error=True)
+            return
+        except ParentCredentialUnavailable:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            return
+        except Exception:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            return
+        self._account_name = ""
+        self._account_age = ""
+        self._accounts_mode = "list"
+        self._text_field = None
+        self._set_accounts_message(text.STATUS_SAVED)
+        self._refresh_accounts()
+
+    def _remove_account(self, account: ChildAccount) -> None:
+        client, session = self._parent_client(), self._session
+        if client is None or session is None:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            return
+        try:
+            client.remove_child_account(session, account.profile_id)
+        except ParentRequestFailed as exc:
+            self._set_accounts_message(exc.reason, error=True)
+            return
+        except Exception:
+            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            return
+        self._pending_remove = None
+        self._accounts_mode = "list"
+        self._set_accounts_message(text.STATUS_SAVED)
+        self._refresh_accounts()
+
+    def _change_password(self) -> None:
+        client, session = self._parent_client(), self._session
+        if client is None or session is None:
+            self._set_security_message(text.STATUS_OFFLINE, error=True)
+            return
+        if self._security_new != self._security_confirm:
+            self._set_security_message(text.SECURITY_MISMATCH, error=True)
+            return
+        try:
+            client.change_parent_password(
+                session, self._security_current, self._security_new
+            )
+        except ParentRequestFailed as exc:
+            reason = exc.reason
+            if "current" in reason.lower():
+                reason = text.SECURITY_CURRENT_WRONG
+            self._set_security_message(reason, error=True)
+            return
+        except Exception:
+            self._set_security_message(text.STATUS_OFFLINE, error=True)
+            return
+        self._security_current = ""
+        self._security_new = ""
+        self._security_confirm = ""
+        self._set_security_message(text.SECURITY_CHANGED)
+
+    def _cycle_avatar(self, step: int) -> None:
+        count = len(self._available_avatars())
+        if count:
+            self._account_avatar_index = (self._account_avatar_index + step) % count
+
+    def _field_value(self, name: str) -> str:
+        return {
+            "account_name": self._account_name,
+            "account_age": self._account_age,
+            "security_current": self._security_current,
+            "security_new": self._security_new,
+            "security_confirm": self._security_confirm,
+        }.get(name, "")
+
+    def _set_field_value(self, name: str, value: str) -> None:
+        if name == "account_name":
+            self._account_name = value[: self._max_name_characters()]
+        elif name == "account_age":
+            self._account_age = value[:3]
+        elif name == "security_current":
+            self._security_current = value
+        elif name == "security_new":
+            self._security_new = value
+        elif name == "security_confirm":
+            self._security_confirm = value
+
+    def _draw_text_field(
+        self,
+        screen: Any,
+        pygame: Any,
+        typography: GreiaTypography,
+        rect: Any,
+        label: str,
+        value: str,
+        field: str,
+        *,
+        placeholder: str = "",
+        secret: bool = False,
+    ) -> None:
+        """A labelled single-line input whose width is driven by measurement."""
+
+        self._blit_rounded_card(
+            screen, rect, (255, 250, 240), (246, 236, 209), pygame,
+            (61, 44, 31), 2 if self._text_field == field else 1, radius=12,
+        )
+        shown = ("\u2022" * len(value)) if secret else value
+        if not shown and placeholder:
+            body = panel_layout.fit_single_line(
+                typography, placeholder, FontRole.BODY, 16, (150, 138, 126),
+                rect.width - 20,
+            )
+        else:
+            body = panel_layout.fit_single_line(
+                typography, shown, FontRole.BODY, 16, (61, 44, 31), rect.width - 20
+            )
+        panel_layout.blit_block(
+            screen, body, pygame, rect.left + 10, rect.centery,
+            bounds=rect,
+        )
+        self._targets.append(PanelHitTarget("focus_field", field, rect))
+
+    def _draw_card_header(
+        self,
+        screen: Any,
+        pygame: Any,
+        typography: GreiaTypography,
+        card: Any,
+        pad: int,
+        title_text: str,
+        intro_text: str,
+        top: int | None = None,
+        reserve_right: int = 0,
+    ) -> int:
+        """Draw a wrapped title and intro, returning the next free y.
+
+        ``reserve_right`` narrows the text so a header-row action button cannot
+        sit on top of it. Without it the intro ran the full card width and the
+        button was painted over the first line.
+        """
+
+        y = card.top + 16 if top is None else top
+        text_w = card.width - pad * 2 - reserve_right
+        title = panel_layout.fit_text_block(
+            typography, title_text, FontRole.TITLE, 22, (61, 44, 31), text_w
+        )
+        panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
+        y += title.height + 8
+        intro = panel_layout.fit_text_block(
+            typography, intro_text, FontRole.BODY, 16, (118, 104, 93), text_w
+        )
+        panel_layout.blit_block(screen, intro, pygame, card.left + pad, y)
+        return y + intro.height + 18
+
+    def _draw_status(
+        self,
+        screen: Any,
+        pygame: Any,
+        typography: GreiaTypography,
+        card: Any,
+        pad: int,
+        y: int,
+        message: str | None,
+        is_error: bool,
+    ) -> None:
+        if not message:
+            return
+        block = panel_layout.fit_text_block(
+            typography, message, FontRole.BODY, 16,
+            (181, 46, 46) if is_error else (47, 117, 81),
+            card.width - pad * 2, max_lines=3,
+        )
+        panel_layout.blit_block(screen, block, pygame, card.left + pad, y)
+
+    def _draw_accounts_tab(
+        self,
+        screen: Any,
+        rect: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+    ) -> None:
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
+        pad = 24
+        inner_w = card.width - pad * 2
+
+        if self._accounts_mode == "add":
+            y = self._draw_card_header(
+                screen, pygame, typography, card, pad,
+                text.ACCOUNTS_ADD, text.ACCOUNTS_INTRO,
+            )
+            # Name and age share a row. Stacked, the form was taller than the
+            # card at 600 px with a wrapped tab strip, and the action buttons
+            # were clipped in half. Sharing a row is layout-driven, not cosmetic.
+            gap = 12
+            age_w = min(220, inner_w // 3)
+            name_w = inner_w - age_w - gap
+            for index, (label, field, value, placeholder, field_w) in enumerate((
+                (text.ACCOUNTS_NAME_LABEL, "account_name", self._account_name,
+                 text.ACCOUNTS_NAME_PLACEHOLDER, name_w),
+                (text.ACCOUNTS_AGE_LABEL, "account_age", self._account_age,
+                 text.ACCOUNTS_AGE_PLACEHOLDER, age_w),
+            )):
+                field_x = card.left + pad + (0 if index == 0 else name_w + gap)
+                caption = panel_layout.fit_text_block(
+                    typography, label, FontRole.BODY, 15, (118, 104, 93), field_w
+                )
+                panel_layout.blit_block(screen, caption, pygame, field_x, y)
+                caption_h = caption.height
+                field_rect = pygame.Rect(field_x, y + caption_h + 4, field_w, 44)
+                self._draw_text_field(
+                    screen, pygame, typography, field_rect, label, value, field,
+                    placeholder=placeholder,
+                )
+            y += caption_h + 4 + 44 + 16
+
+            avatars = self._available_avatars()
+            caption = panel_layout.fit_text_block(
+                typography, text.ACCOUNTS_AVATAR_LABEL, FontRole.BODY, 15,
+                (118, 104, 93), inner_w,
+            )
+            panel_layout.blit_block(screen, caption, pygame, card.left + pad, y)
+            y += caption.height + 4
+            picker = pygame.Rect(card.left + pad, y, inner_w, 48)
+            self._blit_rounded_card(
+                screen, picker, (255, 250, 240), (246, 236, 209), pygame,
+                (61, 44, 31), 1, radius=12,
+            )
+            current = avatars[self._account_avatar_index % len(avatars)]
+            name_block = panel_layout.fit_single_line(
+                typography, current.replace("_", " "), FontRole.CONTROL, 17,
+                (61, 44, 31), picker.width - 140,
+            )
+            panel_layout.blit_block(
+                screen, name_block, pygame, picker.centerx, picker.centery,
+                align="center", bounds=picker,
+            )
+            step_w = 64
+            for side, step in (("prev", -1), ("next", 1)):
+                btn = pygame.Rect(
+                    picker.right - 12 - step_w if side == "prev" else picker.right - 12 - step_w,
+                    picker.top + 6, step_w, picker.height - 12,
+                )
+                if side == "prev":
+                    btn.x = picker.left + 12
+                self._blit_rounded_card(
+                    screen, btn, (246, 236, 209), (255, 250, 240), pygame,
+                    (61, 44, 31), 1, radius=10,
+                )
+                # Drawn, not typeset: U+25C0/U+25B6 are absent from the bundled
+                # fonts and rendered as grey tofu boxes, the same defect the
+                # audio tab's U+2796 step buttons had.
+                cx, cy = btn.centerx, btn.centery
+                size = min(btn.width, btn.height) // 4
+                if side == "prev":
+                    points = [
+                        (cx + size // 2, cy - size),
+                        (cx + size // 2, cy + size),
+                        (cx - size // 2, cy),
+                    ]
+                else:
+                    points = [
+                        (cx - size // 2, cy - size),
+                        (cx - size // 2, cy + size),
+                        (cx + size // 2, cy),
+                    ]
+                pygame.draw.polygon(screen, (61, 44, 31), points)
+                self._targets.append(PanelHitTarget("account_avatar", step, btn))
+            y += 48 + 18
+
+            gap = 12
+            half = (inner_w - gap) // 2
+            for index, (label, action) in enumerate((
+                (text.ACCOUNTS_CANCEL, "account_cancel"),
+                (text.ACCOUNTS_CREATE, "account_create"),
+            )):
+                btn = pygame.Rect(
+                    card.left + pad + index * (half + gap), y, half, 48
+                )
+                self._blit_rounded_card(
+                    screen, btn, (255, 250, 240),
+                    (241, 185, 35) if action == "account_create" else (246, 236, 209),
+                    pygame, (61, 44, 31), 2 if action == "account_create" else 1,
+                    radius=12,
+                )
+                block = panel_layout.fit_single_line(
+                    typography, label, FontRole.CONTROL, 17, (61, 44, 31), btn.width - 14
+                )
+                panel_layout.blit_block(
+                    screen, block, pygame, btn.centerx, btn.centery,
+                    align="center", bounds=btn,
+                )
+                self._targets.append(PanelHitTarget(action, None, btn))
+            y += 48 + 12
+            self._draw_status(
+                screen, pygame, typography, card, pad, y,
+                self._accounts_message, self._accounts_message_is_error,
+            )
+            return
+
+        if self._accounts_mode == "confirm" and self._pending_remove is not None:
+            y = self._draw_card_header(
+                screen, pygame, typography, card, pad,
+                text.ACCOUNTS_CONFIRM_REMOVE_TITLE,
+                text.ACCOUNTS_CONFIRM_REMOVE_BODY,
+            )
+            name = panel_layout.fit_text_block(
+                typography, self._pending_remove.display_name, FontRole.TITLE, 20,
+                (61, 44, 31), inner_w,
+            )
+            panel_layout.blit_block(screen, name, pygame, card.left + pad, y)
+            y += name.height + 20
+            gap = 12
+            half = (inner_w - gap) // 2
+            for index, (label, action, tone) in enumerate((
+                (text.ACCOUNTS_CANCEL, "account_remove_cancel", (246, 236, 209)),
+                (text.ACCOUNTS_CONFIRM_REMOVE_YES, "account_remove_confirm", (181, 46, 46)),
+            )):
+                btn = pygame.Rect(card.left + pad + index * (half + gap), y, half, 48)
+                self._blit_rounded_card(
+                    screen, btn, (255, 250, 240), tone, pygame, (61, 44, 31), 2, radius=12
+                )
+                block = panel_layout.fit_single_line(
+                    typography, label, FontRole.CONTROL, 16, (61, 44, 31), btn.width - 14
+                )
+                panel_layout.blit_block(
+                    screen, block, pygame, btn.centerx, btn.centery,
+                    align="center", bounds=btn,
+                )
+                self._targets.append(PanelHitTarget(action, None, btn))
+            return
+
+        # The "Add child" button shares the title's row, so the flow below it
+        # starts under the button rather than beside it. Letting the intro run
+        # full width under the button only avoided it by vertical luck.
+        header_top = card.top + 16
+        add_w = 168
+        y = self._draw_card_header(
+            screen, pygame, typography, card, pad,
+            text.ACCOUNTS_TITLE, text.ACCOUNTS_INTRO, top=header_top,
+            reserve_right=add_w + 12,
+        )
+        y = max(y, header_top + 42 + 12)
+        limit = self._max_profiles()
+        at_limit = len(self._accounts) >= limit
+        add_rect = pygame.Rect(card.right - pad - add_w, header_top, add_w, 42)
+        self._blit_rounded_card(
+            screen, add_rect, (255, 250, 240),
+            (222, 208, 178) if at_limit else (241, 185, 35), pygame,
+            (61, 44, 31), 1, radius=12,
+        )
+        block = panel_layout.fit_single_line(
+            typography, text.ACCOUNTS_ADD, FontRole.CONTROL, 17, (61, 44, 31), add_w - 14
+        )
+        panel_layout.blit_block(
+            screen, block, pygame, add_rect.centerx, add_rect.centery,
+            align="center", bounds=add_rect,
+        )
+        if not at_limit:
+            self._targets.append(PanelHitTarget("account_add", None, add_rect))
+
+        if not self._accounts_loaded:
+            self._refresh_accounts()
+        if not self._accounts:
+            empty = panel_layout.fit_text_block(
+                typography, text.ACCOUNTS_EMPTY, FontRole.BODY, 16,
+                (118, 104, 93), inner_w,
+            )
+            panel_layout.blit_block(screen, empty, pygame, card.left + pad, y + 8)
+        else:
+            row_h = 60
+            gap_y = 10
+            for index, account in enumerate(self._accounts):
+                row = pygame.Rect(
+                    card.left + pad, y + index * (row_h + gap_y), inner_w, row_h
+                )
+                if row.bottom > card.bottom - 40:
+                    break
+                self._blit_rounded_card(
+                    screen, row, (246, 236, 209), (255, 250, 240), pygame,
+                    (61, 44, 31), 1, radius=12,
+                )
+                name = panel_layout.fit_single_line(
+                    typography, account.display_name, FontRole.CONTROL, 18,
+                    (61, 44, 31), row.width - 190,
+                )
+                panel_layout.blit_block(
+                    screen, name, pygame, row.left + 14, row.centery, bounds=row
+                )
+                remove_w = 120
+                remove_rect = pygame.Rect(row.right - 14 - remove_w, row.top + 9, remove_w, row_h - 18)
+                self._blit_rounded_card(
+                    screen, remove_rect, (255, 250, 240), (246, 236, 209), pygame,
+                    (181, 46, 46), 1, radius=10,
+                )
+                remove_label = panel_layout.fit_single_line(
+                    typography, text.ACCOUNTS_REMOVE, FontRole.CONTROL, 16,
+                    (181, 46, 46), remove_w - 12,
+                )
+                panel_layout.blit_block(
+                    screen, remove_label, pygame, remove_rect.centerx,
+                    remove_rect.centery, align="center", bounds=remove_rect,
+                )
+                self._targets.append(
+                    PanelHitTarget("account_remove", account.profile_id, remove_rect)
+                )
+            y += len(self._accounts) * (row_h + gap_y)
+        y += 12
+        if at_limit:
+            self._draw_status(
+                screen, pygame, typography, card, pad, y,
+                text.ACCOUNTS_LIMIT_REACHED.format(count=limit), True,
+            )
+        else:
+            self._draw_status(
+                screen, pygame, typography, card, pad, y,
+                self._accounts_message, self._accounts_message_is_error,
+            )
+
+    def _draw_security_tab(
+        self,
+        screen: Any,
+        rect: Any,
+        typography: GreiaTypography,
+        pygame: Any,
+    ) -> None:
+        card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
+        self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
+        pad = 24
+        inner_w = card.width - pad * 2
+        header_top = card.top + 16
+        action_w = 200
+        y = self._draw_card_header(
+            screen, pygame, typography, card, pad,
+            text.SECURITY_TITLE, text.SECURITY_INTRO, top=header_top,
+            reserve_right=action_w + 12,
+        )
+        # The action sits on the title's row, as "Add child" does on the accounts
+        # tab. Stacked below three masked fields it was clipped in half at 600 px
+        # once the tab strip wrapped onto two rows.
+        action = pygame.Rect(card.right - pad - action_w, header_top, action_w, 42)
+        self._blit_rounded_card(
+            screen, action, (255, 250, 240), (241, 185, 35), pygame, (61, 44, 31), 2, radius=12
+        )
+        action_label = panel_layout.fit_single_line(
+            typography, text.SECURITY_CHANGE, FontRole.CONTROL, 16, (61, 44, 31),
+            action_w - 14,
+        )
+        panel_layout.blit_block(
+            screen, action_label, pygame, action.centerx, action.centery,
+            align="center", bounds=action,
+        )
+        self._targets.append(PanelHitTarget("security_change", None, action))
+        y = max(y, header_top + 42 + 14)
+
+        for label, field, value in (
+            (text.SECURITY_CURRENT_LABEL, "security_current", self._security_current),
+            (text.SECURITY_NEW_LABEL, "security_new", self._security_new),
+            (text.SECURITY_CONFIRM_LABEL, "security_confirm", self._security_confirm),
+        ):
+            caption = panel_layout.fit_text_block(
+                typography, label, FontRole.BODY, 15, (118, 104, 93), inner_w
+            )
+            panel_layout.blit_block(screen, caption, pygame, card.left + pad, y)
+            y += caption.height + 4
+            field_rect = pygame.Rect(card.left + pad, y, inner_w, 44)
+            self._draw_text_field(
+                screen, pygame, typography, field_rect, label, value, field, secret=True
+            )
+            y += 44 + 14
+        self._draw_status(
+            screen, pygame, typography, card, pad, y,
+            self._security_message, self._security_message_is_error,
+        )
+
     def _draw_audio_tab(
         self,
         screen: Any,
@@ -1181,85 +1903,146 @@ class ParentSettingsOverlay:
     ) -> None:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
+        pad = 24
+        inner_w = card.width - pad * 2
+        y = card.top + 16
 
-        title = self._get_text("Microphone Input Gain (Guadagno Microfono)", FontRole.TITLE, 22, (61, 44, 31), typography)
-        screen.blit(title, (card.left + 24, card.top + 16))
-
-        note = self._get_text(
-            "Controls the microphone recording volume for puppet theater storytelling and voice activities.",
-            FontRole.BODY,
-            16,
-            (118, 104, 93),
-            typography,
+        # Title and intro are measured, not placed at fixed offsets, so a
+        # translated string that needs two lines pushes everything below it
+        # down instead of landing on the first control.
+        title = panel_layout.fit_text_block(
+            typography, text.AUDIO_TITLE, FontRole.TITLE, 22, (61, 44, 31), inner_w
         )
-        screen.blit(note, (card.left + 24, card.top + 46))
+        panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
+        y += title.height + 8
+
+        intro = panel_layout.fit_text_block(
+            typography, text.AUDIO_INTRO, FontRole.BODY, 16, (118, 104, 93), inner_w
+        )
+        panel_layout.blit_block(screen, intro, pygame, card.left + pad, y)
+        y += intro.height + 18
 
         current_gain = self._current_mic_gain()
         pct = int(round(current_gain * 100))
 
-        # Current Gain Display Badge
-        badge_rect = pygame.Rect(card.left + 24, card.top + 84, 300, 48)
-        self._blit_rounded_card(screen, badge_rect, (246, 236, 209), (255, 250, 240), pygame, (241, 185, 35), 2, radius=14)
-        
-        lbl_current = self._get_text(
-            f"🎙️ Livello: {pct}% ({current_gain:.1f}x Boost)", FontRole.CONTROL, 18, (61, 44, 31), typography
+        # Level row: a readout, a real meter, and the two step controls. The
+        # widths are distributed rather than hard-coded, and each label is fitted
+        # to the box it lives in. The previous version centred the level text in
+        # a fixed 300 px badge with no measurement, so it overlapped these
+        # buttons, and used U+2796/U+2795, which the bundled fonts lack and
+        # which rendered as a grey tofu box.
+        step_w = 104
+        gap = 12
+        meter_w = max(120, inner_w - step_w * 2 - gap * 2)
+        # The readout and the track are separate bands inside one card. Centring
+        # the text across the whole card and then drawing the track near its
+        # bottom edge put the track straight through the text, which the
+        # screenshot review caught.
+        text_band = 30
+        track_h = 8
+        row_h = text_band + 10 + track_h + 12
+
+        badge_rect = pygame.Rect(card.left + pad, y, meter_w, row_h)
+        self._blit_rounded_card(
+            screen, badge_rect, (246, 236, 209), (255, 250, 240), pygame,
+            (241, 185, 35), 2, radius=12,
         )
-        screen.blit(lbl_current, lbl_current.get_rect(center=badge_rect.center))
+        badge_text = f"{text.AUDIO_LEVEL_LABEL}: {pct}%"
+        badge = panel_layout.fit_single_line(
+            typography, badge_text, FontRole.CONTROL, 17, (61, 44, 31), meter_w - 24
+        )
+        panel_layout.blit_block(
+            screen, badge, pygame, badge_rect.centerx, badge_rect.top + 6,
+            align="center", bounds=badge_rect,
+        )
 
-        # Fine Adjust [-25%] and [+25%] buttons
-        btn_minus = pygame.Rect(badge_rect.right + 16, card.top + 84, 95, 48)
-        self._blit_rounded_card(screen, btn_minus, (246, 236, 209), (255, 250, 240), pygame, (61, 44, 31), 1, radius=14)
-        lbl_m = self._get_text("➖ 25%", FontRole.CONTROL, 18, (61, 44, 31), typography)
-        screen.blit(lbl_m, lbl_m.get_rect(center=btn_minus.center))
-        self._targets.append(PanelHitTarget("mic_gain_adjust", -0.25, btn_minus))
-
-        btn_plus = pygame.Rect(btn_minus.right + 12, card.top + 84, 95, 48)
-        self._blit_rounded_card(screen, btn_plus, (246, 236, 209), (255, 250, 240), pygame, (61, 44, 31), 1, radius=14)
-        lbl_p = self._get_text("➕ 25%", FontRole.CONTROL, 18, (61, 44, 31), typography)
-        screen.blit(lbl_p, lbl_p.get_rect(center=btn_plus.center))
-        self._targets.append(PanelHitTarget("mic_gain_adjust", 0.25, btn_plus))
-
-        # Preset Quick Select Cards
-        lbl_presets = self._get_text("Preset rapidi consigliati:", FontRole.CONTROL, 18, (61, 44, 31), typography)
-        screen.blit(lbl_presets, (card.left + 24, card.top + 150))
-
-        presets = [
-            (1.0, "100%", "Normale (1.0x)"),
-            (1.5, "150%", "Medio (1.5x)"),
-            (2.0, "200%", "Alto (2.0x) ⭐"),
-            (3.0, "300%", "Forte (3.0x)"),
-            (4.0, "400%", "Massimo (4.0x)"),
-        ]
-
-        card_y = card.top + 182
-        card_w = (card.width - 48 - (len(presets) - 1) * 10) // len(presets)
-        card_h = 72
-
-        for idx, (val, p_pct, p_desc) in enumerate(presets):
-            p_rect = pygame.Rect(card.left + 24 + idx * (card_w + 10), card_y, card_w, card_h)
-            is_active = abs(current_gain - val) < 0.05
-            self._blit_rounded_card(
-                screen,
-                p_rect,
-                (246, 236, 209),
-                (241, 185, 35) if is_active else (255, 250, 240),
-                pygame,
-                (61, 44, 31),
-                3 if is_active else 1,
-                radius=14,
+        # The meter itself: a track with a filled portion, sized from the
+        # actual gain rather than implied by a number in a badge.
+        track = pygame.Rect(
+            badge_rect.left + 12, badge_rect.top + text_band + 8,
+            badge_rect.width - 24, track_h,
+        )
+        pygame.draw.rect(screen, (222, 208, 178), track, border_radius=track_h // 2)
+        filled_w = int(track.width * max(0.0, min(1.0, (current_gain - 1.0) / 3.0)))
+        if filled_w > 0:
+            pygame.draw.rect(
+                screen, (241, 185, 35),
+                pygame.Rect(track.left, track.top, filled_w, track.height),
+                border_radius=track_h // 2,
             )
+        knob_x = track.left + filled_w
+        # draw.circle has no border_radius; a plain disc is what we want anyway.
+        pygame.draw.circle(screen, (61, 44, 31), (knob_x, track.centery), 7)
+        pygame.draw.circle(screen, (255, 250, 240), (knob_x, track.centery), 4)
 
-            txt_p = self._get_text(p_pct, FontRole.CONTROL, 18, (61, 44, 31), typography)
-            screen.blit(txt_p, txt_p.get_rect(center=(p_rect.centerx, p_rect.top + 24)))
+        for offset, delta, label in (
+            (meter_w + gap, -0.25, text.AUDIO_DECREASE),
+            (meter_w + gap + step_w + gap, 0.25, text.AUDIO_INCREASE),
+        ):
+            btn = pygame.Rect(card.left + pad + offset, y, step_w, row_h)
+            self._blit_rounded_card(
+                screen, btn, (246, 236, 209), (255, 250, 240), pygame,
+                (61, 44, 31), 1, radius=12,
+            )
+            block = panel_layout.fit_single_line(
+                typography, label, FontRole.CONTROL, 17, (61, 44, 31), btn.width - 12
+            )
+            panel_layout.blit_block(
+                screen, block, pygame, btn.centerx, btn.centery,
+                align="center", bounds=btn,
+            )
+            self._targets.append(PanelHitTarget("mic_gain_adjust", delta, btn))
+        y += row_h + 20
 
-            txt_d = self._get_text(p_desc, FontRole.BODY, 16, (90, 80, 70), typography)
-            screen.blit(txt_d, txt_d.get_rect(center=(p_rect.centerx, p_rect.top + 50)))
+        presets_title = panel_layout.fit_text_block(
+            typography, text.AUDIO_PRESETS_TITLE, FontRole.CONTROL, 18,
+            (61, 44, 31), inner_w,
+        )
+        panel_layout.blit_block(screen, presets_title, pygame, card.left + pad, y)
+        y += presets_title.height + 10
 
-            self._targets.append(PanelHitTarget("mic_gain_set", val, p_rect))
+        values = sorted(text.AUDIO_PRESET_NAMES)
+        gap_x = 10
+        widths = panel_layout.even_columns(inner_w, len(values), gap_x)
+        preset_h = 76
+        for index, value in enumerate(values):
+            p_rect = pygame.Rect(
+                card.left + pad + sum(widths[:index]) + gap_x * index, y,
+                widths[index], preset_h,
+            )
+            is_active = abs(current_gain - value) < 0.05
+            self._blit_rounded_card(
+                screen, p_rect, (246, 236, 209),
+                (241, 185, 35) if is_active else (255, 250, 240),
+                pygame, (61, 44, 31), 3 if is_active else 1, radius=14,
+            )
+            percent = panel_layout.fit_single_line(
+                typography, f"{int(value * 100)}%", FontRole.CONTROL, 18,
+                (61, 44, 31), p_rect.width - 12,
+            )
+            panel_layout.blit_block(
+                screen, percent, pygame, p_rect.centerx, p_rect.top + 24,
+                align="center", bounds=p_rect,
+            )
+            name = panel_layout.fit_single_line(
+                typography, text.AUDIO_PRESET_NAMES[value], FontRole.BODY, 15,
+                (90, 80, 70), p_rect.width - 12,
+            )
+            panel_layout.blit_block(
+                screen, name, pygame, p_rect.centerx, p_rect.top + 52,
+                align="center", bounds=p_rect,
+            )
+            self._targets.append(PanelHitTarget("mic_gain_set", value, p_rect))
+        y += preset_h + 16
 
         if self._audio_message:
-            msg = self._get_text(self._audio_message, FontRole.BODY, 16, (47, 117, 81), typography)
-            screen.blit(msg, (card.left + 24, card.bottom - 26))
+            message = panel_layout.fit_text_block(
+                typography, self._audio_message, FontRole.BODY, 16,
+                (47, 117, 81), inner_w, max_lines=2,
+            )
+            # Anchored to the flow, not the card bottom, so a two-line message
+            # cannot ride up over the presets.
+            panel_layout.blit_block(screen, message, pygame, card.left + pad, y)
 
     def _draw_pointer_tab(
         self,

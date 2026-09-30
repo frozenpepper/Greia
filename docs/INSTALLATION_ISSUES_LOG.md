@@ -1274,3 +1274,86 @@ the other image-level fixes.
   on another device. Not started.
 - **Audio settings layout.** Controls overlap the input-level visualisation,
   which is too small and does not work. Not yet investigated.
+
+## 24. Parent panel: missing child accounts and Parent password, and a layout that could not survive translation
+
+### 24a. What was missing
+
+The on-device Parent panel could only ask the Parent service one question — is
+this password correct. It had no way to set its own password and no way to add or
+remove a child. The web API already supported both
+(`POST /api/v1/profiles`, `DELETE /api/v1/profiles/{id}`,
+`POST /api/v1/parent-password`), so parents had to use a browser on another
+device. The panel's own tab list was language, audio, wifi, ssh, info and pointer.
+
+### 24b. The layout could not survive a translation, and the screenshot review said so
+
+There was no string table and no measurement. The audio tab had already drifted
+into half-hardcoded Italian beside English — "Microphone Input Gain (Guadagno
+Microfono)", "Preset rapidi consigliati:", "Livello:", "Normale/Medio/Alto/Forte/
+Massimo" — on a system declaring twelve languages including Arabic, Chinese,
+Bengali and Hindi.
+
+Rendering every tab offscreen and looking at the images confirmed the reported
+faults and found more:
+
+- the level label was centred in a fixed 300 px badge and spilled onto the
+  adjacent buttons;
+- the `-25%` and `+25%` controls used U+2796 and U+2795, which the bundled Nunito
+  Sans has no glyphs for, so they rendered as grey tofu boxes;
+- there was no level meter at all, only a text badge, despite the screen implying
+  one;
+- the tab strip sized its columns arithmetically and centred labels inside them,
+  so adding two tabs made the labels collide before any translation existed.
+
+### 24c. What was built
+
+`greia_launcher/panel_layout.py` measures every string through the same
+fallback chain the panel renders with, wraps it to a width, grows a block
+downwards, and clips with an ellipsis only where growth is impossible, reporting
+that it did. `GreiaTypography.render` accepts one line at a time by design, so
+wrapping composes measured single-line renders rather than bypassing the shared
+emoji fallback, which previously produced tofu for every emoji on device.
+
+`greia_launcher/panel_strings.py` is now the single translation surface: every
+user-visible constant, 58 of them. It is deliberately not a gettext pipeline and
+does not pretend to be one. Two gaps are named rather than hidden: right-to-left
+languages need the whole layout mirrored, and non-Latin scripts need font
+coverage this module cannot provide.
+
+Layout changes driven by the screenshots:
+
+- the tab strip wraps onto a second row instead of shrinking every label into an
+  ellipsis, and the content area moves down to follow it. At 800 px with eight
+  tabs it now shows every label in full where the old arithmetic produced
+  "Languag" and "Remote &…";
+- the audio tab has a real meter driven by the actual gain, with the readout and
+  the track in separate bands after the first version drew the track straight
+  through the text;
+- the avatar stepper draws its triangles rather than asking the font for
+  U+25C0/U+25B6, which are absent for the same reason the audio step buttons
+  were;
+- header-row action buttons reserve their column, after "Change password" was
+  first painted on top of the intro's first line;
+- tab content is composed on its own surface of exactly the content rect, so a
+  form taller than the card is clipped instead of spilling onto the chrome. The
+  "Add child" form was clipped in half until name and age shared a row, and the
+  password form until its action moved to the header row.
+
+### 24d. What was verified
+
+`tools/panel_screenshots.py` renders every tab, and the add and confirm
+sub-screens, at 1024x600 and 800x600, and reports overlapping hit targets. All 20
+states pass with zero overlaps. Both new tabs were exercised on the reference
+Acer as `greiakid`: eight tabs present, launcher `active` with 0 restarts over
+60 s, and no errors.
+
+`tests/test_panel_layout.py` replays every string constant through the layout at
+both sizes, including a German compound longer than anything written today, so a
+string that cannot be laid out fails the suite rather than a parent.
+`tests/test_parent_panel_accounts.py` covers the behaviour: refusals, the
+service's own reason reaching the parent, offline distinguished from a bad name,
+the policy's name-length limit, avatar cycling, the password mismatch guard, and
+a bare verifier still unlocking without a session. Four negatives were verified
+individually: removing the empty-name guard, the session-on-unlock path, the
+name-length limit, or the password mismatch guard each fails a test.
