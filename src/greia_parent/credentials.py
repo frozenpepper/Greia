@@ -67,6 +67,15 @@ class ParentDeviceCredentialStore:
         if len(records) >= MAX_PAIRED_DEVICES:
             raise ParentCredentialError("paired-device limit reached")
 
+        # Re-pairing an existing client replaces its own old records instead of
+        # consuming another slot. The on-device panel re-pairs on every launch, so
+        # without this the store filled itself to MAX_PAIRED_DEVICES and then
+        # refused every parent password with "paired-device limit reached" - which
+        # the panel could only report as the password being unavailable.
+        records = [r for r in records if r.device.display_name != display_name]
+        if len(records) >= MAX_PAIRED_DEVICES:
+            raise ParentCredentialError("paired-device limit reached")
+
         token = secrets.token_urlsafe(TOKEN_BYTES)
         device = PairedDevice(
             device_id=secrets.token_urlsafe(12),

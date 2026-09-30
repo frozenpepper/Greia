@@ -710,3 +710,39 @@ class ParentApiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RePairingClientDoesNotExhaustTheLimitTests(unittest.TestCase):
+    """A client that re-pairs must not consume a new slot every time.
+
+    The on-device panel re-pairs on each launch. Before this, sixteen launches
+    filled the store and every subsequent parent password was refused with
+    "paired-device limit reached", which the panel had no way to tell apart
+    from the password being unavailable.
+    """
+
+    def _store(self, tmp: str) -> ParentDeviceCredentialStore:
+        return ParentDeviceCredentialStore(Path(tmp))
+
+    def test_repeated_pairing_of_one_client_stays_within_the_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._store(tmp)
+            for _ in range(MAX_PAIRED_DEVICES + 8):
+                store.issue("greia-on-device")
+            self.assertEqual(len(store.list_devices()), 1)
+
+    def test_distinct_clients_keep_separate_records(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._store(tmp)
+            store.issue("greia-on-device")
+            store.issue("parent-phone")
+            names = sorted(d.display_name for d in store.list_devices())
+            self.assertEqual(names, ["greia-on-device", "parent-phone"])
+
+    def test_limit_still_refuses_genuinely_distinct_clients(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = self._store(tmp)
+            for index in range(MAX_PAIRED_DEVICES):
+                store.issue("device-%d" % index)
+            with self.assertRaises(ParentCredentialError):
+                store.issue("one-too-many")
