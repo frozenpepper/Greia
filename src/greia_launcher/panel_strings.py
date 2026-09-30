@@ -76,6 +76,12 @@ AUDIO_INTRO = (
 AUDIO_LEVEL_LABEL = "Level"
 AUDIO_DECREASE = "−25%"
 AUDIO_INCREASE = "+25%"
+AUDIO_INPUT_LABEL = "Microphone input"
+AUDIO_INPUT_SILENT = "No sound detected"
+AUDIO_INPUT_CLIPPING = "Clipping"
+AUDIO_INPUT_UNAVAILABLE = (
+    "No microphone could be read. Check that a microphone is connected."
+)
 AUDIO_PRESETS_TITLE = "Suggested presets"
 AUDIO_PRESET_NAMES: dict[float, str] = {
     1.0: "Normal",

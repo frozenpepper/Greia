@@ -165,7 +165,19 @@ class SignatureCoversEverythingTheDrawCodeReadsTests(unittest.TestCase):
     #: ``_panel_base`` and ``_panel_composite`` are the caches themselves, and
     #: ``_drawing_targets`` was dead scaffolding from an earlier revision.
     _EXEMPT = frozenset(
-        {"_targets", "_panel_base", "_panel_composite", "_drawing_targets"}
+        {
+            "_targets",
+            "_panel_base",
+            "_panel_composite",
+            "_drawing_targets",
+            # The audio tab carries a live input meter and is therefore never
+            # served from the composite cache, so its per-frame state does not
+            # belong in a signature. The audit flagged it, correctly; these are
+            # exempt for that reason and not because they are unimportant.
+            "_mic_level_reader",
+            "_mic_peak_hold_dbfs",
+            "_mic_peak_hold_until",
+        }
     )
 
     def test_no_state_read_by_the_draw_path_is_missing(self) -> None:
@@ -306,3 +318,26 @@ class CollaboratorStateInvalidatesTests(unittest.TestCase):
         self.panel.wifi_controller = _Broken()
         first = self.panel._composite_key(None, (1024, 600))
         self.assertEqual(first, self.panel._composite_key(None, (1024, 600)))
+
+
+class AudioTabIsNeverCachedTests(unittest.TestCase):
+    """The audio tab has a live input meter, so it must never be cached.
+
+    Caching it would freeze the one number the parent opened the tab to watch,
+    which is the same silent-wrongness failure as the missing signature fields.
+    """
+
+    def setUp(self) -> None:
+        pygame.display.init()
+        self.screen = pygame.display.set_mode((1024, 600))
+        self.panel = _panel()
+        self.panel.active_tab = ParentPanelTab.AUDIO
+
+    def test_audio_tab_is_not_served_from_the_cache(self) -> None:
+        self.panel.draw(self.screen, _Theme(), GreiaTypography(), pygame, _icon)
+        self.panel._content_animating = False
+        self.assertFalse(
+            self.panel._serve_composite(
+                self.screen, self.panel._composite_key(None, (1024, 600))
+            )
+        )

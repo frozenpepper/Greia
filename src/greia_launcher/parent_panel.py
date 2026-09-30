@@ -14,6 +14,12 @@ from greia_platform.hardware_session import (
     speed_preset_names,
     speed_to_preset,
 )
+from greia_platform.microphone_level import (
+    SILENCE_FLOOR_DBFS,
+    MicrophoneLevel,
+    MicrophoneLevelReader,
+)
+
 from greia_launcher import panel_layout
 from greia_launcher import panel_strings as text
 from greia_launcher.parent_credential_client import (
@@ -193,6 +199,14 @@ class ParentSettingsOverlay:
         # Set by the Shell when the tab has something that moves every frame, so
         # an animated tab is never served from the cache.
         self._content_animating = False
+        # Live input level. The gain meter only reflected the setting; nothing
+        # showed what the microphone was hearing, so a parent could not tell a
+        # working mic from a muted one. Measured on the reference Acer's ALC268
+        # input: RMS -9.0 dBFS with the peak pinned at 0.0 dBFS, which is
+        # clipping, and it was invisible.
+        self._mic_level_reader = MicrophoneLevelReader()
+        self._mic_peak_hold_dbfs = SILENCE_FLOOR_DBFS
+        self._mic_peak_hold_until = 0.0
         self._text_surface_cache: dict[tuple[Any, ...], Any] = {}
         self._sync_language_selection()
         # Pointer tab state. The settings store parses a JSON file on read
@@ -1122,7 +1136,9 @@ class ParentSettingsOverlay:
     def _serve_composite(self, screen: Any, key: Any) -> bool:
         """Present the cached frame when nothing it depends on has changed."""
 
-        if self._content_animating:
+        # The audio tab carries a live input meter, so a cached frame would freeze
+        # the one number the parent opened the tab to watch.
+        if self._content_animating or self.active_tab is ParentPanelTab.AUDIO:
             return False
         if self._panel_composite is None or self._panel_composite_key != key:
             return False
@@ -1136,7 +1152,7 @@ class ParentSettingsOverlay:
     def _store_composite(self, screen: Any, key: Any) -> None:
         """Keep this frame so the next one can be a single blit."""
 
-        if self._content_animating:
+        if self._content_animating or self.active_tab is ParentPanelTab.AUDIO:
             self._panel_composite = None
             self._panel_composite_key = None
             return
@@ -1533,6 +1549,19 @@ class ParentSettingsOverlay:
             )
         except Exception:
             return 24
+
+    def _ensure_mic_level_running(self, wanted: bool) -> None:
+        """Hold the capture device only while the audio tab is on screen.
+
+        A parent who is looking at Wi-Fi should not have the microphone held
+        open, so capture follows the tab rather than the panel's lifetime.
+        """
+
+        if wanted:
+            self._mic_level_reader.start()
+        else:
+            self._mic_level_reader.stop()
+            self._mic_peak_hold_dbfs = SILENCE_FLOOR_DBFS
 
     def _refresh_accounts(self) -> None:
         client, session = self._parent_client(), self._session
@@ -2050,6 +2079,85 @@ class ParentSettingsOverlay:
             self._security_message, self._security_message_is_error,
         )
 
+    def _draw_input_meter(
+        self,
+        screen: Any,
+        pygame: Any,
+        typography: GreiaTypography,
+        card: Any,
+        pad: int,
+        y: int,
+        inner_w: int,
+    ) -> int:
+        """Live microphone input level, with a peak hold and a clip warning.
+
+        The gain meter below shows the *setting*. This shows what the microphone
+        is actually hearing, which is the only way a parent can tell a working
+        microphone from a muted one, and the only way to notice that a gain is
+        too high. Measured on the reference Acer, whose ALC268 input was peaking
+        at 0.0 dBFS, i.e. clipping, with no indication of it anywhere in the UI.
+        """
+
+        level: MicrophoneLevel = self._mic_level_reader.level
+        now = time.monotonic()
+        if level.available:
+            if level.peak_dbfs >= self._mic_peak_hold_dbfs:
+                self._mic_peak_hold_dbfs = level.peak_dbfs
+                self._mic_peak_hold_until = now + 1.2
+            elif now > self._mic_peak_hold_until:
+                self._mic_peak_hold_dbfs = max(
+                    SILENCE_FLOOR_DBFS, self._mic_peak_hold_dbfs - 1.0
+                )
+
+        title = panel_layout.fit_text_block(
+            typography, text.AUDIO_INPUT_LABEL, FontRole.CONTROL, 18,
+            (61, 44, 31), inner_w,
+        )
+        panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
+        y += title.height + 6
+
+        if not level.available:
+            note = panel_layout.fit_text_block(
+                typography, text.AUDIO_INPUT_UNAVAILABLE, FontRole.BODY, 15,
+                (150, 138, 126), inner_w,
+            )
+            panel_layout.blit_block(screen, note, pygame, card.left + pad, y)
+            return y + note.height
+
+        readout = f"{level.rms_dbfs:+.0f} dB" if not level.silent else text.AUDIO_INPUT_SILENT
+        if level.clipping:
+            readout = f"{text.AUDIO_INPUT_CLIPPING}  {level.rms_dbfs:+.0f} dB"
+        value = panel_layout.fit_single_line(
+            typography, readout, FontRole.CONTROL, 16,
+            (181, 46, 46) if level.clipping else (61, 44, 31), 200,
+        )
+        panel_layout.blit_block(
+            screen, value, pygame, card.left + pad + inner_w, y, bounds=card
+        )
+
+        bar_h = 16
+        track = pygame.Rect(card.left + pad, y + value.height + 4, inner_w, bar_h)
+        pygame.draw.rect(screen, (222, 208, 178), track, border_radius=bar_h // 2)
+
+        def position(db: float) -> int:
+            span = 0.0 - SILENCE_FLOOR_DBFS
+            fraction = (db - SILENCE_FLOOR_DBFS) / span if span else 0.0
+            return int(track.width * max(0.0, min(1.0, fraction)))
+
+        filled = position(level.rms_dbfs)
+        if filled > 0:
+            pygame.draw.rect(
+                screen, (181, 46, 46) if level.clipping else (241, 185, 35),
+                pygame.Rect(track.left, track.top, filled, track.height),
+                border_radius=bar_h // 2,
+            )
+        peak_x = track.left + position(self._mic_peak_hold_dbfs)
+        pygame.draw.rect(
+            screen, (61, 44, 31),
+            pygame.Rect(peak_x - 1, track.top - 3, 3, track.height + 6),
+        )
+        return track.bottom
+
     def _draw_audio_tab(
         self,
         screen: Any,
@@ -2057,6 +2165,7 @@ class ParentSettingsOverlay:
         typography: GreiaTypography,
         pygame: Any,
     ) -> None:
+        self._ensure_mic_level_running(True)
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
         pad = 24
@@ -2077,6 +2186,9 @@ class ParentSettingsOverlay:
         )
         panel_layout.blit_block(screen, intro, pygame, card.left + pad, y)
         y += intro.height + 18
+
+        y = self._draw_input_meter(screen, pygame, typography, card, pad, y, inner_w)
+        y += 18
 
         current_gain = self._current_mic_gain()
         pct = int(round(current_gain * 100))

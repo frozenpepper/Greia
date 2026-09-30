@@ -1478,3 +1478,40 @@ the panel can both list and connect.
 All three packages are now in `build/package-sets/network-basic.txt`, which every
 target profile already includes, and the staging contract asserts all three by
 name so a rebuild cannot ship a target that can list networks but never join one.
+
+## 27. Microphone: no input level was shown anywhere, and the gain was clipping
+
+The Parent panel's audio tab showed a gain meter that reflected only the
+*setting*. Nothing reported what the microphone was actually hearing, so a parent
+could not tell a working microphone from a muted one, nor notice that the gain was
+too high. There was no level-reading API in the platform at all.
+
+Measured on the reference Acer's ALC268 analog input, in its native format
+(S16_LE, 48 kHz, **2-channel** — it rejects `-c 1` outright):
+
+```
+left RMS   11591.3  (-9.0 dBFS)
+left peak  32768    ( 0.0 dBFS)   <- clipping, and invisible in the UI
+```
+
+`MicrophoneLevelReader` adds a live input meter. Design points, each from the
+hardware rather than assumption:
+
+- **No new dependency.** `arecord` from alsa-utils is already present and writes
+  raw PCM, so the level is computed in-process. A Python ALSA binding would have
+  been another package to ship in an image that has already been bitten by a
+  missing one.
+- **Channel count is discovered, not assumed**, and only the left channel is
+  measured, because averaging would let a loud right channel mask a silent left.
+- **Never blocks the Shell.** Capture runs on one daemon thread and the panel
+  reads a plain snapshot; a wedged or absent device yields "no level", never an
+  exception and never a stall.
+- **Silence is not failure.** A silent microphone reports silence; a device that
+  cannot be opened reports unavailable, so the two are distinguishable on screen.
+- **Capture follows the tab**, not the panel's lifetime, so a parent looking at
+  Wi-Fi does not hold the microphone open.
+
+Verified on the appliance as `greiakid` against the real microphone: RMS tracked
+live between -4.5 and -24.6 dBFS with the peak held, and the device released on
+stop. The audio tab is now excluded from the composite frame cache, because
+caching it would freeze the one number the parent opened the tab to watch.
