@@ -227,6 +227,10 @@ class ParentSettingsOverlay:
         self._pointer_probe_known = False
         self._pointer_message = ""
         self._pointer_focus = 0
+        self._audio_processing_enabled = True
+        self._audio_advanced_enabled = False
+        self._audio_advanced_available = False
+        self._audio_settings_loaded = False
         self._pointer_test_flash: int | None = None
         self._pointer_test_flash_at = 0.0
 
@@ -500,6 +504,9 @@ class ParentSettingsOverlay:
                 elif target.action == "mic_gain_adjust":
                     self._adjust_mic_gain(float(target.value))
                     return True
+                elif target.action == "mic_processing_toggle":
+                    self._toggle_microphone_processing(str(target.value))
+                    return True
                 elif target.action == "pointer_touchpad_preset":
                     self._set_pointer_preset("touchpad", str(target.value))
                     return True
@@ -605,6 +612,79 @@ class ParentSettingsOverlay:
             self._cached_mic_gain = value
             self._mic_gain_read_at = now
         return self._cached_mic_gain
+
+    def _refresh_audio_processing(self) -> None:
+        """Read microphone processing policy through the Parent service.
+
+        The settings directory is greiapel-owned and this panel runs as greiakid,
+        which has read but not write access, so the policy is read and written
+        through the service. Reading it directly is what left the noise cancelling
+        controls unwired for so long.
+        """
+
+        client, session = self._parent_client(), self._session
+        if client is None or session is None:
+            return
+        try:
+            payload = client.get_audio_settings(session)
+        except Exception:
+            self._audio_settings_loaded = False
+            return
+        if not isinstance(payload, dict):
+            return
+        self._audio_processing_enabled = bool(
+            payload.get("microphone_processing_enabled", True)
+        )
+        self._audio_advanced_enabled = bool(payload.get("advanced_noise_reduction", False))
+        advanced = payload.get("advanced_available")
+        self._audio_advanced_available = advanced is True
+        self._audio_settings_loaded = True
+
+    def _set_microphone_processing(self, enabled: bool, advanced: bool) -> None:
+        """Apply microphone processing policy, refusing an unavailable backend."""
+
+        if advanced and not self._audio_advanced_available:
+            self._audio_message = (
+                "Advanced noise reduction is not available on this Greia."
+            )
+            return
+        client, session = self._parent_client(), self._session
+        if client is None or session is None:
+            self._audio_message = text.STATUS_OFFLINE
+            return
+        try:
+            client.set_microphone_processing(
+                session, enabled=enabled, advanced=advanced
+            )
+        except Exception as exc:
+            self._audio_message = f"Could not change noise cancelling: {exc}"
+            return
+        self._audio_processing_enabled = enabled
+        self._audio_advanced_enabled = advanced
+        mode = (
+            "off"
+            if not enabled
+            else ("advanced" if advanced else "lightweight")
+        )
+        self._audio_message = f"Noise cancelling set to {mode}."
+
+    def _toggle_microphone_processing(self, field: str) -> None:
+        """Flip one noise cancelling control, keeping the pair coherent.
+
+        Turning processing off also turns advanced reduction off, so the stored
+        policy never describes noise cancelling that is not running.
+        """
+
+        if field == "mic_processing":
+            enabled = not self._audio_processing_enabled
+            self._set_microphone_processing(
+                enabled, self._audio_advanced_enabled if enabled else False
+            )
+        elif field == "mic_advanced":
+            self._set_microphone_processing(
+                self._audio_processing_enabled,
+                not self._audio_advanced_enabled,
+            )
 
     def _set_mic_gain(self, value: float) -> None:
         if self.hardware_store is not None:
@@ -749,17 +829,11 @@ class ParentSettingsOverlay:
             speed = float(preset_to_speed(name))
         except (KeyError, TypeError, ValueError):
             return
-        try:
-            if which == "touchpad":
-                updated = self.hardware_store.update(touchpad_speed=speed)
-            else:
-                updated = self.hardware_store.update(mouse_speed=speed)
-        except Exception as exc:
-            self._pointer_message = f"Could not update pointer speed: {exc}"
-            return
-        self._cached_pointer_settings = updated
-        self._pointer_settings_read_at = time.monotonic()
         label = "Touchpad" if which == "touchpad" else "Mouse"
+        field = "touchpad_speed" if which == "touchpad" else "mouse_speed"
+        self._apply_hardware_change({field: speed}, f"{label} speed: {name}.")
+        if self.hardware_store is None:
+            return
         self._pointer_message = f"{label} feel set to {name}."
 
     def _step_pointer_preset(self, which: str, delta: int) -> None:
@@ -773,6 +847,32 @@ class ParentSettingsOverlay:
             index = len(names) // 2
         index = max(0, min(len(names) - 1, index + (1 if delta > 0 else -1)))
         self._set_pointer_preset(which, names[index])
+
+    def _apply_hardware_change(
+        self, changes: dict[str, object], success: str
+    ) -> bool:
+        """Apply one settings change through the Parent service.
+
+        The panel runs as greiakid and the settings directory is greiapel-owned
+        with mode 2750, so a direct store write raised PermissionError. Every
+        control caught that and showed nothing, which is why the pointer switches
+        looked interactive and changed nothing. The service owns the write.
+        """
+
+        client, session = self._parent_client(), self._session
+        if client is None or session is None:
+            self._pointer_message = text.STATUS_OFFLINE
+            return False
+        try:
+            updated = client.update_hardware_settings(session, changes)
+        except Exception as exc:
+            self._pointer_message = f"Could not apply: {exc}"
+            return False
+        self._pointer_settings = updated
+        self._cached_pointer_settings = updated
+        self._pointer_settings_read_at = time.monotonic()
+        self._pointer_message = success
+        return True
 
     def _toggle_pointer_setting(self, field: str) -> None:
         if field not in self._POINTER_TOGGLE_FIELDS:
@@ -797,6 +897,18 @@ class ParentSettingsOverlay:
         self._pointer_message = f"{'On' if not current else 'Off'}: {field.replace('_', ' ')}."
 
     def _reset_pointer_defaults(self) -> None:
+        client, session = self._parent_client(), self._session
+        if client is not None and session is not None:
+            try:
+                updated = client.reset_hardware_settings(session)
+            except Exception as exc:
+                self._pointer_message = f"Could not reset pointer settings: {exc}"
+                return
+            self._pointer_settings = updated
+            self._cached_pointer_settings = updated
+            self._pointer_settings_read_at = time.monotonic()
+            self._pointer_message = "Pointer settings reset to defaults."
+            return
         if self.hardware_store is None:
             return
         try:
@@ -1089,6 +1201,9 @@ class ParentSettingsOverlay:
         "_pointer_has_touchpad",
         "_pointer_message",
         "_pointer_min_touch_px",
+        "_audio_processing_enabled",
+        "_audio_advanced_enabled",
+        "_audio_advanced_available",
         "_pointer_test_flash",
         "_pointer_test_flash_at",
         "_ssh_cached_status",
@@ -2370,6 +2485,8 @@ class ParentSettingsOverlay:
         pygame: Any,
     ) -> None:
         self._ensure_mic_level_running(True)
+        if not self._audio_settings_loaded:
+            self._refresh_audio_processing()
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
         pad = 24
@@ -2391,8 +2508,16 @@ class ParentSettingsOverlay:
         panel_layout.blit_block(screen, intro, pygame, card.left + pad, y)
         y += intro.height + 18
 
+        meter_top = y
         y = self._draw_input_meter(screen, pygame, typography, card, pad, y, inner_w)
-        y += 18
+        # The noise cancelling controls sit beside the meter rather than below
+        # it. The audio tab already fills the 600 px reference screen vertically,
+        # and this is the one region the layout was leaving empty.
+        self._draw_noise_cancelling(
+            screen, pygame, typography, card, pad, meter_top,
+            self._meter_band_rect.height if self._meter_band_rect else 0,
+        )
+        y += 8
 
         current_gain = self._current_mic_gain()
         pct = int(round(current_gain * 100))
@@ -2476,7 +2601,7 @@ class ParentSettingsOverlay:
         values = sorted(text.AUDIO_PRESET_NAMES)
         gap_x = 10
         widths = panel_layout.even_columns(inner_w, len(values), gap_x)
-        preset_h = 76
+        preset_h = 58
         for index, value in enumerate(values):
             p_rect = pygame.Rect(
                 card.left + pad + sum(widths[:index]) + gap_x * index, y,
@@ -2489,23 +2614,23 @@ class ParentSettingsOverlay:
                 pygame, (61, 44, 31), 3 if is_active else 1, radius=14,
             )
             percent = panel_layout.fit_single_line(
-                typography, f"{int(value * 100)}%", FontRole.CONTROL, 18,
+                typography, f"{int(value * 100)}%", FontRole.CONTROL, 17,
                 (61, 44, 31), p_rect.width - 12,
             )
             panel_layout.blit_block(
-                screen, percent, pygame, p_rect.centerx, p_rect.top + 24,
+                screen, percent, pygame, p_rect.centerx, p_rect.top + 16,
                 align="center", bounds=p_rect,
             )
             name = panel_layout.fit_single_line(
-                typography, text.AUDIO_PRESET_NAMES[value], FontRole.BODY, 15,
+                typography, text.AUDIO_PRESET_NAMES[value], FontRole.BODY, 13,
                 (90, 80, 70), p_rect.width - 12,
             )
             panel_layout.blit_block(
-                screen, name, pygame, p_rect.centerx, p_rect.top + 52,
+                screen, name, pygame, p_rect.centerx, p_rect.top + 36,
                 align="center", bounds=p_rect,
             )
             self._targets.append(PanelHitTarget("mic_gain_set", value, p_rect))
-        y += preset_h + 16
+        y += preset_h + 12
 
         if self._audio_message:
             message = panel_layout.fit_text_block(
@@ -2515,6 +2640,87 @@ class ParentSettingsOverlay:
             # Anchored to the flow, not the card bottom, so a two-line message
             # cannot ride up over the presets.
             panel_layout.blit_block(screen, message, pygame, card.left + pad, y)
+
+    def _draw_noise_cancelling(
+        self,
+        screen: Any,
+        pygame: Any,
+        typography: GreiaTypography,
+        card: Any,
+        pad: int,
+        top: int,
+        height: int,
+    ) -> None:
+        """Noise cancelling: processing on/off, and advanced reduction.
+
+        Drawn in the column beside the live meter. The policy already existed in
+        greia_platform.audio but was exposed nowhere - not the Parent API, not this
+        panel - and the tab was already full-height on the 600 px reference
+        screen, so this needed a home that did not push anything else out.
+
+        Read and written through the Parent service: the settings directory is
+        greiapel-owned and this panel runs as greiakid, which has read but not
+        write access. That gap is why the pointer and audio controls looked
+        functional and silently did nothing.
+        """
+
+        inner_w = card.width - pad * 2
+        col_w = int(inner_w * 0.34)
+        col_x = card.left + pad + inner_w - col_w
+        top = top - 4
+        if height <= 0 or col_w < 120:
+            return
+
+        title = panel_layout.fit_text_block(
+            typography, text.AUDIO_NOISE_TITLE, FontRole.CONTROL, 15,
+            (61, 44, 31), col_w, max_lines=1,
+        )
+        panel_layout.blit_block(screen, title, pygame, col_x, top)
+        row_y = top + title.height + 4
+        row_h = 30
+
+        toggles = [
+            (
+                "mic_processing",
+                text.AUDIO_NOISE_PROCESSING,
+                self._audio_processing_enabled,
+                True,
+            ),
+            (
+                "mic_advanced",
+                text.AUDIO_NOISE_ADVANCED,
+                self._audio_advanced_enabled and self._audio_processing_enabled,
+                self._audio_advanced_available and self._audio_processing_enabled,
+            ),
+        ]
+        for index, (field, label, is_on, enabled) in enumerate(toggles):
+            box = pygame.Rect(col_x, row_y + index * (row_h + 8), col_w, row_h)
+            self._blit_rounded_card(
+                screen, box, (246, 236, 209),
+                (241, 185, 35) if (is_on and enabled) else (
+                    (235, 228, 214) if not enabled else (255, 250, 240)
+                ),
+                pygame, (61, 44, 31), 3 if (is_on and enabled) else 1, radius=10,
+            )
+            state = "On" if (is_on and enabled) else (
+                "Unavailable" if not enabled else "Off"
+            )
+            t1 = panel_layout.fit_single_line(
+                typography, label, FontRole.BODY, 12, (61, 44, 31), col_w - 12
+            )
+            panel_layout.blit_block(
+                screen, t1, pygame, box.left + 6, box.top + 4, bounds=box
+            )
+            t2 = panel_layout.fit_single_line(
+                typography, state, FontRole.CONTROL, 13, (61, 44, 31), col_w - 12
+            )
+            panel_layout.blit_block(
+                screen, t2, pygame, box.left + 6, box.top + 18, bounds=box
+            )
+            if enabled:
+                self._targets.append(
+                    PanelHitTarget("mic_processing_toggle", field, box)
+                )
 
     def _draw_pointer_tab(
         self,

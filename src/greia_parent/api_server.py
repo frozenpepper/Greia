@@ -25,6 +25,7 @@ from greia_parent.server import (
 )
 from greia_parent.static_client import ParentStaticClient, StaticClientAsset
 from greia_parent.web_client import render_parent_web_app
+from greia_platform.audio import AudioSettingsError
 from greia_platform.activity_discovery import (
     ActivityDiscoveryError,
     ActivityDiscoveryPolicyStore,
@@ -699,6 +700,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
                 return
             self._send_json(200, payload)
             return
+
         if parsed.path != f"{API_BASE}/settings/hardware":
             self._send_api_error(404, "not_found", "Not found")
             return
@@ -713,6 +715,7 @@ class ParentApiRequestHandler(ParentRequestHandler):
             self._send_api_error(400, "invalid_hardware_settings", str(exc))
             return
         self._send_json(200, payload)
+        return
 
     def do_PATCH(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)

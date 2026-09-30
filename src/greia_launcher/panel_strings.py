@@ -149,3 +149,10 @@ STRESS_SAMPLE = (
     "Mikrofonverstärkung für Aufnahmepuppenspiele und Stimmaktivitäten mit "
     "zusätzlicher Verdeutlichung"
 )
+
+AUDIO_NOISE_TITLE = "Noise cancelling"
+AUDIO_NOISE_NOTE = (
+    "Light processing always applies; advanced needs a supported microphone."
+)
+AUDIO_NOISE_PROCESSING = "Noise cancelling"
+AUDIO_NOISE_ADVANCED = "Advanced reduction"

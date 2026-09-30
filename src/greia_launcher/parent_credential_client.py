@@ -30,6 +30,9 @@ from dataclasses import dataclass
 import urllib.request
 from typing import Any, Protocol, runtime_checkable
 
+from greia_parent.credentials import ParentCredentialError
+from greia_parent.protocol import API_BASE
+
 #: Loopback only. The Parent API binds 0.0.0.0 for browser pairing, but the
 #: on-device panel has no reason to leave the machine.
 DEFAULT_PARENT_API_BASE_URL = "http://127.0.0.1:8766"
@@ -291,6 +294,85 @@ class ParentCredentialClient:
             {"current_password": current_password, "new_password": new_password},
             authenticated=True,
             session=session,
+        )
+
+    def _settings_payload(
+        self,
+        method: str,
+        path: str,
+        session: ParentSession,
+        body: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Run one settings call and require a 2xx JSON object back.
+
+        The settings routes answer with a nested payload, and a definite
+        non-success status is turned into an error rather than returned, so a
+        caller cannot mistake a refusal for settings it may then draw as
+        applied.
+        """
+
+        status, decoded = self._request(
+            method, path, body, authenticated=True, session=session
+        )
+        if status < 200 or status >= 300:
+            raise ParentCredentialError(f"settings request failed ({status}): {decoded}")
+        if not isinstance(decoded, dict):
+            raise ParentCredentialError("settings response was not an object")
+        return decoded
+
+    def get_hardware_settings(self, session: ParentSession) -> dict[str, Any]:
+        """Read pointer, display and microphone-gain settings.
+
+        The panel reads these through the service for the same reason it writes
+        them that way: the settings directory is greiapel-owned with mode 2750
+        and the launcher runs as greiakid, which has read but not write access.
+        """
+
+        return self._settings_payload("GET", f"{API_BASE}/settings/hardware", session)
+
+    def update_hardware_settings(
+        self, session: ParentSession, changes: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Apply a partial settings change through the service."""
+
+        return self._settings_payload(
+            "PUT", f"{API_BASE}/settings/hardware", session, dict(changes)
+        )
+
+    def reset_hardware_settings(self, session: ParentSession) -> dict[str, Any]:
+        return self._settings_payload("POST", f"{API_BASE}/settings/hardware/reset", session)
+
+    def get_audio_settings(self, session: ParentSession) -> dict[str, Any]:
+        """Read microphone processing policy, including what is available.
+
+        The panel offers advanced reduction only when the backend advertises it,
+        so availability has to be readable before the control is drawn.
+        """
+
+        return self._settings_payload("GET", f"{API_BASE}/settings/audio", session)
+
+    def set_microphone_processing(
+        self,
+        session: ParentSession,
+        *,
+        enabled: bool,
+        advanced: bool,
+    ) -> dict[str, object]:
+        """Set microphone processing and advanced reduction together.
+
+        Both fields are sent on every call so the stored pair is never left
+        describing a combination the parent did not ask for, such as advanced
+        reduction selected while processing is off.
+        """
+
+        return self._settings_payload(
+            "PUT",
+            f"{API_BASE}/settings/audio",
+            session,
+            {
+                "microphone_processing_enabled": bool(enabled),
+                "advanced_noise_reduction": bool(advanced),
+            },
         )
 
     def _request(
