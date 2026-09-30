@@ -595,6 +595,14 @@ class ProfileStore:
                 )
             )
 
+    #: Directories the child opens and owns itself. The Parent service runs as
+    #: greiapel, not root, so anything it creates here is greiapel-owned, and the
+    #: child then cannot chmod it: the history store requires to own its own
+    #: progress directory and refused to open a parent-owned one, killing the
+    #: launcher the moment a profile was entered. These are deliberately not
+    #: pre-created here; each owning service creates them as the child.
+    CHILD_OWNED_DIRECTORY_NAMES = frozenset({"storage", "progress"})
+
     def _ensure_context_directories(self, context: ProfileContext) -> None:
         if self.data_root.is_symlink():
             raise ProfileError("profile data root may not be a symbolic link")
@@ -612,6 +620,15 @@ class ProfileStore:
             context.storage_dir,
             context.progress_dir,
         ):
+            if path.name in self.CHILD_OWNED_DIRECTORY_NAMES:
+                # Still validated, never created. A symlink or a plain file here
+                # is a tampering signal the Parent service must reject even
+                # though the child is the one that will create it.
+                if path.is_symlink():
+                    raise ProfileError("managed profile path contains a symbolic link")
+                if path.exists() and not path.is_dir():
+                    raise ProfileError("managed profile path contains a non-directory")
+                continue
             _ensure_managed_directory(path, self.data_root, mode=0o2770)
 
     @contextmanager

@@ -64,6 +64,11 @@ _RECONNECT_BACKOFF_MAX = 2.0
 #: The capture tool. Present on the image already; no new dependency.
 ARECORD_PATH = "arecord"
 
+#: The endpoint the meter measures. It is deliberately the same one the audio
+#: service routes Activities to, not the raw device: measuring hw:0,0 bypasses
+#: processing entirely, so the display showed a signal that no Activity would
+#: ever hear and noise reduction appeared to do nothing.
+
 #: Pause between capture attempts. The device is exclusive, so a failed open is
 #: retried, not hammered: an unthrottled retry loop turned one busy device into a
 #: permanent one and pegged a core, which is what made the whole panel crawl.
@@ -89,6 +94,12 @@ class MicrophoneLevel:
     @property
     def silent(self) -> bool:
         return self.available and self.rms_dbfs <= _SILENCE_DBFS
+
+    #: How far above the silence floor a reading must rise before silence is
+    #: declared false. Without hysteresis a quiet room sits right on the floor
+    #: and the label alternated every frame, which reads as a fault rather than as
+    #: a room.
+    SILENCE_RELEASE_DBFS = _SILENCE_DBFS + 6.0
 
     @classmethod
     def unavailable(cls, device: str = DEFAULT_CAPTURE_DEVICE) -> "MicrophoneLevel":

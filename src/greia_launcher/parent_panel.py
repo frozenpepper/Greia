@@ -212,6 +212,7 @@ class ParentSettingsOverlay:
         # clipping, and it was invisible.
         self._mic_level_reader = MicrophoneLevelClient()
         self._mic_peak_hold_dbfs = SILENCE_FLOOR_DBFS
+        self._mic_quiet = False
         self._mic_peak_hold_until = 0.0
         self._text_surface_cache: dict[tuple[Any, ...], Any] = {}
         self._sync_language_selection()
@@ -2417,6 +2418,14 @@ class ParentSettingsOverlay:
         noise_w = self._noise_column_width(inner_w)
         meter_w = inner_w - noise_w - 12 if noise_w else inner_w
         level: MicrophoneLevel = self._mic_level_reader.level
+        # Hysteresis on the silent label. A quiet room sits on the silence floor
+        # and the label flickered on and off, which looked like a broken meter.
+        if level.available:
+            if level.rms_dbfs > MicrophoneLevel.SILENCE_RELEASE_DBFS:
+                self._mic_quiet = False
+            elif level.rms_dbfs <= SILENCE_FLOOR_DBFS:
+                self._mic_quiet = True
+        quiet = bool(self._mic_quiet)
         now = time.monotonic()
         if level.available:
             if level.peak_dbfs >= self._mic_peak_hold_dbfs:
@@ -2454,7 +2463,7 @@ class ParentSettingsOverlay:
             # level then painted over the gain controls below.
             return y + note.height + self._METER_RESERVED_TAIL
 
-        readout = f"{level.rms_dbfs:+.0f} dB" if not level.silent else text.AUDIO_INPUT_SILENT
+        readout = text.AUDIO_INPUT_SILENT if quiet else f"{level.rms_dbfs:+.0f} dB"
         if level.clipping:
             readout = f"{text.AUDIO_INPUT_CLIPPING}  {level.rms_dbfs:+.0f} dB"
         value = panel_layout.fit_single_line(

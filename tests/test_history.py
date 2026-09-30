@@ -444,7 +444,11 @@ class HistoryTests(unittest.TestCase):
             context = self._context(root)
             outside = root / "outside"
             outside.mkdir()
-            context.progress_dir.rmdir()
+            # The Parent service no longer creates child-owned directories, so
+            # the progress directory may already be absent; the symlink check
+            # must still reject it when present.
+            if context.progress_dir.is_dir():
+                context.progress_dir.rmdir()
             try:
                 context.progress_dir.symlink_to(outside, target_is_directory=True)
             except OSError:
@@ -455,3 +459,50 @@ class HistoryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ParentMustNotOwnTheChildsProgressDirectoryTests(unittest.TestCase):
+    """The Parent service may not pre-create directories the child owns.
+
+    greia-parent runs as greiapel, so a progress directory it created is
+    greiapel-owned. ProfileHistoryStore requires to own its own progress
+    directory - it chmods it to 2770 and needs the setgid bit, which only the
+    owner may set - and raised HistoryError on the EPERM. The launcher therefore
+    died the instant a profile was entered, and greia-x-session silently fell
+    back to trusted presentation, which is what looked like a graphics mode
+    change on reboot.
+
+    The child creates these itself, so the Parent store must not race it.
+    """
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+
+    def test_child_owned_directories_are_not_pre_created_by_the_parent(self) -> None:
+        store = _parent_store(self.root)
+        profiles = store.ensure_initialized()
+        base = store.data_root / profiles[0].profile_id
+        self.assertFalse(
+            (base / "progress").exists(),
+            "the Parent service must not create the child's progress directory",
+        )
+        self.assertFalse(
+            (base / "storage").exists(),
+            "the Parent service must not create the child's storage directory",
+        )
+
+    def test_parent_managed_directories_are_still_created(self) -> None:
+        store = _parent_store(self.root)
+        profiles = store.ensure_initialized()
+        base = store.data_root / profiles[0].profile_id
+        self.assertTrue(base.is_dir())
+        self.assertTrue((base / "customization").is_dir())
+        self.assertTrue((base / "activities").is_dir())
+
+
+def _parent_store(root: Path) -> ProfileStore:
+    defaults = root / "profile-defaults.toml"
+    defaults.write_text("[profiles]\n", encoding="utf-8")
+    return ProfileStore.load(defaults, root / "profiles")
