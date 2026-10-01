@@ -9,5 +9,10 @@
     "ui.mode_guess": "Find",
     "ui.guess_prompt": "Where is number $num?"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

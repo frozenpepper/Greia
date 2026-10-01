@@ -66,8 +66,11 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 ),
                 None,
             )
-            if ready_path is None:
-                continue
+            self.assertIsNotNone(
+                ready_path,
+                f"{entrypoint.parent.name} must publish mark_activity_ready in its source",
+            )
+            assert ready_path is not None
             source = ready_path.read_text(encoding="utf-8")
             tree = ast.parse(source, filename=str(ready_path))
             parents: dict[ast.AST, ast.AST] = {}
@@ -159,6 +162,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "costruiamo_ponti",
                 "cucciolo_mio",
                 "enciclopedia_greia",
+                "faccine_momo",
                 "festa_delle_rime",
                 "foresta_parole",
                 "il_giardino_dei_numeri",
@@ -166,6 +170,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "labirinto_magico",
                 "luci_di_momo",
                 "memory_meraviglie",
+                "mondo_contrari",
                 "morbidi_mostriciattoli",
                 "nanna_delle_nuvolette",
                 "nascondino_bosco",
@@ -175,6 +180,7 @@ class FirstPartyActivityReadinessTests(unittest.TestCase):
                 "pasticceria_magica",
                 "piccola_serra",
                 "posta_di_leo",
+                "quattro_stagioni",
                 "shape_garden",
                 "sillabe_magiche",
                 "sottomarino_giramondo",

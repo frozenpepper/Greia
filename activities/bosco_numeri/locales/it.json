@@ -9,5 +9,10 @@
     "ui.mode_guess": "Indovina",
     "ui.guess_prompt": "Dov'è il numero $num?"
   },
-  "audio": {}
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
 }

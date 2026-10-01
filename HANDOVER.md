@@ -1,6 +1,6 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-09-28
+**Updated:** 2026-10-01
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
 **Version:** `0.13.0-phase0-dev`
@@ -2241,3 +2241,37 @@ it. Do not use `losetup -D`.
 
 Session 04 remains OPEN and untouched by this turn: no QEMU lifecycle leg was run, no
 transaction/capability source was changed, and `CAP_CHOWN` remains **NOT AUTHORIZED**.
+
+## 68. Built-in Activity Simulator, Audio, Readiness & Performance Audit (2026-10-01)
+
+An exhaustive headless simulator and static audit was executed across all 41 first-party built-in activities (`activities/`):
+
+1. **Supervisor Readiness & Lifecycle Stop Handling Defect Fixed:**
+   - `activities/faccine_momo/momo_app.py`, `activities/mondo_contrari/contrari_app.py`, and `activities/quattro_stagioni/tree_app.py` were missing `mark_activity_ready()` and `activity_stop_requested()`. In production, `ActivitySupervisor` enforces a 15.0s `ready_deadline`, causing processes without `mark_activity_ready()` to be killed with `READY_TIMEOUT`.
+   - Added `mark_activity_ready()` after the first frame flip and added `not activity_stop_requested()` to their main loop conditions.
+   - Hardened `tests/test_first_party_activity_readiness.py`: removed the bypass skip so all 41 activities are strictly asserted to signal readiness. Test passes (1/1 in 0.264s).
+
+2. **Spoken Audio Assets & Localization Completed:**
+   - Audited launcher spoken titles and collection spoken labels via `tools/audit_launcher_spoken_labels.py`.
+   - `activities/bosco_numeri` was missing `activity-title.wav` in Italian and English.
+   - Generated canonical spoken audio using the Greia voice production pipeline (`tools/greia_voice.py`) with Tito character anchor (`tito-reference-v1.flac`) via Chatterbox MLX:
+     - `activities/bosco_numeri/locales/it/audio/activity-title.wav` (+ receipt)
+     - `activities/bosco_numeri/locales/en/audio/activity-title.wav` (+ receipt)
+   - Registered audio bindings in `activities/bosco_numeri/locales/it.json` and `activities/bosco_numeri/locales/en.json`.
+   - Created reproducible generation script `tools/generate_bosco_audio.py`.
+   - `tools/audit_launcher_spoken_labels.py` confirmed 100% complete: `BUILT_IN_ACTIVITIES=41`, `ACTIVITY_TITLE_LOCALE_COMBINATIONS=82`, `ACTIVITY_TITLE_COMPLETE=82`, `COLLECTION_LABELS_COMPLETE=38`, `RESULT=PASS`.
+
+3. **Performance & Idle Event-Driven Loops Clarified:**
+   - 32 activities render continuously at ~60 FPS (or capped display rate).
+   - 9 activities (`bottega_delle_misure`, `casa_del_dieci`, `festa_delle_rime`, `luci_di_momo`, `morbidi_mostriciattoli`, `nanna_delle_nuvolette`, `officina_dei_suoni`, `posta_di_leo`, `specchi_magici`) utilize dirty-flag / event-driven rendering (`if self._dirty: ... flip()`), registering 0.0 FPS when idle. This is intentional and compliant with low-resource appliance standards to conserve CPU and battery.
+
+4. **Master Report Artifact:**
+   - Full audit report generated in artifact `GREIA_ACTIVITIES_SIMULATOR_AND_STANDARDS_AUDIT_REPORT.md` (`file:///Users/taio84/.gemini/antigravity/brain/dfcc645e-cd1d-42cf-9eae-f56ebc4923c1/GREIA_ACTIVITIES_SIMULATOR_AND_STANDARDS_AUDIT_REPORT.md`).
+   - Machine-readable raw benchmark data preserved in `scratch/full_activity_audit_results.json`.
+
+5. **Verification:**
+   - `python3 tools/audit_launcher_spoken_labels.py`: PASS (82/82).
+   - `tests/test_first_party_activity_readiness.py`: PASS (41/41 verified).
+   - `tests/test_activity_contract.py`: PASS (11/11).
+   - Headless simulator verification: `org.greia.faccine-momo` and `org.greia.bosco-numeri` verified with clean Home return (`rc=0`).
+

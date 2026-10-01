@@ -2640,3 +2640,31 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Carried forward unchanged and still true: accounted installed filesystem use 984 MiB, over the C0 preferred <=800 MiB while remaining under the required <1,000 MiB target.
 - Build-host hygiene: disk-health preflight clean (SMART PASSED, 0 pending/uncorrectable, no kernel errors in 1d). Six loop devices leaked by earlier builds were found before this run and reaped over the run; one autoclear loop remains from this build, which is the recorded per-image-build leak that clears only on a host reboot. Persistent host caches `/var/cache/greia-apt` (329M) and `/var/cache/greia-pool` (150M) were left intact.
 - Pre-existing and NOT introduced here: `tests/test_system_overlay_contract.py` fails 1/23 on `439a9060` with the change stashed, asserting `/var/lib/greia-profiles` should be group `greiaprofiles` where the shipped tmpfiles overlay says `pipprofiles`. That identity mismatch is the same class as the `41dfb864` provisioning fault and is left for its own tranche.
+
+## 2026-10-01 — Built-in Activity Simulator, Audio, Readiness & Performance Audit (41 Activities Verified)
+
+- Pulled current `main` from `origin/main` (clean fast-forward, 109 files updated).
+- Executed an exhaustive automated headless simulator and static inspection audit across all 41 first-party built-in activities in `activities/`.
+- Assessed launch correctness, frame rate / event-driven dirty loops, supervisor readiness signaling, voice audio completeness, and platform activity contracts. Master report generated in artifact `GREIA_ACTIVITIES_SIMULATOR_AND_STANDARDS_AUDIT_REPORT.md`.
+- **Supervisor Readiness & Lifecycle Stop Handling Defect Fixed:**
+  - `activities/faccine_momo/momo_app.py`, `activities/mondo_contrari/contrari_app.py`, and `activities/quattro_stagioni/tree_app.py` were missing `mark_activity_ready()` and `activity_stop_requested()`. In production, `ActivitySupervisor` enforces a 15.0s `ready_deadline`, causing processes without `mark_activity_ready()` to be killed with `READY_TIMEOUT`.
+  - Added `mark_activity_ready()` after the first frame flip and added `not activity_stop_requested()` to their main loop conditions.
+  - Hardened `tests/test_first_party_activity_readiness.py`: removed the bypass skip so all 41 activities are strictly asserted to signal readiness. Test passes (1/1 in 0.264s).
+- **Spoken Audio Assets & Localization Completed:**
+  - Audited launcher spoken titles and collection spoken labels via `tools/audit_launcher_spoken_labels.py`.
+  - `activities/bosco_numeri` was missing `activity-title.wav` in Italian and English.
+  - Generated canonical spoken audio using the Greia voice production pipeline (`tools/greia_voice.py`) with Tito character anchor (`tito-reference-v1.flac`) via Chatterbox MLX:
+    - `activities/bosco_numeri/locales/it/audio/activity-title.wav` (+ receipt)
+    - `activities/bosco_numeri/locales/en/audio/activity-title.wav` (+ receipt)
+  - Registered audio bindings in `activities/bosco_numeri/locales/it.json` and `activities/bosco_numeri/locales/en.json`.
+  - Created reproducible generation script `tools/generate_bosco_audio.py`.
+  - `tools/audit_launcher_spoken_labels.py` confirmed 100% complete: `BUILT_IN_ACTIVITIES=41`, `ACTIVITY_TITLE_LOCALE_COMBINATIONS=82`, `ACTIVITY_TITLE_COMPLETE=82`, `COLLECTION_LABELS_COMPLETE=38`, `RESULT=PASS`.
+- **Performance & Idle Event-Driven Loops Clarified:**
+  - 32 activities render continuously at ~60 FPS (or capped display rate).
+  - 9 activities (`bottega_delle_misure`, `casa_del_dieci`, `festa_delle_rime`, `luci_di_momo`, `morbidi_mostriciattoli`, `nanna_delle_nuvolette`, `officina_dei_suoni`, `posta_di_leo`, `specchi_magici`) utilize dirty-flag / event-driven rendering (`if self._dirty: ... flip()`), registering 0.0 FPS when idle. This is intentional and compliant with low-resource appliance standards to conserve CPU and battery.
+- Verification:
+  - `python3 tools/audit_launcher_spoken_labels.py`: PASS (82/82).
+  - `tests/test_first_party_activity_readiness.py`: PASS (41/41 verified).
+  - `tests/test_activity_contract.py`: PASS (11/11).
+  - Headless simulator verification: `org.greia.faccine-momo` and `org.greia.bosco-numeri` verified with clean Home return (`rc=0`).
+

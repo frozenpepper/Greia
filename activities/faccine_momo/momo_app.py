@@ -7,6 +7,8 @@ import time
 
 import pygame
 
+from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+
 if __package__:
     from .momo_audio import MomoAudio, MomoSpeechQueue
     from .momo_model import (
@@ -57,8 +59,9 @@ class MomoActivity:
 
     def run(self) -> int:
         last_time = time.perf_counter()
+        ready_published = False
 
-        while self.running:
+        while self.running and not activity_stop_requested():
             now = time.perf_counter()
             dt = min(0.1, now - last_time)
             last_time = now
@@ -86,6 +89,9 @@ class MomoActivity:
             # Render frame
             self.renderer.render(self.screen, self.model)
             pygame.display.flip()
+            if not ready_published:
+                mark_activity_ready()
+                ready_published = True
             self.clock.tick(60)
 
         pygame.quit()
