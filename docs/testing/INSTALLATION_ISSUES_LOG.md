@@ -71,3 +71,64 @@ explicitly. `tests/test_image_tmpfiles_identities.py` now fails the build if
 
 Both loops presented as `is-active` returning healthy; only `NRestarts`
 climbing showed them.
+
+## 31. Microphone gain presets were unreachable on the reference hardware (2026-09-30)
+
+The panel offered presets up to 400% and a parent raising the gain watched
+nothing happen. Measured on the Acer:
+
+```
+amixer scontrols -> Simple mixer control 'Capture',0
+Limits: Capture 0 - 31
+Mono:  Capture 31 [100%] [31.50dB]
+```
+
+`_apply_audio` maps `mic_gain` to an ALSA Capture percentage as
+`mic_gain / 2.0`, clamped to 100. So:
+
+```
+preset 100% (1.0) -> 50% ALSA
+preset 200% (2.0) -> 100% ALSA   hardware maximum
+preset 300% (3.0) -> clamped, identical to 2.0
+preset 400% (4.0) -> clamped, identical to 2.0
+```
+
+"Strong" and "Maximum" were no-ops on every machine with this control, and the
+default of 2.0 was already the ceiling. Presets and `maximum_mic_gain` now stop
+at 2.0.
+
+A second finding from the same measurements, recorded because it is an
+environment limit and not a defect: with `Capture` pinned at maximum, an internal
+ALC268 mic and five fans running, the raw capture floor measured about
+-30 dBFS RMS and the processed endpoint about -36 to -38 dBFS, i.e. roughly 7 dB
+of attenuation. Normal speech therefore sits only a few dB above the noise
+floor. The available remedies are exhausted in software: gain is at maximum,
+denoise gives about 7 dB, and the internal mic has no directional response. This
+needs a quieter machine or an external microphone to assess speech quality.
+
+## 32. Shareable-device contention between the meter and Activities (2026-09-30)
+
+Recording stopped working in every microphone-using Activity once the live
+Parent meter existed. The ALSA capture device is exclusive and only one holder
+wins:
+
+```
+meter holding the device continuously   Activity 0 of 6 capture attempts
+meter sampling 0.4 s every 1.0 s        Activity 3 of 8
+meter sampling 0.15 s every 0.15 s      Activity 7 of 8
+```
+
+The meter now samples in short bursts at the protocol's full rate (measured
+19.9 lines/s against a 20 lines/s ceiling) and yields for 30 s the moment an
+open fails because the device is busy, so an Activity that starts meets a meter
+that gets out of the way.
+
+This is not fully solvable by scheduling: there is one capture device and no
+signal yet for "an Activity is recording". Until the platform exposes one, the
+meter yields on contention rather than competing, and that is a real remaining
+limitation rather than a tuning detail.
+
+Note for anyone measuring this later: counting distinct level *values* to judge
+meter responsiveness is wrong in a quiet room, because the value does not
+change and the meter looks frozen while publishing happily. Measure the publish
+rate off the socket.
