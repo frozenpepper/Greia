@@ -165,6 +165,19 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
         self.assertIn("b3-profile-data-ownership-v1", text)
         self.assertIn("chown greiakid:pipprofiles", text)
         self.assertIn("chmod 2770", text)
+        # The repair must be verified on every boot, not run exactly once. The
+        # Parent service creates parts of this tree as greiapel, so a spent marker
+        # let it re-break ownership and the launcher died on profile entry again
+        # on a machine that had already been repaired once.
+        guarded = text.count('[ ! -e "$profile_owner_migration" ]')
+        repair_index = text.index("chown greiakid:pipprofiles")
+        guard_index = text.index('[ ! -e "$profile_owner_migration" ]')
+        self.assertGreater(
+            guard_index,
+            repair_index,
+            "the ownership repair must not be gated behind its own spent marker",
+        )
+        self.assertIn("guarded", "guarded = %d" % guarded)
         # 2755 is the shipped defect: group gets r-x, so the child cannot write.
         self.assertNotIn("chmod 2755", text)
         self.assertNotIn("chmod 0777", text)
@@ -268,3 +281,46 @@ class RepositorySourceCarriesRuntimeFixesTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MicrophoneProcessingReachesTheTargetImageTests(unittest.TestCase):
+    """Noise cancelling is only real if the endpoint, probe and unit ship.
+
+    The Parent API and panel exposed microphone processing while the ALSA
+    ExtPlugin that implements it was never built into the image, so the endpoint
+    could not open and the service correctly fell back to off. Every part has to
+    be present or the setting is decoration.
+    """
+
+    def test_the_endpoint_plugin_is_built_and_installed(self) -> None:
+        text = _read(PROJECT_ROOT / "build" / "lib" / "compose.sh")
+        self.assertIn("greia_mic_light.so", text)
+        self.assertIn("libasound_module_pcm_greia_mic_light.so", text)
+        self.assertIn("alsa-lib", text)
+        # The build must happen before the footprint prune, which is what removes
+        # cc1 and would make the compile impossible.
+        self.assertLess(
+            text.index("greia_mic_light.so"),
+            text.index("compose_footprint_prune")
+            if "compose_footprint_prune" in text
+            else len(text),
+        )
+
+    def test_the_probe_is_executable_and_its_unit_is_enabled(self) -> None:
+        compose = _read(PROJECT_ROOT / "build" / "lib" / "compose.sh")
+        self.assertIn(
+            'chmod 0755 "$rootfs/usr/local/lib/greia-os/greia-audio-endpoint-probe"',
+            compose,
+        )
+        # It previously failed 203/EXEC and never wrote its readiness marker.
+        self.assertIn("greia-audio-endpoints.service", compose)
+
+    def test_the_level_service_units_are_enabled(self) -> None:
+        compose = _read(PROJECT_ROOT / "build" / "lib" / "compose.sh")
+        self.assertIn("greia-microphone-level.socket", compose)
+
+    def test_the_plugin_runtime_library_is_declared(self) -> None:
+        sets = _read(
+            PROJECT_ROOT / "build" / "package-sets" / "platform-shell-pygame.txt"
+        )
+        self.assertIn("libspeexdsp1", sets)

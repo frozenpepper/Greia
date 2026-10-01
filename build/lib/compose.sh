@@ -563,6 +563,39 @@ os.chmod(target, FSTAB_FILE_MODE)
 GREIA_FSTAB_EOF
 }
 
+compose_build_audio_endpoint_plugin() {
+  local rootfs="$1"
+  # The greia_mic_light ALSA ExtPlugin is what makes microphone processing
+  # real. Without it /etc/asound.conf still defines the PCM, but opening it
+  # fails with "No such device or address", the availability probe correctly
+  # declines to write its marker, and the audio service reports both processing
+  # endpoints unavailable - so noise cancelling silently fell back to off on a
+  # machine whose PCM was listed by aplay -L.
+  #
+  # Built with the target toolchain inside the root, like the framebuffer
+  # renderer, because the module must match the image's ABI. The compiler and
+  # headers are development-only and are removed again afterwards.
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
+    install -y --no-install-recommends gcc libasound2-dev libspeexdsp-dev >/dev/null
+  install -d -m 0755 "$rootfs/usr/src/greia-audio"
+  cp "$project_root/src/greia_platform/audio_alsa/greia_mic_light.c" \
+    "$rootfs/usr/src/greia-audio/greia_mic_light.c"
+  local multiarch
+  multiarch="$(chroot "$rootfs" dpkg-architecture -qDEB_HOST_MULTIARCH)"
+  chroot "$rootfs" /bin/sh -c \
+    'cd /usr/src/greia-audio && gcc -O2 -Wall -fPIC -shared -o greia_mic_light.so greia_mic_light.c -lasound -lspeexdsp'
+  install -d -m 0755 "$rootfs/usr/lib/$multiarch/alsa-lib"
+  install -m 0755 "$rootfs/usr/src/greia-audio/greia_mic_light.so" \
+    "$rootfs/usr/lib/$multiarch/alsa-lib/libasound_module_pcm_greia_mic_light.so"
+  rm -rf "$rootfs/usr/src/greia-audio"
+  chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
+    apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge \
+    gcc libasound2-dev libspeexdsp-dev >/dev/null
+}
+
 # Build the Greia-owned early framebuffer boot cover for the TARGET
 # architecture inside the composed root. The binary is compiled with the target
 # klibc toolchain so the build host architecture is never authoritative. The
@@ -573,39 +606,6 @@ compose_build_early_framebuffer() {
   local project_root="${COMPOSE_PROJECT_ROOT:-$_COMPOSE_PROJECT_ROOT_DEFAULT}"
   compose_apt_options
   local rootfs_arg="$rootfs"
-  build_audio_endpoint_plugin() {
-    local rootfs="$1"
-    # The greia_mic_light ALSA ExtPlugin is what makes microphone processing
-    # real. Without it /etc/asound.conf still defines the PCM, but opening it
-    # fails with "No such device or address", the availability probe correctly
-    # declines to write its marker, and the audio service reports both processing
-    # endpoints unavailable - so noise cancelling silently fell back to off on a
-    # machine whose PCM was listed by aplay -L.
-    #
-    # Built with the target toolchain inside the root, like the framebuffer
-    # renderer, because the module must match the image's ABI. The compiler and
-    # headers are development-only and are removed again afterwards.
-    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-      apt-get "${APT_ACQUIRE_OPTIONS[@]}" update
-    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-      apt-get "${APT_ACQUIRE_OPTIONS[@]}" -o Dpkg::Options::=--force-confold \
-      install -y --no-install-recommends gcc libasound2-dev libspeexdsp-dev >/dev/null
-    install -d -m 0755 "$rootfs/usr/src/greia-audio"
-    cp "$project_root/src/greia_platform/audio_alsa/greia_mic_light.c" \
-      "$rootfs/usr/src/greia-audio/greia_mic_light.c"
-    local multiarch
-    multiarch="$(chroot "$rootfs" dpkg-architecture -qDEB_HOST_MULTIARCH)"
-    chroot "$rootfs" /bin/sh -c \
-      'cd /usr/src/greia-audio && gcc -O2 -Wall -fPIC -shared -o greia_mic_light.so greia_mic_light.c -lasound -lspeexdsp'
-    install -d -m 0755 "$rootfs/usr/lib/$multiarch/alsa-lib"
-    install -m 0755 "$rootfs/usr/src/greia-audio/greia_mic_light.so" \
-      "$rootfs/usr/lib/$multiarch/alsa-lib/libasound_module_pcm_greia_mic_light.so"
-    rm -rf "$rootfs/usr/src/greia-audio"
-    chroot "$rootfs" /usr/bin/env DEBIAN_FRONTEND=noninteractive \
-      apt-get "${APT_ACQUIRE_OPTIONS[@]}" -y remove --purge \
-      gcc libasound2-dev libspeexdsp-dev >/dev/null
-  }
-
   build_early_framebuffer() {
     local rootfs="$1"
     # klcc needs the matching native compiler (e.g. i686-linux-gnu-gcc) which is
@@ -676,6 +676,7 @@ compose_configure_systemd() {
     systemctl --root="$rootfs" enable \
       greia-first-boot.service greia-boot-observer.service greia-launcher.service greia-parent.service \
       greia-boot-health.socket greia-system-update.socket greia-audio-endpoints.service \
+      greia-microphone-level.socket \
       systemd-networkd.service systemd-resolved.service iwd.service avahi-daemon.service
     systemctl --root="$rootfs" mask \
       getty@.service autovt@.service console-getty.service debug-shell.service \

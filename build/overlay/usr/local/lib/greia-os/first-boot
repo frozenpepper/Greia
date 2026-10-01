@@ -40,18 +40,23 @@ fi
 # os.chmod(root, 0o2770), the child Shell died before INTERACTIVE_READY, and
 # the launcher's Type=notify unit never saw READY=1.
 #
-# Exactly-once via its own versioned marker; the marker is written only after the
-# repair succeeds, so a failed repair retries through Restart=on-failure.
+# Verified on every boot rather than run exactly once. The Parent service creates
+# parts of the profile tree and runs as greiapel, so it can leave a path
+# greiapel-owned; with a spent marker that was never re-checked, the launcher died
+# on profile entry again on a machine that had already been repaired once. The
+# tree is a handful of directories, so verifying each boot is cheap and is the
+# only version that actually self-heals. The marker records that the repair has
+# run at least once.
 profile_owner_migration=/var/lib/greia-os/migrations/b3-profile-data-ownership-v1.done
-if [ ! -e "$profile_owner_migration" ]; then
-  install -d -m 0755 /var/lib/greia-os/migrations
-  if [ -d /var/lib/greia-profiles/data ]; then
+if [ -d /var/lib/greia-profiles/data ]; then
     # -print0/xargs so an unusual profile id cannot break word splitting.
     find /var/lib/greia-profiles/data -depth -print0 |
       xargs -0 -r chown greiakid:pipprofiles
     find /var/lib/greia-profiles/data -depth -type d -print0 |
       xargs -0 -r chmod 2770
-  fi
+fi
+install -d -m 0755 /var/lib/greia-os/migrations
+if [ ! -e "$profile_owner_migration" ]; then
   printf '%s\n' "b3-profile-data-ownership-v1" > "$profile_owner_migration"
 fi
 [ ! -e "$marker" ] || exit 0

@@ -83,12 +83,18 @@ AUDIO_INPUT_UNAVAILABLE = (
     "No microphone could be read. Check that a microphone is connected."
 )
 AUDIO_PRESETS_TITLE = "Suggested presets"
+#: The microphone gain range is bounded by what the hardware can actually
+#: deliver. The Legacy-X applier maps mic_gain to an ALSA Capture percentage as
+#: mic_gain / 2.0, and that control caps at 100% on the reference Acer
+#: (Limits: Capture 0 - 31, step 31 = 100% = 31.50 dB). So mic_gain 2.0 is the
+#: hardware maximum and anything above it is silently clamped to the same value:
+#: presets beyond 2.0 were unreachable no-ops that read as "Strong" and
+#: "Maximum" while doing nothing at all.
 AUDIO_PRESET_NAMES: dict[float, str] = {
+    0.5: "Low",
     1.0: "Normal",
     1.5: "Medium",
-    2.0: "High",
-    3.0: "Strong",
-    4.0: "Maximum",
+    2.0: "Maximum",
 }
 AUDIO_BOOST_SUFFIX = "boost"
 

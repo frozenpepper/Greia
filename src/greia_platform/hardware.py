@@ -51,7 +51,7 @@ class HardwareDefaults:
     maximum_speed: float
     mic_gain: float = 2.0
     minimum_mic_gain: float = 0.5
-    maximum_mic_gain: float = 4.0
+    maximum_mic_gain: float = 2.0
     disable_while_typing: bool = False
 
     @classmethod
@@ -69,7 +69,7 @@ class HardwareDefaults:
             maximum_speed=1.0,
             mic_gain=2.0,
             minimum_mic_gain=0.5,
-            maximum_mic_gain=4.0,
+            maximum_mic_gain=2.0,
             disable_while_typing=False,
         )
 
@@ -102,7 +102,7 @@ class HardwareDefaults:
                 maximum_speed=float(limits.get("maximum_speed", 1.0)),
                 mic_gain=float(defaults.get("mic_gain", 2.0)),
                 minimum_mic_gain=float(limits.get("minimum_mic_gain", 0.5)),
-                maximum_mic_gain=float(limits.get("maximum_mic_gain", 4.0)),
+                maximum_mic_gain=float(limits.get("maximum_mic_gain", 2.0)),
                 disable_while_typing=_strict_bool(
                     defaults.get("disable_while_typing", False),
                     "disable_while_typing",
