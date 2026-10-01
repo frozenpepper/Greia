@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.quattro_amici.title": "FOUR FRIENDS IN A ROW",
+    "activity.title": "FOUR FRIENDS IN A ROW",
+    "ui.mode_vs_leo": "VS LEO",
+    "ui.mode_two_players": "TWO FRIENDS",
+    "ui.turn_flash": "FLASH'S TURN!",
+    "ui.turn_leo": "LEO'S TURN!",
+    "ui.flash_thinking": "FLASH IS THINKING...",
+    "ui.leo_thinking": "LEO IS THINKING...",
+    "ui.win_flash": "FLASH WON!",
+    "ui.win_leo": "LEO WON!",
+    "ui.draw": "IT'S A DRAW! GREAT GAME!",
+    "ui.play_again": "PLAY AGAIN",
+    "ui.diff_1": "EASY (3 IN A ROW)",
+    "ui.diff_2": "MEDIUM (3 IN A ROW)",
+    "ui.diff_3": "CLASSIC (4 IN A ROW)",
+    "ui.diff_4": "CHALLENGE (4 IN A ROW)",
+    "ui.drop_column": "DROP THE DISC",
+    "ui.level_label": "LEVEL",
+    "ui.mode_label": "MODE"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

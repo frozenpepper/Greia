@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Shape Tower",
+    "mode.free_build": "1. Free",
+    "mode.slow_fall": "2. Gentle",
+    "mode.challenge": "3. Tower",
+    "celebration.title": "Hooray! What a wonderful tower you built!",
+    "celebration.subtitle": "The wooden tower is so tall and colorful!",
+    "btn.replay": "Build Again",
+    "btn.rotate": "Rotate",
+    "btn.left": "Left",
+    "btn.right": "Right",
+    "btn.drop": "Drop",
+    "btn.clean": "New Shapes"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

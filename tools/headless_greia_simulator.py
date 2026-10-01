@@ -418,19 +418,22 @@ def _send_profile_and_activity_launch(
     *,
     child: subprocess.Popen,
     route: ShellLaunchRoute,
+    current_state: dict[str, Any] | None = None,
 ) -> dict[str, Any] | None:
     """Launch through profile -> Collection Home -> optional group -> Activity."""
 
-    if not _bridge_key("RETURN"):
-        return None
-    current = _wait_for_state(
-        lambda state: state.get("mode") == "activities",
-        timeout=8.0,
-        child=child,
-    )
-    if current is None:
-        _log("profile selection never reached Collection Home")
-        return None
+    current = current_state
+    if current is None or current.get("mode") == "profiles":
+        if not _bridge_key("RETURN"):
+            return None
+        current = _wait_for_state(
+            lambda state: state.get("mode") == "activities",
+            timeout=8.0,
+            child=child,
+        )
+        if current is None:
+            _log("profile selection never reached Collection Home")
+            return None
 
     current = _send_right_steps(
         child=child,
@@ -659,7 +662,7 @@ def main(argv: list[str] | None = None) -> int:
         return 4
 
     try:
-        if not _wait_for_bridge(DEFAULT_PORT, timeout=15.0):
+        if not _wait_for_bridge(DEFAULT_PORT, timeout=45.0):
             _log(f"remote bridge never came up; child log: {child_log_path}")
             return 5
         _log("remote bridge is up")
@@ -681,6 +684,7 @@ def main(argv: list[str] | None = None) -> int:
             activity_state = _send_profile_and_activity_launch(
                 child=child,
                 route=target_route,
+                current_state=shell_state,
             )
             if activity_state is None:
                 _log(f"Activity launch failed; child log: {child_log_path}")

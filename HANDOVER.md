@@ -2275,3 +2275,36 @@ An exhaustive headless simulator and static audit was executed across all 41 fir
    - `tests/test_activity_contract.py`: PASS (11/11).
    - Headless simulator verification: `org.greia.faccine-momo` and `org.greia.bosco-numeri` verified with clean Home return (`rc=0`).
 
+## 69. Core Action & Strategy Game Archetypes Implemented (45 Activities Built-in, 2026-10-01)
+
+Following the catalogue strategy analysis in `docs/product/ACTIVITY_CATALOGUE_AGES_3_5_STRATEGY.md` (Sections 7, 8, 9), implemented and verified four first-party built-in game activities providing intuitive physics, spatial reasoning, recoverable failure, and strategic turn-taking:
+
+1. **`org.greia.corsa-bacche` ("La Corsa delle Bacche" / "Berry Chase"):**
+   - Directory: `activities/corsa_bacche/`
+   - Lead Mascot: Momo the squirrel (canonical audio anchor: `momo-reference-v1.flac`).
+   - Archetype: Cute Maze Chase (action/nature/puzzles; motor reaction, spatial mapping, cognitive inhibition).
+   - Features: Orchard hedge maze, berry harvesting, patrolling garden critters (Baffo the hedgehog, bees), Rainbow Star Berry invulnerability power-up causing critters to spin dizzily, and recoverable bump-back failure without harsh game-over.
+
+2. **`org.greia.colline-allegre` ("Colline Allegre" / "Bumpy Hills"):**
+   - Directory: `activities/colline_allegre/`
+   - Lead Mascot: Tito the explorer bear (canonical audio anchor: `tito-reference-v1.flac`).
+   - Archetype: Hill Vehicle Physics (action/nature; timing, momentum, motor coordination).
+   - Features: 2D spring suspension physics over rolling green hills, wooden bridges, mid-air chassis tilt balance for smooth landings, collectible stars/gears/balloons, and a comical cartoon boxing-glove spring uprighting if flipped upside down.
+
+3. **`org.greia.torre-forme` ("La Torre delle Forme" / "Shape Tower"):**
+   - Directory: `activities/torre_forme/`
+   - Lead Mascot: Lilli the builder cat (canonical audio anchor: `lilli-reference-v1.flac`).
+   - Archetype: Spatial Stacking & Falling Shapes (building/puzzles; geometry, spatial composition, planning).
+   - Features: Wooden block geometry inside a tower frame; 3 progressive developmental modes (*Costruisci Libero* static blueprint matching for age 3, *Scendi Piano* slow falling lines for age 4, *Sfida della Torre* classic child-paced puzzle with line clears and rainbow stars for age 5); positive celebration fireworks on reaching tower top.
+
+4. **`org.greia.quattro-amici` ("Quattro Amici in Fila" / "Four Friends in a Row"):**
+   - Directory: `activities/quattro_amici/`
+   - Presenters: Flash the rabbit (carrot discs) vs Leo the owl (acorn discs) (canonical anchors: `flash-reference-v1.flac` and `leo-reference-v1.flac`).
+   - Archetype: Turn-Taking Adversarial Strategy (puzzles; turn-taking, prediction, spatial planning).
+   - Features: Slotted wooden drop board with realistic gravity/bounce; Solo vs Friendly CPU (*Contro Leo* with progressive AI) and local 2-Player Pass-and-Play (*Due Amici* on the same screen); Connect 3 on 5×4 grid (D1–D2) scaling to Connect 4 on 7×6 grid (D3–D4).
+
+**Standards & Platform Verification:**
+- **53 dedicated unit tests PASS**: `tests/test_activity_corsa_bacche.py` (10/10), `tests/test_activity_colline_allegre.py` (13/13), `tests/test_activity_torre_forme.py` (14/14), `tests/test_activity_quattro_amici.py` (16/16).
+- **Spoken Audio Audit**: `tools/audit_launcher_spoken_labels.py` PASS (**90/90 combinations, 100%**).
+- **Contract & Audience Audits**: `tests/test_activity_contract.py` PASS (11/11, 45 built-ins), `tests/test_first_party_activity_readiness.py` PASS (45/45 verified), `tests/test_first_party_activity_audience_metadata.py` PASS (3/3).
+- **Architecture Audits**: `tools/audit_activity_backend_independence.py activities` PASS (45 activities, 0 blockers, 0 new migration findings), `tools/audit_activity_system_chrome_ownership.py --strict` PASS (0 blockers).

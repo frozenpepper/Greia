@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Berry Chase",
+    "activity.corsa_bacche.title": "Berry Chase",
+    "hud.berries": "Berries",
+    "hud.hearts": "Hearts",
+    "hud.level": "Level",
+    "hud.score": "Score",
+    "prompt.start": "Collect sweet berries with Momo!",
+    "msg.rainbow_power": "✨ Rainbow Star Berry! ✨",
+    "msg.rescue": "Gentle wake up!",
+    "msg.level_clear": "Hooray! Level Complete! 🍓🎉",
+    "msg.oops": "Momo munches an apple and bounces back!"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

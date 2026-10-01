@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.colline_allegre.title": "BUMPY HILLS",
+    "activity.title": "Bumpy Hills",
+    "ui.go": "GO!",
+    "ui.brake": "BRAKE!",
+    "ui.distance": "DISTANCE",
+    "ui.stars": "STARS",
+    "ui.perfect_landing": "PERFECT LANDING!",
+    "ui.boing": "BOING!",
+    "ui.level": "LEVEL",
+    "ui.replay": "PLAY AGAIN"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/en/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

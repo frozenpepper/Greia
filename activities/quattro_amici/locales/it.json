@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.quattro_amici.title": "QUATTRO AMICI IN FILA",
+    "activity.title": "QUATTRO AMICI IN FILA",
+    "ui.mode_vs_leo": "CONTRO LEO",
+    "ui.mode_two_players": "DUE AMICI",
+    "ui.turn_flash": "TOCCA A FLASH!",
+    "ui.turn_leo": "TOCCA A LEO!",
+    "ui.flash_thinking": "FLASH STA PENSANDO...",
+    "ui.leo_thinking": "LEO STA PENSANDO...",
+    "ui.win_flash": "FLASH HA VINTO!",
+    "ui.win_leo": "LEO HA VINTO!",
+    "ui.draw": "PARITÀ! CHE BELLA PARTITA!",
+    "ui.play_again": "GIOCA ANCORA",
+    "ui.diff_1": "FACILE (3 IN FILA)",
+    "ui.diff_2": "MEDIO (3 IN FILA)",
+    "ui.diff_3": "CLASSICO (4 IN FILA)",
+    "ui.diff_4": "SFIDA (4 IN FILA)",
+    "ui.drop_column": "FAI CADERE IL DISCO",
+    "ui.level_label": "LIVELLO",
+    "ui.mode_label": "MODALITÀ"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.colline_allegre.title": "COLLINE ALLEGRE",
+    "activity.title": "Colline Allegre",
+    "ui.go": "VAI!",
+    "ui.brake": "FRENA!",
+    "ui.distance": "DISTANZA",
+    "ui.stars": "STELLE",
+    "ui.perfect_landing": "ATTERRAGGIO PERFETTO!",
+    "ui.boing": "BOING!",
+    "ui.level": "LIVELLO",
+    "ui.replay": "GIOCA ANCORA"
+  },
+  "audio": {
+    "activity.title": {
+      "path": "locales/it/audio/activity-title.wav",
+      "caption_key": "activity.title"
+    }
+  }
+}
