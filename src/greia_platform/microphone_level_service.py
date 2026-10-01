@@ -48,16 +48,17 @@ PUBLISH_INTERVAL_SECONDS = 0.05
 #: Read granularity of the capture stream, in bytes.
 _READ_CHUNK = 1024
 
-#: Measured on the Acer: a meter holding the device continuously gave a
-#: microphone-using Activity 0 of 6 capture attempts; 0.4 s every 1.0 s gave
-#: 3 of 8; 0.2 s every 4.0 s gives 7 of 8. The meter is a diagnostic aid and
-#: must not starve a child Activity, so it samples sparsely. Progressive
-#: backoff and a long yield after a busy open were both tried and did not help
-#: - the meter simply won the gaps. Sparse sampling is what works.
+#: Measured on the Acer, a meter holding the device continuously gave a
+#: microphone-using Activity 0 of 6 capture attempts.
 #:
-#: This is not fully solvable by scheduling: there is one capture device and no
-#: signal yet for "an Activity is recording". Until the platform exposes one,
-#: the meter stays sparse, and that is a real remaining limitation.
+#: Sampling sparsely fixed that (0.2 s every 4.0 s gave an Activity 7 of 8) but
+#: made the meter update once a second, which is useless to look at. Sparse
+#: sampling was the wrong lever: the meter should be fast when nothing else wants
+#: the device, and step aside completely when something does.
+#:
+#: So it samples in short bursts at a visible rate, and the moment an open fails
+#: because the device is busy it yields for BUSY_YIELD_SECONDS and stops competing.
+#: An Activity that starts therefore meets a meter that gets out of its way.
 #:
 #: The capture device is exclusive, so a meter that holds it continuously makes
 #: every microphone-using Activity fail to record at all. The service therefore
@@ -65,7 +66,7 @@ _READ_CHUNK = 1024
 #: windows for an Activity to acquire it. Held continuously, the Parent panel's
 #: meter silently starved Activities - they recorded nothing while the Audio tab
 #: was open, which looked like a broken Activity rather than a shared device.
-BURST_SECONDS = 0.25
+BURST_SECONDS = 0.155
 RELEASE_GAP_SECONDS = 3.0
 
 #: How long the meter stays out of the way after finding the device busy.
