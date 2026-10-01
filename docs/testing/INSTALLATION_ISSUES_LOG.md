@@ -72,10 +72,10 @@ explicitly. `tests/test_image_tmpfiles_identities.py` now fails the build if
 Both loops presented as `is-active` returning healthy; only `NRestarts`
 climbing showed them.
 
-## 31. Microphone gain presets were unreachable on the reference hardware (2026-09-30)
+## 31. Microphone gain appeared not to respond on the reference Acer (2026-09-30)
 
-The panel offered presets up to 400% and a parent raising the gain watched
-nothing happen. Measured on the Acer:
+OPEN QUESTION, no product decision taken. A parent raising the gain watched
+nothing happen on this machine. Measured on the Acer:
 
 ```
 amixer scontrols -> Simple mixer control 'Capture',0
@@ -93,9 +93,18 @@ preset 300% (3.0) -> clamped, identical to 2.0
 preset 400% (4.0) -> clamped, identical to 2.0
 ```
 
-"Strong" and "Maximum" were no-ops on every machine with this control, and the
-default of 2.0 was already the ceiling. Presets and `maximum_mic_gain` now stop
-at 2.0.
+On this machine the 300% and 400% presets are therefore indistinguishable from
+200%, and 2.0 is the ceiling. That is an observation about one ALSA control on
+one device, not a product conclusion: other hardware may expose a higher
+Capture limit, a separate `Mic Boost` control (present on the Acer but not yet
+characterised), or a different mapping. The 0.5-4.0 product range and the
+existing presets are unchanged.
+
+The open design question, for the owner to decide rather than an agent: whether
+the achievable range should be discovered per device and surfaced, or whether
+the gain control should be expressed in real hardware terms at all. Either way
+a parent needs to be told what ceiling they have reached instead of watching a
+control that appears inert.
 
 A second finding from the same measurements, recorded because it is an
 environment limit and not a defect: with `Capture` pinned at maximum, an internal
