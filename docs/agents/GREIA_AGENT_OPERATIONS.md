@@ -343,6 +343,23 @@ Developer-image convenience must not leak into normal/release profiles.
   is not in the `disk` group, so an unprivileged driver run fails pre-QEMU at
   clone injection with `losetup: Permission denied` (observed V12F; not a
   product finding). Disposable `/tmp` media only.
+- Detach a long build+flash properly: `setsid nohup sudo -n bash
+  tools/build-and-flash-development-usb.sh <profile> /dev/sdX > <log> 2>&1
+  < /dev/null &`. A plain `nohup ... &` launched from an agent tool call is
+  still in that call's process group, so when the call hits its own timeout and
+  is terminated the tool reaps the **front door and `sudo`** while the deeper
+  `build-*` scripts survive as orphans reparented to `systemd --user`. The build
+  then finishes, writes its image, and the flash and read-back verification
+  silently never happen, because both live in the front door. Observed
+  2026-10-01: a 30-minute build produced a correct image and no USB write, and
+  the only symptom was a missing parent in `ps`. `setsid` gives the job its own
+  session, which survives. Check the front door by name, not the leaf builder.
+- Overlay content is **role-scoped**: `target` composes from `build/overlay`,
+  every other role from `build/installer-overlay`, and the two do not ship the
+  same files. Never touch a role-specific path unconditionally at the top of a
+  shared composition helper — put it inside that role's branch. An unscoped
+  `chmod` of a target-only file aborted every installer build on the live leg
+  (`e859fb4b`, fixed 2026-10-01).
 
 ### Persistent host apt/pool caches (build hosts only)
 

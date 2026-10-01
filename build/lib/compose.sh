@@ -666,13 +666,15 @@ compose_build_early_framebuffer() {
 compose_configure_systemd() {
   local rootfs="$1"
   local role="$2"
-  # The audio endpoint probe ships as an overlay file, so the exec bit is not
-  # carried across. Without it the oneshot failed with 203/EXEC, never wrote the
-  # endpoint readiness markers, and the audio service reported both processing
-  # endpoints unavailable - so microphone processing silently fell back to off
-  # and noise cancelling did nothing at all.
-  chmod 0755 "$rootfs/usr/local/lib/greia-os/greia-audio-endpoint-probe"
   if [[ "$role" == "target" ]]; then
+    # The audio endpoint probe ships as a target-overlay file, so the exec bit is
+    # not carried across. Without it the oneshot failed with 203/EXEC, never
+    # wrote the endpoint readiness markers, and the audio service reported both
+    # processing endpoints unavailable - so microphone processing silently fell
+    # back to off and noise cancelling did nothing at all. Only the target role
+    # ships the probe and enables greia-audio-endpoints.service; the installer
+    # overlay has no such file, so this must stay inside the target branch.
+    chmod 0755 "$rootfs/usr/local/lib/greia-os/greia-audio-endpoint-probe"
     systemctl --root="$rootfs" enable \
       greia-first-boot.service greia-boot-observer.service greia-launcher.service greia-parent.service \
       greia-boot-health.socket greia-system-update.socket greia-audio-endpoints.service \

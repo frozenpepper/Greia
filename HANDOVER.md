@@ -273,7 +273,8 @@ preflight:  68/68 focused + 80/80 broader affected sweep
 evidence:   SOURCE-CLOSED (source + regression locks)
             all three fixes re-verified on the live Acer (render, wifi=5,
             helper rc=0 as nobody) but NOT yet on a freshly built image
-next:       rebuild + flash legacy-x86-i686-dev, then owner acceptance
+next:       IMAGE BUILT + USB FLASHED 2026-10-01 (§8e); owner boots the stick
+            on the Acer and reports the first visible boot stage
 ```
 
 Still open and **not** addressed by this tranche:
@@ -333,6 +334,59 @@ and `REFERENCE_WIDTH`/`REFERENCE_HEIGHT` are scale denominators and defaults, no
 hard layout dependencies.
 
 Evidence: the plan and research are **SOURCE-CLOSED**. No tranche is implemented.
+
+## 8e. Image rebuilt and USB flashed; the build had been broken on `main` (2026-10-01)
+
+Synced first: `HEAD == origin/main == 439a9060`, 0 ahead / 0 behind.
+
+The `legacy-x86-i686-dev` build then **failed**, and the cause was already on
+`main`. `e859fb4b` ("Build and install the microphone processing endpoint
+plugin", 2026-09-30) put an unscoped
+
+```bash
+chmod 0755 "$rootfs/usr/local/lib/greia-os/greia-audio-endpoint-probe"
+```
+
+at the top of `compose_configure_systemd` in `build/lib/compose.sh`, above the
+`if [[ "$role" == "target" ]]` branch. The probe ships only in `build/overlay`;
+the live-installer role composes from `build/installer-overlay`, which has no
+such file, so under the builders' `set -e` **every** installer build aborted on
+the live leg before publishing an image. The installer role does not want the
+file either — `greia-audio-endpoints.service` is enabled only in the `target`
+branch — so the chmod now sits inside that branch and the 203/EXEC repair the
+original entry added is preserved for the root that needs it.
+
+Rebuilt and flashed through the physical front door
+`tools/build-and-flash-development-usb.sh legacy-x86-i686-dev /dev/sdc` onto
+the owner-returned LaCie iamaKey (serial `eca3505216d7d3`), unmounted and
+identity-checked before the write:
+
+```text
+source_artifact_verification=PASS
+usb_flash_readback_verification=PASS   (usb_readback_verification=PASS)
+boot_writer=postmortem-proven-syslinux-fat32
+image sha256=9bfe662cea6c57f7e657f0ce3a0edc393fc4cdc2f251531b9775571b14883a09
+live_media_id=e21e7bca-baab-48b4-b920-81880067395c   (read back off the stick)
+boot_artwork_mode=full-color-landscape-canvas-v1  canvas=1600x900  grub=padding-centered
+```
+
+`tests/test_image_staging_contract.py` 19/19.
+
+Evidence lane is **VM/IMAGE + written USB medium only**. The Acer has not booted
+this image; do not report it as hardware-accepted. Record the first visible boot
+stage when it does.
+
+Two things carried forward, neither introduced here:
+
+```text
+accounted installed filesystem use 984 MiB   over the C0 preferred <=800 MiB,
+                                            under the required <1,000 MiB target
+test_system_overlay_contract.py  1/23 FAIL   pre-existing on 439a9060 (verified with
+                                            the fix stashed): tmpfiles overlay says
+                                            group pipprofiles where the test and
+                                            AGENTS.md say greiaprofiles
+build-host loop leak per image build         one autoclear loop left from this build
+```
 
 ## 8. Current exact next step
 
