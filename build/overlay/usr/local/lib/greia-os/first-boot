@@ -50,9 +50,18 @@ fi
 # find(1) does not follow symlinks by default. -xdev prevents an existing child
 # tree from crossing into another filesystem, and chown -h changes a symlink
 # inode rather than dereferencing it.
-if ! [ -d /var/lib/greia-profiles/data ]; then
-    install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles/data
+profile_data_root=/var/lib/greia-profiles/data
+if [ -L "$profile_data_root" ]; then
+  echo "Refusing symbolic-link profile data root: $profile_data_root" >&2
+  exit 1
 fi
+if [ -e "$profile_data_root" ] && [ ! -d "$profile_data_root" ]; then
+  echo "Refusing non-directory profile data root: $profile_data_root" >&2
+  exit 1
+fi
+# This fixed path is cheap to normalize on every boot and is required before
+# Parent starts. Unlike the old recursive sweep, it does not walk user data.
+install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"
 
 profile_owner_migration=/var/lib/greia-os/migrations/b4-profile-child-roots-v1.done
 if [ ! -e "$profile_owner_migration" ]; then

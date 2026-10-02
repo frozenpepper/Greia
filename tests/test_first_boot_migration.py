@@ -263,15 +263,23 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
 
     def test_data_root_is_pre_created_not_only_repaired_afterwards(self) -> None:
         text = FIRST_BOOT.read_text(encoding="utf-8")
-        creation = (
-            "install -d -m 2770 -o greiakid -g pipprofiles "
-            "/var/lib/greia-profiles/data"
-        )
+        creation = 'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"'
+        self.assertIn("profile_data_root=/var/lib/greia-profiles/data", text)
+        self.assertIn('if [ -L "$profile_data_root" ]', text)
+        self.assertIn('if [ -e "$profile_data_root" ] && [ ! -d "$profile_data_root" ]', text)
         self.assertIn(creation, text)
         self.assertLess(
             text.index(creation),
             text.index('if [ ! -e "$profile_owner_migration" ]'),
         )
+
+    def test_fixed_data_root_is_normalized_without_recursive_walk(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        creation = 'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"'
+        self.assertEqual(text.count(creation), 1)
+        before_b4 = text[: text.index('if [ ! -e "$profile_owner_migration" ]')]
+        self.assertIn(creation, before_b4)
+        self.assertNotIn("find /var/lib/greia-profiles/data", before_b4)
 
     def test_no_profile_repair_runs_after_the_marker_write(self) -> None:
         text = FIRST_BOOT.read_text(encoding="utf-8")

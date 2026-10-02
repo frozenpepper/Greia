@@ -2357,6 +2357,7 @@ main baseline: a261eb2d  Close the two provisioning defects that restart-looped 
 branch:        chatgpt/acer-hardening-v3-20261002
 3889159b       fix(network): place Unmanaged under systemd-networkd [Link]
 e09d9d14       fix(first-boot): replace recurring profile chown with bounded B4 migration
+c76d8ba6       test(image): bind packaged target to the B4 ownership contract
 ```
 
 V3 deliberately keeps the current `pipprofiles`/`pipsettings` names for this
@@ -2368,3 +2369,9 @@ them, stop and design an explicit pin/migration; do not make a name-only fix.
 
 The USB built from `39e83693` predates both `a261eb2d` and V3 and is **not**
 valid final acceptance media.
+
+V3 also normalizes the fixed `/var/lib/greia-profiles/data` root itself on every
+boot before Parent starts, after rejecting symlink/non-directory substitutions.
+That O(1) normalization is intentional: it repairs the exact root that the latest
+Acer install proved could be wrong without reintroducing any recursive per-boot
+walk of PERSIST.

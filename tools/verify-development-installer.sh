@@ -206,7 +206,9 @@ check_runtime_directory_contract() {
     exit 1
   fi
   for required in \
-    'install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles/data' \
+    'profile_data_root=/var/lib/greia-profiles/data' \
+    'if [ -L "$profile_data_root" ]' \
+    'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"' \
     'b4-profile-child-roots-v1.done' \
     'chown -h -- greiakid:pipprofiles'
   do
