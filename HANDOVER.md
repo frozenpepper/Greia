@@ -2358,6 +2358,8 @@ branch:        chatgpt/acer-hardening-v3-20261002
 3889159b       fix(network): place Unmanaged under systemd-networkd [Link]
 e09d9d14       fix(first-boot): replace recurring profile chown with bounded B4 migration
 c76d8ba6       test(image): bind packaged target to the B4 ownership contract
+8aa836c0       fix(first-boot): normalize fixed profile data root safely
+52f3b63c       test(tmpfiles): detect ownership contradictions in both composed roots
 ```
 
 V3 deliberately keeps the current `pipprofiles`/`pipsettings` names for this
@@ -2375,3 +2377,5 @@ boot before Parent starts, after rejecting symlink/non-directory substitutions.
 That O(1) normalization is intentional: it repairs the exact root that the latest
 Acer install proved could be wrong without reintroducing any recursive per-boot
 walk of PERSIST.
+
+No local execution evidence is claimed for V3 yet. The next authority is the focused/local acceptance described by the review agent; do not merge solely from source review.
