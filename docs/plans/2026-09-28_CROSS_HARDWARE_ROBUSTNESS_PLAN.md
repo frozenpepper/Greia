@@ -1,6 +1,6 @@
 # Cross-Hardware Robustness Plan
 
-**Status:** active, sequenced, not yet implemented
+**Status:** active; latest Acer install exposed additional first-boot provisioning defects; clean rebuilt-image acceptance still open
 **Created:** 2026-09-28
 **Owner decision:** recorded in this document; approved scope is Tranche A →
 Acer end-to-end acceptance → Tranche U → Tranche B → Tranche L.
@@ -15,6 +15,37 @@ which remains the active blocking platform plan (T3-P OPEN/BLOCKING).
 
 Root-cause evidence for every instance named here lives in
 `docs/INSTALLATION_ISSUES_LOG.md` §§1–16.
+
+
+### 2026-10-02 checkpoint
+
+A real install from the 2026-10-01 development image completed to the Acer
+internal disk and then exposed two first-boot restart-loop defects. They were
+closed at source by `a261eb2d`: one contradictory tmpfiles declaration had
+silently re-owned `/run/greia-os` away from Xorg, and the profile data root had
+to be created before Parent rather than repaired only after it existed.
+
+The installed appliance was hot-patched to prove those diagnoses and reached
+`launcher_interactive_ready` with zero restarts, but that is not the closure
+gate. The required evidence remains one clean rebuilt-image run with no hot-patch
+substitution: installer boot, internal-disk install, USB removal, installed boot,
+launcher, Activity launch/return, input, Wi-Fi and developer SSH.
+
+Source hardening for that rebuild lives on
+`chatgpt/acer-hardening-v3-20261002`, directly based on `main@a261eb2d`.
+It additionally corrects systemd-networkd wireless ownership to
+`[Link] Unmanaged=yes` and replaces the recurring whole-profile root `chown`
+with a bounded one-time B4 PERSIST migration while preserving the fresh-install
+data-root pre-creation.
+
+The ADR-0014 group-name drift is **not** part of V3. PERSIST ownership is numeric;
+measure the current `pipprofiles`/`pipsettings` GIDs on the installed system
+and a fresh composed target before designing a rename to
+`greiaprofiles`/`greiasettings`.
+
+Tranche A1 remains open: installed-initramfs validation is still explicitly
+SATA/AHCI-shaped (`ahci/libata/sd_mod`) and must not be described as generalized
+storage support.
 
 ---
 

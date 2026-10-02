@@ -1,12 +1,12 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-10-01
+**Updated:** 2026-10-02
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
 **Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
 **Cross-hardware plan:** `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md` — Tranche A → Acer end-to-end acceptance → Tranche U (UEFI) → Tranche B (capability matrix) → Tranche L (advisory lint)
-**Current physical-hardware step:** **Acer Wi-Fi ownership acceptance — source fix landed, awaiting owner hardware evidence (see §8c)**
+**Current physical-hardware step:** **Fresh-image Acer re-acceptance is open. `main@a261eb2d` fixed two first-boot restart-loop causes found by the latest real install; `chatgpt/acer-hardening-v3-20261002` adds the networkd section fix and bounded B4 ownership migration. Validate V3 locally, merge if green, rebuild/flash, then perform one clean install → internal boot → launcher → Activity → input → Wi-Fi → SSH run.**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
@@ -2341,3 +2341,30 @@ Following the catalogue strategy analysis in `docs/product/ACTIVITY_CATALOGUE_AG
 - **Spoken Audio Audit**: `tools/audit_launcher_spoken_labels.py` PASS (**90/90 combinations, 100%**).
 - **Contract & Audience Audits**: `tests/test_activity_contract.py` PASS (11/11, 45 built-ins), `tests/test_first_party_activity_readiness.py` PASS (45/45 verified), `tests/test_first_party_activity_audience_metadata.py` PASS (3/3).
 - **Architecture Audits**: `tools/audit_activity_backend_independence.py activities` PASS (45 activities, 0 blockers, 0 new migration findings), `tools/audit_activity_system_chrome_ownership.py --strict` PASS (0 blockers).
+
+
+## 70. Acer hardening V3 review branch (2026-10-02)
+
+The previous review branches are **not** integration authorities. In particular,
+`chatgpt/acer-hardening-v2-20261002@fdb0ab7c` claimed to replay on current main
+but was parented to `633d9517` and dropped `a261eb2d`'s fresh-install
+pre-creation of `/var/lib/greia-profiles/data`. Do not merge it.
+
+Current review authority:
+
+```text
+main baseline: a261eb2d  Close the two provisioning defects that restart-looped a fresh install
+branch:        chatgpt/acer-hardening-v3-20261002
+3889159b       fix(network): place Unmanaged under systemd-networkd [Link]
+e09d9d14       fix(first-boot): replace recurring profile chown with bounded B4 migration
+```
+
+V3 deliberately keeps the current `pipprofiles`/`pipsettings` names for this
+acceptance tranche. ADR 0014's `greiaprofiles`/`greiasettings` correction is
+real debt, but PERSIST state crosses A/B slots with numeric ownership. Before
+renaming, collect `getent` and `stat` numeric IDs from the installed Acer and
+from a freshly composed target. If IDs differ or the new names cannot preserve
+them, stop and design an explicit pin/migration; do not make a name-only fix.
+
+The USB built from `39e83693` predates both `a261eb2d` and V3 and is **not**
+valid final acceptance media.
