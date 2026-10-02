@@ -1551,3 +1551,28 @@ panel has never exposed them, and neither does the Parent API. Wiring them needs
 the same treatment as everything else here — a parent-service route, because
 `/var/lib/greia-system-settings` is `greiapel:pipsettings 2750` and the panel
 runs as `greiakid`, which has read but not write access to it.
+
+## 29. 2026-10-03 — Wi-Fi L3 ownership is role-specific, not globally owned by iwd
+
+A source-acceptance stop caught a false generalization before another Acer
+build/flash cycle. Greia has two deliberate wireless L3 policies:
+
+- **Live installer:** `build/installer-overlay/etc/iwd/main.conf` sets
+  `EnableNetworkConfiguration=true`. iwd owns association/authentication and
+  IP configuration. The installer wireless networkd policy therefore uses
+  `[Link] Unmanaged=yes` and must not run a second DHCP client.
+- **Installed target:** `build/overlay/etc/iwd/main.conf` sets
+  `EnableNetworkConfiguration=false`. iwd owns association/authentication,
+  while systemd-networkd owns L3/DHCP. The target wireless policy therefore
+  keeps `[Network] DHCP=yes` and must not mark the link unmanaged.
+
+The rejected V4 candidate had changed both roots to networkd DHCP while claiming
+Greia never enabled iwd network configuration. That claim was contradicted by
+the shipped installer `main.conf` and by
+`tests/test_installer_wifi_build_contract.py`, which already pinned the live
+installer's iwd network configuration.
+
+The canonical regression now validates each role as a pair
+(`iwd/main.conf` + `25-greia-wireless.network`) and both development artifact
+verifiers reject either dangerous state: two L3/DHCP owners or no L3/DHCP owner.
+No physical or image evidence is claimed yet for this correction.
