@@ -17,7 +17,7 @@ THIN_CONSUMER = ROOT / "build/build-image.sh"
 # The complete launch path: the unit plus every script it invokes.
 LAUNCH_PATH = (SERVICE, PREPARE, X_SESSION)
 
-MIGRATION_MARKER = "/var/lib/greia-os/migrations/b2-audio-groups-v1.done"
+MIGRATION_MARKER = "/var/lib/greia-os/migrations/b2-audio-groups-v1.done"\nPROFILE_MIGRATION_MARKER = "/var/lib/greia-os/migrations/b4-profile-child-roots-v1.done"
 
 AMIXER_LINES = (
     "amixer sset Master 100% unmute 2>/dev/null || true",
@@ -205,68 +205,79 @@ class MigrationIdempotencyTests(unittest.TestCase):
 
 
 class ProfileDataOwnershipMigrationTests(unittest.TestCase):
-    """B3: the child's profile data tree is owned by the child identity.
+    """B4: bounded upgrade repair plus first-boot prevention for profile data."""
 
-    It shipped as greiapel:pipprofiles 2755 while its own parent
-    /var/lib/greia-profiles was correctly greiakid:pipprofiles 2770. That broke
-    the child twice: 2755 gives the shared group only r-x, so greiakid could not
-    write its own progress, and because a caller must own a file before it may
-    set setgid, greiakid could not chmod the tree back either. history.py then
-    raised PermissionError, the Shell died before INTERACTIVE_READY, and the
-    launcher's Type=notify unit never saw READY=1.
-    """
+    MARKER = PROFILE_MIGRATION_MARKER
 
-    MARKER = "/var/lib/greia-os/migrations/b3-profile-data-ownership-v1.done"
-
-    def test_migration_is_gated_by_its_own_versioned_marker(self) -> None:
+    def _migration_block(self) -> str:
         text = FIRST_BOOT.read_text(encoding="utf-8")
-        self.assertIn(self.MARKER, text)
-        self.assertIn("b3-profile-data-ownership-v1", text)
+        guard = text.index('if [ ! -e "$profile_owner_migration" ]')
+        marker = text.index('> "$profile_owner_migration"', guard)
+        return text[guard:marker]
 
-    def test_migration_repairs_ownership_and_group_write(self) -> None:
+    def test_migration_is_gated_by_a_new_versioned_marker(self) -> None:
         text = FIRST_BOOT.read_text(encoding="utf-8")
-        self.assertIn("chown greiakid:pipprofiles", text)
-        # Group-writable, setgid, no access for other: 2770, never 2755 and
-        # never a world-readable mode.
-        self.assertIn("chmod 2770", text)
-        self.assertNotIn("chmod 2755", text)
-        self.assertNotIn("chmod 0777", text)
+        self.assertIn(f"profile_owner_migration={self.MARKER}", text)
+        guard = text.index('if [ ! -e "$profile_owner_migration" ]')
+        marker = text.index('> "$profile_owner_migration"', guard)
+        self.assertLess(guard, marker)
+        self.assertIn('"b4-profile-child-roots-v1"', text[guard:])
+        self.assertNotEqual(
+            self.MARKER,
+            "/var/lib/greia-os/migrations/b3-profile-data-ownership-v1.done",
+        )
 
-    def test_migration_marker_is_written_only_after_the_repair(self) -> None:
+    def test_profile_roots_are_repaired_for_shared_child_creation(self) -> None:
+        block = self._migration_block()
+        self.assertIn("-mindepth 1 -maxdepth 1 -type d", block)
+        self.assertIn("-exec chgrp -- pipprofiles {} +", block)
+        self.assertIn("-exec chmod 2770 {} +", block)
+
+    def test_only_child_owned_subtrees_are_recursively_reowned(self) -> None:
+        block = self._migration_block()
+        self.assertIn("-mindepth 2 -maxdepth 2 -type d", block)
+        self.assertIn("-name progress", block)
+        self.assertIn("-name storage", block)
+        self.assertNotIn("-name customization", block)
+        self.assertNotIn("-name activities", block)
+        self.assertIn('find "$owned_root" -xdev -depth -print0', block)
+        self.assertIn("chown -h -- greiakid:pipprofiles", block)
+        self.assertNotIn(
+            "find /var/lib/greia-profiles/data -depth -print0",
+            block,
+            "never recursively chown the complete child-writable data tree",
+        )
+
+    def test_migration_marker_is_written_only_after_repairs(self) -> None:
         text = FIRST_BOOT.read_text(encoding="utf-8")
-        inside = text[text.index("b3-profile-data-ownership-v1.done") :]
-        marker_write = inside.index('> "$profile_owner_migration"')
-        repair = inside.index("chmod 2770")
-        self.assertLess(repair, marker_write)
+        guard = text.index('if [ ! -e "$profile_owner_migration" ]')
+        marker = text.index('> "$profile_owner_migration"', guard)
+        self.assertLess(text.index("chgrp -- pipprofiles", guard), marker)
+        self.assertLess(text.index("chown -h -- greiakid:pipprofiles", guard), marker)
 
     def test_migration_survives_unusual_profile_ids(self) -> None:
-        text = FIRST_BOOT.read_text(encoding="utf-8")
-        self.assertIn("-print0", text)
-        self.assertIn("xargs -0", text)
+        block = self._migration_block()
+        self.assertIn("-print0", block)
+        self.assertIn("xargs -0", block)
 
     def test_data_root_is_pre_created_not_only_repaired_afterwards(self) -> None:
-        """Repairing alone cannot work on a fresh install; this one did not.
-
-        greia-first-boot.service is ordered Before=greia-parent.service, and the
-        Parent is what creates /var/lib/greia-profiles/data - as greiapel. So on
-        a freshly installed machine the data root did not exist when the repair
-        ran, the `[ -d ... ]` guard skipped it, and the Parent created the tree
-        with an owner and mode the child cannot write. child_shell then died on
-        PermissionError creating its own progress directory and
-        greia-launcher.service restart-looped until the *second* boot. Ordering a
-        repair after the Parent is impossible (the Parent is itself ordered
-        after the launcher), so the data root must exist before the Parent runs.
-        """
-
         text = FIRST_BOOT.read_text(encoding="utf-8")
-        self.assertIn(
-            "install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles/data",
-            text,
+        creation = (
+            "install -d -m 2770 -o greiakid -g pipprofiles "
+            "/var/lib/greia-profiles/data"
         )
-        # The pre-creation must not be gated on the tree already existing, which
-        # is exactly what made the repair a no-op on first boot.
-        pre_create = text.index("install -d -m 2770 -o greiakid")
-        self.assertLess(pre_create, text.index("if [ -d /var/lib/greia-profiles/data ]"))
+        self.assertIn(creation, text)
+        self.assertLess(
+            text.index(creation),
+            text.index('if [ ! -e "$profile_owner_migration" ]'),
+        )
+
+    def test_no_profile_repair_runs_after_the_marker_write(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        marker = text.index('> "$profile_owner_migration"')
+        remainder = text[marker + len('> "$profile_owner_migration"'):]
+        self.assertNotIn("find /var/lib/greia-profiles/data", remainder)
+        self.assertNotIn("chown -h -- greiakid:pipprofiles", remainder)
 
     def test_history_reports_ownership_and_mode_when_chmod_is_refused(self) -> None:
         """A bare EPERM is what made this cost four blind cycles to diagnose."""
