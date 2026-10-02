@@ -153,13 +153,21 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                     matched = (sections.get("Match", {}).get("Name", "") or "").split()
                     if not any(self._is_wireless_name(name) for name in matched):
                         continue
+                    link = sections.get("Link", {})
                     network = sections.get("Network", {})
-                    # Ownership must be stated, not merely absent, so that a
-                    # future wireless policy cannot silently re-claim the link.
+                    # systemd-networkd owns Unmanaged= in [Link], not [Network].
+                    # Pin the real external contract so a misplaced directive
+                    # cannot pass merely because our own text parser sees it.
                     self.assertEqual(
-                        network.get("Unmanaged"),
+                        link.get("Unmanaged"),
                         "yes",
-                        f"{prefix}/{policy.name} must leave the wireless link to iwd",
+                        f"{prefix}/{policy.name} must leave the wireless link to iwd "
+                        "through [Link] Unmanaged=yes",
+                    )
+                    self.assertNotIn(
+                        "Unmanaged",
+                        network,
+                        f"{prefix}/{policy.name} must not place Unmanaged= in [Network]",
                     )
                     for key in ("DHCP", "DHCPv4", "DHCPv6", "IPv6AcceptRA"):
                         self.assertNotIn(

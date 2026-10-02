@@ -19,5 +19,5 @@
 [Match]
 Name=wl* wlan* wlp* wlx*
 
-[Network]
+[Link]
 Unmanaged=yes

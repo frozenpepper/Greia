@@ -237,7 +237,7 @@ Three traps, all of which have actually bitten this project:
   mode*, and it will not take a link networkd manages. A `Name=wl*` + `DHCP=yes`
   policy makes the installer report the card while never listing a network, and it
   cannot join an encrypted network anyway. Wireless policies use
-  `[Network] Unmanaged=yes` to state the boundary explicitly rather than merely
+  `[Link] Unmanaged=yes` to state the boundary explicitly rather than merely
   failing to match.
 - **Do not probe iwd as `su nobody`.** iwd's bus policy allows `root` and group
   `netdev`. `su` does not inherit systemd `SupplementaryGroups`, so a `su` probe

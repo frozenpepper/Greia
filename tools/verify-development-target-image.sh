@@ -87,8 +87,14 @@ grep -Fq 'DHCP=yes' "$path" || { echo "Developer target: wired policy lacks DHCP
 path="$MOUNT/etc/systemd/network/25-greia-wireless.network"
 [[ -f "$path" ]] || { echo "Developer target: missing 25-greia-wireless.network" >&2; exit 1; }
 directives="$(grep -vE '^[[:space:]]*(#|;|$)' "$path")"
-grep -Fq 'Unmanaged=yes' <<<"$directives" || {
-  echo "Developer target: wireless policy must leave the link to iwd (Unmanaged=yes)." >&2
+awk '
+  BEGIN { in_link = 0; found = 0 }
+  /^[[:space:]]*\[Link\][[:space:]]*$/ { in_link = 1; next }
+  /^[[:space:]]*\[/ { in_link = 0 }
+  in_link && /^[[:space:]]*Unmanaged=yes[[:space:]]*$/ { found = 1 }
+  END { exit(found ? 0 : 1) }
+' "$path" || {
+  echo "Developer target: wireless policy must leave the link to iwd through [Link] Unmanaged=yes." >&2
   exit 1
 }
 if grep -Fq 'DHCP=yes' <<<"$directives"; then

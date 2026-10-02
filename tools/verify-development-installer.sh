@@ -133,8 +133,14 @@ check_network() {
   }
   local directives
   directives="$(printf '%s\n' "$content" | grep -vE '^[[:space:]]*(#|;|$$)' | grep -v '^[[:space:]]*$$')"
-  printf '%s\n' "$directives" | grep -Fq 'Unmanaged=yes' || {
-    echo "$label: $path must leave the wireless link to iwd (Unmanaged=yes)." >&2
+  printf '%s\n' "$content" | awk '
+    BEGIN { in_link = 0; found = 0 }
+    /^[[:space:]]*\[Link\][[:space:]]*$/ { in_link = 1; next }
+    /^[[:space:]]*\[/ { in_link = 0 }
+    in_link && /^[[:space:]]*Unmanaged=yes[[:space:]]*$/ { found = 1 }
+    END { exit(found ? 0 : 1) }
+  ' || {
+    echo "$label: $path must leave the wireless link to iwd through [Link] Unmanaged=yes." >&2
     exit 1
   }
   printf '%s\n' "$directives" | grep -Fq 'DHCP=yes' && {
