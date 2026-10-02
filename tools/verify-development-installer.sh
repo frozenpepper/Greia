@@ -206,6 +206,20 @@ check_runtime_directory_contract() {
     exit 1
   fi
   for required in \
+    'install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles/data' \
+    'b4-profile-child-roots-v1.done' \
+    'chown -h -- greiakid:pipprofiles'
+  do
+    printf '%s\n' "$first_boot" | grep -Fq -- "$required" || {
+      echo "installed-system payload: bounded profile ownership contract missing: $required" >&2
+      exit 1
+    }
+  done
+  if printf '%s\n' "$first_boot" | grep -Fq 'find /var/lib/greia-profiles/data -depth -print0'; then
+    echo "installed-system payload: unsafe whole-profile recursive ownership sweep returned." >&2
+    exit 1
+  fi
+  for required in \
     'AssertPathIsDirectory=/run/greia-os' \
     'AssertPathIsDirectory=/run/greia-hardware'
   do
