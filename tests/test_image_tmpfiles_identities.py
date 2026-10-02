@@ -152,23 +152,26 @@ class TmpfilesIdentitiesExistTests(unittest.TestCase):
         because that is what silently re-owns a path.
         """
 
-        declared: dict[str, set[tuple[str, ...]]] = {}
-        for path in sorted((PROJECT_ROOT / "build" / "overlay").rglob("tmpfiles.d/*.conf")):
-            for fields in (
-                line.split() for line in path.read_text(encoding="utf-8").splitlines()
-            ):
-                if len(fields) >= 5 and fields[0] in {"d", "d+"}:
-                    declared.setdefault(fields[1], set()).add(tuple(fields[:5]))
+        for overlay_name in ("overlay", "installer-overlay"):
+            declared: dict[str, set[tuple[str, ...]]] = {}
+            overlay_root = PROJECT_ROOT / "build" / overlay_name
+            for path in sorted(overlay_root.rglob("tmpfiles.d/*.conf")):
+                for fields in (
+                    line.split()
+                    for line in path.read_text(encoding="utf-8").splitlines()
+                ):
+                    if len(fields) >= 5 and fields[0] in {"d", "d+"}:
+                        declared.setdefault(fields[1], set()).add(tuple(fields[:5]))
 
-        for target, variants in declared.items():
-            with self.subTest(path=target):
-                self.assertLessEqual(
-                    len(variants),
-                    1,
-                    "tmpfiles files disagree about a path they all declare; "
-                    f"{target} is declared as {sorted(variants)}, and the last "
-                    "one applied silently wins",
-                )
+            for target, variants in declared.items():
+                with self.subTest(overlay=overlay_name, path=target):
+                    self.assertLessEqual(
+                        len(variants),
+                        1,
+                        "tmpfiles files disagree about a path they all declare; "
+                        f"{overlay_name}:{target} is declared as {sorted(variants)}, "
+                        "and the last one applied silently wins",
+                    )
 
 
 if __name__ == "__main__":
