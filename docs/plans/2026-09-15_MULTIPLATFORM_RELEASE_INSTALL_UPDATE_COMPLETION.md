@@ -2156,3 +2156,26 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
   `CAP_CHOWN` still **NOT AUTHORIZED**. Next software step is unchanged: diagnostic Session-04
   installer rebuild from the unchanged S03 bundle, **fresh install only**, and report the
   true apt fatal tail before any capability change.
+
+## 2026-10-03 — Acer hardening reconciliation: role-specific Wi-Fi ownership restored
+
+- Local source acceptance of the review candidate stopped before build because
+  the live installer already ships
+  `EnableNetworkConfiguration=true`; a candidate that also assigned wireless
+  DHCP to systemd-networkd would create two L3 authorities.
+- Canonical `main` now preserves the intended split:
+  - live installer: iwd owns association/authentication + L3; networkd marks
+    wireless unmanaged;
+  - installed target: iwd owns association/authentication only; networkd keeps
+    `DHCP=yes`.
+- The same tranche carries the previously reviewed bounded B4 profile ownership
+  migration and its source regression tests from the Acer first-boot
+  restart-loop investigation.
+- Artifact verifiers now inspect the iwd policy together with the matching
+  networkd policy rather than assuming one wireless L3 owner for every image
+  role.
+- Evidence boundary: **UNPROVEN beyond source review**. No image was built, no
+  USB was flashed, and the Acer was not modified in this tranche. The next gate
+  is provider-free/local source validation on the exact canonical `main`
+  commit; only after that passes may a development installer be rebuilt and
+  physically re-accepted.
