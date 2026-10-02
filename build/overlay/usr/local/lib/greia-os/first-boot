@@ -29,49 +29,64 @@ if [ ! -e "$audio_groups_marker" ]; then
   printf '%s\n' "b2-audio-groups-v1" > "$audio_groups_marker"
 fi
 
-# b3-profile-data-ownership-v1: the profile DATA tree is the child's own state
-# and must be owned by the child identity, group-writable by the shared profile
-# group, exactly like its parent /var/lib/greia-profiles (already greiakid:
-# pipprofiles 2770). It shipped as greiapel:pipprofiles 2755, which broke the
-# child twice over: 2755 gives the group only r-x, so greiakid could not write
-# its own progress/history; and because the caller must own a file before it may
-# set setgid (inode_owner_or_capable), greiakid could not even chmod the tree
-# back. history.py's _prepare_root then raised PermissionError on
-# os.chmod(root, 0o2770), the child Shell died before INTERACTIVE_READY, and
-# the launcher's Type=notify unit never saw READY=1.
+# B4 profile ownership migration.
 #
-# Verified on every boot rather than run exactly once. The Parent service creates
-# parts of the profile tree and runs as greiapel, so it can leave a path
-# greiapel-owned; with a spent marker that was never re-checked, the launcher died
-# on profile entry again on a machine that had already been repaired once. The
-# tree is a handful of directories, so verifying each boot is cheap and is the
-# only version that actually self-heals. The marker records that the repair has
-# run at least once.
-# The repair below could only ever fix a tree that already existed, and this
-# unit is ordered Before=greia-parent.service - so on a fresh install the
-# directory was not there yet, the guard was skipped, and the Parent created
-# the tree as greiapel with a mode the child cannot write. The child Shell then
-# died on PermissionError creating its own progress directory and the launcher
-# restart-looped until the *second* boot, when this repair finally had
-# something to fix. Pre-create the data root here instead: first-boot runs as
-# root ahead of the Parent, so this is the one place that can establish the
-# child's ownership before the Parent ever creates a profile underneath it. The
-# Parent's own mkdir then finds a correct directory and never creates a
-# parent-owned one.
-if ! [ -d /var/lib/greia-profiles/data ]; then
-    install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles/data
+# Fresh images are prevented from recreating the historical fault: first-boot
+# creates the setgid shared data root before greia-parent starts, and
+# ProfileStore creates profile/customization/activity directories as 2770 while
+# deliberately leaving storage/progress to the child identity.
+#
+# Existing PERSIST data still needs one compatibility pass. Do not recursively
+# chown the whole child-writable tree on every boot: that makes boot work grow
+# with user data and lets a root repair inspect paths supplied by writable
+# persistent state. B4 is a new marker because machines may already carry the
+# older B3 marker while still containing paths created after that marker.
+#
+# The compatibility pass has two bounded jobs:
+#   1. profile roots (data/<profile>) need shared group-write so the child can
+#      create its own storage/progress directories before Parent starts;
+#   2. existing storage/progress trees are child-owned and are repaired once.
+#
+# find(1) does not follow symlinks by default. -xdev prevents an existing child
+# tree from crossing into another filesystem, and chown -h changes a symlink
+# inode rather than dereferencing it.
+profile_data_root=/var/lib/greia-profiles/data
+if [ -L "$profile_data_root" ]; then
+  echo "Refusing symbolic-link profile data root: $profile_data_root" >&2
+  exit 1
 fi
-profile_owner_migration=/var/lib/greia-os/migrations/b3-profile-data-ownership-v1.done
-if [ -d /var/lib/greia-profiles/data ]; then
-    # -print0/xargs so an unusual profile id cannot break word splitting.
-    find /var/lib/greia-profiles/data -depth -print0 |
-      xargs -0 -r chown greiakid:pipprofiles
-    find /var/lib/greia-profiles/data -depth -type d -print0 |
-      xargs -0 -r chmod 2770
+if [ -e "$profile_data_root" ] && [ ! -d "$profile_data_root" ]; then
+  echo "Refusing non-directory profile data root: $profile_data_root" >&2
+  exit 1
 fi
-install -d -m 0755 /var/lib/greia-os/migrations
+# This fixed path is cheap to normalize on every boot and is required before
+# Parent starts. Unlike the old recursive sweep, it does not walk user data.
+install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"
+
+profile_owner_migration=/var/lib/greia-os/migrations/b4-profile-child-roots-v1.done
 if [ ! -e "$profile_owner_migration" ]; then
-  printf '%s\n' "b3-profile-data-ownership-v1" > "$profile_owner_migration"
+  install -d -m 0755 /var/lib/greia-os/migrations
+  if [ -d /var/lib/greia-profiles/data ]; then
+    # Existing profile roots are Parent-owned but must remain writable by the
+    # shared profile group so greiakid can create storage/progress immediately.
+    find /var/lib/greia-profiles/data -mindepth 1 -maxdepth 1 -type d \
+      -exec chgrp -- pipprofiles {} + \
+      -exec chmod 2770 {} +
+
+    # Only the child-owned roots change owner. Parent-owned customization and
+    # activity directories are deliberately outside this migration.
+    find /var/lib/greia-profiles/data -mindepth 2 -maxdepth 2 -type d \
+      \( -name progress -o -name storage \) \
+      -exec sh -c '
+        for owned_root do
+          find "$owned_root" -xdev -depth -print0 |
+            xargs -0 -r chown -h -- greiakid:pipprofiles
+          find "$owned_root" -xdev -depth -type d -print0 |
+            xargs -0 -r chmod 2770
+        done
+      ' sh {} +
+  fi
+  printf '%s\n' "b4-profile-child-roots-v1" > "$profile_owner_migration"
 fi
 [ ! -e "$marker" ] || exit 0
 trap - EXIT
