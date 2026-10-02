@@ -17,7 +17,8 @@ THIN_CONSUMER = ROOT / "build/build-image.sh"
 # The complete launch path: the unit plus every script it invokes.
 LAUNCH_PATH = (SERVICE, PREPARE, X_SESSION)
 
-MIGRATION_MARKER = "/var/lib/greia-os/migrations/b2-audio-groups-v1.done"\nPROFILE_MIGRATION_MARKER = "/var/lib/greia-os/migrations/b4-profile-child-roots-v1.done"
+MIGRATION_MARKER = "/var/lib/greia-os/migrations/b2-audio-groups-v1.done"
+PROFILE_MIGRATION_MARKER = "/var/lib/greia-os/migrations/b4-profile-child-roots-v1.done"
 
 AMIXER_LINES = (
     "amixer sset Master 100% unmute 2>/dev/null || true",
