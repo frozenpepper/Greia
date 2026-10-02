@@ -1,23 +1,16 @@
-# Greia wireless link is owned by iwd, not systemd-networkd.
+# Wi-Fi association/authentication is owned by iwd; IP configuration is owned by systemd-networkd.
 #
-# Greia ships no wpa_supplicant: iwd is the only WPA2-capable path in the
-# product, and it is enabled in the target role
-# (build/lib/compose.sh -> compose_configure_systemd). The installer persists
-# the chosen iwd .psk/.open profile into this target
-# (src/greia_installer/engine.py -> request.wifi_profile.write_to), and those
-# persisted profiles are only usable if iwd owns the wireless link here.
+# Greia ships iwd (and no wpa_supplicant), so iwd is the WPA2 station/authentication
+# authority and consumes the .psk/.open profile persisted by the installer.
+# That does NOT make iwd the L3/DHCP authority: iwd's built-in network
+# configuration is disabled by default unless EnableNetworkConfiguration=true is
+# explicitly configured. Greia does not enable it. systemd-networkd therefore
+# remains responsible for DHCP after iwd establishes carrier.
 #
-# The previous `Name=wl*` + `DHCP=yes` policy actively defeated that: it made
-# systemd-networkd claim the adapter, so iwd never entered station mode, and
-# the persisted profile could not be used on first boot. It also could not
-# have joined an encrypted network, because bare DHCP-on-wireless cannot speak
-# WPA2 without wpa_supplicant.
-#
-# Unmanaged=yes states the ownership boundary explicitly instead of merely
-# failing to match, so a future `wl*` policy cannot silently re-claim the link.
-# Wired DHCP remains in 20-greia-wired.network.
+# Keep this split explicit. Removing DHCP or marking this link Unmanaged leaves a
+# successfully associated station without an IPv4 lease on the shipped system.
 [Match]
 Name=wl* wlan* wlp* wlx*
 
 [Network]
-Unmanaged=yes
+DHCP=yes
