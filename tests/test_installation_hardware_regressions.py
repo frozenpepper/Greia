@@ -129,47 +129,48 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 return line.split("=", 1)[1].split()
         return []
 
-    def test_iwd_alone_owns_the_wireless_link_in_every_built_root(self) -> None:
-        """No systemd-networkd policy may claim a wireless interface.
+    def test_wireless_l3_owner_is_explicit_per_image_role(self) -> None:
+        """Installer and target deliberately use different L3 owners.
 
-        Greia ships no wpa_supplicant, so iwd is the only WPA2-capable path in
-        the product. iwd only publishes its Device/Station D-Bus interfaces
-        while it holds the adapter in station mode, and it will not take a link
-        that systemd-networkd manages. A wireless `[Network] DHCP=yes` policy
-        therefore did two harmful things at once: it blinded the installer's
-        Wi-Fi selection UI, and it prevented the installed system from using
-        the iwd profile the installer persists at first install. It also could
-        not have joined an encrypted network, because bare DHCP-on-wireless
-        cannot speak WPA2 without wpa_supplicant. Reproduced on the Acer, where
-        the card was reported as found but no network could ever be listed.
+        The live installer enables iwd's built-in network configuration, so its
+        wireless link must be unmanaged by networkd. The installed target
+        disables iwd network configuration, so networkd must retain DHCP there.
+        Keeping these role contracts paired prevents either root from ending up
+        with two DHCP clients or with no DHCP client at all.
         """
 
-        for prefix in ("build/overlay", "build/installer-overlay"):
-            network_dir = PROJECT_ROOT / prefix / "etc/systemd/network"
-            self.assertTrue(network_dir.is_dir(), f"{prefix} has no network policy dir")
-            for policy in sorted(network_dir.glob("*.network")):
-                with self.subTest(policy=f"{prefix}/{policy.name}"):
-                    sections = self._network_sections(policy.read_text(encoding="utf-8"))
-                    matched = (sections.get("Match", {}).get("Name", "") or "").split()
-                    if not any(self._is_wireless_name(name) for name in matched):
-                        continue
-                    network = sections.get("Network", {})
-                    # Ownership must be stated, not merely absent, so that a
-                    # future wireless policy cannot silently re-claim the link.
-                    self.assertEqual(
-                        network.get("Unmanaged"),
-                        "yes",
-                        f"{prefix}/{policy.name} must leave the wireless link to iwd",
-                    )
-                    for key in ("DHCP", "DHCPv4", "DHCPv6", "IPv6AcceptRA"):
-                        self.assertNotIn(
-                            key,
-                            network,
-                            f"{prefix}/{policy.name} must not configure {key} on a "
-                            "wireless link; iwd owns it",
-                        )
+        roles = (
+            (
+                "build/installer-overlay",
+                True,
+                "iwd",
+            ),
+            (
+                "build/overlay",
+                False,
+                "networkd",
+            ),
+        )
+        for prefix, iwd_networks, l3_owner in roles:
+            with self.subTest(prefix=prefix):
+                iwd_conf = self.read(f"{prefix}/etc/iwd/main.conf")
+                expected = (
+                    "EnableNetworkConfiguration=true"
+                    if iwd_networks
+                    else "EnableNetworkConfiguration=false"
+                )
+                self.assertIn(expected, iwd_conf)
 
-        # The premise the ownership decision rests on must stay true.
+                policy = self._network_sections(
+                    self.read(f"{prefix}/etc/systemd/network/25-greia-wireless.network")
+                )
+                if l3_owner == "iwd":
+                    self.assertEqual(policy.get("Link", {}).get("Unmanaged"), "yes")
+                    self.assertNotIn("DHCP", policy.get("Network", {}))
+                else:
+                    self.assertNotEqual(policy.get("Link", {}).get("Unmanaged"), "yes")
+                    self.assertEqual(policy.get("Network", {}).get("DHCP"), "yes")
+
         package_sets = list((PROJECT_ROOT / "build/package-sets").glob("*.txt"))
         self.assertTrue(package_sets)
         for package_set in package_sets:
@@ -177,22 +178,13 @@ class RealHardwareInstallationRegressionTests(unittest.TestCase):
                 self.assertNotIn(
                     "wpa_supplicant",
                     package_set.read_text(encoding="utf-8").split(),
-                    "iwd is the only WPA2 path; adding wpa_supplicant would "
-                    "reintroduce a second wireless owner",
+                    "iwd remains the sole Wi-Fi association/authentication authority",
                 )
         self.assertIn(
             "iwd.service",
-            (PROJECT_ROOT / "build/lib/compose.sh").read_text(encoding="utf-8"),
+            self.read("build/lib/compose.sh"),
             "iwd must stay enabled in the installed target",
         )
-
-        # Wired DHCP must survive: only the wireless link changed hands.
-        for prefix in ("build/overlay", "build/installer-overlay"):
-            with self.subTest(prefix=prefix):
-                wired = self._network_sections(
-                    self.read(f"{prefix}/etc/systemd/network/20-greia-wired.network")
-                )
-                self.assertEqual(wired.get("Network", {}).get("DHCP"), "yes")
 
     @staticmethod
     def _is_wireless_name(pattern: str) -> bool:
