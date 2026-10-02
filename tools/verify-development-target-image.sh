@@ -80,19 +80,29 @@ path="$MOUNT/etc/systemd/network/20-greia-wired.network"
 [[ -f "$path" ]] || { echo "Developer target: missing 20-greia-wired.network" >&2; exit 1; }
 grep -Fq 'DHCP=yes' "$path" || { echo "Developer target: wired policy lacks DHCP." >&2; exit 1; }
 
-# Wireless is iwd's job. The installer persists an iwd .psk/.open profile into
-# this target, and iwd.service is enabled in the target role, so systemd-networkd
-# claiming the link would make that profile unusable on first boot. Assert the
-# ownership boundary instead of a DHCP policy on a wireless interface.
+# iwd owns Wi-Fi association/authentication while systemd-networkd owns
+# L3/DHCP. Greia does not enable iwd's optional built-in network configuration,
+# so the wireless .network policy must remain managed and request DHCP.
 path="$MOUNT/etc/systemd/network/25-greia-wireless.network"
 [[ -f "$path" ]] || { echo "Developer target: missing 25-greia-wireless.network" >&2; exit 1; }
-directives="$(grep -vE '^[[:space:]]*(#|;|$)' "$path")"
-grep -Fq 'Unmanaged=yes' <<<"$directives" || {
-  echo "Developer target: wireless policy must leave the link to iwd (Unmanaged=yes)." >&2
+awk '
+  BEGIN { in_network = 0; found = 0 }
+  /^[[:space:]]*\[Network\][[:space:]]*$/ { in_network = 1; next }
+  /^[[:space:]]*\[/ { in_network = 0 }
+  in_network && /^[[:space:]]*DHCP=yes[[:space:]]*$/ { found = 1 }
+  END { exit(found ? 0 : 1) }
+' "$path" || {
+  echo "Developer target: wireless policy must retain [Network] DHCP=yes behind iwd authentication." >&2
   exit 1
 }
-if grep -Fq 'DHCP=yes' <<<"$directives"; then
-  echo "Developer target: wireless policy must not configure DHCP; iwd owns it." >&2
+if awk '
+  BEGIN { in_link = 0; bad = 0 }
+  /^[[:space:]]*\[Link\][[:space:]]*$/ { in_link = 1; next }
+  /^[[:space:]]*\[/ { in_link = 0 }
+  in_link && /^[[:space:]]*Unmanaged=yes[[:space:]]*$/ { bad = 1 }
+  END { exit(bad ? 0 : 1) }
+' "$path"; then
+  echo "Developer target: wireless policy must not mark Wi-Fi Unmanaged while networkd owns DHCP." >&2
   exit 1
 fi
 
