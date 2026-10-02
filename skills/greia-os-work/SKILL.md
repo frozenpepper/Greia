@@ -224,45 +224,55 @@ Read:
 ```text
 docs/INSTALLATION_ISSUES_LOG.md            (§13 wireless link ownership)
 src/greia_platform/wifi.py                 (iwd backend: available/scan/connect)
-build/overlay/etc/systemd/network/         (wired vs wireless ownership)
+build/installer-overlay/etc/iwd/main.conf  (live-installer L3 owner)
+build/overlay/etc/iwd/main.conf            (installed-target L3 owner)
+build/*/etc/systemd/network/               (role-specific networkd policy)
 build/lib/compose.sh                       (compose_configure_systemd enable lists)
 ```
 
-**`iwd` owns the wireless link. `systemd-networkd` owns wired DHCP only.** Greia
-ships no `wpa_supplicant`, so iwd is the only WPA2-capable path in the product.
-Three traps, all of which have actually bitten this project:
+**Association/authentication and IP configuration are separate ownership
+questions.** Greia ships no `wpa_supplicant`, so `iwd` is the sole Wi-Fi
+station/authentication authority in every role. L3/DHCP ownership is
+role-specific and must be checked together with `iwd/main.conf`:
 
-- **`systemd-networkd` must never claim a wireless interface.** iwd only publishes
-  its `Device`/`Station` D-Bus interfaces while it holds the adapter in *station
-  mode*, and it will not take a link networkd manages. A `Name=wl*` + `DHCP=yes`
-  policy makes the installer report the card while never listing a network, and it
-  cannot join an encrypted network anyway. Wireless policies use
-  `[Network] Unmanaged=yes` to state the boundary explicitly rather than merely
-  failing to match.
-- **Do not probe iwd as `su nobody`.** iwd's bus policy allows `root` and group
-  `netdev`. `su` does not inherit systemd `SupplementaryGroups`, so a `su` probe
-  returns `Access denied` even when the real service reaches the bus fine. Probe
-  with `setpriv --groups=$(getent group netdev | cut -d: -f3)`, or trust the
+- **Live installer:** `EnableNetworkConfiguration=true`. iwd owns both
+  association/authentication and IP configuration. Its wireless
+  `.network` file must therefore use `[Link] Unmanaged=yes`; networkd must
+  not run a second DHCP client on the same wireless link.
+- **Installed target:** `EnableNetworkConfiguration=false`. iwd owns
+  association/authentication only, while systemd-networkd owns L3/DHCP. Its
+  wireless `.network` file must therefore retain `[Network] DHCP=yes` and
+  must not mark the link unmanaged.
+- Never generalize one role's L3 policy to the other. The paired config files
+  are the authority; tests and artifact verifiers must reject both bad states:
+  two DHCP owners and no DHCP owner.
+
+Other hardware-proven traps remain:
+
+- **Do not probe iwd as `su nobody`.** iwd's bus policy allows `root` and
+  group `netdev`. `su` does not inherit systemd `SupplementaryGroups`, so
+  a `su` probe returns `Access denied` even when the real service reaches
+  the bus fine. Probe with
+  `setpriv --groups=$(getent group netdev | cut -d: -f3)`, or trust the
   installer's own report.
 - **The installer persists iwd `.psk`/`.open` profiles into the target**
-  (`engine.py` → `request.wifi_profile.write_to`). Changing wireless ownership
-  in a way that starves iwd of station mode silently breaks installed first boot,
-  not just the installer UI.
+  (`engine.py` → `request.wifi_profile.write_to`). The installed target must
+  keep iwd in station/authentication authority while networkd supplies DHCP.
 - **iwd owns `/var/lib/iwd`. Never write into it from an unprivileged
   process.** It is `root:root 0700`; the installer is `User=nobody`, so any
   attempt fails with `[Errno 1] Operation not permitted`. To hand iwd a
   passphrase, register a `net.connman.iwd.Agent` and answer
   `RequestPassphrase(object network) -> string`; iwd persists the profile
-  itself. Same class as the link conflict: the resource belongs to iwd.
+  itself.
 - **Two iwd-agent traps, both found only on real hardware.** The image's
   python3-dbus rejects the three-argument `dbus.Interface(bus, path, iface)`
   form with `TypeError` — use `bus.get_object(...)` then
-  `dbus.Interface(proxy, iface)`, the shape the rest of `wifi.py` already uses.
-  And `dbus.SystemBus()` is a shared singleton the scan path already opened
-  with **no main loop**, so exporting an object on it raises "connections must
-  be attached to a main loop"; the agent needs its own `BusConnection` with an
-  explicit main loop, and should answer only for the selected network's object
-  path.
+  `dbus.Interface(proxy, iface)`, the shape the rest of `wifi.py` already
+  uses. And `dbus.SystemBus()` is a shared singleton the scan path already
+  opened with **no main loop**, so exporting an object on it raises
+  "connections must be attached to a main loop"; the agent needs its own
+  `BusConnection` with an explicit main loop, and should answer only for the
+  selected network's object path.
 
 ## Responsive display / viewport / coordinate-space work
 
