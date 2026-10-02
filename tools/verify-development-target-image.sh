@@ -81,8 +81,13 @@ path="$MOUNT/etc/systemd/network/20-greia-wired.network"
 grep -Fq 'DHCP=yes' "$path" || { echo "Developer target: wired policy lacks DHCP." >&2; exit 1; }
 
 # iwd owns Wi-Fi association/authentication while systemd-networkd owns
-# L3/DHCP. Greia does not enable iwd's optional built-in network configuration,
-# so the wireless .network policy must remain managed and request DHCP.
+# L3/DHCP in the installed target. Pin both halves of that role contract.
+iwd_conf="$MOUNT/etc/iwd/main.conf"
+[[ -f "$iwd_conf" ]] || { echo "Developer target: missing /etc/iwd/main.conf" >&2; exit 1; }
+grep -Fq 'EnableNetworkConfiguration=false' "$iwd_conf" || {
+  echo "Developer target: iwd must leave target L3 configuration to networkd." >&2
+  exit 1
+}
 path="$MOUNT/etc/systemd/network/25-greia-wireless.network"
 [[ -f "$path" ]] || { echo "Developer target: missing 25-greia-wireless.network" >&2; exit 1; }
 awk '
