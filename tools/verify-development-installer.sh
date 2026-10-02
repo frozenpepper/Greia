@@ -109,7 +109,7 @@ check_ssh_runtime() {
 }
 
 check_network() {
-  local squash="$1" label="$2" path content
+  local squash="$1" label="$2" expected_l3_owner="$3" path content iwd_conf
 
   # Wired recovery networking is systemd-networkd's job and must keep DHCP.
   path="etc/systemd/network/20-greia-wired.network"
@@ -122,26 +122,69 @@ check_network() {
     exit 1
   }
 
-  # Wireless is iwd's job: Greia ships no wpa_supplicant, so iwd is the only
-  # WPA2-capable path. systemd-networkd claiming the link stops iwd entering
-  # station mode, which blinds the Wi-Fi UI and makes the installed iwd profile
-  # unusable on first boot. Assert the ownership boundary, not a DHCP policy.
+  path="etc/iwd/main.conf"
+  iwd_conf="$(sqcat "$squash" "$path")" || {
+    echo "$label: missing iwd role policy $path" >&2
+    exit 1
+  }
   path="etc/systemd/network/25-greia-wireless.network"
   content="$(sqcat "$squash" "$path")" || {
-    echo "$label: missing wireless ownership policy $path" >&2
+    echo "$label: missing wireless network policy $path" >&2
     exit 1
   }
-  local directives
-  directives="$(printf '%s\n' "$content" | grep -vE '^[[:space:]]*(#|;|$$)' | grep -v '^[[:space:]]*$$')"
-  printf '%s\n' "$directives" | grep -Fq 'Unmanaged=yes' || {
-    echo "$label: $path must leave the wireless link to iwd (Unmanaged=yes)." >&2
-    exit 1
-  }
-  printf '%s\n' "$directives" | grep -Fq 'DHCP=yes' && {
-    echo "$label: $path must not configure DHCP; iwd owns the wireless link." >&2
-    exit 1
-  }
-  return 0
+
+  case "$expected_l3_owner" in
+    iwd)
+      printf '%s\n' "$iwd_conf" | grep -Fq 'EnableNetworkConfiguration=true' || {
+        echo "$label: iwd must own live wireless L3 configuration." >&2
+        exit 1
+      }
+      printf '%s\n' "$content" | awk '
+        BEGIN { in_link = 0; found = 0 }
+        /^[[:space:]]*\[Link\][[:space:]]*$/ { in_link = 1; next }
+        /^[[:space:]]*\[/ { in_link = 0 }
+        in_link && /^[[:space:]]*Unmanaged=yes[[:space:]]*$/ { found = 1 }
+        END { exit(found ? 0 : 1) }
+      ' || {
+        echo "$label: networkd must leave live Wi-Fi unmanaged while iwd owns L3." >&2
+        exit 1
+      }
+      if printf '%s\n' "$content" | grep -Eq '^[[:space:]]*DHCP(v4|v6)?[[:space:]]*='; then
+        echo "$label: wireless networkd policy must not run DHCP while iwd owns L3." >&2
+        exit 1
+      fi
+      ;;
+    networkd)
+      printf '%s\n' "$iwd_conf" | grep -Fq 'EnableNetworkConfiguration=false' || {
+        echo "$label: installed target must leave wireless L3 to networkd." >&2
+        exit 1
+      }
+      printf '%s\n' "$content" | awk '
+        BEGIN { in_network = 0; found = 0 }
+        /^[[:space:]]*\[Network\][[:space:]]*$/ { in_network = 1; next }
+        /^[[:space:]]*\[/ { in_network = 0 }
+        in_network && /^[[:space:]]*DHCP=yes[[:space:]]*$/ { found = 1 }
+        END { exit(found ? 0 : 1) }
+      ' || {
+        echo "$label: target Wi-Fi must retain networkd DHCP behind iwd authentication." >&2
+        exit 1
+      }
+      if printf '%s\n' "$content" | awk '
+        BEGIN { in_link = 0; bad = 0 }
+        /^[[:space:]]*\[Link\][[:space:]]*$/ { in_link = 1; next }
+        /^[[:space:]]*\[/ { in_link = 0 }
+        in_link && /^[[:space:]]*Unmanaged=yes[[:space:]]*$/ { bad = 1 }
+        END { exit(bad ? 0 : 1) }
+      '; then
+        echo "$label: target Wi-Fi cannot be Unmanaged while networkd owns DHCP." >&2
+        exit 1
+      fi
+      ;;
+    *)
+      echo "Internal verifier error: unknown wireless L3 owner $expected_l3_owner" >&2
+      exit 2
+      ;;
+  esac
 }
 
 check_installed_dev_boot_diagnostics() {
@@ -197,6 +240,22 @@ check_runtime_directory_contract() {
   fi
   if printf '%s\n' "$first_boot" | grep -Fq '/run/greia-hardware'; then
     echo "installed-system payload: one-time first boot still owns volatile /run/greia-hardware." >&2
+    exit 1
+  fi
+  for required in \
+    'profile_data_root=/var/lib/greia-profiles/data' \
+    'if [ -L "$profile_data_root" ]' \
+    'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"' \
+    'b4-profile-child-roots-v1.done' \
+    'chown -h -- greiakid:pipprofiles'
+  do
+    printf '%s\n' "$first_boot" | grep -Fq -- "$required" || {
+      echo "installed-system payload: bounded profile ownership contract missing: $required" >&2
+      exit 1
+    }
+  done
+  if printf '%s\n' "$first_boot" | grep -Fq 'find /var/lib/greia-profiles/data -depth -print0'; then
+    echo "installed-system payload: unsafe whole-profile recursive ownership sweep returned." >&2
     exit 1
   fi
   for required in \
@@ -413,11 +472,11 @@ PY
 
 check_account "$LIVE" "live installer"
 check_ssh_runtime "$LIVE" "live installer"
-check_network "$LIVE" "live installer"
+check_network "$LIVE" "live installer" "iwd"
 
 check_account "$TARGET" "installed-system payload"
 check_ssh_runtime "$TARGET" "installed-system payload"
-check_network "$TARGET" "installed-system payload"
+check_network "$TARGET" "installed-system payload" "networkd"
 check_installed_dev_boot_diagnostics "$TARGET"
 check_runtime_directory_contract
 check_installed_first_boot_contract
