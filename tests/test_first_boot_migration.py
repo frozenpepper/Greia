@@ -244,6 +244,30 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
         self.assertIn("-print0", text)
         self.assertIn("xargs -0", text)
 
+    def test_data_root_is_pre_created_not_only_repaired_afterwards(self) -> None:
+        """Repairing alone cannot work on a fresh install; this one did not.
+
+        greia-first-boot.service is ordered Before=greia-parent.service, and the
+        Parent is what creates /var/lib/greia-profiles/data - as greiapel. So on
+        a freshly installed machine the data root did not exist when the repair
+        ran, the `[ -d ... ]` guard skipped it, and the Parent created the tree
+        with an owner and mode the child cannot write. child_shell then died on
+        PermissionError creating its own progress directory and
+        greia-launcher.service restart-looped until the *second* boot. Ordering a
+        repair after the Parent is impossible (the Parent is itself ordered
+        after the launcher), so the data root must exist before the Parent runs.
+        """
+
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        self.assertIn(
+            "install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles/data",
+            text,
+        )
+        # The pre-creation must not be gated on the tree already existing, which
+        # is exactly what made the repair a no-op on first boot.
+        pre_create = text.index("install -d -m 2770 -o greiakid")
+        self.assertLess(pre_create, text.index("if [ -d /var/lib/greia-profiles/data ]"))
+
     def test_history_reports_ownership_and_mode_when_chmod_is_refused(self) -> None:
         """A bare EPERM is what made this cost four blind cycles to diagnose."""
 

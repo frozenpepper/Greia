@@ -388,6 +388,39 @@ test_system_overlay_contract.py  1/23 FAIL   pre-existing on 439a9060 (verified 
 build-host loop leak per image build         one autoclear loop left from this build
 ```
 
+## 8f. Fresh install restart-looped; both provisioning defects closed at source (2026-10-01)
+
+The appliance installed from today's image (`sha256=9bfe662c...`) restart-looped
+on first boot. `greia-launcher.service` read `active` between restarts;
+`NRestarts` climbed past 21.
+
+**Defect 1 — `/run/greia-os` resolved to `root:root 0755`.** Two tmpfiles files
+declared the path, and `/usr/lib/tmpfiles.d` sorts after `/etc/tmpfiles.d`, so
+`greia-os-runtime.conf` silently overrode the correct owner of record in
+`greia-os.conf` (`0770 greiakid pipprofiles`). Xorg runs as `greiakid`, could not
+create `Xorg.0.log`, and xinit exited 1. The boot-marker spool is in the same
+directory, so the loop was mute. Duplicate declaration removed; the test that
+required it rewritten; a cross-file contradiction guard added and verified to bite.
+
+**Defect 2 — the child's profile tree was created by the Parent.** `data/` and
+`data/<id>` were `greiapel:pipprofiles 2750`, so `greiakid` could not create its
+own `progress` directory and `child_shell` died before READY. The B3 repair in
+`first-boot` handles this but is ordered `Before=greia-parent`, while the Parent
+is the creator — so on a fresh install the repair was skipped and only took
+effect on the **second** boot. `first-boot` now pre-creates the data root as
+`greiakid:pipprofiles 2770`, which is the one place that runs as root ahead of
+the Parent. B3 retained for upgrades. Locked by a new test.
+
+```text
+device        PHYSICAL, greia-dev @ 10.42.0.203 (greia/greia)
+after repair  launcher_interactive_ready, NRestarts=0 on launcher/parent/audio,
+              Xorg.0.log present, greiakid writing its own progress/
+NOT yet       the image has NOT been rebuilt; a fresh install from the current
+              stick will still loop. Rebuild + physical re-acceptance are owed.
+make verify   3841 tests, 15 failures, byte-identical set to the pre-existing
+              15 at 439a9060 (diffed); none in the suites this change touches.
+```
+
 ## 8. Current exact next step
 
 Session 03 source implementation and source validation are complete for the

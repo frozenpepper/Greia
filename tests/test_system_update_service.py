@@ -1197,9 +1197,26 @@ class OverlayContractTests(unittest.TestCase):
             "system-update.sock", "install-transaction.sock",
         )
 
-    def test_runtime_tmpfiles_creates_socket_directory(self) -> None:
+    def test_runtime_tmpfiles_does_not_re_declare_the_socket_directory(self) -> None:
+        """One owner of record for /run/greia-os, or Xorg cannot write its log.
+
+        This file used to re-declare the path as root:root 0755. /etc/tmpfiles.d
+        sorts before /usr/lib/tmpfiles.d, so the duplicate won, Xorg (greiakid)
+        could not open Xorg.0.log, and greia-launcher.service restart-looped with
+        the boot-marker spool unwritable in the same directory.
+        """
         text = self._read("build/overlay/usr/lib/tmpfiles.d/greia-os-runtime.conf")
-        self.assertIn("d /run/greia-os 0755 root root -", text)
+        directives = [
+            " ".join(line.split()[:5])
+            for line in text.splitlines()
+            if line.split() and not line.strip().startswith("#")
+        ]
+        self.assertFalse(
+            [line for line in directives if line.startswith(("d ", "d+ "))],
+            f"this file must not declare directories; found {directives}",
+        )
+        owner_of_record = self._read("build/overlay/etc/tmpfiles.d/greia-os.conf")
+        self.assertIn("d /run/greia-os 0770 greiakid pipprofiles -", owner_of_record)
 
     def test_update_service_module_reuses_shared_seams(self) -> None:
         import re

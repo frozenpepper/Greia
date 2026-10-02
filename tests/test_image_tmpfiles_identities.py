@@ -136,6 +136,40 @@ class TmpfilesIdentitiesExistTests(unittest.TestCase):
             "Xorg.0.log and the launcher restart-loops",
         )
 
+    def test_no_file_contradicts_another_declaration_of_the_same_path(self) -> None:
+        """A duplicate declaration is applied too, and the later one wins.
+
+        This module only ever read greia-os.conf, so a second file could
+        re-declare the same path with a different owner and no test would see
+        it. build/overlay/usr/lib/tmpfiles.d/greia-os-runtime.conf did exactly
+        that for /run/greia-os: /usr/lib/tmpfiles.d sorts after
+        /etc/tmpfiles.d, so root:root 0755 overrode greiakid, Xorg could not
+        write its log, and greia-launcher.service restart-looped on a freshly
+        installed machine - the same boot break this file exists to prevent.
+
+        Agreeing duplicates (greia-os.conf and greia-runtime.conf both name the
+        volatile roots identically) are tolerated; only disagreement is fatal,
+        because that is what silently re-owns a path.
+        """
+
+        declared: dict[str, set[tuple[str, ...]]] = {}
+        for path in sorted((PROJECT_ROOT / "build" / "overlay").rglob("tmpfiles.d/*.conf")):
+            for fields in (
+                line.split() for line in path.read_text(encoding="utf-8").splitlines()
+            ):
+                if len(fields) >= 5 and fields[0] in {"d", "d+"}:
+                    declared.setdefault(fields[1], set()).add(tuple(fields[:5]))
+
+        for target, variants in declared.items():
+            with self.subTest(path=target):
+                self.assertLessEqual(
+                    len(variants),
+                    1,
+                    "tmpfiles files disagree about a path they all declare; "
+                    f"{target} is declared as {sorted(variants)}, and the last "
+                    "one applied silently wins",
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

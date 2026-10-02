@@ -47,6 +47,20 @@ fi
 # tree is a handful of directories, so verifying each boot is cheap and is the
 # only version that actually self-heals. The marker records that the repair has
 # run at least once.
+# The repair below could only ever fix a tree that already existed, and this
+# unit is ordered Before=greia-parent.service - so on a fresh install the
+# directory was not there yet, the guard was skipped, and the Parent created
+# the tree as greiapel with a mode the child cannot write. The child Shell then
+# died on PermissionError creating its own progress directory and the launcher
+# restart-looped until the *second* boot, when this repair finally had
+# something to fix. Pre-create the data root here instead: first-boot runs as
+# root ahead of the Parent, so this is the one place that can establish the
+# child's ownership before the Parent ever creates a profile underneath it. The
+# Parent's own mkdir then finds a correct directory and never creates a
+# parent-owned one.
+if ! [ -d /var/lib/greia-profiles/data ]; then
+    install -d -m 2770 -o greiakid -g pipprofiles /var/lib/greia-profiles/data
+fi
 profile_owner_migration=/var/lib/greia-os/migrations/b3-profile-data-ownership-v1.done
 if [ -d /var/lib/greia-profiles/data ]; then
     # -print0/xargs so an unusual profile id cannot break word splitting.
