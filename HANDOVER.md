@@ -2341,3 +2341,38 @@ Following the catalogue strategy analysis in `docs/product/ACTIVITY_CATALOGUE_AG
 - **Spoken Audio Audit**: `tools/audit_launcher_spoken_labels.py` PASS (**90/90 combinations, 100%**).
 - **Contract & Audience Audits**: `tests/test_activity_contract.py` PASS (11/11, 45 built-ins), `tests/test_first_party_activity_readiness.py` PASS (45/45 verified), `tests/test_first_party_activity_audience_metadata.py` PASS (3/3).
 - **Architecture Audits**: `tools/audit_activity_backend_independence.py activities` PASS (45 activities, 0 blockers, 0 new migration findings), `tools/audit_activity_system_chrome_ownership.py --strict` PASS (0 blockers).
+
+
+## 70. Acer installer/first-boot hardening reconciled onto canonical main; source acceptance owed (2026-10-03)
+
+The previous review-candidate sequence exposed two process/architecture errors before another hardware cycle:
+
+1. repository policy requires direct work on `main` unless the owner explicitly requests a branch; the review-branch pattern was inherited incorrectly and is no longer the continuation route;
+2. wireless L3 ownership is **role-specific**, not globally owned by iwd or networkd.
+
+Canonical source now expresses the paired role contracts:
+
+- live installer: `EnableNetworkConfiguration=true` + wireless
+  `[Link] Unmanaged=yes` — iwd owns association/authentication and L3;
+- installed target: `EnableNetworkConfiguration=false` + wireless
+  `[Network] DHCP=yes` — iwd owns association/authentication and networkd owns
+  target DHCP/L3.
+
+The regression test and both development artifact verifiers now validate the
+`iwd/main.conf` policy together with the matching wireless networkd policy, so
+both "two DHCP owners" and "no DHCP owner" states are rejected.
+
+The same canonical tranche includes the reviewed bounded B4 profile-data
+migration from the Acer restart-loop investigation: the fixed profile-data root
+is normalized cheaply every boot, existing profile roots are repaired once for
+shared group-write, only existing child-owned `storage`/`progress` subtrees
+are recursively re-owned, and symlink/non-directory data roots fail closed.
+
+**Evidence boundary:** SOURCE ONLY / UNPROVEN. No image has been rebuilt from
+this reconciled `main`, no USB has been flashed, and the Acer has not been
+modified. Previous V4 local acceptance intentionally stopped at the contradictory
+installer Wi-Fi policy and did not execute later test gates.
+
+**Next exact step:** local source acceptance on the exact current `main` SHA.
+Do not build, flash, install, merge, or touch the Acer until that source gate is
+reviewed.
