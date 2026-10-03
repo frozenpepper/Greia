@@ -2179,3 +2179,27 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
   is provider-free/local source validation on the exact canonical `main`
   commit; only after that passes may a development installer be rebuilt and
   physically re-accepted.
+
+## 2026-10-03 — Canonical source acceptance stopped on one stale B3 staging assertion
+
+- Exact tested canonical source before this correction:
+  `af6fb79298e7b6ed5366151aa14ebe2e3d26ebd1`.
+- Role-specific Wi-Fi ownership passed all source checks, five focused suites
+  passed 85/85, both negative ownership controls bit correctly, and the B4
+  first-boot/profile contract passed all ten explicit source invariants.
+- `make verify` ran 3897 tests and produced 16 failures: the historical 15
+  unrelated failures plus exactly one new failure,
+  `test_image_staging_contract.TargetImageCarriesFirstBootFixesTests.test_first_boot_repairs_profile_data_ownership`.
+- That failure was a stale staging test asserting the retired B3 marker and
+  recurring/unbounded ownership-repair shape. It contradicted the accepted B4
+  design already covered by `test_first_boot_migration.py`.
+- Canonical `main` now updates only that staging contract. The replacement
+  asserts the stronger B4 image-staging invariants: symlink/non-directory root
+  refusal, fixed-root 2770 normalization, B4 marker gating, top-level
+  group-write repair, recursion limited to `progress`/`storage`, `-xdev`,
+  `chown -h`, and absence of the retired B3/unbounded sweep.
+- No runtime/build implementation changed in this correction. No image, USB or
+  Acer operation occurred.
+- Evidence boundary remains **SOURCE / UNPROVEN** until the corrected staging
+  test and full provider-free verification are rerun on the exact new
+  canonical `main` SHA.
