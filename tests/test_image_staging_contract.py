@@ -161,24 +161,54 @@ class TargetImageCarriesFirstBootFixesTests(unittest.TestCase):
                 self.assertIn("python3-dbus", network)
 
     def test_first_boot_repairs_profile_data_ownership(self) -> None:
+        """The staged target carries the bounded B4 profile repair contract.
+
+        Fresh installs normalize the fixed data root every boot before Parent
+        can create profile state. Existing installations get one bounded B4
+        compatibility pass: profile roots regain shared group-write, while only
+        child-owned storage/progress subtrees are recursively re-owned. The
+        repair must not recursively chown arbitrary profile data on every boot.
+        """
+
         text = _read(TARGET_OVERLAY / "usr/local/lib/greia-os/first-boot")
-        self.assertIn("b3-profile-data-ownership-v1", text)
-        self.assertIn("chown greiakid:pipprofiles", text)
-        self.assertIn("chmod 2770", text)
-        # The repair must be verified on every boot, not run exactly once. The
-        # Parent service creates parts of this tree as greiapel, so a spent marker
-        # let it re-break ownership and the launcher died on profile entry again
-        # on a machine that had already been repaired once.
-        guarded = text.count('[ ! -e "$profile_owner_migration" ]')
-        repair_index = text.index("chown greiakid:pipprofiles")
-        guard_index = text.index('[ ! -e "$profile_owner_migration" ]')
-        self.assertGreater(
-            guard_index,
-            repair_index,
-            "the ownership repair must not be gated behind its own spent marker",
+
+        # Fixed root is validated before normalization; hostile or malformed
+        # persistent state must not redirect a privileged repair elsewhere.
+        self.assertIn("profile_data_root=/var/lib/greia-profiles/data", text)
+        self.assertIn('if [ -L "$profile_data_root" ]', text)
+        self.assertIn('if [ -e "$profile_data_root" ] && [ ! -d "$profile_data_root" ]', text)
+        self.assertIn(
+            'install -d -m 2770 -o greiakid -g pipprofiles "$profile_data_root"',
+            text,
         )
-        self.assertIn("guarded", "guarded = %d" % guarded)
-        # 2755 is the shipped defect: group gets r-x, so the child cannot write.
+
+        # B4 is deliberately one-shot for the bounded compatibility traversal.
+        # The cheap fixed-root normalization above is the per-boot prevention.
+        self.assertIn("b4-profile-child-roots-v1.done", text)
+        guard = text.index('if [ ! -e "$profile_owner_migration" ]')
+        marker_write = text.index('> "$profile_owner_migration"', guard)
+        self.assertLess(guard, marker_write)
+
+        block = text[guard:marker_write]
+        self.assertIn("-mindepth 1 -maxdepth 1 -type d", block)
+        self.assertIn("-exec chgrp -- pipprofiles {} +", block)
+        self.assertIn("-exec chmod 2770 {} +", block)
+
+        # Recursive ownership is constrained to the child's own roots only.
+        self.assertIn("-mindepth 2 -maxdepth 2 -type d", block)
+        self.assertIn("-name progress", block)
+        self.assertIn("-name storage", block)
+        self.assertNotIn("-name customization", block)
+        self.assertNotIn("-name activities", block)
+        self.assertIn('find "$owned_root" -xdev -depth -print0', block)
+        self.assertIn("chown -h -- greiakid:pipprofiles", block)
+
+        # The retired unbounded/recurring design must not return.
+        self.assertNotIn(
+            "find /var/lib/greia-profiles/data -depth -print0",
+            block,
+        )
+        self.assertNotIn("b3-profile-data-ownership-v1", text)
         self.assertNotIn("chmod 2755", text)
         self.assertNotIn("chmod 0777", text)
 
