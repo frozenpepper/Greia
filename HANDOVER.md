@@ -2376,3 +2376,31 @@ installer Wi-Fi policy and did not execute later test gates.
 **Next exact step:** local source acceptance on the exact current `main` SHA.
 Do not build, flash, install, merge, or touch the Acer until that source gate is
 reviewed.
+
+## 71. Source acceptance found one stale B3 staging test; corrected, rerun owed (2026-10-03)
+
+Source acceptance of `af6fb79298e7b6ed5366151aa14ebe2e3d26ebd1`
+passed the role-specific Wi-Fi matrix, contradiction search, shell syntax,
+85/85 focused tests, both Wi-Fi negative controls and all ten B4 migration
+properties. Full `make verify` stopped with 16 failures: exactly the historical
+15 unrelated failures plus one new stale assertion in
+`tests/test_image_staging_contract.py::TargetImageCarriesFirstBootFixesTests::test_first_boot_repairs_profile_data_ownership`.
+
+The stale test still required the retired B3 marker and recurring/unbounded
+ownership repair. Canonical `main` now changes only that test, replacing it
+with image-staging assertions for the accepted bounded B4 contract:
+
+- refuse symlink and non-directory profile-data roots;
+- normalize the fixed data root to `greiakid:pipprofiles` mode 2770 every boot;
+- use the `b4-profile-child-roots-v1.done` marker for the compatibility pass;
+- repair top-level profile roots to shared group-write;
+- recursively re-own only `progress` and `storage`;
+- use `-xdev` and `chown -h`;
+- reject return of the retired B3 marker, 2755/0777 modes or whole-data-tree
+  recursive ownership sweep.
+
+No runtime implementation changed in this correction and no verification has
+yet executed against the new HEAD. **Next exact step:** run the corrected
+staging-contract suite, the previously focused first-boot/profile suites, then
+`make verify` on the exact current canonical `main`. Do not build, flash or
+touch the Acer until that evidence is reviewed.
