@@ -6,7 +6,7 @@
 **Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
 **Cross-hardware plan:** `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md` — Tranche A → Acer end-to-end acceptance → Tranche U (UEFI) → Tranche B (capability matrix) → Tranche L (advisory lint)
-**Current physical-hardware step:** **Acer Wi-Fi ownership acceptance — source fix landed, awaiting owner hardware evidence (see §8c)**
+**Current physical-hardware step:** **Acer fresh-image re-acceptance — B4/network reconciliation SOURCE-ACCEPTED at `69624a4f`; explicit validate/shell-check/footprint + build-host health preflight next, then proven Syslinux/FAT32 build+flash**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
@@ -2404,3 +2404,29 @@ yet executed against the new HEAD. **Next exact step:** run the corrected
 staging-contract suite, the previously focused first-boot/profile suites, then
 `make verify` on the exact current canonical `main`. Do not build, flash or
 touch the Acer until that evidence is reviewed.
+
+## 72. B4/network reconciliation source gate accepted; tail source gates remain (2026-10-05)
+
+Exact tested source: `69624a4f96d6f441327966a85ba5deb0ea3fcab4`.
+
+The corrected staging suite passed 19/19. The five focused suites passed 85/85.
+Both negative controls rejected the intended bad states. Full unittest discovery
+ran 3897 tests with exactly the established 15 unrelated historical failures and
+8 skips; the one previously new B4 staging failure disappeared, and the failure
+identity set matched the historical baseline exactly. The checkout remained
+clean; no build, flash or Acer operation occurred.
+
+**Disposition:** the B4 profile migration + role-specific Wi-Fi ownership
+reconciliation is **SOURCE-ACCEPTED**.
+
+`make verify` still exits during its test prerequisite because the historical
+15 are unresolved, so `validate`, `shell-check` and `footprint` were not
+reached. The canonical development build+flash front door does not call
+`make verify`, but we will not spend a destructive hardware cycle until those
+three source gates execute explicitly and the build host passes the mandatory
+disk-health/loop preflight.
+
+**Next exact step:** non-destructive local pre-build acceptance on canonical
+`main`: explicit project/activity validation, executable-shell syntax gate,
+source-footprint gate, then SMART/kernel-error/disk-usage/loop audit. Do not
+build or flash in that run.
