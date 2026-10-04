@@ -2203,3 +2203,28 @@ option has been applied; Session 04 remains OPEN pending owner/agent review.
 - Evidence boundary remains **SOURCE / UNPROVEN** until the corrected staging
   test and full provider-free verification are rerun on the exact new
   canonical `main` SHA.
+
+## 2026-10-05 — B4/network ownership reconciliation source-accepted
+
+Exact tested source: `69624a4f96d6f441327966a85ba5deb0ea3fcab4`.
+
+Owner-controlled local evidence:
+
+- corrected image-staging suite: 19/19 PASS;
+- focused first-boot/network/tmpfiles/update suites: 85/85 PASS;
+- retired-B3-marker positive control: expected FAIL observed;
+- unbounded whole-tree-recursion positive control: expected FAIL observed;
+- full unittest phase: 3897 tests, 15 failures, 8 skipped;
+- the 15 failure identities are byte-for-byte/identity-exact with the established
+  unrelated historical baseline;
+- the previously new B4 staging failure is absent;
+- worktree remained clean and no build, USB write or Acer mutation occurred.
+
+Therefore the B4/profile migration and role-specific Wi-Fi ownership
+reconciliation are **SOURCE-ACCEPTED**.
+
+The broad `make verify` target still exits 1 at the test phase because the
+historical 15 are real unresolved failures; therefore its later `validate`,
+`shell-check` and `footprint` phases did not execute. Those three source
+gates must be run explicitly before spending another build/flash cycle.
+No hardware/image evidence is claimed yet for the reconciled source.
