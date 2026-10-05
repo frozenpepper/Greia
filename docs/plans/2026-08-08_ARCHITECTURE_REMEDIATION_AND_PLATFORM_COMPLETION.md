@@ -2724,3 +2724,31 @@ moves from `PENDING` to `OWNER_ACCEPTED` for the 192 candidate set.
 - Device evidence (PHYSICAL, `greia-dev` at `10.42.0.203`, greia/greia): applying the shipped B3 repair plus the `/run/greia-os` ownership reached `launcher_interactive_ready` with `NRestarts=0` on `greia-launcher`, `greia-parent` and `greia-audio-endpoints`, stable across repeated checks, `Xorg.0.log` present, and `greiakid` creating its own `progress` directory. `greia-x-session` restored from backup after diagnosis.
 - **Not yet proven:** the fixed image has not been rebuilt or re-installed. The image on the stick will still loop on a fresh install; only the currently installed appliance is repaired. Rebuild and physical re-acceptance remain owed.
 - `make verify`: 3841 tests, 15 failures, byte-identical failure set to the pre-existing 15 at `439a9060` (diffed); none in the suites this change touches.
+
+## 2026-10-05 — Pre-build validation caught two new Activities outside the curated child runtime
+
+The explicit `make validate` pre-build gate stopped before image work because
+`activities/colline_allegre/main.py` and `activities/corsa_bacche/main.py`
+imported `sys`, which is not in `runtime/child-runtime.toml`'s curated
+allowed import roots.
+
+The runtime policy was not widened. Inspection showed both imports were
+unnecessary:
+
+- Colline Allegre used `sys` only to prepend its own directory to
+  `sys.path`; Greia launches the Activity entrypoint directly with the
+  Activity root as cwd, so the script directory is already importable and the
+  existing direct-script sibling import path remains valid.
+- Corsa Bacche used `sys` only for `sys.exit(main())`; it now uses
+  `raise SystemExit(main())`.
+
+A new repository-wide regression,
+`tests/test_first_party_activity_runtime_policy.py`, validates every bundled
+Python Activity through `PythonRuntimeAdapter` with the canonical
+`PythonRuntimePolicy` loaded from `runtime/child-runtime.toml`. This closes
+the gap where Activity-specific gameplay tests could pass while project
+validation rejected the package.
+
+No child-runtime capability/import surface was expanded. Local re-validation
+of the new exact main is still owed before build-host health checks or image
+work resume.
