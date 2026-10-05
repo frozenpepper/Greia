@@ -7,7 +7,6 @@ sibling modules.
 
 from __future__ import annotations
 
-import sys
 import pygame
 
 from greia_platform.activity_api import get_profile_locale
@@ -31,4 +30,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
