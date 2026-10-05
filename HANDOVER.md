@@ -2430,3 +2430,30 @@ disk-health/loop preflight.
 `main`: explicit project/activity validation, executable-shell syntax gate,
 source-footprint gate, then SMART/kernel-error/disk-usage/loop audit. Do not
 build or flash in that run.
+
+## 73. Pre-build validation found two unnecessary forbidden Activity imports; fixed, re-validation owed (2026-10-05)
+
+The non-destructive pre-build gate stopped at `make validate` on canonical
+`bd6af6438a7345aa30c9b663c45a14e82a7ccb2d` because two newly added
+Activities imported `sys`, outside the curated child Python runtime.
+
+Canonical `main` now removes those unnecessary dependencies without widening
+`runtime/child-runtime.toml`:
+
+- `colline_allegre/main.py`: removed manual `sys.path` mutation and the
+  now-unused `pathlib.Path`; direct script execution already receives the
+  Activity directory on Python's import path and Greia launches with the
+  Activity root as cwd.
+- `corsa_bacche/main.py`: replaced `sys.exit(main())` with
+  `raise SystemExit(main())`.
+
+A new global regression validates every bundled Python Activity against
+`PythonRuntimeAdapter(policy=PythonRuntimePolicy.load(child-runtime.toml))`,
+so future Activity-specific unit suites cannot silently bypass the curated
+runtime-import contract.
+
+**Evidence boundary:** source edited, not yet locally executed at this new HEAD.
+Next exact step is to rerun the new runtime-policy regression and `make
+validate`; if green, continue the previously blocked `shell-check`,
+`footprint`, bytecode-cleanliness and build-host health/loop preflight. Do not
+build or flash before that pre-build gate is green.
