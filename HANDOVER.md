@@ -2571,3 +2571,15 @@ checkout gates are green, no target/runtime bytes changed since the already
 verified USB was produced; the owner can decide to proceed directly with that
 USB to Acer rather than spend another full build solely to regenerate identical
 product payload bytes.
+
+### Loop cleanup redesign candidate
+
+Implementation candidate:
+`258f2189a6e2e9de604becd8b63b4eab28771113`.
+
+This candidate includes the lazy-detach ordering, backing-identity pin,
+non-mount short-circuit, authoritative EXIT-trap status propagation, all seven
+partscan owners, the canonical front-door pre/post loop gate, and executable
+regressions. Local acceptance is still owed. Documentation-only descendants are
+acceptable only after proving their diff contains no build/tool/test/runtime
+implementation.
