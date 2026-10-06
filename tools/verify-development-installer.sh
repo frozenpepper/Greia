@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=../build/lib/safe-cleanup.sh
+source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
+
 usage() {
   echo "Usage: sudo bash tools/verify-development-installer.sh INSTALLER_IMAGE" >&2
 }
@@ -10,7 +14,7 @@ usage() {
 IMAGE="$(realpath "$1")"
 [[ -f "$IMAGE" ]] || { echo "Installer image not found: $IMAGE" >&2; exit 1; }
 
-for command_name in losetup mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
+for command_name in losetup partx blockdev udevadm findmnt mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
   command -v "$command_name" >/dev/null || {
     echo "Missing verifier dependency: $command_name" >&2
     exit 1
@@ -28,13 +32,21 @@ MOUNT="$WORK/media"
 LOOP=""
 mkdir -p "$MOUNT"
 cleanup() {
-  local status=$?
+  local original_status=$?
   trap - EXIT INT TERM
   set +e
-  if mountpoint -q "$MOUNT" 2>/dev/null; then umount "$MOUNT"; fi
-  [[ -z "$LOOP" ]] || losetup -d "$LOOP" 2>/dev/null || true
-  rm -rf "$WORK"
-  exit "$status"
+  local cleanup_failed=0
+  safe_unmount_paths "$MOUNT" || cleanup_failed=1
+  safe_detach_loop "$LOOP" || cleanup_failed=1
+  if (( cleanup_failed == 0 )); then
+    rm -rf "$WORK"
+  else
+    echo "Development-installer verification cleanup was incomplete; preserving work data for inspection." >&2
+    if (( original_status == 0 )); then
+      exit 1
+    fi
+  fi
+  exit "$original_status"
 }
 trap cleanup EXIT INT TERM
 
