@@ -406,13 +406,15 @@ Binding rules:
   `sudo losetup -a | grep greia` must be empty. Any shell path that creates a
   `losetup --partscan` loop must use `build/lib/safe-cleanup.sh` and
   `safe_detach_loop`; direct `losetup -d` followed by forgetting the loop is
-  forbidden. A successful command must verify partition children are removed
-  and the parent loop is no longer associated before clearing its loop variable
-  or deleting the backing/work tree. If verified teardown fails, fail the
-  build/verifier and preserve evidence rather than deleting the backing file.
-  Never delete a backing file while attached. A pre-existing loop already stuck
-  with `autoclear=1` plus partition mappings may still require a reboot —
-  record it, do not accumulate more.
+  forbidden. Linux loop detach is lazy: partition minors may remain until the
+  parent detach is requested. Therefore do **not** require `partx -d` to clear
+  children before parent detach. Unmount first, request the parent detach,
+  settle udev, then require both the parent backing association and partition
+  children to disappear before clearing the loop variable or deleting the
+  backing/work tree. The helper pins the original backing identity and refuses
+  to touch a reused loop number. If verified teardown fails, the process must
+  exit non-zero and preserve evidence. The canonical build+flash front door also
+  refuses pre-existing Greia build loops and refuses success if any remain.
 - Clean `/tmp/greia-installer-build.*` and stale `/tmp/greia-session04-*`
   run dirs after each run.
 - Keep the build root filesystem below ~80 % during image churn; stale loops
