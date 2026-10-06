@@ -25,7 +25,7 @@ DEVICE="$2"
 OUTPUT_DIR="${3:-$PROJECT_ROOT/out}"
 
 [[ -b "$DEVICE" ]] || { echo "USB target is not a block device: $DEVICE" >&2; exit 1; }
-for command_name in lsblk realpath; do
+for command_name in lsblk realpath losetup grep; do
   command -v "$command_name" >/dev/null || { echo "Missing dependency: $command_name" >&2; exit 1; }
 done
 [[ -x "$MEDIA_VERIFIER" ]] || { echo "Missing executable media verifier: $MEDIA_VERIFIER" >&2; exit 1; }
@@ -47,6 +47,17 @@ if (( ${#MOUNTED[@]} > 0 )); then
 fi
 
 OUTPUT_DIR="$(mkdir -p "$OUTPUT_DIR" && realpath "$OUTPUT_DIR")"
+
+greia_build_loops() {
+  losetup -a 2>/dev/null | grep -Ei 'greia-(build|installer|live|sd|dev|os)' || true
+}
+
+PREEXISTING_GREIA_LOOPS="$(greia_build_loops)"
+if [[ -n "$PREEXISTING_GREIA_LOOPS" ]]; then
+  echo "Refusing: pre-existing Greia build loop devices must be cleared before build+flash:" >&2
+  printf '%s\n' "$PREEXISTING_GREIA_LOOPS" >&2
+  exit 1
+fi
 
 printf '%s\n' "Greia development build+flash target:"
 lsblk -dn -o NAME,SIZE,MODEL,SERIAL,TRAN,RM,TYPE "$DEVICE" || true
@@ -74,6 +85,13 @@ IMAGE="$OUTPUT_DIR/greia-os-installer-${PROFILE_ID}.img"
 bash "$PROJECT_ROOT/tools/build-live-usb.sh" "$IMAGE" "$DEVICE"
 bash "$MEDIA_VERIFIER" "$IMAGE" "$DEVICE"
 
+REMAINING_GREIA_LOOPS="$(greia_build_loops)"
+if [[ -n "$REMAINING_GREIA_LOOPS" ]]; then
+  echo "Build+flash failed loop-hygiene verification; Greia loop devices remain:" >&2
+  printf '%s\n' "$REMAINING_GREIA_LOOPS" >&2
+  exit 1
+fi
+
 cat <<EOF
 
 Greia development installer BUILD + FLASH complete.
@@ -82,6 +100,7 @@ source_image=$IMAGE
 usb_device=$DEVICE
 source_artifact_verification=PASS
 usb_flash_readback_verification=PASS
+loop_hygiene_verification=PASS
 boot_writer=postmortem-proven-syslinux-fat32
 boot_diagnostics=console-tty1
 panic_policy=halt-on-panic
