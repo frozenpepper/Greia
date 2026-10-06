@@ -2457,3 +2457,33 @@ Next exact step is to rerun the new runtime-policy regression and `make
 validate`; if green, continue the previously blocked `shell-check`,
 `footprint`, bytecode-cleanliness and build-host health/loop preflight. Do not
 build or flash before that pre-build gate is green.
+
+## 74. Partition-scanned loop leak root-caused and repaired at source; synthetic host acceptance next (2026-10-06)
+
+The non-destructive pre-build gate was source-green but stopped on a pre-existing
+`/dev/loop11` mapped to a deleted
+`greia-installer-build.../target-out/greia-os-legacy-x86-i686-dev.img`.
+
+Root cause is now explicit: `build/build-installer-image.sh` created the
+target payload loop with `--partscan`, later used plain `losetup -d`, and
+cleared `TARGET_LOOP` immediately. A surviving partition child could leave the
+parent AUTOCLEAR loop associated; final cleanup had forgotten it and deleted the
+backing tree.
+
+Canonical source now requires shared verified loop teardown in the installer
+builder, legacy finalizer, development-installer verifier and live-USB
+readback verifier. A loop variable is cleared only after
+`safe_detach_loop` verifies both partition-child removal and parent
+disassociation. Cleanup failure fails closed and preserves work data.
+`tests/test_build_loop_cleanup_contract.py` enforces the rule across every
+build/tool shell script that creates a partition-scanned loop.
+
+**Evidence boundary:** SOURCE EDITED / UNVERIFIED locally at the new HEAD.
+The existing historical `/dev/loop11` is still a host-state blocker and was
+not touched by this source work.
+
+**Next exact step:** run focused source/shell checks plus a disposable synthetic
+`--partscan` loop using the shared helper on the build host. Do not run a full
+image build. If the synthetic lifecycle passes, reboot or otherwise safely
+clear the pre-existing historical loop, re-prove the loop audit is empty, then
+resume the canonical development build+flash gate.
