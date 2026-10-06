@@ -6,7 +6,7 @@
 **Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
 **Cross-hardware plan:** `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md` — Tranche A → Acer end-to-end acceptance → Tranche U (UEFI) → Tranche B (capability matrix) → Tranche L (advisory lint)
-**Current physical-hardware step:** **Acer fresh-image re-acceptance — B4/network reconciliation SOURCE-ACCEPTED at `69624a4f`; explicit validate/shell-check/footprint + build-host health preflight next, then proven Syslinux/FAT32 build+flash**
+**Current physical-hardware step:** **Acer fresh-image campaign authorized — final pre-build PASS at `8eec98d7`; next is canonical legacy-x86-i686-dev build+flash to the serial-identified LaCie, readback verification, then fresh Acer install and first-boot acceptance**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
@@ -2509,3 +2509,27 @@ confirm the post-reboot host still has zero Greia loops. If green, the
 pre-build gate is finally closed and the next run may use the canonical
 `tools/build-and-flash-development-usb.sh legacy-x86-i686-dev <LaCie device>`
 front door, after re-identifying the LaCie by serial and unmounting it.
+
+## 76. Final pre-build PASS; next step is the real build/flash/Acer campaign (2026-10-06)
+
+Exact tested source: `8eec98d7b5e52375bf08790f2fd00cf8a5f006d0`.
+
+The last remaining source blocker is closed. The loop-cleanup contract passed
+3/3, all seven partition-scanned loop owners use the shared verified lifecycle,
+project validation passed all 45 Activities, shell syntax and footprint passed,
+and the post-reboot build host has zero Greia loops with root usage below 80%.
+A disposable real `--partscan` + ext4 mount/write/unmount probe independently
+proved that `safe_detach_loop` removes both the partition child and parent
+association. The LaCie iamaKey was identified by serial
+`eca3505216d7d3` as a removable whole disk and was intentionally left mounted
+and unwritten during the pre-build gate.
+
+**Disposition:** FINAL PREBUILD PASS. Do not insert another source-only gate.
+
+**Next exact step:** re-identify the LaCie by serial, unmount all of its mounted
+filesystems, and run the canonical development front door:
+`sudo bash tools/build-and-flash-development-usb.sh legacy-x86-i686-dev <device>`.
+Require both source artifact verification and USB readback verification, then
+audit for zero Greia loops. Only after that move to the Acer: boot the proven
+Syslinux/FAT32 medium, perform a fresh install, remove the USB, and judge the
+first installed boot with no hotpatch and no second corrective boot.
