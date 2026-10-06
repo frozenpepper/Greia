@@ -8,6 +8,12 @@ safe_udev_settle() {
 safe_unmount_path_tree() {
   local path="$1"
   [[ -n "$path" ]] || return 0
+
+  # findmnt --target resolves an arbitrary non-mount path to the filesystem
+  # containing it (usually /). Never recurse from that containing filesystem:
+  # callers frequently invoke cleanup after an explicit successful umount.
+  mountpoint -q -- "$path" || return 0
+
   local targets=()
   local index target attempt
   mapfile -t targets < <(findmnt -rn -R -o TARGET --target "$path" 2>/dev/null || true)
@@ -52,28 +58,7 @@ safe_loop_partition_children_present() {
   compgen -G "/sys/class/block/${loop_name}p[0-9]*" >/dev/null
 }
 
-safe_remove_loop_partitions() {
-  local loop_device="${1:-}"
-  [[ -n "$loop_device" ]] || return 0
-  local attempt
-  for attempt in {1..20}; do
-    if ! safe_loop_partition_children_present "$loop_device"; then
-      return 0
-    fi
-    # partx modifies kernel partition bookkeeping; a transient busy
-    # child must not be ignored and carried into parent loop detach.
-    partx -d "$loop_device" >/dev/null 2>&1 || true
-    safe_udev_settle
-    if ! safe_loop_partition_children_present "$loop_device"; then
-      return 0
-    fi
-    sleep 0.1
-  done
-  echo "ERROR: loop partition mappings remain after bounded partx teardown: $loop_device" >&2
-  return 1
-}
-
-safe_loop_is_associated() {
+safe_loop_backing_file() {
   local loop_device="${1:-}"
   [[ -n "$loop_device" ]] || return 1
   local loop_name="${loop_device#/dev/}"
@@ -81,34 +66,95 @@ safe_loop_is_associated() {
   [[ -r "$backing_path" ]] || return 1
   local backing
   backing="$(cat "$backing_path" 2>/dev/null || true)"
-  [[ -n "$backing" ]]
+  [[ -n "$backing" ]] || return 1
+  printf '%s\n' "$backing"
+}
+
+safe_loop_is_associated() {
+  safe_loop_backing_file "${1:-}" >/dev/null 2>&1
 }
 
 safe_detach_loop() {
   local loop_device="${1:-}"
   [[ -n "$loop_device" ]] || return 0
-  # Remove and verify kernel partition children before touching the
-  # parent loop. Never suppress a persistent child mapping.
-  safe_remove_loop_partitions "$loop_device" || return 1
+
+  # losetup --detach uses lazy device destruction. Partition minors created by
+  # --partscan may remain until the parent detach has been requested, so partx
+  # removal is not a prerequisite. Request detach, then wait until BOTH the
+  # parent association and partition children are gone. Pin the original
+  # backing identity so a reused loop number can never be detached by mistake.
+  local expected_backing=""
+  local current_backing=""
+  local attempt
+
+  expected_backing="$(safe_loop_backing_file "$loop_device" 2>/dev/null || true)"
+  if [[ -z "$expected_backing" ]]; then
+    for attempt in {1..50}; do
+      if ! safe_loop_partition_children_present "$loop_device"; then
+        return 0
+      fi
+      safe_udev_settle
+      sleep 0.1
+    done
+    echo "ERROR: stale loop partition children remain without a parent association: $loop_device" >&2
+    return 1
+  fi
 
   blockdev --flushbufs "$loop_device" 2>/dev/null || true
-  safe_udev_settle
-  local attempt
-  for attempt in {1..20}; do
-    if ! safe_loop_is_associated "$loop_device"; then
-      return 0
+
+  for attempt in {1..50}; do
+    current_backing="$(safe_loop_backing_file "$loop_device" 2>/dev/null || true)"
+
+    if [[ -z "$current_backing" ]]; then
+      safe_udev_settle
+      if ! safe_loop_partition_children_present "$loop_device"; then
+        return 0
+      fi
+      sleep 0.1
+      continue
     fi
+
+    if [[ "$current_backing" != "$expected_backing" ]]; then
+      echo "ERROR: refusing loop cleanup after device reuse: $loop_device now maps $current_backing, expected $expected_backing" >&2
+      return 1
+    fi
+
     losetup -d "$loop_device" 2>/dev/null || true
     safe_udev_settle
-    if ! safe_loop_is_associated "$loop_device"; then
+
+    current_backing="$(safe_loop_backing_file "$loop_device" 2>/dev/null || true)"
+    if [[ -z "$current_backing" ]] && ! safe_loop_partition_children_present "$loop_device"; then
       return 0
+    fi
+    if [[ -n "$current_backing" && "$current_backing" != "$expected_backing" ]]; then
+      echo "ERROR: refusing loop cleanup after device reuse: $loop_device now maps $current_backing, expected $expected_backing" >&2
+      return 1
     fi
     sleep 0.1
   done
-  echo "ERROR: loop backing file is still associated after detach and udev settle: $loop_device" >&2
+
+  current_backing="$(safe_loop_backing_file "$loop_device" 2>/dev/null || true)"
+  echo "ERROR: loop detach did not fully settle: $loop_device backing=${current_backing:-none} partition_children=$(safe_loop_partition_children_present "$loop_device" && echo present || echo none)" >&2
   return 1
 }
 
+safe_cleanup_exit() {
+  local original_status="${1:-0}"
+  local cleanup_failed="${2:-0}"
+  local message="${3:-Cleanup was incomplete; preserving work data for inspection.}"
+  local final_status="$original_status"
+
+  if (( cleanup_failed != 0 )); then
+    echo "$message" >&2
+    if (( final_status == 0 )); then
+      final_status=1
+    fi
+  fi
+
+  # Intended for EXIT-trap cleanup handlers after they clear EXIT/INT/TERM.
+  # exit, rather than return, makes cleanup failure authoritative.
+  exit "$final_status"
+}
 safe_remove_build_dir() {
   local build_dir="$1"
   [[ -n "$build_dir" && "$build_dir" != "/" ]] || return 1
