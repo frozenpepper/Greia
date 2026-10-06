@@ -219,8 +219,7 @@ cleanup() {
     rmdir "$MOUNT" 2>/dev/null || true
     rmdir "$WORK" 2>/dev/null || true
   fi
-  safe_cleanup_exit "$original_status" "$cleanup_failed" \\
-    "Legacy installer finalization cleanup was incomplete; preserving work data for inspection."
+  safe_cleanup_exit "$original_status" "$cleanup_failed" "Legacy installer finalization cleanup was incomplete; preserving work data for inspection."
 }
 trap cleanup EXIT
 trap 'exit 130' INT
