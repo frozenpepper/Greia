@@ -2583,3 +2583,22 @@ partscan owners, the canonical front-door pre/post loop gate, and executable
 regressions. Local acceptance is still owed. Documentation-only descendants are
 acceptable only after proving their diff contains no build/tool/test/runtime
 implementation.
+
+## 78. Exact leaked loop defeated parent-only detach; third-generation interleaved cleanup ready for field acceptance (2026-10-06)
+
+The existing `OPrdqB` `/dev/loop0` was safely identified and tested once
+against the parent-first helper. It remained associated with deleted backing
+and `loop0p1`; AUTOCLEAR became 1 but teardown never completed. No retry,
+manual partx, detach-all, reboot or Acer action followed.
+
+Source now implements the missing combined sequence: parent detach first,
+then bounded `partx -d` only if children remain while teardown is pending,
+then settle/recheck until both parent association and children are gone.
+Backing identity is pinned and failures print opener/holder diagnostics.
+A real privileged deleted-backing fixture now reproduces a held partition
+opener instead of only testing clean loops.
+
+**Next exact step:** source/shell tests, then run the privileged deleted-backing
+fixture, then apply the new helper once to the still-existing exact OPrdqB loop.
+If that clears, reverify the existing installer image and already-written
+LaCie; do not rebuild product bytes merely for cleanup validation.
