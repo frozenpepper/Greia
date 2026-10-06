@@ -32,7 +32,7 @@ EOF
 IMAGE="$(realpath "$1")"
 DEVICE="$2"
 
-required=(awk cmp find fsck.vfat losetup partx blockdev udevadm findmnt lsblk mount mountpoint parted realpath sed sort umount)
+required=(awk cmp find fsck.vfat losetup blockdev udevadm findmnt lsblk mount mountpoint parted realpath sed sort umount)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing dependency: $command_name" >&2
@@ -93,13 +93,8 @@ cleanup() {
   safe_detach_loop "$IMG_LOOP" || cleanup_failed=1
   if (( cleanup_failed == 0 )); then
     rm -rf "$WORK"
-  else
-    echo "Live-USB verification cleanup was incomplete; preserving work data for inspection." >&2
-    if (( original_status == 0 )); then
-      exit 1
-    fi
   fi
-  exit "$original_status"
+  safe_cleanup_exit "$original_status" "$cleanup_failed"     "Live-USB verification cleanup was incomplete; preserving work data for inspection."
 }
 trap cleanup EXIT INT TERM
 
