@@ -13,7 +13,7 @@ source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
 IMAGE="$(realpath "$1")"
 [[ -f "$IMAGE" ]] || { echo "Developer image not found: $IMAGE" >&2; exit 1; }
 
-for command_name in losetup blockdev udevadm findmnt mount umount mountpoint awk grep realpath; do
+for command_name in losetup partx blockdev udevadm findmnt mount umount mountpoint awk grep realpath; do
   command -v "$command_name" >/dev/null || {
     echo "Missing verifier dependency: $command_name" >&2
     exit 1
