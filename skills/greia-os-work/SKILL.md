@@ -128,12 +128,13 @@ Partition-scanned loop ownership is centralized in
 `build/lib/safe-cleanup.sh`. Any build/tool path that creates a
 `losetup --find --show --partscan` loop must use `safe_detach_loop`; do not
 directly call `losetup -d` and then clear the loop variable. Linux detach is
-lazy, so children are **not** required to disappear before parent detach is
-requested. The correct order is: unmount -> request parent detach -> settle ->
-verify both backing association and partition children are gone -> clear the
-variable/delete backing data. Cleanup pins backing identity to refuse loop-number
-reuse, and cleanup failure must become process failure rather than merely being
-logged from an EXIT trap.
+lazy and open partitions count as disk openers. The required order is:
+unmount -> request parent detach -> settle -> if still bound with partition
+children, bounded `partx -d` as a **post-detach fallback** -> settle -> verify
+both backing association and children are gone -> clear/delete. Cleanup pins
+backing identity against loop-number reuse, emits opener/holder diagnostics on
+failure, and cleanup failure must become process failure rather than merely
+being logged from an EXIT trap.
 
 ## Shell, launcher, Collections or lightweight UI
 
