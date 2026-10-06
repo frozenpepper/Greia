@@ -2257,3 +2257,30 @@ No full image build has yet tested this repair. A small synthetic loop lifecycle
 acceptance on the build host is required first. The already-stuck historical
 `/dev/loop11` remains an operator/host-state blocker until it is gone; source
 changes do not retroactively release it.
+
+## 2026-10-06 — Final two partition-scanned loop owners repaired
+
+Post-reboot host evidence cleared the historical leaked Greia loop and proved
+`safe_detach_loop` on a real disposable partition-scanned ext4 image:
+partition child creation, mount/write/unmount, child removal and parent
+disassociation all completed with no residual loop association.
+
+The repository-wide loop-cleanup regression then correctly exposed two remaining
+owners that still bypassed the shared helper:
+
+- `tools/build-live-usb.sh` — the physically proven Syslinux/FAT32 writer
+  mounted the installer image through a `--partscan` loop and used direct
+  `losetup -d` in its cleanup trap.
+- `tools/verify-development-target-image.sh` — the target-image verifier did
+  the same for its read-only artifact mount.
+
+Both now source `build/lib/safe-cleanup.sh`, use `safe_unmount_paths` and
+`safe_detach_loop`, and fail closed while preserving work state if verified
+teardown cannot complete. The USB media-writing recipe itself is unchanged;
+only cleanup of the read-only source-image loop was altered.
+
+Current evidence boundary: SOURCE EDITED / LOCAL RE-ACCEPTANCE OWED. The build
+host was clean after reboot (no Greia loops, root filesystem below 80%) and the
+shared synthetic helper path is proven. Do not begin the expensive build/flash
+cycle until `tests/test_build_loop_cleanup_contract.py` and the focused shell
+gates pass on the exact new canonical main.
