@@ -73,6 +73,7 @@ MOUNTS=()
 
 cleanup() {
   local original_status=$?
+  trap - EXIT INT TERM
   set +e
   local cleanup_failed=0
   safe_unmount_paths "${MOUNTS[@]}" || cleanup_failed=1
@@ -80,19 +81,13 @@ cleanup() {
   if (( cleanup_failed == 0 )); then
     safe_remove_build_dir "$BUILD_DIR" || cleanup_failed=1
   fi
-  if (( cleanup_failed != 0 )); then
-    echo "Build cleanup was incomplete. Inspect and detach resources manually; no recursive deletion was attempted." >&2
-    if (( original_status == 0 )); then
-      return 1
-    fi
-  fi
-  return "$original_status"
+  safe_cleanup_exit "$original_status" "$cleanup_failed"     "Build cleanup was incomplete. Inspect resources manually; build data was preserved."
 }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-require_commands=(debootstrap parted partx blockdev losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync python3)
+require_commands=(debootstrap parted blockdev losetup mkfs.ext4 blkid grub-install grub-script-check grub-mkpasswd-pbkdf2 chroot mount umount mountpoint findmnt udevadm rsync python3)
 for command_name in "${require_commands[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing build dependency: $command_name" >&2
