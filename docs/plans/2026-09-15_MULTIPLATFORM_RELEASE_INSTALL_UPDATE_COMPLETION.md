@@ -2228,3 +2228,32 @@ historical 15 are real unresolved failures; therefore its later `validate`,
 `shell-check` and `footprint` phases did not execute. Those three source
 gates must be run explicitly before spending another build/flash cycle.
 No hardware/image evidence is claimed yet for the reconciled source.
+
+## 2026-10-06 — Build-host loop leak root cause fixed at source
+
+The pre-build host gate found `/dev/loop11` still associated with a deleted
+target image from an earlier successful legacy development-installer build.
+The exact source cause was identified in `build/build-installer-image.sh`:
+after creating `TARGET_LOOP` with `losetup --partscan`, the payload path
+performed a plain `losetup -d "$TARGET_LOOP"` and immediately cleared
+`TARGET_LOOP`. If the partition child remained open, Linux converted the
+parent to AUTOCLEAR rather than releasing it; final cleanup could no longer see
+the loop, deleted the temporary target image, and left a loop mapped to a
+deleted backing file.
+
+Source repair generalizes the lifecycle rule:
+- the target-payload early detach now uses the shared verified
+  `safe_unmount_paths` + `safe_detach_loop` path and clears its variable
+  only after success;
+- legacy image finalization and both read-only image verifiers now use the same
+  shared verified cleanup rather than direct `losetup -d`;
+- cleanup failure makes an otherwise successful command fail and preserves its
+  work data instead of deleting the backing tree;
+- a repository-wide regression scans build/tool shell scripts and rejects any
+  `--partscan` owner that lacks shared verified detach or directly calls
+  `losetup -d`.
+
+No full image build has yet tested this repair. A small synthetic loop lifecycle
+acceptance on the build host is required first. The already-stuck historical
+`/dev/loop11` remains an operator/host-state blocker until it is gone; source
+changes do not retroactively release it.
