@@ -2419,3 +2419,11 @@ Regression coverage now includes:
 
 Evidence boundary: SOURCE EDITED / LOCAL ACCEPTANCE OWED. The existing verified
 USB product content remains unchanged and Acer remains untested.
+
+### Interleaved cleanup implementation candidate
+
+Exact implementation candidate:
+`3f3f50d1f586872c6b02865e027635b3ac67c1fb`.
+
+Following commits in this update are documentation/operational guidance only.
+Local acceptance must pin this candidate or a documentation-only descendant.
