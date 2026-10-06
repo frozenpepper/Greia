@@ -14,7 +14,7 @@ usage() {
 IMAGE="$(realpath "$1")"
 [[ -f "$IMAGE" ]] || { echo "Installer image not found: $IMAGE" >&2; exit 1; }
 
-for command_name in losetup blockdev udevadm findmnt mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
+for command_name in losetup partx blockdev udevadm findmnt mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
   command -v "$command_name" >/dev/null || {
     echo "Missing verifier dependency: $command_name" >&2
     exit 1
