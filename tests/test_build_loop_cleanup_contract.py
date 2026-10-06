@@ -104,14 +104,69 @@ safe_detach_loop /dev/loop99
         )
         self.assertEqual(0, result.returncode, result.stderr)
 
-    def test_shared_detach_pins_backing_identity_and_does_not_use_partx_teardown(self) -> None:
+    def test_shared_detach_pins_backing_identity_and_interleaves_partx_after_detach(self) -> None:
         text = SAFE_CLEANUP.read_text(encoding="utf-8")
         body = text[text.index("safe_detach_loop() {") :]
         self.assertIn('expected_backing="$(safe_loop_backing_file', body)
         self.assertIn('current_backing" != "$expected_backing"', body)
-        self.assertIn('losetup -d "$loop_device"', body)
-        self.assertIn("safe_loop_partition_children_present", body)
-        self.assertNotIn("partx -d", text)
+        detach_at = body.index('losetup -d "$loop_device"')
+        fallback_at = body.index('safe_remove_loop_partitions_after_detach "$loop_device"')
+        self.assertLess(detach_at, fallback_at)
+        self.assertIn('partx -d "$loop_device"', text)
+        self.assertIn("safe_loop_debug_openers", body)
+
+    def test_interleaved_detach_then_partx_clears_busy_partition_shape(self) -> None:
+        script = f"""
+set -Eeuo pipefail
+source {SAFE_CLEANUP!s}
+ASSOCIATED=1
+CHILDREN=1
+DETACH_REQUESTED=0
+PARTX_BEFORE_DETACH=0
+
+safe_udev_settle() {{ :; }}
+blockdev() {{ :; }}
+safe_loop_backing_file() {{
+  if (( ASSOCIATED )); then
+    printf '%s\\n' '/tmp/greia-deleted-backing.img (deleted)'
+  else
+    return 1
+  fi
+}}
+safe_loop_partition_children_present() {{
+  (( CHILDREN ))
+}}
+losetup() {{
+  if [[ "$1" == "-d" ]]; then
+    DETACH_REQUESTED=1
+    return 0
+  fi
+  return 99
+}}
+partx() {{
+  if (( ! DETACH_REQUESTED )); then
+    PARTX_BEFORE_DETACH=1
+    return 16
+  fi
+  CHILDREN=0
+  ASSOCIATED=0
+  return 0
+}}
+
+safe_detach_loop /dev/loop99
+[[ "$DETACH_REQUESTED" == "1" ]]
+[[ "$PARTX_BEFORE_DETACH" == "0" ]]
+[[ "$ASSOCIATED" == "0" ]]
+[[ "$CHILDREN" == "0" ]]
+"""
+        result = subprocess.run(
+            ["bash", "-c", script],
+            cwd=PROJECT_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
 
     def test_non_mount_cleanup_path_does_not_walk_containing_root_filesystem(self) -> None:
         script = f"""
