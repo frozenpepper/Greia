@@ -2487,3 +2487,25 @@ not touched by this source work.
 image build. If the synthetic lifecycle passes, reboot or otherwise safely
 clear the pre-existing historical loop, re-prove the loop audit is empty, then
 resume the canonical development build+flash gate.
+
+## 75. Final two unsafe partscan owners fixed; loop-contract rerun is the only remaining pre-build source gate (2026-10-06)
+
+After host reboot, all stale Greia loops were gone and a disposable
+`--partscan` ext4 probe proved `safe_detach_loop` removes both partition
+children and the parent loop association without residue.
+
+The new repository-wide regression then found two remaining direct-detach
+paths: `tools/build-live-usb.sh` and
+`tools/verify-development-target-image.sh`. Both are now migrated to the
+shared verified cleanup primitive. The Syslinux/FAT32 writer's destructive
+media recipe is unchanged; only lifecycle cleanup of its read-only installer
+image loop changed.
+
+**Current evidence:** source patch committed; local rerun of the loop-contract
+test and focused shell/source gates still owed at the new HEAD.
+
+**Next exact step:** run the loop cleanup regression, syntax/source gates, and
+confirm the post-reboot host still has zero Greia loops. If green, the
+pre-build gate is finally closed and the next run may use the canonical
+`tools/build-and-flash-development-usb.sh legacy-x86-i686-dev <LaCie device>`
+front door, after re-identifying the LaCie by serial and unmounting it.
