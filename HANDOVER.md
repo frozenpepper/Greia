@@ -6,7 +6,7 @@
 **Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
 **Cross-hardware plan:** `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md` — Tranche A → Acer end-to-end acceptance → Tranche U (UEFI) → Tranche B (capability matrix) → Tranche L (advisory lint)
-**Current physical-hardware step:** **Acer campaign PAUSED before boot — verified USB exists from `64103e48`, but the build-host loop-hygiene gate failed; validate the redesigned lazy-detach cleanup against the exact leaked loop before using the already-written stick**
+**Current physical-hardware step:** **Acer campaign AUTHORIZED with the already-verified `64103e48` USB — the remaining OPrdqB host loop is classified as historical poisoned kernel state; use baseline-aware verifier accounting, then proceed to live Wi-Fi, fresh install, and first-installed-boot acceptance without rebuilding**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
