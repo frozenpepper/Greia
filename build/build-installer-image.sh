@@ -209,9 +209,15 @@ mksquashfs "$TARGET_MOUNT" "$TARGET_PAYLOAD" -comp xz -b 256K -noappend >/dev/nu
 payload_sha256="$(sha256sum "$TARGET_PAYLOAD" | awk '{print $1}')"
 printf '%s  %s\n' "$payload_sha256" 'pip-rootfs.squashfs' > "$TARGET_PAYLOAD_DIGEST"
 target_payload_sha256="$payload_sha256"
-umount "$TARGET_MOUNT"
+safe_unmount_paths "$TARGET_MOUNT" || {
+  echo "Cannot detach target payload filesystem." >&2
+  exit 1
+}
 MOUNTS=()
-losetup -d "$TARGET_LOOP"
+safe_detach_loop "$TARGET_LOOP" || {
+  echo "Cannot detach target payload loop device; preserving build data for inspection." >&2
+  exit 1
+}
 TARGET_LOOP=""
 
 # Compose the live installer root through the shared engine with live-only
