@@ -6,7 +6,7 @@
 **Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
 **Cross-hardware plan:** `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md` — Tranche A → Acer end-to-end acceptance → Tranche U (UEFI) → Tranche B (capability matrix) → Tranche L (advisory lint)
-**Current physical-hardware step:** **Acer fresh-image campaign authorized — final pre-build PASS at `8eec98d7`; next is canonical legacy-x86-i686-dev build+flash to the serial-identified LaCie, readback verification, then fresh Acer install and first-boot acceptance**
+**Current physical-hardware step:** **Acer campaign PAUSED before boot — verified USB exists from `64103e48`, but the build-host loop-hygiene gate failed; validate the redesigned lazy-detach cleanup against the exact leaked loop before using the already-written stick**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
@@ -2533,3 +2533,41 @@ Require both source artifact verification and USB readback verification, then
 audit for zero Greia loops. Only after that move to the Acer: boot the proven
 Syslinux/FAT32 medium, perform a fresh install, remove the USB, and judge the
 first installed boot with no hotpatch and no second corrective boot.
+
+## 77. Build/flash artifact PASS, loop-hygiene FAIL; Acer was correctly not started (2026-10-06)
+
+A full canonical `legacy-x86-i686-dev` build+flash at
+`64103e48412b6ccafbd8c68b1585f7dc3e7ff2ef` produced and readback-verified
+the LaCie successfully:
+
+- image SHA-256
+  `f803c9edff7482b122dea49abd7d12e664d7773dc9ef3180cffb45c4387d801d`;
+- `source_artifact_verification=PASS`;
+- `usb_flash_readback_verification=PASS`;
+- Syslinux/FAT32 writer unchanged and PASS;
+- live media id `2afcbbba-9722-4020-8caf-a16132b54f51`.
+
+The run then stopped at the mandatory loop audit. `/dev/loop0` remained bound
+to the deleted target image with `loop0p1` present. Acer USB boot, live Wi-Fi,
+install and first installed boot were **not** attempted.
+
+Root cause was not simply a missing call: the first cleanup redesign had the
+wrong lifecycle order for this kernel. It tried `partx -d` until children
+vanished before ever requesting parent detach. The child does not vanish in
+that state. Source now requests lazy parent detach after unmount and waits until
+both parent association and children disappear, while pinning backing identity
+against loop-number reuse.
+
+Two additional defects are repaired: non-mount paths no longer let
+`findmnt --target` walk the containing root filesystem, and EXIT-trap cleanup
+failure now exits the process non-zero through shared `safe_cleanup_exit`.
+The canonical build+flash front door itself now treats residual Greia loops as
+a success-condition failure.
+
+**Next exact step:** local source tests plus one tightly scoped application of
+the new helper to the existing leaked Greia loop, after proving its backing
+identity and unmounted state. If that exact field reproduction clears and the
+checkout gates are green, no target/runtime bytes changed since the already
+verified USB was produced; the owner can decide to proceed directly with that
+USB to Acer rather than spend another full build solely to regenerate identical
+product payload bytes.
