@@ -1,70 +1,198 @@
 """Regression locks for loop-device lifecycle in build and verifier shell code.
 
-A --partscan loop can survive a successful plain losetup -d as an AUTOCLEAR
-device while a partition child remains open. If the build then deletes the
-backing tree, the host is left with a loop mapped to a deleted image. Every
-shell path that creates a partition-scanned loop must therefore use Greia's
-shared verified teardown and must not directly detach/forget it.
+The build host proved two important Linux lifecycle facts:
+
+* a --partscan child may remain until parent loop detach is requested, so
+  partx -d cannot be a prerequisite for losetup -d;
+* returning non-zero from a Bash EXIT-trap function does not reliably turn an
+  otherwise successful process into failure.
+
+These tests lock the shared cleanup semantics and every first-party shell owner.
 """
 
 from __future__ import annotations
 
-import re
+import subprocess
 import unittest
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAFE_CLEANUP = PROJECT_ROOT / "build" / "lib" / "safe-cleanup.sh"
+FRONT_DOOR = PROJECT_ROOT / "tools" / "build-and-flash-development-usb.sh"
+PARTSCAN_OWNERS = (
+    PROJECT_ROOT / "build" / "build-image.sh",
+    PROJECT_ROOT / "build" / "build-installer-image.sh",
+    PROJECT_ROOT / "build" / "build-legacy-x86-sd-installer.sh",
+    PROJECT_ROOT / "tools" / "build-live-usb.sh",
+    PROJECT_ROOT / "tools" / "verify-development-installer.sh",
+    PROJECT_ROOT / "tools" / "verify-development-target-image.sh",
+    PROJECT_ROOT / "tools" / "verify-live-usb.sh",
+)
 
 
 class BuildLoopCleanupContractTests(unittest.TestCase):
     def test_every_partscan_shell_path_uses_shared_verified_detach(self) -> None:
-        candidates = []
+        discovered = []
         for root_name in ("build", "tools"):
             for path in (PROJECT_ROOT / root_name).rglob("*.sh"):
                 text = path.read_text(encoding="utf-8")
                 if "losetup --find --show" in text and "--partscan" in text:
-                    candidates.append((path, text))
+                    discovered.append(path)
 
-        self.assertTrue(candidates, "expected at least one partition-scanned loop owner")
-        for path, text in candidates:
+        self.assertEqual(set(PARTSCAN_OWNERS), set(discovered))
+        for path in discovered:
+            text = path.read_text(encoding="utf-8")
             rel = path.relative_to(PROJECT_ROOT)
             with self.subTest(path=str(rel)):
-                self.assertIn(
-                    "safe_detach_loop",
-                    text,
-                    f"{rel} creates a --partscan loop but never uses verified detach",
-                )
-                self.assertIn(
-                    "safe-cleanup.sh",
-                    text,
-                    f"{rel} must source the shared loop cleanup implementation",
-                )
-                self.assertIsNone(
-                    re.search(r"(?m)^\s*losetup\s+-d\b", text),
-                    f"{rel} directly calls losetup -d; this can leave AUTOCLEAR partition loops",
+                self.assertIn("safe_detach_loop", text)
+                self.assertIn("safe-cleanup.sh", text)
+                executable_direct_detach = [
+                    line
+                    for line in text.splitlines()
+                    if line.lstrip().startswith("losetup -d ")
+                ]
+                self.assertEqual(
+                    [],
+                    executable_direct_detach,
+                    f"{rel} bypasses the shared verified detach path",
                 )
 
-    def test_installer_target_loop_is_not_forgotten_before_verified_detach(self) -> None:
-        path = PROJECT_ROOT / "build" / "build-installer-image.sh"
-        text = path.read_text(encoding="utf-8")
-        detach = text.index('safe_detach_loop "$TARGET_LOOP"')
-        clear = text.index('TARGET_LOOP=""', detach)
-        self.assertLess(detach, clear)
-        between = text[detach:clear]
-        self.assertIn("exit 1", between)
+    def test_shared_detach_requests_parent_detach_before_waiting_for_children(self) -> None:
+        script = f"""
+set -Eeuo pipefail
+source {SAFE_CLEANUP!s}
+ASSOCIATED=1
+CHILDREN=1
+DETACH_WITH_CHILD=0
 
-    def test_shared_detach_verifies_children_and_parent_association(self) -> None:
+safe_udev_settle() {{ :; }}
+blockdev() {{ :; }}
+safe_loop_backing_file() {{
+  if (( ASSOCIATED )); then
+    printf '%s\n' '/tmp/greia-probe.img'
+  else
+    return 1
+  fi
+}}
+safe_loop_partition_children_present() {{
+  (( CHILDREN ))
+}}
+losetup() {{
+  if [[ "$1" == "-d" ]]; then
+    if (( CHILDREN )); then
+      DETACH_WITH_CHILD=1
+    fi
+    ASSOCIATED=0
+    CHILDREN=0
+    return 0
+  fi
+  return 99
+}}
+
+safe_detach_loop /dev/loop99
+[[ "$DETACH_WITH_CHILD" == "1" ]]
+[[ "$ASSOCIATED" == "0" ]]
+[[ "$CHILDREN" == "0" ]]
+"""
+        result = subprocess.run(
+            ["bash", "-c", script],
+            cwd=PROJECT_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_shared_detach_pins_backing_identity_and_does_not_use_partx_teardown(self) -> None:
         text = SAFE_CLEANUP.read_text(encoding="utf-8")
         body = text[text.index("safe_detach_loop() {") :]
-        self.assertIn('safe_remove_loop_partitions "$loop_device" || return 1', body)
-        self.assertIn('if ! safe_loop_is_associated "$loop_device"; then', body)
+        self.assertIn('expected_backing="$(safe_loop_backing_file', body)
+        self.assertIn('current_backing" != "$expected_backing"', body)
         self.assertIn('losetup -d "$loop_device"', body)
-        self.assertIn(
-            "loop backing file is still associated after detach and udev settle",
-            body,
+        self.assertIn("safe_loop_partition_children_present", body)
+        self.assertNotIn("partx -d", text)
+
+    def test_non_mount_cleanup_path_does_not_walk_containing_root_filesystem(self) -> None:
+        script = f"""
+set -Eeuo pipefail
+source {SAFE_CLEANUP!s}
+MARKER="$(mktemp)"
+rm -f "$MARKER"
+mountpoint() {{ return 1; }}
+findmnt() {{ printf '%s\n' called > "$MARKER"; return 0; }}
+safe_unmount_path_tree /definitely-not-a-mount
+[[ ! -e "$MARKER" ]]
+"""
+        result = subprocess.run(
+            ["bash", "-c", script],
+            cwd=PROJECT_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
         )
+        self.assertEqual(0, result.returncode, result.stderr)
+
+    def test_cleanup_failure_changes_successful_exit_status(self) -> None:
+        script = f"""
+set -Eeuo pipefail
+source {SAFE_CLEANUP!s}
+cleanup() {{
+  original_status=$?
+  trap - EXIT INT TERM
+  safe_cleanup_exit "$original_status" 1 "forced cleanup failure"
+}}
+trap cleanup EXIT
+true
+"""
+        result = subprocess.run(
+            ["bash", "-c", script],
+            cwd=PROJECT_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(1, result.returncode)
+        self.assertIn("forced cleanup failure", result.stderr)
+
+    def test_cleanup_preserves_original_nonzero_status(self) -> None:
+        script = f"""
+set -Eeuo pipefail
+source {SAFE_CLEANUP!s}
+cleanup() {{
+  original_status=$?
+  trap - EXIT INT TERM
+  safe_cleanup_exit "$original_status" 1 "cleanup also failed"
+}}
+trap cleanup EXIT
+exit 7
+"""
+        result = subprocess.run(
+            ["bash", "-c", script],
+            cwd=PROJECT_ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        self.assertEqual(7, result.returncode)
+        self.assertIn("cleanup also failed", result.stderr)
+
+    def test_all_partscan_owners_use_authoritative_cleanup_exit(self) -> None:
+        for path in PARTSCAN_OWNERS:
+            text = path.read_text(encoding="utf-8")
+            rel = path.relative_to(PROJECT_ROOT)
+            with self.subTest(path=str(rel)):
+                self.assertIn("safe_cleanup_exit", text)
+                self.assertNotIn('return "$original_status"', text)
+                self.assertNotIn("trap cleanup EXIT INT TERM", text)
+
+    def test_front_door_refuses_preexisting_and_postrun_greia_loops(self) -> None:
+        text = FRONT_DOOR.read_text(encoding="utf-8")
+        self.assertIn("PREEXISTING_GREIA_LOOPS", text)
+        self.assertIn("REMAINING_GREIA_LOOPS", text)
+        self.assertIn("Refusing: pre-existing Greia build loop", text)
+        self.assertIn("Build+flash failed loop-hygiene verification", text)
+        self.assertIn("loop_hygiene_verification=PASS", text)
 
 
 if __name__ == "__main__":
