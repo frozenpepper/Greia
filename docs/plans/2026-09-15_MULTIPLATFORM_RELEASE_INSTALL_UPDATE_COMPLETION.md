@@ -2320,3 +2320,55 @@ Require source-artifact verification, USB readback verification, and a post-run
 Greia-loop audit before moving the stick to the reference Acer. Then perform a
 fresh install and judge the **first installed boot** without hotpatching or a
 second corrective boot.
+
+## 2026-10-06 — Full build/flash exposed second-generation loop cleanup defects
+
+The first destructive campaign after the pre-build PASS built and flashed a
+valid `legacy-x86-i686-dev` USB but correctly stopped before Acer testing at
+the post-build loop-hygiene gate.
+
+Exact campaign source: `64103e48412b6ccafbd8c68b1585f7dc3e7ff2ef`.
+Artifact evidence:
+- installer image: 1,290,797,056 bytes;
+- SHA-256: `f803c9edff7482b122dea49abd7d12e664d7773dc9ef3180cffb45c4387d801d`;
+- source artifact verification: PASS;
+- USB flash readback verification: PASS;
+- Syslinux/FAT32 writer: PASS;
+- live media id: `2afcbbba-9722-4020-8caf-a16132b54f51`.
+
+Hard failure: `/dev/loop0` remained associated with the deleted target image
+under `/tmp/greia-installer-build.OPrdqB/...img`, with `loop0p1` still
+present. Acer boot/install was not started.
+
+The run exposed three independent cleanup design faults:
+1. `safe_detach_loop` required `partx -d` to remove partition children
+   before requesting parent detach. On this kernel the child remains while the
+   parent association is live, so the helper could never reach `losetup -d`.
+   Linux loop teardown is lazy; the correct order is parent detach first after
+   unmount, then wait for parent association **and** partition children to
+   disappear.
+2. several EXIT-trap handlers returned a non-zero value rather than exiting
+   with it, so an otherwise successful process could still report success after
+   cleanup failure. The child builder is invoked under the parent's `set -e`;
+   once the child genuinely exits non-zero, that status is already sufficient
+   to stop the parent.
+3. `safe_unmount_path_tree` used `findmnt -R --target` even when the
+   requested path was no longer a mountpoint. `findmnt --target` then resolved
+   the containing root filesystem and the safety guard saw unrelated
+   `/snap/...` mounts. Non-mount paths must be an immediate no-op.
+
+Source repair now:
+- requests lazy parent detach before waiting for partition children;
+- pins the original backing identity and refuses loop-number reuse;
+- waits for both parent disassociation and child removal;
+- makes non-mount cleanup paths no-op;
+- centralizes EXIT-trap termination in `safe_cleanup_exit`, preserving an
+  original non-zero status but converting cleanup failure after success to rc=1;
+- routes all seven partscan owners through that authoritative exit contract;
+- makes the canonical build+flash front door reject both pre-existing and
+  post-run Greia build loops;
+- adds executable regression tests for the exact kernel shape where children
+  persist until parent detach is requested and for cleanup-failure exit status.
+
+Evidence boundary: SOURCE EDITED / LOCAL ACCEPTANCE OWED. The already written
+USB remains artifact/readback verified and Acer remains untouched.
