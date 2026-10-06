@@ -2611,3 +2611,18 @@ Exact implementation candidate:
 This includes the post-detach `partx` fallback, opener diagnostics, restored
 partx dependency declarations across all seven owners, deterministic ordering
 regressions, and the privileged deleted-backing field fixture.
+
+## 79. Interleaved acceptance stopped on stale PARTSCAN_OWNERS pin; one-line test repair landed (2026-10-07)
+
+The field-acceptance run at `6b3706d4` reached the focused test suite and
+stopped with 10/11 PASS. The only failure was the global partscan-owner
+inventory: the newly added deleted-backing fixture creates a `--partscan`
+loop and correctly uses the shared cleanup helper, but was omitted from the
+hard-pinned owner tuple.
+
+Repair commit:
+`6de59fba28a889cc86550926f0bca870eb01ed27`.
+
+The repair adds `DELETED_BACKING_FIXTURE` to `PARTSCAN_OWNERS` and changes
+nothing else. Resume local acceptance from the focused suite; all real loop,
+artifact, USB and Acer evidence remains exactly as previously recorded.
