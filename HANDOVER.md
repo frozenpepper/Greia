@@ -2626,3 +2626,26 @@ Repair commit:
 The repair adds `DELETED_BACKING_FIXTURE` to `PARTSCAN_OWNERS` and changes
 nothing else. Resume local acceptance from the focused suite; all real loop,
 artifact, USB and Acer evidence remains exactly as previously recorded.
+
+## 80. Stop loop teardown redesign; historical OPrdqB loop requires reboot but does not block Acer acceptance (2026-10-07)
+
+The exact OPrdqB orphan defeated all three bounded cleanup orderings, while the
+current helper passes both fresh partscan teardown and the privileged
+deleted-backing/held-partition fixture. The field loop has no mounts, no
+userspace openers and no sysfs holders, remains AUTOCLEAR, and is now treated as
+historical poisoned kernel state.
+
+Do **not** add another removal primitive for this one stale loop. Reboot is the
+supported way to clear it before any future build.
+
+Important routing change:
+
+- new build/flash: still requires zero pre-existing Greia loops;
+- verifier/read-only checks: may use baseline-aware accounting and must create
+  zero **new** Greia loops;
+- existing LaCie Acer acceptance: may proceed without rebuilding and without
+  clearing the historical host loop first, because product content has not
+  changed since the verified USB was written.
+
+Next: existing image digest + baseline-aware artifact/readback verification,
+then physical Acer boot/install/first-boot acceptance.
