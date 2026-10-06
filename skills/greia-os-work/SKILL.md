@@ -124,6 +124,14 @@ SETUP.md
 
 Inspect current builders under `build/` before changing generated target state. Boot-impacting changes also require `skills/greia-os-work/BOOT.md`.
 
+Partition-scanned loop ownership is centralized in
+`build/lib/safe-cleanup.sh`. Any build/tool path that creates a
+`losetup --find --show --partscan` loop must use `safe_detach_loop`; do not
+directly call `losetup -d` and then clear the loop variable. The partition
+children and parent association must be verified gone before temporary backing
+data is deleted. If verified teardown fails, fail closed and preserve the work
+tree/evidence instead of reporting success.
+
 ## Shell, launcher, Collections or lightweight UI
 
 Read:
