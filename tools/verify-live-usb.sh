@@ -32,7 +32,7 @@ EOF
 IMAGE="$(realpath "$1")"
 DEVICE="$2"
 
-required=(awk cmp find fsck.vfat losetup blockdev udevadm findmnt lsblk mount mountpoint parted realpath sed sort umount)
+required=(awk cmp find fsck.vfat losetup partx blockdev udevadm findmnt lsblk mount mountpoint parted realpath sed sort umount)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing dependency: $command_name" >&2
