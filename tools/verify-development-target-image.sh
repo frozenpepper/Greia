@@ -36,7 +36,9 @@ cleanup() {
   fi
   safe_cleanup_exit "$original_status" "$cleanup_failed"     "Development-target verification cleanup was incomplete; preserving work data for inspection."
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 LOOP="$(losetup --find --show --partscan --read-only "$IMAGE")"
 PART="${LOOP}p1"
