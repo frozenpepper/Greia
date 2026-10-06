@@ -29,6 +29,7 @@ PARTSCAN_OWNERS = (
     PROJECT_ROOT / "tools" / "verify-development-installer.sh",
     PROJECT_ROOT / "tools" / "verify-development-target-image.sh",
     PROJECT_ROOT / "tools" / "verify-live-usb.sh",
+    DELETED_BACKING_FIXTURE,
 )
 
 
