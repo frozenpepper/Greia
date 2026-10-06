@@ -403,10 +403,16 @@ Binding rules:
   `sudo dmesg | grep -i 'I/O error'` before touching source; treat it as a
   disk fault until proven otherwise.
 - Loop audit after every build/run (success, failure, interrupt):
-  `sudo losetup -a | grep greia` must be empty. Detach BEFORE deleting image
-  files (`losetup -d` → verify gone → `rm`); never delete a backing file while
-  attached. A loop stuck with `autoclear=1` plus partition mappings clears
-  only on reboot — record it, do not accumulate more.
+  `sudo losetup -a | grep greia` must be empty. Any shell path that creates a
+  `losetup --partscan` loop must use `build/lib/safe-cleanup.sh` and
+  `safe_detach_loop`; direct `losetup -d` followed by forgetting the loop is
+  forbidden. A successful command must verify partition children are removed
+  and the parent loop is no longer associated before clearing its loop variable
+  or deleting the backing/work tree. If verified teardown fails, fail the
+  build/verifier and preserve evidence rather than deleting the backing file.
+  Never delete a backing file while attached. A pre-existing loop already stuck
+  with `autoclear=1` plus partition mappings may still require a reboot —
+  record it, do not accumulate more.
 - Clean `/tmp/greia-installer-build.*` and stale `/tmp/greia-session04-*`
   run dirs after each run.
 - Keep the build root filesystem below ~80 % during image churn; stale loops
