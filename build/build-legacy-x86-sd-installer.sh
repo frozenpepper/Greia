@@ -6,6 +6,8 @@ export PYTHONDONTWRITEBYTECODE=1
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+# shellcheck source=lib/safe-cleanup.sh
+source "$SCRIPT_DIR/lib/safe-cleanup.sh"
 PROFILE="legacy-x86-i686"
 RELEASE_BUNDLE_ARGS=()
 positional=()
@@ -193,7 +195,7 @@ FINAL_DIGEST="$OUTPUT_DIR/greia-os-installer-${PROFILE}.sha256"
   exit 1
 }
 
-required=(losetup mount umount mountpoint sync python3 sha256sum install)
+required=(losetup partx blockdev udevadm mount umount mountpoint sync python3 sha256sum install)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing post-build dependency: $command_name" >&2
@@ -207,15 +209,21 @@ LOOP=""
 mkdir -p "$MOUNT"
 
 cleanup() {
-  local status=$?
+  local original_status=$?
   set +e
-  if [[ -n "$LOOP" ]]; then
-    if mountpoint -q "$MOUNT"; then umount "$MOUNT"; fi
-    losetup -d "$LOOP" 2>/dev/null || true
+  local cleanup_failed=0
+  safe_unmount_paths "$MOUNT" || cleanup_failed=1
+  safe_detach_loop "$LOOP" || cleanup_failed=1
+  if (( cleanup_failed == 0 )); then
+    rmdir "$MOUNT" 2>/dev/null || true
+    rmdir "$WORK" 2>/dev/null || true
+  else
+    echo "Legacy installer finalization cleanup was incomplete; preserving work data for inspection." >&2
+    if (( original_status == 0 )); then
+      return 1
+    fi
   fi
-  rmdir "$MOUNT" 2>/dev/null || true
-  rmdir "$WORK" 2>/dev/null || true
-  return "$status"
+  return "$original_status"
 }
 trap cleanup EXIT INT TERM
 
@@ -263,8 +271,14 @@ terminal output to another computer is required.
 README
 chmod 0644 "$MOUNT/greia-tools/README.txt"
 sync
-umount "$MOUNT"
-losetup -d "$LOOP"
+safe_unmount_paths "$MOUNT" || {
+  echo "Cannot detach finalized installer filesystem." >&2
+  exit 1
+}
+safe_detach_loop "$LOOP" || {
+  echo "Cannot detach finalized installer loop device." >&2
+  exit 1
+}
 LOOP=""
 
 FINAL_SHA="$(sha256sum "$IMAGE" | awk '{print $1}')"
