@@ -32,7 +32,7 @@ USAGE
 IMAGE="$1"
 DEVICE="$2"
 
-required=(losetup partx blockdev udevadm findmnt partprobe wipefs sgdisk parted mkfs.vfat syslinux sync mount umount mountpoint cp dd)
+required=(losetup blockdev udevadm findmnt partprobe wipefs sgdisk parted mkfs.vfat syslinux sync mount umount mountpoint cp dd)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing dependency: $command_name" >&2
@@ -67,15 +67,12 @@ cleanup() {
   safe_detach_loop "$IMG_LOOP" || cleanup_failed=1
   if (( cleanup_failed == 0 )); then
     rm -rf "$WORK"
-  else
-    echo "Live-USB writer cleanup was incomplete; preserving work data for inspection." >&2
-    if (( original_status == 0 )); then
-      return 1
-    fi
   fi
-  return "$original_status"
+  safe_cleanup_exit "$original_status" "$cleanup_failed"     "Live-USB writer cleanup was incomplete; preserving work data for inspection."
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # Mount the installer image partition read-only to source the live files.
 IMG_LOOP="$(losetup --find --show --partscan "$IMAGE")"
