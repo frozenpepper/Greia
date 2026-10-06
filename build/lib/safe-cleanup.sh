@@ -74,6 +74,43 @@ safe_loop_is_associated() {
   safe_loop_backing_file "${1:-}" >/dev/null 2>&1
 }
 
+safe_loop_debug_openers() {
+  local loop_device="${1:-}"
+  [[ -n "$loop_device" ]] || return 0
+  local loop_name="${loop_device#/dev/}"
+  local device holder_dir holder
+
+  echo "loop cleanup diagnostics for $loop_device:" >&2
+  for device in "$loop_device" /dev/"${loop_name}"p*; do
+    [[ -b "$device" ]] || continue
+    echo "  device=$device" >&2
+    if command -v fuser >/dev/null 2>&1; then
+      fuser -v "$device" >&2 2>/dev/null || true
+    fi
+    holder_dir="/sys/class/block/${device#/dev/}/holders"
+    if [[ -d "$holder_dir" ]]; then
+      for holder in "$holder_dir"/*; do
+        [[ -e "$holder" ]] || continue
+        echo "    kernel_holder=${holder##*/}" >&2
+      done
+    fi
+  done
+}
+
+safe_remove_loop_partitions_after_detach() {
+  local loop_device="${1:-}"
+  [[ -n "$loop_device" ]] || return 0
+  safe_loop_partition_children_present "$loop_device" || return 0
+
+  # LOOP_CLR_FD may only set AUTOCLEAR while a partition remains open. Once
+  # detach has been requested, ask the kernel to drop its partition bookkeeping
+  # and then settle. This is deliberately a post-detach fallback: making partx
+  # deletion a prerequisite deadlocked on the Orbiter host, while parent-only
+  # detach could not finish with a persistent partition opener.
+  partx -d "$loop_device" >/dev/null 2>&1 || true
+  safe_udev_settle
+}
+
 safe_detach_loop() {
   local loop_device="${1:-}"
   [[ -n "$loop_device" ]] || return 0
@@ -130,11 +167,26 @@ safe_detach_loop() {
       echo "ERROR: refusing loop cleanup after device reuse: $loop_device now maps $current_backing, expected $expected_backing" >&2
       return 1
     fi
+
+    # If LOOP_CLR_FD could only mark AUTOCLEAR because a partition remains an
+    # opener, remove partition bookkeeping now that parent detach is pending.
+    # A busy child may still refuse deletion; final state remains authoritative.
+    safe_remove_loop_partitions_after_detach "$loop_device"
+
+    current_backing="$(safe_loop_backing_file "$loop_device" 2>/dev/null || true)"
+    if [[ -z "$current_backing" ]] && ! safe_loop_partition_children_present "$loop_device"; then
+      return 0
+    fi
+    if [[ -n "$current_backing" && "$current_backing" != "$expected_backing" ]]; then
+      echo "ERROR: refusing loop cleanup after device reuse: $loop_device now maps $current_backing, expected $expected_backing" >&2
+      return 1
+    fi
     sleep 0.1
   done
 
   current_backing="$(safe_loop_backing_file "$loop_device" 2>/dev/null || true)"
   echo "ERROR: loop detach did not fully settle: $loop_device backing=${current_backing:-none} partition_children=$(safe_loop_partition_children_present "$loop_device" && echo present || echo none)" >&2
+  safe_loop_debug_openers "$loop_device"
   return 1
 }
 
