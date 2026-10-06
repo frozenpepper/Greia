@@ -14,6 +14,8 @@ set -Eeuo pipefail
 #   <device>         the whole removable USB device (e.g. /dev/sdd) to overwrite
 
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=../build/lib/safe-cleanup.sh
+source "$PROJECT_ROOT/build/lib/safe-cleanup.sh"
 
 usage() {
   cat <<'USAGE'
@@ -30,7 +32,7 @@ USAGE
 IMAGE="$1"
 DEVICE="$2"
 
-required=(losetup partprobe wipefs sgdisk parted mkfs.vfat syslinux sync mount umount cp dd)
+required=(losetup partx blockdev udevadm findmnt partprobe wipefs sgdisk parted mkfs.vfat syslinux sync mount umount mountpoint cp dd)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing dependency: $command_name" >&2
@@ -57,15 +59,21 @@ IMG_LOOP=""
 mkdir -p "$IMG_MOUNT" "$USB_MOUNT"
 
 cleanup() {
-  local status=$?
+  local original_status=$?
+  trap - EXIT INT TERM
   set +e
-  umount "$USB_MOUNT" >/dev/null 2>&1 || true
-  umount "$IMG_MOUNT" >/dev/null 2>&1 || true
-  if [[ -n "$IMG_LOOP" ]]; then
-    losetup -d "$IMG_LOOP" >/dev/null 2>&1 || true
+  local cleanup_failed=0
+  safe_unmount_paths "$IMG_MOUNT" "$USB_MOUNT" || cleanup_failed=1
+  safe_detach_loop "$IMG_LOOP" || cleanup_failed=1
+  if (( cleanup_failed == 0 )); then
+    rm -rf "$WORK"
+  else
+    echo "Live-USB writer cleanup was incomplete; preserving work data for inspection." >&2
+    if (( original_status == 0 )); then
+      return 1
+    fi
   fi
-  rm -rf "$WORK"
-  return "$status"
+  return "$original_status"
 }
 trap cleanup EXIT INT TERM
 
