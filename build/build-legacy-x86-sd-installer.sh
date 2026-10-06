@@ -195,7 +195,7 @@ FINAL_DIGEST="$OUTPUT_DIR/greia-os-installer-${PROFILE}.sha256"
   exit 1
 }
 
-required=(losetup blockdev udevadm mount umount mountpoint sync python3 sha256sum install)
+required=(losetup partx blockdev udevadm mount umount mountpoint sync python3 sha256sum install)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing post-build dependency: $command_name" >&2
