@@ -406,15 +406,18 @@ Binding rules:
   `sudo losetup -a | grep greia` must be empty. Any shell path that creates a
   `losetup --partscan` loop must use `build/lib/safe-cleanup.sh` and
   `safe_detach_loop`; direct `losetup -d` followed by forgetting the loop is
-  forbidden. Linux loop detach is lazy: partition minors may remain until the
-  parent detach is requested. Therefore do **not** require `partx -d` to clear
-  children before parent detach. Unmount first, request the parent detach,
-  settle udev, then require both the parent backing association and partition
-  children to disappear before clearing the loop variable or deleting the
-  backing/work tree. The helper pins the original backing identity and refuses
-  to touch a reused loop number. If verified teardown fails, the process must
-  exit non-zero and preserve evidence. The canonical build+flash front door also
-  refuses pre-existing Greia build loops and refuses success if any remain.
+  forbidden. Linux loop detach is lazy: an open partition counts as a disk
+  opener, so `LOOP_CLR_FD` may only set AUTOCLEAR and defer final teardown.
+  Therefore `partx -d` is neither a prerequisite nor forbidden: unmount first,
+  request parent detach, settle udev, and if the parent is still associated with
+  partition children, use bounded `partx -d` **after** detach is pending to
+  remove partition bookkeeping, then settle/recheck. Success requires both the
+  parent backing association and partition children to disappear before the
+  loop variable or backing/work tree is cleared. The helper pins the original
+  backing identity, refuses a reused loop number, and reports userspace/kernel
+  holders on bounded failure. Cleanup failure must exit non-zero and preserve
+  evidence. The canonical build+flash front door also refuses pre-existing
+  Greia build loops and refuses success if any remain.
 - Clean `/tmp/greia-installer-build.*` and stale `/tmp/greia-session04-*`
   run dirs after each run.
 - Keep the build root filesystem below ~80 % during image churn; stale loops
