@@ -2427,3 +2427,27 @@ Exact implementation candidate:
 
 Following commits in this update are documentation/operational guidance only.
 Local acceptance must pin this candidate or a documentation-only descendant.
+
+## 2026-10-07 — Interleaved field acceptance stopped on stale test inventory only
+
+Owner-controlled acceptance at canonical `6b3706d41b898de2e1c2ddfa0a59b72ae4e8c8a0`
+passed source identity, product-content boundary and shell syntax, then stopped
+at the focused loop-cleanup suite: 10/11 tests passed.
+
+The sole failure was not a cleanup implementation defect. The new privileged
+fixture `tools/test-loop-cleanup-deleted-backing.sh` is itself a legitimate
+`--partscan` owner, sources `safe-cleanup.sh`, and calls
+`safe_detach_loop`, but the hard-pinned `PARTSCAN_OWNERS` tuple had not been
+extended to include it. The discovery equality check therefore correctly
+reported the fixture as an unexpected owner.
+
+Repair is intentionally narrow: add the existing
+`DELETED_BACKING_FIXTURE` constant to `PARTSCAN_OWNERS`. No cleanup,
+builder, verifier, target/runtime, USB-content or Acer behavior changed.
+
+Exact repair commit:
+`6de59fba28a889cc86550926f0bca870eb01ed27`.
+
+Next acceptance resumes at the focused loop-contract suite. The privileged
+deleted-backing fixture, real OPrdqB field-loop teardown, artifact re-verifier
+and USB readback verifier remain unexecuted and unproven.
