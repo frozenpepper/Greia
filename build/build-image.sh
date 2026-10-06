@@ -81,7 +81,8 @@ cleanup() {
   if (( cleanup_failed == 0 )); then
     safe_remove_build_dir "$BUILD_DIR" || cleanup_failed=1
   fi
-  safe_cleanup_exit "$original_status" "$cleanup_failed"     "Build cleanup was incomplete. Inspect resources manually; build data was preserved."
+  safe_cleanup_exit "$original_status" "$cleanup_failed" \\
+    "Build cleanup was incomplete. Inspect resources manually; build data was preserved."
 }
 trap cleanup EXIT
 trap 'exit 130' INT
