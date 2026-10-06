@@ -2380,3 +2380,42 @@ The completed source candidate for the second-generation cleanup redesign is
 documentation update are non-runtime. Local acceptance must pin this candidate
 or a documentation-only descendant and must first exercise the already-leaked
 field loop before authorizing another full build.
+
+## 2026-10-06 — Field reproduction proved parent-only detach is insufficient; interleaved teardown implemented
+
+The exact leaked `/dev/loop0` from campaign `OPrdqB` was re-tested against
+the parent-first cleanup candidate. Identity and mount safety checks passed.
+`safe_detach_loop` issued `losetup -d` repeatedly; AUTOCLEAR changed 0 -> 1
+but the parent backing association and `loop0p1` remained for all bounded
+retries. No manual recovery was attempted and Acer remained untouched.
+
+Kernel behavior explains the deadlock: an open partition contributes an opener
+to the whole disk, so `LOOP_CLR_FD` marks AUTOCLEAR and defers final teardown
+while extra openers remain. Pure parent-first teardown therefore cannot finish
+a persistent child, while the earlier pure partx-first design could not make
+progress before detach was pending.
+
+The cleanup contract is now explicitly interleaved:
+1. unmount all owned mounts;
+2. pin the original loop backing identity;
+3. request parent detach (`losetup -d`);
+4. settle udev;
+5. if the parent remains associated and partition children remain, run bounded
+   `partx -d` **after** detach is pending;
+6. settle and require both parent association and children to disappear;
+7. refuse loop-number reuse and emit fuser/sysfs holder diagnostics on bounded
+   failure.
+
+All seven partscan owners again declare `partx` explicitly.
+
+Regression coverage now includes:
+- deterministic detach-first / partx-second ordering;
+- backing-identity pin;
+- all owners declaring `partx`;
+- a privileged real-host fixture
+  `tools/test-loop-cleanup-deleted-backing.sh` that creates a partscan loop,
+  deliberately holds the partition open, unlinks the backing pathname, then
+  requires the shared helper to recover once the opener releases.
+
+Evidence boundary: SOURCE EDITED / LOCAL ACCEPTANCE OWED. The existing verified
+USB product content remains unchanged and Acer remains untested.
