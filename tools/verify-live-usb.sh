@@ -96,7 +96,9 @@ cleanup() {
   fi
   safe_cleanup_exit "$original_status" "$cleanup_failed"     "Live-USB verification cleanup was incomplete; preserving work data for inspection."
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # Read-only filesystem check. fsck.vfat -n never repairs/writes.
 #
