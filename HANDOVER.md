@@ -2602,3 +2602,12 @@ opener instead of only testing clean loops.
 fixture, then apply the new helper once to the still-existing exact OPrdqB loop.
 If that clears, reverify the existing installer image and already-written
 LaCie; do not rebuild product bytes merely for cleanup validation.
+
+### Interleaved cleanup implementation candidate
+
+Exact implementation candidate:
+`3f3f50d1f586872c6b02865e027635b3ac67c1fb`.
+
+This includes the post-detach `partx` fallback, opener diagnostics, restored
+partx dependency declarations across all seven owners, deterministic ordering
+regressions, and the privileged deleted-backing field fixture.
