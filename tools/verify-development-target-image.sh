@@ -34,7 +34,8 @@ cleanup() {
   if (( cleanup_failed == 0 )); then
     rm -rf "$WORK"
   fi
-  safe_cleanup_exit "$original_status" "$cleanup_failed"     "Development-target verification cleanup was incomplete; preserving work data for inspection."
+  safe_cleanup_exit "$original_status" "$cleanup_failed" \\
+    "Development-target verification cleanup was incomplete; preserving work data for inspection."
 }
 trap cleanup EXIT
 trap 'exit 130' INT
