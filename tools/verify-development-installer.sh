@@ -14,7 +14,7 @@ usage() {
 IMAGE="$(realpath "$1")"
 [[ -f "$IMAGE" ]] || { echo "Installer image not found: $IMAGE" >&2; exit 1; }
 
-for command_name in losetup partx blockdev udevadm findmnt mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
+for command_name in losetup blockdev udevadm findmnt mount umount mountpoint unsquashfs awk grep realpath cmp python3; do
   command -v "$command_name" >/dev/null || {
     echo "Missing verifier dependency: $command_name" >&2
     exit 1
@@ -40,13 +40,8 @@ cleanup() {
   safe_detach_loop "$LOOP" || cleanup_failed=1
   if (( cleanup_failed == 0 )); then
     rm -rf "$WORK"
-  else
-    echo "Development-installer verification cleanup was incomplete; preserving work data for inspection." >&2
-    if (( original_status == 0 )); then
-      exit 1
-    fi
   fi
-  exit "$original_status"
+  safe_cleanup_exit "$original_status" "$cleanup_failed"     "Development-installer verification cleanup was incomplete; preserving work data for inspection."
 }
 trap cleanup EXIT INT TERM
 
