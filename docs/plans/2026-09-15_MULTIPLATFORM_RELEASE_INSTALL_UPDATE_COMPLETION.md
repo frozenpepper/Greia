@@ -2284,3 +2284,39 @@ host was clean after reboot (no Greia loops, root filesystem below 80%) and the
 shared synthetic helper path is proven. Do not begin the expensive build/flash
 cycle until `tests/test_build_loop_cleanup_contract.py` and the focused shell
 gates pass on the exact new canonical main.
+
+## 2026-10-06 — Final pre-build gate accepted; hardware campaign authorized next
+
+Exact tested source:
+`8eec98d7b5e52375bf08790f2fd00cf8a5f006d0`.
+
+Owner-controlled local evidence closed the final loop-cleanup source gate and
+reconfirmed the full pre-build tail:
+
+- `tests/test_build_loop_cleanup_contract.py`: 3/3 PASS;
+- all seven `--partscan` owners route through shared verified teardown;
+- the only direct `losetup -d` remaining is inside
+  `build/lib/safe-cleanup.sh` under child-removal + parent-disassociation
+  verification;
+- `make shell-check`: PASS;
+- `make validate`: PASS, 45/45 Activities;
+- `make footprint`: PASS;
+- `make clean-bytecode`: PASS;
+- host reboot cleared all historical Greia loops;
+- synthetic partition-scanned ext4 loop acceptance proved
+  `safe_detach_loop` removes both child mappings and parent association;
+- build host root filesystem remained below 80% usage;
+- LaCie iamaKey was identified by serial `eca3505216d7d3` as a removable
+  whole disk, still mounted and intentionally untouched.
+
+This closes the non-destructive pre-build phase. No additional source gate is
+required before the next campaign.
+
+**Next exact step:** destructive owner-controlled campaign using the canonical
+front door
+`tools/build-and-flash-development-usb.sh legacy-x86-i686-dev <LaCie whole disk>`,
+after re-identifying the LaCie by serial and unmounting all of its filesystems.
+Require source-artifact verification, USB readback verification, and a post-run
+Greia-loop audit before moving the stick to the reference Acer. Then perform a
+fresh install and judge the **first installed boot** without hotpatching or a
+second corrective boot.
