@@ -195,7 +195,7 @@ FINAL_DIGEST="$OUTPUT_DIR/greia-os-installer-${PROFILE}.sha256"
   exit 1
 }
 
-required=(losetup partx blockdev udevadm mount umount mountpoint sync python3 sha256sum install)
+required=(losetup blockdev udevadm mount umount mountpoint sync python3 sha256sum install)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing post-build dependency: $command_name" >&2
@@ -210,6 +210,7 @@ mkdir -p "$MOUNT"
 
 cleanup() {
   local original_status=$?
+  trap - EXIT INT TERM
   set +e
   local cleanup_failed=0
   safe_unmount_paths "$MOUNT" || cleanup_failed=1
@@ -217,15 +218,12 @@ cleanup() {
   if (( cleanup_failed == 0 )); then
     rmdir "$MOUNT" 2>/dev/null || true
     rmdir "$WORK" 2>/dev/null || true
-  else
-    echo "Legacy installer finalization cleanup was incomplete; preserving work data for inspection." >&2
-    if (( original_status == 0 )); then
-      return 1
-    fi
   fi
-  return "$original_status"
+  safe_cleanup_exit "$original_status" "$cleanup_failed"     "Legacy installer finalization cleanup was incomplete; preserving work data for inspection."
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 LOOP="$(losetup --find --show --partscan "$IMAGE")"
 PART="${LOOP}p1"
