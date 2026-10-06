@@ -420,6 +420,13 @@ Binding rules:
   Greia build loops and refuses success if any remain.
 - Clean `/tmp/greia-installer-build.*` and stale `/tmp/greia-session04-*`
   run dirs after each run.
+- A loop that predates the current run and has already been proven to be a
+  deleted-backing AUTOCLEAR orphan with no mounts/openers/holders may be
+  classified in the lifecycle plan as historical poisoned kernel state. Do not
+  keep inventing teardown primitives for it. Reboot before any new build.
+  Read-only verification of an already-built artifact may instead use
+  baseline-aware accounting: the historical loop may remain, but the verifier
+  must introduce zero new Greia loops.
 - Keep the build root filesystem below ~80 % during image churn; stale loops
   count as used space.
 - Do not leave unmounted attached loops for desktop volume monitors to probe;
