@@ -2372,3 +2372,11 @@ Source repair now:
 
 Evidence boundary: SOURCE EDITED / LOCAL ACCEPTANCE OWED. The already written
 USB remains artifact/readback verified and Acer remains untouched.
+
+### Loop cleanup redesign implementation candidate
+
+The completed source candidate for the second-generation cleanup redesign is
+`258f2189a6e2e9de604becd8b63b4eab28771113`. Any following commits in this
+documentation update are non-runtime. Local acceptance must pin this candidate
+or a documentation-only descendant and must first exercise the already-leaked
+field loop before authorizing another full build.
