@@ -20,6 +20,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SAFE_CLEANUP = PROJECT_ROOT / "build" / "lib" / "safe-cleanup.sh"
 FRONT_DOOR = PROJECT_ROOT / "tools" / "build-and-flash-development-usb.sh"
+DELETED_BACKING_FIXTURE = PROJECT_ROOT / "tools" / "test-loop-cleanup-deleted-backing.sh"
 PARTSCAN_OWNERS = (
     PROJECT_ROOT / "build" / "build-image.sh",
     PROJECT_ROOT / "build" / "build-installer-image.sh",
@@ -231,6 +232,32 @@ exit 7
         )
         self.assertEqual(7, result.returncode)
         self.assertIn("cleanup also failed", result.stderr)
+
+    def test_all_partscan_owners_declare_partx_dependency(self) -> None:
+        for path in PARTSCAN_OWNERS:
+            text = path.read_text(encoding="utf-8")
+            rel = path.relative_to(PROJECT_ROOT)
+            with self.subTest(path=str(rel)):
+                dependency_lines = [
+                    line
+                    for line in text.splitlines()
+                    if "required=(" in line
+                    or "require_commands=(" in line
+                    or "for command_name in " in line
+                ]
+                self.assertTrue(
+                    any("partx" in line for line in dependency_lines),
+                    f"{rel} uses shared cleanup but does not declare partx",
+                )
+
+    def test_deleted_backing_fixture_reproduces_field_shape(self) -> None:
+        text = DELETED_BACKING_FIXTURE.read_text(encoding="utf-8")
+        self.assertIn('losetup --find --show --partscan "$IMG"', text)
+        self.assertIn('exec 9<"$1"', text)
+        self.assertIn('rm -f "$IMG"', text)
+        self.assertIn('"(deleted)"', text)
+        self.assertIn('safe_detach_loop "$LOOP"', text)
+        self.assertIn("DELETED_BACKING_LOOP_CLEANUP=PASS", text)
 
     def test_all_partscan_owners_use_authoritative_cleanup_exit(self) -> None:
         for path in PARTSCAN_OWNERS:
