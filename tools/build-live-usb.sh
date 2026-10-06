@@ -32,7 +32,7 @@ USAGE
 IMAGE="$1"
 DEVICE="$2"
 
-required=(losetup blockdev udevadm findmnt partprobe wipefs sgdisk parted mkfs.vfat syslinux sync mount umount mountpoint cp dd)
+required=(losetup partx blockdev udevadm findmnt partprobe wipefs sgdisk parted mkfs.vfat syslinux sync mount umount mountpoint cp dd)
 for command_name in "${required[@]}"; do
   command -v "$command_name" >/dev/null || {
     echo "Missing dependency: $command_name" >&2
