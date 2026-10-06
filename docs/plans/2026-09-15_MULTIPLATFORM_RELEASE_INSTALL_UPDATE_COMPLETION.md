@@ -2451,3 +2451,50 @@ Exact repair commit:
 Next acceptance resumes at the focused loop-contract suite. The privileged
 deleted-backing fixture, real OPrdqB field-loop teardown, artifact re-verifier
 and USB readback verifier remain unexecuted and unproven.
+
+## 2026-10-07 — Historical OPrdqB loop classified as poisoned host state; stop redesigning teardown
+
+The third-generation interleaved helper was accepted in source and in the
+privileged deleted-backing fixture, then tested once against the exact historical
+OPrdqB field loop. The helper still could not release that loop:
+
+- backing remained the deleted OPrdqB target image;
+- AUTOCLEAR remained set;
+- `loop0p1` persisted;
+- parent and child were unmounted;
+- `fuser` reported no userspace opener;
+- sysfs holders were empty;
+- parent-detach + post-detach `partx -d` exhausted the bounded retry window.
+
+This is now classified as **historical poisoned kernel state**, not an open
+product/build cleanup algorithm requirement. The distinction is evidenced by:
+
+- fresh synthetic partscan teardown: PASS;
+- deleted-backing + deliberately held partition fixture: PASS;
+- all current partscan owners: shared verified cleanup;
+- cleanup failure: authoritative process failure;
+- the exact pre-existing months-old OPrdqB orphan: still not recoverable without
+  host reboot.
+
+Do not add a fourth speculative teardown primitive merely to recover this one
+already-poisoned loop. A reboot is the supported host recovery for this state.
+
+Policy from this point:
+
+1. **Before any new build/flash campaign:** zero pre-existing Greia build loops
+   is still mandatory. If the historical OPrdqB loop is present, reboot first.
+2. **For a running build/verifier:** compare post-run state with the pre-run
+   baseline and fail on any newly introduced Greia loop. Current source should
+   not create one.
+3. **For Acer acceptance of an already-built/readback-verified USB:** the
+   historical host-only OPrdqB loop is not a product blocker. It is unrelated to
+   USB bytes, target runtime, first boot, Wi-Fi or Acer disk state.
+4. The already-written LaCie remains valid because product-content paths are
+   unchanged since `64103e48`, its source artifact and USB readback both
+   passed, and the cleanup-only changes do not alter target payload bytes.
+
+Next exact step: re-identify the existing image/USB, optionally rerun read-only
+artifact/readback verification using **baseline-aware loop accounting** (the
+known OPrdqB loop may remain, but no additional Greia loop may appear), then
+proceed to Acer USB boot, live Wi-Fi, fresh install and first-installed-boot
+acceptance. No rebuild is required.
