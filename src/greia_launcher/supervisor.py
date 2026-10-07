@@ -5,6 +5,9 @@ from pathlib import Path
 from typing import Callable, Mapping, Protocol
 
 from greia_platform.activities import ActivityManifest
+from greia_platform.creation_access import CreationSessionAccess
+from greia_platform.creations import CreationLibrary, CreationLibraryError
+from greia_platform.profiles import ProfileError
 from greia_platform.device_capabilities import DeviceCapabilityService
 from greia_platform.history import (
     HistoryError,
@@ -260,7 +263,20 @@ class ActivitySupervisor:
                 storage_broker = self._storage_broker_factory(
                     storage, session_id, sandboxed=sandboxed
                 )
-            except (StorageError, OSError):
+                if manifest.creations_produces or manifest.creations_consumes:
+                    if not isinstance(storage_broker, ActivityStorageBroker):
+                        raise ActivityLifecycleError(
+                            "creation-aware Activity requires the trusted storage broker"
+                        )
+                    access = CreationSessionAccess(
+                        library=CreationLibrary(profile.creations_dir),
+                        storage=storage,
+                        manifest=manifest,
+                        authority=authority,
+                        session_id=session_id,
+                    )
+                    storage_broker.bind_creations(access)
+            except (StorageError, OSError, ProfileError, CreationLibraryError, ActivityLifecycleError, ValueError):
                 return self._failed_launch_session(
                     manifest,
                     profile,
