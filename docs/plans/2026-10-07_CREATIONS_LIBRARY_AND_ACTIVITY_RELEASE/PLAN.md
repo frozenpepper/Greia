@@ -401,4 +401,4 @@ This program closes only after **all** these are true:
 - accepted stable product/API decisions are reflected in the proper `docs/product/`, ADR, agent manual and skills after implementation, without dual authority;
 - final `PROGRESS.md` + HANDOVER explain exact outcomes, accepted roster and remaining post-release improvements.
 
-**Next step as initially planned:** land P1 platform-only repository/capacity/codec source + focused tests; then build the real trusted broker/SDK selection path (P2). The UI, apps, curated build, full release review and physical acceptance are **not** implemented by the first P1 source tranche.
+**Current resume:** The P1 trusted repository and P2 manifest/session broker/SDK are present as **source-only WIP**. The universal child-confirmed picker, viewer, Activity integrations, curated build, full release review and physical acceptance are **not complete**. For the exact next command, evidence scope, and first incomplete user-visible slice, follow the maintained sibling [PROGRESS.md](./PROGRESS.md); do not infer completion from a source commit.
