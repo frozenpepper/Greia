@@ -2551,3 +2551,24 @@ new candidate, then the build host must reboot to clear the known historical
 OPrdqB poisoned loop before any new build. A fresh canonical
 `legacy-x86-i686-dev` build+flash and another no-hotpatch first-installed-boot
 Acer acceptance are required.
+
+### Fresh first-boot repair implementation candidate
+
+Exact implementation/test candidate:
+`af97ddbd7a881d3977c83c1ee99da1b8c0e7e997`.
+
+The candidate changes exactly nine implementation/test files relative to the
+pre-diagnosis routing state `5fb75c24`:
+
+- `build/lib/compose.sh`
+- `build/overlay/etc/systemd/system/greia-parent.service`
+- `build/overlay/usr/local/lib/greia-os/first-boot`
+- `src/greia_platform/developer_control.py`
+- `src/greia_platform/profiles.py`
+- `tests/test_boot_health_product_composition.py`
+- `tests/test_developer_remote.py`
+- `tests/test_first_boot_migration.py`
+- `tests/test_profiles.py`
+
+Following commits in this documentation tranche are documentation-only. No
+owner/local test execution is claimed yet.
