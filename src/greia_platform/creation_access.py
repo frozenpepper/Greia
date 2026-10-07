@@ -103,6 +103,11 @@ class CreationSessionAccess:
             )
 
     @property
+    def session_id(self) -> str:
+        """Trusted session identity associated with the bound broker."""
+        return self._session_id
+
+    @property
     def consumable_media_types(self) -> frozenset[str]:
         """Trusted broker configuration, never a catalogue/read API."""
         return self._can_import
