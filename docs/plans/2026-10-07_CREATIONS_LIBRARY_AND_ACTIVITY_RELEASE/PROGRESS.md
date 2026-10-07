@@ -6,11 +6,11 @@
 
 ## A. At-a-glance checkpoint — 2026-10-07
 
-- Program: **P1 trusted media repository SOURCE-WIP; P2 session-authorized broker/manifest/SDK SOURCE-WIP**. P3 child picker, viewer and apps remain unimplemented.
+- Program: **P1/P2 source WIP**; **P3 standalone universal gallery/viewer + reusable picker Screen source WIP**, and **P4 Painting PNG publisher source WIP**. In-Activity picker mediation and every consumer import remain OPEN; no GUI/simulator acceptance yet.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
 - Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
-- Cross-Activity exchange: **source-only broker/API implemented but not usable by existing apps** (no built-in declarations, no child selection UI). Painting/Writing/Voice/Theatre still use private storage. No gallery/viewer, deletion UI, backup integration or end-to-end Activity flow is complete.
+- Exchange status: **Painting now declares PNG publication and calls guarded SDK on explicit share**, while private autosave remains independent. A platform-owned Home **My Creations** gallery has image/audio/text cards, preview and safe deletion in SOURCE only. **No in-Activity picker request mediation, consumer imports or audio/text producer integration yet**; no end-to-end GUI/physical acceptance or backup integration.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
 - P1 **trusted-only source foundation committed**: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`; still no broker, SDK, picker, Activity integration or full-project acceptance. Local mirrored headless test suite 12/12 PASS; actual Greia checkout acceptance still owed.
 
@@ -21,8 +21,8 @@
 | P0 | repository/source baseline + triage | STARTED | consolidated current-head actual gameplay audit |
 | P1 | typed creation repository, codecs, adaptive capacity | SOURCE WIP (trusted core committed; 12 local mirrored tests PASS) | full Greia checkout tests, error/race/recovery, real budget calibration |
 | P2 | permissions/manifest/broker/SDK | SOURCE WIP (opt-in manifest, trusted broker and SDK committed) | real checkout socket/manifest tests, end-to-end trusted picker issuance, adversarial isolation |
-| P3 | universal picker and My Creations viewer | NOT STARTED | screenshots, huge thumbnails, playable WAV, delete UX |
-| P4 | Painting–Shape Garden–Theatre PNG round trip | NOT STARTED | save/import/edit/export/reopen snapshots |
+| P3 | universal picker and My Creations viewer | SOURCE WIP (trusted Shell viewer, reusable picker controller/Screen, large previews, real Play/Pause/Replay and delete confirmation) | real Pygame screenshots, trusted Activity→Shell picker mediation, audio UX and device acceptance |
+| P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting explicit private PNG publish only) | full-script/runtime tests, Shell gallery verification, Painting shared import, Shape Garden and Theatre consumers |
 | P5 | voice/music and writing/text interoperability | NOT STARTED | real recording preview, text import/export |
 | P6 | explicit release catalogue and adaptive grouping | NOT STARTED | built-index exact match, Parent policy |
 | P7 | deep per-Activity quality review (45) | NOT STARTED | 45 evidence-backed dispositions |
@@ -38,8 +38,8 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 
 | Producer | Consumer | Kind | Status |
 |---|---|---|---|
-| Painting | Painting | PNG bitmap editable again | NOT STARTED |
-| Painting | Shape Garden/stamps | PNG as background/base | NOT STARTED |
+| Painting | Painting | private PNG gallery remains existing; shared import still pending | SOURCE WIP: explicit share producer only |
+| Painting | Shape Garden/stamps | PNG as background/base | NOT STARTED (Painting producer now declared) |
 | Shape Garden | Painting | flattened PNG composition | NOT STARTED |
 | Painting/Shape Garden | Teatrino Fiabe | PNG backdrop | NOT STARTED |
 | Storie della Mia Voce | Teatrino / compatible composer | WAV voice | NOT STARTED |
@@ -118,6 +118,38 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 
 
 **Additional P2 hardening:** `3c6a4a7b` makes the PNG codec report a typed media-unavailable error if Pillow is absent rather than failing during exception handling. The same isolated 18-test Python/Pillow/SQLite suite was rerun **18/18 PASS** against the amended local mirror; full repository/broker/index tests remain owed.
+
+### 2026-10-07 — P3 visual-gallery source and Painting→Creations producer (session continuation)
+
+**Pinned SOURCE candidate:** `ca9dc87d260cf27a4fa3e679364ecd61408a261d` — commits through `tests/test_creation_audio_pygame.py`. Documentation-only plan/procedure/ledger commits follow this candidate. **No Acer/installer/source-acceptance promotion implied.**
+
+**Source delivered:**
+
+1. **Universal platform state owner**: `creation_gallery.py` implements one bounded controller for `LIBRARY` and `PICKER`, indexed mixed-media filters, two/three huge cards per page, detail/open/zoom, audio Play/Pause/Resume/Replay, on-demand audio only after Play, cancellation/focus, one-use trusted selection callback, and viewer-only two-stage explicit deletion. `creations.py` added bounded SQL multi-type indexed filtering, avoiding unbounded Python-wide gallery enumeration. Source commits include `ac90d958`, `f21b2830`, `9d71ada5`, `de5fac95`, `bdf07253`, `c77cf6ce`.
+2. **Shared renderer-neutral responsive geometry + Pygame view**: `creation_gallery_layout.py`, `creation_gallery_painter.py`, `creation_gallery_screen.py`. At 1024×600 target two very large visual cards, real image pixel-data previews, original PNG when expanded, large audio Play/Pause/Replay/progress UI, illustrated text and bounded text excerpt, safe delete confirmation/cancel, IT/EN labels, keyboard/pointer focus and Greia chrome-safe title region. Resolutions in pure geometry tests: 480×320, 640×360, 800×480, 1024×600, 1280×720, 1366×768, 1920×1080. **Real Pygame screenshots and full input proof pending.**
+3. **Audio owner**: `creation_audio_pygame.py` owns an interruptible on-demand SDL mixer channel; genuine Pause/Resume/Replay rather than Play/Stop masquerading as Pause, bounded WAV input, frozen progress on pause and teardown on gallery exit. Repaint is requested only while audio actually runs; idle doesn't animate. Relevant commits `83a6a336`, `5c205a24`, `6e78b145`, `e0c66967`, `7a868da0`. Mock mixer regression `test_creation_audio_pygame.py` committed at `ca9dc87d`.
+4. **Trusted Home entry**: `catalogue_view.py` gained a localized `my_creations` label/semantic palette icon. `GreiaChildShell` adds a dedicated My Creations Home portal and trusted gallery mode without making it a fake Activity/manifest. It uses the active profile's managed library, closes playback on profile logout/change and returns to Home; `presentation.py` integrates paced audio-progress repaint. Commits include `0f0c6a93`, `0ece3e64`, `a1547d47`, `03cadab6`.
+5. **Painting becomes first declared producer**: `activities/painting/activity.toml` declares `[creations] produces = ["image/png"]`; `painting_model.py` validates private PNG names; `painting_app.py` adds a child-visible deliberate share-to-Creations action, saves private draft first, publishes via trusted broker, and avoids repeated identical snapshot publication in the same session; `painting_renderer.py` draws a safe central share icon only in paint mode; `painting/main.py` wires guarded SDK, with no unsafe standalone shared-folder fallback. `tests/test_painting_creations.py` committed but only runnable in Pygame-capable full checkout. Relevant commits `861935a4`, `f318557b`, `7642856d`, `041847d9`, `d95a7914`, `0ccc4478`, `088ff48d`.
+6. **Source regressions**: `test_creation_gallery.py` (paging beyond 64, arbitrary-ID denial, no autoplay, click-to-play, paused state, replay, pick-only handle, delete confirmation), `test_creation_gallery_layout.py` (7 screen sizes), `test_creation_audio_pygame.py` (fake mixer clock/freezing, device failure), `test_painting_creations.py` (pure publication object without display).
+
+**Executed evidence:** in this assistant's restricted Python container, Pygame is **not installed**, and a disposable pip attempt failed due to blocked DNS/network. It does not have the authenticated Greia checkout or running Simulator. A local isolated **mirror** of the creation repository/access/controller/geometry and the audio owner/mock tests ran:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/mnt/data/greia_session/src \\
+  python -Werror::ResourceWarning -m unittest discover \\
+  -s /mnt/data/greia_session/tests -p 'test_creation_*.py' -q
+# 33 tests PASS (isolated source mirror, NOT canonical repository)
+```
+
+This **does not** test the complete Greia `main` checkout, Pygame drawing, launcher MRO, actual audio hardware, actual Unix-socket test suite, built-in image index or full `make verify`. Never promote this to SIMULATOR or PHYSICAL PASS. `tests/test_painting_creations.py`, broker/manifest and full-source suites **are unexecuted** here.
+
+**Architectural finding blocking in-Activity picker activation:** `LauncherApplication._launch_selected` synchronously waits in a supervisor poll loop while the Activity owns the display. Drawing the same `CreationsGalleryScreen` in normal Shell Home does not bring a trusted picker over a running Activity. The master PLAN P3 now requires one proper Activity request → supervisor → trusted display/picker handoff → same-session child-selected token response. Do not bolt a custom raw chooser into Painting/Shape Garden or silently call the Home renderer behind an Activity.
+
+**Next exact acceptance procedure (NO hardware):** [docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md](../../testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md). On an actual complete checkout: test all focused creation suites, Painting, index, supervisor, profile and `make verify`; inspect real Simulator screenshots at 1024×600, 800×480 and 1366×768. Stop on first failure and report evidence. No Acer image flash/install.
+
+**Next implementation step after source/GUI evidence:** fix real source/UX regressions, then design/implement P3 trusted Activity-picker session mediation; connect Painting shared-import and Shape Garden/Theatre in P4. Audio/text production and backup / adaptive budget for ALL writers still pending. Catalogue review 0/45 accepted.
+
+---
 
 ### How to maintain this file
 
