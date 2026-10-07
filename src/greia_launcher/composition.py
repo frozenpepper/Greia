@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from greia_platform.activities import (
@@ -69,9 +69,9 @@ class LauncherRuntimeServices:
     device_capabilities: DeviceCapabilityService
     permission_broker: PermissionBroker
     runtime_manager: RuntimeManager
-    volume_budget: VolumeBudget
     storage_service: ActivityStorageService
     history_service: PlatformHistoryService
+    volume_budget: VolumeBudget = field(default_factory=VolumeBudget)
     achievement_service: ProfileAchievementService | None = None
 
 
