@@ -21,6 +21,11 @@ from greia_platform.storage_protocol import (
     send_frame,
 )
 
+from .creation_selection import (
+    CreationSelectionCoordinator,
+    SelectionRequest,
+)
+
 
 SANDBOX_STORAGE_ROOT = Path("/run/greia-storage")
 SANDBOX_STORAGE_SOCKET = SANDBOX_STORAGE_ROOT / "storage.sock"
@@ -98,6 +103,7 @@ class _StorageUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamSer
     ):
         self.storage = storage
         self.creation_access: CreationSessionAccess | None = None
+        self.selection: CreationSelectionCoordinator | None = None
         self.session_token = session_token
         self.max_payload_bytes = max(
             storage.policy.max_file_bytes,
@@ -128,14 +134,43 @@ class _StorageUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamSer
         payload: bytes,
     ) -> tuple[dict[str, object], bytes]:
         operation = request.get("op")
-        if operation in ("creations.publish_private", "creations.import_selected"):
-            # No child-directed enumeration, arbitrary read, selection grant,
-            # delete or profile selector exists in this protocol.
+        if operation in (
+            "creations.publish_private",
+            "creations.import_selected",
+            "creations.request_selection",
+            "creations.poll_selection",
+            "creations.cancel_selection",
+        ):
+            # The Activity can request a child-owned picker, but can NEVER
+            # browse, delete, grant, or resolve a chosen library artifact.
             access = self.creation_access
             if access is None:
                 raise _BrokerRequestError("unauthorized", "creations not enabled for Activity")
             if payload:
                 raise _BrokerRequestError("invalid_request", "creation actions carry no raw payload")
+            if operation == "creations.request_selection":
+                chooser = self.selection
+                if chooser is None:
+                    raise _BrokerRequestError("unauthorized", "picker not bound")
+                request = chooser.request(
+                    media_types=request.get("media_types"),
+                    roles=request.get("roles"),
+                )
+                return {"request_id": request.request_id}, b""
+            if operation == "creations.poll_selection":
+                chooser = self.selection
+                if chooser is None:
+                    raise _BrokerRequestError("unauthorized", "picker not bound")
+                status = chooser.poll(_required_text(request, "request_id"))
+                return {
+                    "state": status.state.value,
+                    "selection_token": status.selection_token,
+                }, b""
+            if operation == "creations.cancel_selection":
+                chooser = self.selection
+                if chooser is None:
+                    raise _BrokerRequestError("unauthorized", "picker not bound")
+                return {"cancelled": chooser.cancel(_required_text(request, "request_id"))}, b""
             if operation == "creations.publish_private":
                 record = access.publish_private_file(
                     filename=_required_text(request, "filename"),
@@ -251,11 +286,34 @@ class ActivityStorageBroker:
         if self._stopped or self._server.creation_access is not None:
             raise StorageError("creations authority may be bound only once per live session")
         self._server.creation_access = access
+        self._server.selection = CreationSelectionCoordinator(
+            access, access.session_id
+        )
+
+    def pending_creation_selection(self) -> SelectionRequest | None:
+        """Trusted supervisor read; never routed over the Activity socket."""
+        selection = self._server.selection
+        return None if self._stopped or selection is None else selection.trusted_pending()
+
+    def complete_creation_selection(self, request_id: str, creation_id: str) -> None:
+        """Trusted viewer alone may complete a child's selected artifact."""
+        selection = self._server.selection
+        if self._stopped or selection is None:
+            raise StorageError("creation picker session is unavailable")
+        selection.trusted_complete(request_id, creation_id)
+
+    def cancel_creation_selection(self, request_id: str) -> None:
+        selection = self._server.selection
+        if self._stopped or selection is None:
+            raise StorageError("creation picker session is unavailable")
+        selection.trusted_cancel(request_id)
 
     def stop(self) -> None:
         if self._stopped:
             return
         self._stopped = True
+        if self._server.selection is not None:
+            self._server.selection.close()
         if self._server.creation_access is not None:
             self._server.creation_access.close()
         self._server.shutdown()
