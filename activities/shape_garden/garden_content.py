@@ -13,9 +13,10 @@ REFERENCE_WIDTH: Final = 1024
 REFERENCE_HEIGHT: Final = 600
 SOIL_TOP: Final = 530
 
-# Storage key kept for future progression; Activity is currently creative
-# and profile-scoped autosave could be added without changing geometry.
-STORAGE_KEY: Final = "shape_garden.progress.v1"
+# Profile-private editable creative-project state.
+STORAGE_KEY: Final = "shape_garden.project.v1"
+BACKGROUND_PREFIX: Final = "garden/backgrounds"
+MAX_BACKGROUND_BYTES: Final = 8 * 1024 * 1024
 
 COLORS: Final[tuple[tuple[int, int, int], ...]] = (
     (247, 93, 89),   # Tomato Red
@@ -35,6 +36,8 @@ MAX_PARTICLES: Final = 30
 __all__ = [
     "COLORS",
     "LEAF_COLOR",
+    "BACKGROUND_PREFIX",
+    "MAX_BACKGROUND_BYTES",
     "MAX_PARTICLES",
     "MAX_SHAPES",
     "REFERENCE_HEIGHT",
