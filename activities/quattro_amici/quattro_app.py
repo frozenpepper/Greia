@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pygame
 
-from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_api import activity_stop_requested, emit_activity_event, mark_activity_ready
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -62,11 +62,13 @@ class QuattroApp:
     ready_published: bool = False
     running: bool = True
     last_clack_row: int = -1
+    game_sequence: int = 0
 
     def run(self) -> int:
         """Execute the 60 FPS Activity loop."""
         clock = pygame.time.Clock()
         last_time = time.monotonic()
+        self._emit_game_started()
 
         while self.running and not activity_stop_requested():
             now = time.monotonic()
@@ -190,6 +192,7 @@ class QuattroApp:
             self.selected_col = min(self.selected_col, self.model.board.cols - 1)
             self.renderer.invalidate_cache()
             self.audio.play_click()
+            self._emit_game_started()
 
     def _toggle_mode(self) -> None:
         """Toggle between Solo vs Leo and Two Players."""
@@ -202,6 +205,7 @@ class QuattroApp:
         self.active_drop = None
         self.cpu_thinking = False
         self.audio.play_click()
+        self._emit_game_started()
 
     def _restart_game(self) -> None:
         """Restart a new game with current configuration."""
@@ -209,6 +213,7 @@ class QuattroApp:
         self.active_drop = None
         self.cpu_thinking = False
         self.audio.play_click()
+        self._emit_game_started()
 
     def _try_drop(self, col: int) -> bool:
         """Initiate token drop if turn and column are legal."""
@@ -232,6 +237,39 @@ class QuattroApp:
         if not success:
             return False
 
+        move_number = len(self.model.history)
+        self._safe_emit(
+            "quattro.token_dropped",
+            f"game-{self.game_sequence}-move-{move_number}",
+            {
+                "difficulty": self.model.difficulty,
+                "mode": self.model.mode.value,
+                "column": col,
+                "player": player.value,
+            },
+        )
+        if self.model.status == GameStatus.WON:
+            self._safe_emit(
+                "quattro.game_won",
+                f"game-{self.game_sequence}-won",
+                {
+                    "difficulty": self.model.difficulty,
+                    "mode": self.model.mode.value,
+                    "winner": self.model.winner.value,
+                    "moves": move_number,
+                },
+            )
+        elif self.model.status == GameStatus.DRAW:
+            self._safe_emit(
+                "quattro.game_draw",
+                f"game-{self.game_sequence}-draw",
+                {
+                    "difficulty": self.model.difficulty,
+                    "mode": self.model.mode.value,
+                    "moves": move_number,
+                },
+            )
+
         board_rect, cell_size, _ = self.renderer._compute_board_layout(self.model)
         target_y = board_rect.top + row * cell_size + cell_size / 2.0
         start_y = board_rect.top - cell_size * 0.75
@@ -245,6 +283,32 @@ class QuattroApp:
         )
         self.audio.play_drop_slide()
         return True
+
+    def _emit_game_started(self) -> None:
+        self.game_sequence += 1
+        self._safe_emit(
+            "quattro.game_started",
+            f"game-{self.game_sequence}-started",
+            {
+                "difficulty": self.model.difficulty,
+                "mode": self.model.mode.value,
+            },
+        )
+
+    @staticmethod
+    def _safe_emit(
+        event_id: str,
+        idempotency_key: str,
+        payload: dict[str, object],
+    ) -> None:
+        try:
+            emit_activity_event(
+                event_id,
+                idempotency_key=idempotency_key,
+                payload=payload,
+            )
+        except Exception:
+            pass
 
     def _update(self, dt: float) -> None:
         """Update active animations and CPU opponent decision."""
