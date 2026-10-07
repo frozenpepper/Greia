@@ -340,6 +340,12 @@ For first-party Python Activities:
 - keep Activity code display/input-backend neutral;
 - never draw or own the real Greia Home/Back system controls.
 
+### Shared child creations — active platform workstream (not yet public SDK)
+
+The platform-owned PNG/WAV/UTF-8 `CreationLibrary` is an **incomplete trusted service foundation**, not currently an Activity API. Until the reviewed session-authorized broker/picker exists, Activities must continue using their own profile-scoped Greia private storage; **never** read another Activity namespace or mount a global shared directory. An Activity manifest's future `[creations]` metadata does not currently confer permissions.
+
+When the new broker/SDK/visual selector is implemented, use its typed artifact handles and common platform UI; do not build separate file pickers. The cross-Activity implementation and 45-Activity release review are tracked together in `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and `PROGRESS.md`. Painting and Shape Garden round trips should preserve native private editable projects and export flattened immutable PNG snapshots for sharing. For regression, test **both** package imports and Greia's real Python script launch semantics.
+
 ### Performance is correctness
 
 The Acer-class floor is part of the design target, not a later optimization pass.
