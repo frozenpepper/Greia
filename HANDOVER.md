@@ -3043,3 +3043,44 @@ It pins source candidate `d63b9f53...`, instructs pristine ff-only `main` checko
 - P6–P8: explicit release catalogue, 45/45 quality review, full release/physical acceptance.
 
 **Next source task while execution remains deferred:** deep-review Shape Garden and nearby creative Activities, choose the cleanest product direction, and implement the first persistent picture+shape project slice without changing its child fantasy into a generic desktop editor.
+
+## 87. Creations P4 image round-trip source: Shape Garden projects + Teatrino saved backdrops — execution deferred (2026-10-07)
+
+**Authoritative workstream:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`, sibling `PROGRESS.md`, and the consolidated desktop/Simulator acceptance under `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`.
+
+**Pinned latest code/test checkpoint:** `60832f87e2ff432ccadb1189ba1cb726cb2e1394`. Documentation commits after that checkpoint only update state/instructions. **No tests were executed for this checkpoint** because the owner explicitly asked to carry this turn's tests into the next slice while the local agent is unavailable. Do not reuse earlier isolated mirror PASS results as evidence for this source.
+
+### P4 source now implemented
+
+1. **Shape Garden keeps its original product identity.** The existing tap-to-grow randomized shape play remains the interaction model. A new pure `GardenProject` serializes only bounded durable placed shapes plus an optional backdrop digest; transient particles, reaction timers and grow-in animation are intentionally excluded.
+2. **Shape Garden private persistence.** `GardenProjectRepository` stores the selected PNG as a profile-private content-addressed backdrop, verifies SHA256 before load, commits project metadata after bytes are safe, preserves the previous committed project on metadata failure, and performs bounded orphan cleanup. Shape edits autosave and save again on ordinary exit.
+3. **Shape Garden universal import/export.** Its manifest declares PNG produce+consume. The child-visible down-arrow requests only `image/png` through the existing trusted picker and polls nonblockingly; cancel/failure does not mutate the project. A selected picture becomes only the upper backdrop while soil + garden shapes remain owned by Shape Garden. The up-arrow explicitly flattens the stable project (no transient sparkles) and publishes role `composition`; unchanged in-session re-share is deduplicated.
+4. **Teatrino universal backdrop import.** Its manifest now declares PNG consumption. The stage import action uses the same trusted picker; imports are disabled while recording. MIME+digest and PNG decode are validated before stage mutation. Cycling a built-in scene explicitly returns to built-in scenery.
+5. **Saved-show backdrop independence.** Teatrino copies custom backdrops into its private storage as **content-addressed blobs referenced by saved shows**, so deleting/editing the My Creations source cannot break a recorded story. Multiple shows using one picture share one blob; last-reference deletion and over-cap show eviction reclaim it.
+6. **Truthful Theatre persistence.** Existing silent loss was tightened. When real Greia storage exists, save/delete require a readable authoritative show index. A failed new-show file/index commit rolls back unique files and raises `ShowStorageError`. The app shows a localized failure, plays no applause and emits no `story.recorded` creation event unless save actually commits. The bounded in-memory fallback remains only for genuine no-storage/dev mode.
+7. **Shared PNG hardening.** `src/greia_platform/pygame_png.py` now bounds source payload bytes, source side length/pixel count, target size and encoded output size before expensive conversion. Shape Garden/Teatrino use the shared helper. Painting still has a small equivalent local wrapper and can be migrated separately without changing behavior.
+8. **Picker first-frame polish.** `ActivityCreationPickerHost` pre-renders/flips the first trusted picker frame while the Shell is still hidden, then raises it. This avoids showing an old Home framebuffer for one frame on Legacy-X; the normal launcher flip/capture after modal activation remains the Simulator authority path.
+
+### New/expanded regression source — all UNEXECUTED
+
+- `tests/test_shape_garden_project.py`
+- `tests/test_shape_garden_creations.py`
+- `tests/test_teatrino_shared_backdrop_repository.py`
+- `tests/test_teatrino_shared_backdrop.py`
+- `tests/test_pygame_png.py`
+- expanded `tests/test_creation_picker_host.py`
+- existing Painting/broker/gallery/chrome/Simulator/Teatrino suites remain mandatory.
+
+The consolidated acceptance now adds real Simulator evidence for:
+- Painting → Shape Garden import, shape persistence across reopen, flattened publication;
+- Shape Garden composition → Painting independent editable import;
+- Painting/Shape Garden PNG → Teatrino stage;
+- saved Teatrino show retaining its custom backdrop **after the shared source PNG is deliberately deleted**;
+- all earlier modal cancel/select/Home/repeated-open, resolution, gallery/delete and security checks.
+
+No `make verify`, complete-checkout unit suite, real Pygame interaction, screenshot, microphone/audio, native installed Legacy-X, Acer/Pi or release evidence was produced. **P3 and P4 remain SOURCE-WIP.** Do not flash/rebuild/reboot hardware for this acceptance; the Acer first-boot/install/update route remains independently open.
+
+### Next source work while the local agent is unavailable
+
+Proceed to **P5 WAV + UTF-8 interoperability** using the same typed broker/picker architecture, and complete P1's **all-writer proportional capacity guard** rather than placing the 75% policy only around CreationLibrary. The 45-Activity release-quality review remains **0/45 accepted** and must not be conflated with source migration progress.
+

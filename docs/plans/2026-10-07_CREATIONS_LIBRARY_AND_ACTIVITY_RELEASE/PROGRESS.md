@@ -6,11 +6,11 @@
 
 ## A. At-a-glance checkpoint — 2026-10-07
 
-- Program: **P1/P2 source WIP**; **P3 universal gallery + authenticated request transport + trusted in-Activity modal SOURCE-WIP**; **P4 Painting PNG publish/import SOURCE-WIP with child-visible controls**. Legacy-X and Simulator modal backends are implemented in source, but no complete checkout/GUI acceptance has run. Wayland/KMSDRM, Shape Garden/Theatre, audio/text and later release phases remain open.
+- Program: **P1/P2 source WIP**; **P3 universal gallery + authenticated request transport + trusted in-Activity modal SOURCE-WIP**; **P4 image round-trip SOURCE-WIP across Painting, Shape Garden and Teatrino**. Legacy-X and Simulator modal backends are implemented in source, but no complete checkout/GUI acceptance has run. Wayland/KMSDRM, audio/text and later release phases remain open.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
 - Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
-- Exchange status: **Painting declares publish+consume PNG** and now has source-wired child controls: up-arrow deliberate publish; private-gallery down-arrow starts the universal picker nonblockingly; bounded polling returns one child-selected handle; validated PNG becomes a separate editable private painting. The trusted presenter is source-wired for installed Legacy-X and Simulator remote display. My Creations viewer still has large mixed-media cards/audio/delete. **No real Paint→picker→Paint GUI flow has been executed yet**; other consumers, backup and physical evidence remain open.
+- Exchange status: **Painting, Shape Garden and Teatrino now declare the PNG directions they actually use**. Painting deliberately publishes/imports immutable snapshots. Shape Garden preserves its tap-to-grow gameplay while saving bounded shape projects, importing one selected PNG as an independent private backdrop, autosaving durable shapes and explicitly publishing a flattened `composition` PNG. Teatrino imports one selected PNG as a stage backdrop and stores content-addressed private backdrop snapshots referenced by saved shows, with rollback on failed storage commit. The trusted presenter is source-wired for installed Legacy-X and Simulator remote display. My Creations viewer still has large mixed-media cards/audio/delete. **No real cross-app GUI flow has been executed yet**; backup, audio/text and physical evidence remain open.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
 - Historical P1 baseline: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`, local mirrored **12/12 PASS**. P2/P3/P4 subsequent source commits supersede the original 'no broker/UI' snapshot; a complete checkout acceptance remains owed.
 
@@ -22,7 +22,7 @@
 | P1 | typed creation repository, codecs, adaptive capacity | SOURCE WIP (trusted core committed; 12 local mirrored tests PASS) | full Greia checkout tests, error/race/recovery, real budget calibration |
 | P2 | permissions/manifest/broker/SDK | SOURCE WIP (publisher/importer + nonblocking request/poll/cancel and real socket tests committed) | full checkout socket/manifest/supervisor tests; presenter-enabled positive and default-fail-closed negative |
 | P3 | universal picker and My Creations viewer | SOURCE WIP (viewer + filtered picker + authenticated async transaction + Legacy-X/Simulator trusted modal backends) | full checkout tests; real Simulator remote-canvas screenshots/input/audio/cancel/Home; installed Legacy-X focus/stacking; future Wayland/KMSDRM backend |
-| P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting deliberate publish + child-visible universal PNG import → independent editable copy) | real GUI round trip/reopen/save; Shape Garden persistent project; Theatre backdrop consumer |
+| P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting independent import; Shape Garden persistent shape+backdrop project + flattened export; Teatrino persistent custom show backdrops) | full checkout tests; real GUI round trip/reopen/source-delete independence; resource/performance evidence |
 | P5 | voice/music and writing/text interoperability | NOT STARTED | real recording preview, text import/export |
 | P6 | explicit release catalogue and adaptive grouping | NOT STARTED | built-index exact match, Parent policy |
 | P7 | deep per-Activity quality review (45) | NOT STARTED | 45 evidence-backed dispositions |
@@ -39,9 +39,9 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 | Producer | Consumer | Kind | Status |
 |---|---|---|---|
 | Painting | Painting | PNG published snapshot becomes a separate editable private painting | SOURCE WIP: child-visible publish/import controls + modal transport wired; untested live |
-| Painting | Shape Garden/stamps | PNG as background/base | NOT STARTED; Shape Garden has no persistent project yet |
-| Shape Garden | Painting | flattened PNG composition | NOT STARTED |
-| Painting/Shape Garden | Teatrino Fiabe | PNG backdrop | NOT STARTED |
+| Painting | Shape Garden/stamps | PNG as background/base | SOURCE WIP: trusted PNG picker → private content-addressed backdrop + bounded durable shapes |
+| Shape Garden | Painting | flattened PNG composition | SOURCE WIP: explicit trusted publish of deterministic flattened `composition` PNG |
+| Painting/Shape Garden | Teatrino Fiabe | PNG backdrop | SOURCE WIP: trusted PNG picker + show-local content-addressed private backdrop snapshot |
 | Storie della Mia Voce | Teatrino / compatible composer | WAV voice | NOT STARTED |
 | Writing | Writing / genuinely compatible text consumers | UTF-8 | NOT STARTED |
 | Any declared writer | My Creations viewer | large visual/audio/text previews | SOURCE WIP: Shell gallery |
@@ -191,6 +191,43 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 **Deferred acceptance owner:** [`docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`](../../testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md) is being advanced to this exact source SHA. When the local agent returns, run that **single accumulated procedure**; do not discard earlier Gallery, broker, security, Painting publication, resolution or visual checks. No Acer flash/install is requested by this workstream.
 
 **Next source step while testing is deferred:** start P4's next legitimate consumer: define Shape Garden's persistent editable picture+shape project model (or formally choose a better stamp-style Activity after gameplay review), then wire the already-common picker rather than adding another chooser. Theatre backdrop persistence follows. In parallel, P5 WAV/text and P1 all-writer proportional capacity remain open; catalogue review is still 0/45 accepted.
+
+---
+
+### 2026-10-07 — P4 Shape Garden + Teatrino PNG interoperability source; execution still deferred
+
+**Pinned code/test candidate for the next accumulated desktop acceptance:** `60832f87e2ff432ccadb1189ba1cb726cb2e1394`. Documentation commits after this checkpoint only describe the candidate. **No tests were executed for this candidate**: the owner explicitly asked to carry this turn's tests into the next slice while the local agent is unavailable. Historical mirror/unit results do not validate this code.
+
+**Shape Garden implementation (SOURCE-WIP):**
+
+- Kept the existing child experience: tapping still grows randomized colored shapes in the garden; it was not turned into a desktop-style editor.
+- Added a pure bounded persistent project model: only durable shape geometry/color and optional backdrop digest are serialized; spark particles, reaction timers and grow-in animation state remain transient.
+- Added profile-private repository ownership with a content-addressed imported PNG backdrop, integrity verification, bounded orphan cleanup and one replace-in-place export staging file. Project metadata commits only after backdrop bytes are safe; failed metadata writes preserve the previous committed project.
+- Added child-visible nonblocking PNG import through the **same trusted universal picker**. One-use transfer is MIME+SHA256 checked and decoded before the current project mutates. Cancel/integrity failure preserves current work.
+- Added explicit flattened PNG publication with role `composition`; transient sparkles are excluded from the deterministic snapshot. Re-publishing an unchanged in-session snapshot is deduplicated.
+- Added bounded autosave of shape edits and exit save. Blank projects retain the original Greia garden backdrop; an imported Painting replaces only the upper visual backdrop while soil and grown shapes remain Shape Garden-owned.
+- New deferred regressions: `test_shape_garden_project.py`, `test_shape_garden_creations.py`.
+
+**Teatrino implementation (SOURCE-WIP):**
+
+- Added PNG consumption through the same nonblocking trusted picker; importing is disabled while actively recording and cancel/failure preserves the current stage.
+- A custom Painting/Shape-Garden picture becomes the stage backdrop without replacing built-in scene assets; choosing a built-in scene explicitly returns to built-in scenery.
+- Saved shows keep an **independent private backdrop snapshot**. Backdrops are content-addressed and deduplicated across the 16-show library, so many stories using one picture store one PNG rather than N copies.
+- Reference-aware cleanup removes a backdrop only after the last saved show stops referencing it; dropped-over-cap and deleted show JSON/WAV files are reclaimed.
+- Existing silent-save-loss behavior was tightened: with real Greia storage present, an unreadable catalogue refuses save/delete rather than treating it as empty; failed file/index commits roll back unique new files and raise `ShowStorageError`. The app shows a localized failure and emits no `story.recorded` event/applause unless the repository actually committed. No-storage development mode retains the bounded in-memory fallback.
+- New deferred regressions: `test_teatrino_shared_backdrop_repository.py`, `test_teatrino_shared_backdrop.py`, plus existing `test_activity_teatrino_fiabe.py`.
+
+**Shared/P3 refinements:**
+
+- Added `greia_platform.pygame_png` as the common Pygame/Pillow conversion seam; source payload bytes, source side length/pixel count, target dimensions and encoded output bytes are bounded before expensive conversion. Painting can migrate fully onto the helper in a later small refactor; Shape Garden and Teatrino already use it.
+- The trusted picker host now pre-renders and flips the first picker frame **before** raising the hidden Shell, preventing an old Home framebuffer flash on Legacy-X. The normal post-show launcher frame/capture remains authoritative for Simulator remote display.
+- Added deferred `test_pygame_png.py` and expanded picker-host regression source.
+
+**Evidence boundary:** all new Shape Garden, Teatrino, PNG-boundary and first-frame tests are **UNEXECUTED**. No complete checkout, `make verify`, real Pygame, Simulator screenshot, microphone/audio, native Legacy-X or hardware evidence was produced. P4 remains SOURCE-WIP, not accepted.
+
+**Single deferred acceptance owner:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` now carries the earlier P1–P3 checks **plus** P4 Shape Garden/Teatrino source and GUI round trips. Do not flash/rebuild/reboot the Acer for this workstream.
+
+**Next source work while execution is deferred:** proceed to P5's genuine WAV/text producers/consumers and P1 all-writer proportional-capacity enforcement, while keeping the 45-Activity release review separate and still 0/45 accepted.
 
 ---
 

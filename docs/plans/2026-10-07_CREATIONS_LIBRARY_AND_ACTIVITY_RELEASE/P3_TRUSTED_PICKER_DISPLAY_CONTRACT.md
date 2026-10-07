@@ -86,6 +86,7 @@ This is the canonical desktop test path for an in-Activity picker. It does **not
 - never opens until the broker exposes a pending request;
 - binds the active child's managed `creations_dir`, never an Activity-provided path;
 - constructs the same filtered `CreationsGalleryScreen`;
+- pre-renders/flips the first picker frame while the Shell is still hidden so Legacy-X never raises an old Home framebuffer before picker pixels exist;
 - drops events captured before modal ownership, preventing click-through;
 - redraws only on open/input/audio-progress, not continuously while idle;
 - creates a one-use handle only through the trusted Supervisor callback;
@@ -135,15 +136,23 @@ Future target display backends must implement the same `ShellWindowController` s
 
 They must not expose X11 concepts through the generic contract.
 
-## 9. Shape Garden reality check
+## 9. Shape Garden + Theatre P4 consumers
 
-Current `shape_garden` is a transient randomized shape-growing experience with no persistent editable project repository or PNG export. It is **not** already a sticker editor.
+The original `shape_garden` gameplay was a transient randomized shape-growing experience, not a sticker editor. P4 SOURCE-WIP now adds persistence **under that existing interaction** rather than replacing it:
+- only durable placed shapes and an optional backdrop digest are serialized;
+- a selected PNG is copied into profile-private content-addressed storage and decoded before project mutation;
+- blank projects keep the original Greia garden scene;
+- imported pictures replace only the upper backdrop while soil + tap-to-grow shapes remain garden-owned;
+- flattened PNG export is an explicit child action and excludes transient particles.
 
-P4 must either:
-- add a legitimate bounded/versioned editable picture+shape project there, preserving an imported picture as an independent private snapshot and exporting flattened PNG only on an explicit gesture; or
-- identify a genuinely better existing Activity after source/gameplay review.
+Teatrino is the second PNG consumer:
+- the same trusted picker supplies one selected PNG;
+- built-in scenes remain intact and are the fallback;
+- each saved show references a private content-addressed backdrop snapshot;
+- multiple shows using the same picture share one private blob;
+- failed storage/index commits raise instead of falsely reporting a saved story.
 
-Do not distort the current garden merely to manufacture a round-trip demo.
+Both paths are SOURCE-WIP and must be exercised through the same trusted modal lifecycle; neither introduces an Activity-local file browser.
 
 ## 10. Evidence boundary
 
@@ -157,7 +166,10 @@ Source regressions now cover or are intended to cover:
 - trusted Home chrome restacking;
 - Simulator input/frame diversion;
 - host open/select/cancel/abnormal cleanup;
-- Painting request/poll/cancel/import behavior.
+- Painting request/poll/cancel/import behavior;
+- Shape Garden project integrity/autosave/import/publish state;
+- Teatrino backdrop deduplication, storage rollback and nonblocking import;
+- shared PNG source byte/dimension bounds and first-picker-frame preparation.
 
 All of those tests plus previous Gallery/PNG publication checks are carried into:
 [the consolidated P3 desktop/source acceptance](../../testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md).

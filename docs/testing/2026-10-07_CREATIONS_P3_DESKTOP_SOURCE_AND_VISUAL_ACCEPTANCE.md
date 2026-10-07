@@ -1,9 +1,9 @@
 # Creations Library P3 — Desktop Source + Real GUI Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `dae96e9b63bb537456579fa51ad1d9539cf0c204` (last code/test source commit before documentation-only updates).  
+**Pinned source candidate:** `60832f87e2ff432ccadb1189ba1cb726cb2e1394` (latest code/test checkpoint; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
-**Expected state:** P3 Gallery, authenticated request/poll/cancel transport, **trusted in-Activity modal presentation**, and Painting's deliberate PNG publish/import path exist SOURCE-WIP. Legacy-X reuses Greia's existing Shell window with exact supervised-PID revalidation before modal presentation; Simulator uses its existing remote display bridge to divert ordinary input/frames to the same real Shell picker while mandatory Home remains platform-owned. Painting's private gallery has a picture-arrow-down import control that requests only PNG, polls nonblockingly at a bounded cadence, and imports one child-selected handle as an independent editable private painting. **None of this modal/import slice has been accepted in a complete checkout or real GUI yet.** Shape Garden/Theatre, WAV/text producers, all-writer capacity and hardware evidence remain open.
+**Expected state:** P3 Gallery, authenticated request/poll/cancel transport, **trusted in-Activity modal presentation**, and P4 PNG paths across Painting, Shape Garden and Teatrino exist SOURCE-WIP. Legacy-X reuses Greia's existing Shell window with exact supervised-PID revalidation before modal presentation; Simulator uses its existing remote display bridge to divert ordinary input/frames to the same real Shell picker while mandatory Home remains platform-owned. Painting imports a selected PNG as an independent editable painting. Shape Garden imports a selected PNG as a private backdrop beneath its persistent tap-to-grow shapes and explicitly publishes a flattened composition. Teatrino imports a selected PNG as a stage backdrop and persists a private content-addressed snapshot with saved shows. **None of this latest modal/cross-app slice has been accepted in a complete checkout or real GUI yet.** WAV/text producers, all-writer capacity and hardware evidence remain open.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor dae96e9b63bb537456579fa51ad1d9539cf0c204 HEAD` (exit **0** required). Check `git diff --name-only dae96e9b63bb537456579fa51ad1d9539cf0c204 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor 60832f87e2ff432ccadb1189ba1cb726cb2e1394 HEAD` (exit **0** required). Check `git diff --name-only 60832f87e2ff432ccadb1189ba1cb726cb2e1394 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -37,6 +37,12 @@ Run each command **sequentially** and save stdout/stderr + exit status; if any f
 ```bash
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_creation_*.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_painting_creations.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_shape_garden_project.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_shape_garden_creations.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_teatrino_shared_backdrop_repository.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_teatrino_shared_backdrop.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_teatrino_fiabe.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_pygame_png.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_shell_window_legacy_x.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_system_chrome.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_trusted_chrome_supervisor.py' -v
@@ -75,11 +81,17 @@ Capture **actual screenshots from the real running Shell** at these exact checkp
 12. **Resolution checks.** Using documented Simulator viewport controls, repeat Home + gallery + **in-Activity picker** checks at **800×480** and **1366×768**. Screenshot `13-picker-800x480.png`, `14-picker-1366x768.png`. Ensure cards, back/title, select controls and protected Home never overlap or clip.
 13. **Keyboard/controller semantics.** Tab cycles media tabs; arrows move visible focus/pages; Enter opens/chooses as intended; Esc/Backspace cancels/restores; no phantom deletion/selection. Record which input modes were physically exercised. If no controller is connected, do not claim controller accepted.
 14. **Simulator display evidence boundary.** The remote web canvas is the Simulator's authoritative synthetic display for the modal path. Verify Activity frame uploads do not overwrite the picker while it is active and resume after dismissal. Do **not** reinterpret this as proof of native macOS foreground-window stacking or installed Legacy-X behavior.
-15. **Audio/text:** the common picker has WAV preview/text support, but genuine audio/text producers are not yet integrated. Do not inject media into a real child's profile or edit SQLite to fake the workflow. Pure source tests may cover those types; real preview-before-select remains pending until an approved producer/fixture exists.
+15. **Shape Garden → persistent project.** From Painting, deliberately publish a recognizable picture that contains easy-to-identify details. Launch Shape Garden and use its picture-arrow-down import action. Confirm the **same trusted universal picker** appears; select that Painting PNG. The garden must resume automatically with the selected picture as the upper backdrop while its soil/shape-growing identity remains visible. Plant at least six shapes in visibly different positions. Screenshot `15-shape-garden-imported-backdrop.png`.
+16. **Shape Garden persistence.** Leave Shape Garden normally, reopen it, and verify the imported backdrop plus durable shapes return. Transient sparkles/grow-in animation must not be serialized/replayed as project state. Add one more shape, close/reopen again, and verify it persists. Screenshot `16-shape-garden-reopened-project.png`.
+17. **Shape Garden → My Creations → Painting.** Use Shape Garden's upward share action once. Re-share without changing anything and confirm no duplicate is added in-session; add/change a shape and share again, expecting a new flattened `composition` snapshot. Open My Creations and verify the flattened image has the Painting backdrop + garden shapes, without transient particles. Screenshot `17-shape-garden-flattened-composition.png`. Import that composition into Painting through Painting's existing picker, add a visible brush mark, save privately, and verify the My Creations source snapshot itself did not change. Screenshot `18-composition-reopened-in-painting.png`.
+18. **Painting/Shape Garden → Teatrino backdrop.** Publish or reuse one recognizable PNG. Launch Teatrino and use its picture-import control. The same trusted picker must appear; choose the PNG. Verify it becomes the stage backdrop without replacing puppets, curtains, built-in scene controls or trusted Home. Screenshot `19-teatrino-custom-backdrop.png`.
+19. **Teatrino durable show snapshot.** Record a short show using the custom backdrop, stop/save, reopen the saved show from Teatrino's story library, and verify the custom image returns. Then exit to My Creations and delete the **shared source PNG** used for the backdrop (after confirming you are deleting the intended library item). Reopen Teatrino and replay the saved show again: its private backdrop snapshot must still render. Screenshot `20-teatrino-show-after-source-delete.png`. This proves snapshot independence, not raw shared-path coupling.
+20. **Teatrino failure/resource sanity.** Save two short shows using the same custom picture and confirm normal behavior/no visible duplicate-media bookkeeping. The source unit tests, not manual filesystem edits, own proof of content-addressed deduplication and rollback. Do not tamper with private storage during GUI acceptance.
+21. **Audio/text:** the common picker has WAV preview/text support, but genuine audio/text producers are not yet integrated. Do not inject media into a real child's profile or edit SQLite to fake the workflow. Pure source tests may cover those types; real preview-before-select remains pending until an approved producer/fixture exists.
 
 Record frame-rate/idle CPU/RSS observations if the Simulator exposes them; no claim about Acer performance can follow from desktop observation.
 
-### 2b. New SOURCE-WIP modal/transaction cases carried over
+### 2b. SOURCE-WIP modal / transaction / P4 persistence cases carried over
 
 The new code introduces **`tests/test_creation_selection.py`**, additional `tests/test_creation_broker.py` socket cases, enhanced `tests/test_creation_gallery.py` role filtering and `tests/test_painting_creations.py` independent PNG import tests. All are included in the `test_creation_*.py`/Painting commands at §1. In the report verify individually:
 
@@ -92,12 +104,15 @@ The new code introduces **`tests/test_creation_selection.py`**, additional `test
 - Legacy-X modal tests prove exact-object lease ownership, show-time `_NET_WM_PID` revalidation and restoration of a recreated Activity window without leaking X11 IDs into the generic lease;
 - trusted system chrome can restack on the same Activity lease above the picker;
 - Simulator tests prove exact-session modal ownership, ordinary input diversion to Shell, protected Home priority and suppression of Activity frame overwrite;
-- picker-host tests prove real trusted completion callback, cancel/restore, show/chrome failure, terminal Activity handling, and abnormal shutdown cancellation + presenter revocation.
+- picker-host tests prove real trusted completion callback, cancel/restore, show/chrome failure, terminal Activity handling, abnormal shutdown cancellation + presenter revocation, and first picker-frame preparation before Shell raise;
+- shared PNG tests reject payload/source-dimension abuse before expensive conversion;
+- Shape Garden tests prove bounded durable shape serialization, transient-state exclusion, content-addressed backdrop integrity/rollback, bounded picker polling and explicit flattened publication deduplication;
+- Teatrino tests prove PNG integrity-before-mutation, nonblocking cancel/select, content-addressed backdrop deduplication across shows, last-reference cleanup, show-cap reclamation, strict catalogue reads, failed-commit rollback and no false creation event on save failure.
 
 Do not bypass the real presenter gate, inject raw shared paths, or create a dummy Activity-local picker. The implemented backend semantics are documented in
 `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`.
 
-**Further deferred:** Painting→Shape Garden/stamp artwork→Theatre→Painting reimport, genuine WAV preview-before-select, UTF-8 producers/consumers, sibling-profile isolation in live sessions, backup/restore, disk saturation at 75% plus OS headroom, Wayland/KMSDRM modal backends, and installed Acer/Pi interaction/performance only after the independent lifecycle/first-boot route permits it. Avoid unreviewed hardware flashing now.
+**Further deferred:** genuine WAV preview-before-select, UTF-8 producers/consumers, sibling-profile isolation in live sessions, backup/restore, disk saturation at 75% plus OS headroom, Wayland/KMSDRM modal backends, and installed Acer/Pi interaction/performance only after the independent lifecycle/first-boot route permits it. Avoid unreviewed hardware flashing now.
 
 ### 3. Report and evidence
 
@@ -106,6 +121,8 @@ Provide exactly:
 - every source command, exit code, relevant summary and first failure;
 - whether the Simulator ran, screenshot filenames and what was visually inspected;
 - whether Paint→My Creations saved original PNG snapshots, deduplicated unchanged images, and the **Painting→trusted picker→new editable Painting** cancel/select/reopen paths behaved correctly;
+- whether **Painting→Shape Garden→flattened My Creations→Painting** persisted correctly and kept independent snapshots;
+- whether **Painting/Shape Garden→Teatrino** saved-show backdrop survived deletion of the shared source PNG;
 - image detail/deletion/cancel state; actual observed bug(s), with steps;
 - accepted screen sizes/input modes; limitations;
 - any audio/TTS/microphone output not tested;
@@ -117,4 +134,4 @@ Return a ZIP of the raw screenshots + logs + concise Markdown report from the `t
 
 STOP on pre-existing uncommitted source state, mismatched source SHA ancestry, source changes beyond candidate not yet reviewed, first focused or full verify failure, missing unavailable dependencies not safely bootstrappable, profile selection/data isolation ambiguity, real child data exposure, unrecoverable simulator failure, or a GUI crash. Preserve files/logs exactly for root cause; no false PASS by skipping failing gates.
 
-**Expected handoff:** this accumulated run either validates the current trusted modal + Painting round trip or stops at the first reproducible defect with raw evidence. After repairs, proceed to the next P4 consumers (persistent Shape Garden/stamp project and Theatre backdrop), not another picker implementation.
+**Expected handoff:** this accumulated run either validates the current trusted modal + Painting/Shape Garden/Teatrino PNG round trip or stops at the first reproducible defect with raw evidence. After repairs, proceed to P5 WAV/text and all-writer capacity work rather than creating another picker implementation.
