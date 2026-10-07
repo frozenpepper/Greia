@@ -251,14 +251,31 @@ class CreationLibrary:
         self,
         *,
         media_type: str | None = None,
+        media_types: tuple[str, ...] | None = None,
         limit: int = 24,
         offset: int = 0,
     ) -> tuple[CreationRecord, ...]:
         """Return metadata only; galleries fetch previews on demand by ID."""
         if type(limit) is not int or not 1 <= limit <= 64 or type(offset) is not int or offset < 0:
             raise ValueError("invalid bounded creation page")
-        params: tuple[Any, ...]
-        if media_type is not None:
+        if media_type is not None and media_types is not None:
+            raise ValueError("choose either one media type or a set")
+        if media_types is not None:
+            if (
+                not isinstance(media_types, tuple)
+                or not 1 <= len(media_types) <= 8
+                or len(set(media_types)) != len(media_types)
+            ):
+                raise ValueError("invalid media type filter")
+            for kind in media_types:
+                self._media.codec_for(kind)
+            placeholders = ",".join("?" for _ in media_types)
+            query = (
+                f"SELECT * FROM creations WHERE media_type IN ({placeholders}) "
+                "ORDER BY created_at DESC, creation_id DESC LIMIT ? OFFSET ?"
+            )
+            params: tuple[Any, ...] = (*media_types, limit, offset)
+        elif media_type is not None:
             self._media.codec_for(media_type)
             query = "SELECT * FROM creations WHERE media_type = ? ORDER BY created_at DESC, creation_id DESC LIMIT ? OFFSET ?"
             params = (media_type, limit, offset)
