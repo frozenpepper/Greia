@@ -136,6 +136,11 @@ class CreationBrokerTests(unittest.TestCase):
         )
         second.bind_creations(reader)
         with self.assertRaisesRegex(StorageClientError, "unauthorized"):
+            consumer.request_selection(media_types=("text/plain",))
+        # The test fixture alone acts as a trusted presenter. Production
+        # remains fail-closed until the real Shell/display backend is wired.
+        second.enable_creation_picker()
+        with self.assertRaisesRegex(StorageClientError, "unauthorized"):
             consumer.request_selection(media_types=("audio/wav",))
         request_id = consumer.request_selection(
             media_types=("text/plain",), roles=("story",)
@@ -166,6 +171,7 @@ class CreationBrokerTests(unittest.TestCase):
             "org.greia.theatre", {}, producing=False, consuming=True
         )
         broker.bind_creations(reader)
+        broker.enable_creation_picker()
         request_id = client.request_selection(media_types=("text/plain",))
         with self.assertRaisesRegex(StorageClientError, "unauthorized"):
             client.poll_selection("forged")
