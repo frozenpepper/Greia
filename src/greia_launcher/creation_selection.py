@@ -153,7 +153,7 @@ class CreationSelectionCoordinator:
                 return self._request
             return None
 
-    def trusted_complete(self, request_id: str, creation_id: str) -> None:
+    def trusted_complete(self, request_id: str, creation_id: str) -> str:
         """Shell-only: the child has confirmed a specific visible artifact."""
         with self._lock:
             self._require_open()
@@ -169,6 +169,7 @@ class CreationSelectionCoordinator:
                 only_roles=frozenset(req.roles) if req.roles else None,
             )
             self._result = SelectionStatus(SelectionState.READY, token)
+            return token
 
     def trusted_cancel(self, request_id: str) -> None:
         """Shell-only: back/home/timeout of the authoritative child picker."""
