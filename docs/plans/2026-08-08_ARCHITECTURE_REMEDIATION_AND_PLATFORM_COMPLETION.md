@@ -2752,3 +2752,38 @@ validation rejected the package.
 No child-runtime capability/import surface was expanded. Local re-validation
 of the new exact main is still owed before build-host health checks or image
 work resume.
+
+
+## 2026-10-07 — Owner-authorized Creations media foundation and catalogue release program (separate content workstream)
+
+The owner requested a **single comprehensive program** for a profile-owned
+PNG/WAV/UTF-8 Creations Library, large pre-reader picker and universal gallery,
+play-before-select audio, deliberate deletion, volume-relative disk headroom,
+Painting/Shape Garden/Teatrino/voice/text interoperability, explicit release
+catalogue, and full-quality review of all 45 built-ins.
+
+The authoritative **content/product sequencing** is now
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`,
+with exact progress at its sibling `PROGRESS.md`. This is **subordinate** to
+the platform architecture, profile/sandbox trust, and the active independent
+install/update/release lifecycle plan; it does not resolve any remaining blocker
+in this architecture-remediation document or authorize a new physical image.
+
+A trusted-only P1 repository base is now committed in:
+`src/greia_platform/creation_capacity.py`,
+`src/greia_platform/creation_media.py`,
+`src/greia_platform/creations.py`, and
+`tests/test_creation_library.py`.
+It is not connected to the Activity broker, not available to sandboxed
+Activities, not backed up yet, and not a release-ready feature. An isolated
+Python/Pillow/SQLite mirrored-source test suite ran 12/12 PASS locally; this
+was **not** a full Greia checkout/`make verify` or physical device test.
+
+Additionally, the Colline direct-script entrypoint import mismatch was
+source-repaired; Quattro Amici difficulty metadata now matches four actual
+levels. Targeted tests were committed but remain **unexecuted** in a full Greia
+checkout. See the new progress ledger for exact commits and risk/next steps.
+
+The original non-lifecycle architecture prerequisites and first incomplete
+blocking phase remain authoritative as before. This entry does not promote the
+new content workstream above them or change its hardware evidence boundary.
