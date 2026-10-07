@@ -313,9 +313,9 @@ class BootHealthProductCompositionTests(unittest.TestCase):
 
     def test_2_platform_observer_records_last_booted_before_launcher(self) -> None:
         """GREEN: early-boot observation owns last_booted before acceptance."""
-        # Structural: the observer unit precedes the launcher and is
-        # enabled in the image; the launcher never Requires it (a refused
-        # boot fact fails loudly without authorizing boot).
+        # Structural: the observer unit precedes the launcher when an A/B
+        # profile enables it; the launcher never Requires it (a refused boot
+        # fact fails loudly without authorizing boot).
         observer_text = _read_unit_text("greia-boot-observer.service")
         observer = _parse_service_directives(observer_text)
         self.assertIn("greia-launcher.service", observer.get("Unit.Before", []))
