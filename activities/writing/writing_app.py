@@ -8,6 +8,7 @@ renderer. Publishes READY after the first flip in the same loop.
 from __future__ import annotations
 
 import bisect
+import hashlib
 import time
 
 import pygame
@@ -50,6 +51,7 @@ class WritingApp:
         typography: GreiaTypography,
         theme,
         repository: DocumentRepository,
+        creations=None,
     ) -> None:
         self.screen = screen
         self.canvas = canvas
@@ -57,6 +59,12 @@ class WritingApp:
         self.typography = typography
         self.theme = theme
         self.repository = repository
+        self.creations = creations
+        self.shared_request: str | None = None
+        self.shared_next_poll = 0.0
+        self.shared_state = ""
+        self.shared_feedback_until = 0.0
+        self._last_shared_digest: dict[str, str] = {}
         self.font_size = self.metrics.px(42)
         self.small_font_size = self.metrics.px(27)
         self.emoji_palette = EmojiPalette()
@@ -180,6 +188,16 @@ class WritingApp:
         undo = self.metrics.activity_toolbar_button(1, side="left")
         emoji = self.metrics.activity_toolbar_button(2, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
+        shared = self.metrics.activity_toolbar_button(1, side="right")
+        if (
+            self.creations is not None
+            and shared.collidepoint(pos)
+        ):
+            if self.mode == "edit":
+                self._publish_current_document()
+            else:
+                self._request_shared_document()
+            return True
         if gallery.collidepoint(pos):
             if not self._save():
                 return True
@@ -280,6 +298,15 @@ class WritingApp:
 
     def _step_frame(self) -> None:
         self._autosave()
+        now = time.monotonic()
+        if self.shared_request is not None and now >= self.shared_next_poll:
+            self._poll_shared_document(now)
+        elif (
+            self.shared_state
+            and self.shared_state != "pending"
+            and now >= self.shared_feedback_until
+        ):
+            self.shared_state = ""
 
     def _autosave(self) -> None:
         if self.dirty and time.monotonic() - self.last_change >= AUTOSAVE_IDLE_SECONDS:
@@ -297,6 +324,129 @@ class WritingApp:
         self.records = [updated, *[item for item in self.records if item.document_id != updated.document_id]]
         self.dirty = False
         self.save_error = False
+        return True
+
+    # -- shared UTF-8 documents ------------------------------------------
+
+    def _publish_current_document(self) -> None:
+        if (
+            self.creations is None
+            or self.current is None
+            or not self.buffer.text.strip()
+        ):
+            return
+        if not self._save():
+            self.shared_state = "error"
+            self.shared_feedback_until = time.monotonic() + 2.0
+            return
+        payload = self.buffer.text.encode("utf-8")
+        digest = hashlib.sha256(payload).hexdigest()
+        if self._last_shared_digest.get(self.current.document_id) == digest:
+            self.shared_state = "saved"
+            self.shared_feedback_until = time.monotonic() + 2.0
+            return
+        try:
+            name = self.repository.private_document_name(
+                self.current.document_id
+            )
+            self.creations.publish_private_file(
+                name,
+                media_type="text/plain",
+                role="document",
+                title=self.current.preview[:100],
+            )
+        except (RuntimeError, ValueError, OSError, UnicodeError):
+            self.shared_state = "error"
+            self.shared_feedback_until = time.monotonic() + 2.0
+            return
+        self._last_shared_digest[self.current.document_id] = digest
+        self.shared_state = "saved"
+        self.shared_feedback_until = time.monotonic() + 2.0
+
+    def _request_shared_document(self) -> None:
+        if self.creations is None or self.shared_request is not None:
+            return
+        try:
+            request_id = self.creations.request_selection(
+                media_types=("text/plain",),
+                roles=("document",),
+            )
+        except (RuntimeError, ValueError, OSError):
+            self.shared_state = "error"
+            self.shared_feedback_until = time.monotonic() + 2.0
+            return
+        self.shared_request = request_id
+        self.shared_state = "pending"
+        self.shared_next_poll = time.monotonic() + 0.12
+
+    def _poll_shared_document(self, now: float) -> None:
+        request_id = self.shared_request
+        if request_id is None or self.creations is None:
+            return
+        self.shared_next_poll = now + 0.12
+        try:
+            result = self.creations.poll_selection(request_id)
+        except (RuntimeError, ValueError, OSError):
+            self.shared_request = None
+            self.shared_state = "error"
+            self.shared_feedback_until = now + 2.0
+            return
+        if result.state == "pending":
+            return
+        self.shared_request = None
+        if result.state == "cancelled":
+            self.shared_state = ""
+            return
+        token = result.selection_token
+        if (
+            result.state != "ready"
+            or not isinstance(token, str)
+            or not token
+            or not self._accept_shared_document(token)
+        ):
+            self.shared_state = "error"
+            self.shared_feedback_until = now + 2.0
+            return
+        self.shared_state = "imported"
+        self.shared_feedback_until = now + 2.0
+
+    def _accept_shared_document(self, selection_token: str) -> bool:
+        if self.creations is None:
+            return False
+        try:
+            transfer = self.creations.import_selected(selection_token)
+            payload = transfer.payload
+            if (
+                transfer.record.get("media_type") != "text/plain"
+                or transfer.record.get("role") != "document"
+                or not isinstance(payload, bytes)
+                or transfer.record.get("sha256")
+                != hashlib.sha256(payload).hexdigest()
+            ):
+                raise ValueError("selected document failed integrity validation")
+            text = payload.decode("utf-8", errors="strict")
+            record = self.repository.create_text(text)
+            loaded = self.repository.load_text(record.document_id)
+        except (RuntimeError, ValueError, OSError, UnicodeError):
+            return False
+        self.current = record
+        self.records = [
+            record,
+            *[
+                item
+                for item in self.records
+                if item.document_id != record.document_id
+            ],
+        ]
+        self.buffer = TextBuffer(loaded, len(loaded))
+        self.undo_history.clear()
+        self.mode = "edit"
+        self.emoji_picker_open = False
+        self.dirty = False
+        self.save_error = False
+        self.scroll_line = 0
+        self.renderer.invalidate_layout()
+        self._keep_cursor_visible()
         return True
 
     # -- layout / cursor helpers (delegate layout to renderer) -----------
@@ -361,8 +511,13 @@ class WritingApp:
 
     def _draw(self) -> None:
         self.screen.fill(self.theme.background)
-        gallery, undo, emoji, new = self.renderer.draw_toolbar(
-            self.screen, self.undo_history, self.emoji_picker_open, self.mode
+        gallery, undo, emoji, new, shared = self.renderer.draw_toolbar(
+            self.screen,
+            self.undo_history,
+            self.emoji_picker_open,
+            self.mode,
+            shared_available=self.creations is not None,
+            shared_state=self.shared_state,
         )
         # Status dot.
         status = (210, 76, 76) if self.save_error else ((246, 178, 55) if self.dirty else (87, 174, 104))
