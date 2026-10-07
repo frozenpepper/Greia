@@ -121,7 +121,7 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 
 ### 2026-10-07 — P3 visual-gallery source and Painting→Creations producer (session continuation)
 
-**Pinned SOURCE candidate:** `ca9dc87d260cf27a4fa3e679364ecd61408a261d` — commits through `tests/test_creation_audio_pygame.py`. Documentation-only plan/procedure/ledger commits follow this candidate. **No Acer/installer/source-acceptance promotion implied.**
+**Pinned SOURCE candidate:** `d63b9f530e684819e80e9e5a271c13bd953cc001` — includes the final illustrated-empty-state polish, explicit empty-picker-media fail-closed fix (`89074d19`) and regression (`6595621a`). The earlier `ca9dc87d` audio-test commit remains an ancestor. Follow-on test/progress documentation commits are documentation-only. **No Acer/installer/source-acceptance promotion implied.**
 
 **Source delivered:**
 
@@ -145,7 +145,7 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 
 **Architectural finding blocking in-Activity picker activation:** `LauncherApplication._launch_selected` synchronously waits in a supervisor poll loop while the Activity owns the display. Drawing the same `CreationsGalleryScreen` in normal Shell Home does not bring a trusted picker over a running Activity. The master PLAN P3 now requires one proper Activity request → supervisor → trusted display/picker handoff → same-session child-selected token response. Do not bolt a custom raw chooser into Painting/Shape Garden or silently call the Home renderer behind an Activity.
 
-**Next exact acceptance procedure (NO hardware):** [docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md](../../testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md). On an actual complete checkout: test all focused creation suites, Painting, index, supervisor, profile and `make verify`; inspect real Simulator screenshots at 1024×600, 800×480 and 1366×768. Stop on first failure and report evidence. No Acer image flash/install.
+**Next exact acceptance procedure (NO hardware, pinned to `d63b9f53`):** [docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md](../../testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md). On an actual complete checkout: test all focused creation suites, Painting, index, supervisor, profile and `make verify`; inspect real Simulator screenshots at 1024×600, 800×480 and 1366×768. Stop on first failure and report evidence. No Acer image flash/install.
 
 **Next implementation step after source/GUI evidence:** fix real source/UX regressions, then design/implement P3 trusted Activity-picker session mediation; connect Painting shared-import and Shape Garden/Theatre in P4. Audio/text production and backup / adaptive budget for ALL writers still pending. Catalogue review 0/45 accepted.
 
