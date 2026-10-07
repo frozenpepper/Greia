@@ -12,14 +12,14 @@
 - Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
 - Cross-Activity artifact sharing: **not implemented in real Activities**. Current Painting/Writing/Voice/Theatre use Activity-private persistent file storage. Do not claim user-visible picker/viewer, broker authority, or backup integration exists.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
-- Early P1 code work: see dated entry below. A local isolated headless suite is useful but **not** installed Greia source acceptance.
+- P1 **trusted-only source foundation committed**: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`; still no broker, SDK, picker, Activity integration or full-project acceptance. Local mirrored headless test suite 12/12 PASS; actual Greia checkout acceptance still owed.
 
 ## B. Phase delivery status
 
 | Phase | Scope | Current state | Release evidence still owed |
 |---|---|---|---|
 | P0 | repository/source baseline + triage | STARTED | consolidated current-head actual gameplay audit |
-| P1 | typed creation repository, codecs, adaptive capacity | SOURCE WIP | GitHub-integrated tests, error/race/recovery, real budget calibration |
+| P1 | typed creation repository, codecs, adaptive capacity | SOURCE WIP (trusted core committed; 12 local mirrored tests PASS) | full Greia checkout tests, error/race/recovery, real budget calibration |
 | P2 | permissions/manifest/broker/SDK | NOT STARTED | session-authorized cross-Activity flow, adversarial isolation |
 | P3 | universal picker and My Creations viewer | NOT STARTED | screenshots, huge thumbnails, playable WAV, delete UX |
 | P4 | Painting–Shape Garden–Theatre PNG round trip | NOT STARTED | save/import/edit/export/reopen snapshots |
@@ -69,6 +69,32 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 **Important incomplete details:** no broker or manifest integration, no per-Activity permissions, no picker/viewer, no USB/backup link, no crash-orphan sweeper/SQLite migration beyond schema v1, no global guard on *other* data writers, and no actual image/audio/text producer/consumer modified. This initial tranche proves feasibility only. Hardware and GUI tests are not requested yet.
 
 **Next exact implementation step:** complete and review P1 in the canonical repo and tests, then P2 supervisor-broker identity and child-confirmed read-handle design. Do not ship `CreationLibrary` as a sandbox-mount or Activity API merely because its repository tests pass.
+
+### 2026-10-07 — P1 core committed; release-triage source repairs committed (same session)
+
+**Canonical source commits (in order):**
+
+- `c829825a` — volume-relative capacity policy.
+- `f41b4d2e` — PNG/WAV/UTF-8 codecs with previews.
+- `c27a6ce6` — profile-owned immutable creation repository.
+- `f278cbaa` — ten initial repository tests.
+- `43d41532` — safe SQLite rollback guarding.
+- `bc28fc55` — corruption/symlink regressions; local mirrored suite now **12/12 PASS**.
+
+**Additional release triage (NOT full release acceptance):**
+
+- Colline main, model and renderer now all recognize both imported-package and direct Greia script-launch import contexts; eliminated `auto_upright=false if False else False` dead expression. Commits `02b8f2e4`, `1c8a45ee`, `faabb503`, `82ff2d23`; an intermediate model fix `ee917b42` was immediately corrected in `1c8a45ee`.
+- New `tests/test_activity_colline_allegre.py` regression checks the real script import context (`runpy.run_path` without executing the frame loop). Commit `93bf54e1`.
+- Quattro Amici `difficulty_max` was reduced from five to **four** to agree with actual four `LEVEL_CONFIGS`; added manifest-vs-model range test. Commits `7c444493`, `35cb977f`.
+- These game tests were **not executed** in this isolated environment because it lacks the actual Greia repo and Pygame; neither gameplay nor target hardware is claimed verified. Run them in a full local checkout before promoting the source.
+
+**Accepted requirements persisted:** `docs/product/CHILD_CREATIONS_LIBRARY_AND_MEDIA_INTEROPERABILITY.md`; the single program/ledger pointer is in `AGENTS.md`, the documentation map, and both relevant skills.
+
+**Local evidence:** recreated source under `/mnt/data/greia_session` with Python + Pillow + SQLite; `PYTHONPATH=src python -Werror::ResourceWarning -m unittest discover -s tests -p test_creation_library.py -v` → **12/12 PASS**, `python -m compileall -q src tests` → PASS. This is **isolated source testing**, not execution against the authenticated checkout, full `make verify`, GUI screenshots, or physical Acer.
+
+**Known P1 debt before public SDK:** commit-level integration test; strict producer authorization and child-confirmed scoped read-handle via P2; safe crash-orphan recovery / SQLite schema migration; directory ownership inherited from actual active ProfileContext; validate persistent partition reserve with real build geometry; global budget enforcement on all other child-data writers; album/cursor pagination under large collections; backup/restore. All remain OPEN.
+
+**Next exact step:** execute P1 focused tests and new Colline/Quattro script/manifest regressions in a complete Greia checkout, fix any source failure there, then begin P2 trusted session broker/manifest design and implementation.
 
 ---
 
