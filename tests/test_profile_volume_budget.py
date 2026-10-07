@@ -78,6 +78,34 @@ def _history_policy() -> HistoryPolicy:
     )
 
 
+class StoragePolicyAdaptiveQuotaTests(unittest.TestCase):
+    def test_eight_gib_volume_yields_two_gib_activity_quota_at_quarter_fraction(self):
+        policy = StoragePolicy(
+            policy_schema_version=1,
+            namespace_quota_bytes=32 * _MIB,
+            max_kv_bytes=2 * _MIB,
+            max_kv_value_bytes=256 * 1024,
+            max_key_bytes=128,
+            max_file_bytes=16 * _MIB,
+            max_files=512,
+            max_path_bytes=512,
+            protected_free_bytes=64 * _MIB,
+            max_rollback_snapshots=2,
+            namespace_quota_fraction=0.25,
+        )
+        self.assertEqual(
+            policy.effective_namespace_quota_bytes(8 * _GIB),
+            2 * _GIB,
+        )
+
+    def test_legacy_policy_without_fraction_keeps_fixed_floor(self):
+        policy = _storage_policy()
+        self.assertEqual(
+            policy.effective_namespace_quota_bytes(8 * _GIB),
+            4 * _MIB,
+        )
+
+
 class VolumeBudgetTests(unittest.TestCase):
     def test_non_growing_repair_can_use_reserve_but_positive_growth_cannot(self):
         policy = VolumeCapacityPolicy(
