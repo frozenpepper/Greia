@@ -39,7 +39,7 @@ from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
     from .teatrino_assets import clear_all_caches, render_backdrop_surface
-    from .teatrino_audio import MicrophoneRecorder, SoundManager
+    from .teatrino_audio import ImportedNarrationTrack, MicrophoneRecorder, SoundManager
     from .teatrino_content import (
         BG_CONFIGS,
         DARK_TEXT,
@@ -65,7 +65,7 @@ if __package__:
     )
 else:
     from teatrino_assets import clear_all_caches, render_backdrop_surface
-    from teatrino_audio import MicrophoneRecorder, SoundManager
+    from teatrino_audio import ImportedNarrationTrack, MicrophoneRecorder, SoundManager
     from teatrino_content import (
         BG_CONFIGS,
         DARK_TEXT,
@@ -206,6 +206,11 @@ class TeatrinoApp:
         self.backdrop_import_next_poll = 0.0
         self.backdrop_import_state = ""
         self.backdrop_import_feedback_until = 0.0
+        self.narration_import_request: str | None = None
+        self.narration_import_next_poll = 0.0
+        self.narration_import_state = ""
+        self.narration_import_feedback_until = 0.0
+        self.imported_narration: ImportedNarrationTrack | None = None
 
         self.sound_mgr = SoundManager()
         self.mic_recorder = MicrophoneRecorder()
@@ -232,6 +237,9 @@ class TeatrinoApp:
         self.recorded_frames: list[dict] = []
         self.recorded_sfx: list[dict] = []
         self.last_recorded_wav: bytes | None = None
+        self.recording_narration_track: ImportedNarrationTrack | None = None
+        self.recording_narration_sound: pygame.mixer.Sound | None = None
+        self.recording_narration_channel: pygame.mixer.Channel | None = None
         self.feedback_text = ""
         self.feedback_timer = 0.0
 
@@ -265,12 +273,19 @@ class TeatrinoApp:
     def _step_frame(self, dt: float) -> None:
         now = time.monotonic()
         self._poll_shared_backdrop(now)
+        self._poll_shared_narration(now)
         if (
             self.backdrop_import_state
             and self.backdrop_import_state != "pending"
             and now >= self.backdrop_import_feedback_until
         ):
             self.backdrop_import_state = ""
+        if (
+            self.narration_import_state
+            and self.narration_import_state != "pending"
+            and now >= self.narration_import_feedback_until
+        ):
+            self.narration_import_state = ""
         if self.feedback_timer > 0.0:
             self.feedback_timer -= dt
             if self.feedback_timer <= 0.0:
@@ -286,14 +301,14 @@ class TeatrinoApp:
 
         if self.is_recording:
             elapsed = time.time() - self.rec_start_time
-            if elapsed >= MAX_RECORDING_SECONDS:
-                self.is_recording = False
-                wav_bytes = self.mic_recorder.stop_recording()
-                self.last_recorded_wav = wav_bytes
-                self._persist_recorded_show(
-                    active_bg_id,
-                    elapsed,
-                    wav_bytes,
+            limit = (
+                self.recording_narration_track.duration_seconds
+                if self.recording_narration_track is not None
+                else MAX_RECORDING_SECONDS
+            )
+            if elapsed >= limit:
+                self._finish_recording(
+                    min(elapsed, limit),
                     feedback_seconds=4.0,
                 )
             else:
@@ -317,6 +332,12 @@ class TeatrinoApp:
             play_elapsed = time.time() - self.play_start_time
             if play_elapsed >= self.playback_duration:
                 self.is_playing_show = False
+                if self.playback_audio_channel is not None:
+                    try:
+                        self.playback_audio_channel.stop()
+                    except Exception:
+                        pass
+                    self.playback_audio_channel = None
                 self.feedback_text = "👏 Evviva lo Spettacolo!"
                 self.feedback_timer = 3.0
                 self.sound_mgr.play("applause")
@@ -353,6 +374,235 @@ class TeatrinoApp:
                     if sfx["t"] <= play_elapsed:
                         self.sound_mgr.play(sfx["sound"])
                         self.playback_sfx.remove(sfx)
+
+    # -- recording source / narration --------------------------------------
+
+    def _start_recording(self) -> bool:
+        if self.is_recording:
+            return False
+        self.recorded_frames = []
+        self.recorded_sfx = []
+        self.rec_start_time = time.time()
+        self.recording_narration_track = self.imported_narration
+        self.recording_narration_sound = None
+        self.recording_narration_channel = None
+
+        if self.recording_narration_track is not None:
+            played = self.recording_narration_track.play()
+            if played is None:
+                self.recording_narration_track = None
+                self.feedback_text = (
+                    "⚠️ "
+                    + self.ui_strings.get(
+                        "narration_play_failed",
+                        "Could not play this narration.",
+                    )
+                )
+                self.feedback_timer = 2.5
+                self.sound_mgr.play("boing")
+                return False
+            (
+                self.recording_narration_sound,
+                self.recording_narration_channel,
+            ) = played
+        else:
+            self.mic_recorder.start_recording()
+
+        self.is_recording = True
+        self.feedback_text = (
+            "🔴 "
+            + self.ui_strings.get(
+                "recording_active",
+                "Recording in progress... Tell your story!",
+            )
+        )
+        self.feedback_timer = 3.0
+        if self.recording_narration_track is None:
+            self.sound_mgr.play("trumpet")
+        return True
+
+    def _stop_recording_narration(self) -> None:
+        if self.recording_narration_channel is not None:
+            try:
+                self.recording_narration_channel.stop()
+            except Exception:
+                pass
+        self.recording_narration_channel = None
+        self.recording_narration_sound = None
+
+    def _finish_recording(
+        self,
+        elapsed: float,
+        *,
+        feedback_seconds: float,
+    ) -> dict | None:
+        if not self.is_recording:
+            return None
+        self.is_recording = False
+        elapsed = max(0.05, float(elapsed))
+        track = self.recording_narration_track
+        self.recording_narration_track = None
+
+        if track is not None:
+            self._stop_recording_narration()
+            try:
+                wav_bytes = track.trimmed(elapsed)
+            except ValueError:
+                self.feedback_text = (
+                    "⚠️ "
+                    + self.ui_strings.get(
+                        "narration_play_failed",
+                        "Could not use this narration.",
+                    )
+                )
+                self.feedback_timer = feedback_seconds
+                self.sound_mgr.play("boing")
+                return None
+        else:
+            wav_bytes = self.mic_recorder.stop_recording()
+
+        self.last_recorded_wav = wav_bytes
+        active_bg_id = BG_CONFIGS[self.active_bg_idx][0]
+        return self._persist_recorded_show(
+            active_bg_id,
+            elapsed,
+            wav_bytes,
+            feedback_seconds=feedback_seconds,
+        )
+
+    def _request_shared_narration(self) -> None:
+        if (
+            self.creations is None
+            or self.app_mode != "stage"
+            or self.is_recording
+            or self.narration_import_request is not None
+            or self.backdrop_import_request is not None
+        ):
+            return
+        try:
+            request_id = self.creations.request_selection(
+                media_types=("audio/wav",),
+                roles=("narration",),
+            )
+        except (RuntimeError, ValueError, OSError):
+            self.narration_import_state = "error"
+            self.narration_import_feedback_until = time.monotonic() + 2.0
+            return
+        self.narration_import_request = request_id
+        self.narration_import_state = "pending"
+        self.narration_import_next_poll = time.monotonic() + 0.12
+
+    def _poll_shared_narration(self, now: float) -> None:
+        request_id = self.narration_import_request
+        if (
+            request_id is None
+            or self.creations is None
+            or now < self.narration_import_next_poll
+        ):
+            return
+        self.narration_import_next_poll = now + 0.12
+        try:
+            result = self.creations.poll_selection(request_id)
+        except (RuntimeError, ValueError, OSError):
+            self.narration_import_request = None
+            self.narration_import_state = "error"
+            self.narration_import_feedback_until = now + 2.0
+            return
+        if result.state == "pending":
+            return
+        self.narration_import_request = None
+        if result.state == "cancelled":
+            self.narration_import_state = ""
+            return
+        token = result.selection_token
+        if (
+            result.state != "ready"
+            or not isinstance(token, str)
+            or not token
+            or not self._accept_shared_narration(token)
+        ):
+            self.narration_import_state = "error"
+            self.narration_import_feedback_until = now + 2.0
+            return
+        self.narration_import_state = "imported"
+        self.narration_import_feedback_until = now + 2.0
+        self.feedback_text = (
+            "🎧 "
+            + self.ui_strings.get(
+                "narration_imported",
+                "Narration ready!",
+            )
+        )
+        self.feedback_timer = 2.0
+
+    def _accept_shared_narration(self, selection_token: str) -> bool:
+        if self.creations is None:
+            return False
+        try:
+            transfer = self.creations.import_selected(selection_token)
+            payload = transfer.payload
+            if (
+                transfer.record.get("media_type") != "audio/wav"
+                or transfer.record.get("role") != "narration"
+                or not isinstance(payload, bytes)
+                or transfer.record.get("sha256")
+                != hashlib.sha256(payload).hexdigest()
+            ):
+                raise ValueError("selected narration failed integrity validation")
+            track = ImportedNarrationTrack.from_wav(
+                payload,
+                max_duration_seconds=MAX_RECORDING_SECONDS,
+            )
+        except (RuntimeError, ValueError, OSError):
+            return False
+        self.imported_narration = track
+        return True
+
+    def _draw_narration_import_button(self, surf: pygame.Surface) -> None:
+        if self.creations is None or self.app_mode != "stage":
+            return
+        rect = pygame.Rect(352, 16, 52, 52)
+        pending = self.narration_import_state == "pending"
+        active = self.imported_narration is not None
+        fill = (
+            (171, 219, 245)
+            if pending
+            else (198, 235, 211)
+            if active
+            else (236, 244, 252)
+        )
+        border = (
+            (205, 55, 61)
+            if self.narration_import_state == "error"
+            else (39, 112, 168)
+        )
+        pygame.draw.rect(surf, fill, rect, border_radius=13)
+        pygame.draw.rect(surf, border, rect, width=3, border_radius=13)
+        cx, cy = rect.center
+        # Music note + downward arrow: pre-reader "bring saved voice here".
+        pygame.draw.circle(surf, DARK_TEXT, (cx - 9, cy + 8), 5)
+        pygame.draw.line(
+            surf,
+            DARK_TEXT,
+            (cx - 4, cy + 7),
+            (cx - 4, cy - 12),
+            3,
+        )
+        pygame.draw.line(
+            surf,
+            DARK_TEXT,
+            (cx - 4, cy - 12),
+            (cx + 5, cy - 9),
+            3,
+        )
+        pygame.draw.line(surf, DARK_TEXT, (cx + 11, cy - 12), (cx + 11, cy + 5), 3)
+        pygame.draw.lines(
+            surf,
+            DARK_TEXT,
+            False,
+            [(cx + 5, cy), (cx + 11, cy + 6), (cx + 17, cy)],
+            3,
+        )
 
     # -- recorded-show persistence ------------------------------------------
 
@@ -421,6 +671,7 @@ class TeatrinoApp:
             or self.app_mode != "stage"
             or self.is_recording
             or self.backdrop_import_request is not None
+            or self.narration_import_request is not None
         ):
             return
         try:
@@ -653,8 +904,21 @@ class TeatrinoApp:
         # MODE: STAGE EDITOR
         if 140 <= rx <= 215 and 16 <= ry <= 68:
             self.sound_mgr.play("pop")
-            new_state = self.mic_recorder.toggle()
-            self.feedback_text = "🎙️ Microfono ATTIVO" if new_state else "🔇 Microfono DISATTIVATO"
+            if self.imported_narration is not None:
+                self.imported_narration = None
+                self.narration_import_state = ""
+                self.mic_recorder.enabled = True
+                self.feedback_text = (
+                    "🎙️ "
+                    + self.ui_strings.get("mic_source", "Microphone ready")
+                )
+            else:
+                new_state = self.mic_recorder.toggle()
+                self.feedback_text = (
+                    "🎙️ Microfono ATTIVO"
+                    if new_state
+                    else "🔇 Microfono DISATTIVATO"
+                )
             self.feedback_timer = 2.5
             return
         if 225 <= rx <= 345 and 16 <= ry <= 68:
@@ -662,26 +926,16 @@ class TeatrinoApp:
             self.library_shows = self.show_repo.list_shows()
             self.app_mode = "library"
             return
+        if 352 <= rx <= 404 and 16 <= ry <= 68:
+            self._request_shared_narration()
+            return
         if 415 <= rx <= 545 and 16 <= ry <= 68:
             if not self.is_recording:
-                self.is_recording = True
-                self.rec_start_time = time.time()
-                self.recorded_frames = []
-                self.recorded_sfx = []
-                self.mic_recorder.start_recording()
-                self.feedback_text = f"🔴 {self.ui_strings.get('recording_active', 'Registrazione in corso... Racconta la tua storia!')}"
-                self.feedback_timer = 3.0
-                self.sound_mgr.play("trumpet")
+                self._start_recording()
             else:
-                self.is_recording = False
-                elapsed = max(0.5, time.time() - self.rec_start_time)
-                wav_bytes = self.mic_recorder.stop_recording()
-                self.last_recorded_wav = wav_bytes
-                active_bg_id = BG_CONFIGS[self.active_bg_idx][0]
-                self._persist_recorded_show(
-                    active_bg_id,
+                elapsed = max(0.05, time.time() - self.rec_start_time)
+                self._finish_recording(
                     elapsed,
-                    wav_bytes,
                     feedback_seconds=3.5,
                 )
             return
@@ -814,6 +1068,7 @@ class TeatrinoApp:
             lib_label = f"🎬 {self.ui_strings.get('stories', 'Storie')} ({num_saved})"
             lib_s = self.get_text(lib_label, FontRole.TITLE, 14, DARK_TEXT)
             surf.blit(lib_s, (lib_rect.centerx - lib_s.get_width() // 2, lib_rect.centery - lib_s.get_height() // 2))
+            self._draw_narration_import_button(surf)
             rec_rect = pygame.Rect(415, 16, 130, 52)
             if self.is_recording:
                 pygame.draw.rect(surf, (255, 210, 210), rec_rect, border_radius=14)
@@ -823,11 +1078,20 @@ class TeatrinoApp:
                 surf.blit(rec_s, (rec_rect.centerx - rec_s.get_width() // 2, rec_rect.centery - rec_s.get_height() // 2))
                 meter_x = 425
                 meter_y = 72
-                vol = self.mic_recorder.current_volume
+                vol = (
+                    0.72
+                    if self.recording_narration_track is not None
+                    else self.mic_recorder.current_volume
+                )
                 for bar_idx in range(5):
                     bar_h = int(4 + math.sin(time.time() * 12 + bar_idx * 1.5) * 8 * vol + vol * 14)
                     pygame.draw.rect(surf, REC_RED, (meter_x + bar_idx * 6, meter_y + (20 - bar_h) // 2, 4, bar_h), border_radius=2)
-                t_str = f"{int(time.time() - self.rec_start_time)}s / {int(MAX_RECORDING_SECONDS)}s"
+                recording_limit = (
+                    self.recording_narration_track.duration_seconds
+                    if self.recording_narration_track is not None
+                    else MAX_RECORDING_SECONDS
+                )
+                t_str = f"{int(time.time() - self.rec_start_time)}s / {int(recording_limit)}s"
                 t_surf = self.get_text(t_str, FontRole.CONTROL, 11, REC_RED)
                 surf.blit(t_surf, (meter_x + 36, meter_y + 3))
             else:
@@ -1002,51 +1266,71 @@ class TeatrinoApp:
         pygame.display.set_caption("Teatrino delle Fiabe")
         ready_published = False
         self.running = True
-        while self.running and not activity_stop_requested():
-            dt = self.clock.tick(30) / 1000.0
-            self._step_frame(dt)
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                    break
-                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    if not _is_safe_point(self.screen, event.pos):
-                        continue
-                    logical = self.canvas.pointer(event.pos)
-                    if logical is None:
-                        continue
-                    rx, ry = int(logical[0]), int(logical[1])
-                    self._handle_mouse_down(rx, ry)
-                elif event.type == pygame.MOUSEMOTION:
-                    if self.held_puppet is not None:
+        try:
+                while self.running and not activity_stop_requested():
+                dt = self.clock.tick(30) / 1000.0
+                self._step_frame(dt)
+    
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                        break
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        if not _is_safe_point(self.screen, event.pos):
+                            continue
                         logical = self.canvas.pointer(event.pos)
-                        if logical is not None:
-                            rx, ry = int(logical[0]), int(logical[1])
-                            self.held_puppet.x = max(180, min(840, rx + self.held_offset_x))
-                            self.held_puppet.y = max(160, min(360, ry + self.held_offset_y))
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    if self.held_puppet is not None:
-                        self.held_puppet.is_held = False
-                        self.held_puppet = None
-                elif event.type == pygame.VIDEORESIZE:
-                    # Keep bounded caches valid on resize and rebuild canvas.
-                    self.screen = pygame.display.get_surface() or self.screen
-                    self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
-                    self.canvas = PygameReferenceCanvas(self.screen)
-                    clear_all_caches()
-                    # Re-cache backdrops after invalidation (still bounded).
-                    for bg_id, _, _ in BG_CONFIGS:
-                        self.cached_backdrops[bg_id] = render_backdrop_surface(bg_id)
-
-            self._draw()
-            self.canvas.present(clear=self.theme.background)
-            pygame.display.flip()
-            if not ready_published:
-                mark_activity_ready()
-                ready_published = True
-
-        pygame.quit()
+                        if logical is None:
+                            continue
+                        rx, ry = int(logical[0]), int(logical[1])
+                        self._handle_mouse_down(rx, ry)
+                    elif event.type == pygame.MOUSEMOTION:
+                        if self.held_puppet is not None:
+                            logical = self.canvas.pointer(event.pos)
+                            if logical is not None:
+                                rx, ry = int(logical[0]), int(logical[1])
+                                self.held_puppet.x = max(180, min(840, rx + self.held_offset_x))
+                                self.held_puppet.y = max(160, min(360, ry + self.held_offset_y))
+                    elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                        if self.held_puppet is not None:
+                            self.held_puppet.is_held = False
+                            self.held_puppet = None
+                    elif event.type == pygame.VIDEORESIZE:
+                        # Keep bounded caches valid on resize and rebuild canvas.
+                        self.screen = pygame.display.get_surface() or self.screen
+                        self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
+                        self.canvas = PygameReferenceCanvas(self.screen)
+                        clear_all_caches()
+                        # Re-cache backdrops after invalidation (still bounded).
+                        for bg_id, _, _ in BG_CONFIGS:
+                            self.cached_backdrops[bg_id] = render_backdrop_surface(bg_id)
+    
+                self._draw()
+                self.canvas.present(clear=self.theme.background)
+                pygame.display.flip()
+                if not ready_published:
+                    mark_activity_ready()
+                    ready_published = True
+    
+        finally:
+            if self.is_recording:
+                self.is_recording = False
+                if self.recording_narration_track is not None:
+                    self.recording_narration_track = None
+                    self._stop_recording_narration()
+                else:
+                    try:
+                        self.mic_recorder.stop_recording()
+                    except Exception:
+                        pass
+            else:
+                self._stop_recording_narration()
+            if self.playback_audio_channel is not None:
+                try:
+                    self.playback_audio_channel.stop()
+                except Exception:
+                    pass
+                self.playback_audio_channel = None
+            pygame.quit()
         return 0
 
 
