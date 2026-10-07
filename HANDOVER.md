@@ -2990,3 +2990,56 @@ It pins source candidate `d63b9f53...`, instructs pristine ff-only `main` checko
 **Entire future test carryover:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` has updated pinned source SHA and covers old and new tests, true desktop screenshot checks (1024×600, 800×480, 1366×768), Painting private/share/reopen/delete, filter/role/selection security, audio preview, cancellation and later full cross-app/hardware gates. Do **not** ask the user to run it now; their agent is unavailable. The next source implementation may proceed, and when the agent returns, revise the source SHA and run that consolidated non-destructive procedure in order; stop at first failure.
 
 **Remaining P4–P8:** runtime-backed chooser visual test, Painting consumer UI, Shape Garden saved-project and compositing, Theatre backdrop persistence, live WAV/UTF-8 producers, 75% proportional protected disk budget enforced across ALL writer services, backup/restore, curated built-in index and release review of 45 Activities, and finally real hardware only after the separate first-boot lifecycle route is accepted.
+
+
+## 86. Creations P3 trusted modal + child-visible Painting import — SOURCE-WIP, execution deferred (2026-10-07)
+
+**Authoritative workstream:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`, sibling `PROGRESS.md`, and `P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`. This tranche remains independent from the still-open Acer install/first-boot/update lifecycle.
+
+**Pinned latest code/test source candidate:** `dae96e9b63bb537456579fa51ad1d9539cf0c204`. Documentation commits after it only describe/route this candidate. **No tests were executed for this candidate** because the owner's local agent is temporarily unavailable and this assistant runtime does not have the complete authenticated Greia/Pygame checkout. Historical isolated mirror PASS results do not validate this newer modal code.
+
+### Source now implemented
+
+1. **Runtime-neutral modal lease** — `src/greia_launcher/shell_window.py` adds `ShellActivityModalLease(session_id, generation, activity_pid)` and bounded prepare/show/dismiss/abandon methods to the existing Shell-window backend contract. Native window/surface handles are backend-private; the generic lease contains no X11 IDs.
+2. **Installed Legacy-X presenter** — `shell_window_legacy_x.py` extends the existing trusted Xlib seam. Immediately before showing a picker it verifies the currently focused non-Shell X11 window advertises `_NET_WM_PID == exact supervised Activity PID`, privately records that window, raises/focuses Greia's existing Shell SDL window, and restores the exact verified Activity window on dismissal. It re-proves ownership at show time so SDL window recreation after READY cannot create a stale restoration target. Missing/ambiguous PID ownership fails closed.
+3. **Mandatory Home/Back remains above the picker** — `SystemChromeBackend/SystemChromeCoordinator.ensure_visible`, Legacy-X restack, and `TrustedChromeActivitySupervisor.ensure_system_chrome_visible` keep the current exact chrome lease alive and above the Shell modal. No second system-navigation implementation was created.
+4. **Trusted picker host** — `src/greia_launcher/creation_picker_host.py` bridges one RUNNING Activity session to the existing filtered `CreationsGalleryScreen`, using the active profile's managed `creations_dir`. It enables the broker only after a concrete modal lease exists, drops pre-modal events, redraws only for open/input/audio progress, issues a one-use grant only through the trusted Supervisor callback, restores Activity on choose/cancel, and on abnormal cleanup cancels pending request, disables presenter authority, closes audio/UI, restores when safe and abandons the lease.
+5. **Launcher lifecycle** — `LauncherApplication._launch_selected()` now services that host inside the existing supervisor loop only for manifests declaring `creations.consumes`. Modal/picker failure becomes platform failure rather than silent degradation. A `finally` teardown prevents Simulator stop or unexpected unwind from stranding a request/lease.
+6. **Canonical Simulator modal** — new `src/greia_simulator/shell_window.py`; `SimulatorSystemChromeRemoteBridge` now owns exact-session Shell modal state. While active, Activity remote event drains receive no ordinary input, Shell consumes the same queued input, Activity frame uploads cannot overwrite the modal, and protected Home remains Greia-owned. `GreiaSimulatorChildShell` composes this backend; there is no Simulator-specific picker UI or selection IPC.
+7. **Painting reference consumer is user-visible in source** — Painting's private gallery shows a picture-arrow-down action. It requests only `image/png`, never blocks, suppresses duplicate pending requests, polls the broker no faster than every **120 ms**, handles cancel/unavailable safely, imports only the child-selected one-use handle, validates MIME+digest and decodes before mutation, then writes a **new independent editable private painting**. Existing private autosave and explicit up-arrow immutable publication remain separate.
+
+### Regression source added/updated — all UNEXECUTED
+
+- `tests/test_shell_window_legacy_x.py`: exact lease, stale/foreign denial, show-time PID verification, recreated-window restore, Noop fail-closed.
+- `tests/test_system_chrome.py`: restack same visible exact lease.
+- `tests/test_trusted_chrome_supervisor.py`: RUNNING-session trusted restack.
+- `tests/test_simulator_system_chrome.py`: modal input diversion, Home priority, Activity frame suppression, session mismatch.
+- `tests/test_creation_picker_host.py`: prepare/open/draw/cancel/select callback/show failure/chrome failure/terminal Activity/abnormal teardown.
+- `tests/test_painting_creations.py`: explicit PNG request scope, duplicate request suppression, bounded pending polling, cancel, unavailable picker, one-use ready import and independent-editable-copy integrity.
+- Earlier creation broker/gallery/selection/security tests remain part of the same accumulated test set.
+
+### Single deferred acceptance procedure
+
+`docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` now pins `dae96e9b...` and accumulates **all** earlier and current tests. When the local agent is available, run it as one non-destructive desktop source + Simulator collection. It now explicitly requires:
+
+- focused creation/Painting/modal/chrome/Simulator suites + `make verify`;
+- My Creations visual/deletion/resolution checks;
+- Painting publish;
+- **Painting private gallery → trusted universal picker → cancel → Painting restore**;
+- repeat → select a published PNG → automatic Painting restore into a new editable private project;
+- source snapshot remains unchanged after editing imported copy;
+- repeated open/cancel/select without stale events/requests;
+- protected Home while picker is visible ends the Activity through existing lifecycle and does not strand the modal;
+- Simulator **remote web canvas** is the authoritative synthetic modal evidence. It is not proof of native macOS window stacking;
+- 800×480, 1024×600, 1366×768 screenshots/input;
+- no Acer flash/install/reboot in this acceptance.
+
+### Still open
+
+- P3: execute the full source/Simulator acceptance; actual installed Legacy-X focus/stacking evidence later; future Wayland/KMSDRM modal backend implementations.
+- P4: Shape Garden has no persistent project today. Add a legitimate bounded editable picture+shape project (or choose a better existing stamp-style Activity after source/gameplay review), then flattened PNG export; add Theatre independent backdrop persistence; prove end-to-end round trip.
+- P5: genuine WAV producer/preview-before-select and UTF-8 producer/consumer integration.
+- P1 capacity completion: enforce proportional 75% + reserve on **all** profile-writing owners, not just CreationLibrary.
+- P6–P8: explicit release catalogue, 45/45 quality review, full release/physical acceptance.
+
+**Next source task while execution remains deferred:** deep-review Shape Garden and nearby creative Activities, choose the cleanest product direction, and implement the first persistent picture+shape project slice without changing its child fantasy into a generic desktop editor.
