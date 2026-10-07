@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from greia_platform.activity_release import ReleaseSelectionError
+from greia_platform.activity_release import FirstPartyReleaseSelection, ReleaseSelectionError
 from tools.stage_release_activities import stage_release_activities
 
 
@@ -110,6 +110,29 @@ class StageReleaseActivitiesTests(unittest.TestCase):
             allow_draft=True,
         )
         self.assertEqual((release_id, ids), ("greia.test", ("org.greia.painting",)))
+
+    def test_repository_draft_roster_stages_exact_source_reviewed_candidates(self):
+        selection_path = PROJECT / "build" / "first-party-release-activities.toml"
+        selection = FirstPartyReleaseSelection.load(selection_path)
+        self.assertEqual(selection.status.value, "draft")
+        self.assertGreater(len(selection.activities), 0)
+
+        output = self.root / "repository-draft"
+        release_id, ids = stage_release_activities(
+            selection_path=selection_path,
+            activities_root=PROJECT / "activities",
+            runtime_path=RUNTIME,
+            output_root=output,
+            allow_draft=True,
+        )
+        expected_ids = tuple(item.activity_id for item in selection.activities)
+        expected_packages = sorted(item.package_relpath for item in selection.activities)
+        self.assertEqual(release_id, selection.release_id)
+        self.assertEqual(ids, expected_ids)
+        self.assertEqual(
+            sorted(path.name for path in output.iterdir()),
+            expected_packages,
+        )
 
     def test_selected_package_symlink_fails_without_output(self):
         selection = _selection(
