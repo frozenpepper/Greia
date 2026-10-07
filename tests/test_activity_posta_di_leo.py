@@ -135,6 +135,7 @@ class _Storage:
         self.value = value
         self.saved = None
         self.fail_save = False
+        self.files: dict[str, bytes] = {}
 
     def kv_get(self, key):
         return self.value
@@ -143,6 +144,18 @@ class _Storage:
         if self.fail_save:
             raise RuntimeError("storage write failed")
         self.saved = value
+        self.value = value
+
+    def file_write_atomic(self, name, payload):
+        self.files[name] = bytes(payload)
+
+    def file_read(self, name):
+        if name not in self.files:
+            raise RuntimeError("missing file")
+        return self.files[name]
+
+    def file_delete(self, name):
+        return self.files.pop(name, None) is not None
 
 
 class StorageTests(unittest.TestCase):
