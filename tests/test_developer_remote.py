@@ -164,6 +164,7 @@ class DeveloperRemoteTests(unittest.TestCase):
                     "greia_platform.developer_control.subprocess.run",
                     side_effect=fake_run,
                 ),
+                mock.patch.object(devctl, "read_spool_text", return_value=""),
             ):
                 control = devctl.DeveloperControl()
                 status = control.status()
