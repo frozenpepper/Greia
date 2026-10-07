@@ -241,6 +241,17 @@ class ProfileContext:
         _ensure_managed_directory(target, self.root, mode=0o770)
         return target
 
+    @property
+    def creations_dir(self) -> Path:
+        """Managed child-owned creations namespace, outside Activity sandboxes.
+
+        The child Shell creates it only for creation-aware Activity sessions.
+        The managed group must retain access for portable parent backup/export.
+        """
+        target = self.root / "creations"
+        _ensure_managed_directory(target, self.root, mode=0o2770)
+        return target
+
 
 class ProfileStore:
     """Atomic, bounded app-level child profiles over one unprivileged OS user."""
