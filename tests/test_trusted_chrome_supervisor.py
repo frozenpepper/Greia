@@ -93,6 +93,9 @@ class _ChromeBackend:
         if self.fail_show:
             raise RuntimeError("show failed")
 
+    def ensure_visible(self, session_id: str) -> None:
+        self.calls.append(("restack", session_id))
+
     def poll_action(self, session_id: str) -> SystemNavigationAction | None:
         self.calls.append(("poll", session_id))
         return self.actions.pop(0) if self.actions else None
