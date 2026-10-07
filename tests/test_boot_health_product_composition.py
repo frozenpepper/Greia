@@ -24,6 +24,7 @@ import inspect
 import json
 import os
 import socket
+import shlex
 import subprocess
 import tempfile
 import threading
@@ -383,12 +384,12 @@ class BootHealthProductCompositionTests(unittest.TestCase):
                 probe.write_text("#!/bin/sh\n", encoding="utf-8")
                 script = f"""
 set -Eeuo pipefail
-source {compose!s}
+source {shlex.quote(str(compose))}
 systemctl() {{
   printf 'SYSTEMCTL %s\\n' "$*"
 }}
 STORAGE_LAYOUT_ADAPTER={layout}
-compose_configure_systemd {root!s} target
+compose_configure_systemd {shlex.quote(str(root))} target
 """
                 result = subprocess.run(
                     ["bash", "-c", script],
