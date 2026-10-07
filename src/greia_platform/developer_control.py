@@ -127,11 +127,30 @@ class DeveloperControl:
     def __init__(self) -> None:
         self._require_root()
         self._require_developer_image()
+        # Status/logs/reboot/deployment remain useful precisely when the display
+        # session is broken. Load the display endpoint lazily only for commands
+        # that actually need X access.
+        self._ensure_state_dirs()
+
+    def _require_display_endpoint(self) -> DeveloperDisplayEndpoint:
         try:
-            self.display_endpoint = DeveloperDisplayEndpoint.load()
+            return DeveloperDisplayEndpoint.load()
         except DeveloperSessionError as exc:
             raise DeveloperControlError(str(exc)) from exc
-        self._ensure_state_dirs()
+
+    def _display_endpoint_status(self) -> dict[str, object]:
+        try:
+            endpoint = DeveloperDisplayEndpoint.load()
+        except DeveloperSessionError as exc:
+            return {
+                "available": False,
+                "error": str(exc),
+            }
+        return {
+            "available": True,
+            "user": endpoint.user,
+            "display": endpoint.display,
+        }
 
     def status(self) -> dict[str, object]:
         return {
@@ -143,10 +162,7 @@ class DeveloperControl:
                 service: _service_state(service)
                 for service in _SERVICE_MAP["all"]
             },
-            "display_endpoint": {
-                "user": self.display_endpoint.user,
-                "display": self.display_endpoint.display,
-            },
+            "display_endpoint": self._display_endpoint_status(),
             "active_profile": _read_json_optional(
                 Path("/run/greia-os/active-profile.json")
             ),
@@ -156,8 +172,9 @@ class DeveloperControl:
         }
 
     def screenshot(self) -> bytes:
+        display_endpoint = self._require_display_endpoint()
         argv = [
-            *self.display_endpoint.runuser_prefix(),
+            *display_endpoint.runuser_prefix(),
             "PYGAME_HIDE_SUPPORT_PROMPT=1",
             "PYTHONPATH=/opt/greia-os/src",
             "PYTHONNOUSERSITE=1",
@@ -166,7 +183,7 @@ class DeveloperControl:
             "-m",
             "greia_platform.developer_capture",
             "--display",
-            self.display_endpoint.display,
+            display_endpoint.display,
         ]
         completed = subprocess.run(argv, check=False, capture_output=True)
         if completed.returncode != 0:
