@@ -96,11 +96,13 @@ class ActivityCreationPickerHost:
         if self._session.state is not ActivitySessionState.RUNNING:
             return False
 
+        opened = False
         if self._screen is None:
             request = self._supervisor.pending_creation_selection(self._session)
             if request is None:
                 return False
             self._open(pygame, request)
+            opened = True
             # Never deliver input collected while the Activity still visibly
             # owned the screen to the newly raised picker.
             events = ()
@@ -109,7 +111,7 @@ class ActivityCreationPickerHost:
         if screen is None:
             return False
 
-        dirty = False
+        dirty = opened
         for event in events:
             outcome = screen.handle_event(event)
             if outcome is not UiEventResult.IGNORED:
