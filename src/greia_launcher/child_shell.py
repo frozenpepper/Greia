@@ -252,6 +252,14 @@ class GreiaChildShell(
         if result is UiEventResult.REQUEST_CLOSE:
             self._close_creations()
 
+    def _rescan_profiles(self) -> bool:
+        """Revoke a gallery if Parent removes/changes its active child profile."""
+        was_viewing = self._mode == "creations"
+        changed = super()._rescan_profiles()
+        if was_viewing and self._mode != "creations":
+            self._close_creations()
+        return changed
+
     def _logout(self, pygame: Any) -> None:
         # Profile exit must release every preview channel and old gallery view.
         self._close_creations()
