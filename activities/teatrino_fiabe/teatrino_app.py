@@ -30,7 +30,6 @@ from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.child_text import display_text
 from greia_platform.localization import (
     ActivityLocaleSupport,
-    LocalizedResources,
     resolve_activity_locale,
 )
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
@@ -143,29 +142,50 @@ class TeatrinoApp:
         except RuntimeError:
             self.creations = None
 
-        # Localization — preserve original JSON loading while also supporting
-        # platform LocalizedResources for future locale handling.
-        self._resources: LocalizedResources | None = None
+        # This Activity uses the older package JSON shape (ui/puppets/backdrops)
+        # rather than LocalizationBundle schema v1. Resolve the profile locale
+        # first, then load exactly that package bundle once; never pre-load
+        # Italian and merely remember that English was selected.
         self._active_locale = "it"
         locales_dir = Path(__file__).resolve().parent / "locales"
-        it_file = locales_dir / "it.json"
-        self.ui_strings: dict[str, str] = {}
-        self.puppet_names: dict[str, str] = {}
-        if it_file.is_file():
-            try:
-                loc_data = json.loads(it_file.read_text(encoding="utf-8"))
-                self.ui_strings = loc_data.get("ui", {})
-                self.puppet_names = loc_data.get("puppets", {})
-            except Exception:
-                pass
-        # Also build platform resources if possible (reuse, don't invent).
         try:
-            support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+            support = ActivityLocaleSupport.localized(
+                ("it", "en"), default_ui_locale="it"
+            )
             ctx = resolve_activity_locale(get_profile_locale(), support)
             if ctx is not None:
-                self._resources = LocalizedResources(Path(__file__).resolve().parent, ctx)
                 self._active_locale = ctx.selected.language
         except Exception:
+            self._active_locale = "it"
+
+        self.ui_strings: dict[str, str] = {}
+        self.puppet_names: dict[str, str] = {}
+        self.backdrop_names: dict[str, str] = {}
+        locale_file = locales_dir / f"{self._active_locale}.json"
+        if not locale_file.is_file():
+            locale_file = locales_dir / "it.json"
+            self._active_locale = "it"
+        try:
+            loc_data = json.loads(locale_file.read_text(encoding="utf-8"))
+            ui = loc_data.get("ui", {})
+            puppets = loc_data.get("puppets", {})
+            backdrops = loc_data.get("backdrops", {})
+            if isinstance(ui, dict):
+                self.ui_strings = {
+                    str(key): str(value) for key, value in ui.items()
+                    if isinstance(key, str) and isinstance(value, str)
+                }
+            if isinstance(puppets, dict):
+                self.puppet_names = {
+                    str(key): str(value) for key, value in puppets.items()
+                    if isinstance(key, str) and isinstance(value, str)
+                }
+            if isinstance(backdrops, dict):
+                self.backdrop_names = {
+                    str(key): str(value) for key, value in backdrops.items()
+                    if isinstance(key, str) and isinstance(value, str)
+                }
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
             pass
 
         # Sprites — convert_alpha once, pre-scale thumbnails to eliminate
@@ -338,7 +358,13 @@ class TeatrinoApp:
                     except Exception:
                         pass
                     self.playback_audio_channel = None
-                self.feedback_text = "👏 Evviva lo Spettacolo!"
+                self.feedback_text = (
+                    "👏 "
+                    + self.ui_strings.get(
+                        "playback_complete",
+                        "Hooray for the show!",
+                    )
+                )
                 self.feedback_timer = 3.0
                 self.sound_mgr.play("applause")
                 self._emit_saved_story_played()
@@ -935,9 +961,17 @@ class TeatrinoApp:
             else:
                 new_state = self.mic_recorder.toggle()
                 self.feedback_text = (
-                    "🎙️ Microfono ATTIVO"
+                    "🎙️ "
+                    + self.ui_strings.get(
+                        "mic_active_feedback",
+                        "Microphone on",
+                    )
                     if new_state
-                    else "🔇 Microfono DISATTIVATO"
+                    else "🔇 "
+                    + self.ui_strings.get(
+                        "mic_inactive_feedback",
+                        "Microphone off",
+                    )
                 )
             self.feedback_timer = 2.5
             return
@@ -990,7 +1024,13 @@ class TeatrinoApp:
                     p.jump()
                     p.speak()
                 self.sound_mgr.play("trumpet")
-                self.feedback_text = "▶️ Spettacolo delle Marionette!"
+                self.feedback_text = (
+                    "▶️ "
+                    + self.ui_strings.get(
+                        "free_show_playing",
+                        "Puppet show!",
+                    )
+                )
                 self.feedback_timer = 3.0
             return
         if 740 <= rx <= 805 and 16 <= ry <= 68:
@@ -1008,7 +1048,17 @@ class TeatrinoApp:
             self.custom_backdrop_surface = None
             self.backdrop_import_state = ""
             self.active_bg_idx = (self.active_bg_idx + 1) % len(BG_CONFIGS)
-            self.feedback_text = f"✨ Scena: {BG_CONFIGS[self.active_bg_idx][2]}"
+            bg_id, _, fallback_name = BG_CONFIGS[self.active_bg_idx]
+            scene_name = self.backdrop_names.get(bg_id, fallback_name)
+            scene_template = self.ui_strings.get(
+                "scene_changed",
+                "Scene: {scene}",
+            )
+            try:
+                scene_feedback = scene_template.format(scene=scene_name)
+            except (KeyError, ValueError):
+                scene_feedback = f"Scene: {scene_name}"
+            self.feedback_text = f"✨ {scene_feedback}"
             self.feedback_timer = 2.0
             return
         fx_clicked = False
@@ -1151,14 +1201,18 @@ class TeatrinoApp:
             if ratio > 0.0:
                 prog_fill = pygame.Rect(prog_bg.x + 3, prog_bg.y + 3, int((prog_bg.width - 6) * ratio), prog_bg.height - 6)
                 pygame.draw.rect(surf, STAGE_GOLD, prog_fill, border_radius=8)
-            t_title = self.playback_show_meta.get("title", "Storia") if self.playback_show_meta else "Spettacolo"
+            t_title = self.ui_strings.get(
+                "story_generic", "Story"
+            ) if self.playback_show_meta else self.ui_strings.get(
+                "show_generic", "Show"
+            )
             time_str = f"🎬 {t_title} ({min(int(self.playback_duration), int(play_elapsed))}s / {int(self.playback_duration)}s)"
             t_s = self.get_text(time_str, FontRole.CONTROL, 12, (255, 250, 240))
             surf.blit(t_s, (prog_bg.centerx - t_s.get_width() // 2, prog_bg.centery - t_s.get_height() // 2))
 
         if self.app_mode == "stage":
             self._draw_backdrop_import_button(surf)
-            sc_icon, sc_name = BG_CONFIGS[self.active_bg_idx][1], BG_CONFIGS[self.active_bg_idx][2]
+            sc_icon = BG_CONFIGS[self.active_bg_idx][1]
             sc_rect = pygame.Rect(915, 24, 70, 54)
             pygame.draw.rect(surf, (255, 250, 240), sc_rect, border_radius=14)
             pygame.draw.rect(surf, STAGE_GOLD, sc_rect, width=3, border_radius=14)
@@ -1246,7 +1300,20 @@ class TeatrinoApp:
                         micro = self.puppet_micro_thumbs.get(actor_id, self.puppet_micro_thumbs.get("lilli"))
                         if micro is not None:
                             surf.blit(micro, (c_rect.x + 70 + a_idx * 34, c_rect.centery - 19))
-                    title_s = self.get_text(show_item.get("title", f"Storia {s_idx + 1}"), FontRole.TITLE, 18, DARK_TEXT)
+                    title_template = self.ui_strings.get(
+                        "story_number",
+                        "Story {number}",
+                    )
+                    try:
+                        title_text = title_template.format(number=s_idx + 1)
+                    except (KeyError, ValueError):
+                        title_text = f"Story {s_idx + 1}"
+                    title_s = self.get_text(
+                        title_text,
+                        FontRole.TITLE,
+                        18,
+                        DARK_TEXT,
+                    )
                     surf.blit(title_s, (c_rect.x + 190, c_rect.y + 16))
                     mic_indicator = "🎙️ " if show_item.get("has_audio") else ""
                     dur_text = f"{mic_indicator}{show_item.get('duration', 0)}s"
