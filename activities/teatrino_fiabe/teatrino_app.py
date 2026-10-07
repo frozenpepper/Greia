@@ -341,6 +341,7 @@ class TeatrinoApp:
                 self.feedback_text = "👏 Evviva lo Spettacolo!"
                 self.feedback_timer = 3.0
                 self.sound_mgr.play("applause")
+                self._emit_saved_story_played()
             else:
                 if self.playback_frames:
                     prev_f = self.playback_frames[0]
@@ -374,6 +375,24 @@ class TeatrinoApp:
                     if sfx["t"] <= play_elapsed:
                         self.sound_mgr.play(sfx["sound"])
                         self.playback_sfx.remove(sfx)
+
+    def _emit_saved_story_played(self) -> None:
+        meta = self.playback_show_meta
+        if not isinstance(meta, dict):
+            return
+        show_id = meta.get("id")
+        if not isinstance(show_id, str) or not show_id:
+            return
+        try:
+            emit_activity_event(
+                "story.played",
+                idempotency_key=(
+                    f"play-{show_id}-{int(self.play_start_time * 1000)}"
+                ),
+                payload={"id": show_id},
+            )
+        except Exception:
+            pass
 
     # -- recording source / narration --------------------------------------
 
@@ -875,6 +894,7 @@ class TeatrinoApp:
                         pass
                     self.playback_audio_channel = None
                 self.is_playing_show = False
+                self.playback_show_meta = None
                 self.app_mode = "stage"
                 return
             if 265 <= rx <= 385 and 16 <= ry <= 68:
@@ -940,6 +960,7 @@ class TeatrinoApp:
                 )
             return
         if 560 <= rx <= 690 and 16 <= ry <= 68:
+            self.playback_show_meta = None
             if self.recorded_frames:
                 self.is_playing_show = True
                 self.play_start_time = time.time()
