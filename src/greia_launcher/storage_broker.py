@@ -290,6 +290,22 @@ class ActivityStorageBroker:
             access, access.session_id
         )
 
+    def enable_creation_picker(self) -> None:
+        """Trusted display owner attests a real session modal is available.
+
+        Never exposed as an Activity broker operation. Without this explicit
+        activation the child client's picker requests fail closed.
+        """
+        selection = self._server.selection
+        if self._stopped or selection is None:
+            raise StorageError("creation picker session is unavailable")
+        selection.enable_presenter()
+
+    def disable_creation_picker(self) -> None:
+        selection = self._server.selection
+        if selection is not None and not self._stopped:
+            selection.disable_presenter()
+
     def pending_creation_selection(self) -> SelectionRequest | None:
         """Trusted supervisor read; never routed over the Activity socket."""
         selection = self._server.selection
