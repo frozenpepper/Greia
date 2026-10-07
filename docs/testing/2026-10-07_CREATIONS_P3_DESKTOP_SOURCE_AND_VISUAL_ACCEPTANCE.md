@@ -1,9 +1,9 @@
 # Creations Library P3 — Desktop Source + Real GUI Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `d63b9f530e684819e80e9e5a271c13bd953cc001` (last code/test source commit before documentation-only updates).  
+**Pinned source candidate:** `4a44f0a220d6ebf6addee81c9f4bc6282ca2be89` (last code/test source commit before documentation-only updates).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
-**Expected state:** P3 Gallery + Painting publish source exists but is **not yet accepted**; in-Activity consumer picker, audio producer, cross-app import, release selection and hardware tests remain **not implemented**.
+**Expected state:** P3 Gallery, Painting explicit PNG publishing **and an internal child-selected PNG receive hook** exist SOURCE-WIP. P3 now also has a **non-blocking Activity→broker→trusted Supervisor picker request/status/grant transaction** with MIME/role filtering, one outstanding request per session, timeout/cleanup and a **fail-closed disabled-presenter gate**. The actual Shell modal handoff is **NOT wired**, so a real child cannot yet request/select/import through Painting/Shape Garden/Theatre. This test accepts the Gallery and Painting producer only; no fake claim of full cross-app exchange.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor d63b9f530e684819e80e9e5a271c13bd953cc001 HEAD` (exit **0** required). Check `git diff --name-only d63b9f530e684819e80e9e5a271c13bd953cc001 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor 4a44f0a220d6ebf6addee81c9f4bc6282ca2be89 HEAD` (exit **0** required). Check `git diff --name-only 4a44f0a220d6ebf6addee81c9f4bc6282ca2be89 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -69,6 +69,22 @@ Capture **actual screenshots from the real running Shell** at these exact checkp
 10. **Audio/text:** The gallery source includes playable WAV preview and text descriptions, but voice/text Activities do **not yet publish** into the shared library. **Do not** inject media into a production child's profile, mount shared folders or edit private SQLite files to fake this test. Audio/ordinary text gallery visual acceptance remains **PENDING** until a source-approved disposable fixture producer or a genuine integrated producer exists. Unit tests may prove pure behavior only.
 
 Record frame-rate/idle CPU/RSS observations if the Simulator exposes them; no claim about Acer performance can follow from desktop observation.
+
+### 2b. New SOURCE-WIP transaction cases carried over (do not fake an in-Activity picker)
+
+The new code introduces **`tests/test_creation_selection.py`**, additional `tests/test_creation_broker.py` socket cases, enhanced `tests/test_creation_gallery.py` role filtering and `tests/test_painting_creations.py` independent PNG import tests. All are included in the `test_creation_*.py`/Painting commands at §1. In the report verify individually:
+
+- the broker **rejects** `request_selection` until a trusted presenter is installed, and a test-only trusted activation enables a request;
+- forbidden format/semantic role/empty consumer request/duplicate request/forged request ID are rejected;
+- a real Unix socket returns a pending request, trusted selection completes it, the same Activity receives a single-use handle and imports exactly once;
+- cancellation, expired/uncollected result, backend loss, Activity STOP/broker cleanup and a second Activity/sibling session cannot claim another session's choice;
+- Gallery pre-reader cards are filtered by both MIME and role; wrong-media gallery items never appear;
+- Painting's selected-image import creates a **new private editable** project and preserves current work on integrity/decoding failure. This method is a source-only hook until actual in-Activity picker presentation is wired.
+
+There is intentionally no live Activity picker button/GUI acceptance yet. **Do not bypass** the disabled presenter gate, inject raw shared paths or make a dummy Shell picker pretend to control a live Activity. The reviewed next display-owner design is
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`.
+
+**Further deferred, not part of the present desktop source acceptance:** once the trusted live modal and consumer integrations land, extend this *same evidence collection* with Painting→Shape Garden/stamp artwork→Theatre→Painting reimport, real WAV before select, UTF-8, profile isolation, backup/restore, disk saturation at 75% plus OS headroom, and installed Acer/Pi interaction/performance tests only after independent lifecycle/first-boot acceptance. Avoid unreviewed hardware flashing now.
 
 ### 3. Report and evidence
 
