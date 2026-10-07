@@ -50,7 +50,15 @@
     "recording_save_failed": "Non sono riuscito a salvare questo spettacolo.",
     "narration_imported": "Voce pronta per lo spettacolo!",
     "narration_play_failed": "Non riesco a usare questa voce.",
-    "mic_source": "Microfono pronto"
+    "mic_source": "Microfono pronto",
+    "playback_complete": "Evviva lo spettacolo!",
+    "mic_active_feedback": "Microfono attivo",
+    "mic_inactive_feedback": "Microfono disattivato",
+    "free_show_playing": "Spettacolo delle marionette!",
+    "scene_changed": "Scena: {scene}",
+    "story_generic": "Storia",
+    "show_generic": "Spettacolo",
+    "story_number": "Storia {number}"
   },
   "audio": {
     "activity.title": {
