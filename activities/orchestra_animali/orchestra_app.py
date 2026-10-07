@@ -8,6 +8,7 @@ presentation loop, matching the platform readiness invariant.
 
 from __future__ import annotations
 
+import hashlib
 import random
 import time
 from dataclasses import dataclass, field
@@ -201,6 +202,10 @@ class OrchestraApp:
             or self.backing_request is not None
         ):
             return
+        # The trusted picker owns audio preview while visible. Never let an
+        # Orchestra backing track compete with Play/Pause/Replay in the picker.
+        self.backing_player.stop()
+        self.backing_notes_played = 0
         try:
             request_id = self.creations.request_selection(
                 media_types=("audio/wav",),
@@ -261,7 +266,7 @@ class OrchestraApp:
                 or role not in SUPPORTED_BACKING_ROLES
                 or not isinstance(payload, bytes)
                 or transfer.record.get("sha256")
-                != __import__("hashlib").sha256(payload).hexdigest()
+                != hashlib.sha256(payload).hexdigest()
             ):
                 raise ValueError("selected backing track failed integrity validation")
             track = ImportedBackingTrack.from_wav(payload)
