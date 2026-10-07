@@ -8,6 +8,7 @@ Keeps the experience simple, fast, cute, large canvas, small tools.
 
 from __future__ import annotations
 
+import hashlib
 import time
 
 import pygame
@@ -46,11 +47,16 @@ class PaintingApp:
         metrics: ChildUiMetrics,
         theme,
         repository: PaintingRepository,
+        creations=None,
     ) -> None:
         self.screen = screen
         self.metrics = metrics
         self.theme = theme
         self.repository = repository
+        self.creations = creations
+        self._last_shared: tuple[str, str] | None = None
+        self.shared_feedback = ""
+        self.shared_feedback_until = 0.0
         self.renderer = PaintingRenderer(metrics, theme, screen)
         self.clock = pygame.time.Clock()
         self.records = self.repository.list_records()
@@ -120,6 +126,8 @@ class PaintingApp:
 
     def _step_frame(self) -> None:
         self._autosave()
+        if self.shared_feedback and time.monotonic() >= self.shared_feedback_until:
+            self.shared_feedback = ""
 
     # -- input routing ----------------------------------------------------
 
@@ -227,6 +235,10 @@ class PaintingApp:
             return True
         if eraser.collidepoint(pos) and self.mode == "paint":
             self.eraser = not self.eraser
+            return True
+        shared = self.renderer.shared_export_button() if self.creations is not None else None
+        if shared is not None and shared.collidepoint(pos) and self.mode == "paint":
+            self._publish_current()
             return True
         if self.mode == "gallery":
             for rect, record in self.renderer.gallery_cards(self.records):
@@ -338,6 +350,28 @@ class PaintingApp:
         self.save_error = False
         return True
 
+    def _publish_current(self) -> None:
+        """Explicit copy into My Creations, never an automatic autosave export."""
+        if self.creations is None or self.current is None:
+            return
+        if not self._save():
+            self.shared_feedback = "error"
+            self.shared_feedback_until = time.monotonic() + 2.0
+            return
+        try:
+            private_name = self.repository.private_png_name(self.current.painting_id)
+            png = self.repository.load_png(self.current.painting_id)
+            signature = (self.current.painting_id, hashlib.sha256(png).hexdigest())
+            if signature != self._last_shared:
+                self.creations.publish_private_file(
+                    private_name, media_type="image/png", role="drawing",
+                )
+                self._last_shared = signature
+            self.shared_feedback = "saved"
+        except (RuntimeError, ValueError, OSError):
+            self.shared_feedback = "error"
+        self.shared_feedback_until = time.monotonic() + 2.0
+
     def _brush_color(self) -> tuple[int, int, int]:
         return self.canvas_background if self.eraser else COLORS[self.selected_color]
 
@@ -373,7 +407,12 @@ class PaintingApp:
 
     def _draw(self) -> None:
         self.renderer.draw_studio_background(self.screen)
-        self.renderer.draw_toolbar(self.screen, self.mode, self.history, self.eraser, self.dirty, self.save_error)
+        self.renderer.draw_toolbar(
+            self.screen, self.mode, self.history, self.eraser, self.dirty,
+            self.save_error,
+            shared_available=self.creations is not None,
+            shared_feedback=self.shared_feedback,
+        )
         if self.mode == "gallery":
             self.renderer.draw_gallery(self.screen, self.records, self.repository)
         else:
