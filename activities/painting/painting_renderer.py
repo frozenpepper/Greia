@@ -316,7 +316,7 @@ class PaintingRenderer:
 
         # Deliberate publication is independent from per-stroke autosave.
         # The center remains visually quiet on unsupported/narrow viewports.
-        shared = self.shared_export_button() if shared_available else None
+        shared = self.shared_export_button() if shared_available and mode == "paint" else None
         if shared is not None:
             self._draw_tactile_button(
                 screen, shared, icon_key="tool_share",
