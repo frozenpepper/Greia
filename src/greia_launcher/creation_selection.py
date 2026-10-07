@@ -109,8 +109,9 @@ class CreationSelectionCoordinator:
             self._result.state is SelectionState.PENDING
             and now - request.created_at >= self.REQUEST_SECONDS
         ):
-            self._settle(SelectionStatus(SelectionState.CANCELLED))
-        elif (
+            self._result = SelectionStatus(SelectionState.CANCELLED)
+            self._settled_at = request.created_at + self.REQUEST_SECONDS
+        if (
             self._settled_at is not None
             and now - self._settled_at >= self.RESULT_RETENTION_SECONDS
         ):
