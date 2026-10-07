@@ -80,6 +80,11 @@ class PaintingRepository:
         _require_id(painting_id)
         return self.storage.file_read(self._name(painting_id))
 
+    def private_png_name(self, painting_id: str) -> str:
+        """Bounded private source for the platform's trusted publish broker."""
+        _require_id(painting_id)
+        return self._name(painting_id)
+
     def save_png(self, painting_id: str, payload: bytes) -> PaintingRecord:
         _require_id(painting_id)
         self.storage.file_write_atomic(self._name(painting_id), bytes(payload))
