@@ -40,4 +40,7 @@ schema_version = 1
 
 [creations]
 # Publish deliberate saved snapshots; autosaved drafts remain private.
+# The receive hook accepts only Shell-selected immutable PNG copies. The
+# in-Activity picker presentation is still pending platform mediation.
 produces = ["image/png"]
+consumes = ["image/png"]
