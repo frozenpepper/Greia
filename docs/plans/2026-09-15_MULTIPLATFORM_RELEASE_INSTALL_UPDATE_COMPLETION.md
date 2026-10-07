@@ -2498,3 +2498,56 @@ artifact/readback verification using **baseline-aware loop accounting** (the
 known OPrdqB loop may remain, but no additional Greia loop may appear), then
 proceed to Acer USB boot, live Wi-Fi, fresh install and first-installed-boot
 acceptance. No rebuild is required.
+
+## 2026-10-07 — Physical first-installed-boot failure root-caused; product source repaired
+
+The existing verified LaCie was finally booted on the reference Acer and a fresh
+install was observed without hotpatching. The first installed boot restart-looped
+before `launcher_interactive_ready`.
+
+Read-only field evidence established the proximate failure:
+
+- `/run/greia-os` and the fixed profile data root were correct;
+- Parent created the new profile root 17 seconds **after** the B4 marker;
+- that profile root and its Parent-owned children were
+  `greiapanel:pipprofiles 2750`;
+- child history initialization failed creating `progress` with
+  `PermissionError`;
+- B4 is structurally unable to repair fresh profiles because first-boot is
+  ordered before Parent creation.
+
+Source review then exposed why the intended creation-time repair disappeared:
+the Parent unit had `RestrictSUIDSGID=yes`, while `ProfileStore` attempted
+`chmod(2770)` and swallowed `PermissionError`.
+
+The source repair establishes the invariant at the real owner:
+
+1. Parent service `UMask=0007` makes directories under the existing setgid
+   `pipprofiles` root land directly as `2770` while retaining
+   `RestrictSUIDSGID=yes`.
+2. `ProfileStore` validates exact mode + managed group and fails with
+   `ProfileError` on any repair failure.
+3. New profile directories are prepared/verified before registry publication;
+   failed new creates do not publish a broken child-visible profile.
+4. Child-owned `progress` and `storage` remain child-created.
+5. B5 is a one-time bounded compatibility migration for already-created
+   Parent-owned profile/customization/activity directories only.
+
+Two independent physical defects found in the same capture were also repaired:
+
+- `greia-boot-observer.service` is now enabled only for `*-ab-v1` layouts;
+  its required layout/release authority does not exist on single-root targets.
+- developer status/log collection no longer requires a display endpoint, and
+  canonical developer composition now writes the role-specific
+  `developer-display.json` that the installed control path expects.
+
+The one-per-cycle `pkexec` warning remains open/non-blocking; evidence proves
+it is not the loop cause.
+
+**Important evidence/routing change:** product-content files have changed since
+the USB built at `64103e48`. That USB remains valid evidence of the failure
+but may no longer be used to accept the fix. Source acceptance must run on the
+new candidate, then the build host must reboot to clear the known historical
+OPrdqB poisoned loop before any new build. A fresh canonical
+`legacy-x86-i686-dev` build+flash and another no-hotpatch first-installed-boot
+Acer acceptance are required.
