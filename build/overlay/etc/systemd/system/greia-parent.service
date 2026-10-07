@@ -12,6 +12,12 @@ Wants=network.target
 Type=simple
 User=greiapanel
 Group=greiapanel
+# Parent-created profile directories live under the setgid pipprofiles tree and
+# must be born group-writable (2770). RestrictSUIDSGID remains enabled below,
+# so the service cannot repair a missing SGID bit after creation; the explicit
+# umask makes the inherited setgid + mkdir permissions satisfy the contract
+# without weakening that sandbox.
+UMask=0007
 WorkingDirectory=/opt/greia-os
 Environment=GREIA_OS_ROOT=/opt/greia-os
 Environment=PYTHONPATH=/opt/greia-os/src
