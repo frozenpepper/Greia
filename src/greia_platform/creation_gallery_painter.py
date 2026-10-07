@@ -173,6 +173,8 @@ class CreationsPygamePainter:
             rect=self._box(layout.cards[i],pygame)
             pygame.draw.rect(screen,(20,26,56),rect.move(0,5),border_radius=25)
             pygame.draw.rect(screen,self.CREAM,rect,border_radius=25)
+            if page.focused_id == record.creation_id:
+                pygame.draw.rect(screen,self.GOLD,rect,width=5,border_radius=25)
             art=rect.inflate(-16,-16)
             art.height-=55
             pygame.draw.rect(screen,self.LIGHT,art,border_radius=18)
