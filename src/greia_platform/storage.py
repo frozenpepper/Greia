@@ -56,6 +56,13 @@ class StoragePolicy:
     max_path_bytes: int
     protected_free_bytes: int
     max_rollback_snapshots: int
+    namespace_quota_fraction: float = 0.0
+
+    def effective_namespace_quota_bytes(self, total_volume_bytes: int) -> int:
+        if total_volume_bytes < 1:
+            raise StorageError("storage volume size must be positive")
+        proportional = int(total_volume_bytes * self.namespace_quota_fraction)
+        return max(self.namespace_quota_bytes, proportional)
 
     @classmethod
     def load(cls, path: Path) -> "StoragePolicy":
@@ -76,6 +83,11 @@ class StoragePolicy:
             protected_free_bytes=_integer(raw, "protected_free_bytes", minimum=0),
             max_rollback_snapshots=_integer(
                 raw, "max_rollback_snapshots", minimum=0, maximum=16
+            ),
+            namespace_quota_fraction=_fraction(
+                raw,
+                "namespace_quota_fraction",
+                default=0.0,
             ),
         )
         if policy.max_kv_bytes > policy.namespace_quota_bytes:
@@ -333,7 +345,7 @@ class ActivityStorage:
             return StorageInfo(
                 activity_id=self.activity_id,
                 schema_version=metadata.save_schema_version,
-                quota_bytes=self.policy.namespace_quota_bytes,
+                quota_bytes=self._effective_namespace_quota_bytes(),
                 used_bytes=kv_bytes + file_bytes,
                 kv_bytes=kv_bytes,
                 file_bytes=file_bytes,
@@ -373,7 +385,7 @@ class ActivityStorage:
             if kv_bytes > self.policy.max_kv_bytes:
                 raise StorageError("KV state exceeds configured KV limit")
             file_bytes, _ = self._files_usage_unlocked()
-            if kv_bytes + file_bytes > self.policy.namespace_quota_bytes:
+            if kv_bytes + file_bytes > self._effective_namespace_quota_bytes():
                 raise StorageError("Activity storage namespace exceeds configured quota")
 
     def _read_metadata_unlocked(self) -> StorageMetadata:
@@ -468,8 +480,15 @@ class ActivityStorage:
                 old = 0
             file_bytes = file_bytes - old + replacement_bytes
         total = kv_bytes + file_bytes
-        if total > self.policy.namespace_quota_bytes:
+        if total > self._effective_namespace_quota_bytes():
             raise StorageQuotaExceeded("Activity storage namespace quota exceeded")
+
+    def _effective_namespace_quota_bytes(self) -> int:
+        try:
+            usage = self.volume_budget.usage(self.protected_root)
+        except OSError as exc:
+            raise StorageError("cannot measure storage volume capacity") from exc
+        return self.policy.effective_namespace_quota_bytes(usage.total_bytes)
 
     def _write_managed_atomic_unlocked(
         self,
@@ -754,7 +773,7 @@ class StorageMigrationTransaction:
         metadata = self.working.metadata
         if metadata.save_schema_version != self.target_schema_version:
             raise StorageError("migration working copy has wrong target schema")
-        if info.used_bytes > self.service.policy.namespace_quota_bytes:
+        if info.used_bytes > info.quota_bytes:
             raise StorageQuotaExceeded("migrated storage exceeds quota")
 
         snapshot_name = f"schema-{self.source_schema_version}-{uuid.uuid4().hex}"
@@ -930,6 +949,21 @@ def _json_integer(
     if not isinstance(value, int) or isinstance(value, bool) or value < minimum:
         raise StorageError(f"{key} must be an integer >= {minimum}")
     return value
+
+
+def _fraction(
+    container: Mapping[str, object],
+    key: str,
+    *,
+    default: float,
+) -> float:
+    value = container.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise StorageError(f"{key} must be numeric")
+    result = float(value)
+    if not math.isfinite(result) or not 0.0 <= result <= 1.0:
+        raise StorageError(f"{key} must be between 0 and 1")
+    return result
 
 
 def _integer(
