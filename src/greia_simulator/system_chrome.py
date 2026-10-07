@@ -50,6 +50,14 @@ class SimulatorSystemChromeRemoteBridge(SimulatorRemoteBridge):
             self._system_chrome_session_id = session_id
             self._system_chrome_layout = layout
 
+    def can_present_shell_modal(self, session_id: str) -> bool:
+        """Trusted simulator query for exact active Activity display ownership."""
+        with self._system_chrome_lock:
+            return (
+                self._system_chrome_session_id == session_id
+                and self._shell_modal_session_id is None
+            )
+
     def activate_shell_modal(self, session_id: str) -> None:
         """Divert ordinary remote input/frame authority from Activity to Shell."""
         with self._system_chrome_lock:
