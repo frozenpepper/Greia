@@ -23,6 +23,7 @@ import pygame
 from greia_platform.activity_api import (
     activity_stop_requested,
     get_audio_capture_device,
+    get_creations,
     get_sdl_capture_device,
     get_theme,
     mark_activity_ready,
@@ -49,7 +50,7 @@ from voice_content import (
 )
 from voice_microphone import VoiceRecorder
 from voice_renderer import VoiceRenderer
-from voice_services import SavedStory, VoiceEvents, VoiceStorage
+from voice_services import SavedStory, VoiceEvents, VoiceStorage, VoiceStorageError
 
 
 class Phase(StrEnum):
@@ -72,6 +73,7 @@ class VoiceApp:
     storage: VoiceStorage
     events: VoiceEvents
     renderer: VoiceRenderer
+    creations: object | None = None
     phase: Phase = Phase.SCENE_PICKER
     current_scene: Scene | None = None
     pending_recordings: dict[str, bytes] = field(default_factory=dict)
@@ -82,6 +84,11 @@ class VoiceApp:
     last_saved_story: SavedStory | None = None
     current_sound: pygame.mixer.Sound | None = None
     current_channel: pygame.mixer.Channel | None = None
+    library_page: int = 0
+    shared_scene_keys: set[tuple[str, str]] = field(default_factory=set)
+    share_feedback: tuple[str, str, str] | None = None
+    share_feedback_until: float = 0.0
+    save_error_until: float = 0.0
 
     def run(self) -> int:
         clock = pygame.time.Clock()
@@ -146,6 +153,7 @@ class VoiceApp:
         if self.phase == Phase.SCENE_PICKER:
             # Library pill (top left)
             if self.renderer.library_btn_rect.collidepoint(x, y):
+                self.library_page = 0
                 self.phase = Phase.LIBRARY
                 return
             # Back pill (when in sub-page)
@@ -187,6 +195,7 @@ class VoiceApp:
         elif self.phase == Phase.SAVED:
             # Library button
             if 140 <= x <= 420 and 460 <= y <= 540:
+                self.library_page = 0
                 self.phase = Phase.LIBRARY
                 self.last_saved_story = None
                 return
@@ -195,26 +204,60 @@ class VoiceApp:
                 self._start_new_story()
                 return
         elif self.phase == Phase.LIBRARY:
-            # Back pill
             if self.renderer.back_btn_rect.collidepoint(x, y):
                 self.phase = Phase.SCENE_PICKER
                 return
-            # New story button
-            if REFERENCE_WIDTH - 240 <= x <= REFERENCE_WIDTH - 40 and 510 <= y <= 580:
+
+            stories = self.storage._library.stories
+            max_page = max(0, (len(stories) - 1) // 4)
+            if (
+                self.renderer.library_prev_rect().collidepoint(x, y)
+                and self.library_page > 0
+            ):
+                self.library_page -= 1
+                return
+            if (
+                self.renderer.library_next_rect().collidepoint(x, y)
+                and self.library_page < max_page
+            ):
+                self.library_page += 1
+                return
+            if self.renderer.library_new_rect().collidepoint(x, y):
                 self._start_new_story()
                 return
-            # Per-story play/delete
-            for i, story in enumerate(self.storage._library.stories[:6]):
-                col, row = i % 2, i // 2
-                rx = 90 + col * 440
-                ry = 120 + row * 200
-                play_btn = pygame.Rect(rx + 240, ry + 70, 120, 60)
-                del_btn = pygame.Rect(rx + 60, ry + 100, 80, 50)
-                if play_btn.collidepoint(x, y):
+
+            start = self.library_page * 4
+            visible = stories[start : start + 4]
+            for local_index, story in enumerate(visible):
+                if self.creations is not None:
+                    for scene_index, scene in enumerate(SCENES):
+                        share_rect = self.renderer.library_scene_share_rect(
+                            local_index, scene_index
+                        )
+                        if (
+                            share_rect.collidepoint(x, y)
+                            and scene.scene_id in story.scene_recordings
+                        ):
+                            self._share_scene(story, scene)
+                            return
+
+                if self.renderer.library_play_rect(local_index).collidepoint(x, y):
                     self._play_story(story)
                     return
-                if del_btn.collidepoint(x, y):
-                    self.storage.delete_story(story.story_id)
+                if self.renderer.library_delete_rect(local_index).collidepoint(x, y):
+                    if self.storage.delete_story(story.story_id):
+                        self.shared_scene_keys = {
+                            key
+                            for key in self.shared_scene_keys
+                            if key[0] != story.story_id
+                        }
+                        max_page = max(
+                            0,
+                            (self.storage._library.count - 1) // 4,
+                        )
+                        self.library_page = min(
+                            self.library_page, max_page
+                        )
                     return
         elif self.phase == Phase.MIC_REQUIRED:
             if self.renderer.back_btn_rect.collidepoint(x, y):
@@ -276,6 +319,35 @@ class VoiceApp:
         if self.playback.play(wav):
             self.events.recording_replayed(first_scene.scene_id)
 
+    def _share_scene(self, story: SavedStory, scene: Scene) -> None:
+        if self.creations is None:
+            return
+        scene_id = str(scene.scene_id)
+        key = (story.story_id, scene_id)
+        if key in self.shared_scene_keys:
+            self.share_feedback = (story.story_id, scene_id, "saved")
+            self.share_feedback_until = time.monotonic() + 2.0
+            return
+        try:
+            filename = self.storage.private_scene_wav_name(
+                story, scene_id
+            )
+            story_label = self.resources.text("ui.story")
+            scene_label = self.resources.text(scene.label_key)
+            self.creations.publish_private_file(
+                filename,
+                media_type="audio/wav",
+                role="narration",
+                title=f"{story_label} — {scene_label}"[:100],
+            )
+        except (RuntimeError, ValueError, OSError):
+            self.share_feedback = (story.story_id, scene_id, "error")
+            self.share_feedback_until = time.monotonic() + 2.0
+            return
+        self.shared_scene_keys.add(key)
+        self.share_feedback = (story.story_id, scene_id, "saved")
+        self.share_feedback_until = time.monotonic() + 2.0
+
     def _back_to_picker(self) -> None:
         self._stop_playback()
         self.current_scene = None
@@ -302,12 +374,19 @@ class VoiceApp:
         self._save_story()
 
     def _save_story(self) -> None:
-        story = self.storage.save_story(
-            self.pending_recordings, self.pending_durations
-        )
-        if story is None:
-            self.phase = Phase.SCENE_PICKER
+        try:
+            story = self.storage.save_story(
+                self.pending_recordings, self.pending_durations
+            )
+        except (VoiceStorageError, ValueError, OSError):
+            self.save_error_until = time.monotonic() + 2.5
+            self.phase = Phase.REPLAY
             return
+        if story is None:
+            self.save_error_until = time.monotonic() + 2.5
+            self.phase = Phase.REPLAY
+            return
+        self.save_error_until = 0.0
         self.events.story_saved(story.story_id, len(story.scene_recordings))
         if not self.first_story_emitted:
             self.first_story_emitted = True
@@ -331,8 +410,14 @@ class VoiceApp:
     # ------------------------------------------------------------------
 
     def _update(self, dt: float) -> None:
+        now = time.monotonic()
+        if (
+            self.share_feedback is not None
+            and now >= self.share_feedback_until
+        ):
+            self.share_feedback = None
         if self.phase == Phase.RECORDING:
-            elapsed = time.monotonic() - self.recording_start
+            elapsed = now - self.recording_start
             if elapsed >= MAX_RECORDING_SECONDS:
                 self._stop_recording()
 
@@ -354,12 +439,21 @@ class VoiceApp:
         elif self.phase == Phase.REPLAY and self.current_scene is not None:
             duration = self.pending_durations.get(self.current_scene.scene_id, 0.0)
             self.renderer.draw_replay(
-                self.current_scene, duration, text_fn,
+                self.current_scene,
+                duration,
+                text_fn,
+                save_error=time.monotonic() < self.save_error_until,
             )
         elif self.phase == Phase.SAVED and self.last_saved_story is not None:
             self.renderer.draw_saved(self.last_saved_story, text_fn)
         elif self.phase == Phase.LIBRARY:
-            self.renderer.draw_library(self.storage._library, text_fn)
+            self.renderer.draw_library(
+                self.storage._library,
+                text_fn,
+                page=self.library_page,
+                share_feedback=self.share_feedback,
+                share_enabled=self.creations is not None,
+            )
         elif self.phase == Phase.MIC_REQUIRED:
             self.renderer.draw_mic_required(text_fn)
 
@@ -422,6 +516,10 @@ def build_app(
     storage = VoiceStorage.load()
     events = VoiceEvents()
     renderer = VoiceRenderer.build(screen)
+    try:
+        creations = get_creations()
+    except RuntimeError:
+        creations = None
     return VoiceApp(
         screen=screen,
         metrics=metrics,
@@ -432,4 +530,5 @@ def build_app(
         storage=storage,
         events=events,
         renderer=renderer,
+        creations=creations,
     )

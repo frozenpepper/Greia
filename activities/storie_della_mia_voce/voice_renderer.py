@@ -260,7 +260,12 @@ class VoiceRenderer:
         )
 
     def draw_replay(
-        self, scene, duration: float, text_fn, has_recording: bool = True,
+        self,
+        scene,
+        duration: float,
+        text_fn,
+        has_recording: bool = True,
+        save_error: bool = False,
     ) -> None:
         surf = self.surface
         surf.fill(BACKDROP_COLOR)
@@ -270,8 +275,10 @@ class VoiceRenderer:
         surf.blit(title, title.get_rect(center=(REFERENCE_WIDTH // 2, 100)))
         # Big status area
         status = text_fn(
-            "BELLA!" if has_recording else "RIPROVA!",
-            DARK_TEXT,
+            "ui.save_failed"
+            if save_error
+            else ("BELLA!" if has_recording else "RIPROVA!"),
+            MIC_DARK if save_error else DARK_TEXT,
         )
         surf.blit(status, status.get_rect(center=(REFERENCE_WIDTH // 2, 320)))
         dur = text_fn(f"{duration:4.1f}s", DARK_TEXT)
@@ -316,53 +323,185 @@ class VoiceRenderer:
         self._draw_tactile_button(surf, new, "UN'ALTRA STORIA", text_fn,
                                   base=((34, 197, 94), (22, 101, 52)))
 
-    def draw_library(self, library, text_fn) -> None:
+    @staticmethod
+    def library_story_rect(local_index: int) -> pygame.Rect:
+        if not 0 <= local_index < 4:
+            raise ValueError("library page holds exactly four visible stories")
+        col, row = local_index % 2, local_index // 2
+        return pygame.Rect(90 + col * 440, 120 + row * 190, 380, 170)
+
+    @classmethod
+    def library_scene_share_rect(
+        cls, local_index: int, scene_index: int
+    ) -> pygame.Rect:
+        if not 0 <= scene_index < len(SCENES):
+            raise ValueError("invalid story scene index")
+        card = cls.library_story_rect(local_index)
+        return pygame.Rect(card.x + 22 + scene_index * 52, card.y + 12, 48, 48)
+
+    @classmethod
+    def library_play_rect(cls, local_index: int) -> pygame.Rect:
+        card = cls.library_story_rect(local_index)
+        return pygame.Rect(card.x + 240, card.y + 78, 120, 60)
+
+    @classmethod
+    def library_delete_rect(cls, local_index: int) -> pygame.Rect:
+        card = cls.library_story_rect(local_index)
+        return pygame.Rect(card.x + 60, card.y + 108, 80, 46)
+
+    @staticmethod
+    def library_prev_rect() -> pygame.Rect:
+        return pygame.Rect(300, 520, 120, 58)
+
+    @staticmethod
+    def library_next_rect() -> pygame.Rect:
+        return pygame.Rect(445, 520, 120, 58)
+
+    @staticmethod
+    def library_new_rect() -> pygame.Rect:
+        return pygame.Rect(REFERENCE_WIDTH - 240, 510, 200, 70)
+
+    def draw_library(
+        self,
+        library,
+        text_fn,
+        *,
+        page: int = 0,
+        share_feedback: tuple[str, str, str] | None = None,
+        share_enabled: bool = True,
+    ) -> None:
         surf = self.surface
         surf.fill(BACKDROP_COLOR)
         title = text_fn("LE MIE STORIE", DARK_TEXT)
         surf.blit(title, title.get_rect(center=(REFERENCE_WIDTH // 2, 60)))
+        stories = library.stories
+        start_index = max(0, int(page)) * 4
+        visible = stories[start_index : start_index + 4]
         if library.count == 0:
             empty = text_fn("ANCORA NESSUNA STORIA!", (148, 163, 184))
             surf.blit(empty, empty.get_rect(center=(REFERENCE_WIDTH // 2, 280)))
         else:
-            # 2 columns × 2 rows
-            for i, story in enumerate(library.stories[:6]):
-                col, row = i % 2, i // 2
-                x = 90 + col * 440
-                y = 120 + row * 200
-                rect = pygame.Rect(x, y, 380, 170)
+            for local_index, story in enumerate(visible):
+                rect = self.library_story_rect(local_index)
                 pygame.draw.rect(surf, WHITE, rect, border_radius=18)
-                pygame.draw.rect(surf, BUTTON_BORDER, rect, width=2, border_radius=18)
-                # Four scene dots
-                for j, scene in enumerate(SCENES):
-                    cx_dot = x + 60 + j * 32
-                    pygame.draw.circle(
-                        surf,
-                        scene.primary_color if scene.scene_id in story.scene_recordings else (200, 200, 200),
-                        (cx_dot, y + 30), 12,
-                    )
-                dur_label = text_fn(
-                    f"{sum(story.scene_durations.values()):3.1f}s", DARK_TEXT
+                pygame.draw.rect(
+                    surf, BUTTON_BORDER, rect, width=2, border_radius=18
                 )
-                surf.blit(dur_label, dur_label.get_rect(center=(x + 280, y + 30)))
-                # Play button
-                play = pygame.Rect(x + 240, y + 70, 120, 60)
+
+                for scene_index, scene in enumerate(SCENES):
+                    share = self.library_scene_share_rect(
+                        local_index, scene_index
+                    )
+                    present = scene.scene_id in story.scene_recordings
+                    fill = (
+                        scene.primary_color
+                        if present
+                        else (218, 222, 228)
+                    )
+                    pygame.draw.rect(
+                        surf, fill, share, border_radius=14
+                    )
+                    feedback_state = None
+                    if (
+                        share_feedback is not None
+                        and share_feedback[0] == story.story_id
+                        and share_feedback[1] == str(scene.scene_id)
+                    ):
+                        feedback_state = share_feedback[2]
+                    border = (
+                        PLAY_DARK
+                        if feedback_state == "saved"
+                        else MIC_DARK
+                        if feedback_state == "error"
+                        else BUTTON_BORDER
+                    )
+                    pygame.draw.rect(
+                        surf,
+                        border,
+                        share,
+                        width=4 if feedback_state else 2,
+                        border_radius=14,
+                    )
+                    if present:
+                        cx, cy = share.center
+                        if share_enabled:
+                            pygame.draw.line(
+                                surf,
+                                WHITE,
+                                (cx, cy + 11),
+                                (cx, cy - 10),
+                                4,
+                            )
+                            pygame.draw.lines(
+                                surf,
+                                WHITE,
+                                False,
+                                [
+                                    (cx - 8, cy - 2),
+                                    (cx, cy - 10),
+                                    (cx + 8, cy - 2),
+                                ],
+                                4,
+                            )
+                            pygame.draw.line(
+                                surf,
+                                WHITE,
+                                (cx - 12, cy + 12),
+                                (cx + 12, cy + 12),
+                                4,
+                            )
+                        else:
+                            pygame.draw.circle(surf, WHITE, (cx, cy), 8)
+
+                dur_label = text_fn(
+                    f"{sum(story.scene_durations.values()):3.1f}s",
+                    DARK_TEXT,
+                )
+                surf.blit(
+                    dur_label,
+                    dur_label.get_rect(center=(rect.x + 300, rect.y + 34)),
+                )
                 self._draw_tactile_button(
-                    surf, play, "▶", text_fn,
+                    surf,
+                    self.library_play_rect(local_index),
+                    "▶",
+                    text_fn,
                     base=((PLAY_GREEN, PLAY_DARK)),
                 )
-                # Delete button
-                delete = pygame.Rect(x + 60, y + 100, 80, 50)
                 self._draw_tactile_button(
-                    surf, delete, "X", text_fn,
+                    surf,
+                    self.library_delete_rect(local_index),
+                    "X",
+                    text_fn,
                     base=((MIC_RED, MIC_DARK)),
                 )
-        # Back pill
+
         self._draw_back_pill(surf, text_fn)
-        # New story button
-        new = pygame.Rect(REFERENCE_WIDTH - 240, 510, 200, 70)
-        self._draw_tactile_button(surf, new, "+ NUOVA", text_fn,
-                                  base=((34, 197, 94), (22, 101, 52)))
+
+        if start_index > 0:
+            self._draw_tactile_button(
+                surf,
+                self.library_prev_rect(),
+                "←",
+                text_fn,
+                base=((56, 189, 248), (12, 74, 110)),
+            )
+        if start_index + 4 < len(stories):
+            self._draw_tactile_button(
+                surf,
+                self.library_next_rect(),
+                "→",
+                text_fn,
+                base=((56, 189, 248), (12, 74, 110)),
+            )
+
+        self._draw_tactile_button(
+            surf,
+            self.library_new_rect(),
+            "+ NUOVA",
+            text_fn,
+            base=((34, 197, 94), (22, 101, 52)),
+        )
 
     def draw_mic_required(self, text_fn) -> None:
         surf = self.surface

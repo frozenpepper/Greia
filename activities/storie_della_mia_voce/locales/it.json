@@ -25,7 +25,8 @@
     "ui.story": "STORIA",
     "ui.scenes": "SCENE",
     "ui.durations": "DURATA",
-    "activity.title": "STORIE DELLA MIA VOCE"
+    "activity.title": "STORIE DELLA MIA VOCE",
+    "ui.save_failed": "NON SONO RIUSCITO A SALVARE. RIPROVA."
   },
   "audio": {
     "activity.title": {

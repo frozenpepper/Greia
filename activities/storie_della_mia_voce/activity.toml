@@ -52,3 +52,6 @@ requested = []
 
 [storage]
 schema_version = 1
+
+[creations]
+produces = ["audio/wav"]

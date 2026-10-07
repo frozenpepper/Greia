@@ -81,138 +81,213 @@ class StoryLibrary:
         return None
 
 
+class VoiceStorageError(RuntimeError):
+    """A private voice-story mutation could not be committed."""
+
+
 @dataclass(frozen=True, slots=True)
 class VoiceStorage:
-    """Per-profile saved stories wrapper around the platform Activity storage."""
+    """Authoritative private story storage with rollback on failed commits."""
 
     _library: StoryLibrary
+    _storage: object | None = None
+    _index_readable: bool = True
 
     @classmethod
-    def load(cls) -> "VoiceStorage":
-        storage = get_storage()
+    def load(cls, storage=None) -> "VoiceStorage":
         if storage is None:
-            return cls(StoryLibrary())
+            try:
+                storage = get_storage()
+            except Exception:
+                storage = None
+        if storage is None:
+            return cls(StoryLibrary(), None)
+
         try:
             raw = storage.kv_get(STORY_INDEX_KEY, [])
         except Exception:
-            return cls(StoryLibrary())
+            return cls(StoryLibrary(), storage, False)
         if not isinstance(raw, list):
-            return cls(StoryLibrary())
+            return cls(StoryLibrary(), storage, False)
+
         library = StoryLibrary()
         for item in raw[:MAX_SAVED_STORIES]:
-            if not isinstance(item, dict):
-                continue
-            sid = item.get("story_id")
-            if not isinstance(sid, str) or not sid:
-                continue
-            recs_meta = item.get("scene_recordings", {})
-            durs_meta = item.get("scene_durations", {})
-            if not isinstance(recs_meta, dict):
-                continue
-            scene_recordings: dict[str, bytes] = {}
-            scene_durations: dict[str, float] = {}
-            for scene_id, fname in recs_meta.items():
-                if not isinstance(scene_id, str) or scene_id not in SCENE_IDS:
-                    continue
-                if not isinstance(fname, str) or not fname:
-                    continue
-                try:
-                    wav = storage.file_read(fname)
-                except Exception:
-                    wav = b""
-                if not wav:
-                    continue
-                scene_recordings[scene_id] = wav
-                d = durs_meta.get(scene_id, 0.0)
-                scene_durations[scene_id] = float(d) if isinstance(d, (int, float)) else 0.0
-            if not scene_recordings:
+            story = cls._load_story_item(storage, item)
+            if story is not None:
+                library.add(story)
+        return cls(library, storage, True)
+
+    @staticmethod
+    def _scene_name(story_id: str, scene_id: str) -> str:
+        if not story_id or scene_id not in SCENE_IDS:
+            raise ValueError("invalid voice story private filename")
+        return f"stories/{story_id}_{scene_id}.wav"
+
+    @classmethod
+    def _load_story_item(cls, storage, item: object) -> SavedStory | None:
+        if not isinstance(item, dict):
+            return None
+        story_id = item.get("story_id")
+        recordings = item.get("scene_recordings", {})
+        durations = item.get("scene_durations", {})
+        if (
+            not isinstance(story_id, str)
+            or not story_id
+            or not isinstance(recordings, dict)
+            or not isinstance(durations, dict)
+        ):
+            return None
+
+        loaded_recordings: dict[str, bytes] = {}
+        loaded_durations: dict[str, float] = {}
+        for scene_id, filename in recordings.items():
+            if (
+                not isinstance(scene_id, str)
+                or scene_id not in SCENE_IDS
+                or not isinstance(filename, str)
+                or filename != cls._scene_name(story_id, scene_id)
+            ):
                 continue
             try:
-                created_at = int(item.get("created_at", 0))
+                wav = storage.file_read(filename)
             except Exception:
-                created_at = 0
-            library.add(
-                SavedStory(
-                    story_id=sid,
-                    created_at=created_at,
-                    scene_recordings=scene_recordings,
-                    scene_durations=scene_durations,
-                )
+                continue
+            if not isinstance(wav, bytes) or not wav:
+                continue
+            loaded_recordings[scene_id] = wav
+            duration = durations.get(scene_id, 0.0)
+            loaded_durations[scene_id] = (
+                float(duration) if isinstance(duration, (int, float)) else 0.0
             )
-        return cls(library)
 
-    def save_story(self, scene_recordings: dict[str, bytes],
-                   scene_durations: dict[str, float]) -> SavedStory | None:
+        if not loaded_recordings:
+            return None
+        try:
+            created_at = int(item.get("created_at", 0))
+            return SavedStory(
+                story_id=story_id,
+                created_at=created_at,
+                scene_recordings=loaded_recordings,
+                scene_durations=loaded_durations,
+            )
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _index_payload(stories: tuple[SavedStory, ...]) -> list[dict]:
+        result: list[dict] = []
+        for story in stories:
+            result.append(
+                {
+                    "story_id": story.story_id,
+                    "created_at": story.created_at,
+                    "scene_recordings": {
+                        scene_id: VoiceStorage._scene_name(
+                            story.story_id, scene_id
+                        )
+                        for scene_id in story.scene_recordings
+                    },
+                    "scene_durations": dict(story.scene_durations),
+                }
+            )
+        return result
+
+    def save_story(
+        self,
+        scene_recordings: dict[str, bytes],
+        scene_durations: dict[str, float],
+    ) -> SavedStory | None:
         if self._library.is_full:
             return None
-        # Validate
-        if not scene_recordings:
+        if not scene_recordings or self._storage is None:
             return None
-        storage = get_storage()
-        if storage is None:
-            return None
-        story_id = uuid.uuid4().hex[:12]
-        stored_filenames: dict[str, str] = {}
+        if not self._index_readable:
+            raise VoiceStorageError("voice story index is unreadable")
+
+        normalized: dict[str, bytes] = {}
+        normalized_durations: dict[str, float] = {}
         for scene_id, wav in scene_recordings.items():
             if scene_id not in SCENE_IDS:
-                continue
-            fname = f"stories/{story_id}_{scene_id}.wav"
-            try:
-                storage.file_write_atomic(fname, wav)
-            except Exception:
-                continue
-            stored_filenames[scene_id] = fname
-        if not stored_filenames:
-            return None
-        story = SavedStory(
-            story_id=story_id,
-            created_at=int(time.time()),
-            scene_recordings={
-                sid: scene_recordings[sid] for sid in stored_filenames
-            },
-            scene_durations={
-                sid: scene_durations.get(sid, 0.0) for sid in stored_filenames
-            },
-        )
-        self._library.add(story)
-        # Persist index
-        self._persist_index()
+                raise ValueError(f"unknown scene id: {scene_id!r}")
+            if not isinstance(wav, bytes) or not wav:
+                raise ValueError("voice recording must be non-empty bytes")
+            normalized[str(scene_id)] = bytes(wav)
+            duration = scene_durations.get(scene_id, 0.0)
+            normalized_durations[str(scene_id)] = (
+                float(duration) if isinstance(duration, (int, float)) else 0.0
+            )
+
+        story_id = uuid.uuid4().hex[:12]
+        written: list[str] = []
+        try:
+            for scene_id, wav in normalized.items():
+                filename = self._scene_name(story_id, scene_id)
+                self._storage.file_write_atomic(filename, wav)
+                written.append(filename)
+
+            story = SavedStory(
+                story_id=story_id,
+                created_at=int(time.time()),
+                scene_recordings=normalized,
+                scene_durations=normalized_durations,
+            )
+            candidate = (story, *self._library.stories)
+            self._storage.kv_set(
+                STORY_INDEX_KEY,
+                self._index_payload(candidate),
+            )
+        except Exception as exc:
+            for filename in written:
+                try:
+                    self._storage.file_delete(filename)
+                except Exception:
+                    pass
+            raise VoiceStorageError("voice story could not be saved") from exc
+
+        if not self._library.add(story):
+            # Defensive: the capacity check above should make this impossible.
+            raise VoiceStorageError("voice story library rejected committed story")
         return story
 
     def delete_story(self, story_id: str) -> bool:
-        storage = get_storage()
         story = self._library.get(story_id)
         if story is None:
             return False
-        if storage is not None:
-            for scene_id, fname in story.scene_recordings.items():
-                try:
-                    storage.file_delete(fname)
-                except Exception:
-                    pass
+        if self._storage is None:
+            return self._library.delete(story_id)
+        if not self._index_readable:
+            return False
+
+        remaining = tuple(
+            item for item in self._library.stories if item.story_id != story_id
+        )
+        try:
+            self._storage.kv_set(
+                STORY_INDEX_KEY,
+                self._index_payload(remaining),
+            )
+        except Exception:
+            return False
+
         deleted = self._library.delete(story_id)
-        self._persist_index()
+        for scene_id in story.scene_recordings:
+            try:
+                self._storage.file_delete(
+                    self._scene_name(story.story_id, scene_id)
+                )
+            except Exception:
+                pass
         return deleted
 
-    def _persist_index(self) -> None:
-        storage = get_storage()
-        if storage is None:
-            return
-        try:
-            index_items: list[dict] = []
-            for s in self._library.stories:
-                index_items.append({
-                    "story_id": s.story_id,
-                    "created_at": s.created_at,
-                    "scene_recordings": {
-                        sid: f"stories/{s.story_id}_{sid}.wav"
-                        for sid in s.scene_recordings
-                    },
-                    "scene_durations": dict(s.scene_durations),
-                })
-            storage.kv_set(STORY_INDEX_KEY, index_items)
-        except Exception:
-            pass
+    def private_scene_wav_name(
+        self,
+        story: SavedStory,
+        scene_id: str,
+    ) -> str:
+        current = self._library.get(story.story_id)
+        if current is None or scene_id not in current.scene_recordings:
+            raise ValueError("voice scene is not a saved private recording")
+        return self._scene_name(story.story_id, scene_id)
 
 
 class VoiceEvents:
@@ -256,3 +331,13 @@ def _emit(event_id: str, payload: dict) -> None:
         emit_activity_event(event_id, payload=payload)
     except Exception:
         pass
+
+
+__all__ = [
+    "SavedStory",
+    "StoryLibrary",
+    "VoiceStorage",
+    "VoiceStorageError",
+    "VoiceEvents",
+    "STORY_INDEX_KEY",
+]
