@@ -1,7 +1,12 @@
 """Painting publication: retained draft and explicit shared snapshots."""
 from __future__ import annotations
 
+import hashlib
 import unittest
+from types import SimpleNamespace
+from unittest import mock
+
+from greia_platform.creation_client import CreationTransfer
 
 from activities.painting.painting_app import PaintingApp
 from activities.painting.painting_model import PaintingRecord
@@ -63,6 +68,39 @@ class PaintingCreationTests(unittest.TestCase):
         self.assertEqual(app.shared_feedback, "error")
         self.assertIsNone(app._last_shared)
         self.assertEqual(app.current.painting_id, "0123456789abcdef0123456789abcdef")
+
+    def test_import_selected_png_creates_independent_editable_private_project(self):
+        app = self.make_app()
+        original_id = app.current.painting_id
+        app.repository.create = lambda png: PaintingRecord("abcdef0123456789abcdef0123456789")
+        app.records = [app.current]
+        app.renderer = SimpleNamespace(canvas_rect=SimpleNamespace(size=(512, 380)))
+        app.history = SimpleNamespace(clear=lambda: None)
+        app.active_points = []
+        app.mode = "gallery"
+        app.dirty = False
+        payload = b"decoded fake picture"
+        record = {"media_type": "image/png", "sha256": hashlib.sha256(payload).hexdigest()}
+        app.creations.import_selected = lambda token: CreationTransfer(record, payload)
+        fake_surface = SimpleNamespace(copy=lambda: SimpleNamespace())
+        with mock.patch("activities.painting.painting_app._decode_png", return_value=fake_surface):
+            self.assertTrue(app.accept_selected_png("one-time-picker-grant"))
+        self.assertEqual(app.current.painting_id, "abcdef0123456789abcdef0123456789")
+        self.assertNotEqual(app.current.painting_id, original_id)
+        self.assertEqual(app.mode, "paint")
+        self.assertFalse(app.save_error)
+        self.assertEqual(app.records[1].painting_id, original_id)
+
+    def test_invalid_shared_picture_does_not_replace_current_painting(self):
+        app = self.make_app()
+        original = app.current
+        app.records = [original]
+        app.creations.import_selected = lambda token: CreationTransfer(
+            {"media_type": "image/png", "sha256": "tampered"}, b"not a valid image"
+        )
+        self.assertFalse(app.accept_selected_png("expired-or-corrupt"))
+        self.assertEqual(app.current, original)
+        self.assertTrue(app.save_error)
 
     def test_no_publication_if_private_save_fails(self):
         app = self.make_app()
