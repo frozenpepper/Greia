@@ -230,7 +230,8 @@ class CreationLibrary:
                 )
                 db.execute("COMMIT")
             except BaseException:
-                db.execute("ROLLBACK")
+                if db.in_transaction:
+                    db.execute("ROLLBACK")
                 for path in (preview, blob):
                     path.unlink(missing_ok=True)
                 raise
