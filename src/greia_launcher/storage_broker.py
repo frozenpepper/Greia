@@ -285,6 +285,8 @@ class ActivityStorageBroker:
         """Bind trusted producer/selection authority before Activity launch."""
         if self._stopped or self._server.creation_access is not None:
             raise StorageError("creations authority may be bound only once per live session")
+        if access.session_id != self.host_root.name:
+            raise StorageError("creations authority does not belong to this broker session")
         self._server.creation_access = access
         self._server.selection = CreationSelectionCoordinator(
             access, access.session_id
