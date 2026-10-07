@@ -42,7 +42,7 @@ class GalleryError(RuntimeError):
 class CreationsRepository(Protocol):
     def list(
         self, *, media_type: str | None = None, media_types: tuple[str, ...] | None = None,
-        limit: int = 24, offset: int = 0
+        roles: tuple[str, ...] | None = None, limit: int = 24, offset: int = 0
     ) -> tuple[CreationRecord, ...]: ...
 
     def preview(self, creation_id: str) -> tuple[str, bytes]: ...
@@ -99,6 +99,7 @@ class CreationsGalleryController:
         *,
         mode: GalleryMode = GalleryMode.LIBRARY,
         media_types: frozenset[str] | None = None,
+        roles: frozenset[str] | None = None,
         on_pick: Callable[[str], str] | None = None,
         audio_player: AudioPreviewPlayer | None = None,
         page_size: int = 2,
@@ -114,7 +115,15 @@ class CreationsGalleryController:
             raise ValueError("invalid picker media types")
         self.library = library
         self.mode = mode
+        if roles is not None:
+            if (
+                mode != GalleryMode.PICKER
+                or not 1 <= len(roles) <= 8
+                or any(not isinstance(role, str) or not 1 <= len(role) <= 48 for role in roles)
+            ):
+                raise ValueError("invalid picker role scope")
         self.allowed = allowed
+        self.roles = tuple(sorted(roles)) if roles is not None else None
         self.on_pick = on_pick
         self.audio_player = audio_player
         self.page_size = page_size
@@ -166,34 +175,24 @@ class CreationsGalleryController:
 
     def refresh(self) -> None:
         self._check_open()
-        media_type = self.family.media_type
-        if media_type is not None:
-            raw = self.library.list(
-                media_type=media_type, limit=self.page_size + 1, offset=self.page_index * self.page_size
-            )
-            visible = raw[: self.page_size]
-            extra = len(raw) > self.page_size
-        else:
-            if len(self.allowed) == 3:
-                raw = self.library.list(limit=self.page_size + 1, offset=self.page_index * self.page_size)
-                visible = raw[: self.page_size]
-                extra = len(raw) > self.page_size
-            else:
-                # The repository handles this as one indexed, bounded query.
-                # Never scan every file or load unbounded pages to join MIME
-                # families in Python. This remains trusted-Shell-only.
-                raw = self.library.list(
-                    media_types=tuple(sorted(self.allowed)),
-                    limit=self.page_size + 1,
-                    offset=self.page_index * self.page_size,
-                )
-                visible = raw[: self.page_size]
-                extra = len(raw) > self.page_size
+        filters: dict[str, object] = {
+            "limit": self.page_size + 1,
+            "offset": self.page_index * self.page_size,
+        }
+        if self.family.media_type is not None:
+            filters["media_type"] = self.family.media_type
+        elif len(self.allowed) != 3:
+            filters["media_types"] = tuple(sorted(self.allowed))
+        if self.roles is not None:
+            filters["roles"] = self.roles
+
+        raw = self.library.list(**filters)
+        visible = raw[: self.page_size]
         if not visible and self.page_index > 0:
             self.page_index -= 1
             return self.refresh()
         self._items = tuple(visible)
-        self._has_next = extra
+        self._has_next = len(raw) > self.page_size
         self.focused_id = self._items[0].creation_id if self._items else None
 
     def set_page_size(self, size: int) -> None:
