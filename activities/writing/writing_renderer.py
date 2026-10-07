@@ -297,12 +297,16 @@ class WritingRenderer:
         undo_history,
         emoji_picker_open: bool,
         mode: str,
-    ) -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
+        *,
+        shared_available: bool = False,
+        shared_state: str = "",
+    ) -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
         self._ensure_converted()
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
         emoji = self.metrics.activity_toolbar_button(2, side="left")
         new = self.metrics.activity_toolbar_button(0, side="right")
+        shared = self.metrics.activity_toolbar_button(1, side="right")
         draw_icon_button(
             screen,
             gallery,
@@ -328,7 +332,64 @@ class WritingRenderer:
         screen.blit(smile, smile.get_rect(center=emoji.center))
         draw_icon_button(screen, new, fill=self.theme.accent)
         draw_plus_symbol(screen, new, self.theme.accent_text)
-        return gallery, undo, emoji, new
+        if shared_available:
+            active = shared_state in {"pending", "saved", "imported"}
+            fill = (
+                mix(self.theme.accent, self.theme.panel, 0.42)
+                if active
+                else self.theme.panel
+            )
+            draw_icon_button(
+                screen,
+                shared,
+                fill=fill,
+                selected=shared_state == "pending",
+                outline=(210, 76, 76)
+                if shared_state == "error"
+                else self.theme.accent,
+            )
+            cx, cy = shared.center
+            # Paper outline + direction arrow: up publishes, down imports.
+            paper = pygame.Rect(
+                cx - self.metrics.px(13),
+                cy - self.metrics.px(10),
+                self.metrics.px(26),
+                self.metrics.px(23),
+            )
+            pygame.draw.rect(
+                screen,
+                self.theme.text,
+                paper,
+                width=max(2, self.metrics.px(2)),
+                border_radius=max(2, self.metrics.px(3)),
+            )
+            direction = -1 if mode == "edit" else 1
+            pygame.draw.line(
+                screen,
+                self.theme.text,
+                (cx, cy - direction * self.metrics.px(16)),
+                (cx, cy + direction * self.metrics.px(2)),
+                max(3, self.metrics.px(3)),
+            )
+            tip_y = cy + direction * self.metrics.px(3)
+            pygame.draw.lines(
+                screen,
+                self.theme.text,
+                False,
+                [
+                    (
+                        cx - self.metrics.px(7),
+                        tip_y - direction * self.metrics.px(7),
+                    ),
+                    (cx, tip_y),
+                    (
+                        cx + self.metrics.px(7),
+                        tip_y - direction * self.metrics.px(7),
+                    ),
+                ],
+                max(3, self.metrics.px(3)),
+            )
+        return gallery, undo, emoji, new, shared
 
     def draw_editor(
         self,
