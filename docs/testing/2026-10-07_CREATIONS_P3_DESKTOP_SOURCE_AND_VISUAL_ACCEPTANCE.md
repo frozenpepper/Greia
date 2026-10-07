@@ -21,7 +21,16 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 
 Use the project's existing working Python interpreter/environment. If any of Python, Pillow, pygame, Tk or the repository dependencies are missing, report the missing dependency rather than installing globally. A **new disposable local venv** is permitted for ordinary developer dependencies as per Greia setup docs; don't change locked product runtime/import policy to placate the test.
 
-In a shell, create `tmp/creations-p3-acceptance-<timestamp>` (under gitignored `tmp/`). Save **every** log there.
+In a Bash shell, create a unique evidence directory under the repository's ignored `tmp/` area, without modifying existing evidence:
+
+```bash
+EVIDENCE="tmp/creations-p3-acceptance-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$EVIDENCE"
+git rev-parse HEAD > "$EVIDENCE/HEAD.txt"
+git status --short > "$EVIDENCE/git-status.txt"
+```
+
+For each test command below, redirect its entire output to a *different* descriptive `"$EVIDENCE/<test>.log"`, check its exact exit code before running the next, and retain all failure output. Do not `rm -rf`, truncate previous evidence or modify source merely to make a command green.
 
 Run each command **sequentially** and save stdout/stderr + exit status; if any fails, STOP before proceeding to the GUI, report the **first** failure, and do not claim acceptance.
 
