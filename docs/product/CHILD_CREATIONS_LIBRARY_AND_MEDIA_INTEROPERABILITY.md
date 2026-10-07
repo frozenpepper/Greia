@@ -70,6 +70,6 @@ When space runs low, show a friendly prompt to revisit My Creations. Never silen
 
 ## 6. Evidence and exclusions
 
-The product requirements here are **not** a declaration of source/GUI completion. The initial platform core exists in source only once the P1 tranche lands; the session-authorized broker, universal picker/viewer, integrated Activities, curated release selection, portable backup and installed-hardware validation require later phases in the single program.
+The product requirements here are **not** a declaration of source/GUI completion. P1's trusted repository core and P2's narrow manifest/session broker/SDK exchange exist **in source**, but have not been accepted in a full Greia checkout. The broker deliberately does not let Activities list or delete gallery items or issue selection grants. No trusted picker/viewer exists to let a child select and preview an item yet; no existing Activity uses the interchange API. Integrated Activities, curated release selection, portable backup and installed-hardware validation remain open in the single program.
 
 No conventional Linux file manager, uncontrolled cross-Activity shared folder, automatic network upload, generic plugin executor, office-like Save As dialog, or per-Activity home-made file picker belongs in the baseline product.
