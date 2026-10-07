@@ -57,6 +57,9 @@ class PaintingApp:
         self._last_shared: tuple[str, str] | None = None
         self.shared_feedback = ""
         self.shared_feedback_until = 0.0
+        self.shared_import_request: str | None = None
+        self.shared_import_state = ""
+        self.shared_import_feedback_until = 0.0
         self.renderer = PaintingRenderer(metrics, theme, screen)
         self.clock = pygame.time.Clock()
         self.records = self.repository.list_records()
@@ -126,8 +129,17 @@ class PaintingApp:
 
     def _step_frame(self) -> None:
         self._autosave()
-        if self.shared_feedback and time.monotonic() >= self.shared_feedback_until:
+        now = time.monotonic()
+        if self.shared_feedback and now >= self.shared_feedback_until:
             self.shared_feedback = ""
+        if self.shared_import_request is not None:
+            self._poll_shared_png()
+        elif (
+            self.shared_import_state
+            and self.shared_import_state != "pending"
+            and now >= self.shared_import_feedback_until
+        ):
+            self.shared_import_state = ""
 
     # -- input routing ----------------------------------------------------
 
@@ -237,8 +249,11 @@ class PaintingApp:
             self.eraser = not self.eraser
             return True
         shared = self.renderer.shared_export_button() if self.creations is not None else None
-        if shared is not None and shared.collidepoint(pos) and self.mode == "paint":
-            self._publish_current()
+        if shared is not None and shared.collidepoint(pos):
+            if self.mode == "paint":
+                self._publish_current()
+            elif self.mode == "gallery":
+                self._request_shared_png()
             return True
         if self.mode == "gallery":
             for rect, record in self.renderer.gallery_cards(self.records):
@@ -372,6 +387,58 @@ class PaintingApp:
             self.shared_feedback = "error"
         self.shared_feedback_until = time.monotonic() + 2.0
 
+    def _request_shared_png(self) -> None:
+        """Start one nonblocking platform picker from Painting's own gallery."""
+        if (
+            self.creations is None
+            or self.mode != "gallery"
+            or self.shared_import_request is not None
+        ):
+            return
+        if not self._save():
+            self.shared_import_state = "error"
+            self.shared_import_feedback_until = time.monotonic() + 2.0
+            return
+        try:
+            request_id = self.creations.request_selection(
+                media_types=("image/png",)
+            )
+        except (RuntimeError, ValueError, OSError):
+            self.shared_import_state = "error"
+            self.shared_import_feedback_until = time.monotonic() + 2.0
+            return
+        self.shared_import_request = request_id
+        self.shared_import_state = "pending"
+
+    def _poll_shared_png(self) -> None:
+        request_id = self.shared_import_request
+        if request_id is None or self.creations is None:
+            return
+        try:
+            result = self.creations.poll_selection(request_id)
+        except (RuntimeError, ValueError, OSError):
+            self.shared_import_request = None
+            self.shared_import_state = "error"
+            self.shared_import_feedback_until = time.monotonic() + 2.0
+            return
+        state = getattr(result, "state", None)
+        if state == "pending":
+            return
+        self.shared_import_request = None
+        if state == "cancelled":
+            self.shared_import_state = ""
+            return
+        token = getattr(result, "selection_token", None)
+        if state != "ready" or not isinstance(token, str) or not token:
+            self.shared_import_state = "error"
+            self.shared_import_feedback_until = time.monotonic() + 2.0
+            return
+        if self.accept_selected_png(token):
+            self.shared_import_state = "imported"
+        else:
+            self.shared_import_state = "error"
+        self.shared_import_feedback_until = time.monotonic() + 2.0
+
     def accept_selected_png(self, selection_token: str) -> bool:
         """Import one Shell-confirmed PNG as an independent editable painting.
 
@@ -452,6 +519,7 @@ class PaintingApp:
             self.save_error,
             shared_available=self.creations is not None,
             shared_feedback=self.shared_feedback,
+            shared_import_state=self.shared_import_state,
         )
         if self.mode == "gallery":
             self.renderer.draw_gallery(self.screen, self.records, self.repository)
