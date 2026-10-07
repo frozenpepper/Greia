@@ -37,3 +37,7 @@ requested = []
 
 [storage]
 schema_version = 1
+
+[creations]
+# Publish deliberate saved snapshots; autosaved drafts remain private.
+produces = ["image/png"]
