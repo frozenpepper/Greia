@@ -1267,10 +1267,10 @@ class TeatrinoApp:
         ready_published = False
         self.running = True
         try:
-                while self.running and not activity_stop_requested():
+            while self.running and not activity_stop_requested():
                 dt = self.clock.tick(30) / 1000.0
                 self._step_frame(dt)
-    
+
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         self.running = False
@@ -1288,29 +1288,37 @@ class TeatrinoApp:
                             logical = self.canvas.pointer(event.pos)
                             if logical is not None:
                                 rx, ry = int(logical[0]), int(logical[1])
-                                self.held_puppet.x = max(180, min(840, rx + self.held_offset_x))
-                                self.held_puppet.y = max(160, min(360, ry + self.held_offset_y))
-                    elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                                self.held_puppet.x = max(
+                                    180, min(840, rx + self.held_offset_x)
+                                )
+                                self.held_puppet.y = max(
+                                    160, min(360, ry + self.held_offset_y)
+                                )
+                    elif (
+                        event.type == pygame.MOUSEBUTTONUP
+                        and event.button == 1
+                    ):
                         if self.held_puppet is not None:
                             self.held_puppet.is_held = False
                             self.held_puppet = None
                     elif event.type == pygame.VIDEORESIZE:
-                        # Keep bounded caches valid on resize and rebuild canvas.
                         self.screen = pygame.display.get_surface() or self.screen
-                        self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
+                        self.metrics = ChildUiMetrics.for_size(
+                            *self.screen.get_size()
+                        )
                         self.canvas = PygameReferenceCanvas(self.screen)
                         clear_all_caches()
-                        # Re-cache backdrops after invalidation (still bounded).
                         for bg_id, _, _ in BG_CONFIGS:
-                            self.cached_backdrops[bg_id] = render_backdrop_surface(bg_id)
-    
+                            self.cached_backdrops[bg_id] = (
+                                render_backdrop_surface(bg_id)
+                            )
+
                 self._draw()
                 self.canvas.present(clear=self.theme.background)
                 pygame.display.flip()
                 if not ready_published:
                     mark_activity_ready()
                     ready_published = True
-    
         finally:
             if self.is_recording:
                 self.is_recording = False
@@ -1332,6 +1340,5 @@ class TeatrinoApp:
                 self.playback_audio_channel = None
             pygame.quit()
         return 0
-
 
 __all__ = ["TeatrinoApp"]
