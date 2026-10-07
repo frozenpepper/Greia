@@ -190,7 +190,11 @@ class MigrationIdempotencyTests(unittest.TestCase):
         # Each migration writes its own marker inside its own guard. b3's write
         # is outside the audio guard by design, so the invariant is "after its
         # own guard", not "inside the audio one".
-        for name in ("audio_groups_marker", "profile_owner_migration"):
+        for name in (
+            "audio_groups_marker",
+            "profile_owner_migration",
+            "profile_shared_mode_migration",
+        ):
             with self.subTest(migration=name):
                 self.assertLess(
                     text.index('if [ ! -e "$%s" ]' % name),
@@ -200,6 +204,7 @@ class MigrationIdempotencyTests(unittest.TestCase):
         first_guard = min(
             text.index('if [ ! -e "$audio_groups_marker" ]'),
             text.index('if [ ! -e "$profile_owner_migration" ]'),
+            text.index('if [ ! -e "$profile_shared_mode_migration" ]'),
         )
         for mutation in ("usermod", "chown ", "chmod "):
             with self.subTest(unguarded=mutation):
@@ -282,12 +287,13 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
         self.assertIn(creation, before_b4)
         self.assertNotIn("find /var/lib/greia-profiles/data", before_b4)
 
-    def test_no_profile_repair_runs_after_the_marker_write(self) -> None:
+    def test_b4_child_owned_repair_does_not_repeat_after_its_marker(self) -> None:
         text = FIRST_BOOT.read_text(encoding="utf-8")
         marker = text.index('> "$profile_owner_migration"')
         remainder = text[marker + len('> "$profile_owner_migration"'):]
-        self.assertNotIn("find /var/lib/greia-profiles/data", remainder)
         self.assertNotIn("chown -h -- greiakid:pipprofiles", remainder)
+        self.assertNotIn("-name progress", remainder)
+        self.assertNotIn("-name storage", remainder)
 
     def test_history_reports_ownership_and_mode_when_chmod_is_refused(self) -> None:
         """A bare EPERM is what made this cost four blind cycles to diagnose."""
