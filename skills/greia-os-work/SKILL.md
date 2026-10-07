@@ -89,7 +89,7 @@ src/greia_platform/creation_media.py
 src/greia_platform/creations.py
 ```
 
-The P1 repository is **trusted-platform-only**. It is not currently brokered into Activity sandboxes or safe to expose as a raw shared folder. Do not invent an Activity API or a custom file chooser: implement trusted handles and consistent UI through the platform first. Use the actual installed Activity script-launch path in tests. This content workstream does not override the first-boot/installer lifecycle plan or release hardware evidence.
+The P1 repository is **trusted-platform-only**. P2 source now adds an opt-in, manifest-bound **publish-own-private-file/import-child-selected-handle** seam using the existing per-session storage socket (`creation_access.py`, `creation_client.py`, `storage_broker.py`, `supervisor.py`, `activity_api.get_creations`). No built-in Activity declares the media compatibility table yet, and **no trusted child picker issues grants**: the library and SDK are NOT a completed user feature or a broad shared file access capability. Never mount a shared folder or add raw library enumeration/delete through the Activity broker. Use the actual installed script-launch path in tests. This content workstream does not override first-boot/installer authority or hardware evidence.
 
 ## Broad architecture / new platform seam
 
