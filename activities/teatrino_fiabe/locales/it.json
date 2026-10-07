@@ -47,7 +47,10 @@
     "recording_saved": "Spettacolo salvato nella tua libreria!",
     "playing_show": "Spettacolo in corso! Evviva!",
     "stage_cleared": "Palcoscenico pronto!",
-    "recording_save_failed": "Non sono riuscito a salvare questo spettacolo."
+    "recording_save_failed": "Non sono riuscito a salvare questo spettacolo.",
+    "narration_imported": "Voce pronta per lo spettacolo!",
+    "narration_play_failed": "Non riesco a usare questa voce.",
+    "mic_source": "Microfono pronto"
   },
   "audio": {
     "activity.title": {
