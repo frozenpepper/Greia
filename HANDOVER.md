@@ -3084,3 +3084,36 @@ No `make verify`, complete-checkout unit suite, real Pygame interaction, screens
 
 Proceed to **P5 WAV + UTF-8 interoperability** using the same typed broker/picker architecture, and complete P1's **all-writer proportional capacity guard** rather than placing the 75% policy only around CreationLibrary. The 45-Activity release-quality review remains **0/45 accepted** and must not be conflated with source migration progress.
 
+
+
+## 88. Creations P5 first WAV route — Voice Stories narration → Teatrino; execution deferred (2026-10-07)
+
+**Pinned latest source/test candidate:** `cb9bc32c680ddd3953d256b8bc0c4311e194bfad`. Documentation after that SHA only updates state/test instructions. **No tests were executed for this candidate**; the owner explicitly deferred all current testing until their local agent is available.
+
+### Source implemented
+
+1. **Durable WAV producer:** `storie_della_mia_voce` declares `audio/wav` production and shares only private scene WAVs belonging to already-saved stories. Share role is `narration`; same saved scene is deduplicated within a session. The trusted CreationLibrary `WavCodec` remains the publication validation/canonicalization boundary.
+2. **Teatrino WAV consumer:** manifest consumes `image/png` + `audio/wav`. A new compact pre-reader saved-voice control requests only `audio/wav` with role `narration`, uses the common trusted picker and polls at the same bounded nonblocking cadence as image import.
+3. **Audio owner:** `ImportedNarrationTrack` in `teatrino_audio.py` validates/canonicalizes WAV via the platform codec, enforces Theatre's duration ceiling, owns mixer playback and can produce a valid trimmed PCM prefix if the child stops puppeteering early.
+4. **No microphone contention:** when a shared narration is active, Teatrino REC plays that track while recording puppet motion/SFX and **does not call microphone start**. Auto-stop follows narration duration. Manual Stop trims the selected narration to elapsed time before the private show save. With no imported narration, the original microphone path remains unchanged.
+5. **Snapshot independence:** the selected shared WAV exists only as an in-memory source until a show saves; `ShowRepository` then writes its own private WAV alongside JSON/backdrop state. A later deletion of the My Creations source must not break replay.
+6. **Source switching:** tapping Teatrino's microphone control while a shared narration is selected clears the imported narration and returns to live microphone mode. Picker cancel/invalid role/MIME/digest leaves the prior narration untouched.
+7. **Lifecycle cleanup:** imported narration and ordinary playback channels stop on completion/Activity teardown. Existing show playback now explicitly stops its audio channel at show end.
+8. **Transient defect caught during static review:** commit `84f37b27...` introduced bad run-loop indentation while adding `try/finally`; it was caught immediately by source inspection and fixed at `ad9a606e...`. Do not describe the intermediate commit as runnable evidence.
+
+### Deferred regression source
+
+- `tests/test_voice_creations.py`
+- `tests/test_voice_creations_storage.py`
+- `tests/test_teatrino_audio_narration.py`
+- `tests/test_teatrino_shared_narration.py`
+- all earlier Creation/Painting/Shape Garden/Teatrino/modal/chrome/Simulator suites.
+
+The single accumulated desktop procedure is still
+`docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`, now pinned to `cb9bc32c...`. It adds real disposable-profile Voice Stories recording/publication, **audible Play/Pause/Resume/Replay before selection**, narration-only Teatrino picker, imported narration performance with no mic capture, early-stop trim, saved-show replay after deleting the shared source WAV, and explicit switch back to the ordinary mic.
+
+**No complete checkout, `make verify`, Pygame, audible/microphone, Simulator screenshot, Legacy-X or hardware test has run for this candidate.** P3/P4/P5 remain SOURCE-WIP.
+
+### Next source direction
+
+Implement a genuine UTF-8 text producer/consumer using Writing and only semantically compatible existing Activities. For the second audio consumer, source review currently favors **Orchestra Animali** (voice/narration backing track for child accompaniment) and rejects Officina dei Suoni because arbitrary recordings would dilute its phonemic-learning contract. P1 all-writer adaptive capacity and P6–P8 remain open.
