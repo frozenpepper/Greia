@@ -250,6 +250,16 @@ class PaintingRenderer:
         if line_y > 0:
             pygame.draw.line(screen, (235, 226, 208), (0, line_y), (w, line_y), 2)
 
+    def shared_export_button(self) -> pygame.Rect | None:
+        """Child-sized share button in the free center of the safe toolbar."""
+        left = self.metrics.activity_toolbar_button(1, side="left")
+        right = self.metrics.activity_toolbar_button(1, side="right")
+        size = self.metrics.button_size
+        candidate = pygame.Rect((self.metrics.width-size)//2,left.y,size,size)
+        if candidate.left <= left.right+self.metrics.gap or candidate.right >= right.left-self.metrics.gap:
+            return None
+        return candidate
+
     def draw_toolbar(
         self,
         screen: pygame.Surface,
@@ -258,6 +268,9 @@ class PaintingRenderer:
         eraser: bool,
         dirty: bool,
         save_error: bool,
+        *,
+        shared_available: bool = False,
+        shared_feedback: str = "",
     ) -> None:
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
@@ -300,6 +313,20 @@ class PaintingRenderer:
             active_color=(254, 226, 226),
             fallback_symbol="eraser",
         )
+
+        # Deliberate publication is independent from per-stroke autosave.
+        # The center remains visually quiet on unsupported/narrow viewports.
+        shared = self.shared_export_button() if shared_available else None
+        if shared is not None:
+            self._draw_tactile_button(
+                screen, shared, icon_key="tool_share",
+                active=shared_feedback == "saved",
+                base_color=(225, 246, 228),
+                active_color=(171, 231, 186),
+                fallback_symbol="share",
+            )
+            if shared_feedback == "error":
+                pygame.draw.rect(screen,(211,61,65),shared,width=max(3,self.metrics.px(4)),border_radius=self.metrics.radius)
 
         # Status Pill Indicator
         pill_w = self.metrics.px(72)
@@ -365,6 +392,14 @@ class PaintingRenderer:
                 pygame.draw.line(screen, (255, 255, 255), (rect.centerx - 12, rect.centery), (rect.centerx + 12, rect.centery), 4)
             elif fallback_symbol == "eraser":
                 pygame.draw.rect(screen, col, pygame.Rect(rect.centerx - 12, rect.centery - 8, 24, 16), border_radius=4)
+            elif fallback_symbol == "share":
+                # A picture moving upward into the child's Creations library.
+                cx, cy = rect.center
+                pygame.draw.rect(screen,col,(cx-16,cy-2,32,21),width=3,border_radius=4)
+                pygame.draw.circle(screen,col,(cx+8,cy+3),3)
+                pygame.draw.lines(screen,col,False,[(cx-12,cy+13),(cx-5,cy+7),(cx+1,cy+12)],3)
+                pygame.draw.line(screen,col,(cx,cy-16),(cx,cy+1),4)
+                pygame.draw.lines(screen,col,False,[(cx-8,cy-9),(cx,cy-17),(cx+8,cy-9)],4)
 
     def draw_canvas(self, screen: pygame.Surface, canvas: pygame.Surface) -> None:
         crect = self.canvas_rect
