@@ -7,6 +7,7 @@ import json
 import os
 import secrets
 import shutil
+import stat
 import tempfile
 import tomllib
 import unicodedata
@@ -272,8 +273,7 @@ class ProfileStore:
                 self.policy.default_mask_secret,
             )
             profiles = (profile,)
-            self._write_unlocked(profiles)
-            self._ensure_profile_directories(profiles)
+            self._commit_new_profile(profile, profiles)
             return profiles
 
     def list_profiles(self) -> tuple[ChildProfile, ...]:
@@ -328,8 +328,7 @@ class ProfileStore:
                 uppercase_text=bool(uppercase_text),
             )
             updated = (*profiles, profile)
-            self._write_unlocked(updated)
-            self._ensure_profile_directories((profile,))
+            self._commit_new_profile(profile, updated)
             return profile
 
     def update(
@@ -456,6 +455,33 @@ class ProfileStore:
             return candidate == ""
         validated = self.policy.validate_secret(candidate)
         return profile.secret_digest.verify(validated)
+
+    def _commit_new_profile(
+        self,
+        profile: ChildProfile,
+        profiles: tuple[ChildProfile, ...],
+    ) -> None:
+        """Establish the shared directory contract before publishing a profile.
+
+        A Parent-created profile must never become visible in profiles.json
+        until its shared root and Parent-owned subdirectories are group-writable
+        for the child. If directory preparation fails, remove only a directory
+        created by this transaction and leave the registry unchanged.
+        """
+
+        profile_root = self.data_root / profile.profile_id
+        existed_before = os.path.lexists(profile_root)
+        try:
+            self._ensure_profile_directories((profile,))
+            self._write_unlocked(profiles)
+        except BaseException:
+            if (
+                not existed_before
+                and profile_root.exists()
+                and not profile_root.is_symlink()
+            ):
+                shutil.rmtree(profile_root, ignore_errors=True)
+            raise
 
     def _new_profile(
         self,
@@ -609,10 +635,11 @@ class ProfileStore:
         self.data_root.mkdir(parents=True, exist_ok=True)
         if not self.data_root.is_dir():
             raise ProfileError("profile data root is not a directory")
-        try:
-            os.chmod(self.data_root, 0o2770)
-        except PermissionError:
-            pass
+        _ensure_directory_contract(
+            self.data_root,
+            reference_root=self.root,
+            mode=0o2770,
+        )
         for path in (
             context.root,
             context.customization_dir,
@@ -634,10 +661,11 @@ class ProfileStore:
     @contextmanager
     def _mutation_lock(self) -> Iterator[None]:
         self.root.mkdir(parents=True, exist_ok=True)
-        try:
-            os.chmod(self.root, 0o2770)
-        except PermissionError:
-            pass
+        _ensure_directory_contract(
+            self.root,
+            reference_root=self.root,
+            mode=0o2770,
+        )
         lock_path = self.root / self.LOCK_NAME
         with lock_path.open("a+b") as handle:
             try:
@@ -661,6 +689,50 @@ class ProfileStore:
                     pass
 
 
+def _ensure_directory_contract(
+    path: Path,
+    *,
+    reference_root: Path,
+    mode: int,
+) -> None:
+    """Require one shared directory to match the managed group/mode contract."""
+
+    try:
+        reference = reference_root.stat()
+        current = path.stat()
+    except OSError as exc:
+        raise ProfileError(f"managed profile directory is not statable: {path}: {exc}") from exc
+
+    expected_gid = reference.st_gid
+    actual_mode = stat.S_IMODE(current.st_mode)
+    if actual_mode != mode:
+        try:
+            os.chmod(path, mode)
+        except PermissionError as exc:
+            raise ProfileError(
+                f"managed profile directory mode is {actual_mode:04o}, "
+                f"expected {mode:04o}, and chmod was refused: {path}"
+            ) from exc
+        try:
+            current = path.stat()
+        except OSError as exc:
+            raise ProfileError(
+                f"managed profile directory is not statable after chmod: {path}: {exc}"
+            ) from exc
+        actual_mode = stat.S_IMODE(current.st_mode)
+
+    if current.st_gid != expected_gid:
+        raise ProfileError(
+            f"managed profile directory group is {current.st_gid}, "
+            f"expected managed group {expected_gid}: {path}"
+        )
+    if actual_mode != mode:
+        raise ProfileError(
+            f"managed profile directory mode is {actual_mode:04o}, "
+            f"expected {mode:04o}: {path}"
+        )
+
+
 def _ensure_managed_directory(path: Path, managed_root: Path, *, mode: int) -> None:
     try:
         relative = path.relative_to(managed_root)
@@ -679,10 +751,11 @@ def _ensure_managed_directory(path: Path, managed_root: Path, *, mode: int) -> N
                 raise ProfileError("managed profile path contains a non-directory")
         else:
             current.mkdir()
-        try:
-            os.chmod(current, mode)
-        except PermissionError:
-            pass
+        _ensure_directory_contract(
+            current,
+            reference_root=managed_root,
+            mode=mode,
+        )
 
 
 class ActiveProfileSession:
