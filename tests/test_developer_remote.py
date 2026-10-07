@@ -131,6 +131,77 @@ class DeveloperRemoteTests(unittest.TestCase):
             self.assertIn("DISPLAY=:0", argv)
             self.assertNotIn("XAUTHORITY", " ".join(argv))
 
+    def test_status_and_logs_remain_available_without_display_endpoint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            marker = root / "developer-remote"
+            marker.write_text("enabled\n", encoding="utf-8")
+            state = root / "state"
+
+            def fake_run(argv, **kwargs):
+                if argv[:2] == ["systemctl", "is-active"]:
+                    return subprocess.CompletedProcess(argv, 0, "inactive\n", "")
+                if argv and argv[0] == "journalctl":
+                    return subprocess.CompletedProcess(argv, 0, "diagnostic-log\n", "")
+                raise AssertionError(f"unexpected subprocess: {argv}")
+
+            with (
+                mock.patch.object(devctl, "DEVELOPER_MARKER", marker),
+                mock.patch.object(devctl, "STATE_ROOT", state),
+                mock.patch.object(
+                    devctl, "DEVELOPER_ACTIVITY_ROOT", state / "activities"
+                ),
+                mock.patch.object(devctl, "STAGING_ROOT", state / "staging"),
+                mock.patch.object(devctl, "BACKUP_ROOT", state / "backups"),
+                mock.patch.object(devctl, "STATE_FILE", state / "deployments.json"),
+                mock.patch("greia_platform.developer_control.os.geteuid", return_value=0),
+                mock.patch.object(
+                    devctl.DeveloperDisplayEndpoint,
+                    "load",
+                    side_effect=DeveloperSessionError("missing display endpoint"),
+                ),
+                mock.patch(
+                    "greia_platform.developer_control.subprocess.run",
+                    side_effect=fake_run,
+                ),
+            ):
+                control = devctl.DeveloperControl()
+                status = control.status()
+                logs = control.logs("launcher", 25)
+
+            self.assertFalse(status["display_endpoint"]["available"])
+            self.assertIn("missing display endpoint", status["display_endpoint"]["error"])
+            self.assertEqual(logs, "diagnostic-log\n")
+
+    def test_screenshot_still_fails_closed_without_display_endpoint(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            marker = root / "developer-remote"
+            marker.write_text("enabled\n", encoding="utf-8")
+            state = root / "state"
+            with (
+                mock.patch.object(devctl, "DEVELOPER_MARKER", marker),
+                mock.patch.object(devctl, "STATE_ROOT", state),
+                mock.patch.object(
+                    devctl, "DEVELOPER_ACTIVITY_ROOT", state / "activities"
+                ),
+                mock.patch.object(devctl, "STAGING_ROOT", state / "staging"),
+                mock.patch.object(devctl, "BACKUP_ROOT", state / "backups"),
+                mock.patch.object(devctl, "STATE_FILE", state / "deployments.json"),
+                mock.patch("greia_platform.developer_control.os.geteuid", return_value=0),
+                mock.patch.object(
+                    devctl.DeveloperDisplayEndpoint,
+                    "load",
+                    side_effect=DeveloperSessionError("missing display endpoint"),
+                ),
+            ):
+                control = devctl.DeveloperControl()
+                with self.assertRaisesRegex(
+                    devctl.DeveloperControlError,
+                    "missing display endpoint",
+                ):
+                    control.screenshot()
+
     def test_devctl_refuses_non_developer_images_even_as_root(self):
         with tempfile.TemporaryDirectory() as tmp:
             missing = Path(tmp) / "missing-marker"
