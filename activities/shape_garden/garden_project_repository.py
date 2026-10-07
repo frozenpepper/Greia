@@ -113,6 +113,21 @@ class GardenProjectRepository:
         self._cleanup(committed.background_sha256)
         return committed
 
+    def save_export(self, payload: bytes) -> str:
+        """Write one replace-in-place PNG source for trusted publication."""
+        if (
+            not isinstance(payload, bytes)
+            or not payload
+            or len(payload) > MAX_BACKGROUND_BYTES
+        ):
+            raise GardenProjectError("garden export exceeds bounds")
+        name = "garden/shared.png"
+        try:
+            self.storage.file_write_atomic(name, payload)
+        except RuntimeError as exc:
+            raise GardenProjectError("garden export write failed") from exc
+        return name
+
     def _cleanup(self, keep_digest: str | None) -> None:
         keep = self._background_name(keep_digest) if keep_digest else None
         try:
