@@ -16,6 +16,7 @@ from .customization import (
     WallpaperCandidate,
     WallpaperImporter,
 )
+from .creation_client import ActivityCreationsClient
 from .event_client import ActivityEventClient, ActivityEventReceipt
 from .input_core import InteractionProfile, parse_interaction_profile
 from .profile_presentation import (
@@ -142,6 +143,18 @@ def get_storage() -> ActivityStorageClient:
     """Return this launch's runtime-neutral Greia durable storage client."""
 
     return ActivityStorageClient.from_environment()
+
+
+def get_creations() -> ActivityCreationsClient:
+    """Return the session-scoped creation transfer API when the broker exists.
+
+    There is no unsafe standalone/shared-folder fallback. The child-facing
+    picker is a separate trusted platform surface, not an Activity function.
+    """
+    storage = get_storage()
+    if not isinstance(storage, ActivityStorageClient):
+        raise RuntimeError("Greia Creations requires a trusted Activity session")
+    return ActivityCreationsClient(storage)
 
 
 @lru_cache(maxsize=1)
