@@ -511,6 +511,41 @@ class DeveloperRemoteTests(unittest.TestCase):
         self.assertNotIn("tools/provision_developer_image.py", wrapper)
         self.assertNotIn("debootstrap", wrapper)
 
+    def test_canonical_builder_provisions_role_specific_display_endpoint(self):
+        compose = PROJECT_ROOT / "build/lib/compose.sh"
+
+        def endpoint_for(role: str) -> dict[str, str]:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                script = f"""
+set -Eeuo pipefail
+source {shlex.quote(str(compose))}
+chown() {{ :; }}
+compose_write_developer_display_endpoint {shlex.quote(str(root))} {shlex.quote(role)}
+"""
+                completed = subprocess.run(
+                    ["bash", "-c", script],
+                    cwd=PROJECT_ROOT,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                return json.loads(
+                    (root / "etc/greia-os/developer-display.json").read_text(
+                        encoding="utf-8"
+                    )
+                )
+
+        self.assertEqual(
+            endpoint_for("target"),
+            {"user": "greiakid", "display": ":0"},
+        )
+        self.assertEqual(
+            endpoint_for("live-installer"),
+            {"user": "root", "display": ":0"},
+        )
+
     def test_canonical_builder_emits_bounded_greia_devctl_sudoers(self):
         # T01: target-role developer provisioning lives in the shared engine;
         # the thin consumer must not mint SSH/sudo surface itself.
