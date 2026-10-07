@@ -90,6 +90,36 @@ else:
     )
 
 
+def _load_package_locale_tables(
+    locales_dir: Path,
+    requested_language: str,
+) -> tuple[str, dict[str, str], dict[str, str], dict[str, str]]:
+    """Load the Activity's legacy ui/puppets/backdrops JSON for one locale."""
+    language = requested_language if requested_language in {"it", "en"} else "it"
+    locale_file = locales_dir / f"{language}.json"
+    if not locale_file.is_file():
+        language = "it"
+        locale_file = locales_dir / "it.json"
+    try:
+        raw = json.loads(locale_file.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return language, {}, {}, {}
+    if not isinstance(raw, dict):
+        return language, {}, {}, {}
+
+    def table(name: str) -> dict[str, str]:
+        value = raw.get(name, {})
+        if not isinstance(value, dict):
+            return {}
+        return {
+            str(key): str(item)
+            for key, item in value.items()
+            if isinstance(key, str) and isinstance(item, str)
+        }
+
+    return language, table("ui"), table("puppets"), table("backdrops")
+
+
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
     vp = activity_viewport_for_surface(surface)
     x, y = position
@@ -158,35 +188,12 @@ class TeatrinoApp:
         except Exception:
             self._active_locale = "it"
 
-        self.ui_strings: dict[str, str] = {}
-        self.puppet_names: dict[str, str] = {}
-        self.backdrop_names: dict[str, str] = {}
-        locale_file = locales_dir / f"{self._active_locale}.json"
-        if not locale_file.is_file():
-            locale_file = locales_dir / "it.json"
-            self._active_locale = "it"
-        try:
-            loc_data = json.loads(locale_file.read_text(encoding="utf-8"))
-            ui = loc_data.get("ui", {})
-            puppets = loc_data.get("puppets", {})
-            backdrops = loc_data.get("backdrops", {})
-            if isinstance(ui, dict):
-                self.ui_strings = {
-                    str(key): str(value) for key, value in ui.items()
-                    if isinstance(key, str) and isinstance(value, str)
-                }
-            if isinstance(puppets, dict):
-                self.puppet_names = {
-                    str(key): str(value) for key, value in puppets.items()
-                    if isinstance(key, str) and isinstance(value, str)
-                }
-            if isinstance(backdrops, dict):
-                self.backdrop_names = {
-                    str(key): str(value) for key, value in backdrops.items()
-                    if isinstance(key, str) and isinstance(value, str)
-                }
-        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-            pass
+        (
+            self._active_locale,
+            self.ui_strings,
+            self.puppet_names,
+            self.backdrop_names,
+        ) = _load_package_locale_tables(locales_dir, self._active_locale)
 
         # Sprites — convert_alpha once, pre-scale thumbnails to eliminate
         # per-frame smoothscale (case-study performance pattern).
