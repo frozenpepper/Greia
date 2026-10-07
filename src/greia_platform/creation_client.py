@@ -30,7 +30,7 @@ class ActivityCreationsClient:
     def publish_private_file(
         self, filename: str, *, media_type: str, role: str, title: str = ""
     ) -> dict[str, Any]:
-        response, _ = self.storage_session._request(
+        response, _ = self.storage_session.creation_exchange(
             "creations.publish_private",
             filename=filename,
             media_type=media_type,
@@ -40,7 +40,7 @@ class ActivityCreationsClient:
         return self._record(response)
 
     def import_selected(self, selection_token: str) -> CreationTransfer:
-        response, payload = self.storage_session._request(
+        response, payload = self.storage_session.creation_exchange(
             "creations.import_selected", selection_token=selection_token
         )
         return CreationTransfer(self._record(response), payload)
