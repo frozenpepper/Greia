@@ -91,13 +91,17 @@ class GardenCreationFlowTests(unittest.TestCase):
         with mock.patch(
             "activities.shape_garden.garden_app.encode_surface_png",
             return_value=payload,
-        ):
+        ), mock.patch(
+            "activities.shape_garden.garden_app.emit_activity_event"
+        ) as emit:
             app._publish_project()
             app._publish_project()
         self.assertEqual(
             app.creations.published,
             [("garden/shared.png", "image/png", "composition")],
         )
+        emit.assert_called_once()
+        self.assertEqual(emit.call_args.args[0], "creation.completed")
         self.assertEqual(
             app._last_published_digest, hashlib.sha256(payload).hexdigest()
         )
