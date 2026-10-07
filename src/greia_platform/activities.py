@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from .creation_media import CreationMediaRegistry, CreationMediaError
 from .input_core import InteractionProfile, SUPPORTED_INTERACTION_PROFILES
 from .trust import ActivitySource, PackageTrust
 
@@ -65,6 +66,9 @@ class ActivityManifest:
     difficulty_min: int | None = None
     difficulty_max: int | None = None
     adaptive_difficulty: bool = False
+    # Compatibility declarations are never authorization to browse child files.
+    creations_produces: tuple[str, ...] = ()
+    creations_consumes: tuple[str, ...] = ()
 
     @property
     def launch_path(self) -> Path:
@@ -523,6 +527,9 @@ class ActivityRegistry:
         requirements = _table(raw, "requirements")
         permissions = _table(raw, "permissions")
         storage = _table(raw, "storage")
+        creations = raw.get("creations", {})
+        if not isinstance(creations, dict):
+            raise ActivityValidationError("creations must be a table")
 
         raw_presentation = raw.get("presentation")
         if raw_presentation is None:
@@ -584,6 +591,8 @@ class ActivityRegistry:
                 permissions, "requested", allow_empty=True
             ),
             storage_schema_version=_integer(storage, "schema_version", 1),
+            creations_produces=_texts(creations, "produces", allow_empty=True),
+            creations_consumes=_texts(creations, "consumes", allow_empty=True),
             root=root,
             input_profile=input_profile,
             launcher_categories=launcher_categories,
@@ -687,6 +696,21 @@ class ActivityRegistry:
         _unique("requirements.required_capabilities", manifest.required_capabilities)
         _unique("requirements.optional_capabilities", manifest.optional_capabilities)
         _unique("permissions.requested", manifest.requested_permissions)
+        _unique("creations.produces", manifest.creations_produces)
+        _unique("creations.consumes", manifest.creations_consumes)
+        for direction, declared in (
+            ("produces", manifest.creations_produces),
+            ("consumes", manifest.creations_consumes),
+        ):
+            if len(declared) > 8:
+                raise ActivityValidationError(f"creations.{direction} exceeds eight types")
+            for media_type in declared:
+                try:
+                    CreationMediaRegistry().codec_for(media_type)
+                except CreationMediaError as exc:
+                    raise ActivityValidationError(
+                        f"creations.{direction} uses unsupported media type {media_type!r}"
+                    ) from exc
 
         required = set(manifest.required_capabilities)
         optional = set(manifest.optional_capabilities)
