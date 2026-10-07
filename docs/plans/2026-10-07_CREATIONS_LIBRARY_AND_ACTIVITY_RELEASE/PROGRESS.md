@@ -43,7 +43,7 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 | Shape Garden | Painting | flattened PNG composition | SOURCE WIP: explicit trusted publish of deterministic flattened `composition` PNG |
 | Painting/Shape Garden | Teatrino Fiabe | PNG backdrop | SOURCE WIP: trusted PNG picker + show-local content-addressed private backdrop snapshot |
 | Storie della Mia Voce | Teatrino | WAV narration | SOURCE WIP: durable saved-scene publish → audio preview → narration-only picker → private saved-show copy; imported track replaces mic source for that performance |
-| Writing | Writing / genuinely compatible text consumers | UTF-8 | NOT STARTED |
+| Writing | Writing / Posta di Leo | UTF-8 document/postcard | SOURCE WIP: Writing saved document publish + independent document/postcard import; Posta grapheme-safe draft import + saved-postcard publish |
 | Any declared writer | My Creations viewer | large visual/audio/text previews | SOURCE WIP: Shell gallery |
 | My Creations viewer | library | safe deletion/reclaim | SOURCE WIP: two-stage confirmation |
 
@@ -261,7 +261,42 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 
 **Evidence boundary:** no complete checkout, `make verify`, Pygame/audio, Simulator, microphone, audible preview, Legacy-X, Acer/Pi or physical evidence was produced. P5 WAV is SOURCE-WIP only.
 
-**Next source work while tests remain deferred:** implement a real UTF-8 producer/consumer path using Writing and only semantically compatible existing Activities; then add Orchestra Animali as a useful second audio consumer if the source design remains clean. P1 all-writer capacity and P6–P8 remain open.
+**Next source work while tests remain deferred:** UTF-8 is now implemented SOURCE-WIP using Writing and Posta di Leo. Next add Orchestra Animali as a useful second audio consumer, then return to P1 all-writer proportional-capacity enforcement. if the source design remains clean. P1 all-writer capacity and P6–P8 remain open.
+
+---
+
+### 2026-10-07 — P5 reciprocal UTF-8 route: Writing ↔ Posta di Leo; execution deferred
+
+**Pinned latest source/test candidate for this text tranche:** `8d69ee4e7ee076923fbd78256238938b76b59477`. **No tests were executed for this tranche.** All source/unit/GUI checks remain accumulated into the existing desktop acceptance because the local agent is unavailable.
+
+**Writing (SOURCE-WIP):**
+
+- `DocumentRepository.create_text()` creates a new private UTF-8 document first and rolls it back if the index commit fails; imported shared text never overwrites an existing document.
+- Writing deliberately publishes only the currently saved private document as `text/plain`, role `document`, with unchanged in-session publication deduplication.
+- Its trusted picker is scoped to `text/plain` and semantic roles `document` / `postcard`; one-use selected bytes are SHA256 checked and strict UTF-8 decoded before a new private document is committed.
+- The child toolbar exposes the same paper + directional-arrow non-reader affordance used by the other creation flows.
+- Deferred regression owner: `tests/test_writing_creations.py`.
+
+**Posta di Leo (SOURCE-WIP):**
+
+- The original compact postcard editor remains the product interaction. Imported Writing/postcard text is normalized into one message, whitespace-compacted and truncated with Greia grapheme boundaries so emoji/ZWJ clusters are not split.
+- A large paper-arrow-down editor control opens the same trusted universal picker nonblockingly at a 120 ms bounded cadence.
+- Only an already-saved postcard can publish back to My Creations. A saved-card modal exposes a deliberate paper-arrow-up action; unsaved drafts have no publication path.
+- Saved postcards now have path-safe durable private UTF-8 source files tied to the authoritative postcard index. New source files are rolled back when the index commit fails; removed-card files are reclaimed only after a successful index commit. Historical path-safe legacy IDs remain supported.
+- The older gallery-delete false-success path was repaired: if persistence fails, the in-memory library is restored instead of pretending deletion succeeded.
+- Deferred regression owner: `tests/test_posta_di_leo_creations.py`, with the existing `test_activity_posta_di_leo.py` fixture updated for private files.
+
+**Snapshot/role semantics:**
+
+- Writing publishes role `document`; Posta publishes role `postcard`.
+- Both consumers accept exactly those two text roles, but each import creates/mutates only its own private state; deleting the My Creations source later cannot break a saved postcard or imported Writing document.
+- MIME/role/SHA256/strict UTF-8 validation happens before consumer state changes. Wrong role, digest or encoding preserves existing content.
+
+**Evidence boundary:** this is SOURCE-WIP only. No full checkout, `make verify`, Pygame text interaction, universal picker screenshot, real child flow, Legacy-X, Simulator, Acer/Pi or storage-failure run has been executed for the text tranche.
+
+**Single accumulated acceptance owner:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` now includes Writing→Posta→Writing, grapheme/overlong cases, cancel/failure preservation and shared-source deletion independence.
+
+**Next source step:** review/implement Orchestra Animali as the second semantically useful WAV consumer; then complete P1 proportional capacity enforcement across every profile-writing owner rather than only the Creation Library.
 
 ---
 
