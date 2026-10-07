@@ -19,6 +19,7 @@ import pygame
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
+    get_creations,
     get_profile_locale,
     get_storage,
     get_theme,
@@ -37,7 +38,13 @@ from greia_platform.pygame_canvas import (
 from greia_platform.typography import GreiaTypography
 
 if __package__:
-    from .orchestra_audio import SoundManager
+    from .orchestra_audio import BackingTrackPlayer, ImportedBackingTrack, SoundManager
+    from .orchestra_backing import (
+        SUPPORTED_BACKING_ROLES,
+        BackingTrackRecord,
+        BackingTrackRepository,
+        BackingTrackStoreError,
+    )
     from .orchestra_content import (
         NOTE_NAMES_EN,
         NOTE_NAMES_IT,
@@ -50,7 +57,13 @@ if __package__:
     from .orchestra_model import InstrumentCard, Particle
     from .orchestra_renderer import OrchestraRenderer
 else:  # pragma: no cover - runtime/script fallback
-    from orchestra_audio import SoundManager
+    from orchestra_audio import BackingTrackPlayer, ImportedBackingTrack, SoundManager
+    from orchestra_backing import (
+        SUPPORTED_BACKING_ROLES,
+        BackingTrackRecord,
+        BackingTrackRepository,
+        BackingTrackStoreError,
+    )
     from orchestra_content import (
         NOTE_NAMES_EN,
         NOTE_NAMES_IT,
@@ -86,6 +99,15 @@ class OrchestraApp:
     audio: SoundManager = field(default_factory=SoundManager)
     renderer: OrchestraRenderer | None = None
     storage: Any | None = None
+    creations: Any | None = None
+    backing_store: BackingTrackRepository | None = None
+    backing_player: BackingTrackPlayer = field(default_factory=BackingTrackPlayer)
+    backing_record: BackingTrackRecord | None = None
+    backing_request: str | None = None
+    backing_next_poll: float = 0.0
+    backing_import_state: str = ""
+    backing_feedback_until: float = 0.0
+    backing_notes_played: int = 0
     is_it: bool = True
     note_labels: list[str] = field(default_factory=list)
     instruments: list[InstrumentCard] = field(default_factory=list)
@@ -114,10 +136,18 @@ class OrchestraApp:
                 self.storage = get_storage()
             except Exception:
                 self.storage = None
+        if self.creations is None:
+            try:
+                self.creations = get_creations()
+            except RuntimeError:
+                self.creations = None
+        if self.backing_store is None and self.storage is not None:
+            self.backing_store = BackingTrackRepository(self.storage)
         try:
             self._load_stars()
         except Exception:
             pass
+        self._load_backing_track()
 
     # ------------------------------------------------------------------
     # Persistence
@@ -144,6 +174,126 @@ class OrchestraApp:
         except Exception:
             pass
 
+    def _load_backing_track(self) -> None:
+        store = self.backing_store
+        if store is None:
+            return
+        try:
+            loaded = store.load()
+        except BackingTrackStoreError:
+            return
+        if loaded is None:
+            return
+        record, payload = loaded
+        try:
+            track = ImportedBackingTrack.from_wav(payload)
+        except ValueError:
+            return
+        if abs(track.duration_seconds - record.duration_seconds) > 0.05:
+            return
+        self.backing_record = record
+        self.backing_player.load(track)
+
+    def _request_backing_track(self) -> None:
+        if (
+            self.creations is None
+            or self.backing_store is None
+            or self.backing_request is not None
+        ):
+            return
+        try:
+            request_id = self.creations.request_selection(
+                media_types=("audio/wav",),
+                roles=("narration", "song", "music"),
+            )
+        except (RuntimeError, ValueError, OSError):
+            self.backing_import_state = "error"
+            self.backing_feedback_until = time.monotonic() + 2.0
+            return
+        self.backing_request = request_id
+        self.backing_import_state = "pending"
+        self.backing_next_poll = time.monotonic() + 0.12
+
+    def _poll_backing_track(self, now: float) -> None:
+        request_id = self.backing_request
+        if (
+            request_id is None
+            or self.creations is None
+            or now < self.backing_next_poll
+        ):
+            return
+        self.backing_next_poll = now + 0.12
+        try:
+            result = self.creations.poll_selection(request_id)
+        except (RuntimeError, ValueError, OSError):
+            self.backing_request = None
+            self.backing_import_state = "error"
+            self.backing_feedback_until = now + 2.0
+            return
+        if result.state == "pending":
+            return
+        self.backing_request = None
+        if result.state == "cancelled":
+            self.backing_import_state = ""
+            return
+        token = result.selection_token
+        if (
+            result.state != "ready"
+            or not isinstance(token, str)
+            or not token
+            or not self._accept_backing_track(token)
+        ):
+            self.backing_import_state = "error"
+            self.backing_feedback_until = now + 2.0
+            return
+        self.backing_import_state = "imported"
+        self.backing_feedback_until = now + 2.0
+
+    def _accept_backing_track(self, selection_token: str) -> bool:
+        if self.creations is None or self.backing_store is None:
+            return False
+        try:
+            transfer = self.creations.import_selected(selection_token)
+            payload = transfer.payload
+            role = transfer.record.get("role")
+            if (
+                transfer.record.get("media_type") != "audio/wav"
+                or role not in SUPPORTED_BACKING_ROLES
+                or not isinstance(payload, bytes)
+                or transfer.record.get("sha256")
+                != __import__("hashlib").sha256(payload).hexdigest()
+            ):
+                raise ValueError("selected backing track failed integrity validation")
+            track = ImportedBackingTrack.from_wav(payload)
+            title_raw = transfer.record.get("title", "")
+            title = title_raw if isinstance(title_raw, str) else ""
+            record = self.backing_store.save(
+                track.wav_bytes,
+                role=role,
+                title=title,
+                duration_seconds=track.duration_seconds,
+            )
+        except (
+            BackingTrackStoreError,
+            RuntimeError,
+            ValueError,
+            OSError,
+        ):
+            return False
+        self.backing_record = record
+        self.backing_player.load(track)
+        self.backing_notes_played = 0
+        return True
+
+    def _toggle_backing_track(self) -> None:
+        previous = self.backing_player.state
+        state = self.backing_player.toggle()
+        if state == "playing" and previous == "ready":
+            self.backing_notes_played = 0
+        elif state == "error":
+            self.backing_import_state = "error"
+            self.backing_feedback_until = time.monotonic() + 2.0
+
     # ------------------------------------------------------------------
     # Event dispatch
     # ------------------------------------------------------------------
@@ -162,6 +312,14 @@ class OrchestraApp:
             if logical is None:
                 return
             lx, ly = logical
+            point = (int(lx), int(ly))
+            assert self.renderer is not None
+            if self.renderer.backing_import_contains(point):
+                self._request_backing_track()
+                return
+            if self.renderer.backing_play_contains(point):
+                self._toggle_backing_track()
+                return
             for inst in self.instruments:
                 if inst.contains(lx, ly):
                     inst.trigger()
@@ -171,6 +329,8 @@ class OrchestraApp:
                         self.particles.append(
                             Particle(inst.x, inst.y - 20, random.choice(["🎵", "🎶", "✨", "⭐"]), STAGE_GOLD)
                         )
+                    if self.backing_player.state == "playing":
+                        self.backing_notes_played += 1
                     self._safe_emit("instrument.played", f"inst-{time.time()}", payload={"instrument": inst.inst_id})
             for k_i in range(8):
                 kx = 64 + k_i * 112
@@ -220,6 +380,8 @@ class OrchestraApp:
                 self.particles.append(
                     Particle(kx + 52, 460, random.choice(["🎵", "🎶", "♪", "♫"]), RAINBOW_COLORS[k_idx])
                 )
+            if self.backing_player.state == "playing":
+                self.backing_notes_played += 1
             self._safe_emit("instrument.played", f"note-{time.time()}", payload={"note": k_idx})
 
     def _safe_emit(self, ev_id: str, ikey: str, payload: object = None) -> None:
@@ -233,6 +395,22 @@ class OrchestraApp:
     # ------------------------------------------------------------------
 
     def _update_state(self) -> None:
+        now = time.monotonic()
+        self._poll_backing_track(now)
+        if (
+            self.backing_import_state
+            and self.backing_import_state != "pending"
+            and now >= self.backing_feedback_until
+        ):
+            self.backing_import_state = ""
+        if self.backing_player.refresh():
+            if self.backing_notes_played > 0:
+                self._safe_emit(
+                    "concert.performed",
+                    f"concert-{time.time()}",
+                    payload={"live_inputs": self.backing_notes_played},
+                )
+            self.backing_notes_played = 0
         for inst in self.instruments:
             inst.update()
         for i in range(8):
@@ -251,7 +429,14 @@ class OrchestraApp:
         self.renderer.draw_instruments(surf, self.instruments, self.is_it)
         self.renderer.draw_particles(surf, self.particles)
         self.renderer.draw_piano_keys(surf, self.key_highlight_timers, self.note_labels)
-        self.renderer.draw_hud(surf, self.stars, self.is_it)
+        self.renderer.draw_hud(
+            surf,
+            self.stars,
+            self.is_it,
+            backing_enabled=self.backing_player.track is not None,
+            backing_state=self.backing_player.state,
+            backing_import_state=self.backing_import_state,
+        )
         theme = get_theme()
         try:
             bg = theme.background
@@ -273,20 +458,23 @@ class OrchestraApp:
         self.clock.tick(60)
 
     def run(self) -> int:
-        while self._running and not activity_stop_requested():
-            for event in pygame.event.get():
-                self.handle_event(event)
+        try:
+            while self._running and not activity_stop_requested():
+                for event in pygame.event.get():
+                    self.handle_event(event)
+                    if not self._running:
+                        break
                 if not self._running:
                     break
-            if not self._running:
-                break
-            self._update_state()
-            self._draw()
-            if not self.ready_published:
-                mark_activity_ready()
-                self.ready_published = True
-            self.clock.tick(60)
-        self._autosave()
+                self._update_state()
+                self._draw()
+                if not self.ready_published:
+                    mark_activity_ready()
+                    self.ready_published = True
+                self.clock.tick(60)
+        finally:
+            self.backing_player.stop()
+            self._autosave()
         return 0
 
 
@@ -294,6 +482,7 @@ def build_app(
     screen: pygame.Surface,
     *,
     storage: Any | None = None,
+    creations: Any | None = None,
     is_it: bool | None = None,
 ) -> OrchestraApp:
     """Composition helper for the thin bootstrap and tests."""
@@ -314,6 +503,11 @@ def build_app(
             storage = get_storage()
         except Exception:
             storage = None
+    if creations is None:
+        try:
+            creations = get_creations()
+        except RuntimeError:
+            creations = None
     return OrchestraApp(
         screen=screen,
         canvas=canvas,
@@ -322,6 +516,7 @@ def build_app(
         audio=audio,
         renderer=renderer,
         storage=storage,
+        creations=creations,
         is_it=is_it,
     )
 
