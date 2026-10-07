@@ -10,18 +10,32 @@ import pygame
 
 from greia_platform.typography import FontRole, GreiaTypography
 
-from .colline_content import (
-    CHASSIS_HEIGHT,
-    CHASSIS_WIDTH,
-    PIXELS_PER_METER,
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    SYSTEM_CHROME_SAFE_X,
-    SYSTEM_CHROME_SAFE_Y,
-    WHEEL_RADIUS,
-    WHEELBASE,
-)
-from .colline_model import CollineWorld, Vehicle
+if __package__:
+    from .colline_content import (
+        CHASSIS_HEIGHT,
+        CHASSIS_WIDTH,
+        PIXELS_PER_METER,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        SYSTEM_CHROME_SAFE_X,
+        SYSTEM_CHROME_SAFE_Y,
+        WHEEL_RADIUS,
+        WHEELBASE,
+    )
+    from .colline_model import CollineWorld, Vehicle
+else:
+    from colline_content import (
+        CHASSIS_HEIGHT,
+        CHASSIS_WIDTH,
+        PIXELS_PER_METER,
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        SYSTEM_CHROME_SAFE_X,
+        SYSTEM_CHROME_SAFE_Y,
+        WHEEL_RADIUS,
+        WHEELBASE,
+    )
+    from colline_model import CollineWorld, Vehicle
 
 # Visual Palette
 SKY_TOP: Final[tuple[int, int, int]] = (120, 195, 245)
