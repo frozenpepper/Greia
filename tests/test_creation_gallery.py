@@ -158,6 +158,34 @@ class TestGallery(unittest.TestCase):
             controller.toggle_audio(self.sound)
         self.assertIsNone(controller.page.playing_id)
 
+    def test_role_scoped_picker_hides_unrelated_creations(self):
+        self.library.publish(
+            b"a postcard", producer_id="org.greia.mail",
+            media_type="text/plain", role="postcard",
+        )
+        picker = CreationsGalleryController(
+            self.library,
+            mode=GalleryMode.PICKER,
+            media_types=frozenset({"text/plain"}),
+            roles=frozenset({"story"}),
+            on_pick=lambda _: "trusted-selection",
+        )
+        all_stories = []
+        while True:
+            all_stories.extend(picker.page.items)
+            if not picker.next_page():
+                break
+        self.assertEqual(len(all_stories), 5)
+        self.assertTrue(all(record.role == "story" for record in all_stories))
+        with self.assertRaises(ValueError):
+            CreationsGalleryController(
+                self.library,
+                mode=GalleryMode.PICKER,
+                media_types=frozenset({"text/plain"}),
+                roles=frozenset(),
+                on_pick=lambda _: "trusted-selection",
+            )
+
     def test_filtered_pagination_reaches_beyond_sixty_four_items(self):
         for i in range(76):
             self.library.publish(f'Later story {i}'.encode(), producer_id='org.greia.writing', media_type='text/plain', role='story')
