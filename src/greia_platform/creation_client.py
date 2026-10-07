@@ -22,6 +22,14 @@ class CreationTransfer:
 
 
 @dataclass(frozen=True, slots=True)
+class CreationPickerReply:
+    """A non-blocking Shell picker result; an Activity never sees library IDs."""
+
+    state: str
+    selection_token: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class ActivityCreationsClient:
     """Narrow runtime API: publish an own file; receive a picked immutable copy."""
 
@@ -38,6 +46,48 @@ class ActivityCreationsClient:
             title=title,
         )
         return self._record(response)
+
+    def request_selection(
+        self, *, media_types: tuple[str, ...], roles: tuple[str, ...] = ()
+    ) -> str:
+        """Ask the trusted Shell to offer a picker; never enumerate records."""
+        if not isinstance(media_types, tuple) or not media_types:
+            raise ValueError("explicit non-empty media types required")
+        if not isinstance(roles, tuple):
+            raise ValueError("semantic roles must be a tuple")
+        response, _ = self.storage_session.creation_exchange(
+            "creations.request_selection",
+            media_types=list(media_types),
+            roles=list(roles),
+        )
+        request_id = response.get("request_id")
+        if not isinstance(request_id, str) or not request_id:
+            raise StorageClientError("creation broker did not issue a picker request")
+        return request_id
+
+    def poll_selection(self, request_id: str) -> CreationPickerReply:
+        """Poll without blocking a Pygame frame for a human choice."""
+        response, _ = self.storage_session.creation_exchange(
+            "creations.poll_selection", request_id=request_id
+        )
+        state = response.get("state")
+        token = response.get("selection_token")
+        if state not in ("pending", "ready", "cancelled"):
+            raise StorageClientError("creation broker returned an invalid picker state")
+        if state == "ready" and (not isinstance(token, str) or not token):
+            raise StorageClientError("ready picker result lacks a selection handle")
+        if state != "ready" and token is not None:
+            raise StorageClientError("inactive picker unexpectedly carried a handle")
+        return CreationPickerReply(state, token if isinstance(token, str) else None)
+
+    def cancel_selection(self, request_id: str) -> bool:
+        response, _ = self.storage_session.creation_exchange(
+            "creations.cancel_selection", request_id=request_id
+        )
+        cancelled = response.get("cancelled")
+        if not isinstance(cancelled, bool):
+            raise StorageClientError("invalid picker cancellation response")
+        return cancelled
 
     def import_selected(self, selection_token: str) -> CreationTransfer:
         response, payload = self.storage_session.creation_exchange(
