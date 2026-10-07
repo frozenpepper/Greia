@@ -1,9 +1,9 @@
-# Creations Library P3–P5 — Desktop Source + Real GUI Acceptance
+# Creations Library P1–P5 — Desktop Source + Real GUI Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `cb9bc32c680ddd3953d256b8bc0c4311e194bfad` (latest code/test checkpoint; later documentation-only commits may follow).  
+**Pinned source candidate:** `39e8d77b1099f8a407b2f0bc4efbd3516cf04fba` (latest P1–P5 code/test checkpoint; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
-**Expected state:** P3 Gallery, authenticated request/poll/cancel transport, **trusted in-Activity modal presentation**, P4 PNG paths across Painting/Shape Garden/Teatrino, and the first P5 WAV path exist SOURCE-WIP. Storie della Mia Voce deliberately publishes only already-durable scene WAV files with role `narration`. The universal picker can play/pause/resume/replay WAV **before selection**. Teatrino requests only `audio/wav` + `narration`, validates the one-use payload, and can puppeteer to that selected narration without opening the microphone; an early child Stop trims the canonical WAV before the show is privately saved. **None of this latest modal/cross-app/audio slice has been accepted in a complete checkout or real GUI yet.** UTF-8 text, second audio consumer, all-writer capacity and hardware evidence remain open.
+**Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **None of the accumulated P1–P5 candidate has been accepted in a complete checkout or real GUI/audio/text/capacity run yet.** Hardware evidence remains separate.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor cb9bc32c680ddd3953d256b8bc0c4311e194bfad HEAD` (exit **0** required). Check `git diff --name-only cb9bc32c680ddd3953d256b8bc0c4311e194bfad HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor 39e8d77b1099f8a407b2f0bc4efbd3516cf04fba HEAD` (exit **0** required). Check `git diff --name-only 39e8d77b1099f8a407b2f0bc4efbd3516cf04fba HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -54,6 +54,12 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_index.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_profiles.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_profile_volume_budget.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_writing_creations.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_posta_di_leo_creations.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_orchestra_backing_store.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_orchestra_creations.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_orchestra_manifest.py' -v
 make verify
 ```
 
@@ -131,11 +137,15 @@ The new code introduces **`tests/test_creation_selection.py`**, additional `test
 - Writing tests prove saved-private-file publication, `document` + `postcard` picker scope, strict UTF-8/digest/role checks, independent private document import, unchanged-publication deduplication and rollback when a new-document index commit fails;
 - Posta tests prove authoritative saved-card UTF-8 files, failed-index rollback/reclaim order, path-safe legacy IDs, grapheme-safe imported replacement, import failure preservation, saved-only `postcard` publication and deduplication;
 - Orchestra tests prove content-addressed private backing storage, failed-pointer rollback, WAV/role/digest validation, picker audio isolation, reserved mixer channel 0 Play/Pause/Resume, persistence-before-active-state mutation, and `concert.performed` only after real live accompaniment; its manifest regression locks the corrected free-play pedagogy and declared `instrument.played` event.
+- shared-capacity tests prove the owner’s 8 GiB writable-volume example: at 2 GiB used the global policy permits at most 4 GiB additional persistent growth before 6 GiB used; the shipped 25% private-namespace fraction yields a 2 GiB per-Activity containment ceiling on that same writable volume while the 16 MiB single-file bound remains independent;
+- `VolumeBudget.write_reservation()` is shared across private Activity storage, My Creations and history in launcher composition; deterministic concurrency coverage must prove the second writer observes the first writer's changed usage rather than both passing one stale capacity observation;
+- at the 75% occupancy ceiling, same-size/non-growing repair writes to existing private state remain possible when physically free staging room exists, while a new private file, a new history session and a storage-migration working copy are denied;
+- migration-copy and atomic-replacement tests must verify **peak temporary bytes** separately from final persistent growth; do not weaken the 512 MiB floor to make staging pass.
 
 Do not bypass the real presenter gate, inject raw shared paths, or create a dummy Activity-local picker. The implemented backend semantics are documented in
 `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`.
 
-**Further deferred:** sibling-profile isolation in live sessions, backup/restore, disk saturation at 75% plus OS headroom, Wayland/KMSDRM modal backends, and installed Acer/Pi interaction/performance only after the independent lifecycle/first-boot route permits it. Avoid unreviewed hardware flashing now.
+**Further deferred:** sibling-profile isolation in live sessions, backup/restore, **real-device writable-volume calibration** (read-only measurement only in this desktop run; do not intentionally fill or stress a real disk), Wayland/KMSDRM modal backends, and installed Acer/Pi interaction/performance only after the independent lifecycle/first-boot route permits it. Avoid unreviewed hardware flashing now.
 
 ### 3. Report and evidence
 
@@ -149,6 +159,8 @@ Provide exactly:
 - whether **Voice Stories→audio preview→Teatrino narration** worked without microphone contention, including early-stop trimming and saved-show replay after deletion of the shared source WAV;
 - whether **Writing→Posta→Writing UTF-8** worked through the trusted picker, including grapheme-safe postcard compaction, saved-only Posta sharing and continued access after shared-source deletion;
 - whether **Voice Stories→Orchestra** provided audible preview-before-select, no autoplay after import/relaunch, uninterrupted live accompaniment, explicit pause/resume, picker-preview isolation and playback after deletion of the shared source WAV;
+- whether `test_profile_volume_budget.py` and the full suite proved shared reservation serialization, 8 GiB→2 GiB adaptive Activity quota, 75% aggregate ceiling, non-growing recovery writes, history growth denial and migration working-copy denial;
+- the **actual local writable filesystem facts** used for calibration (`df -B1`/platform-equivalent for the profile-data mount if available), recorded read-only; do not create giant filler files or intentionally approach the machine's capacity limit;
 - image detail/deletion/cancel state; actual observed bug(s), with steps;
 - accepted screen sizes/input modes; limitations;
 - any audio/TTS/microphone output not tested;
@@ -160,4 +172,4 @@ Return a ZIP of the raw screenshots + logs + concise Markdown report from the `t
 
 STOP on pre-existing uncommitted source state, mismatched source SHA ancestry, source changes beyond candidate not yet reviewed, first focused or full verify failure, missing unavailable dependencies not safely bootstrappable, profile selection/data isolation ambiguity, real child data exposure, unrecoverable simulator failure, or a GUI crash. Preserve files/logs exactly for root cause; no false PASS by skipping failing gates.
 
-**Expected handoff:** this accumulated run either validates the current trusted modal + PNG round trip + Voice Stories→Teatrino narration flow or stops at the first reproducible defect with raw evidence. After repairs, proceed to UTF-8, the second audio consumer and all-writer capacity work rather than creating another picker implementation.
+**Expected handoff:** this accumulated run either validates the current P1–P5 source candidate (shared/adaptive capacity + trusted modal + PNG/WAV/UTF-8 round trips) or stops at the first reproducible defect with raw evidence. After repairs, proceed to P6 release curation and P7 Activity quality review rather than creating another picker or storage policy.
