@@ -14,7 +14,7 @@ from greia_platform.creation_gallery_screen import CreationsGalleryScreen
 from greia_platform.creations import CreationLibrary
 from greia_platform.ui_core import UiEventResult
 
-from .lifecycle import ActivityExitReason, ActivitySession, ActivitySessionState
+from .lifecycle import ActivitySession, ActivitySessionState
 from .shell_window import ShellActivityModalLease
 
 
@@ -239,13 +239,14 @@ class ActivityCreationPickerHost:
             return True
         self._closed = True
         screen = self._screen
+        was_visible = screen is not None
         self._screen = None
         if screen is not None:
             screen.on_exit()
         lease = self._lease
         clean = True
         if lease is not None:
-            if activity_alive and self.visible:
+            if activity_alive and was_visible:
                 clean = bool(self._shell_window_backend.dismiss_activity_modal(lease))
             self._shell_window_backend.abandon_activity_modal(lease)
         self._lease = None
