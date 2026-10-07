@@ -32,8 +32,8 @@ entrypoint = "main.py"
 profile = "text"
 
 [requirements]
-required_capabilities = ["display", "keyboard"]
-optional_capabilities = ["pointer", "touch"]
+required_capabilities = ["display", "keyboard", "pointer"]
+optional_capabilities = ["touch"]
 
 [permissions]
 requested = []
