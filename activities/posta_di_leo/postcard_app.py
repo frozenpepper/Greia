@@ -263,9 +263,14 @@ class PostcardActivity:
         if self.selected_gallery_card_id is not None:
             if self.confirm_delete:
                 if self.renderer.delete_btn_rect().collidepoint(point):
-                    # Confirm Delete
-                    self.library.delete(self.selected_gallery_card_id)
-                    self.storage.save(self.library)
+                    # Commit deletion before presenting it as successful.
+                    before = tuple(self.library.cards)
+                    deleted_id = self.selected_gallery_card_id
+                    if self.library.delete(deleted_id):
+                        if not self.storage.save(self.library):
+                            self.library = PostcardLibrary(before)
+                            self.confirm_delete = False
+                            return True
                     self.selected_gallery_card_id = None
                     self.confirm_delete = False
                     self.audio.play("delete")
