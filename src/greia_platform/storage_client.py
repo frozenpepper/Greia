@@ -195,6 +195,14 @@ class ActivityStorageClient:
             raise StorageClientError("storage broker returned invalid checkpoint token")
         return token
 
+    def creation_exchange(
+        self, operation: str, **fields: object
+    ) -> tuple[dict[str, object], bytes]:
+        """Bounded SDK transport for only the two child-accessible operations."""
+        if operation not in {"creations.publish_private", "creations.import_selected"}:
+            raise StorageClientError("unsupported creations transfer operation")
+        return self._request(operation, **fields)
+
     def _request(
         self,
         operation: str,
