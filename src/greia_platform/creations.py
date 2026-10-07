@@ -252,38 +252,58 @@ class CreationLibrary:
         *,
         media_type: str | None = None,
         media_types: tuple[str, ...] | None = None,
+        roles: tuple[str, ...] | None = None,
         limit: int = 24,
         offset: int = 0,
     ) -> tuple[CreationRecord, ...]:
-        """Return metadata only; galleries fetch previews on demand by ID."""
+        """Return bounded metadata through indexed SQL, not Python-wide scans.
+
+        Filters are trusted-presentation inputs; no list operation is exposed
+        over an Activity session. All free values are SQLite parameters.
+        """
         if type(limit) is not int or not 1 <= limit <= 64 or type(offset) is not int or offset < 0:
             raise ValueError("invalid bounded creation page")
         if media_type is not None and media_types is not None:
             raise ValueError("choose either one media type or a set")
+
+        clauses: list[str] = []
+        values: list[object] = []
         if media_types is not None:
             if (
                 not isinstance(media_types, tuple)
                 or not 1 <= len(media_types) <= 8
+                or any(not isinstance(kind, str) for kind in media_types)
                 or len(set(media_types)) != len(media_types)
             ):
                 raise ValueError("invalid media type filter")
             for kind in media_types:
                 self._media.codec_for(kind)
-            placeholders = ",".join("?" for _ in media_types)
-            query = (
-                f"SELECT * FROM creations WHERE media_type IN ({placeholders}) "
-                "ORDER BY created_at DESC, creation_id DESC LIMIT ? OFFSET ?"
-            )
-            params: tuple[Any, ...] = (*media_types, limit, offset)
+            clauses.append("media_type IN (" + ",".join("?" for _ in media_types) + ")")
+            values.extend(media_types)
         elif media_type is not None:
             self._media.codec_for(media_type)
-            query = "SELECT * FROM creations WHERE media_type = ? ORDER BY created_at DESC, creation_id DESC LIMIT ? OFFSET ?"
-            params = (media_type, limit, offset)
-        else:
-            query = "SELECT * FROM creations ORDER BY created_at DESC, creation_id DESC LIMIT ? OFFSET ?"
-            params = (limit, offset)
+            clauses.append("media_type = ?")
+            values.append(media_type)
+
+        if roles is not None:
+            if (
+                not isinstance(roles, tuple)
+                or not 1 <= len(roles) <= 8
+                or any(not isinstance(role, str) or not 1 <= len(role) <= 48 for role in roles)
+                or len(set(roles)) != len(roles)
+            ):
+                raise ValueError("invalid semantic role filter")
+            clauses.append("role IN (" + ",".join("?" for _ in roles) + ")")
+            values.extend(roles)
+
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        query = (
+            "SELECT * FROM creations" + where
+            + " ORDER BY created_at DESC, creation_id DESC LIMIT ? OFFSET ?"
+        )
+        values.extend((limit, offset))
         with self._connect() as db:
-            return tuple(CreationRecord.from_row(row) for row in db.execute(query, params))
+            return tuple(CreationRecord.from_row(row) for row in db.execute(query, tuple(values)))
 
     def describe(self, creation_id: str) -> CreationRecord:
         """Trusted platform metadata lookup; never expose in an Activity broker."""
