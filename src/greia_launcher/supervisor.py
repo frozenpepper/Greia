@@ -18,6 +18,7 @@ from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext, ProfileError
 from greia_platform.storage import ActivityStorageService, StorageError
 
+from .creation_selection import SelectionRequest
 from .display_session import (
     DisplaySessionCoordinator,
     DisplaySessionError,
@@ -174,6 +175,37 @@ class ActivitySupervisor:
         if session is not None and not session.terminal:
             return session
         return None
+
+    def _active_creation_broker(self, session: ActivitySession) -> ActivityStorageBroker | None:
+        """Only a currently-running trusted Activity session may own a picker."""
+        if self.active_session is not session or session.state is not ActivitySessionState.RUNNING:
+            return None
+        return next(
+            (resource for resource in self._session_resources.get(session.session_id, ())
+             if isinstance(resource, ActivityStorageBroker)),
+            None,
+        )
+
+    def pending_creation_selection(self, session: ActivitySession) -> SelectionRequest | None:
+        """Shell-only inspection, not an Activity-visible enumeration operation."""
+        broker = self._active_creation_broker(session)
+        return None if broker is None else broker.pending_creation_selection()
+
+    def complete_creation_selection(
+        self, session: ActivitySession, request_id: str, creation_id: str
+    ) -> None:
+        """Shell-only completion after a trusted UI confirmed child intent."""
+        broker = self._active_creation_broker(session)
+        if broker is None:
+            raise ActivityLifecycleError("no live creation-picker session")
+        broker.complete_creation_selection(request_id, creation_id)
+
+    def cancel_creation_selection(self, session: ActivitySession, request_id: str) -> None:
+        """Shell-owned cancellation on Back/Home/display failure."""
+        broker = self._active_creation_broker(session)
+        if broker is None:
+            raise ActivityLifecycleError("no live creation-picker session")
+        broker.cancel_creation_selection(request_id)
 
     def start(
         self,
