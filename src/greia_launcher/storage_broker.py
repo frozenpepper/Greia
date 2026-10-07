@@ -7,9 +7,13 @@ import shutil
 import socketserver
 import tempfile
 import threading
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from greia_platform.creation_access import CreationAccessDenied, CreationSessionAccess
+from greia_platform.creation_capacity import CreationSpaceError
+from greia_platform.creation_media import CreationMediaError
+from greia_platform.creations import CreationLibraryError
 from greia_platform.storage import ActivityStorage, StorageError, StorageQuotaExceeded
 from greia_platform.storage_protocol import (
     StorageProtocolError,
@@ -41,11 +45,17 @@ class _StorageRequestHandler(socketserver.BaseRequestHandler):
                 self.request,
                 {"ok": False, "error_code": exc.code, "message": exc.message},
             )
-        except StorageQuotaExceeded as exc:
+        except CreationAccessDenied:
+            send_frame(self.request, {"ok": False, "error_code": "unauthorized", "message": "creation access denied"})
+        except (StorageQuotaExceeded, CreationSpaceError) as exc:
             send_frame(
                 self.request,
                 {"ok": False, "error_code": "quota_exceeded", "message": str(exc)},
             )
+        except CreationMediaError:
+            send_frame(self.request, {"ok": False, "error_code": "invalid_media", "message": "creation media was rejected"})
+        except CreationLibraryError:
+            send_frame(self.request, {"ok": False, "error_code": "creation_error", "message": "creation operation failed"})
         except (StorageError, StorageProtocolError):
             send_frame(
                 self.request,
@@ -85,8 +95,10 @@ class _StorageUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamSer
         socket_path: Path,
         storage: ActivityStorage,
         session_token: str,
+        creation_access: CreationSessionAccess | None = None,
     ):
         self.storage = storage
+        self.creation_access = creation_access
         self.session_token = session_token
         self.max_payload_bytes = max(
             storage.policy.max_file_bytes,
@@ -117,6 +129,24 @@ class _StorageUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamSer
         payload: bytes,
     ) -> tuple[dict[str, object], bytes]:
         operation = request.get("op")
+        if operation in ("creations.publish_private", "creations.import_selected"):
+            # No child-directed enumeration, arbitrary read, selection grant,
+            # delete or profile selector exists in this protocol.
+            access = self.creation_access
+            if access is None:
+                raise _BrokerRequestError("unauthorized", "creations not enabled for Activity")
+            if payload:
+                raise _BrokerRequestError("invalid_request", "creation actions carry no raw payload")
+            if operation == "creations.publish_private":
+                record = access.publish_private_file(
+                    filename=_required_text(request, "filename"),
+                    media_type=_required_text(request, "media_type"),
+                    role=_required_text(request, "role"),
+                    title=_optional_text(request, "title"),
+                )
+                return {"record": asdict(record)}, b""
+            selected = access.import_selected(_required_text(request, "selection_token"))
+            return {"record": asdict(selected.record)}, selected.payload
         if operation == "kv.get":
             key = _required_text(request, "key")
             sentinel = object()
@@ -182,6 +212,7 @@ class ActivityStorageBroker:
         *,
         runtime_root: Path | None = None,
         sandboxed: bool,
+        creation_access: CreationSessionAccess | None = None,
     ) -> "ActivityStorageBroker":
         base = runtime_root or _default_runtime_root()
         base = base.resolve(strict=False)
@@ -196,7 +227,7 @@ class ActivityStorageBroker:
             raise StorageError("storage broker socket path is too long")
         token = secrets.token_urlsafe(32)
         try:
-            server = _StorageUnixServer(host_socket, storage, token)
+            server = _StorageUnixServer(host_socket, storage, token, creation_access)
         except Exception:
             shutil.rmtree(host_root, ignore_errors=True)
             raise
@@ -221,6 +252,8 @@ class ActivityStorageBroker:
         if self._stopped:
             return
         self._stopped = True
+        if self._server.creation_access is not None:
+            self._server.creation_access.close()
         self._server.shutdown()
         self._server.server_close()
         self._thread.join(timeout=1.0)
@@ -231,6 +264,13 @@ def _required_text(container: dict[str, object], key: str) -> str:
     value = container.get(key)
     if not isinstance(value, str) or not value:
         raise _BrokerRequestError("invalid_request", f"{key} must be non-empty text")
+    return value
+
+
+def _optional_text(container: dict[str, object], key: str) -> str:
+    value = container.get(key, "")
+    if not isinstance(value, str):
+        raise _BrokerRequestError("invalid_request", f"{key} must be text")
     return value
 
 
