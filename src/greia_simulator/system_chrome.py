@@ -35,6 +35,7 @@ class SimulatorSystemChromeRemoteBridge(SimulatorRemoteBridge):
         self._system_navigation: queue.Queue[SystemNavigationAction] = queue.Queue(
             maxsize=self._MAX_SYSTEM_ACTIONS
         )
+        self._shell_modal_session_id: str | None = None
 
     def activate_system_chrome(
         self,
@@ -48,12 +49,36 @@ class SimulatorSystemChromeRemoteBridge(SimulatorRemoteBridge):
             self._system_chrome_session_id = session_id
             self._system_chrome_layout = layout
 
+    def activate_shell_modal(self, session_id: str) -> None:
+        """Divert ordinary remote input/frame authority from Activity to Shell."""
+        with self._system_chrome_lock:
+            if self._system_chrome_session_id != session_id:
+                raise RuntimeError("Simulator modal requires active matching system chrome")
+            if self._shell_modal_session_id is not None:
+                raise RuntimeError("Simulator Shell modal is already active")
+            self._shell_modal_session_id = session_id
+
+    def deactivate_shell_modal(self, session_id: str) -> None:
+        with self._system_chrome_lock:
+            if self._shell_modal_session_id is None:
+                return
+            if self._shell_modal_session_id != session_id:
+                raise RuntimeError("Simulator Shell modal session mismatch")
+            self._shell_modal_session_id = None
+
+    def shell_modal_active(self, session_id: str | None = None) -> bool:
+        with self._system_chrome_lock:
+            if session_id is None:
+                return self._shell_modal_session_id is not None
+            return self._shell_modal_session_id == session_id
+
     def deactivate_system_chrome(self, session_id: str) -> None:
         with self._system_chrome_lock:
             if self._system_chrome_session_id is None:
                 return
             if self._system_chrome_session_id != session_id:
                 raise RuntimeError("Simulator system chrome session mismatch")
+            self._shell_modal_session_id = None
             self._system_chrome_session_id = None
             self._system_chrome_layout = None
             self._clear_system_navigation_locked()
@@ -110,6 +135,25 @@ class SimulatorSystemChromeRemoteBridge(SimulatorRemoteBridge):
 
         super().queue_mouse(x, y, action=action, button=button)
 
+    def drain_events(self) -> list[dict[str, Any]]:
+        """Activity transport receives no ordinary input while Shell modal owns it."""
+        with self._system_chrome_lock:
+            if self._shell_modal_session_id is not None:
+                return []
+        return super().drain_events()
+
+    def capture_frame(self, surface: Any, pygame: Any, mode: str = "profiles") -> None:
+        # Shell modal frames are the authoritative synthetic display until
+        # dismissal; Activity uploads are ignored by set_external_frame_png.
+        if self.shell_modal_active():
+            mode = "creations_picker"
+        super().capture_frame(surface, pygame, mode=mode)
+
+    def set_external_frame_png(self, png_bytes: bytes, mode: str = "activity") -> None:
+        if self.shell_modal_active():
+            return
+        super().set_external_frame_png(png_bytes, mode=mode)
+
     def _clear_system_navigation_locked(self) -> None:
         while True:
             try:
@@ -163,6 +207,13 @@ class SimulatorSystemChromeBackend:
             raise RuntimeError("Simulator system chrome has no layout")
         self._bridge.activate_system_chrome(session_id, layout)
         self._visible = True
+
+    def ensure_visible(self, session_id: str) -> None:
+        self._require_session(session_id)
+        if not self._visible:
+            raise RuntimeError("Simulator system chrome is not visible")
+        # Protected input authority already lives in the remote bridge and
+        # remains active while the Shell modal owns ordinary input.
 
     def poll_action(self, session_id: str) -> SystemNavigationAction | None:
         self._require_session(session_id)
