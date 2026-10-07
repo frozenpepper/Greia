@@ -42,6 +42,7 @@ class CreationSelectionCoordinator:
     """One outstanding request for the broker's one authenticated Activity."""
 
     REQUEST_SECONDS = 180.0
+    RESULT_RETENTION_SECONDS = 30.0
     MAX_ROLES = 8
 
     def __init__(
@@ -59,6 +60,7 @@ class CreationSelectionCoordinator:
         self._lock = threading.Lock()
         self._request: SelectionRequest | None = None
         self._result = SelectionStatus(SelectionState.PENDING)
+        self._settled_at: float | None = None
         self._closed = False
 
     @staticmethod
@@ -94,13 +96,30 @@ class CreationSelectionCoordinator:
         if self._closed:
             raise CreationAccessDenied("selection session has ended")
 
+    def _settle(self, status: SelectionStatus) -> None:
+        self._result = status
+        self._settled_at = self._clock()
+
     def _expire(self) -> None:
+        request = self._request
+        if request is None:
+            return
+        now = self._clock()
         if (
-            self._request is not None
-            and self._result.state is SelectionState.PENDING
-            and self._clock() - self._request.created_at >= self.REQUEST_SECONDS
+            self._result.state is SelectionState.PENDING
+            and now - request.created_at >= self.REQUEST_SECONDS
         ):
-            self._result = SelectionStatus(SelectionState.CANCELLED)
+            self._settle(SelectionStatus(SelectionState.CANCELLED))
+        elif (
+            self._settled_at is not None
+            and now - self._settled_at >= self.RESULT_RETENTION_SECONDS
+        ):
+            # A client that never collects the result cannot hold the single
+            # session picker slot indefinitely. Old handles also expire in
+            # CreationSessionAccess independently.
+            self._request = None
+            self._result = SelectionStatus(SelectionState.PENDING)
+            self._settled_at = None
 
     def request(self, *, media_types: object, roles: object = None) -> SelectionRequest:
         with self._lock:
@@ -119,6 +138,7 @@ class CreationSelectionCoordinator:
                 created_at=self._clock(),
             )
             self._result = SelectionStatus(SelectionState.PENDING)
+            self._settled_at = None
             return self._request
 
     def poll(self, request_id: str) -> SelectionStatus:
@@ -131,6 +151,7 @@ class CreationSelectionCoordinator:
             if result.state is not SelectionState.PENDING:
                 self._request = None
                 self._result = SelectionStatus(SelectionState.PENDING)
+                self._settled_at = None
             return result
 
     def cancel(self, request_id: str) -> bool:
@@ -140,7 +161,7 @@ class CreationSelectionCoordinator:
                 raise CreationAccessDenied("no matching selection request")
             if self._result.state is not SelectionState.PENDING:
                 return False
-            self._result = SelectionStatus(SelectionState.CANCELLED)
+            self._settle(SelectionStatus(SelectionState.CANCELLED))
             return True
 
     def trusted_pending(self) -> SelectionRequest | None:
@@ -168,7 +189,7 @@ class CreationSelectionCoordinator:
                 only_media_types=frozenset(req.media_types),
                 only_roles=frozenset(req.roles) if req.roles else None,
             )
-            self._result = SelectionStatus(SelectionState.READY, token)
+            self._settle(SelectionStatus(SelectionState.READY, token))
             return token
 
     def trusted_cancel(self, request_id: str) -> None:
@@ -180,3 +201,4 @@ class CreationSelectionCoordinator:
             self._closed = True
             self._request = None
             self._result = SelectionStatus(SelectionState.CANCELLED)
+            self._settled_at = None
