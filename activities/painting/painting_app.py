@@ -423,6 +423,7 @@ class PaintingApp:
             result = self.creations.poll_selection(request_id)
         except (RuntimeError, ValueError, OSError):
             self.shared_import_request = None
+            self.shared_import_next_poll = 0.0
             self.shared_import_state = "error"
             self.shared_import_feedback_until = time.monotonic() + 2.0
             return
