@@ -38,6 +38,7 @@ _TOKEN = re.compile(r"^[a-z][a-z0-9._-]{0,95}$")
 _ID = re.compile(r"^[0-9a-f]{32}$")
 _SCHEMA_VERSION = 1
 _PREVIEW_MAX_BYTES = 2 * 1024 * 1024
+_PUBLISH_TRANSACTION_HEADROOM = 512 * 1024
 
 
 def _bounded_token(value: str, label: str) -> str:
@@ -207,7 +208,11 @@ class CreationLibrary:
         prepared = self._media.codec_for(media_type).prepare(bytes(payload))
         if len(prepared.preview) > _PREVIEW_MAX_BYTES:
             raise CreationMediaError("generated preview exceeds size policy")
-        byte_growth = len(prepared.data) + len(prepared.preview)
+        byte_growth = (
+            len(prepared.data)
+            + len(prepared.preview)
+            + _PUBLISH_TRANSACTION_HEADROOM
+        )
         artifact_id = uuid.uuid4().hex
         blob = self._blob_path(artifact_id, media_type)
         preview = self._preview_path(artifact_id)
@@ -222,30 +227,34 @@ class CreationLibrary:
             sha256=hashlib.sha256(prepared.data).hexdigest(),
             attributes=prepared.attributes,
         )
-        with self._connect() as db:
-            db.execute("BEGIN IMMEDIATE")
-            try:
-                self._volume_budget.require_growth(self.root, byte_growth)
-                self._write_atomic(blob, prepared.data)
-                if prepared.preview:
-                    self._write_atomic(preview, prepared.preview)
-                db.execute(
-                    """INSERT INTO creations (
-                        creation_id, producer_id, media_type, role, title, created_at,
-                        content_bytes, sha256, attributes_json
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (record.creation_id, record.producer_id, record.media_type,
-                     record.role, record.title, record.created_at,
-                     record.content_bytes, record.sha256,
-                     json.dumps(record.attributes, separators=(",", ":"))),
-                )
-                db.execute("COMMIT")
-            except BaseException:
-                if db.in_transaction:
-                    db.execute("ROLLBACK")
-                for path in (preview, blob):
-                    path.unlink(missing_ok=True)
-                raise
+        with self._volume_budget.write_reservation(
+            self.root,
+            final_growth_bytes=byte_growth,
+            peak_additional_bytes=byte_growth,
+        ):
+            with self._connect() as db:
+                db.execute("BEGIN IMMEDIATE")
+                try:
+                    self._write_atomic(blob, prepared.data)
+                    if prepared.preview:
+                        self._write_atomic(preview, prepared.preview)
+                    db.execute(
+                        """INSERT INTO creations (
+                            creation_id, producer_id, media_type, role, title, created_at,
+                            content_bytes, sha256, attributes_json
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        (record.creation_id, record.producer_id, record.media_type,
+                         record.role, record.title, record.created_at,
+                         record.content_bytes, record.sha256,
+                         json.dumps(record.attributes, separators=(",", ":"))),
+                    )
+                    db.execute("COMMIT")
+                except BaseException:
+                    if db.in_transaction:
+                        db.execute("ROLLBACK")
+                    for path in (preview, blob):
+                        path.unlink(missing_ok=True)
+                    raise
         return record
 
     def _get(self, creation_id: str) -> CreationRecord:
