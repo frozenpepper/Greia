@@ -1,7 +1,7 @@
 # Creations Library P3 — Desktop Source + Real GUI Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `4a44f0a220d6ebf6addee81c9f4bc6282ca2be89` (last code/test source commit before documentation-only updates).  
+**Pinned source candidate:** `1904e74921b62b78181f45206f394a6b6bf40dd6` (last code/test source commit before documentation-only updates).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
 **Expected state:** P3 Gallery, Painting explicit PNG publishing **and an internal child-selected PNG receive hook** exist SOURCE-WIP. P3 now also has a **non-blocking Activity→broker→trusted Supervisor picker request/status/grant transaction** with MIME/role filtering, one outstanding request per session, timeout/cleanup and a **fail-closed disabled-presenter gate**. The actual Shell modal handoff is **NOT wired**, so a real child cannot yet request/select/import through Painting/Shape Garden/Theatre. This test accepts the Gallery and Painting producer only; no fake claim of full cross-app exchange.
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor 4a44f0a220d6ebf6addee81c9f4bc6282ca2be89 HEAD` (exit **0** required). Check `git diff --name-only 4a44f0a220d6ebf6addee81c9f4bc6282ca2be89 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor 1904e74921b62b78181f45206f394a6b6bf40dd6 HEAD` (exit **0** required). Check `git diff --name-only 1904e74921b62b78181f45206f394a6b6bf40dd6 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
