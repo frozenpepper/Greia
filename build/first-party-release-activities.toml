@@ -5,19 +5,44 @@
 # developers/community work without becoming installed built-ins.
 #
 # STATUS IS INTENTIONALLY DRAFT.
-# P7 has not yet accepted any of the 45 first-party Activities for release.
-# Do not change status to "approved" or populate entries merely to preserve the
-# old all-source-tree image behavior. Each selected entry requires an
-# evidence-backed P7 disposition in the Creations + Activity Release ledger.
+# P7 has begun source review but no Activity has yet passed the required live
+# Simulator/visual/audio evidence. The entries below are SOURCE-REVIEWED
+# CANDIDATES only; official release composition calls require_approved() and
+# therefore still refuse this policy.
 #
-# Once approved, entries are sorted by full Activity ID:
-#
-# [[activities]]
-# activity_id = "org.greia.painting"
-# package = "painting"
+# Add an entry only after its source review/disposition is recorded in the
+# Creations + Activity Release PROGRESS ledger. Keep entries sorted by full ID.
 
 schema_version = 1
 
 [release]
 id = "greia.first-party-launch"
 status = "draft"
+
+[[activities]]
+activity_id = "org.greia.orchestra-animali"
+package = "orchestra_animali"
+
+[[activities]]
+activity_id = "org.greia.painting"
+package = "painting"
+
+[[activities]]
+activity_id = "org.greia.posta-di-leo"
+package = "posta_di_leo"
+
+[[activities]]
+activity_id = "org.greia.shape-garden"
+package = "shape_garden"
+
+[[activities]]
+activity_id = "org.greia.storie-della-mia-voce"
+package = "storie_della_mia_voce"
+
+[[activities]]
+activity_id = "org.greia.teatrino-fiabe"
+package = "teatrino_fiabe"
+
+[[activities]]
+activity_id = "org.greia.writing"
+package = "writing"
