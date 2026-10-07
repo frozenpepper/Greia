@@ -238,6 +238,8 @@ class LegacyXShellWindowController:
         self._focus_bridge = focus_bridge or CtypesX11FocusBridge()
         self._modal_generation = 0
         self._modal_lease: ShellActivityModalLease | None = None
+        self._modal_shell_window: int | None = None
+        self._modal_activity_window: int | None = None
         self._modal_visible = False
 
     def after_window_created(self, pygame: Any) -> bool:
@@ -302,10 +304,10 @@ class LegacyXShellWindowController:
             session_id=session_id,
             generation=self._modal_generation,
             activity_pid=activity_pid,
-            shell_window_id=shell_window,
-            activity_window_id=activity_window,
         )
         self._modal_lease = lease
+        self._modal_shell_window = shell_window
+        self._modal_activity_window = activity_window
         self._modal_visible = False
         return lease
 
@@ -316,7 +318,10 @@ class LegacyXShellWindowController:
         if not self._owns(lease) or self._modal_visible:
             return False
         try:
-            shown = self._focus_bridge.raise_and_focus_window(lease.shell_window_id)
+            shown = (
+                self._modal_shell_window is not None
+                and self._focus_bridge.raise_and_focus_window(self._modal_shell_window)
+            )
         except Exception:
             shown = False
         if shown:
@@ -329,8 +334,11 @@ class LegacyXShellWindowController:
         if not self._modal_visible:
             return True
         try:
-            restored = self._focus_bridge.raise_and_focus_window(
-                lease.activity_window_id
+            restored = (
+                self._modal_activity_window is not None
+                and self._focus_bridge.raise_and_focus_window(
+                    self._modal_activity_window
+                )
             )
         except Exception:
             restored = False
@@ -343,6 +351,8 @@ class LegacyXShellWindowController:
             return
         self._modal_visible = False
         self._modal_lease = None
+        self._modal_shell_window = None
+        self._modal_activity_window = None
 
 
 __all__ = [
