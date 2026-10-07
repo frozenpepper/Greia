@@ -6,11 +6,11 @@
 
 ## A. At-a-glance checkpoint — 2026-10-07
 
-- Program: **P1/P2 source WIP**; **P3 universal gallery + authenticated request transport + trusted in-Activity modal SOURCE-WIP**; **P4 image round-trip SOURCE-WIP across Painting, Shape Garden and Teatrino**. Legacy-X and Simulator modal backends are implemented in source, but no complete checkout/GUI acceptance has run. Wayland/KMSDRM, audio/text and later release phases remain open.
+- Program: **P1/P2 source WIP**; **P3 universal gallery + authenticated request transport + trusted in-Activity modal SOURCE-WIP**; **P4 image round-trip SOURCE-WIP across Painting, Shape Garden and Teatrino**; **P5 WAV interoperability SOURCE-WIP from Storie della Mia Voce into Teatrino**. Legacy-X and Simulator modal backends are implemented in source, but no complete checkout/GUI acceptance has run. Wayland/KMSDRM, UTF-8, second audio consumer and later release phases remain open.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
 - Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
-- Exchange status: **Painting, Shape Garden and Teatrino now declare the PNG directions they actually use**. Painting deliberately publishes/imports immutable snapshots. Shape Garden preserves its tap-to-grow gameplay while saving bounded shape projects, importing one selected PNG as an independent private backdrop, autosaving durable shapes and explicitly publishing a flattened `composition` PNG. Teatrino imports one selected PNG as a stage backdrop and stores content-addressed private backdrop snapshots referenced by saved shows, with rollback on failed storage commit. The trusted presenter is source-wired for installed Legacy-X and Simulator remote display. My Creations viewer still has large mixed-media cards/audio/delete. **No real cross-app GUI flow has been executed yet**; backup, audio/text and physical evidence remain open.
+- Exchange status: **Painting, Shape Garden and Teatrino declare the PNG directions they use, and Voice Stories→Teatrino now adds the first real WAV route.** Storie della Mia Voce publishes only already-saved private scene WAVs with role `narration`; the universal picker already supports child-controlled Play/Pause/Resume/Replay before selection. Teatrino requests only narration WAVs, validates/canonicalizes them, and can puppeteer to imported narration without starting the microphone; early Stop trims the imported WAV and the saved show owns its independent private copy. **No real cross-app GUI/audio flow has been executed yet**; UTF-8, second audio consumer, backup and physical evidence remain open.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
 - Historical P1 baseline: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`, local mirrored **12/12 PASS**. P2/P3/P4 subsequent source commits supersede the original 'no broker/UI' snapshot; a complete checkout acceptance remains owed.
 
@@ -23,7 +23,7 @@
 | P2 | permissions/manifest/broker/SDK | SOURCE WIP (publisher/importer + nonblocking request/poll/cancel and real socket tests committed) | full checkout socket/manifest/supervisor tests; presenter-enabled positive and default-fail-closed negative |
 | P3 | universal picker and My Creations viewer | SOURCE WIP (viewer + filtered picker + authenticated async transaction + Legacy-X/Simulator trusted modal backends) | full checkout tests; real Simulator remote-canvas screenshots/input/audio/cancel/Home; installed Legacy-X focus/stacking; future Wayland/KMSDRM backend |
 | P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting independent import; Shape Garden persistent shape+backdrop project + flattened export; Teatrino persistent custom show backdrops) | full checkout tests; real GUI round trip/reopen/source-delete independence; resource/performance evidence |
-| P5 | voice/music and writing/text interoperability | NOT STARTED | real recording preview, text import/export |
+| P5 | voice/music and writing/text interoperability | SOURCE WIP (Voice Stories durable WAV publication + preview-capable universal picker + Teatrino narration consumer without mic contention) | full checkout/audio tests; real audible preview-before-select; saved-show replay after shared source deletion; second audio consumer; UTF-8 producer/consumer |
 | P6 | explicit release catalogue and adaptive grouping | NOT STARTED | built-index exact match, Parent policy |
 | P7 | deep per-Activity quality review (45) | NOT STARTED | 45 evidence-backed dispositions |
 | P8 | end-to-end release and physical acceptance | NOT STARTED | real Acer and cross-platform acceptance |
@@ -42,7 +42,7 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 | Painting | Shape Garden/stamps | PNG as background/base | SOURCE WIP: trusted PNG picker → private content-addressed backdrop + bounded durable shapes |
 | Shape Garden | Painting | flattened PNG composition | SOURCE WIP: explicit trusted publish of deterministic flattened `composition` PNG |
 | Painting/Shape Garden | Teatrino Fiabe | PNG backdrop | SOURCE WIP: trusted PNG picker + show-local content-addressed private backdrop snapshot |
-| Storie della Mia Voce | Teatrino / compatible composer | WAV voice | NOT STARTED |
+| Storie della Mia Voce | Teatrino | WAV narration | SOURCE WIP: durable saved-scene publish → audio preview → narration-only picker → private saved-show copy; imported track replaces mic source for that performance |
 | Writing | Writing / genuinely compatible text consumers | UTF-8 | NOT STARTED |
 | Any declared writer | My Creations viewer | large visual/audio/text previews | SOURCE WIP: Shell gallery |
 | My Creations viewer | library | safe deletion/reclaim | SOURCE WIP: two-stage confirmation |
@@ -228,6 +228,40 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 **Single deferred acceptance owner:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` now carries the earlier P1–P3 checks **plus** P4 Shape Garden/Teatrino source and GUI round trips. Do not flash/rebuild/reboot the Acer for this workstream.
 
 **Next source work while execution is deferred:** proceed to P5's genuine WAV/text producers/consumers and P1 all-writer proportional-capacity enforcement, while keeping the 45-Activity release review separate and still 0/45 accepted.
+
+---
+
+### 2026-10-07 — P5 first WAV route: durable Voice Stories narration → Teatrino performance; execution deferred
+
+**Pinned latest source/test candidate for the next accumulated desktop acceptance:** `cb9bc32c680ddd3953d256b8bc0c4311e194bfad`. Later documentation commits only update acceptance/state. **No tests were executed for this candidate** because the owner asked that all current testing be carried to the next slice while their local agent is unavailable.
+
+**Producer — Storie della Mia Voce:**
+
+- Existing private story storage was reviewed before use. A scene can be published only after the story/files are durably present in the Activity's private store; `private_scene_wav_name()` rejects forged/unsaved stories.
+- `activity.toml` declares `audio/wav` production. The saved-story/library UI exposes deliberate per-scene sharing; each share uses the trusted broker with role `narration` and a child-readable title. Repeated same-scene taps are deduplicated within the session.
+- Publication still passes through the platform `WavCodec`, so malformed/private bytes cannot become a shared Creation merely because the Activity claims WAV.
+- Relevant source/tests pre-existed this consumer slice at `70d28b22...`: `test_voice_creations.py`, `test_voice_creations_storage.py`. They remain **UNEXECUTED** in the combined candidate.
+
+**Consumer — Teatrino:**
+
+- `activity.toml` now consumes both `image/png` and `audio/wav`.
+- `ImportedNarrationTrack` in `teatrino_audio.py` owns canonical WAV validation, the Theatre-specific maximum duration, mixer playback and PCM-prefix trimming for an early child Stop. The app does not duplicate RIFF parsing.
+- The stage adds a compact pre-reader saved-voice import control in the existing toolbar gap. It requests exactly `media_types=("audio/wav",)` and `roles=("narration",)`; a pending PNG picker and a pending audio picker cannot coexist.
+- Selection is one-use and fail-closed: MIME, semantic role and SHA256 are checked before `ImportedNarrationTrack` replaces the current narration source. Cancel/invalid selection preserves the prior source.
+- When imported narration is selected, REC starts playback of that track and records puppet motion/SFX **without starting microphone capture**. Auto-stop follows narration duration. Manual Stop trims the canonical WAV to elapsed performance time before the show is saved. Without an imported narration source, the original microphone path is unchanged.
+- A saved show receives its own WAV bytes through the already-authoritative `ShowRepository`; later deletion of the My Creations narration must not break saved replay. Playback channels are stopped on show completion and Activity shutdown.
+- The microphone control acts as an explicit source switch: when a shared narration is selected, tapping the mic control clears that selection and returns to live microphone mode.
+- A mechanical indentation defect was introduced in the first large run-loop edit at `84f37b27...`, caught immediately by static source review, and corrected at `ad9a606e...` before this ledger update. It has **not** been execution-tested.
+
+**New deferred regressions:** `tests/test_teatrino_audio_narration.py` covers canonical WAV parsing/duration/trim; `tests/test_teatrino_shared_narration.py` covers narration-only picker scope, cancellation, integrity/role checks, imported-source recording with zero microphone starts, early-stop trimmed persistence and unchanged legacy microphone behavior. These are source only; no PASS is claimed.
+
+**Single accumulated acceptance:** the existing `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` is now pinned to `cb9bc32c...` and adds: real Voice Stories recording/publication; audible My Creations Play/Pause/Resume/Replay **before selection**; Teatrino narration-only picker; no microphone contention during imported narration performance; early-stop trim; saved show replay after deleting the shared source WAV; and a return to the ordinary mic source. All P1–P4 tests/screenshots remain in the same procedure.
+
+**Architecture choice for second audio consumer:** source review rejects `Officina dei Suoni` for arbitrary child audio because it is structured phonemic-awareness training. `Orchestra Animali` is the better future candidate for a narration/backing-track play-along workflow; do not dilute Officina's pedagogy merely to satisfy interoperability counts.
+
+**Evidence boundary:** no complete checkout, `make verify`, Pygame/audio, Simulator, microphone, audible preview, Legacy-X, Acer/Pi or physical evidence was produced. P5 WAV is SOURCE-WIP only.
+
+**Next source work while tests remain deferred:** implement a real UTF-8 producer/consumer path using Writing and only semantically compatible existing Activities; then add Orchestra Animali as a useful second audio consumer if the source design remains clean. P1 all-writer capacity and P6–P8 remain open.
 
 ---
 
