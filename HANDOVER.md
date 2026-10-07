@@ -2808,3 +2808,102 @@ Acer. The new Colline and Quattro tests have not executed at current head.
 files. No child can yet select an image from another Activity; the universal
 picker/player/gallery and corresponding security semantics still need to be
 built and visually evaluated.
+
+
+## 83. Unified Creations + Activity Release — P2 trusted exchange source WIP (2026-10-07)
+
+This is a subordinate **product/content** workstream; do not confuse its
+source progress with closure of the independent Acer first-installed-boot and
+multiplatform installer/update plan. Current resume is:
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`
+plus the sibling **`PROGRESS.md`**; `AGENTS.md` points there.
+
+### Code landed on current main
+
+- Manifest compatibility declarations: `[creations]` with `produces`
+  and `consumes` typed PNG/WAV/UTF-8 sets are optional and parsed/validated
+  in `src/greia_platform/activities.py`; preserved by the trusted
+  `activity_index.py` serializer/reconstruction. Non-declaring Activities
+  remain unaffected. Media declarations **are not direct library permission**.
+- `src/greia_platform/creation_access.py` owns one Activity session's
+  private-file-to-immutable-snapshot publication and one-use expiring
+  selection grants; only the trusted Shell can issue child-selected
+  handles, never an Activity RPC. Its producer ID comes from the trusted
+  manifest/authority and private storage must match.
+- `src/greia_launcher/storage_broker.py` adds exactly two new
+  child-callable operations (`creations.publish_private`,
+  `creations.import_selected`) on the existing per-session Unix socket.
+  No operation permits child-side listing, deletion, arbitrary-ID reads,
+  or minting a selection ticket. The broker's original start signature
+  remains unchanged and the access owner is bound once before launch;
+  handles are revoked on shutdown.
+- `src/greia_launcher/supervisor.py` provisions the capability only
+  if trusted launch manifests declare media types. It binds an
+  `ActivityAuthority` with the current private storage under the
+  active child's `ProfileContext.creations_dir`. Failure after opening
+  a broker now cleans its socket/thread, rather than leaking resources.
+- `src/greia_platform/creation_client.py` is the thin transfer SDK,
+  `src/greia_platform/activity_api.py` provides `get_creations()`
+  without an unsafe standalone fallthrough, and
+  `ActivityStorageClient.creation_exchange` preserves transport encapsulation.
+- `CreationLibrary` now preserves managed-group access for future
+  child-data backup/restore, without opening the directory to Activity
+  sandboxes.
+- Regression sources: `tests/test_creation_access.py` (6 tests),
+  `tests/test_creation_library.py` (12 tests),
+  `tests/test_creation_broker.py` (3 new *unexecuted* real-socket tests),
+  `tests/test_creation_manifest.py` (4 new *unexecuted* index/manifest tests).
+
+### Executed versus owed evidence
+
+The isolated local mirror under `/mnt/data/greia_session` contains the
+Creations core, session-authority and two pure test files. Executed:
+
+```bash
+cd /mnt/data/greia_session
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -Werror::ResourceWarning -m unittest discover -s tests -p 'test_creation_*.py' -v
+# 18 tests PASS on isolated mirror
+```
+
+AST parsing of the 4 mirrored source modules also PASSED. **The code and
+tests for the real socket, indexed manifests, supervisor, existing full
+storage and all Activities were NOT executed here**, because the local
+container lacks an authenticated full Greia checkout and Pygame. There are
+no screenshot, Simulator, installed target, full `make verify`, or
+new Acer results. The new source is **not release-accepted**.
+
+**IMPORTANT:** No built-in Activity yet declares `[creations]`, so the new
+opt-in broker is dormant and a child cannot yet open the shared library
+or export through a real Activity. There is no universal picker, playable
+audio-preview UI, gallery viewer, child delete interaction, or cross-app
+PNG/WAV/text integration yet. These are deliberate next phases, not
+silently complete.
+
+### Next exact step
+
+1. In a **complete Greia checkout** at the then-current clean `main`,
+   run the 4 `test_creation_*.py` suites, the relevant existing
+   `test_activity_index.py`, `test_supervisor.py`, storage and profile
+   suites; perform `make verify` before declaring P2 source acceptance.
+   Fix any concrete failures in their actual owners.
+2. Implement the **trusted platform-owned picker/viewer** P3 with beautiful
+   large image cards, Play/Pause/Replay of selected WAV **before choose**,
+   typed text cards, child-safe confirmation/delete and no filename
+   dependency. This must preserve higher-trust Home/Back and input
+   guarantees.
+3. After a real child choice UI issues session handles, activate `[creations]`
+   declarations in Painting and implement full Painting↔Shape Garden↔Teatrino
+   immutable PNG round trip. Then voice/audio and text.
+4. Implement and verify adaptive disk reservation for *all* profile writers,
+   bounded recovery and logical backup/restore; review every existing
+   Activity and explicit release composition as the unified plan requires.
+5. Do **not** request physical install/flash or repurpose current Acer image
+   to validate these source edits; the lifecycle owner must first complete
+   fresh-boot acceptance. When real hardware is required, give one complete
+   pinned, non-destructive local-agent instruction block as agreed.
+
+Actual commits include `e59736b9`, `2ba77eb0`, `1e8bacaf`,
+`f94b541e`, `5c9e0d82`, `c4676185`, `c4f15453`,
+`c0e53230`, `e119b745`, `8588b656`, `a28e6be5`,
+`b8d3007d`, `7050968a`, `e991706b`; the full
+ordered change ledger is on GitHub and progress document.
