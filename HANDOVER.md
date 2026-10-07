@@ -2693,3 +2693,118 @@ Exact implementation/test candidate:
 
 Everything after this candidate in the current documentation update is
 documentation-only. Local/owner source acceptance has not yet run.
+
+
+## 82. Creations interoperability + all-Activity release program started, platform core SOURCE-WIP (2026-10-07)
+
+### One durable product/content continuation path
+
+Owner explicitly approved and requested a comprehensive **single implementation
+plan** covering typed shared child creations, one universal pre-reader large-card
+image/audio/text picker and gallery/viewer with deletion, cross-Activity creative
+round trips, scaled disk budgets, a curated release set, and a deep quality
+review/repair/test pass for **all 45** first-party Activities.
+
+Read, in this order, when continuing this **content/product workstream**:
+
+1. `AGENTS.md` (new explicit scoped-program pointer; existing lifecycle priorities preserved);
+2. `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` — single detailed plan, P0–P8, full 45-item review roster;
+3. `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md` — current exact status, dated evidence, next step;
+4. `docs/product/CHILD_CREATIONS_LIBRARY_AND_MEDIA_INTEROPERABILITY.md` — accepted child-facing large visual thumbnails, audio-preview-before-pick, viewer/delete and privacy requirements;
+5. existing live architecture and lifecycle plans / skills for relevant real code changes.
+
+This content plan **does not replace** the 2026-09-15 fresh installation,
+first-boot and update/rollback acceptance route, which remains OPEN. No new
+installer or Acer acceptance was executed here; existing Acer image/source
+evidence remains pinned to its own exact SHA.
+
+### Actual source changes committed to main
+
+**Trusted platform P1 core (not installed/connected):**
+
+- `src/greia_platform/creation_capacity.py` — `CreationCapacityPolicy`
+  defaults to 75% maximum occupancy of the actual writable data volume,
+  with an independent 512 MiB free reserve; measured-space injectable probe.
+- `src/greia_platform/creation_media.py` — bounded codec registry for
+  normalized static PNG (384×320 max-size thumbnail), PCM WAV (playable source
+  preview), UTF-8 text (bounded preview), independent of extension claims.
+- `src/greia_platform/creations.py` — one-profile **trusted-only**
+  `CreationLibrary`: immutable snapshot IDs, SQLite v1 index, stable
+  descriptors with producer/type/role/integrity, bounded page listing,
+  content read/digest check, polymorphic preview, explicit deletion.
+- `tests/test_creation_library.py` — focused headless tests for the
+  8-GiB→6-GiB occupancy example, small-volume safeguard, PNG thumbnails,
+  WAV playback payload, UTF-8, independent profile roots, immutable
+  revisions, valid delete, fail-closed malformed types, symlink paths,
+  content tampering and quota refusal.
+
+Commits include `c829825a`, `f41b4d2e`, `c27a6ce6`, `f278cbaa`,
+`43d41532`, `bc28fc55`. The P1 repository is **not currently reachable
+from an Activity sandbox**, not part of the Activity SDK, not a trusted
+selection-token broker, and has no GUI, app integration or backup support.
+Do not mount its directory into an Activity. The scoped producer/consumer
+permissions and profile binding must be provided by the existing supervisor
+authority and broker, not caller-authored strings/environment.
+
+**Source-only Activity release triage:**
+
+- `activities/colline_allegre/colline_app.py`,
+  `colline_model.py` and `colline_renderer.py` now handle top-level
+  script imports as well as package imports. `colline_content.py` no longer
+  contains the dead conditional `auto_upright=false if False else False`.
+- `tests/test_activity_colline_allegre.py` now tests script entrypoint
+  import semantics via `runpy.run_path`; it does *not* execute the game loop.
+- `activities/quattro_amici/activity.toml` now declares D1–D4 rather
+  than nonexistent D5; `tests/test_activity_quattro_amici.py` checks
+  manifest bounds against `LEVEL_CONFIGS`.
+- Commits: `02b8f2e4`, `ee917b42` (intermediate immediately corrected),
+  `1c8a45ee`, `faabb503`, `82ff2d23`, `7c444493`,
+  `93bf54e1`, `35cb977f`. No claims of completed per-game release
+  review or visual acceptance.
+
+### Executed evidence and limits
+
+Local environment had Python, Pillow and SQLite but **no local Greia checkout,
+no Pygame, no complete Simulator or target GUI/display**. An isolated
+mirror of the four new source files ran:
+
+```bash
+PYTHONPATH=src python -Werror::ResourceWarning -m unittest discover -s tests -p test_creation_library.py -v
+# 12 tests: PASS, in the isolated copied/mirrored source
+python -m compileall -q src tests
+# PASS, in the isolated copied/mirrored source
+```
+
+This is **isolated SOURCE evidence**, not `make verify`, not a fresh
+`main` checkout test, not source/image/package acceptance and not physical
+Acer. The new Colline and Quattro tests have not executed at current head.
+
+### Exact next tasks
+
+1. On a complete local checkout of current `main`, run
+   `PYTHONPATH=src python3 -m unittest discover -s tests -p test_creation_library.py -v`,
+   `tests/test_activity_colline_allegre.py`, and
+   `tests/test_activity_quattro_amici.py` plus standard `make verify`.
+   Repair any concrete source failures in the owning code and update the
+   progress ledger. The current shell/source tests must not be reported as
+   hardware evidence.
+2. Review P1 DB crash recovery, media resource bounds and schema handling
+   with the real per-profile layout; ensure all profile data writers eventually
+   share the disk-growth guard rather than letting another storage API fill
+   the PERSIST volume.
+3. Implement P2 session-bound access through the **existing** trusted broker
+   and manifest/SDK semantics, proving negative cross-profile/handle-forgery
+   tests *before* exposing reads/publishing to untrusted Activities.
+4. P3 universal picker/viewer, P4 Painting↔Shape Garden↔Theatre PNG
+   interoperability, P5 audio/text, P6 explicit release profile, P7 complete
+   all-Activity QA and P8 actual hardware evidence, as ordered in the plan.
+5. For any **real hardware** acceptance need, provide the owner exactly **one**
+   fully self-contained local-agent instruction block with pinned SHA,
+   non-destructive prerequisites, exact commands and required evidence,
+   honoring the existing installer/first-boot route. No such hardware test was
+   needed or requested during this source-only tranche.
+
+**Risk:** Do not mistake a safe repository prototype for user-visible shared
+files. No child can yet select an image from another Activity; the universal
+picker/player/gallery and corresponding security semantics still need to be
+built and visually evaluated.
