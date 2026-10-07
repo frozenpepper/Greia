@@ -112,16 +112,19 @@ class CreationsPygamePainter:
         if enabled:
             self._targets.append(GalleryHit(action,value,target))
 
-    def _art(self, screen: Any, record: Any, rect: Any, pygame: Any) -> None:
+    def _art(self, screen: Any, record: Any, rect: Any, pygame: Any, *, expanded: bool = False) -> None:
         box=self._box(rect,pygame)
         if record.media_type == "image/png":
             inset=box.inflate(-18,-18)
-            key=(record.creation_id,inset.width,inset.height)
+            key=(record.creation_id,inset.width,inset.height,expanded)
             image=self._cache.get(key)
             if image is None:
-                kind,payload=self.controller.preview(record.creation_id)
-                if kind != "image/png":
-                    raise ValueError("image preview type mismatch")
+                if expanded:
+                    payload = self.controller.full_image(record.creation_id)
+                else:
+                    kind,payload=self.controller.preview(record.creation_id)
+                    if kind != "image/png":
+                        raise ValueError("image preview type mismatch")
                 raw=pygame.image.load(io.BytesIO(payload),"preview.png").convert_alpha()
                 ratio=min(inset.width/raw.get_width(),inset.height/raw.get_height())
                 image=pygame.transform.smoothscale(raw,(max(1,round(raw.get_width()*ratio)),max(1,round(raw.get_height()*ratio))))
@@ -200,8 +203,15 @@ class CreationsPygamePainter:
         rect=self._box(layout.full_preview,pygame)
         pygame.draw.rect(screen,(22,27,56),rect.move(0,5),border_radius=28)
         pygame.draw.rect(screen,self.CREAM,rect,border_radius=28)
-        self._art(screen,item,rect.inflate(-22,-22),pygame)
+        self._art(screen,item,rect.inflate(-22,-22),pygame,expanded=True)
         if item.media_type=="audio/wav":
+            if page.playing_id==item.creation_id:
+                duration=float(item.attributes.get("duration_seconds",0))
+                player=self.controller.audio_player
+                fraction=player.progress(duration) if player is not None and hasattr(player,"progress") else 0.0
+                bar=pygame.Rect(rect.x+40,rect.bottom-35,rect.width-80,12)
+                pygame.draw.rect(screen,(176,188,198),bar,border_radius=6)
+                pygame.draw.rect(screen,(83,171,166),(bar.x,bar.y,int(bar.width*fraction),bar.height),border_radius=6)
             self._button(screen,"audio",layout.audio_play,"pause" if page.playing_id==item.creation_id else "play",pygame,fill=self.GOLD,value=item.creation_id)
         self._button(screen,"detail_back",layout.back,"back",pygame)
         if self.controller.mode==GalleryMode.PICKER:
