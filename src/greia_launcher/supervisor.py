@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sqlite3
 from pathlib import Path
 from typing import Callable, Mapping, Protocol
 
@@ -276,7 +277,7 @@ class ActivitySupervisor:
                         session_id=session_id,
                     )
                     storage_broker.bind_creations(access)
-            except (StorageError, OSError, ProfileError, CreationLibraryError, ActivityLifecycleError, ValueError):
+            except (StorageError, OSError, ProfileError, CreationLibraryError, ActivityLifecycleError, ValueError, sqlite3.Error):
                 return self._failed_launch_session(
                     manifest,
                     profile,
