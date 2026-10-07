@@ -61,6 +61,7 @@ class CreationSelectionCoordinator:
         self._request: SelectionRequest | None = None
         self._result = SelectionStatus(SelectionState.PENDING)
         self._settled_at: float | None = None
+        self._presenter_available = False
         self._closed = False
 
     @staticmethod
@@ -96,6 +97,19 @@ class CreationSelectionCoordinator:
         if self._closed:
             raise CreationAccessDenied("selection session has ended")
 
+    def enable_presenter(self) -> None:
+        """Trusted Shell only: confirms a backend can actually show the modal."""
+        with self._lock:
+            self._require_open()
+            self._presenter_available = True
+
+    def disable_presenter(self) -> None:
+        """Trusted Shell only: promptly cancel if the display backend is lost."""
+        with self._lock:
+            self._presenter_available = False
+            if self._request is not None and self._result.state is SelectionState.PENDING:
+                self._settle(SelectionStatus(SelectionState.CANCELLED))
+
     def _settle(self, status: SelectionStatus) -> None:
         self._result = status
         self._settled_at = self._clock()
@@ -125,6 +139,8 @@ class CreationSelectionCoordinator:
     def request(self, *, media_types: object, roles: object = None) -> SelectionRequest:
         with self._lock:
             self._require_open()
+            if not self._presenter_available:
+                raise CreationAccessDenied("trusted picker display is not available")
             allowed = self._access.consumable_media_types
             kinds = self._parse_media_types(media_types, allowed)
             selected_roles = self._parse_roles(roles)
@@ -200,6 +216,7 @@ class CreationSelectionCoordinator:
     def close(self) -> None:
         with self._lock:
             self._closed = True
+            self._presenter_available = False
             self._request = None
             self._result = SelectionStatus(SelectionState.CANCELLED)
             self._settled_at = None
