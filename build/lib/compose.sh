@@ -675,11 +675,27 @@ compose_configure_systemd() {
     # ships the probe and enables greia-audio-endpoints.service; the installer
     # overlay has no such file, so this must stay inside the target branch.
     chmod 0755 "$rootfs/usr/local/lib/greia-os/greia-audio-endpoint-probe"
-    systemctl --root="$rootfs" enable \
-      greia-first-boot.service greia-boot-observer.service greia-launcher.service greia-parent.service \
-      greia-boot-health.socket greia-system-update.socket greia-audio-endpoints.service \
-      greia-microphone-level.socket \
-      systemd-networkd.service systemd-resolved.service iwd.service avahi-daemon.service
+    local target_services=(
+      greia-first-boot.service
+      greia-launcher.service
+      greia-parent.service
+      greia-boot-health.socket
+      greia-system-update.socket
+      greia-audio-endpoints.service
+      greia-microphone-level.socket
+      systemd-networkd.service
+      systemd-resolved.service
+      iwd.service
+      avahi-daemon.service
+    )
+    # The early boot observer resolves semantic A/B slot identity from the
+    # installed-layout + release-identity records. Single-root layouts have no
+    # such records or slot identity, so enabling the observer there makes the
+    # unit fail in namespace setup before its process starts.
+    if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]; then
+      target_services+=(greia-boot-observer.service)
+    fi
+    systemctl --root="$rootfs" enable "${target_services[@]}"
     systemctl --root="$rootfs" mask \
       getty@.service autovt@.service console-getty.service debug-shell.service \
       emergency.service rescue.service console-shell.service kbrequest.target \
