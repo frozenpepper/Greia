@@ -205,6 +205,7 @@ class TeatrinoApp:
         self.backdrop_import_request: str | None = None
         self.backdrop_import_next_poll = 0.0
         self.backdrop_import_state = ""
+        self.backdrop_import_feedback_until = 0.0
 
         self.sound_mgr = SoundManager()
         self.mic_recorder = MicrophoneRecorder()
@@ -262,7 +263,14 @@ class TeatrinoApp:
     # -- frame step ---------------------------------------------------------
 
     def _step_frame(self, dt: float) -> None:
-        self._poll_shared_backdrop(time.monotonic())
+        now = time.monotonic()
+        self._poll_shared_backdrop(now)
+        if (
+            self.backdrop_import_state
+            and self.backdrop_import_state != "pending"
+            and now >= self.backdrop_import_feedback_until
+        ):
+            self.backdrop_import_state = ""
         if self.feedback_timer > 0.0:
             self.feedback_timer -= dt
             if self.feedback_timer <= 0.0:
@@ -377,6 +385,7 @@ class TeatrinoApp:
             )
         except (RuntimeError, ValueError, OSError):
             self.backdrop_import_state = "error"
+            self.backdrop_import_feedback_until = time.monotonic() + 2.0
             self.feedback_text = "⚠️"
             self.feedback_timer = 2.0
             return
@@ -400,6 +409,7 @@ class TeatrinoApp:
         except (RuntimeError, ValueError, OSError):
             self.backdrop_import_request = None
             self.backdrop_import_state = "error"
+            self.backdrop_import_feedback_until = now + 2.0
             return
         if result.state == "pending":
             return
@@ -415,8 +425,10 @@ class TeatrinoApp:
             or not self._accept_shared_backdrop(token)
         ):
             self.backdrop_import_state = "error"
+            self.backdrop_import_feedback_until = now + 2.0
             return
         self.backdrop_import_state = "imported"
+        self.backdrop_import_feedback_until = now + 2.0
         self.feedback_text = "🖼️"
         self.feedback_timer = 2.0
 

@@ -169,7 +169,8 @@ class ShowRepository:
         return payload
 
     def _delete_mem_files(self, show_id: str) -> None:
-        self._delete_mem_files(show_id)
+        self._mem_files.pop(f"show_{show_id}.json", None)
+        self._mem_files.pop(f"show_{show_id}.wav", None)
         self._mem_files.pop(f"show_{show_id}_backdrop.png", None)
 
     def _delete_storage_files(self, show_id: str) -> None:
@@ -187,8 +188,7 @@ class ShowRepository:
 
     def delete_show(self, show_id: str) -> None:
         self._mem_index = [s for s in self._mem_index if s.get("id") != show_id]
-        self._mem_files.pop(f"show_{show_id}.json", None)
-        self._mem_files.pop(f"show_{show_id}.wav", None)
+        self._delete_mem_files(show_id)
         if self.storage is not None:
             try:
                 shows = [s for s in self.list_shows() if s.get("id") != show_id]

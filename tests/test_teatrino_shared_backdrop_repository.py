@@ -54,6 +54,17 @@ class TeatrinoBackdropRepositoryTests(unittest.TestCase):
         repo._mem_files.pop(f"show_{meta['id']}_backdrop.png", None)
         self.assertIsNone(repo.load_show_backdrop(meta["id"]))
 
+    def test_memory_cleanup_helper_is_bounded_and_nonrecursive(self):
+        repo = ShowRepository(None)
+        repo._mem_files = {
+            "show_demo.json": b"{}",
+            "show_demo.wav": b"RIFF",
+            "show_demo_backdrop.png": b"png",
+            "unrelated": b"keep",
+        }
+        repo._delete_mem_files("demo")
+        self.assertEqual(repo._mem_files, {"unrelated": b"keep"})
+
     def test_delete_reclaims_json_audio_and_backdrop(self):
         storage = MemoryStorage()
         repo = ShowRepository(storage)
@@ -61,8 +72,10 @@ class TeatrinoBackdropRepositoryTests(unittest.TestCase):
             "forest", [], [], [], 2.0, b"RIFF-audio", b"png"
         )
         show_id = meta["id"]
+        self.assertIn(f"show_{show_id}_backdrop.png", repo._mem_files)
         repo.delete_show(show_id)
         self.assertFalse(any(show_id in name for name in storage.files))
+        self.assertFalse(any(show_id in name for name in repo._mem_files))
         self.assertFalse(any(item.get("id") == show_id for item in repo.list_shows()))
 
 

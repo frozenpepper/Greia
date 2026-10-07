@@ -39,6 +39,7 @@ class TeatrinoBackdropFlowTests(unittest.TestCase):
         app.backdrop_import_request = None
         app.backdrop_import_next_poll = 0.0
         app.backdrop_import_state = ""
+        app.backdrop_import_feedback_until = 0.0
         app.feedback_text = ""
         app.feedback_timer = 0.0
         app.custom_backdrop_png = None
@@ -57,6 +58,21 @@ class TeatrinoBackdropFlowTests(unittest.TestCase):
         self.assertGreaterEqual(app.backdrop_import_next_poll, 10.12)
         app._poll_shared_backdrop(10.1)
         self.assertEqual(app.creations.polls, [])
+
+    def test_temporary_import_feedback_expires_without_touching_stage(self):
+        app = self.make_app()
+        app.backdrop_import_state = "imported"
+        app.backdrop_import_feedback_until = 11.0
+        app.active_bg_idx = 0
+        app.sparks = []
+        app.puppets_on_stage = []
+        app.is_playing_show = False
+        with mock.patch(
+            "activities.teatrino_fiabe.teatrino_app.time.monotonic",
+            return_value=12.0,
+        ):
+            app._step_frame(0.1)
+        self.assertEqual(app.backdrop_import_state, "")
 
     def test_cancel_preserves_current_backdrop(self):
         app = self.make_app()
