@@ -61,6 +61,7 @@ class _ShellBackend:
 class _Supervisor:
     def __init__(self):
         self.enabled = []
+        self.disabled = []
         self.pending = None
         self.cancelled = []
         self.completed = []
@@ -68,6 +69,9 @@ class _Supervisor:
 
     def enable_creation_picker(self, session):
         self.enabled.append(session)
+
+    def disable_creation_picker(self, session):
+        self.disabled.append(session)
 
     def pending_creation_selection(self, session):
         return self.pending
@@ -253,6 +257,24 @@ class CreationPickerHostTests(unittest.TestCase):
             [(self.session, "request-4")],
         )
 
+    def test_abnormal_shutdown_cancels_pending_request_and_revokes_presenter(self):
+        self.assertTrue(self.host.prepare(self.pygame))
+        self.supervisor.pending = SimpleNamespace(
+            request_id="request-shutdown",
+            media_types=("image/png",),
+            roles=(),
+        )
+        self.host.service(self.pygame, ())
+        self.assertTrue(self.host.visible)
+        self.assertTrue(self.host.shutdown(self.pygame, activity_alive=True))
+        self.assertEqual(
+            self.supervisor.cancelled,
+            [(self.session, "request-shutdown")],
+        )
+        self.assertEqual(self.supervisor.disabled, [self.session])
+        self.assertEqual(self.shell.dismisses, [self.shell.lease])
+        self.assertEqual(self.shell.abandons, [self.shell.lease])
+
     def test_terminal_activity_never_opens_or_restores_stale_window(self):
         self.assertTrue(self.host.prepare(self.pygame))
         self.session.state = ActivitySessionState.EXITED
@@ -263,6 +285,7 @@ class CreationPickerHostTests(unittest.TestCase):
         )
         self.assertFalse(self.host.service(self.pygame, ()))
         self.assertTrue(self.host.shutdown(self.pygame, activity_alive=False))
+        self.assertEqual(self.supervisor.disabled, [self.session])
         self.assertEqual(self.shell.shows, [])
         self.assertEqual(self.shell.dismisses, [])
         self.assertEqual(self.shell.abandons, [self.shell.lease])
