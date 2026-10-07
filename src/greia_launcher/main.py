@@ -60,7 +60,7 @@ from .composition import (
     provisional_installed_display_session,
 )
 from .key_chord import KeyChordTracker
-from .lifecycle import ActivityResult, ActivitySessionState
+from .lifecycle import ActivityExitReason, ActivityResult, ActivitySessionState
 from .parent_credential_client import ParentCredentialClient
 from .parent_panel import ParentSettingsOverlay
 from .shell_input import ShellInputController
@@ -997,34 +997,116 @@ class LauncherApplication:
             self._last_result = None
             self._catalogue_error = True
             return
+
         activity_session = self.supervisor.start(
             manifest, self._active_profile, authority
         )
         self._last_result = activity_session.result
+        picker_host = None
+        picker_prepare_deadline = 0.0
+        picker_next_prepare = 0.0
+
         self._draw_launch_overlay(pygame, text="Starting…")
         pygame.display.flip()
         self._on_frame_presented(pygame.display.get_surface(), pygame)
         _launch_feedback = time.monotonic()
+
         while self._last_result is None:
-            # The child Activity owns the visible surface while running. Keep
-            # SDL responsive and show an immediate full-screen launch overlay
-            # that visibly blocks any further clicks or keys until ready.
-            for event in pygame.event.get():
-                pass
+            # Before READY, Shell events are deliberately discarded. Once a
+            # trusted Creations modal is actually visible, only that shared
+            # Shell Screen receives Shell-window input; the Activity remains
+            # alive behind it and never receives picker-native handles.
+            events = tuple(pygame.event.get())
             self._last_result = self.supervisor.poll(activity_session)
-            if self._last_result is None:
-                is_running = activity_session.state == ActivitySessionState.RUNNING
-                is_ready = (
-                    activity_session.control.ready()
-                    if activity_session.control is not None
-                    else False
+            if self._last_result is not None:
+                break
+
+            is_running = activity_session.state == ActivitySessionState.RUNNING
+            is_ready = (
+                activity_session.control.ready()
+                if activity_session.control is not None
+                else False
+            )
+            now = time.monotonic()
+
+            if is_running and manifest.creations_consumes:
+                if picker_host is None:
+                    from .creation_picker_host import (
+                        ActivityCreationPickerHost,
+                        CreationPickerHostError,
+                    )
+
+                    picker_host = ActivityCreationPickerHost(
+                        supervisor=self.supervisor,
+                        shell_window_backend=self._shell_window_backend,
+                        session=activity_session,
+                        profile=self._active_profile,
+                        typography=self._typography,
+                        locale=getattr(self, "_active_locale", "en"),
+                    )
+                    # Allow a bounded focus-settling interval after the child
+                    # window reports READY; never poll X11 indefinitely.
+                    picker_prepare_deadline = now + 1.5
+                    picker_next_prepare = now
+
+                if (
+                    not picker_host.prepared
+                    and now <= picker_prepare_deadline
+                    and now >= picker_next_prepare
+                ):
+                    picker_next_prepare = now + 0.10
+                    try:
+                        picker_host.prepare(pygame)
+                    except CreationPickerHostError:
+                        self._catalogue_error = True
+                        self._last_result = self.supervisor.force_stop(
+                            activity_session,
+                            ActivityExitReason.PLATFORM_FAILURE,
+                        )
+                        continue
+
+                if picker_host.prepared:
+                    try:
+                        drew_picker = picker_host.service(pygame, events)
+                    except CreationPickerHostError:
+                        self._catalogue_error = True
+                        try:
+                            picker_host.shutdown(
+                                pygame,
+                                activity_alive=activity_session.state
+                                is ActivitySessionState.RUNNING,
+                            )
+                        finally:
+                            self._last_result = self.supervisor.force_stop(
+                                activity_session,
+                                ActivityExitReason.PLATFORM_FAILURE,
+                            )
+                        continue
+                    if drew_picker:
+                        pygame.display.flip()
+                        self._on_frame_presented(
+                            pygame.display.get_surface(), pygame
+                        )
+            # While no trusted modal is visible the child owns the foreground;
+            # never repaint the hidden Shell except for pre-READY feedback.
+            if (
+                not is_running
+                and not is_ready
+                and now - _launch_feedback > 0.1
+            ):
+                self._draw_launch_overlay(pygame, text="Starting…")
+                pygame.display.flip()
+                self._on_frame_presented(
+                    pygame.display.get_surface(), pygame
                 )
-                if not is_running and not is_ready and time.monotonic() - _launch_feedback > 0.1:
-                    self._draw_launch_overlay(pygame, text="Starting…")
-                    pygame.display.flip()
-                    self._on_frame_presented(pygame.display.get_surface(), pygame)
-                    _launch_feedback = time.monotonic()
-                time.sleep(0.02)
+                _launch_feedback = now
+            time.sleep(0.02)
+
+        if picker_host is not None:
+            # Supervisor.poll() has already normalized/cleaned a terminal
+            # Activity. Never try to resurrect its now-stale native window.
+            picker_host.shutdown(pygame, activity_alive=False)
+
         pygame.mouse.set_visible(False)
         pygame.event.clear()
         self._shell_input.start()
