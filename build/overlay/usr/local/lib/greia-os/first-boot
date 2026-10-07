@@ -88,6 +88,30 @@ if [ ! -e "$profile_owner_migration" ]; then
   fi
   printf '%s\n' "b4-profile-child-roots-v1" > "$profile_owner_migration"
 fi
+
+# B5 shared-profile mode migration.
+#
+# B4 can legitimately have run before a fresh Parent-created profile existed.
+# Older images also let the Parent swallow a denied chmod(2770), leaving
+# Parent-owned profile/customization/activity directories at umask-derived
+# 2750. Current images prevent that at creation time (Parent UMask=0007 +
+# ProfileStore fail-closed verification). This bounded compatibility pass
+# repairs only the shared Parent-owned directory levels that may already exist.
+profile_shared_mode_migration=/var/lib/greia-os/migrations/b5-profile-shared-modes-v1.done
+if [ ! -e "$profile_shared_mode_migration" ]; then
+  install -d -m 0755 /var/lib/greia-os/migrations
+  if [ -d "$profile_data_root" ]; then
+    find "$profile_data_root" -mindepth 1 -maxdepth 1 -type d \
+      -exec chgrp -- pipprofiles {} + \
+      -exec chmod 2770 {} +
+    find "$profile_data_root" -mindepth 2 -maxdepth 2 -type d \
+      \( -name customization -o -name activities \) \
+      -exec chgrp -- pipprofiles {} + \
+      -exec chmod 2770 {} +
+  fi
+  printf '%s\n' "b5-profile-shared-modes-v1" > "$profile_shared_mode_migration"
+fi
+
 [ ! -e "$marker" ] || exit 0
 trap - EXIT
 
