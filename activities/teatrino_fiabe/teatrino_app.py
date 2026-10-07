@@ -7,6 +7,7 @@ events + platform APIs together.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import math
@@ -19,6 +20,7 @@ import pygame
 from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
+    get_creations,
     get_profile_locale,
     get_storage,
     get_theme,
@@ -32,6 +34,7 @@ from greia_platform.localization import (
     resolve_activity_locale,
 )
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+from greia_platform.pygame_png import PygamePngError, decode_png_surface
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -135,6 +138,10 @@ class TeatrinoApp:
         except Exception:
             self.storage = None
         self.show_repo = ShowRepository(self.storage)
+        try:
+            self.creations = get_creations()
+        except RuntimeError:
+            self.creations = None
 
         # Localization — preserve original JSON loading while also supporting
         # platform LocalizedResources for future locale handling.
@@ -193,6 +200,12 @@ class TeatrinoApp:
         for bg_id, _, _ in BG_CONFIGS:
             self.cached_backdrops[bg_id] = render_backdrop_surface(bg_id)
 
+        self.custom_backdrop_png: bytes | None = None
+        self.custom_backdrop_surface: pygame.Surface | None = None
+        self.backdrop_import_request: str | None = None
+        self.backdrop_import_next_poll = 0.0
+        self.backdrop_import_state = ""
+
         self.sound_mgr = SoundManager()
         self.mic_recorder = MicrophoneRecorder()
 
@@ -249,6 +262,7 @@ class TeatrinoApp:
     # -- frame step ---------------------------------------------------------
 
     def _step_frame(self, dt: float) -> None:
+        self._poll_shared_backdrop(time.monotonic())
         if self.feedback_timer > 0.0:
             self.feedback_timer -= dt
             if self.feedback_timer <= 0.0:
@@ -275,6 +289,7 @@ class TeatrinoApp:
                     self.recorded_sfx,
                     elapsed,
                     wav_bytes,
+                    self.custom_backdrop_png,
                 )
                 self.library_shows = self.show_repo.list_shows()
                 self.feedback_text = f"🎉 {self.ui_strings.get('recording_saved', 'Spettacolo salvato nella libreria!')}"
@@ -346,6 +361,131 @@ class TeatrinoApp:
                         self.sound_mgr.play(sfx["sound"])
                         self.playback_sfx.remove(sfx)
 
+    # -- shared backdrop ----------------------------------------------------
+
+    def _request_shared_backdrop(self) -> None:
+        if (
+            self.creations is None
+            or self.app_mode != "stage"
+            or self.is_recording
+            or self.backdrop_import_request is not None
+        ):
+            return
+        try:
+            request_id = self.creations.request_selection(
+                media_types=("image/png",)
+            )
+        except (RuntimeError, ValueError, OSError):
+            self.backdrop_import_state = "error"
+            self.feedback_text = "⚠️"
+            self.feedback_timer = 2.0
+            return
+        self.backdrop_import_request = request_id
+        self.backdrop_import_state = "pending"
+        self.backdrop_import_next_poll = (
+            time.monotonic() + 0.12
+        )
+
+    def _poll_shared_backdrop(self, now: float) -> None:
+        request_id = self.backdrop_import_request
+        if (
+            request_id is None
+            or self.creations is None
+            or now < self.backdrop_import_next_poll
+        ):
+            return
+        self.backdrop_import_next_poll = now + 0.12
+        try:
+            result = self.creations.poll_selection(request_id)
+        except (RuntimeError, ValueError, OSError):
+            self.backdrop_import_request = None
+            self.backdrop_import_state = "error"
+            return
+        if result.state == "pending":
+            return
+        self.backdrop_import_request = None
+        if result.state == "cancelled":
+            self.backdrop_import_state = ""
+            return
+        token = result.selection_token
+        if (
+            result.state != "ready"
+            or not isinstance(token, str)
+            or not token
+            or not self._accept_shared_backdrop(token)
+        ):
+            self.backdrop_import_state = "error"
+            return
+        self.backdrop_import_state = "imported"
+        self.feedback_text = "🖼️"
+        self.feedback_timer = 2.0
+
+    def _accept_shared_backdrop(self, selection_token: str) -> bool:
+        if self.creations is None:
+            return False
+        try:
+            transfer = self.creations.import_selected(selection_token)
+            payload = transfer.payload
+            if (
+                transfer.record.get("media_type") != "image/png"
+                or not isinstance(payload, bytes)
+                or transfer.record.get("sha256")
+                != hashlib.sha256(payload).hexdigest()
+            ):
+                raise ValueError("selected backdrop failed integrity validation")
+            surface = decode_png_surface(
+                payload, (REFERENCE_WIDTH, REFERENCE_HEIGHT)
+            )
+        except (PygamePngError, RuntimeError, ValueError, OSError):
+            return False
+        self.custom_backdrop_png = payload
+        self.custom_backdrop_surface = surface
+        return True
+
+    def _load_saved_backdrop(self, show_id: str) -> None:
+        payload = self.show_repo.load_show_backdrop(show_id)
+        if payload is None:
+            self.custom_backdrop_png = None
+            self.custom_backdrop_surface = None
+            return
+        try:
+            surface = decode_png_surface(
+                payload, (REFERENCE_WIDTH, REFERENCE_HEIGHT)
+            )
+        except (PygamePngError, RuntimeError, ValueError, OSError):
+            self.custom_backdrop_png = None
+            self.custom_backdrop_surface = None
+            return
+        self.custom_backdrop_png = payload
+        self.custom_backdrop_surface = surface
+
+    def _draw_backdrop_import_button(self, surf: pygame.Surface) -> None:
+        if self.creations is None or self.app_mode != "stage":
+            return
+        rect = pygame.Rect(830, 24, 70, 54)
+        pending = self.backdrop_import_state == "pending"
+        fill = (178, 218, 246) if pending else (234, 244, 252)
+        pygame.draw.rect(surf, fill, rect, border_radius=14)
+        border = (
+            (205, 55, 61)
+            if self.backdrop_import_state == "error"
+            else STAGE_GOLD
+        )
+        pygame.draw.rect(surf, border, rect, width=3, border_radius=14)
+        cx, cy = rect.center
+        pygame.draw.rect(
+            surf, DARK_TEXT, (cx - 15, cy, 30, 18), width=3, border_radius=4
+        )
+        pygame.draw.circle(surf, DARK_TEXT, (cx + 8, cy + 5), 3)
+        pygame.draw.line(surf, DARK_TEXT, (cx, cy - 17), (cx, cy + 1), 4)
+        pygame.draw.lines(
+            surf,
+            DARK_TEXT,
+            False,
+            [(cx - 8, cy - 7), (cx, cy + 1), (cx + 8, cy - 7)],
+            4,
+        )
+
     # -- input dispatch -----------------------------------------------------
 
     def _handle_mouse_down(self, rx: int, ry: int) -> None:
@@ -386,6 +526,7 @@ class TeatrinoApp:
                             if b_id == saved_bg:
                                 self.active_bg_idx = b_idx
                                 break
+                        self._load_saved_backdrop(show_item["id"])
                         self.puppets_on_stage = []
                         for p_meta in show_data.get("puppets", []):
                             p_obj = Puppet(
@@ -488,6 +629,7 @@ class TeatrinoApp:
                     self.recorded_sfx,
                     elapsed,
                     wav_bytes,
+                    self.custom_backdrop_png,
                 )
                 self.library_shows = self.show_repo.list_shows()
                 self.feedback_text = f"🎉 {self.ui_strings.get('recording_saved', 'Spettacolo salvato nella libreria!')}"
@@ -541,8 +683,14 @@ class TeatrinoApp:
             self.feedback_text = f"✨ {self.ui_strings.get('stage_cleared', 'Palcoscenico pronto!')}"
             self.feedback_timer = 2.0
             return
+        if 830 <= rx <= 900 and 24 <= ry <= 78:
+            self._request_shared_backdrop()
+            return
         if 915 <= rx <= 985 and 24 <= ry <= 78:
             self.sound_mgr.play("magic")
+            self.custom_backdrop_png = None
+            self.custom_backdrop_surface = None
+            self.backdrop_import_state = ""
             self.active_bg_idx = (self.active_bg_idx + 1) % len(BG_CONFIGS)
             self.feedback_text = f"✨ Scena: {BG_CONFIGS[self.active_bg_idx][2]}"
             self.feedback_timer = 2.0
@@ -598,7 +746,10 @@ class TeatrinoApp:
     def _draw(self) -> None:
         surf = self.canvas.surface
         active_bg_id = BG_CONFIGS[self.active_bg_idx][0]
-        surf.blit(self.cached_backdrops[active_bg_id], (0, 0))
+        if self.custom_backdrop_surface is not None:
+            surf.blit(self.custom_backdrop_surface, (0, 0))
+        else:
+            surf.blit(self.cached_backdrops[active_bg_id], (0, 0))
         for sp in self.sparks:
             draw_ambient_spark(surf, sp)
         for p in self.puppets_on_stage:
@@ -680,6 +831,7 @@ class TeatrinoApp:
             surf.blit(t_s, (prog_bg.centerx - t_s.get_width() // 2, prog_bg.centery - t_s.get_height() // 2))
 
         if self.app_mode == "stage":
+            self._draw_backdrop_import_button(surf)
             sc_icon, sc_name = BG_CONFIGS[self.active_bg_idx][1], BG_CONFIGS[self.active_bg_idx][2]
             sc_rect = pygame.Rect(915, 24, 70, 54)
             pygame.draw.rect(surf, (255, 250, 240), sc_rect, border_radius=14)

@@ -41,3 +41,6 @@ requested = []
 
 [storage]
 schema_version = 1
+
+[creations]
+consumes = ["image/png"]
