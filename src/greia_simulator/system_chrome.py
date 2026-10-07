@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import queue
 import threading
+from typing import Any
 
 from greia_platform.system_chrome import (
     ActivitySystemChromeLayout,
