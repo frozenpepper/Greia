@@ -761,6 +761,15 @@ class LegacyXSystemChromeBackend:
         self._bridge.show()
         self._visible = True
 
+    def ensure_visible(self, session_id: str) -> None:
+        self._require_session(session_id)
+        if not self._visible:
+            raise RuntimeError("Legacy-X system chrome is not visible")
+        # Ctypes bridge show() is intentionally idempotent at the native level:
+        # map/raise/sync/redraw. Use it after Greia raises its full-screen
+        # trusted Shell modal so Home/Back remain above that modal immediately.
+        self._bridge.show()
+
     def poll_action(self, session_id: str) -> SystemNavigationAction | None:
         self._require_session(session_id)
         if not self._visible:
