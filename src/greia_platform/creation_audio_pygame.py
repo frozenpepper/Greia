@@ -1,13 +1,15 @@
-"""On-demand audible WAV preview for trusted child selection and gallery."""
+"""On-demand audible WAV previews for the trusted child picker/viewer."""
 from __future__ import annotations
+
 import io
 import time
 from typing import Any
+
 from .creation_gallery import GalleryError
 
 
 class PygameRecordingPreview:
-    """Own one interruptible channel; no unsolicited playback/background task."""
+    """One interruptible channel with real pause, resume, replay and progress."""
 
     MAX_WAV_BYTES = 16 * 1024 * 1024
 
@@ -15,6 +17,7 @@ class PygameRecordingPreview:
         self._sound: Any = None
         self._channel: Any = None
         self._started_at = 0.0
+        self._paused_at: float | None = None
 
     def play(self, wav_bytes: bytes) -> None:
         import pygame
@@ -34,23 +37,50 @@ class PygameRecordingPreview:
             self.stop()
             raise GalleryError("audio output is unavailable") from exc
 
-    def is_playing(self) -> bool:
+    def pause(self) -> None:
+        if self._channel is None or self._paused_at is not None:
+            return
         try:
-            return self._channel is not None and bool(self._channel.get_busy())
-        except Exception:  # Device may disappear after unplug or profile exit.
+            self._channel.pause()
+        except Exception as exc:
+            self.stop()
+            raise GalleryError("audio output is unavailable") from exc
+        self._paused_at = time.monotonic()
+
+    def resume(self) -> None:
+        if self._channel is None or self._paused_at is None:
+            return
+        try:
+            self._channel.unpause()
+        except Exception as exc:
+            self.stop()
+            raise GalleryError("audio output is unavailable") from exc
+        self._started_at += time.monotonic() - self._paused_at
+        self._paused_at = None
+
+    def is_playing(self) -> bool:
+        if self._channel is None:
+            return False
+        if self._paused_at is not None:
+            return True
+        try:
+            return bool(self._channel.get_busy())
+        except Exception:  # A device may disappear during Activity/profile exit.
             return False
 
     def progress(self, duration_seconds: float) -> float:
-        """Bounded progress used by the trusted picker; no background timer."""
-        if not self.is_playing() or duration_seconds <= 0:
+        if self._channel is None or duration_seconds <= 0:
             return 0.0
-        return max(0.0, min(1.0, (time.monotonic() - self._started_at) / duration_seconds))
+        now = self._paused_at if self._paused_at is not None else time.monotonic()
+        return max(0.0, min(1.0, (now - self._started_at) / duration_seconds))
 
     def stop(self) -> None:
         if self._channel is not None:
             try:
                 self._channel.stop()
-            except Exception:  # Device may disappear during session teardown.
+            except Exception:  # Device removal must not block cleanup.
                 pass
         self._channel = None
         self._sound = None
+        self._paused_at = None
+        self._started_at = 0.0
