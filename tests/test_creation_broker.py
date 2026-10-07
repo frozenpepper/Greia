@@ -17,6 +17,7 @@ from greia_platform.creation_capacity import VolumeBudget, VolumeUsage
 from greia_platform.creation_client import ActivityCreationsClient
 from greia_platform.creations import CreationLibrary
 from greia_platform.storage_client import ActivityStorageClient, StorageClientError
+from greia_platform.storage import StorageError
 
 
 class _PrivateStorage:
@@ -76,6 +77,26 @@ class CreationBrokerTests(unittest.TestCase):
             ActivityStorageClient(broker.host_socket, broker.session_token)
         )
         return access, broker, client
+
+    def test_creation_authority_cannot_bind_to_another_broker_session(self) -> None:
+        access, broker, _ = self._start(
+            "org.greia.theatre", {}, producing=False, consuming=True
+        )
+        mismatched = CreationSessionAccess(
+            library=self.library,
+            storage=_PrivateStorage("org.greia.theatre", {}),
+            manifest=SimpleNamespace(
+                activity_id="org.greia.theatre",
+                creations_produces=(),
+                creations_consumes=("text/plain",),
+            ),
+            authority=SimpleNamespace(activity_id="org.greia.theatre"),
+            session_id="another-session",
+        )
+        with self.assertRaisesRegex(StorageError, "session"):
+            broker.bind_creations(mismatched)
+        # Failed mismatched setup must not poison this broker.
+        broker.bind_creations(access)
 
     def test_broker_denies_unbound_creation_operations(self) -> None:
         access, broker, client = self._start(
