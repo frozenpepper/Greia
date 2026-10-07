@@ -1,0 +1,23 @@
+# Official first-party Activity release selection.
+#
+# This file is build/release policy, not Activity package metadata and not a
+# launcher visibility filter. Repository Activities may remain available to
+# developers/community work without becoming installed built-ins.
+#
+# STATUS IS INTENTIONALLY DRAFT.
+# P7 has not yet accepted any of the 45 first-party Activities for release.
+# Do not change status to "approved" or populate entries merely to preserve the
+# old all-source-tree image behavior. Each selected entry requires an
+# evidence-backed P7 disposition in the Creations + Activity Release ledger.
+#
+# Once approved, entries are sorted by full Activity ID:
+#
+# [[activities]]
+# activity_id = "org.greia.painting"
+# package = "painting"
+
+schema_version = 1
+
+[release]
+id = "greia.first-party-launch"
+status = "draft"
