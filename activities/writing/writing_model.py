@@ -85,12 +85,17 @@ class DocumentRepository:
         return records
 
     def create(self) -> DocumentRecord:
+        return self.create_text("")
+
+    def create_text(self, text: str) -> DocumentRecord:
+        """Atomically create one new private UTF-8 document snapshot."""
         records = self.list_records()
         if len(records) >= MAX_DOCUMENTS:
             raise RuntimeError("document library limit reached")
-        record = DocumentRecord(uuid.uuid4().hex, "")
+        normalized = clamp_text(text)
+        record = DocumentRecord(uuid.uuid4().hex, preview_text(normalized))
         name = self._name(record.document_id)
-        self.storage.file_write_atomic(name, b"")
+        self.storage.file_write_atomic(name, normalized.encode("utf-8"))
         try:
             self._write_index([record, *records])
         except RuntimeError:
@@ -100,6 +105,11 @@ class DocumentRepository:
                 pass
             raise
         return record
+
+    def private_document_name(self, document_id: str) -> str:
+        """Return a validated private source name for trusted publication."""
+        _require_document_id(document_id)
+        return self._name(document_id)
 
     def load_text(self, document_id: str) -> str:
         _require_document_id(document_id)
