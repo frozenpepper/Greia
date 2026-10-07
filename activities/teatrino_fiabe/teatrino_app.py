@@ -56,7 +56,7 @@ if __package__:
         MIC_GREEN,
         WHITE,
     )
-    from .teatrino_model import AmbientSpark, Puppet, ShowRepository
+    from .teatrino_model import AmbientSpark, Puppet, ShowRepository, ShowStorageError
     from .teatrino_renderer import (
         draw_ambient_spark,
         draw_puppet,
@@ -82,7 +82,7 @@ else:
         MIC_GREEN,
         WHITE,
     )
-    from teatrino_model import AmbientSpark, Puppet, ShowRepository
+    from teatrino_model import AmbientSpark, Puppet, ShowRepository, ShowStorageError
     from teatrino_renderer import (
         draw_ambient_spark,
         draw_puppet,
@@ -290,27 +290,12 @@ class TeatrinoApp:
                 self.is_recording = False
                 wav_bytes = self.mic_recorder.stop_recording()
                 self.last_recorded_wav = wav_bytes
-                saved_meta = self.show_repo.save_show(
+                self._persist_recorded_show(
                     active_bg_id,
-                    [{"id": p.puppet_id, "name": p.name} for p in self.puppets_on_stage],
-                    self.recorded_frames,
-                    self.recorded_sfx,
                     elapsed,
                     wav_bytes,
-                    self.custom_backdrop_png,
+                    feedback_seconds=4.0,
                 )
-                self.library_shows = self.show_repo.list_shows()
-                self.feedback_text = f"🎉 {self.ui_strings.get('recording_saved', 'Spettacolo salvato nella libreria!')}"
-                self.feedback_timer = 4.0
-                try:
-                    emit_activity_event(
-                        "story.recorded",
-                        idempotency_key=f"rec-{saved_meta['id']}",
-                        payload={"duration": round(elapsed, 1), "id": saved_meta["id"]},
-                    )
-                except Exception:
-                    pass
-                self.sound_mgr.play("applause")
             else:
                 frame_data = {
                     "t": round(elapsed, 2),
@@ -368,6 +353,65 @@ class TeatrinoApp:
                     if sfx["t"] <= play_elapsed:
                         self.sound_mgr.play(sfx["sound"])
                         self.playback_sfx.remove(sfx)
+
+    # -- recorded-show persistence ------------------------------------------
+
+    def _persist_recorded_show(
+        self,
+        active_bg_id: str,
+        elapsed: float,
+        wav_bytes: bytes | None,
+        *,
+        feedback_seconds: float,
+    ) -> dict | None:
+        try:
+            saved_meta = self.show_repo.save_show(
+                active_bg_id,
+                [
+                    {"id": puppet.puppet_id, "name": puppet.name}
+                    for puppet in self.puppets_on_stage
+                ],
+                self.recorded_frames,
+                self.recorded_sfx,
+                elapsed,
+                wav_bytes,
+                self.custom_backdrop_png,
+            )
+        except (ShowStorageError, ValueError, OSError):
+            self.library_shows = self.show_repo.list_shows()
+            self.feedback_text = (
+                "⚠️ "
+                + self.ui_strings.get(
+                    "recording_save_failed",
+                    "Could not save this show.",
+                )
+            )
+            self.feedback_timer = feedback_seconds
+            self.sound_mgr.play("boing")
+            return None
+
+        self.library_shows = self.show_repo.list_shows()
+        self.feedback_text = (
+            "🎉 "
+            + self.ui_strings.get(
+                "recording_saved",
+                "Show saved in your library!",
+            )
+        )
+        self.feedback_timer = feedback_seconds
+        try:
+            emit_activity_event(
+                "story.recorded",
+                idempotency_key=f"rec-{saved_meta['id']}",
+                payload={
+                    "duration": round(elapsed, 1),
+                    "id": saved_meta["id"],
+                },
+            )
+        except Exception:
+            pass
+        self.sound_mgr.play("applause")
+        return saved_meta
 
     # -- shared backdrop ----------------------------------------------------
 
@@ -634,27 +678,12 @@ class TeatrinoApp:
                 wav_bytes = self.mic_recorder.stop_recording()
                 self.last_recorded_wav = wav_bytes
                 active_bg_id = BG_CONFIGS[self.active_bg_idx][0]
-                saved_meta = self.show_repo.save_show(
+                self._persist_recorded_show(
                     active_bg_id,
-                    [{"id": p.puppet_id, "name": p.name} for p in self.puppets_on_stage],
-                    self.recorded_frames,
-                    self.recorded_sfx,
                     elapsed,
                     wav_bytes,
-                    self.custom_backdrop_png,
+                    feedback_seconds=3.5,
                 )
-                self.library_shows = self.show_repo.list_shows()
-                self.feedback_text = f"🎉 {self.ui_strings.get('recording_saved', 'Spettacolo salvato nella libreria!')}"
-                self.feedback_timer = 3.5
-                try:
-                    emit_activity_event(
-                        "story.recorded",
-                        idempotency_key=f"rec-{saved_meta['id']}",
-                        payload={"duration": round(elapsed, 1), "id": saved_meta["id"]},
-                    )
-                except Exception:
-                    pass
-                self.sound_mgr.play("applause")
             return
         if 560 <= rx <= 690 and 16 <= ry <= 68:
             if self.recorded_frames:

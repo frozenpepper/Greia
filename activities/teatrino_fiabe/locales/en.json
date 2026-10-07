@@ -46,7 +46,8 @@
     "recording_active": "Recording in progress... Tell your story!",
     "recording_saved": "Show saved in your library!",
     "playing_show": "Showtime in progress! Yay!",
-    "stage_cleared": "Stage ready!"
+    "stage_cleared": "Stage ready!",
+    "recording_save_failed": "I couldn't save this show."
   },
   "audio": {
     "activity.title": {

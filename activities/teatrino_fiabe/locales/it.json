@@ -46,7 +46,8 @@
     "recording_active": "Registrazione in corso... Racconta la tua storia!",
     "recording_saved": "Spettacolo salvato nella tua libreria!",
     "playing_show": "Spettacolo in corso! Evviva!",
-    "stage_cleared": "Palcoscenico pronto!"
+    "stage_cleared": "Palcoscenico pronto!",
+    "recording_save_failed": "Non sono riuscito a salvare questo spettacolo."
   },
   "audio": {
     "activity.title": {
