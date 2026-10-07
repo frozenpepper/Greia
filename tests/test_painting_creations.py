@@ -27,12 +27,26 @@ class ShareRecorder:
     def __init__(self):
         self.published = []
         self.fail = False
+        self.request_fail = False
+        self.requested = []
+        self.reply = SimpleNamespace(state="pending", selection_token=None)
 
     def publish_private_file(self, name, *, media_type, role):
         if self.fail:
             raise RuntimeError("broker unavailable")
         self.published.append((name, media_type, role))
         return {"creation_id": "fake"}
+
+    def request_selection(self, *, media_types, roles=()):
+        if self.request_fail:
+            raise RuntimeError("picker unavailable")
+        self.requested.append((media_types, roles))
+        return "request-1"
+
+    def poll_selection(self, request_id):
+        if self.request_fail:
+            raise RuntimeError("picker unavailable")
+        return self.reply
 
 
 class PaintingCreationTests(unittest.TestCase):
@@ -44,6 +58,11 @@ class PaintingCreationTests(unittest.TestCase):
         app._last_shared = None
         app.shared_feedback = ""
         app.shared_feedback_until = 0.0
+        app.shared_import_request = None
+        app.shared_import_state = ""
+        app.shared_import_feedback_until = 0.0
+        app.shared_import_next_poll = 0.0
+        app.mode = "paint"
         app._save = lambda: True
         return app
 
@@ -68,6 +87,62 @@ class PaintingCreationTests(unittest.TestCase):
         self.assertEqual(app.shared_feedback, "error")
         self.assertIsNone(app._last_shared)
         self.assertEqual(app.current.painting_id, "0123456789abcdef0123456789abcdef")
+
+    def test_gallery_import_request_is_nonblocking_and_explicitly_png_scoped(self):
+        app = self.make_app()
+        app.mode = "gallery"
+        app._request_shared_png()
+        self.assertEqual(
+            app.creations.requested,
+            [(("image/png",), ())],
+        )
+        self.assertEqual(app.shared_import_request, "request-1")
+        self.assertEqual(app.shared_import_state, "pending")
+
+        # A second tap while pending does not create another transaction.
+        app._request_shared_png()
+        self.assertEqual(len(app.creations.requested), 1)
+
+    def test_pending_poll_is_throttled_and_cancel_clears_state(self):
+        app = self.make_app()
+        app.mode = "gallery"
+        app._request_shared_png()
+        with mock.patch(
+            "activities.painting.painting_app.time.monotonic", return_value=10.0
+        ):
+            app._poll_shared_png()
+        self.assertGreater(app.shared_import_next_poll, 10.0)
+        self.assertEqual(app.shared_import_state, "pending")
+
+        app.creations.reply = SimpleNamespace(
+            state="cancelled", selection_token=None
+        )
+        app._poll_shared_png()
+        self.assertIsNone(app.shared_import_request)
+        self.assertEqual(app.shared_import_next_poll, 0.0)
+        self.assertEqual(app.shared_import_state, "")
+
+    def test_ready_poll_imports_one_selected_handle_and_reports_success(self):
+        app = self.make_app()
+        app.mode = "gallery"
+        app._request_shared_png()
+        app.creations.reply = SimpleNamespace(
+            state="ready", selection_token="one-use-handle"
+        )
+        app.accept_selected_png = mock.Mock(return_value=True)
+        app._poll_shared_png()
+        app.accept_selected_png.assert_called_once_with("one-use-handle")
+        self.assertIsNone(app.shared_import_request)
+        self.assertEqual(app.shared_import_state, "imported")
+
+    def test_unavailable_picker_stays_in_gallery_and_reports_error(self):
+        app = self.make_app()
+        app.mode = "gallery"
+        app.creations.request_fail = True
+        app._request_shared_png()
+        self.assertIsNone(app.shared_import_request)
+        self.assertEqual(app.shared_import_state, "error")
+        self.assertEqual(app.mode, "gallery")
 
     def test_import_selected_png_creates_independent_editable_private_project(self):
         app = self.make_app()
