@@ -596,3 +596,26 @@ present but cannot execute `cc1`. Record what `apt-get autoremove` removed
 from `/var/log/apt/history.log*` afterwards, and prefer building an artifact
 in the image composition step (`build/lib/compose.sh`) where the toolchain is
 installed and removed deliberately.
+
+### Fresh installed-boot profile check (2026-10-07)
+
+A correct `/var/lib/greia-profiles/data` root is not sufficient. On fresh
+install, first-boot completes before the Parent creates the initial profile.
+Acceptance must therefore check the **newly created profile root after Parent
+creation**, not only B4/B5 markers:
+
+```text
+data/<profile>             group pipprofiles, mode 2770
+data/<profile>/activities  group pipprofiles, mode 2770
+data/<profile>/customization group pipprofiles, mode 2770
+child-created progress/storage writable by greiakid
+```
+
+A profile root at `2750` is a hard failure even when the data root is
+`2770`. Do not repair it on-device during first-boot acceptance; preserve the
+failure and fix the creation mechanism in source.
+
+On single-root profiles, `greia-boot-observer.service` is not expected to be
+enabled; it is A/B semantic-slot infrastructure. Developer `status` and
+`logs` should work even if the display endpoint is unavailable; screenshots
+and input remain display-dependent.
