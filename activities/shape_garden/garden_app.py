@@ -8,7 +8,7 @@ import time
 
 import pygame
 
-from greia_platform.activity_api import activity_stop_requested, get_theme, mark_activity_ready
+from greia_platform.activity_api import activity_stop_requested, emit_activity_event, get_theme, mark_activity_ready
 from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.pygame_png import PygamePngError, decode_png_surface, encode_surface_png
@@ -319,6 +319,19 @@ class GardenApp:
                     name, media_type="image/png", role="composition"
                 )
                 self._last_published_digest = digest
+                try:
+                    emit_activity_event(
+                        "creation.completed",
+                        idempotency_key=f"composition-{digest}",
+                        payload={
+                            "media_type": "image/png",
+                            "shape_count": len(self.model.active_shapes()),
+                        },
+                    )
+                except Exception:
+                    # Progress telemetry must never make a successful child
+                    # creation publication fail or duplicate the Creation.
+                    pass
             self.publish_state = "saved"
         except (
             GardenProjectError,
