@@ -2685,3 +2685,11 @@ changes. Do not use it to accept the fix. After source acceptance, reboot the
 build host (required to clear historical OPrdqB poisoned loop), require zero
 Greia loops, then perform a new canonical build+flash and repeat fresh Acer
 installation/first-boot acceptance.
+
+### Fresh first-boot repair candidate
+
+Exact implementation/test candidate:
+`af97ddbd7a881d3977c83c1ee99da1b8c0e7e997`.
+
+Everything after this candidate in the current documentation update is
+documentation-only. Local/owner source acceptance has not yet run.
