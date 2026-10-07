@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+import hashlib
 import random
 import time
 from typing import Callable
@@ -61,6 +62,7 @@ class PostcardActivity:
         audio: PostcardAudio,
         rng: random.Random,
         session_id: str,
+        creations=None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self.screen = screen
@@ -75,7 +77,14 @@ class PostcardActivity:
         self.audio = audio
         self.rng = rng
         self.session_id = session_id
+        self.creations = creations
         self.clock = clock
+
+        self.shared_request: str | None = None
+        self.shared_next_poll = 0.0
+        self.shared_state = ""
+        self.shared_feedback_until = 0.0
+        self._shared_card_ids: set[str] = set()
 
         self.view_mode = ViewMode.EDITOR
         self.selected_gallery_card_id: str | None = None
@@ -92,6 +101,8 @@ class PostcardActivity:
 
         while self._running and not activity_stop_requested():
             now = self.clock()
+            if self._step_shared(now):
+                self._dirty = True
             if now - self._last_blink >= 0.5:
                 self._cursor_visible = not self._cursor_visible
                 self._last_blink = now
@@ -223,7 +234,15 @@ class PostcardActivity:
             self.audio.play("select")
             return True
 
-        # 5. Clear Button
+        # 5. Import a child-selected shared text artifact.
+        if (
+            self.creations is not None
+            and self.renderer.shared_import_contains(point)
+        ):
+            self._request_shared_text()
+            return True
+
+        # 6. Clear Button
         if self.renderer.clear_contains(point):
             self.draft.clear()
             self.audio.play("delete")
@@ -257,6 +276,14 @@ class PostcardActivity:
                     self.audio.play("select")
                     return True
             else:
+                if (
+                    self.creations is not None
+                    and self.renderer.share_btn_rect().collidepoint(point)
+                ):
+                    card = self.library.get(self.selected_gallery_card_id)
+                    if card is not None:
+                        self._publish_saved_postcard(card)
+                    return True
                 if self.renderer.delete_btn_rect().collidepoint(point):
                     # Request Delete Confirmation
                     self.confirm_delete = True
@@ -280,6 +307,116 @@ class PostcardActivity:
             return True
 
         return False
+
+    # -- shared UTF-8 text -------------------------------------------------
+
+    def _step_shared(self, now: float) -> bool:
+        changed = False
+        if self.shared_request is not None and now >= self.shared_next_poll:
+            changed = self._poll_shared_text(now) or changed
+        if (
+            self.shared_state
+            and self.shared_state != "pending"
+            and now >= self.shared_feedback_until
+        ):
+            self.shared_state = ""
+            changed = True
+        return changed
+
+    def _request_shared_text(self) -> None:
+        if self.creations is None or self.shared_request is not None:
+            return
+        try:
+            request_id = self.creations.request_selection(
+                media_types=("text/plain",),
+                roles=("document", "postcard"),
+            )
+        except (RuntimeError, ValueError, OSError):
+            self.shared_state = "error"
+            self.shared_feedback_until = self.clock() + 2.0
+            return
+        self.shared_request = request_id
+        self.shared_state = "pending"
+        self.shared_next_poll = self.clock() + 0.12
+
+    def _poll_shared_text(self, now: float) -> bool:
+        request_id = self.shared_request
+        if request_id is None or self.creations is None:
+            return False
+        self.shared_next_poll = now + 0.12
+        try:
+            result = self.creations.poll_selection(request_id)
+        except (RuntimeError, ValueError, OSError):
+            self.shared_request = None
+            self.shared_state = "error"
+            self.shared_feedback_until = now + 2.0
+            return True
+        if result.state == "pending":
+            return False
+        self.shared_request = None
+        if result.state == "cancelled":
+            self.shared_state = ""
+            return True
+        token = result.selection_token
+        if (
+            result.state != "ready"
+            or not isinstance(token, str)
+            or not token
+            or not self._accept_shared_text(token)
+        ):
+            self.shared_state = "error"
+            self.shared_feedback_until = now + 2.0
+            return True
+        self.shared_state = "imported"
+        self.shared_feedback_until = now + 2.0
+        self.audio.play("select")
+        return True
+
+    def _accept_shared_text(self, selection_token: str) -> bool:
+        if self.creations is None:
+            return False
+        try:
+            transfer = self.creations.import_selected(selection_token)
+            payload = transfer.payload
+            if (
+                transfer.record.get("media_type") != "text/plain"
+                or transfer.record.get("role") not in {"document", "postcard"}
+                or not isinstance(payload, bytes)
+                or transfer.record.get("sha256")
+                != hashlib.sha256(payload).hexdigest()
+            ):
+                raise ValueError("selected text failed integrity validation")
+            text = payload.decode("utf-8", errors="strict")
+            self.draft.replace_text(text)
+        except (RuntimeError, ValueError, OSError, UnicodeError):
+            return False
+        self._cursor_visible = True
+        self._last_blink = self.clock()
+        return True
+
+    def _publish_saved_postcard(self, card: SavedPostcard) -> None:
+        if self.creations is None or not card.text.strip():
+            return
+        if card.card_id in self._shared_card_ids:
+            self.shared_state = "saved"
+            self.shared_feedback_until = self.clock() + 2.0
+            return
+        try:
+            name = self.storage.private_card_text_name(card.card_id)
+            self.creations.publish_private_file(
+                name,
+                media_type="text/plain",
+                role="postcard",
+                title=card.text[:100],
+            )
+        except (RuntimeError, ValueError, OSError, UnicodeError):
+            self.shared_state = "error"
+            self.shared_feedback_until = self.clock() + 2.0
+            return
+        self._shared_card_ids.add(card.card_id)
+        self.shared_state = "saved"
+        self.shared_feedback_until = self.clock() + 2.0
+        self.audio.play("send")
 
     def _save_postcard(self) -> None:
         if self.library.is_full:
@@ -320,6 +457,8 @@ class PostcardActivity:
                 self.draft,
                 self.library,
                 cursor_visible=False,
+                shared_available=self.creations is not None,
+                shared_state=self.shared_state,
             )
             self.renderer.draw_full_dialog(self.canvas.surface)
         elif self.view_mode == ViewMode.GALLERY:
@@ -328,6 +467,8 @@ class PostcardActivity:
                 self.library,
                 selected_card_id=self.selected_gallery_card_id,
                 confirm_delete=self.confirm_delete,
+                shared_available=self.creations is not None,
+                shared_state=self.shared_state,
             )
         else:
             self.renderer.draw_editor(
@@ -335,6 +476,8 @@ class PostcardActivity:
                 self.draft,
                 self.library,
                 cursor_visible=self._cursor_visible,
+                shared_available=self.creations is not None,
+                shared_state=self.shared_state,
             )
 
 
