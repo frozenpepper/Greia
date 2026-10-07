@@ -545,3 +545,30 @@ Before calling substantive OS/platform work done, record:
 ```
 
 The standard is not maximal documentation. The standard is a small set of current, correct routers pointing to the real authority for the task.
+
+## Fresh profile / first-boot ownership invariant
+
+For installed-target profile work, the shared Parent-created directory contract
+is load-bearing:
+
+- `/var/lib/greia-profiles/data` is setgid `pipprofiles`;
+- Parent-created profile roots, `customization`, and `activities` must be
+  `2770` with the managed `pipprofiles` group **before** a profile is
+  published;
+- child-owned `progress` and `storage` are not Parent-precreated;
+- the Parent unit currently uses `UMask=0007` so setgid inheritance produces
+  the correct shared mode without weakening `RestrictSUIDSGID=yes`;
+- never swallow a failed profile-directory permission repair.
+
+First-boot B4/B5 are compatibility migrations, not substitutes for correct
+creation-time ownership. A physical first-boot acceptance must create/use a
+profile after first-boot has completed and prove the child can create its own
+progress/storage state.
+
+The platform boot observer is semantic A/B infrastructure. Do not enable
+`greia-boot-observer.service` on single-root layouts that have no installed
+layout/release slot identity.
+
+Developer status/log diagnostics must remain usable when the graphical display
+is broken. Display-dependent operations such as screenshot/input still require
+a valid bounded developer display endpoint.
