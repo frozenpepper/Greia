@@ -1,9 +1,9 @@
-# Creations Library P3 — Desktop Source + Real GUI Acceptance
+# Creations Library P3–P5 — Desktop Source + Real GUI Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `60832f87e2ff432ccadb1189ba1cb726cb2e1394` (latest code/test checkpoint; later documentation-only commits may follow).  
+**Pinned source candidate:** `cb9bc32c680ddd3953d256b8bc0c4311e194bfad` (latest code/test checkpoint; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
-**Expected state:** P3 Gallery, authenticated request/poll/cancel transport, **trusted in-Activity modal presentation**, and P4 PNG paths across Painting, Shape Garden and Teatrino exist SOURCE-WIP. Legacy-X reuses Greia's existing Shell window with exact supervised-PID revalidation before modal presentation; Simulator uses its existing remote display bridge to divert ordinary input/frames to the same real Shell picker while mandatory Home remains platform-owned. Painting imports a selected PNG as an independent editable painting. Shape Garden imports a selected PNG as a private backdrop beneath its persistent tap-to-grow shapes and explicitly publishes a flattened composition. Teatrino imports a selected PNG as a stage backdrop and persists a private content-addressed snapshot with saved shows. **None of this latest modal/cross-app slice has been accepted in a complete checkout or real GUI yet.** WAV/text producers, all-writer capacity and hardware evidence remain open.
+**Expected state:** P3 Gallery, authenticated request/poll/cancel transport, **trusted in-Activity modal presentation**, P4 PNG paths across Painting/Shape Garden/Teatrino, and the first P5 WAV path exist SOURCE-WIP. Storie della Mia Voce deliberately publishes only already-durable scene WAV files with role `narration`. The universal picker can play/pause/resume/replay WAV **before selection**. Teatrino requests only `audio/wav` + `narration`, validates the one-use payload, and can puppeteer to that selected narration without opening the microphone; an early child Stop trims the canonical WAV before the show is privately saved. **None of this latest modal/cross-app/audio slice has been accepted in a complete checkout or real GUI yet.** UTF-8 text, second audio consumer, all-writer capacity and hardware evidence remain open.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor 60832f87e2ff432ccadb1189ba1cb726cb2e1394 HEAD` (exit **0** required). Check `git diff --name-only 60832f87e2ff432ccadb1189ba1cb726cb2e1394 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor cb9bc32c680ddd3953d256b8bc0c4311e194bfad HEAD` (exit **0** required). Check `git diff --name-only cb9bc32c680ddd3953d256b8bc0c4311e194bfad HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -41,6 +41,10 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_shape_garden_creations.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_teatrino_shared_backdrop_repository.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_teatrino_shared_backdrop.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_teatrino_audio_narration.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_teatrino_shared_narration.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_voice_creations.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_voice_creations_storage.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_teatrino_fiabe.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_pygame_png.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_shell_window_legacy_x.py' -v
@@ -87,7 +91,13 @@ Capture **actual screenshots from the real running Shell** at these exact checkp
 18. **Painting/Shape Garden → Teatrino backdrop.** Publish or reuse one recognizable PNG. Launch Teatrino and use its picture-import control. The same trusted picker must appear; choose the PNG. Verify it becomes the stage backdrop without replacing puppets, curtains, built-in scene controls or trusted Home. Screenshot `19-teatrino-custom-backdrop.png`.
 19. **Teatrino durable show snapshot.** Record a short show using the custom backdrop, stop/save, reopen the saved show from Teatrino's story library, and verify the custom image returns. Then exit to My Creations and delete the **shared source PNG** used for the backdrop (after confirming you are deleting the intended library item). Reopen Teatrino and replay the saved show again: its private backdrop snapshot must still render. Screenshot `20-teatrino-show-after-source-delete.png`. This proves snapshot independence, not raw shared-path coupling.
 20. **Teatrino failure/resource sanity.** Save two short shows using the same custom picture and confirm normal behavior/no visible duplicate-media bookkeeping. The source unit tests, not manual filesystem edits, own proof of content-addressed deduplication and rollback. Do not tamper with private storage during GUI acceptance.
-21. **Audio/text:** the common picker has WAV preview/text support, but genuine audio/text producers are not yet integrated. Do not inject media into a real child's profile or edit SQLite to fake the workflow. Pure source tests may cover those types; real preview-before-select remains pending until an approved producer/fixture exists.
+21. **Create and publish a real narration WAV.** Launch Storie della Mia Voce using the disposable simulator profile. Record and save a short scene (speak clearly enough to recognize it), open its saved-story/library view, and use the new share action for that **saved private scene recording**. Re-sharing the same saved scene without changing it must not create a duplicate in-session. Screenshot `21-voice-scene-share.png`.
+22. **Audio preview before choosing.** Open My Creations and select the Audio tab. The narration must appear as a large child-friendly audio card. Exercise **Play → Pause → Resume → Replay** and verify it is genuinely audible before any consumer selection. Leaving the detail/card or the gallery must stop playback. Screenshot `22-audio-preview-before-select.png`. Do not use a real child's recording.
+23. **Voice Stories → Teatrino narration.** Launch Teatrino. Use its small saved-voice import control between Stories and REC. The universal picker must show only compatible WAV items with semantic role `narration`; image/text creations and unrelated audio roles must not appear. Preview the narration again in the picker, select it, and confirm Teatrino returns with the imported-narration control visibly active. Screenshot `23-teatrino-imported-narration.png`.
+24. **Puppeteer to imported narration with NO microphone capture.** Press REC and move/jump puppets while the selected narration plays. Confirm microphone capture is not opened/used for this performance; imported narration is the timing/audio source. Let one show finish automatically at narration end, then record another and press STOP early. Save/replay both. The early-stop show must contain only the corresponding trimmed narration prefix, not the full original clip. Screenshot `24-teatrino-puppeteer-to-narration.png`.
+25. **Saved-show independence from My Creations.** After saving a show that used imported narration, return to My Creations and deliberately delete the shared narration item. Reopen Teatrino and replay the saved show: its private WAV copy must still play and remain synchronized with the saved puppet frames. This proves snapshot independence, not raw shared-path coupling. Screenshot `25-teatrino-audio-after-source-delete.png`.
+26. **Audio/microphone source switching.** Import another narration, then tap the microphone-source control before recording. The imported narration should be cleared and the ordinary microphone path selected; record a very short mic show and verify the legacy microphone flow still works. During an imported-narration performance, no live mic level/capture should compete with playback.
+27. **UTF-8 text remains deferred.** Do not inject text directly into SQLite/private stores to fake P5. Text preview can remain source-covered until a real producer/consumer lands.
 
 Record frame-rate/idle CPU/RSS observations if the Simulator exposes them; no claim about Acer performance can follow from desktop observation.
 
@@ -108,11 +118,13 @@ The new code introduces **`tests/test_creation_selection.py`**, additional `test
 - shared PNG tests reject payload/source-dimension abuse before expensive conversion;
 - Shape Garden tests prove bounded durable shape serialization, transient-state exclusion, content-addressed backdrop integrity/rollback, bounded picker polling and explicit flattened publication deduplication;
 - Teatrino tests prove PNG integrity-before-mutation, nonblocking cancel/select, content-addressed backdrop deduplication across shows, last-reference cleanup, show-cap reclamation, strict catalogue reads, failed-commit rollback and no false creation event on save failure.
+- Voice Stories tests prove only durable private scene WAVs are publishable, failed story commits remain retryable, and share taps are bounded/deduplicated;
+- imported-narration tests prove canonical WAV/duration bounds, early-stop trimming, `audio/wav` + `narration` picker scope, cancellation preservation, no microphone start while imported narration drives the show, and unchanged microphone behavior when no narration is selected;
 
 Do not bypass the real presenter gate, inject raw shared paths, or create a dummy Activity-local picker. The implemented backend semantics are documented in
 `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`.
 
-**Further deferred:** genuine WAV preview-before-select, UTF-8 producers/consumers, sibling-profile isolation in live sessions, backup/restore, disk saturation at 75% plus OS headroom, Wayland/KMSDRM modal backends, and installed Acer/Pi interaction/performance only after the independent lifecycle/first-boot route permits it. Avoid unreviewed hardware flashing now.
+**Further deferred:** UTF-8 producers/consumers, a second genuinely useful audio consumer (Orchestra Animali is the current source-review candidate), sibling-profile isolation in live sessions, backup/restore, disk saturation at 75% plus OS headroom, Wayland/KMSDRM modal backends, and installed Acer/Pi interaction/performance only after the independent lifecycle/first-boot route permits it. Avoid unreviewed hardware flashing now.
 
 ### 3. Report and evidence
 
@@ -123,6 +135,7 @@ Provide exactly:
 - whether Paint→My Creations saved original PNG snapshots, deduplicated unchanged images, and the **Painting→trusted picker→new editable Painting** cancel/select/reopen paths behaved correctly;
 - whether **Painting→Shape Garden→flattened My Creations→Painting** persisted correctly and kept independent snapshots;
 - whether **Painting/Shape Garden→Teatrino** saved-show backdrop survived deletion of the shared source PNG;
+- whether **Voice Stories→audio preview→Teatrino narration** worked without microphone contention, including early-stop trimming and saved-show replay after deletion of the shared source WAV;
 - image detail/deletion/cancel state; actual observed bug(s), with steps;
 - accepted screen sizes/input modes; limitations;
 - any audio/TTS/microphone output not tested;
@@ -134,4 +147,4 @@ Return a ZIP of the raw screenshots + logs + concise Markdown report from the `t
 
 STOP on pre-existing uncommitted source state, mismatched source SHA ancestry, source changes beyond candidate not yet reviewed, first focused or full verify failure, missing unavailable dependencies not safely bootstrappable, profile selection/data isolation ambiguity, real child data exposure, unrecoverable simulator failure, or a GUI crash. Preserve files/logs exactly for root cause; no false PASS by skipping failing gates.
 
-**Expected handoff:** this accumulated run either validates the current trusted modal + Painting/Shape Garden/Teatrino PNG round trip or stops at the first reproducible defect with raw evidence. After repairs, proceed to P5 WAV/text and all-writer capacity work rather than creating another picker implementation.
+**Expected handoff:** this accumulated run either validates the current trusted modal + PNG round trip + Voice Stories→Teatrino narration flow or stops at the first reproducible defect with raw evidence. After repairs, proceed to UTF-8, the second audio consumer and all-writer capacity work rather than creating another picker implementation.
