@@ -40,3 +40,7 @@ requested = []
 
 [storage]
 schema_version = 1
+
+[creations]
+produces = ["text/plain"]
+consumes = ["text/plain"]
