@@ -47,6 +47,8 @@ class CreationsRepository(Protocol):
 
     def preview(self, creation_id: str) -> tuple[str, bytes]: ...
 
+    def read(self, creation_id: str) -> bytes: ...
+
     def delete(self, creation_id: str) -> bool: ...
 
 
@@ -259,6 +261,24 @@ class CreationsGalleryController:
         if creation_id not in {item.creation_id for item in self._items}:
             raise GalleryError("creation preview is not on the visible page")
         return self.library.preview(creation_id)
+
+    def full_image(self, creation_id: str) -> bytes:
+        """Original PNG is available only for an opened picture preview."""
+        self._check_open()
+        record = next((item for item in self._items if item.creation_id == creation_id), None)
+        if self.detail_id != creation_id or record is None or record.media_type != "image/png":
+            raise GalleryError("full-resolution picture requires an opened image")
+        return self.library.read(creation_id)
+
+    def poll_playback(self) -> bool:
+        """Clear stale Play indication after a recording naturally finishes."""
+        if self.playing_id is None:
+            return False
+        busy = getattr(self.audio_player, "is_playing", None)
+        if callable(busy) and not busy():
+            self._stop_playback()
+            return False
+        return True
 
     def toggle_audio(self, creation_id: str) -> bool:
         self._check_open()
