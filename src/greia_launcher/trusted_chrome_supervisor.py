@@ -122,6 +122,20 @@ class TrustedChromeActivitySupervisor(UsageLimitedActivitySupervisor):
             return False
         return True
 
+    def ensure_system_chrome_visible(self, session: ActivitySession) -> bool:
+        """Restack mandatory Home/Back after a trusted Shell modal is raised."""
+        if self.active_session is not session or session.state is not ActivitySessionState.RUNNING:
+            return False
+        lease = self._system_chrome_leases.get(session.session_id)
+        coordinator = self._system_chrome_coordinator
+        if lease is None or coordinator is None:
+            return coordinator is None
+        try:
+            coordinator.ensure_visible(lease)
+        except SystemChromeError:
+            return False
+        return True
+
     def _cleanup_display_session(self, session_id: str) -> bool:
         chrome_clean = self._cleanup_system_chrome(session_id)
         display_clean = super()._cleanup_display_session(session_id)
