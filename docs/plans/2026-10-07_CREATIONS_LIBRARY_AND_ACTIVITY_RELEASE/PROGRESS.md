@@ -6,11 +6,11 @@
 
 ## A. At-a-glance checkpoint — 2026-10-07
 
-- Program: **P1/P2 source WIP**; **P3 trusted gallery + bounded async request/poll/cancel transport SOURCE-WIP**; **P4 Painting PNG publisher and independent selected-image importer SOURCE-WIP**. The real modal display handoff is still missing and presenter-gated OFF; Shape Garden/Theatre are not yet consumers. No full checkout/GUI acceptance in this session.
+- Program: **P1/P2 source WIP**; **P3 universal gallery + authenticated request transport + trusted in-Activity modal SOURCE-WIP**; **P4 Painting PNG publish/import SOURCE-WIP with child-visible controls**. Legacy-X and Simulator modal backends are implemented in source, but no complete checkout/GUI acceptance has run. Wayland/KMSDRM, Shape Garden/Theatre, audio/text and later release phases remain open.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
 - Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
-- Exchange status: **Painting declares publish+consume PNG**, explicitly publishes saved snapshots, and has a source-only import hook making a separate editable private painting from a child-selected handle. The Activity can request an async picker through the broker, but **no production presenter is enabled until Greia can actually display its trusted modal**. My Creations viewer has large cards, audio previews and delete confirmation in SOURCE only; no real Paint→Gallery→Paint GUI flow, other consumers, backup or physical evidence.
+- Exchange status: **Painting declares publish+consume PNG** and now has source-wired child controls: up-arrow deliberate publish; private-gallery down-arrow starts the universal picker nonblockingly; bounded polling returns one child-selected handle; validated PNG becomes a separate editable private painting. The trusted presenter is source-wired for installed Legacy-X and Simulator remote display. My Creations viewer still has large mixed-media cards/audio/delete. **No real Paint→picker→Paint GUI flow has been executed yet**; other consumers, backup and physical evidence remain open.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
 - Historical P1 baseline: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`, local mirrored **12/12 PASS**. P2/P3/P4 subsequent source commits supersede the original 'no broker/UI' snapshot; a complete checkout acceptance remains owed.
 
@@ -21,8 +21,8 @@
 | P0 | repository/source baseline + triage | STARTED | consolidated current-head actual gameplay audit |
 | P1 | typed creation repository, codecs, adaptive capacity | SOURCE WIP (trusted core committed; 12 local mirrored tests PASS) | full Greia checkout tests, error/race/recovery, real budget calibration |
 | P2 | permissions/manifest/broker/SDK | SOURCE WIP (publisher/importer + nonblocking request/poll/cancel and real socket tests committed) | full checkout socket/manifest/supervisor tests; presenter-enabled positive and default-fail-closed negative |
-| P3 | universal picker and My Creations viewer | SOURCE WIP (trusted Shell viewer, filtered large previews/audio/delete, async transaction with disabled-until-ready presenter gate) | **real modal display owner handoff**, full Pygame screenshot/input/audio and cancellation proof |
-| P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting deliberate PNG publish + callable selected PNG → independent editable copy) | platform picker GUI integration, real reopen/save, Shape Garden persistent project and Theatre consumer |
+| P3 | universal picker and My Creations viewer | SOURCE WIP (viewer + filtered picker + authenticated async transaction + Legacy-X/Simulator trusted modal backends) | full checkout tests; real Simulator remote-canvas screenshots/input/audio/cancel/Home; installed Legacy-X focus/stacking; future Wayland/KMSDRM backend |
+| P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting deliberate publish + child-visible universal PNG import → independent editable copy) | real GUI round trip/reopen/save; Shape Garden persistent project; Theatre backdrop consumer |
 | P5 | voice/music and writing/text interoperability | NOT STARTED | real recording preview, text import/export |
 | P6 | explicit release catalogue and adaptive grouping | NOT STARTED | built-index exact match, Parent policy |
 | P7 | deep per-Activity quality review (45) | NOT STARTED | 45 evidence-backed dispositions |
@@ -38,7 +38,7 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 
 | Producer | Consumer | Kind | Status |
 |---|---|---|---|
-| Painting | Painting | PNG published snapshot becomes a separate editable private painting | SOURCE WIP: producer+receiver methods; picker not yet live |
+| Painting | Painting | PNG published snapshot becomes a separate editable private painting | SOURCE WIP: child-visible publish/import controls + modal transport wired; untested live |
 | Painting | Shape Garden/stamps | PNG as background/base | NOT STARTED; Shape Garden has no persistent project yet |
 | Shape Garden | Painting | flattened PNG composition | NOT STARTED |
 | Painting/Shape Garden | Teatrino Fiabe | PNG backdrop | NOT STARTED |
@@ -168,6 +168,29 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 **Entire deferred test set is preserved and expanded**, including all previous source/UI screenshot checks, at [P3 desktop/source acceptance](../../testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md). The user expressly deferred the run until their local agent is available. **Do not ask for Acer flashing**, do not claim live GUI, socket, full-checkout or physical PASS. When the agent is available, test the latest pinned source candidate with `make verify`, real Pygame Simulator screenshots and the listed privacy/rollback/performance negatives; report first failure with evidence.
 
 **Next engineering step:** implement actual trusted display-owned modal presentation/focus bridge through existing `DisplaySessionCoordinator`/system chrome backend behind one runtime-neutral contract; only then may the Shell enable a pending Activity's picker. After that connect real user-facing Painting import + separate Shape Garden saved project + Theatre backdrop, then WAV/text, all-writer proportional disk limit and curated 45-Activity release review.
+
+---
+
+### 2026-10-07 — P3 trusted modal source + Painting live import wiring; all execution deferred
+
+**Pinned source/test candidate for the next combined acceptance:** `dae96e9b63bb537456579fa51ad1d9539cf0c204`. Commits after that SHA in this session are documentation-only. **No tests were executed for this candidate**: the user's local agent remains unavailable, and the assistant environment still lacks the complete authenticated Greia checkout/Pygame runtime. The earlier isolated 33/33 mirror result predates this modal source and is not current evidence.
+
+**Implemented directly on `main`:**
+
+- **Runtime-neutral trusted modal lease:** `ShellActivityModalLease` now carries only exact session ID, generation and supervised Activity PID. X11/native surface handles are private backend state, preventing Legacy-X assumptions from leaking into Wayland/KMSDRM/Simulator contracts.
+- **Legacy-X modal backend:** `LegacyXShellWindowController` reuses Greia's existing Shell SDL window. It enables presenter capability for the live Activity session, then immediately before modal presentation re-reads the currently focused non-Shell X11 window's `_NET_WM_PID` and requires an exact match with the supervised Activity process. It raises/focuses the Shell, keeps the verified Activity window private for restoration, and restores that exact window afterward. It revalidates again at show time so an SDL window recreated after READY is not restored from stale state.
+- **Trusted Home/Back preservation:** `SystemChromeBackend/SystemChromeCoordinator` gained a narrow `ensure_visible` restack operation. Legacy-X re-raises/redraws its already-prepared protected chrome after the full-screen Shell modal rises; `TrustedChromeActivitySupervisor.ensure_system_chrome_visible` is exact-running-session bound. The modal never becomes higher trust than Home.
+- **Trusted host:** new `creation_picker_host.py` binds the active profile's managed `creations_dir`, pending request scopes and the shared `CreationsGalleryScreen`. It drops pre-modal input, draws only on opening/input/audio progress, completes selection only through Supervisor, restores Activity immediately on choose/cancel, and now performs unconditional abnormal cleanup: cancel pending request, disable presenter gate, stop Screen/audio, dismiss/abandon modal lease and clear Shell events.
+- **Launcher lifecycle integration:** `LauncherApplication._launch_selected()` creates the host only for `creations.consumes` Activities, prepares the concrete modal backend after RUNNING, services the real picker inside the existing supervisor loop while Activity stays alive, and wraps the host in `finally` so unexpected unwind/Simulator stop cannot strand modal authority.
+- **Simulator canonical modal:** new `greia_simulator.shell_window.SimulatorShellWindowController` uses the existing `SimulatorSystemChromeRemoteBridge`, not a fake picker. While modal is active the Activity's `/api/events` drain receives no ordinary input, Shell consumes that same queued input, Activity frame uploads cannot replace the trusted picker frame, and protected Home remains system-owned. `GreiaSimulatorChildShell` composes this backend and the launch loop calls existing input hooks only while the picker is visible.
+- **Painting child-visible import:** its private gallery now shows the shared picture-arrow-down affordance. It requests only `image/png`, polls no faster than every **120 ms**, handles cancel/unavailable state without blocking frames, consumes one ready selection handle, validates MIME + digest, decodes before state mutation, creates a new independent private editable project and leaves the shared source unchanged. Existing up-arrow publish and private autosave semantics remain separate.
+- **Regression source added/expanded (UNEXECUTED):** `test_shell_window_legacy_x.py` exact-object/PID/recreated-window restoration; `test_system_chrome.py` restack same lease; `test_trusted_chrome_supervisor.py` running-session restack; `test_simulator_system_chrome.py` modal input/frame diversion and Home; `test_creation_picker_host.py` open/select/cancel/show failure/chrome failure/abnormal teardown; `test_painting_creations.py` explicit request, duplicate suppression, bounded polling, cancel, unavailable presenter and one-use import.
+
+**Architecture/evidence boundary:** this advances P3 from “request transport only” to **modal implementation SOURCE-WIP**. It does **not** prove that Legacy-X `_NET_WM_PID`/stacking behaves correctly on the installed Acer, that the Simulator remote canvas visually presents/restores correctly, that Pygame input or audio is correct, or that the full source suite typechecks/passes. Future Wayland/KMSDRM backends still need the same `ShellWindowController` semantic implementation.
+
+**Deferred acceptance owner:** [`docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`](../../testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md) is being advanced to this exact source SHA. When the local agent returns, run that **single accumulated procedure**; do not discard earlier Gallery, broker, security, Painting publication, resolution or visual checks. No Acer flash/install is requested by this workstream.
+
+**Next source step while testing is deferred:** start P4's next legitimate consumer: define Shape Garden's persistent editable picture+shape project model (or formally choose a better stamp-style Activity after gameplay review), then wire the already-common picker rather than adding another chooser. Theatre backdrop persistence follows. In parallel, P5 WAV/text and P1 all-writer proportional capacity remain open; catalogue review is still 0/45 accepted.
 
 ---
 
