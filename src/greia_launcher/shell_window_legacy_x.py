@@ -291,14 +291,6 @@ class LegacyXShellWindowController:
         shell_window = self._shell_window_id(pygame)
         if shell_window is None:
             return None
-        try:
-            activity_window = self._focus_bridge.focused_window_for_process(
-                activity_pid, excluding_window_id=shell_window
-            )
-        except Exception:
-            return None
-        if not isinstance(activity_window, int) or activity_window <= 0:
-            return None
         self._modal_generation += 1
         lease = ShellActivityModalLease(
             session_id=session_id,
@@ -307,7 +299,10 @@ class LegacyXShellWindowController:
         )
         self._modal_lease = lease
         self._modal_shell_window = shell_window
-        self._modal_activity_window = activity_window
+        # The Activity's native window is deliberately *not* trusted yet.
+        # show_activity_modal() proves the currently focused window advertises
+        # this exact supervised PID immediately before covering it.
+        self._modal_activity_window = None
         self._modal_visible = False
         return lease
 
