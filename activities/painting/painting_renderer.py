@@ -251,7 +251,7 @@ class PaintingRenderer:
             pygame.draw.line(screen, (235, 226, 208), (0, line_y), (w, line_y), 2)
 
     def shared_export_button(self) -> pygame.Rect | None:
-        """Child-sized share button in the free center of the safe toolbar."""
+        """Child-sized share/import slot in the free center of the safe toolbar."""
         left = self.metrics.activity_toolbar_button(1, side="left")
         right = self.metrics.activity_toolbar_button(1, side="right")
         size = self.metrics.button_size
@@ -271,6 +271,7 @@ class PaintingRenderer:
         *,
         shared_available: bool = False,
         shared_feedback: str = "",
+        shared_import_state: str = "",
     ) -> None:
         gallery = self.metrics.activity_toolbar_button(0, side="left")
         undo = self.metrics.activity_toolbar_button(1, side="left")
@@ -316,8 +317,8 @@ class PaintingRenderer:
 
         # Deliberate publication is independent from per-stroke autosave.
         # The center remains visually quiet on unsupported/narrow viewports.
-        shared = self.shared_export_button() if shared_available and mode == "paint" else None
-        if shared is not None:
+        shared = self.shared_export_button() if shared_available else None
+        if shared is not None and mode == "paint":
             self._draw_tactile_button(
                 screen, shared, icon_key="tool_share",
                 active=shared_feedback == "saved",
@@ -326,6 +327,17 @@ class PaintingRenderer:
                 fallback_symbol="share",
             )
             if shared_feedback == "error":
+                pygame.draw.rect(screen,(211,61,65),shared,width=max(3,self.metrics.px(4)),border_radius=self.metrics.radius)
+        elif shared is not None and mode == "gallery":
+            self._draw_tactile_button(
+                screen, shared, icon_key="tool_import",
+                active=shared_import_state == "pending",
+                base_color=(221, 235, 252),
+                active_color=(165, 211, 247),
+                fallback_symbol="import",
+                disabled=shared_import_state == "pending",
+            )
+            if shared_import_state == "error":
                 pygame.draw.rect(screen,(211,61,65),shared,width=max(3,self.metrics.px(4)),border_radius=self.metrics.radius)
 
         # Status Pill Indicator
@@ -392,14 +404,19 @@ class PaintingRenderer:
                 pygame.draw.line(screen, (255, 255, 255), (rect.centerx - 12, rect.centery), (rect.centerx + 12, rect.centery), 4)
             elif fallback_symbol == "eraser":
                 pygame.draw.rect(screen, col, pygame.Rect(rect.centerx - 12, rect.centery - 8, 24, 16), border_radius=4)
-            elif fallback_symbol == "share":
-                # A picture moving upward into the child's Creations library.
+            elif fallback_symbol in {"share", "import"}:
+                # The same picture glyph with an unambiguous arrow direction:
+                # up = publish to My Creations, down = bring one into Painting.
                 cx, cy = rect.center
                 pygame.draw.rect(screen,col,(cx-16,cy-2,32,21),width=3,border_radius=4)
                 pygame.draw.circle(screen,col,(cx+8,cy+3),3)
                 pygame.draw.lines(screen,col,False,[(cx-12,cy+13),(cx-5,cy+7),(cx+1,cy+12)],3)
-                pygame.draw.line(screen,col,(cx,cy-16),(cx,cy+1),4)
-                pygame.draw.lines(screen,col,False,[(cx-8,cy-9),(cx,cy-17),(cx+8,cy-9)],4)
+                if fallback_symbol == "share":
+                    pygame.draw.line(screen,col,(cx,cy-16),(cx,cy+1),4)
+                    pygame.draw.lines(screen,col,False,[(cx-8,cy-9),(cx,cy-17),(cx+8,cy-9)],4)
+                else:
+                    pygame.draw.line(screen,col,(cx,cy-17),(cx,cy+1),4)
+                    pygame.draw.lines(screen,col,False,[(cx-8,cy-7),(cx,cy+1),(cx+8,cy-7)],4)
 
     def draw_canvas(self, screen: pygame.Surface, canvas: pygame.Surface) -> None:
         crect = self.canvas_rect
