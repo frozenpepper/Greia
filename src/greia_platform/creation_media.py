@@ -50,7 +50,9 @@ class PngCodec:
             raise CreationMediaError("PNG header or encoded image size is invalid")
         try:
             from PIL import Image, UnidentifiedImageError
-
+        except ImportError as exc:
+            raise CreationMediaError("PNG decoder unavailable") from exc
+        try:
             with Image.open(io.BytesIO(raw)) as source:
                 if source.format != "PNG" or getattr(source, "n_frames", 1) != 1:
                     raise CreationMediaError("only static PNG images are supported")
