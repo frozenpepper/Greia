@@ -15,6 +15,7 @@ for path in (ROOT / "src", ROOT):
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 os.environ["SDL_AUDIODRIVER"] = "dummy"
 
+from activities.teatrino_fiabe.teatrino_app import _load_package_locale_tables
 from activities.teatrino_fiabe.teatrino_assets import render_backdrop_surface
 from activities.teatrino_fiabe.teatrino_content import BG_CONFIGS, PUPPET_ROSTER
 from activities.teatrino_fiabe.teatrino_model import Puppet, ShowRepository
@@ -50,6 +51,25 @@ class TeatrinoFiabeTests(unittest.TestCase):
         for puppet_id, _name in PUPPET_ROSTER:
             self.assertTrue((runtime_dir / f"puppet_{puppet_id}.png").is_file())
             self.assertTrue((source_dir / f"puppet_{puppet_id}.svg").is_file())
+
+    def test_selected_locale_tables_are_not_pinned_to_italian(self) -> None:
+        locales = ROOT / "activities" / "teatrino_fiabe" / "locales"
+        lang, ui, puppets, backdrops = _load_package_locale_tables(
+            locales, "en"
+        )
+        self.assertEqual(lang, "en")
+        self.assertEqual(ui["stories"], "Stories")
+        self.assertEqual(ui["playback_complete"], "Hooray for the show!")
+        self.assertEqual(puppets["principessa"], "Princess")
+        self.assertEqual(backdrops["forest"], "Forest")
+
+        lang, ui, puppets, backdrops = _load_package_locale_tables(
+            locales, "it"
+        )
+        self.assertEqual(lang, "it")
+        self.assertEqual(ui["stories"], "Storie")
+        self.assertEqual(puppets["principessa"], "Principessa")
+        self.assertEqual(backdrops["forest"], "Bosco")
 
     def test_backdrops_render_at_reference_size(self) -> None:
         for backdrop_id, _icon, _name in BG_CONFIGS:
