@@ -708,7 +708,7 @@ def _ensure_directory_contract(
     if actual_mode != mode:
         try:
             os.chmod(path, mode)
-        except PermissionError as exc:
+        except OSError as exc:
             raise ProfileError(
                 f"managed profile directory mode is {actual_mode:04o}, "
                 f"expected {mode:04o}, and chmod was refused: {path}"
