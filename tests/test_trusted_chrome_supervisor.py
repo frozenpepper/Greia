@@ -179,6 +179,23 @@ class TrustedChromeActivitySupervisorTests(unittest.TestCase):
         self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.HIDDEN)
         self.assertIn(("hide", session.session_id), backend.calls)
 
+    def test_running_session_can_restack_same_trusted_chrome_for_modal(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = _manifest(root / "activity")
+            profile = _ProfileContext(root / "profile")
+            authority = _Authority(manifest.activity_id)
+            process = _Process()
+            backend = _ChromeBackend()
+            supervisor, coordinator = _supervisor(process, backend)
+            session = supervisor.start(manifest, profile, authority)
+            with mock.patch.object(type(session.control), "ready", return_value=True):
+                self.assertIsNone(supervisor.poll(session))
+
+            self.assertTrue(supervisor.ensure_system_chrome_visible(session))
+            self.assertEqual(coordinator.snapshot.phase, SystemChromePhase.VISIBLE)
+            self.assertIn(("restack", session.session_id), backend.calls)
+
     def test_home_action_requests_platform_stop_without_activity_event(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
