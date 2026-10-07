@@ -92,7 +92,7 @@ def stage_release_activities(
         raise ReleaseSelectionError("release Activity staging output already exists")
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    temporary = Path(
+    temporary: Path | None = Path(
         tempfile.mkdtemp(
             prefix=f".{output.name}.",
             dir=output.parent,
@@ -131,10 +131,10 @@ def stage_release_activities(
             )
 
         temporary.rename(output)
-        temporary = Path()
+        temporary = None
         return selection.release_id, tuple(sorted(discovered))
     finally:
-        if temporary and temporary.exists():
+        if temporary is not None and temporary.exists():
             shutil.rmtree(temporary, ignore_errors=True)
 
 
