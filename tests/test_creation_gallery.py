@@ -15,12 +15,28 @@ class Player:
     def __init__(self):
         self.plays = 0
         self.stops = 0
+        self.pauses = 0
+        self.resumes = 0
+        self.active = False
+        self.paused = False
         self.last = b""
     def play(self, wav):
         self.plays += 1
+        self.active = True
+        self.paused = False
         self.last = wav
+    def pause(self):
+        self.pauses += 1
+        self.paused = True
+    def resume(self):
+        self.resumes += 1
+        self.paused = False
+    def is_playing(self):
+        return self.active
     def stop(self):
         self.stops += 1
+        self.active = False
+        self.paused = False
 
 def audio():
     target=io.BytesIO()
@@ -65,6 +81,27 @@ class TestGallery(unittest.TestCase):
         self.assertIsNone(controller.page.playing_id)
         controller.close()
         with self.assertRaises(GalleryError):controller.next_page()
+
+    def test_audio_has_real_pause_resume_and_separate_replay(self):
+        gallery = CreationsGalleryController(self.library, audio_player=self.player)
+        gallery.set_family(CreationFamily.AUDIO)
+        gallery.open_item(self.sound)
+        self.assertTrue(gallery.toggle_audio(self.sound))
+        self.assertEqual(self.player.plays, 1)
+        self.assertFalse(gallery.toggle_audio(self.sound))
+        self.assertEqual(gallery.page.paused_id, self.sound)
+        self.assertEqual(self.player.pauses, 1)
+        self.assertFalse(gallery.poll_playback())
+        self.assertTrue(gallery.toggle_audio(self.sound))
+        self.assertIsNone(gallery.page.paused_id)
+        self.assertEqual(self.player.resumes, 1)
+        self.assertEqual(self.player.plays, 1)
+        gallery.replay_audio(self.sound)
+        self.assertEqual(self.player.plays, 2)
+        self.assertEqual(gallery.page.playing_id, self.sound)
+        self.player.active = False
+        self.assertFalse(gallery.poll_playback())
+        self.assertIsNone(gallery.page.playing_id)
 
     def test_gallery_deletion_requires_open_and_confirm(self):
         controller=CreationsGalleryController(self.library,audio_player=self.player)
