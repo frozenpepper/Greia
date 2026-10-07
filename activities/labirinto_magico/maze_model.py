@@ -69,7 +69,7 @@ HEROES: list[dict[str, Any]] = [
     {"id": "puppy", "name": "Cucciolo", "color": (217, 119, 6)},
 ]
 
-# Difficulty levels scaled progressively up to large and complex sizes
+# Six release-facing difficulty levels match manifest D1–D6. Keep the hardest\n# maze bounded for child-readable cells on Greia's 1024×600 reference surface.
 DIFFICULTIES: list[dict[str, Any]] = [
     {"id": "small", "label_it": "FACILE", "label_en": "EASY", "cols": 13, "rows": 9, "stars": 3},
     {"id": "medium", "label_it": "MEDIO", "label_en": "MEDIUM", "cols": 21, "rows": 13, "stars": 5},
@@ -77,9 +77,6 @@ DIFFICULTIES: list[dict[str, Any]] = [
     {"id": "giant", "label_it": "GIGANTE", "label_en": "GIANT", "cols": 39, "rows": 21, "stars": 12},
     {"id": "epic", "label_it": "EPICO", "label_en": "EPIC", "cols": 49, "rows": 25, "stars": 16},
     {"id": "master", "label_it": "MAESTRO", "label_en": "MASTER", "cols": 59, "rows": 29, "stars": 20},
-    {"id": "titan", "label_it": "TITANO", "label_en": "TITAN", "cols": 69, "rows": 33, "stars": 25},
-    {"id": "colossal", "label_it": "COLOSSALE", "label_en": "COLOSSAL", "cols": 79, "rows": 37, "stars": 30},
-    {"id": "infinite", "label_it": "INFINITO", "label_en": "INFINITE", "cols": 89, "rows": 41, "stars": 35},
 ]
 
 
