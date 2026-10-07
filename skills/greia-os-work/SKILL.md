@@ -76,6 +76,21 @@ installation, or backup work in this lane, and do not treat shipped
 product composition as complete. Pi/UEFI adapters resume only after the
 common product lifecycle is proven.
 
+## Creations Library / first-party Activity release workstream
+
+For child-created PNG/WAV/UTF-8 sharing, the universal pre-reader picker/viewer, storage capacity guard, Painting/Shape Garden/Theatre/voice/text interoperability, and the 45-built-in quality/release audit, read:
+
+```text
+docs/product/CHILD_CREATIONS_LIBRARY_AND_MEDIA_INTEROPERABILITY.md
+docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md
+docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md
+src/greia_platform/creation_capacity.py
+src/greia_platform/creation_media.py
+src/greia_platform/creations.py
+```
+
+The P1 repository is **trusted-platform-only**. It is not currently brokered into Activity sandboxes or safe to expose as a raw shared folder. Do not invent an Activity API or a custom file chooser: implement trusted handles and consistent UI through the platform first. Use the actual installed Activity script-launch path in tests. This content workstream does not override the first-boot/installer lifecycle plan or release hardware evidence.
+
 ## Broad architecture / new platform seam
 
 Read:
