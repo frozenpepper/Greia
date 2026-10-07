@@ -128,6 +128,8 @@ class SystemChromeBackend(Protocol):
 
     def show(self, session_id: str) -> None: ...
 
+    def ensure_visible(self, session_id: str) -> None: ...
+
     def poll_action(self, session_id: str) -> SystemNavigationAction | None: ...
 
     def hide(self, session_id: str) -> None: ...
@@ -244,6 +246,20 @@ class SystemChromeCoordinator:
             self._attempt_hide(lease.session_id)
             raise SystemChromeError("system chrome backend could not show") from exc
         self._phase = SystemChromePhase.VISIBLE
+
+    def ensure_visible(self, lease: SystemChromeLease) -> None:
+        """Restack trusted chrome after another trusted platform modal is raised."""
+        self._require_lease(lease)
+        if self._phase is not SystemChromePhase.VISIBLE:
+            raise SystemChromeError(
+                f"cannot restack system chrome while phase is {self._phase.value}"
+            )
+        try:
+            self._backend.ensure_visible(lease.session_id)
+        except Exception as exc:
+            self._phase = SystemChromePhase.FAILED
+            self._failure = f"restack: {exc}"
+            raise SystemChromeError("system chrome backend could not restack") from exc
 
     def poll_action(self, lease: SystemChromeLease) -> SystemNavigationAction | None:
         self._require_lease(lease)
