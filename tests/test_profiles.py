@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import os
+import stat
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 from greia_platform.customization import ThemeStore
@@ -31,6 +34,70 @@ class ProfileStoreTests(unittest.TestCase):
             self.assertFalse(profiles[0].has_secret)
             self.assertFalse(profiles[0].mask_secret)
             self.assertTrue(store.context(profiles[0].profile_id).customization_dir.is_dir())
+
+    def test_parent_profile_directories_are_group_writable_setgid(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            store = self.make_store(Path(temporary))
+            profile = store.create("Mia", "robot")
+            context = store.context(profile.profile_id)
+            for path in (
+                store.root,
+                store.data_root,
+                context.root,
+                context.customization_dir,
+                context.activities_dir,
+            ):
+                with self.subTest(path=path):
+                    self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o2770)
+                    self.assertEqual(path.stat().st_gid, store.root.stat().st_gid)
+
+    def test_profile_creation_fails_before_registry_publish_when_mode_repair_is_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            store = self.make_store(root)
+            first = store.ensure_initialized()[0]
+            original_chmod = os.chmod
+            original_umask = os.umask(0o027)
+
+            def guarded_chmod(path: str | bytes | os.PathLike[str] | os.PathLike[bytes], mode: int) -> None:
+                candidate = Path(path)
+                if (
+                    mode == 0o2770
+                    and candidate.parent == store.data_root
+                    and candidate.name != first.profile_id
+                ):
+                    raise PermissionError("synthetic parent sandbox refusal")
+                original_chmod(path, mode)
+
+            try:
+                with mock.patch(
+                    "greia_platform.profiles.os.chmod",
+                    side_effect=guarded_chmod,
+                ):
+                    with self.assertRaisesRegex(
+                        ProfileError,
+                        "chmod was refused",
+                    ):
+                        store.create("Nora", "owl")
+            finally:
+                os.umask(original_umask)
+
+            profiles = store.list_profiles()
+            self.assertEqual([profile.profile_id for profile in profiles], [first.profile_id])
+            profile_roots = sorted(
+                path.name
+                for path in store.data_root.iterdir()
+                if path.is_dir()
+            )
+            self.assertEqual(profile_roots, [first.profile_id])
+
+    def test_parent_service_umask_matches_shared_profile_contract(self) -> None:
+        unit = (
+            PROJECT_ROOT
+            / "build/overlay/etc/systemd/system/greia-parent.service"
+        ).read_text(encoding="utf-8")
+        self.assertIn("UMask=0007", unit)
+        self.assertIn("RestrictSUIDSGID=yes", unit)
 
     def test_profiles_have_separate_activity_and_customization_roots(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
