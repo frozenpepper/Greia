@@ -140,6 +140,13 @@ class TestGallery(unittest.TestCase):
         with self.assertRaises(ValueError):CreationsGalleryController(self.library, mode=GalleryMode.PICKER)
         with self.assertRaises(ValueError):CreationsGalleryController(self.library,mode=GalleryMode.LIBRARY,on_pick=lambda _: 'x')
         with self.assertRaises(ValueError):CreationsGalleryController(self.library,page_size=10)
+        # An explicitly empty consumer declaration must NOT silently gain
+        # visibility of all child-created media.
+        with self.assertRaises(ValueError):
+            CreationsGalleryController(
+                self.library, mode=GalleryMode.PICKER,
+                media_types=frozenset(), on_pick=lambda _: "ticket",
+            )
         controller=CreationsGalleryController(self.library,mode=GalleryMode.PICKER,media_types=frozenset({'text/plain'}),on_pick=lambda _: 'x')
         with self.assertRaises(GalleryError):controller.set_family(CreationFamily.AUDIO)
         with self.assertRaises(GalleryError):controller.choose()
