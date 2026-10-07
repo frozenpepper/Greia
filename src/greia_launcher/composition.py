@@ -19,6 +19,7 @@ from greia_platform.activities import (
 from greia_platform.activity_index import ActivityIndexLoader
 from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.achievements import ProfileAchievementService
+from greia_platform.creation_capacity import VolumeBudget
 from greia_platform.device_capabilities import (
     DeviceCapabilityService,
     HALDeviceCapabilityProbe,
@@ -68,6 +69,7 @@ class LauncherRuntimeServices:
     device_capabilities: DeviceCapabilityService
     permission_broker: PermissionBroker
     runtime_manager: RuntimeManager
+    volume_budget: VolumeBudget
     storage_service: ActivityStorageService
     history_service: PlatformHistoryService
     achievement_service: ProfileAchievementService | None = None
@@ -225,10 +227,15 @@ def build_launcher_runtime_services(
         )
     )
     runtime_manager = RuntimeManager(adapters, device_capabilities)
-    storage_service = ActivityStorageService(StoragePolicy.load(storage_policy_path))
+    volume_budget = VolumeBudget()
+    storage_service = ActivityStorageService(
+        StoragePolicy.load(storage_policy_path),
+        volume_budget=volume_budget,
+    )
     history_service = PlatformHistoryService(
         HistoryPolicy.load(history_policy_path),
         load_runtime_progression_policy(progression_policy_path, activities),
+        volume_budget=volume_budget,
     )
 
     resolved_achievement_policy = (
@@ -252,6 +259,7 @@ def build_launcher_runtime_services(
         device_capabilities=device_capabilities,
         permission_broker=permission_broker,
         runtime_manager=runtime_manager,
+        volume_budget=volume_budget,
         storage_service=storage_service,
         history_service=history_service,
         achievement_service=achievement_service,
