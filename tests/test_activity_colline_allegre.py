@@ -50,6 +50,20 @@ class CollineAllegreTests(unittest.TestCase):
         if pygame.display.get_surface() is None:
             pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT))
 
+    def test_real_script_entrypoint_imports_in_non_package_context(self) -> None:
+        """The supervisor executes main.py as a script, not as a package."""
+        import runpy
+
+        source_root = str(ACTIVITY_DIR)
+        sys.path.insert(0, source_root)
+        try:
+            namespace = runpy.run_path(
+                str(ACTIVITY_DIR / "main.py"), run_name="greia_script_import_smoke"
+            )
+        finally:
+            sys.path.remove(source_root)
+        self.assertTrue(callable(namespace["main"]))
+
     def test_manifest_is_valid_and_versioned(self) -> None:
         manifest_path = ACTIVITY_DIR / "activity.toml"
         self.assertTrue(manifest_path.is_file())
