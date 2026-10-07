@@ -3177,3 +3177,43 @@ The single acceptance owner remains `docs/testing/2026-10-07_CREATIONS_P3_DESKTO
 ### Next source direction
 
 Return to P1 and enforce the proportional machine-capacity policy across **all authoritative profile writers**, not only CreationLibrary: real writable-volume ceiling (~75% used maximum), protected free headroom, existing per-Activity namespace/file bounds, fail-closed mutation semantics, and no Acer-specific tiny fixed global quota on larger disks. Keep this centralized at platform storage authorities rather than duplicated inside Activities.
+
+
+## 91. Creations P1 shared adaptive capacity authority — source implemented, execution deferred (2026-10-07)
+
+**Authoritative workstream:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`, sibling `PROGRESS.md`, and the single accumulated acceptance `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`.
+
+**Pinned latest P1–P5 code/test checkpoint:** `39e8d77b1099f8a407b2f0bc4efbd3516cf04fba`. Later commits in this tranche only update plans/progress/test instructions. **No tests were executed for this candidate**; the owner explicitly asked to carry current tests into the next larger local-agent run.
+
+### Source now implemented
+
+1. **One machine-level growth authority.** `creation_capacity.py` now exposes general `VolumeCapacityPolicy` / `VolumeBudget` semantics while retaining the earlier Creation-named aliases. The default aggregate child-data rule is still **75% maximum used** plus **512 MiB minimum free** on the actual writable filesystem containing profile data.
+2. **Race-resistant reservation.** `VolumeBudget.write_reservation()` owns a process-level reentrant lock from measurement through the caller's write section. Activity private storage, My Creations publication and history therefore cannot independently pass the same stale free-space observation inside one launcher process.
+3. **Correct atomic-write accounting.** Reservations distinguish final persistent growth from peak temporary/staging bytes. Positive growth must preserve both occupancy and the full free-space floor. Non-growing replacement/repair writes may use bounded temporary space inside the reserve, but never more than physically free, so a low-space device can still update/reclaim existing state instead of becoming unrecoverably read-only.
+4. **Activity private storage.** KV/private-file/metadata atomic writes use the shared budget. Schema migrations reserve their full temporary working-copy growth before `copytree`. Existing per-file/count/KV limits remain independent safety bounds.
+5. **My Creations.** `CreationLibrary.publish()` holds the same reservation across canonical blob/preview writes and SQLite commit, including conservative transaction/journal headroom. `ActivitySupervisor` injects the exact `ActivityStorageService.volume_budget` into every session library.
+6. **History/progression SQLite.** `PlatformHistoryService/ProfileHistoryStore` receives the same launcher budget. New schema/session/event growth is reserved; update-only READY/finish/recovery work reserves only bounded journal scratch.
+7. **Single composition owner.** `LauncherRuntimeServices` constructs one `VolumeBudget` and supplies it to private storage + history; the supervisor reuses storage's exact instance for Creations. The dataclass keeps a default only for old test/dev fixtures.
+8. **Adaptive Activity containment.** `StoragePolicy` now has optional `namespace_quota_fraction` (default 0 for compatibility). Shipped `runtime/storage-policy.toml` sets **0.25**. Effective per-Activity private quota = max(static byte floor, 25% of actual writable-volume size). Therefore an 8 GiB writable profile-data filesystem yields **2 GiB per Activity**, instead of an Acer-hardcoded 32 MiB, while aggregate positive child-data growth still stops at 6 GiB used under the 75% rule. The 16 MiB single-file bound remains.
+9. **Legacy reserve clarified.** The old `protected_free_bytes = 64 MiB` policy field remains for schema-v1/config compatibility but is no longer the machine headroom authority.
+10. **Bounded control metadata exception.** Profile registry, UI/theme preferences, achievements and the usage-limit ledger are intentionally tiny/bounded and remain writable inside the child-content reserve so settings/recovery/deletion can continue when space is tight. The removable-media wallpaper importer is bounded to 2 MiB and was found only as a dormant library/test capability, not a live Parent/Shell product path; if activated later it must receive the existing shared budget first.
+
+### Deferred regression source — all UNEXECUTED
+
+New `tests/test_profile_volume_budget.py` covers:
+- owner example: 8 GiB writable volume; aggregate 2 GiB used → at most 4 GiB further persistent growth before 6 GiB used;
+- shipped 25% Activity containment → 2 GiB on that same 8 GiB writable volume;
+- legacy policy without fraction remains fixed-size;
+- held reservation serialization so writer B observes writer A's changed usage;
+- same-size private replacement at the 75% ceiling remains allowed;
+- new private-file growth at the ceiling is denied;
+- storage migration working-copy growth is denied at the ceiling;
+- history update-only work remains possible while a new history session is denied.
+
+Existing `tests/test_creation_library.py` remains mandatory for creation-volume rejection. The consolidated deferred desktop procedure is now pinned to `39e8d77b...` and adds these tests plus **read-only** real filesystem calibration. Do not intentionally fill/stress the developer disk.
+
+### Evidence boundary / next source direction
+
+No complete checkout, `make verify`, concurrent real writer, disk-capacity simulation outside injected probes, Simulator, Legacy-X, Acer/Pi or physical evidence was produced. P1–P5 remain SOURCE-WIP until the accumulated acceptance executes.
+
+**Next source work while the local agent is unavailable:** start **P6 explicit release composition** so installed Greia does not implicitly ship every source Activity, then begin **P7 source-first review of all 45 first-party Activities**. Record candidate/hold/repair decisions now; defer real launch/screenshots/performance judgments to the accumulated live session rather than inventing approval.
