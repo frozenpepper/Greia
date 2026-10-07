@@ -1016,6 +1016,14 @@ class LauncherApplication:
             # trusted Creations modal is actually visible, only that shared
             # Shell Screen receives Shell-window input; the Activity remains
             # alive behind it and never receives picker-native handles.
+            #
+            # Simulator remote input normally belongs to its Activity transport.
+            # While the trusted modal owns that transport, pull those queued
+            # events into the Shell process before draining pygame's queue.
+            if picker_host is not None and picker_host.visible:
+                poll_hooks = getattr(self, "_poll_input_hooks", None)
+                if callable(poll_hooks):
+                    poll_hooks(pygame)
             events = tuple(pygame.event.get())
             self._last_result = self.supervisor.poll(activity_session)
             if self._last_result is not None:
