@@ -3117,3 +3117,32 @@ The single accumulated desktop procedure is still
 ### Next source direction
 
 Implement a genuine UTF-8 text producer/consumer using Writing and only semantically compatible existing Activities. For the second audio consumer, source review currently favors **Orchestra Animali** (voice/narration backing track for child accompaniment) and rejects Officina dei Suoni because arbitrary recordings would dilute its phonemic-learning contract. P1 all-writer adaptive capacity and P6–P8 remain open.
+
+## 89. Creations P5 reciprocal UTF-8 route — Writing ↔ Posta di Leo; execution deferred (2026-10-07)
+
+**Latest text-source checkpoint before this documentation commit:** `8d69ee4e7ee076923fbd78256238938b76b59477`, followed by source hardening through `82c942525a80d1e9499786c55be0fc18898cec17` and test/doc commits. **No tests were executed for this tranche**; the owner asked to carry current tests into the next larger local-agent run.
+
+### Source implemented
+
+1. **Writing producer/consumer:** `activities/writing/activity.toml` declares `text/plain` production+consumption. Writing deliberately publishes the saved private document as role `document`; unchanged in-session content is not re-published. Its picker accepts roles `document` and `postcard` and creates a brand-new private Writing document from the one-use selection rather than overwriting the current document.
+2. **Writing storage boundary:** `DocumentRepository.create_text()` writes the new body first and removes it again if the index commit fails. Import validates MIME, semantic role, SHA256 and strict UTF-8 before committing. Existing documents remain untouched on cancellation/failure.
+3. **Posta consumer:** the postcard editor now has a large paper-arrow-down non-reader control. It opens the same trusted picker nonblockingly, scoped to `text/plain` roles `document` / `postcard`. Selected text is strict UTF-8 + digest checked, whitespace-compacted into a single postcard message and truncated through shared grapheme logic so emoji/ZWJ clusters are not split.
+4. **Posta saved-only producer:** unsaved drafts cannot publish. A selected **saved** postcard modal exposes a paper-arrow-up action. It publishes only a durable private text source as role `postcard`; same saved card is deduplicated in-session.
+5. **Posta private source durability:** `GreiaPostcardStorage` now keeps a path-safe UTF-8 file for each saved postcard, tied to the authoritative postcard index. New-card files are rolled back if the index write fails; removed-card files are reclaimed only after the index commits. Safe historical alphanumeric/hyphen IDs remain accepted for compatibility.
+6. **Adjacent reliability repair:** failed postcard deletion no longer removes the card only in memory while storage still retains it. The pre-delete library snapshot is restored when persistence fails.
+7. **Reciprocal independence:** Writing accepts a `postcard` item as an independent private document. Deleting either shared Creation later must not break the original saved postcard or imported Writing document.
+
+### Deferred regression source
+
+- `tests/test_writing_creations.py`
+- `tests/test_posta_di_leo_creations.py`
+- updated `tests/test_activity_posta_di_leo.py` private-file storage seam
+- all prior P1–P5 Creation/PNG/WAV/modal/Simulator suites remain accumulated.
+
+The one authoritative deferred procedure remains `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`. It now includes Writing→Posta import with emoji/newlines/overlong text, saved Posta→Writing reciprocal share, cancellation/failure preservation, and deletion of shared sources while private copies remain usable.
+
+**Evidence boundary:** no complete checkout, `make verify`, Pygame typing/rendering, trusted text picker screenshot, Simulator, Legacy-X, Acer/Pi, storage-failure execution or physical acceptance has run for this UTF-8 tranche. P3/P4/P5 remain SOURCE-WIP.
+
+### Next source direction
+
+Deep-review `Orchestra Animali` before implementing the second audio consumer. Only proceed if child-supplied WAV meaningfully fits its current musical interaction without diluting pedagogy. Then complete P1 proportional capacity enforcement across every profile-writing owner. P6–P8 and the 45/45 release review remain open.
