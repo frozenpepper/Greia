@@ -11,16 +11,15 @@ categories = ["play", "learn"]
 discovery_tags = ["music"]
 
 [education]
-categories = ["music", "rhythm", "auditory_memory"]
+categories = ["music", "rhythm", "creativity"]
 difficulty = 2
 recommended_age_min = 3
 skills = [
   { id = "music.rhythm.perception", weight = 3 },
-  { id = "cognitive.working_memory.auditory", weight = 2 },
   { id = "music.instrument_association", weight = 2 },
 ]
 events = [
-  { id = "melody.matched", kind = "milestone" },
+  { id = "instrument.played", kind = "milestone" },
   { id = "concert.performed", kind = "creation" },
 ]
 
@@ -41,3 +40,6 @@ requested = []
 
 [storage]
 schema_version = 1
+
+[creations]
+consumes = ["audio/wav"]
