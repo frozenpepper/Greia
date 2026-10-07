@@ -136,6 +136,7 @@ Provide exactly:
 - whether **Painting→Shape Garden→flattened My Creations→Painting** persisted correctly and kept independent snapshots;
 - whether **Painting/Shape Garden→Teatrino** saved-show backdrop survived deletion of the shared source PNG;
 - whether **Voice Stories→audio preview→Teatrino narration** worked without microphone contention, including early-stop trimming and saved-show replay after deletion of the shared source WAV;
+- whether **Writing→Posta→Writing UTF-8** worked through the trusted picker, including grapheme-safe postcard compaction, saved-only Posta sharing and continued access after shared-source deletion;
 - image detail/deletion/cancel state; actual observed bug(s), with steps;
 - accepted screen sizes/input modes; limitations;
 - any audio/TTS/microphone output not tested;
