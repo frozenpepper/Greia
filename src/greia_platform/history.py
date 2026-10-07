@@ -9,11 +9,12 @@ import sqlite3
 import time
 import tomllib
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Mapping
 
 from .activities import ActivityEventDefinition, ActivityManifest
+from .creation_capacity import VolumeBudget, VolumeSpaceError
 from .profiles import ProfileContext
 
 
@@ -21,6 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 _HISTORY_SCHEMA_VERSION = 1
+_HISTORY_SCHEMA_GROWTH_HEADROOM = 1024 * 1024
+_HISTORY_SCHEMA_PEAK_HEADROOM = 2 * 1024 * 1024
+_HISTORY_SESSION_GROWTH_HEADROOM = 64 * 1024
+_HISTORY_EVENT_GROWTH_HEADROOM = 512 * 1024
+_HISTORY_JOURNAL_HEADROOM = 256 * 1024
 _MAX_SIGNED_64 = (1 << 63) - 1
 _ALLOWED_EXIT_REASONS = frozenset(
     {
@@ -217,6 +223,7 @@ class PlatformHistoryService:
 
     history_policy: HistoryPolicy
     progression_policy: ProgressionPolicy
+    volume_budget: VolumeBudget = field(default_factory=VolumeBudget)
 
     @classmethod
     def load(
@@ -232,7 +239,11 @@ class PlatformHistoryService:
         )
 
     def open(self, profile: ProfileContext) -> "ProfileHistoryStore":
-        return ProfileHistoryStore(profile, self.history_policy)
+        return ProfileHistoryStore(
+            profile,
+            self.history_policy,
+            volume_budget=self.volume_budget,
+        )
 
     def recover_unfinished(self, profile: ProfileContext) -> int:
         return self.open(profile).recover_unfinished_sessions()
@@ -254,10 +265,12 @@ class ProfileHistoryStore:
         policy: HistoryPolicy,
         *,
         clock: Callable[[], float] = time.time,
+        volume_budget: VolumeBudget | None = None,
     ):
         self.profile = profile
         self.policy = policy
         self._clock = clock
+        self._volume_budget = volume_budget or VolumeBudget()
         self._root = profile.progress_dir
         self._db_path = self._root / self.DB_NAME
         self._prepare_root()
@@ -274,7 +287,9 @@ class ProfileHistoryStore:
         _validate_identifier(session_id, "session_id", maximum=160)
         _validate_digest(package_digest)
         timestamp = _timestamp(self._clock() if started_at is None else started_at)
-        with self._transaction() as connection:
+        with self._transaction(
+            final_growth_bytes=_HISTORY_SESSION_GROWTH_HEADROOM,
+        ) as connection:
             try:
                 connection.execute(
                     """
@@ -387,7 +402,9 @@ class ProfileHistoryStore:
         content_digest = hashlib.sha256(content_json.encode("utf-8")).hexdigest()
         timestamp = _timestamp(self._clock())
 
-        with self._transaction() as connection:
+        with self._transaction(
+            final_growth_bytes=_HISTORY_EVENT_GROWTH_HEADROOM,
+        ) as connection:
             session = self._session_row(connection, session_id)
             if session["ended_at"] is not None:
                 raise EventValidationError("event session is closed")
@@ -660,92 +677,106 @@ class ProfileHistoryStore:
             ) from exc
 
     def _initialize_schema(self) -> None:
+        existed = self._db_path.exists()
         try:
-            with self._connect() as connection:
-                user_version = int(connection.execute("PRAGMA user_version").fetchone()[0])
-                if user_version not in {0, _HISTORY_SCHEMA_VERSION}:
-                    raise HistoryError(
-                        f"unsupported history database schema version: {user_version}"
+            with self._volume_budget.write_reservation(
+                self.profile.root,
+                final_growth_bytes=(
+                    0 if existed else _HISTORY_SCHEMA_GROWTH_HEADROOM
+                ),
+                peak_additional_bytes=_HISTORY_SCHEMA_PEAK_HEADROOM,
+            ):
+                with self._connect() as connection:
+                        user_version = int(
+                            connection.execute("PRAGMA user_version").fetchone()[0]
+                        )
+                    if user_version not in {0, _HISTORY_SCHEMA_VERSION}:
+                        raise HistoryError(
+                            f"unsupported history database schema version: {user_version}"
+                        )
+                    connection.executescript(
+                        """
+                        CREATE TABLE IF NOT EXISTS sessions(
+                            session_id TEXT PRIMARY KEY,
+                            activity_id TEXT NOT NULL,
+                            package_version TEXT NOT NULL,
+                            package_digest TEXT NOT NULL,
+                            runtime_type TEXT NOT NULL,
+                            started_at REAL NOT NULL,
+                            ready_at REAL,
+                            ended_at REAL,
+                            active_duration_seconds REAL,
+                            exit_reason TEXT,
+                            ready INTEGER NOT NULL DEFAULT 0 CHECK(ready IN (0, 1))
+                        );
+                        CREATE INDEX IF NOT EXISTS sessions_started_idx
+                            ON sessions(started_at DESC);
+
+                        CREATE TABLE IF NOT EXISTS events(
+                            record_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+                            activity_id TEXT NOT NULL,
+                            event_id TEXT NOT NULL,
+                            idempotency_key TEXT NOT NULL,
+                            content_digest TEXT NOT NULL,
+                            score REAL,
+                            payload_json TEXT NOT NULL,
+                            created_at REAL NOT NULL,
+                            UNIQUE(session_id, idempotency_key)
+                        );
+                        CREATE INDEX IF NOT EXISTS events_session_idx
+                            ON events(session_id, record_id);
+
+                        CREATE TABLE IF NOT EXISTS event_counts(
+                            activity_id TEXT NOT NULL,
+                            event_id TEXT NOT NULL,
+                            count INTEGER NOT NULL CHECK(count >= 0),
+                            PRIMARY KEY(activity_id, event_id)
+                        );
+
+                        CREATE TABLE IF NOT EXISTS best_scores(
+                            activity_id TEXT NOT NULL,
+                            event_id TEXT NOT NULL,
+                            score_order TEXT NOT NULL CHECK(score_order IN ('higher_better', 'lower_better')),
+                            best_score REAL NOT NULL,
+                            PRIMARY KEY(activity_id, event_id)
+                        );
+
+                        CREATE TABLE IF NOT EXISTS reward_balances(
+                            reward_id TEXT PRIMARY KEY,
+                            balance INTEGER NOT NULL
+                        );
+
+                        CREATE TABLE IF NOT EXISTS reward_ledger(
+                            ledger_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+                            event_record_id INTEGER NOT NULL REFERENCES events(record_id) ON DELETE CASCADE,
+                            rule_id TEXT NOT NULL,
+                            reward_id TEXT NOT NULL,
+                            delta INTEGER NOT NULL,
+                            resulting_balance INTEGER NOT NULL,
+                            created_at REAL NOT NULL
+                        );
+                        CREATE INDEX IF NOT EXISTS reward_ledger_session_idx
+                            ON reward_ledger(session_id, ledger_id);
+
+                        CREATE TABLE IF NOT EXISTS rule_applications(
+                            session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+                            rule_id TEXT NOT NULL,
+                            event_record_id INTEGER NOT NULL REFERENCES events(record_id) ON DELETE CASCADE,
+                            PRIMARY KEY(session_id, rule_id)
+                        );
+                        """
                     )
-                connection.executescript(
-                    """
-                    CREATE TABLE IF NOT EXISTS sessions(
-                        session_id TEXT PRIMARY KEY,
-                        activity_id TEXT NOT NULL,
-                        package_version TEXT NOT NULL,
-                        package_digest TEXT NOT NULL,
-                        runtime_type TEXT NOT NULL,
-                        started_at REAL NOT NULL,
-                        ready_at REAL,
-                        ended_at REAL,
-                        active_duration_seconds REAL,
-                        exit_reason TEXT,
-                        ready INTEGER NOT NULL DEFAULT 0 CHECK(ready IN (0, 1))
-                    );
-                    CREATE INDEX IF NOT EXISTS sessions_started_idx
-                        ON sessions(started_at DESC);
-
-                    CREATE TABLE IF NOT EXISTS events(
-                        record_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
-                        activity_id TEXT NOT NULL,
-                        event_id TEXT NOT NULL,
-                        idempotency_key TEXT NOT NULL,
-                        content_digest TEXT NOT NULL,
-                        score REAL,
-                        payload_json TEXT NOT NULL,
-                        created_at REAL NOT NULL,
-                        UNIQUE(session_id, idempotency_key)
-                    );
-                    CREATE INDEX IF NOT EXISTS events_session_idx
-                        ON events(session_id, record_id);
-
-                    CREATE TABLE IF NOT EXISTS event_counts(
-                        activity_id TEXT NOT NULL,
-                        event_id TEXT NOT NULL,
-                        count INTEGER NOT NULL CHECK(count >= 0),
-                        PRIMARY KEY(activity_id, event_id)
-                    );
-
-                    CREATE TABLE IF NOT EXISTS best_scores(
-                        activity_id TEXT NOT NULL,
-                        event_id TEXT NOT NULL,
-                        score_order TEXT NOT NULL CHECK(score_order IN ('higher_better', 'lower_better')),
-                        best_score REAL NOT NULL,
-                        PRIMARY KEY(activity_id, event_id)
-                    );
-
-                    CREATE TABLE IF NOT EXISTS reward_balances(
-                        reward_id TEXT PRIMARY KEY,
-                        balance INTEGER NOT NULL
-                    );
-
-                    CREATE TABLE IF NOT EXISTS reward_ledger(
-                        ledger_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
-                        event_record_id INTEGER NOT NULL REFERENCES events(record_id) ON DELETE CASCADE,
-                        rule_id TEXT NOT NULL,
-                        reward_id TEXT NOT NULL,
-                        delta INTEGER NOT NULL,
-                        resulting_balance INTEGER NOT NULL,
-                        created_at REAL NOT NULL
-                    );
-                    CREATE INDEX IF NOT EXISTS reward_ledger_session_idx
-                        ON reward_ledger(session_id, ledger_id);
-
-                    CREATE TABLE IF NOT EXISTS rule_applications(
-                        session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
-                        rule_id TEXT NOT NULL,
-                        event_record_id INTEGER NOT NULL REFERENCES events(record_id) ON DELETE CASCADE,
-                        PRIMARY KEY(session_id, rule_id)
-                    );
-                    """
-                )
-                if user_version == 0:
-                    connection.execute(f"PRAGMA user_version = {_HISTORY_SCHEMA_VERSION}")
-                connection.commit()
+                    if user_version == 0:
+                        connection.execute(f"PRAGMA user_version = {_HISTORY_SCHEMA_VERSION}")
+                    connection.commit()
             if self._db_path.exists():
                 os.chmod(self._db_path, 0o660)
+        except VolumeSpaceError as exc:
+            raise HistoryError(
+                "history storage would violate platform child-data headroom"
+            ) from exc
         except sqlite3.DatabaseError as exc:
             raise HistoryError("history database is unavailable or corrupt") from exc
 
@@ -773,15 +804,33 @@ class ProfileHistoryStore:
             connection.close()
 
     @contextmanager
-    def _transaction(self) -> Iterator[sqlite3.Connection]:
-        with self._connect() as connection:
-            try:
-                connection.execute("BEGIN IMMEDIATE")
-                yield connection
-                connection.commit()
-            except Exception:
-                connection.rollback()
-                raise
+    def _transaction(
+        self,
+        *,
+        final_growth_bytes: int = 0,
+        peak_additional_bytes: int = _HISTORY_JOURNAL_HEADROOM,
+    ) -> Iterator[sqlite3.Connection]:
+        try:
+            with self._volume_budget.write_reservation(
+                self.profile.root,
+                final_growth_bytes=final_growth_bytes,
+                peak_additional_bytes=max(
+                    peak_additional_bytes,
+                    final_growth_bytes,
+                ),
+            ):
+                with self._connect() as connection:
+                    try:
+                        connection.execute("BEGIN IMMEDIATE")
+                        yield connection
+                        connection.commit()
+                    except Exception:
+                        connection.rollback()
+                        raise
+        except VolumeSpaceError as exc:
+            raise HistoryError(
+                "history write would violate platform child-data headroom"
+            ) from exc
 
     def _session_row(self, connection: sqlite3.Connection, session_id: str) -> sqlite3.Row:
         _validate_identifier(session_id, "session_id", maximum=160)
