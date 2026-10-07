@@ -477,6 +477,13 @@ class GreiaLauncherPresentation(LauncherApplication):
                 parent_panel = getattr(self, "_parent_panel", None)
                 if parent_panel is not None and parent_panel.needs_frame():
                     _needs_redraw = True
+                # Platform-owned gallery is static except during explicit WAV
+                # preview; update its progress bar and settled Play state only
+                # while that preview is actually active.
+                if self._mode == "creations":
+                    creations_view = getattr(self, "_creations_screen", None)
+                    if creations_view is not None and creations_view.needs_frame():
+                        _needs_redraw = True
                 _pending_motion_pos: tuple[int, int] | None = None
                 _motion_seen = False
                 for event in events:
