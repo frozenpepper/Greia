@@ -24,6 +24,7 @@ import inspect
 import json
 import os
 import socket
+import subprocess
 import tempfile
 import threading
 import unittest
@@ -371,6 +372,41 @@ class BootHealthProductCompositionTests(unittest.TestCase):
             self.assertEqual(state.last_booted_slot, "B")
             self.assertEqual(state.default_slot, "A")
 
+    def test_2b_boot_observer_enablement_follows_storage_layout(self) -> None:
+        compose = _repo_root() / "build" / "lib" / "compose.sh"
+
+        def enabled_services(layout: str) -> str:
+            with tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                probe = root / "usr/local/lib/greia-os/greia-audio-endpoint-probe"
+                probe.parent.mkdir(parents=True)
+                probe.write_text("#!/bin/sh\n", encoding="utf-8")
+                script = f"""
+set -Eeuo pipefail
+source {compose!s}
+systemctl() {{
+  printf 'SYSTEMCTL %s\\n' "$*"
+}}
+STORAGE_LAYOUT_ADAPTER={layout}
+compose_configure_systemd {root!s} target
+"""
+                result = subprocess.run(
+                    ["bash", "-c", script],
+                    cwd=_repo_root(),
+                    text=True,
+                    capture_output=True,
+                    check=False,
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+                return result.stdout
+
+        single_root = enabled_services("bios-single-ext4")
+        self.assertNotIn("greia-boot-observer.service", single_root)
+        self.assertIn("greia-launcher.service", single_root)
+
+        ab = enabled_services("legacy-bios-ab-v1")
+        self.assertIn("greia-boot-observer.service", ab)
+        self.assertIn("greia-launcher.service", ab)
     def test_3_root_service_owns_mutation_launcher_writes_nothing(self) -> None:
         """GREEN: CONFIRM_BOOT_HEALTH commits; the launcher writes nothing."""
         # Structural: the launcher is unprivileged; the health endpoint is
