@@ -1,12 +1,12 @@
 # Greia — Current Engineering Handover
 
-**Updated:** 2026-10-01
+**Updated:** 2026-10-07
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
 **Version:** `0.13.0-phase0-dev`
 **Primary blocking platform phase:** **post-R1 product-composition closure — T3-P OPEN/BLOCKING; install/update/release/multiplatform lifecycle now routes to `docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` (ADR 0036 successor). Gate-P5/V12G/D6 closure routing below is historical and superseded for lifecycle sequencing**
 **Cross-hardware plan:** `docs/plans/2026-09-28_CROSS_HARDWARE_ROBUSTNESS_PLAN.md` — Tranche A → Acer end-to-end acceptance → Tranche U (UEFI) → Tranche B (capability matrix) → Tranche L (advisory lint)
-**Current physical-hardware step:** **Acer campaign AUTHORIZED with the already-verified `64103e48` USB — the remaining OPrdqB host loop is classified as historical poisoned kernel state; use baseline-aware verifier accounting, then proceed to live Wi-Fi, fresh install, and first-installed-boot acceptance without rebuilding**
+**Current physical-hardware step:** **Fresh Acer first-boot FAILED and is source-repaired; run focused/full source acceptance, then REBOOT the build host to clear historical OPrdqB loop, build+flash a NEW legacy-x86-i686-dev USB, and repeat fresh first-installed-boot acceptance with no hotpatch/second boot**
 **Public-source readiness:** **IN PROGRESS**
 **Ordinary-family release:** **NOT READY**
 
@@ -2649,3 +2649,39 @@ Important routing change:
 
 Next: existing image digest + baseline-aware artifact/readback verification,
 then physical Acer boot/install/first-boot acceptance.
+
+## 81. Fresh Acer first boot loop fully root-caused; source fixes landed, new image required (2026-10-07)
+
+Physical read-only diagnosis of the fresh install proved the child shell dies
+creating `<profile>/progress`: the Parent-created profile root was
+`greiapanel:pipprofiles 2750`, while the data root was correctly
+`greiakid:pipprofiles 2770`. B4 had completed 17 seconds before the Parent
+created the profile, so the old prevention repaired the container but not the
+creation mechanism.
+
+The deeper source contradiction was `RestrictSUIDSGID=yes` plus a
+`chmod(2770)` repair whose `PermissionError` was silently swallowed.
+Current source keeps the hardening, adds Parent `UMask=0007`, verifies exact
+mode/group, and refuses to publish a profile until its shared directory
+contract exists. B5 repairs already-existing bad Parent-owned shared
+directories on upgrade.
+
+The same field capture found two independent defects:
+- the A/B boot observer was enabled on `bios-single-ext4` and failed namespace
+  setup because its A/B identity files cannot exist there; composition is now
+  storage-layout aware;
+- `greia-devctl status/logs` unnecessarily required a missing display
+  descriptor, and canonical target composition never provisioned that file.
+  Status/logs are now display-independent and canonical developer composition
+  writes the role-specific descriptor; screenshots remain fail-closed.
+
+The `pkexec` warning remains open/non-blocking.
+
+**Evidence:** source edited and regression coverage added, but no owner/local
+tests have run at the new HEAD yet.
+
+**Critical routing:** the old verified LaCie predates these product-content
+changes. Do not use it to accept the fix. After source acceptance, reboot the
+build host (required to clear historical OPrdqB poisoned loop), require zero
+Greia loops, then perform a new canonical build+flash and repeat fresh Acer
+installation/first-boot acceptance.
