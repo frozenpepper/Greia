@@ -319,7 +319,11 @@ class OrchestraApp:
             lx, ly = logical
             point = (int(lx), int(ly))
             assert self.renderer is not None
-            if self.renderer.backing_import_contains(point):
+            if (
+                self.creations is not None
+                and self.backing_store is not None
+                and self.renderer.backing_import_contains(point)
+            ):
                 self._request_backing_track()
                 return
             if self.renderer.backing_play_contains(point):
@@ -440,6 +444,9 @@ class OrchestraApp:
             self.is_it,
             backing_enabled=self.backing_player.track is not None,
             backing_state=self.backing_player.state,
+            backing_import_enabled=(
+                self.creations is not None and self.backing_store is not None
+            ),
             backing_import_state=self.backing_import_state,
         )
         theme = get_theme()
