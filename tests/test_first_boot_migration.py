@@ -19,6 +19,7 @@ LAUNCH_PATH = (SERVICE, PREPARE, X_SESSION)
 
 MIGRATION_MARKER = "/var/lib/greia-os/migrations/b2-audio-groups-v1.done"
 PROFILE_MIGRATION_MARKER = "/var/lib/greia-os/migrations/b4-profile-child-roots-v1.done"
+PROFILE_SHARED_MODE_MARKER = "/var/lib/greia-os/migrations/b5-profile-shared-modes-v1.done"
 
 AMIXER_LINES = (
     "amixer sset Master 100% unmute 2>/dev/null || true",
@@ -300,6 +301,52 @@ class ProfileDataOwnershipMigrationTests(unittest.TestCase):
         self.assertIn("st_mode & 0o7777", module)
         self.assertIn("owned by the child identity", module)
         self.assertTrue(HistoryError is not None and source is not None)
+
+
+class ProfileSharedModeMigrationTests(unittest.TestCase):
+    """B5: repair Parent-created shared directories that B4 could predate."""
+
+    MARKER = PROFILE_SHARED_MODE_MARKER
+
+    def _migration_block(self) -> str:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        guard = text.index('if [ ! -e "$profile_shared_mode_migration" ]')
+        marker = text.index('> "$profile_shared_mode_migration"', guard)
+        return text[guard:marker]
+
+    def test_b5_has_its_own_versioned_marker(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        self.assertIn(f"profile_shared_mode_migration={self.MARKER}", text)
+        self.assertIn('"b5-profile-shared-modes-v1"', text)
+
+    def test_b5_repairs_profile_root_and_parent_owned_shared_directories(self) -> None:
+        block = self._migration_block()
+        self.assertIn('-mindepth 1 -maxdepth 1 -type d', block)
+        self.assertIn('-mindepth 2 -maxdepth 2 -type d', block)
+        self.assertIn('-name customization', block)
+        self.assertIn('-name activities', block)
+        self.assertIn('chgrp -- pipprofiles', block)
+        self.assertIn('chmod 2770', block)
+
+    def test_b5_does_not_recursively_reown_child_data(self) -> None:
+        block = self._migration_block()
+        self.assertNotIn('chown ', block)
+        self.assertNotIn('-name progress', block)
+        self.assertNotIn('-name storage', block)
+        self.assertNotIn('-depth -print0', block)
+
+    def test_b5_runs_before_initialized_early_exit(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        self.assertLess(
+            text.index('if [ ! -e "$profile_shared_mode_migration" ]'),
+            text.index('[ ! -e "$marker" ] || exit 0'),
+        )
+
+    def test_b5_marker_is_written_after_mode_repairs(self) -> None:
+        text = FIRST_BOOT.read_text(encoding="utf-8")
+        guard = text.index('if [ ! -e "$profile_shared_mode_migration" ]')
+        marker = text.index('> "$profile_shared_mode_migration"', guard)
+        self.assertLess(text.index('chmod 2770', guard), marker)
 
 
 class UnitStartsWithMarkerPresentTests(unittest.TestCase):
