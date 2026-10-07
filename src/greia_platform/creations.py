@@ -268,6 +268,10 @@ class CreationLibrary:
         with self._connect() as db:
             return tuple(CreationRecord.from_row(row) for row in db.execute(query, params))
 
+    def describe(self, creation_id: str) -> CreationRecord:
+        """Trusted platform metadata lookup; never expose in an Activity broker."""
+        return self._get(creation_id)
+
     def read(self, creation_id: str) -> bytes:
         record = self._get(creation_id)
         codec = self._media.codec_for(record.media_type)
