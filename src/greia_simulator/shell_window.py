@@ -53,8 +53,8 @@ class SimulatorShellWindowController:
             return None
         # System chrome proves the remote bridge owns this exact live Activity
         # session before a Shell modal can be prepared.
-        active = getattr(self._bridge, "_system_chrome_session_id", None)
-        if active != session_id:
+        can_present = getattr(self._bridge, "can_present_shell_modal", None)
+        if not callable(can_present) or not can_present(session_id):
             return None
         self._generation += 1
         lease = ShellActivityModalLease(session_id, self._generation, activity_pid)
