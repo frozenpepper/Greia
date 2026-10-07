@@ -105,8 +105,8 @@ class LegacyXShellWindowControllerTests(unittest.TestCase):
         )
         self.assertIsNotNone(lease)
         self.assertEqual(bridge.lookups, [(1234, 42)])
-        self.assertEqual(lease.shell_window_id, 42)
-        self.assertEqual(lease.activity_window_id, 77)
+        self.assertEqual(lease.session_id, "session-1")
+        self.assertEqual(lease.activity_pid, 1234)
         self.assertTrue(controller.show_activity_modal(lease))
         self.assertEqual(bridge.raised, [42])
         self.assertTrue(controller.dismiss_activity_modal(lease))
@@ -152,8 +152,6 @@ class LegacyXShellWindowControllerTests(unittest.TestCase):
             lease.session_id,
             lease.generation,
             lease.activity_pid,
-            lease.shell_window_id,
-            lease.activity_window_id,
         )
         self.assertFalse(controller.show_activity_modal(foreign))
         self.assertFalse(controller.dismiss_activity_modal(foreign))
