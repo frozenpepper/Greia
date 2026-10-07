@@ -51,6 +51,41 @@ class ProfileStoreTests(unittest.TestCase):
                     self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o2770)
                     self.assertEqual(path.stat().st_gid, store.root.stat().st_gid)
 
+    def test_parent_umask_path_needs_no_sgid_chmod_for_new_profile(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            store = self.make_store(root)
+            store.ensure_initialized()
+            original_chmod = os.chmod
+            original_umask = os.umask(0o007)
+
+            def deny_sgid_chmod(
+                path: str | bytes | os.PathLike[str] | os.PathLike[bytes],
+                mode: int,
+            ) -> None:
+                if mode & stat.S_ISGID:
+                    raise PermissionError("synthetic RestrictSUIDSGID refusal")
+                original_chmod(path, mode)
+
+            try:
+                with mock.patch(
+                    "greia_platform.profiles.os.chmod",
+                    side_effect=deny_sgid_chmod,
+                ):
+                    profile = store.create("Mia", "robot")
+                    context = store.context(profile.profile_id)
+            finally:
+                os.umask(original_umask)
+
+            for path in (
+                context.root,
+                context.customization_dir,
+                context.activities_dir,
+            ):
+                with self.subTest(path=path):
+                    self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o2770)
+                    self.assertEqual(path.stat().st_gid, store.data_root.stat().st_gid)
+
     def test_profile_creation_fails_before_registry_publish_when_mode_repair_is_refused(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
