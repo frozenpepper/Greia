@@ -199,7 +199,7 @@ Sequence in one tested vertical slice before broad rollout:
 
 1. Painting keeps private autosave. A deliberate Save-to-My-Creations action creates a versioned immutable PNG; never publish every 1-second autosave.
 2. Painting opens an existing published image as a new native editable canvas/draft or updates its chosen source project without overwriting prior published snapshots. Test undo, resize, transparency, blank/new and quota errors.
-3. Shape Garden (the shape/stamp-style candidate; verify actual UX before changing it) imports a selected image background, adds shapes/stamps, exports composed PNG. Preserve source layout/scale and source-native editable shape state separately.
+3. Shape Garden is currently a **transient random shape-growing experience, not a persistent sticker editor**. P4 must first add a legitimate versioned editable picture/shape project (or review and nominate the actual stamp-style Activity), then import a selected picture, keep an independent private source snapshot, add shapes, persist them, and deliberately export a composed PNG; do not overwrite the existing garden gameplay merely to force a cross-app demo.
 4. Painting reimports Shape Garden output and continues free drawing; publishing yields a new snapshot, not destructive source overwrite.
 5. Teatrino picks an image as background, displays it without catastrophic stretching/incorrect crop, saves its own independent snapshot, and reopens correctly if the library original was edited/deleted.
 6. Exercise every step in actual script launch and real simulator, and review screenshots at 1024×600 plus variation sizes.
