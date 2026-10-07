@@ -19,7 +19,6 @@ skills = [
   { id = "creativity.visual_composition", weight = 2 },
 ]
 events = [
-  { id = "scene.created", kind = "creation" },
   { id = "story.played", kind = "completion" },
   { id = "story.recorded", kind = "creation" },
 ]
