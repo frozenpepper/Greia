@@ -138,10 +138,24 @@ class CreationsPygamePainter:
             paper=box.inflate(-52,-18)
             pygame.draw.rect(screen,(255,251,239),paper,border_radius=18)
             self._icon(screen,"text",pygame.Rect(paper.centerx-42,paper.y+10,84,82),pygame,(147,111,155))
-            for i in range(4):
-                yy=paper.y+105+i*25
-                if yy < paper.bottom-15:
-                    pygame.draw.line(screen,(208,198,181),(paper.left+24,yy),(paper.right-24,yy),4)
+            if expanded:
+                kind,payload=self.controller.preview(record.creation_id)
+                if kind != "text/plain":
+                    raise ValueError("text preview type mismatch")
+                excerpt=payload.decode("utf-8").replace("\n"," ").strip()
+                font=self.typography.font(FontRole.BODY,22)
+                for index in range(4):
+                    piece=excerpt[index*38:(index+1)*38]
+                    yy=paper.y+110+index*38
+                    if not piece or yy+font.get_height()>paper.bottom-12:
+                        break
+                    visual=self.typography.surface(font,piece,self.INK)
+                    screen.blit(visual,(paper.left+28,yy))
+            else:
+                for i in range(4):
+                    yy=paper.y+105+i*25
+                    if yy < paper.bottom-15:
+                        pygame.draw.line(screen,(208,198,181),(paper.left+24,yy),(paper.right-24,yy),4)
 
     def draw(self, screen: Any, layout: CreationGalleryLayout, pygame: Any) -> None:
         self._targets.clear()
