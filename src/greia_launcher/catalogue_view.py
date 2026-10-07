@@ -51,6 +51,7 @@ _CATEGORY_ICONS = {
     "learn": "book",
     "explore": "magnifier",
     "my_greia": "unicorn",
+    "my_creations": "palette",
 }
 _DISCOVERY_ICONS = {
     "drawing": "palette",
@@ -112,6 +113,13 @@ _CATEGORY_TRANSLATIONS: dict[str, dict[str, str]] = {
         "es": "Explorar",
         "de": "Entdecken",
         "fr": "Explorer",
+    },
+    "my_creations": {
+        "it": "Le mie creazioni",
+        "en": "My Creations",
+        "es": "Mis creaciones",
+        "de": "Meine Werke",
+        "fr": "Mes créations",
     },
     "my_greia": {
         "it": "Mio Greia",
