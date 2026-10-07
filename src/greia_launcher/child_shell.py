@@ -153,6 +153,110 @@ class GreiaChildShell(
     as a fail-soft fallback.
     """
 
+    # My Creations is a trusted Shell destination, not a package/Activity.
+    # The existing Collection Home renders semantic destinations without
+    # requiring an ActivityManifest or a parallel launcher hierarchy.
+    CREATIONS_COLLECTION_ID = "my_creations"
+
+    def _home_collections(self) -> tuple[Any, ...]:
+        from greia_platform.ui_core import Collection
+
+        collections = super()._home_collections()
+        if getattr(self, "_active_profile", None) is None:
+            return collections
+        return (*collections, Collection(
+            self.CREATIONS_COLLECTION_ID, (), icon_id="palette",
+        ))
+
+    def _set_category(self, category_id: str) -> None:
+        if category_id == self.CREATIONS_COLLECTION_ID:
+            self._open_creations()
+            return
+        super()._set_category(category_id)
+
+    def _open_creations(self) -> None:
+        """Open active profile's trusted library after selecting Home portal."""
+        if self._active_profile is None:
+            return
+        import sqlite3
+
+        from greia_platform.creation_audio_pygame import PygameRecordingPreview
+        from greia_platform.creation_gallery import CreationsGalleryController
+        from greia_platform.creation_gallery_screen import CreationsGalleryScreen
+        from greia_platform.creations import CreationLibrary, CreationLibraryError
+        from greia_platform.profiles import ProfileError
+
+        try:
+            library = CreationLibrary(self._active_profile.creations_dir)
+            controller = CreationsGalleryController(
+                library, audio_player=PygameRecordingPreview(),
+            )
+            self._creations_screen = CreationsGalleryScreen(
+                controller, typography=self._typography, locale=self._active_locale,
+            )
+        except (OSError, ValueError, ProfileError, CreationLibraryError, sqlite3.Error):
+            self._catalogue_error = True
+            return
+        self._mode = "creations"
+        self._targets.clear()
+
+    def _close_creations(self) -> None:
+        screen = getattr(self, "_creations_screen", None)
+        if screen is not None:
+            screen.on_exit()
+        self._creations_screen = None
+        if self._mode == "creations":
+            self._mode = "activities"
+            super()._set_category(ALL_ACTIVITIES_ID)
+            self._cached_activities_key = None
+
+    def _draw(self, screen: Any, pygame: Any) -> None:
+        if self._mode != "creations":
+            super()._draw(screen, pygame)
+            return
+        self._targets.clear()
+        viewer = getattr(self, "_creations_screen", None)
+        if viewer is None:
+            self._close_creations()
+            return
+        viewer.draw(screen)
+        self._draw_pointer(screen, pygame)
+
+    def _handle_key(self, key: int, pygame: Any) -> bool:
+        if self._mode != "creations":
+            return super()._handle_key(key, pygame)
+        from greia_platform.ui_core import UiEventResult
+
+        viewer = getattr(self, "_creations_screen", None)
+        if viewer is None:
+            self._close_creations()
+            return True
+        result = viewer.handle_event(pygame.event.Event(pygame.KEYDOWN, key=key))
+        if result is UiEventResult.REQUEST_CLOSE:
+            self._close_creations()
+        return True
+
+    def _handle_click(self, position: tuple[int, int], pygame: Any) -> None:
+        if self._mode != "creations":
+            super()._handle_click(position, pygame)
+            return
+        from greia_platform.ui_core import UiEventResult
+
+        viewer = getattr(self, "_creations_screen", None)
+        if viewer is None:
+            self._close_creations()
+            return
+        result = viewer.handle_event(
+            pygame.event.Event(pygame.MOUSEBUTTONUP, button=1, pos=position)
+        )
+        if result is UiEventResult.REQUEST_CLOSE:
+            self._close_creations()
+
+    def _logout(self, pygame: Any) -> None:
+        # Profile exit must release every preview channel and old gallery view.
+        self._close_creations()
+        super()._logout(pygame)
+
     def _runtime_hal(self) -> GreiaHAL | None:
         return None if self._installed_root() else _development_hal()
 
