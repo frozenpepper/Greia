@@ -43,8 +43,6 @@ if __package__:
         WHEEL_RADIUS,
         WHEELBASE,
     )
-
-    TERRAIN_BASE_Y:
 else:
     from colline_content import (
         AIR_DRAG,
@@ -79,8 +77,7 @@ else:
         WHEELBASE,
     )
 
-    TERRAIN_BASE_Y:
- Final[float] = 430.0
+TERRAIN_BASE_Y: Final[float] = 430.0
 
 
 @dataclass
