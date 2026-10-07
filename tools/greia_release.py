@@ -532,6 +532,10 @@ def _release_environment(paths: ReleasePaths) -> dict[str, str]:
     return {
         "GREIA_APT_CACHE": str(apt_cache),
         "GREIA_POOL_CACHE": str(pool_cache),
+        # One existing release-mode switch owns both profile certification
+        # checks and curated first-party Activity composition. Never let the
+        # owner-facing release command silently inherit development semantics.
+        "PIP_RELEASE_BUILD": "1",
         # Keep the entire privileged release subprocess tree from writing
         # bytecode into the developer-owned checkout.
         "PYTHONDONTWRITEBYTECODE": "1",
