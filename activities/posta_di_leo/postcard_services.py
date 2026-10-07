@@ -87,7 +87,7 @@ class GreiaPostcardStorage:
     def _text_name(card_id: str) -> str:
         if (
             not isinstance(card_id, str)
-            or not card_id.startswith("card-")
+            or not card_id
             or len(card_id) > 80
             or not all(ch.isalnum() or ch == "-" for ch in card_id)
         ):
