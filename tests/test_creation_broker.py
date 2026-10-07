@@ -121,6 +121,63 @@ class CreationBrokerTests(unittest.TestCase):
         with self.assertRaisesRegex(StorageClientError, "unauthorized"):
             receiver.import_selected("forged")
 
+    def test_nonblocking_broker_picker_requires_trusted_child_choice(self) -> None:
+        writer, first, publisher = self._start(
+            "org.greia.writing", {"draft.txt": b"forest"},
+            producing=True, consuming=False,
+        )
+        first.bind_creations(writer)
+        saved = publisher.publish_private_file(
+            "draft.txt", media_type="text/plain", role="story"
+        )
+
+        reader, second, consumer = self._start(
+            "org.greia.theatre", {}, producing=False, consuming=True
+        )
+        second.bind_creations(reader)
+        with self.assertRaisesRegex(StorageClientError, "unauthorized"):
+            consumer.request_selection(media_types=("audio/wav",))
+        request_id = consumer.request_selection(
+            media_types=("text/plain",), roles=("story",)
+        )
+        pending = second.pending_creation_selection()
+        self.assertIsNotNone(pending)
+        self.assertEqual(pending.request_id, request_id)
+        self.assertEqual(pending.media_types, ("text/plain",))
+        self.assertEqual(consumer.poll_selection(request_id).state, "pending")
+        with self.assertRaisesRegex(StorageClientError, "unsupported"):
+            consumer.storage_session._request(
+                "creations.grant", creation_id=saved["creation_id"]
+            )
+        second.complete_creation_selection(request_id, saved["creation_id"])
+        self.assertIsNone(second.pending_creation_selection())
+        result = consumer.poll_selection(request_id)
+        self.assertEqual(result.state, "ready")
+        self.assertTrue(result.selection_token)
+        imported = consumer.import_selected(result.selection_token)
+        self.assertEqual(imported.payload, b"forest")
+        with self.assertRaisesRegex(StorageClientError, "unauthorized"):
+            consumer.import_selected(result.selection_token)
+        with self.assertRaisesRegex(StorageClientError, "unauthorized"):
+            consumer.poll_selection(request_id)
+
+    def test_selection_cancellation_and_unrelated_session_are_denied(self) -> None:
+        reader, broker, client = self._start(
+            "org.greia.theatre", {}, producing=False, consuming=True
+        )
+        broker.bind_creations(reader)
+        request_id = client.request_selection(media_types=("text/plain",))
+        with self.assertRaisesRegex(StorageClientError, "unauthorized"):
+            client.poll_selection("forged")
+        self.assertTrue(client.cancel_selection(request_id))
+        self.assertEqual(client.poll_selection(request_id).state, "cancelled")
+        with self.assertRaisesRegex(StorageClientError, "unauthorized"):
+            client.poll_selection(request_id)
+        second_request = client.request_selection(media_types=("text/plain",))
+        broker.stop()
+        with self.assertRaises(StorageClientError):
+            client.poll_selection(second_request)
+
     def test_producer_and_reader_permissions_are_independent(self) -> None:
         writer, broker, client = self._start(
             "org.greia.writing", {"draft.txt": b"text"},
