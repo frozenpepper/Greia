@@ -113,6 +113,23 @@ class CreationsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.library.list(limit=90000)
 
+    def test_corrupted_blob_is_rejected(self):
+        record = self.library.publish(b"initial", producer_id="org.greia.writing", media_type="text/plain", role="story")
+        blob = self.library.blobs / f"{record.creation_id}.txt"
+        blob.write_bytes(b"tampered")
+        with self.assertRaises(CreationLibraryError):
+            self.library.read(record.creation_id)
+
+    def test_blob_symlink_is_rejected(self):
+        record = self.library.publish(b"original", producer_id="org.greia.writing", media_type="text/plain", role="story")
+        blob = self.library.blobs / f"{record.creation_id}.txt"
+        external = self.root / "untrusted.txt"
+        external.write_bytes(b"external")
+        blob.unlink()
+        blob.symlink_to(external)
+        with self.assertRaises(CreationLibraryError):
+            self.library.read(record.creation_id)
+
     def test_volume_guard_refuses_write_without_evicting(self):
         blocked = CreationLibrary(self.root / "full" / "creations", volume_budget=VolumeBudget(
             probe=lambda _: VolumeUsage(900*1024**2, 600*1024**2, 300*1024**2)
