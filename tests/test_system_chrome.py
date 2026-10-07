@@ -427,6 +427,22 @@ class SystemChromeCoordinatorTests(unittest.TestCase):
         self.assertEqual(coordinator.snapshot.session_id, "session-a")
         self.assertIn("prepare failed", coordinator.snapshot.failure or "")
 
+    def test_visible_chrome_can_be_restacked_for_trusted_modal_without_new_lease(self) -> None:
+        backend = RecordingChromeBackend()
+        coordinator = SystemChromeCoordinator(backend)
+        lease = coordinator.prepare("session-a", back_available=False)
+        coordinator.activity_ready(lease)
+        coordinator.ensure_visible(lease)
+        self.assertIs(coordinator.snapshot.phase, SystemChromePhase.VISIBLE)
+        self.assertEqual(
+            backend.events,
+            [
+                ("prepare", "session-a", False),
+                ("show", "session-a"),
+                ("restack", "session-a"),
+            ],
+        )
+
     def test_home_action_is_reported_without_activity_participation(self) -> None:
         backend = RecordingChromeBackend()
         backend.actions.append(SystemNavigationAction.HOME)
