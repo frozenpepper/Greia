@@ -26,15 +26,26 @@ from greia_platform.pygame_canvas import (
 )
 from greia_platform.typography import GreiaTypography
 
-from .colline_audio import CollineAudio
-from .colline_content import (
-    REFERENCE_HEIGHT,
-    REFERENCE_WIDTH,
-    SYSTEM_CHROME_SAFE_X,
-    SYSTEM_CHROME_SAFE_Y,
-)
-from .colline_model import CollineWorld
-from .colline_renderer import CollineRenderer
+if __package__:
+    from .colline_audio import CollineAudio
+    from .colline_content import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        SYSTEM_CHROME_SAFE_X,
+        SYSTEM_CHROME_SAFE_Y,
+    )
+    from .colline_model import CollineWorld
+    from .colline_renderer import CollineRenderer
+else:
+    from colline_audio import CollineAudio
+    from colline_content import (
+        REFERENCE_HEIGHT,
+        REFERENCE_WIDTH,
+        SYSTEM_CHROME_SAFE_X,
+        SYSTEM_CHROME_SAFE_Y,
+    )
+    from colline_model import CollineWorld
+    from colline_renderer import CollineRenderer
 
 STORAGE_KEY: Final[str] = "colline_allegre.progress"
 
