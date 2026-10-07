@@ -153,7 +153,7 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 
 ### 2026-10-07 — P3 async request transport, Painting PNG receiver, no live tests (current source continuation)
 
-**Source candidate for next combined desktop acceptance:** `4a44f0a220d6ebf6addee81c9f4bc6282ca2be89`; newer commits in this ledger/PLAN/test contract are documentation only. **No current-turn tests were run** because a complete authenticated local checkout/GUI environment is not available in the assistant container and the user's local agent is unavailable. The previous session's isolated 33/33 mirror run remains historical, not evidence for this new candidate.
+**Source candidate for next combined desktop acceptance:** `1904e74921b62b78181f45206f394a6b6bf40dd6`; newer commits in this ledger/PLAN/test contract are documentation only. **No current-turn tests were run** because a complete authenticated local checkout/GUI environment is not available in the assistant container and the user's local agent is unavailable. The previous session's isolated 33/33 mirror run remains historical, not evidence for this new candidate.
 
 **Implemented and committed directly to `main`:**
 
