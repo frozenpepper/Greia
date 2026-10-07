@@ -34,6 +34,20 @@ class SelectionCoordinatorTests(unittest.TestCase):
         self.chooser = CreationSelectionCoordinator(
             self.access, "session-1", clock=lambda: self.now
         )
+        self.chooser.enable_presenter()
+
+    def test_absent_trusted_display_rejects_request_without_waiting(self):
+        self.chooser.disable_presenter()
+        with self.assertRaisesRegex(CreationAccessDenied, "display"):
+            self.chooser.request(media_types=["image/png"])
+        self.assertIsNone(self.chooser.trusted_pending())
+        self.chooser.enable_presenter()
+        request = self.chooser.request(media_types=["image/png"])
+        self.chooser.disable_presenter()
+        self.assertEqual(
+            self.chooser.poll(request.request_id).state,
+            SelectionState.CANCELLED,
+        )
 
     def test_Activity_does_not_mint_selected_token(self):
         request = self.chooser.request(media_types=["image/png"], roles=["drawing"])
