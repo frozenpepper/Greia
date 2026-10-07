@@ -191,6 +191,18 @@ class ActivitySupervisor:
         broker = self._active_creation_broker(session)
         return None if broker is None else broker.pending_creation_selection()
 
+    def enable_creation_picker(self, session: ActivitySession) -> None:
+        """Enable requests only after the trusted display host has a real lease."""
+        broker = self._active_creation_broker(session)
+        if broker is None:
+            raise ActivityLifecycleError("no live creation-picker session")
+        broker.enable_creation_picker()
+
+    def disable_creation_picker(self, session: ActivitySession) -> None:
+        broker = self._active_creation_broker(session)
+        if broker is not None:
+            broker.disable_creation_picker()
+
     def complete_creation_selection(
         self, session: ActivitySession, request_id: str, creation_id: str
     ) -> str:
