@@ -54,13 +54,34 @@ class VolumeCapacityPolicy:
         free_space_room = usage.free_bytes - self.minimum_free_bytes
         return max(0, min(occupancy_room, free_space_room))
 
-    def require_growth(self, usage: VolumeUsage, byte_count: int) -> None:
-        if byte_count < 0:
-            raise ValueError("growth must be non-negative")
-        if byte_count > self.remaining_growth_bytes(usage):
+    def require_write(
+        self,
+        usage: VolumeUsage,
+        *,
+        final_growth_bytes: int,
+        peak_additional_bytes: int,
+    ) -> None:
+        if final_growth_bytes < 0 or peak_additional_bytes < 0:
+            raise ValueError("write growth must be non-negative")
+        occupancy_room = (
+            int(usage.total_bytes * self.maximum_used_fraction)
+            - usage.used_bytes
+        )
+        free_space_room = usage.free_bytes - self.minimum_free_bytes
+        if (
+            final_growth_bytes > max(0, occupancy_room)
+            or peak_additional_bytes > max(0, free_space_room)
+        ):
             raise VolumeSpaceError(
                 "child content storage would exhaust protected disk headroom"
             )
+
+    def require_growth(self, usage: VolumeUsage, byte_count: int) -> None:
+        self.require_write(
+            usage,
+            final_growth_bytes=byte_count,
+            peak_additional_bytes=byte_count,
+        )
 
 
 CreationCapacityPolicy = VolumeCapacityPolicy
@@ -104,14 +125,32 @@ class VolumeBudget:
             self.policy.require_growth(self._probe(managed_root), byte_count)
 
     @contextmanager
+    def write_reservation(
+        self,
+        managed_root: Path,
+        *,
+        final_growth_bytes: int,
+        peak_additional_bytes: int,
+    ) -> Iterator[None]:
+        """Serialize measured capacity with one caller-owned atomic write section."""
+        with self._lock:
+            self.policy.require_write(
+                self._probe(managed_root),
+                final_growth_bytes=final_growth_bytes,
+                peak_additional_bytes=peak_additional_bytes,
+            )
+            yield
+
+    @contextmanager
     def growth_reservation(
         self, managed_root: Path, byte_count: int
     ) -> Iterator[None]:
-        """Serialize a bounded growth check with the following write section."""
-        if byte_count < 0:
-            raise ValueError("growth must be non-negative")
-        with self._lock:
-            self.policy.require_growth(self._probe(managed_root), byte_count)
+        """Compatibility shorthand when final and temporary growth are equal."""
+        with self.write_reservation(
+            managed_root,
+            final_growth_bytes=byte_count,
+            peak_additional_bytes=byte_count,
+        ):
             yield
 
 
