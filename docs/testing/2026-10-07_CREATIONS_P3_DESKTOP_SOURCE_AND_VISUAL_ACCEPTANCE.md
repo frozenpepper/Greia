@@ -1,9 +1,9 @@
 # Creations Library P3 — Desktop Source + Real GUI Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `1904e74921b62b78181f45206f394a6b6bf40dd6` (last code/test source commit before documentation-only updates).  
+**Pinned source candidate:** `dae96e9b63bb537456579fa51ad1d9539cf0c204` (last code/test source commit before documentation-only updates).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
-**Expected state:** P3 Gallery, Painting explicit PNG publishing **and an internal child-selected PNG receive hook** exist SOURCE-WIP. P3 now also has a **non-blocking Activity→broker→trusted Supervisor picker request/status/grant transaction** with MIME/role filtering, one outstanding request per session, timeout/cleanup and a **fail-closed disabled-presenter gate**. The actual Shell modal handoff is **NOT wired**, so a real child cannot yet request/select/import through Painting/Shape Garden/Theatre. This test accepts the Gallery and Painting producer only; no fake claim of full cross-app exchange.
+**Expected state:** P3 Gallery, authenticated request/poll/cancel transport, **trusted in-Activity modal presentation**, and Painting's deliberate PNG publish/import path exist SOURCE-WIP. Legacy-X reuses Greia's existing Shell window with exact supervised-PID revalidation before modal presentation; Simulator uses its existing remote display bridge to divert ordinary input/frames to the same real Shell picker while mandatory Home remains platform-owned. Painting's private gallery has a picture-arrow-down import control that requests only PNG, polls nonblockingly at a bounded cadence, and imports one child-selected handle as an independent editable private painting. **None of this modal/import slice has been accepted in a complete checkout or real GUI yet.** Shape Garden/Theatre, WAV/text producers, all-writer capacity and hardware evidence remain open.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor 1904e74921b62b78181f45206f394a6b6bf40dd6 HEAD` (exit **0** required). Check `git diff --name-only 1904e74921b62b78181f45206f394a6b6bf40dd6 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor dae96e9b63bb537456579fa51ad1d9539cf0c204 HEAD` (exit **0** required). Check `git diff --name-only dae96e9b63bb537456579fa51ad1d9539cf0c204 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -37,6 +37,10 @@ Run each command **sequentially** and save stdout/stderr + exit status; if any f
 ```bash
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_creation_*.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_painting_creations.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_shell_window_legacy_x.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_system_chrome.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_trusted_chrome_supervisor.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_simulator_system_chrome.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_index.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_supervisor.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_profiles.py' -v
@@ -64,13 +68,18 @@ Capture **actual screenshots from the real running Shell** at these exact checkp
 5. **Library after saving.** Return Home using Greia controls. Enter My Creations. Expect large pictures, not tiny filename icons. Two versions should be independently viewable. Screenshot `05-gallery-two-large-pictures.png`.
 6. **Full preview.** Open a picture, verify uncropped original high-resolution details and Back behavior. Screenshot `06-full-picture.png`.
 7. **Safe delete.** Tap trash. Verify a distinct cancel and confirm choice; screenshot `07-delete-confirmation.png`. Cancel and verify the picture remains. Repeat and confirm delete of **one** item; verify second saved snapshot remains after leaving/reopening the gallery. Screenshot `08-after-delete.png`.
-8. **Resolution checks.** Using documented Simulator viewport controls, repeat Home + gallery checks at **800×480** and **1366×768**. Screenshot `09-gallery-800x480.png`, `10-gallery-1366x768.png`. Ensure gallery cards, back, title and delete confirmation never overlap protected navigation or get clipped.
-9. **Keyboard/controller semantics.** Tab cycles media tabs; arrows move visible focus/pages; Enter opens item; Esc/Backspace returns; no phantom deletion on single key; size/selection follow real Greia input mapping. Record findings. If controller isn't physically present, do not claim controller accepted.
-10. **Audio/text:** The gallery source includes playable WAV preview and text descriptions, but voice/text Activities do **not yet publish** into the shared library. **Do not** inject media into a production child's profile, mount shared folders or edit private SQLite files to fake this test. Audio/ordinary text gallery visual acceptance remains **PENDING** until a source-approved disposable fixture producer or a genuine integrated producer exists. Unit tests may prove pure behavior only.
+8. **Painting → trusted picker → Painting, CANCEL path.** Reopen Painting and switch to Painting's **private gallery**. Confirm the new picture-arrow-down import action is visible and visually distinct from the upward publish action. Screenshot `09-painting-private-gallery-import.png`. Trigger it. On the Simulator's authoritative **remote web canvas**, the running Activity must remain alive while the **same universal Creations picker** replaces the Activity view. There must be no desktop file dialog, raw path, duplicate Painting-specific chooser, or filename dependence. Screenshot `10-trusted-picker-over-painting.png`. Press Back/Escape inside the picker. Painting must reappear automatically with the prior private painting/gallery state intact and no stale click reaching the canvas. Screenshot `11-picker-cancel-restored-painting.png`.
+9. **Painting → trusted picker → Painting, SELECT path.** Trigger import again. Verify only compatible PNG items are shown. Open one published picture and confirm it. Painting must resume automatically and open a **new independent editable painting** derived from that snapshot. Add a visibly identifying stroke and save. Confirm the shared source remains visually unchanged in My Creations and the imported Painting project retains the edit. Screenshot `12-selected-import-new-editable.png`.
+10. **Repeated modal lifecycle.** Exercise import → cancel → import → select → import → cancel. Check no stale request, duplicate modal, click-through, lost keyboard focus, pointer disappearance, phantom selection, or Activity restart. If a request is unavailable, it must fail back to Painting rather than leaving an invisible pending picker.
+11. **Trusted Home during picker.** Open the picker from Painting, then use Greia's protected Home control. Home must remain above the modal and route through the normal Activity stop lifecycle. The picker/audio/request must be torn down; returning to Painting later must not resurrect the old request.
+12. **Resolution checks.** Using documented Simulator viewport controls, repeat Home + gallery + **in-Activity picker** checks at **800×480** and **1366×768**. Screenshot `13-picker-800x480.png`, `14-picker-1366x768.png`. Ensure cards, back/title, select controls and protected Home never overlap or clip.
+13. **Keyboard/controller semantics.** Tab cycles media tabs; arrows move visible focus/pages; Enter opens/chooses as intended; Esc/Backspace cancels/restores; no phantom deletion/selection. Record which input modes were physically exercised. If no controller is connected, do not claim controller accepted.
+14. **Simulator display evidence boundary.** The remote web canvas is the Simulator's authoritative synthetic display for the modal path. Verify Activity frame uploads do not overwrite the picker while it is active and resume after dismissal. Do **not** reinterpret this as proof of native macOS foreground-window stacking or installed Legacy-X behavior.
+15. **Audio/text:** the common picker has WAV preview/text support, but genuine audio/text producers are not yet integrated. Do not inject media into a real child's profile or edit SQLite to fake the workflow. Pure source tests may cover those types; real preview-before-select remains pending until an approved producer/fixture exists.
 
 Record frame-rate/idle CPU/RSS observations if the Simulator exposes them; no claim about Acer performance can follow from desktop observation.
 
-### 2b. New SOURCE-WIP transaction cases carried over (do not fake an in-Activity picker)
+### 2b. New SOURCE-WIP modal/transaction cases carried over
 
 The new code introduces **`tests/test_creation_selection.py`**, additional `tests/test_creation_broker.py` socket cases, enhanced `tests/test_creation_gallery.py` role filtering and `tests/test_painting_creations.py` independent PNG import tests. All are included in the `test_creation_*.py`/Painting commands at §1. In the report verify individually:
 
@@ -79,12 +88,16 @@ The new code introduces **`tests/test_creation_selection.py`**, additional `test
 - a real Unix socket returns a pending request, trusted selection completes it, the same Activity receives a single-use handle and imports exactly once;
 - cancellation, expired/uncollected result, backend loss, Activity STOP/broker cleanup and a second Activity/sibling session cannot claim another session's choice;
 - Gallery pre-reader cards are filtered by both MIME and role; wrong-media gallery items never appear;
-- Painting's selected-image import creates a **new private editable** project and preserves current work on integrity/decoding failure. This method is a source-only hook until actual in-Activity picker presentation is wired.
+- Painting's selected-image import creates a **new private editable** project, preserves current work on integrity/decoding failure, suppresses duplicate pending requests and polls the broker at a bounded cadence;
+- Legacy-X modal tests prove exact-object lease ownership, show-time `_NET_WM_PID` revalidation and restoration of a recreated Activity window without leaking X11 IDs into the generic lease;
+- trusted system chrome can restack on the same Activity lease above the picker;
+- Simulator tests prove exact-session modal ownership, ordinary input diversion to Shell, protected Home priority and suppression of Activity frame overwrite;
+- picker-host tests prove real trusted completion callback, cancel/restore, show/chrome failure, terminal Activity handling, and abnormal shutdown cancellation + presenter revocation.
 
-There is intentionally no live Activity picker button/GUI acceptance yet. **Do not bypass** the disabled presenter gate, inject raw shared paths or make a dummy Shell picker pretend to control a live Activity. The reviewed next display-owner design is
+Do not bypass the real presenter gate, inject raw shared paths, or create a dummy Activity-local picker. The implemented backend semantics are documented in
 `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`.
 
-**Further deferred, not part of the present desktop source acceptance:** once the trusted live modal and consumer integrations land, extend this *same evidence collection* with Painting→Shape Garden/stamp artwork→Theatre→Painting reimport, real WAV before select, UTF-8, profile isolation, backup/restore, disk saturation at 75% plus OS headroom, and installed Acer/Pi interaction/performance tests only after independent lifecycle/first-boot acceptance. Avoid unreviewed hardware flashing now.
+**Further deferred:** Painting→Shape Garden/stamp artwork→Theatre→Painting reimport, genuine WAV preview-before-select, UTF-8 producers/consumers, sibling-profile isolation in live sessions, backup/restore, disk saturation at 75% plus OS headroom, Wayland/KMSDRM modal backends, and installed Acer/Pi interaction/performance only after the independent lifecycle/first-boot route permits it. Avoid unreviewed hardware flashing now.
 
 ### 3. Report and evidence
 
@@ -92,7 +105,7 @@ Provide exactly:
 - tested HEAD and dirty state;
 - every source command, exit code, relevant summary and first failure;
 - whether the Simulator ran, screenshot filenames and what was visually inspected;
-- whether Paint→My Creations saved original PNG snapshots, deduplicated unchanged images and survived reopening;
+- whether Paint→My Creations saved original PNG snapshots, deduplicated unchanged images, and the **Painting→trusted picker→new editable Painting** cancel/select/reopen paths behaved correctly;
 - image detail/deletion/cancel state; actual observed bug(s), with steps;
 - accepted screen sizes/input modes; limitations;
 - any audio/TTS/microphone output not tested;
@@ -104,4 +117,4 @@ Return a ZIP of the raw screenshots + logs + concise Markdown report from the `t
 
 STOP on pre-existing uncommitted source state, mismatched source SHA ancestry, source changes beyond candidate not yet reviewed, first focused or full verify failure, missing unavailable dependencies not safely bootstrappable, profile selection/data isolation ambiguity, real child data exposure, unrecoverable simulator failure, or a GUI crash. Preserve files/logs exactly for root cause; no false PASS by skipping failing gates.
 
-**Expected handoff:** the first screenshot/transport run identifies concrete integration defects so the next coding session can repair the real owners, then finish the in-Activity trusted picker mediation and Painting↔Shape Garden↔Theatre import work.
+**Expected handoff:** this accumulated run either validates the current trusted modal + Painting round trip or stops at the first reproducible defect with raw evidence. After repairs, proceed to the next P4 consumers (persistent Shape Garden/stamp project and Theatre backdrop), not another picker implementation.
