@@ -109,7 +109,7 @@ class CreationsGalleryController:
             raise ValueError("trusted picker requires an actual selection grant owner")
         if mode == GalleryMode.LIBRARY and on_pick is not None:
             raise ValueError("the library viewer cannot mint selection grants")
-        allowed = frozenset(media_types or {"image/png", "audio/wav", "text/plain"})
+        allowed = frozenset({"image/png", "audio/wav", "text/plain"} if media_types is None else media_types)
         if not allowed or allowed - {"image/png", "audio/wav", "text/plain"}:
             raise ValueError("invalid picker media types")
         self.library = library
