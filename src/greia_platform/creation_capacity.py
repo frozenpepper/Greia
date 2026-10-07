@@ -67,7 +67,16 @@ class VolumeCapacityPolicy:
             int(usage.total_bytes * self.maximum_used_fraction)
             - usage.used_bytes
         )
-        free_space_room = usage.free_bytes - self.minimum_free_bytes
+        # A non-growing replacement is allowed to dip into the protected
+        # reserve temporarily so a child can still update/repair existing
+        # state when the machine is already low on space. It may never demand
+        # more temporary bytes than are physically free. Any positive final
+        # growth must preserve the full boot-safe floor at peak.
+        free_space_room = (
+            usage.free_bytes
+            if final_growth_bytes == 0
+            else usage.free_bytes - self.minimum_free_bytes
+        )
         if (
             final_growth_bytes > max(0, occupancy_room)
             or peak_additional_bytes > max(0, free_space_room)
