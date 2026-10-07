@@ -21,12 +21,27 @@ else:
 
 
 class ShowRepository:
-    """Manages persistent saved shows and companion audio narration tracks."""
+    """Bounded saved shows with deduplicated content-addressed custom backdrops."""
+
+    MAX_BACKDROP_BYTES = 8 * 1024 * 1024
+    BACKDROP_PREFIX = "backdrop_"
 
     def __init__(self, storage) -> None:
         self.storage = storage
         self._mem_index: list[dict] = []
         self._mem_files: dict[str, bytes] = {}
+
+    @classmethod
+    def _backdrop_name(cls, digest: str) -> str:
+        return f"{cls.BACKDROP_PREFIX}{digest}.png"
+
+    @staticmethod
+    def _show_json_name(show_id: str) -> str:
+        return f"show_{show_id}.json"
+
+    @staticmethod
+    def _show_wav_name(show_id: str) -> str:
+        return f"show_{show_id}.wav"
 
     def list_shows(self) -> list[dict]:
         if self.storage is not None:
@@ -35,12 +50,22 @@ class ShowRepository:
                 if isinstance(raw, list):
                     cleaned: list[dict] = []
                     for item in raw:
-                        if isinstance(item, dict) and "id" in item:
+                        if isinstance(item, dict) and isinstance(item.get("id"), str):
                             cleaned.append(item)
                     return cleaned[:MAX_SAVED_SHOWS]
             except Exception:
                 pass
         return list(self._mem_index[:MAX_SAVED_SHOWS])
+
+    @staticmethod
+    def _referenced_backdrops(index: list[dict]) -> set[str]:
+        return {
+            item["backdrop_sha256"]
+            for item in index
+            if isinstance(item, dict)
+            and item.get("has_custom_backdrop")
+            and isinstance(item.get("backdrop_sha256"), str)
+        }
 
     def save_show(
         self,
@@ -52,95 +77,121 @@ class ShowRepository:
         audio_wav_bytes: bytes | None = None,
         backdrop_png_bytes: bytes | None = None,
     ) -> dict:
+        if backdrop_png_bytes is not None and (
+            not isinstance(backdrop_png_bytes, bytes)
+            or not backdrop_png_bytes
+            or len(backdrop_png_bytes) > self.MAX_BACKDROP_BYTES
+        ):
+            raise ValueError("custom backdrop exceeds bounds")
+
         show_id = uuid.uuid4().hex[:12]
+        backdrop_digest = (
+            hashlib.sha256(backdrop_png_bytes).hexdigest()
+            if backdrop_png_bytes
+            else None
+        )
         show_meta = {
             "id": show_id,
             "title": f"Storia {len(self.list_shows()) + 1}",
             "backdrop": backdrop_id,
             "actors": [p["id"] for p in puppets],
             "duration": round(duration, 1),
-            "has_audio": bool(audio_wav_bytes and len(audio_wav_bytes) > 0),
-            "has_custom_backdrop": bool(backdrop_png_bytes),
-            "backdrop_sha256": (
-                hashlib.sha256(backdrop_png_bytes).hexdigest()
-                if backdrop_png_bytes
-                else None
-            ),
+            "has_audio": bool(audio_wav_bytes),
+            "has_custom_backdrop": backdrop_digest is not None,
+            "backdrop_sha256": backdrop_digest,
             "created_at": time.time(),
         }
-
         show_payload = {
             "metadata": show_meta,
             "puppets": puppets,
             "frames": frames,
             "sfx_events": sfx_events,
         }
-
         json_bytes = json.dumps(show_payload).encode("utf-8")
-        self._mem_files[f"show_{show_id}.json"] = json_bytes
+
+        # In-memory fallback mirrors the same bounded ownership model.
+        self._mem_files[self._show_json_name(show_id)] = json_bytes
         if audio_wav_bytes:
-            self._mem_files[f"show_{show_id}.wav"] = audio_wav_bytes
-        if backdrop_png_bytes:
-            self._mem_files[f"show_{show_id}_backdrop.png"] = backdrop_png_bytes
-        prior_index = [s for s in self._mem_index if s.get("id") != show_id]
-        dropped = prior_index[MAX_SAVED_SHOWS - 1 :]
-        self._mem_index = [show_meta, *prior_index][:MAX_SAVED_SHOWS]
-        for old in dropped:
-            old_id = old.get("id")
+            self._mem_files[self._show_wav_name(show_id)] = bytes(audio_wav_bytes)
+        if backdrop_digest is not None and backdrop_png_bytes is not None:
+            self._mem_files[self._backdrop_name(backdrop_digest)] = backdrop_png_bytes
+        prior_mem = [item for item in self._mem_index if item.get("id") != show_id]
+        mem_candidates = [show_meta, *prior_mem]
+        dropped_mem = mem_candidates[MAX_SAVED_SHOWS:]
+        self._mem_index = mem_candidates[:MAX_SAVED_SHOWS]
+        for item in dropped_mem:
+            old_id = item.get("id")
             if isinstance(old_id, str):
-                self._delete_mem_files(old_id)
+                self._delete_mem_show_files(old_id)
+        self._cleanup_mem_backdrops()
 
         if self.storage is not None:
+            old_shows = self.list_shows()
+            old_backdrops = self._referenced_backdrops(old_shows)
+            storage_candidates = [
+                show_meta,
+                *[item for item in old_shows if item.get("id") != show_id],
+            ]
+            new_shows = storage_candidates[:MAX_SAVED_SHOWS]
+            dropped = storage_candidates[MAX_SAVED_SHOWS:]
             try:
-                self.storage.file_write_atomic(f"show_{show_id}.json", json_bytes)
+                self.storage.file_write_atomic(
+                    self._show_json_name(show_id), json_bytes
+                )
                 if audio_wav_bytes:
-                    self.storage.file_write_atomic(f"show_{show_id}.wav", audio_wav_bytes)
-                if backdrop_png_bytes:
                     self.storage.file_write_atomic(
-                        f"show_{show_id}_backdrop.png", backdrop_png_bytes
+                        self._show_wav_name(show_id), bytes(audio_wav_bytes)
                     )
-                shows = self.list_shows()
-                old_ids = [
-                    item.get("id")
-                    for item in shows[MAX_SAVED_SHOWS - 1 :]
-                    if isinstance(item, dict)
-                ]
-                new_shows = [
-                    show_meta,
-                    *[item for item in shows if item.get("id") != show_id],
-                ][:MAX_SAVED_SHOWS]
+                if backdrop_digest is not None and backdrop_png_bytes is not None:
+                    self.storage.file_write_atomic(
+                        self._backdrop_name(backdrop_digest), backdrop_png_bytes
+                    )
                 self.storage.kv_set(SHOWS_INDEX_KEY, new_shows)
-                for old_id in old_ids:
-                    if isinstance(old_id, str) and old_id != show_id:
-                        self._delete_storage_files(old_id)
             except Exception:
-                pass
+                # Roll back unique new show files. A backdrop blob may already
+                # belong to an older show, so remove it only when unreferenced.
+                try:
+                    self.storage.file_delete(self._show_json_name(show_id))
+                    self.storage.file_delete(self._show_wav_name(show_id))
+                    if (
+                        backdrop_digest is not None
+                        and backdrop_digest not in old_backdrops
+                    ):
+                        self.storage.file_delete(
+                            self._backdrop_name(backdrop_digest)
+                        )
+                except Exception:
+                    pass
+            else:
+                for item in dropped:
+                    old_id = item.get("id")
+                    if isinstance(old_id, str) and old_id != show_id:
+                        self._delete_storage_show_files(old_id)
+                self._cleanup_storage_backdrops(new_shows)
 
         return show_meta
 
     def load_show(self, show_id: str) -> tuple[dict | None, bytes | None]:
-        json_bytes = self._mem_files.get(f"show_{show_id}.json")
-        wav_bytes = self._mem_files.get(f"show_{show_id}.wav")
+        json_bytes = self._mem_files.get(self._show_json_name(show_id))
+        wav_bytes = self._mem_files.get(self._show_wav_name(show_id))
 
         if json_bytes is None and self.storage is not None:
             try:
-                json_bytes = self.storage.file_read(f"show_{show_id}.json")
+                json_bytes = self.storage.file_read(self._show_json_name(show_id))
             except Exception:
                 json_bytes = None
-
         if wav_bytes is None and self.storage is not None:
             try:
-                wav_bytes = self.storage.file_read(f"show_{show_id}.wav")
+                wav_bytes = self.storage.file_read(self._show_wav_name(show_id))
             except Exception:
                 wav_bytes = None
 
-        show_data = None
-        if json_bytes:
-            try:
-                show_data = json.loads(json_bytes.decode("utf-8"))
-            except Exception:
-                show_data = None
-
+        if not json_bytes:
+            return None, wav_bytes
+        try:
+            show_data = json.loads(json_bytes.decode("utf-8"))
+        except Exception:
+            show_data = None
         return show_data, wav_bytes
 
     def load_show_backdrop(self, show_id: str) -> bytes | None:
@@ -153,7 +204,7 @@ class ShowRepository:
         expected = meta.get("backdrop_sha256")
         if not isinstance(expected, str):
             return None
-        name = f"show_{show_id}_backdrop.png"
+        name = self._backdrop_name(expected)
         payload = self._mem_files.get(name)
         if payload is None and self.storage is not None:
             try:
@@ -162,38 +213,73 @@ class ShowRepository:
                 return None
         if (
             not isinstance(payload, bytes)
-            or len(payload) > 8 * 1024 * 1024
+            or not payload
+            or len(payload) > self.MAX_BACKDROP_BYTES
             or hashlib.sha256(payload).hexdigest() != expected
         ):
             return None
         return payload
 
-    def _delete_mem_files(self, show_id: str) -> None:
-        self._mem_files.pop(f"show_{show_id}.json", None)
-        self._mem_files.pop(f"show_{show_id}.wav", None)
-        self._mem_files.pop(f"show_{show_id}_backdrop.png", None)
+    def _delete_mem_show_files(self, show_id: str) -> None:
+        self._mem_files.pop(self._show_json_name(show_id), None)
+        self._mem_files.pop(self._show_wav_name(show_id), None)
 
-    def _delete_storage_files(self, show_id: str) -> None:
+    def _delete_storage_show_files(self, show_id: str) -> None:
         if self.storage is None:
             return
         for name in (
-            f"show_{show_id}.json",
-            f"show_{show_id}.wav",
-            f"show_{show_id}_backdrop.png",
+            self._show_json_name(show_id),
+            self._show_wav_name(show_id),
         ):
             try:
                 self.storage.file_delete(name)
             except Exception:
                 pass
 
+    def _cleanup_mem_backdrops(self) -> None:
+        keep = {
+            self._backdrop_name(digest)
+            for digest in self._referenced_backdrops(self._mem_index)
+        }
+        for name in tuple(self._mem_files):
+            if name.startswith(self.BACKDROP_PREFIX) and name not in keep:
+                self._mem_files.pop(name, None)
+
+    def _cleanup_storage_backdrops(self, index: list[dict]) -> None:
+        if self.storage is None:
+            return
+        keep = {
+            self._backdrop_name(digest)
+            for digest in self._referenced_backdrops(index)
+        }
+        try:
+            names = self.storage.file_list(prefix=self.BACKDROP_PREFIX)
+        except Exception:
+            return
+        for name in names[: MAX_SAVED_SHOWS + 4]:
+            if name not in keep:
+                try:
+                    self.storage.file_delete(name)
+                except Exception:
+                    pass
+
     def delete_show(self, show_id: str) -> None:
-        self._mem_index = [s for s in self._mem_index if s.get("id") != show_id]
-        self._delete_mem_files(show_id)
+        self._mem_index = [
+            item for item in self._mem_index if item.get("id") != show_id
+        ]
+        self._delete_mem_show_files(show_id)
+        self._cleanup_mem_backdrops()
+
         if self.storage is not None:
             try:
-                shows = [s for s in self.list_shows() if s.get("id") != show_id]
+                shows = [
+                    item
+                    for item in self.list_shows()
+                    if item.get("id") != show_id
+                ]
                 self.storage.kv_set(SHOWS_INDEX_KEY, shows)
-                self._delete_storage_files(show_id)
+                self._delete_storage_show_files(show_id)
+                self._cleanup_storage_backdrops(shows)
             except Exception:
                 pass
 
