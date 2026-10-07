@@ -22,6 +22,7 @@ class CreationGalleryLayout:
     cancel: UiRect
     full_preview: UiRect
     audio_play: UiRect
+    audio_replay: UiRect
 
     @classmethod
     def for_surface(cls, width: int, height: int, *, tabs: int = 4) -> 'CreationGalleryLayout':
@@ -57,4 +58,5 @@ class CreationGalleryLayout:
         confirm=UiRect(width//2+24,height-80,max(110,min(220,width//3)),67)
         cancel=UiRect(width//2-max(130,min(240,width//3)),height-80,max(110,min(220,width//3)),67)
         play=UiRect(width//2-60,height//2-56,120,112)
-        return cls(title,tab_rects,cards,prev,nex,back,primary,delete,confirm,cancel,preview,play)
+        replay=UiRect(min(width-margin-72, width//2+82), height//2-39,72,76)
+        return cls(title,tab_rects,cards,prev,nex,back,primary,delete,confirm,cancel,preview,play,replay)
