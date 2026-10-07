@@ -201,10 +201,11 @@ class ReleaseCliTests(unittest.TestCase):
             self.assertEqual(paths.cache_dir.name, ".greia-cache")
             self.assertEqual(paths.work_parent.name, ".greia-work")
 
-    def test_release_environment_disables_bytecode_for_privileged_children(self) -> None:
+    def test_release_environment_enables_curated_composition_and_disables_bytecode(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = module.ReleasePaths.for_release(Path(directory), VERSION)
             env = module._release_environment(paths)
+            self.assertEqual(env["PIP_RELEASE_BUILD"], "1")
             self.assertEqual(env["PYTHONDONTWRITEBYTECODE"], "1")
 
     def test_privileged_cli_disables_bytecode_before_project_imports(self) -> None:
@@ -410,6 +411,36 @@ class ReleaseCliTests(unittest.TestCase):
         self.assertIn("mount_pool_cache", adapter)
         self.assertIn("_compose_direct_cleanup", compose)
         self.assertIn('safe_unmount_paths "${MOUNTS[@]}"', compose)
+
+    def test_release_composer_uses_approved_activity_roster_and_indexes_installed_subset(self) -> None:
+        compose = (ROOT / "build" / "lib" / "compose.sh").read_text(
+            encoding="utf-8"
+        )
+        function = compose.split(
+            "compose_install_target_content() {", 1
+        )[1].split("compose_install_live_content() {", 1)[0]
+        self.assertIn('if [[ "${PIP_RELEASE_BUILD:-0}" == "1" ]]', function)
+        self.assertIn("tools/stage_release_activities.py", function)
+        self.assertIn(
+            'build/first-party-release-activities.toml',
+            function,
+        )
+        self.assertIn(
+            '--output "$installed_activity_root"',
+            function,
+        )
+        self.assertIn(
+            '--activities "$installed_activity_root"',
+            function,
+        )
+        self.assertNotIn(
+            '--activities "$project_root/activities"',
+            function.split("# T33 built-in index:", 1)[1],
+        )
+        self.assertIn(
+            '"$project_root/activities/" "$installed_activity_root/"',
+            function,
+        )
 
     def test_requested_version_must_match_repository_metadata(self) -> None:
         with self.assertRaises(module.ReleaseCliError) as raised:
