@@ -6,11 +6,11 @@
 
 ## A. At-a-glance checkpoint — 2026-10-07
 
-- New program: **P0/P1 initialization in progress**.
+- Program: **P1 trusted media repository SOURCE-WIP; P2 session-authorized broker/manifest/SDK SOURCE-WIP**. P3 child picker, viewer and apps remain unimplemented.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
 - Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
-- Cross-Activity artifact sharing: **not implemented in real Activities**. Current Painting/Writing/Voice/Theatre use Activity-private persistent file storage. Do not claim user-visible picker/viewer, broker authority, or backup integration exists.
+- Cross-Activity exchange: **source-only broker/API implemented but not usable by existing apps** (no built-in declarations, no child selection UI). Painting/Writing/Voice/Theatre still use private storage. No gallery/viewer, deletion UI, backup integration or end-to-end Activity flow is complete.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
 - P1 **trusted-only source foundation committed**: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`; still no broker, SDK, picker, Activity integration or full-project acceptance. Local mirrored headless test suite 12/12 PASS; actual Greia checkout acceptance still owed.
 
@@ -20,7 +20,7 @@
 |---|---|---|---|
 | P0 | repository/source baseline + triage | STARTED | consolidated current-head actual gameplay audit |
 | P1 | typed creation repository, codecs, adaptive capacity | SOURCE WIP (trusted core committed; 12 local mirrored tests PASS) | full Greia checkout tests, error/race/recovery, real budget calibration |
-| P2 | permissions/manifest/broker/SDK | NOT STARTED | session-authorized cross-Activity flow, adversarial isolation |
+| P2 | permissions/manifest/broker/SDK | SOURCE WIP (opt-in manifest, trusted broker and SDK committed) | real checkout socket/manifest tests, end-to-end trusted picker issuance, adversarial isolation |
 | P3 | universal picker and My Creations viewer | NOT STARTED | screenshots, huge thumbnails, playable WAV, delete UX |
 | P4 | Painting–Shape Garden–Theatre PNG round trip | NOT STARTED | save/import/edit/export/reopen snapshots |
 | P5 | voice/music and writing/text interoperability | NOT STARTED | real recording preview, text import/export |
@@ -95,6 +95,24 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 **Known P1 debt before public SDK:** commit-level integration test; strict producer authorization and child-confirmed scoped read-handle via P2; safe crash-orphan recovery / SQLite schema migration; directory ownership inherited from actual active ProfileContext; validate persistent partition reserve with real build geometry; global budget enforcement on all other child-data writers; album/cursor pagination under large collections; backup/restore. All remain OPEN.
 
 **Next exact step:** execute P1 focused tests and new Colline/Quattro script/manifest regressions in a complete Greia checkout, fix any source failure there, then begin P2 trusted session broker/manifest design and implementation.
+
+---
+
+### 2026-10-07 — P2 source implementation: manifest, supervisor, broker, SDK (same-day continuation)
+
+**Source boundary:** current `main`; P2 is **SOURCE WIP / GUI-UNPROVEN / INSTALLER-UNPROVEN**, not a user-facing library.
+
+- Manifest and installed-index metadata: `src/greia_platform/activities.py` validates optional `[creations]` produced/consumed types against explicit PNG/WAV/UTF-8 codecs; `activity_index.py` carries the declarations through the deterministic built-in-index serializer/loader. Undeclared older Activities still opt out. Commits `e59736b9`, `2ba77eb0`.
+- Trusted `CreationSessionAccess` (`src/greia_platform/creation_access.py`) binds issued `ActivityAuthority`, same-Activity private storage and a profile-owned `CreationLibrary`. An Activity can publish its **own private file** only if its manifest declares that media type. Import requires a **one-use expiring opaque handle** minted from a selected item by the trusted UI owner, not an Activity method exposed over the socket. No gallery enumeration, delete, grant minting or arbitrary read operation exists in the Activity broker. Commits `99db50c0`, `1e8bacaf`, `2ef428fa`.
+- Existing session socket extended with exactly `creations.publish_private` and `creations.import_selected`; broker binds authority **once before launch** and clears handles on stop. `CreationLibrary` lives under `ProfileContext.creations_dir`, not in an Activity mount; the profile's group access remains available for future trusted backup. `ActivitySupervisor` provisions it only if declarations exist. The production broker start signature was preserved, and a failure after broker startup now cleans the socket/thread. Commits `f94b541e`, `5c9e0d82`, `c4676185`, `55557422`, `5a362a3e`, `1fd14a90`, `a28e6be5`, `b8d3007d`.
+- New narrow `creation_client.py` + `activity_api.get_creations()` and guarded `ActivityStorageClient.creation_exchange()`. Direct standalone development has **no unsafe shared-folder fallback**. Commits `c4f15453`, `c0e53230`, `e119b745`, `8588b656`.
+- New regressions: `tests/test_creation_broker.py` uses real Unix-socket publish/import plus negative enumeration/forgery checks; `tests/test_creation_manifest.py` checks old-manifest compatibility and built-in-index round trip. Commits `7050968a`, `e991706b`, `4aeb1aaf`.
+
+**Executed environment evidence:** only the isolated local Python/Pillow/SQLite mirror of `creation_capacity.py`, `creation_media.py`, `creations.py` and `creation_access.py` was run, with `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python -Werror::ResourceWarning -m unittest discover -s tests -p 'test_creation_*.py' -v` → **18/18 PASS** and isolated AST parse `4/4` PASS. This is **NOT the complete Greia checkout**. Newly committed **broker socket (3 tests)** and **manifest/index (4 tests)** suites, full `make verify`, integration/Simulator/Pygame, screenshots and real hardware have **NOT** run; do not promote source to accepted until that happens.
+
+**Current blockers/risk:** no Activity claims `[creations]` yet; the universal large-thumbnail/audio-preview trusted picker cannot mint handles for a child, so no production child sharing path is live. Profile backup/restore, recovery after interrupted SQLite/blob operations, media quota pressure, and enforcing adaptive disk headroom on **all** writers remain open. The published metadata includes no hidden cross-profile sharing. Source code still needs complete-checkout tests and architecture/performance review before an installed image.
+
+**Next exact step:** run the seven newly committed broker/manifest tests plus 18 media/access tests and existing supervisor/storage/index suites in a complete Greia checkout; repair any failures at real owners. Then develop P3 trusted picker/viewer UI and visual screenshot acceptance, with first Painting↔Shape Garden↔Theatre PNG vertical slice. No destructive USB/Acer test requested in this source-only session.
 
 ---
 
