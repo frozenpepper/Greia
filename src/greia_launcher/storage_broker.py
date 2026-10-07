@@ -95,10 +95,9 @@ class _StorageUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamSer
         socket_path: Path,
         storage: ActivityStorage,
         session_token: str,
-        creation_access: CreationSessionAccess | None = None,
     ):
         self.storage = storage
-        self.creation_access = creation_access
+        self.creation_access: CreationSessionAccess | None = None
         self.session_token = session_token
         self.max_payload_bytes = max(
             storage.policy.max_file_bytes,
@@ -212,7 +211,6 @@ class ActivityStorageBroker:
         *,
         runtime_root: Path | None = None,
         sandboxed: bool,
-        creation_access: CreationSessionAccess | None = None,
     ) -> "ActivityStorageBroker":
         base = runtime_root or _default_runtime_root()
         base = base.resolve(strict=False)
@@ -227,7 +225,7 @@ class ActivityStorageBroker:
             raise StorageError("storage broker socket path is too long")
         token = secrets.token_urlsafe(32)
         try:
-            server = _StorageUnixServer(host_socket, storage, token, creation_access)
+            server = _StorageUnixServer(host_socket, storage, token)
         except Exception:
             shutil.rmtree(host_root, ignore_errors=True)
             raise
