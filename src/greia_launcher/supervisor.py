@@ -7,6 +7,7 @@ from typing import Callable, Mapping, Protocol
 
 from greia_platform.activities import ActivityManifest
 from greia_platform.creation_access import CreationSessionAccess
+from greia_platform.creation_capacity import VolumeBudget
 from greia_platform.creations import CreationLibrary, CreationLibraryError
 from greia_platform.device_capabilities import DeviceCapabilityService
 from greia_platform.history import (
@@ -157,6 +158,11 @@ class ActivitySupervisor:
             )
         self._runtime_manager = runtime_manager
         self._storage_service = storage_service
+        self._volume_budget = (
+            storage_service.volume_budget
+            if storage_service is not None
+            else VolumeBudget()
+        )
         self._storage_broker_factory = storage_broker_factory
         self._history_service = history_service
         self._event_broker_factory = event_broker_factory
@@ -313,7 +319,10 @@ class ActivitySupervisor:
                             "creation-aware Activity requires the trusted storage broker"
                         )
                     access = CreationSessionAccess(
-                        library=CreationLibrary(profile.creations_dir),
+                        library=CreationLibrary(
+                            profile.creations_dir,
+                            volume_budget=self._volume_budget,
+                        ),
                         storage=storage,
                         manifest=manifest,
                         authority=authority,
