@@ -274,6 +274,8 @@ class TestQuattroPackageAndLocales(unittest.TestCase):
         self.assertIn("puzzles", manifest.discovery_tags)
         self.assertEqual(manifest.difficulty, 2)
         self.assertTrue(manifest.adaptive_difficulty)
+        self.assertEqual(manifest.difficulty_min, min(LEVEL_CONFIGS))
+        self.assertEqual(manifest.difficulty_max, max(LEVEL_CONFIGS))
 
     def test_localized_strings_and_audio(self) -> None:
         pkg_dir = Path(__file__).resolve().parent.parent / "activities" / "quattro_amici"
