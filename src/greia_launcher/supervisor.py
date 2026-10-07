@@ -193,12 +193,12 @@ class ActivitySupervisor:
 
     def complete_creation_selection(
         self, session: ActivitySession, request_id: str, creation_id: str
-    ) -> None:
+    ) -> str:
         """Shell-only completion after a trusted UI confirmed child intent."""
         broker = self._active_creation_broker(session)
         if broker is None:
             raise ActivityLifecycleError("no live creation-picker session")
-        broker.complete_creation_selection(request_id, creation_id)
+        return broker.complete_creation_selection(request_id, creation_id)
 
     def cancel_creation_selection(self, session: ActivitySession, request_id: str) -> None:
         """Shell-owned cancellation on Back/Home/display failure."""
