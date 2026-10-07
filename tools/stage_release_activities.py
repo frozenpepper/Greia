@@ -83,13 +83,19 @@ def stage_release_activities(
     if not allow_draft:
         selection.require_approved()
 
-    source_root = activities_root.resolve(strict=True)
-    if source_root.is_symlink() or not source_root.is_dir():
+    source_input = Path(activities_root)
+    if source_input.is_symlink():
+        raise ReleaseSelectionError("built-in Activity source root is unsafe")
+    source_root = source_input.resolve(strict=True)
+    if not source_root.is_dir():
         raise ReleaseSelectionError("built-in Activity source root is unsafe")
 
-    output = output_root.resolve(strict=False)
-    if output.exists() or output.is_symlink():
-        raise ReleaseSelectionError("release Activity staging output already exists")
+    output_input = Path(output_root)
+    if output_input.is_symlink() or output_input.exists():
+        raise ReleaseSelectionError(
+            "release Activity staging output already exists"
+        )
+    output = output_input.resolve(strict=False)
     output.parent.mkdir(parents=True, exist_ok=True)
 
     temporary: Path | None = Path(
