@@ -369,7 +369,7 @@ class WritingApp:
         try:
             request_id = self.creations.request_selection(
                 media_types=("text/plain",),
-                roles=("document",),
+                roles=("document", "postcard"),
             )
         except (RuntimeError, ValueError, OSError):
             self.shared_state = "error"
@@ -418,7 +418,7 @@ class WritingApp:
             payload = transfer.payload
             if (
                 transfer.record.get("media_type") != "text/plain"
-                or transfer.record.get("role") != "document"
+                or transfer.record.get("role") not in {"document", "postcard"}
                 or not isinstance(payload, bytes)
                 or transfer.record.get("sha256")
                 != hashlib.sha256(payload).hexdigest()
