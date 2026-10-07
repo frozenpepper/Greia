@@ -124,15 +124,29 @@ class CollineApp:
             self._storage = None
 
     def _save_storage(self) -> None:
-        if self._storage is not None:
+        if self._storage is None:
+            return
+        previous_best = self._best_distance
+        current_best = max(previous_best, self.world.distance_traveled)
+        try:
+            self._storage.kv_set(
+                STORAGE_KEY,
+                {
+                    "best_distance": current_best,
+                    "total_stars": self._total_stars + self.world.stars_collected,
+                    "timestamp": time.time(),
+                },
+            )
+        except Exception:
+            return
+        self._best_distance = current_best
+        if current_best > previous_best:
             try:
-                self._storage.kv_set(
-                    STORAGE_KEY,
-                    {
-                        "best_distance": max(self._best_distance, self.world.distance_traveled),
-                        "total_stars": self._total_stars + self.world.stars_collected,
-                        "timestamp": time.time(),
-                    },
+                emit_activity_event(
+                    "colline.best_distance",
+                    idempotency_key=f"best-distance-{int(round(current_best * 1000.0))}",
+                    payload={"distance": current_best},
+                    score=current_best,
                 )
             except Exception:
                 pass
