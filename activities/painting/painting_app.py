@@ -372,6 +372,46 @@ class PaintingApp:
             self.shared_feedback = "error"
         self.shared_feedback_until = time.monotonic() + 2.0
 
+    def accept_selected_png(self, selection_token: str) -> bool:
+        """Import one Shell-confirmed PNG as an independent editable painting.
+
+        The source remains an immutable shared artifact and this Activity only
+        writes a copy to its own private repository. The UI owns when the
+        selected session handle is delivered; this method never lists files or
+        presents an Activity-specific chooser.
+        """
+        if self.creations is None or not self._save():
+            return False
+        try:
+            transfer = self.creations.import_selected(selection_token)
+            if (
+                transfer.record.get("media_type") != "image/png"
+                or not isinstance(transfer.payload, bytes)
+                or transfer.record.get("sha256") != hashlib.sha256(transfer.payload).hexdigest()
+            ):
+                raise ValueError("selected picture failed integrity validation")
+            # Decode before creating a private record. A corrupted image must
+            # never leave a half-initialized project or replace the open canvas.
+            canvas = _decode_png(transfer.payload, self.canvas_rect.size)
+            record = self.repository.create(transfer.payload)
+        except (RuntimeError, ValueError, OSError):
+            self.save_error = True
+            return False
+        self.current = record
+        self.records = [
+            record,
+            *[item for item in self.records if item.painting_id != record.painting_id],
+        ]
+        self.mode = "paint"
+        self.canvas = canvas
+        self.base_canvas = canvas.copy()
+        self.history.clear()
+        self.active_points = []
+        self.continuation_only = False
+        self.dirty = False
+        self.save_error = False
+        return True
+
     def _brush_color(self) -> tuple[int, int, int]:
         return self.canvas_background if self.eraser else COLORS[self.selected_color]
 
