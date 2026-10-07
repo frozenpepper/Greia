@@ -34,7 +34,7 @@ def _session() -> ActivitySession:
 
 class _ShellBackend:
     def __init__(self):
-        self.lease = ShellActivityModalLease("session-1", 1, 4321, 42, 77)
+        self.lease = ShellActivityModalLease("session-1", 1, 4321)
         self.prepares = []
         self.shows = []
         self.dismisses = []
