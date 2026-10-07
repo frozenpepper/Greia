@@ -102,13 +102,28 @@ class CreationSessionAccess:
                 title=title,
             )
 
-    def grant_child_selection(self, creation_id: str) -> str:
-        """TRUSTED PICKER ONLY. Do not route this through the Activity broker."""
+    @property
+    def consumable_media_types(self) -> frozenset[str]:
+        """Trusted broker configuration, never a catalogue/read API."""
+        return self._can_import
+
+    def grant_child_selection(
+        self,
+        creation_id: str,
+        *,
+        only_media_types: frozenset[str] | None = None,
+        only_roles: frozenset[str] | None = None,
+    ) -> str:
+        """TRUSTED PICKER ONLY; apply the active request's narrowed scope."""
         with self._lock:
             self._require_open()
             record = self._library.describe(creation_id)
             if record.media_type not in self._can_import:
                 raise CreationAccessDenied("Activity cannot import the selected media type")
+            if only_media_types is not None and record.media_type not in only_media_types:
+                raise CreationAccessDenied("selection is outside the requested media scope")
+            if only_roles is not None and record.role not in only_roles:
+                raise CreationAccessDenied("selection is outside the requested semantic role")
             now = self._clock()
             self._grants = {
                 token: item
