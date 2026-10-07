@@ -11,6 +11,7 @@ import math
 import random
 import struct
 import wave
+from dataclasses import dataclass
 from pathlib import Path
 
 import pygame
@@ -21,6 +22,7 @@ except ImportError:
     sdl2_audio = None
 
 from greia_platform.activity_api import get_audio_capture_device, get_sdl_capture_device
+from greia_platform.creation_media import CreationMediaError, WavCodec
 
 
 class MicrophoneRecorder:
@@ -162,6 +164,68 @@ class MicrophoneRecorder:
             return None
 
 
+@dataclass(frozen=True, slots=True)
+class ImportedNarrationTrack:
+    """Canonical bounded narration selected through My Creations."""
+
+    wav_bytes: bytes
+    duration_seconds: float
+
+    @classmethod
+    def from_wav(
+        cls,
+        payload: bytes,
+        *,
+        max_duration_seconds: float,
+    ) -> "ImportedNarrationTrack":
+        if max_duration_seconds <= 0:
+            raise ValueError("narration duration bound must be positive")
+        try:
+            prepared = WavCodec().prepare(payload)
+        except CreationMediaError as exc:
+            raise ValueError("invalid narration WAV") from exc
+        duration = float(prepared.attributes.get("duration_seconds", 0.0))
+        if duration <= 0.0 or duration > max_duration_seconds:
+            raise ValueError("narration is too long for a Theatre recording")
+        return cls(prepared.data, duration)
+
+    def trimmed(self, seconds: float) -> bytes:
+        """Return a canonical prefix when a child stops puppeteering early."""
+        if seconds <= 0:
+            raise ValueError("trim duration must be positive")
+        if seconds >= self.duration_seconds - 0.01:
+            return self.wav_bytes
+        try:
+            with wave.open(io.BytesIO(self.wav_bytes), "rb") as source:
+                channels = source.getnchannels()
+                width = source.getsampwidth()
+                rate = source.getframerate()
+                frames = source.getnframes()
+                keep = min(frames, max(1, int(round(seconds * rate))))
+                pcm = source.readframes(keep)
+            output = io.BytesIO()
+            with wave.open(output, "wb") as target:
+                target.setnchannels(channels)
+                target.setsampwidth(width)
+                target.setframerate(rate)
+                target.writeframes(pcm)
+            return output.getvalue()
+        except (EOFError, OSError, ValueError, wave.Error) as exc:
+            raise ValueError("narration WAV could not be trimmed") from exc
+
+    def play(self) -> tuple[pygame.mixer.Sound, pygame.mixer.Channel] | None:
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init()
+            sound = pygame.mixer.Sound(io.BytesIO(self.wav_bytes))
+            channel = sound.play()
+            if channel is None:
+                return None
+            return sound, channel
+        except Exception:
+            return None
+
+
 class SoundManager:
     """Procedural audio effects for theater cues and magic sound buttons."""
 
@@ -250,4 +314,4 @@ class SoundManager:
                 pass
 
 
-__all__ = ["MicrophoneRecorder", "SoundManager"]
+__all__ = ["ImportedNarrationTrack", "MicrophoneRecorder", "SoundManager"]
