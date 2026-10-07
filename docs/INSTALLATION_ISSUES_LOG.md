@@ -1576,3 +1576,102 @@ The canonical regression now validates each role as a pair
 (`iwd/main.conf` + `25-greia-wireless.network`) and both development artifact
 verifiers reject either dangerous state: two L3/DHCP owners or no L3/DHCP owner.
 No physical or image evidence is claimed yet for this correction.
+
+## 30. 2026-10-07 — Fresh first boot loop: Parent-created profile root was 2750 after B4 had already completed
+
+The fresh Acer install reached X and repeatedly entered the launcher, but the
+child shell never became interactive. Read-only device forensics captured the
+actual traceback: history initialization tried to create
+`data/<profile>/progress` and received `EACCES`.
+
+The fixed roots were correct:
+
+- `/run/greia-os` = `greiakid:pipprofiles 0770`;
+- `/var/lib/greia-profiles/data` = `greiakid:pipprofiles 2770`.
+
+The newly Parent-created profile root and its Parent-owned
+`customization` / `activities` children were instead
+`greiapanel:pipprofiles 2750`. The B4 marker was written 17 seconds before
+the Parent created that profile, so B4 could never repair it on a fresh system.
+This is structural: first-boot is ordered before the Parent service.
+
+The creation path had a second structural contradiction. The Parent service
+runs with `RestrictSUIDSGID=yes`, while `ProfileStore` attempted to repair
+new shared directories using `chmod(2770)` and silently swallowed
+`PermissionError`. The parent setgid directory correctly caused new
+directories to inherit SGID, but the service's effective umask removed group
+write, leaving `2750`; the attempted chmod was then allowed to disappear
+without a product error.
+
+Source repair:
+
+- `greia-parent.service` now uses `UMask=0007`, so directories under the
+  setgid `pipprofiles` tree are born `2770` without weakening
+  `RestrictSUIDSGID=yes`;
+- `ProfileStore` verifies exact shared mode + managed group and raises
+  `ProfileError` instead of swallowing chmod failure;
+- new profiles establish/verify their directory contract **before** their
+  registry entry is published; a failed new transaction cleans only its new
+  profile root and leaves the registry unchanged;
+- child-owned `progress` / `storage` remain child-created;
+- B5 (`b5-profile-shared-modes-v1`) is a bounded upgrade-only repair for
+  already-existing depth-1 profile roots plus depth-2
+  `customization` / `activities`; it does not recursively re-own user data.
+
+Regression coverage proves the Parent UMask path succeeds even when every SGID
+chmod is synthetically refused, and separately proves a bad-mode create fails
+before registry publication.
+
+**Evidence boundary:** SOURCE FIXED / OWNER SOURCE ACCEPTANCE PENDING. A new
+image is required; the USB that reproduced this failure predates the fix.
+
+## 31. 2026-10-07 — Boot observer was enabled on a layout whose semantic records cannot exist
+
+On the same fresh legacy single-root install,
+`greia-boot-observer.service` failed every boot with systemd status 226
+(namespace setup). Its sandbox bind-mounts
+`installed-layout.json` and `release-identity.json`, but those are A/B slot
+identity records and are not produced by `bios-single-ext4`.
+
+The observer's own production implementation is A/B-specific: it maps kernel
+PARTUUID to semantic slot A/B through the trusted installed-layout record and
+cross-checks the slot-local release identity. Enabling it on single-root targets
+therefore had no valid success state.
+
+`compose_configure_systemd` now enables the observer only when
+`STORAGE_LAYOUT_ADAPTER` ends in `-ab-v1`. The unit remains fail-closed on
+A/B systems; missing authority files there are still a real failure. An
+executable composition regression checks both `bios-single-ext4` (observer
+absent) and `legacy-bios-ab-v1` (observer enabled).
+
+## 32. 2026-10-07 — Developer status/logs incorrectly depended on a display descriptor the canonical target never provisioned
+
+The failed Acer could still be diagnosed over direct SSH, but
+`greia_remote.py status` and `logs` both failed before doing their work
+because `DeveloperControl.__init__` eagerly loaded
+`/etc/greia-os/developer-display.json`.
+
+Source review found two distinct defects:
+
+1. status/log collection was wrongly coupled to X display control;
+2. the canonical developer target composition did not write the descriptor at
+   all (the older standalone provisioner did, but current canonical composition
+   bypasses it).
+
+Repairs:
+
+- `DeveloperControl` loads the display endpoint lazily; status reports
+  `available=false` plus the endpoint error and logs remain usable;
+- screenshot still fails closed without a valid endpoint;
+- canonical developer composition now writes a deterministic role-specific
+  descriptor: installed target = `greiakid :0`, live installer = `root :0`.
+
+This restores the intended diagnostic lane while preserving display-operation
+trust boundaries.
+
+## 33. 2026-10-07 — One-per-cycle `pkexec` warning remains open and non-blocking
+
+The fresh-failure capture also saw `sh: 1: pkexec: not found` once per launcher
+cycle. Device forensics found no Greia source/config reference and proved normal
+session progression continued beyond it. It is not part of the first-boot loop
+root cause and is intentionally left open until a reproducible owner is found.
