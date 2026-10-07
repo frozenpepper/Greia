@@ -78,6 +78,8 @@ class ActivityIndexEntry:
     difficulty_min: int | None = None
     difficulty_max: int | None = None
     adaptive_difficulty: bool = False
+    creations_produces: tuple[str, ...] = ()
+    creations_consumes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -293,6 +295,8 @@ def build_index(
                 difficulty_min=manifest.difficulty_min,
                 difficulty_max=manifest.difficulty_max,
                 adaptive_difficulty=manifest.adaptive_difficulty,
+                creations_produces=tuple(manifest.creations_produces),
+                creations_consumes=tuple(manifest.creations_consumes),
             )
         )
     entries.sort(key=lambda item: item.activity_id)
@@ -412,6 +416,8 @@ class ActivityIndexLoader:
                 difficulty_min=entry.difficulty_min,
                 difficulty_max=entry.difficulty_max,
                 adaptive_difficulty=entry.adaptive_difficulty,
+                creations_produces=tuple(entry.creations_produces),
+                creations_consumes=tuple(entry.creations_consumes),
             )
             if manifest.api_version != self.expected_api_version:
                 raise ActivityIndexError(
@@ -459,6 +465,8 @@ def _entry_to_dict(entry: ActivityIndexEntry) -> dict[str, Any]:
         "recommended_age_max": entry.recommended_age_max,
         "recommended_age_min": entry.recommended_age_min,
         "requested_permissions": list(entry.requested_permissions),
+        "creations_produces": list(entry.creations_produces),
+        "creations_consumes": list(entry.creations_consumes),
         "required_capabilities": list(entry.required_capabilities),
         "runtime_type": entry.runtime_type,
         "skills": [
@@ -509,6 +517,8 @@ def _entry_from_dict(raw: Any) -> ActivityIndexEntry:
         required_capabilities=_text_list(raw, "required_capabilities"),
         optional_capabilities=_text_list(raw, "optional_capabilities"),
         requested_permissions=_text_list(raw, "requested_permissions"),
+        creations_produces=_text_list(raw, "creations_produces"),
+        creations_consumes=_text_list(raw, "creations_consumes"),
         storage_schema_version=_required_int(raw, "storage_schema_version"),
         input_profile=_required_text(raw, "input_profile"),
         launcher_categories=_text_list(raw, "launcher_categories"),
