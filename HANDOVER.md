@@ -2907,3 +2907,56 @@ Actual commits include `e59736b9`, `2ba77eb0`, `1e8bacaf`,
 `c0e53230`, `e119b745`, `8588b656`, `a28e6be5`,
 `b8d3007d`, `7050968a`, `e991706b`; the full
 ordered change ledger is on GitHub and progress document.
+
+
+## 84. Creations P3 Gallery / Painting publisher SOURCE-WIP — requires desktop visual acceptance (2026-10-07)
+
+**Current owner-authorized release program:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and **living exact state** `PROGRESS.md`. The `AGENTS.md` task router already links them. This project remains subordinate to the **separate** unfinished Acer first-install/boot, architecture-remediation and update/rollback release lifecycle paths. No release or physical acceptance is claimed.
+
+### Exact newly landed source candidate
+
+**Pinned code/test source SHA:** `d63b9f530e684819e80e9e5a271c13bd953cc001`. Later plan/test/progress/HANDOVER updates are documentation-only. The complete changes are visible in GitHub history; this is not a claim of a local full Greia checkout.
+
+**Reusable trusted child browser** (Gallery mode + Picker mode share one controller/renderer):
+
+- `src/greia_platform/creation_gallery.py` — bounded indexed, profile-owned `ALL/IMAGE/AUDIO/TEXT` pages, visible-item/typed scope, focused cards, expanded image, audio play/pause/resume/replay only on explicit request, proper teardown, explicit viewer-only confirmation/delete, and picker-only opaque token after child chooses. An **explicitly empty** requested media set now fails closed (`89074d19`) instead of becoming unrestricted all-types.
+- `src/greia_platform/creation_gallery_layout.py` and `creation_gallery_painter.py` — responsive big cards (two large pictures across reference 1024×600), system-chrome-safe title/tabs, real PNG thumbnails and original in detail, non-reader-friendly illustrated empty state, paper/text preview, vector audio/icon/touch targets and confirmation modal. No desktop file dialog, raw path or tiny filename grid.
+- `src/greia_platform/creation_gallery_screen.py` — shared Greia `Screen` input/controller lifecycle, mouse and keyboard navigation, safe cancellation.
+- `src/greia_platform/creation_audio_pygame.py` — actual on-demand SDL WAV channel, distinct Play/Pause/Resume/Replay, paused progress freeze, cleanup on exit/error. `src/greia_launcher/presentation.py` requests animation frames only during active audio playback.
+- `src/greia_launcher/child_shell.py` and `catalogue_view.py` — the profile's **My Creations** destination is a real platform-owned Home portal, not an Activity. The Shell owns viewer, storage root, audio stop on logout/profile change, and Home return.
+- `src/greia_platform/creations.py` filters mixed types in bounded SQL instead of scanning all items in Python.
+
+**First producer: Painting → My Creations**
+
+- `activities/painting/activity.toml` declares `[creations] produces = ["image/png"]`.
+- `painting_renderer.py` adds a responsive kid-visible share-picture-up-arrow control. `painting_app.py` only publishes on deliberate action, saves private autosave/draft first, calls the trusted `get_creations()` broker SDK, reports success/failure and avoids duplicate publication of unchanged saved PNG in the same session. `painting_model.py` validates source private file name and `main.py` passes the optional SDK; standalone mode never mounts a shared folder.
+- **Not yet supported:** browse/import shared images **from within Painting**; Shape Garden/Teatrino importing the image; WAV recording producer; shared UTF-8 producer. These remain P3/P4/P5 work.
+
+**Source/test commits** include `f21b2830`, `263afbf5`, `946a2959`, `9392e94e`, `03e51e25`, `0ece3e64`, `041847d9`, `d95a7914`, `6e78b145`, `c77cf6ce`, `cb3345b4`, `ca9dc87d`, `89074d19`, `6595621a`, `d63b9f53`; see Progress for full explanations.
+
+### Evidence honestly available
+
+Assistant's **isolated** Python environment has Pillow + SQLite and no `pygame`, full private checkout or working Greia Simulator. A non-privileged pip attempt to obtain pygame-ce failed due DNS/network restrictions; **no GUI screenshots** could be rendered here. The local mirror of the pure repository/access/gallery/geometry and mocked audio owner tests was run on 2026-10-07:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/mnt/data/greia_session/src \\
+  python -Werror::ResourceWarning -m unittest discover \\
+  -s /mnt/data/greia_session/tests -p 'test_creation_*.py' -q
+# 33 tests PASS — isolated mirror only
+```
+
+**Not run in complete repo:** Pygame Gallery/Screen/visual tests, `test_creation_broker.py`, `test_creation_manifest.py`, `test_painting_creations.py`, `test_activity_index.py`, `test_supervisor.py`, `make verify`, live save/reopen/delete flow. No physical Acer, install/build/update or performance evidence from these edits.
+
+### Crucial real architectural issue for P3 picker
+
+`LauncherApplication._launch_selected()` waits in an Activity supervisor poll loop while the **Activity owns the visible display**. Therefore a trusted browser rendered as a normal Home Screen cannot be assumed to overlay an active consumer Activity. The controller's `on_pick` callback and SessionAccess grant issuance exist, but **no real Activity→Shell request/response/display handoff exists yet**. This blocks actual in-Activity picker invocation. The master PLAN's P3 section now requires a properly designed request ID, cancel/timeout, Shell/Supervisor authority, backend-appropriate trusted overlay/display transition, restoration of focus/game clock/audio, and same-session returned handle. Do not hack it by letting consumer apps browse shared storage or by drawing Shell pixels behind a live Activity.
+
+### Exact next action (not hardware)
+
+A **single coherent desktop local-agent acceptance procedure** was committed at:
+
+`docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
+
+It pins source candidate `d63b9f53...`, instructs pristine ff-only `main` checkout and full focused + `make verify` tests, and requires unmodified real-Simulator screenshots for Home portal, empty/gallery, Painting explicit PNG share, gallery original zoom, cancel/confirm/delete, reference 1024×600 + 800×480 + 1366×768 and keyboard navigation. It forbids any Acer flash/install/device changes. STOP on first true failure; return evidence ZIP and report so next code tranche can repair actual owners rather than perform speculative patching.
+
+**Implementation after desktop evidence:** fix discovered test/UX/runtime errors; deliver one authoritative trusted in-Activity picker mediation path; implement Painting↔Shape Garden↔Theatre PNG round trip; then voice and text; integrate 75% + reserve into **all profile-writing services**, logical backup, release catalogue curation and 45-Activity QA. All release stages remain open.
