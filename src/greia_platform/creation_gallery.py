@@ -55,6 +55,12 @@ class CreationsRepository(Protocol):
 class AudioPreviewPlayer(Protocol):
     def play(self, wav_bytes: bytes) -> None: ...
 
+    def pause(self) -> None: ...
+
+    def resume(self) -> None: ...
+
+    def is_playing(self) -> bool: ...
+
     def stop(self) -> None: ...
 
 
@@ -69,6 +75,7 @@ class GalleryPage:
     detail_id: str | None
     pending_delete_id: str | None
     playing_id: str | None
+    paused_id: str | None
     selected_handle: str | None
 
 
@@ -119,6 +126,7 @@ class CreationsGalleryController:
         self.detail_id: str | None = None
         self.pending_delete_id: str | None = None
         self.playing_id: str | None = None
+        self.paused_id: str | None = None
         self.selected_handle: str | None = None
         self.closed = False
         self.refresh()
@@ -142,6 +150,7 @@ class CreationsGalleryController:
             detail_id=self.detail_id,
             pending_delete_id=self.pending_delete_id,
             playing_id=self.playing_id,
+            paused_id=self.paused_id,
             selected_handle=self.selected_handle,
         )
 
@@ -153,6 +162,7 @@ class CreationsGalleryController:
         if self.audio_player is not None:
             self.audio_player.stop()
         self.playing_id = None
+        self.paused_id = None
 
     def refresh(self) -> None:
         self._check_open()
@@ -272,7 +282,7 @@ class CreationsGalleryController:
 
     def poll_playback(self) -> bool:
         """Clear stale Play indication after a recording naturally finishes."""
-        if self.playing_id is None:
+        if self.playing_id is None or self.paused_id is not None:
             return False
         busy = getattr(self.audio_player, "is_playing", None)
         if callable(busy) and not busy():
@@ -286,7 +296,15 @@ class CreationsGalleryController:
         if item is None or item.media_type != "audio/wav":
             raise GalleryError("this is not a visible audio recording")
         if self.playing_id == creation_id:
-            self._stop_playback()
+            if self.audio_player is None:
+                self._stop_playback()
+                return False
+            if self.paused_id == creation_id:
+                self.audio_player.resume()
+                self.paused_id = None
+                return True
+            self.audio_player.pause()
+            self.paused_id = creation_id
             return False
         if self.audio_player is None:
             raise GalleryError("audio preview player is unavailable")
@@ -296,7 +314,21 @@ class CreationsGalleryController:
             raise GalleryError("recording preview did not contain WAV audio")
         self.audio_player.play(wav)
         self.playing_id = creation_id
+        self.paused_id = None
         return True
+
+    def replay_audio(self, creation_id: str) -> None:
+        """Explicitly restart a recording from its beginning, even if paused."""
+        self._check_open()
+        item = next((item for item in self._items if item.creation_id == creation_id), None)
+        if item is None or item.media_type != "audio/wav" or self.audio_player is None:
+            raise GalleryError("recording preview is unavailable")
+        self._stop_playback()
+        kind, wav = self.preview(creation_id)
+        if kind != "audio/wav":
+            raise GalleryError("recording preview did not contain WAV audio")
+        self.audio_player.play(wav)
+        self.playing_id = creation_id
 
     def ask_delete(self) -> None:
         self._check_open()
