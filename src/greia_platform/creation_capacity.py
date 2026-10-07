@@ -125,6 +125,11 @@ class VolumeBudget:
         usage = shutil.disk_usage(root)
         return VolumeUsage(usage.total, usage.used, usage.free)
 
+    def usage(self, managed_root: Path) -> VolumeUsage:
+        """Return one serialized filesystem-usage observation."""
+        with self._lock:
+            return self._probe(managed_root)
+
     def remaining_growth_bytes(self, managed_root: Path) -> int:
         with self._lock:
             return self.policy.remaining_growth_bytes(self._probe(managed_root))
