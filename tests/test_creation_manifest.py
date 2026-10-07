@@ -85,8 +85,8 @@ class CreationManifestTests(unittest.TestCase):
     def test_duplicate_claims_and_malformed_table_fail_closed(self):
         with self.assertRaisesRegex(ActivityValidationError, "duplicates"):
             self._discover('\n[creations]\nproduces = ["image/png", "image/png"]\n')
-        with self.assertRaisesRegex(ActivityValidationError, "creations must be a table"):
-            self._discover('\ncreations = "all-files"\n')
+        with self.assertRaisesRegex(ActivityValidationError, "creations.produces"):
+            self._discover('\n[creations]\nproduces = "all-files"\n')
 
 
 if __name__ == "__main__":
