@@ -6,11 +6,11 @@
 
 ## A. At-a-glance checkpoint — 2026-10-07
 
-- Program: **P1/P2 source WIP**; **P3 universal gallery + authenticated request transport + trusted in-Activity modal SOURCE-WIP**; **P4 image round-trip SOURCE-WIP across Painting, Shape Garden and Teatrino**; **P5 WAV interoperability SOURCE-WIP from Storie della Mia Voce into Teatrino**. Legacy-X and Simulator modal backends are implemented in source, but no complete checkout/GUI acceptance has run. Wayland/KMSDRM, UTF-8, second audio consumer and later release phases remain open.
+- Program: **P1/P2 source WIP**; **P3 universal gallery + authenticated request transport + trusted in-Activity modal SOURCE-WIP**; **P4 image round-trip SOURCE-WIP across Painting, Shape Garden and Teatrino**; **P5 WAV + UTF-8 interoperability SOURCE-WIP** (Voice Stories → Teatrino narration, Voice Stories/audio → Orchestra play-along, Writing ↔ Posta di Leo). Legacy-X and Simulator modal backends are implemented in source, but no complete checkout/GUI/audio/text acceptance has run. Wayland/KMSDRM and later release phases remain open.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
 - Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
-- Exchange status: **Painting, Shape Garden and Teatrino declare the PNG directions they use, and Voice Stories→Teatrino now adds the first real WAV route.** Storie della Mia Voce publishes only already-saved private scene WAVs with role `narration`; the universal picker already supports child-controlled Play/Pause/Resume/Replay before selection. Teatrino requests only narration WAVs, validates/canonicalizes them, and can puppeteer to imported narration without starting the microphone; early Stop trims the imported WAV and the saved show owns its independent private copy. **No real cross-app GUI/audio flow has been executed yet**; UTF-8, second audio consumer, backup and physical evidence remain open.
+- Exchange status: **PNG, first/second WAV consumers and reciprocal UTF-8 paths are now implemented SOURCE-WIP.** Storie della Mia Voce publishes already-saved private scene WAVs as `narration`; Teatrino uses them as no-mic performance narration, while Orchestra can persist `narration` / `song` / `music` WAVs as optional non-autoplay backing tracks for live instrument accompaniment. Writing and Posta di Leo reciprocally exchange `text/plain` with saved-only publication and independent private imports. **No real cross-app GUI/audio/text flow has been executed yet**; backup, all-writer capacity proof and physical evidence remain open.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
 - Historical P1 baseline: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`, local mirrored **12/12 PASS**. P2/P3/P4 subsequent source commits supersede the original 'no broker/UI' snapshot; a complete checkout acceptance remains owed.
 
@@ -23,7 +23,7 @@
 | P2 | permissions/manifest/broker/SDK | SOURCE WIP (publisher/importer + nonblocking request/poll/cancel and real socket tests committed) | full checkout socket/manifest/supervisor tests; presenter-enabled positive and default-fail-closed negative |
 | P3 | universal picker and My Creations viewer | SOURCE WIP (viewer + filtered picker + authenticated async transaction + Legacy-X/Simulator trusted modal backends) | full checkout tests; real Simulator remote-canvas screenshots/input/audio/cancel/Home; installed Legacy-X focus/stacking; future Wayland/KMSDRM backend |
 | P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting independent import; Shape Garden persistent shape+backdrop project + flattened export; Teatrino persistent custom show backdrops) | full checkout tests; real GUI round trip/reopen/source-delete independence; resource/performance evidence |
-| P5 | voice/music and writing/text interoperability | SOURCE WIP (Voice Stories durable WAV publication + preview-capable universal picker + Teatrino narration consumer without mic contention) | full checkout/audio tests; real audible preview-before-select; saved-show replay after shared source deletion; second audio consumer; UTF-8 producer/consumer |
+| P5 | voice/music and writing/text interoperability | SOURCE WIP (Voice Stories→Teatrino narration; durable Orchestra play-along backing; Writing↔Posta reciprocal UTF-8) | full checkout/audio/text GUI tests; audible preview/isolation; private-copy persistence after shared-source deletion |
 | P6 | explicit release catalogue and adaptive grouping | NOT STARTED | built-index exact match, Parent policy |
 | P7 | deep per-Activity quality review (45) | NOT STARTED | 45 evidence-backed dispositions |
 | P8 | end-to-end release and physical acceptance | NOT STARTED | real Acer and cross-platform acceptance |
@@ -43,6 +43,7 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 | Shape Garden | Painting | flattened PNG composition | SOURCE WIP: explicit trusted publish of deterministic flattened `composition` PNG |
 | Painting/Shape Garden | Teatrino Fiabe | PNG backdrop | SOURCE WIP: trusted PNG picker + show-local content-addressed private backdrop snapshot |
 | Storie della Mia Voce | Teatrino | WAV narration | SOURCE WIP: durable saved-scene publish → audio preview → narration-only picker → private saved-show copy; imported track replaces mic source for that performance |
+| Storie della Mia Voce / future music producer | Orchestra Animali | WAV backing track | SOURCE WIP: trusted role-filtered picker → content-addressed private track → explicit Play/Pause live accompaniment; no autoplay |
 | Writing | Writing / Posta di Leo | UTF-8 document/postcard | SOURCE WIP: Writing saved document publish + independent document/postcard import; Posta grapheme-safe draft import + saved-postcard publish |
 | Any declared writer | My Creations viewer | large visual/audio/text previews | SOURCE WIP: Shell gallery |
 | My Creations viewer | library | safe deletion/reclaim | SOURCE WIP: two-stage confirmation |
@@ -261,7 +262,7 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 
 **Evidence boundary:** no complete checkout, `make verify`, Pygame/audio, Simulator, microphone, audible preview, Legacy-X, Acer/Pi or physical evidence was produced. P5 WAV is SOURCE-WIP only.
 
-**Next source work while tests remain deferred:** UTF-8 is now implemented SOURCE-WIP using Writing and Posta di Leo. Next add Orchestra Animali as a useful second audio consumer, then return to P1 all-writer proportional-capacity enforcement. if the source design remains clean. P1 all-writer capacity and P6–P8 remain open.
+**Next source work while tests remain deferred:** Orchestra is now the second semantically useful WAV consumer. Return to P1 all-writer proportional-capacity enforcement across profile storage owners; P6–P8 remain open.
 
 ---
 
@@ -296,7 +297,39 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 
 **Single accumulated acceptance owner:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` now includes Writing→Posta→Writing, grapheme/overlong cases, cancel/failure preservation and shared-source deletion independence.
 
-**Next source step:** review/implement Orchestra Animali as the second semantically useful WAV consumer; then complete P1 proportional capacity enforcement across every profile-writing owner rather than only the Creation Library.
+**Next source step:** Orchestra Animali is now implemented SOURCE-WIP as the second semantically useful WAV consumer. Complete P1 proportional capacity enforcement across every profile-writing owner rather than only the Creation Library.
+
+---
+
+### 2026-10-07 — P5 second WAV consumer: Orchestra durable play-along backing; execution deferred
+
+**Pinned latest Orchestra source/test candidate before this documentation commit:** `ae4e5bf6bea6a1adf070de4092c62383056ff17d`. **No tests were executed for this tranche.** All source/unit/GUI/audio checks remain accumulated into the existing desktop acceptance.
+
+**Source review decision:** Orchestra Animali is a free-play instrument/piano stage in current source, not an implemented auditory-memory matching game. Arbitrary child WAV is therefore accepted only as an **optional play-along backing track**; it is not injected into a memory challenge or used to replace instrument sounds.
+
+**Implementation (SOURCE-WIP):**
+
+- New `orchestra_backing.py` owns one content-addressed private backing WAV plus authoritative metadata (`narration`, `song`, or `music`), with strict metadata reads for mutation, failed-pointer rollback, replacement cleanup and integrity-checked load.
+- `ImportedBackingTrack` reuses the platform `WavCodec`; `BackingTrackPlayer` reserves mixer channel 0 so rapid live instrument/piano `Sound.play()` calls cannot steal the backing track. It owns explicit Play/Pause/Resume/stop and natural-completion detection.
+- Orchestra's trusted picker is nonblocking at the common 120 ms cadence and scoped to `audio/wav` roles `narration` / `song` / `music`. Existing backing playback stops **before** opening the picker so My Creations preview audio has sole ownership. Cancel leaves the private selected track loaded but does not resume/autoplay it.
+- Import persists the canonical selected WAV into Orchestra private storage **before** changing the active player. Failed persistence, wrong role/MIME/digest or malformed WAV preserves the previous track.
+- Relaunch loads the private track into a ready state but never autoplays. This makes playback independent from later deletion of the shared My Creations source.
+- Large pre-reader import and Play/Pause controls occupy the top-left safe HUD area, outside trusted Home chrome. Import visibly disables and has no hit target when trusted Creations/private storage is unavailable; a previously persisted track can still play.
+- Live input during backing playback is counted. Natural backing completion emits declared `concert.performed` only when the child actually accompanied it; passive playback is not a creation.
+
+**Adjacent source defect corrected:** Orchestra source emitted `instrument.played` while the manifest declared unused `melody.matched`; Greia rejects undeclared events. The manifest now matches actual free-play behavior: categories `music` / `rhythm` / `creativity`, skills `music.rhythm.perception` + `music.instrument_association`, events `instrument.played` + `concert.performed`, and `audio/wav` consumption. No progression rule referenced the removed legacy event IDs.
+
+**Deferred regressions:**
+
+- `tests/test_orchestra_backing_store.py` — content-addressed save/load/replace, pointer rollback, unreadable metadata denial, corrupt blob fail-closed, clear ordering.
+- `tests/test_orchestra_creations.py` — role-scoped picker, unavailable import fail-closed, persistence-before-mutation, wrong role/digest preservation, reserved channel Play/Pause/Resume, concert only with live input.
+- `tests/test_orchestra_manifest.py` — truthful pedagogy/event declarations and WAV consumer contract.
+
+**Single accumulated acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` now includes real preview-before-select, no-autoplay import/relaunch, live instrument layering without channel theft, pause/resume, picker-preview isolation, source-WAV deletion independence and concert semantics.
+
+**Evidence boundary:** no complete checkout, `make verify`, Pygame/SDL mixer, audible preview/play-along, Simulator screenshot, Legacy-X, Acer/Pi or physical evidence was produced. Orchestra/P5 remains SOURCE-WIP.
+
+**Next source step:** P1 all-writer proportional capacity enforcement — trace every profile-writing owner and enforce the real writable-volume 75% ceiling plus protected headroom at the platform storage authority, without per-Activity duplicated policy.
 
 ---
 
