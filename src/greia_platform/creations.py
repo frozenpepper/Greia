@@ -97,14 +97,14 @@ class CreationLibrary:
     ) -> None:
         if root.is_symlink():
             raise CreationLibraryError("creations root cannot be a symlink")
-        root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        root.mkdir(parents=True, exist_ok=True, mode=0o770)
         if not root.is_dir():
             raise CreationLibraryError("creations root is not a directory")
         self.root = root.resolve(strict=True)
         self.blobs = self.root / "blobs"
         if self.blobs.is_symlink():
             raise CreationLibraryError("creations blob root cannot be a symlink")
-        self.blobs.mkdir(mode=0o700, exist_ok=True)
+        self.blobs.mkdir(mode=0o770, exist_ok=True)
         self._media = media or CreationMediaRegistry()
         self._volume_budget = volume_budget or VolumeBudget()
         self._db_path = self.root / "index.sqlite3"
@@ -152,7 +152,7 @@ class CreationLibrary:
         fd, temp_name = tempfile.mkstemp(prefix=".pending-", dir=target.parent)
         try:
             with os.fdopen(fd, "wb") as stream:
-                os.fchmod(stream.fileno(), 0o600)
+                os.fchmod(stream.fileno(), 0o660)
                 stream.write(content)
                 stream.flush()
                 os.fsync(stream.fileno())
