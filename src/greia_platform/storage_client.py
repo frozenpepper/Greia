@@ -198,8 +198,14 @@ class ActivityStorageClient:
     def creation_exchange(
         self, operation: str, **fields: object
     ) -> tuple[dict[str, object], bytes]:
-        """Bounded SDK transport for only the two child-accessible operations."""
-        if operation not in {"creations.publish_private", "creations.import_selected"}:
+        """Bounded SDK transport for authenticated transfer and picker requests."""
+        if operation not in {
+            "creations.publish_private",
+            "creations.import_selected",
+            "creations.request_selection",
+            "creations.poll_selection",
+            "creations.cancel_selection",
+        }:
             raise StorageClientError("unsupported creations transfer operation")
         return self._request(operation, **fields)
 
