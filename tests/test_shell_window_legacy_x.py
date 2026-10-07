@@ -104,10 +104,11 @@ class LegacyXShellWindowControllerTests(unittest.TestCase):
             pygame, session_id="session-1", activity_pid=1234
         )
         self.assertIsNotNone(lease)
-        self.assertEqual(bridge.lookups, [(1234, 42)])
+        self.assertEqual(bridge.lookups, [])
         self.assertEqual(lease.session_id, "session-1")
         self.assertEqual(lease.activity_pid, 1234)
         self.assertTrue(controller.show_activity_modal(lease))
+        self.assertEqual(bridge.lookups, [(1234, 42)])
         self.assertEqual(bridge.raised, [42])
         self.assertTrue(controller.dismiss_activity_modal(lease))
         self.assertEqual(bridge.raised, [42, 77])
@@ -126,17 +127,32 @@ class LegacyXShellWindowControllerTests(unittest.TestCase):
         self.assertIsNotNone(newer)
         self.assertGreater(newer.generation, lease.generation)
 
-    def test_modal_fails_closed_without_pid_owned_focused_activity_window(self) -> None:
+    def test_modal_show_fails_closed_without_pid_owned_focused_activity_window(self) -> None:
         bridge = _FocusBridge(activity_window=None)
         controller = LegacyXShellWindowController(focus_bridge=bridge)
         pygame = _Pygame({"window": 42})
-        self.assertIsNone(
-            controller.prepare_activity_modal(
-                pygame, session_id="session-1", activity_pid=1234
-            )
+        lease = controller.prepare_activity_modal(
+            pygame, session_id="session-1", activity_pid=1234
         )
+        self.assertIsNotNone(lease)
+        self.assertEqual(bridge.lookups, [])
+        self.assertFalse(controller.show_activity_modal(lease))
         self.assertEqual(bridge.lookups, [(1234, 42)])
         self.assertEqual(bridge.raised, [])
+
+    def test_modal_show_revalidates_recreated_activity_window_before_restore(self) -> None:
+        bridge = _FocusBridge(activity_window=77)
+        controller = LegacyXShellWindowController(focus_bridge=bridge)
+        pygame = _Pygame({"window": 42})
+        lease = controller.prepare_activity_modal(
+            pygame, session_id="session-1", activity_pid=1234
+        )
+        self.assertIsNotNone(lease)
+        bridge.activity_window = 88
+        self.assertTrue(controller.show_activity_modal(lease))
+        self.assertTrue(controller.dismiss_activity_modal(lease))
+        self.assertEqual(bridge.lookups, [(1234, 42)])
+        self.assertEqual(bridge.raised, [42, 88])
 
     def test_stale_or_foreign_modal_lease_cannot_raise_or_restore(self) -> None:
         bridge = _FocusBridge(activity_window=77)
