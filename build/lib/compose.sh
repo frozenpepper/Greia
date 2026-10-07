@@ -836,6 +836,23 @@ DEVSSH
   systemctl --root="$rootfs" enable ssh.service
 }
 
+compose_write_developer_display_endpoint() {
+  local rootfs="$1"
+  local role="$2"
+  local display_user
+  compose_assert_role "$role" || return 1
+  if [[ "$role" == "target" ]]; then
+    display_user="greiakid"
+  else
+    display_user="root"
+  fi
+  install -d -m 0755 "$rootfs/etc/greia-os"
+  printf '{"user":"%s","display":":0"}\n' "$display_user" \
+    > "$rootfs/etc/greia-os/developer-display.json"
+  chown root:root "$rootfs/etc/greia-os/developer-display.json"
+  chmod 0644 "$rootfs/etc/greia-os/developer-display.json"
+}
+
 compose_maybe_provision_developer_ssh() {
   local rootfs="$1"
   local role="$2"
@@ -850,6 +867,7 @@ compose_maybe_provision_developer_ssh() {
       echo "Developer installer profile: enabling greia/greia SSH (root denied)."
     fi
     compose_provision_developer_ssh "$rootfs" "$role"
+    compose_write_developer_display_endpoint "$rootfs" "$role"
   fi
   COMPOSE_ROLE_SETS="$role_sets"
 }
