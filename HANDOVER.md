@@ -2966,7 +2966,7 @@ It pins source candidate `d63b9f53...`, instructs pristine ff-only `main` checko
 
 **Current unified workstream:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`; exact P1–P8 status and dated commit notes in sibling **`PROGRESS.md`**. `AGENTS.md` routes owner-authorized Creations work there. This product tranche **does not** clear the independent Acer first-boot/install/update lifecycle.
 
-**Pinned source commit for later tests:** `4a44f0a220d6ebf6addee81c9f4bc6282ca2be89`. Later commits are plans/test instructions/progress/handover only.
+**Pinned source commit for later tests:** `1904e74921b62b78181f45206f394a6b6bf40dd6`. Later commits are plans/test instructions/progress/handover only.
 
 ### Source implemented (not release-accepted)
 
