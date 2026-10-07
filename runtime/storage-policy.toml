@@ -9,5 +9,5 @@ max_key_bytes = 128
 max_file_bytes = 16777216               # 16 MiB
 max_files = 512
 max_path_bytes = 512
-protected_free_bytes = 67108864          # 64 MiB machine reserve
+protected_free_bytes = 67108864          # legacy schema-v1 field; machine headroom is owned by shared VolumeBudget (75% used ceiling + 512 MiB free floor)
 max_rollback_snapshots = 2
