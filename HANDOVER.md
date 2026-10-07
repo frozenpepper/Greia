@@ -3146,3 +3146,34 @@ The one authoritative deferred procedure remains `docs/testing/2026-10-07_CREATI
 ### Next source direction
 
 Deep-review `Orchestra Animali` before implementing the second audio consumer. Only proceed if child-supplied WAV meaningfully fits its current musical interaction without diluting pedagogy. Then complete P1 proportional capacity enforcement across every profile-writing owner. P6–P8 and the 45/45 release review remain open.
+
+## 90. Creations P5 second WAV consumer — Orchestra Animali durable play-along backing; execution deferred (2026-10-07)
+
+**Pinned latest Orchestra source/test checkpoint before docs:** `ae4e5bf6bea6a1adf070de4092c62383056ff17d`. **No tests were executed for this tranche**; all checks remain accumulated for the next local-agent desktop acceptance.
+
+### Source implemented
+
+1. **Product fit:** current Orchestra source is free musical exploration (five synthesized instrument cards + rainbow piano), not an implemented auditory-memory sequence game. Shared child WAV is therefore used only as an optional play-along backing track.
+2. **Private ownership:** new `orchestra_backing.py` persists one content-addressed private WAV plus authoritative metadata. Mutations refuse unreadable metadata, roll back a unique new blob if the pointer commit fails, and remove the replaced blob only after successful commit.
+3. **Typed audio owner:** `ImportedBackingTrack` reuses `WavCodec` canonical validation; `BackingTrackPlayer` reserves mixer channel 0 and owns explicit Play/Pause/Resume/stop/natural-completion state. Existing synthesized instrument and piano sounds remain the ordinary live overlay.
+4. **Trusted picker:** Orchestra requests only `audio/wav` roles `narration`, `song`, or `music`, polls at the common bounded 120 ms cadence, validates MIME/role/SHA/WAV before state mutation, and persists the selected canonical WAV before loading it into the player.
+5. **Audio isolation:** if a backing track is playing, opening the universal picker stops it first so My Creations preview audio has sole ownership. Cancel keeps the selected private track ready but does not resume/autoplay.
+6. **Persistence semantics:** relaunch restores the private track in `ready` state, never autoplay. Deleting the shared My Creations source later must not break Orchestra playback.
+7. **Pre-reader UI:** top-safe music-note/down-arrow import and large Play/Pause controls were added without moving the instrument stage. Import is visibly disabled and has no hit target if trusted Creations/private storage is unavailable.
+8. **Concert meaning:** live instrument/piano taps are counted only while backing audio is playing. `concert.performed` is emitted at natural backing completion only if at least one live input occurred; passive playback is not a creation.
+9. **Adjacent manifest defect repaired:** source had emitted undeclared `instrument.played` while declaring unused `melody.matched`; Greia's history authority rejects undeclared events. Manifest now matches actual behavior (`music`, `rhythm`, `creativity`; events `instrument.played` and `concert.performed`) and declares `audio/wav` consumption. Repository search found no progression or other source references to the removed legacy event IDs.
+
+### Deferred regressions
+
+- `tests/test_orchestra_backing_store.py`
+- `tests/test_orchestra_creations.py`
+- `tests/test_orchestra_manifest.py`
+- all earlier P1–P5 Creation/PNG/WAV/UTF-8/modal/Simulator suites.
+
+The single acceptance owner remains `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`. It now includes audible preview-before-select, no-autoplay import/relaunch, rapid live accompaniment without channel theft, Play/Pause/Resume, picker-preview isolation, source-WAV deletion independence and concert semantics.
+
+**Evidence boundary:** no complete checkout, `make verify`, Pygame/SDL mixer, audible Orchestra playback, Simulator screenshots, Legacy-X, Acer/Pi or physical evidence was produced. P3/P4/P5 remain SOURCE-WIP.
+
+### Next source direction
+
+Return to P1 and enforce the proportional machine-capacity policy across **all authoritative profile writers**, not only CreationLibrary: real writable-volume ceiling (~75% used maximum), protected free headroom, existing per-Activity namespace/file bounds, fail-closed mutation semantics, and no Acer-specific tiny fixed global quota on larger disks. Keep this centralized at platform storage authorities rather than duplicated inside Activities.
