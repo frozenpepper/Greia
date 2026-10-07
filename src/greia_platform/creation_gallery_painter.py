@@ -188,7 +188,27 @@ class CreationsPygamePainter:
             self._icon(screen,labels[family][2],pygame.Rect(rect.x+3,rect.y+3,42,44),pygame,self.INK if highlighted else self.CREAM)
             self._targets.append(GalleryHit("family",family,rect))
         if not page.items:
-            self._text(screen,self._label("Qui nasceranno nuove creazioni!","Your creations will appear here!"),width//2-120,height//2,22)
+            # The empty state must make sense to a child who cannot read.
+            # Paper, sun and playful sparkles carry the message; copy is optional.
+            top = layout.tabs[0].bottom + 18
+            bottom = layout.back.y - 12
+            cy = (top + bottom) // 2
+            radius = max(42, min(86, (bottom - top) // 2 - 2))
+            cx = width // 2
+            pygame.draw.circle(screen,(236,214,173),(cx,cy+4),radius+7)
+            pygame.draw.circle(screen,(255,247,224),(cx,cy),radius)
+            icon_box = pygame.Rect(cx-radius//2,cy-radius//2,radius,radius)
+            self._icon(screen,"image",icon_box,pygame,(98,127,162))
+            for offset in (-1,1):
+                sx = cx + offset * (radius + 26)
+                pygame.draw.circle(screen,(252,209,111),(sx,cy-radius//2),max(4,radius//9))
+                pygame.draw.line(screen,(252,209,111),(sx-12,cy-radius//2-13),(sx+10,cy-radius//2+10),3)
+            if width >= 740 and height >= 490:
+                self._text(
+                    screen,
+                    self._label("Qui nasceranno nuove creazioni!","Your creations will appear here!"),
+                    cx, min(bottom+24,height-35), 20, center=True,
+                )
         for i,record in enumerate(page.items):
             rect=self._box(layout.cards[i],pygame)
             pygame.draw.rect(screen,(20,26,56),rect.move(0,5),border_radius=25)
