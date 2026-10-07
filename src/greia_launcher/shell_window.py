@@ -6,13 +6,15 @@ from typing import Any, Protocol
 
 @dataclass(frozen=True, slots=True)
 class ShellActivityModalLease:
-    """Exact trusted ownership proof for temporarily presenting Shell over Activity."""
+    """Runtime-neutral exact-session authority for one trusted Shell modal.
+
+    Native window/surface handles are deliberately backend-private. A Wayland,
+    KMSDRM or Simulator implementation must never need to understand X11 IDs.
+    """
 
     session_id: str
     generation: int
     activity_pid: int
-    shell_window_id: int
-    activity_window_id: int
 
 
 class ShellWindowController(Protocol):
