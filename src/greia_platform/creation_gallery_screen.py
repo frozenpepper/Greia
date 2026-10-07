@@ -50,6 +50,14 @@ class CreationsGalleryScreen(Screen):
         self.controller.close()
         self.painter.close()
 
+    def needs_frame(self) -> bool:
+        """Animate progress only during actual playback, never while idle."""
+        if self._closed:
+            return False
+        was_playing = self.controller.playing_id is not None
+        self.controller.poll_playback()
+        return was_playing
+
     def draw(self, screen: Any) -> None:
         import pygame
 
