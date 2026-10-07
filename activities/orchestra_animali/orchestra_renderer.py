@@ -198,17 +198,22 @@ class OrchestraRenderer:
         *,
         backing_enabled: bool = False,
         backing_state: str = "empty",
+        backing_import_enabled: bool = True,
         backing_import_state: str = "",
     ) -> None:
         import_border = (
-            (220, 38, 38)
+            (110, 115, 128)
+            if not backing_import_enabled
+            else (220, 38, 38)
             if backing_import_state == "error"
             else (16, 185, 129)
             if backing_import_state == "imported"
             else (56, 189, 248)
         )
         import_fill = (
-            (205, 240, 224)
+            (61, 65, 76)
+            if not backing_import_enabled
+            else (205, 240, 224)
             if backing_import_state in {"pending", "imported"}
             else (238, 248, 255)
         )
@@ -224,12 +229,13 @@ class OrchestraRenderer:
         )
         ix, iy = BACKING_IMPORT_RECT.center
         # Music note + down arrow: bring a saved recording/song into Orchestra.
-        pygame.draw.circle(surface, DARK_TEXT, (ix - 11, iy + 8), 5)
+        import_icon = DARK_TEXT if backing_import_enabled else (160, 164, 174)
+        pygame.draw.circle(surface, import_icon, (ix - 11, iy + 8), 5)
         pygame.draw.line(
-            surface, DARK_TEXT, (ix - 6, iy + 7), (ix - 6, iy - 14), 3
+            surface, import_icon, (ix - 6, iy + 7), (ix - 6, iy - 14), 3
         )
         pygame.draw.line(
-            surface, DARK_TEXT, (ix - 6, iy - 14), (ix + 2, iy - 11), 3
+            surface, import_icon, (ix - 6, iy - 14), (ix + 2, iy - 11), 3
         )
         pygame.draw.line(
             surface, import_border, (ix + 15, iy - 13), (ix + 15, iy + 9), 4
