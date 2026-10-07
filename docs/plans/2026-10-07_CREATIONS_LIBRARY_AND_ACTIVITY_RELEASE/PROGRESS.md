@@ -9,7 +9,7 @@
 - Program: **P1 adaptive capacity SOURCE-WIP**, **P2 broker/SDK SOURCE-WIP**, **P3 universal gallery + authenticated trusted modal SOURCE-WIP**, **P4 PNG round-trip SOURCE-WIP**, and **P5 WAV + UTF-8 interoperability SOURCE-WIP**. One shared launcher-composed `VolumeBudget` now guards Activity private storage, Creations and history growth at 75% used / 512 MiB free; shipped private Activity namespaces scale to 25% of the actual writable volume (32 MiB is only the legacy minimum floor). No complete checkout/GUI/audio/text/capacity acceptance has run. Wayland/KMSDRM and P6–P8 remain open.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
-- Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
+- Release composition: **explicit draft selection is now source-wired into the authoritative owner release path**. `greia_release.py` sets `PIP_RELEASE_BUILD=1`; target composition stages only `build/first-party-release-activities.toml`, validates/indexes the installed subset, and refuses draft/empty policy for official release. Non-release/dev images deliberately keep the full source tree. Policy remains **draft**, so no official Activity release can build yet.
 - Exchange status: **PNG, first/second WAV consumers and reciprocal UTF-8 paths are implemented SOURCE-WIP.** Capacity plumbing now uses one shared budget across all variable child-data writers in the launcher process (Activity storage, Creations, history), with adaptive private namespaces and migration/staging headroom. Storie della Mia Voce publishes saved `narration`; Teatrino uses it without microphone contention; Orchestra persists optional backing WAVs; Writing and Posta reciprocally exchange saved UTF-8 snapshots. **No real cross-app GUI/audio/text/capacity flow has been executed yet**; backup and physical evidence remain open.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
 - Historical P1 baseline: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`, local mirrored **12/12 PASS**. P2/P3/P4 subsequent source commits supersede the original 'no broker/UI' snapshot; a complete checkout acceptance remains owed.
@@ -24,13 +24,13 @@
 | P3 | universal picker and My Creations viewer | SOURCE WIP (viewer + filtered picker + authenticated async transaction + Legacy-X/Simulator trusted modal backends) | full checkout tests; real Simulator remote-canvas screenshots/input/audio/cancel/Home; installed Legacy-X focus/stacking; future Wayland/KMSDRM backend |
 | P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting independent import; Shape Garden persistent shape+backdrop project + flattened export; Teatrino persistent custom show backdrops) | full checkout tests; real GUI round trip/reopen/source-delete independence; resource/performance evidence |
 | P5 | voice/music and writing/text interoperability | SOURCE WIP (Voice Stories→Teatrino narration; durable Orchestra play-along backing; Writing↔Posta reciprocal UTF-8) | full checkout/audio/text GUI tests; audible preview/isolation; private-copy persistence after shared-source deletion |
-| P6 | explicit release catalogue and adaptive grouping | NOT STARTED | built-index exact match, Parent policy |
-| P7 | deep per-Activity quality review (45) | NOT STARTED | 45 evidence-backed dispositions |
+| P6 | explicit release catalogue and adaptive grouping | SOURCE WIP (single draft roster + official release composition/index wiring; release remains fail-closed until approval) | execute release-selection/composition tests; prove built-index exact match and Parent policy on real staged/release root |
+| P7 | deep per-Activity quality review (45) | SOURCE WIP (first 7 creative/interoperability anchors SOURCE REVIEWED; 0 approved) | continue remaining 38 source reviews, then accumulated Simulator/visual/audio evidence before approval |
 | P8 | end-to-end release and physical acceptance | NOT STARTED | real Acer and cross-platform acceptance |
 
 ### Activity release-review coverage
 
-**45/45 entries inventoried in PLAN §5; 0/45 release-reviewed, 0 release-approved.**
+**45/45 entries inventoried in PLAN §5; 7/45 SOURCE REVIEWED for release candidacy, 0/45 release-approved.**
 
 No new Activity is dropped or silently approved merely for having unit tests. Record each review and disposition with evidence under §C entries. Historical R7.3 structural migration PASS does not equal release UX PASS.
 
@@ -355,6 +355,40 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 **Next source work:** P6 release composition/allowlist, then P7 review of all 45 first-party Activities using source + existing historical evidence now, with live launch/visual/performance acceptance deferred to the same later agent session where necessary.
 
 ---
+
+
+### 2026-10-08 — P6 authoritative release composition + P7 creative-anchor source review (7/45)
+
+**Pinned code/test source candidate:** `d3d9186078a80828995e8be74c29677b308b40ee` plus subsequent P6/P7 source fixes through the current pre-documentation HEAD. **No tests were executed in this continuation**; all source/unit/Simulator/audio/visual checks remain carried to the accumulated acceptance because the owner’s local agent is unavailable.
+
+#### P6 release authority
+
+- `build/first-party-release-activities.toml` is the **single first-party release roster** and remains `status = "draft"`. It contains only the seven Activities that completed this source-review batch; this is a review candidate set, not a final product count.
+- `build/lib/compose.sh` previously bypassed that policy by validating/copying/indexing all repository `activities/`. This is repaired: official `PIP_RELEASE_BUILD=1` composition calls `tools/stage_release_activities.py` into the target root, then hygiene-checks, registry-validates and builds the deterministic index from the **installed staged subset**.
+- Ordinary development/test target composition still copies the complete source Activity tree. This keeps installer/first-boot debugging and P7 review independent from an unfinished release roster.
+- `tools/greia_release.py` now always sets the existing `PIP_RELEASE_BUILD=1` for its privileged release subprocess tree. There is no second release-mode flag.
+- `tests/test_greia_release.py` locks the CLI flag and installed-subset/index composition contract. `tests/test_stage_release_activities.py` stages the repository draft roster under explicit `allow_draft=True`. Existing selection/staging tests still cover sorted identity, draft refusal, symlinks and atomic output behavior.
+- **Official release remains fail-closed:** the draft policy cannot pass `require_approved()`. No current release is silently reduced to seven apps.
+
+#### P7 batch 1 — creative/interoperability anchors
+
+All seven have manifests reviewed, package-specific regression suites present, Italian + English `activity-title.wav`, matching IT/EN locale key sets, typed Creations declarations matching source flows, and small package Git-blob footprints (roughly 180–483 KB). These are **source facts only**, not GUI/performance/audio acceptance.
+
+| Activity | Source disposition | Fixes/findings in this review | Required evidence before approval |
+|---|---|---|---|
+| `painting` | **KEEP / DRAFT CANDIDATE — SOURCE REVIEWED** | Required image anchor; private autosave remains separate from explicit publish/import. Removed stale manifest comment claiming picker mediation was pending. | real publish→picker→independent edit/reopen/delete; 800×480/1024×600/wide screenshots; pointer/touch/undo performance |
+| `shape_garden` | **KEEP / DRAFT CANDIDATE — SOURCE REVIEWED** | Persistent bounded shapes + private imported backdrop + explicit flattened composition. Fixed declared `creation.completed`: emitted once only after a genuinely new successful publish. | real Painting→Garden→Painting; autosave/relaunch; source deletion independence; visual density/touch targets |
+| `teatrino_fiabe` | **KEEP / DRAFT CANDIDATE — SOURCE REVIEWED, COMPLEX** | Removed nonexistent `scene.created`; saved-show completion now emits declared `story.played`; free-stage playback cannot inherit stale saved-show identity. Fixed major locale bug: English profiles previously still loaded Italian UI tables; selected locale now owns UI/puppet/backdrop labels and Italian-only fallbacks were removed. | English + Italian Simulator capture; microphone/imported narration; saved-show replay; PNG backdrop; frame rate/cache behavior; deletion/relaunch |
+| `storie_della_mia_voce` | **KEEP / DRAFT CANDIDATE — SOURCE REVIEWED, HARDWARE-SENSITIVE** | Manifest events match typed event-adapter calls; durable WAV publication is only from saved private scenes, role `narration`; IT/EN title audio present. | real mic/no-mic/busy-device; audible replay + My Creations preview; storage failure/retry; hardware input levels |
+| `orchestra_animali` | **KEEP / DRAFT CANDIDATE — SOURCE REVIEWED** | `instrument.played`/`concert.performed` declarations match actual emissions; imported backing is explicit and non-autoplay. It is the dedicated music family, so preserve absent contrary live evidence. | audible backing + pause/resume; live layering; pedagogical/rhythm usefulness; low-resource mixing |
+| `writing` | **KEEP / DRAFT CANDIDATE — SOURCE REVIEWED (AGE 5+)** | Keyboard+pointer requirements are truthful; grapheme-safe bounded editor; saved UTF-8 publish/import creates an independent private document; no false progress events. | keyboard/emoji/undo/long Unicode; Writing→Posta→Writing; narrow/wide layout |
+| `posta_di_leo` | **KEEP / DRAFT CANDIDATE — SOURCE REVIEWED (AGE 5+)** | Grapheme-safe import and deliberate saved-postcard publish. Fixed capability bug: pointer was optional despite recipient/stamp/gallery/shared-text controls; pointer is now required. `postcard.created` matches committed-storage semantics. | recipient/stamp/text/shared-document flow; keyboard+pointer behavior; bilingual screenshots; save/delete/reimport |
+
+**Draft roster (sorted, not approved):** `org.greia.orchestra-animali`, `org.greia.painting`, `org.greia.posta-di-leo`, `org.greia.shape-garden`, `org.greia.storie-della-mia-voce`, `org.greia.teatrino-fiabe`, `org.greia.writing`.
+
+**Evidence boundary:** no `make verify`, focused unit suite, release staging command, actual release composer, Pygame Simulator, screenshot review, audible playback/microphone, Legacy-X, Acer/Pi or physical run was executed. The seven dispositions mean **source-reviewed candidate**, not accepted or approved.
+
+**Next source-review batch:** action/strategy and motor-play risk cluster — `colline_allegre`, `corsa_bacche`, `labirinto_magico`, `quattro_amici`, `torre_forme`, `viaggio_delfino`, `volo_draghetto`. Focus on real difficulty mapping, failure/retry fairness, CPU/opponent behavior, input smoothness and child-readable feedback before adding any to the draft roster.
 
 ### How to maintain this file
 
