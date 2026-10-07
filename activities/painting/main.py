@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pygame
 
-from greia_platform.activity_api import get_storage, get_theme
+from greia_platform.activity_api import get_creations, get_storage, get_theme
 from greia_platform.activity_ui import ChildUiMetrics
 
 if __package__:
@@ -108,11 +108,18 @@ def main() -> int:
 
             storage = _StubStorage()  # type: ignore[assignment]
         repository = PaintingRepository(storage)
+        try:
+            creations = get_creations()
+        except RuntimeError:
+            # Standalone authoring has no trusted session broker, so sharing
+            # is absent instead of falling back to a globally writable path.
+            creations = None
         app = PaintingApp(
             screen=screen,
             metrics=metrics,
             theme=theme,
             repository=repository,
+            creations=creations,
         )
         return app.run()
     finally:
