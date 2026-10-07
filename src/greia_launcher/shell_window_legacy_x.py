@@ -317,11 +317,22 @@ class LegacyXShellWindowController:
     def show_activity_modal(self, lease: ShellActivityModalLease) -> bool:
         if not self._owns(lease) or self._modal_visible:
             return False
+        shell_window = self._modal_shell_window
+        if shell_window is None:
+            return False
         try:
-            shown = (
-                self._modal_shell_window is not None
-                and self._focus_bridge.raise_and_focus_window(self._modal_shell_window)
+            # READY-time ownership proof can go stale if SDL recreates the
+            # Activity window (resize/backend reset). Re-prove the *currently
+            # focused* foreground belongs to the exact supervised PID before
+            # covering it and update the private restoration target.
+            current_activity = self._focus_bridge.focused_window_for_process(
+                lease.activity_pid,
+                excluding_window_id=shell_window,
             )
+            if not isinstance(current_activity, int) or current_activity <= 0:
+                return False
+            self._modal_activity_window = current_activity
+            shown = self._focus_bridge.raise_and_focus_window(shell_window)
         except Exception:
             shown = False
         if shown:
