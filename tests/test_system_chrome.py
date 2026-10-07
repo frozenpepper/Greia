@@ -44,6 +44,9 @@ class RecordingChromeBackend:
     def show(self, session_id: str) -> None:
         self.events.append(("show", session_id))
 
+    def ensure_visible(self, session_id: str) -> None:
+        self.events.append(("restack", session_id))
+
     def poll_action(self, session_id: str) -> SystemNavigationAction | None:
         self.events.append(("poll", session_id))
         return self.actions.pop(0) if self.actions else None
