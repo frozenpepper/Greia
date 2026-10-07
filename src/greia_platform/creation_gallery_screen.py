@@ -54,9 +54,9 @@ class CreationsGalleryScreen(Screen):
         """Animate progress only during actual playback, never while idle."""
         if self._closed:
             return False
-        was_playing = self.controller.playing_id is not None
+        active = self.controller.playing_id is not None and self.controller.paused_id is None
         self.controller.poll_playback()
-        return was_playing
+        return active
 
     def draw(self, screen: Any) -> None:
         import pygame
@@ -122,6 +122,8 @@ class CreationsGalleryScreen(Screen):
                         return self._activate("choose", None)
                 if key == pygame.K_p and page.detail_id is not None:
                     return self._activate("audio", page.detail_id)
+                if key == pygame.K_r and page.detail_id is not None:
+                    return self._activate("replay", page.detail_id)
                 if key == pygame.K_DELETE and page.detail_id and self.controller.mode == GalleryMode.LIBRARY:
                     return self._activate("ask_delete", None)
                 return UiEventResult.HANDLED
@@ -147,6 +149,8 @@ class CreationsGalleryScreen(Screen):
                 self.controller.open_item(value)  # type: ignore[arg-type]
             elif action == "audio":
                 self.controller.toggle_audio(value)  # type: ignore[arg-type]
+            elif action == "replay":
+                self.controller.replay_audio(value)  # type: ignore[arg-type]
             elif action == "ask_delete":
                 self.controller.ask_delete()
             elif action == "cancel_delete":
