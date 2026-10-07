@@ -295,12 +295,12 @@ class ActivityStorageBroker:
         selection = self._server.selection
         return None if self._stopped or selection is None else selection.trusted_pending()
 
-    def complete_creation_selection(self, request_id: str, creation_id: str) -> None:
+    def complete_creation_selection(self, request_id: str, creation_id: str) -> str:
         """Trusted viewer alone may complete a child's selected artifact."""
         selection = self._server.selection
         if self._stopped or selection is None:
             raise StorageError("creation picker session is unavailable")
-        selection.trusted_complete(request_id, creation_id)
+        return selection.trusted_complete(request_id, creation_id)
 
     def cancel_creation_selection(self, request_id: str) -> None:
         selection = self._server.selection
