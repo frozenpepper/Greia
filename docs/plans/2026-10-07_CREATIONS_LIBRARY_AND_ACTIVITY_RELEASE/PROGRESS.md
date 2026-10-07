@@ -6,11 +6,11 @@
 
 ## A. At-a-glance checkpoint — 2026-10-07
 
-- Program: **P1/P2 source WIP**; **P3 universal gallery + authenticated request transport + trusted in-Activity modal SOURCE-WIP**; **P4 image round-trip SOURCE-WIP across Painting, Shape Garden and Teatrino**; **P5 WAV + UTF-8 interoperability SOURCE-WIP** (Voice Stories → Teatrino narration, Voice Stories/audio → Orchestra play-along, Writing ↔ Posta di Leo). Legacy-X and Simulator modal backends are implemented in source, but no complete checkout/GUI/audio/text acceptance has run. Wayland/KMSDRM and later release phases remain open.
+- Program: **P1 adaptive capacity SOURCE-WIP**, **P2 broker/SDK SOURCE-WIP**, **P3 universal gallery + authenticated trusted modal SOURCE-WIP**, **P4 PNG round-trip SOURCE-WIP**, and **P5 WAV + UTF-8 interoperability SOURCE-WIP**. One shared launcher-composed `VolumeBudget` now guards Activity private storage, Creations and history growth at 75% used / 512 MiB free; shipped private Activity namespaces scale to 25% of the actual writable volume (32 MiB is only the legacy minimum floor). No complete checkout/GUI/audio/text/capacity acceptance has run. Wayland/KMSDRM and P6–P8 remain open.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
 - Release composition: still source-tree driven; explicit release allowlist/manifest **not implemented**.
-- Exchange status: **PNG, first/second WAV consumers and reciprocal UTF-8 paths are now implemented SOURCE-WIP.** Storie della Mia Voce publishes already-saved private scene WAVs as `narration`; Teatrino uses them as no-mic performance narration, while Orchestra can persist `narration` / `song` / `music` WAVs as optional non-autoplay backing tracks for live instrument accompaniment. Writing and Posta di Leo reciprocally exchange `text/plain` with saved-only publication and independent private imports. **No real cross-app GUI/audio/text flow has been executed yet**; backup, all-writer capacity proof and physical evidence remain open.
+- Exchange status: **PNG, first/second WAV consumers and reciprocal UTF-8 paths are implemented SOURCE-WIP.** Capacity plumbing now uses one shared budget across all variable child-data writers in the launcher process (Activity storage, Creations, history), with adaptive private namespaces and migration/staging headroom. Storie della Mia Voce publishes saved `narration`; Teatrino uses it without microphone contention; Orchestra persists optional backing WAVs; Writing and Posta reciprocally exchange saved UTF-8 snapshots. **No real cross-app GUI/audio/text/capacity flow has been executed yet**; backup and physical evidence remain open.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
 - Historical P1 baseline: `creation_capacity.py`, `creation_media.py`, `creations.py`, `test_creation_library.py`, local mirrored **12/12 PASS**. P2/P3/P4 subsequent source commits supersede the original 'no broker/UI' snapshot; a complete checkout acceptance remains owed.
 
@@ -19,7 +19,7 @@
 | Phase | Scope | Current state | Release evidence still owed |
 |---|---|---|---|
 | P0 | repository/source baseline + triage | STARTED | consolidated current-head actual gameplay audit |
-| P1 | typed creation repository, codecs, adaptive capacity | SOURCE WIP (trusted core committed; 12 local mirrored tests PASS) | full Greia checkout tests, error/race/recovery, real budget calibration |
+| P1 | typed creation repository, codecs, adaptive capacity | SOURCE WIP (shared 75%/512MiB VolumeBudget across private storage/Creations/history; 25% adaptive Activity namespace; deterministic tests committed) | full Greia checkout execution, concurrency/recovery results, real writable-volume calibration |
 | P2 | permissions/manifest/broker/SDK | SOURCE WIP (publisher/importer + nonblocking request/poll/cancel and real socket tests committed) | full checkout socket/manifest/supervisor tests; presenter-enabled positive and default-fail-closed negative |
 | P3 | universal picker and My Creations viewer | SOURCE WIP (viewer + filtered picker + authenticated async transaction + Legacy-X/Simulator trusted modal backends) | full checkout tests; real Simulator remote-canvas screenshots/input/audio/cancel/Home; installed Legacy-X focus/stacking; future Wayland/KMSDRM backend |
 | P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting independent import; Shape Garden persistent shape+backdrop project + flattened export; Teatrino persistent custom show backdrops) | full checkout tests; real GUI round trip/reopen/source-delete independence; resource/performance evidence |
@@ -329,7 +329,30 @@ This **does not** test the complete Greia `main` checkout, Pygame drawing, launc
 
 **Evidence boundary:** no complete checkout, `make verify`, Pygame/SDL mixer, audible preview/play-along, Simulator screenshot, Legacy-X, Acer/Pi or physical evidence was produced. Orchestra/P5 remains SOURCE-WIP.
 
-**Next source step:** P1 all-writer proportional capacity enforcement — trace every profile-writing owner and enforce the real writable-volume 75% ceiling plus protected headroom at the platform storage authority, without per-Activity duplicated policy.
+**Next source step:** P1 variable-writer capacity enforcement is now implemented SOURCE-WIP. Move to **P6 explicit release catalogue** and begin **P7 evidence-backed 45-Activity review**, while the accumulated P1–P5 execution remains deferred to the later local-agent run.
+
+---
+
+### 2026-10-07 — P1 shared machine budget + adaptive private namespace source; execution deferred
+
+**Pinned code/test checkpoint for the next accumulated acceptance:** `39e8d77b1099f8a407b2f0bc4efbd3516cf04fba`. Later commits in this tranche are documentation-only. **No tests were executed** for this candidate because the owner asked to carry this turn's checks to the next local-agent slice.
+
+**Implemented SOURCE-WIP:**
+
+- `creation_capacity.py` now exposes a general `VolumeCapacityPolicy` / `VolumeBudget` while retaining backward-compatible `CreationCapacityPolicy` / `CreationSpaceError` names. One held `write_reservation()` serializes filesystem measurement through caller-owned writes and separates final persistent growth from peak temporary staging bytes.
+- Positive child-data growth must satisfy **both** the 75% used ceiling and 512 MiB free floor. Non-growing replacements/repair writes may temporarily use reserve space but can never request more bytes than are actually free; this prevents low-space protection from making existing state impossible to update/reclaim.
+- `ActivityStorage` uses the budget for atomic KV, private-file and metadata writes. `ActivityStorageService` owns/injects the budget and storage migrations reserve their full working-copy growth before `copytree`. The old direct 64 MiB free-space check is no longer authoritative.
+- `CreationLibrary.publish()` holds the same reservation across normalized blob/preview writes + SQLite commit, with conservative transaction/journal headroom. The Activity supervisor injects the exact `ActivityStorageService.volume_budget` into each session library, closing the private-save vs publish stale-check race in one launcher process.
+- `PlatformHistoryService/ProfileHistoryStore` shares the same launcher budget. New schema creation, session inserts and event/progression inserts reserve bounded growth; mark-ready/finish/recovery transactions reserve only journal scratch so existing state remains maintainable at the ceiling.
+- `LauncherRuntimeServices` now composes one budget and passes it to storage + history; its dataclass keeps a default budget for older tests/development fixtures, while production construction explicitly injects the shared instance.
+- `StoragePolicy` gained optional `namespace_quota_fraction` (default 0 for compatibility). Shipped `runtime/storage-policy.toml` uses **0.25**; effective private quota = max(legacy byte floor, fraction × actual writable volume). On an 8 GiB writable volume this is **2 GiB per Activity**, while aggregate positive child-data growth still stops once total used reaches 6 GiB in the owner's 2-used/6-free example. The 16 MiB single-file/media containment bound remains independent.
+- Bounded control metadata (profile registry, presentation/theme JSON, achievements, usage-limit ledger) intentionally remains writable inside the protected content reserve for recovery. The 2 MiB wallpaper importer is currently a dormant library/test capability with no production Parent/Shell route; if activated later it must receive the existing shared budget first.
+
+**Deferred regressions:** new `tests/test_profile_volume_budget.py` covers the 8 GiB→2 GiB adaptive quota, legacy fixed-quota compatibility, held reservation serialization across concurrent writers, non-growing update behavior at the ceiling, new private-file denial, storage-migration copy denial and history update-vs-new-growth behavior. Existing `test_creation_library.py` still owns the 8 GiB aggregate example and creation-full rejection. All are **UNEXECUTED at this checkpoint**.
+
+**Evidence boundary:** no complete checkout, `make verify`, real filesystem saturation, concurrent live Activity writers, Simulator, Legacy-X or hardware evidence was produced. This is architecture/source progress only; P1 remains SOURCE-WIP until the accumulated desktop acceptance runs.
+
+**Next source work:** P6 release composition/allowlist, then P7 review of all 45 first-party Activities using source + existing historical evidence now, with live launch/visual/performance acceptance deferred to the same later agent session where necessary.
 
 ---
 
