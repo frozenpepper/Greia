@@ -128,6 +128,17 @@ class CreationLibrary:
                 )
             """)
             db.execute("CREATE INDEX IF NOT EXISTS creations_recent ON creations(created_at DESC, creation_id DESC)")
+            # Media/role filters are core child-picker operations: keep SQLite
+            # lookups indexed as the library grows instead of scanning every
+            # item in Python or repeatedly decoding preview bytes.
+            db.execute(
+                "CREATE INDEX IF NOT EXISTS creations_type_recent "
+                "ON creations(media_type, created_at DESC, creation_id DESC)"
+            )
+            db.execute(
+                "CREATE INDEX IF NOT EXISTS creations_type_role_recent "
+                "ON creations(media_type, role, created_at DESC, creation_id DESC)"
+            )
             if version == 0:
                 db.execute(f"PRAGMA user_version = {_SCHEMA_VERSION}")
 
