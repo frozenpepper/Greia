@@ -8,7 +8,7 @@ import time
 
 import pygame
 
-from greia_platform.activity_api import get_profile_locale
+from greia_platform.activity_api import get_creations, get_profile_locale
 from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
@@ -61,6 +61,10 @@ def main() -> int:
     renderer = PostcardRenderer(art, typography, resources)
     storage = GreiaPostcardStorage()
     library = storage.load()
+    try:
+        creations = get_creations()
+    except RuntimeError:
+        creations = None
     rng = random.Random()
     draft = PostcardDraft(recipient_id="leo", stamp_id="heart")
     audio = PostcardAudio()
@@ -79,6 +83,7 @@ def main() -> int:
         audio=audio,
         rng=rng,
         session_id=session_id,
+        creations=creations,
     )
     try:
         return app.run()
