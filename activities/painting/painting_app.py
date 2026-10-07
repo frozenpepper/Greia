@@ -18,11 +18,11 @@ from greia_platform.activity_ui import ChildUiMetrics, draw_activity_pointer
 from greia_platform.pygame_canvas import activity_viewport_for_surface
 
 if __package__:
-    from .painting_content import BRUSH_SIZES, COLORS
+    from .painting_content import BRUSH_SIZES, COLORS, CREATION_PICKER_POLL_SECONDS
     from .painting_model import PaintingRecord, PaintingRepository, Stroke, StrokeHistory
     from .painting_renderer import PaintingRenderer, _decode_png, _encode_png
 else:  # pragma: no cover - runtime/script fallback
-    from painting_content import BRUSH_SIZES, COLORS
+    from painting_content import BRUSH_SIZES, COLORS, CREATION_PICKER_POLL_SECONDS
     from painting_model import PaintingRecord, PaintingRepository, Stroke, StrokeHistory
     from painting_renderer import PaintingRenderer, _decode_png, _encode_png
 
@@ -60,6 +60,7 @@ class PaintingApp:
         self.shared_import_request: str | None = None
         self.shared_import_state = ""
         self.shared_import_feedback_until = 0.0
+        self.shared_import_next_poll = 0.0
         self.renderer = PaintingRenderer(metrics, theme, screen)
         self.clock = pygame.time.Clock()
         self.records = self.repository.list_records()
@@ -132,7 +133,10 @@ class PaintingApp:
         now = time.monotonic()
         if self.shared_feedback and now >= self.shared_feedback_until:
             self.shared_feedback = ""
-        if self.shared_import_request is not None:
+        if (
+            self.shared_import_request is not None
+            and now >= self.shared_import_next_poll
+        ):
             self._poll_shared_png()
         elif (
             self.shared_import_state
@@ -409,6 +413,7 @@ class PaintingApp:
             return
         self.shared_import_request = request_id
         self.shared_import_state = "pending"
+        self.shared_import_next_poll = time.monotonic()
 
     def _poll_shared_png(self) -> None:
         request_id = self.shared_import_request
@@ -423,8 +428,12 @@ class PaintingApp:
             return
         state = getattr(result, "state", None)
         if state == "pending":
+            self.shared_import_next_poll = (
+                time.monotonic() + CREATION_PICKER_POLL_SECONDS
+            )
             return
         self.shared_import_request = None
+        self.shared_import_next_poll = 0.0
         if state == "cancelled":
             self.shared_import_state = ""
             return
