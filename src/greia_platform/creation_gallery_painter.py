@@ -102,6 +102,9 @@ class CreationsPygamePainter:
         elif name == "cancel":
             pygame.draw.line(target,ink,(cx-r//2,cy-r//2),(cx+r//2,cy+r//2),6)
             pygame.draw.line(target,ink,(cx-r//2,cy+r//2),(cx+r//2,cy-r//2),6)
+        elif name == "replay":
+            pygame.draw.arc(target,ink,(cx-r,cy-r,2*r,2*r),0.50,5.35,5)
+            pygame.draw.polygon(target,ink,[(cx+r-1,cy-r//2),(cx+r+5,cy-r),(cx+r//2,cy-r)])
 
     def _button(self, screen: Any, action: str, rect: Any, icon: str, pygame: Any,
                 *, fill: tuple[int,int,int] | None = None, value: object = None, enabled: bool = True) -> None:
@@ -204,7 +207,7 @@ class CreationsPygamePainter:
             self._targets.append(GalleryHit("open",record.creation_id,rect))
             if record.media_type=="audio/wav":
                 play=pygame.Rect(rect.right-81,rect.bottom-82,66,62)
-                self._button(screen,"audio",play,"pause" if page.playing_id==record.creation_id else "play",pygame,fill=self.GOLD,value=record.creation_id)
+                self._button(screen,"audio",play,"pause" if page.playing_id==record.creation_id and page.paused_id!=record.creation_id else "play",pygame,fill=self.GOLD,value=record.creation_id)
         self._button(screen,"back",layout.back,"back",pygame)
         self._button(screen,"previous",layout.prev_page,"previous",pygame,enabled=page.has_previous)
         self._button(screen,"next",layout.next_page,"next",pygame,enabled=page.has_next)
@@ -226,7 +229,8 @@ class CreationsPygamePainter:
                 bar=pygame.Rect(rect.x+40,rect.bottom-35,rect.width-80,12)
                 pygame.draw.rect(screen,(176,188,198),bar,border_radius=6)
                 pygame.draw.rect(screen,(83,171,166),(bar.x,bar.y,int(bar.width*fraction),bar.height),border_radius=6)
-            self._button(screen,"audio",layout.audio_play,"pause" if page.playing_id==item.creation_id else "play",pygame,fill=self.GOLD,value=item.creation_id)
+            self._button(screen,"audio",layout.audio_play,"pause" if page.playing_id==item.creation_id and page.paused_id!=item.creation_id else "play",pygame,fill=self.GOLD,value=item.creation_id)
+            self._button(screen,"replay",layout.audio_replay,"replay",pygame,fill=self.LIGHT,value=item.creation_id)
         self._button(screen,"detail_back",layout.back,"back",pygame)
         if self.controller.mode==GalleryMode.PICKER:
             self._button(screen,"choose",layout.primary,"check",pygame,fill=self.GREEN)
