@@ -209,7 +209,13 @@ class CreationPickerHostTests(unittest.TestCase):
         )
         self.host.service(self.pygame, ())
         screen = self.host._screen
-        screen.controller.selected_handle = "one-use-handle"
+        handle = screen.controller.on_pick("creation-1")
+        self.assertEqual(handle, "selected-once")
+        self.assertEqual(
+            self.supervisor.completed,
+            [(self.session, "request-2", "creation-1")],
+        )
+        screen.controller.selected_handle = handle
         screen.next_result = UiEventResult.REQUEST_CLOSE
         self.host.service(self.pygame, (object(),))
         self.assertEqual(self.supervisor.cancelled, [])
@@ -256,7 +262,7 @@ class CreationPickerHostTests(unittest.TestCase):
             roles=(),
         )
         self.assertFalse(self.host.service(self.pygame, ()))
-        self.assertFalse(self.host.shutdown(self.pygame, activity_alive=False) is False)
+        self.assertTrue(self.host.shutdown(self.pygame, activity_alive=False))
         self.assertEqual(self.shell.shows, [])
         self.assertEqual(self.shell.dismisses, [])
         self.assertEqual(self.shell.abandons, [self.shell.lease])
