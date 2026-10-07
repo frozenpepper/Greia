@@ -58,7 +58,8 @@ class CreationsPygamePainter:
     def _text(self, target: Any, label: str, x: int, y: int, size: int, *, center: bool = False) -> None:
         font = self.typography.font(FontRole.TITLE if size >= 27 else FontRole.CONTROL, size)
         surface = self.typography.surface(font, label, self.INK if center else self.CREAM)
-        target.blit(surface, surface.get_rect(center=(x, y) if center else None, topleft=None if center else (x, y)))
+        position = surface.get_rect(center=(x, y)) if center else surface.get_rect(topleft=(x, y))
+        target.blit(surface, position)
 
     @staticmethod
     def _box(rect: Any, pygame: Any) -> Any:
@@ -209,7 +210,7 @@ class CreationsPygamePainter:
             shield=pygame.Surface(screen.get_size(),pygame.SRCALPHA)
             shield.fill((10,16,38,185))
             screen.blit(shield,(0,0))
-            dialog=pygame.Rect(width:=screen.get_width()//2-230,screen.get_height()//2-140,460,220)
+            dialog=pygame.Rect(screen.get_width()//2-230,screen.get_height()//2-140,460,220)
             pygame.draw.rect(screen,self.CREAM,dialog,border_radius=28)
             self._icon(screen,"trash",pygame.Rect(dialog.centerx-56,dialog.y+8,112,100),pygame,(170,69,79))
             caption=self._label("Eliminare?","Delete?")
