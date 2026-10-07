@@ -278,6 +278,10 @@ class ActivitySupervisor:
                     )
                     storage_broker.bind_creations(access)
             except (StorageError, OSError, ProfileError, CreationLibraryError, ActivityLifecycleError, ValueError, sqlite3.Error):
+                # Broker was started before the optional creations repository.
+                # It is not yet in session resources; own its cleanup here.
+                if storage_broker is not None:
+                    storage_broker.stop()
                 return self._failed_launch_session(
                     manifest,
                     profile,
