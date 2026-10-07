@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator, Mapping
 
+from .creation_capacity import VolumeBudget, VolumeSpaceError
 from .profiles import ProfileContext
 
 
@@ -196,11 +197,13 @@ class ActivityStorage:
         policy: StoragePolicy,
         *,
         protected_root: Path,
+        volume_budget: VolumeBudget | None = None,
     ):
         self.root = root.resolve(strict=False)
         self.activity_id = _validate_activity_id(activity_id)
         self.policy = policy
         self.protected_root = protected_root.resolve(strict=False)
+        self.volume_budget = volume_budget or VolumeBudget()
         self.metadata_path = self.root / self.METADATA_NAME
         self.kv_path = self.root / self.KV_NAME
         self.files_root = self.root / self.FILES_NAME
@@ -229,7 +232,9 @@ class ActivityStorage:
             if len(payload) > self.policy.max_kv_bytes:
                 raise StorageQuotaExceeded("KV state exceeds KV quota")
             self._check_total_quota_unlocked(kv_bytes=len(payload))
-            _atomic_write_bytes(self.kv_path, payload, mode=0o660)
+            self._write_managed_atomic_unlocked(
+                self.kv_path, payload, mode=0o660
+            )
             self._touch_metadata_unlocked()
 
     def kv_delete(self, key: str) -> bool:
@@ -239,7 +244,9 @@ class ActivityStorage:
             if normalized not in kv:
                 return False
             del kv[normalized]
-            _atomic_write_bytes(self.kv_path, _encode_json(kv), mode=0o660)
+            self._write_managed_atomic_unlocked(
+                self.kv_path, _encode_json(kv), mode=0o660
+            )
             self._touch_metadata_unlocked()
             return True
 
@@ -285,7 +292,7 @@ class ActivityStorage:
                 replacement_path=target,
                 replacement_bytes=len(data),
             )
-            _atomic_write_bytes(target, data, mode=0o660)
+            self._write_managed_atomic_unlocked(target, data, mode=0o660)
             self._touch_metadata_unlocked()
 
     def file_delete(self, name: str) -> bool:
@@ -382,7 +389,7 @@ class ActivityStorage:
         return metadata
 
     def _write_metadata_unlocked(self, metadata: StorageMetadata) -> None:
-        _atomic_write_bytes(
+        self._write_managed_atomic_unlocked(
             self.metadata_path,
             _encode_json(metadata.as_dict()),
             mode=0o660,
@@ -463,13 +470,32 @@ class ActivityStorage:
         total = kv_bytes + file_bytes
         if total > self.policy.namespace_quota_bytes:
             raise StorageQuotaExceeded("Activity storage namespace quota exceeded")
+
+    def _write_managed_atomic_unlocked(
+        self,
+        target: Path,
+        payload: bytes,
+        *,
+        mode: int,
+    ) -> None:
         try:
-            free = shutil.disk_usage(self.protected_root).free
+            old_bytes = target.stat().st_size
+        except FileNotFoundError:
+            old_bytes = 0
         except OSError as exc:
-            raise StorageError("cannot measure storage free space") from exc
-        growth = max(0, total - (current_kv + self._files_usage_unlocked()[0]))
-        if free - growth < self.policy.protected_free_bytes:
-            raise StorageQuotaExceeded("protected system free-space reserve would be violated")
+            raise StorageError("cannot inspect existing storage file") from exc
+        final_growth = max(0, len(payload) - old_bytes)
+        try:
+            with self.volume_budget.write_reservation(
+                self.protected_root,
+                final_growth_bytes=final_growth,
+                peak_additional_bytes=len(payload),
+            ):
+                _atomic_write_bytes(target, payload, mode=mode)
+        except VolumeSpaceError as exc:
+            raise StorageQuotaExceeded(
+                "platform child-data headroom would be violated"
+            ) from exc
 
     def _files_usage_unlocked(self) -> tuple[int, int]:
         total = 0
@@ -546,8 +572,14 @@ class ActivityStorageService:
     ROLLBACK_ROOT_NAME = ".storage-rollbacks"
     WORKING_ROOT_NAME = ".storage-working"
 
-    def __init__(self, policy: StoragePolicy):
+    def __init__(
+        self,
+        policy: StoragePolicy,
+        *,
+        volume_budget: VolumeBudget | None = None,
+    ):
         self.policy = policy
+        self.volume_budget = volume_budget or VolumeBudget()
 
     def open(
         self,
@@ -564,6 +596,7 @@ class ActivityStorageService:
             activity_id,
             self.policy,
             protected_root=profile.root,
+            volume_budget=self.volume_budget,
         )
         self._initialize_if_needed(storage, schema_version, package_version)
         metadata = storage.metadata
@@ -599,6 +632,7 @@ class ActivityStorageService:
             activity_id,
             self.policy,
             protected_root=profile.root,
+            volume_budget=self.volume_budget,
         )
         if not active.metadata_path.exists():
             raise StorageError("cannot migrate an uninitialized storage namespace")
@@ -619,20 +653,23 @@ class ActivityStorageService:
             raise StorageError("storage migration working directory already exists")
         active_bytes = _directory_bytes(active_root)
         try:
-            free = shutil.disk_usage(profile.root).free
-        except OSError as exc:
-            raise StorageError("cannot measure free space for storage migration") from exc
-        if free - active_bytes < self.policy.protected_free_bytes:
+            with self.volume_budget.write_reservation(
+                profile.root,
+                final_growth_bytes=active_bytes,
+                peak_additional_bytes=active_bytes,
+            ):
+                with active._lock():
+                    shutil.copytree(active_root, working_root, symlinks=False)
+        except VolumeSpaceError as exc:
             raise StorageQuotaExceeded(
-                "storage migration working copy would violate protected free-space reserve"
-            )
-        with active._lock():
-            shutil.copytree(active_root, working_root, symlinks=False)
+                "storage migration would violate platform child-data headroom"
+            ) from exc
         working = ActivityStorage(
             working_root,
             activity_id,
             self.policy,
             protected_root=profile.root,
+            volume_budget=self.volume_budget,
         )
         with working._lock():
             copied = working._read_metadata_unlocked()
@@ -680,12 +717,10 @@ class ActivityStorageService:
             metadata = StorageMetadata.create(
                 storage.activity_id, schema_version, package_version
             )
-            _atomic_write_bytes(
-                storage.metadata_path,
-                _encode_json(metadata.as_dict()),
-                mode=0o660,
+            storage._write_metadata_unlocked(metadata)
+            storage._write_managed_atomic_unlocked(
+                storage.kv_path, b"{}", mode=0o660
             )
-            _atomic_write_bytes(storage.kv_path, b"{}", mode=0o660)
 
     def _prune_rollbacks(self, rollback_parent: Path) -> None:
         snapshots = sorted(
