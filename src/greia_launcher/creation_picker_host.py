@@ -236,25 +236,51 @@ class ActivityCreationPickerHost:
             pass
 
     def shutdown(self, pygame: Any, *, activity_alive: bool) -> bool:
-        """Release every Shell/audio/native resource once the launch loop ends."""
+        """Cancel/revoke UI authority and release every modal/audio resource."""
         if self._closed:
             return True
         self._closed = True
         screen = self._screen
+        request_id = self._request_id
+        selected = (
+            screen is not None
+            and screen.controller.selected_handle is not None
+        )
         was_visible = screen is not None
         self._screen = None
+        self._request_id = None
+        clean = True
         if screen is not None:
             screen.on_exit()
+        if request_id is not None and not selected:
+            try:
+                self._supervisor.cancel_creation_selection(
+                    self._session, request_id
+                )
+            except Exception:
+                clean = False
+        try:
+            self._supervisor.disable_creation_picker(self._session)
+        except Exception:
+            clean = False
         lease = self._lease
-        clean = True
         if lease is not None:
             if activity_alive and was_visible:
-                clean = bool(self._shell_window_backend.dismiss_activity_modal(lease))
-            self._shell_window_backend.abandon_activity_modal(lease)
+                try:
+                    clean = bool(
+                        self._shell_window_backend.dismiss_activity_modal(lease)
+                    ) and clean
+                except Exception:
+                    clean = False
+            try:
+                self._shell_window_backend.abandon_activity_modal(lease)
+            except Exception:
+                clean = False
         self._lease = None
         self._prepared = False
         try:
             pygame.mouse.set_visible(False)
+            pygame.event.clear()
         except Exception:
             pass
         return clean
