@@ -16,7 +16,7 @@ difficulty = 2
 recommended_age_min = 3
 recommended_age_max = 7
 difficulty_min = 1
-difficulty_max = 5
+difficulty_max = 4
 adaptive_difficulty = true
 skills = [
   { id = "cognition.planning", weight = 3 },
