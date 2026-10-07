@@ -233,6 +233,12 @@ class CreationsGalleryController:
         self.refresh()
         return True
 
+    def focus_item(self, creation_id: str) -> None:
+        self._check_open()
+        if creation_id not in {item.creation_id for item in self._items}:
+            raise GalleryError("creation is not on the visible page")
+        self.focused_id = creation_id
+
     def open_item(self, creation_id: str) -> None:
         self._check_open()
         if creation_id not in {item.creation_id for item in self._items}:
