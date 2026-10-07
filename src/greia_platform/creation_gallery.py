@@ -184,6 +184,20 @@ class CreationsGalleryController:
         self._has_next = extra
         self.focused_id = self._items[0].creation_id if self._items else None
 
+    def set_page_size(self, size: int) -> None:
+        """Reflow on device resize without expanding metadata/cache budgets."""
+        self._check_open()
+        if type(size) is not int or not 1 <= size <= self.MAX_PAGE_SIZE:
+            raise ValueError("invalid gallery page size")
+        if size == self.page_size:
+            return
+        self._stop_playback()
+        self.page_size = size
+        self.page_index = 0
+        self.detail_id = None
+        self.pending_delete_id = None
+        self.refresh()
+
     def set_family(self, family: CreationFamily) -> None:
         self._check_open()
         if family not in self.families:
