@@ -26,6 +26,7 @@ Important examples:
 
 ```text
 PHASE0_CORE_CREATION_ACTIVITIES.md
+CHILD_CREATIONS_LIBRARY_AND_MEDIA_INTEROPERABILITY.md
 ACTIVITY_SYSTEM_NAVIGATION.md
 ACTIVITY_INPUT_STANDARDS.md
 RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
@@ -94,6 +95,15 @@ The visual workstream plan remains subordinate to the blocking architecture plan
 ```text
 docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md
 ```
+
+The owner-authorized **Creations Library + Activity catalogue release-quality** workstream has one unified implementation plan and one compact progress ledger:
+
+```text
+docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md
+docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md
+```
+
+It owns interoperable child creations, universal picker/viewer, capacity-aware persistence, first-party Activity quality and curated catalogue decisions. It remains **subordinate to the accepted platform architecture and installer/update/first-boot lifecycle authority**, and it cannot grant hardware release certification.
 
 A subordinate plan owns cross-hardware robustness sequencing and closure criteria:
 
