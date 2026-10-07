@@ -622,7 +622,7 @@ class ProfileStore:
             )
 
     #: Directories the child opens and owns itself. The Parent service runs as
-    #: greiapel, not root, so anything it creates here is greiapel-owned, and the
+    #: greiapanel, not root, so anything it creates here is greiapanel-owned, and the
     #: child then cannot chmod it: the history store requires to own its own
     #: progress directory and refused to open a parent-owned one, killing the
     #: launcher the moment a profile was entered. These are deliberately not
