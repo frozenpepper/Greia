@@ -77,6 +77,10 @@ class FirstPartyReleaseSelection:
     @classmethod
     def load(cls, path: Path) -> "FirstPartyReleaseSelection":
         candidate = Path(path)
+        if candidate.is_symlink():
+            raise ReleaseSelectionError(
+                "release Activity selection may not be a symlink"
+            )
         try:
             stat = candidate.stat()
             if not candidate.is_file() or stat.st_size > _MAX_SELECTION_BYTES:
@@ -135,6 +139,10 @@ class FirstPartyReleaseSelection:
         if self.status is not ReleaseSelectionStatus.APPROVED:
             raise ReleaseSelectionError(
                 "release Activity selection is still draft; release build refused"
+            )
+        if not self.activities:
+            raise ReleaseSelectionError(
+                "approved release Activity selection may not be empty"
             )
 
     @property
