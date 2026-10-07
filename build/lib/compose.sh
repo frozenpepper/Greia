@@ -433,16 +433,49 @@ compose_install_greia_content() {
 compose_install_target_content() {
   local rootfs="$1"
   local project_root="$2"
-  # 2A built-in trust boundary: the image build owns built-in Activity hygiene
-  # and validation. Fail closed here — curated host/editor noise or a registry
-  # validation error aborts the build — so installed content is already
-  # sanitized and validated and normal boot never re-sanitizes the built-in
-  # root. __pycache__ stays excluded by the rsync below (not a violation).
-  PYTHONPATH="$project_root/src" python3 - "$project_root" <<'GREIA_BUILTIN_GATE_EOF'
+  local installed_activity_root="$rootfs/opt/greia-os/activities"
+
+  install -d -m 0755 "$rootfs/opt/greia-os"
+
+  # Source/runtime are common to development and release target images.
+  # Activities are deliberately composed separately below so an official
+  # release can never fall back to "whatever happens to be in activities/".
+  rsync -a --delete --exclude '__pycache__' \
+    "$project_root/src" "$project_root/runtime" \
+    "$rootfs/opt/greia-os/"
+
+  if [[ "${PIP_RELEASE_BUILD:-0}" == "1" ]]; then
+    # P6 release authority: official release composition must come from the
+    # single reviewed declarative roster. stage_release_activities.py refuses
+    # draft/empty policy, validates exact ID↔package identity through the
+    # ActivityRegistry, rejects symlinks, and atomically publishes this output.
+    if ! PYTHONPATH="$project_root/src" python3 \
+      "$project_root/tools/stage_release_activities.py" \
+      --selection "$project_root/build/first-party-release-activities.toml" \
+      --activities "$project_root/activities" \
+      --runtime "$project_root/runtime/child-runtime.toml" \
+      --output "$installed_activity_root"; then
+      echo "Approved first-party Activity release staging failed; refusing release image." >&2
+      return 1
+    fi
+  else
+    # Development/test targets intentionally keep every source Activity so P7
+    # review, simulator work, and independent installer/first-boot debugging do
+    # not depend on an unfinished release roster.
+    rsync -a --delete --exclude '__pycache__' \
+      "$project_root/activities/" "$installed_activity_root/"
+  fi
+
+  # 2A built-in trust boundary: validate the *installed* Activity tree, not a
+  # parallel repository path. This makes content and index one transaction and
+  # prevents release selection from being bypassed after staging.
+  PYTHONPATH="$project_root/src" python3 - \
+    "$project_root" "$installed_activity_root" <<'GREIA_BUILTIN_GATE_EOF'
 import sys
 from pathlib import Path
 
 project = Path(sys.argv[1])
+source_root = Path(sys.argv[2])
 sys.path.insert(0, str(project / "src"))
 
 from greia_platform.activities import (
@@ -453,16 +486,30 @@ from greia_platform.activities import (
 from greia_platform.activity_tree_cleanup import _is_junk_name
 from greia_platform.trust import ActivitySource, PackageTrust
 
-source_root = project / "activities"
+if source_root.is_symlink() or not source_root.is_dir():
+    print("Installed built-in Activity root is unsafe or missing.", file=sys.stderr)
+    sys.exit(1)
+
 junk_hits = []
+symlink_hits = []
 for path in sorted(source_root.rglob("*")):
+    if path.is_symlink():
+        symlink_hits.append(str(path.relative_to(source_root)))
+        continue
     name = path.name
     if name == "__pycache__" or "__pycache__" in path.parts:
         continue
     if _is_junk_name(name):
-        junk_hits.append(str(path.relative_to(project)))
+        junk_hits.append(str(path.relative_to(source_root)))
+
+if symlink_hits:
+    print("Installed built-in Activity tree contains symlinks:", file=sys.stderr)
+    for hit in symlink_hits:
+        print(f"  {hit}", file=sys.stderr)
+    sys.exit(1)
+
 if junk_hits:
-    print("Built-in Activity tree carries curated host/editor noise:", file=sys.stderr)
+    print("Installed built-in Activity tree carries curated host/editor noise:", file=sys.stderr)
     for hit in junk_hits:
         print(f"  {hit}", file=sys.stderr)
     sys.exit(1)
@@ -477,10 +524,6 @@ except ActivityValidationError as exc:
     sys.exit(1)
 GREIA_BUILTIN_GATE_EOF
 
-  install -d -m 0755 "$rootfs/opt/greia-os"
-  rsync -a --delete --exclude '__pycache__' \
-    "$project_root/src" "$project_root/activities" "$project_root/runtime" \
-    "$rootfs/opt/greia-os/"
   install -d -m 0755 "$rootfs/opt/greia-os/assets"
   rsync -a --delete \
     --exclude 'source/' \
@@ -492,22 +535,14 @@ GREIA_BUILTIN_GATE_EOF
   chown -R root:root "$rootfs/opt/greia-os"
   chmod -R a-w "$rootfs/opt/greia-os"
 
-  # T33 built-in index: ship the deterministic built-in Activity index from the
-  # same build transaction as the built-in Activity content installed above.
-  # The generator (tools/build_activity_index.py) re-validates through the
-  # authoritative ActivityRegistry and serializes via the accepted
-  # activity_index model; it reads the same "$PROJECT_ROOT/activities" source
-  # root that was just installed to "$ROOTFS/opt/greia-os/activities", so index
-  # and content always resolve from one source transaction. Any generation
-  # failure aborts the build with no half-installed index. Developer images
-  # delegate to this script and installer images build their target payload
-  # through it, so both paths inherit this transaction unchanged; the live
-  # installer root carries no Activity content and needs no index.
+  # T33 built-in index: generate from the exact installed Activity directory.
+  # In a release build this is the approved staged subset; in ordinary
+  # development/test images it is the full source tree copied above.
   local index_staging
   index_staging="$(mktemp "${TMPDIR:-/tmp}/activity-index.XXXXXX")"
   local image_index="$rootfs/usr/share/greia/activity-index-v1.json"
   if ! PYTHONPATH="$project_root/src" python3 "$project_root/tools/build_activity_index.py" \
-    --activities "$project_root/activities" \
+    --activities "$installed_activity_root" \
     --runtime "$project_root/runtime/child-runtime.toml" \
     --output "$index_staging"; then
     echo "Built-in Activity index generation failed; refusing image." >&2
