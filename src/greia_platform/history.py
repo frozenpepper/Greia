@@ -687,12 +687,13 @@ class ProfileHistoryStore:
                 peak_additional_bytes=_HISTORY_SCHEMA_PEAK_HEADROOM,
             ):
                 with self._connect() as connection:
-                        user_version = int(
-                            connection.execute("PRAGMA user_version").fetchone()[0]
-                        )
+                    user_version = int(
+                        connection.execute("PRAGMA user_version").fetchone()[0]
+                    )
                     if user_version not in {0, _HISTORY_SCHEMA_VERSION}:
                         raise HistoryError(
-                            f"unsupported history database schema version: {user_version}"
+                            "unsupported history database schema version: "
+                            f"{user_version}"
                         )
                     connection.executescript(
                         """
@@ -714,7 +715,8 @@ class ProfileHistoryStore:
 
                         CREATE TABLE IF NOT EXISTS events(
                             record_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+                            session_id TEXT NOT NULL
+                                REFERENCES sessions(session_id) ON DELETE CASCADE,
                             activity_id TEXT NOT NULL,
                             event_id TEXT NOT NULL,
                             idempotency_key TEXT NOT NULL,
@@ -737,7 +739,8 @@ class ProfileHistoryStore:
                         CREATE TABLE IF NOT EXISTS best_scores(
                             activity_id TEXT NOT NULL,
                             event_id TEXT NOT NULL,
-                            score_order TEXT NOT NULL CHECK(score_order IN ('higher_better', 'lower_better')),
+                            score_order TEXT NOT NULL
+                                CHECK(score_order IN ('higher_better', 'lower_better')),
                             best_score REAL NOT NULL,
                             PRIMARY KEY(activity_id, event_id)
                         );
@@ -749,8 +752,10 @@ class ProfileHistoryStore:
 
                         CREATE TABLE IF NOT EXISTS reward_ledger(
                             ledger_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                            session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
-                            event_record_id INTEGER NOT NULL REFERENCES events(record_id) ON DELETE CASCADE,
+                            session_id TEXT NOT NULL
+                                REFERENCES sessions(session_id) ON DELETE CASCADE,
+                            event_record_id INTEGER NOT NULL
+                                REFERENCES events(record_id) ON DELETE CASCADE,
                             rule_id TEXT NOT NULL,
                             reward_id TEXT NOT NULL,
                             delta INTEGER NOT NULL,
@@ -761,15 +766,19 @@ class ProfileHistoryStore:
                             ON reward_ledger(session_id, ledger_id);
 
                         CREATE TABLE IF NOT EXISTS rule_applications(
-                            session_id TEXT NOT NULL REFERENCES sessions(session_id) ON DELETE CASCADE,
+                            session_id TEXT NOT NULL
+                                REFERENCES sessions(session_id) ON DELETE CASCADE,
                             rule_id TEXT NOT NULL,
-                            event_record_id INTEGER NOT NULL REFERENCES events(record_id) ON DELETE CASCADE,
+                            event_record_id INTEGER NOT NULL
+                                REFERENCES events(record_id) ON DELETE CASCADE,
                             PRIMARY KEY(session_id, rule_id)
                         );
                         """
                     )
                     if user_version == 0:
-                        connection.execute(f"PRAGMA user_version = {_HISTORY_SCHEMA_VERSION}")
+                        connection.execute(
+                            f"PRAGMA user_version = {_HISTORY_SCHEMA_VERSION}"
+                        )
                     connection.commit()
             if self._db_path.exists():
                 os.chmod(self._db_path, 0o660)
@@ -778,7 +787,9 @@ class ProfileHistoryStore:
                 "history storage would violate platform child-data headroom"
             ) from exc
         except sqlite3.DatabaseError as exc:
-            raise HistoryError("history database is unavailable or corrupt") from exc
+            raise HistoryError(
+                "history database is unavailable or corrupt"
+            ) from exc
 
     @contextmanager
     def _connect(self) -> Iterator[sqlite3.Connection]:
