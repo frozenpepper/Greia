@@ -1,7 +1,7 @@
 # Creations Library P3 — Desktop Source + Real GUI Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `ca9dc87d260cf27a4fa3e679364ecd61408a261d` (last code/test source commit before documentation-only updates).  
+**Pinned source candidate:** `d63b9f530e684819e80e9e5a271c13bd953cc001` (last code/test source commit before documentation-only updates).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
 **Expected state:** P3 Gallery + Painting publish source exists but is **not yet accepted**; in-Activity consumer picker, audio producer, cross-app import, release selection and hardware tests remain **not implemented**.
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor ca9dc87d260cf27a4fa3e679364ecd61408a261d HEAD` (exit **0** required). Check `git diff --name-only ca9dc87d260cf27a4fa3e679364ecd61408a261d HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor d63b9f530e684819e80e9e5a271c13bd953cc001 HEAD` (exit **0** required). Check `git diff --name-only d63b9f530e684819e80e9e5a271c13bd953cc001 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
