@@ -78,7 +78,7 @@ common product lifecycle is proven.
 
 ## Creations Library / first-party Activity release workstream
 
-For child-created PNG/WAV/UTF-8 sharing, the universal pre-reader picker/viewer, storage capacity guard, Painting/Shape Garden/Theatre/voice/text interoperability, and the 45-built-in quality/release audit, read:
+For child-created PNG/WAV/UTF-8 sharing, the universal pre-reader picker/viewer, shared adaptive storage capacity guard, Painting/Shape Garden/Theatre/voice/text interoperability, and the 45-built-in quality/release audit, read:
 
 ```text
 docs/product/CHILD_CREATIONS_LIBRARY_AND_MEDIA_INTEROPERABILITY.md
