@@ -97,6 +97,26 @@ class SelectionCoordinatorTests(unittest.TestCase):
         with self.assertRaises(CreationAccessDenied):
             self.chooser.request(media_types=["audio/wav"])
 
+    def test_abandoned_result_releases_single_picker_slot(self):
+        first = self.chooser.request(media_types=["image/png"])
+        self.chooser.trusted_complete(first.request_id, "picture")
+        with self.assertRaises(CreationAccessDenied):
+            self.chooser.request(media_types=["audio/wav"])
+        self.now += self.chooser.RESULT_RETENTION_SECONDS + 1
+        second = self.chooser.request(media_types=["audio/wav"])
+        self.assertNotEqual(second.request_id, first.request_id)
+        with self.assertRaises(CreationAccessDenied):
+            self.chooser.poll(first.request_id)
+
+    def test_abandoned_timeout_is_not_permanent_busy_state(self):
+        first = self.chooser.request(media_types=["image/png"])
+        self.now += self.chooser.REQUEST_SECONDS + 1
+        self.assertEqual(self.chooser.poll(first.request_id).state, SelectionState.CANCELLED)
+        second = self.chooser.request(media_types=["audio/wav"])
+        self.now += self.chooser.REQUEST_SECONDS + self.chooser.RESULT_RETENTION_SECONDS + 2
+        third = self.chooser.request(media_types=["image/png"])
+        self.assertNotEqual(third.request_id, second.request_id)
+
     def test_trusted_cancel_revokes_without_child_secret(self):
         request = self.chooser.request(media_types=["audio/wav"])
         self.chooser.trusted_cancel(request.request_id)
