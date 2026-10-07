@@ -2787,3 +2787,32 @@ checkout. See the new progress ledger for exact commits and risk/next steps.
 The original non-lifecycle architecture prerequisites and first incomplete
 blocking phase remain authoritative as before. This entry does not promote the
 new content workstream above them or change its hardware evidence boundary.
+
+
+## 2026-10-07 — Subordinate Creations P2 session broker and manifest source (unverified in full checkout)
+
+The owner-authorized product/content program at
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`
+has advanced beyond its P1 trusted library prototype. Its exact record is the
+sibling `PROGRESS.md`; that progress ledger must be consulted instead of
+duplicating feature test counts here.
+
+P2 source now includes a narrowly bound producer/consumer manifest declaration,
+built-in Activity index roundtrip, `CreationSessionAccess` scoped to the
+trusted `ActivityAuthority` and own `ActivityStorage`, one-use/expiring
+child-selection handles, only two creation actions on the existing storage
+socket, guarded `get_creations` SDK, profile-managed Creations root, and
+session teardown/failure cleanup. The existing storage broker start signature
+is unchanged; no generic shared filesystem access is authorized.
+
+The new P2 broker/index source tests were **committed but did not run** in
+a complete Greia checkout or installed image. Isolated local Python/Pillow/
+SQLite mirrored-source tests for the repository and session-access module
+ran 18/18 PASS, but do not certify the broker, supervisor, manifest/index,
+sandbox, UI, or real profile ACL group behavior. The P3 child picker/gallery
+is not implemented. None of the 45 first-party Activities is release-approved
+by this P2 work.
+
+No install, boot, update, rollback, image composition or physical Acer
+test occurred. The active architecture/lifecycle prerequisite and evidence
+boundary remain unchanged.
