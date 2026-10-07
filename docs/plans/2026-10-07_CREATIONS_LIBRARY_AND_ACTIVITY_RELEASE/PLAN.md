@@ -172,6 +172,13 @@ Build the foundation behind a trusted-only boundary:
 
 ### P3 — Universal child picker and library viewer
 
+**Implementation architecture warning (confirmed 2026-10-07):** The actual Greia launcher synchronously supervises an Activity in `LauncherApplication._launch_selected()`. While an Activity is running, `ActivitySupervisor.poll()` is called in a waiting loop and the Activity, not the Shell, owns the visible display surface. Rendering a `CreationsGalleryScreen` on the Shell's ordinary Home surface **does not** make it available inside a running Activity. Do not claim the platform picker is integrated merely because its renderer/controller exists.
+
+The next cross-Activity slice must define **one trusted selection transaction owner** connecting a requesting Activity session → bounded broker request / cancellation token → supervisor/Shell event transport → platform picker presentation → chosen artifact grant → response delivered to the *same* still-live requesting session. The display handoff must use an existing or deliberately extended `DisplaySessionCoordinator` / trusted overlay owner that works with Greia's current legacy X11 and future Wayland/KMSDRM backends. It must not assume the Shell can draw over an Activity, steal the Activity's SDL surface, expose a direct shared filesystem, or let the Activity mint/replace its own grant. Check current trusted Home chrome/display leases and settle focus/input, game-clock pause/resume, audio-preview resource ownership, cancellation, shutdown, profile switch, and renderer/device failure contracts **before** implementation.
+
+Prove a real source→supervisor→trusted picker→session handle→consumer message path using the canonical simulator owner; there must be no simulator-only IPC or alternative UI. This is the remaining **P3 picker activation/mediation blocker**. The standalone `My Creations` Shell gallery can be source-integrated and visually tested first, but is not a substitute for it.
+
+
 One semantic `CreationsPicker` and `MyCreationsViewer` with a shared adapter-independent view model. Platform-owned presentation/input, not each Activity's custom menu; no lasting X11-specific API.
 
 - Images: 384×320-ish normalized previews, large cards, zoom/inspect full-screen, visible-page cache and memory bound.
