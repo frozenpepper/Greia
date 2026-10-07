@@ -50,7 +50,15 @@
     "recording_save_failed": "I couldn't save this show.",
     "narration_imported": "Narration ready for the show!",
     "narration_play_failed": "I couldn't use this narration.",
-    "mic_source": "Microphone ready"
+    "mic_source": "Microphone ready",
+    "playback_complete": "Hooray for the show!",
+    "mic_active_feedback": "Microphone on",
+    "mic_inactive_feedback": "Microphone off",
+    "free_show_playing": "Puppet show!",
+    "scene_changed": "Scene: {scene}",
+    "story_generic": "Story",
+    "show_generic": "Show",
+    "story_number": "Story {number}"
   },
   "audio": {
     "activity.title": {
