@@ -140,6 +140,13 @@ class OrchestraBackingFlowTests(unittest.TestCase):
         app.particles = []
         return app
 
+    def test_import_request_is_unavailable_without_trusted_store(self):
+        app = self.make_app()
+        app.backing_store = None
+        app._request_backing_track()
+        self.assertEqual(app.creations.requests, [])
+        self.assertIsNone(app.backing_request)
+
     def test_picker_is_wav_and_semantically_scoped(self):
         app = self.make_app()
         app.backing_player.track = object()
