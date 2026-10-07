@@ -333,7 +333,14 @@ class BootHealthProductCompositionTests(unittest.TestCase):
         build_text = (_repo_root() / "build" / "lib" / "compose.sh").read_text(
             encoding="utf-8"
         )
-        self.assertIn("greia-boot-observer.service", build_text)
+        self.assertIn(
+            'if [[ "$STORAGE_LAYOUT_ADAPTER" == *-ab-v1 ]]',
+            build_text,
+        )
+        self.assertIn(
+            "target_services+=(greia-boot-observer.service)",
+            build_text,
+        )
 
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
