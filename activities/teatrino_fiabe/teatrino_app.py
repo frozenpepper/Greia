@@ -1008,7 +1008,7 @@ class TeatrinoApp:
                 self.playback_frames = list(self.recorded_frames)
                 self.playback_sfx = list(self.recorded_sfx)
                 self.playback_duration = max(2.0, self.recorded_frames[-1]["t"])
-                self.feedback_text = f"▶️ {self.ui_strings.get('playing_show', 'Spettacolo in corso! Evviva!')}"
+                self.feedback_text = f"▶️ {self.ui_strings.get('playing_show', 'Showtime!')}"
                 self.feedback_timer = 3.0
                 self.sound_mgr.play("trumpet")
                 if self.playback_audio_channel:
@@ -1043,7 +1043,7 @@ class TeatrinoApp:
         if 740 <= rx <= 805 and 16 <= ry <= 68:
             self.sound_mgr.play("boing")
             self.puppets_on_stage.clear()
-            self.feedback_text = f"✨ {self.ui_strings.get('stage_cleared', 'Palcoscenico pronto!')}"
+            self.feedback_text = f"✨ {self.ui_strings.get('stage_cleared', 'Stage ready!')}"
             self.feedback_timer = 2.0
             return
         if 830 <= rx <= 900 and 24 <= ry <= 78:
@@ -1143,7 +1143,7 @@ class TeatrinoApp:
             pygame.draw.rect(surf, (255, 250, 240), lib_rect, border_radius=14)
             pygame.draw.rect(surf, (61, 44, 31), lib_rect, width=2, border_radius=14)
             num_saved = len(self.library_shows)
-            lib_label = f"🎬 {self.ui_strings.get('stories', 'Storie')} ({num_saved})"
+            lib_label = f"🎬 {self.ui_strings.get('stories', 'Stories')} ({num_saved})"
             lib_s = self.get_text(lib_label, FontRole.TITLE, 14, DARK_TEXT)
             surf.blit(lib_s, (lib_rect.centerx - lib_s.get_width() // 2, lib_rect.centery - lib_s.get_height() // 2))
             self._draw_narration_import_button(surf)
@@ -1193,12 +1193,12 @@ class TeatrinoApp:
             exit_rect = pygame.Rect(140, 16, 110, 52)
             pygame.draw.rect(surf, (255, 230, 230), exit_rect, border_radius=14)
             pygame.draw.rect(surf, (220, 38, 38), exit_rect, width=2, border_radius=14)
-            exit_s = self.get_text(f"⏹️ {self.ui_strings.get('exit_viewer', 'Esci')}", FontRole.TITLE, 15, (185, 28, 28))
+            exit_s = self.get_text(f"⏹️ {self.ui_strings.get('exit_viewer', 'Exit')}", FontRole.TITLE, 15, (185, 28, 28))
             surf.blit(exit_s, (exit_rect.centerx - exit_s.get_width() // 2, exit_rect.centery - exit_s.get_height() // 2))
             rep_rect = pygame.Rect(265, 16, 120, 52)
             pygame.draw.rect(surf, (255, 250, 240), rep_rect, border_radius=14)
             pygame.draw.rect(surf, (61, 44, 31), rep_rect, width=2, border_radius=14)
-            rep_s = self.get_text(f"🔁 {self.ui_strings.get('replay_story', 'Rivedi')}", FontRole.TITLE, 15, DARK_TEXT)
+            rep_s = self.get_text(f"🔁 {self.ui_strings.get('replay_story', 'Replay')}", FontRole.TITLE, 15, DARK_TEXT)
             surf.blit(rep_s, (rep_rect.centerx - rep_s.get_width() // 2, rep_rect.centery - rep_s.get_height() // 2))
             prog_bg = pygame.Rect(410, 24, 360, 34)
             pygame.draw.rect(surf, (20, 16, 30), prog_bg, border_radius=10)
@@ -1225,7 +1225,7 @@ class TeatrinoApp:
             pygame.draw.rect(surf, STAGE_GOLD, sc_rect, width=3, border_radius=14)
             sc_s = self.get_text(sc_icon, FontRole.DISPLAY, 26, DARK_TEXT)
             surf.blit(sc_s, (sc_rect.centerx - sc_s.get_width() // 2, sc_rect.centery - sc_s.get_height() // 2 - 4))
-            sc_lbl = self.get_text(self.ui_strings.get("scene", "Scena"), FontRole.CONTROL, 10, DARK_TEXT)
+            sc_lbl = self.get_text(self.ui_strings.get("scene", "Scene"), FontRole.CONTROL, 10, DARK_TEXT)
             surf.blit(sc_lbl, (sc_rect.centerx - sc_lbl.get_width() // 2, sc_rect.bottom - 13))
             for f_idx, (fx_id, fx_sym) in enumerate(FX_BUTTONS):
                 fy = 88 + f_idx * 58
@@ -1269,7 +1269,7 @@ class TeatrinoApp:
             box_rect = modal_layout["box"]
             pygame.draw.rect(surf, (255, 250, 240), box_rect, border_radius=20)
             pygame.draw.rect(surf, STAGE_GOLD, box_rect, width=4, border_radius=20)
-            hdr_surf = self.get_text(f"🎬 {self.ui_strings.get('stories', 'Storie Magiche')}", FontRole.DISPLAY, 26, DARK_TEXT)
+            hdr_surf = self.get_text(f"🎬 {self.ui_strings.get('stories', 'Stories')}", FontRole.DISPLAY, 26, DARK_TEXT)
             surf.blit(hdr_surf, (box_rect.centerx - hdr_surf.get_width() // 2, box_rect.y + 16))
             cls_rect = modal_layout["close"]
             pygame.draw.rect(surf, (254, 226, 226), cls_rect, border_radius=10)
@@ -1279,7 +1279,7 @@ class TeatrinoApp:
             pygame.draw.line(surf, (185, 28, 28), (cx + 8, cy - 8), (cx - 8, cy + 8), 3)
             if not self.library_shows:
                 no_s = self.get_text(
-                    self.ui_strings.get("no_stories", "Nessuna storia salvata! Registra uno spettacolo!"),
+                    self.ui_strings.get("no_stories", "No saved stories yet!"),
                     FontRole.TITLE,
                     18,
                     (140, 100, 60),
@@ -1328,7 +1328,7 @@ class TeatrinoApp:
                     surf.blit(dur_s, (c_rect.x + 190, c_rect.y + 46))
                     pygame.draw.rect(surf, (220, 255, 225), ply_btn_rect, border_radius=12)
                     pygame.draw.rect(surf, MIC_GREEN, ply_btn_rect, width=2, border_radius=12)
-                    ply_btn_s = self.get_text(f"▶️ {self.ui_strings.get('play_story', 'Guarda')}", FontRole.TITLE, 15, (20, 100, 40))
+                    ply_btn_s = self.get_text(f"▶️ {self.ui_strings.get('play_story', 'Watch')}", FontRole.TITLE, 15, (20, 100, 40))
                     surf.blit(ply_btn_s, (ply_btn_rect.centerx - ply_btn_s.get_width() // 2, ply_btn_rect.centery - ply_btn_s.get_height() // 2))
                     pygame.draw.rect(surf, (255, 230, 230), del_btn_rect, border_radius=12)
                     pygame.draw.rect(surf, (220, 38, 38), del_btn_rect, width=2, border_radius=12)
