@@ -52,6 +52,10 @@ else:  # pragma: no cover - runtime/script fallback
     from orchestra_model import InstrumentCard, Particle
 
 
+BACKING_IMPORT_RECT = pygame.Rect(140, 12, 70, 56)
+BACKING_PLAY_RECT = pygame.Rect(220, 12, 120, 56)
+
+
 class OrchestraRenderer:
     """Stage renderer with one bounded backdrop cache."""
 
@@ -177,8 +181,99 @@ class OrchestraRenderer:
     # ------------------------------------------------------------------
     # HUD + title — kept clear of trusted Home chrome (x < 120)
     # ------------------------------------------------------------------
+    @staticmethod
+    def backing_import_contains(point: tuple[int, int]) -> bool:
+        return BACKING_IMPORT_RECT.collidepoint(point)
 
-    def draw_hud(self, surface: pygame.Surface, stars: int, is_it: bool) -> None:
+    @staticmethod
+    def backing_play_contains(point: tuple[int, int]) -> bool:
+        return BACKING_PLAY_RECT.collidepoint(point)
+
+
+    def draw_hud(
+        self,
+        surface: pygame.Surface,
+        stars: int,
+        is_it: bool,
+        *,
+        backing_enabled: bool = False,
+        backing_state: str = "empty",
+        backing_import_state: str = "",
+    ) -> None:
+        import_border = (
+            (220, 38, 38)
+            if backing_import_state == "error"
+            else (16, 185, 129)
+            if backing_import_state == "imported"
+            else (56, 189, 248)
+        )
+        import_fill = (
+            (205, 240, 224)
+            if backing_import_state in {"pending", "imported"}
+            else (238, 248, 255)
+        )
+        pygame.draw.rect(
+            surface, import_fill, BACKING_IMPORT_RECT, border_radius=14
+        )
+        pygame.draw.rect(
+            surface,
+            import_border,
+            BACKING_IMPORT_RECT,
+            width=3,
+            border_radius=14,
+        )
+        ix, iy = BACKING_IMPORT_RECT.center
+        # Music note + down arrow: bring a saved recording/song into Orchestra.
+        pygame.draw.circle(surface, DARK_TEXT, (ix - 11, iy + 8), 5)
+        pygame.draw.line(
+            surface, DARK_TEXT, (ix - 6, iy + 7), (ix - 6, iy - 14), 3
+        )
+        pygame.draw.line(
+            surface, DARK_TEXT, (ix - 6, iy - 14), (ix + 2, iy - 11), 3
+        )
+        pygame.draw.line(
+            surface, import_border, (ix + 15, iy - 13), (ix + 15, iy + 9), 4
+        )
+        pygame.draw.lines(
+            surface,
+            import_border,
+            False,
+            [(ix + 7, iy + 1), (ix + 15, iy + 10), (ix + 23, iy + 1)],
+            4,
+        )
+
+        play_fill = (232, 246, 236) if backing_enabled else (61, 65, 76)
+        play_border = (34, 197, 94) if backing_enabled else (110, 115, 128)
+        if backing_state == "playing":
+            play_fill = (205, 240, 224)
+        elif backing_state == "paused":
+            play_fill = (254, 240, 138)
+        pygame.draw.rect(
+            surface, play_fill, BACKING_PLAY_RECT, border_radius=14
+        )
+        pygame.draw.rect(
+            surface,
+            play_border,
+            BACKING_PLAY_RECT,
+            width=3,
+            border_radius=14,
+        )
+        px, py = BACKING_PLAY_RECT.center
+        icon_color = DARK_TEXT if backing_enabled else (160, 164, 174)
+        if backing_state == "playing":
+            pygame.draw.rect(
+                surface, icon_color, (px - 12, py - 12, 8, 24), border_radius=2
+            )
+            pygame.draw.rect(
+                surface, icon_color, (px + 4, py - 12, 8, 24), border_radius=2
+            )
+        else:
+            pygame.draw.polygon(
+                surface,
+                icon_color,
+                [(px - 8, py - 14), (px - 8, py + 14), (px + 16, py)],
+            )
+
         title_rect = pygame.Rect(360, 16, 304, 52)
         pygame.draw.rect(surface, (255, 250, 240), title_rect, border_radius=14)
         pygame.draw.rect(surface, (30, 41, 59), title_rect, width=2, border_radius=14)
@@ -193,4 +288,4 @@ class OrchestraRenderer:
         surface.blit(hud_surf, (hud_rect.left + 58, hud_rect.centery - hud_surf.get_height() // 2))
 
 
-__all__ = ["OrchestraRenderer"]
+__all__ = ["BACKING_IMPORT_RECT", "BACKING_PLAY_RECT", "OrchestraRenderer"]
