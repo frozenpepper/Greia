@@ -248,6 +248,12 @@ class ActivityStorageBroker:
             _thread=thread,
         )
 
+    def bind_creations(self, access: CreationSessionAccess) -> None:
+        """Bind trusted producer/selection authority before Activity launch."""
+        if self._stopped or self._server.creation_access is not None:
+            raise StorageError("creations authority may be bound only once per live session")
+        self._server.creation_access = access
+
     def stop(self) -> None:
         if self._stopped:
             return
