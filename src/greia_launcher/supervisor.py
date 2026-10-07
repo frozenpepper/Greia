@@ -8,7 +8,6 @@ from typing import Callable, Mapping, Protocol
 from greia_platform.activities import ActivityManifest
 from greia_platform.creation_access import CreationSessionAccess
 from greia_platform.creations import CreationLibrary, CreationLibraryError
-from greia_platform.profiles import ProfileError
 from greia_platform.device_capabilities import DeviceCapabilityService
 from greia_platform.history import (
     HistoryError,
@@ -16,7 +15,7 @@ from greia_platform.history import (
     ProfileHistoryStore,
 )
 from greia_platform.permissions import ActivityAuthority
-from greia_platform.profiles import ProfileContext
+from greia_platform.profiles import ProfileContext, ProfileError
 from greia_platform.storage import ActivityStorageService, StorageError
 
 from .display_session import (
