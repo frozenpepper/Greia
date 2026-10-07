@@ -11,6 +11,7 @@ from greia_platform.typography import (
     next_grapheme_boundary,
     previous_grapheme_boundary,
     snap_grapheme_boundary,
+    truncate_grapheme_safe,
 )
 
 if __package__:
@@ -99,6 +100,20 @@ class PostcardDraft:
         self._cursor += len(clean)
         self._cursor = snap_grapheme_boundary(self._text, self._cursor)
         return True
+
+    def replace_text(self, text: str) -> bool:
+        """Replace draft body with a safe postcard-length plain-text snapshot."""
+        if not isinstance(text, str):
+            raise TypeError("postcard text must be a string")
+        # Postcards are a compact single-message surface. Imported document
+        # paragraph/tab structure becomes ordinary spaces; control bytes never
+        # enter the draft.
+        compact = " ".join(text.replace("\x00", "").split())
+        normalized = truncate_grapheme_safe(compact, MAX_GRAPHEMES)
+        changed = normalized != self._text
+        self._text = normalized
+        self._cursor = len(normalized)
+        return changed
 
     def backspace(self) -> bool:
         if not self._text or self._cursor <= 0:
