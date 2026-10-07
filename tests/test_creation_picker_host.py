@@ -90,9 +90,13 @@ class _Supervisor:
 class _Display:
     def __init__(self):
         self.surface = object()
+        self.flips = 0
 
     def get_surface(self):
         return self.surface
+
+    def flip(self):
+        self.flips += 1
 
 
 class _Mouse:
@@ -192,6 +196,7 @@ class CreationPickerHostTests(unittest.TestCase):
         self.assertTrue(self.host.service(self.pygame, (object(),)))
         self.assertTrue(self.host.visible)
         self.assertEqual(self.shell.shows, [self.shell.lease])
+        self.assertGreaterEqual(self.pygame.display.flips, 1)
         self.assertEqual(self.pygame.mouse.values[-1], True)
 
         self.host._screen.next_result = UiEventResult.REQUEST_CLOSE

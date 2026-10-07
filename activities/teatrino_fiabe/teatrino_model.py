@@ -449,4 +449,4 @@ class AmbientSpark:
             pass
 
 
-__all__ = ["ShowRepository", "Puppet", "AmbientSpark"]
+__all__ = ["ShowRepository", "ShowStorageError", "Puppet", "AmbientSpark"]

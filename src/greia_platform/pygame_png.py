@@ -16,14 +16,23 @@ class PygamePngError(ValueError):
     """PNG bytes/surface conversion failed."""
 
 
+MAX_PNG_BYTES = 8 * 1024 * 1024
+MAX_PNG_PIXELS = 4_000_000
+MAX_PNG_SIDE = 3200
+
+
 def decode_png_surface(
     payload: bytes,
     target_size: tuple[int, int],
     *,
     background: tuple[int, int, int] = (255, 255, 255),
 ) -> pygame.Surface:
-    if not isinstance(payload, bytes) or not payload:
-        raise PygamePngError("PNG payload must be non-empty bytes")
+    if (
+        not isinstance(payload, bytes)
+        or not payload
+        or len(payload) > MAX_PNG_BYTES
+    ):
+        raise PygamePngError("PNG payload exceeds byte bounds")
     width, height = target_size
     if (
         type(width) is not int
@@ -37,6 +46,15 @@ def decode_png_surface(
         with Image.open(io.BytesIO(payload)) as image:
             if image.format != "PNG":
                 raise PygamePngError("payload is not PNG")
+            source_width, source_height = image.size
+            if (
+                source_width < 1
+                or source_height < 1
+                or source_width > MAX_PNG_SIDE
+                or source_height > MAX_PNG_SIDE
+                or source_width * source_height > MAX_PNG_PIXELS
+            ):
+                raise PygamePngError("PNG source dimensions exceed bounds")
             converted = image.convert("RGB")
             if converted.size != target_size:
                 converted.thumbnail(target_size, Image.Resampling.LANCZOS)
@@ -80,9 +98,19 @@ def encode_surface_png(surface: pygame.Surface) -> bytes:
         )
         output = io.BytesIO()
         image.save(output, format="PNG", optimize=False)
-        return output.getvalue()
+        payload = output.getvalue()
+        if len(payload) > MAX_PNG_BYTES:
+            raise PygamePngError("encoded PNG exceeds byte bounds")
+        return payload
     except (OSError, ValueError, pygame.error) as exc:
         raise PygamePngError("surface could not be encoded as PNG") from exc
 
 
-__all__ = ["PygamePngError", "decode_png_surface", "encode_surface_png"]
+__all__ = [
+    "MAX_PNG_BYTES",
+    "MAX_PNG_PIXELS",
+    "MAX_PNG_SIDE",
+    "PygamePngError",
+    "decode_png_surface",
+    "encode_surface_png",
+]

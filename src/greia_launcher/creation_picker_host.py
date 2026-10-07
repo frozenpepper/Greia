@@ -157,6 +157,16 @@ class ActivityCreationPickerHost:
                 typography=self._typography,
                 locale=self._locale,
             )
+            # Prepare the first trusted picker frame while the Shell is still
+            # behind the Activity. Raising an old Home framebuffer would cause
+            # a visible one-frame flash before the modal appears.
+            surface = pygame.display.get_surface()
+            if surface is None:
+                raise CreationPickerHostError(
+                    "Greia Shell has no drawable modal surface"
+                )
+            screen.draw(surface)
+            pygame.display.flip()
         except Exception as exc:
             try:
                 self._supervisor.cancel_creation_selection(
