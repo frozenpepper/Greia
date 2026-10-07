@@ -20,6 +20,7 @@ from .device import (
 )
 from .remote_bridge import DEFAULT_REMOTE_PORT
 from .runtime import SimulatorPythonRuntimeAdapter
+from .shell_window import SimulatorShellWindowController
 from .system_chrome import (
     SimulatorSystemChromeBackend,
     SimulatorSystemChromeRemoteBridge,
@@ -47,6 +48,12 @@ class GreiaSimulatorChildShell(GreiaChildShell):
             else None
         )
         super().__init__(windowed=True, allow_exit=True)
+        # Override the generic development/no-op Shell-window seam with the
+        # simulator's exact-session remote-display modal owner. This happens
+        # after normal bootstrap composition and before run() creates windows.
+        self._shell_window_backend = SimulatorShellWindowController(
+            self._remote_bridge
+        )
 
     @property
     def remote_url(self) -> str | None:
