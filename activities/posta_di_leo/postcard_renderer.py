@@ -27,6 +27,8 @@ POSTCARD_RECT: Final[pygame.Rect] = pygame.Rect(80, 110, 864, 395)
 SEND_BTN_RECT: Final[pygame.Rect] = pygame.Rect(80, 525, 200, 52)
 GALLERY_BTN_RECT: Final[pygame.Rect] = pygame.Rect(310, 525, 280, 52)
 CLEAR_BTN_RECT: Final[pygame.Rect] = pygame.Rect(620, 525, 180, 52)
+SHARED_IMPORT_BTN_RECT: Final[pygame.Rect] = pygame.Rect(820, 525, 124, 52)
+SHARED_SHARE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(742, 485, 170, 48)
 BACK_TO_EDITOR_RECT: Final[pygame.Rect] = pygame.Rect(80, 24, 240, 52)
 
 
@@ -50,6 +52,8 @@ class PostcardRenderer:
         library: PostcardLibrary,
         *,
         cursor_visible: bool = True,
+        shared_available: bool = False,
+        shared_state: str = "",
     ) -> None:
         target.blit(self._art.background, (0, 0))
 
@@ -60,7 +64,12 @@ class PostcardRenderer:
         self._draw_postcard_canvas(target, draft, cursor_visible=cursor_visible)
 
         # 3. Bottom Toolbar
-        self._draw_editor_toolbar(target, library)
+        self._draw_editor_toolbar(
+            target,
+            library,
+            shared_available=shared_available,
+            shared_state=shared_state,
+        )
 
     def draw_gallery(
         self,
@@ -69,6 +78,8 @@ class PostcardRenderer:
         *,
         selected_card_id: str | None = None,
         confirm_delete: bool = False,
+        shared_available: bool = False,
+        shared_state: str = "",
     ) -> None:
         target.blit(self._art.background, (0, 0))
 
@@ -109,7 +120,13 @@ class PostcardRenderer:
         if selected_card_id is not None:
             card = library.get(selected_card_id)
             if card is not None:
-                self._draw_card_modal(target, card, confirm_delete=confirm_delete)
+                self._draw_card_modal(
+                    target,
+                    card,
+                    confirm_delete=confirm_delete,
+                    shared_available=shared_available,
+                    shared_state=shared_state,
+                )
 
     def draw_full_dialog(self, target: pygame.Surface) -> None:
         """Render polite full-mailbox sheet."""
@@ -183,6 +200,12 @@ class PostcardRenderer:
 
     def clear_contains(self, point: tuple[int, int]) -> bool:
         return CLEAR_BTN_RECT.collidepoint(point)
+
+    def shared_import_contains(self, point: tuple[int, int]) -> bool:
+        return SHARED_IMPORT_BTN_RECT.collidepoint(point)
+
+    def share_btn_rect(self) -> pygame.Rect:
+        return SHARED_SHARE_BTN_RECT.copy()
 
     def back_to_editor_contains(self, point: tuple[int, int]) -> bool:
         return BACK_TO_EDITOR_RECT.collidepoint(point)
@@ -338,7 +361,14 @@ class PostcardRenderer:
                 2,
             )
 
-    def _draw_editor_toolbar(self, target: pygame.Surface, library: PostcardLibrary) -> None:
+    def _draw_editor_toolbar(
+        self,
+        target: pygame.Surface,
+        library: PostcardLibrary,
+        *,
+        shared_available: bool,
+        shared_state: str,
+    ) -> None:
         # Send Button
         pygame.draw.rect(target, (22, 163, 74), SEND_BTN_RECT, border_radius=20)
         pygame.draw.rect(target, (134, 239, 172), SEND_BTN_RECT, width=3, border_radius=20)
@@ -379,6 +409,47 @@ class PostcardRenderer:
             (CLEAR_BTN_RECT.centerx - c_txt.get_width() // 2, CLEAR_BTN_RECT.centery - c_txt.get_height() // 2),
         )
 
+        if shared_available:
+            state_color = (
+                (16, 185, 129)
+                if shared_state in {"pending", "imported", "saved"}
+                else (220, 38, 38)
+                if shared_state == "error"
+                else (2, 132, 199)
+            )
+            pygame.draw.rect(
+                target,
+                (235, 247, 255),
+                SHARED_IMPORT_BTN_RECT,
+                border_radius=18,
+            )
+            pygame.draw.rect(
+                target,
+                state_color,
+                SHARED_IMPORT_BTN_RECT,
+                width=3,
+                border_radius=18,
+            )
+            cx, cy = SHARED_IMPORT_BTN_RECT.center
+            # Page + downward arrow: bring a saved text creation into draft.
+            pygame.draw.rect(
+                target,
+                (30, 41, 59),
+                (cx - 28, cy - 15, 30, 34),
+                width=3,
+                border_radius=4,
+            )
+            pygame.draw.line(
+                target, state_color, (cx + 18, cy - 15), (cx + 18, cy + 10), 4
+            )
+            pygame.draw.lines(
+                target,
+                state_color,
+                False,
+                [(cx + 9, cy + 2), (cx + 18, cy + 11), (cx + 27, cy + 2)],
+                4,
+            )
+
     def _draw_thumbnail_card(
         self,
         target: pygame.Surface,
@@ -414,6 +485,8 @@ class PostcardRenderer:
         card: SavedPostcard,
         *,
         confirm_delete: bool = False,
+        shared_available: bool = False,
+        shared_state: str = "",
     ) -> None:
         overlay = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.SRCALPHA)
         overlay.fill((15, 23, 42, 210))
@@ -484,6 +557,52 @@ class PostcardRenderer:
                 d_txt,
                 (del_rect.centerx - d_txt.get_width() // 2, del_rect.centery - d_txt.get_height() // 2),
             )
+
+            if shared_available and card.text.strip():
+                share_rect = self.share_btn_rect()
+                share_color = (
+                    (16, 185, 129)
+                    if shared_state == "saved"
+                    else (220, 38, 38)
+                    if shared_state == "error"
+                    else (2, 132, 199)
+                )
+                pygame.draw.rect(
+                    target, (235, 247, 255), share_rect, border_radius=18
+                )
+                pygame.draw.rect(
+                    target,
+                    share_color,
+                    share_rect,
+                    width=3,
+                    border_radius=18,
+                )
+                cx, cy = share_rect.center
+                pygame.draw.rect(
+                    target,
+                    (30, 41, 59),
+                    (cx - 24, cy - 10, 30, 28),
+                    width=3,
+                    border_radius=4,
+                )
+                pygame.draw.line(
+                    target,
+                    share_color,
+                    (cx + 18, cy + 12),
+                    (cx + 18, cy - 13),
+                    4,
+                )
+                pygame.draw.lines(
+                    target,
+                    share_color,
+                    False,
+                    [
+                        (cx + 9, cy - 5),
+                        (cx + 18, cy - 14),
+                        (cx + 27, cy - 5),
+                    ],
+                    4,
+                )
 
             close_rect = self.cancel_btn_rect()
             pygame.draw.rect(target, (2, 132, 199), close_rect, border_radius=18)
