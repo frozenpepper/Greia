@@ -720,7 +720,9 @@ first-use reliability and child input isolation:
 1. When a library or filtered picker had zero compatible Creations,
    `_grid` used unbound local names `width` and `height`, raising
    `NameError` while drawing the expected first-use empty state.
-   Corrected by sourcing dimensions from the actual surface.
+   Corrected by sourcing dimensions from the actual surface. A follow-up
+   placed the empty-state caption above (rather than over) the footer
+   navigation on 1024×600 and added a real-Pygame position regression.
    Empty-state art now reflects an audio-only or text-only picker
    instead of displaying a misleading picture symbol.
 2. During library deletion confirmation, the keyboard event handler
