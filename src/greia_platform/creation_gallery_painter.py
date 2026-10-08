@@ -160,19 +160,20 @@ class CreationsPygamePainter:
                     if yy < paper.bottom-15:
                         pygame.draw.line(screen,(208,198,181),(paper.left+24,yy),(paper.right-24,yy),4)
 
-    def draw(self, screen: Any, layout: CreationGalleryLayout, pygame: Any) -> None:
+    def draw(self, screen: Any, layout: CreationGalleryLayout, pygame: Any, *, delete_focus: str = "cancel_delete") -> None:
         self._targets.clear()
         screen.fill(self.BACKGROUND)
         width,height=screen.get_size()
         pygame.draw.circle(screen,(58,73,113),(width-75,height-32),max(118,height//3))
         page=self.controller.page
         if page.detail_id is not None:
-            self._detail(screen,layout,pygame)
+            self._detail(screen,layout,pygame, delete_focus=delete_focus)
         else:
             self._grid(screen,layout,pygame)
 
     def _grid(self, screen: Any, layout: CreationGalleryLayout, pygame: Any) -> None:
         page=self.controller.page
+        width, height = screen.get_size()
         title=self._label("Le mie creazioni","My Creations") if self.controller.mode==GalleryMode.LIBRARY else self._label("Scegli una creazione","Choose a creation")
         self._text(screen,title,layout.title.x,layout.title.y,29)
         labels={
@@ -232,7 +233,7 @@ class CreationsPygamePainter:
         self._button(screen,"previous",layout.prev_page,"previous",pygame,enabled=page.has_previous)
         self._button(screen,"next",layout.next_page,"next",pygame,enabled=page.has_next)
 
-    def _detail(self, screen: Any, layout: CreationGalleryLayout, pygame: Any) -> None:
+    def _detail(self, screen: Any, layout: CreationGalleryLayout, pygame: Any, *, delete_focus: str) -> None:
         page=self.controller.page
         item=next((item for item in page.items if item.creation_id==page.detail_id),None)
         if item is None:
@@ -269,3 +270,8 @@ class CreationsPygamePainter:
             self._targets.clear()
             self._button(screen,"cancel_delete",layout.cancel,"cancel",pygame,fill=self.GREEN)
             self._button(screen,"confirm_delete",layout.confirm,"trash",pygame,fill=self.CORAL)
+            # The confirmation is keyboard-operable, but cancellation is the
+            # default. Keep the selected action visibly identifiable without
+            # relying on its color or a readable label.
+            focus_rect = layout.confirm if delete_focus == "confirm_delete" else layout.cancel
+            pygame.draw.rect(screen, self.INK, self._box(focus_rect, pygame), width=5, border_radius=18)
