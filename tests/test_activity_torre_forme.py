@@ -22,8 +22,10 @@ from torre_content import (  # noqa: E402
     ShapeDefinition,
     TowerMode,
 )
+from torre_app import TorreApp  # noqa: E402
 from torre_model import (  # noqa: E402
     BlueprintSocket,
+    StepOutcome,
     GridCell,
     TorreModel,
     rotate_blocks,
@@ -236,6 +238,24 @@ class TorreAppIntegrationTests(unittest.TestCase):
         # Test drawing one frame without errors
         renderer.draw(canvas.surface, model, 0.5, 100.0)
         canvas.present()
+
+
+class TorreScriptParticleTests(unittest.TestCase):
+    def test_snap_and_clear_effects_work_in_direct_script_import_context(self) -> None:
+        """Greia launches main.py as a script, so torre_app has no package parent."""
+        from unittest.mock import Mock
+
+        app = object.__new__(TorreApp)
+        app._audio = Mock()
+        app._renderer = Mock()
+        app._storage = None
+        outcome = StepOutcome(
+            snap_coords=[(1, 2)],
+            cleared_coords=[(3, 4)],
+        )
+        app._process_outcome(outcome)
+        self.assertEqual(app._renderer.spawn_particles.call_count, 2)
+
 
 
 if __name__ == "__main__":
