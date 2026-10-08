@@ -5,6 +5,34 @@
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
 **Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 32-item child candidate roster plus a mandatory separately staged trusted My Greia system Activity; P7 has source-reviewed 45/45 (12 withheld child, one separate settings/system entry). A new unvoiced My Time source prototype is independently incubated outside the 45 built-ins. None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
 
+### 2026-10-08 current P3 first-use Gallery follow-up (source newer than original pin)
+
+The original pinned source SHA above is retained as **historical evidence**,
+not as an assertion that newer Creations renderer edits were exercised.
+The latest P3 source repairs are documented in the single work queue,
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`, task **GLA-007**.
+Before treating the accumulated P1–P7 candidate as tested, run the
+current source's `test_creation_gallery_render.py` (actual dummy-Pygame
+Screen/Painter) plus `test_creation_gallery_layout.py` and
+`test_creation_gallery.py` on an exact recorded HEAD. Use the queue's
+minimum SHA, unique evidence directory and stop contract.
+
+In the real Simulator capture (not a mock/dummy frame), exercise a
+**brand-new, empty child profile** in My Creations and in a filtered
+audio-only picker. Check the correct type-specific large illustration,
+the child's meaningful Cancel/back affordance and protected Home
+corner. Then create one disposable document, open its detail, enter
+Delete confirmation, verify keyboard focus defaults to safe Cancel,
+press R/P/TAB and confirm none control background content, press
+Enter and verify data remains, reopen Delete, Right then Enter and
+verify removal plus empty-state rendering. Visually inspect both
+focus outlines; test pointer cancellation/confirmation separately.
+Record IT/EN and at least 800×480 and 1024×600 frames. This
+supplements, and does **not** replace, the existing shared-picker
+authenticated token, image/audio/text, recovery and installed-hardware
+acceptance matrix. Do not call P3 release ready without the full
+original evidence.
+
 ### Resume after 2026-10-08 first blocked launch — reuse accepted Steps 0–3 evidence
 
 At source `47a949a0`, the owner-local desktop agent reported four focused suites
