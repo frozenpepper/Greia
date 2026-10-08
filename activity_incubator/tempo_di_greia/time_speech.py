@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from .time_model import TimeMode
+if __package__:
+    from .time_model import TimeMode
+else:
+    from time_model import TimeMode
 
 
 SPEECH_CUES = (
