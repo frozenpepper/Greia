@@ -765,3 +765,30 @@ PNG. No source asset was regenerated or newly approved, and
 Encyclopedia's E3 acceptance remains unchanged. GLA-008 in
 `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` owns generation,
 small-size evaluation and annotated visual findings when agent is free.
+
+
+### 2026-10-08 — Child Home art and layout organization (P6 cross-workstream; SOURCE WIP)
+
+The Creations+Activity P6 owner reviewed the **actual 32 draft**
+first-party Activity manifest memberships and corrected four
+inappropriate Create entries. The existing Greia Shell Home now
+places trusted **My Creations immediately after Create**,
+using `backpack` instead of duplicating Create's `palette`
+icon, and adapts compact landscape column count to avoid a
+six-rows-high Home. This uses existing shared art and
+Collection-first/Parent-policy authorities, no new icon family,
+catalogue migration or visual pipeline.
+
+Visual direction/complete 32-candidate editorial matrix lives
+under `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`.
+The source organization tests are newly committed but
+**UNEXECUTED**, as are real Shell screenshots at 1024×600,
+800×480 and 480×320. The canonical 114-item contact sheet
+is still pending actual visual inspection. Two existing
+IT/EN spoken Home label catalogues lack
+`my_creations.wav`; the local-agent queue GLA-010
+tracks approved voice content and actual listening
+without adding runtime TTS. A distinct existing icon is
+not visual acceptance until it has been seen next to the
+other portals by the owner/child. No P6/P7 release gate
+or full V5 shared-graphics completion was claimed.
