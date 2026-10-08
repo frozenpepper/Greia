@@ -73,8 +73,12 @@ resolver before promotion.
 
 **Source prepared, not verified:** `time_speech.py` owns the single pending
 instruction and first-use/replay/terminal cue semantics;
-`time_audio.py` loads bounded, previously mapped package-local WAV/OGG from
-Greia `LocalizedResources.audio_cue`; `time_app.py` triggers cues and
+`time_audio.py` indexes package-local WAV/OGG through
+Greia `LocalizedResources.audio_cue(key, allow_fallback=False)`, then
+lazily decodes only a requested clip after the first usable frame.
+The cache is bounded to seven semantic cues; invalid audio is
+suppressed after the first failed decode. The semantic key belongs
+to the chosen locale bundle, irrespective of the actual clip directory; `time_app.py` triggers cues and
 conditionally renders an 88×72 speaker/replay control only when the currently
 relevant instruction is actually installed. This does not generate clips.
 Voice is stopped on normal/exceptional Activity exit. Required prompts never
