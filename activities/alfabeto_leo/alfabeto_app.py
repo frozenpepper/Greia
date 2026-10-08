@@ -52,7 +52,7 @@ class AlfabetoApp:
     def __post_init__(self) -> None:
         saved = self.services.load_state()
         if saved.discovered_letters:
-            self.model.discovered_letters.update(saved.discovered_letters)
+            self.model.restore_discoveries(set(saved.discovered_letters))
 
     def run(self) -> int:
         clock = pygame.time.Clock()

@@ -87,6 +87,8 @@ class AlfabetoModel:
     wobble_card: str = ""
     wobble_timer: float = 0.0
     celebrating: bool = False
+    _pending_discoveries: list[str] = field(default_factory=list, repr=False)
+    _parade_recorded: bool = False
 
     def __post_init__(self) -> None:
         self.select_letter("A")
@@ -99,7 +101,7 @@ class AlfabetoModel:
         """Step previous (-1) or next (+1) in alphabet."""
         self.current_index = (self.current_index + delta) % len(LETTERS_CATALOGUE)
         item = self.active_letter
-        self.discovered_letters.add(item.char)
+        self._discover(item.char)
         self.revealed = True
         self.reveal_timer = 0.6
         return item
@@ -110,11 +112,23 @@ class AlfabetoModel:
         for idx, item in enumerate(LETTERS_CATALOGUE):
             if item.char == char_upper:
                 self.current_index = idx
-                self.discovered_letters.add(item.char)
+                self._discover(item.char)
                 self.revealed = True
                 self.reveal_timer = 0.6
                 return True
         return False
+
+    def _discover(self, char: str) -> None:
+        if char not in self.discovered_letters:
+            self.discovered_letters.add(char)
+            self._pending_discoveries.append(char)
+
+    def restore_discoveries(self, letters: set[str]) -> None:
+        """Restore previously seen letters without creating new history facts."""
+        valid = {item.char for item in LETTERS_CATALOGUE}
+        self.discovered_letters.update(letters & valid)
+        self._parade_recorded = len(self.discovered_letters) == len(valid)
+        self._pending_discoveries.clear()
 
     def switch_mode(self, mode: GameMode) -> None:
         self.mode = mode
@@ -152,7 +166,7 @@ class AlfabetoModel:
             self.guess_solved = True
             self.guess_solved_timer = 1.8
             self.celebrating = True
-            self.discovered_letters.add(self.target_letter.char)
+            self._discover(self.target_letter.char)
             return ("correct", self.target_letter)
         else:
             self.wobble_card = chosen_char
@@ -161,7 +175,12 @@ class AlfabetoModel:
 
     def update(self, dt: float) -> list[str]:
         """Update animation timers and state transitions."""
-        events: list[str] = []
+        events: list[str] = ["letter.discovered" for _ in self._pending_discoveries]
+        if self._pending_discoveries:
+            self._pending_discoveries.clear()
+            if len(self.discovered_letters) == len(LETTERS_CATALOGUE) and not self._parade_recorded:
+                self._parade_recorded = True
+                events.append("alphabet.parade_completed")
 
         if self.reveal_timer > 0.0:
             self.reveal_timer = max(0.0, self.reveal_timer - dt)
@@ -174,9 +193,6 @@ class AlfabetoModel:
         if self.guess_solved:
             self.guess_solved_timer -= dt
             if self.guess_solved_timer <= 0.0:
-                events.append("letter.discovered")
-                if len(self.discovered_letters) >= 26:
-                    events.append("alphabet.parade_completed")
                 self.setup_new_guess()
 
         return events

@@ -37,9 +37,9 @@ class AlfabetoLeoTests(unittest.TestCase):
         self.assertEqual(edu["difficulty"], 1)
         self.assertEqual(edu["recommended_age_min"], 2)
         self.assertEqual(edu["recommended_age_max"], 4)
-        self.assertEqual(edu["difficulty_min"], 1)
-        self.assertEqual(edu["difficulty_max"], 3)
-        self.assertTrue(edu["adaptive_difficulty"])
+        self.assertNotIn("difficulty_min", edu)
+        self.assertNotIn("difficulty_max", edu)
+        self.assertNotIn("adaptive_difficulty", edu)
 
         event_ids = [e["id"] for e in edu["events"]]
         self.assertIn("letter.discovered", event_ids)
@@ -80,6 +80,9 @@ class AlfabetoLeoTests(unittest.TestCase):
         self.assertEqual(model.wobble_card, distractor.char)
         self.assertFalse(model.guess_solved)
 
+        # Use a not-yet-discovered target; discoveries count actual new
+        # knowledge rather than every successful repetition.
+        model.target_letter = next(item for item in LETTERS_CATALOGUE if item.char == "C")
         # Test correct guess -> solved, celebration
         res, solved_item = model.handle_guess_choice(model.target_letter.char)
         self.assertEqual(res, "correct")
@@ -90,6 +93,27 @@ class AlfabetoLeoTests(unittest.TestCase):
         # Update after guess celebration timer triggers event
         events = model.update(1.9)
         self.assertIn("letter.discovered", events)
+        self.assertNotIn("alphabet.parade_completed", events)
+        self.assertNotIn("letter.discovered", model.update(0.1))
+
+    def test_exploration_and_full_parade_emit_only_new_facts(self) -> None:
+        model = AlfabetoModel()
+        model.step(1)
+        self.assertEqual(model.update(0.03), ["letter.discovered"])
+        model.step(-1)
+        model.step(1)
+        self.assertEqual(model.update(0.03), [])
+
+        for item in LETTERS_CATALOGUE:
+            model.select_letter(item.char)
+        events = model.update(0.03)
+        self.assertEqual(events.count("alphabet.parade_completed"), 1)
+        self.assertEqual(events.count("letter.discovered"), 24)
+        self.assertEqual(model.update(0.03), [])
+
+        reloaded = AlfabetoModel()
+        reloaded.restore_discoveries(model.discovered_letters)
+        self.assertEqual(reloaded.update(0.03), [])
 
     def test_services_safe_fallback(self) -> None:
         services = AlfabetoServices()

@@ -15,9 +15,8 @@ categories = ["language", "phonics", "fine_motor"]
 difficulty = 1
 recommended_age_min = 2
 recommended_age_max = 4
-difficulty_min = 1
-difficulty_max = 3
-adaptive_difficulty = true
+# Explore and three-choice guessing are two modes, not three authored
+# difficulty tiers or an adaptive-difficulty algorithm.
 skills = [
   { id = "language.letter_recognition", weight = 3 },
   { id = "language.phonological_awareness", weight = 2 },
