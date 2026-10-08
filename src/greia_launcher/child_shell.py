@@ -164,9 +164,19 @@ class GreiaChildShell(
         collections = super()._home_collections()
         if getattr(self, "_active_profile", None) is None:
             return collections
-        return (*collections, Collection(
-            self.CREATIONS_COLLECTION_ID, (), icon_id="palette",
-        ))
+        # A child sees Create and the place to find their saved work together.
+        # Use a different canonical picture from Create's palette so a
+        # prereader can recognize making versus keeping without text.
+        creations = Collection(
+            self.CREATIONS_COLLECTION_ID, (), icon_id="backpack",
+        )
+        create_index = next(
+            (index for index, collection in enumerate(collections)
+             if collection.collection_id == "create"),
+            None,
+        )
+        position = create_index + 1 if create_index is not None else 0
+        return (*collections[:position], creations, *collections[position:])
 
     def _set_category(self, category_id: str) -> None:
         if category_id == self.CREATIONS_COLLECTION_ID:
