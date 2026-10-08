@@ -7,7 +7,7 @@
 ## A. At-a-glance checkpoint — 2026-10-08
 
 - Program: **P1 adaptive capacity SOURCE-WIP**, **P2 broker/SDK SOURCE-WIP**, **P3 universal gallery + authenticated trusted modal SOURCE-WIP**, **P4 PNG round-trip SOURCE-WIP**, and **P5 WAV + UTF-8 interoperability SOURCE-WIP**. One shared launcher-composed `VolumeBudget` now guards Activity private storage, Creations and history growth at 75% used / 512 MiB free; shipped private Activity namespaces scale to 25% of the actual writable volume (32 MiB is only the legacy minimum floor). No complete checkout/GUI/audio/text/capacity acceptance has run. Wayland/KMSDRM and P6–P8 remain open.
-- First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. A new unvoiced **My Time** experiment is separately incubated in `activity_incubator/tempo_di_greia/` and is not a 46th installed Activity. My Greia remains outside child *games* selection but is now mandatorily staged as a trusted system Activity in official target composition (SOURCE-WIP, no live release verification). The earlier catalogue strategy's 41-item figures are historical.
+- P3 source-first child-flow review (latest 2026-10-08): the actual renderer had an unbound `width/height` on a completely empty Creations gallery or compatible-media picker. That first-use crash is corrected. A second issue let keyboard replay/navigation reach underlying content during the delete-confirmation modal; keyboard confirmation now defaults to Cancel and requires explicit Right → Enter, with visible focus. The audio-only empty picker now displays audio imagery. A new real dummy-Pygame screen regression covers these states but has **not been executed**. No P3 acceptance status changes; see GLA-007.\n- First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. A new unvoiced **My Time** experiment is separately incubated in `activity_incubator/tempo_di_greia/` and is not a 46th installed Activity. My Greia remains outside child *games* selection but is now mandatorily staged as a trusted system Activity in official target composition (SOURCE-WIP, no live release verification). The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: the earlier **Colline Allegre script-import** and **Quattro Amici difficulty D5** mismatches were corrected in previous source commits. P7 batch 2 repaired Corsa's queued drag, Quattro's chrome exclusion, Torre's direct-script particle import, Delfino's resize and Dragon's nonexistent event. P7 batch 3 additionally repairs Acquario's missing event-loop input pump and real milestone emissions, Baia's feeding/fact event declarations and chrome checks, Cucciolo's drag/focus/event declaration, and Momo's discovery events, safe pointer mapping and resize. P7 batch 4 repairs atomic Monster-gallery persistence, true creation-event invocation and platform-owned Home input, plus Alphabet unique-discovery and honest difficulty declarations. P7 batch 5 repairs Cloud completion/drag/chrome authority; Mondo Contrari's real interaction milestones, English labels and safe letterboxing; Bridge honest placements; Marble responsive drag/input; Memory exit/localized replay; Encyclopedia internal navigation authority. P7 batch 6 repairs Stars platform Home and session identity, Train per-replay milestone identity, Seasons one-shot discovery and safe letterbox mapping, and Submarine undeclared/phantom events plus pointer authority. The false adaptive-D2–D6 Bridge and adaptive-D1–D4 Marble claims were removed. **All these source changes and new regression tests remain UNEXECUTED in the canonical checkout.**
 - Release composition: **explicit draft selection is now source-wired into the authoritative owner release path**. `greia_release.py` sets `PIP_RELEASE_BUILD=1`; target composition stages only `build/first-party-release-activities.toml`, validates/indexes the installed subset, and refuses draft/empty policy for official release. Non-release/dev images deliberately keep the full source tree. Policy remains **draft**, so no official Activity release can build yet.
 - Exchange status: **PNG, first/second WAV consumers and reciprocal UTF-8 paths are implemented SOURCE-WIP.** Capacity plumbing now uses one shared budget across all variable child-data writers in the launcher process (Activity storage, Creations, history), with adaptive private namespaces and migration/staging headroom. Storie della Mia Voce publishes saved `narration`; Teatrino uses it without microphone contention; Orchestra persists optional backing WAVs; Writing and Posta reciprocally exchange saved UTF-8 snapshots. **No real cross-app GUI/audio/text/capacity flow has been executed yet**; backup and physical evidence remain open.
@@ -707,3 +707,46 @@ UX, real IT/EN voice production, desktop Simulator, actual Shell and
 installed hardware remain unverified. GLA-003 in the single existing
 local-agent queue is responsible for these exact suites. My Time remains
 `activity_incubator/` only; no release acceptance or hardware claims.
+
+
+### 2026-10-08 — P3 universal Gallery child-first rendering/modal source repair
+
+**Workstream returned to the original Creations plan; no new Time features.**
+Traced `CreationsGalleryScreen.draw` →
+`CreationsPygamePainter.draw/_grid/_detail` →
+`CreationsGalleryController` and verified two P3 defects that threaten
+first-use reliability and child input isolation:
+
+1. When a library or filtered picker had zero compatible Creations,
+   `_grid` used unbound local names `width` and `height`, raising
+   `NameError` while drawing the expected first-use empty state.
+   Corrected by sourcing dimensions from the actual surface.
+   Empty-state art now reflects an audio-only or text-only picker
+   instead of displaying a misleading picture symbol.
+2. During library deletion confirmation, the keyboard event handler
+   could still send `P`/`R` and other input into the underlying
+   detail view; keyboard-only users also could not explicitly confirm.
+   Confirmation now consumes background keys, defaults to the safe
+   Cancel focus, and requires Right-arrow then Enter for irreversible
+   deletion. The chosen action gets a visible non-color-only outline.
+   Picker selection/grant ownership, Parent permissions, and the
+   storage deletion service were deliberately not modified.
+
+Added `tests/test_creation_gallery_render.py` that creates a real
+profile-backed `CreationLibrary`, constructs the actual Gallery
+Screen/Painter under dummy SDL, covers IT/EN empty first frames at
+480×320, 800×480 and 1024×600, empty scoped audio picker and cancel,
+safe keyboard deletion, and visual border pixel checks. Existing
+`test_creation_gallery.py` and `test_creation_gallery_layout.py`
+remain the complementary controller/layout suites. **All new tests are
+committed but UNEXECUTED**; neither a dummy SDL screenshot nor a
+green unit suite would replace a real Shell/Simulator view-and-listen
+acceptance. P3 remains SOURCE WIP. The existing GLA-007 queue item
+names commands, exact source SHA, stop conditions and required evidence.
+
+**Outstanding original-plan obligations unchanged:** real trusted modal
+focus/return, audible preview before selection, PNG/WAV/UTF-8 cross-app
+round trips, safe deletion/recovery semantics (including the planned
+undo window), 45-Activity visual/play/pedagogy acceptance, catalogue
+signoff and installed Acer/ARM evidence. Do not silently classify
+any as PASS.
