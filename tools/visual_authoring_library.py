@@ -376,6 +376,10 @@ def main() -> int:
     # validate
     subparsers.add_parser("validate", parents=[parent_parser], help="Validate structural integrity of library TOMLs and source file existence")
 
+    # gallery is a disposable browser output over this same authoritative index.
+    gallery_parser = subparsers.add_parser("gallery", parents=[parent_parser], help="Write an offline source-art thumbnail browser")
+    gallery_parser.add_argument("--output", type=Path, required=True, help="New HTML output path; parent directory must already exist")
+
     args = parser.parse_args()
 
     if args.command == "validate":
@@ -394,6 +398,23 @@ def main() -> int:
         return cmd_search(args, collections)
     elif args.command == "show":
         return cmd_show(args, collections)
+    elif args.command == "gallery":
+        from tools.visual_library_gallery import VisualGalleryError, write_gallery
+        if errors:
+            for error in errors:
+                print(f"ERROR: {error}", file=sys.stderr)
+            return 1
+        try:
+            output = write_gallery(
+                get_all_items(collections),
+                repository=REPO_ROOT,
+                output=args.output,
+            )
+        except (OSError, VisualGalleryError) as exc:
+            print(f"ERROR: gallery not generated: {exc}", file=sys.stderr)
+            return 1
+        print(f"Visual library gallery: {output}")
+        return 0
 
     return 0
 

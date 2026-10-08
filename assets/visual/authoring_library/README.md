@@ -68,3 +68,21 @@ python tools/visual_authoring_library.py show furniture.seating.chair.spindle_wo
 # Validate structure across all library TOMLs
 python tools/visual_authoring_library.py validate
 ```
+
+## Offline visual browser (developer tooling)
+
+The CLI and visual browser use exactly the same six TOML indexes. To view actual
+source-master SVG artwork as large cards with search/status/category filters:
+
+```bash
+mkdir -p tmp
+python3 tools/visual_authoring_library.py gallery --output tmp/greia-visual-library.html
+# Open tmp/greia-visual-library.html in a normal development-host browser.
+```
+
+Output must be new (never overwritten implicitly), is entirely local, uses
+relative paths back into the project, rejects escaped/missing sources, loads
+no remote scripts/fonts/CDNs, and never becomes part of the Greia child image.
+The gallery is a **selection aid**, not runtime art admission or visual-quality
+certification. Preserve SVG masters, confirm final rendered art at 128/64 px and
+run the normal visual acceptance procedure before promoting a candidate.
