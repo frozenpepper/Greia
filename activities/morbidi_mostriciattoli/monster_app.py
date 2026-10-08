@@ -5,7 +5,6 @@ from __future__ import annotations
 from enum import StrEnum
 import random
 import time
-from typing import Final
 
 import pygame
 
