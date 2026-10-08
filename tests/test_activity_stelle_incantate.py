@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import Mock
 
 from activities.stelle_incantate.sky_content import (
     CONSTELLATIONS_BY_ID,
@@ -206,6 +207,38 @@ class GreiaSkyStorageTests(unittest.TestCase):
         )
         stub.data["stelle_incantate.progress.v1"] = "not json"
         self.assertEqual(storage.load_completed(), frozenset())
+
+
+class SkyNavigationAndSessionTests(unittest.TestCase):
+    def test_protected_home_never_exits_activity(self) -> None:
+        import pygame
+        from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
+        from activities.stelle_incantate.sky_app import SkyActivity
+
+        pygame.init()
+        sky = object.__new__(SkyActivity)
+        sky.screen = pygame.Surface((1024, 600))
+        sky.canvas = PygameReferenceCanvas(sky.screen)
+        sky._running = True
+        protected = activity_viewport_for_surface(sky.screen).protected_regions[0]
+        sky._handle_event(pygame.event.Event(
+            pygame.MOUSEBUTTONDOWN,
+            {"button": 1, "pos": (int(protected.x) + 1, int(protected.y) + 1)},
+        ))
+        self.assertTrue(sky._running)
+
+    def test_restart_gets_fresh_event_identity(self) -> None:
+        from activities.stelle_incantate.sky_app import SkyActivity
+        sky = object.__new__(SkyActivity)
+        sky.session_id = "sky-old"
+        sky.storage = Mock()
+        sky.storage.load_completed.return_value = frozenset()
+        sky.completion = Mock()
+        sky.clock = lambda: 0.0
+        sky.audio = Mock()
+        sky._restart()
+        self.assertNotEqual(sky.session_id, "sky-old")
+        self.assertIsNone(sky._fact_opened_for)
 
 
 class GreiaSkyEventsTests(unittest.TestCase):

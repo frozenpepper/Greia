@@ -65,5 +65,15 @@ class TrenoNumeriTests(unittest.TestCase):
                 self.assertEqual(header, b"\x89PNG\r\n\x1a\n", f"Invalid PNG: {name}")
 
 
+class TrainEventKeySourceTests(unittest.TestCase):
+    def test_replayed_journeys_have_independent_progress_event_keys(self) -> None:
+        from pathlib import Path
+        source = (ROOT / "activities" / "treno_numeri" / "treno_app.py").read_text(encoding="utf-8")
+        self.assertIn("self._journey_id = uuid4().hex", source)
+        self.assertIn('idempotency_key=f"train:{self._journey_id}:station:{round_idx}"', source)
+        self.assertIn('idempotency_key=f"train:{self._journey_id}:completed"', source)
+        self.assertEqual(source.count("self._journey_id = uuid4().hex"), 3)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import random
 import time
+from uuid import uuid4
 from pathlib import Path
 from typing import Any
 
@@ -69,6 +70,7 @@ class TrenoApp:
             if screen is None:
                 screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
         self.screen: pygame.Surface = screen
+        self._journey_id = uuid4().hex
         pygame.mouse.set_visible(False)
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         self.canvas = PygameReferenceCanvas(self.screen)
@@ -150,6 +152,7 @@ class TrenoApp:
             elif self.model.is_victory:
                 if event.key in (pygame.K_SPACE, pygame.K_RETURN):
                     self.model.restart()
+                    self._journey_id = uuid4().hex
                     self.train_state = "arriving"
                     setattr(self.model, "train_state", self.train_state)
                     self.train_offset_x = -700.0
@@ -178,6 +181,7 @@ class TrenoApp:
         if self.model.is_victory:
             if self.completion.primary_contains((mx, my)):
                 self.model.restart()
+                self._journey_id = uuid4().hex
                 self.train_state = "arriving"
                 setattr(self.model, "train_state", self.train_state)
                 self.train_offset_x = -700.0
@@ -246,7 +250,7 @@ class TrenoApp:
                             emit_activity_event(
                                 "train.station_completed",
                                 {"mode": self.model.mode, "target": self.model.target_count, "stars": self.model.total_stars},
-                                idempotency_key=f"station-{round_idx}",
+                                idempotency_key=f"train:{self._journey_id}:station:{round_idx}",
                             )
                         except Exception:
                             pass
@@ -301,7 +305,7 @@ class TrenoApp:
                     emit_activity_event(
                         "train.journey_completed",
                         {"stations": self.model.total_stations, "stars": self.model.total_stars},
-                        idempotency_key="journey-completed",
+                        idempotency_key=f"train:{self._journey_id}:completed",
                     )
                 else:
                     self.model.round_idx = next_idx

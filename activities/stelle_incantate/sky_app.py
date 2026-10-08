@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Final
+from uuid import uuid4
 
 import pygame
 
@@ -50,14 +50,6 @@ class AppState:
     TERMINAL = "terminal"
 
 
-_PROTECTED_LEFT: Final[int] = 80
-_PROTECTED_TOP: Final[int] = 80
-
-
-def _is_home_clicked(screen: pygame.Surface, pos: tuple[int, int]) -> bool:
-    return pos[0] <= _PROTECTED_LEFT and pos[1] <= _PROTECTED_TOP
-
-
 class SkyActivity:
     """Connect-the-stars constellation Activity hosted by Leo the owl."""
 
@@ -70,7 +62,7 @@ class SkyActivity:
         storage: GreiaSkyStorage,
         resources: LocalizedResources,
         *,
-        session_id: str = "sky-001",
+        session_id: str | None = None,
         clock=time.monotonic,
     ) -> None:
         self.screen = screen
@@ -80,7 +72,7 @@ class SkyActivity:
         self.events = events
         self.storage = storage
         self.resources = resources
-        self.session_id = session_id
+        self.session_id = session_id or f"sky-{uuid4().hex}"
         self.clock = clock
 
         self.completion = PygameCompletionScreen(
@@ -158,9 +150,6 @@ class SkyActivity:
                 self._hovered_next = NEXT_BUTTON_RECT.collidepoint(point)
             return
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if _is_home_clicked(self.screen, event.pos):
-                self._running = False
-                return
             if not self._point_in_activity_viewport(event.pos):
                 return
             logical = self.canvas.pointer(event.pos)
@@ -280,11 +269,13 @@ class SkyActivity:
         self._state_started = self.clock()
 
     def _restart(self) -> None:
+        self.session_id = f"sky-{uuid4().hex}"
         self.session = SkySession(completed_ids=self.storage.load_completed())
         self.completion.clear()
         self._state = AppState.PLAYING
         self._state_started = self.clock()
         self._fact_text = None
+        self._fact_opened_for = None
         self._wrong_star = None
         self.audio.play_note(0)
 
