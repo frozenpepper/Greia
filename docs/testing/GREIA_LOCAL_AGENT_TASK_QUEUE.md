@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `01b1f535878d52139ac7660c686b65ce93e584d7` (later docs-only commits permitted)
+**Updated:** 2026-10-08; **queue source baseline:** `cbcbe0d26ab69ed7305fbffa092d0a160af5f6eb` (later docs-only commits permitted)
 **Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -155,8 +155,17 @@ test commands and expected observable behavior.
 - **Priority:** P1; **dependency:** current checkout required for source suite;
   **GLA-002 PASS required for the hands-on/Simulator leg, not the isolated
   source model suite**; **minimum source SHA:**
-  `01b1f535878d52139ac7660c686b65ce93e584d7`
-- **Exact suite:** `python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v`
+  `cbcbe0d26ab69ed7305fbffa092d0a160af5f6eb`
+- **Exact provider-free suites (separate logs/exit codes):**
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_activity_time_speech.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v
+  ```
+  Do not assume the newly added voice source has been run locally.
+  Specifically check no voice before READY, welcome → instruction ordering,
+  stale-cue interruption, bounded pending cue, completion priority, no
+  cross-locale audio fallback, source launch in both import modes, and
+  no speaker/replay target when actual recordings are missing.
   **MANDATORY AGAIN**: run this suite on the current checkout even
   if GLA-001/002 exposes an isolated bridge failure; report its result
   independently and do not call the full GLA-003 task PASS. The Activity
@@ -173,7 +182,10 @@ test commands and expected observable behavior.
   changes; the center and ring gap are inert. Check the AM/PM half-day
   selection rule and ensure real system time, Parent limits and
   running stopwatch/countdown are never changed. Inspect icon-first mode/action controls,
-  focused outline, and gentle timer-finished stars in both languages.
+  focused outline, gentle timer-finished stars, and (when recorded voices
+  have been reviewed and mapped) the large speaker/replay target in both
+  languages. With the current empty audio maps, verify the replay control
+  is absent; do not count simulated fake-transport speech as listened audio.
   For any new child-friendly icon controls verify they work **without**
   reading text. Capture screen before/after actions with a clear file name.
 - **PASS:** all functional state transitions correct, no text clipped,
@@ -217,6 +229,13 @@ test commands and expected observable behavior.
   Use configured **Modal** authoring when available/approved and existing
   voice workflow; never invent a runtime cloud TTS or invoke paid/live
   providers without explicit authorization.
+- **Wired source is not playable content:** `time_speech.py` /
+  `time_audio.py` implement prepared semantic sequencing and one cached
+  playback channel; the IT/EN locale `audio` tables are still empty.
+  English must not silently fall back to Italian speech. Verify
+  the actual `locales/<locale>/audio/` mappings and run `GLA-003`
+  again once recordings are integrated. A replay target must not be
+  visible for a missing recording.
 - **Work when unblocked:** use the reviewed cue table in the VOICE_PRODUCTION_BRIEF
   rather than inventing a speaker, cue name or translated line. Generate
   only through the existing VoiceEngine and stage reviewed WAV
@@ -321,6 +340,8 @@ test commands and expected observable behavior.
 - **2026-10-08:** Prepared semantic IT/EN Dani recording requests in the
   Time incubator VOICE_PRODUCTION_BRIEF. No production, audio generation,
   human listening, runtime playback or provider authorization yet.
+
+- **2026-10-08:** Optional semantic recorded-voice source wiring added: bounded first-use/finish coordinator, package-local locale audio adapter, available-only replay button, pure fake-transport tests and real-Activity replay test. No WAVs, generation, listening or local tests. GLA-003 source suites expanded; GLA-005 remains blocked.
 
 - **2026-10-08:** Owner GitHub continuation added a 12-position inner hour ring and four outer quarter-hour touch stops in the incubated My Time Activity, with focused real-input/model tests. Unexecuted, no child visual signoff. GLA-003 covers current source acceptance.
 
