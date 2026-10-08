@@ -466,6 +466,14 @@ src/greia_platform/child_text.py
 
 Child-facing UI defaults to CAPITAL presentation under ADR 0034. Parent-facing surfaces and child-authored content deliberately bypass that transformation.
 
+The platform `LocalizedResources.audio_cue` normally falls back per key,
+matching its existing text/audio bundle contract. For **language-bearing**
+speech that must not unexpectedly switch languages, pass
+`allow_fallback=False`; it restricts lookup to the selected semantic
+locale bundle without assuming any filename or directory naming convention.
+Keep required instruction authoring and acceptance per locale; a missing
+clip is a release blocker, not a justification for runtime TTS.
+
 ## Microphone/audio capture processing
 
 Read:
