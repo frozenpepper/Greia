@@ -1,6 +1,71 @@
 # Greia — Current Engineering Handover
 
 
+## 2026-10-08 — Compact Home typography + verified real authored-asset rendering
+
+**Current scope:** continue P6/P7 child design/organization from
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/`,
+not Creations broker internals or My Time expansion.
+
+**Implemented on main:** the existing `_category_title` now
+accepts `compact=True` for the platform-owned
+`my_creations` caption; `CollectionFirstHomeMixin`
+uses this only on displays <=800px wide, so the
+3×2 compact Home and 2×3 800px Home no longer
+miniaturize `Le mie creazioni` / `My Creations`
+to fit narrow portal slots. Compact labels preserve
+meaning in IT/EN/ES/DE/FR and normal full labels,
+viewer headings, trusted Home routing and full
+prerecorded spoken identity are unchanged. Added
+`test_compact_saved_work_title_stays_short_and_localized`
+in `tests/test_child_home_creation_organization.py`.
+All source work committed; these tests have **NOT
+RUN** in a Greia checkout.
+
+**Local visual feasibility investigation:** this environment has
+Python 3.13, Pillow, CairoSVG and Xvfb, but no `pygame`
+import and no installed source/asset project tree.
+Direct `curl` to GitHub fails DNS; the authenticated
+GitHub connector can read/write UTF-8 source but
+does not export binary PNGs to this filesystem.
+A search of existing mounted uploads found chat
+archive/handovers, NOT a full Greia source ZIP.
+I fetched actual Greia `portal_frame.svg`
+and `activity_card.svg` source via GitHub and
+rasterized them with Python at 256/128/48px.
+Local `/mnt/data/greia_visual_local/
+greia_existing_ui_art_local_render.png` is
+**verified authored-asset art preview only**,
+NOT running Greia screenshots. No source
+test, full 114-icon contact sheet, real UI
+visual review or hardware validation was run.
+
+**Current authoritative items:** P6 source design
+`P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`;
+current source evidence ledger `PROGRESS.md`;
+local agent one queue GLA-008 (real Home IT/EN
+1024×600, 800×480, 480×320/screenshots, full
+art sheet, text/pointer/speech, focus/selection,
+real child game display, report and evidence ZIP).
+GLA-010 missing IT+EN `my_creations.wav`
+remains approval-blocked. P6/P7 release
+not approved, 32 draft / 12 withheld / 1
+system My Greia; P8 not started.
+
+**Next best step:** run full Greia/Pygame project in
+an environment with the complete current
+source and art assets, capture authentic
+scenes using the *existing* headless and
+Simulator capture tools, and change the
+actual offending art/layout based on those
+frames. A full project ZIP including assets
+supplied to the conversation would unblock
+source availability; Pygame must also
+be present or legitimately provisioned.
+Do not claim remotely-rendered SVG samples
+are app output or spin up another renderer
+to avoid missing dependencies.
+
 ## 2026-10-08 — P6 Play/Learn curated child navigation and unique icon language
 
 **Product instruction:** continue original first-party release
