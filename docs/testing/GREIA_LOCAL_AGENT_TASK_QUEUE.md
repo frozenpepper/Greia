@@ -202,13 +202,16 @@ test commands and expected observable behavior.
 - **Priority:** P1; **dependency:** owner-approved voice design and
   local capability / Model authoring access; not GLA-001 dependent.
 - **Voice authority:** `skills/greia-activity-authoring/SKILL.md`,
-  `tools/greia_voice.py`, `docs/product/CHILD_TIME_AND_ROUTINES.md`.
+  `tools/greia_voice.py`, `docs/product/CHILD_TIME_AND_ROUTINES.md`,
+  and `activity_incubator/tempo_di_greia/VOICE_PRODUCTION_BRIEF.md`
+  with exact IT/EN cue IDs, words, speaker, triggers and review requirements.
+  Before authorizing providers, run **only** `python3 tools/greia_voice.py doctor`.
   Use configured **Modal** authoring when available/approved and existing
   voice workflow; never invent a runtime cloud TTS or invoke paid/live
   providers without explicit authorization.
-- **Work when unblocked:** enumerate IT/EN semantic title, clock,
-  stopwatch, timer, practice, play/pause/reset and countdown-finished cues;
-  record short warm lines with consistent cast voice. Stage reviewed WAV
+- **Work when unblocked:** use the reviewed cue table in the VOICE_PRODUCTION_BRIEF
+  rather than inventing a speaker, cue name or translated line. Generate
+  only through the existing VoiceEngine and stage reviewed WAV
   in correct Activity-local locales and map keys, check mono/22050Hz/
   16-bit title requirements. Listen to all samples in both languages,
   report pronunciation, peak level, timing, interruptions and awkwardness.
@@ -306,6 +309,10 @@ test commands and expected observable behavior.
   (`3a9b9b8b`); refreshed suite and screenshots pending.
 - **2026-10-08:** Actual-art contact sheet source generator + tests added
   (`0a09eaf4`); all visual acceptance pending.
+
+- **2026-10-08:** Prepared semantic IT/EN Dani recording requests in the
+  Time incubator VOICE_PRODUCTION_BRIEF. No production, audio generation,
+  human listening, runtime playback or provider authorization yet.
 
 When the GitHub developer changes an API or acceptance target, update the
 affected task in this SAME FILE in the same source commit, preserving all

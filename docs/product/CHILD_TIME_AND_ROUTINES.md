@@ -76,6 +76,15 @@ evidence expectations, dependency/stop conditions, queue-only commit rules,
 status updates and the separate hardware authorization gate. It does not
 replace the existing Creations P1–P7 acceptance procedure or product plan.
 
+### Prereader voice source brief (not yet produced)
+
+`activity_incubator/tempo_di_greia/VOICE_PRODUCTION_BRIEF.md` now records
+intended semantic cues, exact Italian/English text, Dani speaker kind and
+event triggers. All authoring is through existing Greia VoiceEngine; a
+Modal-backed authoring provider would require separate integration and approval,
+not Activity-owned cloud TTS. No WAVs, playback, title audio, visual
+repeat-affordance, listened acceptance or provider invocation exists yet.
+
 ## Clock trust and hardware rules
 
 1. **Real time vs elapsed time:** actual date/hour requires the installed

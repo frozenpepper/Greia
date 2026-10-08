@@ -32,7 +32,13 @@ tests from this slice are **UNEXECUTED locally**.
 
 **Next for local agent:** follow queue READY tasks GLA-001 onward,
 stop at first genuine failure, attach raw evidence and commit only
-queue updates. **Next for GitHub worker:** continue product work and
+queue updates. **Voice production preparation:** the incubator now includes
+`VOICE_PRODUCTION_BRIEF.md` with exact Italian/English cues,
+`dani_system_speech`, review and promotion boundaries. No audio is
+generated/accepted, nor is Modal automatically used (it would require
+an authorized VoiceEngine provider). All live voice work remains blocked.
+
+**Next for GitHub worker:** continue product work and
 keep this queue updated whenever test ownership changes.
 
 ---
