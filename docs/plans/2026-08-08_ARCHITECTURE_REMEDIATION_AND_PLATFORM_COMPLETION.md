@@ -3007,3 +3007,28 @@ committed; tests/Simulator/hardware UNEXECUTED**. The
 progress ledger owns P3 product disposition. The one local-agent
 GLA-007 queue item owns commands and evidence. No physical
 installer/first boot or P3 release gate closure is implied.
+
+
+### 2026-10-08 — P6 child navigation and art taxonomy simplification (SOURCE-ONLY)
+
+Resumed the existing 2026-10-07 Creations + Activity release
+plan's P6/P7 organization/visual work instead of extending
+Creations transport or My Time. Audited all 32 draft
+Activity manifest presentation categories and mapped the
+full Play/Learn collection intent. Reclassified Voice Stories
+as Create-only and Four Seasons as Explore+Learn; kept
+the 21 Play and 22 Learn candidates directly browsable
+because the existing five-group bounded semantic partition
+cannot cover the roster truthfully. No hidden members,
+new hierarchy, altered package identity, Parent policy
+or new platform authority.
+
+Replaced repeated/indistinguishable discovery icon assignments
+with 13 unique **existing** Greia core assets. Both primitive
+and shared-art Activity launch badges now respect IT/EN
+UI locale. A new manifest-real, asset-registry and
+age-filtered projection suite is authored but **UNEXECUTED**.
+Visual screenshots, child-recognition, source tests and physical
+acceptance remain OPEN. The canonical P6 design matrix in
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`
+and the single GLA-008 queue task own further acceptance.
