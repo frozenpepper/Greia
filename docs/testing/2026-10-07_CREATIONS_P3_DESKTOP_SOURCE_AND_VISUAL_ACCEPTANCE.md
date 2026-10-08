@@ -1,9 +1,9 @@
 # Creations Library P1–P7 — Accumulated Desktop Source, Simulator + Draft-Curation Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `8689c3accf41dc94f8fb5a30191eafdb83ab9872` (P7 batch-6 all-45-reviewed source/test + 32-candidate draft roster checkpoint; later documentation-only commits may follow).  
+**Pinned source candidate:** `cf8c210cb1c2a2267c213191013fd50e6c1b0929` (all P1–P7 source + My Greia mandatory installed system-Activity correction + My Time incubator + offline visual-library gallery; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
-**Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 32-item child candidate roster; P7 has source-reviewed 45/45 (12 withheld child, one separate settings/system entry). None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
+**Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 32-item child candidate roster plus a mandatory separately staged trusted My Greia system Activity; P7 has source-reviewed 45/45 (12 withheld child, one separate settings/system entry). A new unvoiced My Time source prototype is independently incubated outside the 45 built-ins. None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor 8689c3accf41dc94f8fb5a30191eafdb83ab9872 HEAD` (exit **0** required). Check `git diff --name-only 8689c3accf41dc94f8fb5a30191eafdb83ab9872 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor cf8c210cb1c2a2267c213191013fd50e6c1b0929 HEAD` (exit **0** required). Check `git diff --name-only cf8c210cb1c2a2267c213191013fd50e6c1b0929 HEAD -- src activities activity_incubator runtime tests build tools`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -62,6 +62,8 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_orchestra_manifest.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_release_selection.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_stage_release_activities.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_visual_library_gallery.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_greia_release.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_action_pointer_boundaries.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_colline_allegre.py' -v
@@ -233,9 +235,43 @@ This completes the **source inventory**, not visual, pedagogy, audio or release 
 71. **Specchi Magici (draft):** complete full **D1–D5 adaptive** procedural symmetry sets, including mirrored orientation, two-sided givens and undo/incorrect placements. Verify no impossible/ambiguous duplicates, input hitbox precision, progress/adaptation fairness, 800×480 layout and actual IT/EN spoken cues.
 72. **Stelle Incantate (draft):** every constellation star must join strictly in increasing number; deliberately tap star out of order, hear and read the related fact, finish all and replay. Protected top-left touch must not leave the Activity on its own, while platform Home remains operable. Replayed session creates **new** idempotency keys for earned facts; persisted figure ids cannot cause false first-time achievements.
 73. **Treno Numeri (draft):** test cardinality/loading, addition, a complete journey and replay. Compare model star counts with stored stars and emitted station/journey milestones. Station keys now include a per-journey ID and station index; replayed journey completion must not be swallowed as a duplicate. Record whether visuals and spoken cues permit pre-reading comprehension at 800×480.
-74. **My Greia Settings (system entry, not child release):** verify this separate parent-authorized management Activity cannot be launched through an ordinary child catalogue entitlement. Check the real platform authority boundary for avatar/profile changes, wallpaper/media reading, parent policy and repeated USB plug/unplug; unprivileged child actions must fail closed. Exercise all theme/interface size changes, wallpaper picker fallback and thumbnail boundedness only under authorized test profile. **Do not add `workshop_settings` to the draft child Activity release roster.**
+74. **My Greia Settings (mandatory trusted child-personalization system Activity, not an optional child-game candidate):** My Greia should be present and child-visible as the authorized profile-scoped avatar/colors/wallpaper/interface-size experience. It is NOT an ordinary privileged parent panel. Verify its installed built-in ID and exact package origin; authorized low-risk personalization works per child, while an untrusted package with a matching name/ID has **no** customization authority. Verify Parent control policy does not accidentally hide the child’s usable personalization route or grant unrelated privileged settings. Exercise saved profile changes, USB media removal, size variants and escape via Greia-owned Home with a disposable test profile. **Do not add `workshop_settings` to the optional 32-entry child-game roster: its source is independently mandatory and separately validated in image composition.**
 
 **Expected policy unchanged:** 45/45 source-reviewed, **32 draft child candidates + 12 withheld child Activities + one separate My Greia/system Activity**; ZERO approved. All local suites and actual audio/GUI operations remain pending until the cumulative run. Never pass this section by citing GitHub source inspection instead of tested behavior.
+
+
+### 2ae. 2026-10-08 product extension: trusted My Greia, incubated My Time, and art-index browser
+
+**This is additional owner-requested source-only work, not a replacement for the earlier P1–P7 acceptance.** It changes neither the 45 installed-source Activity count nor the 32 optional curated child-content draft candidate count. It adds an explicitly mandatory installed My Greia source package and a separately incubated 46th prospective child experience. Do **not** promote that prospective Time Activity into the production catalogue, remove spoken-title requirements, or certify voice quality based on locale JSON.
+
+**Focused package and gallery/source checks** (also included in §1). Stop at the first failed check and return logs:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_release_selection.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_stage_release_activities.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_visual_library_gallery.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/visual_authoring_library.py validate
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/validate_activity.py activity_incubator/tempo_di_greia
+```
+
+**Release composition (disposable developer override only):** call the existing `tools/stage_release_activities.py` with `--allow-draft` and a unique empty output path in `$EVIDENCE`. Expected staging is exactly **32 selected child Activities + mandatory My Greia = 33 packages**, with `workshop_settings` included, withheld packages absent, and `tempo_di_greia` absent. The trusted installed index must agree. The normal no-override draft staging must fail closed. Do not make a privileged official release or change `status = "draft"`.
+
+**Incubated Time experience:** `activity_incubator/tempo_di_greia/main.py` is intentionally not first-party installed. On the local desktop (not real Acer), test its real clock, independent practice clock +/-15-minute steps including 23:45→00:00 rollover, stopwatch Start/Pause/Resume/Reset, 1/3/5/10-minute timer presets and one-shot finish. A stopped countdown at 00:00 must be restartable. Check IT and EN rendering and 1024×600 + 800×480 screen sizes, especially system-Home protected physical corner and letterboxed controls. Use a headless Simulator screenshot harness for its first frame and a GUI run for actual visual interactions. The headless standalone harness does *not* prove the trusted Shell chrome; the full Simulator Shell/candidate package path is needed later. **There is currently NO voiced title/prompts or audio acceptance; no calendar, no background timer notifications, and no RTC-validity policy.** Report these explicitly as not implemented rather than test failures.
+
+For disposable isolated headless snapshots (modify prefix for IT/EN and physical viewport):
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/headless_greia_activity.py --activity-main activity_incubator/tempo_di_greia/main.py --locale it --viewport 1024x600 --survival-seconds 4 --screenshot-prefix "$EVIDENCE/my-time-it-1024"
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/headless_greia_activity.py --activity-main activity_incubator/tempo_di_greia/main.py --locale en --viewport 800x480 --survival-seconds 4 --screenshot-prefix "$EVIDENCE/my-time-en-800"
+```
+
+**Visual library authoring browser:** generate a *new*, offline, source-index-derived HTML next to the evidence (not within the installed OS):
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 tools/visual_authoring_library.py gallery --output "$EVIDENCE/visual-library.html"
+```
+Open this local HTML in a normal workstation browser, capture the initial full grid and filtered results for `tree`, `clock` and `shadow`. Review whether SVG source previews are displayed instead of broken images; preferred/candidate chips are honest; semantic labels are distinguishable; search filters are useful; the view stays legible at 1280×800 and 800×600. **No new art is automatically approved or committed by generating this browser.**
+
+**Source/evidence boundary:** My Time's domain/regression tests, title-source icon, localization JSON and UI code are SOURCE. Screenshots and audible review require the actual local agent. Do not assert Acer performance, installed release, title narration, touch hardware or parent policy passed from source review.
 
 ### 2b. SOURCE-WIP modal / transaction / P4 persistence cases carried over
 
@@ -262,7 +298,7 @@ The new code introduces **`tests/test_creation_selection.py`**, additional `test
 - Activity-event default idempotency tests prove repeated equivalent facts with omitted keys receive independent unique IDs, while explicit retry keys remain unchanged; do not allow recycled Python object addresses to suppress feeding/emotion/progression facts;
 - action-pointer tests prove Corsa explicitly recognizes event-queued press→drag→release/focus loss even if global mouse state changed, Quattro cannot hover/drop in protected chrome, and Delfino switches its render path to the new canvas in the same resize frame;
 - Torre direct-script regression exercises snap and cleared-particle effects in the production import context, not merely a package import at boot; Dragon manifest test locks the actual endless milestone-only event set;
-- release staging tests prove the **32-candidate draft** stages only the reviewed subset, remains refuse-to-release until explicitly approved, and does not install the withheld Orca/Dolphin/Dragon just because they exist in source;
+- release staging tests prove a **32-candidate child-content draft + one mandatory trusted My Greia** stages as 33 exact installed built-ins during developer override; it remains refuse-to-release until explicitly approved, rejects ordinary roster spoofing the system package/ID, and does not install withheld Orca/Dolphin/Dragon just because they exist in source;
 - batch-6 Stars tests verify protected Home and refreshed session identities; Train tests verify per-replay fact IDs; Quattro Stagioni tests verify event-on-new-season and safe canvas mapping; Submarine tests verify manifest event truth and protected viewport; new Bakery and Serra model tests verify exact-ingredient and valid-tool/harvest progress;
 - batch-5 Marble input tests prove contain/letterbox mapping, original drag-tool identity and chrome/focus/resize safety; Mondo tests confirm progress earned only on genuine interactions and English labels; Cloud tests confirm supported completion events and focus-loss safe drag cancellation; Bridge tests confirm real material change, Memory tests confirm QUIT/Escape; Encyclopedia navigation tests confirm internal page-back does not impersonate Greia Back;
 - batch-4 monster save/delete tests prove that a failed durable write never mutates the visible gallery, loses the editor, or emits a creation event; an accepted portrait event must contain a private-safe payload and the correct stable idempotency key, and Activity child clicks cannot impersonate platform Home;
@@ -290,7 +326,7 @@ Provide exactly:
 - whether **Writing→Posta→Writing UTF-8** worked through the trusted picker, including grapheme-safe postcard compaction, saved-only Posta sharing and continued access after shared-source deletion;
 - whether **Voice Stories→Orchestra** provided audible preview-before-select, no autoplay after import/relaunch, uninterrupted live accompaniment, explicit pause/resume, picker-preview isolation and playback after deletion of the shared source WAV;
 - whether all six P7 review batches, including final phonics/creation/seasons/symmetry/marine/system-trust cases passed true script launch, model/events, child comprehension, authored difficulty progression, touch/keyboard controls, protected chrome, terminal/replay handling and 800×480 readability, with all three marine-game comparisons and Dragon differentiation noted rather than silently approved;
-- whether exactly 32 **draft-only** Activities staged and official release still refused unapproved policy;
+- whether **32 draft child Activities plus mandatory My Greia** (33 total) stage under developer override and official release still refuses unapproved draft policy;
 - whether `test_profile_volume_budget.py` and the full suite proved shared reservation serialization, 8 GiB→2 GiB adaptive Activity quota, 75% aggregate ceiling, non-growing recovery writes, history growth denial and migration working-copy denial;
 - the **actual local writable filesystem facts** used for calibration (`df -B1`/platform-equivalent for the profile-data mount if available), recorded read-only; do not create giant filler files or intentionally approach the machine's capacity limit;
 - image detail/deletion/cancel state; actual observed bug(s), with steps;
