@@ -8,6 +8,7 @@ from __future__ import annotations
 import tomllib
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from greia_launcher.child_shell import GreiaChildShell
@@ -74,6 +75,26 @@ class ChildHomeCreationOrganizationTests(unittest.TestCase):
         self.assertEqual(home[1].icon_id, "backpack")
         self.assertNotEqual(home[0].icon_id, home[1].icon_id)
         self.assertEqual(home[1].items, ())
+
+    def test_compact_landscape_home_avoids_six_vertical_rows(self) -> None:
+        shell = object.__new__(GreiaChildShell)
+        for size, columns in (
+            ((480, 320), 3),
+            ((640, 360), 3),
+            ((800, 480), 2),
+            ((1024, 600), 3),
+        ):
+            with self.subTest(size=size):
+                surface = SimpleNamespace(
+                    get_width=lambda: size[0],
+                    get_height=lambda: size[1],
+                )
+                pygame = SimpleNamespace(
+                    display=SimpleNamespace(get_surface=lambda: surface),
+                )
+                self.assertEqual(shell._home_columns(pygame), columns)
+                rows = (6 + columns - 1) // columns
+                self.assertLessEqual(rows, 3)
 
     def test_saved_work_stays_visible_when_parent_hides_all_create_apps(self) -> None:
         shell = object.__new__(GreiaChildShell)
