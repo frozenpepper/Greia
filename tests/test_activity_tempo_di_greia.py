@@ -392,6 +392,49 @@ class TimeToolModelTests(unittest.TestCase):
         finally:
             pygame.quit()
 
+    def test_quit_before_first_frame_never_publishes_ready_or_speaks(self) -> None:
+        import os
+        from unittest.mock import patch
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from activity_incubator.tempo_di_greia.time_app import TimeActivity
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+        from activity_incubator.tempo_di_greia.time_speech import TimeSpeech
+
+        class SilentTransport:
+            def __init__(self) -> None:
+                self.stopped = False
+            def has_clip(self, cue: str) -> bool:
+                return False
+            def play(self, cue: str) -> bool:
+                raise AssertionError("no speech should play before READY")
+            def busy(self) -> bool:
+                return False
+            def stop(self) -> None:
+                self.stopped = True
+
+        pygame.init()
+        try:
+            transport = SilentTransport()
+            app = TimeActivity(
+                pygame.Surface((1024, 600)), "en",
+                {key: key for key in WORD_KEYS}, speech=TimeSpeech(transport),
+            )
+            with (
+                patch("activity_incubator.tempo_di_greia.time_app.activity_stop_requested",
+                      return_value=False),
+                patch("activity_incubator.tempo_di_greia.time_app.mark_activity_ready") as ready,
+                patch("pygame.event.get",
+                      return_value=[pygame.event.Event(pygame.QUIT)]),
+            ):
+                self.assertEqual(app.run(), 0)
+                ready.assert_not_called()
+            self.assertFalse(app.ready_published)
+            self.assertTrue(transport.stopped)
+        finally:
+            pygame.quit()
+
     def test_mode_is_semantic_and_timer_not_screen_time(self) -> None:
         state = TimeExperience(monotonic=FakeClock())
         state.mode = TimeMode.TIMER
