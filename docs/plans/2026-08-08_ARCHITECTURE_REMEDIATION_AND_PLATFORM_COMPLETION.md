@@ -2913,3 +2913,26 @@ readiness/release promotion remain BLOCKED. GLA-003 now includes both
 source suites; GLA-005 remains blocked on approved VoiceEngine production
 and human listening. System/Parent time policy and installed lifecycle
 were not modified or accepted.
+
+
+### 2026-10-08 — Greia-owned locale-safe audio and lazy prereader cues (SOURCE WIP)
+
+The incubated My Time spoken-guidance adapter no longer decides language
+by testing the parent folder of an audio file. Platform localization owns
+this decision through `LocalizedResources.audio_cue(...,
+allow_fallback=False)`, while normal legacy per-key fallback is unchanged.
+This permits validated package audio under any authored directory without
+unintentional Italian/English instruction swaps.
+
+Playback now indexes its at-most-seven semantic cue paths at composition,
+lazily decodes on first actual playback only after the first READY frame,
+reuses each decoded clip, and suppresses further attempts when decoding fails.
+Keyboard UP/DOWN Practice activation now updates voice context. Focused
+platform fallback, Activity audio adapter and keyboard cue tests were added.
+
+**Evidence:** GitHub source edits and readback only; no complete-checkout
+Python/unit/Simulator/screenshots/audio provider/listening/hardware tests.
+The new source remains in `activity_incubator/` and P1–P8 release
+boundaries remain unchanged. The single deferred queue
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` has an exact four-suite
+GLA-003 source step plus subsequent hands-on and audio acceptance.
