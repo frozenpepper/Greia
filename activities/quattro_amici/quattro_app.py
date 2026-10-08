@@ -18,7 +18,7 @@ from greia_platform.localization import (
     LocalizedResources,
     resolve_activity_locale,
 )
-from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 
 if __package__:
@@ -43,6 +43,20 @@ else:
     )
     from quattro_model import QuattroModel
     from quattro_renderer import DropAnimation, QuattroRenderer
+
+
+def _is_safe_pointer(surface: pygame.Surface, position: tuple[int, int]) -> bool:
+    """Prevent Activity clicks/hover from operating under trusted Greia chrome."""
+    viewport = activity_viewport_for_surface(surface)
+    x, y = position
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+        return False
+    if any(
+        region.x <= x < region.right and region.y <= y < region.bottom
+        for region in viewport.protected_regions
+    ):
+        return False
+    return True
 
 
 @dataclass
@@ -103,6 +117,8 @@ class QuattroApp:
                 self._handle_keydown(event.key)
 
             elif event.type == pygame.MOUSEMOTION:
+                if not _is_safe_pointer(self.screen, event.pos):
+                    continue
                 logical_pos = self.canvas.pointer(event.pos)
                 if logical_pos is not None:
                     col = self.renderer.get_column_at_x(self.model, logical_pos[0])
@@ -111,6 +127,8 @@ class QuattroApp:
                         self.audio.play_hover()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if not _is_safe_pointer(self.screen, event.pos):
+                    continue
                 logical_pos = self.canvas.pointer(event.pos)
                 if logical_pos is not None:
                     self._handle_click(logical_pos[0], logical_pos[1])
