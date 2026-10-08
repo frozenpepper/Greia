@@ -1,5 +1,38 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — Locale-owned speech resolution and keyboard cue synchronization
+
+**Canonical `main` source, unexecuted tests; My Time still incubated.**
+The previous Time audio adapter restricted required recordings by checking
+`locales/<locale>/audio/` physical paths. That duplicated policy and would
+silence legitimate recordings under `assets/audio/`. Now
+`src/greia_platform/localization.py` exposes
+`LocalizedResources.audio_cue(key, allow_fallback=False)` to request the
+selected **semantic locale bundle** only; existing clients retain per-key
+fallback by default. My Time uses that flag rather than guessing from a path.
+This belongs to platform localization, not Activity presentation code.
+
+`tests/test_localization.py` covers missing selected-locale audio, ordinary
+fallback preservation, and a valid English clip outside `locales/`.
+`tests/test_activity_time_audio.py` uses real locale bundles and a
+mocked Pygame mixer to prove correct adapter routing. Keyboard UP/DOWN now
+notify the semantic voice coordinator when entering Practice mode; an
+Activity-level test checks the new transition.
+
+**Verification boundary:** Source committed, GitHub source/diff review only;
+these suites have not been run in a complete local checkout, nor has any
+audio been produced/heard, Simulator launched, or Acer hardware accepted.
+All prereader/voice/release/installed lifecycle restrictions persist.
+
+**Next exact step for local agent:** Follow GLA-003 in
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`; run four independent
+source suites in this order:
+`test_localization.py`, `test_activity_time_speech.py`,
+`test_activity_time_audio.py`, `test_activity_tempo_di_greia.py`.
+Log separate exit codes at HEAD. Afterwards run relevant Simulator and
+hands-on steps only when their GLA-001/002 dependencies pass.
+No voice provider calls or release promotion without separate approval.
+
 ## 2026-10-08 — My Time prerecorded speech seam (current source-only continuation)
 
 **Status: incubated SOURCE-WIP; no voice or release acceptance.** On
@@ -15,8 +48,8 @@ missing English speech does not silently fall back to Italian.
 **Source/test anchors:** implementation starts at `5c8f0c21` (speech
 coordinator) and `2fcd2af8` (audio adapter), with source integration
 through `a75cf484` and two new testing files/updates through
-`cbcbe0d2`. Pure fake-transport speech tests an audio locale-fallback boundary test, and real Activity
-replay/immediate-exit tests have been added, but **NEVER EXECUTED in a local
+`cbcbe0d2`. Pure fake-transport speech tests, an audio locale-fallback boundary test,
+and real Activity replay/immediate-exit tests have been added, but **NEVER EXECUTED in a local
 checkout**. The latest source/test commit is `c56d2949`.
 
 **What is explicitly NOT done:** IT/EN recordings; reviewed cue map; launcher
