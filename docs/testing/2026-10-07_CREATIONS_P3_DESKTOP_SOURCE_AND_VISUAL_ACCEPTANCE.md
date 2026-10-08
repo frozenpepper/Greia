@@ -1,7 +1,7 @@
 # Creations Library P1–P7 — Accumulated Desktop Source, Simulator + Draft-Curation Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `4d5c0de5d1a035732765c5182ef428d6f20becc9` (all P1–P7 source + My Greia mandatory installed system-Activity correction + My Time incubator + offline visual-library gallery; later documentation-only commits may follow).  
+**Pinned source candidate:** `fa0526aab1fe688020620513ab3623f8a4516cc6` (all P1–P7 source + My Greia mandatory installed system-Activity correction + My Time incubator + offline visual-library gallery; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
 **Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 32-item child candidate roster plus a mandatory separately staged trusted My Greia system Activity; P7 has source-reviewed 45/45 (12 withheld child, one separate settings/system entry). A new unvoiced My Time source prototype is independently incubated outside the 45 built-ins. None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
 
@@ -88,7 +88,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor 4d5c0de5d1a035732765c5182ef428d6f20becc9 HEAD` (exit **0** required). Check `git diff --name-only 4d5c0de5d1a035732765c5182ef428d6f20becc9 HEAD -- src activities activity_incubator runtime tests build tools`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor fa0526aab1fe688020620513ab3623f8a4516cc6 HEAD` (exit **0** required). Check `git diff --name-only fa0526aab1fe688020620513ab3623f8a4516cc6 HEAD -- src activities activity_incubator runtime tests build tools`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 

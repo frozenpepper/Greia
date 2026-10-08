@@ -2,7 +2,7 @@
 
 ## 2026-10-08 — Second Time acceptance: owned bridge correction
 
-**Current executable source + tests anchor:** `4d5c0de5d1a035732765c5182ef428d6f20becc9` (until any later
+**Current executable source + tests anchor:** `fa0526aab1fe688020620513ab3623f8a4516cc6` (until any later
 source changes). **Report:** first local resume at `b96b08d3` passed updated
 Time suite 10/10, real direct renderer 11 PNGs, 101/101 offline gallery SVGs;
 headless standalone probe still failed because `tools/headless_greia_activity.py`
