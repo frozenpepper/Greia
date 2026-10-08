@@ -11,9 +11,11 @@ from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewpor
 
 if __package__:
     from .time_model import PRESET_MINUTES, TimeExperience, TimeMode
+    from .time_interaction import practice_quarter_at_point
     from .time_renderer import ACTION_BUTTONS, MODE_BUTTONS, PRESET_BUTTONS, TimeRenderer
 else:
     from time_model import PRESET_MINUTES, TimeExperience, TimeMode
+    from time_interaction import practice_quarter_at_point
     from time_renderer import ACTION_BUTTONS, MODE_BUTTONS, PRESET_BUTTONS, TimeRenderer
 
 
@@ -54,6 +56,10 @@ class TimeActivity:
                 self.model.nudge_practice(-15)
             elif self.model.practice and ACTION_BUTTONS["plus"].collidepoint(point):
                 self.model.nudge_practice(15)
+            elif self.model.practice:
+                quarter = practice_quarter_at_point(point)
+                if quarter is not None:
+                    self.model.set_practice_minute(quarter)
         else:
             if ACTION_BUTTONS["primary"].collidepoint(point):
                 clock = self.model.stopwatch if self.model.mode is TimeMode.STOPWATCH else self.model.timer

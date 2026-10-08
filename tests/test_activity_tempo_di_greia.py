@@ -195,6 +195,38 @@ class TimeToolModelTests(unittest.TestCase):
         finally:
             pygame.quit()
 
+    def test_practice_dial_click_updates_only_simulated_minute(self) -> None:
+        import os
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from greia_platform.pygame_canvas import PygameReferenceCanvas
+        from activity_incubator.tempo_di_greia.time_app import TimeActivity
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+        from activity_incubator.tempo_di_greia.time_interaction import DIAL_CENTER
+        pygame.init()
+        try:
+            screen = pygame.Surface((1024, 600))
+            wall = datetime(2026, 10, 8, 12, 13, tzinfo=timezone.utc)
+            state = TimeExperience(wall_now=lambda: wall, monotonic=FakeClock())
+            app = TimeActivity(screen, "it", {key: key for key in WORD_KEYS}, state)
+            cx, cy = DIAL_CENTER
+            # The actual clock is read-only even if a child taps its dial.
+            app.press((cx + 150, cy))
+            self.assertEqual(state.shown_time(), wall)
+            state.set_practice(True)
+            app.press((cx + 150, cy))
+            self.assertEqual(state.shown_time().minute, 15)
+            app.press((cx, cy + 150))
+            self.assertEqual(state.shown_time().minute, 30)
+            app.press((cx, cy))  # center is not a touch stop
+            self.assertEqual(state.shown_time().minute, 30)
+            self.assertEqual(wall.minute, 13)
+            app.renderer.draw(app.canvas.surface, state)  # real paint path
+            app.renderer.fonts.clear()
+        finally:
+            pygame.quit()
+
     def test_mode_is_semantic_and_timer_not_screen_time(self) -> None:
         state = TimeExperience(monotonic=FakeClock())
         state.mode = TimeMode.TIMER

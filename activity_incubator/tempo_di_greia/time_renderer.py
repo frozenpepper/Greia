@@ -72,18 +72,62 @@ class TimeRenderer:
     def _button(
         self, screen: pygame.Surface, rect: pygame.Rect, label: str,
         *, selected: bool = False, tint: tuple[int, int, int] = SEA,
-        size: int = 23,
+        size: int = 23, icon: str | None = None,
     ) -> None:
         color = tint if selected else PAPER
         foreground = PAPER if selected else INK
         pygame.draw.rect(screen, (221, 211, 194), rect.move(0, 5), border_radius=23)
         pygame.draw.rect(screen, color, rect, border_radius=23)
         pygame.draw.rect(screen, (191, 179, 159), rect, 2, border_radius=23)
-        self._text(screen, label, rect.center, size, foreground, centered=True)
+        # Pictures lead; readable labels remain as optional support.
+        if icon is not None:
+            self._symbol(screen, icon, (rect.x + 28, rect.centery), foreground)
+        self._text(
+            screen, label, (rect.centerx + (17 if icon is not None else 0), rect.centery),
+            size, foreground, centered=True,
+        )
+
+    def _symbol(
+        self, screen: pygame.Surface, name: str,
+        center: tuple[int, int], color: tuple[int, int, int],
+    ) -> None:
+        """Four minimal icons made from bounded Pygame primitives (no assets)."""
+        x, y = center
+        if name in {"clock", "stopwatch"}:
+            pygame.draw.circle(screen, color, center, 15, 3)
+            pygame.draw.line(screen, color, center, (x, y - 10), 3)
+            pygame.draw.line(screen, color, center, (x + 8, y + 5), 3)
+            if name == "stopwatch":
+                pygame.draw.rect(screen, color, pygame.Rect(x - 5, y - 23, 10, 5), border_radius=2)
+        elif name == "timer":
+            pygame.draw.line(screen, color, (x - 13, y - 17), (x + 13, y - 17), 4)
+            pygame.draw.line(screen, color, (x - 13, y + 17), (x + 13, y + 17), 4)
+            pygame.draw.polygon(screen, color, ((x - 10, y - 13), (x + 10, y - 13), (x, y)), 3)
+            pygame.draw.polygon(screen, color, ((x, y), (x - 10, y + 13), (x + 10, y + 13)), 3)
+        elif name == "play":
+            pygame.draw.polygon(screen, color, (
+                (x - 8, y - 12), (x + 13, y), (x - 8, y + 12),
+            ))
+        elif name == "pause":
+            pygame.draw.rect(screen, color, pygame.Rect(x - 10, y - 12, 7, 24), border_radius=2)
+            pygame.draw.rect(screen, color, pygame.Rect(x + 3, y - 12, 7, 24), border_radius=2)
+        elif name == "reset":
+            pygame.draw.arc(
+                screen, color, pygame.Rect(x - 13, y - 13, 26, 26),
+                0.35, 2 * math.pi - 0.35, 4,
+            )
+            pygame.draw.polygon(screen, color, (
+                (x + 14, y + 3), (x + 15, y - 10), (x + 3, y - 7),
+            ))
+        elif name == "hands":
+            pygame.draw.circle(screen, color, center, 15, 3)
+            pygame.draw.line(screen, color, center, (x - 4, y - 10), 3)
+            pygame.draw.line(screen, color, center, (x + 11, y + 4), 3)
+            pygame.draw.circle(screen, color, center, 3)
 
     def _dial(
         self, screen: pygame.Surface, *, angles: tuple[float, float, float] | None,
-        fraction: float | None = None,
+        fraction: float | None = None, practice: bool = False,
     ) -> None:
         x, y, radius = 286, 338, 180
         pygame.draw.circle(screen, (222, 202, 171), (x, y + 9), radius + 9)
@@ -127,6 +171,18 @@ class TimeRenderer:
                     screen, SEA, pygame.Rect(x - 135, y - 135, 270, 270),
                     math.pi / 2 - (clamped * 2 * math.pi), math.pi / 2, 24,
                 )
+        if practice:
+            # Four big visual touch stops around the dial face. Clicking
+            # them directly moves the illustrated minute hand only.
+            for quarter, degrees in ((0, -90), (15, 0), (30, 90), (45, 180)):
+                a = math.radians(degrees)
+                dot = (round(x + 156 * math.cos(a)), round(y + 156 * math.sin(a)))
+                selected = (
+                    angles is not None and
+                    abs((angles[1] / 6.0) % 60 - quarter) < 0.01
+                )
+                pygame.draw.circle(screen, SEA if selected else SUN, dot, 11 if selected else 8)
+                pygame.draw.circle(screen, INK, dot, 2)
         pygame.draw.circle(screen, SUN, (x, y), 10)
         pygame.draw.circle(screen, INK, (x, y), 10, 2)
 
@@ -139,11 +195,11 @@ class TimeRenderer:
             self._button(
                 screen, rect, self.words[mode.value],
                 selected=model.mode is mode, tint=PURPLE if mode is TimeMode.CLOCK else SEA,
-                size=19 if mode is TimeMode.STOPWATCH else 23,
+                size=16 if mode is TimeMode.STOPWATCH else 18, icon=mode.value,
             )
         if model.mode is TimeMode.CLOCK:
             now = model.shown_time()
-            self._dial(screen, angles=analog_hand_angles(now))
+            self._dial(screen, angles=analog_hand_angles(now), practice=model.practice)
             self._text(screen, now.strftime("%H:%M"), (758, 223), 79, centered=True)
             weekday = self.words[f"weekday.{now.weekday()}"]
             self._text(screen, f"{weekday} {now.day:02d}/{now.month:02d}", (758, 299), 26, centered=True)
@@ -155,7 +211,7 @@ class TimeRenderer:
             self._button(
                 screen, ACTION_BUTTONS["practice"],
                 self.words["back_real"] if model.practice else self.words["practice"],
-                tint=PURPLE, selected=model.practice, size=22,
+                tint=PURPLE, selected=model.practice, size=20, icon="hands",
             )
         else:
             if model.mode is TimeMode.STOPWATCH:
@@ -175,9 +231,9 @@ class TimeRenderer:
             self._button(
                 screen, ACTION_BUTTONS["primary"],
                 self.words["pause"] if running else self.words["start"],
-                selected=running, size=26,
+                selected=running, size=23, icon="pause" if running else "play",
             )
-            self._button(screen, ACTION_BUTTONS["reset"], self.words["reset"], tint=CORAL, size=23)
+            self._button(screen, ACTION_BUTTONS["reset"], self.words["reset"], tint=CORAL, size=19, icon="reset")
             if model.mode is TimeMode.TIMER:
                 for minutes, rect in zip(PRESET_MINUTES, PRESET_BUTTONS):
                     self._button(
