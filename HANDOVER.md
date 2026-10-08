@@ -15,8 +15,9 @@ missing English speech does not silently fall back to Italian.
 **Source/test anchors:** implementation starts at `5c8f0c21` (speech
 coordinator) and `2fcd2af8` (audio adapter), with source integration
 through `a75cf484` and two new testing files/updates through
-`cbcbe0d2`. Pure fake-transport speech tests and an Activity
-replay-path test have been added but **NEVER EXECUTED in a local checkout**.
+`cbcbe0d2`. Pure fake-transport speech tests an audio locale-fallback boundary test, and real Activity
+replay/immediate-exit tests have been added, but **NEVER EXECUTED in a local
+checkout**. The latest source/test commit is `c56d2949`.
 
 **What is explicitly NOT done:** IT/EN recordings; reviewed cue map; launcher
 title WAV; Modal/VoiceEngine provider authorization or invocation; human
@@ -26,7 +27,8 @@ replay icon is correctly absent from the current candidate UI.
 
 **Next exact step:** Current local agent checks out up-to-date `main` and
 follows `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`. For GLA-003
-run `test_activity_time_speech.py` and `test_activity_tempo_di_greia.py`
+run `test_activity_time_speech.py`, `test_activity_time_audio.py` and
+`test_activity_tempo_di_greia.py`
 as distinct exit-code/evidence entries, then isolate headless/full GUI
 acceptance according to GLA-001/002 dependencies. GLA-005 remains blocked
 until voice generation is explicitly authorized; follow
