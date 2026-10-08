@@ -927,3 +927,51 @@ GLA-008 in the one local-agent queue now records precise
 source suites, actual 48/64px art comparison and IT/EN
 Home/gameplay screenshots. No P6/P7 launch or final
 visual acceptance, and no P8 approval is asserted.
+
+
+### 2026-10-08 — P6 compact Home caption, actual local SVG render, live screenshot blocker
+
+**Scope:** original child-facing P6 Home design, not picker/backend
+work or another architecture. On the real existing Home renderer,
+`my_creations` used a long localized single-line caption that
+would be shrunk under the 800×480 and 480×320
+six-portal layouts. Added `compact` to the existing
+`_category_title` presentation function and enabled it
+in `CollectionFirstHomeMixin` for canvas width <=800.
+The shorter child-facing IT/EN/ES/DE/FR labels are
+`Creazioni`, `Creations`, `Creaciones`, `Werke`,
+and `Créations`; full normal text and prerecorded
+semantic lookup remain unchanged. Added unit assertions
+to `test_child_home_creation_organization.py`.
+**Source committed; test NOT RUN.** No release
+metadata, Parent policy, storage or routes changed.
+
+**Real local rendering attempt:** this execution container
+has Python 3.13, Pillow, CairoSVG, Xvfb/SDL libraries.
+It lacks an installed `pygame` module and a full private
+Greia checkout. Direct clone/archive from GitHub fails
+due to network DNS resolution, not a Greia source
+failure. The connected GitHub API allows only text
+for source; it rejects binary image fetching. We
+successfully fetched the genuine textual SVG sources
+`assets/visual/ui/v0.1/portal_frame.svg` and
+`activity_card.svg`, then rendered both locally
+via CairoSVG+Pillow at 256,128,48px into a
+clearly **non-runtime** Greia art comparison.
+This proves only original authored-asset rasterization,
+NOT a real Shell/App screenshot, NOT quality
+of actual Activity icon illustrations, and NOT
+target frame performance. GLA-008 real GUI
+and the complete 114-asset contact-sheet review
+remain OPEN. Do not mark any P6/P7 acceptance
+as passed or count this as a Simulator capture.
+
+**Next:** obtain a complete working-tree source/archive
+(including PNG/SVG runtime assets) with Pygame
+available in an authorized Python environment.
+Run the existing `tools/headless_greia_activity.py`
+and Shell/Simulator capture procedures rather than
+building a second screenshot framework; review actual
+child UI screens before further art polish.
+Existing GLA-008 local-agent task already owns
+exact commands, evidence and first failure handling.
