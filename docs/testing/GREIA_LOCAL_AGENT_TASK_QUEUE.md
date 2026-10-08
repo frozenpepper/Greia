@@ -291,7 +291,7 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_creation_gallery_layout.py' -v
   python3 -m unittest discover -s tests -p 'test_creation_gallery.py' -v
   ```
-  Minimum source SHA `05b0e50d439cd1d0836bda27666eb8b0520ec98e`.
+  Minimum source SHA `7835faf15ba67fed9659aff7da93f75b5ccca066`.
   The first suite uses **actual dummy SDL/Pygame** and a disposable
   profile-backed `CreationLibrary`, not only mock-painter methods.
   Confirm Italian and English completely empty library at 480×320,
