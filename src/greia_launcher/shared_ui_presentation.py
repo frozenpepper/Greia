@@ -454,8 +454,11 @@ class SharedUiActivityCardMixin:
             pygame.draw.rect(screen, (239, 77, 83), badge_rect, border_radius=badge_h // 2)
             pygame.draw.rect(screen, (255, 255, 255), badge_rect, width=2, border_radius=badge_h // 2)
             launch_font = self._font(max(12, min(15, badge_h - 10)), pygame)
+            from .presentation import _launch_status_label
+
             launch_surf = launch_font.render(
-                self._child_display_text("Avvio..."), True, (255, 255, 255)
+                self._child_display_text(_launch_status_label(self._active_locale)),
+                True, (255, 255, 255),
             )
             screen.blit(launch_surf, launch_surf.get_rect(center=badge_rect.center))
 
