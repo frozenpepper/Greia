@@ -685,3 +685,25 @@ The new source remains in `activity_incubator/` and P1–P8 release
 boundaries remain unchanged. The single deferred queue
 `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` has an exact four-suite
 GLA-003 source step plus subsequent hands-on and audio acceptance.
+
+
+### 2026-10-08 — My Time first-frame voice and terminal-event safety (SOURCE-ONLY)
+
+The incubated `TimeSpeech` coordinator now defers a timer completion
+that is already pending before the first Activity frame, and emits it only
+after `mark_activity_ready` has been published. This terminal case
+supersedes any launch greeting or queued first-use instruction, preventing
+invisible or misleading speech. Missing/corrupt greeting playback no longer
+consumes the first essential instruction. Missing recordings never
+masquerade as successful replay; closing the coordinator prevents further
+playback. No extra audio backend, cloud synthesis or platform time policy
+was introduced.
+
+Added pure coordinator tests and an `TimeActivity.run()` regression
+that drives a deterministic, already-expired countdown through frame
+presentation and READY with a fake audio sink.
+**Evidence:** GitHub commit/readback only, tests not executed; prereader
+UX, real IT/EN voice production, desktop Simulator, actual Shell and
+installed hardware remain unverified. GLA-003 in the single existing
+local-agent queue is responsible for these exact suites. My Time remains
+`activity_incubator/` only; no release acceptance or hardware claims.
