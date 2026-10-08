@@ -7,7 +7,7 @@ icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]
-categories = ["learn", "create"]
+categories = ["learn"]
 discovery_tags = ["puzzles", "making"]
 
 [education]
