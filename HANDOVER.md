@@ -1,5 +1,40 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — My Time prerecorded speech seam (current source-only continuation)
+
+**Status: incubated SOURCE-WIP; no voice or release acceptance.** On
+`main`, the My Time Activity has a new pure `TimeSpeech` cue coordinator,
+package-local `LocalTimeSpeechTransport` resolving
+`LocalizedResources.audio_cue`, and a large replay icon shown only when
+the currently relevant accepted voice clip exists. Speech begins only
+after READY, mode changes replace obsolete cues, welcome and first-use
+instruction never overlap, timer completion supersedes pending speech,
+and playback stops on exit. The selected language is mandatory:
+missing English speech does not silently fall back to Italian.
+
+**Source/test anchors:** implementation starts at `5c8f0c21` (speech
+coordinator) and `2fcd2af8` (audio adapter), with source integration
+through `a75cf484` and two new testing files/updates through
+`cbcbe0d2`. Pure fake-transport speech tests and an Activity
+replay-path test have been added but **NEVER EXECUTED in a local checkout**.
+
+**What is explicitly NOT done:** IT/EN recordings; reviewed cue map; launcher
+title WAV; Modal/VoiceEngine provider authorization or invocation; human
+listening; real audio output; current-source simulator, pre-reader, hardware
+or release acceptance. Both locale audio maps remain empty; therefore the
+replay icon is correctly absent from the current candidate UI.
+
+**Next exact step:** Current local agent checks out up-to-date `main` and
+follows `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`. For GLA-003
+run `test_activity_time_speech.py` and `test_activity_tempo_di_greia.py`
+as distinct exit-code/evidence entries, then isolate headless/full GUI
+acceptance according to GLA-001/002 dependencies. GLA-005 remains blocked
+until voice generation is explicitly authorized; follow
+`activity_incubator/tempo_di_greia/VOICE_PRODUCTION_BRIEF.md` when
+unblocked. Do not change the curated release roster, system time, Parent
+screen-time, or hardware build/installer gates as part of voice tests.
+
+
 ## 2026-10-08 — Practice clock dual-ring continuation
 
 **SOURCE-WIP.** The My Time incubator now distinguishes 12 inner hour touch
