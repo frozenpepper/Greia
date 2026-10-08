@@ -105,6 +105,10 @@ class CreationGalleryRenderingTests(unittest.TestCase):
             {hit.action for hit in screen.painter.targets},
             {"confirm_delete", "cancel_delete"},
         )
+        layout = CreationGalleryLayout.for_surface(800, 480)
+        cancel_border = (layout.cancel.x + layout.cancel.width // 2, layout.cancel.y + 2)
+        confirm_border = (layout.confirm.x + layout.confirm.width // 2, layout.confirm.y + 2)
+        self.assertEqual(tuple(surface.get_at(cancel_border)[:3]), screen.painter.INK)
 
         # Background replay, Delete, TAB and arrow keys cannot escape the modal.
         for key in (pygame.K_p, pygame.K_r, pygame.K_TAB, pygame.K_DELETE):
@@ -128,6 +132,7 @@ class CreationGalleryRenderingTests(unittest.TestCase):
             {hit.action for hit in screen.painter.targets},
             {"confirm_delete", "cancel_delete"},
         )
+        self.assertEqual(tuple(surface.get_at(confirm_border)[:3]), screen.painter.INK)
         screen.handle_event(pygame.event.Event(pygame.KEYDOWN, {"key": pygame.K_RETURN}))
         self.assertEqual(self.library.list(), ())
         screen.draw(surface)  # deletion returns safely to empty-library state
