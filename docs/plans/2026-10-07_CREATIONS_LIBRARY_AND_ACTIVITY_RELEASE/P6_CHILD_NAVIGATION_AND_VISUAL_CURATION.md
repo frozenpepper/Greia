@@ -261,6 +261,48 @@ controlled depth and obvious feedback. This is neither a generic
 desktop icon grid nor a decorative art slideshow. Parent policy
 and protected OS navigation remain untouched.
 
+## 5a. Compact Home typography and verified local-art evidence (2026-10-08)
+
+On the 480×320 and 800×480 reference layouts, the existing
+`CollectionFirstHomeMixin` scales long Home captions to the width
+of a small portal. The saved-work label in particular was
+`Le mie creazioni` / `My Creations`, making the caption far
+smaller than its neighbours when compressed. The existing
+`_category_title(..., compact=True)` presentation now supplies
+the short **Creazioni / Creations** label at width **800px and
+below** (corresponding labels: ES `Creaciones`, DE `Werke`,
+FR `Créations`). At 1024px and wider, the complete name
+remains visible. The full accessibility/spoken name and the
+actual Gallery title are unchanged, as are collection semantics
+and profile policy. The compact title still needs live IT/EN
+screenshots with visual font-height/target observations; the
+missing voice recordings remain GLA-010.
+
+**What could be rendered in the present remote runtime:** the
+existing GitHub source SVGs
+`assets/visual/ui/v0.1/portal_frame.svg` and
+`activity_card.svg` were fetched as UTF-8 text and genuinely
+rasterized here using installed Python + CairoSVG + Pillow.
+The local comparison image explicitly labels its 256/128/48px
+asset preview as **not a running Greia launcher screenshot**.
+This confirms that authored art can be visually inspected
+here; it does not validate Pygame composition or the real
+Activity icons. The remote runtime currently lacks both a
+checked-out private Greia source tree **and** Pygame, and its
+network cannot resolve GitHub to clone the repository.
+Therefore full Shell/Activity screenshots were **not
+captured**; GLA-008 remains open. No screenshot or asset
+preview may be cited as a real app run.
+
+The straightforward unblock for genuine local screenshots is
+a full current working-tree source ZIP **including runtime
+visual assets** plus the Pygame requirements/wheel installation
+being available in the same execution environment. Do not
+install random OS tooling or fake the app with a Pillow
+recreation. Greia's existing `tools/headless_greia_activity.py`
+and Simulator visual capture routes remain the source-owned
+runners; no new capture framework is needed.
+
 ## 6. Acceptance and next real work
 
 The source-only changes to existing Activity metadata, Home ordering,
