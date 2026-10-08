@@ -50,6 +50,14 @@ No new Activity is dropped or silently approved merely for having unit tests. Re
 
 ## C. Append-only dated progress entries
 
+### 2026-10-08 — My Time composition-root launch repair (source only)
+
+Local desktop acceptance at `47a949a0db27bfb078bc5af1d4d574f526f1e0c3` passed the four focused suites (5+7+9+3), library validation (101 resources), incubator package validation and the exact draft composition rules: default staging fails closed; `--allow-draft` stages 32 child Activities plus trusted My Greia (33 total), excluding 12 withheld entries and the incubated Time Activity. The first IT headless Simulator launch failed before screenshots because `activity_incubator/tempo_di_greia/main.py` called nonexistent `LocalizedResources.string()`. No source was modified during that failed run. Evidence was reported under `tmp/time-and-system-acceptance-20261008-042012/` and `time-and-system-acceptance-evidence.zip` on the local agent machine (not independently inspected here).
+
+This bounded source repair changes that composition-root call to the public `LocalizedResources.text()` API and adds a regression that actually enters `main()` under both IT/EN with the real localization bundles and a stub activity event loop. **No headless, GUI, screenshot, audio, hardware or full-suite acceptance is claimed for the repair.** Continue desktop acceptance at its previously blocked Step 4; retain draft/noninstalled classifications unchanged.
+
+
+
 ### 2026-10-07 — Owner-approved unified program and P1 local headless source prototype
 
 **Starting repository head:** `56f22131c60a7fb06ff2dbbe97cdd03aca4165a3` before documentation commits.  

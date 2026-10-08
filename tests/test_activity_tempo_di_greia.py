@@ -104,6 +104,43 @@ class TimeToolModelTests(unittest.TestCase):
             self.assertEqual(data["audio"], {})
 
 
+    def test_composition_root_uses_platform_localized_text_api(self) -> None:
+        """Actually enter main(): model-only tests must not mask a broken launch path."""
+        import os
+        from unittest.mock import patch
+
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+
+        import pygame
+        from activity_incubator.tempo_di_greia import main as entrypoint
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+
+        launches: list[tuple[str, dict[str, str]]] = []
+
+        class FakeTimeActivity:
+            def __init__(self, screen, locale, words) -> None:
+                self.screen = screen
+                launches.append((locale, words))
+
+            def run(self) -> int:
+                return 0
+
+        try:
+            for locale in ("it", "en"):
+                with self.subTest(locale=locale):
+                    with (
+                        patch.object(entrypoint, "get_profile_locale", return_value=locale),
+                        patch.object(entrypoint, "TimeActivity", FakeTimeActivity),
+                    ):
+                        self.assertEqual(entrypoint.main(), 0)
+                    selected, words = launches[-1]
+                    self.assertEqual(selected, locale)
+                    self.assertEqual(set(words), set(WORD_KEYS))
+                    self.assertTrue(all(isinstance(value, str) and value for value in words.values()))
+        finally:
+            pygame.quit()
+
     def test_safe_pointer_excludes_trusted_home_at_both_screen_sizes(self) -> None:
         import os
         os.environ.setdefault("SDL_VIDEODRIVER", "dummy")

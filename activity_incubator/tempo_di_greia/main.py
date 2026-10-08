@@ -28,7 +28,7 @@ def main() -> int:
     assert context is not None
     locale = context.selected.value.split("-")[0]
     resources = LocalizedResources(Path(__file__).resolve().parent, context)
-    words = {key: resources.string(key) for key in WORD_KEYS}
+    words = {key: resources.text(key) for key in WORD_KEYS}
     return TimeActivity(screen, locale, words).run()
 
 

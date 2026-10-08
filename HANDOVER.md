@@ -1,5 +1,12 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — My Time launch-blocker correction (source-only)
+
+At the previous `47a949a0` source state, focused unit/package/draft-staging checks passed, but Step 4 IT headless Simulator launch failed before screenshots: the incubated Time Activity's composition root called nonexistent `LocalizedResources.string(key)`. The platform API is `LocalizedResources.text(key)`. This commit changes that single call and adds `test_composition_root_uses_platform_localized_text_api` to execute the real entrypoint for IT and EN, stubbing only the event loop. The previous agent's evidence remains in its local `tmp/time-and-system-acceptance-20261008-042012/` directory and ZIP.
+
+**Next:** run `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v`, then resume the already-defined Step 4 headless IT/EN and GUI acceptance in `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` §2ae. Do not repeat already-green draft-stage checks absent related code changes. Do not claim screenshot/voice/hardware acceptance until the relevant run completes. Draft composition and incubation remain unchanged.
+
+
 ## 2026-10-08 — My Greia / My Time / Visual Library source checkpoint
 
 **Last executable source/test anchor:** `cf8c210cb1c2a2267c213191013fd50e6c1b0929` (My Greia staging + Time incubator + HTML gallery, plus low-idle redraw and protected-touch test; later documentation-only commits follow). **Source-only; no local tests, real GUI/audio, or Acer hardware run here.**
