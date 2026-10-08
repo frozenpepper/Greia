@@ -58,7 +58,7 @@ class TimeSpeech:
 
     @property
     def can_repeat(self) -> bool:
-        return self.transport.has_clip(self._instruction)
+        return self._started and self.transport.has_clip(self._instruction)
 
     def start(self, mode: TimeMode, practice: bool) -> None:
         """Begin only after the first usable frame has been presented."""
