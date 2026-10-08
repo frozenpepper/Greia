@@ -792,3 +792,32 @@ without adding runtime TTS. A distinct existing icon is
 not visual acceptance until it has been seen next to the
 other portals by the owner/child. No P6/P7 release gate
 or full V5 shared-graphics completion was claimed.
+
+
+### 2026-10-08 — Distinct child theme icons; no duplicate symbolism (P6 SOURCE-ONLY)
+
+Source review of actual first-party draft Home/Play/Learn
+navigation found collisions in the canonical semantic
+discovery icon mapping: Music and Making reused Drawing's
+palette; Words and Writing reused Stories' book; Building,
+Numbers and Action reused Puzzles' identical graphic.
+This made the existing optional subcollection vocabulary
+visually indistinguishable to prereaders. Updated only
+`src/greia_launcher/catalogue_view.py` icon lookup to use
+13 distinct **already-registered** Greia core images
+(palette, notebook, music star, train blocks, coins,
+alphabet board, block puzzle, garden, book, rainbow,
+heart, lightning, unicorn). No art generation or
+runtime rendering/cache layers were introduced.
+
+Both launcher card variants now show launch-status copy
+in the child's active IT/EN language. Two misleading Play
+memberships were dropped from authoring/observation
+Activities; current 21 Play/22 Learn remain directly
+browsed rather than forcing incomplete semantic groups.
+A 32-candidate curation matrix lives in the existing
+P6 design record. The local agent's GLA-008 art contact
+sheet/simulator screenshots at 128/64/48px and 1024×600,
+800×480, 480×320 still require execution and human
+visual judgment. **No new test or render was run**, and
+art, voice and release approval remain OPEN.
