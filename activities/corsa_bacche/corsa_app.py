@@ -133,17 +133,13 @@ class CorsaApp:
                 elif event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.get_surface() or self.screen
                     self.canvas = PygameReferenceCanvas(self.screen)
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self._pointer_drag_held = True
-                    self._handle_pointer_motion(event.pos)
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self._pointer_drag_held = False
-                elif event.type == pygame.MOUSEMOTION and self._pointer_drag_held:
-                    self._handle_pointer_motion(event.pos)
-                elif event.type == pygame.WINDOWFOCUSLOST:
-                    # An Activity must not continue steering after focus
-                    # moves to Greia's trusted Home/picker window.
-                    self._pointer_drag_held = False
+                elif event.type in (
+                    pygame.MOUSEBUTTONDOWN,
+                    pygame.MOUSEBUTTONUP,
+                    pygame.MOUSEMOTION,
+                    pygame.WINDOWFOCUSLOST,
+                ):
+                    self._process_pointer_event(event)
                 elif event.type == pygame.JOYHATMOTION:
                     hx, hy = event.value
                     if hy == 1:
@@ -235,6 +231,18 @@ class CorsaApp:
 
         pygame.quit()
         return 0
+
+    def _process_pointer_event(self, event: pygame.event.Event) -> None:
+        """Translate queued press/drag/release events without global mouse polls."""
+        if event.type == pygame.WINDOWFOCUSLOST:
+            self._pointer_drag_held = False
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self._pointer_drag_held = True
+            self._handle_pointer_motion(event.pos)
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            self._pointer_drag_held = False
+        elif event.type == pygame.MOUSEMOTION and self._pointer_drag_held:
+            self._handle_pointer_motion(event.pos)
 
     def _handle_pointer_motion(self, pos: tuple[int, int]) -> None:
         """Route mouse click/drag or touch swipe towards target cell relative to Momo."""
