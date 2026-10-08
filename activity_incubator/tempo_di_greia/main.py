@@ -11,9 +11,13 @@ from greia_platform.localization import ActivityLocaleSupport, LocalizedResource
 if __package__:
     from .time_app import TimeActivity
     from .time_renderer import WORD_KEYS
+    from .time_audio import LocalTimeSpeechTransport
+    from .time_speech import TimeSpeech
 else:
     from time_app import TimeActivity
     from time_renderer import WORD_KEYS
+    from time_audio import LocalTimeSpeechTransport
+    from time_speech import TimeSpeech
 
 
 def main() -> int:
@@ -29,7 +33,8 @@ def main() -> int:
     locale = context.selected.value.split("-")[0]
     resources = LocalizedResources(Path(__file__).resolve().parent, context)
     words = {key: resources.text(key) for key in WORD_KEYS}
-    return TimeActivity(screen, locale, words).run()
+    speech = TimeSpeech(LocalTimeSpeechTransport(resources))
+    return TimeActivity(screen, locale, words, speech=speech).run()
 
 
 if __name__ == "__main__":
