@@ -207,8 +207,10 @@ class TimeToolModelTests(unittest.TestCase):
         launches: list[tuple[str, dict[str, str]]] = []
 
         class FakeTimeActivity:
-            def __init__(self, screen, locale, words) -> None:
+            def __init__(self, screen, locale, words, *, speech=None) -> None:
                 self.screen = screen
+                if speech is None:
+                    raise AssertionError("composition root must supply the speech coordinator")
                 launches.append((locale, words))
 
             def run(self) -> int:
