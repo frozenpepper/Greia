@@ -63,6 +63,12 @@ class VoloDraghettoTests(unittest.TestCase):
         self.assertIn("audio.basic", data["requirements"]["required_capabilities"])
         self.assertIn("display", data["requirements"]["required_capabilities"])
         self.assertIn("pointer", data["requirements"]["required_capabilities"])
+        # Endless flight has repeatable milestones, not a fictitious terminal
+        # completion emitted on exit or after an arbitrary star count.
+        self.assertEqual(
+            {entry["id"] for entry in data["education"]["events"]},
+            {"flight.star_milestone"},
+        )
 
     def test_localization_catalogue_contains_all_keys(self) -> None:
         locales_dir = ACTIVITY_DIR / "locales"
