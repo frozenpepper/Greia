@@ -25,9 +25,12 @@ from greia_platform.typography import GreiaTypography
 if __package__:
     from .torre_audio import TorreAudio
     from .torre_content import (
+        CELL_SIZE,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
         STORAGE_KEY,
+        TOWER_X,
+        TOWER_Y,
         TowerMode,
     )
     from .torre_model import StepOutcome, TorreModel
@@ -35,9 +38,12 @@ if __package__:
 else:
     from torre_audio import TorreAudio
     from torre_content import (
+        CELL_SIZE,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
         STORAGE_KEY,
+        TOWER_X,
+        TOWER_Y,
         TowerMode,
     )
     from torre_model import StepOutcome, TorreModel
@@ -286,14 +292,12 @@ class TorreApp:
         # Particle effects
         if outcome.snap_coords:
             for cx, cy in outcome.snap_coords:
-                from .torre_content import CELL_SIZE, TOWER_X, TOWER_Y
                 px = TOWER_X + cx * CELL_SIZE + CELL_SIZE // 2
                 py = TOWER_Y + cy * CELL_SIZE + CELL_SIZE // 2
                 self._renderer.spawn_particles(px, py, (254, 240, 138), count=5)
 
         if outcome.cleared_coords:
             for cx, cy in outcome.cleared_coords:
-                from .torre_content import CELL_SIZE, TOWER_X, TOWER_Y
                 px = TOWER_X + cx * CELL_SIZE + CELL_SIZE // 2
                 py = TOWER_Y + cy * CELL_SIZE + CELL_SIZE // 2
                 self._renderer.spawn_particles(
