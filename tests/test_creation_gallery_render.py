@@ -59,6 +59,26 @@ class CreationGalleryRenderingTests(unittest.TestCase):
                     self.assertFalse(any(t.action == "open" for t in screen.painter.targets))
                     screen.on_exit()
 
+    def test_empty_library_caption_does_not_cover_footer_navigation(self) -> None:
+        screen = self._screen(locale="en")
+        size = (1024, 600)
+        surface = pygame.display.set_mode(size)
+        positions: list[int] = []
+        real_text = screen.painter._text
+
+        def observe_text(target, label, x, y, font_size, *, center=False):
+            if "creations will appear" in label:
+                positions.append(y)
+            return real_text(target, label, x, y, font_size, center=center)
+
+        screen.painter._text = observe_text
+        screen.draw(surface)
+        self.assertFalse(screen.error)
+        self.assertEqual(len(positions), 1)
+        layout = CreationGalleryLayout.for_surface(*size)
+        self.assertLess(positions[0], layout.back.y - 8)
+        screen.on_exit()
+
     def test_empty_filtered_picker_can_cancel_without_minting_a_grant(self) -> None:
         granted: list[str] = []
         screen = self._screen(
