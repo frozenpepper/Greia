@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import math
 import unittest
 
-from activities.tempo_di_greia.time_model import (
+from activity_incubator.tempo_di_greia.time_model import (
     CountdownTimer, ElapsedStopwatch, TimeExperience, TimeMode,
     analog_hand_angles, display_duration,
 )
@@ -96,8 +96,8 @@ class TimeToolModelTests(unittest.TestCase):
     def test_bilingual_renderer_key_contract_is_complete(self) -> None:
         import json
         from pathlib import Path
-        from activities.tempo_di_greia.time_renderer import WORD_KEYS
-        root = Path(__file__).resolve().parents[1] / "activities" / "tempo_di_greia"
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+        root = Path(__file__).resolve().parents[1] / "activity_incubator" / "tempo_di_greia"
         for locale in ("it", "en"):
             data = json.loads((root / "locales" / (locale + ".json")).read_text(encoding="utf-8"))
             self.assertEqual(set(WORD_KEYS), set(data["strings"]) - {"activity.title"})
