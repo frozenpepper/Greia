@@ -162,6 +162,20 @@ However, accepted asset bytes do not prove that every Activity runtime path alre
 
 Canonical character introductions are OS/shared presentation content. Do not rerecord "Hi, I'm Leo/Lilli/..." independently in every Activity.
 
+### Selected-language audio authority
+
+The platform `LocalizedResources.audio_cue(key)` preserves the normal
+per-key locale fallback for ordinary optional sounds. For **required
+spoken instructions, narration or pronunciation**, resolve using
+`audio_cue(key, allow_fallback=False)`: a missing recording must not
+speak another language just because that happens to be the package default.
+This is decided by the **locale bundle that owns the semantic key**, not by
+the physical filename, parent folder, or hand-authored path heuristic.
+A clip may live anywhere inside Greia's validated package-media root.
+An absent selected-locale cue is an unfulfilled release requirement, not
+permission to auto-translate or synthesize at child runtime. Record
+the missing clip and keep human listening and per-locale authoring gates open.
+
 ## 6. Semantic cue IDs and localization
 
 Gameplay code chooses semantic meaning, not filenames or sentences.
