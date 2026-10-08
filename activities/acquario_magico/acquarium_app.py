@@ -33,7 +33,7 @@ from greia_platform.activity_api import (
 )
 from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import LocalizedResources
-from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 
 if __package__:
     from .acquarium_assets import AquariumAssetCache
@@ -69,18 +69,16 @@ CHEST_RECT = pygame.Rect(460, REFERENCE_HEIGHT - 165, 112, 88)
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
-    """Refuse pointer coordinates outside the play surface.
+    """Reject coordinates outside the Activity or inside trusted Home/Back."""
 
-    The Activity does not own the real Greia Home/Back chrome:
-    that authority migrated to the trusted launcher chrome path
-    for R7.3. The local pointer gate only ensures the
-    Activity-local child action does not react to out-of-bounds
-    clicks, which would otherwise drive confusing state changes.
-    """
-
-    w, h = surface.get_size()
+    viewport = activity_viewport_for_surface(surface)
     x, y = position
-    return 0 <= x < w and 0 <= y < h
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+        return False
+    return not any(
+        region.x <= x < region.right and region.y <= y < region.bottom
+        for region in viewport.protected_regions
+    )
 
 
 @dataclass

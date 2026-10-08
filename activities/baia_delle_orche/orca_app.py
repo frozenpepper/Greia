@@ -9,7 +9,7 @@ from greia_platform.activity_api import (
     activity_stop_requested,
     mark_activity_ready,
 )
-from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 
 try:
     from orca_audio import OrcaAudio
@@ -64,6 +64,18 @@ class OrcaBayActivity:
         self._running = True
         self._ready_published = False
         self._last_save_time = time.monotonic()
+
+    def _safe_pointer(self, position: tuple[int, int]) -> bool:
+        viewport = activity_viewport_for_surface(self.screen)
+        x, y = position
+        return (
+            0 <= x < viewport.surface.width
+            and 0 <= y < viewport.surface.height
+            and not any(
+                region.x <= x < region.right and region.y <= y < region.bottom
+                for region in viewport.protected_regions
+            )
+        )
 
     def handle_tool_click(self, tool_idx: int) -> None:
         self.pod.active_tool = tool_idx
@@ -204,7 +216,7 @@ class OrcaBayActivity:
                     if pos is None and hasattr(event, "x") and hasattr(event, "y"):
                         w, h = self.screen.get_size()
                         pos = (int(event.x * w), int(event.y * h))
-                    if pos is None:
+                    if pos is None or not self._safe_pointer(pos):
                         continue
 
                     pointer = self.canvas.pointer(pos)
@@ -220,7 +232,7 @@ class OrcaBayActivity:
                         if pos is None and hasattr(event, "x") and hasattr(event, "y"):
                             w, h = self.screen.get_size()
                             pos = (int(event.x * w), int(event.y * h))
-                        if pos is not None:
+                        if pos is not None and self._safe_pointer(pos):
                             pointer = self.canvas.pointer(pos)
                             if pointer is not None and self.pod.active_tool == 1:
                                 mx, my = pointer[0], pointer[1]

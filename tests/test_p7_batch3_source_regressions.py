@@ -58,6 +58,29 @@ class AquariumEventLoopTests(TestCase):
         ))
 
 
+
+    def test_aquarium_rejects_platform_chrome(self) -> None:
+        from activities.acquario_magico.acquarium_app import _is_safe_point
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+
+        surface = pygame.Surface((1024, 600))
+        region = activity_viewport_for_surface(surface).protected_regions[0]
+        self.assertFalse(_is_safe_point(surface, (int(region.x) + 1, int(region.y) + 1)))
+        self.assertTrue(_is_safe_point(surface, (500, 300)))
+
+
+class OrcaPointerSafetyTests(TestCase):
+    def test_rejects_chrome_and_outside_surface(self) -> None:
+        from activities.baia_delle_orche.orca_app import OrcaBayActivity
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+
+        app = object.__new__(OrcaBayActivity)
+        app.screen = pygame.Surface((1024, 600))
+        region = activity_viewport_for_surface(app.screen).protected_regions[0]
+        self.assertFalse(app._safe_pointer((int(region.x) + 1, int(region.y) + 1)))
+        self.assertFalse(app._safe_pointer((-1, 200)))
+        self.assertTrue(app._safe_pointer((500, 300)))
+
 class OrcaEventManifestTests(TestCase):
     def test_service_event_ids_are_declared(self) -> None:
         declared = {

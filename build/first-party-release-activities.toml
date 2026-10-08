@@ -20,6 +20,14 @@ id = "greia.first-party-launch"
 status = "draft"
 
 [[activities]]
+activity_id = "org.greia.acquario-magico"
+package = "acquario_magico"
+
+[[activities]]
+activity_id = "org.greia.clinica-cuccioli"
+package = "clinica_cuccioli"
+
+[[activities]]
 activity_id = "org.greia.colline-allegre"
 package = "colline_allegre"
 
@@ -28,8 +36,24 @@ activity_id = "org.greia.corsa-bacche"
 package = "corsa_bacche"
 
 [[activities]]
+activity_id = "org.greia.cucciolo-mio"
+package = "cucciolo_mio"
+
+[[activities]]
+activity_id = "org.greia.faccine-momo"
+package = "faccine_momo"
+
+[[activities]]
+activity_id = "org.greia.il-giardino-dei-numeri"
+package = "il_giardino_dei_numeri"
+
+[[activities]]
 activity_id = "org.greia.labirinto-magico"
 package = "labirinto_magico"
+
+[[activities]]
+activity_id = "org.greia.luci-di-momo"
+package = "luci_di_momo"
 
 [[activities]]
 activity_id = "org.greia.orchestra-animali"
