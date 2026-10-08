@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 import pygame
@@ -108,6 +109,15 @@ class MockStorage:
 class TestCloudServices(unittest.TestCase):
     """Test preference persistence, event emission, and corruption recovery."""
 
+    def test_platform_completion_adapter_uses_supported_signature(self) -> None:
+        with patch("activities.nanna_delle_nuvolette.cloud_services.emit_activity_event") as emit:
+            GreiaCloudEvents().rest_completed("night-123", {"cloud_count": 3, "star_count": 4})
+        emit.assert_called_once_with(
+            EVENT_REST_COMPLETED,
+            {"cloud_count": 3, "star_count": 4},
+            idempotency_key="cloud-rest:night-123",
+        )
+
     def test_storage_fallback_on_empty_or_corrupt(self) -> None:
         mock = MockStorage()
         storage = GreiaCloudStorage(storage=mock, key="test.cloud.pref.v1")
@@ -140,6 +150,34 @@ class TestCloudAppInteraction(unittest.TestCase):
         self.audio = CloudAudio()
         self.events = GreiaCloudEvents()
         self.storage = GreiaCloudStorage(storage=MockStorage())
+
+    def test_platform_home_click_is_not_a_private_exit(self) -> None:
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+        app = CloudActivity(self.screen, self.renderer, self.audio, self.events, self.storage)
+        rect = activity_viewport_for_surface(self.screen).protected_regions[0]
+        app._handle_event(pygame.event.Event(
+            pygame.MOUSEBUTTONDOWN,
+            {"button": 1, "pos": (int(rect.x) + 1, int(rect.y) + 1)},
+        ))
+        self.assertTrue(app._running)
+        self.assertEqual(app.scene.total_stars, 0)
+
+    def test_drag_focus_loss_and_protected_drop_do_not_commit(self) -> None:
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+        app = CloudActivity(self.screen, self.renderer, self.audio, self.events, self.storage)
+        app._selected_blanket_idx = 0
+        app._drag_pos = (400, 400)
+        app._handle_event(pygame.event.Event(pygame.WINDOWFOCUSLOST))
+        self.assertIsNone(app._selected_blanket_idx)
+        self.assertIsNone(app._drag_pos)
+        app._holding_star = True
+        rect = activity_viewport_for_surface(self.screen).protected_regions[0]
+        app._handle_event(pygame.event.Event(
+            pygame.MOUSEBUTTONUP,
+            {"button": 1, "pos": (int(rect.x) + 1, int(rect.y) + 1)},
+        ))
+        self.assertFalse(app._holding_star)
+        self.assertEqual(app.scene.total_stars, 0)
 
     def test_render_scene_without_error(self) -> None:
         scene = NightScene.create_night("test-night")

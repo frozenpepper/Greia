@@ -25,7 +25,7 @@ class GreiaCloudEvents:
     def rest_completed(self, session_id: str, payload: dict[str, Any]) -> None:
         """Emit cloud.rest_completed when all 3 clouds are asleep."""
         try:
-            emit_activity_event(EVENT_REST_COMPLETED, session_id=session_id, payload=payload)
+            emit_activity_event(EVENT_REST_COMPLETED, payload, idempotency_key=f"cloud-rest:{session_id}")
         except Exception:
             pass
 

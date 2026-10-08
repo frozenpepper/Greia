@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import time
-from typing import Final
+from uuid import uuid4
 
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
 from greia_platform.localization import LocalizedResources
-from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 
 if __package__:
@@ -26,12 +26,15 @@ else:
     from cloud_services import GreiaCloudEvents, GreiaCloudStorage
 
 
-PROTECTED_LEFT: Final[int] = 80
-PROTECTED_TOP: Final[int] = 80
-
-
-def _is_home_clicked(screen: pygame.Surface, pos: tuple[int, int]) -> bool:
-    return pos[0] <= PROTECTED_LEFT and pos[1] <= PROTECTED_TOP
+def _is_safe_point(screen: pygame.Surface, pos: tuple[int, int]) -> bool:
+    """Reject platform-protected coordinates without claiming Home ownership."""
+    viewport = activity_viewport_for_surface(screen)
+    x, y = pos
+    return (
+        0 <= x < viewport.surface.width
+        and 0 <= y < viewport.surface.height
+        and not any(r.x <= x < r.right and r.y <= y < r.bottom for r in viewport.protected_regions)
+    )
 
 
 class CloudActivity:
@@ -117,7 +120,13 @@ class CloudActivity:
             self._dirty = True
             return
 
+        if event.type == pygame.WINDOWFOCUSLOST:
+            self._cancel_held_item()
+            return
+
         if event.type == pygame.MOUSEMOTION:
+            if not _is_safe_point(self.screen, event.pos):
+                return
             logical = self.canvas.pointer(event.pos)
             if logical is not None:
                 point = (int(logical[0]), int(logical[1]))
@@ -145,23 +154,47 @@ class CloudActivity:
                     self._dirty = True
             return
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if _is_home_clicked(self.screen, event.pos):
-                self._running = False
+        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 return
-            logical = self.canvas.pointer(event.pos)
+            pos = self._event_position(event)
+            if not _is_safe_point(self.screen, pos):
+                return
+            logical = self.canvas.pointer(pos)
             if logical is not None:
                 point = (int(logical[0]), int(logical[1]))
                 if self._handle_pointer_click(point):
                     self._dirty = True
             return
 
-        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            logical = self.canvas.pointer(event.pos)
-            if logical is not None:
-                point = (int(logical[0]), int(logical[1]))
-                if self._handle_pointer_drop(point):
-                    self._dirty = True
+        if event.type in (pygame.MOUSEBUTTONUP, pygame.FINGERUP):
+            if event.type == pygame.MOUSEBUTTONUP and event.button != 1:
+                return
+            pos = self._event_position(event)
+            if not _is_safe_point(self.screen, pos):
+                self._cancel_held_item()
+                return
+            logical = self.canvas.pointer(pos)
+            if logical is None:
+                self._cancel_held_item()
+                return
+            point = (int(logical[0]), int(logical[1]))
+            if self._handle_pointer_drop(point):
+                self._dirty = True
+
+    def _event_position(self, event: pygame.event.Event) -> tuple[int, int]:
+        position = getattr(event, "pos", None)
+        if position is not None:
+            return (int(position[0]), int(position[1]))
+        width, height = self.screen.get_size()
+        return (int(event.x * width), int(event.y * height))
+
+    def _cancel_held_item(self) -> None:
+        if self._selected_blanket_idx is not None or self._holding_star or self._drag_pos is not None:
+            self._selected_blanket_idx = None
+            self._holding_star = False
+            self._drag_pos = None
+            self._dirty = True
 
     def _handle_pointer_click(self, point: tuple[int, int]) -> bool:
         # 1. Click on Moon (new night) if all asleep
@@ -242,9 +275,7 @@ class CloudActivity:
                     return True
 
         # Drop into empty space cancels drag
-        self._selected_blanket_idx = None
-        self._holding_star = False
-        self._drag_pos = None
+        self._cancel_held_item()
         return True
 
     def _advance_animation(self) -> bool:
@@ -284,7 +315,7 @@ class CloudActivity:
             self.audio.play("chime")
 
     def _start_new_night(self) -> None:
-        self.night_id = f"night-{int(time.time()):06d}"
+        self.night_id = f"night-{uuid4().hex}"
         self.scene = NightScene.create_night(self.night_id)
         self._yawn_starts = [None, None, None]
         self._completed_emitted = False
