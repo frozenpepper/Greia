@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import Mock, patch
+import tomllib
 
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 import pygame
@@ -126,6 +128,49 @@ class TestMomoRendererAndApp(unittest.TestCase):
     def test_render_quiz_mode_without_crash(self) -> None:
         self.model.start_quiz_round()
         self.renderer.render(self.screen, self.model)
+
+    def test_declared_events_only_on_new_discoveries_and_completion(self) -> None:
+        events = Mock()
+        app = MomoActivity(self.screen, self.renderer, self.audio, MomoModel(), events)
+        app._set_emotion(Emotion.SAD)
+        app._set_emotion(Emotion.SAD)
+        self.assertEqual(events.emotion_discovered.call_count, 1)
+        for emotion in Emotion:
+            app._set_emotion(emotion)
+        self.assertEqual(events.emotion_discovered.call_count, len(Emotion) - 1)
+        events.all_emotions_explored.assert_called_once_with()
+
+        declared = {
+            item["id"]
+            for item in tomllib.loads((PACKAGE_ROOT / "activity.toml").read_text())["education"]["events"]
+        }
+        self.assertEqual(declared, {
+            "faccine_momo.emotion_discovered",
+            "faccine_momo.all_emotions_explored",
+        })
+
+    def test_correct_quiz_answers_discover_emotions(self) -> None:
+        events = Mock()
+        app = MomoActivity(self.screen, self.renderer, self.audio, MomoModel(), events)
+        app.model.start_quiz_round()
+        app.model.quiz_target = Emotion.ANGRY
+        app.model.quiz_choices = [Emotion.ANGRY, Emotion.SAD]
+        app._handle_pointer_down(self.renderer.quiz_choice_rects[0].center)
+        events.emotion_discovered.assert_called_once_with(Emotion.ANGRY.value)
+
+    def test_reference_canvas_refuses_protected_chrome_and_letterbox(self) -> None:
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+
+        viewport = activity_viewport_for_surface(self.screen)
+        protected = viewport.protected_regions[0]
+        events = Mock()
+        app = MomoActivity(self.screen, self.renderer, self.audio, MomoModel(), events)
+        app._handle_pointer_down((int(protected.x) + 1, int(protected.y) + 1))
+        events.emotion_discovered.assert_not_called()
+
+        # The dedicated reference canvas owns fit/pointer mapping, not
+        # independent X/Y stretch factors.
+        self.assertEqual(app._to_reference_pos((-3, 10)), None)
 
     def test_pointer_interaction(self) -> None:
         # Tap sad button (first right button)

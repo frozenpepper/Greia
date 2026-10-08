@@ -64,9 +64,7 @@ class MomoModel:
     def set_emotion(self, emotion: Emotion) -> None:
         self.emotion = emotion
         self.is_comforted = False
-        self.discovered_emotions.add(emotion)
-        if len(self.discovered_emotions) == len(Emotion):
-            self.completed_all = True
+        self._remember_emotion(emotion)
 
         # Spawn celebration particles when happy/silly
         if emotion == Emotion.HAPPY:
@@ -77,6 +75,10 @@ class MomoModel:
             self._spawn_stars(15)
         elif emotion == Emotion.ANGRY:
             self._spawn_puffs()
+
+    def _remember_emotion(self, emotion: Emotion) -> None:
+        self.discovered_emotions.add(emotion)
+        self.completed_all = len(self.discovered_emotions) == len(Emotion)
 
     def comfort_momo(self) -> bool:
         """Called when child taps/strokes Momo's cheek when sad."""
@@ -124,6 +126,7 @@ class MomoModel:
 
     def answer_quiz(self, choice: Emotion) -> bool:
         if choice == self.quiz_target:
+            self._remember_emotion(self.quiz_target)
             self.quiz_streak += 1
             self.hop_offset = 25.0
             self._spawn_confetti(40)

@@ -20,11 +20,13 @@ if __package__:
     from .momo_audio import MomoAudio
     from .momo_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, MomoModel
     from .momo_renderer import MomoRenderer
+    from .momo_services import GreiaMomoEvents
 else:
     from momo_app import MomoActivity
     from momo_audio import MomoAudio
     from momo_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, MomoModel
     from momo_renderer import MomoRenderer
+    from momo_services import GreiaMomoEvents
 
 
 def _resolve_locale() -> str:
@@ -60,6 +62,7 @@ def main() -> int:
         renderer=renderer,
         audio=audio,
         model=model,
+        events=GreiaMomoEvents(),
     )
     return app.run()
 

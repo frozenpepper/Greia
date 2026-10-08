@@ -8,6 +8,7 @@ import time
 import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 
 if __package__:
     from .momo_audio import MomoAudio, MomoSpeechQueue
@@ -20,6 +21,7 @@ if __package__:
         MomoParticle,
     )
     from .momo_renderer import MomoRenderer
+    from .momo_services import MomoEventPort, NullMomoEvents
 else:
     from momo_audio import MomoAudio, MomoSpeechQueue
     from momo_model import (
@@ -31,6 +33,7 @@ else:
         MomoParticle,
     )
     from momo_renderer import MomoRenderer
+    from momo_services import MomoEventPort, NullMomoEvents
 
 
 class MomoActivity:
@@ -42,8 +45,11 @@ class MomoActivity:
         renderer: MomoRenderer,
         audio: MomoAudio,
         model: MomoModel,
+        events: MomoEventPort | None = None,
     ) -> None:
         self.screen = screen
+        self.canvas = PygameReferenceCanvas(screen)
+        self.events = events if events is not None else NullMomoEvents()
         self.renderer = renderer
         self.audio = audio
         self.model = model
@@ -72,8 +78,17 @@ class MomoActivity:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self._handle_pointer_down(event.pos)
+                elif event.type == pygame.VIDEORESIZE:
+                    self.screen = pygame.display.get_surface() or self.screen
+                    self.canvas = PygameReferenceCanvas(self.screen)
+                elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
+                        continue
+                    position = getattr(event, "pos", None)
+                    if position is None:
+                        sw, sh = self.screen.get_size()
+                        position = (int(event.x * sw), int(event.y * sh))
+                    self._handle_pointer_down(position)
 
             # Quiz advance transition
             if self._quiz_advance_timer > 0.0:
@@ -87,26 +102,45 @@ class MomoActivity:
             self.speech_queue.update(dt)
 
             # Render frame
-            self.renderer.render(self.screen, self.model)
+            self.renderer.render(self.canvas.surface, self.model)
+            self.canvas.present(clear=(36, 46, 67), smooth=False)
             pygame.display.flip()
             if not ready_published:
                 mark_activity_ready()
                 ready_published = True
-            self.clock.tick(60)
+            self.clock.tick(30)
 
         pygame.quit()
         return 0
 
-    def _to_reference_pos(self, physical_pos: tuple[int, int]) -> tuple[int, int]:
-        sw, sh = self.screen.get_size()
-        if (sw, sh) == (REFERENCE_WIDTH, REFERENCE_HEIGHT):
-            return physical_pos
-        rx = int(physical_pos[0] * (REFERENCE_WIDTH / max(1, sw)))
-        ry = int(physical_pos[1] * (REFERENCE_HEIGHT / max(1, sh)))
-        return (rx, ry)
+    def _to_reference_pos(self, physical_pos: tuple[int, int]) -> tuple[int, int] | None:
+        viewport = activity_viewport_for_surface(self.screen)
+        x, y = physical_pos
+        if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+            return None
+        for protected in viewport.protected_regions:
+            if protected.x <= x < protected.right and protected.y <= y < protected.bottom:
+                return None
+        logical = self.canvas.pointer(physical_pos)
+        return (int(logical[0]), int(logical[1])) if logical is not None else None
+
+    def _publish_discoveries(self, before: set[Emotion], completed_before: bool) -> None:
+        for emotion in sorted(self.model.discovered_emotions - before, key=lambda item: item.value):
+            self.events.emotion_discovered(emotion.value)
+        if self.model.completed_all and not completed_before:
+            self.events.all_emotions_explored()
+
+    def _set_emotion(self, emotion: Emotion) -> None:
+        before = set(self.model.discovered_emotions)
+        completed_before = self.model.completed_all
+        self.model.set_emotion(emotion)
+        self._publish_discoveries(before, completed_before)
 
     def _handle_pointer_down(self, physical_pos: tuple[int, int]) -> None:
-        ref_x, ref_y = self._to_reference_pos(physical_pos)
+        mapped = self._to_reference_pos(physical_pos)
+        if mapped is None:
+            return
+        ref_x, ref_y = mapped
 
         # 1. Check Mode Toggle Button
         if self.renderer.mode_button_rect.collidepoint(ref_x, ref_y):
@@ -124,7 +158,7 @@ class MomoActivity:
             # Check Emotion circular buttons (left & right)
             for emo, rect in self.renderer.left_buttons + self.renderer.right_buttons:
                 if rect.collidepoint(ref_x, ref_y):
-                    self.model.set_emotion(emo)
+                    self._set_emotion(emo)
                     self.audio.play_sfx("pop")
                     self.speech_queue.enqueue(emo.value, delay_after=0.3)
                     return
@@ -145,7 +179,7 @@ class MomoActivity:
                 all_emo = list(Emotion)
                 cur_idx = all_emo.index(self.model.emotion)
                 next_emo = all_emo[(cur_idx + 1) % len(all_emo)]
-                self.model.set_emotion(next_emo)
+                self._set_emotion(next_emo)
                 self.audio.play_sfx("giggle")
                 self.speech_queue.enqueue(next_emo.value, delay_after=0.3)
                 return
@@ -155,7 +189,10 @@ class MomoActivity:
             for idx, choice_emo in enumerate(self.model.quiz_choices):
                 rect = self.renderer.quiz_choice_rects[idx]
                 if rect.collidepoint(ref_x, ref_y):
+                    before = set(self.model.discovered_emotions)
+                    completed_before = self.model.completed_all
                     if self.model.answer_quiz(choice_emo):
+                        self._publish_discoveries(before, completed_before)
                         self.audio.play_sfx("boing")
                         praise = random.choice(["praise_1", "praise_2", "praise_3"])
                         self.speech_queue.enqueue(praise, delay_after=0.5)
