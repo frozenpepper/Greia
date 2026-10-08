@@ -24,6 +24,14 @@ activity_id = "org.greia.acquario-magico"
 package = "acquario_magico"
 
 [[activities]]
+activity_id = "org.greia.bottega-delle-misure"
+package = "bottega_delle_misure"
+
+[[activities]]
+activity_id = "org.greia.casa-del-dieci"
+package = "casa_del_dieci"
+
+[[activities]]
 activity_id = "org.greia.clinica-cuccioli"
 package = "clinica_cuccioli"
 
@@ -42,6 +50,14 @@ package = "cucciolo_mio"
 [[activities]]
 activity_id = "org.greia.faccine-momo"
 package = "faccine_momo"
+
+[[activities]]
+activity_id = "org.greia.festa-delle-rime"
+package = "festa_delle_rime"
+
+[[activities]]
+activity_id = "org.greia.foresta-parole"
+package = "foresta_parole"
 
 [[activities]]
 activity_id = "org.greia.il-giardino-dei-numeri"
