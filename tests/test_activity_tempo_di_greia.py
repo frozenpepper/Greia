@@ -103,6 +103,36 @@ class TimeToolModelTests(unittest.TestCase):
             self.assertEqual(set(WORD_KEYS), set(data["strings"]) - {"activity.title"})
             self.assertEqual(data["audio"], {})
 
+
+    def test_safe_pointer_excludes_trusted_home_at_both_screen_sizes(self) -> None:
+        import os
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+        from activity_incubator.tempo_di_greia.time_app import TimeActivity
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+
+        pygame.init()
+        try:
+            for size in ((1024, 600), (800, 480)):
+                with self.subTest(size=size):
+                    screen = pygame.Surface(size)
+                    state = TimeExperience(
+                        wall_now=lambda: datetime(2026, 10, 8, 9, 30, tzinfo=timezone.utc),
+                        monotonic=FakeClock(),
+                    )
+                    app = TimeActivity(screen, "it", {key: key for key in WORD_KEYS}, state)
+                    protected = activity_viewport_for_surface(screen).protected_regions[0]
+                    self.assertIsNone(app._logical_point(
+                        (int(protected.x) + 1, int(protected.y) + 1)))
+                    self.assertIsNone(app._logical_point((-1, -1)))
+                    app.press((500, 45))  # Clock top-tab is not trusted Home.
+                    self.assertEqual(state.mode, TimeMode.CLOCK)
+                    app.renderer.fonts.clear()
+        finally:
+            pygame.quit()
+
     def test_mode_is_semantic_and_timer_not_screen_time(self) -> None:
         state = TimeExperience(monotonic=FakeClock())
         state.mode = TimeMode.TIMER

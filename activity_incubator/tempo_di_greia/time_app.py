@@ -115,7 +115,14 @@ class TimeActivity:
             if self.model.timer.consume_completion():
                 self.celebrate_until = moment + 3.0
                 self.dirty = True
-            # At most 10 full-frame redraws/sec; counters use monotonic time.
+            # Idle clock redraws only once/second; an active elapsed counter
+            # uses 10 Hz for a legible visual ring. No per-frame busy repaint
+            # when a child is simply looking at a stationary clock.
+            active_counter = (
+                self.model.mode is TimeMode.STOPWATCH and self.model.stopwatch.running
+            ) or (
+                self.model.mode is TimeMode.TIMER and self.model.timer.running
+            )
             if self.dirty or moment >= next_draw:
                 self.renderer.draw(self.canvas.surface, self.model,
                     celebrate=moment < self.celebrate_until)
@@ -125,7 +132,7 @@ class TimeActivity:
                     mark_activity_ready()
                     self.ready_published = True
                 self.dirty = False
-                next_draw = moment + 0.1
+                next_draw = moment + (0.1 if active_counter else 1.0)
             ticker.tick(30)
         return 0
 
