@@ -3217,3 +3217,36 @@ Existing `tests/test_creation_library.py` remains mandatory for creation-volume 
 No complete checkout, `make verify`, concurrent real writer, disk-capacity simulation outside injected probes, Simulator, Legacy-X, Acer/Pi or physical evidence was produced. P1–P5 remain SOURCE-WIP until the accumulated acceptance executes.
 
 **Next source work while the local agent is unavailable:** start **P6 explicit release composition** so installed Greia does not implicitly ship every source Activity, then begin **P7 source-first review of all 45 first-party Activities**. Record candidate/hold/repair decisions now; defer real launch/screenshots/performance judgments to the accumulated live session rather than inventing approval.
+
+
+## 89. Creations P7 motor/action source review batch 2 — 14/45 reviewed, 12 draft candidates, 0 approved (2026-10-08)
+
+**Source authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` + same directory `PROGRESS.md`. **One cumulative deferred acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`. The user has explicitly deferred all local-agent, Simulator, full checkout and physical tests until their agent is available. No test was executed during this continuation; do not claim PASS.
+
+### Work performed directly on GitHub main
+
+The second seven-Activity source review covers `colline_allegre`, `corsa_bacche`, `labirinto_magico`, `quattro_amici`, `torre_forme`, `viaggio_delfino` and `volo_draghetto`. Source inspected: all seven manifests, modeled difficulty/play loops, input/protected-chrome paths, associated test suites, Italian/English locale key parity and both packaged localized spoken `activity-title.wav` files. Each has matching IT/EN locale keys and both title WAVs. **These are source/package checks only; actual audio quality, child usability, art and low-resource performance remain unverified.**
+
+Exact source corrections and review decisions:
+
+1. **Corsa pointer stream** — `activities/corsa_bacche/corsa_app.py` no longer gates queued MOUSEBUTTONDOWN/MOUSEMOTION through transient `pygame.mouse.get_pressed()`. It tracks one Activity-local left-button drag; consumes press/motion/release with proper ignored secondary button; drops drag on `WINDOWFOCUSLOST`. This should preserve Simulator/touch presses and prevent steering behind trusted Home, but requires actual Pygame confirmation. Commits `d8017a7a`, `69f866d1`.
+2. **Quattro pointer ownership** — `activities/quattro_amici/quattro_app.py` now rejects hover and token/drop clicks over the platform's protected chrome and beyond physical bounds before canvas mapping. The prior D1–D5 manifest mismatch has already been repaired to honest D1–D4. Commit `ac1678c3`.
+3. **Torre production script-import fix** — `activities/torre_forme/torre_app.py` previously invoked `from .torre_content` *inside* snap/row-clear particle paths even when loaded as a direct script module without a package parent. Moved geometry constants to the existing package/script-aware import block; added a direct-script effects test to `tests/test_activity_torre_forme.py`. Commits `c8171378`, `c3c7730b`.
+4. **Viaggio Delfino resize** — `activities/viaggio_delfino/delfino_app.py` previously kept drawing to a stale local canvas after `VIDEORESIZE` had assigned new `self.screen/self.canvas`. The loop now refreshes those references the same frame. New deterministic mock regression in `tests/test_action_pointer_boundaries.py`. Commits `56d383b1`, `936f2fb7`.
+5. **Volo Draghetto metadata** — this is genuinely endless friendly flight, not an authored 6-level game. Its `flight.completed` declaration was never emitted and misled progression; removed rather than fabricating completion. Test `tests/test_activity_volo_draghetto.py` now locks milestone-only event declarations. Commits `1a913c3f`, `416611b8`.
+6. **New action pointer regressions** — `tests/test_action_pointer_boundaries.py` verifies Corsa queued input/release/focus loss, Quattro safe/unsafe pointer regions and Delfino canvas replacement within one running frame. Commit `795989e3` plus Delfino augmentation `936f2fb7`. **Unexecuted.**
+
+### P7 curated release status
+
+- **14/45 source-reviewed**, **0/45 release-approved**. Source-reviewed batch 1 still has the original 7 creative/interoperability anchors; batch 2 contains the seven above. Review details, named source defects and unverified UX/performance questions are in PROGRESS's 2026-10-08 P7 batch 2 entry.
+- **12 draft release candidates** now in the single authoritative `build/first-party-release-activities.toml`: original 7 plus `colline_allegre`, `corsa_bacche`, `labirinto_magico`, `quattro_amici`, `torre_forme`. Five new candidate entries are sorted and scope-validated by source inspection, not accepted. Policy remains `status = "draft"` so official production release composition remains fail-closed. Commit `6afc788a`.
+- **`viaggio_delfino` and `volo_draghetto` are source-reviewed, withheld from the release roster**, not removed from the normal full developer build. Dolphin has progressive ocean science narration and chapter facts; Dragon has endless motor-play/accessory loops. Both need a comparative value and child UX judgement to justify release inclusion separately.
+- **31 remaining** first-party Activities have not received this targeted release source review. Next batch: `acquario_magico`, `baia_delle_orche`, `clinica_cuccioli`, `cucciolo_mio`, `faccine_momo`, `il_giardino_dei_numeri`, `luci_di_momo`, focusing age-2/3 non-reader learning and pedagogical overlap.
+
+### Deferred acceptance / no current test claim
+
+The **same consolidated desktop acceptance file** now covers all previous P1–P5 creation/gallery/PNG/WAV/UTF-8/capacity tests, P6 draft-only staging/index checks, and the P7 seven-game source tests and real responsive Simulator play at 1024×600, 800×480 and selected wide screens. **Exact source/test/draft-roster anchor:** `6afc788a190e10c4421d6ad925de18773b986f1d`; later commits updating the plan, ledger, test document and this handover are documentation-only unless another agent adds code. When running later, pin to the latest agreed source candidate and STOP on unexpected source drift; never assume the anchor's unexecuted tests passed.
+
+Do **not** invoke Acer flashing, install/release-image builds or physical testing for this content tranche. The independent Acer first-boot/install/update lifecycle remains OPEN with its own authoritative plan and real-device evidence boundary. Also do not approve the release roster or remove an Activity merely because it was withheld as a current draft candidate.
+
+**Next source engineering:** review the seven named age-2/3 science/care/counting Activities and address concrete owner-path flaws with focused regressions; then proceed through the other 24 source entries. A full live user-agent acceptance is still needed for the current P1–P7 candidate after the agent returns.
