@@ -290,8 +290,10 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_creation_gallery_render.py' -v
   python3 -m unittest discover -s tests -p 'test_creation_gallery_layout.py' -v
   python3 -m unittest discover -s tests -p 'test_creation_gallery.py' -v
+  python3 -m unittest discover -s tests -p 'test_creation_selection.py' -v
+  python3 -m unittest discover -s tests -p 'test_creation_picker_host.py' -v
   ```
-  Minimum source SHA `ccd8e5b4e5c3fa293203a06660df4125b072fd11`.
+  Minimum source SHA `957a7da1073e7807f3108d8adb7bd2771f81fac8`.
   The first suite uses **actual dummy SDL/Pygame** and a disposable
   profile-backed `CreationLibrary`, not only mock-painter methods.
   Confirm Italian and English completely empty library at 480×320,
@@ -307,7 +309,23 @@ test commands and expected observable behavior.
   the artifact; Right then Enter explicitly deletes it. Observe focus
   outline and cursor/selection feedback in a **real GUI** before
   acceptance. Distinguish dummy SDL test PASS from human visual PASS.
-  If this suite fails, STOP this P3 slice and return traceback/log + HEAD.
+  **Trusted picker lease tests (four new cases in the existing
+  host test file):** while a chooser is visible, cancel via the
+  Activity broker; let a pending request reach its 180-second
+  simulated expiry; replace an already-cancelled/collected request
+  with a new one; and simulate broker cancellation failure.
+  In each case verify the previous chooser closes, stops its
+  audio/preview owner, grants nothing, clears the child input overlay
+  and returns focus to the Activity. If cancellation itself errors,
+  the Activity display must be restored before the host reports
+  the fail-closed error. On a later new selection, old taps must
+  **not** reach the new request. These are provider-free tests
+  using the real `CreationSelectionCoordinator` clock where
+  applicable, not proof of live Xorg/Simulator focus restoration.
+  In the full Simulator repeat cancel/expiry with a disposable
+  Activity, inspect actual video/screenshot and compare with
+  `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md`.
+  If a suite fails, STOP this P3 slice and return traceback/log + HEAD.
 - **Priority:** P1; **dependency:** a clean checkout / prepared environment,
   NOT blocked by a Time-only test.
 - **Authority:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
@@ -323,8 +341,9 @@ test commands and expected observable behavior.
   still retained. If no audio/GUI, mark individual sections NOT_TESTABLE,
   never inflate to full PASS.
 - **Last result:** earlier *focused* P6 staging passed (33 exact);
-  latest empty-gallery, audio-filter icon and modal keyboard fixes committed
-  but unexecuted; full P1–P7 acceptance remains unexecuted.
+  empty-gallery, safe delete and stale-modal cancel/timeout source
+  fixes committed with unexecuted tests. Full P1–P7 acceptance remains
+  unexecuted.
 
 ### GLA-008 — Art / cast / launcher visual comparison
 
@@ -365,6 +384,18 @@ test commands and expected observable behavior.
 - **Last result:** PHYSICAL NOT TESTED in this workstream.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-08:** P3 source trace through
+  `CreationSelectionCoordinator.trusted_pending` →
+  `ActivityCreationPickerHost.service` uncovered missing modal
+  teardown when the Activity cancels its request or the
+  three-minute request deadline expires. A stale modal could
+  remain visible and attempt to choose from an invalid request.
+  The host now closes superseded/expired views, skips cancelling
+  already-settled requests, restores display on cancellation
+  errors, and refuses to reuse old taps for a new request.
+  Four provider-free host/real-coordinator tests were added.
+  **NOT EXECUTED.** P3 Source WIP; release/physical gates unchanged.
 
 - **2026-10-08:** P3 source audit traced the trusted
   `CreationsGalleryScreen` → `CreationsPygamePainter` empty-library
