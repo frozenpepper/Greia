@@ -821,3 +821,31 @@ sheet/simulator screenshots at 128/64/48px and 1024×600,
 800×480, 480×320 still require execution and human
 visual judgment. **No new test or render was run**, and
 art, voice and release approval remain OPEN.
+
+
+### 2026-10-08 — Locally rasterized existing SVG art is not app acceptance
+
+A remote development environment can use Python,
+Pillow and CairoSVG for actual authored Greia SVG.
+`assets/visual/ui/v0.1/portal_frame.svg` and
+`activity_card.svg` were retrieved as text via the
+GitHub connector and successfully rasterized at
+256/128/48px into a labeled comparison PNG.
+This is a **genuine source-art sample**, not
+a complete Pygame/child Shell render: it lacks
+actual Activity icons, text composition, focus,
+hit targets, performance and real profile state.
+The remote environment has no full checked-out
+private source and no Pygame, and cannot clone
+the source because its network DNS is unavailable.
+Do not use this asset PNG to close GLA-008.
+
+Source change: a compact variant of the visible
+My Creations Home caption (IT Creazioni,
+EN Creations, with corresponding ES/DE/FR)
+is now used at widths <=800px; the normal
+caption and prerecorded semantic name are
+unmodified. Tests were authored but NOT RUN.
+Real Greia screenshots at 1024×600/800×480/
+480×320 and child-facing visual approval remain
+OPEN. No duplicate screenshot pipeline was created.
