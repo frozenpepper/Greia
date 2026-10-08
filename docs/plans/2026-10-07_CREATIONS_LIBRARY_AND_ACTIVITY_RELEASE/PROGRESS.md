@@ -14,7 +14,20 @@
   input to a later request. Four new host/coordinator regressions
   were committed but NOT EXECUTED; no Simulator display
   focus claim or P3 promotion is made.
-- P3 source-first child-flow review (latest 2026-10-08): the actual renderer had an unbound `width/height` on a completely empty Creations gallery or compatible-media picker. That first-use crash is corrected. A second issue let keyboard replay/navigation reach underlying content during the delete-confirmation modal; keyboard confirmation now defaults to Cancel and requires explicit Right → Enter, with visible focus. The audio-only empty picker now displays audio imagery. A new real dummy-Pygame screen regression covers these states but has **not been executed**. No P3 acceptance status changes; see GLA-007.\n- First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. A new unvoiced **My Time** experiment is separately incubated in `activity_incubator/tempo_di_greia/` and is not a 46th installed Activity. My Greia remains outside child *games* selection but is now mandatorily staged as a trusted system Activity in official target composition (SOURCE-WIP, no live release verification). The earlier catalogue strategy's 41-item figures are historical.
+- P3 source-first child-flow review (latest 2026-10-08): the actual renderer had an unbound `width/height` on a completely empty Creations gallery or compatible-media picker. That first-use crash is corrected. A second issue let keyboard replay/navigation reach underlying content during the delete-confirmation modal; keyboard confirmation now defaults to Cancel and requires explicit Right → Enter, with visible focus. The audio-only empty picker now displays audio imagery. A new real dummy-Pygame screen regression covers these states but has **not been executed**. No P3 acceptance status changes; see GLA-007.\n- **Current P6 child organization/design (source-only, untested):**
+  six genuine shareable-work Create anchors now replace ten misleading
+  Create memberships among the 32 draft candidates; Acquario is Explore,
+  Cucciolo is Play, Specchi is Learn, Torre is Play. My Creations appears
+  immediately after Create with a distinct existing backpack core icon,
+  independent of Parent-filtered Create membership. A compact-landscape
+  Home presentation adjustment targets 3×2 rather than six vertical rows.
+  A bounded [P6 child navigation and visual curation record](./P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md)
+  maps all 32 draft Activities by curriculum family and lists the real
+  remaining visual/organizational decisions. No actual Home screenshot
+  or refreshed test execution yet. **IT/EN `my_creations.wav` launcher
+  recordings are missing**, queued as approval-blocked GLA-010; do not
+  mistake text/localization plumbing for spoken pre-reader readiness.
+- First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. A new unvoiced **My Time** experiment is separately incubated in `activity_incubator/tempo_di_greia/` and is not a 46th installed Activity. My Greia remains outside child *games* selection but is now mandatorily staged as a trusted system Activity in official target composition (SOURCE-WIP, no live release verification). The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: the earlier **Colline Allegre script-import** and **Quattro Amici difficulty D5** mismatches were corrected in previous source commits. P7 batch 2 repaired Corsa's queued drag, Quattro's chrome exclusion, Torre's direct-script particle import, Delfino's resize and Dragon's nonexistent event. P7 batch 3 additionally repairs Acquario's missing event-loop input pump and real milestone emissions, Baia's feeding/fact event declarations and chrome checks, Cucciolo's drag/focus/event declaration, and Momo's discovery events, safe pointer mapping and resize. P7 batch 4 repairs atomic Monster-gallery persistence, true creation-event invocation and platform-owned Home input, plus Alphabet unique-discovery and honest difficulty declarations. P7 batch 5 repairs Cloud completion/drag/chrome authority; Mondo Contrari's real interaction milestones, English labels and safe letterboxing; Bridge honest placements; Marble responsive drag/input; Memory exit/localized replay; Encyclopedia internal navigation authority. P7 batch 6 repairs Stars platform Home and session identity, Train per-replay milestone identity, Seasons one-shot discovery and safe letterbox mapping, and Submarine undeclared/phantom events plus pointer authority. The false adaptive-D2–D6 Bridge and adaptive-D1–D4 Marble claims were removed. **All these source changes and new regression tests remain UNEXECUTED in the canonical checkout.**
 - Release composition: **explicit draft selection is now source-wired into the authoritative owner release path**. `greia_release.py` sets `PIP_RELEASE_BUILD=1`; target composition stages only `build/first-party-release-activities.toml`, validates/indexes the installed subset, and refuses draft/empty policy for official release. Non-release/dev images deliberately keep the full source tree. Policy remains **draft**, so no official Activity release can build yet.
 - Exchange status: **PNG, first/second WAV consumers and reciprocal UTF-8 paths are implemented SOURCE-WIP.** Capacity plumbing now uses one shared budget across all variable child-data writers in the launcher process (Activity storage, Creations, history), with adaptive private namespaces and migration/staging headroom. Storie della Mia Voce publishes saved `narration`; Teatrino uses it without microphone contention; Orchestra persists optional backing WAVs; Writing and Posta reciprocally exchange saved UTF-8 snapshots. **No real cross-app GUI/audio/text/capacity flow has been executed yet**; backup and physical evidence remain open.
@@ -797,3 +810,62 @@ Legacy-X focus/stacking, auditory preview, cross-Activity
 PNG/WAV/UTF-8, recovery and curation remain OPEN. P1–P7
 remain SOURCE WIP; P8 remains NOT STARTED; no release roster
 status or hardware claim changed.
+
+
+### 2026-10-08 — P6 actual child Home and catalogue design/organization
+
+**Product emphasis restored:** simplify the existing first-party
+Home and curation, not add more Creations/Time infrastructure.
+
+Audited actual `activity.toml` presentation and education metadata
+for each of the 32 **draft** child-release candidates, and the
+existing Collection-first Home and adaptive grouping mechanisms.
+The major source-organizational problem was **Create**: four
+interactive games without a publishable child-made work product
+were grouped beside genuine creative Activities. Corrected only
+`[presentation].categories` for Acquario Magico (Explore only),
+Cucciolo Mio (Play only), Specchi Magici (Learn only) and Torre
+Forme (Play only). The six genuine Create entries are Painting,
+Shape Garden, Storie della Mia Voce, Teatrino Fiabe, Writing and
+Posta di Leo. All game identities, progression, saves, education
+metadata, Parent policy and draft-release membership remain
+untouched. No new root or child subcollection is invented.
+
+`GreiaChildShell._home_collections` now inserts the existing
+trusted My Creations viewer **immediately after Create**, instead
+of appending it as the last Home destination. It retains a distinct
+existing `backpack` icon (catalogue icon metadata synchronized),
+so the prereader can distinguish making from finding saved work.
+When no Create apps are Parent-visible, the library remains
+present. `CollectionFirstHomeMixin._home_columns` now avoids
+an unusable six-rows-high Home on 480×320/640×360 landscape,
+with a more compact preexisting portal sizing option.
+`tests/test_child_home_creation_organization.py` reads actual
+roster/manifests, verifies the six Create entries and four repairs,
+checks saved-work portal order/filter fallback/icon, and guards
+the compact column count. **Added but not executed here.**
+
+Visual editorial work is captured inside the P6 design record,
+which classifies all 32 draft candidates across eight curriculum
+families (math 6, literacy 6, nature 4, logic 6, creative 4,
+care 3, music 1, action 2). These families are for release
+review only, not a new runtime taxonomy. Play/Learn still have
+dense listings and require actual screenshot/gameplay-based
+complete semantic grouping decisions; fake tags or misc bins
+remain disallowed. The art-family contact sheet also remains
+unreviewed in the current checkout.
+
+An accessibility omission was verified: the platform-owned
+`assets/audio/system/launcher-labels/it` and `en`
+directories do not yet contain `my_creations.wav`, despite
+existing labels for other collections. GLA-010 is explicitly
+BLOCKED on owner-approved voice authoring (Modal only if
+authorized), real human listening and Shell playback. GLA-008
+is now the prioritized Home/art/collection visualization and
+organization acceptance task. Neither voice nor paid providers
+were invoked.
+
+**Result:** P6 stays SOURCE WIP / 0 release approvals, P7 is
+still 45/45 source-reviewed with gameplay/visual evidence owed,
+P8 not started. No hardware, release, trust, profile-policy,
+activity distribution or live GUI/audio acceptance claimed.
