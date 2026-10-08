@@ -2,8 +2,8 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `510edb8bb7738c6c4b15727f98d1ed4f027fbe4a` (later docs-only commits permitted)
-**Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
+**Updated:** 2026-10-08; **queue source baseline:** `06a25eb7269c78db9c110fa5382df8bc6e364187` (later docs-only commits permitted)
+**Product authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` + `P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`; My Time remains separately in `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
 **Queue scope:** checks that need the local machine, Simulator, screenshots, hearing or human observation. Do not use this as a second implementation plan.
@@ -348,17 +348,49 @@ test commands and expected observable behavior.
 ### GLA-008 — Art / cast / launcher visual comparison
 
 - **Status:** READY
-- **Priority:** P2; **dependency:** current image assets available.
+- **Priority:** P1 (current owner design focus); **dependency:** current image
+  assets and prepared source test environment. GUI screenshot inspection is
+  a separate evidence layer and is NOT gated by My Time.
 - **Authority:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`,
   `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`,
   `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`,
   `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
 - **New source/test minimum SHA:** `0a09eaf49b247d4c6f427481530a02ce370c9123`.
+- **Current child Home/catalogue source pin:** `06a25eb7269c78db9c110fa5382df8bc6e364187`.
+  Start with the real 32-candidate P6 design record:
+  `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`.
+  Confirm source metadata of **exactly six genuine Create anchors**;
+  no Acquario/Cucciolo/Specchi/Torre in Create; those four still
+  available through their honest collections. Confirm My Creations
+  appears **adjacent to Create** even when Parent filters away all
+  creative apps, keeps the distinct backpack icon and never obtains
+  Activity/package privileges. Check 1024×600 (3×2),
+  800×480 (2×3) and 480×320 (compact 3×2) Home portal layout.
+  Correct Italian/English labels, sufficient real targets, complete
+  visibility, profile switcher and Back/OS chrome are critical.
+- **Exact additional source checks (separately logged; stop first failure):**
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_child_home_creation_organization.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_discovery_policy.py' -v
+  python3 -m unittest discover -s tests -p 'test_launcher_spoken_labels.py' -v
+  python3 -m unittest discover -s tests -p 'test_launcher_layout.py' -v
+  ```
+  Do not promote P6 merely because these tests pass; actual Shell
+  screenshots and independent listening/child visual review remain owed.
 - **Commands (save logs/exit codes; STOP on first failure):**
   ```bash
   python3 -m unittest discover -s tests -p 'test_visual_family_contact_sheet.py' -v
   python3 tools/visual_family_contact_sheet.py --output "$EVIDENCE/greia-art-family.png"
   ```
+- **Design/organization leg:** compare actual six Home portal
+  screenshots and the six creative Activity icons against the source
+  contact sheet at 128/64/48px; rank misleading or near-identical art,
+  overly dense panels and confusing child language. For large Play
+  and Learn collections, give a real gameplay-based activity-to-child-intent
+  grouping proposal that covers **every** item after age filtering.
+  Do not add tags, change manifests or modify source: report whether
+  the current five-group bounded planner can partition honestly or
+  whether keeping direct cards is currently safer.
 - **Do:** inspect the **single generated contact sheet** with 39 canonical
   core icons, 45 Activity icons and 30 canonical character expression images.
   The same real artwork is rendered side-by-side at 128/64/48 px. Compare to
@@ -371,7 +403,9 @@ test commands and expected observable behavior.
 - **Evidence:** contact sheet + ranked severity/fix recommendations,
   source hashes, no source art change or unsupported design PASS.
   Owner approves any major visual redesign direction later.
-- **Last result:** NOT TESTED at current source.
+- **Last result:** previous art gallery source-only index review;
+  current P6 Home/32-draft membership changes, contact sheet and
+  real IT/EN Home screenshots NOT TESTED.
 
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
@@ -383,7 +417,53 @@ test commands and expected observable behavior.
   stop conditions. This task is a reminder, not install authorization.
 - **Last result:** PHYSICAL NOT TESTED in this workstream.
 
+### GLA-010 — Record missing My Creations launcher spoken labels
+
+- **Status:** BLOCKED
+- **Priority:** P1 accessibility/content; **dependency:** explicit owner
+  authorization for authoring/provider use and a configured local
+  Greia VoiceEngine. Never authorize paid cloud/Modal calls by
+  interpreting this task as permission.
+- **Provenance:** P6 design audit verified the English and Italian
+  `assets/audio/system/launcher-labels` directories contain the
+  established Create/Play/Learn/Explore/My Greia WAVs, **but no
+  `my_creations.wav`**. The installed `SpokenLabelController` already
+  uses this exact platform filename for Home hover/keyboard focus;
+  no new voice player is required.
+- **Safe first command (once checkout prepared, even while blocked):**
+  ```bash
+  python3 tools/greia_voice.py doctor
+  ```
+  This is diagnostic only. Then stop and report readiness/authorization;
+  do not call providers, record personal voices or synthesize by default.
+- **When specifically unblocked:** using `skills/greia-os-work/SKILL.md`,
+  `skills/greia-activity-authoring/VOICE_GENERATION.md` and existing
+  `tools/greia_voice.py` authoring, produce short human-reviewable,
+  clear child-directed IT **“Le mie creazioni”** and EN
+  **“My Creations”**, stage approved canonical `my_creations.wav`
+  in each matching directory with expected format/level, and
+  listen to both at keyboard focus and hover in the real Shell.
+  Use configured Modal only if explicit owner permission covers it.
+  Check first-frame behavior, audio interruption, no runtime TTS,
+  default fail-silent only while recordings are genuinely absent.
+- **PASS:** exact localized prerecorded files and human listening
+  approval, verified real Shell trigger, no wrong-language or
+  unrelated “Create” playback; returned WAV provenance and evidence.
+- **Last result:** BLOCKED; both actual files missing in repository,
+  authoring/approval NOT PERFORMED.
+
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-08:** P6 navigation/visual curation resumed.
+  Reviewed 32 draft manifest categories, corrected four misleading
+  Create memberships without changing game/library authority,
+  placed My Creations immediately after Create with a different
+  existing core icon and compact-landscape Home layout, and added
+  focused Home/manifest checks (UNEXECUTED). Audit found no IT/EN
+  `my_creations.wav` in launcher-label audio assets; delegated
+  authoring to blocked GLA-010, NOT to unapproved network TTS.
+  Art/home/play/learn review expanded in GLA-008; neither source
+  nor real screenshots have release acceptance.
 
 - **2026-10-08:** P3 source trace through
   `CreationSelectionCoordinator.trusted_pending` →
