@@ -79,7 +79,7 @@ class TreeRenderer:
             WeatherMode.SNOW: pygame.Rect(830, 24, 76, 76),
         }
         # Sun / Moon interactive disc
-        self.celestial_rect = pygame.Rect(80, 40, 100, 100)
+        self.celestial_rect = pygame.Rect(185, 90, 100, 100)
         # Tito clickable hitbox
         self.tito_rect = pygame.Rect(180, 370, 120, 160)
         # Season selector: bottom center

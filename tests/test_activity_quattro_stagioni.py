@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import Mock, patch
 
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 import pygame
@@ -147,6 +148,26 @@ class TestQuattroStagioniRendererAndApp(unittest.TestCase):
         self.renderer = TreeRenderer()
         self.audio = TreeAudio(PACKAGE_ROOT, locale="it")
         self.app = TreeActivity(self.screen, self.renderer, self.audio, self.model)
+
+    def test_discovery_events_require_new_season_and_complete_once(self) -> None:
+        events = Mock()
+        app = TreeActivity(self.screen, self.renderer, self.audio, self.model, events)
+        for season, rect in self.renderer.season_buttons.items():
+            app._handle_pointer_down(rect.center)
+        self.assertEqual(events.season_explored.call_count, 3)
+        events.all_seasons_discovered.assert_called_once()
+        app._handle_pointer_down(self.renderer.season_buttons[Season.SUMMER].center)
+        self.assertEqual(events.season_explored.call_count, 3)
+        events.all_seasons_discovered.assert_called_once()
+
+    def test_protected_home_is_not_a_season_button(self) -> None:
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+        app = TreeActivity(self.screen, self.renderer, self.audio, self.model)
+        rect = activity_viewport_for_surface(self.screen).protected_regions[0]
+        app._handle_pointer_down((int(rect.x) + 1, int(rect.y) + 1))
+        self.assertTrue(app.running)
+        self.assertEqual(self.model.season, Season.SPRING)
+        self.assertFalse(self.model.experienced_night)
 
     def test_render_all_seasons_without_crash(self) -> None:
         for s in Season:
