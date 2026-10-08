@@ -1,63 +1,90 @@
-"""Offline checks for My Time's package-local prerecorded audio boundary."""
+"""Offline integration tests for My Time's semantic locale audio boundary."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from greia_platform.localization import (
+    ActivityLocaleSupport, LocalizedResources, resolve_activity_locale,
+)
 from activity_incubator.tempo_di_greia.time_audio import LocalTimeSpeechTransport
 
 
-class FakeResources:
-    def __init__(self, root: Path, locale: str, source: Path) -> None:
-        self.package_root = root
-        self.context = SimpleNamespace(selected=SimpleNamespace(value=locale))
-        self.source = source
-
-    def audio_cue(self, cue: str):
-        return SimpleNamespace(path=self.source)
+def _resources(root: Path, *, english_clip: bool) -> LocalizedResources:
+    """Use real Greia bundles and fallback order, never a fake API contract."""
+    (root / "locales").mkdir()
+    voices = root / "assets" / "voices"
+    voices.mkdir(parents=True)
+    (voices / "italian.wav").write_bytes(b"RIFF Italian fixture")
+    (voices / "english.wav").write_bytes(b"RIFF English fixture")
+    for locale in ("it", "en"):
+        audio = (
+            {"instruction.clock": {
+                "path": "assets/voices/italian.wav",
+            }} if locale == "it" else
+            {"instruction.clock": {
+                "path": "assets/voices/english.wav",
+            }} if english_clip else {}
+        )
+        (root / "locales" / f"{locale}.json").write_text(
+            json.dumps({
+                "schema_version": 1, "locale": locale,
+                "strings": {}, "audio": audio,
+            }),
+            encoding="utf-8",
+        )
+    # A selected-English package may have Italian as its default fallback.
+    support = ActivityLocaleSupport.localized(("en", "it"), default_ui_locale="it")
+    context = resolve_activity_locale("en", support)
+    assert context is not None
+    return LocalizedResources(root, context)
 
 
 class TimeAudioBoundaryTests(unittest.TestCase):
-    def test_required_english_speech_must_not_use_italian_fallback(self) -> None:
+    def test_missing_english_cue_never_loads_italian_even_if_default_fallback(self) -> None:
         with TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            it_dir = root / "locales" / "it" / "audio"
-            en_dir = root / "locales" / "en" / "audio"
-            it_dir.mkdir(parents=True)
-            en_dir.mkdir(parents=True)
-            italian = it_dir / "instruction-clock.wav"
-            english = en_dir / "instruction-clock.wav"
-            italian.write_bytes(b"mock WAV loaded only through patched mixer")
-            english.write_bytes(b"mock English WAV")
+            resources = _resources(Path(tmp), english_clip=False)
+            self.assertTrue(resources.audio_cue("instruction.clock").path.is_file())
+            with (
+                patch("pygame.mixer.get_init", return_value=(22050, -16, 2)),
+                patch("pygame.mixer.Channel"),
+                patch("pygame.mixer.Sound") as sound,
+            ):
+                transport = LocalTimeSpeechTransport(resources)
+                self.assertFalse(transport.has_clip("instruction.clock"))
+                self.assertFalse(transport.play("instruction.clock"))
+                sound.assert_not_called()
+
+    def test_selected_english_clip_can_live_in_any_safe_package_directory(self) -> None:
+        with TemporaryDirectory() as tmp:
+            resources = _resources(Path(tmp), english_clip=True)
             with (
                 patch("pygame.mixer.get_init", return_value=(22050, -16, 2)),
                 patch("pygame.mixer.Channel") as channel,
                 patch("pygame.mixer.Sound") as sound,
             ):
                 sound.side_effect = lambda source: source
-                wrong = LocalTimeSpeechTransport(FakeResources(root, "en", italian))
-                self.assertFalse(wrong.has_clip("instruction.clock"))
-                self.assertFalse(wrong.play("instruction.clock"))
-                self.assertEqual(sound.call_count, 0)
-                correct = LocalTimeSpeechTransport(FakeResources(root, "en", english))
-                self.assertTrue(correct.has_clip("instruction.clock"))
-                self.assertTrue(correct.play("instruction.clock"))
-                self.assertGreaterEqual(channel.return_value.play.call_count, 1)
+                transport = LocalTimeSpeechTransport(resources)
+                self.assertTrue(transport.has_clip("instruction.clock"))
+                self.assertTrue(transport.play("instruction.clock"))
+                sound.assert_called_once_with(
+                    str(resources.package_root / "assets" / "voices" / "english.wav")
+                )
+                channel.return_value.play.assert_called_once()
 
-    def test_audio_device_unavailable_is_silent_and_does_not_decode(self) -> None:
+    def test_audio_device_unavailable_is_silent_and_decodes_nothing(self) -> None:
         with TemporaryDirectory() as tmp:
-            root = Path(tmp)
+            resources = _resources(Path(tmp), english_clip=True)
             with (
                 patch("pygame.mixer.get_init", return_value=None),
                 patch("pygame.mixer.Sound") as sound,
             ):
-                source = root / "locales" / "en" / "audio" / "instruction.wav"
-                transport = LocalTimeSpeechTransport(FakeResources(root, "en", source))
-                self.assertFalse(transport.has_clip("instruction.timer"))
-                self.assertFalse(transport.play("instruction.timer"))
+                transport = LocalTimeSpeechTransport(resources)
+                self.assertFalse(transport.has_clip("instruction.clock"))
+                self.assertFalse(transport.play("instruction.clock"))
                 self.assertFalse(transport.busy())
                 transport.stop()
                 sound.assert_not_called()
