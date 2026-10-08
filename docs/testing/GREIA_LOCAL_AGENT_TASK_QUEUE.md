@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `157ec160ec30454b66f5a807b98d3aeaee8ebe3b` (later docs-only commits permitted)
+**Updated:** 2026-10-08; **queue source baseline:** `c56d29492741715b19826c003a0bd5f8dd953819` (later docs-only commits permitted)
 **Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -155,7 +155,7 @@ test commands and expected observable behavior.
 - **Priority:** P1; **dependency:** current checkout required for source suite;
   **GLA-002 PASS required for the hands-on/Simulator leg, not the isolated
   source model suite**; **minimum source SHA:**
-  `157ec160ec30454b66f5a807b98d3aeaee8ebe3b`
+  `c56d29492741715b19826c003a0bd5f8dd953819`
 - **Exact provider-free suites (separate logs/exit codes):**
   ```bash
   python3 -m unittest discover -s tests -p 'test_activity_time_speech.py' -v
@@ -166,7 +166,8 @@ test commands and expected observable behavior.
   Specifically check no voice before READY, welcome → instruction ordering,
   stale-cue interruption, bounded pending cue, completion priority, no
   cross-locale audio fallback, source launch in both import modes, and
-  no speaker/replay target when actual recordings are missing. The new
+  no speaker/replay target when actual recordings are missing, and
+  immediate Quit/stop before READY never emits voice or readiness. The new
   audio-boundary suite uses a mocked mixer and disposable fake paths;
   it does NOT prove audible output or valid real WAV decoding.
   **MANDATORY AGAIN**: run this suite on the current checkout even
