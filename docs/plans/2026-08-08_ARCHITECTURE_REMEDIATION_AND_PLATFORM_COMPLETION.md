@@ -2835,3 +2835,19 @@ Source changes correct several child runtime event/coordinate/nav contracts and 
 ## 2026-10-08 — First-party Creations P7 SOURCE REVIEW COMPLETE, no lifecycle or release closure
 
 The subordinate Creations + Activity Release ledger `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md` reports all **45 first-party source directories reviewed**: 44 child-content = 32 **draft-only** + 12 withheld; one `workshop_settings` separately excluded as privileged system management. Latest executable source+roster SHA `8689c3accf41dc94f8fb5a30191eafdb83ab9872`; the *single* deferred live desktop acceptance is `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`. No tests were executed in the canonical checkout; no Simulator, sound, device or release validation occurred. The P1–P6 platform library/broker work is SOURCE-WIP, P7 is source-reviewed only and P8 release/hardware acceptance is NOT STARTED. This subordinate review neither supersedes outstanding architecture remediation nor alters the independent 2026-09-15 installation/update/first-boot lifecycle gates.
+
+
+### 2026-10-08 — Scoped product improvement source (My Greia / Time / generic-art viewer)
+
+This source-only parallel work is permitted by the accepted product/runtime boundaries,
+but does **not** close the blocking R1+ remediation or declare release readiness.
+The mandatory system Activity composition now explicitly preserves child-facing
+`org.greia.workshop-settings` independently of the curated 32-game roster.
+The newly incubated `activity_incubator/tempo_di_greia/` demonstrates real
+vs practice clock and monotonic stopwatch/timer without OS clock permissions,
+background process or parent usage-limit bypass. The indexed generic visual
+library CLI now supports an offline HTML preview over the existing TOMLs.
+See `docs/product/CHILD_TIME_AND_ROUTINES.md`, the 2026-10-07 Creations
+`PROGRESS.md`, and `HANDOVER.md` for exact source/evidence anchors.
+No current checkout tests, Simulator, voiced-prereader, installed source
+composition, Acer or Parent/security acceptance has yet run for these changes.

@@ -356,3 +356,17 @@ Post-activity-pass acceptance SHA is e2b831da (Activity modernization COMPLETE, 
 - no R7/hardware claims from Activity visual work.
 
 The owner promoted the first website direction to the official site work in progress at `website/index.html`, with `website/downloads.html`, `website/library.html` and `website/README.md`. After owner rejection of the guessed wide landscape, the opening was rebuilt around the discovered original 1080×2922 rendered boot artwork: the original high-resolution final frame supplies the central G/Greia/forest, while a website-only generated panorama extends its specific palette, mountain lines, pine silhouettes, small warm-window village and lilac flowers. The 17 August patch contains Plymouth playback code and 222×600 rendered frames, not editable scene source. The 52 unchanged small frames still animate, then the original high-resolution final frame appears. Continuous pointer-responsive fireflies remain. Asset origin, hashes and the derived-background boundary are in `website/README.md`. The site uses English real-service Simulator captures except for an explicit English/Italian language comparison, a readable single-screen Parent enlargement, six real cast voice clips, and fuller parent-facing OS, hardware, architecture, network, agent-authoring and educational messaging. Installer and per-Activity package controls remain disabled until verified files exist. The old first-concept URL redirects to the official WIP; Wonder Map and Scribble Machine remain historical alternatives. The transparent small identity derivative remains website-specific, not an accepted brand master. Evidence is DESIGN SPEC / DESKTOP VISUAL REVIEW plus development Simulator visual captures only; Encyclopedia E4 and R7 continuation routes are unchanged. Next website step is owner visual review of the corrected opening.
+
+
+## 2026-10-08 — Parallel developer visual-library gallery (source, NOT E3 closure)
+
+The authoring library can now be inspected through
+`python3 tools/visual_authoring_library.py gallery --output tmp/greia-visual-library.html`.
+This uses the same six semantic indexes, not another asset manifest. Local
+host-browser screenshots and core gallery unit tests are pending, so no
+new asset is approved. The My Time source candidate stays outside installed
+Activities until the icon, large clock/timer render and bilingual speech
+pass real Simulator/child review. Its illustrative icon SVG/WebP is a
+candidate, not a new core visual primitive. Resume Encyclopedia E3/E4
+according to their own exact-state evidence and plan; this entry documents a
+parallel tooling improvement, not a competing art subphase.

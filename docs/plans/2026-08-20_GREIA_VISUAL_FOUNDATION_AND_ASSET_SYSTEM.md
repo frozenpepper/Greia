@@ -736,3 +736,21 @@ The entries below preserve the workstream chronology. Corrections/new state are 
 - Owner rejected the official site's guessed wide trees, mountains, houses and colors. Inspected the 17 August boot patch and its Plymouth script: it centers/plays 52 small rendered frames but includes no editable SVG or scene generator. Located the original 1080×2922 rendered frames outside the repository and used its final frame directly for the large central G, Greia wordmark and forest.
 - Replaced the official website's guessed SVG with a website-only panoramic extension made with the original high-resolution final frame as image reference. The extension follows the source's near-black navy palette, fine blue mountain outlines, intricate sharp pine silhouettes, small warm-window village, sparse stars and lilac foreground flowers. The original final frame overlays it; the 52 canonical small playback frames remain unchanged. Removed the obsolete official-site SVG and recorded exact asset provenance and hashes in `website/README.md`.
 - Evidence is **DESIGN SPEC / DESKTOP VISUAL REVIEW** of the local website opening. The wide background is a generated derivative, not an original boot master or exact vector reconstruction. This does not change Greia OS boot assets, accepted brand masters, device acceptance, release readiness or the Encyclopedia/R7 route.
+
+
+## 2026-10-08 — Offline semantic visual browser and candidate Time icon (SOURCE)
+
+Added `tools/visual_library_gallery.py` and a `gallery` subcommand to
+the canonical `tools/visual_authoring_library.py` CLI. Six authoritative
+generic index files / 101 indexed resources remain unchanged. The developer
+can view large source masters, text/category/status filters and source links
+in one local self-contained HTML gallery. Asset traversal/duplicates are
+rejected, output creation is exclusive, no external CDN/runtime SVG is
+introduced. Source tests at `tests/test_visual_library_gallery.py` have not
+yet been run or visually captured; **no artwork admission/quality decision**
+is implied. Existing visual scene renderer, cast semantics and award art are
+unchanged. An isolated Time icon SVG/WebP source candidate resides in
+`activity_incubator/tempo_di_greia/assets/` and is not promoted to the
+shared catalogue; its final child usability and stylistic review is owed.
+The Encyclopedia visual workstream's acceptance/continuation route is not
+superseded by this bounded library affordance.

@@ -2572,3 +2572,19 @@ pre-diagnosis routing state `5fb75c24`:
 
 Following commits in this documentation tranche are documentation-only. No
 owner/local test execution is claimed yet.
+
+
+### 2026-10-08 — My Greia trusted system-content composition correction (SOURCE-ONLY)
+
+`src/greia_platform/activity_release.py` now fixes the mandatory system Activity
+`org.greia.workshop-settings` outside curated educational Activity release
+policy. `tools/stage_release_activities.py` copies both the approved curated
+child set and this immutable system set into one atomically validated installed
+root; staged identity must match both, and an ordinary release roster cannot
+claim its reserved package/ID. The release `status="draft"` gate remains
+unchanged and still blocks official target build. Tests added/updated in
+`tests/test_stage_release_activities.py` and
+`tests/test_activity_release_selection.py`; these are UNEXECUTED source
+assertions. No owner Linux release command, installer media, Acer installation,
+boot, rollback or physical trust acceptance occurred. The 2026-09-15 lifecycle
+sequence and its independent blockers do not change.

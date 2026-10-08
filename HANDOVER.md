@@ -1,5 +1,20 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — My Greia / My Time / Visual Library source checkpoint
+
+**Last source/change anchor:** `90b7552e4d757323efff0d5795adccac475dc529` (My Greia staging + Time incubator + HTML gallery; later documentation-only commits follow). **Source-only; no local tests, real GUI/audio, or Acer hardware run here.**
+
+- **My Greia:** `org.greia.workshop-settings` is now a fixed mandatory trusted built-in in the official target *system* composition. The 32-entry child-content roster remains separate/draft, official image composition still refuses it. Source + negative staging tests are committed but not run. Parent policy and installed source trust still need live checking.
+- **My Time / Il Mio Tempo:** `activity_incubator/tempo_di_greia/` contains an interactive three-mode 1024×600 clock/stopwatch/countdown candidate and provider-free domain tests. It stays OUTSIDE normal `activities/` until prereader voiced title/prompts, screen-time trust, local RTC validity, visual acceptance and true child usability are proven. It cannot set OS time or bypass screen-time policy. Calendar/learning workshop/background alerts are design-only, specified in `docs/product/CHILD_TIME_AND_ROUTINES.md`.
+- **Visual authoring library:** `tools/visual_authoring_library.py gallery --output tmp/greia-visual-library.html` renders a local-source thumbnail browser over the existing six semantic indexes (no new registry); tests and browser capture pending.
+- **Existing P1–P7:** 45 source-reviewed first-party Activities, 32 draft ordinary child candidates + 12 held child Activities + 1 mandatory My Greia; zero release-approved, cross-media Simulator/audio acceptance pending. This new incubator does not change the 45 source-count claim.
+- **Authoritative acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` carries the cumulative test/evidence protocol; its new My Greia/Time/visual-gallery addendum gives focused source and screenshot probes. No action on Acer/hardware until separately authorized under the 2026-09-15 lifecycle route.
+
+**Next:** local agent runs focused source tests, exact-head package validation + My Greia staging, My Time headless Simulator and visual gallery screenshots, returns raw evidence/first failure without source modification. Fix defects before voiced/title art and main catalogue promotion.
+
+---
+
+
 **Updated:** 2026-10-07
 **Canonical repository/branch:** `frozenpepper/Greia` / `main`
 **Frozen baseline:** `372ee310f8e9a652bb88ecce75168e62928489e7` (clean tree)
