@@ -27,6 +27,16 @@ class CostruiamoPontiContractTests(unittest.TestCase):
         self.assertIn("get_theme()", combined)
         self.assertIn("activity_stop_requested()", combined)
 
+    def test_genuine_new_block_placement_not_repeat_click(self) -> None:
+        from activities.costruiamo_ponti.ponti_model import PontiModel
+        model = PontiModel()
+        self.assertTrue(model.place_block(0))
+        self.assertFalse(model.place_block(0))
+        other = next(x for x in ("wood", "stone", "rainbow", "shroom") if x != model.selected_block_id)
+        model.select_block(other)
+        self.assertTrue(model.place_block(0))
+        self.assertEqual(model.slots[0], other)
+
     def test_materials_and_runtime_assets_exist(self) -> None:
         runtime_dir = ACTIVITY / "assets" / "runtime"
         self.assertTrue((runtime_dir / "block_wood.png").is_file())

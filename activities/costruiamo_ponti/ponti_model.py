@@ -127,6 +127,8 @@ class PontiModel:
             return False
         if not (0 <= slot_idx < self.num_slots):
             return False
+        if self.slots[slot_idx] == self.selected_block_id:
+            return False
         self.slots[slot_idx] = self.selected_block_id
         return True
 

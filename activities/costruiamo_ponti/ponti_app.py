@@ -313,6 +313,17 @@ class PontiApp:
             placed = self._model.place_block(slot_idx)
             if placed:
                 self._audio.play("place")
+                try:
+                    emit_activity_event(
+                        "bridge.block_placed",
+                        {
+                            "level": self._model.level_idx,
+                            "slot": slot_idx,
+                            "material": self._model.selected_block_id,
+                        },
+                    )
+                except Exception:
+                    pass
                 slot_w = self._model.slot_w
                 sx = BRIDGE_START_X + slot_idx * slot_w
                 cx = sx + slot_w // 2
