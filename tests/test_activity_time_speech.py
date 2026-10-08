@@ -107,6 +107,55 @@ class TimeSpeechTests(unittest.TestCase):
         speech.update()
         self.assertEqual(audio.played[-1], "instruction.timer")
 
+    def test_timer_completed_before_ready_waits_for_first_frame(self) -> None:
+        audio = FakeSpeechTransport()
+        speech = TimeSpeech(audio)
+        speech.timer_finished()
+        speech.update()
+        self.assertEqual(audio.played, [])  # READY not published
+        speech.start(TimeMode.TIMER, False)
+        self.assertEqual(audio.played, ["feedback.timer_finished"])
+        audio.finish()
+        speech.update()
+        self.assertEqual(audio.played, ["feedback.timer_finished"])
+        self.assertTrue(speech.can_repeat)  # child may ask how timer works
+        speech.close()
+        speech.start(TimeMode.TIMER, False)
+        speech.timer_finished()
+        self.assertEqual(audio.played, ["feedback.timer_finished"])
+        self.assertFalse(speech.can_repeat)
+
+    def test_broken_welcome_cannot_swallow_required_instruction(self) -> None:
+        class BrokenWelcome(FakeSpeechTransport):
+            def play(self, cue: str) -> bool:
+                if cue == "presenter.welcome":
+                    self.cues.remove(cue)  # failed lazy decode
+                    return False
+                return super().play(cue)
+
+        audio = BrokenWelcome()
+        speech = TimeSpeech(audio)
+        speech.start(TimeMode.CLOCK, False)
+        self.assertEqual(audio.played, ["instruction.clock"])
+        speech.update()
+        self.assertEqual(audio.played, ["instruction.clock"])
+        speech.close()
+
+    def test_replay_failure_propagates_without_a_false_success(self) -> None:
+        class BrokenInstruction(FakeSpeechTransport):
+            def play(self, cue: str) -> bool:
+                if cue == "instruction.timer":
+                    self.cues.remove(cue)
+                    return False
+                return super().play(cue)
+
+        audio = BrokenInstruction(("instruction.timer",))
+        speech = TimeSpeech(audio)
+        speech.start(TimeMode.TIMER, False)
+        self.assertFalse(speech.can_repeat)
+        self.assertFalse(speech.replay())
+        self.assertEqual(audio.played, [])
+
     def test_no_welcome_still_plays_instruction_and_cancels_on_close(self) -> None:
         audio = FakeSpeechTransport(("instruction.stopwatch",))
         speech = TimeSpeech(audio)
