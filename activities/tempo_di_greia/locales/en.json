@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "locale": "en",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "My Time",
+    "mode.clock": "Clock",
+    "mode.stopwatch": "Stopwatch",
+    "mode.timer": "Timer"
+  },
+  "audio": {}
+}

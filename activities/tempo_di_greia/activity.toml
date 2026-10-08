@@ -1,0 +1,38 @@
+[activity]
+id = "org.greia.tempo-di-greia"
+title_key = "activity.title"
+version = "0.1.0"
+icon = "package:assets/icon.webp"
+languages = ["it", "en"]
+
+[presentation]
+categories = ["learn", "play"]
+discovery_tags = ["time", "everyday"]
+
+[education]
+categories = ["temporal_reasoning", "digital_literacy"]
+difficulty = 1
+recommended_age_min = 3
+skills = [
+  { id = "time.daily_clock.awareness", weight = 2 },
+  { id = "time.duration.visualization", weight = 3 },
+]
+events = []
+
+[runtime]
+type = "python"
+api_version = "0.1"
+entrypoint = "main.py"
+
+[input]
+profile = "pointer"
+
+[requirements]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["touch"]
+
+[permissions]
+requested = []
+
+[storage]
+schema_version = 1

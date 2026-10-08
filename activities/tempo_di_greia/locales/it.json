@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "locale": "it",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Il Mio Tempo",
+    "mode.clock": "Orologio",
+    "mode.stopwatch": "Cronometro",
+    "mode.timer": "Timer"
+  },
+  "audio": {}
+}
