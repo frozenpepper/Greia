@@ -435,6 +435,60 @@ class TimeToolModelTests(unittest.TestCase):
         finally:
             pygame.quit()
 
+    def test_keyboard_practice_nudge_updates_semantic_voice_context(self) -> None:
+        import os
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from activity_incubator.tempo_di_greia.time_app import TimeActivity
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+        from activity_incubator.tempo_di_greia.time_speech import TimeSpeech
+
+        class Recorder:
+            def __init__(self) -> None:
+                self.history: list[str] = []
+                self.playing = False
+
+            def has_clip(self, cue: str) -> bool:
+                return cue.startswith("instruction.")
+
+            def play(self, cue: str) -> bool:
+                self.history.append(cue)
+                self.playing = True
+                return True
+
+            def busy(self) -> bool:
+                return self.playing
+
+            def stop(self) -> None:
+                self.playing = False
+
+        pygame.init()
+        try:
+            recorder = Recorder()
+            speech = TimeSpeech(recorder)
+            state = TimeExperience(
+                wall_now=lambda: datetime(2026, 10, 8, 9, 30, tzinfo=timezone.utc),
+                monotonic=FakeClock(),
+            )
+            app = TimeActivity(
+                pygame.Surface((1024, 600)), "en",
+                {key: key for key in WORD_KEYS}, state, speech,
+            )
+            speech.start(TimeMode.CLOCK, False)
+            self.assertEqual(recorder.history[-1], "instruction.clock")
+            app.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_UP))
+            self.assertTrue(state.practice)
+            self.assertEqual((state.shown_time().hour, state.shown_time().minute), (9, 45))
+            self.assertEqual(recorder.history[-1], "instruction.practice")
+            app.handle_event(pygame.event.Event(pygame.KEYDOWN, key=pygame.K_DOWN))
+            self.assertEqual((state.shown_time().hour, state.shown_time().minute), (9, 30))
+            self.assertEqual(recorder.history.count("instruction.practice"), 1)
+            speech.close()
+            app.renderer.fonts.clear()
+        finally:
+            pygame.quit()
+
     def test_mode_is_semantic_and_timer_not_screen_time(self) -> None:
         state = TimeExperience(monotonic=FakeClock())
         state.mode = TimeMode.TIMER
