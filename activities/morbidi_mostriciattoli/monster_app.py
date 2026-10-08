@@ -11,7 +11,7 @@ import pygame
 
 from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
 from greia_platform.localization import LocalizedResources
-from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 
 if __package__:
@@ -62,12 +62,16 @@ class ViewMode(StrEnum):
     NAME_DIALOG = "name_dialog"
 
 
-PROTECTED_LEFT: Final[int] = 80
-PROTECTED_TOP: Final[int] = 80
-
-
-def _is_home_clicked(screen: pygame.Surface, pos: tuple[int, int]) -> bool:
-    return pos[0] <= PROTECTED_LEFT and pos[1] <= PROTECTED_TOP
+def _is_safe_point(screen: pygame.Surface, pos: tuple[int, int]) -> bool:
+    """Platform Home/Back belongs to trusted chrome; the Activity must not exit for it."""
+    viewport = activity_viewport_for_surface(screen)
+    x, y = pos
+    if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+        return False
+    return not any(
+        r.x <= x < r.right and r.y <= y < r.bottom
+        for r in viewport.protected_regions
+    )
 
 
 class MonsterActivity:
@@ -154,6 +158,8 @@ class MonsterActivity:
             return
 
         if event.type == pygame.MOUSEMOTION:
+            if not _is_safe_point(self.screen, event.pos):
+                return
             logical = self.canvas.pointer(event.pos)
             if logical is not None:
                 point = (int(logical[0]), int(logical[1]))
@@ -177,11 +183,16 @@ class MonsterActivity:
                         self._dirty = True
             return
 
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if _is_home_clicked(self.screen, event.pos):
-                self._running = False
+        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
                 return
-            logical = self.canvas.pointer(event.pos)
+            position = getattr(event, "pos", None)
+            if position is None:
+                width, height = self.screen.get_size()
+                position = (int(event.x * width), int(event.y * height))
+            if not _is_safe_point(self.screen, position):
+                return
+            logical = self.canvas.pointer(position)
             if logical is not None:
                 point = (int(logical[0]), int(logical[1]))
                 if self._handle_pointer(point):
@@ -231,11 +242,16 @@ class MonsterActivity:
                 # Save portrait
                 if not self.gallery.is_full:
                     recipe_to_save = self.editor.recipe
-                    self.gallery.add(recipe_to_save)
-                    self.storage.save_gallery(self.gallery)
+                    candidate = MonsterGallery(self.gallery.recipes)
+                    if not candidate.add(recipe_to_save):
+                        return False
+                    # Commit storage first. A failed save must leave the
+                    # editor/visible gallery unchanged and must not award a creation.
+                    if not self.storage.save_gallery(candidate):
+                        return False
+                    self.gallery = candidate
                     self.events.portrait_created(recipe_to_save.portrait_id, recipe_to_save)
                     self.audio.play("save")
-                    # Start fresh portrait
                     self.editor = MonsterEditor()
                     return True
             elif btn == "gallery":
@@ -247,8 +263,14 @@ class MonsterActivity:
         elif self.view_mode == ViewMode.GALLERY:
             if self.selected_portrait_id is not None:
                 if self.renderer.modal_delete_contains(point):
-                    self.gallery.delete(self.selected_portrait_id)
-                    self.storage.save_gallery(self.gallery)
+                    candidate = MonsterGallery(self.gallery.recipes)
+                    if not candidate.delete(self.selected_portrait_id):
+                        return False
+                    # Only remove the selected portrait from the visible gallery
+                    # after its new durable catalogue has committed.
+                    if not self.storage.save_gallery(candidate):
+                        return False
+                    self.gallery = candidate
                     self.selected_portrait_id = None
                     self.renderer.clear_thumbnail_cache()
                     self.audio.play("pop")

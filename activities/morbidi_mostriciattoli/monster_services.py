@@ -35,7 +35,11 @@ class GreiaMonsterEvents:
                 "portrait_id": recipe.portrait_id,
                 "named": bool(recipe.name.strip()),
             }
-            emit_activity_event(EVENT_PORTRAIT_CREATED, session_id=session_id, payload=payload)
+            emit_activity_event(
+                EVENT_PORTRAIT_CREATED,
+                payload,
+                idempotency_key=f"monster-portrait:{session_id}",
+            )
         except Exception:
             pass
 

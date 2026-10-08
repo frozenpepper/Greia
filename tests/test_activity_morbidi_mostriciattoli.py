@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import random
 import unittest
+from unittest.mock import Mock, patch
 
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 import pygame
@@ -166,6 +167,16 @@ class TestMonsterGalleryAndStorage(unittest.TestCase):
         self.assertEqual(gallery.count, 23)
         self.assertFalse(gallery.is_full)
 
+    def test_event_adapter_emits_real_creation_with_no_child_name(self) -> None:
+        recipe = MonsterRecipe.default_recipe("portrait-123").with_name("A secret")
+        with patch("activities.morbidi_mostriciattoli.monster_services.emit_activity_event") as emit:
+            GreiaMonsterEvents().portrait_created(recipe.portrait_id, recipe)
+        emit.assert_called_once_with(
+            EVENT_PORTRAIT_CREATED,
+            {"portrait_id": "portrait-123", "named": True},
+            idempotency_key="monster-portrait:portrait-123",
+        )
+
     def test_storage_and_privacy_event(self) -> None:
         mock = MockStorage()
         storage = GreiaMonsterStorage(storage=mock)
@@ -226,6 +237,51 @@ class TestMonsterAppInteraction(unittest.TestCase):
         gallery = MonsterGallery([MonsterRecipe.default_recipe("m1")])
         self.renderer.draw_gallery(self.screen, gallery)
         self.assertEqual(self.screen.get_size(), (1024, 600))
+
+    def test_failed_portrait_save_preserves_editor_and_gallery(self) -> None:
+        app = MonsterActivity(
+            self.screen, self.renderer, self.audio, self.events, self.storage
+        )
+        original_editor = app.editor
+        original_recipe = original_editor.recipe
+        app.renderer.button_at = Mock(return_value="save")
+        app.renderer.tab_at = Mock(return_value=None)
+        app.renderer.option_at = Mock(return_value=None)
+        app.storage.save_gallery = Mock(return_value=False)
+        app.events = Mock()
+        self.assertFalse(app._handle_pointer((512, 512)))
+        self.assertEqual(app.gallery.count, 0)
+        self.assertIs(app.editor, original_editor)
+        self.assertEqual(app.editor.recipe, original_recipe)
+        app.events.portrait_created.assert_not_called()
+
+    def test_failed_portrait_delete_preserves_gallery_and_confirmation(self) -> None:
+        recipe = MonsterRecipe.default_recipe("hold-123")
+        app = MonsterActivity(
+            self.screen, self.renderer, self.audio, self.events, self.storage
+        )
+        app.gallery.add(recipe)
+        app.view_mode = ViewMode.GALLERY
+        app.selected_portrait_id = recipe.portrait_id
+        app.renderer.modal_delete_contains = Mock(return_value=True)
+        app.storage.save_gallery = Mock(return_value=False)
+        self.assertFalse(app._handle_pointer((512, 512)))
+        self.assertEqual(app.gallery.count, 1)
+        self.assertEqual(app.selected_portrait_id, "hold-123")
+
+    def test_home_region_does_not_terminate_child_activity(self) -> None:
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+
+        app = MonsterActivity(
+            self.screen, self.renderer, self.audio, self.events, self.storage
+        )
+        protected = activity_viewport_for_surface(self.screen).protected_regions[0]
+        app._handle_event(pygame.event.Event(
+            pygame.MOUSEBUTTONDOWN,
+            {"button": 1, "pos": (int(protected.x) + 1, int(protected.y) + 1)},
+        ))
+        self.assertTrue(app._running)
+        self.assertEqual(app.gallery.count, 0)
 
     def test_thumbnail_cache_lru_cap_and_clear(self) -> None:
         recipes = [MonsterRecipe.default_recipe(f"m-{i}") for i in range(16)]
