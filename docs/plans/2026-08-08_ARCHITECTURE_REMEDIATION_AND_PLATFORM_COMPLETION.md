@@ -2958,3 +2958,26 @@ UX, real IT/EN voice production, desktop Simulator, actual Shell and
 installed hardware remain unverified. GLA-003 in the single existing
 local-agent queue is responsible for these exact suites. My Time remains
 `activity_incubator/` only; no release acceptance or hardware claims.
+
+
+### 2026-10-08 — Creations P3 renderer/confirmation safety (source-only)
+
+Returned to the owner-requested unified Creations release programme
+instead of adding features to My Time. Traced the real trusted
+`CreationsGalleryScreen` and `CreationsPygamePainter` and fixed a
+first-use `NameError` in the empty Gallery/picker presentation; a
+filtered audio-only picker now shows a matching audio illustration.
+Library deletion confirmation no longer leaks keyboard preview/
+navigation actions into its underlying detail screen; it provides
+explicit safe Cancel-by-default, deliberate keyboard Confirm and a
+visible focus border without introducing an additional trust boundary.
+Created real dummy-SDL renderer/screen regression tests alongside
+the pre-existing pure controller/layout tests.
+
+**Evidence:** only GitHub source/commit inspection; added tests
+UNEXECUTED, full Shell/Simulator and physical acceptance OPEN. Same
+trusted CreationLibrary, modal/grant broker, profile isolation, Parent
+policy and hardware lifecycle authorities remain unchanged. The
+unified `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/`
+progress ledger owns product status. The existing GLA-007 local
+work queue owns exact execution and screenshot steps.
