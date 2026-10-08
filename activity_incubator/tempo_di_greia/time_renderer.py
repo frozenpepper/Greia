@@ -125,7 +125,7 @@ class TimeRenderer:
             if clamped > 0:
                 pygame.draw.arc(
                     screen, SEA, pygame.Rect(x - 135, y - 135, 270, 270),
-                    math.pi / 2, math.pi / 2 + (clamped * 2 * math.pi), 24,
+                    math.pi / 2 - (clamped * 2 * math.pi), math.pi / 2, 24,
                 )
         pygame.draw.circle(screen, SUN, (x, y), 10)
         pygame.draw.circle(screen, INK, (x, y), 10, 2)

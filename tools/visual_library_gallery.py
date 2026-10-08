@@ -68,7 +68,7 @@ def render_gallery(items: list[dict[str, object]], *, repository: Path, output: 
     note = (f"{len(items)} source resources · {counts['preferred']} preferred · "
             f"{counts['candidate_reference']} candidate references")
     # A single self-contained document: no CDN, backend, or collection mutation.
-    markup = """<!doctype html>
+    markup = r"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Greia · Visual Library</title>
 <style>
