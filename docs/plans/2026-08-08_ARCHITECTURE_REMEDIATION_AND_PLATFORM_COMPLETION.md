@@ -2823,3 +2823,10 @@ boundary remain unchanged.
 The owner-authorized Creations/first-party Activity release program has source-reviewed 28/45 Activities (22 provisional **draft-only** release entries, six withheld, zero approved). Its precise item decisions, repairs and test debts are recorded in `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md` and the single consolidated acceptance procedure at `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`. Latest executable source candidate is `9d8da5ba6a34c6d3efa8da84748406b82c5ace64`.
 
 This is a distinct non-lifecycle source/content tranche. The platform's architectural remediation blocking obligations are **not** closed, the official release stays fail-closed, and **no** `make verify`, Simulator, image, Acer/Pi, first-boot, installation, update, rollback or physical test was executed. The installer/first-boot lifecycle continues independently under the 2026-09-15 release plan.
+
+
+## 2026-10-08 — P7 fifth subordinate Activity source review (no non-lifecycle architectural closure)
+
+Greia Creations/first-party Activity source reviews have reached **35/45**, with **27 draft-only candidates**, **eight withheld**, **zero approved**. Exact factual activity decisions, repairs and remaining test debt are owned by `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md` and its ONE accumulated desk acceptance `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`, pinned to `10e8fe7cbd3bf9c431c7de687bf0b689c72fd3a6`. This note is not a competing progress tracker.
+
+Source changes correct several child runtime event/coordinate/nav contracts and misleading difficulty manifest flags; **none have been exercised in the complete checkout**, Simulator, physical UI, launch image or Acer first boot. The architecture-remediation remaining prerequisites and lifecycle acceptance still block release independently. The catalogue `status="draft"` keeps official release fail-closed.
