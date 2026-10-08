@@ -48,6 +48,10 @@ activity_id = "org.greia.cucciolo-mio"
 package = "cucciolo_mio"
 
 [[activities]]
+activity_id = "org.greia.enciclopedia"
+package = "enciclopedia_greia"
+
+[[activities]]
 activity_id = "org.greia.faccine-momo"
 package = "faccine_momo"
 
@@ -64,12 +68,28 @@ activity_id = "org.greia.il-giardino-dei-numeri"
 package = "il_giardino_dei_numeri"
 
 [[activities]]
+activity_id = "org.greia.la-discesa-della-biglia"
+package = "la_discesa_della_biglia"
+
+[[activities]]
 activity_id = "org.greia.labirinto-magico"
 package = "labirinto_magico"
 
 [[activities]]
 activity_id = "org.greia.luci-di-momo"
 package = "luci_di_momo"
+
+[[activities]]
+activity_id = "org.greia.memory-meraviglie"
+package = "memory_meraviglie"
+
+[[activities]]
+activity_id = "org.greia.mondo-contrari"
+package = "mondo_contrari"
+
+[[activities]]
+activity_id = "org.greia.nascondino-bosco"
+package = "nascondino_bosco"
 
 [[activities]]
 activity_id = "org.greia.orchestra-animali"
