@@ -186,6 +186,18 @@ class TimeRenderer:
         pygame.draw.circle(screen, SUN, (x, y), 10)
         pygame.draw.circle(screen, INK, (x, y), 10, 2)
 
+    def _celebrate(self, screen: pygame.Surface) -> None:
+        """Quiet completion stars, deterministic and zero per-frame assets."""
+        cx, cy = 286, 338
+        for index in range(12):
+            angle = index * math.pi / 6
+            point = (
+                round(cx + 199 * math.sin(angle)),
+                round(cy - 199 * math.cos(angle)),
+            )
+            pygame.draw.circle(screen, CORAL if index % 2 else SUN, point, 8 if index % 3 else 11)
+            pygame.draw.circle(screen, PAPER, point, 3)
+
     def draw(self, screen: pygame.Surface, model: TimeExperience, *, celebrate: bool = False) -> None:
         screen.fill(BG)
         pygame.draw.rect(screen, (231, 225, 208), pygame.Rect(85, 113, 900, 463), border_radius=39)
@@ -223,6 +235,8 @@ class TimeRenderer:
                 running = model.timer.running
                 fraction = seconds / model.timer.duration_seconds
             self._dial(screen, angles=None, fraction=fraction)
+            if celebrate and model.mode is TimeMode.TIMER:
+                self._celebrate(screen)
             self._text(screen, display_duration(seconds, round_up=model.mode is TimeMode.TIMER),
                        (757, 235), 76, centered=True)
             self._text(screen, self.words["done"] if celebrate else
