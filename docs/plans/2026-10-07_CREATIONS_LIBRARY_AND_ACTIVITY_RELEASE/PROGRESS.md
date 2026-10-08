@@ -539,6 +539,31 @@ Reviewed **all seven manifests**, relevant domain/gameplay, rendering, audio/eve
 
 **Addendum 2026-10-08 — source/test pin correction:** final Time implementation commit `cf8c210cb1c2a2267c213191013fd50e6c1b0929` reduced idle dial redraw to 1 Hz (10 Hz while measuring) and added dual-viewport protected-region regression. The canonical accumulated local-agent procedure now pins that exact source candidate and includes My Greia source-package staging and Time/gallery checks in §2ae. GitHub tree static inspection at documentation commit `b9eb38b2`: original 45 built-ins remain, exactly nine Time incubator assets/files exist, 32 unique sorted draft games, trusted My Greia reserved outside roster; IT/EN Time strings have 24 matching keys; icon runtime blob SHA `1c5a86d04901aa569348a684ac342ac58fbdb36d`. These are **source-tree consistency observations only**, not tests, browser or voice acceptance.
 
+### 2026-10-08 — Second local-agent resume / headless harness root cause fixed in source
+
+Owner-agent report at `b96b08d3`: Time regression **10/10 PASS**, full
+renderer-state capture **11 PNGs** (IT/EN and clock/timer modes), My Time
+bootstrap no localization exception; gallery HTML generated and **101/101**
+source preview URLs resolved offline. The agent could not capture actual
+interactive browser screenshots because no browser was installed; this remains
+visual acceptance debt. Original evidence `time-and-system-acceptance-evidence.zip`
+and second `time-resume-acceptance-evidence.zip` remain local to owner agent;
+not directly read in this GitHub session.
+
+**New defect was the test harness, not the Activity:** old
+`tools/headless_greia_activity.py` launched only
+`greia_simulator.python_activity` (client) yet waited for nonexistent
+remote server at 8767. Replaced it with a focused runner that owns an ephemeral
+`SimulatorRemoteBridge` before child spawn, retains process logs and PNG
+evidence, cleans temp session state and supports synthetic input. Source commits
+`329b41f5` / `4fd80b6d` add the real Pygame/bridge smoke regression. Fixed
+gallery semantic visibility `4d5c0de5`: clock is already in shared asset
+TOML tags, but not displayed in the previous gallery title; now shows tags
+alongside human-readable roles and canonical IDs. **These new changes have NOT
+been executed by the agent or full checkout.** Retest only the two modified
+suites and IT/EN headless probes; keep old green staging/domain proofs. No
+release promotion, title audio, hardware or child-comprehension approval.
+
 ### How to maintain this file
 
 Append a dated entry to §C after every substantive session. Include commit SHA, files changed, actual test command/output and environment, screenshots reviewed if any, real remaining blockers, and **one precise next step**. Update current-state tables in §A/B as facts change; keep dated entries immutable except explicit factual corrections. Every Activity review gets one evidence-backed decision; reference source snapshots instead of pasting thousands of lines. Update `HANDOVER.md` and the appropriate existing architecture/lifecycle ledger without duplicating hardware evidence or inventing another orchestration process.

@@ -1,5 +1,33 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — Second Time acceptance: owned bridge correction
+
+**Current executable source + tests anchor:** `4d5c0de5d1a035732765c5182ef428d6f20becc9` (until any later
+source changes). **Report:** first local resume at `b96b08d3` passed updated
+Time suite 10/10, real direct renderer 11 PNGs, 101/101 offline gallery SVGs;
+headless standalone probe still failed because `tools/headless_greia_activity.py`
+had no bridge *server*. Evidence path/zip reported:
+`tmp/time-resume-acceptance-20261008-050153/` /
+`time-resume-acceptance-evidence.zip`. Not independently mounted.
+
+**Fix committed:** `329b41f5` starts a real ephemeral loopback bridge before
+the child bootstrap; `4fd80b6d` adds a real subprocess/Pygame frame capture
+test, and `4d5c0de5` exposes gallery index search tags + friendly headings.
+Do not edit `python_activity.py` to open a second server; it is the canonical
+transport client. Both tools have intentionally distinct contracts:
+`tools/headless_greia_activity.py` probes one Activity without Shell; the
+full `tools/headless_greia_simulator.py` owns true child-shell navigation.
+
+**Next exact test:** follow the newest resumable addendum in
+`docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`.
+Clean ff-only checkout, run *new* `test_headless_greia_activity.py` and
+modified `test_visual_library_gallery.py`, then retry IT/EN headless captures
+with fresh evidence paths. Known-green Time model, staged My Greia and art
+index validation do not need repetition. Browser and full Shell acceptance
+remain pending, NOT falsely PASS.
+
+---
+
 ## 2026-10-08 — My Time launch-blocker correction (source-only)
 
 At the previous `47a949a0` source state, focused unit/package/draft-staging checks passed, but Step 4 IT headless Simulator launch failed before screenshots: the incubated Time Activity's composition root called nonexistent `LocalizedResources.string(key)`. The platform API is `LocalizedResources.text(key)`. This commit changes that single call and adds `test_composition_root_uses_platform_localized_text_api` to execute the real entrypoint for IT and EN, stubbing only the event loop. The previous agent's evidence remains in its local `tmp/time-and-system-acceptance-20261008-042012/` directory and ZIP.

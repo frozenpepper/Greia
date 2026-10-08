@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import struct
 import sys
 import tempfile
 import unittest
@@ -89,7 +90,9 @@ class HeadlessActivityCaptureTests(unittest.TestCase):
             log = root / "capture-child.log"
             for file in (first, post):
                 self.assertTrue(file.is_file(), file)
-                self.assertTrue(file.read_bytes().startswith(headless.PNG_SIGNATURE))
+                data = file.read_bytes()
+                self.assertTrue(data.startswith(headless.PNG_SIGNATURE))
+                self.assertEqual(struct.unpack_from(">II", data, 16), (800, 480))
             self.assertTrue(log.is_file())
             self.assertNotIn("Traceback (most recent call last)", log.read_text(errors="replace"))
 

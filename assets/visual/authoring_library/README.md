@@ -86,3 +86,12 @@ no remote scripts/fonts/CDNs, and never becomes part of the Greia child image.
 The gallery is a **selection aid**, not runtime art admission or visual-quality
 certification. Preserve SVG masters, confirm final rendered art at 128/64 px and
 run the normal visual acceptance procedure before promoting a candidate.
+
+**2026-10-08 discovery clarification:** The `component.mechanical.dial_hands.blank`
+and `ingredient.mechanical.axle_hands` resources already carry the
+`clock` semantic tag. The generated gallery now displays human-readable
+role labels, original canonical IDs **and** source tags. Search matches
+tags as well as names; a zero count for literal IDs containing `clock`
+does not mean a zero search result. After checkout update, regenerate with
+a fresh output filename before checking `clock`. Browser screenshot/
+visual usability remains unaccepted when no browser is available.

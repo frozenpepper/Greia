@@ -1,7 +1,7 @@
 # Creations Library P1–P7 — Accumulated Desktop Source, Simulator + Draft-Curation Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f` (all P1–P7 source + My Greia mandatory installed system-Activity correction + My Time incubator + offline visual-library gallery; later documentation-only commits may follow).  
+**Pinned source candidate:** `4d5c0de5d1a035732765c5182ef428d6f20becc9` (all P1–P7 source + My Greia mandatory installed system-Activity correction + My Time incubator + offline visual-library gallery; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
 **Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 32-item child candidate roster plus a mandatory separately staged trusted My Greia system Activity; P7 has source-reviewed 45/45 (12 withheld child, one separate settings/system entry). A new unvoiced My Time source prototype is independently incubated outside the 45 built-ins. None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
 
@@ -29,6 +29,55 @@ their owners. Preserve original evidence ZIP unchanged and create a new unique
 new report. Stop at the first unexpected exit code. This exception does not
 turn source or headless screenshots into full P1–P7 or physical acceptance.
 
+### 2026-10-08 — Headless bridge harness correction: two preserved runs, now retry ONLY changed owners
+
+The second owner-local acceptance report (HEAD `b96b08d3`, evidence
+`tmp/time-resume-acceptance-20261008-050153/`) states that the updated Time
+suite passed **10/10** with IT/EN composition entrypoints; direct-renderer
+capture delivered **11 valid PNGs** demonstrating normal/practice clocks,
+midnight nudge, stopwatch, timer and protected input. The offline generic-art
+gallery rendered all **101** locally resolvable SVG previews; a browser was not
+available for interactive captures. These are *owner-agent-reported results*:
+their ZIP was not mounted or independently reviewed in this GitHub session.
+
+The remaining headless exit 3 was a **harness topology error**. In
+`tools/headless_greia_activity.py`, the Activity bootstrap was an HTTP *client*
+waiting for a non-existent bridge server. The obsolete runner could never
+succeed on a clean host. This was not an Activity regression. GitHub source
+commit `329b41f5` replaces that test harness with an **owned ephemeral
+`SimulatorRemoteBridge`** on `127.0.0.1`, connects the unchanged canonical
+Python Activity bootstrap to the newly assigned port, captures actual PNG
+frames, retains child process output, refuses existing evidence names, uses a
+temporary test profile and closes the bridge and child. Commit `4fd80b6d`
+adds a live dummy-Pygame Activity regression (not just mocks), and
+`4d5c0de5` displays all authoring-library semantic tags directly in the
+offline gallery; the existing index already tagged `dial_hands` as `clock`.
+
+**New focused replay:** on a clean ff-only checkout at the pinned source SHA,
+do **not** rerun the unchanged Time model/package suite, 33-package staging or
+101-index validator. Run only:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_headless_greia_activity.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_visual_library_gallery.py' -v
+```
+
+If both pass, resume IT+EN source-headless captures from §2ae **with the
+same command-line options**, using new evidence filenames. Verify each command
+exits 0, produces two nonempty PNGs plus a child log, and prints that it owns
+an ephemeral loopback bridge. Images are direct Activity + trusted Simulator
+bootstrap overlay, **not** normal Shell/profile/catalogue navigation proof.
+If the bridge still fails, return the new `*-child.log` and harness trace,
+not an invented Activity defect. Steps 0–3 and direct-renderer frames are
+preserved as historical green evidence; never repeat them without source drift.
+
+The unavailable GUI/browser environment is an **explicit untested condition**,
+not permission to install arbitrary browsers or to claim visual acceptance.
+For gallery search, the refreshed HTML displays semantic tag chips: `clock`
+should reveal indexed `dial_hands` and `axle_hands` despite their technical
+IDs not containing the word. Review gallery captures when a supported local
+browser becomes available, preferably in the same accumulated visual gate.
+
 ## Instructions for one local desktop agent
 
 Work in the authorized existing Greia macOS checkout. This is **not** an installer/flash/rebuild/Acer task.
@@ -39,7 +88,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f HEAD` (exit **0** required). Check `git diff --name-only d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f HEAD -- src activities activity_incubator runtime tests build tools`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor 4d5c0de5d1a035732765c5182ef428d6f20becc9 HEAD` (exit **0** required). Check `git diff --name-only 4d5c0de5d1a035732765c5182ef428d6f20becc9 HEAD -- src activities activity_incubator runtime tests build tools`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
