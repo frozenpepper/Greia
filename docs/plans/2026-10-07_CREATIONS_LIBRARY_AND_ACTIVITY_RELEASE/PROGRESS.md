@@ -27,6 +27,21 @@
   or refreshed test execution yet. **IT/EN `my_creations.wav` launcher
   recordings are missing**, queued as approval-blocked GLA-010; do not
   mistake text/localization plumbing for spoken pre-reader readiness.
+- **Current P6 Play/Learn design tranche (source only):**
+  reclassified the saved-voice authoring Activity `storie_della_mia_voce`
+  to Create-only and the observational `quattro_stagioni` to
+  Explore+Learn, leaving 21 draft Play / 22 draft Learn /
+  six draft Create memberships. A complete per-Activity editorial
+  matrix in [P6 navigation/visual curation](./P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md)
+  explains why the present five-group limit cannot truthfully
+  partition all Activities; child browsing stays direct rather
+  than manufacturing categories or hiding music/performance.
+  The 13 existing discovery themes now use distinct canonical
+  icons rather than sharing palette/book/puzzle artwork.
+  The basic and shared-art launcher cards now show localized
+  IT `Avvio...` / EN `Starting...` status.
+  Real-roster/policy/art/locale regression tests were **authored
+  but not executed**; no Simulator/art/listening acceptance.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. A new unvoiced **My Time** experiment is separately incubated in `activity_incubator/tempo_di_greia/` and is not a 46th installed Activity. My Greia remains outside child *games* selection but is now mandatorily staged as a trusted system Activity in official target composition (SOURCE-WIP, no live release verification). The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: the earlier **Colline Allegre script-import** and **Quattro Amici difficulty D5** mismatches were corrected in previous source commits. P7 batch 2 repaired Corsa's queued drag, Quattro's chrome exclusion, Torre's direct-script particle import, Delfino's resize and Dragon's nonexistent event. P7 batch 3 additionally repairs Acquario's missing event-loop input pump and real milestone emissions, Baia's feeding/fact event declarations and chrome checks, Cucciolo's drag/focus/event declaration, and Momo's discovery events, safe pointer mapping and resize. P7 batch 4 repairs atomic Monster-gallery persistence, true creation-event invocation and platform-owned Home input, plus Alphabet unique-discovery and honest difficulty declarations. P7 batch 5 repairs Cloud completion/drag/chrome authority; Mondo Contrari's real interaction milestones, English labels and safe letterboxing; Bridge honest placements; Marble responsive drag/input; Memory exit/localized replay; Encyclopedia internal navigation authority. P7 batch 6 repairs Stars platform Home and session identity, Train per-replay milestone identity, Seasons one-shot discovery and safe letterbox mapping, and Submarine undeclared/phantom events plus pointer authority. The false adaptive-D2–D6 Bridge and adaptive-D1–D4 Marble claims were removed. **All these source changes and new regression tests remain UNEXECUTED in the canonical checkout.**
 - Release composition: **explicit draft selection is now source-wired into the authoritative owner release path**. `greia_release.py` sets `PIP_RELEASE_BUILD=1`; target composition stages only `build/first-party-release-activities.toml`, validates/indexes the installed subset, and refuses draft/empty policy for official release. Non-release/dev images deliberately keep the full source tree. Policy remains **draft**, so no official Activity release can build yet.
@@ -869,3 +884,46 @@ were invoked.
 still 45/45 source-reviewed with gameplay/visual evidence owed,
 P8 not started. No hardware, release, trust, profile-policy,
 activity distribution or live GUI/audio acceptance claimed.
+
+### 2026-10-08 — P6 Play/Learn child-intent organization and meaningful visual vocabulary
+
+**Scope:** resume original P6 design/navigation and P7 visual curation.
+The 32 draft release candidates were reviewed against their
+`activity.toml` presentation categories and semantic discovery hints.
+Before this tranche, Play held 23 draft candidates and Learn 22.
+Two correction-only manifest edits now make Voice Stories a
+Create-only authoring tool and Four Seasons an Explore+Learn
+observation experience; Play now has **21**, Learn **22**,
+Create **six**. Both remain in the 32-candidate draft release.
+No change to educational skills, age/difficulty declarations,
+progression, saves, permissions or package identity.
+
+The bounded P6 design record now maps **every** Play and Learn
+draft candidate once to its primary *editorial* child intent
+with no fake `music` or `stories` two-Activity category.
+The current runtime `AdaptiveCollectionPlanner` requires
+at most five non-singleton groups with exact coverage.
+The actual roster cannot satisfy that honestly; therefore
+the existing direct Activity-card display is retained.
+This avoids creating a spurious navigation layer and honors
+Parent filtering at ages 3, 4, 5.
+
+`catalogue_view._DISCOVERY_ICONS` now maps the 13 existing
+semantic group labels to **13 distinct existing Greia core
+illustrations** instead of visually ambiguous shared
+palette/book/puzzle shapes. This improves the shared group
+art vocabulary when genuine subcollections are present,
+without adding art assets or runtime image generation.
+Both primitive and shared-art launcher Activity launch
+badges now use the current UI locale (IT `Avvio...`,
+EN `Starting...`) instead of hardcoding Italian.
+
+New `tests/test_launcher_collection_visual_curation.py` reads
+the **actual 32-file release roster and manifests**, checks
+counts, category completeness/no duplicate for age-filtered
+catalogues, real asset IDs and unique group silhouettes,
+and bilingual feedback. This test is **NOT EXECUTED**.
+GLA-008 in the one local-agent queue now records precise
+source suites, actual 48/64px art comparison and IT/EN
+Home/gameplay screenshots. No P6/P7 launch or final
+visual acceptance, and no P8 approval is asserted.
