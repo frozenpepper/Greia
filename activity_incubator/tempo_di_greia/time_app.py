@@ -164,13 +164,11 @@ class TimeActivity:
                 self.press(ACTION_BUTTONS["primary"].center)
             elif event.key == pygame.K_r and self.model.mode is not TimeMode.CLOCK:
                 self.press(ACTION_BUTTONS["reset"].center)
-            elif event.key == pygame.K_UP and self.model.mode is TimeMode.CLOCK:
+            elif event.key in (pygame.K_UP, pygame.K_DOWN) and self.model.mode is TimeMode.CLOCK:
                 self.model.set_practice(True)
-                self.model.nudge_practice(15)
-                self.dirty = True
-            elif event.key == pygame.K_DOWN and self.model.mode is TimeMode.CLOCK:
-                self.model.set_practice(True)
-                self.model.nudge_practice(-15)
+                self.model.nudge_practice(15 if event.key == pygame.K_UP else -15)
+                if self.speech is not None:
+                    self.speech.on_context(self.model.mode, self.model.practice)
                 self.dirty = True
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             point = self._logical_point(event.pos)
