@@ -51,7 +51,7 @@ _CATEGORY_ICONS = {
     "learn": "book",
     "explore": "magnifier",
     "my_greia": "unicorn",
-    "my_creations": "palette",
+    "my_creations": "backpack",
 }
 _DISCOVERY_ICONS = {
     "drawing": "palette",
