@@ -124,35 +124,106 @@ system-owned My Greia** are unchanged; consult PROGRESS P7 for
 their exact dispositions. The official `[release].status` remains
 `draft` and thus fail-closed.
 
-## 4. What is still organizationally weak
+## 4. Play and Learn: complete draft activity-to-intent audit (2026-10-08)
 
-The full draft Home is now much clearer for Create and Explore. **Play
-and Learn are still dense**; the existing adaptive grouping planner
-currently refuses incomplete partitions, correctly avoiding a misleading
-menu that strands or hides an untagged Activity. Do **not** make a
-grouping test green by attaching false tags or adding an unexplained
-“Everything else” portal.
+**Real source counts for the 32 draft candidates, after this tranche:**
+**Play 21**, **Learn 22**, and **Create 6**. These are overlapping
+**Home memberships**, not exclusive curriculum counts; 32 is the total
+of unique child draft candidates. Source data comes from each existing
+`activities/*/activity.toml`, not guessed game genres or a new runtime
+classification.
 
-The next **design/curation** pass should produce, for both Play and
-Learn, a *complete* activity-to-primary-child-intent matrix based on
-the actual gameplay observed in Simulator. Accept up to the existing
-five groups only if each group has at least two real members, every
-visible Activity appears exactly once in that Collection's view, and
-every group name/icon is recognizable without reading and has
-IT/EN prerecorded speech. Candidate child-language families to
-evaluate—not approved navigation IDs—are:
+Two further mismatches were corrected **only in
+`[presentation].categories`**:
 
-- **Play:** things to solve/build, move/act, pretend/care, tell/perform,
-  and make sounds. The number and wording must follow actual clusters;
-  do not force a singleton music game into a dishonest group.
-- **Learn:** numbers/shapes, words/sounds, world/nature, thinking/
-  strategies, and people/feelings. Parent age filtering can shrink
-  any cluster below the useful-group threshold, so graceful direct
-  fallback remains mandatory.
+- `storie_della_mia_voce`: **Create**, rather than Create + Play.
+  Its actual interaction is recording/replaying/saving stories, not
+  a challenge or pretend-play game; a child still finds every saved
+  narration in My Creations.
+- `quattro_stagioni`: **Explore + Learn**, rather than Explore +
+  Play + Learn. Its interactions explore seasonal/weather/day-night
+  relationships; source-reviewed milestones are discoveries, not
+  game wins/losses.
 
-The real target is **fewer confusing decisions**, not the number of
-group buttons. Do not add new Activities, root Collections,
-hierarchy, policy stores, or runtime taxonomy for this design pass.
+Neither loses launchability, saves, educational metadata, language,
+events or Parent permission. Both remain draft candidates. The
+`Play 23 / Learn 22` numbers before these two changes are historical.
+
+### Play (21) — primary child-intent map for human curation
+
+| Editorial child intent | Exactly which draft Activities | Count |
+|---|---|---:|
+| Move, race and react | `colline_allegre`, `corsa_bacche` | 2 |
+| Care and express feelings | `clinica_cuccioli`, `cucciolo_mio`, `faccine_momo` | 3 |
+| Play with numbers | `casa_del_dieci`, `il_giardino_dei_numeri`, `luci_di_momo`, `treno_numeri` | 4 |
+| Play with sounds and words | `festa_delle_rime`, `foresta_parole`, `officina_dei_suoni` | 3 |
+| Puzzles, observation and building | `la_discesa_della_biglia`, `labirinto_magico`, `memory_meraviglie`, `mondo_contrari`, `nascondino_bosco`, `quattro_amici`, `torre_forme` | 7 |
+| Make music | `orchestra_animali` | 1 |
+| Put on a story performance | `teatrino_fiabe` | 1 |
+| **Total** | **Every current Play draft candidate, once** | **21** |
+
+### Learn (22) — primary educational intent map for human curation
+
+| Editorial child intent | Exactly which draft Activities | Count |
+|---|---|---:|
+| Numbers and quantities | `bottega_delle_misure`, `casa_del_dieci`, `il_giardino_dei_numeri`, `luci_di_momo`, `stelle_incantate`, `treno_numeri` | 6 |
+| Words, language and writing | `festa_delle_rime`, `foresta_parole`, `officina_dei_suoni`, `posta_di_leo`, `writing` | 5 |
+| Nature and seasonal knowledge | `enciclopedia_greia`, `quattro_stagioni` | 2 |
+| Care and social understanding | `clinica_cuccioli`, `faccine_momo` | 2 |
+| Thinking, spatial reasoning and symmetry | `la_discesa_della_biglia`, `memory_meraviglie`, `mondo_contrari`, `quattro_amici`, `shape_garden`, `specchi_magici` | 6 |
+| Music and rhythm | `orchestra_animali` | 1 |
+| **Total** | **Every current Learn draft candidate, once** | **22** |
+
+These tables are **editorial review lenses only**. They do **not**
+create root categories, alter approved teaching skills, or assign
+new `discovery_tags`. The “musical” singleton and the Story
+performance singleton are **real**: do not pretend there are enough
+independent Activities to give each a two-card submenu.
+
+The existing `AdaptiveCollectionPlanner` currently offers at most
+five semantic groups of at least two Activities and requires full,
+honest coverage. On the verified original 23/22 metadata the
+frequency-first five tags left three Play Activities and four
+Learn Activities without a truthful destination. After the two
+membership corrections, at least the music singleton in each
+collection prevents a complete useful split. **Therefore keep
+direct Activity browsing**. This is intentional—not a
+failure to finish wiring a grouping feature. A six/seven-option
+chooser plus more navigation steps would be *worse* for a
+3–5-year-old than carefully legible Activity cards.
+
+The test `tests/test_launcher_collection_visual_curation.py`
+asserts that the real release-roster memberships remain
+represented, and checks every age-filtered projection for no
+missing/duplicated Activity IDs. Future authentic content changes
+may justify groups, but require real screenshots, bilingual
+spoken names, complete mapping *after* Parent filtering and
+child trial before introducing any submenu.
+
+### Discovery art is a language: stop duplicating symbols
+
+The 13 already-platform-owned subcollection themes previously
+reused the **palette** for Drawing, Music and Making; **book** for
+Writing, Words and Stories; and **puzzle pieces** for Building,
+Numbers, Puzzles and Action. That is not meaningfully legible
+to a prereader.
+
+The source mapping in `src/greia_launcher/catalogue_view.py`
+now selects 13 **different existing canonical Greia core
+illustrations**: palette, notebook, music star, train blocks,
+coins, alphabet board, block puzzle, garden, book, rainbow,
+heart, lightning and unicorn. No new assets, font family,
+rendering system or per-frame image conversions were added.
+Their artwork consistency still needs GLA-008 actual
+64/48px screenshot inspection. These are illustrations
+for subcollection groups *when those groups legitimately exist*;
+the current Play/Learn screens still browse directly.
+
+The launch status also now uses `Avvio...` in Italian and
+`Starting...` in English for **both** ordinary and shared-art
+Activity cards. This repairs a real language inconsistency
+without touching voice generation or changing any child
+navigation level.
 
 ## 5. Concrete visual decisions to review, not declare passed
 
