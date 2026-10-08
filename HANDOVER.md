@@ -3250,3 +3250,22 @@ The **same consolidated desktop acceptance file** now covers all previous P1–P
 Do **not** invoke Acer flashing, install/release-image builds or physical testing for this content tranche. The independent Acer first-boot/install/update lifecycle remains OPEN with its own authoritative plan and real-device evidence boundary. Also do not approve the release roster or remove an Activity merely because it was withheld as a current draft candidate.
 
 **Next source engineering:** review the seven named age-2/3 science/care/counting Activities and address concrete owner-path flaws with focused regressions; then proceed through the other 24 source entries. A full live user-agent acceptance is still needed for the current P1–P7 candidate after the agent returns.
+
+
+## Creations P7 early-learning source review batch 3 — 21/45 reviewed, 18 draft candidates, 0 approved (2026-10-08)
+
+**Authoritative program:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`. Continue with the **same** accumulated desktop acceptance: `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`. New batch-3 source/test/roster anchor **`6076879ed07513e6f1545e356a6ee0b0e5e07401`**; subsequent documents do not change that executable source. **No tests were executed in this batch.** Do not carry old checkout/test PASS to this candidate.
+
+**Reviewed, source only:** `acquario_magico`, `baia_delle_orche`, `clinica_cuccioli`, `cucciolo_mio`, `faccine_momo`, `il_giardino_dei_numeri`, `luci_di_momo`. Each manifest, content/model event path, existing package tests, both locale dictionaries and both packaged spoken title WAV entries were inspected. IT/EN locale keys matched and WAV files were present; voice quality and functional gameplay remain untested. All seven have a disposition and risk-specific evidence requirements in PROGRESS.
+
+**Commits on `main`:**
+- `001368439f3ea35c240e1090f06170ee39e119e1`: Acquario's previously inert event loop now drains Pygame input; real feeding/glow fact emission; Orca fact event declaration + actual consumed-fish emission; Cucciolo's queued ball drag/focus safety + honest `pet.played` manifest; focused regression source.
+- `7df80d372b68f382b0158259ee42efb414441ce1`: Momo typed events for distinct emotion discoveries and one-shot completion, correct quiz discovery, platform-safe contain reference canvas, resize/finger input and 30Hz loop, new regression source.
+- `6076879ed07513e6f1545e356a6ee0b0e5e07401`: Acquario and Orca protected-chrome gates and focused tests; six new **source-reviewed only** candidates added to the sorted release roster, still **`status = "draft"`**.
+
+**Curated state:** now **21/45 source-reviewed; 18/45 release draft candidates; 3/45 withheld** (`baia_delle_orche`, `viaggio_delfino`, `volo_draghetto`); **0 approved**. Six new candidates are Acquario, Clinica, Cucciolo, Faccine, Giardino, Luci. The remaining **24** entries are not yet P7-reviewed. No deletions from development images. Published release composition still intentionally rejects the draft policy.
+
+**Deferred source / actual UX acceptance:** `tests/test_p7_batch3_source_regressions.py`, expanded `tests/test_activity_faccine_momo.py` and existing Aquarium/Orca/Clinic/Giardino/Luci suites, plus all previous P1–P7, `make verify` and the real Simulator/audio/visual/capacity scenarios in the **single** existing acceptance doc. None has run on this head. No source/package approval or Acer hardware claim follows from this review.
+
+**Next exact step while the local agent is unavailable:** P7 source review literacy/numeracy and creative gaps `alfabeto_leo`, `bosco_numeri`, `bottega_delle_misure`, `casa_del_dieci`, `festa_delle_rime`, `foresta_parole`, `morbidi_mostriciattoli`; address concrete owner-path flaws and append one dated ledger entry. When the local agent returns, run the cumulative one-run acceptance **from the latest source head**; stop on first failure, no Acer build/flash/boot in the Creations run.
+

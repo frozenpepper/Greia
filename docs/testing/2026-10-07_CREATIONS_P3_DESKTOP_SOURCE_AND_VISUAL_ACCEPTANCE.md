@@ -1,9 +1,9 @@
 # Creations Library P1–P7 — Accumulated Desktop Source, Simulator + Draft-Curation Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `6afc788a190e10c4421d6ad925de18773b986f1d` (latest source/test + 12-candidate draft roster checkpoint; later documentation-only commits may follow).  
+**Pinned source candidate:** `6076879ed07513e6f1545e356a6ee0b0e5e07401` (P7 batch-3 source/test + 18-candidate draft roster checkpoint; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
-**Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 12-item candidate roster; P7 has source-reviewed 14/45 (two withheld). None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
+**Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 18-item candidate roster; P7 has source-reviewed 21/45 (three withheld). None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor 6afc788a190e10c4421d6ad925de18773b986f1d HEAD` (exit **0** required). Check `git diff --name-only 6afc788a190e10c4421d6ad925de18773b986f1d HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor 6076879ed07513e6f1545e356a6ee0b0e5e07401 HEAD` (exit **0** required). Check `git diff --name-only 6076879ed07513e6f1545e356a6ee0b0e5e07401 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -71,6 +71,13 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_torre_forme.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_viaggio_delfino.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_volo_draghetto.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_p7_batch3_source_regressions.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_acquario_magico.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_baia_delle_orche.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_clinica_cuccioli_refactor.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_faccine_momo.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_il_giardino_dei_numeri.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_luci_di_momo.py' -v
 make verify
 ```
 
@@ -135,11 +142,26 @@ Only after earlier source and Simulator steps succeed, exercise these **real Act
 40. **Torre Forme** — run free-build matching with a snap effect, slow-fall placement, and tower challenge with a line clear and celebration. It must execute `main.py` in the normal **script** context; no `attempted relative import with no known parent package` traceback may occur after normal gameplay. Verify shape shelf, rotation, replay and input at 800×480.
 41. **Viaggio Delfino (withheld from draft)** — complete a chapter, listen to an animal fact, resize the running Simulator child surface, steer and continue. The same frame after resize must use the rebuilt canvas (no frozen/scaled-old viewport). Compare nature/discovery learning against Dragon rather than treating similar sea/sky movement as sufficient distinction.
 42. **Volo Draghetto (withheld from draft)** — test stars, turbo/rainbow, bounce and accessory cycling, with keyboard and pointer. Verify it remains honestly **endless** and does not fabricate a terminal `flight.completed` reward. Evaluate whether there is enough choice/challenge to merit a separate release candidate rather than just another endless motor game.
-43. **Draft release staging on disposable output only** — read `build/first-party-release-activities.toml` and confirm `status = "draft"`, exactly 12 sorted candidate IDs and no Delfino/Dragon. Run only the safe **unprivileged test harness** from §1; do not change policy to approved, invoke privileged image build, or install anything. Inspect staged-selection test logs to confirm expected source directory and installed-index identities match.
+43. **Draft release staging on disposable output only** — read `build/first-party-release-activities.toml` and confirm `status = "draft"`, exactly 18 sorted candidate IDs and no Delfino/Dragon/Orca. Run only the safe **unprivileged test harness** from §1; do not change policy to approved, invoke privileged image build, or install anything. Inspect staged-selection test logs to confirm expected source directory and installed-index identities match.
 
 These checks add to, not replace, the earlier Creations PNG/WAV/UTF-8 and adaptive-capacity acceptance. If the first failure happens before this section, **STOP** and preserve it; do not skip earlier failing tests to reach gameplay.
 
 Record frame-rate/idle CPU/RSS observations if the Simulator exposes them; no claim about Acer performance can follow from desktop observation.
+
+
+### 2aa. P7 early learning, nature and care child-play acceptance (source-reviewed batch 3)
+
+Following §2a, capture **real Simulator shell windows** at **1024×600 and 800×480** for every newly drafted candidate; include **1366×768** for Momo and at least one counting game. Keep a comparison video/observation log where moving feedback cannot be judged from a still. No release approval without real sound and child-comprehension review.
+
+44. **Acquario Magico:** launch via normal supervisor script, verify a first presentable frame, then actually click aquarium tools, fish, chest, glow toggle and feed. The event loop must drain queued mouse/key input rather than animate forever without accepting it. Actual eaten food, not food placement, triggers `aquarium.fish_fed`; day/night toggle triggers its event. Test saved fish population after restart and trusted chrome exclusion. Inspect max fish count and low-end per-frame particle/asset costs.
+45. **Baia delle Orche (withheld):** discover all six spoken marine facts and play the orca cuddle/breach/food/music paths, including real food consumption. Compare its learning content, visuals, motion, audio and play difference against Aquarium and the already withheld Dolphin before deciding if three marine games are justified. Check pointer exclusion over Home and long-song audio behavior.
+46. **Clinica Cuccioli:** five full patients, deliberately choose a wrong tool and recover, explicitly select the correct care tool before use; no automatic treatment on patient taps. Verify actual teaching cues before any English/Italian textual label, restart and star persistence.
+47. **Cucciolo Mio:** feed, bath, dress, sleep, and play through queued mouse down/move/up; confirm ball drag works with injected events when global mouse position is stale, no click fires on ball release and no persistent drag after window focus loss. Verify `pet.played` is accepted by the manifest and a saved pet reopens intact. Inspect pointer controls at 800×480.
+48. **Faccine Momo:** each of six emotions, sad comfort, mode switch, wrong quiz and successful quiz; verify only *newly discovered* emotions emit milestones, and all-explored only once, not each tap. Check spoken Italian/English, Home protected-region rejection, correct contain letterboxing at 800×480/1366×768, and 30Hz redraw footprint.
+49. **Il Giardino dei Numeri:** child aged 2–4 should be able to tap a target, hear one counted number, retry a repeated target harmlessly and watch the basket celebration. Verify progression D1–D3 and reopening saved counts, including optional `audio.basic` absent.
+50. **Luci di Momo:** complete each of five rounds at D1 and D4, including wrong choice, hint and Replay; verify bounded adaptive progression and once-only completion when replaying/restarting. Confirm spoken quantity and reveal timing remain intelligible with slower frame delivery.
+
+The release roster is **18 draft-only source candidates**, and **Baia/Viaggio Delfino/Volo Draghetto are currently withheld**, not rejected or uninstalled from developer source. Keep all three comparisons open until actual child-facing evidence is available.
 
 ### 2b. SOURCE-WIP modal / transaction / P4 persistence cases carried over
 
@@ -165,7 +187,7 @@ The new code introduces **`tests/test_creation_selection.py`**, additional `test
 - Orchestra tests prove content-addressed private backing storage, failed-pointer rollback, WAV/role/digest validation, picker audio isolation, reserved mixer channel 0 Play/Pause/Resume, persistence-before-active-state mutation, and `concert.performed` only after real live accompaniment; its manifest regression locks the corrected free-play pedagogy and declared `instrument.played` event.
 - action-pointer tests prove Corsa explicitly recognizes event-queued press→drag→release/focus loss even if global mouse state changed, Quattro cannot hover/drop in protected chrome, and Delfino switches its render path to the new canvas in the same resize frame;
 - Torre direct-script regression exercises snap and cleared-particle effects in the production import context, not merely a package import at boot; Dragon manifest test locks the actual endless milestone-only event set;
-- release staging tests prove the **12-candidate draft** stages only the reviewed subset, remains refuse-to-release until explicitly approved, and does not install the withheld Dolphin/Dragon just because they exist in source;
+- release staging tests prove the **18-candidate draft** stages only the reviewed subset, remains refuse-to-release until explicitly approved, and does not install the withheld Orca/Dolphin/Dragon just because they exist in source;
 - shared-capacity tests prove the owner’s 8 GiB writable-volume example: at 2 GiB used the global policy permits at most 4 GiB additional persistent growth before 6 GiB used; the shipped 25% private-namespace fraction yields a 2 GiB per-Activity containment ceiling on that same writable volume while the 16 MiB single-file bound remains independent;
 - `VolumeBudget.write_reservation()` is shared across private Activity storage, My Creations and history in launcher composition; deterministic concurrency coverage must prove the second writer observes the first writer's changed usage rather than both passing one stale capacity observation;
 - at the 75% occupancy ceiling, same-size/non-growing repair writes to existing private state remain possible when physically free staging room exists, while a new private file, a new history session and a storage-migration working copy are denied;
@@ -188,8 +210,8 @@ Provide exactly:
 - whether **Voice Stories→audio preview→Teatrino narration** worked without microphone contention, including early-stop trimming and saved-show replay after deletion of the shared source WAV;
 - whether **Writing→Posta→Writing UTF-8** worked through the trusted picker, including grapheme-safe postcard compaction, saved-only Posta sharing and continued access after shared-source deletion;
 - whether **Voice Stories→Orchestra** provided audible preview-before-select, no autoplay after import/relaunch, uninterrupted live accompaniment, explicit pause/resume, picker-preview isolation and playback after deletion of the shared source WAV;
-- whether the P7 action/strategy batch passed true script launch, both low and high authored difficulty, touch/keyboard controls, protected chrome, terminal/replay handling and 800×480 readability, with Delfino/Dragon differentiation noted rather than silently approved;
-- whether exactly 12 **draft-only** Activities staged and official release still refused unapproved policy;
+- whether P7 action/strategy and early-learning batches passed true script launch, model/events, child comprehension, authored difficulty progression, touch/keyboard controls, protected chrome, terminal/replay handling and 800×480 readability, with all three marine-game comparisons and Dragon differentiation noted rather than silently approved;
+- whether exactly 18 **draft-only** Activities staged and official release still refused unapproved policy;
 - whether `test_profile_volume_budget.py` and the full suite proved shared reservation serialization, 8 GiB→2 GiB adaptive Activity quota, 75% aggregate ceiling, non-growing recovery writes, history growth denial and migration working-copy denial;
 - the **actual local writable filesystem facts** used for calibration (`df -B1`/platform-equivalent for the profile-data mount if available), recorded read-only; do not create giant filler files or intentionally approach the machine's capacity limit;
 - image detail/deletion/cancel state; actual observed bug(s), with steps;
