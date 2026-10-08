@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `c0120384e69201bd8bd613c863a23eb15a2adcbb` (later docs-only commits permitted)
+**Updated:** 2026-10-08; **queue source baseline:** `90fe1d5a556b44f6c9ea3690bab2b167a3730493` (later docs-only commits permitted)
 **Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -155,7 +155,7 @@ test commands and expected observable behavior.
 - **Priority:** P1; **dependency:** current checkout required for source suite;
   **GLA-002 PASS required for the hands-on/Simulator leg, not the isolated
   source model suite**; **minimum source SHA:**
-  `c0120384e69201bd8bd613c863a23eb15a2adcbb`
+  `90fe1d5a556b44f6c9ea3690bab2b167a3730493`
 - **Exact provider-free suites (separate logs/exit codes):**
   ```bash
   python3 -m unittest discover -s tests -p 'test_localization.py' -v
@@ -171,8 +171,12 @@ test commands and expected observable behavior.
   in both import modes, and
   no speaker/replay target when actual recordings are missing, and
   immediate Quit/stop before READY never emits voice or readiness. The new
-  audio-boundary suite uses a mocked mixer and disposable fake paths;
-  it does NOT prove audible output or valid real WAV decoding.
+  audio-boundary suite uses real locale bundle catalogues, a mocked mixer,
+  and disposable fake audio bytes. Verify it demonstrates a selected-English
+  clip under `assets/`, normal fallback retention, strictly missing-English
+  behavior, **no WAV decoding at Activity startup**, at-most-one decode per
+  valid cue, and corrupt WAV fail-closed. These are logical/mock tests,
+  NOT actual audible output, quality or valid production WAV decoding.
   **MANDATORY AGAIN**: run this suite on the current checkout even
   if GLA-001/002 exposes an isolated bridge failure; report its result
   independently and do not call the full GLA-003 task PASS. The Activity
@@ -330,6 +334,12 @@ test commands and expected observable behavior.
 - **Last result:** PHYSICAL NOT TESTED in this workstream.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-08:** Low-resource audio source change: index selected
+  semantic cue paths at Activity construction, decode a clip only when
+  `TimeSpeech` requests it after READY; cache at most seven decoded
+  recordings, and suppress replay after a failed decode. Added mocked
+  call-count/corruption tests. All new tests remain UNEXECUTED.
 
 - **2026-10-08:** Platform `LocalizedResources.audio_cue(...,
   allow_fallback=False)` now owns selected-language cue resolution;
