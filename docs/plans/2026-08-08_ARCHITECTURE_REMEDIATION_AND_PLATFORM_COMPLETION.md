@@ -2981,3 +2981,29 @@ policy and hardware lifecycle authorities remain unchanged. The
 unified `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/`
 progress ledger owns product status. The existing GLA-007 local
 work queue owns exact execution and screenshot steps.
+
+
+### 2026-10-08 — Existing Creations P3 modal lease restoration (SOURCE-WIP)
+
+P3 trusted picker acceptance source review found lifecycle drift
+between the existing `CreationSelectionCoordinator` request
+timeout/client cancellation and the `ActivityCreationPickerHost`
+modal display lease. The broker already invalidated expired
+requests correctly, but the Shell's chooser view did not check
+the current trusted pending request once displayed. This
+could leave obsolete Gallery UI above the foreground Activity.
+The host now verifies request identity on each poll and
+dismisses a cancelled/expired/replaced modal, releasing
+screen/audio and restoring Activity focus without further
+untrusted grants. Ordinary cancellation failures no longer
+prevent display restoration attempts. No additional IPC,
+transport, platform architecture layer, privilege or
+hardware mechanism was added.
+
+Added host tests using a real coordinator fake-clock timeout
+and explicit cancellation/replacement/error cases. **Source
+committed; tests/Simulator/hardware UNEXECUTED**. The
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/`
+progress ledger owns P3 product disposition. The one local-agent
+GLA-007 queue item owns commands and evidence. No physical
+installer/first boot or P3 release gate closure is implied.
