@@ -92,6 +92,10 @@ activity_id = "org.greia.nascondino-bosco"
 package = "nascondino_bosco"
 
 [[activities]]
+activity_id = "org.greia.officina-dei-suoni"
+package = "officina_dei_suoni"
+
+[[activities]]
 activity_id = "org.greia.orchestra-animali"
 package = "orchestra_animali"
 
@@ -108,8 +112,20 @@ activity_id = "org.greia.quattro-amici"
 package = "quattro_amici"
 
 [[activities]]
+activity_id = "org.greia.quattro-stagioni"
+package = "quattro_stagioni"
+
+[[activities]]
 activity_id = "org.greia.shape-garden"
 package = "shape_garden"
+
+[[activities]]
+activity_id = "org.greia.specchi-magici"
+package = "specchi_magici"
+
+[[activities]]
+activity_id = "org.greia.stelle-incantate"
+package = "stelle_incantate"
 
 [[activities]]
 activity_id = "org.greia.storie-della-mia-voce"
@@ -122,6 +138,10 @@ package = "teatrino_fiabe"
 [[activities]]
 activity_id = "org.greia.torre-forme"
 package = "torre_forme"
+
+[[activities]]
+activity_id = "org.greia.treno-numeri"
+package = "treno_numeri"
 
 [[activities]]
 activity_id = "org.greia.writing"
