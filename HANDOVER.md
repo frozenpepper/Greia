@@ -1,6 +1,72 @@
 # Greia — Current Engineering Handover
 
 
+## 2026-10-08 — P3 trusted picker cancellation/expiry restoration
+
+**Canonical repo/branch:** `frozenpepper/Greia`, `main`;
+**active owner plan:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`,
+P3 universal child picker/Creations Library acceptance; no new Time
+complexity, no new IPC architecture, no installer or release changes.
+
+**Production-path finding:** The Activity-side narrow client requests an
+opaque picker transaction; the trusted `CreationSelectionCoordinator`
+allows client cancellation and a 180-second deadline, but the
+`ActivityCreationPickerHost` previously kept the Shell modal visible
+until the child chose or pressed Back. A cancelled/expired request
+could strand a child in an obsolete picker; stale taps could try to
+complete an invalid handle. Also an exception from broker
+cancellation used to abort restoration before dismissing the modal.
+
+**Implemented in existing source:**
+`src/greia_launcher/creation_picker_host.py` checks the trusted
+pending request identity each service poll, closes an invalidated
+modal without re-cancelling an already-settled broker operation,
+stops preview via Screen.on_exit and restores the Activity display
+and mouse control. A new request cannot inherit the previous
+display's input. The ordinary Back path now attempts focus
+restoration before surfacing a broker cancellation error. The
+authority-granting coordinator, profile isolation, one-use
+selection token and trusted Home chrome were left intact.
+
+**Source/test anchors:**
+`7916c89c98e6724c4bd325dd77c7982c501c5998` host repair;
+`957a7da1073e7807f3108d8adb7bd2771f81fac8` four new
+`tests/test_creation_picker_host.py` test cases (client cancellation,
+real coordinator timeout, stale/new request replacement,
+cancel-broker failure with display restoration).
+The previous continuation also fixed empty Gallery first
+frame, media-specific empty-state icon, footer caption overlap,
+keyboard deletion confirmation and added the real dummy-Pygame
+`test_creation_gallery_render.py` suite.
+
+**Evidence honesty:** GitHub commits and source inspection only;
+new and prior-unrun P3 suites **not executed** in this
+session's full Greia checkout; no claim of live Simulator
+display/audio, first-party release, physical Acer, installed
+legacy-X or ARM validation. P3 is SOURCE WIP and no
+other P1–P8 status advanced.
+
+**Local agent:** The **single** authoritative
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` item GLA-007
+now lists exact five first-source suites
+(`test_creation_gallery_render.py`,
+`test_creation_gallery_layout.py`, `test_creation_gallery.py`,
+`test_creation_selection.py`, `test_creation_picker_host.py`),
+dependency/source minimum, exact screenshot/timeout/restore
+checks, stop conditions, evidence handling and documentation
+update rules. Existing
+`docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
+retains earlier evidence pins and adds the live cancelled/expired
+picker scenario. GLA-001–006 and hardware GLA-009 keep their
+independent authority.
+
+**Next exact step:** execute GLA-007 on a prepared checkout
+and review real tests and Simulator UI evidence, then fix
+failures at the existing source owner. Continue the original
+PNG/WAV/UTF-8 cross-Activity flows, preview-before-selection
+and release-quality pass without new features until
+they work.
+
 ## 2026-10-08 — Creations Gallery first-use and delete-modal source repair
 
 **Active route:** original Creations/Activity release programme,
