@@ -1,9 +1,9 @@
-# Creations Library P1–P5 — Desktop Source + Real GUI Acceptance
+# Creations Library P1–P7 — Accumulated Desktop Source, Simulator + Draft-Curation Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `39e8d77b1099f8a407b2f0bc4efbd3516cf04fba` (latest P1–P5 code/test checkpoint; later documentation-only commits may follow).  
+**Pinned source candidate:** `6afc788a190e10c4421d6ad925de18773b986f1d` (latest source/test + 12-candidate draft roster checkpoint; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
-**Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **None of the accumulated P1–P5 candidate has been accepted in a complete checkout or real GUI/audio/text/capacity run yet.** Hardware evidence remains separate.
+**Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 12-item candidate roster; P7 has source-reviewed 14/45 (two withheld). None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor 39e8d77b1099f8a407b2f0bc4efbd3516cf04fba HEAD` (exit **0** required). Check `git diff --name-only 39e8d77b1099f8a407b2f0bc4efbd3516cf04fba HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor 6afc788a190e10c4421d6ad925de18773b986f1d HEAD` (exit **0** required). Check `git diff --name-only 6afc788a190e10c4421d6ad925de18773b986f1d HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -60,6 +60,17 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_orchestra_backing_store.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_orchestra_creations.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_orchestra_manifest.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_release_selection.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_stage_release_activities.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_greia_release.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_action_pointer_boundaries.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_colline_allegre.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_corsa_bacche.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_labirinto_magico.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_quattro_amici.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_torre_forme.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_viaggio_delfino.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_volo_draghetto.py' -v
 make verify
 ```
 
@@ -113,6 +124,21 @@ Capture **actual screenshots from the real running Shell** at these exact checkp
 34. **Backing snapshot independence.** Exit and relaunch Orchestra: the imported track must remain privately available but not autoplay. Delete the shared source WAV from My Creations, relaunch again, and verify Orchestra can still play its private backing copy. This proves snapshot independence rather than raw shared-path coupling.
 35. **Concert semantics.** Let one backing track finish after playing at least one live note/instrument. Source tests own exact event validation, but manually confirm normal completion/no crash. Let another track finish with no live input: it must remain simple playback, not visually claim a concert/completion reward.
 
+### 2a. P7 action/strategy child-play acceptance (source-reviewed batch 2)
+
+Only after earlier source and Simulator steps succeed, exercise these **real Activity entrypoints** in the same disposable Simulator child profile. Keep raw Shell screenshots at **1024×600 and 800×480**, and include a wide 1366×768 example for at least two games. Do not infer responsiveness from an offscreen renderer screenshot. Check trusted Home behavior and actual child task comprehension rather than only whether a window opened.
+
+36. **Colline Allegre** — drive D1 and D5 using on-screen throttle/brake/tilt. Actually cross a bridge/mud/hill, collect a star and experience a flip/landing. Verify wheel/terrain interaction, child-visible restart and committed best-distance score. Capture both low and high difficulty.
+37. **Corsa delle Bacche** — test touchscreen-style press→drag→release with the Simulator's actual event translation, plus keyboard directions, across early and late authored levels. Verify no movement after release or after focusing trusted chrome, all berries genuinely reachable, rainbow/star/critter collision semantics and gentle recovery from zero hearts. Capture one late-tier action frame.
+38. **Labirinto Magico** — launch all **six** actual difficulty sizes D1–D6. For a large-tier generated maze, verify passage widths, player marker and directional/path choices remain visually distinguishable at 800×480; collect a star, solve/finish and verify final overlay/replay without blocked input.
+39. **Quattro Amici** — play an entire two-player game including win and restart, then test CPU tiers 1, 2 and 4 with a near-win/block situation. Verify a protected Home-region pointer cannot move the selector/drop a token, and assess CPU think-time latency on the desktop as a *non-hardware* observation.
+40. **Torre Forme** — run free-build matching with a snap effect, slow-fall placement, and tower challenge with a line clear and celebration. It must execute `main.py` in the normal **script** context; no `attempted relative import with no known parent package` traceback may occur after normal gameplay. Verify shape shelf, rotation, replay and input at 800×480.
+41. **Viaggio Delfino (withheld from draft)** — complete a chapter, listen to an animal fact, resize the running Simulator child surface, steer and continue. The same frame after resize must use the rebuilt canvas (no frozen/scaled-old viewport). Compare nature/discovery learning against Dragon rather than treating similar sea/sky movement as sufficient distinction.
+42. **Volo Draghetto (withheld from draft)** — test stars, turbo/rainbow, bounce and accessory cycling, with keyboard and pointer. Verify it remains honestly **endless** and does not fabricate a terminal `flight.completed` reward. Evaluate whether there is enough choice/challenge to merit a separate release candidate rather than just another endless motor game.
+43. **Draft release staging on disposable output only** — read `build/first-party-release-activities.toml` and confirm `status = "draft"`, exactly 12 sorted candidate IDs and no Delfino/Dragon. Run only the safe **unprivileged test harness** from §1; do not change policy to approved, invoke privileged image build, or install anything. Inspect staged-selection test logs to confirm expected source directory and installed-index identities match.
+
+These checks add to, not replace, the earlier Creations PNG/WAV/UTF-8 and adaptive-capacity acceptance. If the first failure happens before this section, **STOP** and preserve it; do not skip earlier failing tests to reach gameplay.
+
 Record frame-rate/idle CPU/RSS observations if the Simulator exposes them; no claim about Acer performance can follow from desktop observation.
 
 ### 2b. SOURCE-WIP modal / transaction / P4 persistence cases carried over
@@ -137,6 +163,9 @@ The new code introduces **`tests/test_creation_selection.py`**, additional `test
 - Writing tests prove saved-private-file publication, `document` + `postcard` picker scope, strict UTF-8/digest/role checks, independent private document import, unchanged-publication deduplication and rollback when a new-document index commit fails;
 - Posta tests prove authoritative saved-card UTF-8 files, failed-index rollback/reclaim order, path-safe legacy IDs, grapheme-safe imported replacement, import failure preservation, saved-only `postcard` publication and deduplication;
 - Orchestra tests prove content-addressed private backing storage, failed-pointer rollback, WAV/role/digest validation, picker audio isolation, reserved mixer channel 0 Play/Pause/Resume, persistence-before-active-state mutation, and `concert.performed` only after real live accompaniment; its manifest regression locks the corrected free-play pedagogy and declared `instrument.played` event.
+- action-pointer tests prove Corsa explicitly recognizes event-queued press→drag→release/focus loss even if global mouse state changed, Quattro cannot hover/drop in protected chrome, and Delfino switches its render path to the new canvas in the same resize frame;
+- Torre direct-script regression exercises snap and cleared-particle effects in the production import context, not merely a package import at boot; Dragon manifest test locks the actual endless milestone-only event set;
+- release staging tests prove the **12-candidate draft** stages only the reviewed subset, remains refuse-to-release until explicitly approved, and does not install the withheld Dolphin/Dragon just because they exist in source;
 - shared-capacity tests prove the owner’s 8 GiB writable-volume example: at 2 GiB used the global policy permits at most 4 GiB additional persistent growth before 6 GiB used; the shipped 25% private-namespace fraction yields a 2 GiB per-Activity containment ceiling on that same writable volume while the 16 MiB single-file bound remains independent;
 - `VolumeBudget.write_reservation()` is shared across private Activity storage, My Creations and history in launcher composition; deterministic concurrency coverage must prove the second writer observes the first writer's changed usage rather than both passing one stale capacity observation;
 - at the 75% occupancy ceiling, same-size/non-growing repair writes to existing private state remain possible when physically free staging room exists, while a new private file, a new history session and a storage-migration working copy are denied;
@@ -159,6 +188,8 @@ Provide exactly:
 - whether **Voice Stories→audio preview→Teatrino narration** worked without microphone contention, including early-stop trimming and saved-show replay after deletion of the shared source WAV;
 - whether **Writing→Posta→Writing UTF-8** worked through the trusted picker, including grapheme-safe postcard compaction, saved-only Posta sharing and continued access after shared-source deletion;
 - whether **Voice Stories→Orchestra** provided audible preview-before-select, no autoplay after import/relaunch, uninterrupted live accompaniment, explicit pause/resume, picker-preview isolation and playback after deletion of the shared source WAV;
+- whether the P7 action/strategy batch passed true script launch, both low and high authored difficulty, touch/keyboard controls, protected chrome, terminal/replay handling and 800×480 readability, with Delfino/Dragon differentiation noted rather than silently approved;
+- whether exactly 12 **draft-only** Activities staged and official release still refused unapproved policy;
 - whether `test_profile_volume_budget.py` and the full suite proved shared reservation serialization, 8 GiB→2 GiB adaptive Activity quota, 75% aggregate ceiling, non-growing recovery writes, history growth denial and migration working-copy denial;
 - the **actual local writable filesystem facts** used for calibration (`df -B1`/platform-equivalent for the profile-data mount if available), recorded read-only; do not create giant filler files or intentionally approach the machine's capacity limit;
 - image detail/deletion/cancel state; actual observed bug(s), with steps;
@@ -172,4 +203,4 @@ Return a ZIP of the raw screenshots + logs + concise Markdown report from the `t
 
 STOP on pre-existing uncommitted source state, mismatched source SHA ancestry, source changes beyond candidate not yet reviewed, first focused or full verify failure, missing unavailable dependencies not safely bootstrappable, profile selection/data isolation ambiguity, real child data exposure, unrecoverable simulator failure, or a GUI crash. Preserve files/logs exactly for root cause; no false PASS by skipping failing gates.
 
-**Expected handoff:** this accumulated run either validates the current P1–P5 source candidate (shared/adaptive capacity + trusted modal + PNG/WAV/UTF-8 round trips) or stops at the first reproducible defect with raw evidence. After repairs, proceed to P6 release curation and P7 Activity quality review rather than creating another picker or storage policy.
+**Expected handoff:** this accumulated run either validates the current P1–P7 source candidate (shared/adaptive capacity + trusted modal + PNG/WAV/UTF-8 round trips) or stops at the first reproducible defect with raw evidence. After repairs, proceed to P6 release curation and P7 Activity quality review rather than creating another picker or storage policy.
