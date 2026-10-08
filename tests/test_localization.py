@@ -164,6 +164,50 @@ class LocalizationBundleTests(unittest.TestCase):
             self.assertEqual(cue.path, root / "audio" / "hello.ogg")
             self.assertEqual(cue.caption_key, "caption.hello")
 
+    def test_selected_only_audio_blocks_fallback_without_assuming_file_layout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            (root / "audio").mkdir()
+            (root / "audio" / "italian.wav").write_bytes(b"RIFF")
+            (root / "audio" / "english.wav").write_bytes(b"RIFF")
+            self._write_bundle(
+                root, "it", strings={"instruction": "Tocca qui"},
+                audio={"voice.instruction": {
+                    "path": "audio/italian.wav", "caption_key": "instruction",
+                }},
+            )
+            self._write_bundle(root, "en", strings={"instruction": "Touch here"})
+            support = ActivityLocaleSupport.localized(
+                ("it", "en"), default_ui_locale="it",
+            )
+            context = resolve_activity_locale("en", support)
+            assert context is not None
+            resources = LocalizedResources(root, context)
+
+            # The legacy per-key fallback remains the default.
+            fallback = resources.audio_cue("voice.instruction")
+            self.assertEqual(fallback.path, root / "audio" / "italian.wav")
+            with self.assertRaisesRegex(LocalizationError, "missing localized audio cue"):
+                resources.audio_cue("voice.instruction", allow_fallback=False)
+
+            # English audio may live anywhere inside the validated package;
+            # semantic locale ownership, not pathname, makes it English.
+            self._write_bundle(
+                root, "en", strings={"instruction": "Touch here"},
+                audio={"voice.instruction": {
+                    "path": "audio/english.wav", "caption_key": "instruction",
+                }},
+            )
+            resources = LocalizedResources(root, context)
+            self.assertEqual(
+                resources.audio_cue("voice.instruction", allow_fallback=False).path,
+                root / "audio" / "english.wav",
+            )
+            self.assertEqual(
+                resources.audio_cue("voice.instruction").path,
+                root / "audio" / "english.wav",
+            )
+
     def test_missing_placeholder_is_not_silently_ignored(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp).resolve()
