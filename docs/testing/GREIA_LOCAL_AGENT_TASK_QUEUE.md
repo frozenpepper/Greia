@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `c56d29492741715b19826c003a0bd5f8dd953819` (later docs-only commits permitted)
+**Updated:** 2026-10-08; **queue source baseline:** `c0120384e69201bd8bd613c863a23eb15a2adcbb` (later docs-only commits permitted)
 **Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -155,17 +155,20 @@ test commands and expected observable behavior.
 - **Priority:** P1; **dependency:** current checkout required for source suite;
   **GLA-002 PASS required for the hands-on/Simulator leg, not the isolated
   source model suite**; **minimum source SHA:**
-  `c56d29492741715b19826c003a0bd5f8dd953819`
+  `c0120384e69201bd8bd613c863a23eb15a2adcbb`
 - **Exact provider-free suites (separate logs/exit codes):**
   ```bash
+  python3 -m unittest discover -s tests -p 'test_localization.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_time_speech.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_time_audio.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v
   ```
   Do not assume the newly added voice source has been run locally.
   Specifically check no voice before READY, welcome → instruction ordering,
-  stale-cue interruption, bounded pending cue, completion priority, no
-  cross-locale audio fallback, source launch in both import modes, and
+  stale-cue interruption, bounded pending cue, completion priority,
+  selected-locale-only resolution through the real Greia localization
+  catalogue (plus legacy default fallback preservation), source launch
+  in both import modes, and
   no speaker/replay target when actual recordings are missing, and
   immediate Quit/stop before READY never emits voice or readiness. The new
   audio-boundary suite uses a mocked mixer and disposable fake paths;
@@ -178,7 +181,8 @@ test commands and expected observable behavior.
   visible keyboard focus and Return activation. Never reuse the old PASS for this newer source.
 - **Hands-on:** actual desktop Pygame or supported full Simulator with a
   disposable profile, both locales, 1024×600 and 800×480. Exercise the
-  clock, practice 23:45→00:15, timer 1/3/5/10, running/pause/finish/restart,
+  clock, practice 23:45→00:15, keyboard UP/DOWN spoken Practice
+  transitions (where recordings exist), timer 1/3/5/10, running/pause/finish/restart,
   stopwatch, keyboard alternatives (LEFT/RIGHT/TAB focus and ENTER),
   protected Home corner and resize. In practice mode touch each of the 12 inner hour positions and each
   outer quarter-hour marker (12/3/6/9), including taps on the
@@ -326,6 +330,15 @@ test commands and expected observable behavior.
 - **Last result:** PHYSICAL NOT TESTED in this workstream.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-08:** Platform `LocalizedResources.audio_cue(...,
+  allow_fallback=False)` now owns selected-language cue resolution;
+  My Time no longer infers locale from the clip's directory. Strict and
+  legacy-fallback tests added in `test_localization.py`; integrated
+  `test_activity_time_audio.py` uses actual bundles with clips outside
+  `locales/`; keyboard Practice now triggers semantic guidance. All
+  tests and listening still UNEXECUTED; GLA-003 now includes the extra
+  localization suite. Do not infer a PASS from this queue update.
 
 - **2026-10-08:** owner-local accepted prior four P6 / Time package tests
   and exact 33-item developer staging at `47a949a0`; blocked at old
