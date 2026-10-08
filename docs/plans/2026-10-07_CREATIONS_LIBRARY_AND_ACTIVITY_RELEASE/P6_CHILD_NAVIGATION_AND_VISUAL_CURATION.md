@@ -159,7 +159,7 @@ hierarchy, policy stores, or runtime taxonomy for this design pass.
 1. **Home at 1024×600, 800×480, 480×320:** screenshot all six portals
    at once. Check their order, responsive rows, no overlap with
    profile/Back chrome, finger-sized targets, distinct Create/My
-   Creations silhouette, legibility and Portuguese-free IT/EN text.
+   Creations silhouette, legibility and correct IT/EN labels without clipping.
    Inspect the whole frame, not unit-test-only hit boxes.
 2. **The six Create cards:** compare icons/real screenshots together
    with the art-family contact sheet. Check a prereader can distinguish
