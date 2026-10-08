@@ -69,11 +69,15 @@ invent date/time parsing, localization or trust.
 
 **Dual-ring practice input remains SOURCE-ONLY.** The inner ring changes the illustrated hour in the current AM/PM half-day and the outer ring changes imagined minutes. Practice mode hides the real calendar date rather than implying an imaginary time has a real weekday. Visual, small-screen and child usability review remains outstanding, and the dual-ring teaching interaction is not an accepted pedagogical design yet.
 
-**Latest source revision (still unverified):** required speech now has
+**Latest source revisions (still unverified):** required speech now has
 platform-owned selected-locale lookup independent of file path layout.
 Keyboard UP/DOWN Practice shortcuts trigger the same semantic guidance as
 pointer interaction. Lazy decoding protects the first child-visible frame
-when optional voice recordings are installed. Full local tests, real listening,
+when optional voice recordings are installed. Already-complete countdowns
+hold their completion speech until the Activity has presented its first
+usable frame and published READY; stale greetings or instructions cannot
+replace that terminal event. A corrupt/missing greeting cannot suppress
+the first real instruction. Full local tests, real listening,
 small-screen/Simulator screenshots and prereader acceptance are outstanding.
 
 **What it does NOT yet have:** recorded/approved spoken labels or instructions,
