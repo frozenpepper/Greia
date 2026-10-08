@@ -278,6 +278,10 @@ class DelfinoJourneyApp:
             previous_time = now
 
             running = self._handle_events(screen, canvas, running, dt)
+            # VIDEORESIZE rebuilds self.screen/self.canvas in the event owner.
+            # Refresh this frame's view before drawing or hit-testing again;
+            # otherwise the main loop keeps presenting the stale SDL surface.
+            screen, canvas = self.screen, self.canvas
 
             if self.completion_screen is None:
                 for event in self.world.update(dt, self._rng):
