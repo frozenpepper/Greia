@@ -224,7 +224,7 @@ class CreationsPygamePainter:
                 self._text(
                     screen,
                     self._label("Qui nasceranno nuove creazioni!","Your creations will appear here!"),
-                    cx, min(bottom+24,height-35), 20, center=True,
+                    cx, min(bottom-26, cy+radius+28), 20, center=True,
                 )
         for i,record in enumerate(page.items):
             rect=self._box(layout.cards[i],pygame)
