@@ -1,5 +1,59 @@
 # Greia — Current Engineering Handover
 
+
+## 2026-10-08 — Creations Gallery first-use and delete-modal source repair
+
+**Active route:** original Creations/Activity release programme,
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`,
+**P3**. No new Time Activity feature work, no new architecture subsystem,
+no release/installer/Parent permissions changes. Main branch only.
+
+**Actual source defects identified and repaired:** The first visit to
+an empty profile-backed My Creations library or an empty filtered
+picker reached `CreationsPygamePainter._grid` with unbound
+`width`/`height` local names and would throw `NameError`. Empty
+state now obtains the actual surface dimensions and uses a
+semantic media icon (audio for audio-only picker, text for text-only
+picker). Separately, `CreationsGalleryScreen.handle_event` did not
+isolate keyboard P/R/replay/navigation from an open Delete
+confirmation; keyboard users had no deliberate Confirm path.
+Delete confirmation now captures all keyboard actions, starts
+focused on Cancel, switches via Left/Right and confirms via Enter/
+Space; selected action is visibly outlined. This is UI-level
+input safety, with the trusted Creations repository/delete owner
+unchanged.
+
+**Source/test anchors:** `88137032` empty dimensions + focus border,
+`ea522ce7` isolated dialog input,
+`a7f3e3e9` real dummy-Pygame Gallery screen tests,
+`cc72ffbb` correct media-specific empty icon,
+`05b0e50d` audio-only illustration test,
+`7835faf1` visible focus pixel checks.
+Added `tests/test_creation_gallery_render.py` to exercise first
+real frame and return-to-empty behavior using a disposable
+CreationLibrary. Kept existing controller/layout tests. The tests
+were authored and source-read back but **not executed** in a full
+Greia checkout; visual/audio/real Shell evidence also remains open.
+Do not claim P3 accepted.
+
+**Single local-agent queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`,
+GLA-007, contains exact three Python suites, minimum source SHA,
+unique evidence requirements, early-stop conditions and actual
+blank-profile/picker/delete GUI actions. The older
+`docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
+has a current-source resume note without erasing prior runs.
+GLA-001..006 and hardware GLA-009 stay separately scoped and
+unchanged in authority. No Acer media operations are authorized.
+
+**Next step:** local agent executes focused P3 new suites, then the
+existing P1–P7 source+Simulator GUI/audio/cross-Activity acceptance;
+fix actual failures before expanding functionality. Real-world
+preview-before-selection, source-delete independence, missing undo
+window, keyboard and protected chrome, 45-Activity child usability,
+recovery/capacity and official release still require evidence or
+remaining implementation.
+
+
 ## 2026-10-08 — My Time terminal speech after READY (source-only latest)
 
 **Branch:** canonical `main`. **Product:** My Time remains in
