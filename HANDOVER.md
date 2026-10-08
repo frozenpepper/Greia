@@ -1,5 +1,39 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — Deferred, bounded speech decode (latest source slice)
+
+**Greia `main` source is ahead of prior Time speech handover; this is
+not runtime acceptance.** `LocalTimeSpeechTransport` now indexes only
+the seven allowed semantic source paths on construction and defers actual
+`pygame.mixer.Sound` decoding until `TimeSpeech` first plays a cue,
+which happens only after the first usable Activity frame has been
+presented and READY published. Each successfully used cue is cached
+once; corrupt/unsupported audio is marked unavailable and does not
+leave a deceptive speaker replay control. Voice production and the
+dual-ring clock remain source-only.
+
+**Canonical source/test anchors:** `fd714350` platform
+`audio_cue(..., allow_fallback=False)`, `eb3d7ac1` Time adapter,
+`5da31a89` strict-vs-default locale API test,
+`eda526cd` full-bundle adapter tests, `52b1626b`
+keyboard Practice cue synchronization, `c0120384` keyboard test,
+`b7008c27` lazy decode and bounded cache, and `90fe1d5a`
+deferred-decode and corrupt-file tests.
+
+**Verification actually performed:** GitHub readback / source inspection
+only. No local checkout execution, no tests passed in this session, no
+actual sound files, no audio-device playback, no screenshots, no human
+hearing or toddler review, no hardware installation and no release
+approval. Source tests are queued, not implicitly green.
+
+**Current operator next step:** Fetch latest `main`, preserve dirty
+work and use `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+Execute GLA-003's four listed source suites on current HEAD and return
+actual per-command results; follow separate GLA-001/002 dependencies
+for headless/GUI. GLA-005 is blocked on owner-approved VoiceEngine
+recording and human listening. No autonomous voice-provider calls or
+release-roster modifications.
+
 ## 2026-10-08 — Locale-owned speech resolution and keyboard cue synchronization
 
 **Canonical `main` source, unexecuted tests; My Time still incubated.**
