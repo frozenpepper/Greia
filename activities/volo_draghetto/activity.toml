@@ -21,7 +21,6 @@ skills = [
 ]
 events = [
   { id = "flight.star_milestone", kind = "milestone" },
-  { id = "flight.completed", kind = "completion" },
 ]
 
 [runtime]
