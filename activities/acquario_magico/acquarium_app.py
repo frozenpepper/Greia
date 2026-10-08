@@ -192,8 +192,7 @@ class AquariumApp:
         if key == pygame.K_ESCAPE:
             self._running = False
         elif key == pygame.K_SPACE:
-            self.session.glow_mode = not self.session.glow_mode
-            self.audio.play("glow")
+            self._toggle_glow_mode()
         elif key == pygame.K_1:
             self.session.active_tool = ToolIndex.SPAWN
             self.audio.play("bubble")
@@ -254,8 +253,7 @@ class AquariumApp:
 
     def _activate_tool(self, tool_index: int, button_rect: pygame.Rect) -> None:
         if tool_index == ToolIndex.DAY_NIGHT:
-            self.session.glow_mode = not self.session.glow_mode
-            self.audio.play("glow")
+            self._toggle_glow_mode()
         elif tool_index == ToolIndex.FEED:
             self._scatter_food(6)
             self.audio.play("nibble")
@@ -281,6 +279,14 @@ class AquariumApp:
             )
             self.audio.play("bubble")
         self.session.active_tool = tool_index
+
+    def _toggle_glow_mode(self) -> None:
+        self.session.glow_mode = not self.session.glow_mode
+        self.audio.play("glow")
+        emit_activity_event(
+            "aquarium.glow_mode_toggled",
+            {"glow_mode": self.session.glow_mode},
+        )
 
     def _scatter_food(self, count: int) -> None:
         for _ in range(count):
@@ -383,12 +389,25 @@ class AquariumApp:
 
     def run(self) -> int:
         while self._running and not activity_stop_requested():
+            for event in pygame.event.get():
+                self.handle_event(event)
+                if not self._running:
+                    break
+            if not self._running:
+                break
             self._step_frame(0.033)
         self._autosave()
         return 0
 
     def _step_frame(self, dt: float) -> None:
+        previously_fed = self.session.total_fed
         self.session.update(dt)
+        newly_fed = self.session.total_fed - previously_fed
+        if newly_fed > 0:
+            emit_activity_event(
+                "aquarium.fish_fed",
+                {"count": newly_fed, "total_fed": self.session.total_fed},
+            )
         if (
             self.storage is not None
             and time.monotonic() - self.last_save_time > AUTOSAVE_INTERVAL_SECONDS

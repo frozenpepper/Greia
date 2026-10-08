@@ -232,7 +232,11 @@ class OrcaBayActivity:
                                         self.pod.total_cuddled += 1
 
             # Update Domain Physics and State
+            previously_fed = self.pod.total_fed
             events = self.pod.update(dt)
+            newly_fed = self.pod.total_fed - previously_fed
+            if newly_fed > 0:
+                self.events.record_feeding(newly_fed)
             for ev in events:
                 if ev in ("splash", "whistle", "clicks", "nibble", "purr", "bubble", "bounce"):
                     self.audio.play(ev)

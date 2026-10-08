@@ -29,6 +29,10 @@ class GreiaOrcaProgress:
 class GreiaOrcaEvents:
     """Emits verified semantic milestones and achievements to the Greia platform."""
 
+    def record_feeding(self, count: int) -> None:
+        """Report only food actually eaten, not pellets merely dropped."""
+        emit_activity_event("orca.fed", {"count": count})
+
     def record_fed(self, orca_id: str, food_type: str) -> None:
         emit_activity_event(
             "orca.fed",

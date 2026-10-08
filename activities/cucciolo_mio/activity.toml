@@ -23,6 +23,7 @@ skills = [
 events = [
   { id = "pet.fed", kind = "milestone" },
   { id = "pet.groomed", kind = "milestone" },
+  { id = "pet.played", kind = "milestone" },
   { id = "pet.tucked_in", kind = "completion" },
 ]
 

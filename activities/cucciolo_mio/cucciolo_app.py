@@ -202,24 +202,44 @@ class CuccioloApp:
             self._metrics = ChildUiMetrics.for_size(*self._screen.get_size())
             self._canvas = PygameReferenceCanvas(self._screen)
             self._renderer.invalidate()
+        elif event.type == pygame.WINDOWFOCUSLOST:
+            self._is_dragging_ball = False
+            self._ball_vel = [0.0, 0.0]
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if not _is_safe_point(self._screen, event.pos):
+                return
             logical = self._canvas.pointer(event.pos)
             if logical is not None:
                 lx, ly = logical
                 if self._active_tab == "play" and (lx - self._ball_pos[0]) ** 2 + (ly - self._ball_pos[1]) ** 2 <= 40 ** 2:
                     self._is_dragging_ball = True
                     self._ball_vel = [0.0, 0.0]
+        elif event.type == pygame.MOUSEMOTION and self._is_dragging_ball:
+            self._move_dragged_ball(event.pos)
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            if self._is_dragging_ball:
+            was_dragging = self._is_dragging_ball
+            if was_dragging:
                 self._is_dragging_ball = False
                 self._ball_vel[0] = max(-16.0, min(16.0, (self._ball_pos[0] - self._ball_last_pos[0]) * 0.9))
                 self._ball_vel[1] = max(-16.0, min(16.0, (self._ball_pos[1] - self._ball_last_pos[1]) * 0.9))
+                return
             if not _is_safe_point(self._screen, event.pos):
                 return
             logical = self._canvas.pointer(event.pos)
             if logical is not None:
                 lx, ly = logical
                 self._handle_pointer_click(lx, ly)
+
+    def _move_dragged_ball(self, position: tuple[int, int]) -> None:
+        if not _is_safe_point(self._screen, position):
+            return
+        logical = self._canvas.pointer(position)
+        if logical is None:
+            return
+        self._ball_last_pos[:] = self._ball_pos
+        self._ball_pos[0] = max(150.0, min(874.0, logical[0]))
+        self._ball_pos[1] = max(160.0, min(450.0, logical[1]))
+        self._pet.target_x = max(240.0, min(780.0, self._ball_pos[0]))
 
     def _handle_pointer_click(self, lx: float, ly: float) -> None:
         # Species buttons
@@ -313,17 +333,7 @@ class CuccioloApp:
     def _step_frame(self) -> None:
         # Ball physics when play tab active
         if self._active_tab == "play":
-            if self._is_dragging_ball and pygame.mouse.get_focused():
-                mpos = pygame.mouse.get_pos()
-                if _is_safe_point(self._screen, mpos):
-                    plog = self._canvas.pointer(mpos)
-                    if plog is not None:
-                        self._ball_last_pos[0] = self._ball_pos[0]
-                        self._ball_last_pos[1] = self._ball_pos[1]
-                        self._ball_pos[0] = max(150.0, min(874.0, plog[0]))
-                        self._ball_pos[1] = max(160.0, min(450.0, plog[1]))
-                        self._pet.target_x = max(240.0, min(780.0, self._ball_pos[0]))
-            else:
+            if not self._is_dragging_ball:
                 self._ball_vel[1] += 0.45
                 self._ball_vel[0] *= 0.99
                 self._ball_pos[0] += self._ball_vel[0]

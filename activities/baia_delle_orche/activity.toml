@@ -31,6 +31,7 @@ events = [
   { id = "orca.cuddled", kind = "milestone" },
   { id = "orca.acrobatics_performed", kind = "milestone" },
   { id = "orca.song_completed", kind = "milestone" },
+  { id = "orca.fact_discovered", kind = "milestone" },
 ]
 
 [runtime]
