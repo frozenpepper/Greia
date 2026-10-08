@@ -60,6 +60,11 @@ class CollectionFirstHomeMixin:
     def _home_columns(self, pygame: Any) -> int:
         surface = pygame.display.get_surface()
         width = surface.get_width() if surface is not None else 1024
+        height = surface.get_height() if surface is not None else 600
+        if height <= 400:
+            # Six Home destinations cannot fit in one vertical column on a
+            # compact landscape screen. Use two shallow rows instead.
+            return 3 if width >= 480 else 2 if width >= 320 else 1
         if width >= 900:
             return 3
         if width >= 620:
@@ -258,7 +263,7 @@ class CollectionFirstHomeMixin:
         # 141 = 136 reference portal +4% so Collection buttons match the
         # larger Activity-card scale; label font size stays unchanged.
         portal_size = max(
-            76,
+            60 if height <= 400 else 76,
             min(
                 141,
                 avail_cell_w - 12,
