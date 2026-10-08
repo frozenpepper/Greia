@@ -115,15 +115,15 @@ def render_sheet(root: Path, output: Path) -> dict[str, int]:
             title = item.key if len(item.key) <= 32 else item.key[:29] + "..."
             draw.text((x + 13, ty + 10), title, font=font, fill=INK)
             with Image.open(item.source) as image:
-                original = image.convert("RGBA")
-                if max(original.size) > 4096:
+                if max(image.size) > 4096:
                     raise VisualFamilyError(f"oversized icon source: {item.source}")
+                original = image.convert("RGBA")
                 for j, size in enumerate(SIZES):
                     # All sizes are rendered from the same actual source, so
                     # reviewer comparisons do not conflate unrelated masters.
                     thumbnail = original.copy()
                     thumbnail.thumbnail((size, size), Image.Resampling.LANCZOS)
-                    slot_x = x + 15 + (j * 94)
+                    slot_x = x + (12, 149, 224)[j]
                     slot_y = ty + 40
                     square = Image.new("RGBA", (size, size), (238, 237, 229, 255))
                     square.alpha_composite(thumbnail,
