@@ -4,6 +4,7 @@ import os
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from uuid import uuid4
 
 from .assets import AssetCatalogue, AssetCatalogueError
 from .child_text import ChildTextCase, child_text_case_from_environment
@@ -241,7 +242,11 @@ def emit_activity_event(
         idempotency_key = payload_or_key
 
     if idempotency_key is None:
-        idempotency_key = f"{event_id}-{os.getpid()}-{id(payload)}"
+        # A payload's object address can be recycled between calls, collapsing
+        # distinct child achievements into one deduplicated history event.
+        # Omitted keys mean a fresh fact; callers with retry semantics supply
+        # a stable explicit idempotency_key themselves.
+        idempotency_key = f"{event_id}-{uuid4().hex}"
 
     try:
         return get_events().emit(
