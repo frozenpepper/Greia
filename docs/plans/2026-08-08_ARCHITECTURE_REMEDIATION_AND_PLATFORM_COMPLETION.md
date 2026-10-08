@@ -2888,3 +2888,28 @@ shows its practice label instead of a misleading real weekday/date when
 imaginary time crosses midnight. Additional source assertions cover tapping
 a visible hour numeral and the inert gap. No new source or GUI acceptance
 was executed; GLA-003 remains open.
+
+
+### 2026-10-08 — My Time prerecorded voice coordination source (not yet voiced)
+
+In `activity_incubator/tempo_di_greia/`, added a pure, injected
+`TimeSpeech` coordinator and a Pygame-local `LocalTimeSpeechTransport`
+for cached `LocalizedResources.audio_cue` playback. The coordinator keeps
+at most one queued first-use instruction, replaces obsolete mode/help
+speech, makes a timer-finished cue supersede pending help, and stops its
+channel when the Activity exits. First-use guidance is deferred until
+after the first usable READY frame. A large icon-only replay control is
+drawn and keyboard-focusable **only when** the current language's real
+recording is mapped and available. Cross-language fallback of required
+speech is explicitly rejected.
+
+Added `tests/test_activity_time_speech.py` pure fake-transport regression
+cases and a Pygame Activity replay-hit case in
+`tests/test_activity_tempo_di_greia.py`. The real IT/EN locale audio tables
+remain empty; no voice files, provider calls, generated previews, real
+listening, GUI screenshots or source test executions happened here.
+Consequently the Activity remains in the incubator and pre-reader
+readiness/release promotion remain BLOCKED. GLA-003 now includes both
+source suites; GLA-005 remains blocked on approved VoiceEngine production
+and human listening. System/Parent time policy and installed lifecycle
+were not modified or accepted.
