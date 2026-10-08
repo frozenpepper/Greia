@@ -14,7 +14,8 @@ picker reached `CreationsPygamePainter._grid` with unbound
 `width`/`height` local names and would throw `NameError`. Empty
 state now obtains the actual surface dimensions and uses a
 semantic media icon (audio for audio-only picker, text for text-only
-picker). Separately, `CreationsGalleryScreen.handle_event` did not
+picker). The reference 1024×600 first-use caption is now kept above
+bottom navigation. Separately, `CreationsGalleryScreen.handle_event` did not
 isolate keyboard P/R/replay/navigation from an open Delete
 confirmation; keyboard users had no deliberate Confirm path.
 Delete confirmation now captures all keyboard actions, starts
@@ -28,7 +29,9 @@ unchanged.
 `a7f3e3e9` real dummy-Pygame Gallery screen tests,
 `cc72ffbb` correct media-specific empty icon,
 `05b0e50d` audio-only illustration test,
-`7835faf1` visible focus pixel checks.
+`7835faf1` visible focus pixel checks,
+`0104e847` empty caption/footer fix,
+`ccd8e5b4` caption placement regression.
 Added `tests/test_creation_gallery_render.py` to exercise first
 real frame and return-to-empty behavior using a disposable
 CreationLibrary. Kept existing controller/layout tests. The tests
