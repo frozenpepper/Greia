@@ -85,6 +85,15 @@ Voice is stopped on normal/exceptional Activity exit. Required prompts never
 fall back to another language; missing mapped audio means no speech and no
 fake replay button, and **blocks production acceptance**.
 
+**Additional sequencing guarantee (SOURCE-WIP):** A timer that is
+already complete when the Activity starts cannot speak before READY.
+Its terminal cue is held until the first meaningful frame is on screen,
+and replaces (rather than queues behind) obsolete welcome/instruction
+speech. A missing or invalid welcome cue does not suppress the
+immediately relevant instructional recording. Closing the Activity
+prevents any subsequent cue from starting. These cases are covered by
+new provider-free tests but **not yet locally executed or heard**.
+
 **Still not performed:** voice generation, owner approval, human listening,
 actual IT/EN cue mapping, validated WAV formats, real audio playback,
 controller/touch/keyboard verification, exact-SHA full Shell acceptance.
