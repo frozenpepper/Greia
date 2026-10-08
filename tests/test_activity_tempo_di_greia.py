@@ -93,6 +93,16 @@ class TimeToolModelTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             display_duration(math.inf)
 
+    def test_bilingual_renderer_key_contract_is_complete(self) -> None:
+        import json
+        from pathlib import Path
+        from activities.tempo_di_greia.time_renderer import WORD_KEYS
+        root = Path(__file__).resolve().parents[1] / "activities" / "tempo_di_greia"
+        for locale in ("it", "en"):
+            data = json.loads((root / "locales" / (locale + ".json")).read_text(encoding="utf-8"))
+            self.assertEqual(set(WORD_KEYS), set(data["strings"]) - {"activity.title"})
+            self.assertEqual(data["audio"], {})
+
     def test_mode_is_semantic_and_timer_not_screen_time(self) -> None:
         state = TimeExperience(monotonic=FakeClock())
         state.mode = TimeMode.TIMER

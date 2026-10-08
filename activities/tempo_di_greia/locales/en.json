@@ -4,9 +4,29 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "My Time",
-    "mode.clock": "Clock",
-    "mode.stopwatch": "Stopwatch",
-    "mode.timer": "Timer"
+    "title": "MY TIME",
+    "clock": "CLOCK",
+    "stopwatch": "STOPWATCH",
+    "timer": "TIMER",
+    "real": "REAL TIME",
+    "practice": "TRY THE HANDS",
+    "back_real": "BACK TO REAL TIME",
+    "today": "TODAY",
+    "start": "START",
+    "pause": "PAUSE",
+    "reset": "RESET",
+    "ready": "READY!",
+    "done": "TIME'S UP!",
+    "plus": "+15 MIN",
+    "minus": "-15 MIN",
+    "minutes": "MINUTES",
+    "weekday.0": "MONDAY",
+    "weekday.1": "TUESDAY",
+    "weekday.2": "WEDNESDAY",
+    "weekday.3": "THURSDAY",
+    "weekday.4": "FRIDAY",
+    "weekday.5": "SATURDAY",
+    "weekday.6": "SUNDAY"
   },
   "audio": {}
 }

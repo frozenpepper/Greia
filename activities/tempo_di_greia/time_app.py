@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import time
+from typing import Mapping
 
 import pygame
 
@@ -19,12 +20,12 @@ else:
 class TimeActivity:
     """Three small, related tools. All timers end with the Activity session."""
 
-    def __init__(self, screen: pygame.Surface, locale: str = "it",
-                 model: TimeExperience | None = None) -> None:
+    def __init__(self, screen: pygame.Surface, locale: str,
+                 words: Mapping[str, str], model: TimeExperience | None = None) -> None:
         self.screen = screen
         self.canvas = PygameReferenceCanvas(screen)
         self.model = model if model is not None else TimeExperience()
-        self.renderer = TimeRenderer(locale)
+        self.renderer = TimeRenderer(locale, words)
         self.running = True
         self.ready_published = False
         self.celebrate_until = 0.0
@@ -56,7 +57,12 @@ class TimeActivity:
         else:
             if ACTION_BUTTONS["primary"].collidepoint(point):
                 clock = self.model.stopwatch if self.model.mode is TimeMode.STOPWATCH else self.model.timer
-                clock.pause() if clock.running else clock.start()
+                if clock.running:
+                    clock.pause()
+                else:
+                    if self.model.mode is TimeMode.TIMER and self.model.timer.remaining() == 0:
+                        self.model.timer.reset()
+                    clock.start()
             elif ACTION_BUTTONS["reset"].collidepoint(point):
                 clock = self.model.stopwatch if self.model.mode is TimeMode.STOPWATCH else self.model.timer
                 clock.reset()

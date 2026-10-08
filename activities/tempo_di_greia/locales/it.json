@@ -4,9 +4,29 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Il Mio Tempo",
-    "mode.clock": "Orologio",
-    "mode.stopwatch": "Cronometro",
-    "mode.timer": "Timer"
+    "title": "IL MIO TEMPO",
+    "clock": "OROLOGIO",
+    "stopwatch": "CRONOMETRO",
+    "timer": "TIMER",
+    "real": "ORA REALE",
+    "practice": "PROVA LE LANCETTE",
+    "back_real": "TORNA ALL'ORA VERA",
+    "today": "OGGI",
+    "start": "AVVIA",
+    "pause": "PAUSA",
+    "reset": "RICOMINCIA",
+    "ready": "PRONTO!",
+    "done": "TEMPO FINITO!",
+    "plus": "+15 MIN",
+    "minus": "-15 MIN",
+    "minutes": "MINUTI",
+    "weekday.0": "LUNEDI",
+    "weekday.1": "MARTEDI",
+    "weekday.2": "MERCOLEDI",
+    "weekday.3": "GIOVEDI",
+    "weekday.4": "VENERDI",
+    "weekday.5": "SABATO",
+    "weekday.6": "DOMENICA"
   },
   "audio": {}
 }

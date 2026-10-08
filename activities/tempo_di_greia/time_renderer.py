@@ -6,6 +6,7 @@ Responsive placement is delegated to PygameReferenceCanvas.
 from __future__ import annotations
 
 import math
+from typing import Mapping
 
 import pygame
 
@@ -27,9 +28,9 @@ SUN = (246, 185, 73)
 PURPLE = (126, 94, 166)
 
 MODE_BUTTONS = {
-    TimeMode.CLOCK: pygame.Rect(205, 30, 185, 65),
-    TimeMode.STOPWATCH: pygame.Rect(414, 30, 185, 65),
-    TimeMode.TIMER: pygame.Rect(623, 30, 185, 65),
+    TimeMode.CLOCK: pygame.Rect(398, 30, 170, 65),
+    TimeMode.STOPWATCH: pygame.Rect(597, 30, 170, 65),
+    TimeMode.TIMER: pygame.Rect(796, 30, 170, 65),
 }
 ACTION_BUTTONS = {
     "primary": pygame.Rect(542, 362, 210, 85),
@@ -43,54 +44,19 @@ PRESET_BUTTONS = tuple(
     for index in range(len(PRESET_MINUTES))
 )
 
-LABELS = {
-    "it": {
-        "title": "IL MIO TEMPO",
-        "clock": "OROLOGIO",
-        "stopwatch": "CRONOMETRO",
-        "timer": "TIMER",
-        "real": "ORA REALE",
-        "practice": "PROVA LE LANCETTE",
-        "back_real": "TORNA ALL'ORA VERA",
-        "today": "OGGI",
-        "start": "AVVIA",
-        "pause": "PAUSA",
-        "reset": "RICOMINCIA",
-        "ready": "PRONTO!",
-        "done": "TEMPO FINITO!",
-        "plus": "+15 MIN",
-        "minus": "-15 MIN",
-        "minutes": "MINUTI",
-    },
-    "en": {
-        "title": "MY TIME",
-        "clock": "CLOCK",
-        "stopwatch": "STOPWATCH",
-        "timer": "TIMER",
-        "real": "REAL TIME",
-        "practice": "TRY THE HANDS",
-        "back_real": "BACK TO REAL TIME",
-        "today": "TODAY",
-        "start": "START",
-        "pause": "PAUSE",
-        "reset": "RESET",
-        "ready": "READY!",
-        "done": "TIME'S UP!",
-        "plus": "+15 MIN",
-        "minus": "-15 MIN",
-        "minutes": "MINUTES",
-    },
-}
-WEEKDAYS = {
-    "it": ("LUNEDI", "MARTEDI", "MERCOLEDI", "GIOVEDI", "VENERDI", "SABATO", "DOMENICA"),
-    "en": ("MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"),
-}
+WORD_KEYS = (
+    "title", "clock", "stopwatch", "timer", "real", "practice",
+    "back_real", "today", "start", "pause", "reset", "ready",
+    "done", "plus", "minus", "minutes",
+) + tuple(f"weekday.{index}" for index in range(7))
 
 
 class TimeRenderer:
-    def __init__(self, locale: str) -> None:
+    def __init__(self, locale: str, words: Mapping[str, str]) -> None:
         self.locale = "it" if locale == "it" else "en"
-        self.words = LABELS[self.locale]
+        if set(words) != set(WORD_KEYS):
+            raise ValueError("time Activity locale keys are incomplete or unexpected")
+        self.words = dict(words)
         self.fonts = GreiaTypography()
 
     def _text(
@@ -168,7 +134,7 @@ class TimeRenderer:
         screen.fill(BG)
         pygame.draw.rect(screen, (231, 225, 208), pygame.Rect(85, 113, 900, 463), border_radius=39)
         pygame.draw.rect(screen, PAPER, pygame.Rect(85, 107, 900, 458), border_radius=39)
-        self._text(screen, self.words["title"], (112, 37), 31)
+        self._text(screen, self.words["title"], (112, 48), 29)
         for mode, rect in MODE_BUTTONS.items():
             self._button(
                 screen, rect, self.words[mode.value],
@@ -179,7 +145,7 @@ class TimeRenderer:
             now = model.shown_time()
             self._dial(screen, angles=analog_hand_angles(now))
             self._text(screen, now.strftime("%H:%M"), (758, 223), 79, centered=True)
-            weekday = WEEKDAYS[self.locale][now.weekday()]
+            weekday = self.words[f"weekday.{now.weekday()}"]
             self._text(screen, f"{weekday} {now.day:02d}/{now.month:02d}", (758, 299), 26, centered=True)
             if model.practice:
                 self._button(screen, ACTION_BUTTONS["minus"], self.words["minus"], tint=CORAL, size=19)
@@ -220,4 +186,4 @@ class TimeRenderer:
                     )
 
 
-__all__ = ["TimeRenderer", "MODE_BUTTONS", "ACTION_BUTTONS", "PRESET_BUTTONS", "REFERENCE_SIZE"]
+__all__ = ["TimeRenderer", "WORD_KEYS", "MODE_BUTTONS", "ACTION_BUTTONS", "PRESET_BUTTONS", "REFERENCE_SIZE"]
