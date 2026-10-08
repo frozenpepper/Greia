@@ -309,7 +309,23 @@ def _category_sort_key(value: str) -> tuple[int, str]:
     return (_CATEGORY_ORDER.get(value, 100), value)
 
 
-def _category_title(value: str, locale: str = "it") -> str:
+# The six-portal Home needs shorter captions on compact screens; keep the
+# normal full titles, Activity names and prerecorded spoken labels untouched.
+_COMPACT_CREATIONS_TITLES = {
+    "it": "Creazioni",
+    "en": "Creations",
+    "es": "Creaciones",
+    "de": "Werke",
+    "fr": "Créations",
+}
+
+
+def _category_title(
+    value: str, locale: str = "it", *, compact: bool = False
+) -> str:
+    if compact and value == "my_creations":
+        language = locale.split("-")[0].lower() if locale else "it"
+        return _COMPACT_CREATIONS_TITLES.get(language, "Creations")
     return _localized_title(_CATEGORY_TRANSLATIONS, value, locale)
 
 
