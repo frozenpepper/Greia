@@ -199,7 +199,23 @@ class CreationsPygamePainter:
             pygame.draw.circle(screen,(236,214,173),(cx,cy+4),radius+7)
             pygame.draw.circle(screen,(255,247,224),(cx,cy),radius)
             icon_box = pygame.Rect(cx-radius//2,cy-radius//2,radius,radius)
-            self._icon(screen,"image",icon_box,pygame,(98,127,162))
+            # Empty audio-only or text-only pickers should show the requested
+            # kind, not an unrelated image icon to a child who cannot read.
+            kind_by_family = {
+                CreationFamily.IMAGE: "image",
+                CreationFamily.AUDIO: "audio",
+                CreationFamily.TEXT: "text",
+            }
+            if page.family is CreationFamily.ALL and len(self.controller.allowed) == 1:
+                only_type = next(iter(self.controller.allowed))
+                empty_icon = {
+                    "image/png": "image",
+                    "audio/wav": "audio",
+                    "text/plain": "text",
+                }[only_type]
+            else:
+                empty_icon = kind_by_family.get(page.family, "all")
+            self._icon(screen,empty_icon,icon_box,pygame,(98,127,162))
             for offset in (-1,1):
                 sx = cx + offset * (radius + 26)
                 pygame.draw.circle(screen,(252,209,111),(sx,cy-radius//2),max(4,radius//9))
