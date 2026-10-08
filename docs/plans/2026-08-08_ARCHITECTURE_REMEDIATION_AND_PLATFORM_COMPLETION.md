@@ -2816,3 +2816,10 @@ by this P2 work.
 No install, boot, update, rollback, image composition or physical Acer
 test occurred. The active architecture/lifecycle prerequisite and evidence
 boundary remain unchanged.
+
+
+## 2026-10-08 — Source-only subordinate P7 Activity review tranche (not closure)
+
+The owner-authorized Creations/first-party Activity release program has source-reviewed 28/45 Activities (22 provisional **draft-only** release entries, six withheld, zero approved). Its precise item decisions, repairs and test debts are recorded in `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md` and the single consolidated acceptance procedure at `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`. Latest executable source candidate is `9d8da5ba6a34c6d3efa8da84748406b82c5ace64`.
+
+This is a distinct non-lifecycle source/content tranche. The platform's architectural remediation blocking obligations are **not** closed, the official release stays fail-closed, and **no** `make verify`, Simulator, image, Acer/Pi, first-boot, installation, update, rollback or physical test was executed. The installer/first-boot lifecycle continues independently under the 2026-09-15 release plan.
