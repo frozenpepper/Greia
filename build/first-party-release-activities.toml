@@ -20,6 +20,18 @@ id = "greia.first-party-launch"
 status = "draft"
 
 [[activities]]
+activity_id = "org.greia.colline-allegre"
+package = "colline_allegre"
+
+[[activities]]
+activity_id = "org.greia.corsa-bacche"
+package = "corsa_bacche"
+
+[[activities]]
+activity_id = "org.greia.labirinto-magico"
+package = "labirinto_magico"
+
+[[activities]]
 activity_id = "org.greia.orchestra-animali"
 package = "orchestra_animali"
 
@@ -32,6 +44,10 @@ activity_id = "org.greia.posta-di-leo"
 package = "posta_di_leo"
 
 [[activities]]
+activity_id = "org.greia.quattro-amici"
+package = "quattro_amici"
+
+[[activities]]
 activity_id = "org.greia.shape-garden"
 package = "shape_garden"
 
@@ -42,6 +58,10 @@ package = "storie_della_mia_voce"
 [[activities]]
 activity_id = "org.greia.teatrino-fiabe"
 package = "teatrino_fiabe"
+
+[[activities]]
+activity_id = "org.greia.torre-forme"
+package = "torre_forme"
 
 [[activities]]
 activity_id = "org.greia.writing"
