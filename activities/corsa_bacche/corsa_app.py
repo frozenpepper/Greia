@@ -87,6 +87,10 @@ class CorsaApp:
         self.running: bool = True
         self.ready_published: bool = False
         self._level_clear_timer: float = 0.0
+        # Track this Activity's own drag, not instantaneous global mouse
+        # state: remote-simulator and touch press events can arrive after
+        # pygame.mouse.get_pressed() has already changed.
+        self._pointer_drag_held: bool = False
 
     def _init_localization(self, preferred_locale: str) -> None:
         pkg_root = Path(__file__).parent
@@ -129,9 +133,17 @@ class CorsaApp:
                 elif event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.get_surface() or self.screen
                     self.canvas = PygameReferenceCanvas(self.screen)
-                elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION):
-                    if pygame.mouse.get_pressed()[0]:
-                        self._handle_pointer_motion(event.pos)
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self._pointer_drag_held = True
+                    self._handle_pointer_motion(event.pos)
+                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                    self._pointer_drag_held = False
+                elif event.type == pygame.MOUSEMOTION and self._pointer_drag_held:
+                    self._handle_pointer_motion(event.pos)
+                elif event.type == pygame.WINDOWFOCUSLOST:
+                    # An Activity must not continue steering after focus
+                    # moves to Greia's trusted Home/picker window.
+                    self._pointer_drag_held = False
                 elif event.type == pygame.JOYHATMOTION:
                     hx, hy = event.value
                     if hy == 1:
