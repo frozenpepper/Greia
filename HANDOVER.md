@@ -4,7 +4,7 @@
 
 At the previous `47a949a0` source state, focused unit/package/draft-staging checks passed, but Step 4 IT headless Simulator launch failed before screenshots: the incubated Time Activity's composition root called nonexistent `LocalizedResources.string(key)`. The platform API is `LocalizedResources.text(key)`. This commit changes that single call and adds `test_composition_root_uses_platform_localized_text_api` to execute the real entrypoint for IT and EN, stubbing only the event loop. The previous agent's evidence remains in its local `tmp/time-and-system-acceptance-20261008-042012/` directory and ZIP.
 
-**Next:** run `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v`, then resume the already-defined Step 4 headless IT/EN and GUI acceptance in `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` §2ae. Do not repeat already-green draft-stage checks absent related code changes. Do not claim screenshot/voice/hardware acceptance until the relevant run completes. Draft composition and incubation remain unchanged.
+**Exact repaired source SHA:** `d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f`. **Next:** use the incremental resumption option in `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md` near the top; execute the updated `test_activity_tempo_di_greia.py`, then Step 4 headless IT/EN and GUI, Step 5 gallery screenshots, Step 6 report. Do not repeat already-green draft-stage checks absent related code changes. Do not claim screenshot/voice/hardware acceptance until the relevant run completes. Draft composition and incubation remain unchanged.
 
 
 ## 2026-10-08 — My Greia / My Time / Visual Library source checkpoint

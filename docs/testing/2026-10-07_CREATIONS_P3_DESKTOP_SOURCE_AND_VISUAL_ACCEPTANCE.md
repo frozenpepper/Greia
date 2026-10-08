@@ -1,9 +1,33 @@
 # Creations Library P1–P7 — Accumulated Desktop Source, Simulator + Draft-Curation Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `cf8c210cb1c2a2267c213191013fd50e6c1b0929` (all P1–P7 source + My Greia mandatory installed system-Activity correction + My Time incubator + offline visual-library gallery; later documentation-only commits may follow).  
+**Pinned source candidate:** `d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f` (all P1–P7 source + My Greia mandatory installed system-Activity correction + My Time incubator + offline visual-library gallery; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
 **Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 32-item child candidate roster plus a mandatory separately staged trusted My Greia system Activity; P7 has source-reviewed 45/45 (12 withheld child, one separate settings/system entry). A new unvoiced My Time source prototype is independently incubated outside the 45 built-ins. None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
+
+### Resume after 2026-10-08 first blocked launch — reuse accepted Steps 0–3 evidence
+
+At source `47a949a0`, the owner-local desktop agent reported four focused suites
+passing (5 + 7 + 9 + 3 tests), validated 101 generic indexed art resources,
+validated the Time incubator package, and proved draft fail-closed plus exact
+33-package developer staging (32 child candidates + separately mandatory
+`workshop_settings`). These are **reported local results**, not rerun here.
+The IT first headless launch then failed on the absent `LocalizedResources.string()`
+API; no screenshots were produced. The repair in `d75b5e2b` uses the supported
+`LocalizedResources.text()` and adds a bilingual actual-composition-root test.
+Only the Time entrypoint, its unit suite and living progress/handover docs changed
+relative to the previously checked-out `47a949a0`.
+
+**Incremental resumption option (preferred for this exact failure):** after the
+same clean, ff-only checkout check at the new source SHA, run **only** the updated
+`test_activity_tempo_di_greia.py` suite. If it passes, resume **Step 4** IT
+headless launch, EN headless launch, actual desktop GUI capture, then **Step 5**
+offline gallery/browser inspection and **Step 6** evidence reporting. Do not
+repeat known-green package staging/other suites unless new source changes touch
+their owners. Preserve original evidence ZIP unchanged and create a new unique
+`tmp/` evidence directory for resumed runs; link to the original path in the
+new report. Stop at the first unexpected exit code. This exception does not
+turn source or headless screenshots into full P1–P7 or physical acceptance.
 
 ## Instructions for one local desktop agent
 
@@ -15,7 +39,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor cf8c210cb1c2a2267c213191013fd50e6c1b0929 HEAD` (exit **0** required). Check `git diff --name-only cf8c210cb1c2a2267c213191013fd50e6c1b0929 HEAD -- src activities activity_incubator runtime tests build tools`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f HEAD` (exit **0** required). Check `git diff --name-only d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f HEAD -- src activities activity_incubator runtime tests build tools`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
