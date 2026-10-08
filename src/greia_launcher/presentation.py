@@ -1979,7 +1979,7 @@ class GreiaLauncherPresentation(LauncherApplication):
             pygame.draw.rect(screen, (255, 255, 255), badge_rect, width=2, border_radius=badge_h // 2)
             font_launch = self._font(max(13, min(17, badge_h // 2)), pygame)
             launch_text = font_launch.render(
-                self._child_display_text("Avvio..."), True, (255, 255, 255)
+                self._child_display_text(_launch_status_label(self._active_locale)), True, (255, 255, 255)
             )
             screen.blit(launch_text, launch_text.get_rect(center=badge_rect.center))
 
@@ -2124,6 +2124,12 @@ class GreiaLauncherPresentation(LauncherApplication):
                 max(0, len(self._presented_activities) - 1),
             )
             self._ensure_selected_visible(pygame)
+
+
+def _launch_status_label(locale: str) -> str:
+    """Short launcher-owned feedback in the child's selected UI language."""
+    language = locale.split("-")[0].lower() if locale else "it"
+    return "Avvio..." if language == "it" else "Starting..."
 
 
 _ACTIVITY_TITLE_CACHE: dict[tuple[str, str, str], str] = {}
