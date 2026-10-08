@@ -74,6 +74,31 @@ class TimeToolModelTests(unittest.TestCase):
         state.set_practice(False)
         self.assertEqual(state.shown_time(), wall)
 
+    def test_practice_touch_sets_quarter_minutes_without_changing_real_clock(self) -> None:
+        from activity_incubator.tempo_di_greia.time_interaction import (
+            DIAL_CENTER, practice_quarter_at_point,
+        )
+        cx, cy = DIAL_CENTER
+        for point, minute in (
+            ((cx, cy - 150), 0), ((cx + 150, cy), 15),
+            ((cx, cy + 150), 30), ((cx - 150, cy), 45),
+        ):
+            with self.subTest(point=point):
+                self.assertEqual(practice_quarter_at_point(point), minute)
+        self.assertIsNone(practice_quarter_at_point((cx, cy)))
+        self.assertIsNone(practice_quarter_at_point((cx + 225, cy)))
+
+        wall = datetime(2026, 10, 8, 23, 45, tzinfo=timezone.utc)
+        state = TimeExperience(wall_now=lambda: wall, monotonic=FakeClock())
+        state.set_practice_minute(0)
+        self.assertEqual(state.shown_time(), wall)
+        state.set_practice(True)
+        state.set_practice_minute(15)
+        self.assertEqual((state.shown_time().hour, state.shown_time().minute), (23, 15))
+        self.assertEqual(wall.minute, 45)
+        with self.assertRaises(ValueError):
+            state.set_practice_minute(16)
+
     def test_time_source_separates_wall_clock_jump_from_stopwatch(self) -> None:
         clock = FakeClock()
         wall = [datetime(2026, 1, 1, 12, tzinfo=timezone.utc)]

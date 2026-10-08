@@ -145,6 +145,18 @@ class TimeExperience:
         total = (self._practice_hour * 60 + self._practice_minute + minutes) % (24 * 60)
         self._practice_hour, self._practice_minute = divmod(total, 60)
 
+    def set_practice_minute(self, minute: int) -> None:
+        """Turn only the imagined minute hand to a quarter-hour point.
+
+        Setting an illustrated minute hand has no authority over wall time,
+        profile schedules or any running stopwatch/countdown.
+        """
+        if not self.practice:
+            return
+        if isinstance(minute, bool) or minute not in (0, 15, 30, 45):
+            raise ValueError("practice minute must be a quarter hour")
+        self._practice_minute = minute
+
 
 def analog_hand_angles(shown: datetime) -> tuple[float, float, float]:
     """Clockwise degrees from twelve for hour, minute and seconds."""
