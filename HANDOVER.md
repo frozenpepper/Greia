@@ -1,6 +1,86 @@
 # Greia — Current Engineering Handover
 
 
+## 2026-10-08 — P6 Play/Learn curated child navigation and unique icon language
+
+**Product instruction:** continue original first-party release
+programme's **design and organization** work. No new picker
+infrastructure, calendar/Time feature or navigation subsystem.
+Current branch `main`; owner design P6 artifact:
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`.
+
+**Actual 32-draft roster audit:** previously Play=23/Learn=22,
+Create=6 in the 32 candidates. Examined actual Activity manifests,
+their `presentation.categories`, discovery tags and P7
+source-recorded gameplay. Source-corrected
+`storie_della_mia_voce` from Create+Play to **Create only**
+(the child authors and saves narrated WAV stories) and
+`quattro_stagioni` from Explore+Play+Learn to
+**Explore+Learn only** (child observes season/weather/day-night
+cycles). Current draft **Play=21, Learn=22, Create=6**;
+overlapping categories are intentional. No title/event/save/
+difficulty/Parent/trust/release roster changes. The P6 document
+maps all 21 Play and all 22 Learn candidate memberships
+exactly once under editorial intents, without installing a
+separate curriculum taxonomy.
+
+**Child navigation decision:** existing
+`AdaptiveCollectionPlanner` allows at most five 2+-item
+groups and rejects incomplete coverage; actual roster still
+contains a solo music Activity and solo performance Activity.
+Forcing a category would mislead/hide Activities. Preserve
+the current direct Activity card browse until real child
+screenshots, audio and gameplay justify any grouping. Age/Parent
+visibility remains authoritative.
+
+**Visual source work:** `src/greia_launcher/catalogue_view.py`
+used identical palettes for Drawing/Music/Making, identical
+books for Writing/Words/Stories, and puzzle pieces for
+Building/Numbers/Puzzles/Action. It now uses **13 distinct
+pre-existing registered canonical core icons**; no new art
+and no cache/renderer/UI levels. Both launch card renderers
+(`presentation.py` base and `shared_ui_presentation.py`)
+now use the active language for Activity launch status:
+Italian `Avvio...` and English `Starting...`.
+The existing My Creations Home portal with different
+backpack silhouette remains adjacent to Create from
+the previous P6 tranche; its real IT/EN voice files
+`my_creations.wav` remain missing, GLA-010 blocked
+until owner-approved production/listening.
+
+**New regression source:**
+`tests/test_launcher_collection_visual_curation.py`
+reads the **real release policy and all 32 activity.toml files**,
+checks 21/22/6 counts, distinct valid canonical icons and
+bilingual semantic group labels, prevents hiding/duplicating
+Activities under age-3/4/5 filtering, and checks launch badge
+localization. Previous P6 Home test remains.
+**All tests authored, not executed locally.** GitHub source
+write/readback is not full-checkout type/runtime/GUI evidence.
+No art sheet, screenshots or audio were reviewed in this
+session. P6 SOURCE WIP; P7 still all 45 source reviewed /
+0 approved; P8 NOT STARTED; no installed OS/hardware claims.
+
+**Local agent task:** single existing
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`, **GLA-008**
+now includes exact `unittest discover` for the new
+roster/art/language source test plus existing launcher/policy
+tests and the 114-item contact sheet. Capture true
+1024×600, 800×480, 480×320 IT/EN Home and Play/Learn
+screenshots; compare theme icons at 48/64px, verify that
+selected launch card text is locale-correct for normal and
+shared-art render paths. Return one run evidence ZIP
+and update queue-only status. Do NOT run release/image/USB
+or any paid voice provider. GLA-010 recordings still
+require explicit approval.
+
+**Next source/design step:** inspect GLA-008 real screenshots
+and annotated art severity; fix the actual confusing icons,
+text metrics and viewport spacing at the existing presentation
+owners. Prioritize clear, beautiful first-party navigation,
+then actual child game quality. Do not make arbitrary new
+tags or a forced subcollection just to pass a planner test.
+
 ## 2026-10-08 — P6 child Home design and 32-draft catalogue organization (SOURCE-ONLY)
 
 **Branch/repository:** `frozenpepper/Greia`, `main`.
