@@ -47,6 +47,8 @@ class TimeSpeech:
         self._instruction = "instruction.clock"
         self._introduced: set[str] = set()
         self._pending: str | None = None
+        self._deferred_finish = False
+        self._closed = False
 
     @staticmethod
     def instruction_for(mode: TimeMode, practice: bool) -> str:
@@ -58,24 +60,32 @@ class TimeSpeech:
 
     @property
     def can_repeat(self) -> bool:
-        return self._started and self.transport.has_clip(self._instruction)
+        return self._started and not self._closed and self.transport.has_clip(self._instruction)
 
     def start(self, mode: TimeMode, practice: bool) -> None:
         """Begin only after the first usable frame has been presented."""
-        if self._started:
+        if self._started or self._closed:
             return
         self._started = True
         target = self.instruction_for(mode, practice)
         self._instruction = target
         self._introduced.add(target)
-        if self.transport.has_clip("presenter.welcome"):
-            self._replace("presenter.welcome")
+        if self._deferred_finish:
+            # An already-expired timer must finish after READY, without
+            # narrating stale welcome/help after the terminal event.
+            self._deferred_finish = False
+            self._replace("feedback.timer_finished")
+        elif self._replace("presenter.welcome"):
             self._pending = target if self.transport.has_clip(target) else None
         else:
+            # Welcome missing or corrupt: attempt the instruction now,
+            # rather than waiting for a clip that never started.
             self._replace(target)
 
     def on_context(self, mode: TimeMode, practice: bool) -> None:
         """An actual mode/practice transition invalidates stale speech."""
+        if self._closed:
+            return
         target = self.instruction_for(mode, practice)
         if target == self._instruction:
             return
@@ -98,16 +108,20 @@ class TimeSpeech:
         """Replay the relevant short instruction, replacing stale narration."""
         if not self.can_repeat:
             return False
-        self._replace(self._instruction)
-        return True
+        return self._replace(self._instruction)
 
     def timer_finished(self) -> None:
-        """Completion outranks intro/help and must not queue repeatedly."""
+        """Completion outranks intro/help, including prior to READY."""
+        if self._closed:
+            return
+        if not self._started:
+            self._deferred_finish = True
+            return
         self._replace("feedback.timer_finished")
 
     def update(self) -> None:
         """Advance a single deferred first-use instruction without blocking."""
-        if self._pending is None or self.transport.busy():
+        if not self._started or self._closed or self._pending is None or self.transport.busy():
             return
         cue, self._pending = self._pending, None
         if self.transport.has_clip(cue):
@@ -115,15 +129,20 @@ class TimeSpeech:
 
     def close(self) -> None:
         """Terminate only this Activity process's speech on Home/exit."""
+        if self._closed:
+            return
+        self._closed = True
         self._pending = None
+        self._deferred_finish = False
         self.transport.stop()
 
-    def _replace(self, cue: str) -> None:
+    def _replace(self, cue: str) -> bool:
         self._pending = None
+        if not self.transport.has_clip(cue):
+            return False
         if self.transport.busy():
             self.transport.stop()
-        if self.transport.has_clip(cue):
-            self.transport.play(cue)
+        return self.transport.play(cue)
 
 
 __all__ = ["SpeechTransport", "TimeSpeech", "SPEECH_CUES"]
