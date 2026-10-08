@@ -12,6 +12,17 @@ This is not a child-accessible version of Linux settings and not a second Parent
 
 The stable package identity remains `org.greia.workshop-settings` for migration/permission continuity; the child-facing product name is My Greia.
 
+**Installed product requirement (2026-10-08 source reconciliation):** My Greia
+is a mandatory **trusted child-personalization system Activity** in every
+Greia target, separate from ordinary optional/curated *educational-game*
+release selection. `src/greia_platform/activity_release.py` declares the
+immutable built-in package identity and `tools/stage_release_activities.py`
+installs it alongside a curated roster, validating exact installed identity
+before publishing. Merely having the expected package ID in an untrusted
+third-party package never grants `customization.manage`. This source repair
+is NOT yet accepted by installed target or Parent-policy testing; Greia's
+official release selection still remains draft/fail-closed.
+
 ## 2. Child-facing scope
 
 My Greia owns only low-risk, high-visual-impact, profile-scoped choices:

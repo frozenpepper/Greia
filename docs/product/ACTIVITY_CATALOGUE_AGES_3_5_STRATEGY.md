@@ -456,6 +456,18 @@ Useful concepts:
 
 This may not require its own Activity if sequencing and existing seasons content cover it well.
 
+**2026-10-08 cross-product clarification:** This narrow curriculum assessment
+does **not** cover time as an everyday Greia computing utility. A child's real
+clock, stopwatch and visual timer belong to a stronger *Time & Days* product
+experience; a personal calendar can connect tomorrow and yesterday to
+meaningful family events. The new **SOURCE-ONLY** Activity prototype lives
+outside built-in release at `activity_incubator/tempo_di_greia/`. The exact
+product proposal, permission/time-validity rules, pending bilingual audio,
+calendar and background timer boundaries are in
+[`CHILD_TIME_AND_ROUTINES.md`](./CHILD_TIME_AND_ROUTINES.md).
+This addendum does not claim spoken/title audio, runtime/SIMULATOR review,
+calendar production or release readiness.
+
 ### 5.11 Body, senses, health, and independence — medium priority
 
 Possible topics:

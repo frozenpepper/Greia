@@ -823,6 +823,29 @@ Examples:
 
 ---
 
+## 20.1 Offline visual discovery, same semantic index (2026-10-08 SOURCE)
+
+The six existing `assets/visual/authoring_library/*.toml` indexes remain
+the sole developer-facing semantic inventory of generic source masters. The
+`tools/visual_authoring_library.py gallery --output tmp/greia-visual-library.html`
+command now produces a **local-only** browser gallery with large previews,
+search, collection/status filters and direct source links.
+
+The visual gallery is not a second asset library, not part of Greia's child
+runtime, not a source approval authority and not a network service. It reads
+the existing indexes using `get_all_items`, refuses source paths outside the
+allowed visual tree, renders only safe escaped metadata, and loads SVG sources
+as browser previews on the developer workstation. A rendered thumbnail is not
+the same as an owner-reviewed 128/64 px runtime rendition. See the indexed
+library README and `tests/test_visual_library_gallery.py`. Source and tests
+have not yet run together in the canonical checkout.
+
+The new `activity_incubator/tempo_di_greia/assets/source/icon.svg` / WebP
+pair is an isolated **candidate Activity** visual experiment, not promoted to
+the shared art library. Review existing `component.mechanical.*` library
+entries and reuse the current canonical Dani/Flash actor states before making
+finished Greia Time art.
+
 # 21. Standard source-asset workflow
 
 For new or extended source art:

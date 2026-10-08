@@ -66,9 +66,18 @@ Use the repository discovery helper instead of manually crawling source folders:
 python tools/visual_authoring_library.py collections
 python tools/visual_authoring_library.py search <need>
 python tools/visual_authoring_library.py show <semantic-id>
+python tools/visual_authoring_library.py gallery --output tmp/greia-visual-library.html
 ```
 
 Prefer `library_status = "preferred"` for direct reuse. Treat `candidate_reference` as reference/adaptation material unless a narrower accepted document says otherwise.
+
+For a visual selection pass, create `tmp/` if needed, run the new `gallery`
+subcommand and open the generated standalone HTML in a development-host
+browser. It exposes all assets with large source previews and filter controls
+without creating another catalogue or requiring hosted services. The output
+path must not exist; choose a fresh path for repeated captures. Review
+source-art pixels at low sizes and runtime before admitting preferred art.
+Gallery implementation is source-WIP until its test/screenshot gate runs.
 
 The canonical authoring index lives under:
 
