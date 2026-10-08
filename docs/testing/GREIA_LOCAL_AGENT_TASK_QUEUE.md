@@ -285,6 +285,25 @@ test commands and expected observable behavior.
 ### GLA-007 — Creations P1–P7 accumulated desktop/audio acceptance
 
 - **Status:** READY
+- **Required current-source P3 Gallery regression (run first, separately logged):**
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_creation_gallery_render.py' -v
+  python3 -m unittest discover -s tests -p 'test_creation_gallery_layout.py' -v
+  python3 -m unittest discover -s tests -p 'test_creation_gallery.py' -v
+  ```
+  Minimum source SHA `05b0e50d439cd1d0836bda27666eb8b0520ec98e`.
+  The first suite uses **actual dummy SDL/Pygame** and a disposable
+  profile-backed `CreationLibrary`, not only mock-painter methods.
+  Confirm Italian and English completely empty library at 480×320,
+  800×480 and 1024×600 renders a visible empty state without exception.
+  Confirm an empty audio-only picker shows an **audio** illustration,
+  never a mismatched picture, offers cancel and mints no handle.
+  In the library confirm that delete dialog intercepts all background
+  replay/preview/navigation keys; Enter defaults to Cancel and preserves
+  the artifact; Right then Enter explicitly deletes it. Observe focus
+  outline and cursor/selection feedback in a **real GUI** before
+  acceptance. Distinguish dummy SDL test PASS from human visual PASS.
+  If this suite fails, STOP this P3 slice and return traceback/log + HEAD.
 - **Priority:** P1; **dependency:** a clean checkout / prepared environment,
   NOT blocked by a Time-only test.
 - **Authority:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
@@ -299,8 +318,9 @@ test commands and expected observable behavior.
   precise source-vs-Simulator-vs-physical classification; draft status
   still retained. If no audio/GUI, mark individual sections NOT_TESTABLE,
   never inflate to full PASS.
-- **Last result:** earlier *focused* P6 staging passed (33 exact); full
-  P1–P7 acceptance remains unexecuted.
+- **Last result:** earlier *focused* P6 staging passed (33 exact);
+  latest empty-gallery, audio-filter icon and modal keyboard fixes committed
+  but unexecuted; full P1–P7 acceptance remains unexecuted.
 
 ### GLA-008 — Art / cast / launcher visual comparison
 
@@ -341,6 +361,15 @@ test commands and expected observable behavior.
 - **Last result:** PHYSICAL NOT TESTED in this workstream.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-08:** P3 source audit traced the trusted
+  `CreationsGalleryScreen` → `CreationsPygamePainter` empty-library
+  path and confirmed undefined width/height on first use. Source fixes
+  and dummy-Pygame tests now cover empty library/filtered picker,
+  appropriate audio-empty icon and modal-only keyboard delete with
+  safe default. **All new tests remain UNEXECUTED**, and original
+  P1–P7 desktop/GUI/audio integration remains OPEN. No hardware,
+  provider, Parent, release-roster or Creations broker authority changed.
 
 - **2026-10-08:** `TimeSpeech` guards an already-expired pre-READY
   countdown: defers terminal cue until after the first presented frame,
