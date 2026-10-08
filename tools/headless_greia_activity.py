@@ -1,271 +1,245 @@
-"""Headless launch of a single Greia Activity through the canonical
-SimulatorPythonRuntimeAdapter.
+"""Focused headless Activity capture through Greia's real Simulator bridge.
 
-This script exists for the `LAUNCH_ACCEPTANCE.md` gate when the
-Activity under test is already a built-in (so the simulator's
-"Load Activity Folder..." path is a no-op alias collision) or
-when the developer-unsigned path is unavailable in the
-terminal-only execution context. It invokes the Activity's
-`main.py` exactly the way the simulator's child shell would,
-through the trusted `greia_simulator.python_activity` bootstrap
-with the synthetic display surface and the remote bridge bound
-to 127.0.0.1:8767.
+This tool deliberately does NOT simulate the entire Greia Shell. It owns a
+temporary loopback SimulatorRemoteBridge, launches the trusted Python Activity
+bootstrap as a client of that server, and captures real Pygame frames. The
+full-Shell route is tools/headless_greia_simulator.py and must be used for
+profile, catalogue, supervisor, trusted Home and installation acceptance.
 
-The script is deliberately narrow: it captures screenshots,
-verifies the Shell (now the Activity) survives for the requested
-number of seconds, sends a bounded interaction, and stops the
-process through the proper SIGTERM / SIGKILL escalation that the
-simulator's ActivitySupervisor also performs.
-
-The headless launch is **not** a substitute for the canonical
-simulator gate in every case — it does not exercise the launcher
-UI, the profile picker, the ActivitySupervisor's normal launch
-harness, or the read-only workspace contract. It is the right
-tool for "this Activity's runtime launches, survives, responds
-to input, exits cleanly" once the launcher and supervisor paths
-are already known to work for a sibling Activity in the same
-execution environment.
+All test state is disposable; only explicitly requested evidence is retained.
 """
-
 from __future__ import annotations
 
 import argparse
 import os
-import shutil
-import socket
+from pathlib import Path
+import signal
 import subprocess
 import sys
 import tempfile
 import time
-import urllib.error
-import urllib.request
-from pathlib import Path
-
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PORT = 8767
-BRIDGE_URL = f"http://127.0.0.1:{DEFAULT_PORT}"
+TRUSTED_SOURCE = REPO_ROOT / "src"
+if str(TRUSTED_SOURCE) not in sys.path:
+    sys.path.insert(0, str(TRUSTED_SOURCE))
+
+from greia_simulator.remote_bridge import SimulatorRemoteBridge  # noqa: E402
 
 
-def _log(msg: str) -> None:
-    print(f"[hl-activity] {msg}", flush=True)
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
-def _wait_for_bridge(port: int, timeout: float) -> bool:
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(0.4)
-            try:
-                s.connect(("127.0.0.1", port))
-                return True
-            except OSError:
-                time.sleep(0.2)
+def _log(message: str) -> None:
+    print(f"[hl-activity] {message}", flush=True)
+
+
+def _evidence_path(prefix: Path, suffix: str) -> Path:
+    return prefix.with_name(prefix.stem + suffix)
+
+
+def _capture_frame(bridge: SimulatorRemoteBridge, path: Path) -> bool:
+    data = bridge.get_latest_frame_png()
+    if not isinstance(data, bytes) or not data.startswith(PNG_SIGNATURE):
+        _log("Activity bridge has no valid PNG frame")
+        return False
+    try:
+        with path.open("xb") as output:
+            output.write(data)
+    except FileExistsError:
+        _log(f"refusing to overwrite screenshot: {path}")
+        return False
+    _log(f"saved {len(data)} bytes: {path}")
+    return True
+
+
+def _wait_for_frame(
+    bridge: SimulatorRemoteBridge,
+    child: subprocess.Popen[bytes],
+    *,
+    after: int = 0,
+    timeout: float = 30.0,
+) -> bool:
+    until = time.monotonic() + timeout
+    while time.monotonic() < until:
+        if child.poll() is not None:
+            _log(f"Activity exited before a frame (rc={child.returncode})")
+            return False
+        state = bridge.get_state()
+        if int(state.get("frame_count", 0)) > after and state.get("mode") == "activity":
+            return True
+        time.sleep(0.1)
+    _log(f"no Activity frame after {timeout:g}s; bridge state: {bridge.get_state()}")
     return False
 
 
-def _http_post_json(path: str, payload: dict) -> int:
-    import json as _json
-    body = _json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        f"{BRIDGE_URL}{path}", data=body, method="POST"
-    )
-    req.add_header("Content-Type", "application/json")
-    try:
-        with urllib.request.urlopen(req, timeout=5.0) as resp:  # noqa: S310
-            return resp.getcode()
-    except urllib.error.HTTPError as exc:
-        return exc.code
-
-
-def _http_get_json(path: str) -> dict:
-    with urllib.request.urlopen(f"{BRIDGE_URL}{path}", timeout=5.0) as resp:  # noqa: S310
-        import json as _json
-        return _json.loads(resp.read().decode("utf-8"))
-
-
-def _screenshot(out_path: Path) -> bool:
-    try:
-        with urllib.request.urlopen(
-            f"{BRIDGE_URL}/api/frame", timeout=10.0
-        ) as resp:  # noqa: S310
-            data = resp.read()
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_bytes(data)
-        return True
-    except Exception as exc:  # noqa: BLE001
-        _log(f"screenshot failed: {exc}")
+def _stop_child(child: subprocess.Popen[bytes]) -> bool:
+    """A graceful SIGTERM is expected in the Supervisor-compatible probe."""
+    if child.poll() is not None:
+        _log(f"Activity already stopped unexpectedly (rc={child.returncode})")
         return False
+    child.terminate()
+    try:
+        rc = child.wait(timeout=8.0)
+    except subprocess.TimeoutExpired:
+        _log("Activity ignored SIGTERM: forced kill; probe is NOT accepted")
+        child.kill()
+        child.wait(timeout=3.0)
+        return False
+    _log(f"Activity stopped on request (rc={rc})")
+    return rc in (0, -signal.SIGTERM)
 
 
-def _bridge_click(x: int, y: int) -> bool:
-    return _http_post_json(
-        "/api/input/mouse",
-        {"x": int(x), "y": int(y), "action": "click", "button": 1},
-    ) in (200, 204)
+def _probe(
+    *,
+    activity_main: Path,
+    locale: str,
+    viewport: str,
+    survival_seconds: float,
+    screenshot_prefix: Path,
+    click: tuple[int, int] | None,
+    key: str | None,
+) -> int:
+    """Return nonzero on launch/frame/interaction/teardown failure."""
+    if not activity_main.is_file():
+        _log(f"Activity entrypoint not found: {activity_main}")
+        return 2
 
+    screenshot_prefix.parent.mkdir(parents=True, exist_ok=True)
+    first = _evidence_path(screenshot_prefix, "-01-first-frame.png")
+    post = _evidence_path(screenshot_prefix, "-02-post.png")
+    log_path = _evidence_path(screenshot_prefix, "-child.log")
+    if any(path.exists() or path.is_symlink() for path in (first, post, log_path)):
+        _log("evidence already exists: choose a NEW screenshot prefix")
+        return 2
 
-def _bridge_key(name: str, action: str = "press") -> bool:
-    return _http_post_json(
-        "/api/input/key",
-        {"key": name.upper(), "action": action},
-    ) in (200, 204)
+    # port=0 owns a fresh loopback listener. Never attach to a stale 8767
+    # server or rely on somebody else running the full Greia Shell.
+    bridge = SimulatorRemoteBridge(port=0, host="127.0.0.1")
+    try:
+        bridge.start()
+    except OSError as exc:
+        _log(f"could not start owned loopback bridge: {exc}")
+        return 3
+    child: subprocess.Popen[bytes] | None = None
+    try:
+        with tempfile.TemporaryDirectory(prefix="greia-hl-activity-") as sandbox:
+            scratch = Path(sandbox)
+            env = os.environ.copy()
+            env.update({
+                "PYTHONPATH": str(TRUSTED_SOURCE),
+                "PYTHONDONTWRITEBYTECODE": "1",
+                "SDL_VIDEODRIVER": "dummy",
+                "SDL_AUDIODRIVER": "dummy",
+                "GREIA_PROFILE_LOCALE": locale,
+                "GREIA_DEVICE_LOCALE": locale,
+                "GREIA_OS_ROOT": str(REPO_ROOT),
+                "GREIA_ACTIVITY_ROOT": str(activity_main.resolve().parent),
+                "GREIA_PROFILES_DIR": str(scratch / "profiles"),
+                "GREIA_DEVELOPER_ACTIVITY_ROOT": str(scratch / "developer"),
+                "GREIA_PARENT_ACTIVITY_ROOT": str(scratch / "parent" / "active"),
+                "GREIA_PARENT_ACTIVITY_PACKAGE_ROOT": str(scratch / "packages"),
+                "GREIA_MEDIA_ROOT": str(scratch / "media"),
+                "GREIA_MAIN_CREDENTIAL_PATH": str(scratch / "credentials" / "main.json"),
+                "GREIA_ACTIVE_PROFILE_STATUS": str(scratch / "active-profile.json"),
+                "GREIA_SKIP_BOOT_HANDOFF": "1",
+            })
+            command = [
+                sys.executable, "-m", "greia_simulator.python_activity",
+                "--viewport", viewport,
+                "--remote-port", str(bridge.port),
+                str(activity_main.resolve()),
+            ]
+            _log(f"owned bridge: {bridge.url}; launching: {command}")
+            # A real file avoids a child PIPE deadlock and preserves tracebacks
+            # from failures before the first simulator frame.
+            with log_path.open("xb") as child_log:
+                child = subprocess.Popen(
+                    command, cwd=str(REPO_ROOT), env=env,
+                    stdin=subprocess.DEVNULL,
+                    stdout=child_log, stderr=subprocess.STDOUT,
+                )
+                if not _wait_for_frame(bridge, child, timeout=30.0):
+                    _log(f"Activity never produced a frame. Inspect {log_path}")
+                    return 4
+                if not _capture_frame(bridge, first):
+                    return 5
+
+                _log(f"survival window: {survival_seconds:g}s")
+                initial = time.monotonic()
+                sent = False
+                while time.monotonic() - initial < survival_seconds:
+                    if child.poll() is not None:
+                        _log(f"Activity exited during survival (rc={child.returncode}); see {log_path}")
+                        return 6
+                    if not sent:
+                        if click is not None:
+                            bridge.queue_mouse(*click)
+                            _log(f"queued mouse click {click}")
+                            sent = True
+                        elif key is not None:
+                            bridge.queue_key(key)
+                            _log(f"queued key {key}")
+                            sent = True
+                    time.sleep(0.1)
+
+                if child.poll() is not None:
+                    _log(f"Activity exited before post-frame (rc={child.returncode})")
+                    return 7
+                if sent:
+                    before = bridge.get_state()["frame_count"]
+                    # Allow event polling plus the 1 Hz idle My Time redraw.
+                    # Static Activities may not redraw on every input: in
+                    # that case capture the last valid frame without lying.
+                    _wait_for_frame(bridge, child, after=int(before), timeout=2.0)
+                    if child.poll() is not None:
+                        _log(f"Activity died after interaction (rc={child.returncode})")
+                        return 7
+                if not _capture_frame(bridge, post):
+                    return 7
+                if not _stop_child(child):
+                    return 8
+                _log(f"PASS: isolated Activity probe (not full Shell); child log: {log_path}")
+                return 0
+    finally:
+        if child is not None and child.poll() is None:
+            child.terminate()
+            try:
+                child.wait(timeout=3.0)
+            except subprocess.TimeoutExpired:
+                child.kill()
+                child.wait(timeout=3.0)
+        bridge.stop()
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Headless launch of one Greia Activity under the canonical simulator bootstrap."
+        description="Capture a standalone Greia Activity against an OWNED remote bridge.",
     )
-    parser.add_argument("--activity-main", type=Path, required=True,
-                        help="Absolute path to the Activity's main.py")
+    parser.add_argument("--activity-main", type=Path, required=True)
     parser.add_argument("--locale", default="it")
     parser.add_argument("--viewport", default="1024x600")
     parser.add_argument("--survival-seconds", type=float, default=12.0)
-    parser.add_argument("--screenshot-prefix", type=Path,
-                        default=Path("/tmp/greia-activity-evidence"))
+    parser.add_argument(
+        "--screenshot-prefix", type=Path, default=Path("/tmp/greia-activity-evidence"),
+    )
     parser.add_argument("--click-x", type=int, default=None)
     parser.add_argument("--click-y", type=int, default=None)
     parser.add_argument("--press-key", default=None)
     args = parser.parse_args(argv)
-
-    if not args.activity_main.is_file():
-        _log(f"Activity entrypoint not found: {args.activity_main}")
-        return 2
-
-    # We invoke the Activity under the canonical simulator's
-    # trusted bootstrap (`greia_simulator.python_activity`). The
-    # bootstrap sets up the synthetic display, the remote bridge
-    # on 127.0.0.1:8767, and the supervisor-style environment, then
-    # exec's the Activity's main.py.
-    activity_root = args.activity_main.resolve().parent
-    env = os.environ.copy()
-    env["PYTHONPATH"] = "src"
-    env["GREIA_SIMULATOR_HEADLESS"] = "1"
-    env["SDL_VIDEODRIVER"] = "dummy"
-    env["SDL_AUDIODRIVER"] = "dummy"
-    env["GREIA_PROFILE_LOCALE"] = args.locale
-    env["GREIA_DEVICE_LOCALE"] = args.locale
-    env["GREIA_OS_ROOT"] = str(REPO_ROOT)
-    env["GREIA_ACTIVITY_ROOT"] = str(activity_root)
-    # The Activity also needs the rest of the normal Greia env
-    # so it can talk to its profile-scoped storage, etc.
-    env["GREIA_PROFILES_DIR"] = str(
-        Path(tempfile.mkdtemp(prefix="ramp-hl-profiles-", dir="/tmp")) / "profiles"
+    if (args.click_x is None) != (args.click_y is None):
+        parser.error("--click-x and --click-y must be supplied together")
+    if not 0 <= args.survival_seconds <= 120:
+        parser.error("--survival-seconds must be between 0 and 120")
+    return _probe(
+        activity_main=args.activity_main,
+        locale=args.locale,
+        viewport=args.viewport,
+        survival_seconds=args.survival_seconds,
+        screenshot_prefix=args.screenshot_prefix,
+        click=(args.click_x, args.click_y) if args.click_x is not None else None,
+        key=args.press_key,
     )
-    env["GREIA_DEVELOPER_ACTIVITY_ROOT"] = str(
-        Path(tempfile.mkdtemp(prefix="ramp-hl-devact-", dir="/tmp"))
-    )
-    env["GREIA_PARENT_ACTIVITY_ROOT"] = str(
-        Path(tempfile.mkdtemp(prefix="ramp-hl-pact-", dir="/tmp")) / "active"
-    )
-    env["GREIA_PARENT_ACTIVITY_PACKAGE_ROOT"] = str(
-        Path(tempfile.mkdtemp(prefix="ramp-hl-pkg-", dir="/tmp"))
-    )
-    env["GREIA_MEDIA_ROOT"] = str(
-        Path(tempfile.mkdtemp(prefix="ramp-hl-media-", dir="/tmp"))
-    )
-    env["GREIA_MAIN_CREDENTIAL_PATH"] = str(
-        Path(tempfile.mkdtemp(prefix="ramp-hl-creds-", dir="/tmp"))
-        / "main-credential.json"
-    )
-    env["GREIA_ACTIVE_PROFILE_STATUS"] = str(
-        Path(tempfile.mkdtemp(prefix="ramp-hl-run-", dir="/tmp"))
-        / "active-profile.json"
-    )
-    env["GREIA_SKIP_BOOT_HANDOFF"] = "1"
-    env["PYTHONDONTWRITEBYTECODE"] = "1"
-
-    cmd = [
-        sys.executable,
-        "-m",
-        "greia_simulator.python_activity",
-        "--viewport",
-        args.viewport,
-        "--remote-port",
-        str(DEFAULT_PORT),
-        str(args.activity_main),
-    ]
-    _log(f"launching: {cmd}")
-    child = subprocess.Popen(
-        cmd,
-        cwd=str(REPO_ROOT),
-        env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
-    try:
-        if not _wait_for_bridge(DEFAULT_PORT, timeout=15.0):
-            _log("remote bridge never came up")
-            return 3
-        _log("bridge up")
-        # First frame
-        deadline = time.monotonic() + 30.0
-        first = False
-        first_path = args.screenshot_prefix.with_name(
-            args.screenshot_prefix.stem + "-01-first-frame.png"
-        )
-        while time.monotonic() < deadline:
-            try:
-                st = _http_get_json("/api/state")
-                if int(st.get("frame_count", 0)) > 0:
-                    first = True
-                    break
-            except Exception:  # noqa: BLE001
-                pass
-            time.sleep(0.5)
-        if not first:
-            _log("first frame never arrived")
-            return 4
-        _log(f"first frame: {st}")
-        if not _screenshot(first_path):
-            return 5
-        # Survival
-        _log(f"survival {args.survival_seconds}s")
-        deadline = time.monotonic() + args.survival_seconds
-        interacted = False
-        while time.monotonic() < deadline:
-            if (
-                args.click_x is not None
-                and args.click_y is not None
-                and not interacted
-            ):
-                _bridge_click(args.click_x, args.click_y)
-                interacted = True
-            if args.press_key and not interacted:
-                _bridge_key(args.press_key)
-                interacted = True
-            time.sleep(0.5)
-            if child.poll() is not None:
-                _log(f"process died unexpectedly rc={child.returncode}")
-                return 6
-        # Post-interaction
-        post = args.screenshot_prefix.with_name(
-            args.screenshot_prefix.stem + "-02-post.png"
-        )
-        _screenshot(post)
-        if child.poll() is not None:
-            return 7
-        # Clean stop
-        _log("stopping Activity")
-        child.terminate()
-        try:
-            code = child.wait(timeout=8.0)
-        except subprocess.TimeoutExpired:
-            child.kill()
-            code = child.wait(timeout=3.0)
-        _log(f"Activity exited rc={code}")
-        return 0 if code == 0 else 8
-    finally:
-        if child.poll() is None:
-            try:
-                child.terminate()
-                child.wait(timeout=3.0)
-            except Exception:  # noqa: BLE001
-                try:
-                    child.kill()
-                except Exception:  # noqa: BLE001
-                    pass
 
 
 if __name__ == "__main__":
