@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from greia_launcher.child_shell import GreiaChildShell
 from greia_launcher.collection_home_presentation import CollectionFirstHomeMixin
+from greia_launcher.catalogue_view import _category_title
 from greia_platform.ui_core import Collection
 
 
@@ -95,6 +96,24 @@ class ChildHomeCreationOrganizationTests(unittest.TestCase):
                 self.assertEqual(shell._home_columns(pygame), columns)
                 rows = (6 + columns - 1) // columns
                 self.assertLessEqual(rows, 3)
+
+    def test_compact_saved_work_title_stays_short_and_localized(self) -> None:
+        for locale, full, compact in (
+            ("it", "Le mie creazioni", "Creazioni"),
+            ("en", "My Creations", "Creations"),
+            ("es", "Mis creaciones", "Creaciones"),
+            ("de", "Meine Werke", "Werke"),
+            ("fr", "Mes créations", "Créations"),
+        ):
+            with self.subTest(locale=locale):
+                self.assertEqual(_category_title("my_creations", locale), full)
+                self.assertEqual(
+                    _category_title("my_creations", locale, compact=True),
+                    compact,
+                )
+                self.assertLess(len(compact), len(full))
+        self.assertEqual(_category_title("create", "it", compact=True), "Crea")
+        self.assertEqual(_category_title("play", "en", compact=True), "Play")
 
     def test_saved_work_stays_visible_when_parent_hides_all_create_apps(self) -> None:
         shell = object.__new__(GreiaChildShell)
