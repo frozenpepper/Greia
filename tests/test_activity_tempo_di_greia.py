@@ -489,6 +489,64 @@ class TimeToolModelTests(unittest.TestCase):
         finally:
             pygame.quit()
 
+    def test_already_finished_timer_speaks_only_after_first_ready_frame(self) -> None:
+        import os
+        from unittest.mock import patch
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from activity_incubator.tempo_di_greia.time_app import TimeActivity
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+        from activity_incubator.tempo_di_greia.time_speech import TimeSpeech
+
+        events: list[str] = []
+
+        class Recorder:
+            def has_clip(self, cue: str) -> bool:
+                return True
+            def play(self, cue: str) -> bool:
+                events.append("voice." + cue)
+                return True
+            def busy(self) -> bool:
+                return False
+            def stop(self) -> None:
+                events.append("stop")
+
+        pygame.init()
+        try:
+            screen = pygame.display.set_mode((1024, 600))
+            clock = FakeClock()
+            model = TimeExperience(
+                wall_now=lambda: datetime(2026, 10, 8, 9, 30, tzinfo=timezone.utc),
+                monotonic=clock,
+            )
+            model.mode = TimeMode.TIMER
+            model.timer.set_duration(1)
+            model.timer.start()
+            clock.value += 2
+            app = TimeActivity(
+                screen, "en", {key: key for key in WORD_KEYS},
+                model, TimeSpeech(Recorder()),
+            )
+            with (
+                patch("activity_incubator.tempo_di_greia.time_app.activity_stop_requested",
+                      return_value=False),
+                patch("activity_incubator.tempo_di_greia.time_app.mark_activity_ready",
+                      side_effect=lambda: events.append("ready")),
+                patch("pygame.event.get", side_effect=[
+                    [], [pygame.event.Event(pygame.QUIT)]
+                ]),
+            ):
+                self.assertEqual(app.run(), 0)
+            self.assertEqual(
+                events[:2], ["ready", "voice.feedback.timer_finished"],
+            )
+            self.assertEqual(events.count("voice.feedback.timer_finished"), 1)
+            self.assertTrue(app.ready_published)
+            app.renderer.fonts.clear()
+        finally:
+            pygame.quit()
+
     def test_mode_is_semantic_and_timer_not_screen_time(self) -> None:
         state = TimeExperience(monotonic=FakeClock())
         state.mode = TimeMode.TIMER
