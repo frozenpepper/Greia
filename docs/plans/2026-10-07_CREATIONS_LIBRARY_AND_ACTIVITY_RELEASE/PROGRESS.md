@@ -7,6 +7,13 @@
 ## A. At-a-glance checkpoint — 2026-10-08
 
 - Program: **P1 adaptive capacity SOURCE-WIP**, **P2 broker/SDK SOURCE-WIP**, **P3 universal gallery + authenticated trusted modal SOURCE-WIP**, **P4 PNG round-trip SOURCE-WIP**, and **P5 WAV + UTF-8 interoperability SOURCE-WIP**. One shared launcher-composed `VolumeBudget` now guards Activity private storage, Creations and history growth at 75% used / 512 MiB free; shipped private Activity namespaces scale to 25% of the actual writable volume (32 MiB is only the legacy minimum floor). No complete checkout/GUI/audio/text/capacity acceptance has run. Wayland/KMSDRM and P6–P8 remain open.
+- P3 integration continuation: the Shell trusted picker now rechecks
+  its live broker request while displayed, dismissing a chooser promptly
+  when the Activity cancels or the broker times out. It restores the
+  Activity, stops Gallery preview audio, and does not apply stale
+  input to a later request. Four new host/coordinator regressions
+  were committed but NOT EXECUTED; no Simulator display
+  focus claim or P3 promotion is made.
 - P3 source-first child-flow review (latest 2026-10-08): the actual renderer had an unbound `width/height` on a completely empty Creations gallery or compatible-media picker. That first-use crash is corrected. A second issue let keyboard replay/navigation reach underlying content during the delete-confirmation modal; keyboard confirmation now defaults to Cancel and requires explicit Right → Enter, with visible focus. The audio-only empty picker now displays audio imagery. A new real dummy-Pygame screen regression covers these states but has **not been executed**. No P3 acceptance status changes; see GLA-007.\n- First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. A new unvoiced **My Time** experiment is separately incubated in `activity_incubator/tempo_di_greia/` and is not a 46th installed Activity. My Greia remains outside child *games* selection but is now mandatorily staged as a trusted system Activity in official target composition (SOURCE-WIP, no live release verification). The earlier catalogue strategy's 41-item figures are historical.
 - Catalogue handoff: the earlier **Colline Allegre script-import** and **Quattro Amici difficulty D5** mismatches were corrected in previous source commits. P7 batch 2 repaired Corsa's queued drag, Quattro's chrome exclusion, Torre's direct-script particle import, Delfino's resize and Dragon's nonexistent event. P7 batch 3 additionally repairs Acquario's missing event-loop input pump and real milestone emissions, Baia's feeding/fact event declarations and chrome checks, Cucciolo's drag/focus/event declaration, and Momo's discovery events, safe pointer mapping and resize. P7 batch 4 repairs atomic Monster-gallery persistence, true creation-event invocation and platform-owned Home input, plus Alphabet unique-discovery and honest difficulty declarations. P7 batch 5 repairs Cloud completion/drag/chrome authority; Mondo Contrari's real interaction milestones, English labels and safe letterboxing; Bridge honest placements; Marble responsive drag/input; Memory exit/localized replay; Encyclopedia internal navigation authority. P7 batch 6 repairs Stars platform Home and session identity, Train per-replay milestone identity, Seasons one-shot discovery and safe letterbox mapping, and Submarine undeclared/phantom events plus pointer authority. The false adaptive-D2–D6 Bridge and adaptive-D1–D4 Marble claims were removed. **All these source changes and new regression tests remain UNEXECUTED in the canonical checkout.**
 - Release composition: **explicit draft selection is now source-wired into the authoritative owner release path**. `greia_release.py` sets `PIP_RELEASE_BUILD=1`; target composition stages only `build/first-party-release-activities.toml`, validates/indexes the installed subset, and refuses draft/empty policy for official release. Non-release/dev images deliberately keep the full source tree. Policy remains **draft**, so no official Activity release can build yet.
@@ -752,3 +759,41 @@ round trips, safe deletion/recovery semantics (including the planned
 undo window), 45-Activity visual/play/pedagogy acceptance, catalogue
 signoff and installed Acer/ARM evidence. Do not silently classify
 any as PASS.
+
+
+### 2026-10-08 — P3 picker cancellation/expiry lifecycle source repair
+
+Traced `ActivityCreationsClient.request_selection/poll_selection`
+through the existing trusted `CreationSelectionCoordinator` /
+Supervisor broker into the `ActivityCreationPickerHost` display
+lease. The coordinator deliberately expires outstanding selection
+requests after three minutes and independently supports client
+cancellation, but the visible Shell picker was only closed in
+response to child UI Back/Choose. This left a stale chooser
+visible even after its grant authority was gone, risking a stranded
+child and ineffective subsequent input.
+
+The host now checks `pending_creation_selection` on every Shell
+poll and closes an obsolete picker if its request is no longer
+pending or its ID no longer matches. Stale close doesn't attempt
+to cancel a settled request. This preserves the existing
+one-request-per-session, fail-closed broker policy. Ordinary
+child Back/Cancel still cancels via the trusted broker, but
+even if the cancellation call fails, the host restores the
+Activity's display/focus before reporting a typed failure.
+No new IPC, modal backend, permissions or Activity API was introduced.
+
+Four provider-free tests in `tests/test_creation_picker_host.py`
+cover Activity cancellation, an actual
+`CreationSelectionCoordinator` clock expiry, replaced request
+identity and failure during cancellation with display
+restoration. The updated GLA-007 current-source suite also
+covers the existing Gallery first-use, audio-only preview
+and delete-confirmation fixes.
+
+**Verification:** source committed/readback only. Tests NOT EXECUTED
+on a full checkout; trusted real Simulator and installed
+Legacy-X focus/stacking, auditory preview, cross-Activity
+PNG/WAV/UTF-8, recovery and curation remain OPEN. P1–P7
+remain SOURCE WIP; P8 remains NOT STARTED; no release roster
+status or hardware claim changed.
