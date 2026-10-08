@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `06a25eb7269c78db9c110fa5382df8bc6e364187` (later docs-only commits permitted)
+**Updated:** 2026-10-08; **queue source baseline:** `de162fd1448f7f56ac15f95f2876724a029f7354` (later docs-only commits permitted)
 **Product authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` + `P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`; My Time remains separately in `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -356,7 +356,7 @@ test commands and expected observable behavior.
   `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`,
   `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
 - **New source/test minimum SHA:** `0a09eaf49b247d4c6f427481530a02ce370c9123`.
-- **Current child Home/catalogue source pin:** `06a25eb7269c78db9c110fa5382df8bc6e364187`.
+- **Current child Home/catalogue source pin:** `de162fd1448f7f56ac15f95f2876724a029f7354`.
   Start with the real 32-candidate P6 design record:
   `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`.
   Confirm source metadata of **exactly six genuine Create anchors**;
@@ -371,6 +371,7 @@ test commands and expected observable behavior.
 - **Exact additional source checks (separately logged; stop first failure):**
   ```bash
   python3 -m unittest discover -s tests -p 'test_child_home_creation_organization.py' -v
+  python3 -m unittest discover -s tests -p 'test_launcher_collection_visual_curation.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_discovery_policy.py' -v
   python3 -m unittest discover -s tests -p 'test_launcher_spoken_labels.py' -v
   python3 -m unittest discover -s tests -p 'test_launcher_layout.py' -v
@@ -382,6 +383,27 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_visual_family_contact_sheet.py' -v
   python3 tools/visual_family_contact_sheet.py --output "$EVIDENCE/greia-art-family.png"
   ```
+- **Play/Learn curation gate (new source):** compare the P6 record's
+  *complete* 21-Activity Play and 22-Activity Learn mappings against
+  the actual `build/first-party-release-activities.toml` and the
+  underlying `activity.toml` files. The recently reclassified
+  `storie_della_mia_voce` must be **Create only**, and
+  `quattro_stagioni` **Explore+Learn only**. Confirm the count, that
+  no Activity was deleted or had its Parent visibility/age/
+  progression data altered, and that age-3/4/5 filtered
+  catalogues neither duplicate nor lose a permitted Activity.
+  Play/Learn correctly remain direct browse at the current
+  32-candidate roster rather than fake complete submenus.
+- **Art/language gate (new source):** verify all 13 semantic discovery
+  group icons resolve to **different actual canonical core assets**;
+  compare small 48/64px silhouettes, especially Music vs
+  Drawing, Words vs Stories, Numbers vs Puzzles vs Building,
+  and Action vs Puzzles. In both the normal and shared-art
+  Activity card renderers observe Italian **“Avvio...”**
+  and English **“Starting...”** only in the corresponding
+  locale during launch; check that the badge fits the tile
+  without clipping, and does not obscure the Activity image.
+  Treat source-test PASS as separate from real-UI visual PASS.
 - **Design/organization leg:** compare actual six Home portal
   screenshots and the six creative Activity icons against the source
   contact sheet at 128/64/48px; rank misleading or near-identical art,
@@ -403,9 +425,9 @@ test commands and expected observable behavior.
 - **Evidence:** contact sheet + ranked severity/fix recommendations,
   source hashes, no source art change or unsupported design PASS.
   Owner approves any major visual redesign direction later.
-- **Last result:** previous art gallery source-only index review;
-  current P6 Home/32-draft membership changes, contact sheet and
-  real IT/EN Home screenshots NOT TESTED.
+- **Last result:** 32-candidate draft curation map, distinct theme icons,
+  and bilingual launch-caption source implemented; all new regression
+  tests, real contact sheet and IT/EN Shell screenshots UNEXECUTED.
 
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
@@ -453,6 +475,18 @@ test commands and expected observable behavior.
   authoring/approval NOT PERFORMED.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-08:** P6 resumed Play/Learn curation instead of
+  infrastructure. Counted real 32-candidate draft memberships,
+  reclassified voice-story creator away from Play and seasonal
+  observation away from Play, yielding 21 Play/22 Learn/6 Create.
+  Existing five-tag bounded grouping cannot honestly cover all,
+  so direct child browsing remains. Replaced repeated subcollection
+  icons with distinct existing canonical art and localized both
+  launch-card badges for IT/EN. P6 record now has complete
+  Play/Learn editorial matrices. New roster/icon/language tests
+  committed but **NOT RUN**. GLA-008 will collect visual evidence
+  before any new navigation level, game or release decision.
 
 - **2026-10-08:** P6 navigation/visual curation resumed.
   Reviewed 32 draft manifest categories, corrected four misleading
