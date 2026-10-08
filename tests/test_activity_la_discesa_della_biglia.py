@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import importlib
 import math
+import os
+from unittest.mock import Mock
 import sys
 import unittest
 from pathlib import Path
@@ -125,6 +127,59 @@ class RampEngineTests(unittest.TestCase):
         self.assertEqual(eng.marble.y, MARBLE_START[1])
         self.assertEqual(eng.elapsed, 0.0)
 
+
+class RampPointerSafetyTests(unittest.TestCase):
+    def test_letterbox_and_protected_input_rejected_without_mutation(self) -> None:
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        import pygame
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+        from ramp_app import RampApp
+
+        pygame.init()
+        surface = pygame.Surface((800, 480))
+        app = RampApp(
+            screen=surface,
+            metrics=Mock(),
+            theme=Mock(),
+            typography=Mock(),
+            resources=Mock(),
+            audio=Mock(),
+            storage=Mock(),
+            events=Mock(),
+        )
+        rect = activity_viewport_for_surface(surface).protected_regions[0]
+        self.assertIsNone(app._reference_point((int(rect.x) + 1, int(rect.y) + 1)))
+        self.assertIsNone(app._reference_point((-2, 240)))
+        self.assertIsNone(app._reference_point((400, 0)))
+        self.assertIsNotNone(app._reference_point((400, 240)))
+
+        app.renderer.drag_kind = ToolKind.BUMPER
+        app.renderer.drag_origin = (300, 220)
+        app._handle_release((int(rect.x) + 1, int(rect.y) + 1))
+        self.assertIsNone(app.renderer.drag_kind)
+        self.assertEqual(len(app.engine.tools), 0)
+
+    def test_released_tool_preserves_original_drag_kind(self) -> None:
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        import pygame
+        from ramp_app import RampApp
+
+        pygame.init()
+        app = RampApp(
+            screen=pygame.Surface((1024, 600)),
+            metrics=Mock(),
+            theme=Mock(),
+            typography=Mock(),
+            resources=Mock(),
+            audio=Mock(),
+            storage=Mock(),
+            events=Mock(),
+        )
+        app.renderer.drag_kind = ToolKind.BUMPER
+        app.renderer.palette_selected = 0
+        app._handle_release((380, 250))
+        self.assertEqual(len(app.engine.tools), 1)
+        self.assertEqual(app.engine.tools[0].spec.kind, ToolKind.BUMPER)
 
 class RampStorageContractTests(unittest.TestCase):
     """Storage shape is owned by the Activity; tests cover the

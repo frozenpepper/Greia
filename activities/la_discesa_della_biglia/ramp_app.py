@@ -27,6 +27,7 @@ from greia_platform.activity_api import (
 )
 from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.child_text import display_text
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -91,6 +92,7 @@ class RampApp:
     phase: Phase = Phase.PALETTE
     engine: RampEngine = field(init=False)
     renderer: RampRenderer = field(init=False)
+    canvas: PygameReferenceCanvas = field(init=False)
     pre_drop_timer: float = 0.0
     ready_published: bool = False
     finished_banner_timer: float = 0.0
@@ -101,7 +103,8 @@ class RampApp:
 
     def __post_init__(self) -> None:
         self.engine = RampEngine(level=LEVELS[self.level_index])
-        self.renderer = RampRenderer.build(self.screen)
+        self.canvas = PygameReferenceCanvas(self.screen)
+        self.renderer = RampRenderer.build(self.canvas.surface)
         self._refresh_palette()
 
     def _refresh_palette(self) -> None:
@@ -128,17 +131,24 @@ class RampApp:
                     elif event.key == pygame.K_c:
                         self._clear_tools()
                 elif event.type == pygame.VIDEORESIZE:
-                    self.metrics = ChildUiMetrics.for_size(
-                        *self.screen.get_size()
-                    )
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self._handle_click(event.pos)
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self._handle_release(event.pos)
+                    self.screen = pygame.display.get_surface() or self.screen
+                    self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
+                    self.canvas = PygameReferenceCanvas(self.screen)
+                    self.renderer.surface = self.canvas.surface
+                    self._cancel_drag()
+                elif event.type == pygame.WINDOWFOCUSLOST:
+                    self._cancel_drag()
+                elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
+                    if event.type == pygame.FINGERDOWN or event.button == 1:
+                        self._handle_click(self._event_position(event))
+                elif event.type in (pygame.MOUSEBUTTONUP, pygame.FINGERUP):
+                    if event.type == pygame.FINGERUP or event.button == 1:
+                        self._handle_release(self._event_position(event))
                 elif event.type == pygame.MOUSEMOTION:
                     self._handle_motion(event.pos)
             self._update(dt)
             self._draw()
+            self.canvas.present()
             # Present the frame so the first usable frame is on the
             # display BEFORE we tell the Shell the Activity is ready.
             pygame.display.flip()
@@ -154,8 +164,35 @@ class RampApp:
     # Input
     # ------------------------------------------------------------------
 
+    def _event_position(self, event: pygame.event.Event) -> tuple[int, int]:
+        pos = getattr(event, "pos", None)
+        if pos is not None:
+            return (int(pos[0]), int(pos[1]))
+        width, height = self.screen.get_size()
+        return (int(event.x * width), int(event.y * height))
+
+    def _reference_point(self, physical: tuple[int, int]) -> tuple[int, int] | None:
+        vp = activity_viewport_for_surface(self.screen)
+        px, py = physical
+        if not (0 <= px < vp.surface.width and 0 <= py < vp.surface.height):
+            return None
+        if any(r.x <= px < r.right and r.y <= py < r.bottom for r in vp.protected_regions):
+            return None
+        logical = self.canvas.pointer(physical)
+        if logical is None:
+            return None
+        return (int(logical[0]), int(logical[1]))
+
+    def _cancel_drag(self) -> None:
+        self.renderer.drag_kind = None
+        self.renderer.drag_origin = None
+        self.renderer.drag_pos = None
+
     def _handle_click(self, pos: tuple[int, int]) -> None:
-        x, y = pos
+        point = self._reference_point(pos)
+        if point is None:
+            return
+        x, y = point
         # Top-bar buttons
         if 80 <= x <= 280 and 84 <= y <= 132:
             self._clear_tools()
@@ -179,13 +216,14 @@ class RampApp:
             self.renderer.drag_pos = (x, y)
 
     def _handle_release(self, pos: tuple[int, int]) -> None:
-        if self.renderer.drag_kind is None:
-            return
-        x, y = pos
         kind = self.renderer.drag_kind
-        self.renderer.drag_kind = None
-        self.renderer.drag_pos = None
-        self.renderer.drag_origin = None
+        if kind is None:
+            return
+        point = self._reference_point(pos)
+        self._cancel_drag()
+        if point is None:
+            return
+        x, y = point
         if not self._inside_playfield(x, y):
             return
         # Don't place on top of the marble spawn area or the basket area
@@ -195,7 +233,7 @@ class RampApp:
             return
         if math_hypot(x - 160, y - 110) < 28:
             return
-        spec = TOOL_CATALOGUE[self.renderer.palette_selected]
+        spec = next(item for item in TOOL_CATALOGUE if item.kind == kind)
         tool = PlacedTool(spec, float(x), float(y))
         if self.engine.add_tool(tool):
             self.events.tool_placed(kind.value)
@@ -204,7 +242,7 @@ class RampApp:
     def _handle_motion(self, pos: tuple[int, int]) -> None:
         if self.renderer.drag_kind is None:
             return
-        self.renderer.drag_pos = pos
+        self.renderer.drag_pos = self._reference_point(pos)
 
     def _try_drop(self) -> None:
         if self.phase == Phase.RUNNING:
