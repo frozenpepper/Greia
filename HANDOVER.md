@@ -1,5 +1,46 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — My Time terminal speech after READY (source-only latest)
+
+**Branch:** canonical `main`. **Product:** My Time remains in
+`activity_incubator/tempo_di_greia/`. No release/installer/Parent time
+policy modifications or accepted visual/audio/hardware evidence.
+
+**Observed issue fixed in source:** An already-expired injected stopwatch/
+countdown fixture could present a timer completion to `TimeSpeech` before
+the first meaningful Activity frame and READY. The controller now
+defers pre-READY completion, then speaks terminal feedback after READY
+instead of playing stale launch welcome or first-use guidance. Its
+`SpeechTransport.play` result is respected: a missing or corrupt
+greeting does not swallow a usable instruction, and replay accurately
+returns failure. Closing the Activity shuts speech down and prevents
+future playback calls.
+
+**Implementation SHA:** `6b7e749380fe4d600c5ca5d8987073386da6d859`.
+**New tests:** `b57d447ff27f74af336995d35af5d3aed6c0428e`
+(coordinator fake transport), `510edb8bb7738c6c4b15727f98d1ed4f027fbe4a`
+(real Activity `run()` ordering with fake clock, DONE timer, pygame
+dummy presentation and explicit READY event). These are **written but
+not executed in a prepared checkout**. Do not call them green. No
+human-approved recorded IT/EN voices exist, no full Simulator GUI
+review, physical validation or official release approval was done.
+
+**Single local-agent acceptance source:** 
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` (GLA-001/002
+bridge + display, GLA-003 four source suites and real interaction,
+GLA-005 still BLOCKED on approved voice generation and listening).
+The queue includes explicit evidence, source SHA gates, stop conditions,
+which tasks remain independent and how the agent must update it.
+The installed Acer first-boot/lifecycle path remains separately BLOCKED
+without explicit owner authorization.
+
+**Next developer step:** Review local-agent test evidence when
+available and repair any real integration failures; until then,
+avoid promoting Time or substituting silent audio for required
+prereader instructions. Continue source work under
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`
+without touching runtime trust or release approval gates.
+
 ## 2026-10-08 — Deferred, bounded speech decode (latest source slice)
 
 **Greia `main` source is ahead of prior Time speech handover; this is
