@@ -5,6 +5,41 @@
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
 **Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 32-item child candidate roster plus a mandatory separately staged trusted My Greia system Activity; P7 has source-reviewed 45/45 (12 withheld child, one separate settings/system entry). A new unvoiced My Time source prototype is independently incubated outside the 45 built-ins. None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
 
+### 2026-10-08 current P3 stale-picker lifecycle follow-up
+
+The trusted session picker host originally opened the Gallery and then
+kept it visible until the child chose a Creation or pressed Back.
+The actual session broker's `CreationSelectionCoordinator` can cancel
+a request or expire it at `REQUEST_SECONDS=180` independently of
+the still-visible Shell overlay. Old UI was not rechecking the
+trusted request identity on subsequent polls; an expired or
+Activity-cancelled request could remain as a stale picker. The
+host source now consults `trusted_pending` on each poll, dismisses
+a no-longer-pending or replaced request, stops its screen/preview
+and restores the Activity without erroneously cancelling an
+already-settled request. An ordinary cancellation-broker exception
+is reported **after** an attempt to restore the display.
+
+**The unchanged current P3 acceptance now includes:**
+`test_creation_selection.py` and
+`test_creation_picker_host.py` alongside the three existing
+Gallery/controller/renderer tests (exact commands and minimum SHA in
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` GLA-007).
+The added host tests use real bounded request-expiry semantics as
+well as backend stubs. In an actual Simulator run, explicitly
+cancel an open audio chooser from its client, let a request
+expire, and confirm the overlay no longer intercepts input,
+no invalid token is issued, the Activity is usable again, and
+an immediately new request cannot receive buffered input
+from the old one. Preserve display/frontmost-state evidence,
+request log/timestamps, preview stop and Home chrome.
+
+**Evidence boundary:** the new tests and source are committed but
+UNEXECUTED; these outcomes have NOT been observed in Simulator
+or on the installed Acer. Existing P3/P4/P5 release thresholds
+remain unchanged. Do not enable hardware builds to validate
+this desktop/source change.
+
 ### 2026-10-08 current P3 first-use Gallery follow-up (source newer than original pin)
 
 The original pinned source SHA above is retained as **historical evidence**,
