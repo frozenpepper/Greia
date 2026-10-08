@@ -12,22 +12,26 @@ from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewpor
 if __package__:
     from .time_model import PRESET_MINUTES, TimeExperience, TimeMode
     from .time_interaction import practice_hour_at_point, practice_quarter_at_point
-    from .time_renderer import ACTION_BUTTONS, MODE_BUTTONS, PRESET_BUTTONS, TimeRenderer
+    from .time_renderer import ACTION_BUTTONS, MODE_BUTTONS, PRESET_BUTTONS, REPLAY_BUTTON, TimeRenderer
+    from .time_speech import TimeSpeech
 else:
     from time_model import PRESET_MINUTES, TimeExperience, TimeMode
     from time_interaction import practice_hour_at_point, practice_quarter_at_point
-    from time_renderer import ACTION_BUTTONS, MODE_BUTTONS, PRESET_BUTTONS, TimeRenderer
+    from time_renderer import ACTION_BUTTONS, MODE_BUTTONS, PRESET_BUTTONS, REPLAY_BUTTON, TimeRenderer
+    from time_speech import TimeSpeech
 
 
 class TimeActivity:
     """Three small, related tools. All timers end with the Activity session."""
 
     def __init__(self, screen: pygame.Surface, locale: str,
-                 words: Mapping[str, str], model: TimeExperience | None = None) -> None:
+                 words: Mapping[str, str], model: TimeExperience | None = None,
+                 speech: TimeSpeech | None = None) -> None:
         self.screen = screen
         self.canvas = PygameReferenceCanvas(screen)
         self.model = model if model is not None else TimeExperience()
         self.renderer = TimeRenderer(locale, words)
+        self.speech = speech
         self.running = True
         self.ready_published = False
         self.celebrate_until = 0.0
@@ -47,6 +51,8 @@ class TimeActivity:
     def _targets(self) -> tuple[tuple[str, pygame.Rect], ...]:
         """Only targets currently visible/operable on the reference canvas."""
         shared = tuple((f"mode.{mode.value}", rect) for mode, rect in MODE_BUTTONS.items())
+        if self.speech is not None and self.speech.can_repeat:
+            shared += (("repeat", REPLAY_BUTTON),)
         if self.model.mode is TimeMode.CLOCK:
             items = [("practice", ACTION_BUTTONS["practice"])]
             if self.model.practice:
@@ -80,15 +86,25 @@ class TimeActivity:
                 return
 
     def press(self, point: tuple[int, int]) -> None:
+        if (self.speech is not None and self.speech.can_repeat
+                and REPLAY_BUTTON.collidepoint(point)):
+            self.speech.replay()
+            self.focus_id = "repeat"
+            self.dirty = True
+            return
         for mode, rect in MODE_BUTTONS.items():
             if rect.collidepoint(point):
                 self.model.mode = mode
+                if self.speech is not None:
+                    self.speech.on_context(self.model.mode, self.model.practice)
                 self.focus_id = f"mode.{mode.value}"
                 self.dirty = True
                 return
         if self.model.mode is TimeMode.CLOCK:
             if ACTION_BUTTONS["practice"].collidepoint(point):
                 self.model.set_practice(not self.model.practice)
+                if self.speech is not None:
+                    self.speech.on_context(self.model.mode, self.model.practice)
             elif self.model.practice and ACTION_BUTTONS["minus"].collidepoint(point):
                 self.model.nudge_practice(-15)
             elif self.model.practice and ACTION_BUTTONS["plus"].collidepoint(point):
@@ -140,6 +156,8 @@ class TimeActivity:
                 self._activate_focus()
             elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3):
                 self.model.mode = (TimeMode.CLOCK, TimeMode.STOPWATCH, TimeMode.TIMER)[event.key - pygame.K_1]
+                if self.speech is not None:
+                    self.speech.on_context(self.model.mode, self.model.practice)
                 self.focus_id = f"mode.{self.model.mode.value}"
                 self.dirty = True
             elif event.key == pygame.K_SPACE and self.model.mode is not TimeMode.CLOCK:
@@ -171,7 +189,11 @@ class TimeActivity:
             # Show the finish feedback when Timer is visible again.
             if self.model.mode is TimeMode.TIMER and self.model.timer.consume_completion():
                 self.celebrate_until = moment + 3.0
+                if self.speech is not None:
+                    self.speech.timer_finished()
                 self.dirty = True
+            if self.speech is not None:
+                self.speech.update()
             # Idle clock redraws only once/second; an active elapsed counter
             # uses 10 Hz for a legible visual ring. No per-frame busy repaint
             # when a child is simply looking at a stationary clock.
@@ -186,15 +208,20 @@ class TimeActivity:
                     None,
                 )
                 self.renderer.draw(self.canvas.surface, self.model,
-                    celebrate=moment < self.celebrate_until, focus_rect=focus_rect)
+                    celebrate=moment < self.celebrate_until, focus_rect=focus_rect,
+                    can_repeat=self.speech is not None and self.speech.can_repeat)
                 self.canvas.present(clear=(247, 241, 226))
                 pygame.display.flip()
                 if not self.ready_published:
                     mark_activity_ready()
                     self.ready_published = True
+                    if self.speech is not None:
+                        self.speech.start(self.model.mode, self.model.practice)
                 self.dirty = False
                 next_draw = moment + (0.1 if active_counter else 1.0)
             ticker.tick(30)
+        if self.speech is not None:
+            self.speech.close()
         return 0
 
 
