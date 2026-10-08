@@ -564,6 +564,46 @@ been executed by the agent or full checkout.** Retest only the two modified
 suites and IT/EN headless probes; keep old green staging/domain proofs. No
 release promotion, title audio, hardware or child-comprehension approval.
 
+### 2026-10-08 — Continued My Time child UX, 114-art-family reviewer and agent execution queue
+
+The owner requested that GitHub implementation continue while the local agent
+is unavailable, and that **one living task list** be maintained for later
+non-destructive local work. Created
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` with GLA-001–009,
+explicit prerequisites, minimum source SHAs, commands, pass/failure
+predicates, evidence ZIP expectations and authorized **queue-only**
+status/evidence commits. This is a local execution queue subordinate to the
+existing product, architecture, Creations and installer plans—not a new
+competing implementation plan.
+
+**My Time**, still in `activity_incubator/` rather than 45 first-party
+packages: source commits `31e5d1ab`, `fae0fb2d`, `e324e3ad` and
+`3a9b9b8b` add pure quarter-hour dial hit geometry, four large visual
+practice markers, meaningful pictograms for Clock/Stopwatch/Timer and
+Play/Pause/Reset, bounded non-audio finish stars, visible arrow/Tab
+focus and Enter activation. Source tests cover actual quarter-hour
+practice changes vs immutable read-only real clock, mouse/keyboard
+interactions, and the renderer. **New tests and new pixels are not yet
+executed/reviewed**; the prior `PASS@b96b08d3` Time 10/10 suite
+does not verify the updated source. Still no prerecorded IT/EN voice,
+offline RTC confidence, My Days calendar, Time Workshop, background
+alarm/suspend service or installed release.
+
+**Visual coherence tooling**: `tools/visual_family_contact_sheet.py`
+(and `tests/test_visual_family_contact_sheet.py`) creates one authoring-only
+source-truth comparison sheet from 39 actual catalogued core icons,
+45 ordinary built-in Activity icons and 30 canonical cast expression
+PNGs, each at 128/64/48px; commit `0a09eaf4` fixes scale placement.
+No art masters, semantic indexes or child's runtime changed. Local agent
+GLA-008 must run and review the real generated PNG before visual
+design decisions are declared accepted.
+
+**Previously reported green evidence unchanged:** mandatory My Greia
+appeared as installed package 33 under developer staging, old Time
+10/10 model and 11 SDL captures, 101/101 gallery source preview
+paths resolved at earlier SHAs. The owned HTTP bridge probe, revised
+Time UI and art-family review remain local-agent queued/source-WIP.
+
 ### How to maintain this file
 
 Append a dated entry to §C after every substantive session. Include commit SHA, files changed, actual test command/output and environment, screenshots reviewed if any, real remaining blockers, and **one precise next step**. Update current-state tables in §A/B as facts change; keep dated entries immutable except explicit factual corrections. Every Activity review gets one evidence-backed decision; reference source snapshots instead of pasting thousands of lines. Update `HANDOVER.md` and the appropriate existing architecture/lifecycle ledger without duplicating hardware evidence or inventing another orchestration process.

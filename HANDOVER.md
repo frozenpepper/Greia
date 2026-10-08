@@ -1,5 +1,42 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — Product implementation + one local-agent execution queue
+
+**Last current source/test anchor:** `0a09eaf49b247d4c6f427481530a02ce370c9123`
+(subsequent documentation-only commits allowed). All new source and
+tests from this slice are **UNEXECUTED locally**.
+
+- **Queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` is now the
+  sole backlog for owner-authorized local-agent testing. Queue-only
+  documentation status/evidence commits to `main` are permitted; source
+  changes, draft-release promotion, provider spending and installer/Acer
+  operations are NOT authorized. The queue has exact commands,
+  dependencies, evidence folders/ZIP, stop rules and carryover results.
+- **My Time / Il Mio Tempo:** still incubated. Added four tappable
+  quarter-hour dial markers, mode and play/pause/reset pictograms, gentle
+  timer-finished stars, explicit arrow/Tab/Return keyboard navigation
+  with visible focus. New source tests cover touch, immutable real
+  clock, renderer and focus. Still missing IT/EN recorded voices,
+  confidence in offline RTC and real first-launch child usability; no
+  calendar or background alarms yet.
+- **Art/character visual evaluation:** new offline
+  `tools/visual_family_contact_sheet.py` plus tests generate one actual
+  39 core + 45 Activity + 30 canonical cast-expression comparison
+  image at 128/64/48px. No visual style change or art admission is
+  claimed. GLA-008 owns execution and review.
+- **Prior reported evidence retained:** Time-model 10/10 at
+  `b96b08d3`, 11 direct-renderer frames, and 101 gallery previews;
+  My Greia developer stage 32 optional games plus 1 mandatory trusted
+  system package. Those prior results do NOT validate latest Time
+  pictograms or current owned-bridge runner.
+
+**Next for local agent:** follow queue READY tasks GLA-001 onward,
+stop at first genuine failure, attach raw evidence and commit only
+queue updates. **Next for GitHub worker:** continue product work and
+keep this queue updated whenever test ownership changes.
+
+---
+
 ## 2026-10-08 — Second Time acceptance: owned bridge correction
 
 **Current executable source + tests anchor:** `fa0526aab1fe688020620513ab3623f8a4516cc6` (until any later

@@ -48,12 +48,13 @@ invent date/time parsing, localization or trust.
 - one coherent Activity with Clock / Stopwatch / Timer modes;
 - real wall clock rendered as a large analog dial plus HH:MM readout;
 - weekday and day/month formatted from a single local-time snapshot;
-- independent practice clock stepped in fifteen-minute intervals;
+- independent practice clock stepped in fifteen-minute intervals, with four tappable quarter-hour stops around the dial;
 - monotonic pause/resume stopwatch;
 - countdown with duration presets, one-time finish state and replay;
 - letterboxed 1024×600 logical scene, protected Greia Home physical region,
   keyboard mode shortcuts and interactive mouse controls;
 - low-frequency, at-most-ten-Hz screen redraw, cached Greia typography;
+- provisional icon-first clock/stopwatch/timer mode buttons and play/pause/restart controls; visible Left/Right/Tab focus and Enter activation; gentle visual countdown completion (all SOURCE-WIP, new screenshots/audio/child review pending);
 - small authored SVG clock icon with an exact verified WebP rendition;
 - separate IT and EN localization bundles and provider-free model tests.
 
@@ -68,6 +69,12 @@ until those responsibilities are satisfied. Promoting it prematurely would
 break the current first-party spoken-label completeness contract and expose
 unreviewed prereader UI in shipped builds. This is a deliberate non-regression
 boundary, not a permanent second Activity system.
+
+**Single deferred local-agent acceptance queue:**
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` lists exact test commands,
+evidence expectations, dependency/stop conditions, queue-only commit rules,
+status updates and the separate hardware authorization gate. It does not
+replace the existing Creations P1–P7 acceptance procedure or product plan.
 
 ## Clock trust and hardware rules
 
