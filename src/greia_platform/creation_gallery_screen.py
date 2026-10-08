@@ -34,6 +34,7 @@ class CreationsGalleryScreen(Screen):
         self._size: tuple[int, int] | None = None
         self._closed = False
         self.error = False
+        self._delete_focus = "cancel_delete"
 
     @property
     def surface_id(self) -> str:
@@ -70,7 +71,7 @@ class CreationsGalleryScreen(Screen):
                 self._size = size
                 self.controller.set_page_size(len(layout.cards))
                 self.painter.close()
-            self.painter.draw(screen, layout, pygame)
+            self.painter.draw(screen, layout, pygame, delete_focus=self._delete_focus)
         except (GalleryError, CreationLibraryError, ValueError, OSError, sqlite3.Error, pygame.error):
             self.error = True
         if self.error:
@@ -94,9 +95,19 @@ class CreationsGalleryScreen(Screen):
             if getattr(event, "type", None) == pygame.KEYDOWN:
                 key = getattr(event, "key", -1)
                 page = self.controller.page
-                if key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
-                    if page.pending_delete_id is not None:
+                if page.pending_delete_id is not None:
+                    # Confirmation is a true modal: no background play/replay,
+                    # navigation or second delete while the question is open.
+                    if key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
                         return self._activate("cancel_delete", None)
+                    if key == pygame.K_LEFT:
+                        self._delete_focus = "cancel_delete"
+                    elif key == pygame.K_RIGHT:
+                        self._delete_focus = "confirm_delete"
+                    elif key in (pygame.K_RETURN, pygame.K_SPACE):
+                        return self._activate(self._delete_focus, None)
+                    return UiEventResult.HANDLED
+                if key in (pygame.K_ESCAPE, pygame.K_BACKSPACE):
                     return self._activate("detail_back" if page.detail_id else "close", None)
                 if key == pygame.K_TAB and not page.detail_id:
                     families = self.controller.families
@@ -114,8 +125,6 @@ class CreationsGalleryScreen(Screen):
                             self.controller.previous_page() if direction < 0 else self.controller.next_page()
                     return UiEventResult.HANDLED
                 if key in (pygame.K_RETURN, pygame.K_SPACE):
-                    if page.pending_delete_id is not None:
-                        return self._activate("cancel_delete", None)
                     if page.detail_id is None and page.focused_id:
                         return self._activate("open", page.focused_id)
                     if page.detail_id and self.controller.mode == GalleryMode.PICKER:
@@ -152,6 +161,7 @@ class CreationsGalleryScreen(Screen):
             elif action == "replay":
                 self.controller.replay_audio(value)  # type: ignore[arg-type]
             elif action == "ask_delete":
+                self._delete_focus = "cancel_delete"
                 self.controller.ask_delete()
             elif action == "cancel_delete":
                 self.controller.cancel_delete()
