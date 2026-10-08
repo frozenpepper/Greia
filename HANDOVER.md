@@ -3269,3 +3269,7 @@ Do **not** invoke Acer flashing, install/release-image builds or physical testin
 
 **Next exact step while the local agent is unavailable:** P7 source review literacy/numeracy and creative gaps `alfabeto_leo`, `bosco_numeri`, `bottega_delle_misure`, `casa_del_dieci`, `festa_delle_rime`, `foresta_parole`, `morbidi_mostriciattoli`; address concrete owner-path flaws and append one dated ledger entry. When the local agent returns, run the cumulative one-run acceptance **from the latest source head**; stop on first failure, no Acer build/flash/boot in the Creations run.
 
+
+### 2026-10-08 — P7 batch-3 platform event identity correction
+
+After the 18-candidate draft/source review, **`c6204fbfa524dc3a0272a506cb74e8163d91236a`** changed the shared `src/greia_platform/activity_api.py` fallback event idempotency key from recyclable `id(payload)` to a fresh UUID per **new default event**, preserving explicitly supplied stable retry keys. Added **unexecuted** `tests/test_activity_event_idempotency.py`. This is the **latest executable SOURCE/TEST anchor** for the consolidated acceptance; the prior `6076879ed...` is the P7 draft-roster checkpoint only. The acceptance document now pins `c6204fbfa524dc3a0272a506cb74e8163d91236a` and includes the new test. No source, GUI, Simulator, make verify or hardware tests ran in this session; no release approval follows.

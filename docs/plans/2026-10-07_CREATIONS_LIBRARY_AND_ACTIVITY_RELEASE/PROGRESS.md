@@ -437,6 +437,11 @@ All seven have manifests reviewed, package-specific regression suites present, I
 
 **Next P7 source-review batch:** inspect seven remaining distinct curriculum/creative gap candidates: `alfabeto_leo`, `bosco_numeri`, `bottega_delle_misure`, `casa_del_dieci`, `festa_delle_rime`, `foresta_parole`, `morbidi_mostriciattoli`. Trace actual difficulty, proof of reading-free interaction, words/number teaching parity, duplication across portfolio and Creations producer capability. Preserve all deferred acceptance obligations; do not approve a roster based solely on source review.
 
+
+### 2026-10-08 — Batch-3 shared event identity follow-up (source only)
+
+A platform-wide event-semantics defect surfaced during this review: `activity_api.emit_activity_event()` generated its default idempotency key from `id(payload)`, which Python can recycle immediately. Repeated identical but **distinct** child actions therefore risk being treated as the same already-processed history fact. Fixed **centrally** in `src/greia_platform/activity_api.py` at `c6204fbfa524dc3a0272a506cb74e8163d91236a`: omitted keys now use a fresh UUID-based identity; callers supplying an explicit stable idempotency key (for semantic retries) remain unchanged. Added `tests/test_activity_event_idempotency.py` proving distinct default facts and explicit-key stability. **No test or runtime execution was performed**. The shared executable code/test acceptance anchor supersedes the previous batch-3 roster-only `6076879ed...` and is now `c6204fbfa524dc3a0272a506cb74e8163d91236a`. This preserves the same 18 draft candidates and 21/45 review coverage.
+
 ### How to maintain this file
 
 Append a dated entry to §C after every substantive session. Include commit SHA, files changed, actual test command/output and environment, screenshots reviewed if any, real remaining blockers, and **one precise next step**. Update current-state tables in §A/B as facts change; keep dated entries immutable except explicit factual corrections. Every Activity review gets one evidence-backed decision; reference source snapshots instead of pasting thousands of lines. Update `HANDOVER.md` and the appropriate existing architecture/lifecycle ledger without duplicating hardware evidence or inventing another orchestration process.

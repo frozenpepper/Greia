@@ -1,7 +1,7 @@
 # Creations Library P1–P7 — Accumulated Desktop Source, Simulator + Draft-Curation Acceptance
 
 **Scope:** non-destructive desktop **SOURCE and SIMULATOR** evidence for the 2026-10-07 Creations work, not hardware acceptance.  
-**Pinned source candidate:** `6076879ed07513e6f1545e356a6ee0b0e5e07401` (P7 batch-3 source/test + 18-candidate draft roster checkpoint; later documentation-only commits may follow).  
+**Pinned source candidate:** `c6204fbfa524dc3a0272a506cb74e8163d91236a` (P7 batch-3 source/test + 18-candidate draft roster checkpoint; later documentation-only commits may follow).  
 **Authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` and sibling `PROGRESS.md`.  
 **Expected state:** P1 adaptive capacity, P3 Gallery/authenticated trusted modal, P4 PNG interoperability, and P5 WAV + UTF-8 routes exist SOURCE-WIP. One launcher-composed `VolumeBudget` now owns variable child-data growth for Activity private storage, My Creations and history; shipped private Activity namespaces scale to 25% of the actual writable data filesystem while aggregate positive growth remains bounded by the 75% used ceiling + 512 MiB free floor. Storie della Mia Voce publishes saved narration WAVs; Teatrino can puppeteer without microphone contention; Orchestra owns durable non-autoplay backing tracks; Writing and Posta exchange independent UTF-8 snapshots. **P6 source owns a draft, release-fail-closed 18-item candidate roster; P7 has source-reviewed 21/45 (three withheld). None of the accumulated P1–P7 source has been accepted in a complete checkout or real GUI/audio/text/capacity/gameplay run yet.** Hardware evidence remains separate.
 
@@ -15,7 +15,7 @@ Work in the authorized existing Greia macOS checkout. This is **not** an install
 2. `cd` to the existing local clone and record `pwd`.
 3. `git status --short`; if there are modifications not explicitly authorized for this test, **STOP** and report filenames/HEAD. Do not stash, reset or silently discard changes.
 4. `git fetch origin main` and `git switch main && git merge --ff-only origin/main`. If ff-only fails, STOP; do not merge/rebase/reset.
-5. `git rev-parse HEAD`, `git merge-base --is-ancestor 6076879ed07513e6f1545e356a6ee0b0e5e07401 HEAD` (exit **0** required). Check `git diff --name-only 6076879ed07513e6f1545e356a6ee0b0e5e07401 HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
+5. `git rev-parse HEAD`, `git merge-base --is-ancestor c6204fbfa524dc3a0272a506cb74e8163d91236a HEAD` (exit **0** required). Check `git diff --name-only c6204fbfa524dc3a0272a506cb74e8163d91236a HEAD -- src activities runtime tests build`. It should be empty for this pinned code candidate; if not, STOP and report new source changed by other work.
 
 ### 1. Source preflight
 
@@ -71,6 +71,7 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_torre_forme.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_viaggio_delfino.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_volo_draghetto.py' -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_event_idempotency.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_p7_batch3_source_regressions.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_acquario_magico.py' -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest discover -s tests -p 'test_activity_baia_delle_orche.py' -v
@@ -185,6 +186,7 @@ The new code introduces **`tests/test_creation_selection.py`**, additional `test
 - Writing tests prove saved-private-file publication, `document` + `postcard` picker scope, strict UTF-8/digest/role checks, independent private document import, unchanged-publication deduplication and rollback when a new-document index commit fails;
 - Posta tests prove authoritative saved-card UTF-8 files, failed-index rollback/reclaim order, path-safe legacy IDs, grapheme-safe imported replacement, import failure preservation, saved-only `postcard` publication and deduplication;
 - Orchestra tests prove content-addressed private backing storage, failed-pointer rollback, WAV/role/digest validation, picker audio isolation, reserved mixer channel 0 Play/Pause/Resume, persistence-before-active-state mutation, and `concert.performed` only after real live accompaniment; its manifest regression locks the corrected free-play pedagogy and declared `instrument.played` event.
+- Activity-event default idempotency tests prove repeated equivalent facts with omitted keys receive independent unique IDs, while explicit retry keys remain unchanged; do not allow recycled Python object addresses to suppress feeding/emotion/progression facts;
 - action-pointer tests prove Corsa explicitly recognizes event-queued press→drag→release/focus loss even if global mouse state changed, Quattro cannot hover/drop in protected chrome, and Delfino switches its render path to the new canvas in the same resize frame;
 - Torre direct-script regression exercises snap and cleared-particle effects in the production import context, not merely a package import at boot; Dragon manifest test locks the actual endless milestone-only event set;
 - release staging tests prove the **18-candidate draft** stages only the reviewed subset, remains refuse-to-release until explicitly approved, and does not install the withheld Orca/Dolphin/Dragon just because they exist in source;
