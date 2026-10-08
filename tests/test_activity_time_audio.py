@@ -68,12 +68,33 @@ class TimeAudioBoundaryTests(unittest.TestCase):
             ):
                 sound.side_effect = lambda source: source
                 transport = LocalTimeSpeechTransport(resources)
+                # Indexing the locale bundle must not decode 7 possible clips
+                # on the child's low-resource machine before the first frame.
+                sound.assert_not_called()
                 self.assertTrue(transport.has_clip("instruction.clock"))
+                self.assertTrue(transport.play("instruction.clock"))
                 self.assertTrue(transport.play("instruction.clock"))
                 sound.assert_called_once_with(
                     str(resources.package_root / "assets" / "voices" / "english.wav")
                 )
-                channel.return_value.play.assert_called_once()
+                self.assertEqual(channel.return_value.play.call_count, 2)
+
+    def test_invalid_clip_fails_closed_without_redecoding(self) -> None:
+        with TemporaryDirectory() as tmp:
+            resources = _resources(Path(tmp), english_clip=True)
+            import pygame
+            with (
+                patch("pygame.mixer.get_init", return_value=(22050, -16, 2)),
+                patch("pygame.mixer.Channel"),
+                patch("pygame.mixer.Sound", side_effect=pygame.error("bad audio")) as sound,
+            ):
+                transport = LocalTimeSpeechTransport(resources)
+                sound.assert_not_called()
+                self.assertTrue(transport.has_clip("instruction.clock"))
+                self.assertFalse(transport.play("instruction.clock"))
+                self.assertFalse(transport.has_clip("instruction.clock"))
+                self.assertFalse(transport.play("instruction.clock"))
+                self.assertEqual(sound.call_count, 1)
 
     def test_audio_device_unavailable_is_silent_and_decodes_nothing(self) -> None:
         with TemporaryDirectory() as tmp:
