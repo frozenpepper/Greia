@@ -614,3 +614,16 @@ the countdown elapses.
 ### How to maintain this file
 
 Append a dated entry to §C after every substantive session. Include commit SHA, files changed, actual test command/output and environment, screenshots reviewed if any, real remaining blockers, and **one precise next step**. Update current-state tables in §A/B as facts change; keep dated entries immutable except explicit factual corrections. Every Activity review gets one evidence-backed decision; reference source snapshots instead of pasting thousands of lines. Update `HANDOVER.md` and the appropriate existing architecture/lifecycle ledger without duplicating hardware evidence or inventing another orchestration process.
+
+### 2026-10-08 — Practice dial hour and minute touch separation (SOURCE-ONLY)
+
+In the existing incubated My Time Activity, 12 hour selections occupy the
+inner dial ring, and four quarter-hour minute selections occupy the outer
+dial ring. A deliberate radial gap is inert. The illustrated 12-hour hand
+keeps its current AM/PM half-day, and neither input can mutate wall time,
+stopwatch, countdown, Parent time policy or platform Home.
+Model and actual Activity press-path regression cases added, but **not
+executed locally in this GitHub-only session**. Local-agent GLA-003 now
+checks both rings in IT/EN at 1024x600 and 800x480. All old and outstanding
+voice, source acceptance, Shell, physical and release boundaries remain;
+do not promote from incubator.

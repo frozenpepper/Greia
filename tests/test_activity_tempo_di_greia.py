@@ -99,6 +99,66 @@ class TimeToolModelTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             state.set_practice_minute(16)
 
+    def test_inner_hour_and_outer_quarter_regions_are_disjoint(self) -> None:
+        from activity_incubator.tempo_di_greia.time_interaction import (
+            DIAL_CENTER, practice_hour_at_point, practice_quarter_at_point,
+        )
+        x, y = DIAL_CENTER
+        for point, hour in (
+            ((x, y - 87), 12), ((x + 87, y), 3),
+            ((x, y + 87), 6), ((x - 87, y), 9),
+        ):
+            with self.subTest(point=point):
+                self.assertEqual(practice_hour_at_point(point), hour)
+                self.assertIsNone(practice_quarter_at_point(point))
+        for point in ((x, y), (x + 112, y), (x + 150, y)):
+            self.assertIsNone(practice_hour_at_point(point))
+        self.assertIsNone(practice_quarter_at_point((x + 112, y)))
+        self.assertEqual(practice_quarter_at_point((x + 150, y)), 15)
+
+    def test_touching_hours_changes_only_imagined_time_and_not_counters(self) -> None:
+        import os
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from activity_incubator.tempo_di_greia.time_app import TimeActivity
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+        from activity_incubator.tempo_di_greia.time_interaction import DIAL_CENTER
+        pygame.init()
+        try:
+            wall = datetime(2026, 10, 8, 23, 45, tzinfo=timezone.utc)
+            monotonic = FakeClock()
+            state = TimeExperience(wall_now=lambda: wall, monotonic=monotonic)
+            state.timer.set_duration(180)
+            state.timer.start()
+            state.stopwatch.start()
+            app = TimeActivity(pygame.Surface((1024, 600)), "it",
+                               {key: key for key in WORD_KEYS}, state)
+            x, y = DIAL_CENTER
+            app.press((x + 87, y))
+            self.assertEqual(state.shown_time(), wall)
+            state.set_practice(True)
+            app.press((x + 87, y))
+            self.assertEqual((state.shown_time().hour, state.shown_time().minute), (15, 45))
+            app.press((x + 150, y))
+            self.assertEqual((state.shown_time().hour, state.shown_time().minute), (15, 15))
+            app.press((x + 112, y))
+            self.assertEqual((state.shown_time().hour, state.shown_time().minute), (15, 15))
+            state.set_practice_hour(12)
+            self.assertEqual(state.shown_time().hour, 12)
+            for invalid in (True, 0, 13, 2.5):
+                with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                    state.set_practice_hour(invalid)
+            monotonic.value += 20
+            self.assertEqual(state.timer.remaining(), 160)
+            self.assertEqual(state.stopwatch.seconds(), 20)
+            state.set_practice(False)
+            self.assertEqual(state.shown_time(), wall)
+            app.renderer.draw(app.canvas.surface, state)
+            app.renderer.fonts.clear()
+        finally:
+            pygame.quit()
+
     def test_time_source_separates_wall_clock_jump_from_stopwatch(self) -> None:
         clock = FakeClock()
         wall = [datetime(2026, 1, 1, 12, tzinfo=timezone.utc)]

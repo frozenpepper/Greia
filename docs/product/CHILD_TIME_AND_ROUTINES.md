@@ -48,7 +48,7 @@ invent date/time parsing, localization or trust.
 - one coherent Activity with Clock / Stopwatch / Timer modes;
 - real wall clock rendered as a large analog dial plus HH:MM readout;
 - weekday and day/month formatted from a single local-time snapshot;
-- independent practice clock stepped in fifteen-minute intervals, with four tappable quarter-hour stops around the dial;
+- independent practice clock with separate touch rings for twelve inner illustrated hour stops and four outer quarter-hour stops;
 - monotonic pause/resume stopwatch;
 - countdown with duration presets, one-time finish state and replay;
 - letterboxed 1024×600 logical scene, protected Greia Home physical region,
@@ -57,6 +57,8 @@ invent date/time parsing, localization or trust.
 - provisional icon-first clock/stopwatch/timer mode buttons and play/pause/restart controls; visible Left/Right/Tab focus and Enter activation; gentle visual countdown completion (all SOURCE-WIP, new screenshots/audio/child review pending);
 - small authored SVG clock icon with an exact verified WebP rendition;
 - separate IT and EN localization bundles and provider-free model tests.
+
+**Dual-ring practice input remains SOURCE-ONLY.** The inner ring changes the illustrated hour in the current AM/PM half-day and the outer ring changes imagined minutes. Visual, small-screen and child usability review remains outstanding, and the dual-ring teaching interaction is not an accepted pedagogical design yet.
 
 **What it does NOT yet have:** spoken labels/instructions or local title WAVs,
 finished child-safe sound, real children usability evidence, accepted full-size

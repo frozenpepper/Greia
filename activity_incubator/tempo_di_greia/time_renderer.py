@@ -172,8 +172,17 @@ class TimeRenderer:
                     math.pi / 2 - (clamped * 2 * math.pi), math.pi / 2, 24,
                 )
         if practice:
-            # Four big visual touch stops around the dial face. Clicking
-            # them directly moves the illustrated minute hand only.
+            # Two disjoint, touchable rings: 12 illustrated hours inside;
+            # quarter-hour minutes on the outer rim.
+            pygame.draw.circle(screen, (208, 187, 226), (x, y), 106, 2)
+            for hour in range(1, 13):
+                angle = math.radians(hour * 30 - 90)
+                dot = (round(x + 87 * math.cos(angle)), round(y + 87 * math.sin(angle)))
+                selected = angles is not None and int(angles[0] // 30) % 12 == hour % 12
+                pygame.draw.circle(screen, PURPLE if selected else (205, 184, 221),
+                                   dot, 9 if selected else 6)
+                if selected:
+                    pygame.draw.circle(screen, PAPER, dot, 3)
             for quarter, degrees in ((0, -90), (15, 0), (30, 90), (45, 180)):
                 a = math.radians(degrees)
                 dot = (round(x + 156 * math.cos(a)), round(y + 156 * math.sin(a)))

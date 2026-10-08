@@ -2864,3 +2864,17 @@ added, not used to change production assets. Owner-authorized local agent
 tests and evidence updates belong to the **one queue**:
 `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`. This parallel work
 does not supersede the blocking R1 remediation or lifecycle authority.
+
+
+### 2026-10-08 — Practice dial hour and minute touch separation (SOURCE-ONLY)
+
+In the existing incubated My Time Activity, 12 hour selections occupy the
+inner dial ring, and four quarter-hour minute selections occupy the outer
+dial ring. A deliberate radial gap is inert. The illustrated 12-hour hand
+keeps its current AM/PM half-day, and neither input can mutate wall time,
+stopwatch, countdown, Parent time policy or platform Home.
+Model and actual Activity press-path regression cases added, but **not
+executed locally in this GitHub-only session**. Local-agent GLA-003 now
+checks both rings in IT/EN at 1024x600 and 800x480. All old and outstanding
+voice, source acceptance, Shell, physical and release boundaries remain;
+do not promote from incubator.

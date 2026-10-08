@@ -156,15 +156,17 @@ test commands and expected observable behavior.
   **minimum source SHA:** `d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f`
 - **Exact suite:** `python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v`
   **MANDATORY AGAIN**: the Activity changed after the old 10/10 PASS. Check
-  quarter-hour dial hit-geometry, actual clock isolation, icon rendering,
+  inner-hour/outer-quarter dial hit-geometry, actual clock isolation, icon rendering,
   visible keyboard focus and Return activation. Never reuse the old PASS for this newer source.
 - **Hands-on:** actual desktop Pygame or supported full Simulator with a
   disposable profile, both locales, 1024×600 and 800×480. Exercise the
   clock, practice 23:45→00:15, timer 1/3/5/10, running/pause/finish/restart,
   stopwatch, keyboard alternatives (LEFT/RIGHT/TAB focus and ENTER),
-  protected Home corner and resize. In practice mode touch each of the
-  quarter-hour dial markers at 12/3/6/9; verify 0/15/30/45 minute changes
-  but NO real system time changes. Inspect icon-first mode/action controls,
+  protected Home corner and resize. In practice mode touch each of the 12 inner hour positions and each
+  outer quarter-hour marker (12/3/6/9). Verify only the intended hand
+  changes; the center and ring gap are inert. Check the AM/PM half-day
+  selection rule and ensure real system time, Parent limits and
+  running stopwatch/countdown are never changed. Inspect icon-first mode/action controls,
   focused outline, and gentle timer-finished stars in both languages.
   For any new child-friendly icon controls verify they work **without**
   reading text. Capture screen before/after actions with a clear file name.
@@ -313,6 +315,8 @@ test commands and expected observable behavior.
 - **2026-10-08:** Prepared semantic IT/EN Dani recording requests in the
   Time incubator VOICE_PRODUCTION_BRIEF. No production, audio generation,
   human listening, runtime playback or provider authorization yet.
+
+- **2026-10-08:** Owner GitHub continuation added a 12-position inner hour ring and four outer quarter-hour touch stops in the incubated My Time Activity, with focused real-input/model tests. Unexecuted, no child visual signoff. GLA-003 covers current source acceptance.
 
 - **2026-10-08:** A running Timer completion no longer disappears when
   the child switches to Clock/Stopwatch at the moment it finishes;

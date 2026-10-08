@@ -145,6 +145,19 @@ class TimeExperience:
         total = (self._practice_hour * 60 + self._practice_minute + minutes) % (24 * 60)
         self._practice_hour, self._practice_minute = divmod(total, 60)
 
+    def set_practice_hour(self, hour: int) -> None:
+        """Set the imagined hour hand in the current AM/PM half-day.
+
+        The real clock, countdown, stopwatch and parent time policy
+        are never modified.
+        """
+        if not self.practice:
+            return
+        if isinstance(hour, bool) or not isinstance(hour, int) or not 1 <= hour <= 12:
+            raise ValueError("practice hour must be from 1 through 12")
+        half_day = 12 if self._practice_hour >= 12 else 0
+        self._practice_hour = half_day + hour % 12
+
     def set_practice_minute(self, minute: int) -> None:
         """Turn only the imagined minute hand to a quarter-hour point.
 

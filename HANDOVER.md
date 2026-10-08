@@ -1,5 +1,24 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-08 — Practice clock dual-ring continuation
+
+**SOURCE-WIP.** The My Time incubator now distinguishes 12 inner hour touch
+positions from four outer minute-quarter positions, preserving actual
+clock, running timers, Parent policy and trusted Greia Home. Disjoint radial
+hit geometry, hour AM/PM semantics and real Activity input tests were added.
+
+**Evidence boundary:** no current-checkout test run, new screenshots,
+spoken clips, listened review, GUI Simulator or hardware testing this turn.
+Old 10/10 Time domain acceptance does not validate these changes.
+The source remains incubated and release status stays draft.
+
+**Next exact action:** Local agent pulls current main and follows
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` GLA-001/002/003.
+At GLA-003 test both touch rings, center/gap non-actions, real-clock
+isolation, timer/stopwatch survival, both locales and 800x480 legibility.
+Any failure stops that task and returns full evidence for GitHub repair.
+
+
 ## 2026-10-08 — Product implementation + one local-agent execution queue
 
 **Last current source/test anchor:** `33b0ddc680bb72417b4dc00c5a624840a0d8595f`
