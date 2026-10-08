@@ -6,8 +6,7 @@
 `activity_incubator/tempo_di_greia/`. No release/installer/Parent time
 policy modifications or accepted visual/audio/hardware evidence.
 
-**Observed issue fixed in source:** An already-expired injected stopwatch/
-countdown fixture could present a timer completion to `TimeSpeech` before
+**Observed issue fixed in source:** An already-expired injected countdown fixture could present a timer completion to `TimeSpeech` before
 the first meaningful Activity frame and READY. The controller now
 defers pre-READY completion, then speaks terminal feedback after READY
 instead of playing stale launch welcome or first-use guidance. Its
