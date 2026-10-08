@@ -368,6 +368,16 @@ test commands and expected observable behavior.
   800×480 (2×3) and 480×320 (compact 3×2) Home portal layout.
   Correct Italian/English labels, sufficient real targets, complete
   visibility, profile switcher and Back/OS chrome are critical.
+  **New source-committed compact caption behavior:** at 800px
+  and below, My Creations visibly says **Creazioni** (IT) /
+  **Creations** (EN) instead of shrinking the full longer title;
+  at 1024px the full **Le mie creazioni** / **My Creations**
+  remains. Inspect the visual result and any remaining ugly
+  squashing or overlaps, with actual fonts and PNG assets.
+  `test_child_home_creation_organization.py` now tests the
+  full/compact text in IT/EN/ES/DE/FR without changing the
+  spoken semantic identifier; **GLA-010 prerecorded cue still
+  missing**, not waived by a shorter printed caption.
 - **Exact additional source checks (separately logged; stop first failure):**
   ```bash
   python3 -m unittest discover -s tests -p 'test_child_home_creation_organization.py' -v
@@ -425,9 +435,11 @@ test commands and expected observable behavior.
 - **Evidence:** contact sheet + ranked severity/fix recommendations,
   source hashes, no source art change or unsupported design PASS.
   Owner approves any major visual redesign direction later.
-- **Last result:** 32-candidate draft curation map, distinct theme icons,
-  and bilingual launch-caption source implemented; all new regression
-  tests, real contact sheet and IT/EN Shell screenshots UNEXECUTED.
+- **Last result:** compact Home label source + additional text tests
+  implemented (minimum `0439f5ef5703ed697200fc2a32167643d360cc8a`);
+  actual whole-Shell snapshots and full 114-item contact
+  sheet remain **NOT TESTED**. A remote local SVG-only preview
+  of the real authored portal/card frames is NOT live app evidence.
 
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
@@ -475,6 +487,20 @@ test commands and expected observable behavior.
   authoring/approval NOT PERFORMED.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-08:** Source design follow-up shortened only the
+  narrow-screen visible `my_creations` Home label (IT/EN/ES/DE/FR)
+  without altering full labels, spoken lookup or child collection
+  ownership. Added actual table-based text regression.
+  The remote execution runtime contains Python, Pillow,
+  CairoSVG and Xvfb, but **does not contain Pygame or a
+  Greia project checkout**, and its outbound GitHub DNS
+  cannot clone private source. Python locally rasterized the
+  authentic `portal_frame.svg`/`activity_card.svg` source
+  successfully as an **art asset contact image only**; no
+  actual Activity was launched/screenshot. GLA-008
+  actual Greia GUI remains UNEXECUTED. Do not substitute
+  this authored asset preview for Shell Simulator evidence.
 
 - **2026-10-08:** P6 resumed Play/Learn curation instead of
   infrastructure. Counted real 32-candidate draft memberships,
