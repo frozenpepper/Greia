@@ -1,8 +1,8 @@
 # Greia — Local Agent Work Queue
 
 **Owner:** repository owner; **execution:** authorized local agent when available
-**Branch:** `main`; **mode:** read/execute/report only unless a task explicitly authorizes source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `1ad10e400855d13201afb243c7e1cb2d0f148778`
+**Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
+**Updated:** 2026-10-08; **queue source baseline:** `0a09eaf49b247d4c6f427481530a02ce370c9123` (later docs-only commits permitted)
 **Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -71,8 +71,7 @@ implementation completeness. For each task, preserve its ID, scope,
 test commands and expected observable behavior.
 
 - Before starting: refresh current `main`, inspect tasks and dependencies;
-  change one selected task to `IN_PROGRESS` **only in an authorized
-  queue-only documentation commit**, recording tested HEAD and run directory.
+  change one selected task to `IN_PROGRESS` in a queue-only documentation commit (owner-authorized 2026-10-08), recording tested HEAD and run directory.
   If commits are not authorized in the current invocation, do not edit
   this file: record the intended status change in the returned
   `QUEUE_UPDATE.md` instead.
@@ -89,8 +88,7 @@ test commands and expected observable behavior.
   PASS to the new SHA**. State `PASS@oldSHA`, reopen only affected
   checks and quote `git diff --name-only`. Leave unrelated previous
   PASS results intact with provenance.
-- A queue-only documentation update may be committed to `main` if the
-  owner explicitly authorizes **queue maintenance**. Check current HEAD
+- The owner explicitly authorizes queue-only documentation updates on `main` (unless later revoked). Check current HEAD
   immediately before writing, preserve concurrent work, stage **only this
   file** with `git add docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`,
   commit a descriptive queue/evidence-only message and push fast-forward.
@@ -157,17 +155,24 @@ test commands and expected observable behavior.
 - **Priority:** P1; **dependency:** GLA-002 PASS;
   **minimum source SHA:** `d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f`
 - **Exact suite:** `python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v`
-  only if source in its ownership changed since the previous 10/10 PASS.
-  Otherwise reuse the prior `PASS@b96b08d3` with provenance.
+  **MANDATORY AGAIN**: the Activity changed after the old 10/10 PASS. Check
+  quarter-hour dial hit-geometry, actual clock isolation, icon rendering,
+  visible keyboard focus and Return activation. Never reuse the old PASS for this newer source.
 - **Hands-on:** actual desktop Pygame or supported full Simulator with a
   disposable profile, both locales, 1024×600 and 800×480. Exercise the
   clock, practice 23:45→00:15, timer 1/3/5/10, running/pause/finish/restart,
-  stopwatch, keyboard alternatives, protected Home corner and resize.
+  stopwatch, keyboard alternatives (LEFT/RIGHT/TAB focus and ENTER),
+  protected Home corner and resize. In practice mode touch each of the
+  quarter-hour dial markers at 12/3/6/9; verify 0/15/30/45 minute changes
+  but NO real system time changes. Inspect icon-first mode/action controls,
+  focused outline, and gentle timer-finished stars in both languages.
   For any new child-friendly icon controls verify they work **without**
   reading text. Capture screen before/after actions with a clear file name.
 - **PASS:** all functional state transitions correct, no text clipped,
   no input stealing Home, no unexpected dialog, no system clock or parental
   screen-time mutation. Review legibility at actual **800×480 pixels**.
+  Source now has new controls, so the old 11 direct-renderer PNGs do not
+  replace current screenshot/child-usability review.
 - **If no GUI:** `NOT_TESTABLE`, keep SDL dummy proof separately;
   do not invent interaction or visual acceptance.
 - **Last result:** previous 10/10 model + 11 SDL dummy frames
@@ -256,14 +261,24 @@ test commands and expected observable behavior.
   `docs/design/GREIA_CANONICAL_CAST_SYSTEM.md`,
   `docs/design/GREIA_VISUAL_STYLE_GUIDE.md`,
   `docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md`.
-- **Do:** assemble a **single** contact sheet of 39 core icons,
-  six characters (five expressive states each), current launcher
-  screenshots and selected 45 Activity icons. Inspect actual icon legibility
-  at 128, 64 and 48 px. Judge style mismatch, unnecessary empty space,
-  hierarchy, accessibility, pre-reader uniqueness and low-end performance.
-- **Evidence:** one annotated contact sheet + ranked severity/fix
-  recommendations, source hashes, no new asset admission or vague
-  subjective PASS claim. Owner approves visual direction later.
+- **New source/test minimum SHA:** `0a09eaf49b247d4c6f427481530a02ce370c9123`.
+- **Commands (save logs/exit codes; STOP on first failure):**
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_visual_family_contact_sheet.py' -v
+  python3 tools/visual_family_contact_sheet.py --output "$EVIDENCE/greia-art-family.png"
+  ```
+- **Do:** inspect the **single generated contact sheet** with 39 canonical
+  core icons, 45 Activity icons and 30 canonical character expression images.
+  The same real artwork is rendered side-by-side at 128/64/48 px. Compare to
+  existing Greia launcher screenshots separately; do not silently blend
+  screenshots into authored art. Judge stylistic mismatch, empty space,
+  hierarchy, pre-reader uniqueness, contrast and tiny-size legibility.
+- **Expected:** unit test PASS; actual PNG opens, all 114 tiles are present,
+  columns do not overlap, original assets unchanged. Developer-only output;
+  never staged in the installed OS.
+- **Evidence:** contact sheet + ranked severity/fix recommendations,
+  source hashes, no source art change or unsupported design PASS.
+  Owner approves any major visual redesign direction later.
 - **Last result:** NOT TESTED at current source.
 
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
@@ -285,8 +300,12 @@ test commands and expected observable behavior.
   eleven SDL dummy frames, 101/101 source gallery previews; old harness
   bridge failure persisted; HTML GUI not available.
 - **2026-10-08:** GitHub source added owned bridge + real Pygame test and
-  visible gallery tags (`fa0526aa` is complete source/test anchor);
-  NOT yet executed on local machine.
+  visible gallery tags (`fa0526aa` source/test anchor); NOT executed yet.
+- **2026-10-08:** Time incubator gained direct quarter-hour touch, icon-first
+  controls, gentle visual timer stars and visible arrow/Tab/Return focus
+  (`3a9b9b8b`); refreshed suite and screenshots pending.
+- **2026-10-08:** Actual-art contact sheet source generator + tests added
+  (`0a09eaf4`); all visual acceptance pending.
 
 When the GitHub developer changes an API or acceptance target, update the
 affected task in this SAME FILE in the same source commit, preserving all
