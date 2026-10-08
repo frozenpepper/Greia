@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `33b0ddc680bb72417b4dc00c5a624840a0d8595f` (later docs-only commits permitted)
+**Updated:** 2026-10-08; **queue source baseline:** `01b1f535878d52139ac7660c686b65ce93e584d7` (later docs-only commits permitted)
 **Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -152,10 +152,15 @@ test commands and expected observable behavior.
 ### GLA-003 — Current My Time model and real-interaction review
 
 - **Status:** READY
-- **Priority:** P1; **dependency:** GLA-002 PASS;
-  **minimum source SHA:** `d75b5e2b714a3e46f5dda6a3c5421acd4ca65e8f`
+- **Priority:** P1; **dependency:** current checkout required for source suite;
+  **GLA-002 PASS required for the hands-on/Simulator leg, not the isolated
+  source model suite**; **minimum source SHA:**
+  `01b1f535878d52139ac7660c686b65ce93e584d7`
 - **Exact suite:** `python3 -m unittest discover -s tests -p 'test_activity_tempo_di_greia.py' -v`
-  **MANDATORY AGAIN**: the Activity changed after the old 10/10 PASS. Check
+  **MANDATORY AGAIN**: run this suite on the current checkout even
+  if GLA-001/002 exposes an isolated bridge failure; report its result
+  independently and do not call the full GLA-003 task PASS. The Activity
+  changed after the old 10/10 PASS. Check
   inner-hour/outer-quarter dial hit-geometry, actual clock isolation, icon rendering,
   visible keyboard focus and Return activation. Never reuse the old PASS for this newer source.
 - **Hands-on:** actual desktop Pygame or supported full Simulator with a
