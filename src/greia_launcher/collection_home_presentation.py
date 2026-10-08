@@ -345,7 +345,13 @@ class CollectionFirstHomeMixin:
             )
             screen.blit(icon, icon.get_rect(center=(target.centerx, target.centery - 2)))
 
-            label_text = _category_title(collection.collection_id, self._active_locale)
+            # A six-portal layout should not squeeze a long saved-work label
+            # into unreadable miniature text on the 480–800px canvases.
+            label_text = _category_title(
+                collection.collection_id,
+                self._active_locale,
+                compact=width <= 800,
+            )
             label = self._category_label_surface(
                 label_text,
                 label_size,
