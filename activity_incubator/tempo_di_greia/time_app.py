@@ -162,7 +162,10 @@ class TimeActivity:
             for event in pygame.event.get():
                 self.handle_event(event)
             moment = time.monotonic()
-            if self.model.timer.consume_completion():
+            # A child may switch tabs while a foreground timer is running.
+            # Do not consume its only completion signal on an invisible tab.
+            # Show the finish feedback when Timer is visible again.
+            if self.model.mode is TimeMode.TIMER and self.model.timer.consume_completion():
                 self.celebrate_until = moment + 3.0
                 self.dirty = True
             # Idle clock redraws only once/second; an active elapsed counter
