@@ -37,7 +37,9 @@ class ContrariModel:
 
     def __init__(self) -> None:
         self.category: OppositeCategory = OppositeCategory.UP_DOWN
-        self.discovered_categories: set[OppositeCategory] = {OppositeCategory.UP_DOWN}
+        # A visit to a category is not an exploration milestone; the child
+        # must trigger the opposite animation at least once.
+        self.discovered_categories: set[OppositeCategory] = set()
         self.completed_all: bool = False
 
         # States for each opposite scene
@@ -72,10 +74,20 @@ class ContrariModel:
 
     def set_category(self, cat: OppositeCategory) -> None:
         self.category = cat
-        self.discovered_categories.add(cat)
-        if len(self.discovered_categories) == len(OppositeCategory):
-            self.completed_all = True
         self.particles.clear()
+
+    def record_exploration(self) -> tuple[bool, bool]:
+        """Return (first interaction in category, first all-five completion)."""
+        if self.category in self.discovered_categories:
+            return (False, False)
+        self.discovered_categories.add(self.category)
+        completed_now = (
+            not self.completed_all
+            and len(self.discovered_categories) == len(OppositeCategory)
+        )
+        if completed_now:
+            self.completed_all = True
+        return (True, completed_now)
 
     def toggle_up_down(self) -> bool:
         self.is_up = not self.is_up

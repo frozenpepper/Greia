@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import unittest
+from unittest.mock import Mock, patch
 
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 import pygame
@@ -37,9 +38,13 @@ class TestContrariDomain(unittest.TestCase):
         for cat in OppositeCategory:
             self.model.set_category(cat)
             self.assertEqual(self.model.category, cat)
-            self.assertIn(cat, self.model.discovered_categories)
-
+            self.assertNotIn(cat, self.model.discovered_categories)
+            first, complete = self.model.record_exploration()
+            self.assertTrue(first)
+            self.assertEqual(complete, cat == OppositeCategory.FAST_SLOW)
+            self.assertFalse(self.model.record_exploration()[0])
         self.assertTrue(self.model.completed_all)
+        self.assertFalse(self.model.record_exploration()[1])
 
     def test_up_down_toggle(self) -> None:
         is_up = self.model.toggle_up_down()
@@ -115,6 +120,45 @@ class TestContrariRendererAndApp(unittest.TestCase):
         self.renderer = ContrariRenderer()
         self.audio = ContrariAudio(PACKAGE_ROOT, locale="it")
         self.app = ContrariActivity(self.screen, self.renderer, self.audio, self.model)
+
+    def test_events_follow_interactions_once_not_toolbar_visits(self) -> None:
+        events = Mock()
+        app = ContrariActivity(self.screen, self.renderer, self.audio, self.model, events)
+        for cat, rect in self.renderer.category_buttons.items():
+            app._handle_pointer_down(rect.center)
+            self.assertEqual(self.model.category, cat)
+        events.opposite_explored.assert_not_called()
+        events.all_opposites_completed.assert_not_called()
+        for cat, rect in self.renderer.category_buttons.items():
+            app._handle_pointer_down(rect.center)
+            app._handle_pointer_down(self.renderer.play_surface_rect.center)
+        self.assertEqual(events.opposite_explored.call_count, 5)
+        events.all_opposites_completed.assert_called_once()
+        app._handle_pointer_down(self.renderer.play_surface_rect.center)
+        self.assertEqual(events.opposite_explored.call_count, 5)
+        events.all_opposites_completed.assert_called_once()
+
+    def test_protected_pointer_cannot_select_or_exit(self) -> None:
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+        app = ContrariActivity(self.screen, self.renderer, self.audio, self.model)
+        vp = activity_viewport_for_surface(self.screen)
+        rect = vp.protected_regions[0]
+        initial = self.model.category
+        app._handle_pointer_down((int(rect.x) + 1, int(rect.y) + 1))
+        self.assertEqual(self.model.category, initial)
+        self.assertTrue(app.running)
+
+    def test_event_adapter_uses_platform_event_contract(self) -> None:
+        from activities.mondo_contrari.contrari_app import GreiaContrariEvents
+        with patch("activities.mondo_contrari.contrari_app.emit_activity_event") as emit:
+            adapter = GreiaContrariEvents()
+            adapter.opposite_explored(OppositeCategory.UP_DOWN)
+            adapter.all_opposites_completed()
+        self.assertEqual(emit.call_count, 2)
+        self.assertEqual(emit.call_args_list[0].args[0], "mondo_contrari.opposite_explored")
+        self.assertEqual(emit.call_args_list[0].args[1], {"category": "up_down"})
+        self.assertEqual(emit.call_args_list[1].args[0], "mondo_contrari.all_opposites_completed")
+        self.assertTrue(emit.call_args_list[0].kwargs["idempotency_key"])
 
     def test_render_all_categories_without_crash(self) -> None:
         for cat in OppositeCategory:

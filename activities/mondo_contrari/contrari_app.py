@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import random
 import time
+from typing import Protocol
+from uuid import uuid4
 
 import pygame
 
-from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_api import activity_stop_requested, emit_activity_event, mark_activity_ready
+from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 
 if __package__:
     from .contrari_audio import ContrariAudio, ContrariSpeechQueue
@@ -29,6 +32,32 @@ else:
     from contrari_renderer import ContrariRenderer
 
 
+class ContrariEventPort(Protocol):
+    def opposite_explored(self, category: OppositeCategory) -> None: ...
+    def all_opposites_completed(self) -> None: ...
+
+
+class GreiaContrariEvents:
+    """One launch-scoped progression adapter for genuine opposite interactions."""
+
+    def __init__(self) -> None:
+        self._session_id = uuid4().hex
+
+    def opposite_explored(self, category: OppositeCategory) -> None:
+        emit_activity_event(
+            "mondo_contrari.opposite_explored",
+            {"category": category.value},
+            idempotency_key=f"contrari:{self._session_id}:{category.value}",
+        )
+
+    def all_opposites_completed(self) -> None:
+        emit_activity_event(
+            "mondo_contrari.all_opposites_completed",
+            {"categories": len(OppositeCategory)},
+            idempotency_key=f"contrari:{self._session_id}:all",
+        )
+
+
 class ContrariActivity:
     """Greia Activity controller for Mondo Contrari."""
 
@@ -38,8 +67,11 @@ class ContrariActivity:
         renderer: ContrariRenderer,
         audio: ContrariAudio,
         model: ContrariModel,
+        events: ContrariEventPort | None = None,
     ) -> None:
         self.screen = screen
+        self.canvas = PygameReferenceCanvas(screen)
+        self.events = events if events is not None else GreiaContrariEvents()
         self.renderer = renderer
         self.audio = audio
         self.model = model
@@ -67,15 +99,25 @@ class ContrariActivity:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         self.running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self._handle_pointer_down(event.pos)
+                elif event.type == pygame.VIDEORESIZE:
+                    self.screen = pygame.display.get_surface() or self.screen
+                    self.canvas = PygameReferenceCanvas(self.screen)
+                elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
+                        continue
+                    pos = getattr(event, "pos", None)
+                    if pos is None:
+                        width, height = self.screen.get_size()
+                        pos = (int(event.x * width), int(event.y * height))
+                    self._handle_pointer_down(pos)
 
             # Update physics & speech
             self.model.update(dt)
             self.speech_queue.update(dt)
 
             # Render scene
-            self.renderer.render(self.screen, self.model)
+            self.renderer.render(self.canvas.surface, self.model)
+            self.canvas.present()
             pygame.display.flip()
             if not ready_published:
                 mark_activity_ready()
@@ -85,16 +127,24 @@ class ContrariActivity:
         pygame.quit()
         return 0
 
-    def _to_reference_pos(self, physical_pos: tuple[int, int]) -> tuple[int, int]:
-        sw, sh = self.screen.get_size()
-        if (sw, sh) == (REFERENCE_WIDTH, REFERENCE_HEIGHT):
-            return physical_pos
-        rx = int(physical_pos[0] * (REFERENCE_WIDTH / max(1, sw)))
-        ry = int(physical_pos[1] * (REFERENCE_HEIGHT / max(1, sh)))
-        return (rx, ry)
+    def _to_reference_pos(self, physical_pos: tuple[int, int]) -> tuple[int, int] | None:
+        viewport = activity_viewport_for_surface(self.screen)
+        x, y = physical_pos
+        if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+            return None
+        if any(
+            r.x <= x < r.right and r.y <= y < r.bottom
+            for r in viewport.protected_regions
+        ):
+            return None
+        logical = self.canvas.pointer(physical_pos)
+        return (int(logical[0]), int(logical[1])) if logical is not None else None
 
     def _handle_pointer_down(self, physical_pos: tuple[int, int]) -> None:
-        ref_x, ref_y = self._to_reference_pos(physical_pos)
+        pos = self._to_reference_pos(physical_pos)
+        if pos is None:
+            return
+        ref_x, ref_y = pos
 
         # 1. Check Top Category Toolbar
         for cat, rect in self.renderer.category_buttons.items():
@@ -152,6 +202,12 @@ class ContrariActivity:
             is_fast = self.model.toggle_fast_slow()
             self.audio.play_sfx("whoosh" if is_fast else "pop")
             self.speech_queue.enqueue("fast" if is_fast else "slow", delay_after=0.3)
+
+        newly_explored, completed = self.model.record_exploration()
+        if newly_explored:
+            self.events.opposite_explored(cat)
+        if completed:
+            self.events.all_opposites_completed()
 
         # Occasional praise from Flash
         if self._interactions_count % 4 == 0:
