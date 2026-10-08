@@ -331,6 +331,67 @@ class TimeToolModelTests(unittest.TestCase):
         finally:
             pygame.quit()
 
+    def test_voice_replay_visible_only_with_actual_spoken_cue(self) -> None:
+        import os
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from activity_incubator.tempo_di_greia.time_app import TimeActivity
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS, REPLAY_BUTTON
+        from activity_incubator.tempo_di_greia.time_speech import TimeSpeech
+        from activity_incubator.tempo_di_greia.time_model import TimeMode
+
+        class Voice:
+            def __init__(self, available: bool) -> None:
+                self.available = available
+                self.history: list[str] = []
+                self.playing = False
+
+            def has_clip(self, cue: str) -> bool:
+                return self.available and cue == "instruction.clock"
+
+            def play(self, cue: str) -> bool:
+                if not self.has_clip(cue):
+                    return False
+                self.history.append(cue)
+                self.playing = True
+                return True
+
+            def stop(self) -> None:
+                self.playing = False
+
+            def busy(self) -> bool:
+                return self.playing
+
+        pygame.init()
+        try:
+            for available in (False, True):
+                with self.subTest(available=available):
+                    voice = Voice(available)
+                    speech = TimeSpeech(voice)
+                    app = TimeActivity(
+                        pygame.Surface((1024, 600)), "it",
+                        {key: key for key in WORD_KEYS},
+                        TimeExperience(), speech,
+                    )
+                    # Before READY/start, even installed clips may not speak.
+                    self.assertNotIn("repeat", [name for name, _ in app._targets()])
+                    app.press(REPLAY_BUTTON.center)
+                    self.assertEqual(voice.history, [])
+                    speech.start(TimeMode.CLOCK, False)
+                    self.assertEqual(
+                        "repeat" in [name for name, _ in app._targets()], available
+                    )
+                    app.press(REPLAY_BUTTON.center)
+                    self.assertEqual(voice.history.count("instruction.clock"),
+                                     2 if available else 0)
+                    app.renderer.draw(app.canvas.surface, app.model,
+                                      can_repeat=speech.can_repeat)
+                    app.renderer.fonts.clear()
+                    speech.close()
+        finally:
+            pygame.quit()
+
     def test_mode_is_semantic_and_timer_not_screen_time(self) -> None:
         state = TimeExperience(monotonic=FakeClock())
         state.mode = TimeMode.TIMER
