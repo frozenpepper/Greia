@@ -56,11 +56,18 @@ invent date/time parsing, localization or trust.
 - low-frequency, at-most-ten-Hz screen redraw, cached Greia typography;
 - provisional icon-first clock/stopwatch/timer mode buttons and play/pause/restart controls; visible Left/Right/Tab focus and Enter activation; gentle visual countdown completion (all SOURCE-WIP, new screenshots/audio/child review pending);
 - small authored SVG clock icon with an exact verified WebP rendition;
-- separate IT and EN localization bundles and provider-free model tests.
+- separate IT and EN localization bundles, source tests, and a small
+  dependency-injected semantic voice coordinator with a bounded one-cue
+  pending sequence;
+- cached, package-local prerecorded audio playback through Greia's existing
+  localized audio cue resolver. A large icon-only speaker/replay control
+  appears only if the relevant reviewed instruction clip actually exists.
+  No voice generation or cloud service is present on the child device.
 
 **Dual-ring practice input remains SOURCE-ONLY.** The inner ring changes the illustrated hour in the current AM/PM half-day and the outer ring changes imagined minutes. Practice mode hides the real calendar date rather than implying an imaginary time has a real weekday. Visual, small-screen and child usability review remains outstanding, and the dual-ring teaching interaction is not an accepted pedagogical design yet.
 
-**What it does NOT yet have:** spoken labels/instructions or local title WAVs,
+**What it does NOT yet have:** recorded/approved spoken labels or instructions,
+mapped locale audio files or local launcher title WAVs,
 finished child-safe sound, real children usability evidence, accepted full-size
 art/composition/character presenters, touch-controller acceptance, visual
 calendar, background alarm persistence, time-validity status, explicit offline
@@ -84,8 +91,11 @@ replace the existing Creations P1–P7 acceptance procedure or product plan.
 intended semantic cues, exact Italian/English text, Dani speaker kind and
 event triggers. All authoring is through existing Greia VoiceEngine; a
 Modal-backed authoring provider would require separate integration and approval,
-not Activity-owned cloud TTS. No WAVs, playback, title audio, visual
-repeat-affordance, listened acceptance or provider invocation exists yet.
+not Activity-owned cloud TTS. There are no reviewed WAVs, title audio, locale audio mappings,
+actual listened playback acceptance or provider invocations. The optional
+playback/first-use/replay **source implementation** now exists; it does
+nothing when audio is missing rather than inventing speech or making a
+cross-language fallback. The Activity remains incomplete for pre-readers.
 
 ## Clock trust and hardware rules
 
