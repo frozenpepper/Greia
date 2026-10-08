@@ -315,10 +315,20 @@ class LocalizedResources:
         key: str,
         *,
         variant: str | None = None,
+        allow_fallback: bool = True,
     ) -> LocalizedAudioCue:
+        """Resolve a semantic clip with explicit locale-fallback authority.
+
+        By default, existing callers keep Greia's per-resource fallback.
+        Set `allow_fallback=False` for spoken language content that must
+        match the child's selected locale (for example, prerequisite teaching
+        instructions). This is a catalogue decision, independent of how
+        package authors organize their safe audio paths.
+        """
         key = _resource_key(key)
         lookup_keys = _variant_keys(key, variant)
-        for bundle in self._bundles:
+        bundles = self._bundles if allow_fallback else self._bundles[:1]
+        for bundle in bundles:
             for lookup_key in lookup_keys:
                 cue = bundle.audio.get(lookup_key)
                 if cue is not None:
