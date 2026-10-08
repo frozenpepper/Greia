@@ -291,13 +291,17 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_creation_gallery_layout.py' -v
   python3 -m unittest discover -s tests -p 'test_creation_gallery.py' -v
   ```
-  Minimum source SHA `7835faf15ba67fed9659aff7da93f75b5ccca066`.
+  Minimum source SHA `ccd8e5b4e5c3fa293203a06660df4125b072fd11`.
   The first suite uses **actual dummy SDL/Pygame** and a disposable
   profile-backed `CreationLibrary`, not only mock-painter methods.
   Confirm Italian and English completely empty library at 480×320,
   800×480 and 1024×600 renders a visible empty state without exception.
   Confirm an empty audio-only picker shows an **audio** illustration,
   never a mismatched picture, offers cancel and mints no handle.
+  Confirm the empty-library explanatory caption stays entirely above
+  navigation controls at the 1024×600 reference size (regression included
+  in the new real-Pygame suite). Inspect actual screenshots: labels
+  cannot cover previous/next/back and should not look crowded.
   In the library confirm that delete dialog intercepts all background
   replay/preview/navigation keys; Enter defaults to Cancel and preserves
   the artifact; Right then Enter explicitly deletes it. Observe focus
