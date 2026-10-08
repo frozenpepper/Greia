@@ -1,7 +1,8 @@
 # My Time — Voice production brief (SOURCE DESIGN, no audio generated)
 
-**Status:** awaiting owner/provider authorization, generation, listening and
-in-Activity playback implementation. **Never ship** the current
+**Status:** playback/controller source is wired, but audio production,
+locale audio mappings, provider authorization, human listening and real
+in-Activity sound acceptance are still outstanding. **Never ship** the current
 `activity_incubator/tempo_di_greia/` as a normal first-party game based on
 this text alone.
 
@@ -70,5 +71,17 @@ resolver before promotion.
    `release` selection. Generation receipts alone never prove
    listened acceptance.
 
-**Not performed yet:** production, audio generation, listening, mapping,
-playback integration, visual repeat button, exact-SHA live acceptance.
+**Source prepared, not verified:** `time_speech.py` owns the single pending
+instruction and first-use/replay/terminal cue semantics;
+`time_audio.py` loads bounded, previously mapped package-local WAV/OGG from
+Greia `LocalizedResources.audio_cue`; `time_app.py` triggers cues and
+conditionally renders an 88×72 speaker/replay control only when the currently
+relevant instruction is actually installed. This does not generate clips.
+Voice is stopped on normal/exceptional Activity exit. Required prompts never
+fall back to another language; missing mapped audio means no speech and no
+fake replay button, and **blocks production acceptance**.
+
+**Still not performed:** voice generation, owner approval, human listening,
+actual IT/EN cue mapping, validated WAV formats, real audio playback,
+controller/touch/keyboard verification, exact-SHA full Shell acceptance.
+The title WAV for the launcher remains an independent obligation.
