@@ -28,18 +28,15 @@ class LocalTimeSpeechTransport:
             self._channel = pygame.mixer.Channel(0)
         except pygame.error:
             return
-        # Required prerecorded guidance must be in the selected language.
-        # Greia's generic resolver supports locale fallback, but a missing
-        # English instruction is not permission to speak Italian instead.
-        selected_audio = (
-            resources.package_root / "locales" / resources.context.selected.value / "audio"
-        ).resolve()
+        # Semantic instruction speech requires the selected locale;
+        # the shared resolver enforces it without constraining whether an
+        # author stores clips under locales/, assets/ or a shared media tree.
         for cue in SPEECH_CUES:
             try:
-                source = resources.audio_cue(cue).path
+                source = resources.audio_cue(cue, allow_fallback=False).path
             except LocalizationError:
                 continue
-            if selected_audio not in source.parents or not source.is_file():
+            if not source.is_file():
                 continue
             try:
                 self._clips[cue] = pygame.mixer.Sound(str(source))
