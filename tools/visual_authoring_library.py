@@ -399,7 +399,10 @@ def main() -> int:
     elif args.command == "show":
         return cmd_show(args, collections)
     elif args.command == "gallery":
-        from tools.visual_library_gallery import VisualGalleryError, write_gallery
+        if __package__:
+            from .visual_library_gallery import VisualGalleryError, write_gallery
+        else:
+            from visual_library_gallery import VisualGalleryError, write_gallery
         if errors:
             for error in errors:
                 print(f"ERROR: {error}", file=sys.stderr)

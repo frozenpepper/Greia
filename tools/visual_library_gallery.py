@@ -8,9 +8,9 @@ inside Greia's low-resource child runtime.
 from __future__ import annotations
 
 from html import escape
+import os
 from pathlib import Path
 from urllib.parse import quote
-import json
 
 
 class VisualGalleryError(ValueError):
@@ -24,7 +24,7 @@ def _source_url(source_path: object, *, repository: Path, output: Path) -> str:
     source = (repository / source_path).resolve(strict=True)
     if not source.is_file() or not source.is_relative_to(source_root):
         raise VisualGalleryError(f"art source outside reviewed visual tree: {source_path}")
-    relative = Path(__import__("os").path.relpath(source, output.parent.resolve()))
+    relative = Path(os.path.relpath(source, output.parent.resolve()))
     return quote(relative.as_posix(), safe="/-._~")
 
 
@@ -122,7 +122,13 @@ def write_gallery(items: list[dict[str, object]], *, repository: Path, output: P
     if not output.parent.is_dir():
         raise VisualGalleryError("gallery output parent does not exist")
     html = render_gallery(items, repository=repository, output=output)
-    output.write_text(html, encoding="utf-8")
+    # Exclusive creation prevents a concurrent authoring job from overwriting
+    # a file that did not exist during the initial safety check.
+    try:
+        with output.open("x", encoding="utf-8") as handle:
+            handle.write(html)
+    except FileExistsError as exc:
+        raise VisualGalleryError("gallery output already exists") from exc
     return output
 
 
