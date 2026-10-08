@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `90fe1d5a556b44f6c9ea3690bab2b167a3730493` (later docs-only commits permitted)
+**Updated:** 2026-10-08; **queue source baseline:** `510edb8bb7738c6c4b15727f98d1ed4f027fbe4a` (later docs-only commits permitted)
 **Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -155,7 +155,7 @@ test commands and expected observable behavior.
 - **Priority:** P1; **dependency:** current checkout required for source suite;
   **GLA-002 PASS required for the hands-on/Simulator leg, not the isolated
   source model suite**; **minimum source SHA:**
-  `90fe1d5a556b44f6c9ea3690bab2b167a3730493`
+  `510edb8bb7738c6c4b15727f98d1ed4f027fbe4a`
 - **Exact provider-free suites (separate logs/exit codes):**
   ```bash
   python3 -m unittest discover -s tests -p 'test_localization.py' -v
@@ -170,7 +170,14 @@ test commands and expected observable behavior.
   catalogue (plus legacy default fallback preservation), source launch
   in both import modes, and
   no speaker/replay target when actual recordings are missing, and
-  immediate Quit/stop before READY never emits voice or readiness. The new
+  immediate Quit/stop before READY never emits voice or readiness.
+  **New (same suite):** complete a 1-second timer before the first Activity
+  frame, then exercise `TimeActivity.run()` with a fake voice channel and
+  mock READY; prove READY precedes exactly one completion cue, no welcome
+  or timer instruction supersedes completion, and early Quit is still silent.
+  Also prove missing/corrupt `presenter.welcome` cannot block the required
+  first instruction, failed replay returns false, and a closed coordinator
+  never plays again. The new
   audio-boundary suite uses real locale bundle catalogues, a mocked mixer,
   and disposable fake audio bytes. Verify it demonstrates a selected-English
   clip under `assets/`, normal fallback retention, strictly missing-English
@@ -334,6 +341,13 @@ test commands and expected observable behavior.
 - **Last result:** PHYSICAL NOT TESTED in this workstream.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
+
+- **2026-10-08:** `TimeSpeech` guards an already-expired pre-READY
+  countdown: defers terminal cue until after the first presented frame,
+  suppresses stale welcome/help, and treats missing/corrupt welcome as
+  optional rather than swallowing required instruction. Closing prevents
+  future playback. Added pure coordinator and real Activity-loop mock
+  regressions; UNEXECUTED pending the local source suites in GLA-003.
 
 - **2026-10-08:** Low-resource audio source change: index selected
   semantic cue paths at Activity construction, decode a clip only when
