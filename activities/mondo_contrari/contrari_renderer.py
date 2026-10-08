@@ -43,6 +43,14 @@ CATEGORY_TITLES: Final = {
     OppositeCategory.FAST_SLOW: "VELOCE / LENTO",
 }
 
+CATEGORY_TITLES_EN: Final = {
+    OppositeCategory.UP_DOWN: "UP / DOWN",
+    OppositeCategory.BIG_SMALL: "BIG / SMALL",
+    OppositeCategory.IN_OUT: "IN / OUT",
+    OppositeCategory.OPEN_CLOSED: "OPEN / CLOSED",
+    OppositeCategory.FAST_SLOW: "FAST / SLOW",
+}
+
 CATEGORY_ICONS: Final = {
     OppositeCategory.UP_DOWN: "🎈",
     OppositeCategory.BIG_SMALL: "🫧",
@@ -55,7 +63,8 @@ CATEGORY_ICONS: Final = {
 class ContrariRenderer:
     """Render opposite concepts with lively animations and giant toddler touch targets."""
 
-    def __init__(self) -> None:
+    def __init__(self, locale: str = "it") -> None:
+        self._locale = locale
         self._reference_surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
 
         # Top Toolbar buttons (5 categories)
@@ -322,7 +331,8 @@ class ContrariRenderer:
             pygame.draw.rect(surf, bg, rect, border_radius=18)
             pygame.draw.rect(surf, border_col, rect, 4 if is_active else 2, border_radius=18)
 
-            label = f"{CATEGORY_ICONS[cat]} {CATEGORY_TITLES[cat]}"
+            titles = CATEGORY_TITLES if self._locale.startswith("it") else CATEGORY_TITLES_EN
+            label = f"{CATEGORY_ICONS[cat]} {titles[cat]}"
             text_surf = font.render(label, True, (40, 40, 40) if is_active else (100, 100, 100))
             surf.blit(text_surf, text_surf.get_rect(center=rect.center))
 

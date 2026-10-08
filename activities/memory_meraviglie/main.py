@@ -136,7 +136,7 @@ def main() -> int:
     )
 
     clock = pygame.time.Clock()
-    while not activity_stop_requested():
+    while app._running and not activity_stop_requested():
         for event in pygame.event.get():
             app.handle_event(event)
         app._update()

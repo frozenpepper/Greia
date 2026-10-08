@@ -128,6 +128,16 @@ class RampEngineTests(unittest.TestCase):
         self.assertEqual(eng.elapsed, 0.0)
 
 
+class RampManifestTruthTests(unittest.TestCase):
+    def test_declares_authored_not_fictional_adaptive_progression(self) -> None:
+        import tomllib
+        with (ACTIVITY_ROOT / "activity.toml").open("rb") as file:
+            manifest = tomllib.load(file)
+        self.assertNotIn("adaptive_difficulty", manifest["education"])
+        self.assertNotIn("difficulty_max", manifest["education"])
+        self.assertEqual(len(LEVELS), 3)
+
+
 class RampPointerSafetyTests(unittest.TestCase):
     def test_letterbox_and_protected_input_rejected_without_mutation(self) -> None:
         os.environ.setdefault("SDL_VIDEODRIVER", "dummy")

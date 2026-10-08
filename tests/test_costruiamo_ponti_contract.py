@@ -17,6 +17,8 @@ class CostruiamoPontiContractTests(unittest.TestCase):
         self.assertEqual(raw["input"]["profile"], "hybrid")
         self.assertEqual(raw["requirements"]["required_capabilities"], ["display", "pointer", "audio.basic"])
         self.assertEqual(raw["permissions"]["requested"], [])
+        self.assertNotIn("adaptive_difficulty", raw["education"])
+        self.assertNotIn("difficulty_max", raw["education"])
 
     def test_activity_uses_shared_logical_canvas_and_platform_navigation(self) -> None:
         combined = "\n".join(p.read_text(encoding="utf-8") for p in sorted(ACTIVITY.glob("*.py")))

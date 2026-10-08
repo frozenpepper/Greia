@@ -20,9 +20,7 @@ categories = ["spatial_reasoning", "physics_intuition", "construction"]
 difficulty = 4
 recommended_age_min = 5
 recommended_age_max = 10
-difficulty_min = 2
-difficulty_max = 6
-adaptive_difficulty = true
+# Three fixed bridge designs, not an adaptive D2-D6 progression.
 skills = [
   { id = "spatial.construction.bridge", weight = 3 },
   { id = "physics.balance.structural", weight = 2 },

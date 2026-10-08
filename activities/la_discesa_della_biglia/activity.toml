@@ -15,9 +15,7 @@ categories = ["spatial_reasoning", "physics_intuition", "construction"]
 difficulty = 2
 recommended_age_min = 4
 recommended_age_max = 7
-difficulty_min = 1
-difficulty_max = 4
-adaptive_difficulty = true
+# Three fixed physical layouts with open-ended tool placement; no adaptive D1-D4.
 skills = [
   { id = "physics.motion.gravity", weight = 3 },
   { id = "physics.collision.bounce", weight = 3 },

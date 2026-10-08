@@ -60,7 +60,7 @@ def main() -> int:
 
     model = ContrariModel()
     audio = ContrariAudio(package_root, locale=locale)
-    renderer = ContrariRenderer()
+    renderer = ContrariRenderer(locale=locale)
 
     app = ContrariActivity(
         screen=screen,

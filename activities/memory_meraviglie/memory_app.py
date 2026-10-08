@@ -97,6 +97,7 @@ class MemoryApp:
     is_victory: bool = False
     completion_presented: bool = False
     ready_published: bool = False
+    _running: bool = True
 
     def __post_init__(self) -> None:
         self._start_new_game()
@@ -221,6 +222,9 @@ class MemoryApp:
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.QUIT:
+            self._running = False
+            return
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self._running = False
             return
         if event.type == pygame.VIDEORESIZE:
@@ -389,7 +393,12 @@ class MemoryApp:
         new_btn = pygame.Rect(REFERENCE_WIDTH - 170, 14, 150, 52)
         pygame.draw.rect(surf, (51, 65, 85), new_btn, border_radius=18)
         pygame.draw.rect(surf, (30, 41, 59), new_btn, width=2, border_radius=18)
-        new_txt = self.typography.render("🔄 NUOVO", FontRole.DISPLAY, 18, (255, 255, 255))
+        new_label = (
+            self.resources.text("btn.new_game")
+            if self.resources is not None
+            else ("🔄 Nuovo" if self.active_locale == "it" else "🔄 New Game")
+        )
+        new_txt = self.typography.render(new_label, FontRole.DISPLAY, 18, (255, 255, 255))
         surf.blit(
             new_txt,
             (new_btn.centerx - new_txt.get_width() // 2, new_btn.centery - new_txt.get_height() // 2),

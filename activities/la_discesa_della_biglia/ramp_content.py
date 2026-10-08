@@ -1,8 +1,8 @@
 """La Discesa della Biglia — level, tool and physics content.
 
 This module is the single source of truth for:
-  * the three pre-defined play levels (difficulty is adaptive, so a
-    fourth level is procedurally generated from level 3 parameters);
+  * the three authored physical layouts (open, moving and narrow);
+    no fourth level is generated and difficulty is not adaptive;
   * the four draggable tools the child can place on the playfield
     (slope, bumper, fan, spring);
   * the physics constants used by the engine (gravity, restitution,
