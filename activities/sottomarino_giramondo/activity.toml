@@ -7,7 +7,7 @@ icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]
-categories = ["create", "explore"]
+categories = ["play", "explore"]
 discovery_tags = ["nature", "action"]
 
 [education]
@@ -23,8 +23,8 @@ skills = [
 ]
 events = [
   { id = "submarine.instrument_used", kind = "milestone" },
-  { id = "submarine.depth_milestone", kind = "milestone" },
   { id = "submarine.creature_discovered", kind = "milestone" },
+  { id = "submarine.order_completed", kind = "milestone" },
   { id = "submarine.encounter_resolved", kind = "completion" },
 ]
 

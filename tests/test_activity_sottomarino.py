@@ -27,6 +27,29 @@ class SottomarinoTests(unittest.TestCase):
     without pytest. Bodies preserve the original pytest-style
     assertions verbatim."""
 
+    def test_submarine_manifest_does_not_claim_nonexistent_depth_or_creation(self):
+        import tomllib
+        manifest = ACTIVITY_DIR / "activity.toml"
+        with manifest.open("rb") as source:
+            data = tomllib.load(source)
+        events = {item["id"] for item in data["education"]["events"]}
+        assert "submarine.order_completed" in events
+        assert "submarine.depth_milestone" not in events
+        assert "create" not in data["presentation"]["categories"]
+
+    def test_platform_home_pointer_not_used_as_cockpit_input(self):
+        import os
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        os.environ["SDL_AUDIODRIVER"] = "dummy"
+        import pygame
+        from greia_platform.pygame_canvas import activity_viewport_for_surface
+        from sub_app import SubmarineApp
+
+        app = SubmarineApp()
+        protected = activity_viewport_for_surface(app.screen).protected_regions[0]
+        assert app._safe_pointer((int(protected.x) + 1, int(protected.y) + 1)) is None
+        assert app._safe_pointer((-3, 200)) is None
+
     def test_biome_transitions(self):
         assert get_biome(0.0) == BiomeType.SHALLOW_REEF
         assert get_biome(24.9) == BiomeType.SHALLOW_REEF

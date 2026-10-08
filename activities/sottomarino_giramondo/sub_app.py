@@ -126,6 +126,15 @@ class SubmarineApp:
             except Exception:
                 pass
 
+    def _safe_pointer(self, physical: tuple[int, int]) -> tuple[float, float] | None:
+        viewport = activity_viewport_for_surface(self.screen)
+        x, y = physical
+        if not (0 <= x < viewport.surface.width and 0 <= y < viewport.surface.height):
+            return None
+        if any(r.x <= x < r.right and r.y <= y < r.bottom for r in viewport.protected_regions):
+            return None
+        return self.canvas.pointer(physical)
+
     def _handle_button_press(self, btn_name: str) -> None:
         self.audio.play("click")
 
@@ -134,21 +143,17 @@ class SubmarineApp:
         if btn_name in ("steer_left", "left"):
             self.model.steer(-1.0, 0.0)
             order_solved = self.model.check_action("left")
-            emit_activity_event("submarine.maneuver", payload={"action": "steer_left"})
         elif btn_name in ("steer_right", "right"):
             self.model.steer(1.0, 0.0)
             order_solved = self.model.check_action("right")
-            emit_activity_event("submarine.maneuver", payload={"action": "steer_right"})
         elif btn_name in ("ahead", "forward"):
             self.model.set_speed(0.8)
             self.audio.play("engine_shift")
             order_solved = self.model.check_action("ahead")
-            emit_activity_event("submarine.maneuver", payload={"action": "ahead"})
         elif btn_name in ("stop", "halt"):
             self.model.set_speed(0.0)
             self.audio.play("engine_shift")
             order_solved = self.model.check_action("stop")
-            emit_activity_event("submarine.maneuver", payload={"action": "stop"})
         elif btn_name == "light":
             self.model.toggle_lights()
             self.audio.play("light")
@@ -239,8 +244,16 @@ class SubmarineApp:
                     elif event.key == pygame.K_h:
                         self._handle_button_press("horn")
 
+                elif event.type == pygame.WINDOWFOCUSLOST:
+                    self._dragging_wheel = False
+                    self._dragging_lever = False
+                elif event.type == pygame.VIDEORESIZE:
+                    self.screen = pygame.display.get_surface() or self.screen
+                    self.canvas = PygameReferenceCanvas(self.screen)
+                    self._dragging_wheel = False
+                    self._dragging_lever = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    pt = self.canvas.pointer(event.pos)
+                    pt = self._safe_pointer(event.pos)
                     if pt is not None:
                         clicked_btn = False
                         for name, rect in BUTTON_RECTS.items():
@@ -282,7 +295,10 @@ class SubmarineApp:
                     self._dragging_lever = False
 
                 elif event.type == pygame.MOUSEMOTION:
-                    pt = self.canvas.pointer(event.pos)
+                    pt = self._safe_pointer(event.pos)
+                    if pt is None:
+                        self._dragging_wheel = False
+                        self._dragging_lever = False
                     self._hot_button = None
                     if pt is not None:
                         for name, rect in BUTTON_RECTS.items():
