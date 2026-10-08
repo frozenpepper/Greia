@@ -59,12 +59,22 @@ invent date/time parsing, localization or trust.
 - separate IT and EN localization bundles, source tests, and a small
   dependency-injected semantic voice coordinator with a bounded one-cue
   pending sequence;
-- cached, package-local prerecorded audio playback through Greia's existing
-  localized audio cue resolver. A large icon-only speaker/replay control
-  appears only if the relevant reviewed instruction clip actually exists.
+- selected-locale prerecorded audio playback through Greia's semantic
+  `LocalizedResources.audio_cue(..., allow_fallback=False)` resolver;
+  indexing cue paths is cheap at startup, while clip decoding is deferred
+  until needed after READY and cached for at most seven cues. Corrupt audio
+  stops being advertised as playable. A large icon-only speaker/replay control
+  appears only when that locale's relevant clip is available.
   No voice generation or cloud service is present on the child device.
 
 **Dual-ring practice input remains SOURCE-ONLY.** The inner ring changes the illustrated hour in the current AM/PM half-day and the outer ring changes imagined minutes. Practice mode hides the real calendar date rather than implying an imaginary time has a real weekday. Visual, small-screen and child usability review remains outstanding, and the dual-ring teaching interaction is not an accepted pedagogical design yet.
+
+**Latest source revision (still unverified):** required speech now has
+platform-owned selected-locale lookup independent of file path layout.
+Keyboard UP/DOWN Practice shortcuts trigger the same semantic guidance as
+pointer interaction. Lazy decoding protects the first child-visible frame
+when optional voice recordings are installed. Full local tests, real listening,
+small-screen/Simulator screenshots and prereader acceptance are outstanding.
 
 **What it does NOT yet have:** recorded/approved spoken labels or instructions,
 mapped locale audio files or local launcher title WAVs,
