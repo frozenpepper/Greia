@@ -180,48 +180,54 @@ class TimeActivity:
     def run(self) -> int:
         ticker = pygame.time.Clock()
         next_draw = 0.0
-        while self.running and not activity_stop_requested():
-            for event in pygame.event.get():
-                self.handle_event(event)
-            moment = time.monotonic()
-            # A child may switch tabs while a foreground timer is running.
-            # Do not consume its only completion signal on an invisible tab.
-            # Show the finish feedback when Timer is visible again.
-            if self.model.mode is TimeMode.TIMER and self.model.timer.consume_completion():
-                self.celebrate_until = moment + 3.0
-                if self.speech is not None:
-                    self.speech.timer_finished()
-                self.dirty = True
-            if self.speech is not None:
-                self.speech.update()
-            # Idle clock redraws only once/second; an active elapsed counter
-            # uses 10 Hz for a legible visual ring. No per-frame busy repaint
-            # when a child is simply looking at a stationary clock.
-            active_counter = (
-                self.model.mode is TimeMode.STOPWATCH and self.model.stopwatch.running
-            ) or (
-                self.model.mode is TimeMode.TIMER and self.model.timer.running
-            )
-            if self.dirty or moment >= next_draw:
-                focus_rect = next(
-                    (rect for key, rect in self._targets() if key == self.focus_id),
-                    None,
-                )
-                self.renderer.draw(self.canvas.surface, self.model,
-                    celebrate=moment < self.celebrate_until, focus_rect=focus_rect,
-                    can_repeat=self.speech is not None and self.speech.can_repeat)
-                self.canvas.present(clear=(247, 241, 226))
-                pygame.display.flip()
-                if not self.ready_published:
-                    mark_activity_ready()
-                    self.ready_published = True
+        try:
+            while self.running and not activity_stop_requested():
+                for event in pygame.event.get():
+                    self.handle_event(event)
+                moment = time.monotonic()
+                # A child may switch tabs while a foreground timer is running.
+                # Do not consume its only completion signal on an invisible tab.
+                # Show the finish feedback when Timer is visible again.
+                if self.model.mode is TimeMode.TIMER and self.model.timer.consume_completion():
+                    self.celebrate_until = moment + 3.0
                     if self.speech is not None:
-                        self.speech.start(self.model.mode, self.model.practice)
-                self.dirty = False
-                next_draw = moment + (0.1 if active_counter else 1.0)
-            ticker.tick(30)
-        if self.speech is not None:
-            self.speech.close()
+                        self.speech.timer_finished()
+                    self.dirty = True
+                if self.speech is not None:
+                    self.speech.update()
+                # Idle clock redraws only once/second; an active elapsed counter
+                # uses 10 Hz for a legible visual ring. No per-frame busy repaint
+                # when a child is simply looking at a stationary clock.
+                active_counter = (
+                    self.model.mode is TimeMode.STOPWATCH and self.model.stopwatch.running
+                ) or (
+                    self.model.mode is TimeMode.TIMER and self.model.timer.running
+                )
+                if self.dirty or moment >= next_draw:
+                    focus_rect = next(
+                        (rect for key, rect in self._targets() if key == self.focus_id),
+                        None,
+                    )
+                    self.renderer.draw(self.canvas.surface, self.model,
+                        celebrate=moment < self.celebrate_until, focus_rect=focus_rect,
+                        can_repeat=self.speech is not None and self.speech.can_repeat)
+                    self.canvas.present(clear=(247, 241, 226))
+                    pygame.display.flip()
+                    if not self.ready_published:
+                        mark_activity_ready()
+                        self.ready_published = True
+                        if self.speech is not None:
+                            self.speech.start(self.model.mode, self.model.practice)
+                        # Show the replay affordance on the next frame, but
+                        # never advertise an absent or unstarted voice clip.
+                        self.dirty = self.speech is not None and self.speech.can_repeat
+                    else:
+                        self.dirty = False
+                    next_draw = moment + (0.1 if active_counter else 1.0)
+                ticker.tick(30)
+        finally:
+            if self.speech is not None:
+                self.speech.close()
         return 0
 
 
