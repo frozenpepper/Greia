@@ -4,11 +4,11 @@
 **Master plan:** [PLAN.md](./PLAN.md)  
 **Run this ledger with:** `AGENTS.md` + `HANDOVER.md` + current `main`.
 
-## A. At-a-glance checkpoint — 2026-10-07
+## A. At-a-glance checkpoint — 2026-10-08
 
 - Program: **P1 adaptive capacity SOURCE-WIP**, **P2 broker/SDK SOURCE-WIP**, **P3 universal gallery + authenticated trusted modal SOURCE-WIP**, **P4 PNG round-trip SOURCE-WIP**, and **P5 WAV + UTF-8 interoperability SOURCE-WIP**. One shared launcher-composed `VolumeBudget` now guards Activity private storage, Creations and history growth at 75% used / 512 MiB free; shipped private Activity namespaces scale to 25% of the actual writable volume (32 MiB is only the legacy minimum floor). No complete checkout/GUI/audio/text/capacity acceptance has run. Wayland/KMSDRM and P6–P8 remain open.
 - First-party `activities/` snapshot: **45** directories = **44 child-content Activities + 1 My Greia/settings Activity**. The earlier catalogue strategy's 41-item figures are historical.
-- Catalogue handoff: four October 1 action/strategy games added. **Colline Allegre script entrypoint broken** via relative imports in top-level `colline_app.py`/related modules; **Quattro Amici** manifest declares D1–D5 but its model config has D1–D4. These are **source inspection findings**, not claims that a fresh production launch test ran.
+- Catalogue handoff: the earlier **Colline Allegre script-import** and **Quattro Amici difficulty D5** mismatches were corrected in previous source commits. P7 batch 2 also repaired Corsa's queued touch/pointer drag, Quattro's trusted-chrome pointer exclusion, Torre's direct-script particle import crash, Delfino's resize-canvas handoff and Dragon's non-existent completion declaration. All corrections remain **UNEXECUTED** in the canonical checkout.
 - Release composition: **explicit draft selection is now source-wired into the authoritative owner release path**. `greia_release.py` sets `PIP_RELEASE_BUILD=1`; target composition stages only `build/first-party-release-activities.toml`, validates/indexes the installed subset, and refuses draft/empty policy for official release. Non-release/dev images deliberately keep the full source tree. Policy remains **draft**, so no official Activity release can build yet.
 - Exchange status: **PNG, first/second WAV consumers and reciprocal UTF-8 paths are implemented SOURCE-WIP.** Capacity plumbing now uses one shared budget across all variable child-data writers in the launcher process (Activity storage, Creations, history), with adaptive private namespaces and migration/staging headroom. Storie della Mia Voce publishes saved `narration`; Teatrino uses it without microphone contention; Orchestra persists optional backing WAVs; Writing and Posta reciprocally exchange saved UTF-8 snapshots. **No real cross-app GUI/audio/text/capacity flow has been executed yet**; backup and physical evidence remain open.
 - OS first-boot/installer: independently **OPEN** on the Acer route; read existing lifecycle plan before any hardware action.
@@ -25,12 +25,12 @@
 | P4 | Painting–Shape Garden–Theatre PNG round trip | SOURCE WIP (Painting independent import; Shape Garden persistent shape+backdrop project + flattened export; Teatrino persistent custom show backdrops) | full checkout tests; real GUI round trip/reopen/source-delete independence; resource/performance evidence |
 | P5 | voice/music and writing/text interoperability | SOURCE WIP (Voice Stories→Teatrino narration; durable Orchestra play-along backing; Writing↔Posta reciprocal UTF-8) | full checkout/audio/text GUI tests; audible preview/isolation; private-copy persistence after shared-source deletion |
 | P6 | explicit release catalogue and adaptive grouping | SOURCE WIP (single draft roster + official release composition/index wiring; release remains fail-closed until approval) | execute release-selection/composition tests; prove built-index exact match and Parent policy on real staged/release root |
-| P7 | deep per-Activity quality review (45) | SOURCE WIP (first 7 creative/interoperability anchors SOURCE REVIEWED; 0 approved) | continue remaining 38 source reviews, then accumulated Simulator/visual/audio evidence before approval |
+| P7 | deep per-Activity quality review (45) | SOURCE WIP (**14/45 source-reviewed** in two batches; 12 draft candidates, 2 explicitly deferred, 0 approved) | continue remaining 31 source reviews, then accumulated Simulator/visual/audio evidence before approval |
 | P8 | end-to-end release and physical acceptance | NOT STARTED | real Acer and cross-platform acceptance |
 
 ### Activity release-review coverage
 
-**45/45 entries inventoried in PLAN §5; 7/45 SOURCE REVIEWED for release candidacy, 0/45 release-approved.**
+**45/45 entries inventoried in PLAN §5; 14/45 SOURCE REVIEWED (12 draft candidates, 2 withheld), 0/45 release-approved.**
 
 No new Activity is dropped or silently approved merely for having unit tests. Record each review and disposition with evidence under §C entries. Historical R7.3 structural migration PASS does not equal release UX PASS.
 
@@ -389,6 +389,29 @@ All seven have manifests reviewed, package-specific regression suites present, I
 **Evidence boundary:** no `make verify`, focused unit suite, release staging command, actual release composer, Pygame Simulator, screenshot review, audible playback/microphone, Legacy-X, Acer/Pi or physical run was executed. The seven dispositions mean **source-reviewed candidate**, not accepted or approved.
 
 **Next source-review batch:** action/strategy and motor-play risk cluster — `colline_allegre`, `corsa_bacche`, `labirinto_magico`, `quattro_amici`, `torre_forme`, `viaggio_delfino`, `volo_draghetto`. Focus on real difficulty mapping, failure/retry fairness, CPU/opponent behavior, input smoothness and child-readable feedback before adding any to the draft roster.
+
+
+---
+
+### 2026-10-08 — P7 batch 2: motor, action and strategy games (14/45 source-reviewed)
+
+**Source-only evidence:** inspected all seven current manifests, actual game-model and input/progression paths, existing package tests, and both locale JSONs plus both spoken `activity-title.wav` package directories. All seven have exact Italian/English string-key parity and both title recordings. Five are added to the **draft** release candidate roster, not to a released/approved catalogue. Two remain source-reviewed but withheld. **No tests, live gameplay, screenshots, hardware, accessibility or frame-time measurements were executed**, by owner request.
+
+| Activity | Source disposition | Verified source finding / repair | Evidence still required |
+|---|---|---|---|
+| `colline_allegre` | **KEEP / DRAFT CANDIDATE** | Five real physics profiles D1–D5 vary hill amplitude, roughness, terrain/obstacles and target distance; model implements sprung wheels, torque/tilt and landings. Earlier direct-script relative-import chain repaired. Best-distance event now emitted only after successful durable improvement. | actual Greia script launch; 5 course profiles, flips/bridges/mud, responsive throttle/brake/tilt, 30Hz Acer budget |
+| `corsa_bacche` | **KEEP / DRAFT CANDIDATE** | Five authored maze layouts; gentle critters, naps, rainbow power and recovery at zero hearts rather than hard game-over. Found queued click/drag used global `pygame.mouse.get_pressed()`, unreliable with touch/Simulator event injection. Fixed explicit press/drag/release and focus-loss handling in `corsa_app.py`. | all five layouts reachable/solvable, critter chase fairness/collision safety, tiny touchscreen pointer control, real frame rate |
+| `labirinto_magico` | **KEEP / DRAFT CANDIDATE, LARGE-MAZE VISUAL RISK** | Six *actual* size tiers D1–D6 from 13×9 to 59×29, generated paths, collectibles, directional slide controls and terminal victory layer; recent difficulty-roster fix present. Not simply six label variants. | solvability with each size, 800×480 and 1024×600 path legibility, large-tier accessibility, pointer/keyboard/Back, real restart |
+| `quattro_amici` | **KEEP / DRAFT CANDIDATE** | Four supported D1–D4 configurations, two-player versus age-calibrated CPU with silly/defensive/smart/minimax tiers; gravity, wins, turn-taking. Earlier false D5 manifest corrected and lifecycle events integrated. Fixed pointer hover/click entry to reject protected trusted-Home regions. | CPU fairness across board states, two-player handoff, native & pointer gamepad navigation, robust undo/restart, high-level move latency |
+| `torre_forme` | **KEEP / DRAFT CANDIDATE** | Three genuinely different modes — free geometric matching, slow falling, faster challenge — correspond to *age/difficulty ranges* D1–D2, D3, D4–D5, **not five separately authored modes**. Fixed direct-script failure: particle effects incorrectly imported `.torre_content` inside an event handler; constants now resolve from the package/script-aware module imports. | direct-script snap + clear effects, 3 modes, slow-machine falling/latency, responsive shelf/rotation/controls, visual height/celebration |
+| `viaggio_delfino` | **SOURCE REVIEWED / WITHHOLD from draft pending product differentiation** | Sequential marine chapters, sourced animal/nature voice facts and narrated discovery give it a distinct direction from Dragon's endless flight; no declared D1–D6 roster or adaptive tier should be invented. Fixed resize bug: `_handle_events()` rebuilt `self.canvas`, but `run()` used a stale local canvas to draw/present; it now refreshes in the same frame. | full 3-chapter progression, spoken fact comprehension, real 800×480 resize, art/perf, compare experience against Dragon before including both |
+| `volo_draghetto` | **SOURCE REVIEWED / WITHHOLD from draft pending depth decision** | Gentle endless flight with stars, rainbows, cloud bounce, accessories and no terminal lose/win; not a D1–D6 progression despite earlier review queue shorthand. Manifest falsely declared `flight.completed`, which the endless app never emits; removed rather than inventing achievement events. | prove sufficiently differentiated motor/reaction progression vs Delfino, actual replay motivation, collision/pacing for ages 4–9, low-resource render |
+
+**New deferred regression source:** `tests/test_action_pointer_boundaries.py` covers queued Corsa press→drag→release→lost focus, Quattro protected-region denial on hover/click, and Delfino's same-frame canvas replacement; `tests/test_activity_torre_forme.py` now exercises snap/clear effects with direct-script module imports; `tests/test_activity_volo_draghetto.py` checks the manifest's honest endless-flight event set. Existing package-specific suites for all seven remain authoritative too. All new/old tests are **unexecuted** for this continuation.
+
+**Draft roster target:** original seven creative candidates + `org.greia.colline-allegre`, `org.greia.corsa-bacche`, `org.greia.labirinto-magico`, `org.greia.quattro-amici`, `org.greia.torre-forme` = **12**. The two other reviewed games are not deleted or dropped from development; they remain discoverable in the full source/dev install. Official release still fails closed while policy is `draft`.
+
+**Next P7 batch:** science, emotional reasoning and early mathematics (`acquario_magico`, `baia_delle_orche`, `clinica_cuccioli`, `cucciolo_mio`, `faccine_momo`, `il_giardino_dei_numeri`, `luci_di_momo`), emphasizing overlapping pedagogy, non-reader interaction and genuine age-2/3 independence. The accumulated one-run local-agent acceptance must include direct-script and low-resource motor-play cases from this batch; no Acer flashing or release build is requested now.
 
 ### How to maintain this file
 
