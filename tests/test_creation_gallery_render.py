@@ -66,8 +66,20 @@ class CreationGalleryRenderingTests(unittest.TestCase):
             on_pick=lambda creation_id: granted.append(creation_id) or "token",
         )
         surface = pygame.display.set_mode((800, 480))
+        names: list[str] = []
+        icon = screen.painter._icon
+
+        def observe_icon(target, name, box, pg, color=None):
+            names.append(name)
+            icon(target, name, box, pg, color)
+
+        screen.painter._icon = observe_icon
         screen.draw(surface)
         self.assertFalse(screen.error)
+        # One 'audio' icon is the tab, another is the large empty-state art.
+        # An audio-only picker must not incorrectly present a picture icon.
+        self.assertEqual(names.count("audio"), 2)
+        self.assertNotIn("image", names)
         self.assertFalse(any(t.action == "choose" for t in screen.painter.targets))
         back = next(t.rect.center for t in screen.painter.targets if t.action == "back")
         result = screen.handle_event(pygame.event.Event(
