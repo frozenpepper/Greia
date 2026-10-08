@@ -184,6 +184,10 @@ class TimeActivity:
             while self.running and not activity_stop_requested():
                 for event in pygame.event.get():
                     self.handle_event(event)
+                # Stop requests have priority over both presentation and
+                # the first spoken cue. Never publish READY after an exit.
+                if not self.running or activity_stop_requested():
+                    break
                 moment = time.monotonic()
                 # A child may switch tabs while a foreground timer is running.
                 # Do not consume its only completion signal on an invisible tab.
