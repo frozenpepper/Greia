@@ -604,6 +604,13 @@ appeared as installed package 33 under developer staging, old Time
 paths resolved at earlier SHAs. The owned HTTP bridge probe, revised
 Time UI and art-family review remain local-agent queued/source-WIP.
 
+**Source follow-up 2026-10-08:** `33b0ddc6` defers consuming a silent
+timer-finished one-shot until the child revisits the Timer tab. This avoids
+silently losing the only finish cue while the other two modes are visible.
+It is not a background notification and is untested in the current
+local-agent session; GLA-003 covers returning from Clock/Stopwatch after
+the countdown elapses.
+
 ### How to maintain this file
 
 Append a dated entry to §C after every substantive session. Include commit SHA, files changed, actual test command/output and environment, screenshots reviewed if any, real remaining blockers, and **one precise next step**. Update current-state tables in §A/B as facts change; keep dated entries immutable except explicit factual corrections. Every Activity review gets one evidence-backed decision; reference source snapshots instead of pasting thousands of lines. Update `HANDOVER.md` and the appropriate existing architecture/lifecycle ledger without duplicating hardware evidence or inventing another orchestration process.

@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `0a09eaf49b247d4c6f427481530a02ce370c9123` (later docs-only commits permitted)
+**Updated:** 2026-10-08; **queue source baseline:** `33b0ddc680bb72417b4dc00c5a624840a0d8595f` (later docs-only commits permitted)
 **Product authority:** `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -313,6 +313,11 @@ test commands and expected observable behavior.
 - **2026-10-08:** Prepared semantic IT/EN Dani recording requests in the
   Time incubator VOICE_PRODUCTION_BRIEF. No production, audio generation,
   human listening, runtime playback or provider authorization yet.
+
+- **2026-10-08:** A running Timer completion no longer disappears when
+  the child switches to Clock/Stopwatch at the moment it finishes;
+  unseen completion stays pending until the Timer mode returns
+  (`33b0ddc6`). Current-source GUI review owed in GLA-003.
 
 When the GitHub developer changes an API or acceptance target, update the
 affected task in this SAME FILE in the same source commit, preserving all
