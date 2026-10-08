@@ -37,6 +37,11 @@ else:
     from enciclopedia_services import EncyclopediaPalette, VisualLibrary
 
 
+# Activity-local page history control. Greia owns the top-left Home/Back
+# system chrome; an Encyclopedia internal return must live in content instead.
+INTERNAL_BACK_RECT = pygame.Rect(890, 12, 110, 64)
+
+
 _COMMANDS = {
     SemanticAction.NAV_UP: PageCommand.UP,
     SemanticAction.NAV_DOWN: PageCommand.DOWN,
@@ -101,17 +106,10 @@ class EncyclopediaApp:
         return 0
 
     def _draw_back_button(self, surface: pygame.Surface) -> None:
-        """Draw tactile Back button at canonical back_hitbox when can_go_back is True."""
+        """Draw an Activity-internal return affordance outside trusted chrome."""
         from greia_platform.activity_ui import draw_back_symbol
-        from greia_platform.system_chrome import ActivitySystemChromeLayout
 
-        chrome = ActivitySystemChromeLayout.for_surface(
-            self.canvas.spec.width,
-            self.canvas.spec.height,
-            back_available=True,
-        )
-        bb = chrome.back_hitbox
-        back_rect = pygame.Rect(bb.x, bb.y, bb.width, bb.height)
+        back_rect = INTERNAL_BACK_RECT
         radius = max(8, back_rect.width // 3)
 
         # Drop shadow
@@ -158,17 +156,20 @@ class EncyclopediaApp:
             return
 
         if event.type == pygame.MOUSEMOTION:
+            if not self._point_in_activity_viewport(event.pos):
+                return
             logical = self.canvas.pointer(event.pos)
             if logical is not None:
                 self.navigator.handle_input(PageInput.pointer_move(logical))
             return
 
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            # Check if user clicked the in-app Back button
+            if not self._point_in_activity_viewport(event.pos):
+                return
+            # Internal page history lives in the authored top-right control,
+            # never in the launcher-owned system Back hitbox.
             if self.navigator.can_go_back and self._point_in_back_hitbox(event.pos):
                 self.go_back()
-                return
-            if not self._point_in_activity_viewport(event.pos):
                 return
             logical = self.canvas.pointer(event.pos)
             if logical is not None:
@@ -187,19 +188,10 @@ class EncyclopediaApp:
         self.navigator.handle_input(PageInput.command_event(command))
 
     def _point_in_back_hitbox(self, pos: tuple[int, int]) -> bool:
-        from greia_platform.system_chrome import ActivitySystemChromeLayout
-
-        chrome = ActivitySystemChromeLayout.for_surface(
-            self.canvas.spec.width,
-            self.canvas.spec.height,
-            back_available=True,
-        )
-        logical = self.canvas.pointer(pos)
-        if logical is None:
+        if not self._point_in_activity_viewport(pos):
             return False
-        lx, ly = logical
-        bb = chrome.back_hitbox
-        return bb.x <= lx < bb.right and bb.y <= ly < bb.bottom
+        logical = self.canvas.pointer(pos)
+        return logical is not None and INTERNAL_BACK_RECT.collidepoint(logical)
 
     def _point_in_activity_viewport(self, pos: tuple[int, int]) -> bool:
         viewport = activity_viewport_for_surface(self.screen)
