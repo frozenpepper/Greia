@@ -3032,3 +3032,29 @@ Visual screenshots, child-recognition, source tests and physical
 acceptance remain OPEN. The canonical P6 design matrix in
 `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`
 and the single GLA-008 queue task own further acceptance.
+
+
+### 2026-10-08 — P6 compact child Home label at existing presentation seam (SOURCE WIP)
+
+In the existing six-portal Home on 800×480/480×320, the
+full `my_creations` caption would be proportionally
+compressed to the narrow portal width, risking tiny type.
+Added an optional compact title at the existing
+`catalogue_view._category_title` UI seam, consumed
+only in `CollectionFirstHomeMixin` for width <=800.
+Short captions are localized (IT/EN/ES/DE/FR); full
+translated names and spoken label identity remain
+unchanged. No new hierarchy, Parent authority,
+storage surface, device assumption or renderer.
+A corresponding regression test was added but
+**not executed**.
+
+The remote runtime has Python/CairoSVG/Pillow and
+rendered the genuine existing shared portal/activity-card
+SVG *assets*. It lacks both a full private project
+checkout and the Pygame module; GitHub DNS also
+blocks direct cloning. No running Greia Activity,
+full Shell screenshot or installed hardware evidence
+was obtained. GLA-008 remains the one queued
+real-GUI art acceptance owner; this source-only
+work is not a release or visual-quality PASS.
