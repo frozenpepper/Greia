@@ -111,9 +111,10 @@ class TimeToolModelTests(unittest.TestCase):
             with self.subTest(point=point):
                 self.assertEqual(practice_hour_at_point(point), hour)
                 self.assertIsNone(practice_quarter_at_point(point))
-        for point in ((x, y), (x + 112, y), (x + 150, y)):
+        self.assertEqual(practice_hour_at_point((x + 111, y)), 3)
+        for point in ((x, y), (x + 120, y), (x + 150, y)):
             self.assertIsNone(practice_hour_at_point(point))
-        self.assertIsNone(practice_quarter_at_point((x + 112, y)))
+        self.assertIsNone(practice_quarter_at_point((x + 120, y)))
         self.assertEqual(practice_quarter_at_point((x + 150, y)), 15)
 
     def test_touching_hours_changes_only_imagined_time_and_not_counters(self) -> None:
@@ -142,7 +143,9 @@ class TimeToolModelTests(unittest.TestCase):
             self.assertEqual((state.shown_time().hour, state.shown_time().minute), (15, 45))
             app.press((x + 150, y))
             self.assertEqual((state.shown_time().hour, state.shown_time().minute), (15, 15))
-            app.press((x + 112, y))
+            app.press((x + 111, y))  # visible hour numeral is also touchable
+            self.assertEqual((state.shown_time().hour, state.shown_time().minute), (15, 15))
+            app.press((x + 120, y))  # intentional radial gap
             self.assertEqual((state.shown_time().hour, state.shown_time().minute), (15, 15))
             state.set_practice_hour(12)
             self.assertEqual(state.shown_time().hour, 12)

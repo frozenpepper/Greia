@@ -6,6 +6,8 @@
 positions from four outer minute-quarter positions, preserving actual
 clock, running timers, Parent policy and trusted Greia Home. Disjoint radial
 hit geometry, hour AM/PM semantics and real Activity input tests were added.
+The touch region includes visible hour numerals, and practice mode hides
+the real calendar date rather than implying a fictional time is today's date.
 
 **Evidence boundary:** no current-checkout test run, new screenshots,
 spoken clips, listened review, GUI Simulator or hardware testing this turn.

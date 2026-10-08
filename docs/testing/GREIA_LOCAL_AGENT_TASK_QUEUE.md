@@ -163,7 +163,8 @@ test commands and expected observable behavior.
   clock, practice 23:45→00:15, timer 1/3/5/10, running/pause/finish/restart,
   stopwatch, keyboard alternatives (LEFT/RIGHT/TAB focus and ENTER),
   protected Home corner and resize. In practice mode touch each of the 12 inner hour positions and each
-  outer quarter-hour marker (12/3/6/9). Verify only the intended hand
+  outer quarter-hour marker (12/3/6/9), including taps on the
+  visible hour numerals. Verify only the intended hand
   changes; the center and ring gap are inert. Check the AM/PM half-day
   selection rule and ensure real system time, Parent limits and
   running stopwatch/countdown are never changed. Inspect icon-first mode/action controls,

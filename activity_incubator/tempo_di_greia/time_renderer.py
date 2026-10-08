@@ -225,8 +225,16 @@ class TimeRenderer:
             now = model.shown_time()
             self._dial(screen, angles=analog_hand_angles(now), practice=model.practice)
             self._text(screen, now.strftime("%H:%M"), (758, 223), 79, centered=True)
-            weekday = self.words[f"weekday.{now.weekday()}"]
-            self._text(screen, f"{weekday} {now.day:02d}/{now.month:02d}", (758, 299), 26, centered=True)
+            if model.practice:
+                # An imagined clock time is not a real calendar date. In
+                # particular, nudging through midnight must not present
+                # today's weekday as the illustrated tomorrow.
+                self._text(screen, self.words["practice"], (758, 299),
+                           23, PURPLE, centered=True)
+            else:
+                weekday = self.words[f"weekday.{now.weekday()}"]
+                self._text(screen, f"{weekday} {now.day:02d}/{now.month:02d}",
+                           (758, 299), 26, centered=True)
             if model.practice:
                 self._button(screen, ACTION_BUTTONS["minus"], self.words["minus"], tint=CORAL, size=19)
                 self._button(screen, ACTION_BUTTONS["plus"], self.words["plus"], tint=CORAL, size=19)

@@ -627,3 +627,13 @@ executed locally in this GitHub-only session**. Local-agent GLA-003 now
 checks both rings in IT/EN at 1024x600 and 800x480. All old and outstanding
 voice, source acceptance, Shell, physical and release boundaries remain;
 do not promote from incubator.
+
+
+### 2026-10-08 — Practice hour hit-area/date-label follow-up (SOURCE-ONLY)
+
+Corrected the inner-hour hit radius to include the dial's visible numeral
+positions, while keeping a gap from the outer minute ring. Practice now
+shows its practice label instead of a misleading real weekday/date when
+imaginary time crosses midnight. Additional source assertions cover tapping
+a visible hour numeral and the inert gap. No new source or GUI acceptance
+was executed; GLA-003 remains open.

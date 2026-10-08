@@ -58,7 +58,7 @@ invent date/time parsing, localization or trust.
 - small authored SVG clock icon with an exact verified WebP rendition;
 - separate IT and EN localization bundles and provider-free model tests.
 
-**Dual-ring practice input remains SOURCE-ONLY.** The inner ring changes the illustrated hour in the current AM/PM half-day and the outer ring changes imagined minutes. Visual, small-screen and child usability review remains outstanding, and the dual-ring teaching interaction is not an accepted pedagogical design yet.
+**Dual-ring practice input remains SOURCE-ONLY.** The inner ring changes the illustrated hour in the current AM/PM half-day and the outer ring changes imagined minutes. Practice mode hides the real calendar date rather than implying an imaginary time has a real weekday. Visual, small-screen and child usability review remains outstanding, and the dual-ring teaching interaction is not an accepted pedagogical design yet.
 
 **What it does NOT yet have:** spoken labels/instructions or local title WAVs,
 finished child-safe sound, real children usability evidence, accepted full-size
