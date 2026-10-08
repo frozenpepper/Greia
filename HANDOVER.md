@@ -1,6 +1,79 @@
 # Greia — Current Engineering Handover
 
 
+## 2026-10-08 — P6 child Home design and 32-draft catalogue organization (SOURCE-ONLY)
+
+**Branch/repository:** `frozenpepper/Greia`, `main`.
+**Authoritative programme:**
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md`.
+**Active bounded P6 design record:**
+`docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`
+(the actual 32-candidate editorial/curriculum table, Home intent,
+visual direction and remaining decisions). Do not create another
+competing plan or reintroduce Time complexity.
+
+**Source organization implemented:**
+1. Audited actual manifest presentation/education metadata for all **32
+   draft** child content release candidates. Four non-publishable game
+   experiences no longer misleadingly appear under Create:
+   `acquario_magico`: Explore;
+   `cucciolo_mio`: Play;
+   `specchi_magici`: Learn;
+   `torre_forme`: Play.
+   Preserved their educational taxonomy, saved data, events, permissions,
+   package IDs and draft release inclusion. Create contains six actual
+   reusable-creation anchors: Painting, Shape Garden, Stories in My Voice,
+   Teatrino Fiabe, Writing, Posta di Leo.
+2. `GreiaChildShell._home_collections`: the trusted **My Creations**
+   viewer is now visibly *adjacent to Create*, not stranded as the last
+   home portal. It uses a distinct existing **backpack** core icon,
+   coherent with `catalogue_view.py`; preserves availability when Parent
+   policy hides all Create apps; remains a trusted Shell surface.
+3. `CollectionFirstHomeMixin._home_columns`: compact landscape
+   widths/heights now prefer 3 columns for six portal destinations at
+   480×320/640×360 instead of six vertical rows, with reduced small
+   portal-size floor. 1024×600 and 800×480 keep existing 3/2-column
+   regimes. Real screenshot/hit-size checks are still necessary.
+4. `tests/test_child_home_creation_organization.py` reads actual
+   roster/TOML, asserts exact six genuine Create anchors, the four
+   repaired categories, adjacent distinctive My Creations portal
+   (including zero Parent-visible Create apps) and compact columns.
+   No new architecture/permission store or game was created.
+
+**Important discovered missing content:** Both actual prerecorded
+IT/EN launcher label directories lack `my_creations.wav`.
+The current `SpokenLabelController` already supports the semantic
+cue, but the child will not hear this destination until a real approved
+recording exists. **GLA-010 BLOCKED** owns voice authoring and human
+listening, using `tools/greia_voice.py` and Modal only with explicit
+owner approval; do not synthesize or reuse an incorrect “Create”
+recording automatically.
+
+**Current evidence:** GitHub direct-to-main commits/source readback
+only. The new P6 tests are UNEXECUTED in a complete checkout;
+Home screenshots, art-family side-by-side, localized audio listening,
+Play/Learn meaningful subdivision and all P7 gameplay/physical evidence
+are still outstanding. No acceptance or release roster promotion:
+32 candidate child Activities + 12 withheld + one system My Greia,
+**zero approved**; P8 not started. Prior Creations picker P3
+SOURCE-WIP work remains in prior handover entries.
+
+**Single local-agent queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+GLA-008 now has first-party curation/visual tests and actual
+Home screenshot expectations at 1024×600, 800×480 and 480×320,
+plus contact sheet and Play/Learn whole-inventory design evaluation;
+GLA-010 is voice-only and approval-blocked. Each task records current
+HEAD, one evidence ZIP, exact pass/fail/not-testable, first-failure
+stop and queue-only updates. Do not start Acer/installer GLA-009.
+
+**Next source priority:** after genuine source/UI evidence, repair
+observed Home/child-target failures, resolve dense Play and Learn
+navigation with accurate complete semantic coverage rather than
+invented “misc” groups, review original icon/character art across
+all 45 Activities and make actual product-quality decisions.
+Avoid expanding the architecture, creating additional Activities,
+or treating design annotations as accepted gameplay.
+
 ## 2026-10-08 — P3 trusted picker cancellation/expiry restoration
 
 **Canonical repo/branch:** `frozenpepper/Greia`, `main`;
