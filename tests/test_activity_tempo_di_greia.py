@@ -227,6 +227,45 @@ class TimeToolModelTests(unittest.TestCase):
         finally:
             pygame.quit()
 
+    def test_keyboard_focus_can_use_visible_controls_without_text_commands(self) -> None:
+        import os
+        os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
+        os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
+        import pygame
+        from activity_incubator.tempo_di_greia.time_app import TimeActivity
+        from activity_incubator.tempo_di_greia.time_renderer import WORD_KEYS
+        pygame.init()
+        try:
+            model = TimeExperience(
+                wall_now=lambda: datetime(2026, 10, 8, 9, tzinfo=timezone.utc),
+                monotonic=FakeClock(),
+            )
+            app = TimeActivity(pygame.Surface((1024, 600)), "it",
+                               {key: key for key in WORD_KEYS}, model)
+            move = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RIGHT)
+            activate = pygame.event.Event(pygame.KEYDOWN, key=pygame.K_RETURN)
+            app.handle_event(move)
+            self.assertEqual(app.focus_id, "mode.clock")
+            app.handle_event(move)
+            self.assertEqual(app.focus_id, "mode.stopwatch")
+            app.handle_event(activate)
+            self.assertIs(model.mode, TimeMode.STOPWATCH)
+            app.handle_event(move)
+            self.assertEqual(app.focus_id, "mode.timer")
+            app.handle_event(activate)
+            self.assertIs(model.mode, TimeMode.TIMER)
+            app._focus_move(1)
+            self.assertEqual(app.focus_id, "primary")
+            app.handle_event(activate)
+            self.assertTrue(model.timer.running)
+            app.handle_event(activate)
+            self.assertFalse(model.timer.running)
+            app.renderer.draw(app.canvas.surface, model,
+                              focus_rect=app._targets()[3][1])
+            app.renderer.fonts.clear()
+        finally:
+            pygame.quit()
+
     def test_mode_is_semantic_and_timer_not_screen_time(self) -> None:
         state = TimeExperience(monotonic=FakeClock())
         state.mode = TimeMode.TIMER

@@ -31,6 +31,7 @@ class TimeActivity:
         self.running = True
         self.ready_published = False
         self.celebrate_until = 0.0
+        self.focus_id: str | None = None
         self.dirty = True
 
     def _logical_point(self, position: tuple[int, int]) -> tuple[int, int] | None:
@@ -43,10 +44,46 @@ class TimeActivity:
         point = self.canvas.pointer(position)
         return (int(point[0]), int(point[1])) if point is not None else None
 
+    def _targets(self) -> tuple[tuple[str, pygame.Rect], ...]:
+        """Only targets currently visible/operable on the reference canvas."""
+        shared = tuple((f"mode.{mode.value}", rect) for mode, rect in MODE_BUTTONS.items())
+        if self.model.mode is TimeMode.CLOCK:
+            items = [("practice", ACTION_BUTTONS["practice"])]
+            if self.model.practice:
+                items += [
+                    ("minus", ACTION_BUTTONS["minus"]),
+                    ("plus", ACTION_BUTTONS["plus"]),
+                ]
+            return shared + tuple(items)
+        items = [
+            ("primary", ACTION_BUTTONS["primary"]),
+            ("reset", ACTION_BUTTONS["reset"]),
+        ]
+        if self.model.mode is TimeMode.TIMER:
+            items += [
+                (f"preset.{minutes}", rect)
+                for minutes, rect in zip(PRESET_MINUTES, PRESET_BUTTONS)
+            ]
+        return shared + tuple(items)
+
+    def _focus_move(self, direction: int) -> None:
+        controls = self._targets()
+        ids = [name for name, _ in controls]
+        index = ids.index(self.focus_id) if self.focus_id in ids else (-1 if direction > 0 else 0)
+        self.focus_id = ids[(index + direction) % len(ids)]
+        self.dirty = True
+
+    def _activate_focus(self) -> None:
+        for name, rect in self._targets():
+            if name == self.focus_id:
+                self.press(rect.center)
+                return
+
     def press(self, point: tuple[int, int]) -> None:
         for mode, rect in MODE_BUTTONS.items():
             if rect.collidepoint(point):
                 self.model.mode = mode
+                self.focus_id = f"mode.{mode.value}"
                 self.dirty = True
                 return
         if self.model.mode is TimeMode.CLOCK:
@@ -91,8 +128,15 @@ class TimeActivity:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.running = False
+            elif event.key in (pygame.K_TAB, pygame.K_RIGHT):
+                self._focus_move(1)
+            elif event.key == pygame.K_LEFT:
+                self._focus_move(-1)
+            elif event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                self._activate_focus()
             elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3):
                 self.model.mode = (TimeMode.CLOCK, TimeMode.STOPWATCH, TimeMode.TIMER)[event.key - pygame.K_1]
+                self.focus_id = f"mode.{self.model.mode.value}"
                 self.dirty = True
             elif event.key == pygame.K_SPACE and self.model.mode is not TimeMode.CLOCK:
                 self.press(ACTION_BUTTONS["primary"].center)
@@ -130,8 +174,12 @@ class TimeActivity:
                 self.model.mode is TimeMode.TIMER and self.model.timer.running
             )
             if self.dirty or moment >= next_draw:
+                focus_rect = next(
+                    (rect for key, rect in self._targets() if key == self.focus_id),
+                    None,
+                )
                 self.renderer.draw(self.canvas.surface, self.model,
-                    celebrate=moment < self.celebrate_until)
+                    celebrate=moment < self.celebrate_until, focus_rect=focus_rect)
                 self.canvas.present(clear=(247, 241, 226))
                 pygame.display.flip()
                 if not self.ready_published:

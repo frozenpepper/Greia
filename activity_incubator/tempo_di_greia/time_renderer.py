@@ -198,7 +198,10 @@ class TimeRenderer:
             pygame.draw.circle(screen, CORAL if index % 2 else SUN, point, 8 if index % 3 else 11)
             pygame.draw.circle(screen, PAPER, point, 3)
 
-    def draw(self, screen: pygame.Surface, model: TimeExperience, *, celebrate: bool = False) -> None:
+    def draw(
+        self, screen: pygame.Surface, model: TimeExperience, *,
+        celebrate: bool = False, focus_rect: pygame.Rect | None = None,
+    ) -> None:
         screen.fill(BG)
         pygame.draw.rect(screen, (231, 225, 208), pygame.Rect(85, 113, 900, 463), border_radius=39)
         pygame.draw.rect(screen, PAPER, pygame.Rect(85, 107, 900, 458), border_radius=39)
@@ -254,6 +257,11 @@ class TimeRenderer:
                         screen, rect, f"{minutes} MIN",
                         selected=model.timer.duration_seconds == minutes * 60, size=17,
                     )
+        if focus_rect is not None:
+            pygame.draw.rect(
+                screen, PURPLE, focus_rect.inflate(8, 8),
+                width=4, border_radius=26,
+            )
 
 
 __all__ = ["TimeRenderer", "WORD_KEYS", "MODE_BUTTONS", "ACTION_BUTTONS", "PRESET_BUTTONS", "REFERENCE_SIZE"]
