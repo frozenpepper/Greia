@@ -43,6 +43,8 @@ PRESET_BUTTONS = tuple(
     pygame.Rect(542 + index * 109, 477, 95, 67)
     for index in range(len(PRESET_MINUTES))
 )
+# This region exists only while the localized cue is actually available.
+REPLAY_BUTTON = pygame.Rect(868, 117, 88, 72)
 
 WORD_KEYS = (
     "title", "clock", "stopwatch", "timer", "real", "practice",
@@ -119,6 +121,13 @@ class TimeRenderer:
             pygame.draw.polygon(screen, color, (
                 (x + 14, y + 3), (x + 15, y - 10), (x + 3, y - 7),
             ))
+        elif name == "speaker":
+            pygame.draw.polygon(screen, color, (
+                (x - 19, y - 7), (x - 11, y - 7), (x - 2, y - 16),
+                (x - 2, y + 16), (x - 11, y + 7), (x - 19, y + 7),
+            ))
+            pygame.draw.arc(screen, color, pygame.Rect(x - 7, y - 15, 35, 30),
+                            -0.85, 0.85, 3)
         elif name == "hands":
             pygame.draw.circle(screen, color, center, 15, 3)
             pygame.draw.line(screen, color, center, (x - 4, y - 10), 3)
@@ -210,11 +219,18 @@ class TimeRenderer:
     def draw(
         self, screen: pygame.Surface, model: TimeExperience, *,
         celebrate: bool = False, focus_rect: pygame.Rect | None = None,
+        can_repeat: bool = False,
     ) -> None:
         screen.fill(BG)
         pygame.draw.rect(screen, (231, 225, 208), pygame.Rect(85, 113, 900, 463), border_radius=39)
         pygame.draw.rect(screen, PAPER, pygame.Rect(85, 107, 900, 458), border_radius=39)
         self._text(screen, self.words["title"], (112, 48), 29)
+        if can_repeat:
+            pygame.draw.rect(screen, (221, 211, 194), REPLAY_BUTTON.move(0, 4),
+                             border_radius=22)
+            pygame.draw.rect(screen, PAPER, REPLAY_BUTTON, border_radius=22)
+            pygame.draw.rect(screen, SEA, REPLAY_BUTTON, width=3, border_radius=22)
+            self._symbol(screen, "speaker", REPLAY_BUTTON.center, SEA)
         for mode, rect in MODE_BUTTONS.items():
             self._button(
                 screen, rect, self.words[mode.value],
@@ -281,4 +297,4 @@ class TimeRenderer:
             )
 
 
-__all__ = ["TimeRenderer", "WORD_KEYS", "MODE_BUTTONS", "ACTION_BUTTONS", "PRESET_BUTTONS", "REFERENCE_SIZE"]
+__all__ = ["TimeRenderer", "WORD_KEYS", "MODE_BUTTONS", "ACTION_BUTTONS", "PRESET_BUTTONS", "REPLAY_BUTTON", "REFERENCE_SIZE"]
