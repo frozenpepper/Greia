@@ -5,10 +5,12 @@
 # developers/community work without becoming installed built-ins.
 #
 # STATUS IS INTENTIONALLY DRAFT.
-# P7 has begun source review but no Activity has yet passed the required live
-# Simulator/visual/audio evidence. The entries below are SOURCE-REVIEWED
-# CANDIDATES only; official release composition calls require_approved() and
-# therefore still refuse this policy.
+# P7 source review covers all 45 packages, but none has passed the required
+# current Simulator/visual/audio release evidence. The 32 entries below are
+# CHILD-CONTENT CANDIDATES only. My Greia is a mandatory system-owned child
+# personalization Activity installed separately by the staging engine; never
+# add it here or use its privileges to admit an untrusted package. Official
+# release composition calls require_approved() and still refuse this policy.
 #
 # Add an entry only after its source review/disposition is recorded in the
 # Creations + Activity Release PROGRESS ledger. Keep entries sorted by full ID.

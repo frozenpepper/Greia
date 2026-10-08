@@ -21,6 +21,7 @@ if str(_SRC) not in sys.path:
 from greia_platform.activities import ActivityRegistry, RuntimeCatalogue
 from greia_platform.activity_release import (
     FirstPartyReleaseSelection,
+    MANDATORY_SYSTEM_ACTIVITIES,
     ReleaseSelectionError,
 )
 from greia_platform.trust import ActivitySource, PackageTrust
@@ -105,7 +106,11 @@ def stage_release_activities(
         )
     )
     try:
-        for item in selection.activities:
+        # Immutable, platform-owned My Greia ships in every installed target;
+        # it is not another child-content release candidate and is never
+        # discovered from a caller-writable manifest or plugin.
+        installed = selection.activities + MANDATORY_SYSTEM_ACTIVITIES
+        for item in installed:
             source_package = source_root / item.package_relpath
             _require_clean_package_tree(source_package)
             shutil.copytree(
@@ -129,7 +134,7 @@ def stage_release_activities(
         }
         expected = {
             item.activity_id: item.package_relpath
-            for item in selection.activities
+            for item in installed
         }
         if discovered != expected:
             raise ReleaseSelectionError(

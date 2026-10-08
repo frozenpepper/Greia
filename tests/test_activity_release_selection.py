@@ -7,6 +7,7 @@ from pathlib import Path
 
 from greia_platform.activity_release import (
     FirstPartyReleaseSelection,
+    MANDATORY_SYSTEM_ACTIVITIES,
     ReleaseSelectionError,
     ReleaseSelectionStatus,
 )
@@ -72,6 +73,20 @@ class ActivityReleaseSelectionTests(unittest.TestCase):
                         "schema_version": 1,
                         "release": {"id": "greia.test", "status": "draft"},
                         "activities": activities,
+                    })
+
+    def test_child_roster_cannot_claim_trusted_system_package(self):
+        system = MANDATORY_SYSTEM_ACTIVITIES[0]
+        for entry in (
+            {"activity_id": system.activity_id, "package": "painting"},
+            {"activity_id": "org.greia.painting", "package": system.package_relpath},
+        ):
+            with self.subTest(entry=entry):
+                with self.assertRaisesRegex(ReleaseSelectionError, "system Activities"):
+                    FirstPartyReleaseSelection.from_dict({
+                        "schema_version": 1,
+                        "release": {"id": "greia.test", "status": "draft"},
+                        "activities": [entry],
                     })
 
     def test_policy_file_symlink_is_rejected(self):

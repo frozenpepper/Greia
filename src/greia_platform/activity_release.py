@@ -49,6 +49,14 @@ class ReleaseActivity:
             raise ReleaseSelectionError("release Activity package must be one safe directory")
 
 
+# Trusted system-facing Activities are part of every installed Greia target,
+# independently of the curated child learning/game release catalogue.
+# Their identity is fixed by the platform rather than package metadata.
+MANDATORY_SYSTEM_ACTIVITIES: tuple[ReleaseActivity, ...] = (
+    ReleaseActivity("org.greia.workshop-settings", "workshop_settings"),
+)
+
+
 @dataclass(frozen=True, slots=True)
 class FirstPartyReleaseSelection:
     schema_version: int
@@ -69,6 +77,12 @@ class FirstPartyReleaseSelection:
             raise ReleaseSelectionError("duplicate release Activity ID")
         if len(set(packages)) != len(packages):
             raise ReleaseSelectionError("duplicate release Activity package")
+        system_ids = {item.activity_id for item in MANDATORY_SYSTEM_ACTIVITIES}
+        system_packages = {item.package_relpath for item in MANDATORY_SYSTEM_ACTIVITIES}
+        if system_ids.intersection(ids) or system_packages.intersection(packages):
+            raise ReleaseSelectionError(
+                "system Activities are platform-owned, not child release candidates"
+            )
         if tuple(ids) != tuple(sorted(ids)):
             raise ReleaseSelectionError(
                 "release Activities must be sorted by Activity ID for stable review"
@@ -151,6 +165,7 @@ class FirstPartyReleaseSelection:
 
 
 __all__ = [
+    "MANDATORY_SYSTEM_ACTIVITIES",
     "FirstPartyReleaseSelection",
     "ReleaseActivity",
     "ReleaseSelectionError",
