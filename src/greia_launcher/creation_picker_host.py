@@ -96,9 +96,18 @@ class ActivityCreationPickerHost:
         if self._session.state is not ActivitySessionState.RUNNING:
             return False
 
+        # A client may cancel while the trusted Shell owns the display, or
+        # the bounded request may expire before the child chooses anything.
+        # Never leave an obsolete picker visible or grant from a new request.
+        request = self._supervisor.pending_creation_selection(self._session)
+        if self._screen is not None and (
+            request is None or request.request_id != self._request_id
+        ):
+            self._close_visible(pygame, selected=False, cancel_pending=False)
+            return False
+
         opened = False
         if self._screen is None:
-            request = self._supervisor.pending_creation_selection(self._session)
             if request is None:
                 return False
             self._open(pygame, request)
@@ -213,7 +222,9 @@ class ActivityCreationPickerHost:
         except Exception:
             pass
 
-    def _close_visible(self, pygame: Any, *, selected: bool) -> None:
+    def _close_visible(
+        self, pygame: Any, *, selected: bool, cancel_pending: bool = True
+    ) -> None:
         screen = self._screen
         request_id = self._request_id
         lease = self._lease
@@ -221,15 +232,18 @@ class ActivityCreationPickerHost:
         self._request_id = None
         if screen is not None:
             screen.on_exit()
-        if not selected and request_id is not None:
+
+        # Cancelling broker state is distinct from restoring the child's
+        # display. A failed broker call must not leave the Shell overlay
+        # covering the Activity indefinitely.
+        cancel_error: Exception | None = None
+        if cancel_pending and not selected and request_id is not None:
             try:
                 self._supervisor.cancel_creation_selection(
                     self._session, request_id
                 )
             except Exception as exc:
-                raise CreationPickerHostError(
-                    "creation picker cancellation was not accepted"
-                ) from exc
+                cancel_error = exc
         if lease is None or not self._shell_window_backend.dismiss_activity_modal(lease):
             raise CreationPickerHostError("Activity focus could not be restored")
         ensure_chrome = getattr(
@@ -244,6 +258,10 @@ class ActivityCreationPickerHost:
             pygame.event.clear()
         except Exception:
             pass
+        if cancel_error is not None:
+            raise CreationPickerHostError(
+                "creation picker cancellation was not accepted"
+            ) from cancel_error
 
     def shutdown(self, pygame: Any, *, activity_alive: bool) -> bool:
         """Cancel/revoke UI authority and release every modal/audio resource."""
