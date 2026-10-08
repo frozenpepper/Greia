@@ -370,3 +370,13 @@ pass real Simulator/child review. Its illustrative icon SVG/WebP is a
 candidate, not a new core visual primitive. Resume Encyclopedia E3/E4
 according to their own exact-state evidence and plan; this entry documents a
 parallel tooling improvement, not a competing art subphase.
+
+## 2026-10-08 — Actual asset-family review workstream (SOURCE)
+
+Source/test `tools/visual_family_contact_sheet.py` renders one
+developer-only PNG from 39 core + 45 Activity + 30 cast-expression
+art at small 128/64/48px sizes. No output accepted or runtime asset
+changed. Task GLA-008 in `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`
+owns exact-SHA execution/review; previously frozen Encyclopedia E3/E4
+direction is unaffected. New My Time control iconography is also an
+unverified UI source experiment requiring the local agent's screenshots.

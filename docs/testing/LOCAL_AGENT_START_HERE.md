@@ -31,6 +31,15 @@ docs/agents/GREIA_AGENT_OPERATIONS.md
 
 The current handover owns the **current exact evidence boundary and next legitimate gate**. Do not infer the current gate from the newest-looking filename, a stale result document, or an old phase number.
 
+## Current owner-authorized product/source testing queue
+
+Use [`GREIA_LOCAL_AGENT_TASK_QUEUE.md`](./GREIA_LOCAL_AGENT_TASK_QUEUE.md)
+for the postponed Time/visual/gallery/Creations acceptance work.
+The owner authorizes **queue-only** evidence/status commits to `main`,
+not source edits or hardware access. The queue does not supersede
+the exact dated Creations acceptance or the independent installer
+and first-boot lifecycle authorization.
+
 ## 2. Current blocking route
 
 Post-R1 product-composition closure is blocking: source composition primitives (T3-S) are done, exact shipped installer/update/boot-health product composition (T3-P) is OPEN/BLOCKING, and the next executable task is **`POSTR1-P1-INSTALLER-RED`**. Do not start Raspberry Pi 400/500 work, UEFI work, or destructive Acer installation in this lane. R8 ARM64/Pi board adapters resume only after the common product lifecycle is proven — they are not the current blocking route.

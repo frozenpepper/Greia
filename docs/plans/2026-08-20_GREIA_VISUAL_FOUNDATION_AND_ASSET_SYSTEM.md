@@ -754,3 +754,14 @@ unchanged. An isolated Time icon SVG/WebP source candidate resides in
 shared catalogue; its final child usability and stylistic review is owed.
 The Encyclopedia visual workstream's acceptance/continuation route is not
 superseded by this bounded library affordance.
+
+## 2026-10-08 — Offline actual-art comparison, SOURCE only
+
+Added `tools/visual_family_contact_sheet.py` and
+`tests/test_visual_family_contact_sheet.py` (source anchor `0a09eaf4`).
+The developer tool compares the existing 39 canonical core icons,
+45 Activity icons and 30 cast-expression files at 128/64/48px in one
+PNG. No source asset was regenerated or newly approved, and
+Encyclopedia's E3 acceptance remains unchanged. GLA-008 in
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` owns generation,
+small-size evaluation and annotated visual findings when agent is free.

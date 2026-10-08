@@ -30,6 +30,14 @@ Current test/evidence routing starts at:
 docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
+The **single owner-authorized delayed local-agent queue** is
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`; it lists exact
+commands/SHAs/status/evidence tasks and safe queue-only update rules.
+The owner authorizes *queue-file-only* status/evidence commits to `main`.
+That is NOT permission for source edits, direct release approval, real
+user-profile access or Acer/installer operations.
+```
+
 That router follows `HANDOVER.md`. Do not select a dated procedure merely because its filename looks newer or familiar.
 
 ---

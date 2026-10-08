@@ -2851,3 +2851,16 @@ See `docs/product/CHILD_TIME_AND_ROUTINES.md`, the 2026-10-07 Creations
 `PROGRESS.md`, and `HANDOVER.md` for exact source/evidence anchors.
 No current checkout tests, Simulator, voiced-prereader, installed source
 composition, Acer or Parent/security acceptance has yet run for these changes.
+
+### 2026-10-08 — Parallel pre-reader time utility and deferred acceptance
+
+The source-only `activity_incubator/tempo_di_greia/` now supports direct
+quarter-hour dial touch, icon-first actions/modes, bounded visual timer
+finish cues and keyboard focus/Return. All source and updated tests remain
+unexecuted in a current checkout; no system time privileges, parental
+time-policy modification, installation, hardware or release approval.
+A developer-only real 39/45/30 icon/cast contact sheet renderer was also
+added, not used to change production assets. Owner-authorized local agent
+tests and evidence updates belong to the **one queue**:
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`. This parallel work
+does not supersede the blocking R1 remediation or lifecycle authority.

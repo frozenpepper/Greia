@@ -917,6 +917,17 @@ Do not reintroduce:
 
 ---
 
+## 23.1 Canonical-art contact sheet (authoring only, 2026-10-08)
+
+Use `python3 tools/visual_family_contact_sheet.py --output <new.png>`
+to compare actual source-truth 39 core, 45 built-in Activity and 30
+canonical cast-expression PNGs at 128/64/48px. The tool reads current
+file/manifest owners, adds no alternate art index, and never runs on a
+child's computer. Unit test `tests/test_visual_family_contact_sheet.py`;
+actual captured visual acceptance is GLA-008 in the living local-agent queue.
+No existing art or Greia UI style has yet been changed/approved through
+this new sheet.
+
 # 24. Current implementation snapshot
 
 The authoritative live checkpoint remains the active plan and resume file, but the stable architecture currently has these important facts:
