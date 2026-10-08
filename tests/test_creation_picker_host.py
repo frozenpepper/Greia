@@ -230,6 +230,90 @@ class CreationPickerHostTests(unittest.TestCase):
         self.assertEqual(self.supervisor.cancelled, [])
         self.assertEqual(self.shell.dismisses, [self.shell.lease])
 
+    def test_activity_cancellation_dismisses_stale_modal_without_second_cancel(self):
+        self.assertTrue(self.host.prepare(self.pygame))
+        self.supervisor.pending = SimpleNamespace(
+            request_id="cancelled-by-child",
+            media_types=("image/png",),
+            roles=(),
+        )
+        self.host.service(self.pygame, ())
+        screen = self.host._screen
+        self.assertTrue(self.host.visible)
+
+        # The Activity already cancelled the request through its broker.
+        # The chooser must disappear before processing a stale tap.
+        self.supervisor.pending = None
+        self.assertFalse(self.host.service(self.pygame, (object(),)))
+        self.assertFalse(self.host.visible)
+        self.assertTrue(screen.closed)
+        self.assertEqual(self.supervisor.completed, [])
+        self.assertEqual(self.supervisor.cancelled, [])
+        self.assertEqual(self.shell.dismisses, [self.shell.lease])
+        self.assertEqual(self.pygame.mouse.values[-1], False)
+
+    def test_expired_broker_request_restores_activity_and_stops_old_picker(self):
+        from greia_launcher.creation_selection import CreationSelectionCoordinator
+
+        now = [10.0]
+        access = SimpleNamespace(consumable_media_types=frozenset({"audio/wav"}))
+        picker = CreationSelectionCoordinator(access, "session-1", clock=lambda: now[0])
+        picker.enable_presenter()
+        self.supervisor.pending_creation_selection = lambda _session: picker.trusted_pending()
+
+        self.host.prepare(self.pygame)
+        req = picker.request(media_types=("audio/wav",))
+        self.host.service(self.pygame, ())
+        previous_screen = self.host._screen
+        self.assertTrue(self.host.visible)
+
+        now[0] += picker.REQUEST_SECONDS + 1
+        self.assertFalse(self.host.service(self.pygame, (object(),)))
+        self.assertFalse(self.host.visible)
+        self.assertTrue(previous_screen.closed)
+        self.assertEqual(self.supervisor.completed, [])
+        self.assertEqual(self.supervisor.cancelled, [])
+        self.assertEqual(self.shell.dismisses, [self.shell.lease])
+        self.assertEqual(picker.poll(req.request_id).state, "cancelled")
+
+    def test_replaced_request_never_receives_input_through_previous_modal(self):
+        self.assertTrue(self.host.prepare(self.pygame))
+        self.supervisor.pending = SimpleNamespace(
+            request_id="old", media_types=("image/png",), roles=(),
+        )
+        self.host.service(self.pygame, ())
+        old = self.host._screen
+        self.supervisor.pending = SimpleNamespace(
+            request_id="new", media_types=("image/png",), roles=(),
+        )
+        self.assertFalse(self.host.service(self.pygame, (object(),)))
+        self.assertTrue(old.closed)
+        self.assertFalse(self.host.visible)
+        self.assertEqual(self.supervisor.completed, [])
+        self.assertTrue(self.host.service(self.pygame, ()))
+        self.assertEqual(self.host._request_id, "new")
+        self.assertEqual(self.shell.shows, [self.shell.lease, self.shell.lease])
+
+    def test_cancel_failure_still_restores_activity_before_raising(self):
+        self.assertTrue(self.host.prepare(self.pygame))
+        self.supervisor.pending = SimpleNamespace(
+            request_id="cancel-error", media_types=("image/png",), roles=(),
+        )
+        self.host.service(self.pygame, ())
+        screen = self.host._screen
+
+        def fail_cancel(*_args):
+            raise RuntimeError("broker unavailable")
+
+        self.supervisor.cancel_creation_selection = fail_cancel
+        screen.next_result = UiEventResult.REQUEST_CLOSE
+        with self.assertRaisesRegex(CreationPickerHostError, "cancellation"):
+            self.host.service(self.pygame, (object(),))
+        self.assertTrue(screen.closed)
+        self.assertFalse(self.host.visible)
+        self.assertEqual(self.shell.dismisses, [self.shell.lease])
+        self.assertEqual(self.pygame.mouse.values[-1], False)
+
     def test_show_failure_cancels_pending_request_and_never_leaves_visible_screen(self):
         self.assertTrue(self.host.prepare(self.pygame))
         self.shell.show_result = False
