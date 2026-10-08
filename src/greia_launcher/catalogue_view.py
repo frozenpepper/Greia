@@ -54,18 +54,21 @@ _CATEGORY_ICONS = {
     "my_creations": "backpack",
 }
 _DISCOVERY_ICONS = {
+    # Every semantic group needs its own child-recognizable silhouette.
+    # Reuse the existing canonical Greia icons, never platform emoji or a
+    # runtime-generated substitute; no additional artwork dependency.
     "drawing": "palette",
-    "writing": "book",
-    "music": "palette",
-    "building": "puzzle_pieces",
-    "numbers": "puzzle_pieces",
-    "words": "book",
-    "puzzles": "puzzle_pieces",
-    "nature": "magnifier",
+    "writing": "notebook",
+    "music": "music_star",
+    "building": "train_blocks",
+    "numbers": "coins",
+    "words": "abc_board",
+    "puzzles": "block_puzzle",
+    "nature": "garden",
     "stories": "book",
-    "making": "palette",
-    "care": "unicorn",
-    "action": "puzzle_pieces",
+    "making": "rainbow",
+    "care": "heart",
+    "action": "lightning",
     "settings": "unicorn",
 }
 _DEFAULT_CATEGORY_ICON = "backpack"
