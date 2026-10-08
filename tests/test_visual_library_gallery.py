@@ -41,6 +41,25 @@ class VisualLibraryGalleryTests(unittest.TestCase):
         self.assertIn("&lt;img src=x", page)
         self.assertIn('data-status="preferred"', page)
 
+    def test_semantic_tags_are_searchable_and_visible_even_without_name_match(self) -> None:
+        from tools.visual_authoring_library import get_all_items, load_library
+        collections, errors = load_library()
+        self.assertFalse(errors)
+        clock_assets = [
+            item for item in get_all_items(collections)
+            if "clock" in item.get("tags", [])
+        ]
+        self.assertTrue(clock_assets)
+        self.assertTrue(any("clock" not in item["id"] for item in clock_assets))
+        html = render_gallery(
+            clock_assets, repository=Path(__file__).resolve().parents[1],
+            output=self.root / "out" / "gallery.html",
+        )
+        self.assertIn('class="tag">clock</span>', html)
+        self.assertIn('data-search="', html)
+        for item in clock_assets:
+            self.assertIn(item["id"], html)
+
     def test_traversal_missing_source_and_duplicate_identity_refused(self) -> None:
         output = self.root / "out" / "gallery.html"
         for path in ("../escape.svg", "assets/visual/not-here.svg"):

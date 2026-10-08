@@ -47,10 +47,18 @@ def render_gallery(items: list[dict[str, object]], *, repository: Path, output: 
         search = " ".join(str(item.get(key, "")) for key in
                           ("id", "role", "family", "notes", "collection_name", "source_pack"))
         tags = item.get("tags", [])
-        if isinstance(tags, list):
-            search += " " + " ".join(map(str, tags))
+        semantic_tags = tuple(str(tag) for tag in tags if isinstance(tag, str)) if isinstance(tags, list) else ()
+        search += " " + " ".join(semantic_tags)
+        # A semantic resource can be relevant to "clock" without that word
+        # appearing in its technical ID (e.g. dial_hands). Surface those
+        # author-written tags so a human can understand the search result.
+        tag_preview = "".join(
+            '<span class="tag">' + escape(tag.replace("_", " ")) + "</span>"
+            for tag in semantic_tags[:5]
+        )
         label = "Preferred" if status == "preferred" else "Candidate reference"
         kind = str(item.get("item_type", "finished"))
+        display_name = str(item.get("role", asset_id)).replace("_", " ").title()
         cards.append(
             '<article class="asset" data-status="' + escape(status, quote=True) +
             '" data-collection="' + escape(category, quote=True) +
@@ -59,8 +67,10 @@ def render_gallery(items: list[dict[str, object]], *, repository: Path, output: 
             '" alt="' + escape(asset_id, quote=True) + '" loading="lazy"></div>' +
             '<div class="details"><span class="state">' + label + "</span>" +
             '<span class="kind">' + escape(kind) + "</span>" +
-            "<h2>" + escape(asset_id) + "</h2>" +
+            "<h2>" + escape(display_name) + "</h2>" +
+            '<div class="asset-id">' + escape(asset_id) + '</div>' +
             "<p>" + escape(str(item.get("notes", item.get("role", "")))) + "</p>" +
+            '<div class="tags">' + tag_preview + "</div>" +
             '<div class="foot"><span>' + escape(category) + '</span>' +
             '<a href="' + escape(path, quote=True) + '" target="_blank" rel="noopener">Open source ↗</a></div>' +
             "</div></article>"
@@ -86,15 +96,18 @@ main{max-width:1440px;margin:auto;padding:0 28px 70px}
 .preview img{max-width:100%;max-height:100%;object-fit:contain}
 .details{padding:18px 19px 20px}.state,.kind{font-size:12px;font-weight:750;letter-spacing:.04em;text-transform:uppercase}
 .state{color:var(--accent)}.kind{color:var(--muted);float:right}
-h2{font-size:15px;line-height:1.35;overflow-wrap:anywhere;margin:12px 0 7px}
-.details p{font-size:14px;color:var(--muted);margin:0 0 16px;min-height:40px}
+h2{font-size:19px;line-height:1.35;overflow-wrap:anywhere;margin:12px 0 3px;letter-spacing:-.02em}
+.asset-id{font-size:11px;color:var(--muted);overflow-wrap:anywhere;margin-bottom:10px}
+.details p{font-size:14px;color:var(--muted);margin:0 0 12px;min-height:40px}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 16px}
+.tag{background:#e9f1ee;border:1px solid #d9e4df;border-radius:7px;padding:2px 7px;color:#396d63;font-size:11px}
 .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
 .foot a{font-size:12px;color:#09665e;text-decoration:underline}
 .asset[hidden]{display:none}#results{margin:0 0 17px;color:var(--muted)}
 @media(prefers-reduced-motion:no-preference){.asset{transition:box-shadow .14s}.asset:hover{box-shadow:0 8px 29px #23313a17}}
 </style></head>
 <body><header><h1>Greia Visual Library</h1><p class="subtitle">Explore our reusable artwork source masters. Search by object, meaning or role. Preferred assets are reviewed for reuse; candidates are references for adaptation—not automatically approved finished art.</p>
-<div class="controls"><input id="search" aria-label="Search visuals" placeholder="Try tree, lamp, book, shadow…" type="search">
+<div class="controls"><input id="search" aria-label="Search visuals" placeholder="Search names and tags: clock, tree, shadow…" type="search">
 <select id="collection" aria-label="Collection"><option value="">All collections</option></select>
 <select id="status" aria-label="Review status"><option value="">All statuses</option><option value="preferred">Preferred</option><option value="candidate_reference">Candidate reference</option></select></div>
 </header><main><p id="results" aria-live="polite"></p><div id="grid">__CARDS__</div></main>
