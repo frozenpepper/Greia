@@ -223,6 +223,16 @@ Sequence in one tested vertical slice before broad rollout:
 
 ### P6 — Catalogue and release selection authority
 
+**Child Home / editorial and visual curation checkpoint (2026-10-08):**
+[the 32-candidate navigation + art direction baseline](./P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md)
+records the existing-source Create/Play/Learn/Explore membership audit,
+adjacent My Creations Home portal and compact-display target, and the
+remaining actual-gameplay/visual/audio decisions. It is a *bounded P6
+decision record*, not an additional architecture layer, approved roster,
+or a second implementation plan. Source edits remain UNVERIFIED pending
+GLA-008 and spoken-label authoring GLA-010.
+
+
 - Introduce an **explicit first-party release Activity selection** in the build/manifest/index composition owner; keep experiments in source without automatically shipping them.
 - No ad hoc list in Shell or parallel release flags in every app. One trusted declarative selection with canonical installer/index equality checks and tests.
 - Derive release set from quality evidence: Anchor/Keep, Improve before ship, Merge/Replace, Exclude/Experimental. Do not mechanically meet a count.
