@@ -81,6 +81,10 @@ class TimeSpeech:
             return
         previous = self._instruction
         self._instruction = target
+        if not self._started:
+            # Startup events can precede the first READY frame. The correct
+            # instruction will be chosen by start(), without early playback.
+            return
         self._pending = None
         if self.transport.busy():
             self.transport.stop()
