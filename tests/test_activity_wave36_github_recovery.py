@@ -209,6 +209,14 @@ class StarsKeyboardRecoveryTests(unittest.TestCase):
         self.assertEqual(app.selected_star_index, 0)
         app.events.constellation_completed.assert_called_once()
 
+    def test_number_shortcut_cannot_leave_selection_outside_star_array(self) -> None:
+        app = self.make_app()
+        count = app.session.current.star_count
+        app._handle_keydown(pygame.K_9)
+        if count < 9:
+            self.assertEqual(app.selected_star_index, 0)
+            self.assertEqual(len(app.session.current.connected), 0)
+
     def test_fact_speech_disallows_foreign_language_fallback(self) -> None:
         app = self.make_app()
         app.resources.audio_cue.return_value = None
