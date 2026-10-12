@@ -87,6 +87,7 @@ class WoodlandApp:
 
         self.state = WoodlandGameState(total_stars=total_stars)
         self.state.start_round()
+        self.selected_spot_index = 0
 
         # Terminal victory screen owner
         self.completion = PygameCompletionScreen(
@@ -120,14 +121,21 @@ class WoodlandApp:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self._running = False
-                elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                    self._running = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self._running = False
+                    elif self._handle_keydown(event.key):
+                        dirty = True
                 elif event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.get_surface() or self.screen
                     self.canvas = PygameReferenceCanvas(self.screen)
                     dirty = True
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self._handle_click(event.pos):
+                        dirty = True
+                elif event.type == pygame.FINGERDOWN:
+                    width, height = self.screen.get_size()
+                    if self._handle_click((int(event.x * width), int(event.y * height))):
                         dirty = True
 
             if not self.state.is_victory:
@@ -151,6 +159,7 @@ class WoodlandApp:
                         self.state,
                         ui_prefs.interface_size,
                         t_now=now,
+                        selected_spot_id=self.state.spots[self.selected_spot_index].spot_id,
                     )
 
                 self.canvas.present()
@@ -164,6 +173,23 @@ class WoodlandApp:
             clock.tick(30 if not self.state.is_victory else 25)
 
         return 0
+
+    def _handle_keydown(self, key: int) -> bool:
+        """Navigate and activate using the same action as mouse or touch."""
+        if self.state.is_victory:
+            if key in (pygame.K_RETURN, pygame.K_SPACE):
+                self.state.start_round()
+                self.selected_spot_index = 0
+                self.audio.play("pop")
+                return True
+            return False
+        if key in (pygame.K_LEFT, pygame.K_UP, pygame.K_RIGHT, pygame.K_DOWN):
+            step = -1 if key in (pygame.K_LEFT, pygame.K_UP) else 1
+            self.selected_spot_index = (self.selected_spot_index + step) % len(self.state.spots)
+            return True
+        if key in (pygame.K_RETURN, pygame.K_SPACE):
+            return self._inspect_spot(self.state.spots[self.selected_spot_index].spot_id)
+        return False
 
     def _handle_click(self, raw_pos: tuple[int, int]) -> bool:
         """Dispatch child clicks cleanly to spots or completion controls."""
@@ -180,38 +206,40 @@ class WoodlandApp:
             if self.completion.primary_contains((mx, my)):
                 self.audio.play("pop")
                 self.state.start_round()
+                self.selected_spot_index = 0
                 return True
             return False
 
-        # Check spot interactions
-        for spot in self.state.spots:
+        for index, spot in enumerate(self.state.spots):
             if spot.contains(mx, my):
-                was_target, animal_id = self.state.inspect_spot(spot.spot_id)
-                if animal_id is not None:
-                    self.audio.play("rustle")
-                    self.audio.play("pop")
-
-                    if was_target:
-                        # Save progress & emit milestone
-                        if self.storage:
-                            self.storage.kv_set(STORAGE_KEY, {"stars": self.state.total_stars})
-                        try:
-                            emit_activity_event(
-                                "woodland.animal_found",
-                                {"animal": animal_id, "stars": self.state.total_stars},
-                            )
-                        except Exception:
-                            pass
-
-                        if self.state.is_victory:
-                            self.audio.play("win")
-                            try:
-                                emit_activity_event(
-                                    "woodland.round_completed",
-                                    {"stars": self.state.total_stars},
-                                )
-                            except Exception:
-                                pass
-                return True
-
+                self.selected_spot_index = index
+                return self._inspect_spot(spot.spot_id)
         return False
+
+    def _inspect_spot(self, spot_id: str) -> bool:
+        """One gameplay action shared by pointer, touch and keyboard."""
+        was_target, animal_id = self.state.inspect_spot(spot_id)
+        if animal_id is None:
+            return False
+        self.audio.play("rustle")
+        self.audio.play("pop")
+        if was_target:
+            if self.storage:
+                self.storage.kv_set(STORAGE_KEY, {"stars": self.state.total_stars})
+            try:
+                emit_activity_event(
+                    "woodland.animal_found",
+                    {"animal": animal_id, "stars": self.state.total_stars},
+                )
+            except Exception:
+                pass
+            if self.state.is_victory:
+                self.audio.play("win")
+                try:
+                    emit_activity_event(
+                        "woodland.round_completed",
+                        {"stars": self.state.total_stars},
+                    )
+                except Exception:
+                    pass
+        return True

@@ -194,6 +194,7 @@ class WoodlandGameState:
     target_animal_id: str = "fox"
     found_count: int = 0
     is_victory: bool = False
+    found_spot_ids: set[str] = field(default_factory=set)
     leaping_animal: LeapingAnimal | None = None
     particles: list[Particle] = field(default_factory=list)
 
@@ -208,6 +209,7 @@ class WoodlandGameState:
         }
         self.target_animal_id = random.choice(list(self.hiding_map.values()))
         self.found_count = 0
+        self.found_spot_ids.clear()
         self.is_victory = False
         self.leaping_animal = None
         self.particles.clear()
@@ -221,7 +223,7 @@ class WoodlandGameState:
         if self.is_victory:
             return False, None
         animal_id = self.hiding_map.get(spot_id)
-        if animal_id is None:
+        if animal_id is None or spot_id in self.found_spot_ids:
             return False, None
 
         spot = next((s for s in self.spots if s.spot_id == spot_id), None)
@@ -247,6 +249,7 @@ class WoodlandGameState:
 
         is_target = animal_id == self.target_animal_id
         if is_target:
+            self.found_spot_ids.add(spot_id)
             self.found_count += 1
             self.total_stars += 1
             if self.found_count >= self.total_to_find:
@@ -254,8 +257,8 @@ class WoodlandGameState:
             else:
                 remaining = [
                     a_id
-                    for a_id in self.hiding_map.values()
-                    if a_id != self.target_animal_id
+                    for candidate_spot, a_id in self.hiding_map.items()
+                    if candidate_spot not in self.found_spot_ids
                 ]
                 if remaining:
                     self.target_animal_id = random.choice(remaining)

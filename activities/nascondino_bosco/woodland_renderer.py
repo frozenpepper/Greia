@@ -124,6 +124,7 @@ class WoodlandRenderer:
         state: WoodlandGameState,
         interface_size: InterfaceSize,
         t_now: float,
+        selected_spot_id: str | None = None,
     ) -> None:
         """Render the complete active game frame in one optimized pass."""
         # 1. Fast opaque background blit
@@ -135,6 +136,15 @@ class WoodlandRenderer:
             animal_id = state.hiding_map.get(spot.spot_id)
             if animal_id is not None:
                 self.art.draw_peeking_clue(target_surface, spot, animal_id, t_now)
+
+        # Visible keyboard focus; no extra image allocation.
+        if selected_spot_id is not None:
+            for spot in state.spots:
+                if spot.spot_id == selected_spot_id:
+                    focus = pygame.Rect(spot.rect_tuple).inflate(12, 12)
+                    pygame.draw.ellipse(target_surface, (15, 23, 42), focus, 7)
+                    pygame.draw.ellipse(target_surface, (56, 189, 248), focus, 4)
+                    break
 
         # 3. Leaping animal animation (if active)
         leap = state.leaping_animal
