@@ -444,7 +444,7 @@ test commands and expected observable behavior.
 ### GLA-011 — Wave 37 three-Activity input and save-recovery acceptance
 
 - **Status:** READY (source tests); full isolated GUI depends on GLA-001 PASS.
-- **Priority:** P1; **minimum source SHA:** `8a0a4e54e213be7bb7f906e57fd45582c01d1f6d`.
+- **Priority:** P1; **minimum source SHA:** `b091f24d58851a938f9139398769fc986e82fc4e`.
 - **Scope:** Woodland Hide-and-Seek (`nascondino_bosco`), Little Green Thumb
   (`piccola_serra`), Magic Aquarium (`acquario_magico`); IT/EN.
   No drawings/voices modified or accepted by this task.
@@ -478,14 +478,15 @@ test commands and expected observable behavior.
   just “launched OK.”
 - **PASS boundary:** source commands all exit 0 **and** each live game
   interaction works without traceback, unbounded saved counters, repeated
-  rewards, invisible keyboard focus or protected-chrome leakage. A headless
+  rewards, synthetic touch+mouse double actions, invisible keyboard
+  focus or protected-chrome leakage. A headless
   launch alone is startup evidence, not complete gameplay acceptance.
   Real speakers, child usability, full Greia Shell and Acer/ARM remain
   separately unproven.
 - **Failure:** preserve exit code, first failing assertion, logs,
   screenshots and any offending save **with personal data removed** in
   one evidence ZIP. Stop; no modifications outside queue-only status.
-- **Last result:** UNEXECUTED on GitHub source `8a0a4e54`.
+- **Last result:** UNEXECUTED on GitHub source `b091f24d`.
 - **Execution history:** the earlier Wave 37 chat archive described
   successful local Pygame work but did not include its edited project
   or a reusable evidence ZIP. This GitHub reconstruction is a new SHA
