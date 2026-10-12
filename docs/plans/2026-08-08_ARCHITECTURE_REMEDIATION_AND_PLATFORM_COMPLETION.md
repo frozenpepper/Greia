@@ -3076,3 +3076,22 @@ Pygame, `make verify`, Simulator and physical checks have not been
 executed in this GitHub-only checkout. GLA-011 in the single local-agent
 queue contains exact acceptance instructions. Release lifecycle and
 architecture remediation open phases remain unchanged.
+
+
+### 2026-10-12 — GitHub Wave 36 gameplay continuity reconciliation (SOURCE WIP)
+
+The archive's Wave 36 local ZIP/evidence did not land on GitHub `main`.
+The current source independently lacked keyboard gameplay for Memory and
+Train, missing in-motion lock for Maze, and complete keyboard/state/strict
+IT-EN fact voice support for Stars. Four existing Activity apps were
+reconstructed at `8070cfd3`, `5907b0e7`, `3a73add0` and
+`93f30a7f`, with nine source regression cases at `d3cf6790` and
+`b73dde9e`. No Activity manifest, sandbox, storage API, trust,
+media/artwork or OS lifecycle authority was changed. The new
+`GLA-012` local-agent task carries complete Pygame tests, five-station
+Train gameplay, bilingual screenshot/audio checks and physical-input
+review. **No local test or Simulator/Pygame acceptance ran on these
+new GitHub commits.** The older archive's reported PASS counts must
+not be attributed to GitHub `main`. The earlier blocking architecture
+and hardware release prerequisites remain open; Waves 34–35 source
+reconciliation is still needed.
