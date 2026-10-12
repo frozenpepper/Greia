@@ -1,5 +1,38 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-12 — Next archived gameplay corrections: Clinic + Orca (SOURCE ONLY)
+
+The original 2026-10-12 local Wave 34/35 archive reported Clinic
+keyboard access and Orca fact-language/gesture repairs; neither
+survived onto current GitHub `main`. Rebuilt these source paths:
+
+- `e2e5a733`: Clinic explicit keyboard tool choice, separate treatment
+  activation, arrow focus, replay, direct touch with synthetic mouse
+  filtering. One shared `_apply_to_patient` preserves existing
+  `ClinicSession` truth, persistence and event contracts.
+- `57bf0c0a`: Orca Bay fact audio selects the actual
+  `LocalizedResources.context.selected.value` locale instead of
+  a nonexistent `.locale` attribute; K6 reaches facts. Drag
+  gives each orca at most one cuddle reward per contact gesture,
+  and touch-generated mouse duplicates are filtered.
+- `2cfcde61`: five focused regression methods covering complete
+  five-patient keyboard progression, selection safety and replay,
+  touch event deduplication, English voice selection and cuddling.
+
+**Evidence and boundaries:** GitHub source committed, no
+`unittest`/`make verify`, Pygame, GUI, voice listening, child
+acceptance or hardware tests executed on these SHAs.
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` GLA-013 is the
+exact follow-up. GLA-012 (Wave 36) and GLA-011 (Wave 37) also
+remain UNEXECUTED.
+
+**Next engineering focus:** inspect missing archived Wave 34/35
+Momo narration, Solar System Spaceship, Bridges and Marble repairs
+against current `main`; implement only genuine gaps, with
+tests. Do not revisit visual styling/art in this functional
+audit. Do not mark P7 Activities approved until source,
+bilingual real gameplay and voice/speaker acceptance pass.
+
 ## 2026-10-12 — Missing Wave 36 GitHub repairs restored (SOURCE ONLY)
 
 **Continuity finding:** the attached previous-session HTML reports local
