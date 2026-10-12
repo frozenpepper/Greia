@@ -184,8 +184,10 @@ class SkyActivity:
                 self.selected_star_index + step
             ) % self.session.current.star_count
         elif pygame.K_1 <= key <= pygame.K_9:
-            self.selected_star_index = key - pygame.K_1
-            self._tap_star(self.selected_star_index)
+            index = key - pygame.K_1
+            if index < self.session.current.star_count:
+                self.selected_star_index = index
+                self._tap_star(index)
         elif key in (pygame.K_SPACE, pygame.K_RETURN):
             self._tap_star(self.selected_star_index)
 
