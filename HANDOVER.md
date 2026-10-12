@@ -1,5 +1,41 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-12 — Missing Wave 36 GitHub repairs restored (SOURCE ONLY)
+
+**Continuity finding:** the attached previous-session HTML reports local
+Waves 34–37 with large project ZIPs and passing Pygame tests, but the
+canonical GitHub repo had not received Wave 34–36 source changes. We
+confirmed the four Wave 36 behaviors were absent from the Activity
+implementations on `main` and reconstructed their intended behavior
+without changing visuals, audio recordings or product classification.
+
+**GitHub source changes:** Memory Meraviglie arrow/Enter matching,
+theme/grid keys and focus recovery; Treno Numeri keyboard crate loading
+through the existing station model, visible focus and unified replay;
+Labirinto Magico movement commands locked while an animated slide
+is active; Stelle Incantate arrows/Enter connect, F fact playback,
+celebration advance, replay, focus and Italian/English strict audio
+lookup. All four gained or preserved touch/mouse parity as appropriate.
+Nine regression test methods committed in
+`tests/test_activity_wave36_github_recovery.py`.
+
+**Committed source anchors:** `8070cfd3`, `5907b0e7`,
+`3a73add0`, `d3cf6790`, `93f30a7f`, `b73dde9e`.
+These are **independent GitHub reconstructions**, not original Wave 36
+file copies. Current tests remain UNEXECUTED on these SHAs; the local
+archived 78/78 and 16/16 claims certify only the unavailable local
+project snapshot, not these GitHub commits.
+
+**Required next:** local agent GLA-012 in the single
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` provides exact
+unittest + `make verify` commands, language/device gameplay
+captures, evidence ZIP contract and first-failure stop.
+GLA-011 Wave 37 remains independently unverified.
+After results, reconcile the still-missing Wave 34–35 repairs
+(Clinic/Momo/Spaceship; Bridges/Marble/Momo/Orca etc) against
+the actual current `main` and continue the functional audit.
+P6/P7 draft and P8/installer/first-boot acceptance status is unchanged.
+
 ## 2026-10-12 — Wave 37 source resumed via GitHub (NOT YET EXECUTION-VERIFIED)
 
 **Why:** the prior archived Greia Activity functional audit was interrupted
