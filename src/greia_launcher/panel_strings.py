@@ -3,11 +3,12 @@
 The panel had no string table at all. Labels were inline literals, and the audio
 tab had already drifted into half-hardcoded Italian next to English —
 "Microphone Input Gain (Guadagno Microfono)", "Preset rapidi consigliati:",
-"Livello:", "Normale/Medio/Alto/Forte/Massimo" — on a system that declares
-twelve supported languages including Arabic, Chinese, Bengali and Hindi. That is
-not a cosmetic problem: the audio tab's level label is centred inside a fixed
-300 px badge with no measurement, and a longer translation lands on the adjacent
-buttons. The screenshot review reproduced exactly that.
+"Livello:", "Normale/Medio/Alto/Forte/Massimo" — on a system that formerly
+offered twelve languages without the necessary translation coverage. As of
+2026-10-12 only en/it remain selectable and es/fr are in staged production;
+that does NOT mean the entire Parent panel has been translated. Its current
+English text constants still need semantic per-locale catalogues in phase L3.
+The original screenshot review showed fixed layout and truncation problems.
 
 This module is the single translation surface. It is deliberately *not* a
 gettext pipeline: there is no catalogue compiler, no per-locale .mo files and no
@@ -24,10 +25,11 @@ property that matters for correctness today:
     string that cannot be laid out fails the suite rather than a parent.
 
 Two things this deliberately does not solve, recorded so they are not mistaken
-for solved. Right-to-left languages (Arabic is in SUPPORTED_SYSTEM_LANGUAGES)
-need mirroring of the whole layout, not just text wrapping, and nothing here does
-that. Non-Latin scripts (Chinese, Bengali, Hindi) need a font that has the
-glyphs; the bundled Nunito Sans coverage decides that, not this module.
+for solved. The panel's constants are still largely English independent of
+selected device locale; phase L3 must add semantic localized resources without
+breaking responsive layout. Future right-to-left languages require actual
+layout mirroring; non-Latin scripts require suitable fonts/shaping and cannot
+be made selectable solely by listing their locale tags.
 """
 
 from __future__ import annotations
