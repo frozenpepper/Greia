@@ -578,6 +578,65 @@ test commands and expected observable behavior.
 - **Execution history:** archived Wave 34/35 local tests are historical
   only, not present evidence on GitHub main.
 
+### GLA-014 — Four-language registry, staged installer text and voice inventory
+
+- **Status:** READY for source-only coverage tests/inventory;
+  **voice generation:** BLOCKED pending reviewed text, supported
+  provider and explicit paid/model run authority.
+- **Priority:** P1; **minimum source SHA:**
+  `2555b874281dd2f69d53954d4efb3e1f0ea36307`.
+- **Source authority:**
+  `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+  Follow the sibling **`LOCAL_AGENT_VOICE_PRODUCTION.md`** exactly
+  for per-cue, per-speaker four-language jobs and the real EN/IT
+  missing recordings. This queue is only the execution bookmark.
+- **Preflight:** §0. Read `SETUP.md` before any environment change.
+  Clean `main`, ff-only, current SHA ancestor and recognized
+  Python environment. No branch/source edits, TTS/Modal calls,
+  downloaded models or privileged images.
+- **First stage — non-destructive source commands, each logged
+  with true exit code, sequential and first-failure stop:**
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_system_language.py' -v
+  python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
+  python3 -m unittest discover -s tests -p 'test_four_language_inventory.py' -v
+  python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-four-language-coverage.json
+  PYTHONPATH=src python3 tools/audit_launcher_spoken_labels.py --locales en it --json
+  make verify
+  ```
+  For the inventory, use a unique ignored evidence directory
+  (replace the example `tmp/` output with its actual unique path)
+  and preserve the full JSON. The new source catalogue includes
+  108 staged ES keys and 108 FR keys; the installer still exposes
+  only EN/IT. Check dictionary key parity plus real error/warning
+  meaning and dynamic SSIDs/keyboard/battery formatting.
+- **Second stage — supervised non-destructive GUI:** use the
+  approved existing Simulator/installer preview fixture only,
+  not a real destructive installer. Capture first-language screen
+  with **exactly EN/IT choices**, keyboard/pointer focus,
+  1024×600 and 800×480. Stage the ES/FR translations via
+  `InstallerTranslator("es")` / `InstallerTranslator("fr")`
+  in source-approved non-destructive preview tests; these should
+  not create selectable Spanish/French devices yet. Test old
+  install-record locales `es`, `fr`, `zh-CN` read as
+  English safely without rewriting history, parent PUT rejects
+  unsupported writes. Do not create a new disk image solely to
+  inspect translations.
+- **Third stage — voice preparation, NOT actual generation:**
+  run `python3 tools/greia_voice.py doctor` (no downloads),
+  follow the voice work order to produce the full
+  `RECORDING_LEDGER.csv` with all four locales and the known
+  missing EN/IT `my_creations.wav` and My Time cues. Report
+  `BLOCKED_MODAL_PROVIDER` and `BLOCKED_TEXT` where appropriate,
+  including current source SHA. Actual cloud/provider calls
+  need explicit owner authorization and provider integration.
+- **PASS scope:** only executed tests/inventory and observed
+  EN/IT selector correctness, not finished 4-language support.
+  Voice stage cannot be PASS until human reviewed and recorded.
+  Return logs, output hashes, text keys missing, candidate cue
+  list, screenshot/audio-availability notes and evidence ZIP.
+- **Last result:** SOURCE COMMITTED; UNEXECUTED on current main.
+
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
 - **Status:** BLOCKED
