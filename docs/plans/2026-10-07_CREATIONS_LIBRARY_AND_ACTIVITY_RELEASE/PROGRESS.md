@@ -975,3 +975,37 @@ building a second screenshot framework; review actual
 child UI screens before further art polish.
 Existing GLA-008 local-agent task already owns
 exact commands, evidence and first failure handling.
+
+
+### 2026-10-12 — Wave 37 child Activity hybrid-input and save recovery (GITHUB SOURCE WIP)
+
+Reconstructed the interrupted Wave 37 functional-audit tranche from the
+archived conversation while preserving the newer authoritative GitHub
+`main` history. GitHub at start was `c177276e` (2026-10-08); the
+archived local work did **not** arrive as a repository tree or evidence ZIP.
+
+- `nascondino_bosco`: arrow navigation, visible selected-spot focus,
+  Enter/Space inspection and victory replay, normalized touch events,
+  mouse/keyboard/touch routed to the same `_inspect_spot`. Pure model
+  now excludes already found spots from targets and rejects repeat awards.
+- `piccola_serra`: selected pot focus, arrow selection, 1–4 tools, Tab
+  plant selection, Enter/Space applying the existing staged growth model,
+  normalized touch events. Uses existing pointer and model transitions.
+- `acquario_magico`: bounded visible keyboard cursor, arrows, Enter for
+  tank/creature/chest interaction, 1–3 tools, Space for night/day, C for
+  chest, pointer and keyboard sharing the action dispatcher. Invalid or
+  negative persisted counters recover to 0; absurdly large counters cap
+  at 1,000,000,000 without crashing Activity initialization.
+- New `tests/test_activity_wave37_input.py` covers keyboard-only complete
+  Woodland and Greenhouse cycles, reward uniqueness, replay reset, keyboard
+  Aquarium tool/chest interactions, cursor limits, touch normalization and
+  malformed/capped persisted counters. GLA-011 in the existing single
+  local-agent queue owns full execution and bilingual gameplay evidence.
+
+Source commits: `988bb134`, `26ec9870`, `8a0a4e54`.
+**Verification boundary:** GitHub source writes/readback only. This
+execution environment has no private full checkout or Pygame and cannot
+execute `make verify` or the Activity suites. Prior archived local chat
+claims do not certify this reconstructed SHA. No graphics or voice changes,
+no release promotion, no Shell/Simulator or installed x86/ARM acceptance.
+P6/P7 original programme and withheld/draft memberships unchanged.
