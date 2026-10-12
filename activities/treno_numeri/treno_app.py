@@ -129,6 +129,7 @@ class TrenoApp:
         self.renderer = TrenoRenderer(self.typography)
         self.running: bool = True
         self.first_frame_ready: bool = False
+        self.selected_crate: int = 0
         # Play initial whistle (model didn't; app owns presentation side-effects).
         self.sounds.play("whistle")
 
@@ -140,6 +141,7 @@ class TrenoApp:
         setattr(self.model, "train_state", self.train_state)
         self.train_offset_x = -700.0
         self.sounds.play("whistle")
+        self.selected_crate = 0
 
     # -- event handling ---------------------------------------------------
 
@@ -151,25 +153,42 @@ class TrenoApp:
                 self.running = False
             elif self.model.is_victory:
                 if event.key in (pygame.K_SPACE, pygame.K_RETURN):
-                    self.model.restart()
-                    self._journey_id = uuid4().hex
-                    self.train_state = "arriving"
-                    setattr(self.model, "train_state", self.train_state)
-                    self.train_offset_x = -700.0
-                    self.completion.clear()
-                    self.completion_presented = False
-                    self.renderer.invalidate()
-                    self.sounds.play("whistle")
+                    self._restart_journey()
                 # Terminal input must never fall through into active controls.
                 return
+            elif self.train_state == "loading":
+                if event.key in (pygame.K_LEFT, pygame.K_RIGHT,
+                                 pygame.K_UP, pygame.K_DOWN):
+                    self.selected_crate = (self.selected_crate + 1) % (
+                        2 if self.model.mode == "addition" else 1
+                    )
+                elif event.key in (pygame.K_SPACE, pygame.K_RETURN):
+                    self._load_crate(self.selected_crate)
         elif event.type == pygame.VIDEORESIZE:
             self.screen = pygame.display.get_surface() or self.screen
             self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
             self.canvas = PygameReferenceCanvas(self.screen)
             self.completion_presented = False
             self.renderer.invalidate()
-        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        elif (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
+              and not getattr(event, "touch", False)):
             self._handle_pointer(event.pos)
+        elif event.type == pygame.FINGERDOWN:
+            width, height = self.screen.get_size()
+            self._handle_pointer((int(event.x * width), int(event.y * height)))
+
+    def _restart_journey(self) -> None:
+        """One restart transaction regardless of keyboard/pointer input."""
+        self.model.restart()
+        self._journey_id = uuid4().hex
+        self.train_state = "arriving"
+        setattr(self.model, "train_state", self.train_state)
+        self.train_offset_x = -700.0
+        self.selected_crate = 0
+        self.completion.clear()
+        self.completion_presented = False
+        self.renderer.invalidate()
+        self.sounds.play("whistle")
 
     def _handle_pointer(self, screen_pos: tuple[int, int]) -> None:
         pointer = self.canvas.pointer(screen_pos)
@@ -180,80 +199,79 @@ class TrenoApp:
             return
         if self.model.is_victory:
             if self.completion.primary_contains((mx, my)):
-                self.model.restart()
-                self._journey_id = uuid4().hex
-                self.train_state = "arriving"
-                setattr(self.model, "train_state", self.train_state)
-                self.train_offset_x = -700.0
-                self.completion.clear()
-                self.completion_presented = False
-                self.renderer.invalidate()
-                self.sounds.play("whistle")
+                self._restart_journey()
             # Terminal input must never fall through into active controls.
             return
-        # Crate tap handlers during loading state
-        if self.train_state == "loading":
-            b_a = pygame.Rect(80, 430, 200, 130)
-            b_b = pygame.Rect(320, 430, 200, 130)
-            clicked_amt = 0
-            start_pos = (mx, my)
-            if self.model.mode == "addition":
-                if b_a.collidepoint(mx, my):
-                    clicked_amt = self.model.val_a
-                    start_pos = (b_a.centerx, b_a.centery)
-                elif b_b.collidepoint(mx, my):
-                    clicked_amt = self.model.val_b
-                    start_pos = (b_b.centerx, b_b.centery)
-            else:
-                b_c = pygame.Rect(120, 430, 280, 130)
-                if b_c.collidepoint(mx, my):
-                    clicked_amt = 1
-                    start_pos = (b_c.centerx, b_c.centery)
-            if clicked_amt > 0:
-                needed = self.model.target_count - self.model.loaded_count
-                to_load = min(clicked_amt, needed) if needed > 0 else 0
-                if to_load > 0:
-                    for idx in range(to_load):
-                        target_idx = self.model.loaded_count + idx
-                        wagon_dest_x = 100 + self.train_offset_x + 42 + (target_idx % 5) * 44
-                        wagon_dest_y = 285 + (target_idx // 5) * 36
-                        self.flying_items.append(
-                            {
-                                "fruit": self.model.current_fruit["id"],
-                                "start_x": start_pos[0],
-                                "start_y": start_pos[1],
-                                "target_x": wagon_dest_x,
-                                "target_y": wagon_dest_y,
-                                "t": 0.0,
-                                "speed": 0.08 + idx * 0.02,
-                            }
-                        )
-                    self.model.add_load(to_load)
-                    note_idx = min(9, self.model.loaded_count)
-                    self.sounds.play(f"load_{note_idx}")
-                    if self.model.is_station_complete:
-                        self.train_state = "celebrating"
-                        setattr(self.model, "train_state", self.train_state)
-                        self.celebration_timer = 2.4
-                        self.sounds.play("win")
-                        if self.storage:
-                            self.storage.kv_set(STORAGE_KEY, {"stars": self.model.total_stars + 1})
-                        # Update model stars now (kept in sync with storage).
-                        # The model will increment on complete_station alternative path;
-                        # here we increment directly because original added after celebration start.
-                        # For bookkeeping, also advance internal counter for event payload.
-                        # We mimic original: total_stars was separate var incremented here before event.
-                        # Model's total_stars currently holds previous journey total; bump it.
-                        self.model.total_stars += 1
-                        round_idx = self.model.round_idx
-                        try:
-                            emit_activity_event(
-                                "train.station_completed",
-                                {"mode": self.model.mode, "target": self.model.target_count, "stars": self.model.total_stars},
-                                idempotency_key=f"train:{self._journey_id}:station:{round_idx}",
-                            )
-                        except Exception:
-                            pass
+        if self.train_state != "loading":
+            return
+        first = pygame.Rect(80, 430, 200, 130)
+        second = pygame.Rect(320, 430, 200, 130)
+        single = pygame.Rect(120, 430, 280, 130)
+        if self.model.mode == "addition":
+            if first.collidepoint(mx, my):
+                self.selected_crate = 0
+                self._load_crate(0)
+            elif second.collidepoint(mx, my):
+                self.selected_crate = 1
+                self._load_crate(1)
+        elif single.collidepoint(mx, my):
+            self.selected_crate = 0
+            self._load_crate(0)
+
+    def _load_crate(self, crate_index: int) -> None:
+        """Apply one crate choice through the original model/event path."""
+        if self.train_state != "loading" or self.model.is_victory:
+            return
+        if self.model.mode == "addition":
+            if crate_index not in (0, 1):
+                return
+            amount = self.model.val_a if crate_index == 0 else self.model.val_b
+            rect = (pygame.Rect(80, 430, 200, 130)
+                    if crate_index == 0 else pygame.Rect(320, 430, 200, 130))
+        else:
+            if crate_index != 0:
+                return
+            amount = 1
+            rect = pygame.Rect(120, 430, 280, 130)
+        needed = self.model.needed
+        to_load = min(amount, needed)
+        if to_load <= 0:
+            return
+        for idx in range(to_load):
+            target_idx = self.model.loaded_count + idx
+            wagon_dest_x = 100 + self.train_offset_x + 42 + (target_idx % 5) * 44
+            wagon_dest_y = 285 + (target_idx // 5) * 36
+            self.flying_items.append(
+                {
+                    "fruit": self.model.current_fruit["id"],
+                    "start_x": rect.centerx,
+                    "start_y": rect.centery,
+                    "target_x": wagon_dest_x,
+                    "target_y": wagon_dest_y,
+                    "t": 0.0,
+                    "speed": 0.08 + idx * 0.02,
+                }
+            )
+        self.model.add_load(to_load)
+        note_idx = min(9, self.model.loaded_count)
+        self.sounds.play(f"load_{note_idx}")
+        if self.model.is_station_complete:
+            self.train_state = "celebrating"
+            setattr(self.model, "train_state", self.train_state)
+            self.celebration_timer = 2.4
+            self.sounds.play("win")
+            self.model.total_stars += 1
+            if self.storage:
+                self.storage.kv_set(STORAGE_KEY, {"stars": self.model.total_stars})
+            try:
+                emit_activity_event(
+                    "train.station_completed",
+                    {"mode": self.model.mode, "target": self.model.target_count,
+                     "stars": self.model.total_stars},
+                    idempotency_key=f"train:{self._journey_id}:station:{self.model.round_idx}",
+                )
+            except Exception:
+                pass
 
     # -- per-frame simulation ---------------------------------------------
 
@@ -368,6 +386,14 @@ class TrenoApp:
             self.model.total_stars,
             t_now,
         )
+        if self.train_state == "loading":
+            if self.model.mode == "addition":
+                rect = (pygame.Rect(80, 430, 200, 130)
+                        if self.selected_crate == 0 else pygame.Rect(320, 430, 200, 130))
+            else:
+                rect = pygame.Rect(120, 430, 280, 130)
+            pygame.draw.rect(surf, (15, 23, 42), rect.inflate(8, 8), 6, border_radius=16)
+            pygame.draw.rect(surf, (56, 189, 248), rect.inflate(8, 8), 3, border_radius=16)
         self.canvas.present()
 
     # -- main loop --------------------------------------------------------
