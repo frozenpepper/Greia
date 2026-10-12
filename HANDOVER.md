@@ -12,7 +12,9 @@ repairs against the authentic `frozenpepper/Greia` `main` baseline
 visible focus, victory replay, single shared action and unique rewarded
 spots; `26ec9870` — Greenhouse pot/tool keyboard play and touch, Aquarium
 bounded visible keyboard cursor with shared pointer actions and resilient
-saved counters; `8a0a4e54` — nine Wave 37 focused regression methods.
+saved counters; `8a0a4e54` — Wave 37 focused regressions;
+`b091f24d` — reject SDL synthetic touch-mouse duplicate actions
+and add two regressions (11 focused tests total).
 The implementation is a **new reconstruction**, not an assertion that
 unavailable archived project edits were copied byte-for-byte.
 
