@@ -38,13 +38,14 @@ def _load_collection_ids() -> tuple[str, ...]:
         sys.path.insert(0, str(PROJECT_ROOT / "src"))
         from greia_launcher.catalogue_view import (
             BROWSE_ACTIVITIES_ID,
+            MY_CREATIONS_PORTAL_ID,
             DISCOVERY_GROUP_IDS,
             PRIMARY_COLLECTION_IDS,
         )
 
         # Exclude internal 'all' – it is not a child Home destination per the runbook.
-        # Keep 'browse' and all primary/discovery IDs.
-        ids = (BROWSE_ACTIVITIES_ID,) + tuple(PRIMARY_COLLECTION_IDS) + tuple(
+        # Keep 'browse', the My Creations portal and all primary/discovery IDs.
+        ids = (BROWSE_ACTIVITIES_ID, MY_CREATIONS_PORTAL_ID) + tuple(PRIMARY_COLLECTION_IDS) + tuple(
             DISCOVERY_GROUP_IDS
         )
         # Deduplicate while preserving order
