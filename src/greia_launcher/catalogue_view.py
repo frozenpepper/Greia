@@ -10,6 +10,7 @@ from greia_platform.ui_core import Collection
 
 ALL_ACTIVITIES_ID = "all"
 BROWSE_ACTIVITIES_ID = "browse"
+MY_CREATIONS_PORTAL_ID = "my_creations"
 PRIMARY_COLLECTION_IDS = (
     "create",
     "play",
@@ -51,7 +52,7 @@ _CATEGORY_ICONS = {
     "learn": "book",
     "explore": "magnifier",
     "my_greia": "unicorn",
-    "my_creations": "backpack",
+    MY_CREATIONS_PORTAL_ID: "backpack",
 }
 _DISCOVERY_ICONS = {
     # Every semantic group needs its own child-recognizable silhouette.
@@ -117,7 +118,7 @@ _CATEGORY_TRANSLATIONS: dict[str, dict[str, str]] = {
         "de": "Entdecken",
         "fr": "Explorer",
     },
-    "my_creations": {
+    MY_CREATIONS_PORTAL_ID: {
         "it": "Le mie creazioni",
         "en": "My Creations",
         "es": "Mis creaciones",
@@ -323,7 +324,7 @@ _COMPACT_CREATIONS_TITLES = {
 def _category_title(
     value: str, locale: str = "it", *, compact: bool = False
 ) -> str:
-    if compact and value == "my_creations":
+    if compact and value == MY_CREATIONS_PORTAL_ID:
         language = locale.split("-")[0].lower() if locale else "it"
         return _COMPACT_CREATIONS_TITLES.get(language, "Creations")
     return _localized_title(_CATEGORY_TRANSLATIONS, value, locale)
