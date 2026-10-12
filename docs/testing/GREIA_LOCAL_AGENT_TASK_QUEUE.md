@@ -444,7 +444,7 @@ test commands and expected observable behavior.
 ### GLA-011 — Wave 37 three-Activity input and save-recovery acceptance
 
 - **Status:** READY (source tests); full isolated GUI depends on GLA-001 PASS.
-- **Priority:** P1; **minimum source SHA:** `b091f24d58851a938f9139398769fc986e82fc4e`.
+- **Priority:** P1; **minimum source SHA:** `5f45d0dad6df1cdb6f7a2b05d53712d15f1c89bf`.
 - **Scope:** Woodland Hide-and-Seek (`nascondino_bosco`), Little Green Thumb
   (`piccola_serra`), Magic Aquarium (`acquario_magico`); IT/EN.
   No drawings/voices modified or accepted by this task.
@@ -465,7 +465,8 @@ test commands and expected observable behavior.
   GLA-001), launch each Activity in IT and EN at 1024×600 and 800×480;
   capture first, active keyboard-focus, changed-state and victory/replay
   frames. Woodland: arrows select five spots, Enter inspects, four
-  **different** correct finds give exactly four stars and one completion,
+  **different** correct finds give exactly four stars and one completion;
+  cleared hiding places stop showing clues and keyboard focus skips them,
   replay resets without erasing prior earned total. Greenhouse: arrows
   select all four pots, keys 1–4 choose tools, Tab cycles plants,
   Enter/Space applies seed→water→sun→water→harvest; six harvests give
@@ -486,7 +487,7 @@ test commands and expected observable behavior.
 - **Failure:** preserve exit code, first failing assertion, logs,
   screenshots and any offending save **with personal data removed** in
   one evidence ZIP. Stop; no modifications outside queue-only status.
-- **Last result:** UNEXECUTED on GitHub source `b091f24d`.
+- **Last result:** UNEXECUTED on GitHub source `5f45d0da`.
 - **Execution history:** the earlier Wave 37 chat archive described
   successful local Pygame work but did not include its edited project
   or a reusable evidence ZIP. This GitHub reconstruction is a new SHA
