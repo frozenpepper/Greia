@@ -74,6 +74,16 @@ class MemoryKeyboardRecoveryTests(unittest.TestCase):
         self.assertNotEqual(app.grid_idx, original_grid)
         self.assertEqual(app.selected_card_index, 0)
 
+    def test_vertical_focus_recovers_when_one_column_is_cleared(self) -> None:
+        app = self.make_app()
+        columns = 3
+        for i, card in enumerate(app.cards):
+            card["is_matched"] = i % columns == 0
+        app.selected_card_index = 0
+        app._move_focus(columns)
+        self.assertNotEqual(app.selected_card_index % columns, 0)
+        self.assertFalse(app.cards[app.selected_card_index]["is_matched"])
+
     def test_wrong_pair_is_temporarily_locked(self) -> None:
         app = self.make_app()
         first = 0
