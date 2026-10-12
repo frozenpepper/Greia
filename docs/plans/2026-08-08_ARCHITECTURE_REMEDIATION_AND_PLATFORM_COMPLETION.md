@@ -3116,3 +3116,28 @@ hardware acceptance obligations remain open.
 
 
 **2026-10-12 source review:** Train celebration particles now capped at 96 and cleared between stations/replays instead of accumulating across sessions (`1e0392c5`, `a6c7fead`), still UNEXECUTED.
+
+
+### 2026-10-12 — Four-language platform localization: initial source slice, no gate promotion
+
+Owner authorized `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
+a scoped, ADR 0028-compatible workstream. The formerly false
+twelve-language Greia device selection was reduced to English and
+Italian at the one `SystemLanguage` registry, automatically consumed
+by graphical installer, Parent API, on-device Parent Settings and
+privileged helper. Spanish/French remain target locales not yet
+selectable; previous unsupported install/override records remain
+historical and safely fall back. Staged 108-key ES and FR installer
+source catalogues with dynamic status handling were added; new
+inventory/test utilities enumerate Activity text/voice gaps without
+making them invisible when files are missing. Existing launcher
+spoken-label audit now includes My Creations, and the known missing
+EN/IT `my_creations.wav` pair is explicitly queued for recording.
+Local voice instructions include all OS/Activity/encyclopedia and
+My Time EN/IT gaps, Modal authoring preference and its currently
+unimplemented provider adapter. Original architecture and Activity
+release/Creations authorities are unchanged. **Source only**; no
+new complete-checkout tests, real sound listening, GUI/installer,
+hardware/boot or architecture closure acceptance executed.
+Current exact status: `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`;
+GLA-014 in sole local-agent queue owns deferred checks.
