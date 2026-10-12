@@ -2,7 +2,7 @@
 
 **Owner:** repository owner; **execution:** authorized local agent when available
 **Branch:** `main`; **mode:** read/execute/report plus queue-only doc maintenance, never source repairs
-**Updated:** 2026-10-08; **queue source baseline:** `de162fd1448f7f56ac15f95f2876724a029f7354` (later docs-only commits permitted)
+**Updated:** 2026-10-12; **queue source baseline:** `de162fd1448f7f56ac15f95f2876724a029f7354` (later docs-only commits permitted)
 **Product authority:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` + `P6_CHILD_NAVIGATION_AND_VISUAL_CURATION.md`; My Time remains separately in `docs/product/CHILD_TIME_AND_ROUTINES.md`
 **Existing full P1–P7 acceptance:** `docs/testing/2026-10-07_CREATIONS_P3_DESKTOP_SOURCE_AND_VISUAL_ACCEPTANCE.md`
 **Project authority:** `AGENTS.md`, `SETUP.md`, `HANDOVER.md`
@@ -440,6 +440,56 @@ test commands and expected observable behavior.
   actual whole-Shell snapshots and full 114-item contact
   sheet remain **NOT TESTED**. A remote local SVG-only preview
   of the real authored portal/card frames is NOT live app evidence.
+
+### GLA-011 — Wave 37 three-Activity input and save-recovery acceptance
+
+- **Status:** READY (source tests); full isolated GUI depends on GLA-001 PASS.
+- **Priority:** P1; **minimum source SHA:** `8a0a4e54e213be7bb7f906e57fd45582c01d1f6d`.
+- **Scope:** Woodland Hide-and-Seek (`nascondino_bosco`), Little Green Thumb
+  (`piccola_serra`), Magic Aquarium (`acquario_magico`); IT/EN.
+  No drawings/voices modified or accepted by this task.
+- **Preconditions:** follow §0 verbatim; clean ff-only `main`, available
+  Pygame from the SETUP-approved environment, no source repairs. Export
+  `PYTHONDONTWRITEBYTECODE=1`, `PYTHONPATH=src`. Record full SHA and
+  per-command exit codes. Stop on the first real failure. Do not continue
+  to later steps merely to collect more PASS counts.
+- **Provider-free commands, in exact order, each in its own log:**
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_activity_wave37_input.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_nascondino_bosco.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_piccola_serra.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_acquario_magico.py' -v
+  make verify
+  ```
+- **Gameplay inspection:** in the actual isolated Simulator (only after
+  GLA-001), launch each Activity in IT and EN at 1024×600 and 800×480;
+  capture first, active keyboard-focus, changed-state and victory/replay
+  frames. Woodland: arrows select five spots, Enter inspects, four
+  **different** correct finds give exactly four stars and one completion,
+  replay resets without erasing prior earned total. Greenhouse: arrows
+  select all four pots, keys 1–4 choose tools, Tab cycles plants,
+  Enter/Space applies seed→water→sun→water→harvest; six harvests give
+  exactly one completion, replay works. Aquarium: arrows move visible
+  cursor, keys 1–3 choose tools, Enter acts on water/chest, Space toggles
+  light, C opens chest; a corrupted counter save must load safely. Verify
+  touch and mouse still use the same actions, including Home/Back protected
+  screen regions. No gesture may duplicate rewards or skip terminal state.
+  Save one bilingual screenshot/evidence set and identify problems, not
+  just “launched OK.”
+- **PASS boundary:** source commands all exit 0 **and** each live game
+  interaction works without traceback, unbounded saved counters, repeated
+  rewards, invisible keyboard focus or protected-chrome leakage. A headless
+  launch alone is startup evidence, not complete gameplay acceptance.
+  Real speakers, child usability, full Greia Shell and Acer/ARM remain
+  separately unproven.
+- **Failure:** preserve exit code, first failing assertion, logs,
+  screenshots and any offending save **with personal data removed** in
+  one evidence ZIP. Stop; no modifications outside queue-only status.
+- **Last result:** UNEXECUTED on GitHub source `8a0a4e54`.
+- **Execution history:** the earlier Wave 37 chat archive described
+  successful local Pygame work but did not include its edited project
+  or a reusable evidence ZIP. This GitHub reconstruction is a new SHA
+  and requires its own acceptance.
 
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
