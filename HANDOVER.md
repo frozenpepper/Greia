@@ -1,5 +1,82 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-12 — Language support L0/L1/L2 launch (SOURCE WIP, not release accepted)
+
+**Owner-authorized new scoped workstream:**
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
+progress in `PROGRESS.md`, and detailed independent local recording
+instructions in `LOCAL_AGENT_VOICE_PRODUCTION.md`. Exact local
+execution bookmark: GLA-014 in the existing
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+This work does not supersede original non-lifecycle architecture,
+installer/release lifecycle or Creations/Activities authorities.
+
+**Product decision:** stop advertising a misleading 12-language
+system. Now select **English and Italian only** in the installer's
+first screen, installed hidden Parent panel, Parent API and
+narrow `greia-languagectl` helper, all via the ONE shared
+`src/greia_platform/system_language.py` registry.
+Previously stored unsupported `es,fr,de,zh-CN,pt,ar,hi,id,bn,sw`
+defaults/overrides fail softly to English; original historical
+install records are not rewritten. Spanish and French are the
+next **full text+voice support targets**, intentionally
+**not offered yet** until source, listening, visual and installed
+acceptance all pass. English and Italian still have known
+localization/voice gaps to repair.
+
+**Code/source committed:** canonical registry and legacy tests
+`132b10ea`, `f511e5a4`; first **108 Spanish + 108 French**
+installer message translations staged in
+`src/greia_installer/i18n_es_fr.py`, wired through
+`InstallerTranslator` including safe dynamic SSID/key/battery
+formatting `8c8085cb`, `4d8c565e`, `ed0d6152`;
+provider-free Activity audio/locale census
+`tools/audit_greia_language_coverage.py` and tests
+`e332349a`, `2555b874`, `c11b0be0`, `028b6a15`,
+`6e86d8f6`, `46321689`.
+The source also fixes missing My Creations portal vocabulary
+in the *existing* launcher spoken-label completeness audit
+(`ae124511`, `27613150`), now able to catch the known
+missing `en/my_creations.wav` and `it/my_creations.wav`.
+These are STAGED DRAFT translations, not yet native-reviewed.
+
+**Local agent:** exact voice plan includes four-language
+semantic cue ledger, all system/Activity/encyclopedia dialogue,
+existing missing EN/IT My Creations labels, My Time's
+eight semantic cues per existing language, and older presenter
+gaps. The local agent owns recordings/listening and evidence,
+not translation/source. Modal preferred **only as an
+authoring-time provider**; current `tools/greia_voice_core`
+has no Modal backend, and provider-cost/model/download
+authorization is still required. No clips generated yet.
+
+**External Parent client reality:** GitHub source
+`frozenpepper/Greia-Parent-App-Html/src/views_device.js`
+already derives its options from the Parent API's
+`snapshot.language.languages`, so the narrowed registry
+propagates without a browser hard-coded choices patch.
+However, Parent client UI and the installed on-device
+`panel_strings.py` remain substantially English only
+and are L3 translation work. No external client pin
+or release bundle changed in this tranche.
+
+**Evidence boundary:** GitHub source commits and connector
+readback only. No `unittest`, `make verify`,
+rendered installer/Simulator, human-reviewed speech,
+physical image/installer or boot acceptance executed
+at these SHAs. GLA-014 carries the exact source tests,
+inventory and bilingual screen/voice-preflight tasks.
+Do not call these commits "fully translated" or P7/P8
+release ready.
+
+**Next:** obtain GLA-014 first-failure/source reports; complete
+installer EN/IT/ES/FR uncovered strings and native review,
+extract/localize Shell/Parent copy, implement all Activity/
+encyclopedia ES/FR semantic bundle texts with accurate
+UI/content locale separation, then batch offline voice assets
+via approved provider + human listening. Only then atomically
+promote `es`/`fr` into shared selectable registry.
+
 ## 2026-10-12 — Next archived gameplay corrections: Clinic + Orca (SOURCE ONLY)
 
 The original 2026-10-12 local Wave 34/35 archive reported Clinic
