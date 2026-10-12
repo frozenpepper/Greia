@@ -3,7 +3,9 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from greia_installer.i18n import InstallerTranslator, LocalizedFont
+from greia_installer.i18n import InstallerTranslator, LocalizedFont, _ITALIAN
+from greia_installer.i18n_es_fr import FRENCH, SPANISH
+from greia_platform.system_language import SUPPORTED_SYSTEM_LANGUAGES
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,10 +64,42 @@ class InstallerLocalizationTests(unittest.TestCase):
         # An SSID-bearing status line is intentionally not semantically parsed.
         self.assertEqual(translator.text("Wi-Fi: Casa"), "Wi-Fi: Casa")
 
-    def test_other_selectable_locales_fall_back_honestly_to_english_copy(self) -> None:
-        for locale in ("en", "es", "de", "fr", "zh-CN", "ar", "hi", "bn", "sw"):
+    def test_unselectable_staged_translations_are_available_for_review(self) -> None:
+        self.assertEqual([item.locale for item in SUPPORTED_SYSTEM_LANGUAGES], ["en", "it"])
+        self.assertEqual(InstallerTranslator("es").text("Continue"), "Continuar")
+        self.assertEqual(InstallerTranslator("fr").text("Continue"), "Continuer")
+        self.assertEqual(InstallerTranslator("es-ES").text("Start"), "Empezar")
+        self.assertEqual(InstallerTranslator("fr-FR").text("Start"), "Commencer")
+        for locale in ("en", "de", "zh-CN", "ar", "hi", "bn", "sw"):
             with self.subTest(locale=locale):
                 self.assertEqual(InstallerTranslator(locale).text("Continue"), "Continue")
+
+    def test_installer_catalogue_key_parity_and_destructive_warning(self) -> None:
+        self.assertEqual(set(SPANISH), set(_ITALIAN))
+        self.assertEqual(set(FRENCH), set(_ITALIAN))
+        for locale in ("es", "fr"):
+            with self.subTest(locale=locale):
+                translator = InstallerTranslator(locale)
+                for source in ("Hold to erase and install", "Everything currently on this disk will be erased.",
+                               "installation payload is damaged; the disk was not changed",
+                               "selected disk identity changed; installation stopped"):
+                    self.assertNotEqual(translator.text(source), source)
+
+    def test_spanish_and_french_preserve_dynamic_data(self) -> None:
+        for locale, expected_key, expected_battery in (
+            ("es", "Pulsa la tecla que escribe “/”", "batería al 30%"),
+            ("fr", "Appuyez sur la touche qui écrit « / »", "batterie à 30 %"),
+        ):
+            with self.subTest(locale=locale):
+                translator = InstallerTranslator(locale)
+                self.assertEqual(translator.text("Press the key that types “/”"), expected_key)
+                self.assertIn("Casa", translator.text("Connecting to Casa…"))
+                self.assertIn("Casa", translator.text("Connected to Casa"))
+                self.assertEqual(translator.text("Wi-Fi: Casa"), "Wi-Fi: Casa")
+                self.assertIn(expected_battery, translator.text(
+                    "Connect the power adapter before installing (battery is 30%)."
+                ))
+                self.assertEqual(translator.text("Disk: /dev/sda"), "Disk: /dev/sda")
 
     def test_font_proxy_translates_without_changing_font_metrics_api(self) -> None:
         base = _FakeFont()
