@@ -3095,3 +3095,18 @@ new GitHub commits.** The older archive's reported PASS counts must
 not be attributed to GitHub `main`. The earlier blocking architecture
 and hardware release prerequisites remain open; Waves 34–35 source
 reconciliation is still needed.
+
+
+### 2026-10-12 — Clinic / Orca Activity repair restored on canonical GitHub (SOURCE WIP)
+
+Archive-to-GitHub reconciliation reintroduced the missing
+keyboard treatment pathway in Clinic and fixed Orca Bay's
+wrong-language spoken facts and unbounded cuddle drag rewards.
+Source commits `e2e5a733`, `57bf0c0a`, `2cfcde61`
+include a focused five-test regression module and GLA-013
+execution instructions. No voice asset, structural platform input
+adapter, storage authority, policy, installer or runtime boundary
+changed. **No source suite, live Pygame play or human listening
+executed** on these commits. The historical archive's local tests
+are not transferable to the GitHub SHA. Existing release and
+hardware acceptance obligations remain open.
