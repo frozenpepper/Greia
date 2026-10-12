@@ -540,6 +540,43 @@ test commands and expected observable behavior.
   tests and 16 Pygame launches passing on an unavailable local tree;
   those numbers are HISTORICAL and must not certify current main.
 
+### GLA-013 — Clinic and Orca archived-fix reconciliation
+
+- **Status:** READY for source tests; actual GUI/audio needs GLA-001 PASS.
+- **Priority:** P1; **minimum SHA:** `2cfcde61de4651540f8fdd9ce58c356979ec1bf1`.
+- **Purpose:** verify independently reconstructed portions of archived Waves
+  34–35 now committed to GitHub. The earlier local screenshots, WAV tests
+  and PASS counts do not certify these new GitHub commits.
+- **Preconditions:** follow §0, clean ff-only `main`, valid Greia Pygame
+  Python setup. Log every exit code, stop on first failure, no source edits.
+- **Exact sequential commands:**
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_activity_wave34_35_github_recovery.py' -v
+  python3 -m unittest discover -s tests -p 'test_clinica_cuccioli_refactor.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_baia_delle_orche.py' -v
+  make verify
+  ```
+- **Hands-on:** IT/EN at 1024×600 and 800×480. Clinic: use only arrows
+  and Enter to select an explicit instrument and treat each of five
+  patients; wrong instrument does not advance, success/replay work and
+  each healed patient yields one event. Confirm clear focus and real
+  patient audio feedback. Orca Bay: six keyboard tools including
+  facts; Italian spoken fact must be Italian, English must play English
+  and never silently Italian. Press-drag/touch-hold each orca: one
+  cuddled/reward event per contact gesture, no sound storm; lift and
+  start new gesture should permit one more reward. Verify pointer,
+  touch emulation dedup, protected Home/Back and clean exit. Return
+  captured/screenshotted states plus speaker/listening notes.
+- **Pass:** source command exits 0 and observed behaviors correct
+  without repeat rewards, wrong-language facts or crashes. Record
+  missing approved recordings as BLOCKED, not as successful audio.
+  One evidence ZIP with exact SHA, logs, image hashes and first failure.
+  Never run providers, hosted Actions, installer/USB or hardware tests
+  without the separately required authority.
+- **Last result:** UNEXECUTED on reconstructed GitHub source.
+- **Execution history:** archived Wave 34/35 local tests are historical
+  only, not present evidence on GitHub main.
+
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
 - **Status:** BLOCKED
