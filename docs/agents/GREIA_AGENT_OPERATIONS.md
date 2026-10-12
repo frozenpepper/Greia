@@ -39,6 +39,23 @@ user-profile access or Acer/installer operations.
 
 That router follows `HANDOVER.md`. Do not select a dated procedure merely because its filename looks newer or familiar.
 
+**2026-10-12 language/voice authoring route:** for the owner-authorized
+four-language rollout, read
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`
+and its sibling `LOCAL_AGENT_VOICE_PRODUCTION.md`, then operate
+the exact GLA-014 task in the single queue. The visible OS/installer
+language registry is currently EN/IT; ES/FR texts are *staged*
+and must not become selectable until complete acceptance.
+Authoring-only Modal is preferred for speech but no Modal adapter
+exists in the canonical Greia VoiceEngine today; do not launch
+any cloud workload or download models based on the plan alone.
+Inventoried absent WAVs and missing translations are real
+`BLOCKED` content. Never substitute placeholder or wrong-language
+speech, treat ASR PASS as human listening, or claim a voice
+catalogue passes if `my_creations.wav` is absent. The local
+agent may update evidence/task status only under the queue's
+explicit procedure.
+
 ---
 
 ## 2. Repository and concurrent-work discipline
