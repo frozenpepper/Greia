@@ -163,6 +163,11 @@ class MazeApp:
     def trigger_move(self, dr: int, dc: int) -> None:
         if self.state is None or self.state.is_victory:
             return
+        # Player grid coordinates are updated as each animated waypoint is
+        # reached. Recomputing during a slide would overwrite the remaining
+        # path from a stale grid position.
+        if self.state.sliding_waypoints:
+            return
 
         # Facing direction
         if dc < 0:

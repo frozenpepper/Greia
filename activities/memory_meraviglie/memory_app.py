@@ -87,6 +87,7 @@ class MemoryApp:
     completion_content: CompletionContent
     theme_idx: int = 0
     grid_idx: int = 1
+    selected_card_index: int = 0
     cards: list[dict[str, Any]] = field(default_factory=list)
     flipped_indices: list[int] = field(default_factory=list)
     pairs_found: int = 0
@@ -118,6 +119,7 @@ class MemoryApp:
         self.is_victory = False
         self.completion.clear()
         self.completion_presented = False
+        self.selected_card_index = 0
 
         selected_items = random.sample(theme_cfg["items"], self.total_pairs)
         deck_items = selected_items * 2
@@ -136,6 +138,8 @@ class MemoryApp:
             )
 
     def _handle_card_click(self, idx: int) -> None:
+        if self.is_victory or not 0 <= idx < len(self.cards):
+            return
         card = self.cards[idx]
         if card["is_revealed"] or card["is_matched"]:
             return
@@ -234,13 +238,45 @@ class MemoryApp:
             self.completion_presented = False
             return
         if event.type == pygame.KEYDOWN:
-            if event.key in (pygame.K_SPACE, pygame.K_RETURN) and self.is_victory:
+            if self.is_victory:
+                if event.key in (pygame.K_SPACE, pygame.K_RETURN, pygame.K_n):
+                    self._start_new_game()
+                return
+            if event.key == pygame.K_n:
                 self._start_new_game()
-            elif event.key == pygame.K_n:
+            elif event.key == pygame.K_t:
+                self.theme_idx = (self.theme_idx + 1) % len(THEMES)
                 self._start_new_game()
+            elif event.key == pygame.K_g:
+                self.grid_idx = (self.grid_idx + 1) % len(GRID_CONFIGS)
+                self._start_new_game()
+            elif event.key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN):
+                columns = GRID_CONFIGS[self.grid_idx]["cols"]
+                step = {
+                    pygame.K_LEFT: -1,
+                    pygame.K_RIGHT: 1,
+                    pygame.K_UP: -columns,
+                    pygame.K_DOWN: columns,
+                }[event.key]
+                self._move_focus(step)
+            elif event.key in (pygame.K_SPACE, pygame.K_RETURN):
+                self._handle_card_click(self.selected_card_index)
             return
-        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+        if (event.type == pygame.MOUSEBUTTONUP and event.button == 1
+                and not getattr(event, "touch", False)):
             self._handle_pointer(event.pos)
+        elif event.type == pygame.FINGERDOWN:
+            width, height = self.screen.get_size()
+            self._handle_pointer((int(event.x * width), int(event.y * height)))
+
+    def _move_focus(self, step: int) -> None:
+        """Move through the current grid without focusing cleared pairs."""
+        if not self.cards:
+            return
+        for _ in range(len(self.cards)):
+            self.selected_card_index = (self.selected_card_index + step) % len(self.cards)
+            if not self.cards[self.selected_card_index]["is_matched"]:
+                break
 
     def _handle_pointer(self, raw_pos: tuple[int, int]) -> None:
         if not _is_safe_point(self.screen, raw_pos):
@@ -277,6 +313,7 @@ class MemoryApp:
         )
         for idx, rect in enumerate(card_rects):
             if rect.collidepoint(mx, my):
+                self.selected_card_index = idx
                 self._handle_card_click(idx)
                 return
 
@@ -371,6 +408,11 @@ class MemoryApp:
                         cur_rect.centery,
                         int(back_r * 1.2),
                     )
+
+        if card_rects:
+            focused = card_rects[self.selected_card_index % len(card_rects)].inflate(8, 8)
+            pygame.draw.rect(surf, (15, 23, 42), focused, width=6, border_radius=20)
+            pygame.draw.rect(surf, (56, 189, 248), focused, width=3, border_radius=20)
 
         for p in self.particles:
             cur_sz = max(2.0, p["size"] * max(0.0, min(1.0, p["life"])))
