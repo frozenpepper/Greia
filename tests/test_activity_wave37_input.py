@@ -124,6 +124,16 @@ class GreenhouseKeyboardCycleTests(TestCase):
         app._handle_keydown(pygame.K_TAB)
         self.assertEqual(app.selected_plant_type, 1)
 
+    def test_touch_mouse_emulation_does_not_duplicate_growth(self) -> None:
+        app = self.build_app()
+        app._handle_pointer = Mock()
+        app.handle_event(
+            pygame.event.Event(
+                pygame.MOUSEBUTTONUP, button=1, pos=(200, 360), touch=True
+            )
+        )
+        app._handle_pointer.assert_not_called()
+
     def test_touch_normalizes_position_before_shared_pointer_path(self) -> None:
         app = self.build_app()
         app.screen = pygame.Surface((800, 480))
@@ -171,6 +181,15 @@ class AquariumKeyboardAndRecoveryTests(TestCase):
             app._handle_keydown(pygame.K_RIGHT)
             app._handle_keydown(pygame.K_DOWN)
         self.assertEqual(app.keyboard_cursor, (954, 490))
+
+    def test_touch_emulated_mouse_is_not_counted_as_second_action(self) -> None:
+        app = self.build_app()
+        app.handle_event(
+            pygame.event.Event(
+                pygame.MOUSEBUTTONDOWN, button=1, pos=(512, 300), touch=True
+            )
+        )
+        self.assertEqual(len(app.session.creatures), 0)
 
     def test_corrupt_persisted_counters_are_bounded(self) -> None:
         app = self.build_app()

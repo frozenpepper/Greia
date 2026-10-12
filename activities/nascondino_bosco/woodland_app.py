@@ -130,7 +130,8 @@ class WoodlandApp:
                     self.screen = pygame.display.get_surface() or self.screen
                     self.canvas = PygameReferenceCanvas(self.screen)
                     dirty = True
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                elif (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
+                      and not getattr(event, "touch", False)):
                     if self._handle_click(event.pos):
                         dirty = True
                 elif event.type == pygame.FINGERDOWN:

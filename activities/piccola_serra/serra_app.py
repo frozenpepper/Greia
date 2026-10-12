@@ -238,7 +238,8 @@ class SerraApp:
                 # Terminal input must never fall through into active controls.
                 return
             self._handle_keydown(event.key)
-        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+        elif (event.type == pygame.MOUSEBUTTONUP and event.button == 1
+              and not getattr(event, "touch", False)):
             self._handle_pointer(event.pos)
         elif event.type == pygame.FINGERDOWN:
             width, height = self.screen.get_size()

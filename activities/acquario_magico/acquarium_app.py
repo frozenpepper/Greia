@@ -193,7 +193,10 @@ class AquariumApp:
         if event.type == pygame.VIDEORESIZE:
             self._handle_resize()
             return
-        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
+        if event.type == pygame.FINGERDOWN:
+            self._handle_pointer(event)
+        elif event.type == pygame.MOUSEBUTTONDOWN and not getattr(event, "touch", False):
+            # SDL may synthesize a mouse event for the same physical finger.
             self._handle_pointer(event)
 
     def _handle_keydown(self, key: int) -> None:
