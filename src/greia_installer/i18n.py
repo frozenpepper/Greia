@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from greia_platform.system_language import DEFAULT_SYSTEM_LOCALE, system_language
+from greia_platform.localization import LocalizationError, LocaleTag
+
+from .i18n_es_fr import FRENCH, SPANISH
+from greia_platform.system_language import DEFAULT_SYSTEM_LOCALE
 
 
 # Installer copy is deliberately owned separately from installer state/disk logic.
@@ -123,68 +126,134 @@ _ITALIAN: dict[str, str] = {
 }
 
 
+_TRANSLATIONS: dict[str, dict[str, str]] = {
+    "it": _ITALIAN,
+    "es": SPANISH,
+    "fr": FRENCH,
+}
+
+# Formatted status text is translated without translating SSIDs, keys,
+# percentages, disk identities or any other untrusted machine payload.
+_DYNAMIC_MESSAGES: dict[str, dict[str, str]] = {
+    "it": {
+        "press_key": "Premi il tasto che scrive “{value}”",
+        "connecting": "Connessione a {value}…",
+        "connected": "Connesso a {value}",
+        "pressed": "{left} di {right} premuti",
+        "more_keys_one": "Dopo un altro tasto mostrerò un elenco da confermare.",
+        "more_keys": "Dopo altri {value} tasti mostrerò un elenco da confermare.",
+        "power_unknown": "Collega l'alimentatore prima di installare (impossibile leggere il livello della batteria).",
+        "power_percent": "Collega l'alimentatore prima di installare (batteria al {value}%).",
+        "nice_click": "Bel clic!{value}",
+        "greia_screens": "Schermi Greia: {value}",
+        "resolution": "Risoluzione: {value}",
+        "pointer_unavailable": "Anteprima del puntatore non disponibile{value}",
+    },
+    "es": {
+        "press_key": "Pulsa la tecla que escribe “{value}”",
+        "connecting": "Conectando con {value}…",
+        "connected": "Conectado a {value}",
+        "pressed": "{left} de {right} pulsadas",
+        "more_keys_one": "Después de otra tecla mostraré una lista para confirmar.",
+        "more_keys": "Después de {value} teclas más mostraré una lista para confirmar.",
+        "power_unknown": "Conecta el adaptador de corriente antes de instalar (no se pudo leer el nivel de batería).",
+        "power_percent": "Conecta el adaptador de corriente antes de instalar (batería al {value}%).",
+        "nice_click": "¡Buen clic!{value}",
+        "greia_screens": "Pantallas Greia: {value}",
+        "resolution": "Resolución: {value}",
+        "pointer_unavailable": "Vista previa del puntero no disponible{value}",
+    },
+    "fr": {
+        "press_key": "Appuyez sur la touche qui écrit « {value} »",
+        "connecting": "Connexion à {value}…",
+        "connected": "Connecté à {value}",
+        "pressed": "{left} touches sur {right} enfoncées",
+        "more_keys_one": "Après une touche supplémentaire, j’afficherai une liste à confirmer.",
+        "more_keys": "Après {value} touches supplémentaires, j’afficherai une liste à confirmer.",
+        "power_unknown": "Branchez l’alimentation avant l’installation (niveau de batterie illisible).",
+        "power_percent": "Branchez l’alimentation avant l’installation (batterie à {value} %).",
+        "nice_click": "Bien joué !{value}",
+        "greia_screens": "Écrans Greia : {value}",
+        "resolution": "Résolution : {value}",
+        "pointer_unavailable": "Aperçu du pointeur indisponible{value}",
+    },
+}
+
+
+def _dynamic_text(value: str, language: str) -> str:
+    """Translate exact known dynamic templates; preserve raw data verbatim."""
+    msg = _DYNAMIC_MESSAGES[language]
+    if value.startswith("Press the key that types “") and value.endswith("”"):
+        return msg["press_key"].format(value=value[len("Press the key that types “"):-1])
+    if value.startswith("Connecting to ") and value.endswith("…"):
+        return msg["connecting"].format(value=value[len("Connecting to "):-1])
+    if value.startswith("Connected to "):
+        return msg["connected"].format(value=value[len("Connected to "):])
+    if value.startswith("Wi-Fi: "):
+        # A status prefix may include an SSID; preserve the whole payload.
+        return value
+    if " of " in value and value.endswith(" pressed"):
+        left, right = value[:-len(" pressed")].split(" of ", 1)
+        if left.isdigit() and right.isdigit():
+            return msg["pressed"].format(left=left, right=right)
+    if value.startswith("After ") and " more key" in value:
+        count = value[len("After "):].split(" ", 1)[0]
+        if count.isdigit():
+            return (
+                msg["more_keys_one"]
+                if count == "1"
+                else msg["more_keys"].format(value=count)
+            )
+    if value == "Connect the power adapter before installing (battery level could not be read).":
+        return msg["power_unknown"]
+    if value.startswith("Connect the power adapter before installing (battery is ") and value.endswith("%)."):
+        percent = value[len("Connect the power adapter before installing (battery is "):-3]
+        if percent.isdigit():
+            return msg["power_percent"].format(value=percent)
+    if value.startswith("Nice click!"):
+        return msg["nice_click"].format(value=value[len("Nice click!"):])
+    if value.startswith("Greia screens: "):
+        return msg["greia_screens"].format(value=value[len("Greia screens: "):])
+    if value.startswith("Resolution: ") and value != "Resolution: Automatic":
+        return msg["resolution"].format(value=value[len("Resolution: "):])
+    if value.startswith("Pointer preview unavailable"):
+        return msg["pointer_unavailable"].format(value=value[len("Pointer preview unavailable"):])
+    return value
+
+
 @dataclass(frozen=True, slots=True)
 class InstallerTranslator:
-    """Translate installer-owned presentation copy without touching state logic."""
+    """Translate installer-only copy independently from selectable OS locales.
+
+    Spanish/French are intentionally available to source acceptance and
+    preview renderers before promotion into the device language selector.
+    """
 
     locale: str = DEFAULT_SYSTEM_LOCALE
 
     def __post_init__(self) -> None:
         try:
-            canonical = system_language(self.locale).locale
-        except Exception:
-            canonical = DEFAULT_SYSTEM_LOCALE
-        object.__setattr__(self, "locale", canonical)
+            language = LocaleTag.parse(self.locale).language
+        except (LocalizationError, ValueError):
+            language = DEFAULT_SYSTEM_LOCALE
+        if language not in ("en", "it", "es", "fr"):
+            language = DEFAULT_SYSTEM_LOCALE
+        object.__setattr__(self, "locale", language)
 
     @property
     def language(self) -> str:
-        return self.locale.split("-", 1)[0].lower()
+        return self.locale
 
     def text(self, value: str) -> str:
-        if self.language != "it" or not value:
+        if not value:
             return value
-        fixed = _ITALIAN.get(value)
-        if fixed is not None:
-            return fixed
-
-        # Dynamic child/parent-visible strings keep machine data (SSID, counts,
-        # typed character, battery percentage) verbatim and translate only the
-        # surrounding copy.
-        if value.startswith("Press the key that types “") and value.endswith("”"):
-            character = value[len("Press the key that types “") : -1]
-            return f"Premi il tasto che scrive “{character}”"
-        if value.startswith("Connecting to ") and value.endswith("…"):
-            return f"Connessione a {value[len('Connecting to ') : -1]}…"
-        if value.startswith("Connected to "):
-            return f"Connesso a {value[len('Connected to '):]}"
-        if value.startswith("Wi-Fi: "):
+        table = _TRANSLATIONS.get(self.language)
+        if table is None:
             return value
-        if " of " in value and value.endswith(" pressed"):
-            left, right = value[:-len(" pressed")].split(" of ", 1)
-            if left.isdigit() and right.isdigit():
-                return f"{left} di {right} premuti"
-        if value.startswith("After ") and " more key" in value:
-            count = value[len("After ") :].split(" ", 1)[0]
-            if count.isdigit():
-                noun = "tasto" if count == "1" else "tasti"
-                return f"Dopo altri {count} {noun} mostrerò un elenco da confermare."
-        if value == "Connect the power adapter before installing (battery level could not be read).":
-            return "Collega l'alimentatore prima di installare (impossibile leggere il livello della batteria)."
-        if value.startswith("Connect the power adapter before installing (battery is ") and value.endswith("%)."):
-            percent = value[len("Connect the power adapter before installing (battery is ") : -3]
-            if percent.isdigit():
-                return f"Collega l'alimentatore prima di installare (batteria al {percent}%)."
-        if value.startswith("Nice click!"):
-            tail = value[len("Nice click!") :]
-            return f"Bel clic!{tail}"
-        if value.startswith("Greia screens: "):
-            return f"Schermi Greia: {value[len('Greia screens: ') :]}"
-        if value.startswith("Resolution: ") and value != "Resolution: Automatic":
-            return f"Risoluzione: {value[len('Resolution: ') :]}"
-        if value.startswith("Pointer preview unavailable"):
-            tail = value[len("Pointer preview unavailable") :]
-            return f"Anteprima del puntatore non disponibile{tail}"
-        return value
+        translated = table.get(value)
+        if translated is not None:
+            return translated
+        return _dynamic_text(value, self.language)
 
 
 class LocalizedFont:
