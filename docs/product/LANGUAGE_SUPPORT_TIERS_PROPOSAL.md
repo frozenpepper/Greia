@@ -1,8 +1,14 @@
 # Greia language support tiers — proposal for owner decision
 
 **Date:** 2026-09-27
-**Status:** PROPOSAL. No code changes. Nothing here is an accepted requirement until the
-owner approves the model.
+**Status:** HISTORICAL / SUPERSEDED on 2026-10-12. This document records the
+2026-09-27 proposal, not current implemented behavior. Owner has now
+approved the separate **four-language rollout**:
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+As of 2026-10-12 the selectable registry has been reduced to EN/IT
+and ES/FR are staged for translation and voice before future promotion.
+All historical twelve-language figures below are source snapshots,
+not current support claims.
 **Requested by:** repository owner, during the Acer physical installer investigation.
 **Audience:** lead agent / repository owner.
 

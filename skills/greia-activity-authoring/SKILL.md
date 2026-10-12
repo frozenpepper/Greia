@@ -194,6 +194,21 @@ Increase challenge through the learning mechanic, not through tiny targets, dens
 
 Mistakes should reorient and encourage, not shame or punish.
 
+### Four-language rollout (2026-10-12)
+
+Current Greia OS selectable locales: **English and Italian**.
+Spanish and French are translation/voice targets but not globally
+selectable. The accepted cross-surface plan is
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`;
+the exact local recording work order is the sibling
+`LOCAL_AGENT_VOICE_PRODUCTION.md`. All built-in Activity semantic
+UI/lesson-language separation, locale bundle keys, launcher titles,
+caption/audio mappings and human-listened speech must pass before
+ES/FR are promoted. Never mark a locale supported merely because
+you copied `en.json` or created placeholder WAV paths. Preserve
+current English/Italian recording assets and repair only identified
+missing/incorrect cues.
+
 ## 8. Greia already owns voice production
 
 Normal Activity narration/instructions are **authoring-time prerecorded audio**.

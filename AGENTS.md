@@ -62,6 +62,21 @@ The architecture-remediation plan remains the active **blocking implementation**
 
 **Current owner-authorized Activity release + Creations workstream:** `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md` is the **single unified product/content implementation plan** for the typed child Creations Library, universal pre-reader picker/viewer, adaptable disk budget, Painting/Shape Garden/Theatre/voice/text interoperability, complete built-in Activity quality audit, and deliberate catalogue selection. Continue from `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md` and append accurate session results. This owner-requested scoped program coordinates those features but **does not supersede** the architectural-remediation and release-install/first-boot lifecycle authorities above; those still govern safety prerequisites, image installation, update, rollback and hardware acceptance. Product/source work may proceed in parallel without making hardware claims. Do not spin up a second competing catalogue, picker, or creative-media plan.
 
+**Owner-authorized localization workstream (2026-10-12):**
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md` is the
+scoped implementation plan for reducing misleading language choices,
+completing EN/IT gaps, and extending real installer/OS/Parent/Activity
+text and voice support to ES/FR. Its precise local-agent speech work
+order is `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`.
+The sole practical local-agent task queue remains
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+The canonical selectable registry currently contains **only en/it**;
+es/fr are staged until explicit complete-language release gates pass.
+This scope does not override ADR 0028, accepted architecture,
+installer/first-boot/lifecycle test gates or the Creations/Activity
+audit programme. Do not invent a second language registry or silently
+promote unvoiced locales.
+
 The visual-foundation plan is the current **art/visual workstream** plan. It owns art sequencing, checkpoints and append-only art progress while active, but it is subordinate to the blocking architecture plan and accepted ADRs. `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` is the stable visual-system architecture/index and must remain interpretable after the current plan becomes historical. Art/design/library work may advance where it does not bypass platform prerequisites; a visual task must not be used as justification to deepen provisional X11 coupling, invent a parallel runtime/UI architecture, weaken protected system chrome, or claim hardware/runtime evidence that did not execute.
 
 After every substantive **implementation** turn:

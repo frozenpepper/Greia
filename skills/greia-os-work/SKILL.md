@@ -353,6 +353,24 @@ src/greia_platform/activity_backend_policy.py
 
 For Activity implementation itself, use `skills/greia-activity-authoring/SKILL.md`.
 
+## Supported-language declaration and staged ES/FR translation
+
+The current **selectable** OS device locales are `en` and `it` only.
+The former 12-language installer/on-device/Parent API roster has been
+reduced at its unique owner `src/greia_platform/system_language.py`.
+Spanish and French are actively staged but NOT selectable until
+installer, Shell, Parent HTML/overlay, built-in Activities, media and
+source/physical acceptance pass. Follow
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`
+and `LOCAL_AGENT_VOICE_PRODUCTION.md` in that directory.
+`src/greia_installer/i18n_es_fr.py` contains staged copy; never
+misinterpret it as a shipped Spanish/French install-flow claim.
+Historical unsupported records are left intact and read as safe
+English runtime fallback. Do not install voice/TTS models on Greia OS.
+New authoring-time provider adapters belong only under
+`tools/greia_voice_core`, with Modal a proposed authoring backend,
+not a current runtime feature.
+
 ## Activity discovery, age guidance or Parent catalogue filtering
 
 Read:
