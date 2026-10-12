@@ -71,15 +71,15 @@ class FourLanguageInventoryTests(unittest.TestCase):
             root = Path(temp)
             (root / "activities" / "fake" / "locales").mkdir(parents=True)
             (root / "activities" / "fake" / "activity.toml").write_text(
-                "[activity]\\n", encoding="utf-8"
+                "[activity]\n", encoding="utf-8"
             )
             catalogue = root / "src" / "greia_launcher"
             catalogue.mkdir(parents=True)
             (catalogue / "catalogue_view.py").write_text(
-                'BROWSE_ACTIVITIES_ID = "browse"\\n'
-                'MY_CREATIONS_PORTAL_ID = "my_creations"\\n'
-                'PRIMARY_COLLECTION_IDS = ("create", "play")\\n'
-                'DISCOVERY_GROUP_IDS = ("drawing",)\\n',
+                'BROWSE_ACTIVITIES_ID = "browse"\n'
+                'MY_CREATIONS_PORTAL_ID = "my_creations"\n'
+                'PRIMARY_COLLECTION_IDS = ("create", "play")\n'
+                'DISCOVERY_GROUP_IDS = ("drawing",)\n',
                 encoding="utf-8",
             )
             report = build_inventory(root)
