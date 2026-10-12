@@ -9,13 +9,13 @@ from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewpor
 
 try:
     from clinic_audio import ClinicAudioPort
-    from clinic_model import ClinicSession, TreatmentResult
-    from clinic_renderer import ClinicRenderer
+    from clinic_model import ClinicSession, TreatmentResult, TOOL_IDS
+    from clinic_renderer import ClinicRenderer, TABLE_RECT
     from clinic_services import ClinicEventPort, ClinicProgressPort
 except ImportError:
     from .clinic_audio import ClinicAudioPort
-    from .clinic_model import ClinicSession, TreatmentResult
-    from .clinic_renderer import ClinicRenderer
+    from .clinic_model import ClinicSession, TreatmentResult, TOOL_IDS
+    from .clinic_renderer import ClinicRenderer, TABLE_RECT
     from .clinic_services import ClinicEventPort, ClinicProgressPort
 
 
@@ -46,6 +46,7 @@ class ClinicActivity:
         self._events = events
         self._running = True
         self._ready_published = False
+        self._focused_tool_index = 0
 
     def run(self) -> int:
         clock = pygame.time.Clock()
@@ -68,6 +69,12 @@ class ClinicActivity:
 
             if dirty:
                 self._renderer.render(self._canvas.surface, self._session, now)
+                if not self._session.is_victory:
+                    # Tool focus is distinct from the model's explicitly
+                    # armed treatment selection; draw it over existing art.
+                    rect = self._renderer.tool_rect(self._focused_tool_index).inflate(8, 8)
+                    pygame.draw.rect(self._canvas.surface, (15, 23, 42), rect, 6, border_radius=15)
+                    pygame.draw.rect(self._canvas.surface, (56, 189, 248), rect, 3, border_radius=15)
                 self._canvas.present()
                 pygame.display.flip()
                 dirty = False
@@ -92,9 +99,41 @@ class ClinicActivity:
             self._screen = pygame.display.get_surface() or self._screen
             self._canvas = PygameReferenceCanvas(self._screen)
             return True
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if event.type == pygame.KEYDOWN:
+            return self._handle_keyboard(event.key)
+        if (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
+                and not getattr(event, "touch", False)):
             return self._handle_pointer(event.pos)
+        if event.type == pygame.FINGERDOWN:
+            width, height = self._screen.get_size()
+            return self._handle_pointer((int(event.x * width), int(event.y * height)))
         return False
+
+    def _handle_keyboard(self, key: int) -> bool:
+        if self._session.is_victory:
+            if key in (pygame.K_SPACE, pygame.K_RETURN):
+                self._restart()
+                return True
+            return False
+        if key in (pygame.K_LEFT, pygame.K_UP, pygame.K_RIGHT, pygame.K_DOWN):
+            step = -1 if key in (pygame.K_LEFT, pygame.K_UP) else 1
+            self._focused_tool_index = (self._focused_tool_index + step) % len(TOOL_IDS)
+            return True
+        if key in (pygame.K_SPACE, pygame.K_RETURN):
+            tool_id = TOOL_IDS[self._focused_tool_index]
+            if self._session.selected_tool_id != tool_id:
+                # First press arms the highlighted tool, never implicitly
+                # guesses or treats a patient.
+                self._session.select_tool(tool_id)
+            else:
+                self._apply_to_patient(TABLE_RECT.center)
+            return True
+        return False
+
+    def _restart(self) -> None:
+        self._session.restart()
+        self._renderer.reset_transients()
+        self._focused_tool_index = 0
 
     def _handle_pointer(self, screen_position: tuple[int, int]) -> bool:
         if not _is_safe_point(self._screen, screen_position):
@@ -107,8 +146,7 @@ class ClinicActivity:
 
         if self._session.is_victory:
             if self._renderer.play_again_contains(point):
-                self._session.restart()
-                self._renderer.reset_transients()
+                self._restart()
                 return True
             return False
 
@@ -116,23 +154,24 @@ class ClinicActivity:
         if tool_id is not None:
             # Palette interaction only chooses a tool. Treatment is applied only
             # when the child subsequently uses that selection on the patient.
+            self._focused_tool_index = TOOL_IDS.index(tool_id)
             self._session.select_tool(tool_id)
             return True
 
         if self._renderer.patient_contains(point):
-            result = self._session.use_selected_tool()
-            if result is None:
-                # No implicit/default answer: touching the animal without first
-                # choosing a tool is intentionally a no-op.
-                return False
-
-            # Tool sounds represent use on the patient, not merely palette focus.
-            self._audio.play(result.tool_id)
-            if result.applied:
-                self._finish_treatment(result, point)
-            return True
+            return self._apply_to_patient(point)
 
         return False
+
+    def _apply_to_patient(self, point: tuple[int, int]) -> bool:
+        result = self._session.use_selected_tool()
+        if result is None:
+            # No default treatment: a child must explicitly arm a tool.
+            return False
+        self._audio.play(result.tool_id)
+        if result.applied:
+            self._finish_treatment(result, point)
+        return True
 
     def _finish_treatment(
         self,
