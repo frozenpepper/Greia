@@ -64,6 +64,8 @@ class OrcaBayActivity:
         self._running = True
         self._ready_published = False
         self._last_save_time = time.monotonic()
+        # One reward per orca per contact gesture, not per rendered frame.
+        self._gesture_cuddled_ids: set[str] = set()
 
     def _safe_pointer(self, position: tuple[int, int]) -> bool:
         viewport = activity_viewport_for_surface(self.screen)
@@ -76,6 +78,29 @@ class OrcaBayActivity:
                 for region in viewport.protected_regions
             )
         )
+
+    def _play_fact(self) -> None:
+        fact_key = self.pod.trigger_fact()
+        self.audio.play("aurora")
+        # LocalizedResources has .context.selected, not .locale.
+        selected_locale = self.renderer.resources.context.selected.value
+        self.audio.play_voice(fact_key, selected_locale)
+        self.events.record_fact_discovered(fact_key)
+
+    def _cuddle_once(self, orca: OrcaEntity, *, drag: bool = False) -> None:
+        """Prevent repeated sounds/rewards while one finger stays down."""
+        if orca.id in self._gesture_cuddled_ids:
+            return
+        self._gesture_cuddled_ids.add(orca.id)
+        orca.trigger_cuddle()
+        self.audio.play("purr")
+        if not drag:
+            self.audio.play("whistle")
+        self.pod.spawn_heart_particles(
+            orca.x, orca.y - 15.0, count=3 if drag else 6
+        )
+        self.pod.total_cuddled += 1
+        self.events.record_cuddled(orca.id, "belly_rub")
 
     def handle_tool_click(self, tool_idx: int) -> None:
         self.pod.active_tool = tool_idx
@@ -102,20 +127,13 @@ class OrcaBayActivity:
             self.audio.play("bell_0")
         elif tool_idx == 5:
             # Tito Spoken Orca Facts
-            fact_key = self.pod.trigger_fact()
-            self.audio.play("aurora")
-            loc = getattr(self.renderer.resources, "locale", "it")
-            self.audio.play_voice(fact_key, loc)
-            self.events.record_fact_discovered(fact_key)
+            self._play_fact()
 
     def handle_pointer_down(self, mx: float, my: float) -> None:
+        self._gesture_cuddled_ids.clear()
         # 0. Check Tito Fact Banner Clicks (advance to next fact)
         if self.pod.active_fact is not None and self.renderer.fact_banner_rect.collidepoint(int(mx), int(my)):
-            fact_key = self.pod.trigger_fact()
-            self.audio.play("aurora")
-            loc = getattr(self.renderer.resources, "locale", "it")
-            self.audio.play_voice(fact_key, loc)
-            self.events.record_fact_discovered(fact_key)
+            self._play_fact()
             return
 
         # 1. Check Bottom Toolbar Clicks
@@ -148,12 +166,7 @@ class OrcaBayActivity:
         if touched_orca is not None:
             if self.pod.active_tool == 1 or touched_orca.state == OrcaState.SWIMMING:
                 # Cuddle & Tickle belly
-                touched_orca.trigger_cuddle()
-                self.audio.play("purr")
-                self.audio.play("whistle")
-                self.pod.spawn_heart_particles(touched_orca.x, touched_orca.y - 15.0, count=6)
-                self.pod.total_cuddled += 1
-                self.events.record_cuddled(touched_orca.id, "belly_rub")
+                self._cuddle_once(touched_orca)
             elif self.pod.active_tool == 2:
                 # Acrobatic leap trigger
                 touched_orca.trigger_breach(mx + touched_orca.facing * 100.0)
@@ -206,12 +219,20 @@ class OrcaBayActivity:
                         self._running = False
                     elif event.key == pygame.K_SPACE:
                         self.handle_tool_click(4)  # Toggle Day/Night
-                    elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5):
+                    elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6):
                         self.handle_tool_click(event.key - pygame.K_1)
                 elif event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.get_surface() or self.screen
                     self.canvas = PygameReferenceCanvas(self.screen)
+                elif event.type in (pygame.MOUSEBUTTONUP, pygame.FINGERUP):
+                    self._gesture_cuddled_ids.clear()
                 elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
+                    # SDL duplicates touch as synthetic mouse input on some
+                    # devices; each physical tap must produce one action.
+                    if event.type == pygame.MOUSEBUTTONDOWN and getattr(event, "touch", False):
+                        continue
+                    if event.type == pygame.MOUSEBUTTONDOWN and event.button != 1:
+                        continue
                     pos = getattr(event, "pos", None)
                     if pos is None and hasattr(event, "x") and hasattr(event, "y"):
                         w, h = self.screen.get_size()
@@ -226,6 +247,8 @@ class OrcaBayActivity:
                     self.handle_pointer_down(pointer[0], pointer[1])
 
                 elif event.type in (pygame.MOUSEMOTION, pygame.FINGERMOTION):
+                    if event.type == pygame.MOUSEMOTION and getattr(event, "touch", False):
+                        continue
                     buttons = getattr(event, "buttons", (0, 0, 0))
                     if (buttons and buttons[0]) or event.type == pygame.FINGERMOTION:
                         pos = getattr(event, "pos", None)
@@ -238,10 +261,7 @@ class OrcaBayActivity:
                                 mx, my = pointer[0], pointer[1]
                                 for orca in self.pod.orcas:
                                     if orca.hit_test(mx, my) and orca.state == OrcaState.SWIMMING:
-                                        orca.trigger_cuddle()
-                                        self.audio.play("purr")
-                                        self.pod.spawn_heart_particles(orca.x, orca.y - 15.0, count=3)
-                                        self.pod.total_cuddled += 1
+                                        self._cuddle_once(orca, drag=True)
 
             # Update Domain Physics and State
             previously_fed = self.pod.total_fed
