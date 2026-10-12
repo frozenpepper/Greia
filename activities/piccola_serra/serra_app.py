@@ -203,6 +203,7 @@ class SerraApp:
         # UI selection state lives in the app, not the pure model.
         self.active_tool: int = 0
         self.selected_plant_type: int = 0
+        self.selected_pot_index: int = 0
         self.completion_presented: bool = False
         self.running: bool = True
         self._ready_published: bool = False
@@ -236,8 +237,27 @@ class SerraApp:
                     self._reset_greenhouse()
                 # Terminal input must never fall through into active controls.
                 return
+            self._handle_keydown(event.key)
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             self._handle_pointer(event.pos)
+        elif event.type == pygame.FINGERDOWN:
+            width, height = self.screen.get_size()
+            self._handle_pointer((int(event.x * width), int(event.y * height)))
+
+    def _handle_keydown(self, key: int) -> None:
+        """Keyboard acts on the exact same pots and model transitions as touch."""
+        if self.model.is_victory:
+            return
+        if key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN):
+            step = {pygame.K_LEFT: -1, pygame.K_RIGHT: 1,
+                    pygame.K_UP: -2, pygame.K_DOWN: 2}[key]
+            self.selected_pot_index = (self.selected_pot_index + step) % len(POT_RECTS)
+        elif key in (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4):
+            self.active_tool = (pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4).index(key)
+        elif key == pygame.K_TAB:
+            self.selected_plant_type = (self.selected_plant_type + 1) % len(PLANTS)
+        elif key in (pygame.K_RETURN, pygame.K_SPACE):
+            self._handle_pot_click(*POT_RECTS[self.selected_pot_index].center)
 
     def _handle_pointer(self, screen_pos: tuple[int, int]) -> None:
         if not _is_safe_point(self.screen, screen_pos):
@@ -277,6 +297,7 @@ class SerraApp:
             return
         for idx, r_pot in enumerate(POT_RECTS):
             if r_pot.collidepoint(mx, my):
+                self.selected_pot_index = idx
                 result = self.model.apply_tool(idx, self.active_tool, self.selected_plant_type)
                 if result is None:
                     break
@@ -399,6 +420,11 @@ class SerraApp:
         # RENDER TO CANVAS
         surf = self.canvas.surface
         self.renderer.render(surf, self.model, self.active_tool, t_now)
+        pygame.draw.rect(
+            surf, (15, 118, 110),
+            POT_RECTS[self.selected_pot_index].inflate(10, 10),
+            4, border_radius=14,
+        )
         self.canvas.present(clear=self.theme.background)
 
     # -- main loop --------------------------------------------------------

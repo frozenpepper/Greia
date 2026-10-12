@@ -68,6 +68,15 @@ else:
 CHEST_RECT = pygame.Rect(460, REFERENCE_HEIGHT - 165, 112, 88)
 
 
+def _safe_saved_counter(value: Any) -> int:
+    """Corrupt persisted counters must not crash first frame or grow unbounded."""
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError, OverflowError):
+        return 0
+    return max(0, min(parsed, 1_000_000_000))
+
+
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
     """Reject coordinates outside the Activity or inside trusted Home/Back."""
 
@@ -105,6 +114,7 @@ class AquariumApp:
     last_save_time: float = field(default_factory=time.monotonic)
     _running: bool = True
     _renderer: Optional[AquariumRenderer] = None
+    keyboard_cursor: tuple[int, int] = (REFERENCE_WIDTH // 2, REFERENCE_HEIGHT // 2)
 
     def __post_init__(self) -> None:
         self._renderer = AquariumRenderer(
@@ -136,8 +146,8 @@ class AquariumApp:
         if not isinstance(saved, dict):
             return
         self.session.glow_mode = bool(saved.get("glow_mode", False))
-        self.session.total_fed = int(saved.get("total_fed", 0))
-        self.session.total_popped = int(saved.get("total_popped", 0))
+        self.session.total_fed = _safe_saved_counter(saved.get("total_fed", 0))
+        self.session.total_popped = _safe_saved_counter(saved.get("total_popped", 0))
         saved_creatures = saved.get("creatures")
         if isinstance(saved_creatures, list) and saved_creatures:
             self.session.restore_saved_population(saved_creatures)
@@ -200,6 +210,25 @@ class AquariumApp:
         elif key == pygame.K_3:
             self.session.active_tool = ToolIndex.BUBBLES
             self.audio.play("bubble")
+        elif key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN):
+            x, y = self.keyboard_cursor
+            delta = 48
+            if key == pygame.K_LEFT:
+                x -= delta
+            elif key == pygame.K_RIGHT:
+                x += delta
+            elif key == pygame.K_UP:
+                y -= delta
+            else:
+                y += delta
+            self.keyboard_cursor = (
+                max(70, min(REFERENCE_WIDTH - 70, x)),
+                max(85, min(REFERENCE_HEIGHT - 110, y)),
+            )
+        elif key == pygame.K_RETURN:
+            self._handle_action_at(*self.keyboard_cursor)
+        elif key == pygame.K_c:
+            self._open_chest()
 
     def _handle_resize(self) -> None:
         new_screen = pygame.display.get_surface()
@@ -229,8 +258,12 @@ class AquariumApp:
         if pointer is None:
             return
         mx, my = int(pointer[0]), int(pointer[1])
-        assert self._renderer is not None
+        self.keyboard_cursor = (mx, my)
+        self._handle_action_at(mx, my)
 
+    def _handle_action_at(self, mx: int, my: int) -> None:
+        """Activate one logical location, independent of input device."""
+        assert self._renderer is not None
         if self._handle_toolbar_click(mx, my):
             return
         if CHEST_RECT.collidepoint(mx, my):
@@ -435,6 +468,10 @@ class AquariumApp:
             self.session.glow_mode,
             self.session.spawn_selector_idx,
         )
+        x, y = self.keyboard_cursor
+        pygame.draw.circle(surf, (15, 23, 42), (x, y), 21, 7)
+        pygame.draw.circle(surf, (56, 189, 248), (x, y), 21, 4)
+        pygame.draw.circle(surf, (255, 255, 255), (x, y), 3)
         self.canvas.present()
         pygame.display.flip()
 
