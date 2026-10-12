@@ -999,10 +999,12 @@ archived local work did **not** arrive as a repository tree or evidence ZIP.
 - New `tests/test_activity_wave37_input.py` covers keyboard-only complete
   Woodland and Greenhouse cycles, reward uniqueness, replay reset, keyboard
   Aquarium tool/chest interactions, cursor limits, touch normalization and
-  malformed/capped persisted counters. GLA-011 in the existing single
+  malformed/capped persisted counters. Also guards SDL-generated synthetic
+  touch mouse events (otherwise a single tap could apply a tool twice)
+  with two dedicated regression methods. GLA-011 in the existing single
   local-agent queue owns full execution and bilingual gameplay evidence.
 
-Source commits: `988bb134`, `26ec9870`, `8a0a4e54`.
+Source commits: `988bb134`, `26ec9870`, `8a0a4e54`, `b091f24d`.
 **Verification boundary:** GitHub source writes/readback only. This
 execution environment has no private full checkout or Pygame and cannot
 execute `make verify` or the Activity suites. Prior archived local chat
