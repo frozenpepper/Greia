@@ -163,6 +163,21 @@ class TrainKeyboardRecoveryTests(unittest.TestCase):
             self.assertEqual(app.model.round_idx, 0)
             self.assertEqual(app.model.total_stars, app.model.total_stations)
 
+    def test_celebration_particles_are_bounded_and_reset(self) -> None:
+        app = self.make_app()
+        app.train_state = "celebrating"
+        app.celebration_timer = 1.0
+        app.celebration_particles = [
+            {"x": 0, "y": 0, "vx": 0, "vy": 0, "size": 10,
+             "color": (255, 255, 255)} for _ in range(150)
+        ]
+        app._step_frame(0.1)
+        self.assertLessEqual(len(app.celebration_particles), 96)
+        app._restart_journey()
+        self.assertEqual(app.celebration_particles, [])
+        self.assertEqual(app.flying_items, [])
+        self.assertEqual(app.smoke_particles, [])
+
     def test_crate_controls_do_not_load_during_travel(self) -> None:
         app = self.make_app()
         app.train_state = "arriving"
