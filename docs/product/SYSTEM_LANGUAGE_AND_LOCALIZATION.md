@@ -1,6 +1,6 @@
 # Greia System Language and Localization
 
-**Status:** accepted product behavior; selection/persistence source implemented; translation coverage incremental  
+**Status:** accepted product behavior; language choices narrowed to currently shipped EN/IT, ES/FR in staged translation rollout  
 **Date:** 2026-08-19  
 **Architecture authority:** ADR 0028  
 **Canonical implementation:** `src/greia_platform/system_language.py`
@@ -21,28 +21,36 @@ These are three views of one platform-owned setting. They must never maintain in
 
 The first graphical installer screen is a flag-first language chooser. It appears before the normal Greia welcome, keyboard/layout, target-disk, hardware, Wi-Fi and confirmation flow.
 
-The initial selector contains:
+**Current selectable registry:**
 
 | Locale | Language | Visual cue |
 |---|---|---|
 | `en` | English | 🇬🇧 |
 | `it` | Italian | 🇮🇹 |
-| `es` | Spanish | 🇪🇸 |
-| `de` | German | 🇩🇪 |
-| `fr` | French | 🇫🇷 |
-| `zh-CN` | Chinese (Simplified) | 🇨🇳 |
-| `pt` | Portuguese | 🇵🇹 |
-| `ar` | Arabic | 🇸🇦 |
-| `hi` | Hindi | 🇮🇳 |
-| `id` | Indonesian | 🇮🇩 |
-| `bn` | Bengali | 🇧🇩 |
-| `sw` | Swahili | 🇹🇿 |
 
-English is the initial highlighted choice. The chooser is usable with pointer and keyboard navigation and reflows for the current installer viewport.
+Spanish `es` 🇪🇸 and French `fr` 🇫🇷 are the active next-language
+translation targets, but **not yet selectable**. They will be added to
+the same canonical registry only after installer, platform, Parent,
+built-in Activities and voice acceptance. German `de`, Simplified
+Chinese `zh-CN`, Portuguese `pt`, Arabic `ar`, Hindi `hi`,
+Indonesian `id`, Bengali `bn` and Swahili `sw` are not supported
+product choices at this time. Former twelve-language source/persistence
+policy was misleading and has been superseded by the accepted rollout
+plan:
 
-The flags are presentation cues only. The canonical locale tag is the actual stored identity. Flags do not mean Greia is selecting citizenship, country or legal region.
+```text
+docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md
+```
 
-The language list is intentionally broader than Western Europe: Portuguese, Arabic, Hindi, Indonesian, Bengali and Swahili provide high-value coverage across South Asia, Southeast Asia, Africa and other lower- and middle-income regions where low-cost/offline computing is especially relevant to Greia's mission.
+English is initially highlighted. The selector supports pointer and
+keyboard navigation at the installer's actual viewport. Flags are
+presentation cues, not citizenship or legal region.
+
+This is a deliberate reduction of what a parent can select today.
+Prior unsupported locales may remain in immutable installed records
+or historic preferences; the runtime falls back to English without
+rewriting those original records. Choosing a supported language via
+the Parent controls atomically replaces the override.
 
 ## 3. Installation transfer contract
 
@@ -100,7 +108,7 @@ The installer and hidden on-device Parent Settings import that registry directly
 
 The Parent API returns that same registry to HTML/native clients. Browser code must **not** carry a second hard-coded list.
 
-The Chinese alias `zh` canonicalizes to the selected initial Simplified Chinese locale `zh-CN`.
+Legacy `zh` and `zh-CN` values are no longer selectable until Chinese text, script and runtime acceptance. Old records containing them fall back safely to English.
 
 Adding/removing a selectable device language therefore requires a platform change plus appropriate localization/font/layout evidence; editing a browser-only array is not sufficient.
 
@@ -179,27 +187,34 @@ Activity supported-locale resolution/fallback
 
 Selecting Italian does **not** make an English-only Activity invalid. The Activity resolves to a supported fallback according to ADR 0028 and should expose the actual launch language through Greia's child-friendly language cue.
 
-## 10. Selection is not translation coverage
+## 10. Selectable languages and truthful completeness
 
-This distinction is mandatory:
+The selectable languages are **currently English and Italian**,
+not the former twelve. Both still require a full gap audit for inline
+OS strings, legacy Activity speech and release-specific audio. Do not
+claim complete end-to-end voice or translation coverage until
+the four-language plan's L6 criteria are met.
 
-> **A locale being selectable means Greia can persist and propagate that device preference. It does not by itself prove that every Greia surface or Activity has complete translations for that locale.**
+Spanish and French are staged as translation and audio targets. The
+installer now has Spanish/French maps for its known static messages
+and dynamic message formats, but the language selector intentionally
+does not advertise them yet. They must not be promoted merely because
+an install-time translation file exists.
 
-Current source selection/persistence therefore must not be described as “Greia is fully translated into 12 languages.”
+Complete acceptance for each promised language requires:
 
-Full language acceptance also requires, per applicable surface:
+- reviewed installer source/format/error strings;
+- Greia Shell, Parent overlay/HTML client and accessible system messages;
+- Activities, Creatives/Creations, encyclopedia and profile overrides;
+- text fitting and correct glyphs at 1024×600 and 800×480;
+- fully reviewed voice assets for all required semantic cues;
+- actual installed image/Parent API/installer inheritance acceptance;
+- separate source, rendered and hardware evidence.
 
-- translated Greia platform string catalogues;
-- translated Parent client strings;
-- Activity-localized resources where claimed;
-- appropriate font/glyph coverage;
-- text shaping where required;
-- RTL layout and interaction evidence for Arabic;
-- responsive layout under longer/shorter translations;
-- localized audio where the product uses spoken instructions;
-- physical low-resolution/readability evidence.
-
-Until that work exists, unsupported strings use the existing deterministic localization fallback rather than fabricated machine translations or raw semantic IDs.
+A missing required translated string or spoken clip is a release
+blocker for that language even when deterministic fallback safely
+keeps runtime alive. Third-party single-language Activity behavior
+from ADR 0028 remains valid.
 
 ## 11. Font and script implications
 
@@ -247,3 +262,17 @@ Physical installer acceptance should prove at minimum:
 6. Activities without profile overrides inherit the current device locale;
 7. an Activity that lacks the selected translation follows its declared fallback rather than failing;
 8. selecting/storing Arabic/Chinese/Hindi/Bengali does not crash the Shell even before complete translation/font acceptance exists.
+
+## 14. 2026-10-12 accepted rollout correction
+
+The former `LANGUAGE_SUPPORT_TIERS_PROPOSAL.md` (2026-09-27)
+is a historical proposal; the owner now approved a more specific
+four-language program. Source changes narrow
+`SUPPORTED_SYSTEM_LANGUAGES` to en/it and stage es/fr
+installer translations while local recording tools and authoring
+agents fill the true coverage gaps.
+
+**Current visible devices choices:** en, it. **Promotion targets:**
+es, fr. All other language tags are retired from device selection
+until independently supported. New platform and installer source
+commits do not establish unit/visual/hardware acceptance.
