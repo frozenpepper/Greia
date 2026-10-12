@@ -1004,7 +1004,11 @@ archived local work did **not** arrive as a repository tree or evidence ZIP.
   with two dedicated regression methods. GLA-011 in the existing single
   local-agent queue owns full execution and bilingual gameplay evidence.
 
-Source commits: `988bb134`, `26ec9870`, `8a0a4e54`, `b091f24d`.
+The follow-up `5f45d0da` hides completed woodland clues and moves
+keyboard focus past already-rewarded hiding places, so the new unique
+reward invariant is child-visible and usable rather than merely internal.
+
+Source commits: `988bb134`, `26ec9870`, `8a0a4e54`, `b091f24d`, `5f45d0da`.
 **Verification boundary:** GitHub source writes/readback only. This
 execution environment has no private full checkout or Pygame and cannot
 execute `make verify` or the Activity suites. Prior archived local chat
