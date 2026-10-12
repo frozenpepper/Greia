@@ -584,7 +584,7 @@ test commands and expected observable behavior.
   **voice generation:** BLOCKED pending reviewed text, supported
   provider and explicit paid/model run authority.
 - **Priority:** P1; **minimum source SHA:**
-  `2555b874281dd2f69d53954d4efb3e1f0ea36307`.
+  `46321689d43f2e492cb22ffad743bc35ade98309`.
 - **Source authority:**
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
   Follow the sibling **`LOCAL_AGENT_VOICE_PRODUCTION.md`** exactly
@@ -635,6 +635,12 @@ test commands and expected observable behavior.
   Voice stage cannot be PASS until human reviewed and recorded.
   Return logs, output hashes, text keys missing, candidate cue
   list, screenshot/audio-availability notes and evidence ZIP.
+- **Important expected blocker:** the launcher spoken-label audit now includes
+  the **My Creations** portal. With its known missing EN/IT
+  `my_creations.wav` clips the audit can legitimately return
+  `FAIL` until GLA-010 has generated, human-approved and integrated
+  those two files. This is honest missing-content detection, not a
+  reason to weaken the audit or fake placeholder recordings.
 - **Last result:** SOURCE COMMITTED; UNEXECUTED on current main.
 
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
