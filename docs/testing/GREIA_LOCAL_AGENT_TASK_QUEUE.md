@@ -493,6 +493,53 @@ test commands and expected observable behavior.
   or a reusable evidence ZIP. This GitHub reconstruction is a new SHA
   and requires its own acceptance.
 
+### GLA-012 — Wave 36 GitHub restoration: Memory, Train, Maze, Stars
+
+- **Status:** READY for source tests; visual/gameplay GUI checks require GLA-001 PASS.
+- **Priority:** P1; **minimum source SHA:**
+  `b73dde9ec510e3db5d5128126259e8ead3aff533`.
+- **Why:** the earlier archived Wave 36 project ZIP/tests were not pushed
+  to canonical GitHub. This is a new independent source reconstruction at
+  new SHAs, not a transplant of the archived 78/78 PASS evidence.
+- **Source focus:** `memory_meraviglie`, `treno_numeri`,
+  `labirinto_magico`, `stelle_incantate`; no drawings or new voice
+  recordings were edited. Do not modify their art during this task.
+- **Preflight:** follow §0. Clean `main`, ff-only synchronization,
+  approved Pygame environment and source SHA ancestor proof required.
+  Stop at first failure. Produce logs with exact exit codes and HEAD.
+- **Commands (each separately logged, sequential):**
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_activity_wave36_github_recovery.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_memory_meraviglie.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_treno_numeri.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_labirinto_magico.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_stelle_incantate.py' -v
+  make verify
+  ```
+- **Required supervised behavior:** test IT and EN on 1024×600 and
+  800×480 through the existing isolated Simulator. Memory: visible
+  arrow focus, Enter/Space flips cards, mismatch lockout, every match
+  exactly one reward, victory/replay and T/G theme/grid switching.
+  Explicitly test a cleared column. Train: keyboard crate selection and
+  loading, full five stations with one reward each, no loading during
+  arrival/departure/celebration, victory and replay. Maze: repeated
+  arrows/clicks while a slide is active cannot overwrite that path;
+  confirm reaching collectible/exit, rewards, replay. Stars:
+  arrow selection + Enter connect in order, completed figure advancement,
+  fact key F, victory/restart. Strict IT/EN fact audio must not fall back
+  across languages. Where a required recording is missing, mark that
+  language's voice claim BLOCKED; never generate voices without approval.
+  Check mouse/touch parity, safe Home/Back bounds, genuine screen focus.
+- **Expected output:** one run evidence ZIP with command logs, locale
+  screenshots, complete gameplay observations, WAV listening notes when
+  applicable, exact SHA, hashes and errors; update queue-only result
+  and preserve this history. No source edits, Actions, paid providers,
+  flashing, reset/clean/stash or unapproved OS installation.
+- **Last result:** UNEXECUTED on reconstructed GitHub source.
+- **Execution history:** archived local Wave 36 reported 78 regression
+  tests and 16 Pygame launches passing on an unavailable local tree;
+  those numbers are HISTORICAL and must not certify current main.
+
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
 - **Status:** BLOCKED
