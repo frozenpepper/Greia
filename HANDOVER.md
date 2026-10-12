@@ -1,5 +1,36 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-12 — Wave 37 source resumed via GitHub (NOT YET EXECUTION-VERIFIED)
+
+**Why:** the prior archived Greia Activity functional audit was interrupted
+before its final delivery. The archive is a saved browser conversation,
+not the edited Wave 37 source tree. We reconstructed the three reported
+repairs against the authentic `frozenpepper/Greia` `main` baseline
+`c177276e`, without creating branches or touching prior graphics/voices.
+
+**On main:** `988bb134` — Woodland full keyboard and touch inspection,
+visible focus, victory replay, single shared action and unique rewarded
+spots; `26ec9870` — Greenhouse pot/tool keyboard play and touch, Aquarium
+bounded visible keyboard cursor with shared pointer actions and resilient
+saved counters; `8a0a4e54` — nine Wave 37 focused regression methods.
+The implementation is a **new reconstruction**, not an assertion that
+unavailable archived project edits were copied byte-for-byte.
+
+**Evidence:** GitHub writes and source readback. NO executed unittest,
+`make verify`, headless Pygame, GUI, listening, physical-device or Shell
+proof exists at these SHAs from this session: local Python 3.13 lacks
+`pygame` and a complete private project checkout; GitHub DNS cloning is
+blocked. Do not transplant the interrupted conversation's earlier PASS
+claims onto these new commits. No P6/P7 release approvals, roster moves,
+new artwork/recordings or hardware acceptance resulted.
+
+**Next:** execute `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` GLA-011,
+starting with `test_activity_wave37_input.py`, three incumbent Activity
+regressions, then `make verify` and real IT/EN keyboard/mouse/touch
+Simulator cycles under GLA-001. Capture first real failure, return one
+reviewable evidence ZIP. Continue P6/P7 audit afterward; P1–P8 and
+installer/first-boot lifecycle evidence boundaries are unchanged.
+
 
 ## 2026-10-08 — Compact Home typography + verified real authored-asset rendering
 
