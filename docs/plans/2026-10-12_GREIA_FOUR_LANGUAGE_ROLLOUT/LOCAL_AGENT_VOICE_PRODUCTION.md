@@ -139,6 +139,35 @@ In addition to tooling, manually inspect **all** of:
   Distinguish missing files from bad ASR, bad pronunciation,
   wrong language, stale manifest, and missing text.
 
+### Already identified EN/IT recording gaps — do not overlook
+
+These are **verified existing obligations**, not generic search terms:
+
+1. **My Creations launcher destination:** both
+   `assets/audio/system/launcher-labels/en/my_creations.wav`
+   and `assets/audio/system/launcher-labels/it/my_creations.wav`
+   were absent at the latest P6 audit. Exact approved text candidates
+   are **EN “My Creations”** and **IT “Le mie creazioni”**.
+   See `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` GLA-010;
+   do not replace with an unrelated “Create” recording.
+   Check whether another agent subsequently filled them before recording.
+2. **My Time (incubator, not released):**
+   `activity_incubator/tempo_di_greia/VOICE_PRODUCTION_BRIEF.md`
+   defines the **exact eight semantic cues per EN and IT**:
+   title, welcome, clock, practice, stopwatch, timer, finished,
+   real-time instruction. These are currently unrecorded
+   source obligations. They require L5 reviews and full prereader
+   acceptance before promoting the incubated Activity. Extend its
+   reviewed cue sheet to ES and FR **only after** the GitHub
+   authoring agent has translated those scripts; do not guess
+   Spanish/French text or silently release the Activity early.
+3. **Previously reported Momo and other presenter gaps:**
+   consult the archived P7/Wave 34–37 notes and present code.
+   Record the exact missing semantic cues/files, distinguish
+   unavailable narration from nonverbal music, and file specific
+   ledger rows. Do not mark a broad "Momo voice" task complete
+   solely from an Activity title WAV.
+
 Do not assume that per-locale JSON `audio` covers *every*
 spoken line: some legacy Activities still select WAVs
 programmatically. Those must be listed separately and converted
