@@ -2588,3 +2588,25 @@ unchanged and still blocks official target build. Tests added/updated in
 assertions. No owner Linux release command, installer media, Acer installation,
 boot, rollback or physical trust acceptance occurred. The 2026-09-15 lifecycle
 sequence and its independent blockers do not change.
+
+
+### 2026-10-12 — Language chooser truthful registry and staged ES/FR installer copy (SOURCE WIP)
+
+The 12-language installer first-screen selector claimed ten locales
+without real Greia system/Activity translation coverage. The
+owner's new scoped `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`
+fixes this claim: canonical `SUPPORTED_SYSTEM_LANGUAGES` now
+contains only en/it, consumed unchanged by installer, Parent
+API and installed Parent Settings. Legacy records with no longer
+supported locales are preserved but fall back safely to en at runtime.
+The separate staging translator contains 108 ES and 108 FR
+installer source messages, including disk-destructive warnings
+and dynamic statuses, but ES/FR are **not** offered to installer
+users until comprehensive text, voiced assets and real install
+acceptance pass. Test migration and provider-free inventory source
+committed; local GLA-014 task handles current SHA validation and
+non-destructive GUI preview. No new physical installer run,
+USB flash, first-boot, QEMU, rollback, release packaging or
+C0 footprint acceptance was executed. Prior lifecycle blockers
+and install/update/release scope remain unchanged; the new
+four-language plan does not replace this plan.
