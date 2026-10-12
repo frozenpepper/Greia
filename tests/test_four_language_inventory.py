@@ -7,9 +7,13 @@ import tempfile
 import unittest
 
 from tools.audit_greia_language_coverage import build_inventory
+from tools.audit_launcher_spoken_labels import _load_collection_ids
 
 
 class FourLanguageInventoryTests(unittest.TestCase):
+    def test_launcher_audit_includes_my_creations_even_if_clip_missing(self) -> None:
+        self.assertIn("my_creations", _load_collection_ids())
+
     def test_audio_and_string_gaps_are_distinct_and_source_preserved(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
