@@ -46,24 +46,17 @@ class SystemLanguage:
         }
 
 
-# One canonical list feeds installer, on-device Parent settings and every
-# Parent API client. Do not duplicate a browser-only or installer-only list.
+# This is the ONE canonical selectable-language registry for the installer,
+# installed Parent panel, privileged helper and Parent API clients. Offering a
+# locale is a product support claim, not merely an ability to persist its tag.
+# Spanish/French translations are being authored but MUST NOT enter this list
+# until text, locale switching, voice inventory and release checks are complete.
+# See docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md.
 SUPPORTED_SYSTEM_LANGUAGES: tuple[SystemLanguage, ...] = (
     SystemLanguage("en", "English", "English", "🇬🇧"),
     SystemLanguage("it", "Italian", "Italiano", "🇮🇹"),
-    SystemLanguage("es", "Spanish", "Español", "🇪🇸"),
-    SystemLanguage("de", "German", "Deutsch", "🇩🇪"),
-    SystemLanguage("fr", "French", "Français", "🇫🇷"),
-    SystemLanguage("zh-CN", "Chinese", "简体中文", "🇨🇳"),
-    SystemLanguage("pt", "Portuguese", "Português", "🇵🇹"),
-    SystemLanguage("ar", "Arabic", "العربية", "🇸🇦"),
-    SystemLanguage("hi", "Hindi", "हिन्दी", "🇮🇳"),
-    SystemLanguage("id", "Indonesian", "Bahasa Indonesia", "🇮🇩"),
-    SystemLanguage("bn", "Bengali", "বাংলা", "🇧🇩"),
-    SystemLanguage("sw", "Swahili", "Kiswahili", "🇹🇿"),
 )
 _LANGUAGES_BY_LOCALE = {item.locale: item for item in SUPPORTED_SYSTEM_LANGUAGES}
-_LANGUAGE_ALIASES = {"zh": "zh-CN"}
 
 
 def system_language(locale: str | LocaleTag) -> SystemLanguage:
@@ -73,7 +66,6 @@ def system_language(locale: str | LocaleTag) -> SystemLanguage:
         canonical = str(locale if isinstance(locale, LocaleTag) else LocaleTag.parse(locale))
     except LocalizationError as exc:
         raise SystemLanguageError(str(exc)) from exc
-    canonical = _LANGUAGE_ALIASES.get(canonical, canonical)
     try:
         return _LANGUAGES_BY_LOCALE[canonical]
     except KeyError as exc:
