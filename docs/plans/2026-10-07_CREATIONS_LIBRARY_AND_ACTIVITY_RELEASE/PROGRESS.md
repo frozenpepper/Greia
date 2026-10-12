@@ -1049,7 +1049,7 @@ Reconstructed on `main` (new code, not byte-identical replay of a missing ZIP):
   `audio_cue(..., allow_fallback=False)` for existing fact voice.
   No audio media were generated or modified.
 
-A new provider-free nine-method test module
+A new provider-free ten-method test module
 `tests/test_activity_wave36_github_recovery.py` exercises an entire
 keyboard Memory round, mismatches and theme/grid changes, a five-station
 Train journey with unique event counts, the Maze mid-slide lock, and a
@@ -1059,7 +1059,7 @@ complete checkout and Pygame; the archived local 78/78 + 16 launch
 results are HISTORICAL evidence against a different tree.
 
 Source commits: `8070cfd3`, `5907b0e7`, `3a73add0`,
-`d3cf6790`, `93f30a7f`, `b73dde9e`.
+`d3cf6790`, `93f30a7f`, `b73dde9e`, `a3dc7ea9`, `1677613a`.
 The single pre-existing local-agent queue now contains GLA-012 with
 exact commands and supervised bilingual complete-cycle expectations.
 No P6/P7 release promotion, no graphics/voice acceptance, and no
@@ -1104,3 +1104,6 @@ owns exact execution and human listening. Source for the other
 archived Wave 34/35 fixes (Momo speech, Solar System Spaceship,
 Bridges, Marble) has not yet been reconciled with GitHub main.
 P6/P7 draft/withheld and all OS release/hardware gates remain unchanged.
+
+
+**2026-10-12 post-review correction:** Stars now ignores numeric shortcuts outside the active constellation's star count; otherwise a shortcut for a nonexistent star could move focus out of range and crash when rendering the focus indicator. Source `a3dc7ea9`; regression `1677613a`, still UNEXECUTED.

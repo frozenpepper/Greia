@@ -26,6 +26,10 @@ acceptance or hardware tests executed on these SHAs.
 exact follow-up. GLA-012 (Wave 36) and GLA-011 (Wave 37) also
 remain UNEXECUTED.
 
+**Post-review correction:** Stars numeric keys are bounded by the active
+constellation count before focus changes; previously a nonexistent star
+key could produce an IndexError on the next focus render.
+
 **Next engineering focus:** inspect missing archived Wave 34/35
 Momo narration, Solar System Spaceship, Bridges and Marble repairs
 against current `main`; implement only genuine gaps, with
@@ -49,11 +53,11 @@ Labirinto Magico movement commands locked while an animated slide
 is active; Stelle Incantate arrows/Enter connect, F fact playback,
 celebration advance, replay, focus and Italian/English strict audio
 lookup. All four gained or preserved touch/mouse parity as appropriate.
-Nine regression test methods committed in
+Ten regression test methods committed in
 `tests/test_activity_wave36_github_recovery.py`.
 
 **Committed source anchors:** `8070cfd3`, `5907b0e7`,
-`3a73add0`, `d3cf6790`, `93f30a7f`, `b73dde9e`.
+`3a73add0`, `d3cf6790`, `93f30a7f`, `b73dde9e`, `a3dc7ea9`, `1677613a`.
 These are **independent GitHub reconstructions**, not original Wave 36
 file copies. Current tests remain UNEXECUTED on these SHAs; the local
 archived 78/78 and 16/16 claims certify only the unavailable local
