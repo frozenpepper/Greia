@@ -10,6 +10,7 @@ No model/API/runtime Pygame dependency and no network; writes only --output.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 from pathlib import Path
 import sys
@@ -148,14 +149,39 @@ def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], lis
     return summary, cues
 
 
-def _report_launcher_labels(root: Path) -> list[dict[str, Any]]:
+def _report_launcher_labels(root: Path, errors: list[str]) -> list[dict[str, Any]]:
     base = root / "assets/audio/system/launcher-labels"
-    expected_names = sorted({
+    expected = {
         file.stem
         for locale in SOURCE_LOCALES
         for suffix in SPEECH_EXTENSIONS
         for file in (base / locale).glob(f"*{suffix}")
-    })
+    }
+    # Read the platform-owned vocabulary from static declarations in the
+    # canonical source, not only from files that happen to exist. Otherwise
+    # missing clips (notably my_creations.wav) vanish from the inventory.
+    catalogue = root / "src/greia_launcher/catalogue_view.py"
+    if catalogue.is_file():
+        try:
+            parsed = ast.parse(catalogue.read_text(encoding="utf-8"))
+            wanted = {
+                "BROWSE_ACTIVITIES_ID", "MY_CREATIONS_PORTAL_ID",
+                "PRIMARY_COLLECTION_IDS", "DISCOVERY_GROUP_IDS",
+            }
+            seen: set[str] = set()
+            for statement in parsed.body:
+                if isinstance(statement, ast.Assign) and len(statement.targets) == 1:
+                    target = statement.targets[0]
+                    if isinstance(target, ast.Name) and target.id in wanted:
+                        value = ast.literal_eval(statement.value)
+                        names = (value,) if isinstance(value, str) else value
+                        expected.update(names)
+                        seen.add(target.id)
+            if seen != wanted:
+                errors.append(f"{catalogue}: incomplete source collection vocabulary: {sorted(wanted - seen)}")
+        except (OSError, UnicodeError, SyntaxError, ValueError, TypeError) as exc:
+            errors.append(f"{catalogue}: cannot audit source collection vocabulary: {exc}")
+    expected_names = sorted(expected)
     results = []
     for name in expected_names:
         for locale in LOCALES:
@@ -179,7 +205,7 @@ def _report_launcher_labels(root: Path) -> list[dict[str, Any]]:
 def build_inventory(root: Path) -> dict[str, Any]:
     errors: list[str] = []
     activities, spoken = _report_activity(root, errors)
-    spoken.extend(_report_launcher_labels(root))
+    spoken.extend(_report_launcher_labels(root, errors))
     counts = {
         locale: {
             "activity_bundles": sum(
