@@ -1066,3 +1066,41 @@ No P6/P7 release promotion, no graphics/voice acceptance, and no
 hardware/lifecycle completion is claimed. Waves 34–35 from the
 archived local tree still need a separate GitHub behavioral
 reconciliation; do not assume their claimed fixes exist in main.
+
+
+### 2026-10-12 — Archived Wave 34–35 GitHub recovery: Clinic and Orca (SOURCE WIP)
+
+Continuation of the archive-to-GitHub functional-drift reconciliation,
+without drawings, asset review, new narration or providers:
+
+- `clinica_cuccioli/clinic_app.py`: the current GitHub version only
+  responded to the mouse and Escape, despite a `hybrid` input profile.
+  Added directional keyboard tool focus, explicit Enter/Space selection
+  followed by separate Enter/Space patient treatment, terminal replay,
+  and touch input with SDL synthetic-mouse deduplication. All successful
+  treatments still flow through `ClinicSession.use_selected_tool`
+  and the existing Greia event/progress owner. The focus indicator
+  uses the existing tool geometry on the Activity reference canvas.
+- `baia_delle_orche/orca_app.py`: both spoken-fact entry points read
+  `resources.locale`, which does not exist on `LocalizedResources`,
+  and therefore silently defaulted to Italian even in English. They now
+  share a single fact dispatcher using
+  `resources.context.selected.value`. Keyboard key 6 reaches the
+  sixth fact tool. Drag handling previously incremented `total_cuddled`
+  and replayed sounds every motion frame; a per-gesture orca identity
+  set now permits only one cuddle and event per orca per press/drag.
+  Finger and synthetic mouse duplications are suppressed.
+- New `tests/test_activity_wave34_35_github_recovery.py` contains
+  five provider-free regressions: complete five-patient Clinic
+  keyboard treatment and replay, selection-then-apply semantics,
+  touch normalization/deduplication, exact English fact locale,
+  and per-gesture cuddle event/audio bounds.
+
+Source commits: `e2e5a733`, `57bf0c0a`, `2cfcde61`.
+**Current evidence:** committed GitHub code and connector readback
+only; these tests and real Pygame/Simulator/speaker sessions remain
+UNEXECUTED on the current main. GLA-013 in the sole local-agent queue
+owns exact execution and human listening. Source for the other
+archived Wave 34/35 fixes (Momo speech, Solar System Spaceship,
+Bridges, Marble) has not yet been reconciled with GitHub main.
+P6/P7 draft/withheld and all OS release/hardware gates remain unchanged.
