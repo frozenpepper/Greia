@@ -273,10 +273,18 @@ class MemoryApp:
         """Move through the current grid without focusing cleared pairs."""
         if not self.cards:
             return
+        initial = self.selected_card_index
         for _ in range(len(self.cards)):
             self.selected_card_index = (self.selected_card_index + step) % len(self.cards)
             if not self.cards[self.selected_card_index]["is_matched"]:
-                break
+                return
+        # A vertical stride visits only one column; when that column has
+        # already been cleared, find another remaining playable card.
+        for distance in range(1, len(self.cards) + 1):
+            index = (initial + distance) % len(self.cards)
+            if not self.cards[index]["is_matched"]:
+                self.selected_card_index = index
+                return
 
     def _handle_pointer(self, raw_pos: tuple[int, int]) -> None:
         if not _is_safe_point(self.screen, raw_pos):
