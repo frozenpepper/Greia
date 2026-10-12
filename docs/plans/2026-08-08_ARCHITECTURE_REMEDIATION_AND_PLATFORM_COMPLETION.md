@@ -3063,13 +3063,14 @@ work is not a release or visual-quality PASS.
 ### 2026-10-12 — Three hybrid child Activities: input completeness and persistence safety (SOURCE WIP)
 
 Owner-authorized P7 game-quality audit continuation at `988bb134`,
-`26ec9870`, `8a0a4e54` repairs direct keyboard/touch routes for
+`26ec9870`, `8a0a4e54`, `b091f24d` repairs direct keyboard/touch routes for
 Woodland Hide-and-Seek and Little Green Thumb, completes keyboard cursor
 and gameplay actions in Magic Aquarium, prevents repeated rewarded
 Woodland discoveries and rejects corrupt Aquarium saved counters.
 The existing shared platform canvas, trusted protected input bounds,
 Activity APIs, profile storage and progression event ownership remain
-unchanged. A targeted nine-case regression module was committed, but
+unchanged. SDL touch-mouse emulation is filtered to avoid duplicate operations.
+A targeted eleven-case regression module was committed, but
 Pygame, `make verify`, Simulator and physical checks have not been
 executed in this GitHub-only checkout. GLA-011 in the single local-agent
 queue contains exact acceptance instructions. Release lifecycle and
