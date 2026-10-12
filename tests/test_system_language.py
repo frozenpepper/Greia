@@ -27,29 +27,21 @@ class SystemLanguageTests(unittest.TestCase):
         locales = [item.locale for item in SUPPORTED_SYSTEM_LANGUAGES]
         self.assertEqual(len(locales), len(set(locales)))
         self.assertEqual(DEFAULT_SYSTEM_LOCALE, "en")
-        for locale in (
-            "en",
-            "it",
-            "es",
-            "de",
-            "fr",
-            "zh-CN",
-            "pt",
-            "ar",
-            "hi",
-            "id",
-            "bn",
-            "sw",
-        ):
-            self.assertIn(locale, locales)
+        self.assertEqual(locales, ["en", "it"])
+        for unavailable in ("es", "fr", "de", "zh-CN", "pt", "ar", "hi", "id", "bn", "sw"):
+            self.assertNotIn(unavailable, locales)
+            with self.assertRaises(SystemLanguageError):
+                system_language(unavailable)
         for item in SUPPORTED_SYSTEM_LANGUAGES:
             self.assertTrue(item.flag)
             self.assertTrue(item.name)
             self.assertTrue(item.native_name)
 
-    def test_chinese_language_alias_resolves_to_selected_simplified_locale(self) -> None:
-        self.assertEqual(system_language("zh").locale, "zh-CN")
-        self.assertEqual(system_language("ZH-cn").locale, "zh-CN")
+    def test_legacy_unsupported_aliases_are_no_longer_selectable(self) -> None:
+        with self.assertRaises(SystemLanguageError):
+            system_language("zh")
+        with self.assertRaises(SystemLanguageError):
+            system_language("ZH-cn")
 
     def test_install_record_is_initial_device_language_then_state_override_wins(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -58,23 +50,41 @@ class SystemLanguageTests(unittest.TestCase):
             record.write_text(json.dumps({"locale": "it"}), encoding="utf-8")
             store = SystemLanguageStore(root / "settings", install_record_path=record)
             self.assertEqual(store.read().locale, "it")
-            saved = store.replace("sw")
-            self.assertEqual(saved.locale, "sw")
-            self.assertEqual(store.read().locale, "sw")
+            saved = store.replace("en")
+            self.assertEqual(saved.locale, "en")
+            self.assertEqual(store.read().locale, "en")
             payload = store.as_json_dict()
-            self.assertEqual(payload["locale"], "sw")
+            self.assertEqual(payload["locale"], "en")
             self.assertEqual(len(payload["languages"]), len(SUPPORTED_SYSTEM_LANGUAGES))
+
+    def test_legacy_install_and_override_do_not_crash_or_rewrite_history(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            record = root / "install-record.json"
+            record.write_text(json.dumps({"locale": "es"}), encoding="utf-8")
+            settings = root / "settings"
+            settings.mkdir()
+            override = settings / "language.json"
+            override.write_text(
+                json.dumps({"schema_version": 1, "locale": "fr"}), encoding="utf-8"
+            )
+            store = SystemLanguageStore(settings, install_record_path=record)
+            self.assertEqual(store.read().locale, "en")
+            self.assertEqual(json.loads(record.read_text())["locale"], "es")
+            self.assertEqual(json.loads(override.read_text())["locale"], "fr")
+            store.replace("it")
+            self.assertEqual(store.read().locale, "it")
 
     def test_invalid_persisted_state_falls_back_without_crashing_child_ui(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             record = root / "install-record.json"
-            record.write_text(json.dumps({"locale": "fr"}), encoding="utf-8")
+            record.write_text(json.dumps({"locale": "it"}), encoding="utf-8")
             state = root / "settings"
             state.mkdir()
             (state / "language.json").write_text("not-json", encoding="utf-8")
             store = SystemLanguageStore(state, install_record_path=record)
-            self.assertEqual(store.read().locale, "fr")
+            self.assertEqual(store.read().locale, "it")
             with self.assertRaises(SystemLanguageError):
                 store.replace("xx-NOPE")
 
@@ -83,7 +93,7 @@ class SystemLanguageTests(unittest.TestCase):
             root = Path(directory)
             settings = root / "settings"
             record = root / "install-record.json"
-            record.write_text(json.dumps({"locale": "bn"}), encoding="utf-8")
+            record.write_text(json.dumps({"locale": "it"}), encoding="utf-8")
             with patch.dict(
                 os.environ,
                 {
@@ -95,7 +105,7 @@ class SystemLanguageTests(unittest.TestCase):
                 os.environ.pop("GREIA_PROFILE_LOCALE", None)
                 os.environ.pop("GREIA_DEVICE_LOCALE", None)
                 activity_api._system_language_store.cache_clear()
-                self.assertEqual(activity_api.get_profile_locale(), "bn")
+                self.assertEqual(activity_api.get_profile_locale(), "it")
                 os.environ["GREIA_PROFILE_LOCALE"] = "it"
                 self.assertEqual(activity_api.get_profile_locale(), "it")
             activity_api._system_language_store.cache_clear()
@@ -114,7 +124,7 @@ class SystemLanguageTests(unittest.TestCase):
             root = Path(directory)
             settings = root / "system-settings"
             record = root / "install-record.json"
-            record.write_text(json.dumps({"locale": "es"}), encoding="utf-8")
+            record.write_text(json.dumps({"locale": "it"}), encoding="utf-8")
             environment = {
                 "GREIA_INSTALL_RECORD": str(record),
                 "GREIA_PARENT_ACTIVITY_INSTALL": "0",
@@ -130,11 +140,14 @@ class SystemLanguageTests(unittest.TestCase):
                     profiles_dir=root / "profiles",
                     active_profile_status_path=root / "active-profile.json",
                 )
-                self.assertEqual(app.language_payload()["locale"], "es")
-                self.assertEqual(app.update_language("hi")["locale"], "hi")
+                self.assertEqual(app.language_payload()["locale"], "it")
+                self.assertEqual([item["locale"] for item in app.language_payload()["languages"]], ["en", "it"])
+                with self.assertRaises(SystemLanguageError):
+                    app.update_language("hi")
+                self.assertEqual(app.update_language("en")["locale"], "en")
                 self.assertEqual(
                     SystemLanguageStore(settings, install_record_path=record).read().locale,
-                    "hi",
+                    "en",
                 )
 
     def test_installer_service_uses_language_first_entrypoint_and_helper_is_narrow(self) -> None:
