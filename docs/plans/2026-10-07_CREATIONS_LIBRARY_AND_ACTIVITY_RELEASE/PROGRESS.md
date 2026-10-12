@@ -1015,3 +1015,54 @@ execute `make verify` or the Activity suites. Prior archived local chat
 claims do not certify this reconstructed SHA. No graphics or voice changes,
 no release promotion, no Shell/Simulator or installed x86/ARM acceptance.
 P6/P7 original programme and withheld/draft memberships unchanged.
+
+
+### 2026-10-12 — Missing Wave 36 functional-audit recovery on GitHub (SOURCE-WIP)
+
+The archived conversation (Archive 33, Wave 34–37) describes Pygame source fixes,
+executed local tests and complete local project ZIPs that were not committed to
+the canonical GitHub branch. After delivering the reconstructed Wave 37 work
+above, we compared Wave 36's four named behavior changes to actual GitHub
+source and confirmed each was missing from the active Activity app.
+
+Reconstructed on `main` (new code, not byte-identical replay of a missing ZIP):
+
+- `memory_meraviglie`: arrow-key card navigation, visible focus,
+  Enter/Space flips, T/G theme/grid switching, matching and restart
+  routed through existing game transitions. Cleared cards are skipped;
+  focus can escape a fully cleared column instead of remaining trapped
+  by a row-stride step. Touch is normalized and synthetic SDL mouse
+  events are filtered to avoid double flips.
+- `treno_numeri`: keyboard crate selection/activation calls the same
+  `_load_crate` path as pointer/touch, retaining model caps,
+  flying-fruit feedback, one reward per completed station and
+  idempotency-keyed events. Loading is disabled while traveling.
+  Replay now uses one shared `_restart_journey` transaction, with
+  selected crate focus visible in the existing renderer surface.
+- `labirinto_magico`: `trigger_move` refuses a second movement
+  command while the player is traversing queued slide waypoints,
+  preventing a stale-grid recomputation from replacing the live path.
+- `stelle_incantate`: directional keyboard selection, numbered
+  shortcuts, Enter/Space connection and state-aware Next/replay,
+  visible selected star, F fact playback, normalized touch with
+  SDL synthetic-mouse deduplication, and locale-strict
+  `audio_cue(..., allow_fallback=False)` for existing fact voice.
+  No audio media were generated or modified.
+
+A new provider-free nine-method test module
+`tests/test_activity_wave36_github_recovery.py` exercises an entire
+keyboard Memory round, mismatches and theme/grid changes, a five-station
+Train journey with unique event counts, the Maze mid-slide lock, and a
+Stars round/fact locale fallback. These tests are committed but **NOT
+EXECUTED** because this connector-only environment lacks the private
+complete checkout and Pygame; the archived local 78/78 + 16 launch
+results are HISTORICAL evidence against a different tree.
+
+Source commits: `8070cfd3`, `5907b0e7`, `3a73add0`,
+`d3cf6790`, `93f30a7f`, `b73dde9e`.
+The single pre-existing local-agent queue now contains GLA-012 with
+exact commands and supervised bilingual complete-cycle expectations.
+No P6/P7 release promotion, no graphics/voice acceptance, and no
+hardware/lifecycle completion is claimed. Waves 34–35 from the
+archived local tree still need a separate GitHub behavioral
+reconciliation; do not assume their claimed fixes exist in main.
