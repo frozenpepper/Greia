@@ -14,7 +14,9 @@ spots; `26ec9870` — Greenhouse pot/tool keyboard play and touch, Aquarium
 bounded visible keyboard cursor with shared pointer actions and resilient
 saved counters; `8a0a4e54` — Wave 37 focused regressions;
 `b091f24d` — reject SDL synthetic touch-mouse duplicate actions
-and add two regressions (11 focused tests total).
+and add two regressions (11 focused tests total);
+`5f45d0da` — remove solved hiding clues and keep keyboard focus on
+remaining Woodland spots after correct answers.
 The implementation is a **new reconstruction**, not an assertion that
 unavailable archived project edits were copied byte-for-byte.
 
