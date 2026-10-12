@@ -186,7 +186,11 @@ class WoodlandApp:
             return False
         if key in (pygame.K_LEFT, pygame.K_UP, pygame.K_RIGHT, pygame.K_DOWN):
             step = -1 if key in (pygame.K_LEFT, pygame.K_UP) else 1
-            self.selected_spot_index = (self.selected_spot_index + step) % len(self.state.spots)
+            for _ in self.state.spots:
+                self.selected_spot_index = (self.selected_spot_index + step) % len(self.state.spots)
+                spot_id = self.state.spots[self.selected_spot_index].spot_id
+                if spot_id not in self.state.found_spot_ids:
+                    break
             return True
         if key in (pygame.K_RETURN, pygame.K_SPACE):
             return self._inspect_spot(self.state.spots[self.selected_spot_index].spot_id)
@@ -225,6 +229,13 @@ class WoodlandApp:
         self.audio.play("rustle")
         self.audio.play("pop")
         if was_target:
+            if not self.state.is_victory:
+                # Keep keyboard focus on a place that still has an animal.
+                for step in range(1, len(self.state.spots) + 1):
+                    index = (self.selected_spot_index + step) % len(self.state.spots)
+                    if self.state.spots[index].spot_id not in self.state.found_spot_ids:
+                        self.selected_spot_index = index
+                        break
             if self.storage:
                 self.storage.kv_set(STORAGE_KEY, {"stars": self.state.total_stars})
             try:

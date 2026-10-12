@@ -134,7 +134,7 @@ class WoodlandRenderer:
         # 2. Grounded peeking clues
         for spot in state.spots:
             animal_id = state.hiding_map.get(spot.spot_id)
-            if animal_id is not None:
+            if animal_id is not None and spot.spot_id not in state.found_spot_ids:
                 self.art.draw_peeking_clue(target_surface, spot, animal_id, t_now)
 
         # Visible keyboard focus; no extra image allocation.

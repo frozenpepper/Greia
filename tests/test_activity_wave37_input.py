@@ -49,6 +49,9 @@ class WoodlandKeyboardCycleTests(TestCase):
                 self.assertTrue(app._handle_keydown(pygame.K_RETURN))
                 self.assertEqual(app.state.found_count, expected_found)
                 self.assertEqual(len(app.state.found_spot_ids), expected_found)
+                if not app.state.is_victory:
+                    focused = app.state.spots[app.selected_spot_index].spot_id
+                    self.assertNotIn(focused, app.state.found_spot_ids)
             self.assertTrue(app.state.is_victory)
             self.assertEqual(app.state.total_stars, app.state.total_to_find)
             self.assertEqual(
