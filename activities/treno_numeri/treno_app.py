@@ -140,6 +140,7 @@ class TrenoApp:
         self.train_state = "arriving"
         setattr(self.model, "train_state", self.train_state)
         self.train_offset_x = -700.0
+        self.celebration_particles.clear()
         self.sounds.play("whistle")
         self.selected_crate = 0
 
@@ -185,6 +186,9 @@ class TrenoApp:
         setattr(self.model, "train_state", self.train_state)
         self.train_offset_x = -700.0
         self.selected_crate = 0
+        self.flying_items.clear()
+        self.smoke_particles.clear()
+        self.celebration_particles.clear()
         self.completion.clear()
         self.completion_presented = False
         self.renderer.invalidate()
@@ -350,6 +354,10 @@ class TrenoApp:
                         "size": random.uniform(8, 16),
                     }
                 )
+            # Terminal/replay sessions must not accumulate unlimited
+            # celebration entities on the small Acer memory floor.
+            if len(self.celebration_particles) > 96:
+                del self.celebration_particles[:-96]
             if self.celebration_timer <= 0:
                 self.train_state = "departing"
                 setattr(self.model, "train_state", self.train_state)
