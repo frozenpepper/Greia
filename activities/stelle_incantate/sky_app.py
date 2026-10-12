@@ -105,6 +105,7 @@ class SkyActivity:
         self._fact_text: str | None = None
         self._fact_opened_for: str | None = None
         self._hovered_next = False
+        self.selected_star_index = 0
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -139,9 +140,8 @@ class SkyActivity:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self._running = False
             return
-        if event.type == pygame.KEYDOWN and pygame.K_1 <= event.key <= pygame.K_9:
-            if self._state == AppState.PLAYING:
-                self._tap_star(event.key - pygame.K_1)
+        if event.type == pygame.KEYDOWN:
+            self._handle_keydown(event.key)
             return
         if event.type == pygame.MOUSEMOTION:
             logical = self.canvas.pointer(event.pos)
@@ -149,13 +149,45 @@ class SkyActivity:
                 point = (int(logical[0]), int(logical[1]))
                 self._hovered_next = NEXT_BUTTON_RECT.collidepoint(point)
             return
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if not self._point_in_activity_viewport(event.pos):
-                return
-            logical = self.canvas.pointer(event.pos)
-            if logical is None:
-                return
+        if (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
+                and not getattr(event, "touch", False)):
+            self._handle_raw_pointer(event.pos)
+        elif event.type == pygame.FINGERDOWN:
+            width, height = self.screen.get_size()
+            self._handle_raw_pointer((int(event.x * width), int(event.y * height)))
+
+    def _handle_raw_pointer(self, screen_point: tuple[int, int]) -> None:
+        if not self._point_in_activity_viewport(screen_point):
+            return
+        logical = self.canvas.pointer(screen_point)
+        if logical is not None:
             self._handle_pointer_click((int(logical[0]), int(logical[1])))
+
+    def _handle_keydown(self, key: int) -> None:
+        """Navigation is visible and all activations use existing gameplay actions."""
+        if self._state == AppState.TERMINAL:
+            if key in (pygame.K_SPACE, pygame.K_RETURN):
+                self._restart()
+            return
+        if key == pygame.K_f:
+            self._open_fact()
+            return
+        if self._state == AppState.CELEBRATE:
+            if key in (pygame.K_SPACE, pygame.K_RETURN):
+                # Do not skip the constellation celebration before Next appears.
+                if self.clock() - self._state_started >= 1.0:
+                    self._advance()
+            return
+        if key in (pygame.K_LEFT, pygame.K_UP, pygame.K_RIGHT, pygame.K_DOWN):
+            step = -1 if key in (pygame.K_LEFT, pygame.K_UP) else 1
+            self.selected_star_index = (
+                self.selected_star_index + step
+            ) % self.session.current.star_count
+        elif pygame.K_1 <= key <= pygame.K_9:
+            self.selected_star_index = key - pygame.K_1
+            self._tap_star(self.selected_star_index)
+        elif key in (pygame.K_SPACE, pygame.K_RETURN):
+            self._tap_star(self.selected_star_index)
 
     def _point_in_activity_viewport(self, raw_pos: tuple[int, int]) -> bool:
         viewport = activity_viewport_for_surface(self.screen)
@@ -185,6 +217,7 @@ class SkyActivity:
             return
         star_index = self.renderer.star_at(self.session.current, point)
         if star_index is not None:
+            self.selected_star_index = star_index
             self._tap_star(star_index)
 
     # ------------------------------------------------------------------
@@ -197,6 +230,8 @@ class SkyActivity:
             return
         if round_state.connect(star_index):
             self.audio.play_note(star_index)
+            if not round_state.is_complete:
+                self.selected_star_index = round_state.next_star
             self._line_started = self.clock()
             self._line_progress = 0.0
             if round_state.is_complete:
@@ -224,6 +259,7 @@ class SkyActivity:
             self._begin_terminal()
             return
         self.session.advance()
+        self.selected_star_index = 0
         self._state = AppState.PLAYING
         self._state_started = self.clock()
         self._fact_text = None
@@ -244,7 +280,7 @@ class SkyActivity:
         # the procedural chirp is the fail-soft fallback, never a substitute
         # impersonation.
         try:
-            cue = self.resources.audio_cue(fact_key)
+            cue = self.resources.audio_cue(fact_key, allow_fallback=False)
         except Exception:
             cue = None
         if cue is not None and self.audio.play_voice_cue(cue.path):
@@ -271,6 +307,7 @@ class SkyActivity:
     def _restart(self) -> None:
         self.session_id = f"sky-{uuid4().hex}"
         self.session = SkySession(completed_ids=self.storage.load_completed())
+        self.selected_star_index = 0
         self.completion.clear()
         self._state = AppState.PLAYING
         self._state_started = self.clock()
@@ -321,3 +358,7 @@ class SkyActivity:
             show_next=show_next,
             hovered_next=self._hovered_next,
         )
+        if self._state == AppState.PLAYING:
+            cx, cy = self.renderer.star_center(round_state, self.selected_star_index)
+            pygame.draw.circle(self.canvas.surface, (15, 23, 42), (cx, cy), 30, 7)
+            pygame.draw.circle(self.canvas.surface, (56, 189, 248), (cx, cy), 30, 4)
