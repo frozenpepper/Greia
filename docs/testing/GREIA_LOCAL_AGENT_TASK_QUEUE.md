@@ -497,7 +497,7 @@ test commands and expected observable behavior.
 
 - **Status:** READY for source tests; visual/gameplay GUI checks require GLA-001 PASS.
 - **Priority:** P1; **minimum source SHA:**
-  `b73dde9ec510e3db5d5128126259e8ead3aff533`.
+  `a6c7feadc42fc7061a1394410e797192e6790e2e`.
 - **Why:** the earlier archived Wave 36 project ZIP/tests were not pushed
   to canonical GitHub. This is a new independent source reconstruction at
   new SHAs, not a transplant of the archived 78/78 PASS evidence.
@@ -521,7 +521,8 @@ test commands and expected observable behavior.
   arrow focus, Enter/Space flips cards, mismatch lockout, every match
   exactly one reward, victory/replay and T/G theme/grid switching.
   Explicitly test a cleared column. Train: keyboard crate selection and
-  loading, full five stations with one reward each, no loading during
+  loading, bounded celebration particles across repeat play,
+  full five stations with one reward each, no loading during
   arrival/departure/celebration, victory and replay. Maze: repeated
   arrows/clicks while a slide is active cannot overwrite that path;
   confirm reaching collectible/exit, rewards, replay. Stars:

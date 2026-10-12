@@ -3085,7 +3085,7 @@ The current source independently lacked keyboard gameplay for Memory and
 Train, missing in-motion lock for Maze, and complete keyboard/state/strict
 IT-EN fact voice support for Stars. Four existing Activity apps were
 reconstructed at `8070cfd3`, `5907b0e7`, `3a73add0` and
-`93f30a7f`, with ten source regression cases at `d3cf6790` and
+`93f30a7f`, with eleven source regression cases at `d3cf6790` and
 `b73dde9e`. No Activity manifest, sandbox, storage API, trust,
 media/artwork or OS lifecycle authority was changed. The new
 `GLA-012` local-agent task carries complete Pygame tests, five-station
@@ -3113,3 +3113,6 @@ hardware acceptance obligations remain open.
 
 
 **2026-10-12 source review:** guard invalid numeric constellation shortcuts to prevent focus-render IndexError (`a3dc7ea9`, `1677613a`). Remains UNEXECUTED.
+
+
+**2026-10-12 source review:** Train celebration particles now capped at 96 and cleared between stations/replays instead of accumulating across sessions (`1e0392c5`, `a6c7fead`), still UNEXECUTED.
