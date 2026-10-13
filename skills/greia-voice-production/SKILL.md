@@ -40,6 +40,28 @@ Only engine maintainers/troubleshooters should normally read:
 docs/agents/GREIA_CHATTERBOX_PRODUCTION_FIELD_GUIDE.md
 ```
 
+## 2026-10-14 owner-approved four-language all-Activity recording task
+
+The owner approved **all currently authored EN/IT/ES/FR text
+translations** for voice recording and explicitly requested that the
+local agent inspect **all 45 Activities plus shared OS/Parent/Creations,
+Encyclopedia and incubated voice surfaces**, then actually record each
+missing clip. The executable sequence is
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`.
+The detailed cue identity and per-Activity legacy inventory remain in
+`LOCAL_AGENT_VOICE_PRODUCTION.md` beside that work order, and the
+single task queue remains `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+
+This is explicit authority to use an **already configured, registered,
+no-new-spend local VoiceEngine provider** for exact current approved
+scripts in reviewed small batches; it is *not* authority for new paid
+cloud/Modal spend, heavy downloads, direct backend scripting, or
+unreviewed voice anchors. Owner-approved visible text does not fill in
+an absent long spoken transcript or decide preschool letter-name
+versus phoneme; those are `BLOCKED_SCRIPT` cue rows pending a complete
+script. Audio remains human-review pending and ES/FR are not selectable
+Greia product languages until their separate release gates close.
+
 ## Semantic input
 
 Every generated cue needs:
