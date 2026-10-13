@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "L'atelier des mesures",
+    "activity.bottega_delle_misure.title": "L'atelier des mesures",
+    "prompt.compare_longer": "Touche le paquet le plus long !",
+    "prompt.compare_shorter": "Touche le paquet le plus court !",
+    "prompt.compare_taller": "Touche le paquet le plus haut !",
+    "prompt.compare_shorter_h": "Touche le paquet le moins haut !",
+    "prompt.order_length": "Range les paquets du plus court au plus long !",
+    "prompt.order_height": "Range les paquets du moins haut au plus haut !",
+    "prompt.measure": "Mesure le paquet avec des blocs en bois !",
+    "prompt.shelf": "Combien de blocs tiennent sur cette étagère ?",
+    "button.confirm": "VALIDER",
+    "button.play_again": "REJOUER",
+    "victory.title": "Atelier terminé !",
+    "victory.subtitle": "Tu as mesuré et livré tous les paquets avec Dani !"
+  },
+  "audio": {}
+}

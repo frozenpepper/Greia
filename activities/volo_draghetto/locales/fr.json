@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Le vol du petit dragon",
+    "hud.stars": "★ ",
+    "hud.score": "Score : ",
+    "prompt.guide": "Déplace le pointeur ou utilise les flèches pour voler parmi les nuages !",
+    "msg.rainbow_dash": "🌈 FONCE, ARC-EN-CIEL ! 🌟",
+    "msg.star_milestone": "Bravo ! Tu as ramassé 20 étoiles ! 🌟✨",
+    "btn.accessories": "🎀 Accessoires",
+    "acc.none": "Aucun",
+    "acc.bow": "Nœud rose 🎀",
+    "acc.crown": "Couronne royale 👑",
+    "acc.glasses": "Lunettes de soleil 😎",
+    "acc.flower": "Couronne de fleurs 🌸"
+  },
+  "audio": {}
+}

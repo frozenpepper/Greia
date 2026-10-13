@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.quattro_stagioni.title": "El gran árbol de las estaciones",
+    "activity.title": "El gran árbol de las estaciones",
+    "btn.day": "Día",
+    "btn.night": "Noche",
+    "btn.sun": "Sol",
+    "btn.rain": "Lluvia",
+    "btn.wind": "Viento",
+    "btn.snow": "Nieve",
+    "season.spring": "Primavera",
+    "season.summer": "Verano",
+    "season.autumn": "Otoño",
+    "season.winter": "Invierno"
+  },
+  "audio": {}
+}

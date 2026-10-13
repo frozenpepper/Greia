@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.colline_allegre.title": "COLINAS DIVERTIDAS",
+    "activity.title": "Colinas divertidas",
+    "ui.go": "¡VAMOS!",
+    "ui.brake": "¡FRENA!",
+    "ui.distance": "DISTANCIA",
+    "ui.stars": "ESTRELLAS",
+    "ui.perfect_landing": "¡ATERRIZAJE PERFECTO!",
+    "ui.boing": "¡BOING!",
+    "ui.level": "NIVEL",
+    "ui.replay": "JUGAR OTRA VEZ"
+  },
+  "audio": {}
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Tour des formes",
+    "mode.free_build": "1. Libre",
+    "mode.slow_fall": "2. Doux",
+    "mode.challenge": "3. Tour",
+    "celebration.title": "Bravo ! Quelle belle tour tu as construite !",
+    "celebration.subtitle": "Ta tour en bois est si haute et colorée !",
+    "btn.replay": "Reconstruire",
+    "btn.rotate": "Tourner",
+    "btn.left": "Gauche",
+    "btn.right": "Droite",
+    "btn.drop": "Lâcher",
+    "btn.clean": "Nouvelles formes"
+  },
+  "audio": {}
+}

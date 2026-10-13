@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "El taller de las medidas",
+    "activity.bottega_delle_misure.title": "El taller de las medidas",
+    "prompt.compare_longer": "¡Toca el paquete más largo!",
+    "prompt.compare_shorter": "¡Toca el paquete más corto!",
+    "prompt.compare_taller": "¡Toca el paquete más alto!",
+    "prompt.compare_shorter_h": "¡Toca el paquete más bajo!",
+    "prompt.order_length": "¡Ordena los paquetes del más corto al más largo!",
+    "prompt.order_height": "¡Ordena los paquetes del más bajo al más alto!",
+    "prompt.measure": "¡Mide el paquete con bloques de madera!",
+    "prompt.shelf": "¿Cuántos bloques caben en este estante?",
+    "button.confirm": "CONFIRMAR",
+    "button.play_again": "JUGAR OTRA VEZ",
+    "victory.title": "¡Taller listo!",
+    "victory.subtitle": "¡Has medido y entregado todos los paquetes con Dani!"
+  },
+  "audio": {}
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "El acuario mágico",
+    "tool.add_fish": "CRIATURAS",
+    "tool.feed": "ALIMENTAR",
+    "tool.bubbles": "BURBUJAS",
+    "tool.day": "DÍA",
+    "tool.night": "NOCHE",
+    "tool.glow": "Brillo nocturno",
+    "creature.clownfish": "Pez payaso",
+    "creature.turtle": "Tortuga marina",
+    "creature.octopus": "Pulpo",
+    "creature.dolphin": "Delfín",
+    "creature.puffer": "Pez globo",
+    "creature.seahorse": "Caballito de mar",
+    "creature.jellyfish": "Medusa luminosa",
+    "creature.starfish": "Estrella de mar",
+    "chest.treasure": "Cofre del tesoro"
+  },
+  "audio": {}
+}

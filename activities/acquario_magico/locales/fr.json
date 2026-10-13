@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "L'aquarium magique",
+    "tool.add_fish": "ANIMAUX",
+    "tool.feed": "NOURRIR",
+    "tool.bubbles": "BULLES",
+    "tool.day": "JOUR",
+    "tool.night": "NUIT",
+    "tool.glow": "Lueur nocturne",
+    "creature.clownfish": "Poisson-clown",
+    "creature.turtle": "Tortue de mer",
+    "creature.octopus": "Poulpe",
+    "creature.dolphin": "Dauphin",
+    "creature.puffer": "Poisson-globe",
+    "creature.seahorse": "Hippocampe",
+    "creature.jellyfish": "Méduse lumineuse",
+    "creature.starfish": "Étoile de mer",
+    "chest.treasure": "Coffre au trésor"
+  },
+  "audio": {}
+}

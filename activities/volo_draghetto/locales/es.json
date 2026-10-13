@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "El vuelo del dragoncito",
+    "hud.stars": "★ ",
+    "hud.score": "Puntos: ",
+    "prompt.guide": "¡Mueve el puntero o usa las flechas para volar entre las nubes!",
+    "msg.rainbow_dash": "🌈 ¡TURBO ARCOÍRIS! 🌟",
+    "msg.star_milestone": "¡Genial! ¡Has recogido 20 estrellas! 🌟✨",
+    "btn.accessories": "🎀 Accesorios",
+    "acc.none": "Ninguno",
+    "acc.bow": "Lazo rosa 🎀",
+    "acc.crown": "Corona real 👑",
+    "acc.glasses": "Gafas de sol 😎",
+    "acc.flower": "Corona de flores 🌸"
+  },
+  "audio": {}
+}
