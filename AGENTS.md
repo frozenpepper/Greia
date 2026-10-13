@@ -66,8 +66,15 @@ The architecture-remediation plan remains the active **blocking implementation**
 `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md` is the
 scoped implementation plan for reducing misleading language choices,
 completing EN/IT gaps, and extending real installer/OS/Parent/Activity
-text and voice support to ES/FR. Its precise local-agent speech work
-order is `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`.
+text and voice support to ES/FR. Its standing local-agent speech design and cue-source authority is
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`.
+**Current executable voice-production work order:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
+(owner instruction 2026-10-14). The owner approved every **currently authored**
+EN/IT/ES/FR text translation for recording; this does not fabricate missing
+spoken phoneme/narration scripts, accept generated audio, or promote ES/FR.
+An available, registered zero-new-spend local Greia Voice Engine provider may
+be used to record without waiting for a future Modal provider, but paid
+cloud/model installation still needs separate explicit cost approval.
 The sole practical local-agent task queue remains
 `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
 The canonical selectable registry currently contains **only en/it**;
