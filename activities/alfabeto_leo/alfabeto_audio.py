@@ -86,8 +86,8 @@ class AlfabetoAudio:
 
     def _load_spoken_assets(self) -> None:
         loc_dir = AUDIO_DIR / self.locale
-        if not loc_dir.is_dir():
-            loc_dir = AUDIO_DIR / "it"
+        # Never substitute Italian letter names or phonemes for another
+        # teaching language. Missing approved speech stays unavailable.
         if not loc_dir.is_dir():
             return
 
