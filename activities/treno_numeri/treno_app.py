@@ -85,7 +85,7 @@ class TrenoApp:
         def t(key: str, default: str) -> str:
             if self.resources is not None:
                 try:
-                    value = self.resources.string(key)
+                    value = self.resources.text(key)
                     if value:
                         return value
                 except Exception:
