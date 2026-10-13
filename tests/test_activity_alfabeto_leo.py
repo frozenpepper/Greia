@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTIVITY_ROOT = ROOT / "activities" / "alfabeto_leo"
@@ -114,6 +116,26 @@ class AlfabetoLeoTests(unittest.TestCase):
         reloaded = AlfabetoModel()
         reloaded.restore_discoveries(model.discovered_letters)
         self.assertEqual(reloaded.update(0.03), [])
+
+    def test_missing_language_audio_never_uses_italian_phonics(self) -> None:
+        from alfabeto_audio import AlfabetoAudio
+
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            italian = base / "it"
+            italian.mkdir()
+            (italian / "letter_A.wav").write_bytes(b"not a real wav")
+            # The old loader would fall back to the it directory for es/fr.
+            for lang in ("es", "fr", "en"):
+                audio = object.__new__(AlfabetoAudio)
+                audio.locale = lang
+                audio._spoken_sounds = {}
+                with patch("alfabeto_audio.AUDIO_DIR", base), patch(
+                    "alfabeto_audio.pygame.mixer.Sound"
+                ) as load:
+                    audio._load_spoken_assets()
+                    load.assert_not_called()
+                self.assertEqual(audio._spoken_sounds, {})
 
     def test_services_safe_fallback(self) -> None:
         services = AlfabetoServices()
