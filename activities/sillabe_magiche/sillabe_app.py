@@ -25,7 +25,6 @@ if __package__:
         BG_SKY_TOP,
         CARD_BG,
         CARD_BORDER,
-        CONSONANTS_IT,
         CORAL,
         DARK_TEXT,
         GOLD,
@@ -37,9 +36,7 @@ if __package__:
         SHADOW_COLOR,
         SKY_BLUE,
         STORAGE_KEY,
-        VOWELS_IT,
-        WORDS_DATA_EN,
-        WORDS_DATA_IT,
+        get_syllable_curriculum,
     )
     from .sillabe_model import SillabeSession
     from .sillabe_renderer import FloatingOrb, LeoCompanion, Particle, SillabeRenderer, SyllableCard, WordTile
@@ -50,7 +47,6 @@ else:
         BG_SKY_TOP,
         CARD_BG,
         CARD_BORDER,
-        CONSONANTS_IT,
         CORAL,
         DARK_TEXT,
         GOLD,
@@ -62,9 +58,7 @@ else:
         SHADOW_COLOR,
         SKY_BLUE,
         STORAGE_KEY,
-        VOWELS_IT,
-        WORDS_DATA_EN,
-        WORDS_DATA_IT,
+        get_syllable_curriculum,
     )
     from sillabe_model import SillabeSession
     from sillabe_renderer import FloatingOrb, LeoCompanion, Particle, SillabeRenderer, SyllableCard, WordTile
@@ -113,11 +107,11 @@ class SillabeApp:
         self._sounds = SoundManager()
         self._renderer = SillabeRenderer(typography)
 
-        words_pool = WORDS_DATA_IT if active_locale == "it" else WORDS_DATA_EN
+        self._curriculum = get_syllable_curriculum(active_locale)
         self._session = SillabeSession(
-            words_pool=words_pool,
-            consonants_pool=list(CONSONANTS_IT),
-            vowels_pool=list(VOWELS_IT),
+            words_pool=list(self._curriculum.words),
+            consonants_pool=self._curriculum.consonants,
+            vowels_pool=self._curriculum.vowels,
         )
         # Load persistent progression
         if storage is not None:
@@ -129,9 +123,9 @@ class SillabeApp:
 
         # Geometry (reference space)
         self._tabs = [
-            ("explorer", "📖 " + ("Sillabario" if active_locale == "it" else "Syllabary"), pygame.Rect(180, 16, 175, 58)),
-            ("catcher", "🎯 " + ("Acchiappa" if active_locale == "it" else "Catch"), pygame.Rect(370, 16, 175, 58)),
-            ("builder", "🧩 " + ("Crea Parole" if active_locale == "it" else "Words"), pygame.Rect(560, 16, 175, 58)),
+            ("explorer", "📖 " + self._curriculum.tabs[0], pygame.Rect(180, 16, 175, 58)),
+            ("catcher", "🎯 " + self._curriculum.tabs[1], pygame.Rect(370, 16, 175, 58)),
+            ("builder", "🧩 " + self._curriculum.tabs[2], pygame.Rect(560, 16, 175, 58)),
         ]
         self._audio_btn_rect = pygame.Rect(755, 14, 68, 62)
         self._star_jar_rect = pygame.Rect(835, 14, 130, 62)
@@ -353,7 +347,7 @@ class SillabeApp:
                         # Consonant Palette Buttons
                         pal_w = 68
                         pal_h = 56
-                        for i, c in enumerate(CONSONANTS_IT):
+                        for i, c in enumerate(self._session.consonants_pool):
                             row = i % 7
                             col = i // 7
                             bx = 40 + col * 76
@@ -503,12 +497,12 @@ class SillabeApp:
             pygame.draw.rect(logical_surf, (248, 242, 230), shelf_rect, border_radius=18)
             pygame.draw.rect(logical_surf, (215, 195, 170), shelf_rect, width=3, border_radius=18)
 
-            pal_title = self._typography.render(display_text("Consonanti"), FontRole.TITLE, 18, DARK_TEXT)
+            pal_title = self._typography.render(display_text(self._curriculum.consonant_heading), FontRole.TITLE, 18, DARK_TEXT)
             logical_surf.blit(pal_title, (shelf_rect.centerx - pal_title.get_width() // 2, 104))
 
             pal_w = 68
             pal_h = 56
-            for i, c in enumerate(CONSONANTS_IT):
+            for i, c in enumerate(self._session.consonants_pool):
                 row = i % 7
                 col = i // 7
                 bx = 38 + col * 78

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 """Pure syllable-magic content tables and visual constants (no pygame).
 
 Content owns all reference sizes, storage key, palette and linguistic tables
@@ -90,6 +92,94 @@ WORDS_DATA_EN: list[tuple[str, tuple[str, str], str, str]] = [
     ("SUNNY", ("SUN", "NY"), "☀️", "sunny"),
 ]
 
+
+# Candidate native-language builder lessons. Orthographic and spoken-syllable
+# accuracy must be approved by native-speaking educators before release.
+# ES/FR are NOT enabled in the Activity manifest and have no accepted speech.
+WORDS_DATA_ES: list[tuple[str, tuple[str, str], str, str]] = [
+    ("CASA", ("CA", "SA"), "🏠", "casa"),
+    ("LUNA", ("LU", "NA"), "🌙", "luna"),
+    ("MESA", ("ME", "SA"), "🍽️", "mesa"),
+    ("PATO", ("PA", "TO"), "🦆", "pato"),
+    ("GATO", ("GA", "TO"), "🐱", "gato"),
+    ("RANA", ("RA", "NA"), "🐸", "rana"),
+    ("NUBE", ("NU", "BE"), "☁️", "nube"),
+    ("BOCA", ("BO", "CA"), "👄", "boca"),
+    ("CAMA", ("CA", "MA"), "🛏️", "cama"),
+    ("PINO", ("PI", "NO"), "🌲", "pino"),
+    ("DADO", ("DA", "DO"), "🎲", "dado"),
+    ("MOTO", ("MO", "TO"), "🏍️", "moto"),
+    ("ROSA", ("RO", "SA"), "🌹", "rosa"),
+    ("PERA", ("PE", "RA"), "🍐", "pera"),
+    ("TAZA", ("TA", "ZA"), "☕", "taza"),
+    ("VASO", ("VA", "SO"), "🏺", "vaso"),
+]
+
+WORDS_DATA_FR: list[tuple[str, tuple[str, str], str, str]] = [
+    ("BATEAU", ("BA", "TEAU"), "⛵", "bateau"),
+    ("LAPIN", ("LA", "PIN"), "🐰", "lapin"),
+    ("ROBOT", ("RO", "BOT"), "🤖", "robot"),
+    ("MAISON", ("MAI", "SON"), "🏠", "maison"),
+    ("VÉLO", ("VÉ", "LO"), "🚲", "velo"),
+    ("MOTO", ("MO", "TO"), "🏍️", "moto"),
+    ("BÉBÉ", ("BÉ", "BÉ"), "👶", "bebe"),
+    ("PAPI", ("PA", "PI"), "👴", "papi"),
+    ("RADIS", ("RA", "DIS"), "🌱", "radis"),
+    ("TÉLÉ", ("TÉ", "LÉ"), "📺", "tele"),
+    ("CHAPEAU", ("CHA", "PEAU"), "🎩", "chapeau"),
+    ("GÂTEAU", ("GÂ", "TEAU"), "🎂", "gateau"),
+    ("SAPIN", ("SA", "PIN"), "🌲", "sapin"),
+    ("CANARD", ("CA", "NARD"), "🦆", "canard"),
+    ("MOUTON", ("MOU", "TON"), "🐑", "mouton"),
+    ("TAPIS", ("TA", "PIS"), "🧶", "tapis"),
+]
+
+
+@dataclass(frozen=True, slots=True)
+class SyllableCurriculum:
+    """One coherent language's child-facing literacy and speech-cue settings."""
+
+    consonants: tuple[str, ...]
+    vowels: tuple[str, ...]
+    words: tuple[tuple[str, tuple[str, str], str, str], ...]
+    tabs: tuple[str, str, str]
+    consonant_heading: str
+    praise_cues: tuple[str, ...]
+
+
+_CURRICULA: dict[str, SyllableCurriculum] = {
+    "it": SyllableCurriculum(
+        tuple(CONSONANTS_IT), tuple(VOWELS_IT), tuple(WORDS_DATA_IT),
+        ("Sillabario", "Acchiappa", "Crea Parole"), "Consonanti",
+        ("esatto", "fantastico", "super", "magnifico", "ottimo", "ben_fatto"),
+    ),
+    "en": SyllableCurriculum(
+        tuple(CONSONANTS_IT), tuple(VOWELS_IT), tuple(WORDS_DATA_EN),
+        ("Syllabary", "Catch", "Words"), "Consonants",
+        ("great_job", "wonderful", "you_did_it", "fantastic", "super", "well_done"),
+    ),
+    "es": SyllableCurriculum(
+        tuple(CONSONANTS_IT), tuple(VOWELS_IT), tuple(WORDS_DATA_ES),
+        ("Sílabas", "Atrapa", "Palabras"), "Consonantes",
+        ("muy_bien", "genial", "lo_lograste"),
+    ),
+    "fr": SyllableCurriculum(
+        tuple(CONSONANTS_IT), tuple(VOWELS_IT), tuple(WORDS_DATA_FR),
+        ("Syllabes", "Attrape", "Mots"), "Consonnes",
+        ("bravo", "tres_bien", "tu_as_reussi"),
+    ),
+}
+
+
+def get_syllable_curriculum(locale: str) -> SyllableCurriculum:
+    """Resolve native lesson data; never silently substitute English/Italian."""
+    language = locale.replace("_", "-").split("-", 1)[0].lower()
+    try:
+        return _CURRICULA[language]
+    except KeyError as exc:
+        raise ValueError(f"unsupported syllable curriculum language: {locale}") from exc
+
+
 __all__ = [
     "REFERENCE_WIDTH",
     "REFERENCE_HEIGHT",
@@ -118,4 +208,8 @@ __all__ = [
     "VOWELS_IT",
     "WORDS_DATA_IT",
     "WORDS_DATA_EN",
+    "WORDS_DATA_ES",
+    "WORDS_DATA_FR",
+    "SyllableCurriculum",
+    "get_syllable_curriculum",
 ]

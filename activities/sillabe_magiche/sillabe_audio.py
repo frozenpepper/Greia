@@ -17,6 +17,11 @@ import wave
 
 import pygame
 
+if __package__:
+    from .sillabe_content import get_syllable_curriculum
+else:
+    from sillabe_content import get_syllable_curriculum
+
 
 def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
     buf = io.BytesIO()
@@ -144,8 +149,7 @@ class SoundManager:
             self.play("pop")
 
     def play_praise(self, locale: str = "it") -> None:
-        praises = ["esatto", "fantastico", "super", "magnifico", "ottimo", "ben_fatto"] if locale == "it" else ["great_job", "wonderful", "you_did_it", "fantastic", "super", "well_done"]
-        chosen = random.choice(praises)
+        chosen = random.choice(get_syllable_curriculum(locale).praise_cues)
         key = f"{locale}:{chosen}"
         if self._get_sound(key) is not None:
             self.play(key)
