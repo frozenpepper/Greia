@@ -209,6 +209,22 @@ you copied `en.json` or created placeholder WAV paths. Preserve
 current English/Italian recording assets and repair only identified
 missing/incorrect cues.
 
+### Source-staged Activity text (2026-10-13)
+
+The first six built-in `es.json`/`fr.json` files under
+`activities/{painting,writing,shape_garden,piccola_serra,memory_meraviglie,clinica_cuccioli}/locales/`
+have full currently catalogued semantic string-key parity with EN/IT,
+but no generated voice assets yet. **The manifests still correctly
+advertise only en/it.** Do not add `es`/`fr` to a manifest or
+fill `audio` mappings with nonexistent WAVs merely because
+translated text exists. Resolve real missing/speaker-assigned
+speech first via the central four-language local-agent voice
+work order, then test UI, actual voice and profile language
+inheritance before release. Test per-language semantic
+interpolation with `tests/test_staged_activity_translations.py`.
+Do not translate a lesson's target content language as if it
+were ordinary UI text.
+
 ## 8. Greia already owns voice production
 
 Normal Activity narration/instructions are **authoring-time prerecorded audio**.
