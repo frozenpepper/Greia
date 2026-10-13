@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from typing import Any
 
 import pygame
@@ -25,6 +26,13 @@ except ImportError:
         get_scaled_asset,
     )
     from .maze_model import BIOMES, DIFFICULTIES, CollectibleStar, MazeState
+
+
+@dataclass(frozen=True, slots=True)
+class MazeHudLabels:
+    difficulty: str
+    biome: str
+    new_maze: str
 
 
 class MazeRenderer:
@@ -119,6 +127,7 @@ class MazeRenderer:
         celebration_particles: list[dict[str, Any]],
         metrics: ChildUiMetrics,
         t_now: float,
+        labels: MazeHudLabels | None = None,
     ) -> None:
         w, h = screen.get_size()
         cs, ox, oy, maze_rect = self.compute_maze_viewport(w, h, state.cols, state.rows, metrics)
@@ -195,19 +204,19 @@ class MazeRenderer:
         db = hud["diff_btn"]
         pygame.draw.rect(screen, (255, 255, 255), db, border_radius=metrics.radius)
         pygame.draw.rect(screen, (56, 189, 248), db, width=2, border_radius=metrics.radius)
-        d_txt = self._render_text(diff["label_it"], FontRole.DISPLAY, metrics.px(18), (3, 105, 161))
+        d_txt = self._render_text(labels.difficulty if labels is not None else str(diff["id"]).title(), FontRole.DISPLAY, metrics.px(18), (3, 105, 161))
         screen.blit(d_txt, (db.centerx - d_txt.get_width() // 2, db.centery - d_txt.get_height() // 2))
 
         # 9c. Biome Switcher Button
         bb = hud["biome_btn"]
         pygame.draw.rect(screen, (255, 255, 255), bb, border_radius=metrics.radius)
         pygame.draw.rect(screen, biome["wall"], bb, width=2, border_radius=metrics.radius)
-        b_txt = self._render_text(biome["name_it"], FontRole.DISPLAY, metrics.px(15), (30, 41, 59))
+        b_txt = self._render_text(labels.biome if labels is not None else "🌍", FontRole.DISPLAY, metrics.px(15), (30, 41, 59))
         screen.blit(b_txt, (bb.centerx - b_txt.get_width() // 2, bb.centery - b_txt.get_height() // 2))
 
         # 9d. New Maze Button
         nb = hud["new_btn"]
         pygame.draw.rect(screen, (251, 191, 36), nb, border_radius=metrics.radius)
         pygame.draw.rect(screen, (217, 119, 6), nb, width=2, border_radius=metrics.radius)
-        n_txt = self._render_text("NUOVO 🔄", FontRole.DISPLAY, metrics.px(16), (120, 53, 15))
+        n_txt = self._render_text(labels.new_maze if labels is not None else "🔄", FontRole.DISPLAY, metrics.px(16), (120, 53, 15))
         screen.blit(n_txt, (nb.centerx - n_txt.get_width() // 2, nb.centery - n_txt.get_height() // 2))
