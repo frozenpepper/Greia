@@ -170,60 +170,89 @@ These are **verified existing obligations**, not generic search terms:
    ledger rows. Do not mark a broad "Momo voice" task complete
    solely from an Activity title WAV.
 
-### 2026-10-13/14 staging: twenty-seven translated Activities (54 title recording candidates)
+### 2026-10-13 current source stage: all 45 built-ins have ES/FR bundles; NOT 45 accepted languages
 
-**Current source tally:** 27 of the 45 built-in Activity packages have
-`locales/es.json` and `locales/fr.json` with translated text.
-The stage has **54 untranslated-to-audio title recordings
-(27 titles × ES/FR)**, plus missing EN/IT/ES/FR shared navigation
-and legacy custom narration. All 54 new locale JSONs
-deliberately have **no `audio` table mappings** and the
-`activity.toml` manifests still list `en,it` only.
-Use `PROGRESS.md` for the exact roster.
+The 45 built-ins now all have staged `locales/es.json` and
+`locales/fr.json` files, but they have intentionally different
+coverage levels:
 
-The new source-driven inventory command above now writes
-`RECORDING_LEDGER.csv` automatically. Its title rows take
-each `activity.title` text from the locale's actual checked-out
-JSON; the proposed output path is
-`activities/<activity>/locales/<locale>/audio/activity-title.wav`.
-Collection voice text (including “My Creations” in all four
-languages) is read from `src/greia_launcher/catalogue_view.py`
-without executing source. Existing files receive a SHA-256
-and `EXISTING_REVIEW_PENDING`, **never automatic approval**.
-A missing file is `MISSING_AUDIO` and unavailable source text
-is `BLOCKED_TEXT`; a malformed output path is
-`PATH_REVIEW_REQUIRED`.
+- **39 packages:** ES/FR bundles have **all currently declared
+  English/Italian text keys**. This is source-key parity, **not**
+  accepted UI, sound or gameplay translation. The latest adds
+  `baia_delle_orche`, `cucciolo_mio`,
+  `la_discesa_della_biglia`, `labirinto_magico`,
+  `mondo_contrari`, `morbidi_mostriciattoli`,
+  `posta_di_leo`, `stelle_incantate`,
+  `storie_della_mia_voce`, `teatrino_fiabe`,
+  `viaggio_delfino` and the 77-key
+  `sottomarino_giramondo`.
+- **Five literacy packages** have translated UI/instructions,
+  but the actual alphabet/rhyme/phonics/syllable/word examples
+  are **NOT adapted to each language**. `foresta_parole`
+  deliberately leaves its 24 English-specific
+  `word.*`/`phonics.*` source keys untranslated instead
+  of lying about language-correct spelling puzzles.
+  `alfabeto_leo`, `festa_delle_rime`,
+  `officina_dei_suoni` and `sillabe_magiche` have
+  source-key parity for UI strings but still need
+  local-language pedagogical content/voice.
+- **Encyclopedia:** ES/FR only the first 51 of 246
+  source text keys (navigation plus lion, elephant,
+  octopus, bee, penguin and frog). **195 keys per locale
+  remain untranslated.** The source declares **200
+  prerecorded audio cue keys per language**; they are
+  not 200 approved English/Italian transcripts and
+  must not be blindly voiced from short UI headings.
 
-**Do not feed the generated CSV directly to the voice engine.**
-It is an *incomplete candidate census*, not the approved
-production manifest. For every row, review exact locale text,
-speaker, `SpeechKind` and output path, then add any missing
-runtime-loaded cues (e.g. Momo Lights voice, Orca facts,
-Submarine commands, Stars curiosities, the Encyclopedia's
-extensive narrated facts, Parent/Shell prompts and My Time's
-incubator cues). Use registered character voices without
-substitution. The inventory explicitly names code modules
-requiring manual attention.
+**At least 90 missing ES/FR Activity title voice candidates**
+(45 titles × two languages) appear in the generated
+`RECORDING_LEDGER.csv`. This is only a small subset:
+`sottomarino_giramondo` alone declares 55
+source audio cues per locale, including button actions,
+orders and 32 marine fact scripts. ES/FR textual
+marine facts are now drafted, **not recorded**; other
+audio cues without authored scripts remain
+`BLOCKED_TEXT`. Dolphin Journey has seven existing
+EN/IT narrated cues now explicitly linked to their
+caption keys in its two source locale bundles:
+review those captions against each existing recording
+before treating them as transcripts. Its ES/FR
+dialogue/facts are still text-only.
 
-**Known translation-specific blockers:**
-- `treno_numeri` currently builds `prompt.load` with
-  a count and an item name that is *always plural*.
-  A cue such as 1 apple would form “1 manzanas” / “1 pommes”
-  in ES/FR. Resolve singular/plural grammar in the source
-  consumer, translations and resulting speech requests before
-  presenting this educational activity as French/Spanish-ready.
-- `casa_del_dieci` and `bosco_numeri` use literal `$target`
-  and `$num` interpolation tokens. Preserve them in all text
-  sources; do not insert token names into spoken recordings.
-- `bottega_delle_misure`: distinguish *shorter length*
-  from *less tall* in Spanish/French pedagogical guidance.
-- Alphabet, syllable, rhyme and phonics Activities require
-  **language-specific curriculum/content adaptation**, not
-  simply translating their instructional interface.
-- My Time is still an incubator, not a released Activity;
-  its previously approved EN/IT voice brief remains the
-  speech-source authority, with ES/FR scripts to be authored
-  and approved before synthesis.
+Generate the ledger using the exact command in §2.
+Its source title text, expected paths and original
+asset hashes are real source facts, but every row's
+`speaker`, `kind`, provider, script approval and
+human audio acceptance must be filled separately.
+`EXISTING_REVIEW_PENDING` does not mean approved.
+
+**Known language and content review requirements:**
+- Number Train's `prompt.load` plural item names
+  are currently **dormant**: the active puzzle is
+  graphical and generated target counts are at least
+  two. It is *not* a reproduced 1-item gameplay bug.
+  If a localized text/spoken prompt is later wired
+  into runtime, author count-sensitive phrasing first.
+- `casa_del_dieci`, `bosco_numeri`,
+  `viaggio_delfino` and `foresta_parole`
+  use literal `$target`, `$num`, `$count`,
+  `$word` or `$letter` template markers.
+  Never read the markers aloud or erase them during
+  locale copy authoring.
+- `bottega_delle_misure` must distinguish length
+  from height in Spanish and French.
+- Curriculum Lessons (letters, syllables, rhyme and
+  phonics) require real locale-relative lesson data
+  and accepted speech; a visually translated menu
+  does **not** establish proper educational behavior.
+- `enciclopedia_greia` and
+  `sottomarino_giramondo` require narrative/science
+  review and exact transcript provenance per cue,
+  especially where English and Italian audio have
+  richer narration than the on-screen titles.
+- Existing My Time incubator EN/IT
+  `VOICE_PRODUCTION_BRIEF.md` remains authoritative;
+  review ES/FR scripts separately before synthesis.
 
 Do not assume that per-locale JSON `audio` covers *every*
 spoken line: some legacy Activities still select WAVs
