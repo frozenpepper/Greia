@@ -1256,3 +1256,43 @@ A neighbouring source-only render-path check confirmed that Number Train and Won
 `activities/viaggio_delfino/delfino_app.py` had correct localized `completion.*` keys and normal `_text` resolution but still used fixed `BRAVO!`/`ANCORA!` as failure-path defaults. It now uses neutral `🐬🌟`/`🔄` symbols when package resources cannot resolve, preserving normal localized completion and audio behavior. `tests/test_four_language_activity_runtime_text.py` now contains **10** source tests (previous 8), covering both this fallback and Opposites semantic-key usage. The four target JSON inventories remain structurally intact; this turn added **zero locale keys** because the ten Opposites strings and Dolphin completion words already existed.
 
 **Evidence and release boundary:** Verified the GitHub source definitions and committed changes; did **not** run Python/unittest, actual graphics at 1024×600 or 800×480, Pygame font/glyph test, speech recording/listening, installed OS or human semantic QA. GLA-015 now includes dedicated Opposites four-locale renderer suite, English/Italian child-facing state labels, ES/FR test-only injection, and Dolphin completion missing-resource path. No supported-language registry change, no manifest promotion, no Parent external-client pin change and no claim of complete four-language localization.
+
+
+## 2026-10-14 — Owner-approved existing text translations; voice work order dispatched (DOCUMENTATION/AUTHORIZATION)
+
+The owner explicitly **approves all currently authored English, Italian,
+Spanish and French text translations** and requests recording **every
+missing voice in all four languages**, going through **all 45 built-in
+Activities** as well as all other Greia spoken surfaces. This authorizes
+using already available zero-new-spend local registered Greia Voice Engine
+providers immediately for source-backed exact utterances. New paid Modal
+cloud jobs, large provider/model installation and open-ended spending were
+not authorized; those require separately specified resources and approval.
+The Modal `VoiceProvider` is not implemented at this source checkpoint.
+
+Created the standalone task-specific execution document
+`LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md` in this plan folder.
+The agent must enumerate 45 apps, inspect code-loaded as well as
+catalogue-declared audio, record the 45×4 app/locale status matrix, work
+each Activity EN/IT/ES/FR, then shared Shell/launcher/Parent, system
+labels, My Time and character speech. The script includes exact Git
+sync, inventory, doctor, canonical batch engine, review, resumability
+and evidence handoff instructions. It makes the existing
+`LOCAL_AGENT_VOICE_PRODUCTION.md` its detailed cue/voice policy and
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` its sole status queue.
+
+**Scope accuracy:** owner approval accepts extant text *as content for
+voice authoring*, not not-yet-written full narration transcripts,
+unstated name/phoneme pronunciations, or any genuinely unlocalized
+inline runtime copy. Missing distinct spoken scripts remain
+`BLOCKED_SCRIPT` for the relevant cue only, while other ready clips
+proceed. Approval is not a substitute for a person hearing generated
+audio, for tests, correct rendering, accessibility, offline acceptance
+or L6 Spanish/French system-language promotion.
+
+**Evidence:** the GitHub worktree's committed contents plus readback;
+no voice generation, hardware or locally run Pygame/CLI executed
+in this authoring session. The local agent will produce the actual
+recording ledger, WAV/OGG candidates, receipts, review evidence,
+gap list and resumable ZIP under ignored `tmp/` and hand it back for
+reviewed integration into `main`.
