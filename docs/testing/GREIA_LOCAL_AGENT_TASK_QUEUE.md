@@ -584,7 +584,7 @@ test commands and expected observable behavior.
   **voice generation:** BLOCKED pending reviewed text, supported
   provider and explicit paid/model run authority.
 - **Priority:** P1; **minimum source SHA:**
-  `46321689d43f2e492cb22ffad743bc35ade98309`.
+  `90399e1ad79af37742fb1c1746b0442a7600bf26`.
 - **Source authority:**
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
   Follow the sibling **`LOCAL_AGENT_VOICE_PRODUCTION.md`** exactly
@@ -600,7 +600,7 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_system_language.py' -v
   python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
   python3 -m unittest discover -s tests -p 'test_four_language_inventory.py' -v
-  python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-four-language-coverage.json
+  python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-four-language-coverage.json --recording-ledger tmp/greia-four-language-recordings.csv
   PYTHONPATH=src python3 tools/audit_launcher_spoken_labels.py --locales en it --json
   make verify
   ```
@@ -643,11 +643,11 @@ test commands and expected observable behavior.
   reason to weaken the audit or fake placeholder recordings.
 - **Last result:** SOURCE COMMITTED; UNEXECUTED on current main.
 
-### GLA-015 — Parent panel locale path and thirteen staged Activity translations
+### GLA-015 — Full on-device Parent localization and 27 staged Activity text packs
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `1e75dafeec890698c51a7057bb0d990f8aa6ec05`.
+- **Priority:** P1; **minimum source SHA:** `90399e1ad79af37742fb1c1746b0442a7600bf26`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
@@ -660,7 +660,7 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_staged_activity_translations.py' -v
   python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
   python3 -m unittest discover -s tests -p 'test_system_language.py' -v
-  python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-GLA015-locale-coverage.json
+  python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-GLA015-locale-coverage.json --recording-ledger tmp/greia-GLA015-recordings.csv
   make verify
   ```
   Replace the example inventory path with the run's unique ignored
@@ -679,11 +679,14 @@ test commands and expected observable behavior.
   settings directory, never mutate an owner's real Parent password
   or profile. Preview Spanish/French stage copy *using test injection*
   only, with no changed supported-language registry.
-- **Thirteen staged Activity text packs:** `painting`, `writing`,
-  `shape_garden`, `piccola_serra`, `memory_meraviglie`,
-  `clinica_cuccioli`, `acquario_magico`, `torre_forme`,
-  `volo_draghetto`, `colline_allegre`, `quattro_stagioni`,
-  `corsa_bacche`, and `bottega_delle_misure`.
+- **27 staged Activity text packs:** the original 13 plus
+  `bosco_numeri`, `il_giardino_dei_numeri`, `faccine_momo`,
+  `luci_di_momo`, `costruiamo_ponti`, `casa_del_dieci`,
+  `workshop_settings`, `specchi_magici`, `nascondino_bosco`,
+  `nanna_delle_nuvolette`, `orchestra_animali`,
+  `treno_numeri`, `quattro_amici`, `pasticceria_magica`.
+  Read the exhaustive roster in
+  `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`.
   Confirm ES/FR JSON is parseable, matches all
   EN/IT semantic keys, preserves `{count}`, `{found}`,
   `{total}`, `{moves}` placeholders and does not claim recorded
@@ -696,6 +699,17 @@ test commands and expected observable behavior.
   new languages: here "shorter" means lower/less tall, while the
   horizontal measure uses shorter length. Ask a native-language
   reviewer to check the pedagogical distinction in context.
+  The Number Train's current source plural-only item names
+  form incorrect singular phrases in ES/FR; record
+  `BLOCKED_GRAMMAR` until the owner resolves the language-specific
+  singular/plural contract. Verify that literal `$target` and
+  `$num` tokens remain in number Activities. The Parent tab now
+  covers accounts/security/audio/pointer/Wi-Fi/SSH/info; assess
+  every tab's real visible text and data safety, including
+  destructive child-profile confirmation in each locale.
+  Capture `RECORDING_LEDGER.csv` with actual source title
+  texts and existing-file SHA-256; it is a draft until
+  manually expanded with code-loaded cues and approved.
 - **Expected evidence:** exact checkout SHA, per-command exit code,
   sample multilingual screenshots and measured text fits,
   key-parity report and accurate missing-voice list; archive output
