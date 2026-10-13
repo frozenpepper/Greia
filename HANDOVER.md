@@ -1,5 +1,68 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-13 — Multilingual continuation L3/L4: real Parent UI + six built-in text packs (SOURCE WIP)
+
+**GitHub-only substantive source work** on the owner-authorized
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+Current exact state and remaining tasks:
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`.
+The sole local-agent queue gained **GLA-015** for new
+source/UI checks; prior GLA-014 covers initial selector/source
+and the `LOCAL_AGENT_VOICE_PRODUCTION.md` owns semantic spoken
+content across all four locales. Do not generate voice under
+an unapproved provider or mark ES/FR globally supported.
+
+**Committed implementation:**
+
+1. Four-language semantic messages for installed on-device
+   Parent password/unlock/error, tabs, header and device-language
+   interface: `src/greia_launcher/panel_localization.py`.
+   `ParentSettingsOverlay` uses device locale from the existing
+   authoritative setting service, and cache keys include locale
+   so the Parent panel changes displayed strings after
+   switching. Password/card and language labels use the
+   existing measured fitting; service errors and user data are
+   not blindly passed through translation.
+   Tests `tests/test_panel_localization.py` (10 methods).
+2. The first installer chooser now centres the two genuinely
+   selectable languages and displays their native names;
+   the false twelve-slot layout and an es/fr teaser
+   were dropped. The original safe install transaction is
+   unchanged.
+3. Six first-party Activities now have staged exact-key
+   `locales/es.json` and `locales/fr.json` copies:
+   `painting`, `writing`, `shape_garden`,
+   `piccola_serra`, `memory_meraviglie`,
+   `clinica_cuccioli` (66 messages/language).
+   Translations are authored, but **not yet reviewed by native
+   speakers**. They contain no synthetic audio mappings,
+   while manifests still claim only actual EN/IT support.
+   Tests `tests/test_staged_activity_translations.py`
+   (3 methods), checking semantic keys, placeholders,
+   and honest deferred language metadata.
+
+**Evidence:** source committed on `main` with GitHub
+readback/commit provenance. Not tested in live local
+checkout: no unittests, `make verify`, GUI, audio,
+Parent HTML client build, installer image, Acer/Pi
+hardware or native review in this slice.
+Do not derive a simulated PASS from original archived
+Wave or pre-locale tests.
+
+**Next:** (a) local GLA-014/015 verification on the exact
+current SHA, first-failure stop; (b) continue L3 Parent
+forms/Shell notifications and L4 Activity/encyclopedia
+text extraction, retaining child content-language
+semantics; (c) local agent compiles voice ledger including
+known missing EN/IT My Creations and My Time clips and
+new ES/FR Activity titles; (d) integrate reviewed Modal
+provider only under the existing VoiceEngine interface
+and after explicit spending authorization; (e) promote
+languages only after complete text+sound+GUI+hardware
+release acceptance. Existing install/update lifecycle,
+Creations and Activity-quality release blockers are
+unchanged.
+
 ## 2026-10-12 — Language support L0/L1/L2 launch (SOURCE WIP, not release accepted)
 
 **Owner-authorized new scoped workstream:**
