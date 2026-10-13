@@ -584,7 +584,7 @@ test commands and expected observable behavior.
   **voice generation:** BLOCKED pending reviewed text, supported
   provider and explicit paid/model run authority.
 - **Priority:** P1; **minimum source SHA:**
-  `90399e1ad79af37742fb1c1746b0442a7600bf26`.
+  `cd3d220d5413120ff888d0ce2abc20bb9c127d57`.
 - **Source authority:**
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
   Follow the sibling **`LOCAL_AGENT_VOICE_PRODUCTION.md`** exactly
@@ -643,11 +643,11 @@ test commands and expected observable behavior.
   reason to weaken the audit or fake placeholder recordings.
 - **Last result:** SOURCE COMMITTED; UNEXECUTED on current main.
 
-### GLA-015 — Full on-device Parent localization and 27 staged Activity text packs
+### GLA-015 — Parent localization and 45 bilingual Activity source packs
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `90399e1ad79af37742fb1c1746b0442a7600bf26`.
+- **Priority:** P1; **minimum source SHA:** `cd3d220d5413120ff888d0ce2abc20bb9c127d57`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
@@ -679,37 +679,48 @@ test commands and expected observable behavior.
   settings directory, never mutate an owner's real Parent password
   or profile. Preview Spanish/French stage copy *using test injection*
   only, with no changed supported-language registry.
-- **27 staged Activity text packs:** the original 13 plus
-  `bosco_numeri`, `il_giardino_dei_numeri`, `faccine_momo`,
-  `luci_di_momo`, `costruiamo_ponti`, `casa_del_dieci`,
-  `workshop_settings`, `specchi_magici`, `nascondino_bosco`,
-  `nanna_delle_nuvolette`, `orchestra_animali`,
-  `treno_numeri`, `quattro_amici`, `pasticceria_magica`.
-  Read the exhaustive roster in
-  `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`.
-  Confirm ES/FR JSON is parseable, matches all
-  EN/IT semantic keys, preserves `{count}`, `{found}`,
-  `{total}`, `{moves}` placeholders and does not claim recorded
-  Spanish/French voice or manifest support. Review text fit at
-  1024×600/800×480 via existing Simulator/test-locales only when
-  supported by its injection APIs; otherwise note PREVIEW BLOCKED.
-  Do not fake supported Spanish/French Activity launch by changing
-  manifests/flags or copying English WAVs. Check the workshop's
-  `prompt.compare_shorter_h` and `prompt.order_height` in both
-  new languages: here "shorter" means lower/less tall, while the
-  horizontal measure uses shorter length. Ask a native-language
-  reviewer to check the pedagogical distinction in context.
-  The Number Train's current source plural-only item names
-  form incorrect singular phrases in ES/FR; record
-  `BLOCKED_GRAMMAR` until the owner resolves the language-specific
-  singular/plural contract. Verify that literal `$target` and
-  `$num` tokens remain in number Activities. The Parent tab now
-  covers accounts/security/audio/pointer/Wi-Fi/SSH/info; assess
-  every tab's real visible text and data safety, including
-  destructive child-profile confirmation in each locale.
-  Capture `RECORDING_LEDGER.csv` with actual source title
-  texts and existing-file SHA-256; it is a draft until
-  manually expanded with code-loaded cues and approved.
+- **All 45 built-in Activity directories now contain staged ES/FR
+  JSON bundles, but are NOT 45 fully localized games.** Check:
+  - 39 full *source string-key parity* packages including
+    `viaggio_delfino`, `baia_delle_orche`,
+    `stelle_incantate`, `sottomarino_giramondo`
+    (55 source audio cues per locale).
+  - Five reading/phonics/rhyme/alphabet packages with
+    translated instructions but no language-specific
+    curriculum/voice adaptation. `foresta_parole` leaves
+    24 English-dependent examples deliberately absent
+    in ES/FR; do not copy English examples to obtain a
+    false key-parity PASS.
+  - Encyclopedia ES/FR contains 51/246 source keys
+    (six animal chapters + navigation), **195 missing**;
+    source declares **200 narration cues/locale** which
+    require real scripts and human review, not UI
+    headings used as fake transcripts.
+  - All manifest locale lists still only `en,it`,
+    all staged ES/FR `audio` maps still empty,
+    and the system language selector only EN/IT.
+  Run `test_staged_activity_translations.py` to ensure
+  these deliberate boundaries stay explicit; run the
+  coverage JSON to read `stage`,
+  `advertised_by_manifest`, `audio_missing_or_unmapped`
+  separately. Preserve literal `$word`, `$letter`,
+  `$count`, `$target` and curly placeholders.
+  Current Number Train source generates targets >=2 and
+  renders the puzzle graphically; do **not** diagnose
+  a 1-item singular bug without runtime evidence.
+  Check measurement height-vs-length distinctions
+  and dolphin narrator caption links. Review exactly
+  the current language facts and voice scripts in the
+  production ledger, not English subtitles copied
+  as finished audio.
+  For GUI preview, focus on a representative sample
+  of translated controls/text with 1024×600 and
+  800×480, plus explicit notes on unrendered/blocked
+  locales; never change manifests to make a screenshot
+  look multilingual. The recording CSV includes
+  **at least 90 ES/FR Activity-title candidates** plus
+  many other narration requirements. Inspect/reconcile
+  per voice; do not feed it straight to the generator.
 - **Expected evidence:** exact checkout SHA, per-command exit code,
   sample multilingual screenshots and measured text fits,
   key-parity report and accurate missing-voice list; archive output
