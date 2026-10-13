@@ -1,3 +1,30 @@
+## 2026-10-13 — Parent browser first-run locales staged (100 keys, SOURCE-WIP)
+
+**Greia OS GitHub main:** `3cf5065ca1bd55a0d1f0eb573e51501f046a5d5a`
+(before this documentation commit).
+**External browser GitHub main:** `frozenpepper/Greia-Parent-App-Html`
+`ec0bf413ca0e62e0c612e4916ff18854d2f70846`.
+
+The external Parent browser now has **100 semantic EN/IT/ES/FR
+message keys**, including live source wiring for Greia device
+discovery/chooser, connecting/retry/error screens and actual
+Parent-password entry/feedback. This extends the prior
+61-key navigation/chrome/setting/speaker integration while
+preserving the API's canonical `language.languages` picker,
+same-origin/discovery safety and password-based authentication.
+Translation files and tests are committed but no Node tests,
+real browser, native speaker validation or installed Greia
+acceptance have executed. Home/Children/Activities and
+many Device management details remain English.
+
+**Do not repin** `runtime/parent-app-client.toml` or its
+byte-integrity manifest until complete browser translations,
+source tests and real authorized acceptance. ES/FR device
+choices and Activity manifests remain restricted.
+The separate Parents repo `HANDOVER.md` is current.
+See multilingual progress ledger for accurate source counts
+and the next work (remaining UI extraction and reviewed voices).
+
 ## 2026-10-13 — Syllable correctness repair and external Parent browser translations (SOURCE-WIP)
 
 **Greia OS source:** `main` 07a700310d26e40592353a5243ea36954287ea9d

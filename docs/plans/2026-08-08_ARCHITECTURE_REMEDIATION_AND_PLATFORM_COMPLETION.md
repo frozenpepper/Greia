@@ -3246,3 +3246,17 @@ exist but Python/Node, visual/native speaker,
 audio/hardware, and installed Parent acceptance
 have NOT run. Active architectural/lifecycle gates
 remain open; no release gate is closed.
+
+
+### 2026-10-13 — External Parent HTML initial connection and password copy (source-only)
+
+The dedicated Parents HTML repository expanded its semantic
+EN/IT/ES/FR source vocabulary from 61 to **100 messages** and
+now routes device discovery, Greia chooser, connection errors,
+loading, and password authentication through that catalogue.
+Device selection, API transport, password validation and
+credential isolation remain unchanged. This was GitHub-source
+authoring only: no Node execution, browser screenshots, or
+pinned Parent HTML runtime rebuild. More Parent views still
+require localization; ES/FR system languages and all
+hardware/release acceptance gates remain blocked.

@@ -782,7 +782,8 @@ test commands and expected observable behavior.
   approved science scripts and human review.
   Separate Parent browser repo source at
   `frozenpepper/Greia-Parent-App-Html` now stages
-  61 EN/IT/ES/FR chrome keys. When the checked-out
+  100 EN/IT/ES/FR chrome keys, now including the real
+  discovery/chooser/error and Parent-password screens. When the checked-out
   external browser source is available, run `npm test`
   at its exact current `main` HEAD with no remote
   dependency installation or new API host, log command

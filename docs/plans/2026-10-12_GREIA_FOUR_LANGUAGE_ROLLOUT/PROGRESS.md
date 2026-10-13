@@ -958,3 +958,31 @@ voices, physical Greia installs or hardware acceptance
 were run. Task queue GLA-015 tracks future source/GUI
 checks; do not ask a device agent to do paid voice work
 without exact approved scripts.
+
+
+### 2026-10-13 — External Parents browser discovery/authentication text integration
+
+After the initial 61-key browser chrome slice, the separately
+owned `frozenpepper/Greia-Parent-App-Html` repository advanced:
+- `3b0003cf` adds 39 additional semantic EN/IT/ES/FR copy
+  messages for discovery, connecting, chooser, retry/errors,
+  loading and password authentication.
+- `ed4ac5d9` integrates those messages into the actual
+  Parent first-run/connection/authentication paths, preserving
+  existing Parent API password pairing, device-scoped
+  credentials, and safe `textContent` rendering.
+- `ec0bf413` updates the separate repository's handover
+  and developer README.
+
+The external first-party source now contains **100 distinct
+EN/IT/ES/FR staged browser message IDs** (100×4 translations),
+superseding the preceding 61-key checkpoint. The device
+language chooser STILL uses the API's live
+`snapshot.language.languages`, never those message IDs.
+All four source translation sets are authored but not
+human-reviewed. This is not full browser UI coverage:
+Home/Children/Activities and deeper device forms remain
+English; live normal login/discovery, browser layout,
+Node tests and production file-integrity sealing are
+**not executed**. No change to Greia OS's installed Parent
+client pin. No ES/FR device promotion.
