@@ -107,7 +107,9 @@ current GitHub tree, run:
 
 ```bash
 python3 tools/audit_greia_language_coverage.py \
-  --root . --output "$RUN/inventory/language-coverage.json"
+  --root . \
+  --output "$RUN/inventory/language-coverage.json" \
+  --recording-ledger "$RUN/inventory/RECORDING_LEDGER.csv"
 echo "$?" > "$RUN/inventory/language-coverage.exit"
 ```
 
@@ -168,42 +170,60 @@ These are **verified existing obligations**, not generic search terms:
    ledger rows. Do not mark a broad "Momo voice" task complete
    solely from an Activity title WAV.
 
-### 2026-10-13 staging: thirteen translated Activity title cues per new language
+### 2026-10-13/14 staging: twenty-seven translated Activities (54 title recording candidates)
 
-Spanish/French `locales/es.json` and `locales/fr.json`
-contain actual authored UI text for **thirteen** built-in Activities:
-`painting`, `writing`, `shape_garden`, `piccola_serra`,
-`memory_meraviglie`, `clinica_cuccioli`,
-`acquario_magico`, `torre_forme`, `volo_draghetto`,
-`colline_allegre`, `quattro_stagioni`,
-`corsa_bacche` and `bottega_delle_misure`.
-The `audio` tables are deliberately **empty** and their manifests
-still advertise only EN/IT. This is a staging condition, not
-permission to copy existing English/Italian WAVs.
+**Current source tally:** 27 of the 45 built-in Activity packages have
+`locales/es.json` and `locales/fr.json` with translated text.
+The stage has **54 untranslated-to-audio title recordings
+(27 titles × ES/FR)**, plus missing EN/IT/ES/FR shared navigation
+and legacy custom narration. All 54 new locale JSONs
+deliberately have **no `audio` table mappings** and the
+`activity.toml` manifests still list `en,it` only.
+Use `PROGRESS.md` for the exact roster.
 
-For this batch include **26 different ledger rows**:
-`activity.title × {thirteen Activities} × {es,fr}`.
-Read the exact approved initial title text from each checked-out
-locale JSON and set `speaker=UNASSIGNED`,
-`kind=UNASSIGNED` until canonical speaker authority decides
-the voice for each. Planned consuming path:
-`activities/<activity>/locales/<locale>/audio/activity-title.wav`;
-this path is **not yet populated**. These title strings are
-draft source translations, not human-reviewed speech scripts.
-As needed the authoring agent will revise them before freezing
-the recording ledger. Maintain the same child-recognizable
-presenter identity where the title has a canonical narrator.
+The new source-driven inventory command above now writes
+`RECORDING_LEDGER.csv` automatically. Its title rows take
+each `activity.title` text from the locale's actual checked-out
+JSON; the proposed output path is
+`activities/<activity>/locales/<locale>/audio/activity-title.wav`.
+Collection voice text (including “My Creations” in all four
+languages) is read from `src/greia_launcher/catalogue_view.py`
+without executing source. Existing files receive a SHA-256
+and `EXISTING_REVIEW_PENDING`, **never automatic approval**.
+A missing file is `MISSING_AUDIO` and unavailable source text
+is `BLOCKED_TEXT`; a malformed output path is
+`PATH_REVIEW_REQUIRED`.
 
-Beyond title WAVs, inventory every remaining narrated cue,
-spoken instruction and dynamic speech in these Activities,
-including code-loaded assets not present in `audio`.
-`bottega_delle_misure` has distinct horizontal
-length and vertical height comparison prompts; a native
-reviewer must preserve this educational distinction.
-Neither finished `audio.activity.title` mappings nor
-manifest `languages` may be promoted until all remaining
-required spoken content, source and real UX acceptance
-for that locale pass.
+**Do not feed the generated CSV directly to the voice engine.**
+It is an *incomplete candidate census*, not the approved
+production manifest. For every row, review exact locale text,
+speaker, `SpeechKind` and output path, then add any missing
+runtime-loaded cues (e.g. Momo Lights voice, Orca facts,
+Submarine commands, Stars curiosities, the Encyclopedia's
+extensive narrated facts, Parent/Shell prompts and My Time's
+incubator cues). Use registered character voices without
+substitution. The inventory explicitly names code modules
+requiring manual attention.
+
+**Known translation-specific blockers:**
+- `treno_numeri` currently builds `prompt.load` with
+  a count and an item name that is *always plural*.
+  A cue such as 1 apple would form “1 manzanas” / “1 pommes”
+  in ES/FR. Resolve singular/plural grammar in the source
+  consumer, translations and resulting speech requests before
+  presenting this educational activity as French/Spanish-ready.
+- `casa_del_dieci` and `bosco_numeri` use literal `$target`
+  and `$num` interpolation tokens. Preserve them in all text
+  sources; do not insert token names into spoken recordings.
+- `bottega_delle_misure`: distinguish *shorter length*
+  from *less tall* in Spanish/French pedagogical guidance.
+- Alphabet, syllable, rhyme and phonics Activities require
+  **language-specific curriculum/content adaptation**, not
+  simply translating their instructional interface.
+- My Time is still an incubator, not a released Activity;
+  its previously approved EN/IT voice brief remains the
+  speech-source authority, with ES/FR scripts to be authored
+  and approved before synthesis.
 
 Do not assume that per-locale JSON `audio` covers *every*
 spoken line: some legacy Activities still select WAVs
@@ -223,10 +243,13 @@ source,locale,speaker,kind,cue_id,exact_text,caption_key,output_path,existing_as
 - Unique `(source,locale,speaker,cue_id)`; never reuse a
   similar-sounding sentence in a different pedagogical context
   without the product owner approving semantic reuse.
-- `state` is one of: `EXISTING_ACCEPTED`,
-  `MISSING_AUDIO`, `BLOCKED_TEXT`, `READY_TO_GENERATE`,
+- `state` is one of: `EXISTING_REVIEW_PENDING`,
+  `EXISTING_ACCEPTED`, `MISSING_AUDIO`, `BLOCKED_TEXT`,
+  `PATH_REVIEW_REQUIRED`, `READY_TO_GENERATE`,
   `GENERATED_REVIEW_PENDING`, `ASR_WARNING`,
   `REJECTED`, `HUMAN_ACCEPTED`, `INTEGRATED`.
+  Never mark `EXISTING_ACCEPTED` based on a hash or file
+  presence alone; the owner needs provenance and human review.
 - Include **all four locales** per required cue, including EN/IT
   legacy gaps. Skip only a documented inherently language-neutral
   nonverbal sound; do not re-record music/SFX in a language.
