@@ -160,9 +160,9 @@ def audit_panel_messages() -> list[str]:
                 errors.append(f"{key}/{locale}: empty message or placeholder mismatch")
     return errors
 
-// Named legacy Parent form constants retain their English ownership in
-// panel_strings. Localizations are keyed by the same semantic identifier,
-// not by substring-matching user data or maintaining a second English base.
+# Named legacy Parent form constants retain their English ownership in
+# panel_strings. Localizations are keyed by the same semantic identifier,
+# not by substring-matching user data or maintaining a second English base.
 from greia_launcher import panel_strings as _source_copy
 
 _FORM_TRANSLATIONS: dict[str, dict[str, str]] = {
