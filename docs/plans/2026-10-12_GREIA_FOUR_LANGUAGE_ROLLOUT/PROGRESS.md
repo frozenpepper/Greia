@@ -1036,3 +1036,82 @@ ES/FR still must NOT become selectable system languages or
 Activity languages. Continue translating real UI owners,
 then run normal source/browser tests and repin only after
 the accepted exact-byte integration procedure.
+
+
+### 2026-10-13 — Complete first-pass deep Parent HTML Device UI text integration and audited distance-to-text-completion (SOURCE-WIP)
+
+External browser source owner `frozenpepper/Greia-Parent-App-Html`
+advanced to `db14662dbdf6879b6883ab5172dfb3869821e44b`
+on `main`. Actual Device management controls now use
+EN/IT/ES/FR semantic translations for Wi-Fi network connection,
+input/display/microphone processing, Parent password,
+SSH maintenance, paired devices, OS update upload/status, and
+accessibility/initial HTML. The Parent source catalogue has
+**373 distinct message IDs**, each with all four language
+values and matching variable-placeholder sets. The menu
+model's unused English copies were removed.
+
+**Source verification actually performed:** all 13 browser
+`src/*.js` files pass in-session JavaScript syntax parsing
+(no Node `npm test` yet); static key-reference audit,
+including `index.html`, found **357 distinct literal
+referenced IDs, zero missing entries, zero interpolation
+mismatches**, and zero occurrences of `innerHTML` in those
+13 source modules. The semantic device API/capability
+and existing operating language constraints were unchanged.
+A focused deep Device messages source test was committed
+but is unexecuted under Node. The installed Greia Parent
+client remains at its previous pinned exact-byte version;
+the new external source is NOT shipped or promoted.
+
+**Measured text authoring facts rather than a fake global
+percentage:**
+- Installer has **108 identical reference keys** in current
+  IT, ES and FR maps, with English as source/fallback.
+  Actual rendering/translated warning review is unaccepted.
+- **45/45 built-in Activities** have EN/IT/ES/FR JSON text
+  bundles with the pre-existing reference-key parity audit.
+  That audit explicitly does NOT prove absence of inline
+  strings or complete educational/encyclopedia content.
+  Five language-learning Activities have native ES/FR
+  candidate curricula, not teacher-approved linguistic facts.
+- External Parent HTML now has **373/373 complete locale
+  entries per language**, with source wiring for main UI
+  views and Device controls. Server-returned dynamic
+  error strings are separate OS/API localization work.
+- On-device Parent is further along than old comments
+  suggest: `src/greia_launcher/panel_localization.py`
+  already owns four-language semantic strings and named
+  form translations. A discovered set of **three invalid
+  `//` comments** in this Python file was repaired to
+  `#` at Greia commit `68434184`; the complete Python
+  suite has not been run to prove runtime import.
+- Shell/creations/launcher inline text, user-visible
+  generated strings and encyclopedia knowledge text still
+  require an exhaustive extraction-and-use audit. Merely
+  counting text keys cannot provide a defensible global
+  100%-completion percentage.
+
+**Outstanding *text-only* completion work:**
+1. Enumerate and remove the residual unowned runtime
+   English/Italian literals in Shell/Creations/launcher,
+   Activity mechanics and Parent API error paths; prove
+   every visible copy owner resolves EN/IT/ES/FR.
+2. Audit content completeness/accuracy: encyclopedia facts,
+   language-learning phonemes/segmentation/grammar, nouns,
+   plurals and child-facing labels in ALL 45 Activities.
+3. Run source checks (including the Python import after
+   the corrected panel source), full `npm test`, real
+   translated UI screenshots at target viewports, and
+   native EN/IT/ES/FR editorial proofread.
+4. After complete accepted browser source, execute the
+   separate existing Parent client content-pin and hash
+   integration. System ES/FR language selection still
+   remains disabled by intentional L6 policy, independently
+   of text staging. Voice/recording work remains a separate
+   non-text release blocker.
+
+No images were built, no hardware was operated, no audio was
+generated and neither Python nor Node full suites ran in this
+GitHub-only source continuation. The earlier source key
+counts must not be used as a claim of shipped translation.

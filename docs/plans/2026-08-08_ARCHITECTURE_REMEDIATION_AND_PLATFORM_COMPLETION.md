@@ -3278,3 +3278,23 @@ does not replace full `npm test` or runtime/UI validation.
 The Greia OS Parent HTML revision/hash pin, device languages,
 Activity manifests, installer and lifecycle gates remain
 unchanged. No remediation/hardware/release gate is closed.
+
+
+### 2026-10-13 — Four-language deep Device text and panel Python syntax repair (no release closure)
+
+The separately owned Parent browser now stages 373
+EN/IT/ES/FR semantic keys, integrated across Home,
+Children, Activities, discovery and deep Device forms.
+13 JavaScript source files parse in the available
+authoring JS engine; zero missing static referenced
+translation keys or placeholder differences under
+source inspection. Source `npm test` and browser
+acceptance remain open. In Greia OS itself, replaced
+three invalid `//` lines with Python `#` comments
+inside `greia_launcher/panel_localization.py`;
+the panel owns four-language semantic/form resources,
+but the repair has NOT passed a real Python suite.
+OS runtime Parent HTML pin, language selector and
+all installation/lifecycle gates remain unchanged.
+A full residual inline-Shell and educational-content
+text audit and native proofreading are still required.

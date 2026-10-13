@@ -782,21 +782,31 @@ test commands and expected observable behavior.
   approved science scripts and human review.
   Separate Parent browser repo source at
   `frozenpepper/Greia-Parent-App-Html` now stages
-  272 EN/IT/ES/FR semantic browser text keys, now
-  including Home, Children, full child/time editors,
-  Activities search/policy/install/removal, plus
-  discovery/authentication and shared system chrome. When the checked-out
+  373 EN/IT/ES/FR semantic browser text keys, now
+  including deep Device UI (Wi-Fi, input/display/mic,
+  Parent password, SSH, pairing and OS update), initial
+  HTML accessibility, all Home/Children/Activities views,
+  plus discovery/authentication and common chrome. When the checked-out
   external browser source is available, run `npm test`
   (including `tests/localization_source_contract.test.js`,
   which checks Node module syntax and all literal translation
   bindings)
+  and `tests/localization.test.js` with new deep-Device
+  Wi-Fi/password/pairing/update interpolation tests; record
+  all failures without silent fallback. Greia source also
+  repaired a Python-comment syntax error in
+  `src/greia_launcher/panel_localization.py` at
+  `68434184`; run `python3 -m unittest discover -s
+  tests -p 'test_panel_localization.py' -v` in the normal
+  provider-free source gate and preserve evidence.
   at its exact current `main` HEAD with no remote
   dependency installation or new API host, log command
   exits and perform a read-only translated chrome
   preview on a disposable browser profile. Do not
   change the OS runtime pin or claim deployed/browser
-  four-language parity; most detail views are not yet
-  fully translated.
+  four-language parity; deep Device static labels now
+  have staged copy, but server/API error text, exact
+  content audit and native proofread remain open.
   Preserve source hashes, actual missing cues
   and `PATH_REVIEW_REQUIRED` states.
   Never synthesize from a category heading when

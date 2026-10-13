@@ -1,3 +1,43 @@
+## 2026-10-13 — Four-language text coverage measured; Parent deep Device done in source (SOURCE-WIP)
+
+**Greia OS main prior to this documentation commit:**
+`68434184473e942bcb8421d514a42122c8a7f6b6`.
+**External browser Parent repo main:**
+`db14662dbdf6879b6883ab5172dfb3869821e44b`.
+
+The browser's entire principal Home/Children/Activities/
+discovery/deep-Device *static* UI now uses staged semantic
+EN/IT/ES/FR messages (**373 catalogue keys per locale**).
+In-session source audit: 13/13 browser JS modules parse,
+357 literal source references all resolve, four-language
+placeholders match, and no `innerHTML` appears in these
+13 source modules. The current Browser source is not the
+accepted/pinned Greia installed client. Node `npm test`
+and browser screenshots are still owed.
+
+Measured other text surfaces: installer ES and FR each
+match **108/108** IT reference entries; all **45/45**
+built-in Activities have four-language text bundles
+(reference-key parity only). On-device Parent already
+has four-language semantic/form translations; a real
+Python source error (three JavaScript-style `//`
+comments) was corrected in
+`src/greia_launcher/panel_localization.py` at
+`68434184` but NOT run in Python yet.
+
+**Not full text-localization closure:** runtime Shell/
+launcher/Creations and Parent API error strings, inline
+Activity dialogue and encyclopedia facts, educational
+phonological accuracy, text fit, full test suites and
+native language review remain to be audited/approved.
+No honest product-wide percentage can be derived solely
+from matching catalogue keys. No ES/FR system/Activity
+language promotion or audio approval; existing release,
+pin/integrity and hardware gates remain open.
+The accurate source inventory and next steps are in
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`
+and task GLA-015 in `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+
 ## 2026-10-13 — Parent HTML Home/Children/Activities localization SOURCE-WIP (272 keys)
 
 **Greia OS main before this documentation commit:**
