@@ -24,11 +24,25 @@ class LetterItem:
     def symbol(self) -> str:
         return self.symbol_it
 
+    @staticmethod
+    def _supported_lesson_language(locale: str) -> str:
+        """Fail closed until a language has real curriculum example words.
+
+        Translating Activity chrome is not equivalent to translating
+        the alphabet's symbols, phonemes and accompanying spoken examples.
+        """
+        language = locale.split("-", 1)[0].lower()
+        if language not in ("it", "en"):
+            raise ValueError(f"unsupported alphabet lesson language: {language}")
+        return language
+
     def symbol_for(self, locale: str) -> str:
-        return self.symbol_it if locale.startswith("it") else self.symbol_en
+        return (self.symbol_it if self._supported_lesson_language(locale) == "it"
+                else self.symbol_en)
 
     def word_for(self, locale: str) -> str:
-        return self.word_it if locale.startswith("it") else self.word_en
+        return (self.word_it if self._supported_lesson_language(locale) == "it"
+                else self.word_en)
 
 
 LETTERS_CATALOGUE: Final[list[LetterItem]] = [
