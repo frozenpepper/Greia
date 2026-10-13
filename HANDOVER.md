@@ -79,6 +79,22 @@ actual generator always requests at least
 future text/speech enabling still requires
 count-aware grammar if count 1 is introduced.
 
+**Skill-routing integrity repaired:** prior GitHub edit accidentally
+interchanged the *entire* contents of
+`skills/greia-os-work/SKILL.md` and
+`skills/greia-activity-authoring/SKILL.md`.
+The path/header mismatch was detected during this
+continuation; both files were atomically restored
+under their proper paths at commit `4957bc96`,
+and `tests/test_greia_skill_identity.py` adds
+three source-based path/name/role guard cases
+(commit `b1d2e14b`). Both files were
+re-read through GitHub and their frontmatter
+names verified. The new tests have NOT yet
+been run in a checkout; GLA-015 now includes
+them. Do not copy or route one skill into the
+other again.
+
 **Strict evidence labels:** SOURCE COMMITTED,
 GitHub readback-only. No source unit tests,
 `make verify`, Pygame or Acer visual
