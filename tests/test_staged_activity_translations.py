@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from string import Formatter
+import ast
 import json
 import tomllib
 import unittest
@@ -22,6 +23,10 @@ STAGED = (
     "workshop_settings", "specchi_magici", "nascondino_bosco",
     "nanna_delle_nuvolette", "orchestra_animali", "treno_numeri",
     "quattro_amici", "pasticceria_magica",
+    "baia_delle_orche", "cucciolo_mio", "la_discesa_della_biglia",
+    "labirinto_magico", "mondo_contrari", "morbidi_mostriciattoli",
+    "posta_di_leo", "stelle_incantate", "storie_della_mia_voce",
+    "teatrino_fiabe", "viaggio_delfino",
 )
 
 
@@ -67,20 +72,43 @@ class StagedActivityTranslationTests(unittest.TestCase):
                         if token in original:
                             self.assertIn(token, text[key], f"{activity}/{locale}/{key}")
 
-    def test_number_train_needs_plural_review_before_voice_release(self) -> None:
-        """The existing train prompt uses one item form for 1 and many.
+    def test_number_train_plurals_match_reachable_count_targets(self) -> None:
+        """No fabricated 'one apple' bug: the actual train generates >=2.
 
-        This catches a known pedagogical mismatch without inventing a Spanish
-        or French voice that incorrectly says '1 manzanas' / '1 pommes'.
+        Its prompt.load source string is currently dormant in the renderer.
+        If station generation ever allows 1, this test must fail until
+        the actual consumer and ES/FR item variants handle singular.
         """
-        root = ROOT / "activities/treno_numeri/locales"
-        for locale in ("es", "fr"):
-            text = json.loads((root / f"{locale}.json").read_text(encoding="utf-8"))["strings"]
+        source = ast.parse(
+            (ROOT / "activities/treno_numeri/treno_content.py").read_text(encoding="utf-8")
+        )
+        literals = {}
+        for node in source.body:
+            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                if node.target.id in {"ADDITION_PAIRS", "COUNT_CHOICES"}:
+                    literals[node.target.id] = ast.literal_eval(node.value)
+        self.assertEqual(set(literals), {"ADDITION_PAIRS", "COUNT_CHOICES"})
+        targets = [sum(pair) for pair in literals["ADDITION_PAIRS"]] + list(literals["COUNT_CHOICES"])
+        self.assertTrue(targets)
+        self.assertGreaterEqual(min(targets), 2)
+        for locale in ("en", "it", "es", "fr"):
+            text = json.loads(
+                (ROOT / "activities/treno_numeri/locales" / f"{locale}.json").read_text(encoding="utf-8")
+            )["strings"]
             self.assertIn("{count}", text["prompt.load"])
             self.assertIn("{item}", text["prompt.load"])
-            self.assertTrue(text["item.apple"])
-        # Track as a release blocker in the voice ledger; the source tests
-        # above prove token compatibility, not correct singular grammar.
+
+    def test_dollar_variables_remain_unchanged_in_every_staged_locale(self) -> None:
+        """Legacy activity strings use Template($name), not str.format()."""
+        for activity in STAGED:
+            base = ROOT / "activities" / activity / "locales"
+            source = json.loads((base / "en.json").read_text(encoding="utf-8"))["strings"]
+            for locale in ("es", "fr"):
+                translated = json.loads((base / f"{locale}.json").read_text(encoding="utf-8"))["strings"]
+                for key, original in source.items():
+                    for token in ("$num", "$target", "$word", "$letter", "$score", "$stars", "$count"):
+                        if token in original:
+                            self.assertIn(token, translated[key], f"{activity}/{locale}/{key}")
 
     def test_translation_stage_does_not_falsely_advertise_speech(self) -> None:
         for activity in STAGED:
