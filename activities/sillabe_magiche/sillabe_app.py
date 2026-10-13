@@ -114,6 +114,13 @@ class SillabeApp:
             vowels_pool=self._curriculum.vowels,
             syllable_families=self._curriculum.syllable_families,
         )
+        # Resolve fixed UI copy once; lesson-specific formula is recomputed
+        # only when the child selects a different consonant.
+        self._explorer_instruction = self._ui_text("ui.explorer.instruction")
+        self._catcher_instruction = self._ui_text("ui.catcher.listen")
+        self._first_slot_label = self._ui_text("ui.builder.first_syllable")
+        self._second_slot_label = self._ui_text("ui.builder.second_syllable")
+        self._explorer_formula = self._make_explorer_formula()
         # Load persistent progression
         if storage is not None:
             try:
@@ -153,6 +160,26 @@ class SillabeApp:
         self._ready_published = False
         self._virtual_pointer = (512.0, 300.0)
         self._pointer_down = False
+
+    def _ui_text(self, key: str, variables: dict[str, str] | None = None) -> str:
+        """Use the Activity's existing locale authority, never an Italian default."""
+        if self._resources is None:
+            return "✦"
+        try:
+            return self._resources.text(key, variables)
+        except (KeyError, ValueError):
+            # Missing/broken authoring data must not introduce wrong-language
+            # text; catalogues are checked explicitly before release.
+            return "✦"
+
+    def _make_explorer_formula(self) -> str:
+        return self._ui_text(
+            "ui.explorer.formula",
+            {
+                "consonant": self._session.active_consonant,
+                "vowels": " · ".join(self._curriculum.vowels),
+            },
+        )
 
     # ------------------------------------------------------------------ #
     # Persistence helper
@@ -356,6 +383,7 @@ class SillabeApp:
                             btn_rect = pygame.Rect(bx, by, pal_w, pal_h)
                             if btn_rect.collidepoint(lx, ly):
                                 self._session.set_active_consonant(c)
+                                self._explorer_formula = self._make_explorer_formula()
                                 self._sounds.play_consonant(c, self._active_locale)
                                 self._refresh_station1_cards()
                                 self._mascot.wiggle()
@@ -526,9 +554,9 @@ class SillabeApp:
             pygame.draw.rect(logical_surf, (0, 0, 0, 25), (top_card.x + 3, top_card.y + 4, top_card.w, top_card.h), border_radius=22)
             pygame.draw.rect(logical_surf, CARD_BG, top_card, border_radius=22)
             pygame.draw.rect(logical_surf, CARD_BORDER, top_card, width=3, border_radius=22)
-            formula_surf = self._typography.render(display_text(f"Fabbrica delle Sillabe:   [ {self._session.active_consonant} ]  ➕  Vocali ( A , E , I , O , U )"), FontRole.TITLE, 22, DARK_TEXT)
+            formula_surf = self._typography.render(display_text(self._explorer_formula), FontRole.TITLE, 22, DARK_TEXT)
             logical_surf.blit(formula_surf, (top_card.centerx - formula_surf.get_width() // 2, top_card.y + 20))
-            instruct_surf = self._typography.render(display_text("Tocca ogni tessera per ascoltare e imparare la sillaba!"), FontRole.BODY, 18, (100, 85, 115))
+            instruct_surf = self._typography.render(display_text(self._explorer_instruction), FontRole.BODY, 18, (100, 85, 115))
             logical_surf.blit(instruct_surf, (top_card.centerx - instruct_surf.get_width() // 2, top_card.y + 72))
             for card in self._cards_station1:
                 card.draw(logical_surf, self._typography)
@@ -538,7 +566,7 @@ class SillabeApp:
             pygame.draw.rect(logical_surf, (0, 0, 0, 25), (banner_rect.x + 3, banner_rect.y + 4, banner_rect.w, banner_rect.h), border_radius=18)
             pygame.draw.rect(logical_surf, CARD_BG, banner_rect, border_radius=18)
             pygame.draw.rect(logical_surf, GOLD_BORDER, banner_rect, width=3, border_radius=18)
-            p_txt = display_text("Ascolta e tocca:  ")
+            p_txt = display_text(self._catcher_instruction + "  ")
             p_surf = self._typography.render(p_txt, FontRole.TITLE, 28, DARK_TEXT)
             target_surf = self._typography.render(self._session.target_syl, FontRole.DISPLAY, 40, CORAL)
             total_w = p_surf.get_width() + target_surf.get_width()
@@ -583,7 +611,7 @@ class SillabeApp:
             else:
                 pygame.draw.rect(logical_surf, (244, 244, 244), slot1_rect, border_radius=18)
                 pygame.draw.rect(logical_surf, (160, 160, 175), slot1_rect, width=3, border_radius=18)
-                q1_txt = self._typography.render(display_text("1° Sillaba"), FontRole.TITLE, 20, (160, 160, 175))
+                q1_txt = self._typography.render(display_text(self._first_slot_label), FontRole.TITLE, 20, (160, 160, 175))
                 logical_surf.blit(q1_txt, (slot1_rect.centerx - q1_txt.get_width() // 2, slot1_rect.centery - q1_txt.get_height() // 2))
             if self._session.slot2_filled:
                 pygame.draw.rect(logical_surf, MINT_GREEN, slot2_rect, border_radius=18)
@@ -593,7 +621,7 @@ class SillabeApp:
             else:
                 pygame.draw.rect(logical_surf, (244, 244, 244), slot2_rect, border_radius=18)
                 pygame.draw.rect(logical_surf, (160, 160, 175), slot2_rect, width=3, border_radius=18)
-                q2_txt = self._typography.render(display_text("2° Sillaba"), FontRole.TITLE, 20, (160, 160, 175))
+                q2_txt = self._typography.render(display_text(self._second_slot_label), FontRole.TITLE, 20, (160, 160, 175))
                 logical_surf.blit(q2_txt, (slot2_rect.centerx - q2_txt.get_width() // 2, slot2_rect.centery - q2_txt.get_height() // 2))
             for tile in self._word_tiles:
                 tile.draw(logical_surf, self._typography)
