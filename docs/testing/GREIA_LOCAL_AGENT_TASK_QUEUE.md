@@ -851,6 +851,9 @@ test commands and expected observable behavior.
   code edits or out-of-scope OS changes.
 - **Last result:** SOURCE COMMITTED, UNEXECUTED at current HEAD.
 
+- **2026-10-14 owner approval / operative voice work order (NOT YET EXECUTED):** owner approved **all currently authored** EN/IT/ES/FR text translations for voice production and explicitly requested **record all missing voices app-by-app**. Use
+  `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
+  as the actual step-by-step instructions, with `LOCAL_AGENT_VOICE_PRODUCTION.md` for specialist cue-script/provider limits. Enumerate **45 Activities × 4 languages = 180 app/locale coverage rows**, plus launcher, Shell, My Creations, Creations, Encyclopedia, incubated My Time, shared characters and any genuinely voiced installer/Parent UX. Start actual recording on an already ready, no-new-spend provider inside `tools/greia_voice.py`; no global waiting for Modal. New paid provider install/cloud calls still require their own cost approval. A translated display label or phonics glyph alone is not necessarily an approved *full spoken transcript*; mark such cue `BLOCKED_SCRIPT` and continue all independent ready cues. Preserve existing accepted recordings. Save generated review candidates, receipts, per-cue hearing results and app-progress ledger under one ignored `tmp/` run, return ZIP + report; never edit manifests/system selector/voice anchors or auto-commit source. The 10-method `test_four_language_activity_runtime_text.py` and Opposites Pygame fixture are still **unexecuted**. Owner text approval does NOT authorize L6 release promotion or count as a voice/audio pass.
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
 - **Status:** BLOCKED
