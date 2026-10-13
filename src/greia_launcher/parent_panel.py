@@ -1403,11 +1403,27 @@ class ParentSettingsOverlay:
                 pygame, (61, 44, 31), 3, radius=24,
             )
 
-        title = self._get_text(self._ui_message("parent.title"), FontRole.TITLE, 28, (61, 44, 31), typography)
-        screen.blit(title, title.get_rect(center=(card.centerx, card.top + 36)))
+        title = panel_layout.fit_single_line(
+            typography, self._ui_message("parent.title"),
+            FontRole.TITLE, 28, (61, 44, 31),
+            max(1, card_w - 32), min_size=16,
+        )
+        panel_layout.blit_block(
+            screen, title, pygame, card.centerx,
+            card.top + 36 - title.height // 2,
+            align="center", bounds=card,
+        )
 
-        subtitle = self._get_text(self._ui_message("auth.prompt"), FontRole.BODY, 18, (118, 104, 93), typography)
-        screen.blit(subtitle, subtitle.get_rect(center=(card.centerx, card.top + 70)))
+        subtitle = panel_layout.fit_single_line(
+            typography, self._ui_message("auth.prompt"),
+            FontRole.BODY, 18, (118, 104, 93),
+            max(1, card_w - 32), min_size=12,
+        )
+        panel_layout.blit_block(
+            screen, subtitle, pygame, card.centerx,
+            card.top + 70 - subtitle.height // 2,
+            align="center", bounds=card,
+        )
 
         input_rect = pygame.Rect(card.left + 30, card.top + 106, card_w - 60, 52)
         border_col = (181, 46, 46) if time.monotonic() < self.password_error_until else (241, 185, 35)
@@ -1423,12 +1439,14 @@ class ParentSettingsOverlay:
                 reason = self._ui_message("auth.rejected")
             elif reason == _PASSWORD_CHECK_FAILED:
                 reason = self._ui_message("auth.unavailable")
-            reason_surf = self._get_text(
-                reason, FontRole.BODY, 15, (181, 46, 46), typography
+            reason_label = panel_layout.fit_single_line(
+                typography, reason, FontRole.BODY, 15, (181, 46, 46),
+                max(1, card_w - 32), min_size=11,
             )
-            screen.blit(
-                reason_surf,
-                reason_surf.get_rect(center=(card.centerx, input_rect.bottom + 16)),
+            panel_layout.blit_block(
+                screen, reason_label, pygame, card.centerx,
+                input_rect.bottom + 16 - reason_label.height // 2,
+                align="center", bounds=card,
             )
 
         btn_w = (card_w - 80) // 2
