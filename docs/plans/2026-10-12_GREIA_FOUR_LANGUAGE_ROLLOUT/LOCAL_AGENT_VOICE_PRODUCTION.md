@@ -168,6 +168,39 @@ These are **verified existing obligations**, not generic search terms:
    ledger rows. Do not mark a broad "Momo voice" task complete
    solely from an Activity title WAV.
 
+### 2026-10-13 staging: six translated Activity title cues await recording
+
+Spanish/French `locales/es.json` and `locales/fr.json`
+now contain actual authored UI text for six built-in Activities
+(`painting`, `writing`, `shape_garden`,
+`piccola_serra`, `memory_meraviglie`, and
+`clinica_cuccioli`). Their `audio` dictionaries are
+deliberately **empty** and their manifests still advertise
+EN/IT only. This is a staging condition, **not a reason
+to copy English or Italian WAVs**. The `activity.title`
+message in each new JSON is the exact initial
+recording-script candidate for that locale; six Spanish
+and six French title WAVs will be required before the
+corresponding manifests can be promoted.
+
+For this batch, add **12 distinct ledger rows**:
+`activity.title × {six Activities} × {es,fr}`.
+Derive the exact text from each checked-out JSON; set
+`speaker=UNASSIGNED` and `kind=UNASSIGNED` until
+canonical speaker authority decides the voice for
+each title. The intended consumer path follows the
+accepted first-party title contract,
+`activities/<activity>/locales/<locale>/audio/activity-title.wav`;
+treat that as the *planned output*, not an existing
+asset. Require native speech review and preserve
+character identity where title narration has a
+canonical presenter. The L5 integration owner
+will fill approved `audio.activity.title` mappings
+and modify manifests only after all the checks.
+Additional Activity speech outside title WAVs
+must be inventoried separately and can still
+block language promotion.
+
 Do not assume that per-locale JSON `audio` covers *every*
 spoken line: some legacy Activities still select WAVs
 programmatically. Those must be listed separately and converted
