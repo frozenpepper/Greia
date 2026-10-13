@@ -136,3 +136,90 @@ order covering ES/FR plus missing EN/IT.
    behind the existing Greia VoiceEngine seam; no live cloud calls
    until authorization and source checks. Coordinate output
    integration/QA with the local agent.
+
+
+## 2026-10-13 — L3 on-device Parent chrome and L4 first six Activity text packs (SOURCE WIP)
+
+**Previous language gate unchanged:** installer/Parent API/on-device
+selector shows only EN/IT. ES/FR are still deliberately unavailable in
+global language choices while the complete product/voice rollout runs.
+
+### GitHub implementation
+
+- Added `src/greia_launcher/panel_localization.py`, a small
+  semantic, no-I/O, four-language message catalogue covering the
+  **on-device** Parent password prompt, rejection/unavailability,
+  primary title, all eight tab labels, and device language
+  selection/confirmation/error. All four locales have identical
+  semantic keys and named interpolation parameters; arbitrary
+  child names/SSIDs/password values are NOT translated by scanning
+  their text. Runtime device locale is resolved through the
+  existing `SystemLanguageService`; stage-only test stubs can
+  preview ES/FR without exposing them to families.
+- `src/greia_launcher/parent_panel.py` now consumes those exact
+  semantic IDs and translates these screens at render time.
+  `_device_locale` participates in both composite-frame and
+  precomposed-chrome cache keys to prevent English UI from
+  persisting visually after switching to Italian. The source
+  language setting still uses the existing typed Parent helper.
+  Auth and language labels are bounded via existing
+  `panel_layout.fit_single_line` to avoid low-resolution overflow.
+  Added ten provider-free cases in
+  `tests/test_panel_localization.py`, including key/placeholder
+  parity, exact IT/ES/FR expressions, safe dynamic values,
+  switching/invalidation and rejected actions. This is a
+  localized *subset* of Parent UI, not the entire panel.
+  Source: `06237731`, `a4579e98`, `4f751756`,
+  `43b8e394`, `007e69fb`, `8c952587`.
+- Installer language-first chooser now lays out the two
+  supported options as a centered, suitably sized pair rather
+  than preserving the 12-language table's orphaned top row.
+  Removed the unsupported "Idioma / Langue" initial-language
+  subtitle and used native names for language choices. The
+  installed locale/transaction/fail-closed disk safety API is
+  unchanged. Source `2b4c78e8`, non-destructive
+  source-only until rendered installer acceptance.
+- Staged **12 new JSON locale files** at the actual
+  `activities/<name>/locales/{es,fr}.json` paths for:
+  `painting`, `writing`, `shape_garden`,
+  `piccola_serra`, `memory_meraviglie` and
+  `clinica_cuccioli`. Each has exactly the existing EN
+  semantic string keys with Spanish/French translations,
+  preserved interpolation fields and `direction=ltr`.
+  Total per new language: **66 localized string entries**
+  (6+5+6+13+16+20), 132 new translated string entries.
+  These are language-ready **text only**, with empty
+  `audio` mappings; source manifests continue to declare only
+  en/it. No falsely linked voice paths or premature
+  catalogue/installed-language support.
+  Source `f8baa8fe`, validated structurally at authoring
+  by comparing keys/placeholder sets to EN inputs. Three
+  additional provider-free regressions in
+  `tests/test_staged_activity_translations.py`
+  enforce bundle parity and honest manifest language lists
+  (`357e36ca`).
+- Added GLA-015 to the ONE local-agent queue with exact
+  unittest commands for Parent localization, cache/layout,
+  staged Activity texts, current-hardware-sized UI previews
+  and missing-voice inventory. ES/FR first-party title WAVs
+  for these six Activities remain unrecorded, so their
+  semantic `activity.title` entries are concrete items for
+  the four-language voice recording ledger.
+
+### Evidence and remaining work
+
+**SOURCE COMMITTED only; UNEXECUTED** `unittest`,
+`make verify`, runtime Pygame, human language/text/voice
+review, screen captures, Parent HTML pin/release, or
+real installed image/hardware acceptance. No Modal
+provider calls, recordings or asset changes. Do not
+describe the full Parent panel or built-in Activities
+as translated on the basis of this first slice.
+
+**Next GitHub slice:** translate remaining Parent settings
+forms and Shell notifications into semantic catalogues,
+inspect and correct first-party Activity inline text
+outside bundles, and stage additional ES/FR Activities
+with complete placeholder parity; produce the exact
+approved dialogue text/recording ledger before the
+local agent is unblocked to produce voices.
