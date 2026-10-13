@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.alfabeto_leo.title": "L'ALPHABET DE LEO",
+    "activity.title": "L'ALPHABET DE LEO",
+    "ui.mode_explore_title": "DÉCOUVRE LES LETTRES !",
+    "ui.mode_guess_title": "TROUVE LA LETTRE !",
+    "ui.switch_to_guess": "CHERCHER ! 🔍",
+    "ui.switch_to_explore": "ALPHABET 🔤",
+    "ui.guess_prompt": "OÙ EST $char ?"
+  },
+  "audio": {}
+}

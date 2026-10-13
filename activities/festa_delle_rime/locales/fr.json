@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Fête des rimes",
+    "activity.festa_delle_rime.title": "Fête des rimes",
+    "prompt.rhyme": "Écoute et touche la lanterne dont le mot rime !",
+    "prompt.odd": "Touche la lanterne dont le mot ne rime pas !",
+    "prompt.sound": "Touche la lanterne dont le mot commence par le même son !",
+    "button.replay": "ÉCOUTER",
+    "button.play_again": "REJOUER",
+    "victory.title": "Fête lumineuse !",
+    "victory.subtitle": "Toutes les lanternes des rimes brillent avec Leo !"
+  },
+  "audio": {}
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "El bosque de palabras",
+    "mode.letter_catch": "Atrapa la letra",
+    "mode.word_builder": "Forma la palabra",
+    "prompt.catch_letter": "¡Encuentra la letra $letter como en $word!",
+    "prompt.spell_word": "Deletrea: $word",
+    "feedback.correct": "¡Muy bien! ✨",
+    "feedback.try_again": "¡Casi! Inténtalo otra vez 💕",
+    "feedback.word_complete": "¡Palabra mágica completada! 🌟",
+    "hud.score": "Puntos: $score",
+    "hud.stars": "★ $stars"
+  },
+  "audio": {}
+}

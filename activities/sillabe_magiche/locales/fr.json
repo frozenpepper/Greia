@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Syllabes magiques",
+    "mode.explorer": "Découvrir les syllabes",
+    "mode.catcher": "Attraper",
+    "mode.builder": "Former des mots",
+    "prompt.explore": "Touche une consonne et découvre les syllabes !",
+    "prompt.catch": "Écoute et trouve la bonne syllabe !",
+    "prompt.build": "Forme le mot avec les deux syllabes !",
+    "feedback.correct": "Bravo !",
+    "feedback.fantastic": "Fantastique !",
+    "feedback.super": "Super !",
+    "feedback.word_complete": "Mot terminé !",
+    "ui.replay_audio": "Réécouter le son",
+    "ui.stars": "Étoiles"
+  },
+  "audio": {}
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Sílabas mágicas",
+    "mode.explorer": "Explorar sílabas",
+    "mode.catcher": "Atrapar",
+    "mode.builder": "Formar palabras",
+    "prompt.explore": "¡Toca una consonante y descubre las sílabas!",
+    "prompt.catch": "¡Escucha y encuentra la sílaba correcta!",
+    "prompt.build": "¡Forma la palabra con las dos sílabas!",
+    "feedback.correct": "¡Muy bien!",
+    "feedback.fantastic": "¡Fantástico!",
+    "feedback.super": "¡Genial!",
+    "feedback.word_complete": "¡Palabra completada!",
+    "ui.replay_audio": "Repetir sonido",
+    "ui.stars": "Estrellas"
+  },
+  "audio": {}
+}

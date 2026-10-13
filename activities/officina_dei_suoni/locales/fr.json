@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Atelier des sons",
+    "activity.officina_dei_suoni.title": "Atelier des sons",
+    "prompt.find_sound": "Écoute le son et trouve l'image !",
+    "prompt.first_sound": "Quel son entends-tu au début ?",
+    "prompt.build_word": "Place la lettre pour former le mot !",
+    "button.listen": "ÉCOUTER",
+    "button.play_again": "REJOUER",
+    "victory.title": "Atelier des mots !",
+    "victory.subtitle": "Tu as terminé tous les sons et tous les mots avec Leo !"
+  },
+  "audio": {}
+}

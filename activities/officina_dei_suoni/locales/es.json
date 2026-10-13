@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Taller de sonidos",
+    "activity.officina_dei_suoni.title": "Taller de sonidos",
+    "prompt.find_sound": "¡Escucha el sonido y encuentra la imagen!",
+    "prompt.first_sound": "¿Con qué sonido empieza?",
+    "prompt.build_word": "¡Coloca la letra para formar la palabra!",
+    "button.listen": "ESCUCHAR",
+    "button.play_again": "JUGAR OTRA VEZ",
+    "victory.title": "¡Taller de palabras!",
+    "victory.subtitle": "¡Has completado todos los sonidos y palabras con Leo!"
+  },
+  "audio": {}
+}

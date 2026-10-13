@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Fiesta de rimas",
+    "activity.festa_delle_rime.title": "Fiesta de rimas",
+    "prompt.rhyme": "¡Escucha y toca el farol que rima!",
+    "prompt.odd": "¡Toca el farol que no rima!",
+    "prompt.sound": "¡Toca el farol que empieza por el mismo sonido!",
+    "button.replay": "ESCUCHAR",
+    "button.play_again": "JUGAR OTRA VEZ",
+    "victory.title": "¡Festival brillante!",
+    "victory.subtitle": "¡Todos los faroles de rimas brillan con Leo!"
+  },
+  "audio": {}
+}
