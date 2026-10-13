@@ -110,5 +110,79 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
 
 
 
+    def test_magic_syllables_live_guidance_and_phonics_formula(self) -> None:
+        from string import Template
+
+        activity = ROOT / "activities/sillabe_magiche"
+        required = {
+            "ui.explorer.formula", "ui.explorer.instruction",
+            "ui.catcher.listen", "ui.builder.first_syllable",
+            "ui.builder.second_syllable",
+        }
+        for language in LANGUAGES:
+            with self.subTest(language=language):
+                strings = _strings(activity, language)
+                self.assertFalse(required.difference(strings))
+                self.assertTrue(all(strings[key].strip() for key in required))
+                # The authored template must be compatible with Greia's
+                # real string.Template substitution, NOT Python .format().
+                result = Template(strings["ui.explorer.formula"]).substitute(
+                    consonant="M", syllables="MA · MÉ · MI · MO · MU"
+                )
+                self.assertIn("MÉ", result)
+                self.assertIn("M", result)
+
+        app = (activity / "sillabe_app.py").read_text(encoding="utf-8")
+        compile(app, str(activity / "sillabe_app.py"), "exec")
+        self.assertIn("self._session.explorer_syllables()", app)
+        self.assertIn("self._explorer_formula = self._make_explorer_formula()", app)
+        for obsolete in (
+            "Fabbrica delle Sillabe:", "Tocca ogni tessera per ascoltare",
+            "Ascolta e tocca:", "1° Sillaba", "2° Sillaba",
+        ):
+            self.assertNotIn(obsolete, app)
+
+    def test_greenhouse_toolbar_consumes_semantic_locale_keys(self) -> None:
+        activity = ROOT / "activities/piccola_serra"
+        tools = _items_from_module(activity / "serra_content.py", "TOOL_DEFS")
+        keys = {row[2] for row in tools}
+        self.assertEqual(
+            {"tool.seeds", "tool.water", "tool.sun", "tool.harvest"}, keys
+        )
+        for language in LANGUAGES:
+            with self.subTest(language=language):
+                labels = _strings(activity, language)
+                self.assertTrue(all(labels.get(key, "").strip() for key in keys))
+                self.assertTrue(all(
+                    labels.get(key, "").strip()
+                    for key in ("victory.title", "victory.subtitle", "btn.play_again")
+                ))
+        renderer = (activity / "serra_renderer.py").read_text(encoding="utf-8")
+        app = (activity / "serra_app.py").read_text(encoding="utf-8")
+        compile(renderer, str(activity / "serra_renderer.py"), "exec")
+        compile(app, str(activity / "serra_app.py"), "exec")
+        self.assertIn("self._tool_labels.get(label_key", renderer)
+        self.assertIn("tool_labels={", app)
+        self.assertIn("for _, _, key, _ in TOOL_DEFS", app)
+        for wrong_language in ("Che magnifico raccolto", "La tua serra è un vero paradiso",
+                               "Coltiva Ancora!"):
+            self.assertNotIn(wrong_language, app)
+
+    def test_victory_localization_uses_actual_platform_text_api(self) -> None:
+        api = (ROOT / "src/greia_platform/localization.py").read_text(encoding="utf-8")
+        self.assertIn("    def text(", api)
+        self.assertNotIn("    def string(", api)
+        for relative_path in (
+            "activities/memory_meraviglie/main.py",
+            "activities/treno_numeri/treno_app.py",
+            "activities/piccola_serra/serra_app.py",
+        ):
+            with self.subTest(path=relative_path):
+                source = (ROOT / relative_path).read_text(encoding="utf-8")
+                compile(source, str(ROOT / relative_path), "exec")
+                self.assertNotIn("resources.string(", source)
+                self.assertIn("resources.text(", source)
+
+
 if __name__ == "__main__":
     unittest.main()
