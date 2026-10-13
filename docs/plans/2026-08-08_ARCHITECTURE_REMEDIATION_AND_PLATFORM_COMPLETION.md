@@ -3141,3 +3141,29 @@ new complete-checkout tests, real sound listening, GUI/installer,
 hardware/boot or architecture closure acceptance executed.
 Current exact status: `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`;
 GLA-014 in sole local-agent queue owns deferred checks.
+
+
+### 2026-10-13 — Four-language L3/L4 text integration slice (SOURCE ONLY)
+
+Continued scoped, owner-approved work under
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+The installed on-device Parent password, all eight tab labels
+and device-language selector now use a semantic, four-language
+authoring catalogue, selected via the existing device setting
+with cache-safe switch and bounded measured text. Installer's
+genuine EN/IT first-language chooser now centres its only
+two options rather than leaving an obsolete twelve-slot
+layout. Added six built-in Activity ES/FR text-bundle pairs
+(`painting`, `writing`, `shape_garden`,
+`piccola_serra`, `memory_meraviglie`,
+`clinica_cuccioli`), preserving keys/placeholder syntax.
+New packs' audio dictionaries are empty by design and
+existing Activity manifests still claim EN/IT only.
+Two new provider-free test modules define Parent/locale
+cache and staged semantic key parity; exact commands
+and GUI/manual checks are in GLA-015 of the single
+local-agent queue. No new voice generation, real source
+test execution, Parent client update, hardware/installer
+acceptance or architectural phase gate closure.
+Existing non-lifecycle remediation and release
+prerequisites remain open and unchanged.
