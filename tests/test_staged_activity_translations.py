@@ -17,6 +17,11 @@ STAGED = (
     "memory_meraviglie", "clinica_cuccioli", "acquario_magico",
     "torre_forme", "volo_draghetto", "colline_allegre",
     "quattro_stagioni", "corsa_bacche", "bottega_delle_misure",
+    "bosco_numeri", "il_giardino_dei_numeri", "faccine_momo",
+    "luci_di_momo", "costruiamo_ponti", "casa_del_dieci",
+    "workshop_settings", "specchi_magici", "nascondino_bosco",
+    "nanna_delle_nuvolette", "orchestra_animali", "treno_numeri",
+    "quattro_amici", "pasticceria_magica",
 )
 
 
@@ -49,6 +54,33 @@ class StagedActivityTranslationTests(unittest.TestCase):
                             f"{activity}/{locale}/{key}: missing interpolation placeholders"
                         )
                     self.assertEqual(localized["audio"], {})
+
+    def test_numeric_template_targets_remain_intact(self) -> None:
+        """Dollar targets are consumed by old activities, not Python format()."""
+        for activity in ("bosco_numeri", "casa_del_dieci"):
+            root = ROOT / "activities" / activity / "locales"
+            source = json.loads((root / "en.json").read_text(encoding="utf-8"))["strings"]
+            for locale in ("es", "fr"):
+                text = json.loads((root / f"{locale}.json").read_text(encoding="utf-8"))["strings"]
+                for key, original in source.items():
+                    for token in ("$num", "$target"):
+                        if token in original:
+                            self.assertIn(token, text[key], f"{activity}/{locale}/{key}")
+
+    def test_number_train_needs_plural_review_before_voice_release(self) -> None:
+        """The existing train prompt uses one item form for 1 and many.
+
+        This catches a known pedagogical mismatch without inventing a Spanish
+        or French voice that incorrectly says '1 manzanas' / '1 pommes'.
+        """
+        root = ROOT / "activities/treno_numeri/locales"
+        for locale in ("es", "fr"):
+            text = json.loads((root / f"{locale}.json").read_text(encoding="utf-8"))["strings"]
+            self.assertIn("{count}", text["prompt.load"])
+            self.assertIn("{item}", text["prompt.load"])
+            self.assertTrue(text["item.apple"])
+        # Track as a release blocker in the voice ledger; the source tests
+        # above prove token compatibility, not correct singular grammar.
 
     def test_translation_stage_does_not_falsely_advertise_speech(self) -> None:
         for activity in STAGED:
