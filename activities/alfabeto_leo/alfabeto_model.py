@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from typing import Final
 
@@ -19,6 +19,10 @@ class LetterItem:
     symbol_it: str
     symbol_en: str
     color: tuple[int, int, int]
+    word_es: str = ""
+    symbol_es: str = ""
+    word_fr: str = ""
+    symbol_fr: str = ""
 
     @property
     def symbol(self) -> str:
@@ -31,18 +35,24 @@ class LetterItem:
         Translating Activity chrome is not equivalent to translating
         the alphabet's symbols, phonemes and accompanying spoken examples.
         """
-        language = locale.split("-", 1)[0].lower()
-        if language not in ("it", "en"):
+        language = locale.replace("_", "-").split("-", 1)[0].lower()
+        if language not in ("it", "en", "es", "fr"):
             raise ValueError(f"unsupported alphabet lesson language: {language}")
         return language
 
     def symbol_for(self, locale: str) -> str:
-        return (self.symbol_it if self._supported_lesson_language(locale) == "it"
-                else self.symbol_en)
+        language = self._supported_lesson_language(locale)
+        symbol = getattr(self, f"symbol_{language}")
+        if not symbol:
+            raise ValueError(f"letter {self.char} has no {language} example")
+        return symbol
 
     def word_for(self, locale: str) -> str:
-        return (self.word_it if self._supported_lesson_language(locale) == "it"
-                else self.word_en)
+        language = self._supported_lesson_language(locale)
+        word = getattr(self, f"word_{language}")
+        if not word:
+            raise ValueError(f"letter {self.char} has no {language} example")
+        return word
 
 
 LETTERS_CATALOGUE: Final[list[LetterItem]] = [
@@ -77,6 +87,104 @@ LETTERS_CATALOGUE: Final[list[LetterItem]] = [
 LETTER_BY_CHAR: Final[dict[str, LetterItem]] = {item.char: item for item in LETTERS_CATALOGUE}
 
 
+
+# Staged orthographic examples for alphabet discovery only. H is silent
+# in Spanish/French; letter NAME vs PHONEME and digraph behavior require
+# native review and approved voice clips before these are child-selectable.
+EXAMPLES_ES: Final[dict[str, tuple[str, str]]] = {
+    "A": ("ABEJA", "🐝"),
+    "B": ("BARCO", "⛵"),
+    "C": ("CASA", "🏠"),
+    "D": ("DADO", "🎲"),
+    "E": ("ELEFANTE", "🐘"),
+    "F": ("FLOR", "🌸"),
+    "G": ("GATO", "🐱"),
+    "H": ("HELADO", "🍦"),
+    "I": ("ISLA", "🏝️"),
+    "J": ("JIRAFA", "🦒"),
+    "K": ("KIWI", "🥝"),
+    "L": ("LUNA", "🌙"),
+    "M": ("MANZANA", "🍎"),
+    "N": ("NUBE", "☁️"),
+    "O": ("OSO", "🐻"),
+    "P": ("PATO", "🦆"),
+    "Q": ("QUESO", "🧀"),
+    "R": ("RANA", "🐸"),
+    "S": ("SOL", "☀️"),
+    "T": ("TREN", "🚂"),
+    "U": ("UVA", "🍇"),
+    "V": ("VACA", "🐄"),
+    "W": ("WAFLE", "🧇"),
+    "X": ("XILÓFONO", "🎼"),
+    "Y": ("YATE", "⛵"),
+    "Z": ("ZAPATO", "👞"),
+}
+
+EXAMPLES_FR: Final[dict[str, tuple[str, str]]] = {
+    "A": ("AVION", "✈️"),
+    "B": ("BATEAU", "⛵"),
+    "C": ("CAROTTE", "🥕"),
+    "D": ("DINOSAURE", "🦕"),
+    "E": ("ESCARGOT", "🐌"),
+    "F": ("FLEUR", "🌸"),
+    "G": ("GÂTEAU", "🎂"),
+    "H": ("HÉRISSON", "🦔"),
+    "I": ("IGLOO", "🧊"),
+    "J": ("JARDIN", "🌳"),
+    "K": ("KOALA", "🐨"),
+    "L": ("LUNE", "🌙"),
+    "M": ("MAISON", "🏠"),
+    "N": ("NUAGE", "☁️"),
+    "O": ("OURS", "🐻"),
+    "P": ("POMME", "🍎"),
+    "Q": ("QUATRE", "4️⃣"),
+    "R": ("ROBOT", "🤖"),
+    "S": ("SOLEIL", "☀️"),
+    "T": ("TORTUE", "🐢"),
+    "U": ("USINE", "🏭"),
+    "V": ("VÉLO", "🚲"),
+    "W": ("WAGON", "🚃"),
+    "X": ("XYLOPHONE", "🎶"),
+    "Y": ("YAOURT", "🥣"),
+    "Z": ("ZÈBRE", "🦓"),
+}
+
+
+LETTERS_CATALOGUE_ES: Final[tuple[LetterItem, ...]] = tuple(
+    replace(item,
+            word_es=EXAMPLES_ES[item.char][0], symbol_es=EXAMPLES_ES[item.char][1])
+    for item in LETTERS_CATALOGUE
+)
+# Ñ is a full Spanish alphabet letter between N and O, not a variant of N.
+SPANISH_ENYE: Final[LetterItem] = LetterItem(
+    "Ñ", "", "", "", "", (76, 135, 194),
+    word_es="ÑANDÚ", symbol_es="🐦",
+)
+LETTERS_CATALOGUE_ES = (
+    LETTERS_CATALOGUE_ES[:14] + (SPANISH_ENYE,) + LETTERS_CATALOGUE_ES[14:]
+)
+LETTERS_CATALOGUE_FR: Final[tuple[LetterItem, ...]] = tuple(
+    replace(item,
+            word_fr=EXAMPLES_FR[item.char][0], symbol_fr=EXAMPLES_FR[item.char][1])
+    for item in LETTERS_CATALOGUE
+)
+
+_ALPHABETS: Final[dict[str, tuple[LetterItem, ...]]] = {
+    "it": tuple(LETTERS_CATALOGUE),
+    "en": tuple(LETTERS_CATALOGUE),
+    "es": LETTERS_CATALOGUE_ES,
+    "fr": LETTERS_CATALOGUE_FR,
+}
+
+
+def get_letter_catalogue(locale: str) -> tuple[LetterItem, ...]:
+    """Actual lesson alphabet with Spanish Ñ; never guess a different language."""
+    language = LetterItem._supported_lesson_language(locale)
+    return _ALPHABETS[language]
+
+
+
+
 class GameMode(StrEnum):
     EXPLORE = "explore"
     GUESS = "guess"
@@ -105,15 +213,21 @@ class AlfabetoModel:
     _parade_recorded: bool = False
 
     def __post_init__(self) -> None:
+        # Reject unsupported pedagogical locales even before the first frame.
+        get_letter_catalogue(self.locale)
         self.select_letter("A")
 
     @property
+    def letters(self) -> tuple[LetterItem, ...]:
+        return get_letter_catalogue(self.locale)
+
+    @property
     def active_letter(self) -> LetterItem:
-        return LETTERS_CATALOGUE[self.current_index]
+        return self.letters[self.current_index]
 
     def step(self, delta: int) -> LetterItem:
         """Step previous (-1) or next (+1) in alphabet."""
-        self.current_index = (self.current_index + delta) % len(LETTERS_CATALOGUE)
+        self.current_index = (self.current_index + delta) % len(self.letters)
         item = self.active_letter
         self._discover(item.char)
         self.revealed = True
@@ -123,7 +237,7 @@ class AlfabetoModel:
     def select_letter(self, char: str) -> bool:
         """Jump directly to a specific letter."""
         char_upper = char.upper()
-        for idx, item in enumerate(LETTERS_CATALOGUE):
+        for idx, item in enumerate(self.letters):
             if item.char == char_upper:
                 self.current_index = idx
                 self._discover(item.char)
@@ -139,7 +253,7 @@ class AlfabetoModel:
 
     def restore_discoveries(self, letters: set[str]) -> None:
         """Restore previously seen letters without creating new history facts."""
-        valid = {item.char for item in LETTERS_CATALOGUE}
+        valid = {item.char for item in self.letters}
         self.discovered_letters.update(letters & valid)
         self._parade_recorded = len(self.discovered_letters) == len(valid)
         self._pending_discoveries.clear()
@@ -161,10 +275,10 @@ class AlfabetoModel:
         self.wobble_timer = 0.0
 
         # Choose target letter
-        self.target_letter = random.choice(LETTERS_CATALOGUE)
+        self.target_letter = random.choice(self.letters)
 
         # Pick 2 different distractors
-        other_letters = [item for item in LETTERS_CATALOGUE if item.char != self.target_letter.char]
+        other_letters = [item for item in self.letters if item.char != self.target_letter.char]
         distractors = random.sample(other_letters, 2)
 
         choices = [self.target_letter, distractors[0], distractors[1]]
@@ -192,7 +306,7 @@ class AlfabetoModel:
         events: list[str] = ["letter.discovered" for _ in self._pending_discoveries]
         if self._pending_discoveries:
             self._pending_discoveries.clear()
-            if len(self.discovered_letters) == len(LETTERS_CATALOGUE) and not self._parade_recorded:
+            if len(self.discovered_letters) == len(self.letters) and not self._parade_recorded:
                 self._parade_recorded = True
                 events.append("alphabet.parade_completed")
 

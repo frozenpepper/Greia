@@ -15,7 +15,6 @@ from greia_platform.typography import GreiaTypography
 if __package__:
     from .alfabeto_audio import AlfabetoAudio
     from .alfabeto_model import (
-        LETTERS_CATALOGUE,
         REFERENCE_WIDTH,
         AlfabetoModel,
         GameMode,
@@ -25,7 +24,6 @@ if __package__:
 else:
     from alfabeto_audio import AlfabetoAudio
     from alfabeto_model import (
-        LETTERS_CATALOGUE,
         REFERENCE_WIDTH,
         AlfabetoModel,
         GameMode,
@@ -80,6 +78,11 @@ class AlfabetoApp:
                     elif pygame.K_a <= event.key <= pygame.K_z:
                         char = chr(ord("A") + (event.key - pygame.K_a))
                         self._handle_key_letter(char)
+                elif event.type == pygame.TEXTINPUT and event.text.upper() == "Ñ":
+                    # SDL text input handles Ñ even when keyboard layouts do
+                    # not expose it as a simple pygame.K_* alphabet key.
+                    if self.model.locale.replace("_", "-").split("-")[0].lower() == "es":
+                        self._handle_key_letter("Ñ")
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     ref_pos = self.canvas.pointer(event.pos)
                     if ref_pos is not None:
@@ -168,13 +171,13 @@ class AlfabetoApp:
                 return
 
             half = visible_count // 2
-            total = len(LETTERS_CATALOGUE)
+            total = len(self.model.letters)
             for i in range(visible_count):
                 bx = start_x + i * (btn_size + spacing)
                 if bx <= rx <= bx + btn_size:
                     offset = i - half
                     idx = (self.model.current_index + offset) % total
-                    target_char = LETTERS_CATALOGUE[idx].char
+                    target_char = self.model.letters[idx].char
                     self.model.select_letter(target_char)
                     self.audio.play_letter(target_char)
                     return

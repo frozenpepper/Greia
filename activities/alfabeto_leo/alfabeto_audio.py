@@ -8,6 +8,11 @@ from typing import Final
 
 import pygame
 
+if __package__:
+    from .alfabeto_model import get_letter_catalogue
+else:
+    from alfabeto_model import get_letter_catalogue
+
 from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
 
 MAX_SIMULTANEOUS_CHANNELS: Final[int] = 4
@@ -104,8 +109,8 @@ class AlfabetoAudio:
             return
         sample_rate, channel_count = spec
 
-        for index in range(26):
-            char = chr(ord("A") + index)
+        for index, item in enumerate(get_letter_catalogue(self.locale)):
+            char = item.char
             frequency = 261.63 * (2.0 ** (index / 12.0))
             self._sounds[f"letter_{char}"] = self._synthesize_marimba(
                 sample_rate,

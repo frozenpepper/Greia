@@ -64,7 +64,7 @@ class AlfabetoLeoTests(unittest.TestCase):
         self.assertEqual(item.word_for("it-IT"), item.word_it)
         self.assertEqual(item.symbol_for("en-GB"), item.symbol_en)
         self.assertEqual(item.symbol_for("it-IT"), item.symbol_it)
-        for lang in ("es", "fr", "zh-CN"):
+        for lang in ("de", "zh-CN"):
             with self.subTest(locale=lang):
                 with self.assertRaises(ValueError):
                     item.word_for(lang)

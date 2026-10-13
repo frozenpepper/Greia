@@ -13,7 +13,6 @@ from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
     from .alfabeto_model import (
-        LETTERS_CATALOGUE,
         AlfabetoModel,
         GameMode,
         REFERENCE_HEIGHT,
@@ -21,7 +20,6 @@ if __package__:
     )
 else:
     from alfabeto_model import (
-        LETTERS_CATALOGUE,
         AlfabetoModel,
         GameMode,
         REFERENCE_HEIGHT,
@@ -238,7 +236,7 @@ class AlfabetoRenderer:
         btn_size = 64
         spacing = 16
         cur_idx = model.current_index
-        total = len(LETTERS_CATALOGUE)
+        total = len(model.letters)
 
         # Previous button (drawn triangle instead of tofu font)
         prev_rect = pygame.Rect(135, strip_y, 52, btn_size)
@@ -254,7 +252,7 @@ class AlfabetoRenderer:
         for i in range(visible_count):
             offset = i - half
             idx = (cur_idx + offset) % total
-            item = LETTERS_CATALOGUE[idx]
+            item = model.letters[idx]
             bx = start_x + i * (btn_size + spacing)
             brect = pygame.Rect(bx, strip_y, btn_size, btn_size)
 
