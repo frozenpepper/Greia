@@ -1,5 +1,104 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-13 — FINAL current L4 source-text checkpoint: 44/45 bilingual source-key parity, NO ES/FR voice acceptance
+
+**Canonical implementation ledger:**
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`.
+Plan:
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+Local agent acceptance GLA-014/015:
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`;
+audio production:
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`.
+
+**Source inventory truth:** all **45** built-ins have a
+`locales/es.json` and `locales/fr.json`,
+and **44** now match all current declared
+English/Italian *text keys*; one (Word Forest)
+intentionally leaves 24 language-dependent
+phonics/word exemplars untranslated in each
+locale. Exactly **877 authored text strings
+per target language** across the 45 packs
+(1,754 ES+FR values). Not all hardcoded
+runtime/UI text has been extracted; do not
+interpret file/key parity as complete screen
+translation. All 45 Activity manifests and the
+installer/global system registry continue to
+advertise **EN/IT only**.
+
+**Encyclopedia completed TEXT, not audio:** its
+full **246** written source string keys
+per language now have ES/FR copies, across
+animals, the solar system, Earth, human biology,
+engineering, airplanes, ancient history and
+fossils. The source EN and IT packs each
+declare **200 audio cues** which require
+exact approved narration transcripts, language
+adaptation, assigned speakers and listened
+recordings. New ES/FR `audio` tables remain
+empty. Source commits:
+`f34ee05f` initial 51,
+`880848ab` Space 68,
+`3f271e65` Earth/Body 61,
+`447c72e9` Engineering/History 66.
+Science, translated grammar and child text-fit
+still require real review.
+
+**Literacy NOT localized as curriculum:** four
+letters/rhyme/phonics/syllable Activities have
+all source UI keys in ES/FR but still use
+language-specific teaching engines/content
+not adapted/accepted. Word Forest contains
+only 10 staged ES/FR UI keys; its 24
+`word.*`/`phonics.*` words and example
+phonemes remain intentionally unmodified.
+Do not fill these with easy one-word translations:
+verify exact playable target-letter relation and
+authentic voice before adding.
+
+**Other source work this turn:** 11 new
+complete-key Activity translations (Orca Bay,
+My Pet, Marble Descent, Magic Labyrinth,
+Opposites, Fluffy Monsters, Leo's Post,
+Enchanted Stars, Stories of My Voice,
+Puppet Theatre, Dolphin Journey);
+Submarine 77 ES/FR text keys with orders and
+32 marine facts, but 55 separate audio cues
+per source language remain unrecorded in ES/FR.
+Dolphin seven EN/IT narrated cues now explicitly
+link to seven full captions for future
+human transcript checking. Source locale
+audit now reports `advertised_by_manifest`
+and separate honest source-key completion
+classes. Source tests count 45 and assert
+Encyclopedia 246 keys without claiming
+200 narrated clips. Number Train's alleged
+1-fruit plural bug corrected in backlog:
+actual generator always requests at least
+2 fruit and the prompt text is dormant;
+future text/speech enabling still requires
+count-aware grammar if count 1 is introduced.
+
+**Strict evidence labels:** SOURCE COMMITTED,
+GitHub readback-only. No source unit tests,
+`make verify`, Pygame or Acer visual
+acceptance, native proofread, human/ASR
+voice review, Modal voice generation,
+Parent HTML client pinned build, installer
+repackaging or live Acer/Pi release test.
+No paid/provider calls or privileged OS
+work authorized in this stage.
+
+**Next actual work:** native ES/FR
+letter/phoneme/rhyme target datasets
+and gameplay, 200-cue Encyclopedia speech
+reconciliation, 55-cue Submarine and other
+legacy narration production ledger,
+Shell/Parent HTML UI integration and real
+source+GUI/audio acceptance through the
+one queue. Only then may ES/FR be promoted
+to the canonical selectable language registry.
+
 ## 2026-10-13 — Multilingual continuation: 45 Activity ES/FR source bundles, 39 full-key, 6 explicitly blocked (SOURCE-WIP)
 
 **Authority:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
