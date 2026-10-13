@@ -2836,13 +2836,17 @@ class ParentSettingsOverlay:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = self._get_text(self._ui_message("pointer.title"), FontRole.TITLE, 22, (61, 44, 31), typography)
-        screen.blit(title, (card.left + 20, card.top + 12))
-        note = self._get_text(
-            self._ui_message("pointer.note"),
-            FontRole.BODY, 14, (118, 104, 93), typography,
+        title = panel_layout.fit_single_line(
+            typography, self._ui_message("pointer.title"), FontRole.TITLE, 22,
+            (61, 44, 31), max(1, card.width - 40), min_size=14,
         )
-        screen.blit(note, (card.left + 20, card.top + 40))
+        panel_layout.blit_block(screen, title, pygame, card.left + 20, card.top + 12, bounds=card)
+        note = panel_layout.fit_text_block(
+            typography, self._ui_message("pointer.note"), FontRole.BODY, 13,
+            (118, 104, 93), max(1, card.width - 40), max_lines=2,
+        )
+        panel_layout.blit_block(screen, note, pygame, card.left + 20, card.top + 40, bounds=card)
+        section_top = max(card.top + 62, card.top + 44 + note.height + 6)
 
         settings = self._pointer_settings()
         min_touch = self._pointer_min_touch_px()
@@ -2872,7 +2876,7 @@ class ParentSettingsOverlay:
         row_h = max(34, min(44, min_touch - 4))
 
         # --- Touchpad speed presets ---
-        y = card.top + 62
+        y = section_top
         lbl = self._get_text(self._ui_message("pointer.touchpad.speed"), FontRole.CONTROL, 15, (61, 44, 31), typography)
         screen.blit(lbl, (left, y))
         if not has_touchpad:
@@ -2889,7 +2893,7 @@ class ParentSettingsOverlay:
                 (241, 185, 35) if active else ((235, 228, 214) if not has_touchpad else (255, 250, 240)),
                 pygame, (61, 44, 31), 3 if (active or focused) else 1, radius=10,
             )
-            short = self._ui_message(f"pointer.preset.{name}").split()[0][:5]
+            short = self._ui_message(f"pointer.preset.short.{name}")
             txt = self._get_text(short, FontRole.BODY, 13, (61, 44, 31), typography)
             screen.blit(txt, txt.get_rect(center=chip.center))
             self._targets.append(PanelHitTarget("pointer_touchpad_preset", name, chip))
@@ -2911,7 +2915,7 @@ class ParentSettingsOverlay:
                 (241, 185, 35) if active else ((235, 228, 214) if not has_relative else (255, 250, 240)),
                 pygame, (61, 44, 31), 3 if (active or focused) else 1, radius=10,
             )
-            short = self._ui_message(f"pointer.preset.{name}").split()[0][:5]
+            short = self._ui_message(f"pointer.preset.short.{name}")
             txt = self._get_text(short, FontRole.BODY, 13, (61, 44, 31), typography)
             screen.blit(txt, txt.get_rect(center=chip.center))
             self._targets.append(PanelHitTarget("pointer_mouse_preset", name, chip))
@@ -2934,8 +2938,14 @@ class ParentSettingsOverlay:
                 pygame, (61, 44, 31), 3 if (focused or (is_on and enabled)) else 1, radius=10,
             )
             state = self._ui_message("state.on" if (is_on and enabled) else "state.off")
-            t1 = self._get_text(label, FontRole.BODY, 12, (61, 44, 31), typography)
-            screen.blit(t1, t1.get_rect(center=(tog.centerx, tog.top + 14)))
+            t1 = panel_layout.fit_single_line(
+                typography, label, FontRole.BODY, 12, (61, 44, 31),
+                max(1, tog.width - 8), min_size=10,
+            )
+            panel_layout.blit_block(
+                screen, t1, pygame, tog.centerx, tog.top + 14 - t1.height // 2,
+                align="center", bounds=tog,
+            )
             t2 = self._get_text(state, FontRole.CONTROL, 13, (61, 44, 31), typography)
             screen.blit(t2, t2.get_rect(center=(tog.centerx, tog.top + 30)))
             self._targets.append(PanelHitTarget("pointer_toggle", field, tog))
@@ -2956,7 +2966,7 @@ class ParentSettingsOverlay:
             screen.blit(msg, (reset_rect.right + 10, reset_rect.top + 9))
 
         # --- Bounded test region (right column) ---
-        test_top = card.top + 62
+        test_top = section_top
         test_h = card.bottom - test_top - 12
         test_rect = pygame.Rect(right, test_top, max(120, test_w), max(80, test_h))
         self._blit_rounded_card(screen, test_rect, (246, 236, 209), (255, 250, 240), pygame, (220, 210, 190), 1, radius=12)
@@ -3100,8 +3110,12 @@ class ParentSettingsOverlay:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = self._get_text(self._ui_message("ssh.title"), FontRole.TITLE, 22, (61, 44, 31), typography)
-        screen.blit(title, (card.left + 24, card.top + 20))
+        title = panel_layout.fit_single_line(
+            typography, self._ui_message("ssh.title"),
+            FontRole.TITLE, 22, (61, 44, 31), max(1, card.width - 48),
+            min_size=14,
+        )
+        panel_layout.blit_block(screen, title, pygame, card.left + 24, card.top + 20, bounds=card)
 
         if status is None:
             waiting = self._get_text(self._ui_message("ssh.checking"), FontRole.BODY, 18, (118, 104, 93), typography)
@@ -3134,16 +3148,23 @@ class ParentSettingsOverlay:
             self._ui_message("ssh.command", username=status.username, ip=status.host_ip),
         ]
         for line in lines:
-            line_surf = _body(line)
-            screen.blit(line_surf, (card.left + 24, y))
+            line_label = panel_layout.fit_single_line(
+                typography, line, FontRole.BODY, 18, (61, 44, 31),
+                max(1, card.width - 48), min_size=12,
+            )
+            panel_layout.blit_block(screen, line_label, pygame, card.left + 24, y, bounds=card)
             y += 28
 
-        note_y = card.bottom - 48
-        note = _body(
-            self._ui_message("ssh.note"),
-            (118, 104, 93),
+        note = panel_layout.fit_text_block(
+            typography, self._ui_message("ssh.note"),
+            FontRole.BODY, 16, (118, 104, 93),
+            max(1, card.width - 48), max_lines=2,
         )
-        screen.blit(note, (card.left + 24, note_y))
+        panel_layout.blit_block(
+            screen, note, pygame, card.left + 24,
+            max(y + 4, card.bottom - note.height - 16),
+            bounds=card,
+        )
 
     def _draw_info_tab(
         self,
@@ -3163,8 +3184,12 @@ class ParentSettingsOverlay:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = self._get_text(self._ui_message("info.title"), FontRole.TITLE, 22, (61, 44, 31), typography)
-        screen.blit(title, (card.left + 24, card.top + 20))
+        title = panel_layout.fit_single_line(
+            typography, self._ui_message("info.title"),
+            FontRole.TITLE, 22, (61, 44, 31), max(1, card.width - 48),
+            min_size=14,
+        )
+        panel_layout.blit_block(screen, title, pygame, card.left + 24, card.top + 20, bounds=card)
 
         y = card.top + 64
         lines = [
@@ -3175,6 +3200,9 @@ class ParentSettingsOverlay:
             self._ui_message("info.step_login"),
         ]
         for line in lines:
-            surf = self._get_text(line, FontRole.BODY, 18, (61, 44, 31), typography)
-            screen.blit(surf, (card.left + 24, y))
+            block = panel_layout.fit_single_line(
+                typography, line, FontRole.BODY, 18,
+                (61, 44, 31), max(1, card.width - 48), min_size=11,
+            )
+            panel_layout.blit_block(screen, block, pygame, card.left + 24, y, bounds=card)
             y += 32
