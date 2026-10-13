@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import argparse
 import ast
+import csv
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -151,6 +153,7 @@ def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], lis
 
 def _report_launcher_labels(root: Path, errors: list[str]) -> list[dict[str, Any]]:
     base = root / "assets/audio/system/launcher-labels"
+    label_text: dict[str, dict[str, str]] = {}
     expected = {
         file.stem
         for locale in SOURCE_LOCALES
@@ -169,14 +172,37 @@ def _report_launcher_labels(root: Path, errors: list[str]) -> list[dict[str, Any
                 "PRIMARY_COLLECTION_IDS", "DISCOVERY_GROUP_IDS",
             }
             seen: set[str] = set()
+            source_names: dict[str, str | tuple[str, ...]] = {}
             for statement in parsed.body:
                 if isinstance(statement, ast.Assign) and len(statement.targets) == 1:
                     target = statement.targets[0]
                     if isinstance(target, ast.Name) and target.id in wanted:
                         value = ast.literal_eval(statement.value)
                         names = (value,) if isinstance(value, str) else value
+                        source_names[target.id] = value
                         expected.update(names)
                         seen.add(target.id)
+            # These are purely source-declared translations, read as AST
+            # literals. No app imports, side effects, eval() or network.
+            for statement in parsed.body:
+                if not isinstance(statement, ast.AnnAssign) or not isinstance(statement.target, ast.Name):
+                    continue
+                if statement.target.id not in {"_CATEGORY_TRANSLATIONS", "_DISCOVERY_TRANSLATIONS"}:
+                    continue
+                if not isinstance(statement.value, ast.Dict):
+                    errors.append(f"{catalogue}: translations must be a literal dict")
+                    continue
+                for key_node, translations_node in zip(statement.value.keys, statement.value.values):
+                    if isinstance(key_node, ast.Name):
+                        key = source_names.get(key_node.id)
+                    else:
+                        key = ast.literal_eval(key_node)
+                    values = ast.literal_eval(translations_node)
+                    if isinstance(key, str) and isinstance(values, dict):
+                        label_text[key] = {
+                            lang: value for lang, value in values.items()
+                            if isinstance(lang, str) and isinstance(value, str)
+                        }
             if seen != wanted:
                 errors.append(f"{catalogue}: incomplete source collection vocabulary: {sorted(wanted - seen)}")
         except (OSError, UnicodeError, SyntaxError, ValueError, TypeError) as exc:
@@ -188,15 +214,17 @@ def _report_launcher_labels(root: Path, errors: list[str]) -> list[dict[str, Any
             wav = base / locale / f"{name}.wav"
             ogg = base / locale / f"{name}.ogg"
             actual = wav if wav.is_file() else ogg if ogg.is_file() else None
+            source_text = label_text.get(name, {}).get(locale)
             results.append({
                 "source": "assets/audio/system/launcher-labels",
                 "locale": locale, "cue_id": f"collection.{name}",
                 "caption_key": f"collection.{name}",
-                "text": None,
+                "text": source_text,
                 "path": str(actual.relative_to(root)) if actual else
                         f"assets/audio/system/launcher-labels/{locale}/{name}.wav",
                 "file_exists": actual is not None,
-                "state": "EXISTING_ASSET_NEEDS_REVIEW" if actual else "BLOCKED_TEXT",
+                "state": "EXISTING_ASSET_NEEDS_REVIEW" if actual else
+                         "MISSING_AUDIO" if source_text else "BLOCKED_TEXT",
                 "speaker": "UNASSIGNED", "kind": "UNASSIGNED",
             })
     return results
@@ -240,10 +268,85 @@ def build_inventory(root: Path) -> dict[str, Any]:
     }
 
 
+
+
+_LEDGER_COLUMNS = (
+    "source", "locale", "speaker", "kind", "cue_id", "exact_text",
+    "caption_key", "output_path", "existing_asset_sha256", "state",
+    "provider", "receipt_path", "asr_result", "human_review", "notes",
+)
+
+
+def write_recording_ledger(root: Path, report: dict[str, Any], output: Path) -> int:
+    """Produce exact-script candidates without inventing voice speakers.
+
+    Actual approvals/receipts are never inferred from a file's existence.
+    Rows needing an author-approved voice or transcript remain blocked.
+    Custom Python-loaded cues are explicitly outside this mechanical census.
+    """
+    rows: list[dict[str, str]] = []
+    for item in sorted(
+        report["spoken_resources"],
+        key=lambda entry: (entry["source"], entry["locale"], entry["cue_id"]),
+    ):
+        locale = item["locale"]
+        source = item["source"]
+        cue = item["cue_id"]
+        text_value = item.get("text")
+        text_value = text_value if isinstance(text_value, str) else ""
+        media_path = item.get("path") or ""
+        if not media_path and cue == "activity.title" and source.startswith("activities/"):
+            media_path = f"{source}/locales/{locale}/audio/activity-title.wav"
+        digest = ""
+        if item.get("file_exists") and media_path:
+            path = (root / media_path).resolve()
+            if path.is_file() and path.is_relative_to(root.resolve()):
+                hasher = hashlib.sha256()
+                with path.open("rb") as stream:
+                    for block in iter(lambda: stream.read(65536), b""):
+                        hasher.update(block)
+                digest = hasher.hexdigest()
+        state = (
+            "BLOCKED_TEXT" if not text_value.strip()
+            else "EXISTING_REVIEW_PENDING" if digest
+            else "PATH_REVIEW_REQUIRED" if not media_path
+            else "MISSING_AUDIO"
+        )
+        rows.append({
+            "source": source,
+            "locale": locale,
+            "speaker": "UNASSIGNED",
+            "kind": "UNASSIGNED",
+            "cue_id": cue,
+            "exact_text": text_value,
+            "caption_key": item.get("caption_key") or "",
+            "output_path": media_path,
+            "existing_asset_sha256": digest,
+            "state": state,
+            "provider": "",
+            "receipt_path": "",
+            "asr_result": "",
+            "human_review": "",
+            "notes": (
+                "Source inventory only; assign speaker/kind and review script"
+                "; extra code-loaded speech still needs a separate scan"
+            ),
+        })
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=_LEDGER_COLUMNS)
+        writer.writeheader()
+        writer.writerows(rows)
+    return len(rows)
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--recording-ledger", type=Path,
+        help="optional candidate CSV; no audio or provider calls",
+    )
     args = parser.parse_args(argv)
     root = args.root.resolve()
     if not (root / "activities").is_dir():
@@ -254,8 +357,14 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(report, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+    ledger_count = (
+        write_recording_ledger(root, report, args.recording_ledger)
+        if args.recording_ledger is not None else 0
+    )
     print(json.dumps({
         "report": str(args.output), "status": report["status"],
+        "recording_ledger": str(args.recording_ledger) if args.recording_ledger else None,
+        "recording_candidate_rows": ledger_count,
         "activities": len(report["activities"]),
         "summary": report["summary"],
         "structural_errors": len(report["structural_errors"]),
