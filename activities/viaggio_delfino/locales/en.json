@@ -21,25 +21,32 @@
   },
   "audio": {
     "presenter.welcome.voice": {
-      "path": "assets/audio/en/presenter-welcome.ogg"
+      "path": "assets/audio/en/presenter-welcome.ogg",
+      "caption_key": "presenter.welcome.caption"
     },
     "curiosity.delfino.breaching.voice": {
-      "path": "assets/audio/en/curiosity-breaching.ogg"
+      "path": "assets/audio/en/curiosity-breaching.ogg",
+      "caption_key": "curiosity.delfino.breaching.caption"
     },
     "curiosity.delfino.echolocation.voice": {
-      "path": "assets/audio/en/curiosity-echolocation.ogg"
+      "path": "assets/audio/en/curiosity-echolocation.ogg",
+      "caption_key": "curiosity.delfino.echolocation.caption"
     },
     "curiosity.delfino.blowhole.voice": {
-      "path": "assets/audio/en/curiosity-blowhole.ogg"
+      "path": "assets/audio/en/curiosity-blowhole.ogg",
+      "caption_key": "curiosity.delfino.blowhole.caption"
     },
     "curiosity.delfino.pods.voice": {
-      "path": "assets/audio/en/curiosity-pods.ogg"
+      "path": "assets/audio/en/curiosity-pods.ogg",
+      "caption_key": "curiosity.delfino.pods.caption"
     },
     "curiosity.delfino.teeth.voice": {
-      "path": "assets/audio/en/curiosity-teeth.ogg"
+      "path": "assets/audio/en/curiosity-teeth.ogg",
+      "caption_key": "curiosity.delfino.teeth.caption"
     },
     "curiosity.delfino.whistle.voice": {
-      "path": "assets/audio/en/curiosity-whistle.ogg"
+      "path": "assets/audio/en/curiosity-whistle.ogg",
+      "caption_key": "curiosity.delfino.whistle.caption"
     },
     "activity.title": {
       "path": "locales/en/audio/activity-title.wav",
