@@ -7,6 +7,9 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+from greia_platform.typography import FontRole, GreiaTypography
+
 if __package__:
     from .contrari_model import (
         REFERENCE_HEIGHT,
@@ -35,20 +38,21 @@ COLOR_FLASH_PINK: Final = (255, 182, 193)
 COLOR_DANI_BLUE: Final = (38, 166, 154)
 COLOR_DANI_DARK: Final = (0, 121, 107)
 
-CATEGORY_TITLES: Final = {
-    OppositeCategory.UP_DOWN: "SU / GIÙ",
-    OppositeCategory.BIG_SMALL: "GRANDE / PICCOLO",
-    OppositeCategory.IN_OUT: "DENTRO / FUORI",
-    OppositeCategory.OPEN_CLOSED: "APERTO / CHIUSO",
-    OppositeCategory.FAST_SLOW: "VELOCE / LENTO",
+# The five concepts and their two spoken/visible state keys are the same
+# semantic lesson concepts across every UI language.
+CATEGORY_OPPOSITE_KEYS: Final = {
+    OppositeCategory.UP_DOWN: ("up", "down"),
+    OppositeCategory.BIG_SMALL: ("big", "small"),
+    OppositeCategory.IN_OUT: ("in", "out"),
+    OppositeCategory.OPEN_CLOSED: ("open", "closed"),
+    OppositeCategory.FAST_SLOW: ("fast", "slow"),
 }
 
-CATEGORY_TITLES_EN: Final = {
-    OppositeCategory.UP_DOWN: "UP / DOWN",
-    OppositeCategory.BIG_SMALL: "BIG / SMALL",
-    OppositeCategory.IN_OUT: "IN / OUT",
-    OppositeCategory.OPEN_CLOSED: "OPEN / CLOSED",
-    OppositeCategory.FAST_SLOW: "FAST / SLOW",
+# Neutral standalone-renderer defaults are pictograms, not another language.
+NEUTRAL_STATE_SYMBOLS: Final = {
+    "up": "↑", "down": "↓", "big": "＋", "small": "−",
+    "in": "↘", "out": "↗", "open": "○", "closed": "●",
+    "fast": "»", "slow": "·",
 }
 
 CATEGORY_ICONS: Final = {
@@ -63,8 +67,30 @@ CATEGORY_ICONS: Final = {
 class ContrariRenderer:
     """Render opposite concepts with lively animations and giant toddler touch targets."""
 
-    def __init__(self, locale: str = "it") -> None:
+    def __init__(
+        self,
+        locale: str = "it",
+        resources: LocalizedResources | None = None,
+        typography: GreiaTypography | None = None,
+    ) -> None:
+        # Keep the historical locale argument for existing embedder callers.
+        # Locale choice itself belongs to the composition root and resources.
         self._locale = locale
+        self._typography = typography or GreiaTypography()
+        self._state_labels = {
+            state: resources.text(f"opposite.{state}") if resources else symbol
+            for state, symbol in NEUTRAL_STATE_SYMBOLS.items()
+        }
+        self._toolbar_labels = {
+            category: (
+                f"{CATEGORY_ICONS[category]} "
+                f"{self._state_labels[first]} / {self._state_labels[second]}"
+                if resources else CATEGORY_ICONS[category]
+            )
+            for category, (first, second) in CATEGORY_OPPOSITE_KEYS.items()
+        }
+        self._toolbar_surfaces: dict[tuple[OppositeCategory, bool], pygame.Surface] = {}
+        self._status_surfaces: dict[tuple[str, tuple[int, int, int]], pygame.Surface] = {}
         self._reference_surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
 
         # Top Toolbar buttons (5 categories)
@@ -156,7 +182,7 @@ class ContrariRenderer:
         self._draw_flash_rabbit(surf, bx, by + 18, scale=0.85)
 
         # Big Toddler Label Banner
-        banner_text = "SU!" if model.is_up else "GIÙ!"
+        banner_text = self._state_labels["up" if model.is_up else "down"]
         banner_col = (76, 175, 80) if model.is_up else (255, 152, 0)
         self._draw_status_banner(surf, banner_text, banner_col)
 
@@ -180,7 +206,7 @@ class ContrariRenderer:
         pygame.draw.circle(bubble_surf, (255, 255, 255, 220), (cur_r + 10 - int(cur_r * 0.35), cur_r + 10 - int(cur_r * 0.35)), max(3, int(cur_r * 0.15)))
         surf.blit(bubble_surf, (cx - cur_r - 10, cy - cur_r - 10))
 
-        banner_text = "GRANDE!" if model.is_big else "PICCOLO!"
+        banner_text = self._state_labels["big" if model.is_big else "small"]
         banner_col = (156, 39, 176) if model.is_big else (3, 169, 244)
         self._draw_status_banner(surf, banner_text, banner_col)
 
@@ -204,7 +230,7 @@ class ContrariRenderer:
         lid_y = box_y - bh // 2 - 12 if model.is_in else box_y - bh // 2 - 40
         pygame.draw.rect(surf, (211, 47, 47), (box_x - bw // 2 - 10, lid_y, bw + 20, 24), border_radius=6)
 
-        banner_text = "DENTRO!" if model.is_in else "FUORI!"
+        banner_text = self._state_labels["in" if model.is_in else "out"]
         banner_col = (233, 30, 99) if model.is_in else (0, 150, 136)
         self._draw_status_banner(surf, banner_text, banner_col)
 
@@ -236,7 +262,7 @@ class ContrariRenderer:
         pygame.draw.rect(surf, (67, 160, 71), (wx + half_w - shutter_w, wy - wh // 2, max(6, shutter_w), wh), border_radius=4)
         pygame.draw.rect(surf, (46, 125, 50), (wx + half_w - shutter_w, wy - wh // 2, max(6, shutter_w), wh), 3, border_radius=4)
 
-        banner_text = "APERTO!" if model.is_open else "CHIUSO!"
+        banner_text = self._state_labels["open" if model.is_open else "closed"]
         banner_col = (76, 175, 80) if model.is_open else (121, 85, 72)
         self._draw_status_banner(surf, banner_text, banner_col)
 
@@ -254,7 +280,7 @@ class ContrariRenderer:
         sx = int(model.snail_x)
         self._draw_snail(surf, sx, 420)
 
-        banner_text = "VELOCE!" if model.is_fast else "LENTO!"
+        banner_text = self._state_labels["fast" if model.is_fast else "slow"]
         banner_col = (255, 160, 0) if model.is_fast else (139, 195, 74)
         self._draw_status_banner(surf, banner_text, banner_col)
 
@@ -315,15 +341,20 @@ class ContrariRenderer:
         pygame.draw.rect(surf, col, (x - int(25 * scale), y - int(6 * scale), int(50 * scale), int(16 * scale)))
 
     def _draw_status_banner(self, surf: pygame.Surface, text: str, accent: tuple[int, int, int]) -> None:
-        font = pygame.font.Font(None, 46)
         banner_rect = pygame.Rect(512 - 130, 490, 260, 68)
         pygame.draw.rect(surf, (255, 255, 255), banner_rect, border_radius=34)
         pygame.draw.rect(surf, accent, banner_rect, 5, border_radius=34)
-        lbl = font.render(text, True, accent)
+        cache_key = (text, accent)
+        lbl = self._status_surfaces.get(cache_key)
+        if lbl is None:
+            for font_size in (40, 36, 32, 28, 24, 20):
+                if self._typography.measure(text, FontRole.DISPLAY, font_size).width <= banner_rect.width - 24:
+                    break
+            lbl = self._typography.render(text, FontRole.DISPLAY, font_size, accent)
+            self._status_surfaces[cache_key] = lbl
         surf.blit(lbl, lbl.get_rect(center=banner_rect.center))
 
     def _render_toolbar(self, surf: pygame.Surface, model: ContrariModel) -> None:
-        font = pygame.font.Font(None, 24)
         for cat, rect in self.category_buttons.items():
             is_active = model.category == cat
             bg = (255, 255, 255) if is_active else (245, 245, 250)
@@ -331,9 +362,20 @@ class ContrariRenderer:
             pygame.draw.rect(surf, bg, rect, border_radius=18)
             pygame.draw.rect(surf, border_col, rect, 4 if is_active else 2, border_radius=18)
 
-            titles = CATEGORY_TITLES if self._locale.startswith("it") else CATEGORY_TITLES_EN
-            label = f"{CATEGORY_ICONS[cat]} {titles[cat]}"
-            text_surf = font.render(label, True, (40, 40, 40) if is_active else (100, 100, 100))
+            cached_key = (cat, is_active)
+            text_surf = self._toolbar_surfaces.get(cached_key)
+            if text_surf is None:
+                label = self._toolbar_labels[cat]
+                for font_size in (19, 17, 15, 13):
+                    if self._typography.measure(label, FontRole.CONTROL, font_size).width <= rect.width - 12:
+                        break
+                text_surf = self._typography.render(
+                    label,
+                    FontRole.CONTROL,
+                    font_size,
+                    (40, 40, 40) if is_active else (100, 100, 100),
+                )
+                self._toolbar_surfaces[cached_key] = text_surf
             surf.blit(text_surf, text_surf.get_rect(center=rect.center))
 
     def _render_particles(self, surf: pygame.Surface, model: ContrariModel) -> None:
