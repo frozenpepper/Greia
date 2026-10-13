@@ -1,559 +1,638 @@
 ---
-name: greia-activity-authoring
-description: Design and build one or more Greia Activities from a parent's request. Child/play/teaching design comes first, followed by clean implementation, prerecorded speech, repeated headless Simulator integration and final GUI user review.
+name: greia-os-work
+description: Task router for substantive Greia OS/platform/Shell/Parent/installer/simulator/build/runtime/hardware-service work. Load only the task-specific local docs required for the work.
 ---
 
-# Greia Activity Authoring
+# Greia OS Work — task router
 
-**Status:** living Activity-authoring contract  
-**Reviewed:** 2026-09-03
+**Status:** LIVING derived contributor router  
+**Reviewed:** 2026-09-21
 
-The normal entry point is simple:
+This file tells an agent **what to read for the task**. It is deliberately not a second architecture manual.
 
-> **A parent asks for one or more Activities.**
+## Universal rules
 
-Act as a small Activity designer/producer, not merely a coder. Turn the request into coherent child experiences, plan the set, implement each Activity cleanly, and prove the final result through Greia.
+1. Work from current `main`; preserve concurrent changes. Read `AGENTS.md` and `HANDOVER.md` first.
+2. Accepted ADRs own architecture; source/runtime declarations own exact implemented APIs/schemas/limits; product docs own accepted child-facing behavior.
+3. Greia Shell is the child-facing OS surface. Do not expose a generic Linux desktop/shell/package-management path during normal child use.
+4. Platform authority stays platform-owned: profiles/sessions, trust/packages, permissions, Home/Back, physical input, system controls, microphone routing/processing, storage/history, progression/rewards, install/update authority and hardware facts.
+5. Low-resource behavior is correctness. The Acer reference floor is not a later optimization target.
+6. GitHub-hosted Actions/execution are opt-in only and require explicit owner authorization.
+7. Claim only evidence that actually ran. Source, authoring-provider+human, browser, Simulator, VM/image and physical evidence are distinct.
+8. After substantive implementation, update the active plan/HANDOVER and affected living manuals/skills as required by `AGENTS.md`.
+9. New prerecorded Greia speech is authoring-time work through `tools/greia_voice.py`; OS/Activity/shared-library code must not grow a parallel TTS/ASR backend.
+10. Launcher spoken labels are Shell-owned prerecorded assets; no child-runtime TTS and no Activity-owned hover/focus speech.
+11. Display/session/input abstraction must preserve direct safe Activity SDL/Pygame rendering and high-rate input paths; do not introduce avoidable full-frame copies or generic high-rate IPC merely for abstraction symmetry.
+12. Repository verification must not traverse arbitrary git-ignored build/evidence/cache state. Privileged release attempts may legitimately leave root-owned preserved evidence under ignored paths; source cleanup/footprint gates must stay scoped to source-owned/tracked material rather than requiring deletion/chown of retained evidence.
+13. Privileged release/build orchestration must not write generated Python bytecode into the developer-owned checkout. Owner release execution and its subprocess tree must run with bytecode writing disabled. Source-bytecode cleanup has one explicit source-scoped owner and must fail closed on traversal/deletion errors rather than using brittle Make/shell-variable loops or returning a false-green verification result.
 
-## 1. Mandatory authoring loop
-
-For every new Activity request:
-
-```text
-parent request
--> decompose into one or more coherent Activity concepts
--> design child fantasy + play/teaching loop
--> choose defensible minimum age + challenge model
--> design no-reading communication + required speech
--> choose presenter, feedback/audio sequencing and progression semantics
--> plan implementation + Activity-local authoring tools
--> implement one small vertical slice
--> headless Greia Simulator
--> iterate with focused tests + headless Simulator
--> produce/review required prerecorded voice/assets
--> final exact-state headless Simulator
--> launch GUI Greia Simulator
--> user reviews actual child experience
--> accepted only after applicable evidence is complete
-```
-
-Do not build first and try to make it child-friendly afterward.
-
-## 2. Creation core — load these every time
-
-Before coding a new first-party Activity or materially redesigning gameplay, load:
+Before installing/configuring anything also read:
 
 ```text
-DESIGN_AND_TEACHING.md
-PRE_READER_UX.md
-DISCOVERY.md
-FEEDBACK_ORCHESTRATION.md
-ACHIEVEMENTS.md
-ENGINEERING.md
-SIMULATOR_WORKFLOW.md
+SETUP.md
+docs/agents/GREIA_AGENT_OPERATIONS.md
 ```
 
-These seven companions are the normal creation core:
-
-- `DESIGN_AND_TEACHING.md` — parent-request decomposition, gameplay and learning design;
-- `PRE_READER_UX.md` — operation without reading and spoken-command requirements;
-- `DISCOVERY.md` — mandatory minimum age, difficulty and Collection/discovery metadata;
-- `FEEDBACK_ORCHESTRATION.md` — audio/event conflicts, shared reactions and terminal transitions;
-- `ACHIEVEMENTS.md` — local score/progress/events versus Greia-owned rewards;
-- `ENGINEERING.md` — clean architecture, runtime rules and performance;
-- `SIMULATOR_WORKFLOW.md` — repeated headless integration and final GUI review.
-
-Do not load every specialist companion merely because it exists.
-
-## 3. First action: decompose the parent's request
-
-If several Activities are requested, plan the set before coding.
-
-Decide whether the request is best represented as:
-
-- several distinct Activities;
-- one Activity with progressive stages;
-- or one coherent Activity with multiple modes.
-
-Prefer separate Activities when the child fantasy, primary learning goal or core interaction is materially different.
-
-For multiple Activities, first make a compact matrix:
+For current evidence/test routing use:
 
 ```text
-Activity | child fantasy | learning/development goal | core mechanic | presenter | age/challenge | why distinct
+docs/testing/LOCAL_AGENT_START_HERE.md
 ```
 
-Avoid producing several copies of the same quiz with different nouns/art.
+## Current blocking route: post-R1 product-composition closure + multiplatform lifecycle plan
 
-Infer ordinary design details from the request and Greia's existing product language. Ask only when a missing choice genuinely changes product direction.
+Install/update/release/multiplatform lifecycle work routes to
+`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md`
+(the ADR 0036 successor plan), not to signed-bundle or Gate-P5/V12G/D6
+closure. That plan owns lifecycle sequencing and closure criteria; the
+2026-08-08 architecture-remediation plan remains blocking only for its
+remaining non-lifecycle obligations.
 
-## 4. No code before the child loop is clear
+Session 03's owner-release CLI implementation and source validation are green.
+The current lifecycle entry point is the **real Linux owner-command release
+build acceptance**:
 
-Every Activity gets the compact brief in `DESIGN_AND_TEACHING.md` first.
+`docs/testing/2026-09-21_SESSION03_LINUX_RELEASE_BUILD_ACCEPTANCE.md`
 
-At minimum know:
+Run that only on an owner-approved x86_64 Linux build host. It proves the
+single owner command against the current Acer-only release matrix; it does not
+create or certify the universal Setup image, which remains Session 08 work.
+
+The old signed `.greiaupdate` v2 flow and release signing keys are
+superseded by ADR 0036 and are not the normal production route; older
+references to them are historical only.
+
+After the Session 03 Linux owner-command build is green, Session 04 owns the
+real legacy-i386 fresh-install/update/rollback lifecycle. The
+`POSTR1-P1-INSTALLER-RED` / Gate-P5/V12G/D6 routing below is historical and
+superseded for lifecycle sequencing. Source composition primitives (T3-S) are
+done; exact shipped installer/update/boot-health product composition (T3-P)
+remains OPEN/BLOCKING until closed through the 2026-09-15 plan. T7 remains
+valid only in its disposable/device-harness scope. See `HANDOVER.md` §2/§8
+and the active lifecycle plan for current disposition.
+
+Do not start Raspberry Pi 400/500 work, UEFI work, destructive Acer
+installation, or backup work in this lane, and do not treat shipped
+product composition as complete. Pi/UEFI adapters resume only after the
+common product lifecycle is proven.
+
+## Creations Library / first-party Activity release workstream
+
+For child-created PNG/WAV/UTF-8 sharing, the universal pre-reader picker/viewer, shared adaptive storage capacity guard, Painting/Shape Garden/Theatre/voice/text interoperability, and the 45-built-in quality/release audit, read:
 
 ```text
-what world/fantasy the child enters
-what the child repeatedly does
-what the child learns/practices/creates
-what happens in the first five seconds
-how a non-reader knows what to do
-recommended_age_min and why it is defensible
-how challenge/scaffolding changes
-what keeps repetition varied
-what success and mistakes look/sound like
-which presenter/character is used
-which commands require spoken language
-which locales ship
-how completion/progress works
-what score/events exist, if any
-what happens on the final item/final answer
-which cue wins when speech/SFX/celebration collide
+docs/product/CHILD_CREATIONS_LIBRARY_AND_MEDIA_INTEROPERABILITY.md
+docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PLAN.md
+docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/PROGRESS.md
+src/greia_platform/creation_capacity.py
+src/greia_platform/creation_media.py
+src/greia_platform/creations.py
 ```
 
-If these are vague, keep designing instead of writing infrastructure.
+P1 remains the trusted repository; P2 provides the manifest-bound **publish-own-private-file/import-child-selected-handle** seam over the existing per-session socket. P3 SOURCE-WIP includes the common gallery/picker renderer, audio preview owner, authenticated nonblocking request/poll/cancel coordinator, and **trusted modal presentation**: Legacy-X keeps native window handles private, re-proves the foreground window's `_NET_WM_PID` against the supervised process before raising Greia's existing Shell window, and restores the Activity afterward; Simulator diverts its existing remote display/input transport to the same Shell picker and prevents Activity frame overwrite while the modal is active. Painting is the first real PNG producer+consumer and exposes child-visible up-arrow publish / down-arrow import actions; import polls at a bounded cadence and saves an independent private editable copy. **All of this latest modal/import work is untested in a complete checkout/GUI**, so do not call P3 accepted yet. Do not mount a shared folder, duplicate choosers per app or expose arbitrary library listing/deletion to an Activity. Follow `P3_TRUSTED_PICKER_DISPLAY_CONTRACT.md` and the consolidated deferred acceptance before promotion. Wayland/KMSDRM still require their own backend implementation of the same runtime-neutral modal lease.
 
-## 5. Design for children who cannot read instructions
+## Broad architecture / new platform seam
 
-Normal Greia operation must not depend on reading button labels, prose or instructions.
-
-Prefer:
+Read:
 
 ```text
-obvious scene composition
-+ large child-sized targets
-+ pictures / shapes / numbers / icons
-+ short visual demonstration or motion cue
-+ spoken instruction when language is necessary
-+ immediate visual/audio cause-and-effect
+docs/DOCUMENTATION.md
+docs/architecture/GREIA_ARCHITECTURE.md
+docs/adr/0012-platform-architecture-constitution.md
+docs/engineering/ENGINEERING_FOUNDATIONS.md
+docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md
 ```
 
-Text is secondary support.
+Use this broad set only when the change genuinely crosses subsystem boundaries.
 
-Even a reading/phonics Activity is not exempt: letters/words may be learning content, but the instruction for how to play must still be understandable to a pre-reader.
+## Boot, GRUB, Syslinux, initramfs, first boot, X startup, recovery
 
-### Required language commands are spoken
-
-If exact language is needed to know what to do, it must be spoken.
-
-Examples:
+Read **first**:
 
 ```text
-“Trova la lettera S.”
-“Metti tre mele nel cestino.”
-“Quale animale fa questo verso?”
+skills/greia-os-work/BOOT.md
 ```
 
-Do not ship these as text-only commands.
-
-Required speech is short, localized, semantically identified, repeatable when useful, produced through Greia's prerecorded voice system and human-reviewed before final acceptance.
-
-## 6. Age metadata is part of design
-
-Every first-party Activity must declare a defensible:
-
-```toml
-[education]
-recommended_age_min = N
-```
-
-Choose the youngest ordinary child for whom the **actual shipped interaction** is appropriate considering concepts, language/reading assumptions, working-memory load and motor demands.
-
-Do not copy `difficulty` into age. Difficulty and developmental suitability are independent.
-
-`recommended_age_max` is optional. Open-ended creative/sensory/imaginative Activities should not receive fake upper limits merely for symmetry.
-
-Parent restrictive age presets depend on truthful metadata. See `DISCOVERY.md` for exact semantics, including unknown-age compatible packages and explicit Parent overrides.
-
-## 7. Teaching happens through play
-
-Do not put a worksheet on a cute background.
-
-Prefer mechanics where the educational idea is what the child actually does:
+Then as relevant:
 
 ```text
-count visible objects by touching/moving them
-fit shapes into meaningful silhouettes
-hear a phoneme and manipulate/choose its symbol
-arrange a sequence and watch the consequence
-build/experiment and see cause-and-effect
+docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
+docs/INSTALLATION_ISSUES_LOG.md
+docs/INSTALLATION_USB_BOOT_POSTMORTEM.md
+docs/INSTALLED_OS_BOOT_POSTMORTEM.md
+docs/design/GREIA_BOOT_EXPERIENCE.md
+docs/design/GREIA_BOOT_PROGRESS.md
 ```
 
-Useful default progression:
+Do not modify physical boot/recovery state from memory.
+
+## Installer, image composition or build pipeline
+
+Read:
 
 ```text
-tiny demonstration
--> guided first attempt
--> independent repetition
--> gentle variation
--> slightly harder variation
--> natural completion/continuation
+docs/adr/0013-declarative-image-profiles-and-composable-build-artifacts.md
+docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md
+docs/engineering/BOOT_PIPELINE_AGENT_GUIDE.md
+SETUP.md
 ```
 
-Increase challenge through the learning mechanic, not through tiny targets, dense screens, reading requirements, punitive timers or confusing layout.
+Inspect current builders under `build/` before changing generated target state. Boot-impacting changes also require `skills/greia-os-work/BOOT.md`.
 
-Mistakes should reorient and encourage, not shame or punish.
+Partition-scanned loop ownership is centralized in
+`build/lib/safe-cleanup.sh`. Any build/tool path that creates a
+`losetup --find --show --partscan` loop must use `safe_detach_loop`; do not
+directly call `losetup -d` and then clear the loop variable. Linux detach is
+lazy and open partitions count as disk openers. The required order is:
+unmount -> request parent detach -> settle -> if still bound with partition
+children, bounded `partx -d` as a **post-detach fallback** -> settle -> verify
+both backing association and children are gone -> clear/delete. Cleanup pins
+backing identity against loop-number reuse, emits opener/holder diagnostics on
+failure, and cleanup failure must become process failure rather than merely
+being logged from an EXIT trap.
 
-### Four-language rollout (2026-10-12)
+## Shell, launcher, Collections or lightweight UI
 
-Current Greia OS selectable locales: **English and Italian**.
-Spanish and French are translation/voice targets but not globally
-selectable. The accepted cross-surface plan is
-`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`;
-the exact local recording work order is the sibling
-`LOCAL_AGENT_VOICE_PRODUCTION.md`. All built-in Activity semantic
-UI/lesson-language separation, locale bundle keys, launcher titles,
-caption/audio mappings and human-listened speech must pass before
-ES/FR are promoted. Never mark a locale supported merely because
-you copied `en.json` or created placeholder WAV paths. Preserve
-current English/Italian recording assets and repair only identified
-missing/incorrect cues.
-
-### Source-staged Activity text (2026-10-13)
-
-The first twenty-seven built-in Activity packages now have
-`locales/es.json` and `locales/fr.json` *source-stage text bundles*,
-with full currently catalogued semantic string-key parity
-with EN/IT. The remaining 18 include language-learning
-curricula (phonics/rhymes/alphabets), long voiced facts
-and inline-only gameplay needing more than direct
-translation. Do not record wrong singular/plural phrases
-in Number Train, or claim the translated JSON alone
-makes a game multilingual. Consult the current roster
-in `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`;
-but no generated voice assets yet. **The manifests still correctly
-advertise only en/it.** Do not add `es`/`fr` to a manifest or
-fill `audio` mappings with nonexistent WAVs merely because
-translated text exists. Resolve real missing/speaker-assigned
-speech first via the central four-language local-agent voice
-work order, then test UI, actual voice and profile language
-inheritance before release. Test per-language semantic
-interpolation with `tests/test_staged_activity_translations.py`.
-Do not translate a lesson's target content language as if it
-were ordinary UI text.
-
-## 8. Greia already owns voice production
-
-Normal Activity narration/instructions are **authoring-time prerecorded audio**.
-
-Canonical production entry point:
+Read:
 
 ```text
-tools/greia_voice.py
+docs/adr/0018-lightweight-ui-foundation.md
+docs/design/GREIA_LAUNCHER_INTERACTION_AND_ACTIVITY_CATALOGUE.md
+docs/design/GREIA_ART_GRAPHICS_SYSTEM.md
 ```
 
-The child device does not run Chatterbox/Whisper or normal narration TTS.
-
-Activity code and Activity-local tooling must not create a parallel Chatterbox/MLX/Whisper/native-TTS/FFmpeg routing stack.
-
-Speech kinds are semantic:
+Inspect:
 
 ```text
-character_dialogue
-    presenter welcome, instruction, hint, narration, fact
-
-shared_character_utterance
-    generic ready/praise/retry/progress/celebration when the shared resolver exposes it
-
-pedagogical_speech
-    the exact sound itself is educational truth: letter/syllable/phonics/pronunciation
-
-dani_system_speech
-    Dani's intentionally robotic presenter/logic speech
+src/greia_launcher/
+src/greia_platform/ui_*.py
 ```
 
-Do not classify all speech in an educational Activity as `pedagogical_speech`.
+Collections provide semantic data; do not create category-specific copies of common Shell behavior.
 
-When actual speech needs producing/replacing, load:
+## Protected Activity Home/Back and lifecycle chrome
+
+Read:
 
 ```text
-VOICE_GENERATION.md
+docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/product/ACTIVITY_SYSTEM_NAVIGATION.md
+docs/reviews/2026-08-29_R7_R73_ACTIVITY_CHROME_MIGRATION_TRANCHE.md
+docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
+src/greia_launcher/system_chrome.py
+src/greia_launcher/system_chrome_legacy_x.py
+src/greia_launcher/trusted_chrome_supervisor.py
+```
+
+Real Home/Back is platform authority. First-party Activities must not restore retired cooperative Home helpers or request Activity-side canvas chrome.
+
+Current strict ownership gate:
+
+```bash
+PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
+```
+
+The September 2026 missing-Home composition regression is fixed and physically verified at its exact candidate. Current scope/evidence is in `HANDOVER.md`.
+
+## R7 display/session/backend work
+
+Read:
+
+```text
+docs/adr/0014-greia-identity-arm-parity-and-direct-graphics-direction.md
+docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
+docs/testing/2026-09-02_R7_FINAL_EVIDENCE_GAP_CLOSURE.md
+src/greia_launcher/display_session.py
+src/greia_launcher/display_session_legacy_x.py
+src/greia_launcher/system_chrome.py
+src/greia_launcher/system_chrome_legacy_x.py
+src/greia_launcher/trusted_chrome_supervisor.py
+src/greia_launcher/trusted_presentation.py
+src/greia_platform/activity_backend_policy.py
+```
+
+Preserve these seams:
+
+- `DisplaySessionCoordinator` owns Shell/Activity surface lifecycle;
+- concrete display backends own transport mechanics;
+- `SystemChromeCoordinator` owns Home/Back semantic authority;
+- `TrustedChromeActivitySupervisor` binds chrome to Activity stop/cleanup authority;
+- installed primary and fallback Shell paths both preserve trusted chrome;
+- Activity source stays backend-neutral;
+- shared X11 is migration plumbing, not final malicious-client isolation.
+
+Current audits:
+
+```bash
+PYTHONPATH=src python3 tools/audit_activity_backend_independence.py activities
+PYTHONPATH=src python3 tools/audit_activity_system_chrome_ownership.py --strict
+```
+
+Do not begin a new R7 subphase by relying on stale physical evidence from an older runtime candidate; follow `HANDOVER.md`.
+
+## Input, controller, pointer or touch ownership
+
+Read:
+
+```text
+docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md
+docs/product/ACTIVITY_INPUT_STANDARDS.md
+docs/testing/2026-08-15_PHASE0_INPUT_CONTROLLER_ACCEPTANCE.md
+```
+
+Physical device/controller details stay below runtime-neutral semantics. Ordinary Activities do not receive raw `/dev/input` to implement convenience mappings.
+
+## Network / Wi-Fi ownership
+
+Read:
+
+```text
+docs/INSTALLATION_ISSUES_LOG.md            (§13 wireless link ownership)
+src/greia_platform/wifi.py                 (iwd backend: available/scan/connect)
+build/installer-overlay/etc/iwd/main.conf  (live-installer L3 owner)
+build/overlay/etc/iwd/main.conf            (installed-target L3 owner)
+build/*/etc/systemd/network/               (role-specific networkd policy)
+build/lib/compose.sh                       (compose_configure_systemd enable lists)
+```
+
+**Association/authentication and IP configuration are separate ownership
+questions.** Greia ships no `wpa_supplicant`, so `iwd` is the sole Wi-Fi
+station/authentication authority in every role. L3/DHCP ownership is
+role-specific and must be checked together with `iwd/main.conf`:
+
+- **Live installer:** `EnableNetworkConfiguration=true`. iwd owns both
+  association/authentication and IP configuration. Its wireless
+  `.network` file must therefore use `[Link] Unmanaged=yes`; networkd must
+  not run a second DHCP client on the same wireless link.
+- **Installed target:** `EnableNetworkConfiguration=false`. iwd owns
+  association/authentication only, while systemd-networkd owns L3/DHCP. Its
+  wireless `.network` file must therefore retain `[Network] DHCP=yes` and
+  must not mark the link unmanaged.
+- Never generalize one role's L3 policy to the other. The paired config files
+  are the authority; tests and artifact verifiers must reject both bad states:
+  two DHCP owners and no DHCP owner.
+
+Other hardware-proven traps remain:
+
+- **Do not probe iwd as `su nobody`.** iwd's bus policy allows `root` and
+  group `netdev`. `su` does not inherit systemd `SupplementaryGroups`, so
+  a `su` probe returns `Access denied` even when the real service reaches
+  the bus fine. Probe with
+  `setpriv --groups=$(getent group netdev | cut -d: -f3)`, or trust the
+  installer's own report.
+- **The installer persists iwd `.psk`/`.open` profiles into the target**
+  (`engine.py` → `request.wifi_profile.write_to`). The installed target must
+  keep iwd in station/authentication authority while networkd supplies DHCP.
+- **iwd owns `/var/lib/iwd`. Never write into it from an unprivileged
+  process.** It is `root:root 0700`; the installer is `User=nobody`, so any
+  attempt fails with `[Errno 1] Operation not permitted`. To hand iwd a
+  passphrase, register a `net.connman.iwd.Agent` and answer
+  `RequestPassphrase(object network) -> string`; iwd persists the profile
+  itself.
+- **Two iwd-agent traps, both found only on real hardware.** The image's
+  python3-dbus rejects the three-argument `dbus.Interface(bus, path, iface)`
+  form with `TypeError` — use `bus.get_object(...)` then
+  `dbus.Interface(proxy, iface)`, the shape the rest of `wifi.py` already
+  uses. And `dbus.SystemBus()` is a shared singleton the scan path already
+  opened with **no main loop**, so exporting an object on it raises
+  "connections must be attached to a main loop"; the agent needs its own
+  `BusConnection` with an explicit main loop, and should answer only for the
+  selected network's object path.
+
+## Responsive display / viewport / coordinate-space work
+
+Read:
+
+```text
+docs/adr/0026-resolution-adaptive-ui-layout.md
+docs/adr/0027-activity-coordinate-spaces-canvas-and-world-camera.md
+docs/product/RESPONSIVE_UI_AND_DISPLAY_LAYOUT.md
+docs/design/GREIA_ACTIVITY_CANVAS_AND_VIEWPORT_AUTHORING.md
+```
+
+## Display facts, suitability, and pointer/display settings (ADR 0035)
+
+Entry point for physical display facts and suitability policy:
+
+```text
+src/greia_platform/display_metrics.py
+```
+
+- `DisplayMetrics` holds raw facts only; unknown physical size is explicit, never invented, never assumed 96 DPI.
+- `DisplayPolicy.phase0()` decides suitability by envelope comparison; `1024×600` is a preferred default, not a whitelist branch.
+- `PhysicalUiPolicy.minimum_pixels` floors shared interactive minimums (8–320 px); it never scales a layout globally.
+- `responsive_layout.py` stays geometry-only: no subprocess, no `xrandr`/`xinput`, no model or resolution-equality branches.
+- Legacy-X translation lives only in `hal_legacy_x.py` (hardware-session controller, `probe_display`, `probe_pointers`); UI layers never call backend commands.
+- `HardwareSettingsStore` (schema v2, tap-OFF) owns desired pointer state; the watcher applies it; installer preview and Parent controls use only the `PointerSettingsController` seam with semantic settings.
+- Unknown metrics fail open (full controls, no install block); provably-unsupported modes block destructive install with a clear message.
+- No CTM command in any ordinary apply path; no hard-coded device names in generic startup. CTM or model-specific handling requires physical evidence plus architecture review.
+- Trusted-action floor (`TRUSTED_ACTION_MINIMUM_MM`, `resolve_trusted_action_minimum_px`) is defined once in `src/greia_launcher/system_chrome.py`; import it, do not duplicate it.
+- Activity/catalogue pins follow live catalogue discovery, per the standing owner rule accepting Sottomarino and any new activity.
+
+## Activity runtime, package, permissions, trust or lifecycle
+
+Read:
+
+```text
+docs/architecture/GREIA_ACTIVITY_ECOSYSTEM.md
+docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md
+docs/adr/0017-platform-owned-sessions-events-progression-and-reward-ledger.md
+docs/adr/0019-platform-owned-activity-system-navigation.md
+docs/adr/0023-open-activity-ecosystem-distribution-and-official-catalogue.md
+docs/adr/0033-fail-soft-activity-crossbindings-and-dev-noise-scrub.md
+runtime/child-runtime.toml
+src/greia_launcher/runtime_adapter.py
+src/greia_platform/activities.py
+src/greia_platform/activity_packages.py
+src/greia_platform/activity_tree_cleanup.py
+src/greia_platform/trust.py
+src/greia_platform/activity_backend_policy.py
+```
+
+For Activity implementation itself, use `skills/greia-activity-authoring/SKILL.md`.
+
+## Supported-language declaration and staged ES/FR translation
+
+The current **selectable** OS device locales are `en` and `it` only.
+The former 12-language installer/on-device/Parent API roster has been
+reduced at its unique owner `src/greia_platform/system_language.py`.
+Spanish and French are actively staged but NOT selectable until
+installer, Shell, Parent HTML/overlay, built-in Activities, media and
+source/physical acceptance pass. Follow
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`
+and `LOCAL_AGENT_VOICE_PRODUCTION.md` in that directory.
+`src/greia_installer/i18n_es_fr.py` contains staged copy; never
+misinterpret it as a shipped Spanish/French install-flow claim.
+Historical unsupported records are left intact and read as safe
+English runtime fallback. Do not install voice/TTS models on Greia OS.
+New authoring-time provider adapters belong only under
+`tools/greia_voice_core`, with Modal a proposed authoring backend,
+not a current runtime feature.
+
+### Installed Parent locale translation seam (2026-10-13)
+
+On-device Parent Settings `ParentSettingsOverlay` renders semantic
+password/authentication, eight tabs, title and device language controls
+via `src/greia_launcher/panel_localization.py`. This is source-staged
+for EN/IT/ES/FR; only EN/IT are currently selectable globally.
+**Do not** introduce a second locale store, set Linux `LANG`,
+or translate user-entered child names, SSIDs, passwords or service
+machine data through an arbitrary substring dictionary.
+Use semantic keys with named format fields. When adding dynamic
+UI text, ensure `_device_locale` participates in the Parent
+overlay's cached composite and pre-rendered chrome keys; reuse
+`panel_layout.fit_single_line` or measured wrapping so longer
+translated text cannot overflow on the 1024×600/Acer floor.
+Follow `tests/test_panel_localization.py` and
+`tests/test_panel_frame_cache.py`. The implemented Parent forms, audio, pointer, Wi-Fi, SSH and Info
+tab copy now also use the same locale resource; service-origin
+errors and any custom/inline text not yet extracted are still
+coverage items. A failed hardware setting write must never be
+followed by an invented success message. The separately maintained
+Parent HTML browser client still needs its own localization and
+pinned-build review.
+
+## Activity discovery, age guidance or Parent catalogue filtering
+
+Read:
+
+```text
+docs/product/CHILD_ACTIVITY_DISCOVERY_AND_AUDIENCE.md
+skills/greia-activity-authoring/DISCOVERY.md
+src/greia_platform/activity_discovery.py
+src/greia_platform/activities.py
+src/greia_launcher/activity_policy_presentation.py
+src/greia_launcher/child_shell.py
+src/greia_launcher/trusted_presentation.py
+src/greia_parent/api_server.py
+docs/testing/2026-09-03_ACTIVITY_AGE_POLICY_ACCEPTANCE.md
+docs/testing/2026-09-04_CHILD_ACTIVITY_POLICY_FAIL_CLOSED_ACCEPTANCE.md
+```
+
+The platform owns the effective catalogue. Do not create a second browser/Activity age engine. Parent Activity visibility/age/difficulty policy is mandatory launcher authority, not an optional adaptive-presentation feature: both the normal rich Shell and the trusted emergency fallback must project it before exposing any Activity. The normal Shell may add adaptive sub-Collections after filtering; the trusted fallback remains direct/non-adaptive rather than bypassing policy.
+
+A genuinely missing discovery-policy file is the legitimate default. A policy path that exists but is malformed, unreadable, an unsupported schema, or a symlink must fail closed to zero launchable Activities until repaired; never coerce invalid policy state to `ActivityDiscoveryPolicy()`/`show_all` as a recovery shortcut. Repair must be detected through the bounded reload/rescan path without a permissive interval.
+
+Adaptive sub-Collection hysteresis is launcher-owned presentation state, not Parent authority. Historical `subdivided_collections` may be consumed once as a compatibility seed, but the child Shell must not write adaptive grouping back into the Parent policy file. Never use a stale read-modify-write of Parent policy to persist presentation state: it can clobber a concurrent `always_hide`, age mode or difficulty update.
+
+Canonical Parent modes are:
+
+```text
+show_all
+recommended_only   # Age N only: declared range contains N
+age_and_easier     # Age N + easier: declared minimum <= N
+custom
+```
+
+`hide_too_simple` is compatibility input only and normalizes to `age_and_easier`; do not use it for new UI or stored output. Every first-party Activity declares a defensible `recommended_age_min`; `recommended_age_max` remains optional for genuinely open-ended experiences. Age suitability and difficulty are independent, and explicit Parent `always_show` / `always_hide` wins over automatic filtering.
+
+The maintained browser client lives in `frozenpepper/Greia-Parent-App-Html` and is revision/integrity pinned before Greia serves it. Browser source acceptance comes before pin advancement.
+
+## Activity Simulator
+
+Read:
+
+```text
+docs/adr/0029-real-runtime-activity-simulator.md
+docs/development/GREIA_ACTIVITY_SIMULATOR.md
+docs/reviews/2026-08-31_R7_SIMULATOR_RUNTIME_INTEGRATION_REJECTION_AND_CORRECTION.md
+src/greia_simulator/
+```
+
+Simulator evidence does not prove production display/session/input/hardware behavior. Do not make Activity code branch on Simulator identity or duplicate platform policy inside the Simulator.
+
+## Parent management / Parent API / pairing
+
+Read:
+
+```text
+docs/architecture/GREIA_PARENT_MANAGEMENT.md
+docs/architecture/PARENT_APP_SOURCE_INTEGRATION.md
+docs/product/PARENT_MANAGEMENT.md
+```
+
+For per-child Activity age/catalogue policy also read the dedicated Activity-discovery route above. Inspect the current Parent client pin/integrity manifest before changing either repository. Parent/browser code must not gain generic shell/root authority.
+
+## System output controls (volume / mute / brightness / media keys)
+
+Inspect current exact owners:
+
+```text
+src/greia_platform/system_controls.py
+src/greia_platform/system_controls_legacy_x.py
+src/greia_platform/hardware_session.py
+src/greia_platform/hardware_session_legacy_x.py
+src/greia_parent/protocol.py
+src/greia_parent/update_api.py
+```
+
+Persistent desired state is platform-owned. Legacy-X mixer/backlight/media-key mechanics stay below the platform seam. Parent API may mutate only typed desired settings; it must not directly own host mixer/backlight devices or expose arbitrary commands.
+
+Because these files changed after the last physically tested Home candidate, use `HANDOVER.md` before making current physical claims.
+
+## System update mechanism
+
+Current lifecycle authority is ADR 0036 plus the 2026-09-15 lifecycle plan:
+
+```text
+docs/adr/0036-unified-system-slot-releases-and-platform-install-media.md
+docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md
+```
+
+Historical context only (signing requirements superseded by ADR 0036; the
+signed `.greiaupdate` v2 / release-key workflow is not the normal
+production route):
+
+```text
+docs/adr/0030-platform-owned-transactional-system-updates.md
+docs/product/SYSTEM_UPDATES.md
+docs/development/GREIA_SYSTEM_UPDATE_RELEASE_WORKFLOW.md
+```
+
+## Localization / language / profile presentation / child letter case
+
+Read:
+
+```text
+docs/adr/0028-platform-and-activity-localization-language-context.md
+docs/adr/0032-profile-presentation-and-grammatical-agreement.md
+docs/adr/0034-child-text-letter-case-policy.md
+src/greia_platform/localization.py
+src/greia_platform/language_presentation.py
+src/greia_platform/profile_presentation.py
+src/greia_platform/child_text.py
+```
+
+Child-facing UI defaults to CAPITAL presentation under ADR 0034. Parent-facing surfaces and child-authored content deliberately bypass that transformation.
+
+The platform `LocalizedResources.audio_cue` normally falls back per key,
+matching its existing text/audio bundle contract. For **language-bearing**
+speech that must not unexpectedly switch languages, pass
+`allow_fallback=False`; it restricts lookup to the selected semantic
+locale bundle without assuming any filename or directory naming convention.
+Keep required instruction authoring and acceptance per locale; a missing
+clip is a release blocker, not a justification for runtime TTS.
+
+## Microphone/audio capture processing
+
+Read:
+
+```text
+docs/adr/0031-platform-owned-microphone-processing.md
+docs/architecture/GREIA_AUDIO_SERVICE.md
+docs/reviews/2026-08-24_ACER_MICROPHONE_PHYSICAL_ACCEPTANCE.md
+skills/greia-activity-authoring/MICROPHONE_RECORDING.md
+```
+
+Preserve the platform-owned on-demand route, Parent-owned settings, honest raw fallback and no ordinary Activity hardware bypass.
+
+## Prerecorded voice/speech production
+
+Read:
+
+```text
 skills/greia-voice-production/SKILL.md
+tools/greia_voice_core/README.md
+docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md
+docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md
 ```
 
-### Shared character speech
-
-Accepted shared v0.2 assets live at:
-
-```text
-assets/audio/characters/shared/v0.2/
-```
-
-Current accepted set:
-
-```text
-180 shared reactions
-12 canonical character introductions
-```
-
-Documented generic families include:
-
-```text
-ready.go
-praise.general
-celebrate.success
-encourage.retry
-encourage.progress
-```
-
-Reuse shared reactions instead of generating duplicate generic praise when the current runtime resolver exposes the needed family.
-
-Do not assume a generic greeting family exists, and do not copy the shared WAV catalogue into individual Activities.
-
-## 9. Resolve semantic feedback before playing sound
-
-One child action can simultaneously mean:
-
-```text
-ordinary item collected
-teaching target completed
-score changed
-milestone emitted
-round finished
-victory reached
-```
-
-These events must not independently fire competing sounds.
-
-Classic failure:
-
-```text
-collect final item
--> ordinary collect SFX starts
--> final-word speech starts
--> victory fanfare replaces it
--> character congratulations overlaps everything
-```
-
-Instead resolve the state transition first, then deliberately choose one of:
-
-```text
-SEQUENCE
-SUPPRESS
-REPLACE
-INTERRUPT
-COALESCE
-```
-
-The final item/final answer/final piece is normally a **terminal transition**, not merely an ordinary success plus another victory callback.
-
-Protect pedagogical/required speech, keep queues bounded, and emit completion/score/milestone facts once.
-
-`FEEDBACK_ORCHESTRATION.md` owns the detailed rules.
-
-## 10. Score, Stars, medals and achievements
-
-Every Activity must explicitly decide its progression relationship, even if the correct answer is `none`.
-
-Keep these separate:
-
-```text
-local Activity score/progress
-    Activity-owned presentation/state where appropriate
-
-normalized completion/milestone/score facts
-    emitted by Activity through Greia contracts
-
-Greia Stars / medals / trophies / global progression
-    platform-owned policy and ledger
-```
-
-Activities report facts. They do not directly grant or mutate global rewards.
-
-Do not add streaks, points or reward spam simply because games often have them.
-
-`ACHIEVEMENTS.md` owns the exact event/reward contract.
-
-## 11. Technical implementation standard
-
-For first-party Python Activities:
-
-- keep `main.py` a thin bootstrap/composition root;
-- use cohesive modules/classes around real responsibilities;
-- prefer composition over deep inheritance;
-- use polymorphism at genuine variation points;
-- reuse Greia platform services/primitives rather than cloning them;
-- preserve both Greia script-launch and repository/package import contexts;
-- use Greia storage/events/progression/permissions rather than private substitutes;
-- keep Activity code display/input-backend neutral;
-- never draw or own the real Greia Home/Back system controls.
-
-### Shared child creations — active platform workstream (not yet public SDK)
-
-**Storage sizing:** do not assume the historical 32 MiB private namespace. Shipped Greia now uses an adaptive per-Activity namespace (25% of the actual writable profile-data filesystem, with the old byte quota only as a minimum/fallback), while a shared platform `VolumeBudget` caps aggregate variable child-data growth at 75% used plus 512 MiB free. Per-file/KV/media bounds still apply. Activities must never implement their own disk-usage policy or bypass the trusted storage broker.
-
-The platform-owned PNG/WAV/UTF-8 `CreationLibrary` has a guarded Activity transfer API (`get_creations`) and manifest `creations.produces`/`creations.consumes` declarations. The universal `CreationsGalleryScreen`/controller and the nonblocking `request_selection(...)` / `poll_selection(...)` / `cancel_selection(...)` protocol now connect in SOURCE-WIP to a trusted modal host. Legacy-X and Simulator each implement the same runtime-neutral Shell modal contract; an Activity still cannot enumerate/delete the profile library or mint its own handle. **Never** read another Activity namespace, mount a global shared directory, create an Activity-local chooser, or block a frame loop waiting for human input.
-
-Painting is the reference PNG integration: normal autosaves stay private; an explicit up-arrow publishes an immutable snapshot; from Painting's own gallery a down-arrow requests `image/png`, the Activity polls at a bounded cadence, and a child-selected one-use handle is imported as a new independent editable private painting after digest/type validation. This latest interaction is **SOURCE-WIP and not yet accepted in a complete checkout/GUI**. New consumers should copy the semantic pattern only after the consolidated acceptance is green. The cross-Activity implementation and 45-Activity release review remain tracked in the single Creations PLAN/PROGRESS; Shape Garden is not yet a persistent stamp editor and must not be treated as one without the planned project-model work.
-
-### Performance is correctness
-
-The Acer-class floor is part of the design target, not a later optimization pass.
-
-Avoid hot-path work such as:
-
-```text
-filesystem scans
-asset decoding/loading
-image scaling/transforms
-font recreation
-subprocess/device discovery
-storage/config reads
-large allocation churn
-unbounded audio/event queues
-full-screen expensive alpha work that never settles
-```
-
-Prefer preloaded/cached immutable assets, bounded caches/queues, event-driven/invalidation rendering where appropriate, and cheap static states.
-
-A performance stall can become an audio/timing bug by delaying feedback until semantic events collide.
-
-Load `ENGINEERING.md` before implementation.
-
-## 12. Project-specific tools stay with the project
-
-Activity-specific authoring/generation/migration tooling belongs under:
-
-```text
-activities/<activity_dir>/tools/
-```
-
-Examples:
-
-```text
-activities/my_activity/tools/generate_voice_requests.py
-activities/my_activity/tools/build_local_assets.py
-activities/my_activity/tools/migrate_content.py
-```
-
-Rules:
-
-1. place project-specific tools there from the start;
-2. runtime code does not belong in `tools/`;
-3. repository root `tools/` is only for genuinely Greia-wide tooling;
-4. remove obsolete/one-shot tools and scratch output when work closes;
-5. remember the Activity directory is also package input—do not ship development machinery accidentally;
-6. promote a local tool to root only when it genuinely becomes a reusable Greia-wide facility with a stable contract.
-
-## 13. Use the headless Simulator throughout development
-
-Do not wait for the Activity to be finished.
-
-Typical loop:
-
-```text
-minimal valid skeleton
--> headless Simulator
-
-first meaningful child interaction
--> focused tests + headless Simulator
-
-major runtime/resource/refactor change
--> focused tests + headless Simulator
-
-completion/restart/audio integration
--> headless Simulator
-
-final runtime edit
--> final headless Simulator again
-```
-
-Canonical runner:
+Canonical entry:
 
 ```bash
-PYTHONPATH=src python3 tools/headless_greia_simulator.py \
-  --activity-dir activities/<activity_dir> \
-  --workspace-dir /tmp/greia-sim-<activity_dir> \
-  --locale it \
-  --viewport 1024x600 \
-  --survival-seconds 12 \
-  --screenshot-prefix /tmp/greia-<activity_dir>-it
+python3 tools/greia_voice.py doctor
 ```
 
-Use `--press-key` or `--click-x/--click-y` for meaningful mechanical interaction where practical, and test relevant shipped locales.
+All new production goes through VoiceEngine. Current accepted shared v0.2 assets contain 180 shared reactions + 12 introductions; runtime resolver/product placement remain separate concerns. Launcher spoken labels are a separate accepted prerecorded Shell asset set.
 
-`SIMULATOR_WORKFLOW.md` owns the detailed loop.
+## Progression / achievements / Badge Library
 
-## 14. Final GUI Simulator review is mandatory
-
-Headless integration cannot decide whether:
-
-- a toddler understands the first action;
-- the game is fun/coherent;
-- targets are large enough;
-- the teaching mechanic works;
-- presenter/audio timing feels right;
-- final-item feedback collides;
-- 1024×600 presentation is pleasant;
-- obvious performance stalls exist.
-
-After final headless integration launch:
-
-```bash
-python3 tools/greia_simulator.py \
-  --state-dir ~/.greia-simulator-review-<activity_dir>
-```
-
-Present that exact final state to the user/reviewer.
-
-If GUI review cannot be performed, the strongest honest result is:
+Read:
 
 ```text
-SOURCE-VERIFIED / HEADLESS-SIMULATOR-PASS / GUI-REVIEW-PENDING
+docs/design/GREIA_ACHIEVEMENTS_AND_BADGE_LIBRARY.md
+docs/design/GREIA_ACTIVITY_ACHIEVEMENT_ART.md
+docs/adr/0033-fail-soft-activity-crossbindings-and-dev-noise-scrub.md
+runtime/progression-policy.toml
+runtime/achievement-policy.toml
 ```
 
-Any runtime-relevant edit after evidence requires rerunning the applicable final checks.
+Absent-Activity cross-bindings fail soft where ADR 0033 specifies; corrupt policy and undeclared events remain hard failures.
 
-## 15. Load specialist companions only when relevant
+## Performance / low-resource regressions
+
+Read:
 
 ```text
-PRESENTERS_AND_CURIOSITY.md   presenter/factual-curiosity design
-VOICE_GENERATION.md           actual speech production/replacement
-MICROPHONE_RECORDING.md       child microphone recording
-LAUNCHER_SPOKEN_LABELS.md     launcher title speech
-TERMINAL_RENDERING.md         completion/Continue/Replay presentation
-REFACTORING.md                substantive existing-Activity refactor
-LAUNCH_ACCEPTANCE.md          detailed final launch/evidence procedure
+docs/engineering/ENGINEERING_FOUNDATIONS.md
+docs/engineering/GREIA_PERFORMANCE_BEST_PRACTICES.md
 ```
 
-For actual visual asset creation/adaptation load:
+Measure the interaction actually being optimized. Desktop reasoning is not Acer/Pi performance evidence.
+
+## Physical Acer / developer remote-control work
+
+Read:
+
+```text
+docs/agents/GREIA_AGENT_OPERATIONS.md
+docs/testing/2026-08-09_DEVELOPER_REMOTE_CONTROL.md
+docs/testing/LOCAL_AGENT_START_HERE.md
+```
+
+Then follow the exact physical procedure named by `HANDOVER.md`.
+
+## Visual-system / asset integration
+
+Route to:
 
 ```text
 skills/greia-visual-authoring/SKILL.md
 ```
 
-For `.greiaactivity` packaging use current package authority:
+Do not duplicate visual-authoring rules here.
+
+## Completion check
+
+Before calling substantive OS/platform work done, record:
 
 ```text
-docs/architecture/GREIA_ACTIVITY_PACKAGE_FORMAT.md
-src/greia_platform/activity_packages.py
-src/greia_platform/activity_package_format.py
+1. task-specific authorities read
+2. exact source SHA changed/tested
+3. tests/validators actually run
+4. evidence lane exercised
+5. what remains unverified
+6. platform authority/resource invariants preserved
+7. required plan/HANDOVER/manual/skill updates made
 ```
 
-## 16. Definition of done
+The standard is not maximal documentation. The standard is a small set of current, correct routers pointing to the real authority for the task.
 
-A new first-party Activity is not done until all applicable items are true:
+## Fresh profile / first-boot ownership invariant
 
-```text
-PARENT_REQUEST_DECOMPOSED=yes
-ACTIVITY_SET_PLAN_COMPLETE=yes/not-applicable
-CHILD_PLAY_LOOP_CLEAR=yes
-LEARNING_OR_CREATIVE_PURPOSE_CLEAR=yes
-RECOMMENDED_AGE_MIN_DEFINED=yes
-DISCOVERY_METADATA_VALID=yes
-FIRST_ACTION_CLEAR_WITHOUT_READING=yes
-REQUIRED_SPOKEN_COMMANDS_COMPLETE=yes/not-applicable
-VOICE_KIND_SEMANTICS_CORRECT=yes/not-applicable
-HUMAN_AUDIO_REVIEW_COMPLETE=yes/not-applicable
-FINAL_ACTION_FEEDBACK_CONFLICT_RESOLVED=yes
-PROGRESSION_REWARD_RELATIONSHIP_DEFINED=yes
-PROJECT_LOCAL_TOOLS_CLEAN=yes
-PERFORMANCE_HOT_PATHS_BOUNDED=yes
-FOCUSED_TESTS_PASS=yes
-FINAL_HEADLESS_SIMULATOR_PASS=yes
-GUI_SIMULATOR_USER_REVIEW=PASS
-```
+For installed-target profile work, the shared Parent-created directory contract
+is load-bearing:
 
-Physical/Acer evidence is additionally required for claims that depend on physical performance, hardware behavior or production display/input paths.
+- `/var/lib/greia-profiles/data` is setgid `pipprofiles`;
+- Parent-created profile roots, `customization`, and `activities` must be
+  `2770` with the managed `pipprofiles` group **before** a profile is
+  published;
+- child-owned `progress` and `storage` are not Parent-precreated;
+- the Parent unit currently uses `UMask=0007` so setgid inheritance produces
+  the correct shared mode without weakening `RestrictSUIDSGID=yes`;
+- never swallow a failed profile-directory permission repair.
 
-Never upgrade source or Simulator evidence into a stronger evidence class that did not actually run.
+First-boot B4/B5 are compatibility migrations, not substitutes for correct
+creation-time ownership. A physical first-boot acceptance must create/use a
+profile after first-boot has completed and prove the child can create its own
+progress/storage state.
+
+The platform boot observer is semantic A/B infrastructure. Do not enable
+`greia-boot-observer.service` on single-root layouts that have no installed
+layout/release slot identity.
+
+Developer status/log diagnostics must remain usable when the graphical display
+is broken. Display-dependent operations such as screenshot/input still require
+a valid bounded developer display endpoint.
