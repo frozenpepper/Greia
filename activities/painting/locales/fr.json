@@ -8,7 +8,10 @@
     "btn.new": "Nouveau",
     "btn.undo": "Annuler",
     "btn.clear": "Tout effacer",
-    "btn.eraser": "Gomme"
+    "btn.eraser": "Gomme",
+    "status.saved": "Enregistré",
+    "status.saving": "En cours…",
+    "status.error": "Erreur"
   },
   "audio": {}
 }

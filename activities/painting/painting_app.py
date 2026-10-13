@@ -13,9 +13,11 @@ import time
 
 import pygame
 
-from greia_platform.activity_api import activity_stop_requested, mark_activity_ready
+from greia_platform.activity_api import activity_stop_requested, get_profile_locale, mark_activity_ready
 from greia_platform.activity_ui import ChildUiMetrics, draw_activity_pointer
 from greia_platform.pygame_canvas import activity_viewport_for_surface
+from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+from pathlib import Path
 
 if __package__:
     from .painting_content import BRUSH_SIZES, COLORS, CREATION_PICKER_POLL_SECONDS
@@ -61,7 +63,18 @@ class PaintingApp:
         self.shared_import_state = ""
         self.shared_import_feedback_until = 0.0
         self.shared_import_next_poll = 0.0
-        self.renderer = PaintingRenderer(metrics, theme, screen)
+        # Renderer never reads global locale or owns translation fallback.
+        # The manifest still advertises only IT/EN; ES/FR source is staged.
+        context = resolve_activity_locale(
+            get_profile_locale(),
+            ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it"),
+        )
+        resources = LocalizedResources(Path(__file__).parent, context) if context else None
+        status_labels = (
+            {name: resources.text(f"status.{name}") for name in ("saved", "saving", "error")}
+            if resources is not None else None
+        )
+        self.renderer = PaintingRenderer(metrics, theme, screen, status_labels=status_labels)
         self.clock = pygame.time.Clock()
         self.records = self.repository.list_records()
         self.current: PaintingRecord | None = None

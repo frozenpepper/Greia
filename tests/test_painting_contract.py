@@ -42,6 +42,22 @@ def _load_painting_module():
 
 
 class PaintingContractTests(unittest.TestCase):
+
+    def test_status_badge_uses_locale_bundles_not_hardcoded_italian(self) -> None:
+        import json
+
+        renderer_source = (ACTIVITY_ROOT / "painting_renderer.py").read_text(encoding="utf-8")
+        app_source = (ACTIVITY_ROOT / "painting_app.py").read_text(encoding="utf-8")
+        self.assertNotIn('"Salvo"', renderer_source)
+        self.assertNotIn('"Salva..."', renderer_source)
+        self.assertNotIn('"Errore"', renderer_source)
+        self.assertIn("resolve_activity_locale(", app_source)
+        self.assertIn('resources.text(f"status.{name}")', app_source)
+        for language in ("en", "it", "es", "fr"):
+            with self.subTest(language=language):
+                bundle = json.loads((ACTIVITY_ROOT / "locales" / f"{language}.json").read_text(encoding="utf-8"))
+                self.assertTrue(all(bundle["strings"][f"status.{key}"] for key in ("saved", "saving", "error")))
+
     def test_painting_manifest_contract(self) -> None:
         manifest_path = ACTIVITY_ROOT / "activity.toml"
         self.assertTrue(manifest_path.exists(), "activity.toml must exist")

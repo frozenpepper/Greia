@@ -16,7 +16,6 @@ from PIL import Image
 import pygame
 
 from greia_platform.activity_ui import draw_activity_pointer, load_icon, mix
-from greia_platform.child_text import display_text
 
 if __package__:
     from .painting_content import BRUSH_SIZES, COLORS
@@ -40,7 +39,7 @@ class PaintingRenderer:
     window (6 visible) and the library bound (48).
     """
 
-    def __init__(self, metrics, theme, screen: pygame.Surface) -> None:
+    def __init__(self, metrics, theme, screen: pygame.Surface, *, status_labels: dict[str, str] | None = None) -> None:
         self.metrics = metrics
         self.theme = theme
         self.screen = screen
@@ -52,6 +51,12 @@ class PaintingRenderer:
         self._scaled_dish: pygame.Surface | None = None
         self._scaled_card_frame: pygame.Surface | None = None
         self._background_surface: pygame.Surface | None = None
+        # Pure semantic status IDs remain stable; locale text is supplied by
+        # the Activity's already resolved profile context. Standalone/legacy
+        # renderer construction uses language-neutral visual symbols.
+        self._status_text = dict(status_labels) if status_labels is not None else {
+            "saved": "✓", "saving": "…", "error": "!",
+        }
         self._status_labels: dict[str, pygame.Surface] = {}
         self.status_font: pygame.font.Font | None = None
         self.empty_icon: pygame.Surface | None = None
@@ -149,9 +154,8 @@ class PaintingRenderer:
         # Pre-render status labels (bounded: 3 labels, small font once)
         self.status_font = pygame.font.Font(None, self.metrics.px(16))
         self._status_labels = {
-            "Salvo": self.status_font.render(display_text("Salvo"), True, (100, 116, 139)),
-            "Salva...": self.status_font.render(display_text("Salva..."), True, (100, 116, 139)),
-            "Errore": self.status_font.render(display_text("Errore"), True, (100, 116, 139)),
+            key: self.status_font.render(value, True, (100, 116, 139))
+            for key, value in self._status_text.items()
         }
 
     def on_resize(self, metrics, screen: pygame.Surface) -> None:
@@ -341,8 +345,11 @@ class PaintingRenderer:
                 pygame.draw.rect(screen,(211,61,65),shared,width=max(3,self.metrics.px(4)),border_radius=self.metrics.radius)
 
         # Status Pill Indicator
-        pill_w = self.metrics.px(72)
         pill_h = self.metrics.px(28)
+        # Measure once from pre-rendered labels, retaining complete French and
+        # Spanish words instead of overlapping/cropping them.
+        widest_label = max((item.get_width() for item in self._status_labels.values()), default=0)
+        pill_w = max(self.metrics.px(72), pill_h + self.metrics.px(12) + widest_label)
         pill_x = eraser_rect.left - pill_w - self.metrics.px(10)
         pill_y = eraser_rect.centery - pill_h // 2
         pill_rect = pygame.Rect(pill_x, pill_y, pill_w, pill_h)
@@ -354,14 +361,8 @@ class PaintingRenderer:
             cx = pill_rect.left + pill_h // 2
             cy = pill_rect.centery
             pygame.draw.lines(screen, (255, 255, 255), False, [(cx - 3, cy), (cx - 1, cy + 2), (cx + 3, cy - 2)], 2)
-        status_label = "Salvo" if not dirty else "Salva..."
-        if save_error:
-            status_label = "Errore"
-        txt = self._status_labels.get(status_label)
-        if txt is None:
-            if self.status_font is None:
-                self.status_font = pygame.font.Font(None, self.metrics.px(16))
-            txt = self.status_font.render(status_label, True, (100, 116, 139))
+        status_key = "error" if save_error else ("saving" if dirty else "saved")
+        txt = self._status_labels[status_key]
         screen.blit(txt, (pill_rect.left + pill_h + 2, pill_rect.centery - txt.get_height() // 2))
 
     def _draw_tactile_button(

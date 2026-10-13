@@ -8,7 +8,10 @@
     "btn.new": "New",
     "btn.undo": "Undo",
     "btn.clear": "Clear",
-    "btn.eraser": "Eraser"
+    "btn.eraser": "Eraser",
+    "status.saved": "Saved",
+    "status.saving": "Saving…",
+    "status.error": "Error"
   },
   "audio": {
     "activity.title": {

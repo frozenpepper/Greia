@@ -8,7 +8,10 @@
     "btn.new": "Nuevo",
     "btn.undo": "Deshacer",
     "btn.clear": "Borrar todo",
-    "btn.eraser": "Goma"
+    "btn.eraser": "Goma",
+    "status.saved": "Guardado",
+    "status.saving": "Guardando…",
+    "status.error": "Error"
   },
   "audio": {}
 }
