@@ -1,5 +1,102 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-13 — Multilingual continuation: 45 Activity ES/FR source bundles, 39 full-key, 6 explicitly blocked (SOURCE-WIP)
+
+**Authority:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+Exact cumulative inventory/counts:
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`.
+Local-agent task queue GLA-014/015 and voice brief
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`
+are current.
+
+**Work committed on GitHub main this continuation:**
+
+1. 11 further Activities have fully populated ES/FR
+   source **text keys**: Orca Bay, My Pet, Marble Descent,
+   Magic Labyrinth, Opposites, Fluffy Monsters, Leo's
+   Post, Enchanted Stars, Stories of My Voice, Puppet
+   Theatre, and Dolphin Journey. This is 199 keys × 2;
+   no audio or manifest language promotion.
+2. Submarine Explorer ES/FR now has all 77
+   source text strings each, with its marine science
+   narration, navigation and voice aliases.
+   **55 existing source audio cue IDs per language** must
+   still receive actual ES/FR voice recordings and
+   human review. Some of these voice IDs have no
+   complete script even in the existing display
+   locale bundles: author scripts instead of using
+   UI words as fake transcripts.
+3. Five phonics/alphabet/rhyme/word Activities
+   have new *UI instruction* locale packs.
+   **Do not call the educational curricula translated.**
+   Word Forest deliberately omits 24 English-specific
+   spelling/phoneme word keys in both new languages.
+   Its lesson engine must receive authentic localized
+   targets and appropriate pronunciation.
+4. Encyclopedia ES/FR now holds 51 of the 246
+   source text keys per target locale, covering
+   navigation and six complete animal chapters.
+   **195 keys still missing per locale**; each
+   source language declares **200 separate narration
+   cue IDs**, most not connected to approved
+   full spoken transcripts. ES/FR `audio={}`.
+5. Dolphin Journey's seven EN/IT voice cues are now
+   mapped to their named full-text captions
+   (`caption_key`), for the first real audio
+   candidate review, not acceptance.
+
+**Exact source coverage:** 45 of 45 built-ins have
+some ES/FR source bundle, 39 have complete *source
+string-key parity*, five have literacy/UI work still
+requiring curriculum adaptation, and one (Encyclopedia)
+is partially translated. 90 ES+FR files, around
+682 authored string values per new language. None
+is released/selectable in ES/FR. The product currently
+advertises only EN/IT and original records/parent
+language policy are unchanged.
+
+**Important correction:** Number Train currently
+generates counts >=2 and displays a graphical
+puzzle; `prompt.load` is dormant. Old reports of a
+reproduced one-item plural bug were incorrect.
+The updated source unit check guards against
+introducing count 1 without grammar logic
+when that prompt becomes active.
+
+**Technical quality:** `tools/audit_greia_language_coverage.py`
+now distinguishes `SOURCE_TEXT_KEYS_ONLY` from
+`INCOMPLETE_TEXT_KEYS` and reports whether a
+locale is **actually advertised by the manifest**.
+`tests/test_staged_activity_translations.py`
+now inventories all 45 as the declared 39/5/1
+coverage families, with Submarine voice aliases,
+Dolphin captions, literal dollar placeholders and
+complete-key parity. Source voice CSV still
+requires missing cue transcripts and human voice
+review. GLA-014/015 task queue and voice brief
+have the latest source classifications.
+
+**Evidence boundary:** commits/source readbacks
+only; NO complete local checkout tests, make verify,
+GUI screenshots, recorded or listened audio,
+hosted Actions, language-native/scientific review,
+Parent browser client release build, installer
+image or Acer/Raspberry Pi live acceptance. Do not
+suggest adding ES/FR to the selector yet, fabricate
+audio, declare locale launch-ready or confuse
+media file existence with voice acceptance.
+
+**Next implementation:** progressively translate and
+review remaining 195 Encyclopedia facts per locale,
+author proper language-specific phonics/word/rhyme
+curricula, audit other inline Activity/Shell
+language-dependent text, integrate Parent HTML
+client with proper pin ownership. Then local agent
+performs the exact GLA-014/015 and voice ledger
+review without privileged flash/provider work;
+separate human approval is mandatory for paid
+Modal or any speech synthesis.
+
 ## 2026-10-13 — Multilingual L3/L4 expansion: Parent Settings, 27 Activities, recording CSV (SOURCE WIP)
 
 **Owner-authorized program:**
