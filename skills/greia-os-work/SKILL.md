@@ -371,6 +371,24 @@ New authoring-time provider adapters belong only under
 `tools/greia_voice_core`, with Modal a proposed authoring backend,
 not a current runtime feature.
 
+### Installed Parent locale translation seam (2026-10-13)
+
+On-device Parent Settings `ParentSettingsOverlay` renders semantic
+password/authentication, eight tabs, title and device language controls
+via `src/greia_launcher/panel_localization.py`. This is source-staged
+for EN/IT/ES/FR; only EN/IT are currently selectable globally.
+**Do not** introduce a second locale store, set Linux `LANG`,
+or translate user-entered child names, SSIDs, passwords or service
+machine data through an arbitrary substring dictionary.
+Use semantic keys with named format fields. When adding dynamic
+UI text, ensure `_device_locale` participates in the Parent
+overlay's cached composite and pre-rendered chrome keys; reuse
+`panel_layout.fit_single_line` or measured wrapping so longer
+translated text cannot overflow on the 1024×600/Acer floor.
+Follow `tests/test_panel_localization.py` and
+`tests/test_panel_frame_cache.py`. Remaining Parent tabs
+and separate Parent HTML client are not fully localized.
+
 ## Activity discovery, age guidance or Parent catalogue filtering
 
 Read:
