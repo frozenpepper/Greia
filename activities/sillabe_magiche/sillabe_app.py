@@ -177,7 +177,7 @@ class SillabeApp:
             "ui.explorer.formula",
             {
                 "consonant": self._session.active_consonant,
-                "vowels": " · ".join(self._curriculum.vowels),
+                "syllables": " · ".join(self._session.explorer_syllables()),
             },
         )
 
