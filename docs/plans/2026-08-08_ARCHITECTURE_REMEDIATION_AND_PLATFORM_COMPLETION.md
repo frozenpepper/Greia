@@ -3298,3 +3298,21 @@ OS runtime Parent HTML pin, language selector and
 all installation/lifecycle gates remain unchanged.
 A full residual inline-Shell and educational-content
 text audit and native proofreading are still required.
+
+
+### 2026-10-13 — Runtime child Shell and Word Forest fallback language fixes (source only)
+
+Greia Shell Activity launch transition previously displayed
+unconditional English `Starting…` and `Please wait…`
+even for IT; launch badge used an IT/EN-only ternary.
+New pure platform-owned `launch_feedback.py` supplies
+EN/IT/ES/FR copy based on effective already-resolved
+profile/Shell locale. Word Forest's missing-resource
+fallback formerly showed Italian text in other locales;
+normal `LocalizedResources.text` remains authoritative,
+with neutral `✨`/`🌟` as emergency visual fallback.
+Relevant source regression tests are committed but
+unexecuted. Remaining OS/Activity inline text has NOT
+been exhaustively audited, and the connector-limited
+attempt was not counted as evidence. No image, release,
+hardware, registry or audio acceptance closed.

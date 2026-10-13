@@ -1,3 +1,37 @@
+## 2026-10-13 — Real runtime language-leak repairs; full Activity audit OPEN
+
+**Greia OS `main` prior to this documentation commit:**
+`ba7f87e77583b094a999a374a7fac556a6e83026`.
+**Parent browser** remains at
+`db14662dbdf6879b6883ab5172dfb3869821e44b`
+(staged 373-key four-language source, not Greia OS's
+installed pinned client).
+
+Confirmed child-facing runtime language leaks repaired:
+- `src/greia_launcher/main.py` pre-READY/repeated Activity
+  launch overlay and `presentation.py` Activity badge
+  now obtain localized launch/wait copy through pure
+  `launch_feedback.py` (EN/IT/ES/FR; unsupported
+  legacy tags -> EN safe fallback), commit `9297e8a7`.
+- Word Forest no longer renders hardcoded Italian praise
+  when localized resources are missing. Existing
+  locale-bundle `feedback.*` keys remain primary;
+  language-neutral celebration symbols are the emergency
+  fallback, commit `ba7f87e7`.
+
+Focused pure and source-only tests added, **NOT RUN**.
+No simulator, browser, native-speaking children, audio,
+physical Greia or hardware tests. An attempted broad
+GitHub Activity fetch exceeded the connector call budget,
+so no claimed project-wide inline-source census exists.
+Still open: remaining Shell/Creations/Activities text
+renderers, encyclopedia content integrity, real
+four-language text fit, native editorial acceptance,
+full Node/Python tests and exact pinned-client integration.
+ES/FR selection remains correctly disabled.
+See multilingual `PROGRESS.md` for the exact boundary
+and GLA-015 for provider-free test instructions.
+
 ## 2026-10-13 — Four-language text coverage measured; Parent deep Device done in source (SOURCE-WIP)
 
 **Greia OS main prior to this documentation commit:**

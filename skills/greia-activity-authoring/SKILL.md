@@ -574,3 +574,17 @@ GUI_SIMULATOR_USER_REVIEW=PASS
 Physical/Acer evidence is additionally required for claims that depend on physical performance, hardware behavior or production display/input paths.
 
 Never upgrade source or Simulator evidence into a stronger evidence class that did not actually run.
+
+
+### Missing localized Activity feedback (2026-10-13)
+
+When a built-in Activity cannot resolve a requested
+`LocalizedResources.text("feedback.*")` message,
+**never substitute a fixed-language sentence** in the
+runtime error fallback. Word Forest has been repaired:
+normal feedback remains locale-bundle owned, and its
+emergency presentation is a language-neutral visual
+celebration symbol. Missing required translations are
+still audit/release defects, not a reason to declare a
+language complete. See
+`tests/test_word_forest_phonics_inventory.py`.

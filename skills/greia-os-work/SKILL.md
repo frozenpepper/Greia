@@ -636,3 +636,16 @@ layout/release slot identity.
 Developer status/log diagnostics must remain usable when the graphical display
 is broken. Display-dependent operations such as screenshot/input still require
 a valid bounded developer display endpoint.
+
+
+### Activity launch feedback localization (2026-10-13 source WIP)
+
+The Shell-owned `src/greia_launcher/launch_feedback.py`
+is now the small typed owner of launch overlay, badge,
+and wait phrases. Use the **effective child/profile UI
+locale**, not process `LANG`, a new supported-language
+list, or Activity-local duplicated phrases. The launcher
+consumes the same source in the pre-READY overlay and
+tile badge. Focused pure tests:
+`tests/test_launcher_launch_feedback_localization.py`;
+provider-free suite and display acceptance still pending.

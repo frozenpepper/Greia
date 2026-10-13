@@ -805,6 +805,17 @@ test commands and expected observable behavior.
   on a disposable profile only after source tests pass.
   Deep Device static text is staged; server/API errors,
   native proofreading and exact content audit remain OPEN.
+  Also execute the following NEW focused pure/source
+  regressions against current Greia `main` after the
+  existing preflight, with no user/device mutation:
+  `python3 -m unittest discover -s tests
+  -p 'test_launcher_launch_feedback_localization.py' -v`
+  `python3 -m unittest discover -s tests
+  -p 'test_word_forest_phonics_inventory.py' -v`
+  Record stdout/stderr, exit codes, and the exact SHA.
+  Do not claim four-language Activity runtime coverage
+  based solely on these two targeted leak repairs.
+
   Preserve source hashes, actual missing cues
   and `PATH_REVIEW_REQUIRED` states.
   Never synthesize from a category heading when

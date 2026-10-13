@@ -1115,3 +1115,61 @@ No images were built, no hardware was operated, no audio was
 generated and neither Python nor Node full suites ran in this
 GitHub-only source continuation. The earlier source key
 counts must not be used as a claim of shipped translation.
+
+
+### 2026-10-13 — Runtime Shell launch copy and Word Forest foreign-language fallback repair (SOURCE-WIP)
+
+After the staged four-language structured-bundle census, the next
+actual runtime text audit found two independent user-visible
+language leaks, now repaired on Greia `main`:
+
+1. `9297e8a7`: The child's actual full-screen Activity
+   launch overlay rendered English `Starting…` and `Please wait…`
+   regardless of profile language; the smaller launch tile
+   badge supported only Italian and English. A tiny pure
+   `src/greia_launcher/launch_feedback.py` now owns
+   typed EN/IT/ES/FR `overlay`, `badge` and `wait` phrases.
+   The pre-READY and repeated launch overlay, subtitle and
+   small Activity badge all consume the effective
+   already-selected Shell/profile UI locale. Unknown historic
+   locales use the existing safe English text fallback. No
+   Shell/Activity locale registry, launch timing, protected
+   overlay, Pygame geometry or speech backend was changed.
+   Focused pure `tests/test_launcher_launch_feedback_localization.py`
+   was authored for four locales, region tags, and fallback.
+2. `ba7f87e7`: Word Forest's correct-letter and finished-word
+   messages used literal *Italian* compliments if its
+   `LocalizedResources` lookup was unavailable or failed,
+   even under an English profile or staged ES/FR curricula.
+   Normal success paths still use
+   `feedback.correct`/`feedback.word_complete` from the
+   relevant locale JSON bundle. The degraded-display
+   fallback is now the language-neutral visual `✨`/`🌟`,
+   with NO Italian sentence and no silent cross-language
+   instructional speech. `tests/test_word_forest_phonics_inventory.py`
+   now checks that the runtime source lacks the old Italian
+   fallbacks and the four actual bundles own those messages.
+
+**Evidence boundary:** GitHub content, exact anchored replacements
+and branch/commit writes only. Neither new focused test nor the
+cumulative Python suite nor real visual/sound/hardware acceptance
+was executed. A wider batch attempt to inspect all Activity
+`*_app.py`/`*_renderer.py` files was stopped by the
+GitHub connector's per-execution call limit and yielded
+**no usable coverage evidence**. Do not treat 45/45
+bundle-key parity as proof of zero inline literals.
+The rest of the Shell/Activities/Creations/encyclopedia
+audit and four-language human review remains OPEN.
+
+**Next:** use bounded GitHub file batches grouped by
+Activity family, record actual render-site ownership,
+fix text leaks with shared runtime localization, run
+`python3 -m unittest discover -s tests
+-p 'test_launcher_launch_feedback_localization.py' -v`
+and `python3 -m unittest discover -s tests
+-p 'test_word_forest_phonics_inventory.py' -v`
+in the existing local-source testing task, then visually
+check the actual overlay at a real profile locale after
+source tests pass. This is source-only; it does not
+authorize ES/FR manifests, language selector promotion,
+recording synthesis, or installed-device changes.
