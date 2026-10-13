@@ -1659,7 +1659,8 @@ class ParentSettingsOverlay:
                 max(1, cell.width - 60), min_size=11,
             )
             panel_layout.blit_block(
-                screen, label, pygame, cell.left + 54, cell.centery,
+                screen, label, pygame, cell.left + 54,
+                cell.centery - label.height // 2,
                 align="left", bounds=cell,
             )
             self._targets.append(PanelHitTarget("language_select", index, cell))
