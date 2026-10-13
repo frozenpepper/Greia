@@ -584,7 +584,7 @@ test commands and expected observable behavior.
   **voice generation:** BLOCKED pending reviewed text, supported
   provider and explicit paid/model run authority.
 - **Priority:** P1; **minimum source SHA:**
-  `b3716733766aa62d8568e388360528b84809c603`.
+  `b1d2e14b18c77d07deae10e2f678cfa4336101d9`.
 - **Source authority:**
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
   Follow the sibling **`LOCAL_AGENT_VOICE_PRODUCTION.md`** exactly
@@ -647,13 +647,14 @@ test commands and expected observable behavior.
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `b3716733766aa62d8568e388360528b84809c603`.
+- **Priority:** P1; **minimum source SHA:** `b1d2e14b18c77d07deae10e2f678cfa4336101d9`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
   rules and existing prepared Pygame environment; no source modifications.
 - **Exact sequential source commands**, each with log and exit code:
   ```bash
+  python3 -m unittest discover -s tests -p 'test_greia_skill_identity.py' -v
   python3 -m unittest discover -s tests -p 'test_panel_localization.py' -v
   python3 -m unittest discover -s tests -p 'test_panel_frame_cache.py' -v
   python3 -m unittest discover -s tests -p 'test_panel_layout.py' -v
@@ -698,7 +699,8 @@ test commands and expected observable behavior.
   and all 45 manifests still advertise only
   `en,it`. The global language selector remains EN/IT.
 - **Deterministic text checks:** run
-  `test_staged_activity_translations.py` to assert
+  `test_staged_activity_translations.py` and
+  `test_greia_skill_identity.py` to assert
   all 45 packages accounted for, keys, literal
   `$word`/`$letter`/`$count`/`$target`
   tokens, `{variable}` fields,
