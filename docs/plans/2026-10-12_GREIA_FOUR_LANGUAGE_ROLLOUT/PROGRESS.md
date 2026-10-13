@@ -258,3 +258,147 @@ until the acceptance queue runs. Later L4 stages must still
 include all other first-party Activities, the encyclopedia,
 custom-code narrated text and platform Shell/Parent forms.
 Source `bb0d855c`; expanded test roster `1e75dafe`.
+
+
+## 2026-10-13 — L3 Parent forms completed to current controller copy; L4 expanded to 27 text-bundled Activities; usable audio ledger
+
+### L3: installed on-device Parent tabs
+
+- `src/greia_launcher/panel_localization.py` gained a reviewed-structure
+  translation table for **50 named English source constants** in
+  `panel_strings.py`, all with EN/IT/ES/FR:
+  microphone recording gain, input meter, presets, processing,
+  child account creation, rename, permanent deletion warnings,
+  password change/security and service status messages.
+  Original `panel_strings` remains the sole English baseline,
+  so the translated table cannot silently fork source copy.
+  `ParentSettingsOverlay` consumes named localized entries
+  at actual text/render/action paths; unrelated profile names,
+  credentials, SSIDs and backend diagnostics are preserved.
+- Added ~70 other semantic localized labels and statuses for
+  pointer speed/toggle/testing, Wi-Fi selection and errors,
+  SSH enablement/administration, and browser Parent pairing.
+  Stable tab IDs, service/API calls, numeric gain and pointer
+  preset values are unchanged. Dynamic IPs, SSH shell
+  connection strings and SSIDs are interpolated literally,
+  not passed to an English-word replacement function.
+- Pointer speed selections formerly rendered both *very slow*
+  and *very fast* as the same abbreviated first word. Added
+  distinct bounded locale-aware short labels for all five
+  speed levels without altering stored semantic values.
+  Added measured text fitting for important long titles,
+  pointer hints, actions and SSH/Info lines on smaller displays;
+  actual screenshots and text-clipping acceptance remain
+  pending.
+- **Real functional fix found while translating:**
+  `_set_pointer_preset` and `_toggle_pointer_setting`
+  used to show "success" after the hardware/Parent API
+  had reported failure. The second assignment overwrote
+  the actual error. Both now rely on the single
+  `_apply_hardware_change` authoritative outcome;
+  status messages are localized. New provider-free
+  tests cover no false success, French feedback, 50
+  message parity, pointer options and dynamic network
+  field interpolation.
+  Commits include `973de157`, `3cd8841e`,
+  `21c9b034`, `535b9b8a`, `b6f7843f`,
+  `b86c750b`, `ff64ece6`, `06c33682`,
+  `192dafe5`. **These changes remain SOURCE ONLY.**
+
+### L4: third Activity staging batch
+
+Fourteen more Activities now have complete *currently bundled
+text-key* maps in `locales/es.json` and
+`locales/fr.json`: `bosco_numeri`,
+`il_giardino_dei_numeri`, `faccine_momo`,
+`luci_di_momo`, `costruiamo_ponti`,
+`casa_del_dieci`, `workshop_settings`,
+`specchi_magici`, `nascondino_bosco`,
+`nanna_delle_nuvolette`, `orchestra_animali`,
+`treno_numeri`, `quattro_amici`,
+`pasticceria_magica`.
+
+- **Third-wave addition:** 14 packages × 2 locale files,
+  154 ES + 154 FR messages (308 newly translated text values).
+- **Total active L4 stage:** **27 of 45 built-in packages**,
+  **54 locale files**, **307 semantic strings per new
+  language** (614 translated values), excluding any
+  unextracted inline UI text. All newly staged voice
+  tables remain empty and each Activity manifest still
+  truthfully declares `en,it` only.
+- `tests/test_staged_activity_translations.py`
+  covers all 27 with key and `{variable}` parity,
+  `$num`/`$target` numeric prompt contract and
+  explicit Number Train grammar blocker.
+  Source `9a8d8520`, tests `2ffa9dfd`.
+- Remaining **18** packages need more work:
+  `alfabeto_leo`, `baia_delle_orche`,
+  `cucciolo_mio`, `enciclopedia_greia`,
+  `festa_delle_rime`, `foresta_parole`,
+  `la_discesa_della_biglia`, `labirinto_magico`,
+  `mondo_contrari`, `morbidi_mostriciattoli`,
+  `officina_dei_suoni`, `posta_di_leo`,
+  `sillabe_magiche`, `sottomarino_giramondo`,
+  `stelle_incantate`, `storie_della_mia_voce`,
+  `teatrino_fiabe`, `viaggio_delfino`.
+  Alphabet/phonics/rhymes must adapt teaching content,
+  not merely translate presentation strings. The
+  Encyclopedia and Submarine contain large language-
+  dependent voiced datasets and require separate deep
+  content/audio reconciliation.
+
+### L1 + L5 voice work order advanced into executable inventory
+
+- `tools/audit_greia_language_coverage.py` now accepts
+  `--recording-ledger PATH` alongside its JSON output.
+  It creates a deterministic UTF-8 CSV with the precise
+  fields demanded by `LOCAL_AGENT_VOICE_PRODUCTION.md`.
+  Existing title audio is hashed using the correct
+  Activity-local/package path; **file presence NEVER
+  counts as human listening acceptance**. Rows remain
+  `EXISTING_REVIEW_PENDING`, `MISSING_AUDIO`,
+  `BLOCKED_TEXT` or `PATH_REVIEW_REQUIRED` until
+  author/providership review. Unsafe source paths are
+  never emitted as recording destinations.
+- Collection labels' actual four-language text is
+  derived from the canonical `catalogue_view.py`
+  source AST (no imports/execution), including missing
+  `my_creations.wav` for IT/EN and proposed ES/FR
+  spoken labels. The generated ledger is **only the
+  initial declarative audit**; dynamic/code-loaded
+  Activity, Parent, Shell, Encyclopedia and My Time
+  voice cues still require human inventory and merging.
+  Tests expanded in
+  `tests/test_four_language_inventory.py`.
+  Source `d79f59dd`, fixes `6ffbb37f`,
+  `7897afbf`, `2eb0167a`, `9bdaac9b`,
+  tests `0fbc5195`, `90399e1a`.
+- The local-agent recording plan now instructs one exact
+  source command producing both JSON and CSV, and includes
+  **54 ES/FR title candidate recordings for 27 translated
+  Activities**, plus real absent EN/IT voice, all other
+  bundled/non-bundled narration, and text/pedagogy review.
+  The agent must **NOT** feed a raw inventory CSV to the
+  VoiceEngine: no speaker/kind/ASR/human provenance yet.
+
+### Evidence and current strict boundary
+
+All work is **GitHub source committed and source-readback
+only**. No local complete checkout `unittest`,
+`make verify`, rendered GUI, system audio generation,
+human listening, native-language proofread, Parent
+HTML client deployment, installer build or hardware
+testing was run on these source changes. GLA-014 and
+GLA-015 specify exact source commands and visual/audio
+gap evidence. Missing Spanish/French selection is
+intentional until the four-language gate; missing
+English/Italian recordings are also not accepted.
+
+**Next:** finish the 18 remaining built-ins,
+resolve Number Train singular/plural usage at its
+actual prompt construction (not just strings),
+audit all inline Shell/Parent messages, and align
+separate Parent HTML client localization with its
+own pinned build. Extend native reviewed voice
+scripts and only then authorize voice production
+and real device acceptance.
