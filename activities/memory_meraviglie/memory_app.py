@@ -385,7 +385,11 @@ class MemoryApp:
                         emblem_cy,
                         int(emblem_r * 1.5),
                     )
-                    label = item["label_it"] if self.active_locale == "it" else item["label_en"]
+                    label = (
+                        self.resources.text(f"item.{item['id']}")
+                        if self.resources is not None
+                        else "★"
+                    )
                     lbl_text = display_text(label)
                     lbl_surf = self.typography.render(
                         lbl_text,
@@ -446,7 +450,7 @@ class MemoryApp:
         new_label = (
             self.resources.text("btn.new_game")
             if self.resources is not None
-            else ("🔄 Nuovo" if self.active_locale == "it" else "🔄 New Game")
+            else "🔄"
         )
         new_txt = self.typography.render(new_label, FontRole.DISPLAY, 18, (255, 255, 255))
         surf.blit(
@@ -458,7 +462,11 @@ class MemoryApp:
         theme_btn = pygame.Rect(REFERENCE_WIDTH // 2 - 150, REFERENCE_HEIGHT - 52, 140, 44)
         pygame.draw.rect(surf, (51, 65, 85), theme_btn, border_radius=12)
         pygame.draw.rect(surf, (30, 41, 59), theme_btn, width=2, border_radius=12)
-        t_name = theme_cfg["name_it"] if self.active_locale == "it" else theme_cfg["name_en"]
+        t_name = (
+            self.resources.text(f"theme.{theme_cfg['id']}")
+            if self.resources is not None
+            else "🎨"
+        )
         theme_lbl = self.typography.render(t_name, FontRole.BODY, 15, (255, 255, 255))
         surf.blit(
             theme_lbl,
