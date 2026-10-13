@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.shape_garden.title": "Jardín de formas",
+    "activity.title": "Jardín de formas",
+    "btn.clear": "Borrar todo",
+    "shape.circle": "Círculo",
+    "shape.square": "Cuadrado",
+    "shape.triangle": "Triángulo"
+  },
+  "audio": {}
+}

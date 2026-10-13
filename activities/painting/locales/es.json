@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.painting.title": "Pintura libre",
+    "activity.title": "Pintura libre",
+    "btn.new": "Nuevo",
+    "btn.undo": "Deshacer",
+    "btn.clear": "Borrar todo",
+    "btn.eraser": "Goma"
+  },
+  "audio": {}
+}

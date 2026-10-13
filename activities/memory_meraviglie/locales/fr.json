@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Mémoire merveilleuse",
+    "hud.pairs": "Paires : {found}/{total}",
+    "hud.moves": "Coups : {moves}",
+    "theme.animals": "🐾 Animaux",
+    "theme.sweets": "🍭 Bonbons",
+    "theme.vehicles": "🚀 Véhicules",
+    "theme.nature": "🌸 Nature",
+    "grid.small": "2x2",
+    "grid.medium": "3x2",
+    "grid.large": "4x3",
+    "grid.xlarge": "4x4",
+    "btn.new_game": "🔄 Nouvelle partie",
+    "btn.play_again": "🎉 Rejouer !",
+    "victory.title": "Bravo ! Tu as trouvé toutes les paires ! 🌟",
+    "victory.subtitle": "Quelle mémoire formidable !",
+    "grid.giant": "6x3"
+  },
+  "audio": {}
+}

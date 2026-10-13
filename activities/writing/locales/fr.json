@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.writing.title": "Écriture et mots",
+    "activity.title": "Écriture et mots",
+    "btn.new": "Nouvelle page",
+    "btn.undo": "Annuler",
+    "btn.clear": "Tout effacer"
+  },
+  "audio": {}
+}

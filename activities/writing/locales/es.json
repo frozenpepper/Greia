@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.writing.title": "Escritura y palabras",
+    "activity.title": "Escritura y palabras",
+    "btn.new": "Página nueva",
+    "btn.undo": "Deshacer",
+    "btn.clear": "Borrar todo"
+  },
+  "audio": {}
+}

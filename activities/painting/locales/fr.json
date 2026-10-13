@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.painting.title": "Peinture libre",
+    "activity.title": "Peinture libre",
+    "btn.new": "Nouveau",
+    "btn.undo": "Annuler",
+    "btn.clear": "Tout effacer",
+    "btn.eraser": "Gomme"
+  },
+  "audio": {}
+}

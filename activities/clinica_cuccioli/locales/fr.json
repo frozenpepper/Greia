@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Clinique des petits animaux",
+    "patient.puppy": "Chiot 🐶",
+    "patient.kitten": "Chaton 🐱",
+    "patient.bunny": "Lapereau 🐰",
+    "patient.dragon": "Petit dragon 🐲",
+    "tool.stetho": "🩺 Examen",
+    "tool.bandage": "🩹 Pansement",
+    "tool.sponge": "🧼 Bain",
+    "tool.snack": "🥣 Repas",
+    "tool.cuddle": "💖 Câlins",
+    "tool.stethoscope.short": "EXAMEN",
+    "tool.bath.short": "BAIN",
+    "tool.bandaid.short": "PANSEMENT",
+    "tool.food.short": "REPAS",
+    "tool.cuddle.short": "CÂLINS",
+    "victory.title": "Le chiot est guéri et heureux ! 🐶💖",
+    "victory.subtitle": "Tu es un super vétérinaire !",
+    "victory.all_patients": "TOUS GUÉRIS !",
+    "btn.next_patient": "🐾 Patient suivant !",
+    "btn.play_again": "REJOUER"
+  },
+  "audio": {}
+}

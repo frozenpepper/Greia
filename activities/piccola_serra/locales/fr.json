@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Ma petite serre",
+    "hud.harvest": "Récolte : 🧺 {count}",
+    "tool.seeds": "🌱 Graines",
+    "tool.water": "💧 Arroser",
+    "tool.sun": "☀️ Soleil",
+    "tool.harvest": "🧺 Récolter",
+    "plant.sunflower": "Tournesol 🌻",
+    "plant.strawberry": "Fraise 🍓",
+    "plant.tulip": "Tulipe 🌷",
+    "plant.carrot": "Carotte 🥕",
+    "victory.title": "Quelle belle récolte ! 🌻🍓🥕",
+    "victory.subtitle": "Ta serre est un vrai paradis !",
+    "btn.play_again": "🎉 Plante encore !"
+  },
+  "audio": {}
+}

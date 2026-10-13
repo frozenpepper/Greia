@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Memoria maravillosa",
+    "hud.pairs": "Parejas: {found}/{total}",
+    "hud.moves": "Movimientos: {moves}",
+    "theme.animals": "🐾 Animales",
+    "theme.sweets": "🍭 Dulces",
+    "theme.vehicles": "🚀 Vehículos",
+    "theme.nature": "🌸 Naturaleza",
+    "grid.small": "2x2",
+    "grid.medium": "3x2",
+    "grid.large": "4x3",
+    "grid.xlarge": "4x4",
+    "btn.new_game": "🔄 Nueva partida",
+    "btn.play_again": "🎉 ¡Juega otra vez!",
+    "victory.title": "¡Genial! ¡Encontraste todas las parejas! 🌟",
+    "victory.subtitle": "¡Qué buena memoria tienes!",
+    "grid.giant": "6x3"
+  },
+  "audio": {}
+}
