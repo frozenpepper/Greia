@@ -95,8 +95,25 @@ been run in a checkout; GLA-015 now includes
 them. Do not copy or route one skill into the
 other again.
 
+**Exact source-check evidence:** GitHub readback
+re-fetched `en/es/fr` JSON for all 45
+built-ins in eight groups and compared
+90 staged ES/FR files against authoritative
+English key sets. **1,754 translated
+values inspected; 0 structural key,
+named-placeholder, literal-template
+or staged-audio-mapping mismatches**,
+with the 24 omitted Word Forest
+phonics/word keys treated as deliberate
+unresolved curriculum data. Both OS
+and Activity skill frontmatter names
+were rechecked against canonical paths.
+These are repository-source checks,
+**NOT Python unit runs, screenshots,
+recording or hardware acceptance**.
+
 **Strict evidence labels:** SOURCE COMMITTED,
-GitHub readback-only. No source unit tests,
+GitHub structural readback verified. No source unit tests,
 `make verify`, Pygame or Acer visual
 acceptance, native proofread, human/ASR
 voice review, Modal voice generation,
