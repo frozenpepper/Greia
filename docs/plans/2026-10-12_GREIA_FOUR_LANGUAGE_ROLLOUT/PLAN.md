@@ -1,7 +1,7 @@
 # Greia — Honest Language Selection and Four-Language Rollout
 
 **Date:** 2026-10-12  
-**Status:** ACTIVE, owner-authorized; L0 selector restricted to EN/IT; L1 coverage audit tooling, L2 staged ES/FR installer text, L3 initial Parent panel strings, and L4 six Activity text packs committed SOURCE-WIP; ES/FR NOT yet selectable  
+**Status:** ACTIVE, owner-authorized; L0 global selector still restricted to EN/IT; L1 provider-free gap/voice audit, L2 staged ES/FR installer copy, L3 installed Parent overlay string integration, L4 ES/FR text bundles for all 45 built-ins (44 exact source-key parity, Word Forest intentionally missing 24 curriculum keys) committed SOURCE-WIP. L5 narration/curriculum/Parent HTML and L6 selectable-language acceptance NOT completed; ES/FR NOT yet selectable  
 **Intent:** one correctly integrated language experience across the installer, installed OS, Parent controls, built-in Activities and their speech.  
 **Owner:** Greia product source; language setting authority remains `src/greia_platform/system_language.py`; runtime inheritance/Activity fallback remains ADR 0028.  
 **Voice execution:** `LOCAL_AGENT_VOICE_PRODUCTION.md` in this directory.  
