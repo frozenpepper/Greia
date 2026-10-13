@@ -58,7 +58,20 @@ class AlfabetoLeoTests(unittest.TestCase):
             self.assertEqual(item.word_for("it"), item.word_it)
             self.assertEqual(item.word_for("en"), item.word_en)
 
-    def test_model_explore_and_guess_mechanics(self) -> None:
+    def test_unsupported_lesson_languages_cannot_fall_back_to_english(self) -> None:
+        item = LETTERS_CATALOGUE[0]
+        self.assertEqual(item.word_for("en-US"), item.word_en)
+        self.assertEqual(item.word_for("it-IT"), item.word_it)
+        self.assertEqual(item.symbol_for("en-GB"), item.symbol_en)
+        self.assertEqual(item.symbol_for("it-IT"), item.symbol_it)
+        for lang in ("es", "fr", "zh-CN"):
+            with self.subTest(locale=lang):
+                with self.assertRaises(ValueError):
+                    item.word_for(lang)
+                with self.assertRaises(ValueError):
+                    item.symbol_for(lang)
+
+
         model = AlfabetoModel(locale="it")
         self.assertEqual(model.mode, GameMode.EXPLORE)
 
