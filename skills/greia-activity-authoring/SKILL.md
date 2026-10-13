@@ -606,3 +606,28 @@ isolated no-context renderer uses neutral symbols.
 Visual sizing is source WIP, especially for
 longer ES/FR labels. Test:
 `tests/test_painting_contract.py`.
+
+
+### Live Activity copy: source API, classroom text and renderer separation (2026-10-13)
+
+The only public string-display lookup on the current `LocalizedResources`
+class is **`.text(key, variables=None)`**, not `.string()`. The latter
+is not implemented; surrounding it with `except Exception` hides a real
+localization defect and can silently force the fallback copy in *every*
+locale. When reviewing or authoring an Activity, trace normal rendering
+through `.text` and the concrete locale JSON instead of counting keys.
+Greia uses `string.Template` placeholders (`$consonant`, not Python
+`{consonant}`) for this API. The result honors child text-case policy.
+
+The Magic Syllables Activity now derives its exploration header from the
+**actual selected curriculum's displayed syllables**, not an assumed
+Italian vowel grid (French may show `MÉ`). Its real explorer/catcher/
+word-slot instructional copy is authored in four locale bundles, while
+ES/FR *teaching scripts and recordings remain unapproved*. Use the
+same separation of lesson data vs translated UI in other literacy games.
+Greenhouse toolbar geometry stores semantic keys, with its app resolving
+translated labels once at launch and the renderer using neutral icons
+when independently constructed. Avoid per-frame locale resolution and
+hardcoded Italian emergency completion text. Follow
+`tests/test_four_language_activity_runtime_text.py` and the existing
+GLA-015 for source/visual acceptance; no live review has run yet.
