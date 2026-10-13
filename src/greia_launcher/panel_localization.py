@@ -336,3 +336,26 @@ _MESSAGES.update({
     "pointer.preset.short.fast": {"en": "Fast", "it": "Vel.", "es": "Ráp.", "fr": "Rap."},
     "pointer.preset.short.very fast": {"en": "V.Fast", "it": "Max.", "es": "M.Ráp.", "fr": "T.Rap."},
 })
+
+
+# Feedback is localizable too: never show an English success after an
+# unsuccessful hardware mutation, and never translate OS error details.
+_MESSAGES.update({
+    "audio.processing.unavailable": {"en": "Advanced noise reduction is not available on this Greia.", "it": "La riduzione avanzata del rumore non è disponibile su questo Greia.", "es": "La reducción avanzada del ruido no está disponible en este Greia.", "fr": "La réduction avancée du bruit n'est pas disponible sur cet appareil Greia."},
+    "audio.processing.failed": {"en": "Could not change noise cancelling: {detail}", "it": "Impossibile cambiare la riduzione del rumore: {detail}", "es": "No se pudo cambiar la reducción del ruido: {detail}", "fr": "Impossible de modifier la réduction du bruit : {detail}"},
+    "audio.processing.changed": {"en": "Noise cancelling set to {mode}.", "it": "Riduzione del rumore: {mode}.", "es": "Reducción del ruido: {mode}.", "fr": "Réduction du bruit : {mode}."},
+    "audio.mode.off": {"en": "off", "it": "disattivata", "es": "desactivada", "fr": "désactivée"},
+    "audio.mode.advanced": {"en": "advanced", "it": "avanzata", "es": "avanzada", "fr": "avancée"},
+    "audio.mode.lightweight": {"en": "lightweight", "it": "leggera", "es": "ligera", "fr": "légère"},
+    "pointer.disabled.touchpad": {"en": "No touchpad detected — touchpad speed is not active.", "it": "Touchpad non rilevato: velocità non disponibile.", "es": "No se detectó un panel táctil: no puedes ajustar su velocidad.", "fr": "Pavé tactile non détecté : réglage de vitesse indisponible."},
+    "pointer.disabled.mouse": {"en": "No mouse detected — mouse speed is not active.", "it": "Mouse non rilevato: velocità non disponibile.", "es": "No se detectó un ratón: no puedes ajustar su velocidad.", "fr": "Souris non détectée : réglage de vitesse indisponible."},
+    "pointer.disabled.toggle": {"en": "No touchpad detected — this switch is not active.", "it": "Touchpad non rilevato: comando non disponibile.", "es": "No se detectó un panel táctil: control desactivado.", "fr": "Pavé tactile non détecté : commande indisponible."},
+    "pointer.device.touchpad": {"en": "Touchpad", "it": "Touchpad", "es": "Panel táctil", "fr": "Pavé tactile"},
+    "pointer.device.mouse": {"en": "Mouse", "it": "Mouse", "es": "Ratón", "fr": "Souris"},
+    "pointer.speed.changed": {"en": "{device} feel set to {name}.", "it": "Velocità {device}: {name}.", "es": "Velocidad de {device}: {name}.", "fr": "Vitesse de {device} : {name}."},
+    "pointer.change.failed": {"en": "Could not apply: {detail}", "it": "Impossibile applicare: {detail}", "es": "No se pudo aplicar: {detail}", "fr": "Impossible d'appliquer : {detail}"},
+    "pointer.toggle.changed": {"en": "{state}: {setting}.", "it": "{state}: {setting}.", "es": "{state}: {setting}.", "fr": "{state} : {setting}."},
+    "pointer.reset.failed": {"en": "Could not reset pointer settings: {detail}", "it": "Impossibile ripristinare il puntatore: {detail}", "es": "No se pudo restablecer el puntero: {detail}", "fr": "Impossible de réinitialiser le pointeur : {detail}"},
+    "pointer.reset.done": {"en": "Pointer settings reset to defaults.", "it": "Impostazioni puntatore ripristinate.", "es": "Ajustes del puntero restablecidos.", "fr": "Réglages du pointeur réinitialisés."},
+    "pointer.test.done": {"en": "Tapped — try moving across the test area.", "it": "Fatto! Prova a muovere il puntatore nell'area di prova.", "es": "¡Bien! Prueba a mover el puntero por la zona de prueba.", "fr": "Bien ! Essayez de déplacer le pointeur dans la zone de test."},
+})
