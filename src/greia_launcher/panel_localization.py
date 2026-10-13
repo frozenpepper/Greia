@@ -325,3 +325,14 @@ _MESSAGES.update({
     "info.step_mdns": {"en": "3. mDNS Service: _greia-parent._tcp (Bonjour / Avahi auto-discovery).", "it": "3. Servizio mDNS: _greia-parent._tcp (rilevamento Bonjour / Avahi).", "es": "3. Servicio mDNS: _greia-parent._tcp (detección Bonjour / Avahi).", "fr": "3. Service mDNS : _greia-parent._tcp (découverte Bonjour / Avahi)."},
     "info.step_login": {"en": "4. Main Parent login: username 'greia', default password 'greia'.", "it": "4. Accesso genitori: utente 'greia', password iniziale 'greia'.", "es": "4. Acceso para padres: usuario 'greia', contraseña inicial 'greia'.", "fr": "4. Accès parent : identifiant 'greia', mot de passe initial 'greia'."},
 })
+
+
+# Small pointer-speed controls need unique, recognizable short labels.
+# Taking the first word of "very slow" and "very fast" made both "very".
+_MESSAGES.update({
+    "pointer.preset.short.very slow": {"en": "V.Slow", "it": "Min.", "es": "M.Len.", "fr": "T.Len."},
+    "pointer.preset.short.slow": {"en": "Slow", "it": "Lenta", "es": "Lenta", "fr": "Lente"},
+    "pointer.preset.short.medium": {"en": "Med.", "it": "Media", "es": "Media", "fr": "Moy."},
+    "pointer.preset.short.fast": {"en": "Fast", "it": "Vel.", "es": "Ráp.", "fr": "Rap."},
+    "pointer.preset.short.very fast": {"en": "V.Fast", "it": "Max.", "es": "M.Ráp.", "fr": "T.Rap."},
+})
