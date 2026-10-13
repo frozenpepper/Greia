@@ -631,3 +631,23 @@ when independently constructed. Avoid per-frame locale resolution and
 hardcoded Italian emergency completion text. Follow
 `tests/test_four_language_activity_runtime_text.py` and the existing
 GLA-015 for source/visual acceptance; no live review has run yet.
+
+
+### Opposites state words and real language presentation (2026-10-13)
+
+`activities/mondo_contrari` originally had perfectly good `opposite.*`
+translations in EN/IT/ES/FR bundles but drew ten fixed Italian state
+banners and only switched the category tabs between IT and EN. The real
+runtime now resolves the ten semantic state words once from
+`LocalizedResources.text()`; five category labels reuse the identical
+two words, with GreiaTypography supporting accented glyphs and bounded
+text-surface caches. The composition root resolves only the declared
+EN/IT profile locale; staged ES/FR rendering uses explicit test-only
+resource injection. Do not equate stageable source strings with
+accepted language-bearing speech. For non-localized independent renderer
+tests use concept pictograms, not arbitrary fixed-language text. See
+`tests/test_activity_mondo_contrari.py` and
+`tests/test_four_language_activity_runtime_text.py`.
+`viaggio_delfino` also now uses visual symbols for missing-resource
+completion emergencies instead of forcing Italian replay copy; its
+real EN/IT completion title/replay/body remain semantic resources.
