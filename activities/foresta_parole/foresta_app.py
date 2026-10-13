@@ -82,7 +82,9 @@ class SoundManager:
 
     def _init_sounds(self) -> None:
         audio_dir = Path(__file__).resolve().parent / "assets" / "audio"
-        for loc in ("it", "en"):
+        # Source-declared locale sets are loaded only when their files exist.
+        # This does not advertise a language or synthesize missing speech.
+        for loc in PHONICS_DATA:
             loc_dir = audio_dir / loc
             if loc_dir.exists():
                 for wav in loc_dir.glob("*.wav"):
