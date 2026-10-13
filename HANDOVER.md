@@ -1,5 +1,93 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-13 — Multilingual L3/L4 expansion: Parent Settings, 27 Activities, recording CSV (SOURCE WIP)
+
+**Owner-authorized program:**
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`;
+precise current state:
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`.
+Single local-agent queue GLA-014/GLA-015:
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+Audio task owner:
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`.
+
+**Actual source progress:** Greia's on-device Parent Settings
+now displays localized named text (EN/IT/ES/FR) across
+authentication, navigation tabs, device language, child accounts
+and dangerous account deletion, password changes, microphone
+levels/reduction, pointer speed/toggles, Wi-Fi settings,
+SSH maintenance and Parent remote pairing. Original English
+form source remains in `panel_strings.py`, translated by
+`panel_localization.py`. All display locale comes from
+the existing device service (not `LANG`); sensitive user
+values (SSIDs, credentials, names, IPs, SSH commands) are
+not run through linguistic replacement logic.
+The existing cached Pygame panel layout remains measured/
+bounded. **Behavioral fix:** previous pointer speed/toggle
+handlers erroneously overwrote a failed service write
+with a success message. The authoritative apply result
+now controls feedback. Tests in
+`tests/test_panel_localization.py` were expanded to
+cover translated forms, API failure behavior and
+dynamic interpolation. **Source only, not executed.**
+
+**Current L4 batch:** `activities/*/locales/es.json` and
+`fr.json` now staged for **27/45** built-in Activities:
+54 files, **307 text keys per target locale** = 614
+translated text entries. Added the 14-package third
+wave at `9a8d8520` after the prior 13, with
+`tests/test_staged_activity_translations.py`
+reconciling strict key parity, curly placeholders
+and legacy literal `$target`/`$num` values.
+This is currently *declared bundle-text coverage*,
+NOT total translated gameplay or voice. Source
+manifests still correctly list **only en/it**.
+18 more built-ins await ES/FR content work, including
+the Encyclopedia, Submarine facts, and educational
+language/phonics curriculum adaptation.
+The Number Train contains a known ES/FR singular-
+versus-plural phrase defect; must fix consumer
+grammar before voice production/release.
+
+**Real local-agent improvement:** the offline
+`tools/audit_greia_language_coverage.py` accepts
+`--recording-ledger` and generates the actual
+four-language script/audio candidate CSV, including
+authoritative collection names from the source AST,
+known missing `my_creations.wav`, existing asset
+hashes, safe expected paths and honest states.
+Existing files are `EXISTING_REVIEW_PENDING`,
+never automatically human-approved. Staged ES/FR
+require **54 Activity title recordings** for these
+27 packages; further voice work across UI, custom
+Activity dialogue and Encyclopedia must be manually
+extracted/added to the same ledger. Speech requires
+reviewed scripts, canonical voice/speaker,
+supported `VoiceEngine` provider, optional approved
+Modal authoring compute and human listening before
+integration; none executed or authorized here.
+
+**Evidence limit:** GitHub direct-to-main commits/source readbacks
+only. No unit execution, `make verify`, Pygame
+screenshots, bilingual live games, generated WAVs,
+human audio listening, Parent HTML revision pin,
+device installation/upgrade, Acer or Pi acceptance.
+Do not promote ES/FR to the global language selector,
+treat first-party title WAVs as present or claim
+existing EN/IT speech gaps resolved. The two
+current source/visual acceptance queue tasks remain
+NOT EXECUTED. Existing physical lifecycle and Activity
+release conditions remain independently OPEN.
+
+**Next GitHub work:** remaining 18 locale/content
+bundles, authentic number-train grammar, inline
+unbundled strings in Shell and Activities, Parent
+HTML client cross-repo semantic translation.
+The local recording agent's first independent
+action is GLA-014 source/CSV inventory, then
+full spoken cue assignment/review. No cloud
+provider calls until actual approval.
+
 ## 2026-10-13 — Multilingual continuation L3/L4: real Parent UI + six built-in text packs (SOURCE WIP)
 
 **GitHub-only substantive source work** on the owner-authorized
