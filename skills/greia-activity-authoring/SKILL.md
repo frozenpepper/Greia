@@ -211,9 +211,11 @@ missing/incorrect cues.
 
 ### Source-staged Activity text (2026-10-13)
 
-The first six built-in `es.json`/`fr.json` files under
-`activities/{painting,writing,shape_garden,piccola_serra,memory_meraviglie,clinica_cuccioli}/locales/`
-have full currently catalogued semantic string-key parity with EN/IT,
+The first thirteen built-in Activity packages now have
+`locales/es.json` and `locales/fr.json` text bundles,
+with full currently catalogued semantic string-key parity
+with EN/IT. Consult the current roster and checkpoint
+in `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`;
 but no generated voice assets yet. **The manifests still correctly
 advertise only en/it.** Do not add `es`/`fr` to a manifest or
 fill `audio` mappings with nonexistent WAVs merely because
