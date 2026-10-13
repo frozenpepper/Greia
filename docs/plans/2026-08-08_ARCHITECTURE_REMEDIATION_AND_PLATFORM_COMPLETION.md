@@ -3340,3 +3340,8 @@ Continuing the owner-authorized L0–L6 localization workstream (full detail and
 ### 2026-10-13 — Train and Wonder Match missing-resource copy neutrality
 
 Follow-up to the same four-language source-only Activity audit: Number Train and Wonder Match victory content now uses language-neutral symbols only when localization resources cannot be obtained; normal localized `victory.*` semantics retain full text. Five focused provider-free tests authored, still not executed. No public system-language expansion, trust/runtime API change, real GUI, voice or hardware evidence; active remediation blockers remain open. Details in the four-language `PROGRESS.md`.
+
+
+### 2026-10-13 — Syllable guidance and Greenhouse semantic labels; actual LocalizedResources method contract
+
+The scoped L0–L6 translation audit removed fixed Italian text from real Magic Syllables instruction/word-slot surfaces and Greenhouse toolbar; both use current Activity profile-relative source resources and stage all four language strings while ES/FR remain unadvertised. Magic Syllables derives displayed lesson syllables from the actual selected curriculum, not fixed Italian vowels. Found and repaired a production `LocalizedResources.string()` call error in Wonder Match, Number Train and Greenhouse: the platform exposes `.text()` only; the previous swallowed exception meant the translated victory messages were not actually shown. Eight focused source tests added, but **not executed**. No runtime, installer, voice, visual or hardware acceptance; no remediation/lifecycle stage closure. Detailed source checkpoint and evidence boundary in `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`.
