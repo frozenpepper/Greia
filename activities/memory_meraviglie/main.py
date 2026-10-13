@@ -70,7 +70,7 @@ def _localized(
     if resources is None:
         return default
     try:
-        value = resources.string(key)
+        value = resources.text(key)
     except Exception:
         return default
     return value or default
