@@ -72,6 +72,35 @@ class FourLanguageInventoryTests(unittest.TestCase):
             self.assertIsNone(candidates[("es", "activity.title")]["path"])
             self.assertEqual(report["summary"]["fr"]["activity_bundles"], 0)
 
+    def test_text_stage_does_not_claim_product_language_support(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            package = root / "activities" / "little_game"
+            (package / "locales").mkdir(parents=True)
+            (package / "activity.toml").write_text(
+                '[activity]\nlanguages = ["en", "it"]\n', encoding="utf-8"
+            )
+            for locale, strings in {
+                "en": {"activity.title": "Little Game", "btn.go": "Go"},
+                "it": {"activity.title": "Gioco", "btn.go": "Vai"},
+                "es": {"activity.title": "Juego", "btn.go": "Ir"},
+                "fr": {"activity.title": "Jeu"},
+            }.items():
+                (package / "locales" / f"{locale}.json").write_text(
+                    json.dumps({"locale": locale, "strings": strings, "audio": {}}),
+                    encoding="utf-8",
+                )
+            report = build_inventory(root)
+            self.assertEqual(report["structural_errors"], [])
+            entry = report["activities"]["little_game"]
+            self.assertEqual(entry["advertised_languages"], ["en", "it"])
+            self.assertEqual(entry["locale_text"]["es"]["stage"], "SOURCE_TEXT_KEYS_ONLY")
+            self.assertFalse(entry["locale_text"]["es"]["advertised_by_manifest"])
+            self.assertEqual(entry["locale_text"]["fr"]["stage"], "INCOMPLETE_TEXT_KEYS")
+            self.assertFalse(entry["locale_text"]["fr"]["advertised_by_manifest"])
+            self.assertEqual(report["summary"]["es"]["text_key_complete_bundles"], 1)
+            self.assertEqual(report["summary"]["es"]["advertised_activity_locales"], 0)
+
     def test_missing_platform_portal_is_inventoried_without_wav_seed(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
