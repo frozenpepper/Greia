@@ -116,9 +116,9 @@ def main() -> int:
         primary_rect=play_again_rect,
     )
     completion_content = CompletionContent(
-        title=_localized(resources, "victory.title", "Ottimo lavoro! Coppie trovate! 🌟"),
-        body_lines=(_localized(resources, "victory.subtitle", "Che memoria fantastica!"),),
-        primary_label=_localized(resources, "btn.play_again", "🎉 Gioca Ancora!"),
+        title=_localized(resources, "victory.title", "🌟"),
+        body_lines=(_localized(resources, "victory.subtitle", "★"),),
+        primary_label=_localized(resources, "btn.play_again", "🔄"),
         achievement_count=3,
     )
 
