@@ -649,3 +649,19 @@ consumes the same source in the pre-READY overlay and
 tile badge. Focused pure tests:
 `tests/test_launcher_launch_feedback_localization.py`;
 provider-free suite and display acceptance still pending.
+
+
+### Display-string API contract and render-path audit (2026-10-13)
+
+`LocalizedResources.text(key, variables=None)` is the actual public
+string lookup in `src/greia_platform/localization.py`; there is **no**
+`LocalizedResources.string()` method. Calling `.string()` inside a
+blanket-except helper is a silent multilingual rendering failure, not a
+legitimate fallback. Runtime text placeholders use `string.Template`
+(`$variable`), and the display result follows ADR 0034 child-case
+presentation. Resolve Activity UI text at the Activity owner and pass
+renderers the already-resolved labels; leave genuinely language-neutral
+symbols for missing-package emergency rendering, and report missing
+required translations as release blockers. The real My Time/Creations
+local-agent acceptance queue remains `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`;
+source key parity alone cannot certify translated runtime behavior.
