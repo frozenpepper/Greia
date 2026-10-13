@@ -49,6 +49,22 @@ hardware or native review in this slice.
 Do not derive a simulated PASS from original archived
 Wave or pre-locale tests.
 
+**Additional 2026-10-13 L4 source continuation:** seven more
+ES/FR staged Activity JSON pairs committed at `bb0d855c`
+(`acquario_magico`, `torre_forme`, `volo_draghetto`,
+`colline_allegre`, `quattro_stagioni`,
+`corsa_bacche`, `bottega_delle_misure`).
+**Current aggregate: 13 Activities, 26 new locale JSONs,
+153 translated semantic messages per locale.** The original
+six-pack handover above is a historical intermediate checkpoint,
+not the final count. Tests now audit the full thirteen;
+GLA-015 was re-pinned to `1e75dafe`. No supported
+language manifest/audio mappings have been promoted. The
+local recording brief now lists all 26 ES/FR spoken title
+candidates plus the known missing EN/IT recordings.
+These remain source-draft text awaiting native proofread,
+human listening and real Pygame/build acceptance.
+
 **Next:** (a) local GLA-014/015 verification on the exact
 current SHA, first-failure stop; (b) continue L3 Parent
 forms/Shell notifications and L4 Activity/encyclopedia
