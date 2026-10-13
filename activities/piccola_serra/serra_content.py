@@ -57,12 +57,13 @@ POT_RECT_TUPLES: Final[tuple[tuple[int, int, int, int], ...]] = (
     (720, 160, 180, 280),
 )
 
-# Toolbar button definitions: (x, tool_index, label, color).
+# Toolbar presentation: (x, tool_index, semantic locale key, color).
+# No display words belong in the pure game/geometry catalogue.
 TOOL_DEFS: Final[tuple[tuple[int, int, str, tuple[int, int, int]], ...]] = (
-    (100, 0, "SEME", (22, 101, 52)),
-    (310, 1, "ACQUA", (2, 132, 199)),
-    (520, 2, "SOLE", (202, 138, 4)),
-    (730, 3, "RACCOLTA", (194, 65, 12)),
+    (100, 0, "tool.seeds", (22, 101, 52)),
+    (310, 1, "tool.water", (2, 132, 199)),
+    (520, 2, "tool.sun", (202, 138, 4)),
+    (730, 3, "tool.harvest", (194, 65, 12)),
 )
 
 TARGET_HARVEST: Final = 6
