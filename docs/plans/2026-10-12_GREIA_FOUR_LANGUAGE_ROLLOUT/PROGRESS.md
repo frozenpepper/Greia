@@ -402,3 +402,136 @@ separate Parent HTML client localization with its
 own pinned build. Extend native reviewed voice
 scripts and only then authorize voice production
 and real device acceptance.
+
+
+## 2026-10-13 — L4 fourth wave and science/curriculum separation (SOURCE WIP)
+
+### Current source stage: all 45 built-in Activity folders represented
+
+**Do not read file presence as delivered language support.**
+English/Italian remain the only advertised Activity and system
+languages. No new Spanish/French WAVs or OGGs have been recorded.
+
+| Source-stage classification | Packages | ES+FR files | Meaning |
+| --- | ---: | ---: | --- |
+| Full *declared string-key parity* | **39** | 78 | All currently declared English/Italian text keys translated, but still missing audio and possibly inline UI |
+| Literacy/phonics interface stage | **5** | 10 | Four have UI-key parity without language-specific lesson adaptation; Word Forest intentionally omits 24 English-specific phonics/word keys |
+| Encyclopedia partial stage | **1** | 2 | 51/246 keys in ES and FR, 195 missing per language; audio not copied |
+| **Total** | **45** | **90** | Source-stage bundles only, **0 ES/FR Activities promoted** |
+
+Translated staged text values now total approximately **682 per target
+language** (1,364 ES+FR text entries). Of these, 583 keys per target
+are in the 39 full-key packages, 48 are in the five literacy UI
+bundles and 51 are in the partial Encyclopedia bundle.
+Actual missing declared strings in these packages: **219 per
+new language** (24 Word Forest content words + 195 Encyclopedia).
+These counts exclude text hardcoded outside the locale catalogues
+and content/voice adaptations, which remain a separate audit.
+
+### Actual added content
+
+- Eleven more *full-key text* packages:
+  `baia_delle_orche`, `cucciolo_mio`,
+  `la_discesa_della_biglia`, `labirinto_magico`,
+  `mondo_contrari`, `morbidi_mostriciattoli`,
+  `posta_di_leo`, `stelle_incantate`,
+  `storie_della_mia_voce`, `teatrino_fiabe`,
+  `viaggio_delfino`. These add **199** translated
+  values per new language, including Orca Bay facts,
+  Dolphin Journey narration scripts, constellations,
+  storage/delete warnings and accessible visual/game controls.
+  Source `458d852d`.
+- `sottomarino_giramondo`: **77** ES/FR text
+  entries each, with nautical left/right orders, 32
+  marine facts, multiple legacy voice aliases and
+  buttons. The source holds **55 cue mappings per locale**
+  and ES/FR `audio` stays empty until recorded,
+  speaker-assigned, verified, human listened and integrated.
+  Source `3c317b35`; tests `81bd3a10`.
+- Five literacy Activities have translated
+  ES/FR UI/instructions: `alfabeto_leo`,
+  `festa_delle_rime`, `officina_dei_suoni`,
+  `sillabe_magiche`, `foresta_parole`.
+  Do not claim that Italian/English letters, phoneme mappings,
+  rhymes or spelling tasks automatically translate.
+  Word Forest intentionally excludes its 24
+  `word.*`/`phonics.*` strings, preserving precise
+  pending adaptation rather than introducing wrong-target
+  pedagogical content. Added **48** UI string values
+  per new language. Source `1a730529`.
+- Encyclopedia now has the first **51** ES/FR
+  keys: activity title, navigation, six animal
+  groups, detailed lion/elephant/octopus/bee/penguin/frog
+  explanations. **195 keys per locale remain**.
+  Source EN/IT declares 200 audio cues per locale;
+  none was copied or fabricated in ES/FR.
+  The short English topic titles are not approved
+  transcripts of the source narration.
+  Source `f34ee05f`.
+- Dolphin Journey's seven rich narrator/curiosity
+  cue IDs in both EN and IT now explicitly declare their
+  actual `caption_key` instead of appearing as
+  title-less `*.voice` audio in the source/voice
+  inventory. This is transcript *association* pending
+  human checking, not transcript acceptance.
+  Source `8bdffaa1`.
+
+### Quality corrections, testing and voice planning
+
+- Prior Number Train "1 fruit" singular bug was
+  *hypothetical*. A source trace of
+  `treno_content.py`, `treno_model.py`,
+  `treno_app.py` and `treno_renderer.py`
+  shows generated counts **at least two**, and
+  `prompt.load` is currently not rendered.
+  Updated test pins the actual reachable target
+  contract rather than pretending a reproduced
+  live grammar bug. Count-sensitive phrasing is
+  a requirement **only when** the text/speech
+  prompt is introduced and one-item cases exist.
+- `tests/test_staged_activity_translations.py`
+  now explicitly recognizes all 45 built-ins:
+  39 full-key, five literacy/UI, one partial
+  Encyclopedia, and checks source-key/placeholder
+  parity, hidden ES/FR support, curriculum gaps,
+  77 Submarine text keys/voice aliases and
+  seven Dolphin caption mappings.
+- `tools/audit_greia_language_coverage.py`
+  now parses `activity.toml` and reports
+  `advertised_languages`,
+  `advertised_by_manifest`, and stages
+  `NO_BUNDLE`, `INCOMPLETE_TEXT_KEYS`
+  and `SOURCE_TEXT_KEYS_ONLY` separately.
+  The audit cannot mislabel an ES/FR text pack
+  as advertised production support.
+  Additional tests in `tests/test_four_language_inventory.py`.
+- The local-agent recording brief now identifies
+  **at least 90 new ES/FR title recording candidates**,
+  Submarine's 55 cue owners per locale, Dolphin narrator
+  and six curated Encyclopedia chapters, the entire
+  remaining source fact/phonics cue backlog, and
+  existing EN/IT missing recordings.
+  No Modal/provider calls or generation authorized.
+
+### Acceptance status and next code work
+
+**SOURCE COMMITTED via GitHub; UNEXECUTED locally.**
+No `unittest` suite, `make verify`, Simulator,
+audio provider, child GUI or hardware acceptance
+has been executed against the current SHA.
+Native-language proofread and scientific/phonics
+authoring approval remain necessary for all new text.
+GLA-014/015 in the one local-agent task queue now
+describe the actual staged boundary and current
+CSV/script review requirements.
+
+**Next:** translate the remaining **195 Encyclopedia
+keys per target locale**, using science/narration
+review by chapter; adapt Word Forest's 24 actual
+spelling/phoneme curriculum keys per locale and
+similar English/Italian-only learning rules in the
+other four literacy packages; reconcile inline
+runtime strings and all source audio owner scripts;
+integrate the separate Parent HTML client. Only
+then proceed to human-reviewed voice and selectable
+locale promotion under the accepted plan.
