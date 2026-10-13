@@ -1,3 +1,13 @@
+## 2026-10-13 — Localized runtime Maze and Wonder Match labels (SOURCE-WIP)
+
+**Main implementation anchor before this documentation update:** `02213ed37e9d8e8b0318902a908225ef5b1d2cff`. **Localization authority:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md` and sibling `PROGRESS.md`; local agent task `GLA-015` in `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+
+Real user-visible inline language leaks were found and corrected rather than increasing empty JSON-key counts. Magical Labyrinth now resolves 6 model difficulty captions, 4 real biome captions and a short new-maze HUD caption from semantic Activity localization, and victory messages from its existing translated resources. Four language bundles gained 11 locale keys apiece. Wonder Match now renders all 64 matching illustration names and its 4 themes through semantic resources instead of hardcoded IT/EN names; 64 words per language were authored in its EN/IT/ES/FR bundles. Source tests added in `tests/test_four_language_activity_runtime_text.py` (4 tests). Existing EN/IT selectable-only and staging policy is unchanged.
+
+**Verification:** GitHub readback checked all current model IDs against all 4 written language bundles: 0 missing. No Python unit tests, actual Pygame render, GUI screenshots, human translation review, voices or physical acceptance were executed. For next checkout, run `python3 -m unittest discover -s tests -p 'test_four_language_activity_runtime_text.py' -v`; then check actual Maze/HUD/card layouts at 1024×600 and 800×480 in EN/IT and only staged ES/FR test injection. GLA-015 also retains its existing upstream and cumulative source gates. Continue actual remaining runtime inline copy census and phonics/encyclopedia semantic translation review, not false claims of completion.
+
+**Unchanged:** External Parent HTML source is staged (373 semantic keys per language), not installed/pin-promoted; ES/FR system or Activity selection remains gated; voice production and multilingual visual/hardware acceptance remain OPEN.
+
 ## 2026-10-13 — Painting status localized; real inline-text gaps remain (SOURCE-WIP)
 
 **Greia OS main before this documentation commit:**
