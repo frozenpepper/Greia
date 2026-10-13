@@ -58,6 +58,89 @@ def _audio_asset(root: Path, rel: str | None) -> tuple[str, bool]:
     return rel, target.is_file()
 
 
+def _foresta_lesson_audio(root: Path, errors: list[str]) -> list[dict[str, Any]]:
+    """Inventory code-owned phonics audio as explicit candidate cues.
+
+    The Word Forest's actual runtime uses foresta_content.PHONICS_DATA,
+    not the locale JSON's audio table. Parse only a literal data assignment;
+    never import pygame/game code or invent a phoneme/prompt transcript.
+    """
+    package = root / "activities" / "foresta_parole"
+    path = package / "foresta_content.py"
+    if not path.is_file():
+        return []
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        definitions = [
+            node for node in tree.body
+            if isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "PHONICS_DATA"
+        ]
+        if len(definitions) != 1:
+            raise ValueError("expected one literal PHONICS_DATA")
+        rows = ast.literal_eval(definitions[0].value)
+        if not isinstance(rows, dict):
+            raise ValueError("PHONICS_DATA must be a locale dictionary")
+    except (SyntaxError, ValueError, TypeError, OSError, UnicodeError) as exc:
+        errors.append(f"{path}: cannot inventory Word Forest phonics: {exc}")
+        return []
+
+    cues: list[dict[str, Any]] = []
+    for locale in LOCALES:
+        lessons = rows.get(locale)
+        if not isinstance(lessons, list) or not lessons:
+            errors.append(f"{path}: missing phonics lessons for {locale}")
+            continue
+        seen: set[str] = set()
+        for lesson in lessons:
+            if (not isinstance(lesson, (tuple, list)) or len(lesson) != 6
+                    or any(not isinstance(field, str) or not field for field in lesson)):
+                errors.append(f"{path}: malformed {locale} phonics lesson")
+                continue
+            letter, letter_stem, prompt_stem, word, _emoji, word_stem = lesson
+            # Prevent a malformed code catalogue from manufacturing unsafe
+            # candidate recording output destinations.
+            names = (letter_stem, prompt_stem, word_stem)
+            if any(not item.isascii() or not item.replace("_", "").isalnum()
+                   or item != item.lower() for item in names):
+                errors.append(f"{path}: unsafe {locale} phonics audio stem")
+                continue
+            if not word.casefold().startswith(letter.casefold()):
+                errors.append(f"{path}: {locale} example {word!r} does not begin with {letter}")
+                continue
+            for kind, stem, script in (
+                ("letter", letter_stem, None),
+                ("prompt", prompt_stem, None),
+                ("word", word_stem, word),
+            ):
+                cue_id = f"phonics.{kind}.{stem}"
+                if cue_id in seen:
+                    errors.append(f"{path}: duplicate {locale}/{cue_id}")
+                    continue
+                seen.add(cue_id)
+                rel = f"assets/audio/{locale}/{stem}.wav"
+                _, exists = _audio_asset(package, rel)
+                cues.append({
+                    "source": "activities/foresta_parole",
+                    "locale": locale,
+                    "cue_id": cue_id,
+                    "caption_key": f"phonics.{letter_stem}" if kind == "word" else None,
+                    # Prompt recordings may teach phoneme vs letter name;
+                    # no authoritative spoken script is currently declared.
+                    "text": script,
+                    "path": rel,
+                    "file_exists": exists,
+                    "state": (
+                        "BLOCKED_TEXT" if not script else
+                        "EXISTING_ASSET_NEEDS_REVIEW" if exists else "MISSING_AUDIO"
+                    ),
+                    "speaker": "UNASSIGNED",
+                    "kind": "UNASSIGNED",
+                })
+    return cues
+
+
 def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     dirs = sorted(
         path for path in (root / "activities").iterdir()
@@ -171,6 +254,15 @@ def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], lis
                 "mapped_cues": len(audio),
                 "missing_reference_mappings": missing_audio_mappings,
                 "missing_or_invalid_files": audio_missing,
+            }
+        if activity.name == "foresta_parole":
+            # Not present in the Activity's locale audio declarations:
+            # code owns letter, find-letter prompt, and example-word playback.
+            runtime_cues = _foresta_lesson_audio(root, errors)
+            cues.extend(runtime_cues)
+            entry["code_owned_phonics_audio"] = {
+                locale: sum(1 for cue in runtime_cues if cue["locale"] == locale)
+                for locale in LOCALES
             }
         summary[activity.name] = entry
     return summary, cues
