@@ -1,7 +1,7 @@
 # Greia — Honest Language Selection and Four-Language Rollout
 
 **Date:** 2026-10-12  
-**Status:** ACTIVE, owner-authorized; only EN/IT system languages selectable. L0 selector restriction and L2 ES/FR installer translations staged; L3 Parent overlay and partial external Parent HTML source translations; L4 ES/FR text-key parity in all 45 Activities, plus five unreviewed literacy curricula; L5 voice/script/native educational review and remaining UI text INCOMPLETE; L6 hardware/visual/language release acceptance NOT MET. Spanish and French MUST NOT yet be selectable.  
+**Status:** ACTIVE, owner-authorized; only EN/IT system languages selectable. L0 selector restriction and L2 ES/FR installer translations staged; L3 Parent overlay and external Parent HTML translation source expanded to 272 semantic UI keys across Home/Children/Activities/discovery/common chrome (deeper Device UI incomplete); L4 ES/FR text-key parity in all 45 Activities, plus five unreviewed literacy curricula; L5 voice/script/native educational review and remaining UI text INCOMPLETE; L6 hardware/visual/language release acceptance NOT MET. Spanish and French MUST NOT yet be selectable.  
 **Intent:** one correctly integrated language experience across the installer, installed OS, Parent controls, built-in Activities and their speech.  
 **Owner:** Greia product source; language setting authority remains `src/greia_platform/system_language.py`; runtime inheritance/Activity fallback remains ADR 0028.  
 **Voice execution:** `LOCAL_AGENT_VOICE_PRODUCTION.md` in this directory.  

@@ -3260,3 +3260,21 @@ authoring only: no Node execution, browser screenshots, or
 pinned Parent HTML runtime rebuild. More Parent views still
 require localization; ES/FR system languages and all
 hardware/release acceptance gates remain blocked.
+
+
+### 2026-10-13 — Parent HTML client Home/Children/Activities translation implementation (no release acceptance)
+
+In the separately owned browser repo, semantic EN/IT/ES/FR
+source text coverage expanded to 272 keys with integrated
+Home, child management, daily Activity-time editing and
+Activities policy/install/remove workflows. Shared formatted
+age/time/category values now follow the selected locale.
+No alternate Parent API, credentials, language registry,
+or browser-side management protocol was introduced.
+In-session syntax/parser inspection of all 13 browser JS
+modules passed, and all 246 literal referenced translation
+IDs have complete four-language source coverage. This
+does not replace full `npm test` or runtime/UI validation.
+The Greia OS Parent HTML revision/hash pin, device languages,
+Activity manifests, installer and lifecycle gates remain
+unchanged. No remediation/hardware/release gate is closed.

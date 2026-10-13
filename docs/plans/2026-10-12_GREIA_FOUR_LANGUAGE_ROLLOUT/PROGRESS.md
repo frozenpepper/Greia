@@ -986,3 +986,53 @@ English; live normal login/discovery, browser layout,
 Node tests and production file-integrity sealing are
 **not executed**. No change to Greia OS's installed Parent
 client pin. No ES/FR device promotion.
+
+
+### 2026-10-13 — Parent browser Home/Children/Activities four-language source integration
+
+The separate `frozenpepper/Greia-Parent-App-Html` repository
+advanced to `11f43f63f51cda5da260d26488435615f67289ae`
+on its `main` branch (source only).
+The Parents browser now has **272 semantic UI text keys in each
+of EN/IT/ES/FR**, superseding the 100-key partial checkpoint.
+Real UI integration now includes:
+- Home selected-child overview, recent sessions, status,
+  star/usage metrics and device management navigation;
+- Children list, age/style/challenge badges, individual/shared
+  daily Activity-time editing, profile creation/modification,
+  secure password fields and deletion confirmation;
+- Activities search/categories, policy age/difficulty
+  controls, visibility overrides, installation/removal,
+  child data preservation text and feedback.
+
+Common time/age/category/challenge formatters were converted
+to the same locale service rather than duplicating per-view
+localized logic. Dynamic profile names and API-provided text
+continue to render only as plain text.
+
+**Verification actually performed in the GitHub-authoring
+environment:** exact HEAD and blob readback; in-session
+V8 JavaScript syntax compilation of all **13** `src/*.js`
+browser source modules (all pass after repairing a missing
+parenthesis in the first Activity removal edit); pure
+translation smoke evaluation in each locale; static
+identification of **246 distinct referenced semantic keys**
+with zero missing IDs and matching four-language placeholder
+sets. No `innerHTML` in the 13 inspected client source
+modules. Source tests now include
+`tests/localization_source_contract.test.js`, whose
+`npm test` run will independently check `node --check`
+for every JS module, literal translation references,
+and API call boundaries.
+
+**Not executed:** actual Node `npm test`, real browser
+rendering/layout, device discovery/password interaction,
+native linguistic review, installed image, physical hardware.
+Deep Device management forms and some dynamic/API errors
+remain untranslated. These changes have **not been shipped**
+into Greia OS's pinned/verified Parent client; the OS pin and
+runtime integrity manifest are deliberately unchanged.
+ES/FR still must NOT become selectable system languages or
+Activity languages. Continue translating real UI owners,
+then run normal source/browser tests and repin only after
+the accepted exact-byte integration procedure.

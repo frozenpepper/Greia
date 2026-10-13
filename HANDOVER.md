@@ -1,3 +1,33 @@
+## 2026-10-13 — Parent HTML Home/Children/Activities localization SOURCE-WIP (272 keys)
+
+**Greia OS main before this documentation commit:**
+`52794dd700d75efdf0ba5bc14dd5b0e3b9229bda`.
+**External browser GitHub main:**
+`frozenpepper/Greia-Parent-App-Html`
+`11f43f63f51cda5da260d26488435615f67289ae`.
+
+External browser UI now contains **272 staged semantic messages per
+language (EN/IT/ES/FR)**. Beyond navigation and device discovery/
+password authentication, Parent Home, Children (including profile
+editor and time limits), and Activities (visibility policies,
+search, installing/removing packages and validation feedback)
+use those keys. Shared common age/time/category formatting
+is locale-aware. Exact literal source references: 246 distinct,
+all available; all 13 Parent JS modules pass in-session V8
+source parse after a caught-and-repaired Activity remove
+parenthesis. A new `localization_source_contract.test.js`
+will repeat parser/reference checks during `npm test`.
+
+**No `npm test`, browser render, native proofread, password/device
+live API testing, audio or hardware run** in this GitHub source
+session. Some deep Device forms and dynamic server-side messages
+remain English. Browser code is **not the installed OS pin**:
+do not repin the Parent runtime integrity manifest until
+complete localization and exact accepted source/browser proof.
+Do not advertise ES/FR as supported in system selectors
+or Activity manifests. Other language-plan work remains
+according to the current progress ledger and GLA-015 queue.
+
 ## 2026-10-13 — Parent browser first-run locales staged (100 keys, SOURCE-WIP)
 
 **Greia OS GitHub main:** `3cf5065ca1bd55a0d1f0eb573e51501f046a5d5a`

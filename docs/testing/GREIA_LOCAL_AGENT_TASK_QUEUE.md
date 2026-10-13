@@ -782,9 +782,14 @@ test commands and expected observable behavior.
   approved science scripts and human review.
   Separate Parent browser repo source at
   `frozenpepper/Greia-Parent-App-Html` now stages
-  100 EN/IT/ES/FR chrome keys, now including the real
-  discovery/chooser/error and Parent-password screens. When the checked-out
+  272 EN/IT/ES/FR semantic browser text keys, now
+  including Home, Children, full child/time editors,
+  Activities search/policy/install/removal, plus
+  discovery/authentication and shared system chrome. When the checked-out
   external browser source is available, run `npm test`
+  (including `tests/localization_source_contract.test.js`,
+  which checks Node module syntax and all literal translation
+  bindings)
   at its exact current `main` HEAD with no remote
   dependency installation or new API host, log command
   exits and perform a read-only translated chrome
