@@ -12,7 +12,19 @@ does not authorize new system installation, hosted Actions or flashing.
 `docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md`,
 `tools/greia_voice_core/README.md`, and
 `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.  
-**Status:** instructions prepared; actual recording NOT STARTED or accepted.
+**Status:** voice-production work order **AUTHORIZED** by owner on
+2026-10-14 for all missing EN/IT/ES/FR clips; generation/recording itself
+has **NOT BEEN EXECUTED** in the GitHub authoring session.
+Owner approval covers **every currently authored text translation**, not
+unwritten full narration transcripts, missing letter-name/phoneme scripts,
+unverified pronunciation or generated audio. Audio remains review-pending
+until heard.
+
+**START HERE — EXECUTION ORDER:**
+[`LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`](./LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md).
+It provides the 45×4 sequential Activity pass, shared-system pass, live
+CLI commands, resumable ledger and deliverables; this existing document
+remains the detailed voice/script/architecture authority.
 
 ## 0. Hard rules for this agent
 
@@ -23,16 +35,24 @@ does not authorize new system installation, hosted Actions or flashing.
    currently supports macOS/MLX and native speakers; a **Modal
    `VoiceProvider` does not yet exist**. Modal is the preferred future
    authoring platform, **not an already-working integration**.
-2. **Never invent lines or translate scripts yourself**. Generate only
-   from reviewed four-language cue sheets produced in this plan.
-   Every job must have: unique semantic `cue_id`, exact text,
-   `locale`, `speaker`, speech `kind`, and path. A missing
-   translation is `BLOCKED_TEXT`, never guessed into a recording.
-3. **No mass generation until the owner authorizes provider/cloud
-   expenditure and the provider is ready.** Do not deploy Modal,
-   download multi-GB model weights, start a paid job, or install voice
-   dependencies without explicit approval. A task to prepare the
-   recording instructions is not approval for open-ended spending.
+2. **Never invent a spoken line or translate a missing script.** The
+   owner approved all *existing authored* four-language text on
+   2026-10-14; a complete, semantically correct utterance in those
+   catalogues can be used without another generic copy-approval pass.
+   Every voice job still requires a unique semantic `cue_id`, exact
+   speech text, `locale`, `speaker`, kind and destination path.
+   Where an existing catalogue contains only a glyph, short heading,
+   incomplete narration caption or unresolved phoneme-vs-letter-name
+   choice, mark `BLOCKED_SCRIPT`; text approval did not create the
+   missing required utterance.
+3. **Owner's 2026-10-14 instruction authorizes proceeding with actual
+   missing-voice production** through an *already available, registered,
+   zero-new-spend local Greia Voice Engine provider*, in small reviewable
+   batches. A priced/cloud Modal run, installing voice stacks or
+   downloading multi-GB weights still requires a separate concrete
+   expenditure approval. Do not let missing Modal block an independently
+   working local provider, and do not silently spend. Record and
+   continue unrelated apps if a speaker/provider remains blocked.
 4. Never overwrite accepted WAV/OGG or their receipts. Never directly
    change canonical character anchor hashes or substitute a new
    character identity. Reuse accepted original EN/IT assets.
@@ -305,9 +325,12 @@ source,locale,speaker,kind,cue_id,exact_text,caption_key,output_path,existing_as
   Treat syllables/letters/phonics as `pedagogical_speech`,
   not mascot voice cloning.
 
-First submit `RECORDING_LEDGER.csv` and a short gap report listing
-total cues by `locale,source,state` to the authoring owner.
-**This is a prerequisite to producing the large voice batch.**
+First complete the `RECORDING_LEDGER.csv` census and a gap report
+listing total cues by `locale,source,state`. Preserve those in the
+run evidence so the GitHub authoring owner can reconcile paths.
+**A complete inventory is a prerequisite for a large batch, not a
+reason to stop all immediately actionable local recordings.** Work
+each app/locale in small bounded batches; hold blocked rows aside.
 
 ## 4. Provider readiness / Modal decision
 
@@ -322,12 +345,14 @@ receipts; do not fork the voice pipeline with an Activity-specific
 Modal script. Add tests for error, unavailable provider and output
 validation. Credentials must remain outside Git/source/logs.
 
-**Local agent must STOP on Modal readiness until the GitHub
-authoring owner has committed and tested the adapter and the
-owner has approved a concrete cost/run budget.** A status message
-`BLOCKED_MODAL_PROVIDER` is correct if this has not happened.
-An approved existing MLX provider can be used only with explicit
-authority for that route. Do not silently swap to macOS `say`
+**Local agent must not use Modal until** its integrated
+`VoiceProvider` is committed/tested and a concrete spend budget
+is approved; record `BLOCKED_MODAL_PROVIDER` for that route.
+**The owner has explicitly authorized recording on 2026-10-14:**
+if `doctor` finds a ready **existing registered local provider with
+no new spend**, use that engine for a small reviewed batch and continue
+the 45-app recording work. Never substitute an unrelated backend or
+write a direct synthesis script. Do not silently swap to macOS `say`
 for character speech or use a generic accent in lieu of the
 canonical character.
 
