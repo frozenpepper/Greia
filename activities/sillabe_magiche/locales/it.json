@@ -16,7 +16,7 @@
     "feedback.word_complete": "Parola completata!",
     "ui.replay_audio": "Riascolta suono",
     "ui.stars": "Stelle",
-    "ui.explorer.formula": "Crea sillabe: $consonant + $vowels",
+    "ui.explorer.formula": "Sillabe con $consonant: $syllables",
     "ui.explorer.instruction": "Tocca una tessera per ascoltare la sillaba!",
     "ui.catcher.listen": "Ascolta e tocca:",
     "ui.builder.first_syllable": "1ª sillaba",
