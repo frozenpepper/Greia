@@ -15,7 +15,12 @@
     "feedback.super": "Super!",
     "feedback.word_complete": "Word completed!",
     "ui.replay_audio": "Replay sound",
-    "ui.stars": "Stars"
+    "ui.stars": "Stars",
+    "ui.explorer.formula": "Build syllables: $consonant + $vowels",
+    "ui.explorer.instruction": "Tap a tile to hear its syllable!",
+    "ui.catcher.listen": "Listen and touch:",
+    "ui.builder.first_syllable": "1st syllable",
+    "ui.builder.second_syllable": "2nd syllable"
   },
   "audio": {
     "activity.title": {
