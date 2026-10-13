@@ -1,3 +1,34 @@
+## 2026-10-13 — Painting status localized; real inline-text gaps remain (SOURCE-WIP)
+
+**Greia OS main before this documentation commit:**
+`5a4b33bd0aa912293b6763a2a0d41a2258d0afe1`.
+External Parent HTML remains source-staged at
+`db14662d` (373 EN/IT/ES/FR keys), NOT the
+installed OS's pinned Parent client.
+
+This turn corrected three real locale leaks:
+- `9297e8a7`: Shell full-screen Activity launch
+  overlay/wait copy and tile badge now use EN/IT/ES/FR
+  profile-relative `launch_feedback.py`.
+- `ba7f87e7`: Word Forest no longer shows fixed
+  Italian praise when a localized resource is
+  unavailable; primary messages still use bundle keys.
+- `5a4b33bd`: Painting's live status pill no longer
+  hardcodes Italian `Salvo`/`Salva...`/`Errore`.
+  `status.saved/saving/error` now exist in all four
+  locale bundles and are resolved through the existing
+  Activity locale context before cached rendering.
+
+Tests for each were authored but **not executed**.
+A bounded ten-file Activity inspection exposed Painting;
+it is NOT a full 45-Activity inline-text audit.
+Visual sizing in Painting (particularly ES/FR),
+the full Shell/Activity/Creations/Encyclopedia string
+census, reviewed phonics, source suites and voice
+recordings remain open. No locale selector, manifest,
+browser client pin, image, or hardware action changed.
+Continue from multilingual PROGRESS and GLA-015.
+
 ## 2026-10-13 — Real runtime language-leak repairs; full Activity audit OPEN
 
 **Greia OS `main` prior to this documentation commit:**

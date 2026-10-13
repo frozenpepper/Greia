@@ -3316,3 +3316,17 @@ unexecuted. Remaining OS/Activity inline text has NOT
 been exhaustively audited, and the connector-limited
 attempt was not counted as evidence. No image, release,
 hardware, registry or audio acceptance closed.
+
+
+### 2026-10-13 — Painting UI status now locale-owned (source only)
+
+A bounded Activity audit found Painting renderer's
+Italian save/saving/error text outside locale JSON.
+All four locale bundles now contain the semantic
+status keys; Activity locale resolution supplies the
+cached renderer text. Language-neutral symbols are
+used only in isolated renderer construction, and pill
+width measures the translated text. Focused source
+test authored but not run; no visual proof or release
+gate closure. Continue the full inline-Shell/Activity
+source audit, not just bundle-key parity.

@@ -812,7 +812,14 @@ test commands and expected observable behavior.
   -p 'test_launcher_launch_feedback_localization.py' -v`
   `python3 -m unittest discover -s tests
   -p 'test_word_forest_phonics_inventory.py' -v`
+  `python3 -m unittest discover -s tests
+  -p 'test_painting_contract.py' -v`
   Record stdout/stderr, exit codes, and the exact SHA.
+  When GUI source acceptance is authorized, inspect
+  Painting save/saving/error text at 1024×600 and
+  800×480. Check cropped labels and overlap for
+  EN/IT and staged ES/FR text without promoting
+  an unsupported Activity locale.
   Do not claim four-language Activity runtime coverage
   based solely on these two targeted leak repairs.
 

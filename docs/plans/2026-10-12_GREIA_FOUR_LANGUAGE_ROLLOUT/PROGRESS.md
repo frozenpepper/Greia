@@ -1173,3 +1173,44 @@ check the actual overlay at a real profile locale after
 source tests pass. This is source-only; it does not
 authorize ES/FR manifests, language selector promotion,
 recording synthesis, or installed-device changes.
+
+
+### 2026-10-13 — Bounded Activity render-path audit: Painting save status four-language fix (SOURCE-WIP)
+
+A bounded source read of ten Activity app/renderer/content modules
+identified a third visible language leak (after Shell launch and
+Word Forest praise). Painting had three **Italian** status
+literals `Salvo`, `Salva...`, `Errore` outside
+all four locale bundles; prior 45/45 bundle-key parity
+was not sufficient proof of runtime UI completeness.
+
+**Source correction `5a4b33bd`:**
+- Added `status.saved`, `status.saving`,
+  `status.error` to each EN/IT/ES/FR Painting bundle.
+- Painting's actual Activity owner resolves effective profile
+  UI locale through `ActivityLocaleSupport`,
+  `resolve_activity_locale` and `LocalizedResources`,
+  still advertising only EN/IT. Renderer receives text
+  once at construction and caches by semantic save-state
+  IDs. A standalone renderer without language context
+  uses neutral symbols `✓`/`…`/`!`, never Italian
+  text under another locale.
+- Pill width now measures cached labels instead of
+  assuming the width of the old short Italian strings.
+- `tests/test_painting_contract.py` checks that legacy
+  literals are absent and all four bundles own the
+  new keys.
+
+**Evidence:** GitHub anchored edits/commits only. Python
+tests, screenshots, font/accent rendering and installed
+device have NOT run. Measured text width still needs
+visual acceptance. The ten-file Activity source sample
+does not exhaust all 45 built-ins; broader code-level
+runtime-inline text work remains OPEN. The attempted
+large-batch source sweep was aborted by GitHub call
+budget without actionable output and is not counted.
+
+Next focused source test:
+`python3 -m unittest discover -s tests
+-p 'test_painting_contract.py' -v`.
+No audio/manifest/language registry promotion.

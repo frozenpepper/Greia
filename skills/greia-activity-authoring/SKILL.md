@@ -588,3 +588,21 @@ celebration symbol. Missing required translations are
 still audit/release defects, not a reason to declare a
 language complete. See
 `tests/test_word_forest_phonics_inventory.py`.
+
+
+### Painting save-status text ownership (2026-10-13)
+
+Painting now resolves `status.saved`,
+`status.saving`, `status.error` through the
+existing Activity `LocalizedResources`, passing
+the three locale strings to its renderer once for
+cached visual surfaces. The renderer uses stable
+semantic state IDs rather than Italian words.
+Follow that pattern for other Activity UI:
+never choose a UI language from process `LANG`
+inside the renderer and never make cross-locale
+text fallback a hidden Italian phrase. An
+isolated no-context renderer uses neutral symbols.
+Visual sizing is source WIP, especially for
+longer ES/FR labels. Test:
+`tests/test_painting_contract.py`.
