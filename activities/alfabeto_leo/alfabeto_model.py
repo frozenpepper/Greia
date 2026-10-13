@@ -150,7 +150,7 @@ EXAMPLES_FR: Final[dict[str, tuple[str, str]]] = {
 }
 
 
-LETTERS_CATALOGUE_ES: Final[tuple[LetterItem, ...]] = tuple(
+_SPANISH_STANDARD: Final[tuple[LetterItem, ...]] = tuple(
     replace(item,
             word_es=EXAMPLES_ES[item.char][0], symbol_es=EXAMPLES_ES[item.char][1])
     for item in LETTERS_CATALOGUE
@@ -160,8 +160,8 @@ SPANISH_ENYE: Final[LetterItem] = LetterItem(
     "Ñ", "", "", "", "", (76, 135, 194),
     word_es="ÑANDÚ", symbol_es="🐦",
 )
-LETTERS_CATALOGUE_ES = (
-    LETTERS_CATALOGUE_ES[:14] + (SPANISH_ENYE,) + LETTERS_CATALOGUE_ES[14:]
+LETTERS_CATALOGUE_ES: Final[tuple[LetterItem, ...]] = (
+    _SPANISH_STANDARD[:14] + (SPANISH_ENYE,) + _SPANISH_STANDARD[14:]
 )
 LETTERS_CATALOGUE_FR: Final[tuple[LetterItem, ...]] = tuple(
     replace(item,

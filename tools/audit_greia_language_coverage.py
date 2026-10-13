@@ -281,6 +281,185 @@ def _literacy_lesson_audio(root: Path, activity_name: str, errors: list[str]) ->
     return cues
 
 
+def _literal_annotated_values(path: Path, names: tuple[str, ...]) -> dict[str, Any]:
+    """Read *only* statically literal named assignments, without import/exec."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    result: dict[str, Any] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.AnnAssign) or not isinstance(node.target, ast.Name):
+            continue
+        if node.target.id in names:
+            if node.target.id in result:
+                raise ValueError(f"duplicate literal source variable: {node.target.id}")
+            result[node.target.id] = ast.literal_eval(node.value)
+    if set(result) != set(names):
+        raise ValueError(f"missing literal source variables: {sorted(set(names)-set(result))}")
+    return result
+
+
+def _code_owned_voice_row(package: Path, locale: str, activity: str,
+                          stem: str, script: str | None, cue_kind: str) -> dict[str, Any]:
+    """Create one auditable cue from a reviewed source-owned playback stem."""
+    if not stem or stem in (".", "..") or "/" in stem or "\\" in stem:
+        raise ValueError(f"unsafe voice stem: {stem!r}")
+    rel = f"assets/audio/{locale}/{stem}.wav"
+    _, exists = _audio_asset(package, rel)
+    return {
+        "source": f"activities/{activity}",
+        "locale": locale,
+        "cue_id": f"{cue_kind}.{stem}",
+        "caption_key": None,
+        "text": script,
+        "path": rel,
+        "file_exists": exists,
+        "state": ("BLOCKED_TEXT" if script is None else
+                  "EXISTING_ASSET_NEEDS_REVIEW" if exists else "MISSING_AUDIO"),
+        "speaker": "UNASSIGNED",
+        "kind": "UNASSIGNED",
+    }
+
+
+def _alphabet_lesson_audio(root: Path, errors: list[str]) -> list[dict[str, Any]]:
+    """Inventory real Alphabet Leo playback IDs including Spanish Ñ.
+
+    The source rendering examples are not narration transcripts. Letter-name
+    versus sound decisions and question sentence wording remain BLOCKED_TEXT.
+    """
+    activity = "alfabeto_leo"
+    package = root / "activities" / activity
+    path = package / "alfabeto_model.py"
+    if not path.is_file():
+        return []
+    try:
+        sources = _literal_annotated_values(path, ("EXAMPLES_ES", "EXAMPLES_FR"))
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        names = {}
+        for node in tree.body:
+            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                if node.target.id in ("LETTERS_CATALOGUE", "SPANISH_ENYE"):
+                    names[node.target.id] = node.value
+        catalogue = names["LETTERS_CATALOGUE"]
+        enye = names["SPANISH_ENYE"]
+        if not isinstance(catalogue, ast.List) or len(catalogue.elts) != 26:
+            raise ValueError("expected 26 baseline letter entries")
+        letters: list[str] = []
+        for call in catalogue.elts:
+            if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "LetterItem":
+                raise ValueError("invalid letter constructor")
+            letters.append(ast.literal_eval(call.args[0]))
+        if "".join(letters) != "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+            raise ValueError("baseline alphabet order changed")
+        if not isinstance(enye, ast.Call) or ast.literal_eval(enye.args[0]) != "Ñ":
+            raise ValueError("missing Spanish Ñ lesson")
+        if set(sources["EXAMPLES_ES"]) != set(letters) or set(sources["EXAMPLES_FR"]) != set(letters):
+            raise ValueError("ES/FR examples lack all 26 base alphabet letters")
+    except (SyntaxError, ValueError, TypeError, IndexError, KeyError, AttributeError,
+            OSError, UnicodeError) as exc:
+        errors.append(f"{path}: cannot inventory Alphabet Leo source: {exc}")
+        return []
+    results: list[dict[str, Any]] = []
+    for locale in LOCALES:
+        chars = letters[:14] + ["Ñ"] + letters[14:] if locale == "es" else letters
+        for char in chars:
+            for prefix in ("letter", "ask"):
+                results.append(_code_owned_voice_row(
+                    package, locale, activity, f"{prefix}_{char}", None, "alphabet",
+                ))
+        for cue in ("intro", "mode_guess_intro", "try_again", "well_done"):
+            results.append(_code_owned_voice_row(package, locale, activity, cue, None, "alphabet"))
+    return results
+
+
+def _syllable_lesson_audio(root: Path, errors: list[str]) -> list[dict[str, Any]]:
+    """Inventory real Magic Syllables playback stems via pure source literals.
+
+    Do not infer spoken phoneme/prompts from uppercase letter combinations:
+    French sound boundaries need acoustic review, not orthographic guessing.
+    """
+    activity = "sillabe_magiche"
+    package = root / "activities" / activity
+    path = package / "sillabe_content.py"
+    if not path.is_file():
+        return []
+    names = ("CONSONANTS_IT", "VOWELS_IT") + tuple(
+        f"WORDS_DATA_{loc.upper()}" for loc in LOCALES
+    )
+    try:
+        d = _literal_annotated_values(path, names)
+        consonants, vowels = d["CONSONANTS_IT"], d["VOWELS_IT"]
+        if not isinstance(consonants, list) or not isinstance(vowels, list):
+            raise ValueError("invalid consonant/vowel source lists")
+        if len(consonants) != len(set(consonants)) or len(vowels) != 5:
+            raise ValueError("malformed phoneme source lists")
+        for c in (*consonants, *vowels):
+            if not isinstance(c, str) or len(c) != 1 or not c.isupper():
+                raise ValueError("invalid consonant/vowel symbol")
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        curriculum_nodes = [
+            node.value for node in tree.body
+            if isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "_CURRICULA"
+        ]
+        if len(curriculum_nodes) != 1 or not isinstance(curriculum_nodes[0], ast.Dict):
+            raise ValueError("missing static curriculum dispatch")
+        praise_by_locale: dict[str, tuple[str, ...]] = {}
+        for key, value in zip(curriculum_nodes[0].keys, curriculum_nodes[0].values):
+            loc = ast.literal_eval(key)
+            if loc not in LOCALES or not isinstance(value, ast.Call) or not isinstance(value.func, ast.Name) or value.func.id != "SyllableCurriculum":
+                raise ValueError("unrecognized curriculum source declaration")
+            if len(value.args) != 6 or value.keywords:
+                raise ValueError("malformed curriculum source declaration")
+            cues = ast.literal_eval(value.args[5])
+            if not isinstance(cues, tuple) or not cues:
+                raise ValueError("missing praise source cues")
+            praise_by_locale[loc] = cues
+        if set(praise_by_locale) != set(LOCALES):
+            raise ValueError("missing praise-language source")
+    except (SyntaxError, ValueError, TypeError, KeyError, IndexError, AttributeError,
+            OSError, UnicodeError) as exc:
+        errors.append(f"{path}: cannot inventory Magic Syllables source: {exc}")
+        return []
+
+    result: list[dict[str, Any]] = []
+    for locale in LOCALES:
+        terms: dict[str, str | None] = {}
+        try:
+            words = d[f"WORDS_DATA_{locale.upper()}"]
+            if not isinstance(words, list) or not words:
+                raise ValueError("no syllable builder lessons")
+            for c in consonants:
+                terms[f"letter_{c.lower()}"] = None
+                for v in vowels:
+                    stem = f"{c}{v}".lower()
+                    terms[f"syl_{stem}"] = None
+                    terms[f"find_{stem}"] = None
+            for entry in words:
+                if not isinstance(entry, tuple) or len(entry) != 4:
+                    raise ValueError("invalid word-builder entry")
+                word, parts, emoji, stem = entry
+                if not isinstance(parts, tuple) or len(parts) != 2 or parts[0] + parts[1] != word:
+                    raise ValueError("inconsistent written-syllable parts")
+                if not _safe_lesson_audio_stem(stem) or not emoji:
+                    raise ValueError("invalid word voice ID/picture")
+                key = f"word_{stem}"
+                if key in terms:
+                    raise ValueError("duplicate word voice ID")
+                terms[key] = word.casefold()  # Candidate literal *word*, not phoneme.
+                for part in parts:
+                    terms.setdefault(f"syl_{part.lower()}", None)
+            for cue in praise_by_locale[locale]:
+                if not _safe_lesson_audio_stem(cue):
+                    raise ValueError("invalid praise cue")
+                terms.setdefault(cue, None)
+        except (ValueError, TypeError, IndexError) as exc:
+            errors.append(f"{path}: invalid {locale} syllable lessons: {exc}")
+            continue
+        for stem, script in sorted(terms.items()):
+            result.append(_code_owned_voice_row(package, locale, activity, stem, script, "syllables"))
+    return result
+
+
 def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     dirs = sorted(
         path for path in (root / "activities").iterdir()
@@ -408,6 +587,16 @@ def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], lis
             runtime_cues = _literacy_lesson_audio(root, activity.name, errors)
             cues.extend(runtime_cues)
             entry["code_owned_literacy_audio"] = {
+                locale: sum(1 for cue in runtime_cues if cue["locale"] == locale)
+                for locale in LOCALES
+            }
+        if activity.name in ("alfabeto_leo", "sillabe_magiche"):
+            runtime_cues = (
+                _alphabet_lesson_audio(root, errors) if activity.name == "alfabeto_leo"
+                else _syllable_lesson_audio(root, errors)
+            )
+            cues.extend(runtime_cues)
+            entry["code_owned_lesson_audio"] = {
                 locale: sum(1 for cue in runtime_cues if cue["locale"] == locale)
                 for locale in LOCALES
             }

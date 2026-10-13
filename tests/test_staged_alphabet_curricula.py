@@ -76,6 +76,22 @@ class StagedAlphabetCurriculumTests(unittest.TestCase):
         )
         self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
 
+    def test_real_alphabet_audio_inventory_counts_enye_and_blocks_scripts(self) -> None:
+        from tools.audit_greia_language_coverage import _alphabet_lesson_audio
+
+        errors: list[str] = []
+        cues = _alphabet_lesson_audio(ROOT, errors)
+        self.assertEqual(errors, [])
+        for locale, expected in (("it", 56), ("en", 56), ("es", 58), ("fr", 56)):
+            with self.subTest(locale=locale):
+                relevant = [row for row in cues if row["locale"] == locale]
+                self.assertEqual(len(relevant), expected)
+                self.assertEqual(len({row["path"] for row in relevant}), expected)
+                self.assertTrue(all(row["state"] == "BLOCKED_TEXT" for row in relevant))
+                self.assertEqual(any(row["path"].endswith("letter_Ñ.wav") for row in relevant), locale == "es")
+
+
+
 
 if __name__ == "__main__":
     unittest.main()

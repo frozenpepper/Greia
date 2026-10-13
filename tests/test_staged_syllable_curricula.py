@@ -61,6 +61,42 @@ class StagedSyllableCurriculumTests(unittest.TestCase):
         manifest = tomllib.loads((PACKAGE / "activity.toml").read_text(encoding="utf-8"))
         self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
 
+    def test_source_syllable_audio_inventory_exposes_required_unvoiced_cues(self) -> None:
+        from tools.audit_greia_language_coverage import _syllable_lesson_audio
+
+        errors: list[str] = []
+        cues = _syllable_lesson_audio(ROOT, errors)
+        self.assertEqual(errors, [])
+        for locale in ("es", "fr"):
+            with self.subTest(locale=locale):
+                scoped = [row for row in cues if row["locale"] == locale]
+                self.assertGreaterEqual(len(scoped), 170)
+                self.assertEqual(len(scoped), len({row["path"] for row in scoped}))
+                self.assertEqual(len([row for row in scoped if row["path"].split("/")[-1].startswith("word_")]), 16)
+                self.assertTrue(any(row["state"] == "BLOCKED_TEXT" for row in scoped))
+                self.assertTrue(all(row["speaker"] == "UNASSIGNED" for row in scoped))
+                self.assertTrue(any(row["path"].endswith("word_bebe.wav") and row["text"] == "bébé" for row in scoped) if locale == "fr" else
+                                any(row["path"].endswith("word_luna.wav") and row["text"] == "luna" for row in scoped))
+
+    def test_nonliteral_word_tables_are_never_executed_by_inventory(self) -> None:
+        import tempfile
+        from tools.audit_greia_language_coverage import _syllable_lesson_audio
+
+        with tempfile.TemporaryDirectory() as temp:
+            package = Path(temp) / "activities/sillabe_magiche"
+            package.mkdir(parents=True)
+            marker = Path(temp) / "EXECUTED"
+            (package / "sillabe_content.py").write_text(
+                'WORDS_DATA_ES: list = __import__("pathlib").Path(' + repr(str(marker)) + ').touch()\n',
+                encoding="utf-8",
+            )
+            errors: list[str] = []
+            self.assertEqual(_syllable_lesson_audio(Path(temp), errors), [])
+            self.assertTrue(errors)
+            self.assertFalse(marker.exists())
+
+
+
 
 if __name__ == "__main__":
     unittest.main()
