@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.bosco_numeri.title": "La forêt des nombres de Tito",
+    "activity.title": "La forêt des nombres de Tito",
+    "ui.mode_count": "Compter",
+    "ui.mode_guess": "Chercher",
+    "ui.guess_prompt": "Où est le nombre $num ?"
+  },
+  "audio": {}
+}

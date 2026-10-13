@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Orchestre magique",
+    "inst.piano": "Piano 🎹",
+    "inst.drums": "Batterie 🥁",
+    "inst.trumpet": "Trompette 🎺",
+    "inst.guitar": "Guitare 🎸",
+    "inst.maracas": "Maracas 🪇",
+    "prompt.free": "Touche les instruments ou joue avec les touches arc-en-ciel !",
+    "feedback.perfect": "Bravo ! Quelle belle mélodie ! 🌟🎶",
+    "hud.stars": "★ "
+  },
+  "audio": {}
+}

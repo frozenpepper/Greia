@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Pâtisserie magique",
+    "mode.orders": "🧁 Commandes sucrées",
+    "mode.patterns": "🍪 Suites de biscuits",
+    "mode.free": "🎨 Décoration libre",
+    "btn.serve": "🔔 SERVIR !",
+    "btn.clear": "🧹 Effacer",
+    "prompt.order": "Prépare : ",
+    "prompt.pattern": "Quel biscuit complète la suite ?",
+    "prompt.free": "Crée ta gourmandise spéciale !",
+    "feedback.perfect": "Parfait ! Délicieux ! ✨🍰",
+    "feedback.try_again": "Regarde la recette et réessaie 💕",
+    "feedback.pattern_correct": "Suite terminée ! 🌟",
+    "hud.score": "Score : ",
+    "hud.stars": "★ ",
+    "topping.strawberry": "Fraise",
+    "topping.blueberry": "Myrtille",
+    "topping.star": "Étoile",
+    "topping.chocolate": "Chocolat",
+    "topping.cherry": "Cerise",
+    "topping.cookie": "Biscuit"
+  },
+  "audio": {}
+}

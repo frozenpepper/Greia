@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.il_giardino_dei_numeri.title": "LE JARDIN DES NOMBRES",
+    "activity.title": "LE JARDIN DES NOMBRES",
+    "ui.touch_to_count": "TOUCHE ET COMPTE !",
+    "ui.keep_counting": "COMPTE AVEC DANI !",
+    "ui.well_done": "BRAVO !",
+    "ui.next": "ENCORE ! ▶"
+  },
+  "audio": {}
+}

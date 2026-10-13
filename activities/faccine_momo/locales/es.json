@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.faccine_momo.title": "Las caras de Momo",
+    "activity.title": "Las caras de Momo",
+    "emotion.happy": "Feliz",
+    "emotion.sad": "Triste",
+    "emotion.surprised": "Sorprendido",
+    "emotion.silly": "Gracioso",
+    "emotion.angry": "Enfadado",
+    "emotion.sleepy": "Con sueño"
+  },
+  "audio": {}
+}

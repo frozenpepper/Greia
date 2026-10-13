@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "La casa del diez",
+    "activity.casa_del_dieci.title": "La casa del diez",
+    "prompt.compose_one": "¡Enciende la luz de 1 habitación!",
+    "prompt.compose": "¡Enciende la luz de $target habitaciones!",
+    "prompt.add": "¿Cuántas habitaciones tienen luz en total?",
+    "prompt.take_away": "¿Cuántas habitaciones siguen encendidas?",
+    "prompt.missing_part": "¿Cuántas habitaciones faltan para llegar a $target?",
+    "button.confirm": "CONFIRMAR",
+    "button.play_again": "JUGAR OTRA VEZ",
+    "victory.title": "¡Casa completada!",
+    "victory.subtitle": "¡Has resuelto todos los retos con Dani!"
+  },
+  "audio": {}
+}

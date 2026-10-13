@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Nubes a dormir",
+    "activity.nanna_delle_nuvolette.title": "Nubes a dormir",
+    "activity.nanna_delle_nuvolette.description": "Ayuda a tres nubecitas a prepararse para dormir con mantitas y estrellas brillantes.",
+    "prompt.scene": "¡Pon una manta y estrellas a cada nube y arrópala al terminar!",
+    "basket.label": "Estrellitas ⭐",
+    "button.new_night": "OTRA NOCHE 🌙",
+    "cloud.1": "Nube rosa",
+    "cloud.2": "Nube azul",
+    "cloud.3": "Nube morada",
+    "blanket.rose": "Manta rosa",
+    "blanket.amber": "Manta amarilla",
+    "blanket.mint": "Manta verde",
+    "blanket.sky": "Manta celeste",
+    "blanket.lavender": "Manta lavanda",
+    "blanket.peach": "Manta melocotón"
+  },
+  "audio": {}
+}

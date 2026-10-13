@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.quattro_amici.title": "CUATRO AMIGOS EN LÍNEA",
+    "activity.title": "CUATRO AMIGOS EN LÍNEA",
+    "ui.mode_vs_leo": "CONTRA LEO",
+    "ui.mode_two_players": "DOS AMIGOS",
+    "ui.turn_flash": "¡TURNO DE FLASH!",
+    "ui.turn_leo": "¡TURNO DE LEO!",
+    "ui.flash_thinking": "FLASH ESTÁ PENSANDO...",
+    "ui.leo_thinking": "LEO ESTÁ PENSANDO...",
+    "ui.win_flash": "¡GANÓ FLASH!",
+    "ui.win_leo": "¡GANÓ LEO!",
+    "ui.draw": "¡EMPATE! ¡BUENA PARTIDA!",
+    "ui.play_again": "JUGAR OTRA VEZ",
+    "ui.diff_1": "FÁCIL (3 EN LÍNEA)",
+    "ui.diff_2": "MEDIO (3 EN LÍNEA)",
+    "ui.diff_3": "CLÁSICO (4 EN LÍNEA)",
+    "ui.diff_4": "RETO (4 EN LÍNEA)",
+    "ui.drop_column": "SUELTA LA FICHA",
+    "ui.level_label": "NIVEL",
+    "ui.mode_label": "MODO"
+  },
+  "audio": {}
+}

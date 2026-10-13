@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.faccine_momo.title": "Les grimaces de Momo",
+    "activity.title": "Les grimaces de Momo",
+    "emotion.happy": "Heureux",
+    "emotion.sad": "Triste",
+    "emotion.surprised": "Surpris",
+    "emotion.silly": "Rigolo",
+    "emotion.angry": "Fâché",
+    "emotion.sleepy": "Endormi"
+  },
+  "audio": {}
+}

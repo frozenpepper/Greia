@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Orquesta mágica",
+    "inst.piano": "Piano 🎹",
+    "inst.drums": "Batería 🥁",
+    "inst.trumpet": "Trompeta 🎺",
+    "inst.guitar": "Guitarra 🎸",
+    "inst.maracas": "Maracas 🪇",
+    "prompt.free": "¡Toca los instrumentos o pulsa las teclas arcoíris!",
+    "feedback.perfect": "¡Muy bien! ¡Qué melodía tan bonita! 🌟🎶",
+    "hud.stars": "★ "
+  },
+  "audio": {}
+}

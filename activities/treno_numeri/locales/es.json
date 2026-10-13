@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "El tren de los números",
+    "prompt.load": "¡Carga {count} {item} en el vagón!",
+    "hud.station": "Estación {number}",
+    "hud.score": "Estrellas: ★ {stars}",
+    "btn.whistle": "🚂 ¡Pitar!",
+    "btn.depart": "🟢 ¡Vamos!",
+    "btn.reset": "🔄 Reiniciar",
+    "btn.play_again": "🎉 ¡Juega otra vez!",
+    "victory.title": "¡Hurra! ¡El tren llegó al final! 🚂🌟",
+    "victory.subtitle": "¡Muy bien! ¡Completaste todas las estaciones!",
+    "item.apple": "manzanas 🍎",
+    "item.carrot": "zanahorias 🥕",
+    "item.banana": "plátanos 🍌",
+    "item.strawberry": "fresas 🍓",
+    "item.pumpkin": "calabazas 🎃",
+    "item.orange": "naranjas 🍊"
+  },
+  "audio": {}
+}

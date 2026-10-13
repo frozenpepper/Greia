@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Pastelería mágica",
+    "mode.orders": "🧁 Pedidos dulces",
+    "mode.patterns": "🍪 Series de galletas",
+    "mode.free": "🎨 Decoración libre",
+    "btn.serve": "🔔 ¡SERVIR!",
+    "btn.clear": "🧹 Borrar",
+    "prompt.order": "Prepara: ",
+    "prompt.pattern": "¿Qué galleta sigue en la serie?",
+    "prompt.free": "¡Crea tu dulce especial!",
+    "feedback.perfect": "¡Perfecto! ¡Qué rico! ✨🍰",
+    "feedback.try_again": "Mira la receta y vuelve a intentarlo 💕",
+    "feedback.pattern_correct": "¡Serie completada! 🌟",
+    "hud.score": "Puntos: ",
+    "hud.stars": "★ ",
+    "topping.strawberry": "Fresa",
+    "topping.blueberry": "Arándano",
+    "topping.star": "Estrella",
+    "topping.chocolate": "Chocolate",
+    "topping.cherry": "Cereza",
+    "topping.cookie": "Galleta"
+  },
+  "audio": {}
+}

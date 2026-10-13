@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Constructores de puentes",
+    "btn.cross": "🐾 ¡Cruzar!",
+    "btn.clear": "🧹 Borrar",
+    "btn.play_again": "🎉 ¡Siguiente nivel!",
+    "level.river": "Río verde 🌊",
+    "level.canyon": "Cañón rocoso 🏔️",
+    "level.space": "Abismo cósmico 🌌",
+    "victory.title": "¡Hurra! ¡El puente es muy resistente! 🐾🎉",
+    "victory.subtitle": "¡El perrito ha llegado sano y salvo al pícnic!"
+  },
+  "audio": {}
+}

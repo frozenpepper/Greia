@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Bâtisseurs de ponts",
+    "btn.cross": "🐾 Traverser !",
+    "btn.clear": "🧹 Effacer",
+    "btn.play_again": "🎉 Niveau suivant !",
+    "level.river": "Rivière verte 🌊",
+    "level.canyon": "Canyon rocheux 🏔️",
+    "level.space": "Gouffre cosmique 🌌",
+    "victory.title": "Hourra ! Le pont est très solide ! 🐾🎉",
+    "victory.subtitle": "Le chiot a traversé jusqu'au pique-nique sans danger !"
+  },
+  "audio": {}
+}

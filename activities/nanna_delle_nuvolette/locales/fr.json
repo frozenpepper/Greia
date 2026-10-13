@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Dodo des petits nuages",
+    "activity.nanna_delle_nuvolette.title": "Dodo des petits nuages",
+    "activity.nanna_delle_nuvolette.description": "Aide trois petits nuages à se préparer au dodo avec des couvertures douces et des étoiles scintillantes.",
+    "prompt.scene": "Donne une couverture et des étoiles à chaque nuage, puis borde-les !",
+    "basket.label": "Petites étoiles ⭐",
+    "button.new_night": "AUTRE NUIT 🌙",
+    "cloud.1": "Nuage rose",
+    "cloud.2": "Nuage bleu",
+    "cloud.3": "Nuage violet",
+    "blanket.rose": "Couverture rose",
+    "blanket.amber": "Couverture jaune",
+    "blanket.mint": "Couverture verte",
+    "blanket.sky": "Couverture bleu ciel",
+    "blanket.lavender": "Couverture lavande",
+    "blanket.peach": "Couverture pêche"
+  },
+  "audio": {}
+}

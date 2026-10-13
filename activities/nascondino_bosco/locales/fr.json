@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Cache-cache dans la forêt",
+    "activity.nascondino_bosco.title": "Cache-cache dans la forêt",
+    "hud.found": "Trouvés : {found}/{total}",
+    "hud.stars": "★ {stars}",
+    "btn.play_again": "REJOUER",
+    "victory.title": "TU LES AS TOUS TROUVÉS !",
+    "victory.subtitle": "Tous les animaux de la forêt sont heureux !",
+    "animal.fox": "RENARD",
+    "animal.bunny": "LAPIN",
+    "animal.owl": "HIBOU",
+    "animal.hedgehog": "HÉRISSON",
+    "animal.squirrel": "ÉCUREUIL",
+    "animal.frog": "GRENOUILLE"
+  },
+  "audio": {}
+}

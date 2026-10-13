@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.quattro_amici.title": "QUATRE AMIS ALIGNÉS",
+    "activity.title": "QUATRE AMIS ALIGNÉS",
+    "ui.mode_vs_leo": "CONTRE LEO",
+    "ui.mode_two_players": "DEUX AMIS",
+    "ui.turn_flash": "À FLASH DE JOUER !",
+    "ui.turn_leo": "À LEO DE JOUER !",
+    "ui.flash_thinking": "FLASH RÉFLÉCHIT...",
+    "ui.leo_thinking": "LEO RÉFLÉCHIT...",
+    "ui.win_flash": "FLASH A GAGNÉ !",
+    "ui.win_leo": "LEO A GAGNÉ !",
+    "ui.draw": "ÉGALITÉ ! BELLE PARTIE !",
+    "ui.play_again": "REJOUER",
+    "ui.diff_1": "FACILE (3 ALIGNÉS)",
+    "ui.diff_2": "MOYEN (3 ALIGNÉS)",
+    "ui.diff_3": "CLASSIQUE (4 ALIGNÉS)",
+    "ui.diff_4": "DÉFI (4 ALIGNÉS)",
+    "ui.drop_column": "LÂCHE LE JETON",
+    "ui.level_label": "NIVEAU",
+    "ui.mode_label": "MODE"
+  },
+  "audio": {}
+}
