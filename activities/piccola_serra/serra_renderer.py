@@ -9,7 +9,7 @@ would be cached with convert() once if assets were used (kept bounded).
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, Mapping
 
 import pygame
 
@@ -35,8 +35,18 @@ class SerraRenderer:
     bounded) if runtime assets were added.
     """
 
-    def __init__(self, typography: GreiaTypography) -> None:
+    def __init__(
+        self,
+        typography: GreiaTypography,
+        tool_labels: Mapping[str, str] | None = None,
+    ) -> None:
         self._typography = typography
+        # Renderer-only use remains icon-neutral; the Activity supplies locale
+        # text resolved once per launch, not during every animation frame.
+        self._tool_labels = dict(tool_labels or {
+            "tool.seeds": "🌱", "tool.water": "💧",
+            "tool.sun": "☀️", "tool.harvest": "🧺",
+        })
         self._text_cache: dict[tuple[str, FontRole, int, tuple[int, int, int]], pygame.Surface] = {}
         self._text_order: list[tuple[str, FontRole, int, tuple[int, int, int]]] = []
         self._hud_value: int | None = None
@@ -237,7 +247,7 @@ class SerraRenderer:
 
     def _draw_toolbar(self, surface: pygame.Surface, active_tool: int) -> None:
         tool_y = REFERENCE_HEIGHT - 85
-        for tx, t_idx, lbl, col in TOOL_DEFS:
+        for tx, t_idx, label_key, col in TOOL_DEFS:
             b_rect = pygame.Rect(tx, tool_y, 180, 72)
             is_sel = active_tool == t_idx
             bg_col = col if is_sel else (255, 255, 255)
@@ -284,7 +294,7 @@ class SerraRenderer:
                 pygame.draw.arc(surface, bask_col, pygame.Rect(cx - 13, cy - 16, 26, 20), 0, 3.14, 3)
                 pygame.draw.circle(surface, (239, 68, 68), (cx - 4, cy - 5), 5)
                 pygame.draw.circle(surface, (234, 179, 8), (cx + 5, cy - 5), 5)
-            lbl_surf = self._cached_text(lbl, FontRole.DISPLAY, 16, (255, 255, 255) if is_sel else col)
+            lbl_surf = self._cached_text(self._tool_labels.get(label_key, "✦"), FontRole.DISPLAY, 16, (255, 255, 255) if is_sel else col)
             surface.blit(lbl_surf, (cx - lbl_surf.get_width() // 2, b_rect.bottom - 22))
 
 
