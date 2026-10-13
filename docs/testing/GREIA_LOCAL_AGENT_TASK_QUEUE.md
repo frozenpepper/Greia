@@ -690,7 +690,8 @@ test commands and expected observable behavior.
   Wonder Match now resolves 64 real illustrated card names and four theme
   labels from semantic Activity resources, with 64 new card words per
   locale. GLA-015 MUST run `test_four_language_activity_runtime_text.py`
-  and inspect real gameplay at 1024×600 and 800×480 for glyphs,
+  and check missing-resource completion (Memory and Number Train)
+    for neutral fallback instead of incorrect Italian copy; inspect real gameplay at 1024×600 and 800×480 for glyphs,
   label width, actual saved-language effect, and fallbacks. Do not
   enable ES/FR manifests/selector for a screenshot; staged-locale
   injection can be used only in non-release test contexts. Do not claim
