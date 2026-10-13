@@ -668,6 +668,7 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_panel_frame_cache.py' -v
   python3 -m unittest discover -s tests -p 'test_panel_layout.py' -v
   python3 -m unittest discover -s tests -p 'test_staged_activity_translations.py' -v
+  python3 -m unittest discover -s tests -p 'test_four_language_activity_runtime_text.py' -v
   python3 -m unittest discover -s tests -p 'test_word_forest_phonics_inventory.py' -v
   python3 -m unittest discover -s tests -p 'test_activity_alfabeto_leo.py' -v
   python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
@@ -682,6 +683,18 @@ test commands and expected observable behavior.
   audit detects absent `my_creations.wav` for EN/IT, record exact
   failure and stop; do not hide the portal, weaken validation, or
   substitute a placeholder sound.
+- **2026-10-13 real-render-path addition (SOURCE-WIP; test UNEXECUTED):**
+  Magical Labyrinth removed unlocalized Italian completion/HUD copy;
+  authored 11 semantic caption keys in each EN/IT/ES/FR bundle
+  (six model difficulty levels, four biomes, short new-maze button).
+  Wonder Match now resolves 64 real illustrated card names and four theme
+  labels from semantic Activity resources, with 64 new card words per
+  locale. GLA-015 MUST run `test_four_language_activity_runtime_text.py`
+  and inspect real gameplay at 1024×600 and 800×480 for glyphs,
+  label width, actual saved-language effect, and fallbacks. Do not
+  enable ES/FR manifests/selector for a screenshot; staged-locale
+  injection can be used only in non-release test contexts. Do not claim
+  local Python, Pygame, voices or visual acceptance from source readback.
 - **Non-destructive GUI checks if GLA-001 passed:** record actual
   Parent password dialog, tabs, device-language panel, successful
   language change and error indication on both 1024×600 and
