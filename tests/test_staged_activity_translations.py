@@ -27,6 +27,7 @@ STAGED = (
     "labirinto_magico", "mondo_contrari", "morbidi_mostriciattoli",
     "posta_di_leo", "stelle_incantate", "storie_della_mia_voce",
     "teatrino_fiabe", "viaggio_delfino", "sottomarino_giramondo",
+    "enciclopedia_greia",
 )
 
 # These five have translated *instructions*, not adapted reading curricula.
@@ -38,7 +39,7 @@ CURRICULUM_UI_ONLY = (
     "sillabe_magiche", "foresta_parole",
 )
 
-ENCYCLOPEDIA_PARTIAL = "enciclopedia_greia"
+# Source-key parity alone does not establish accurate narration or pedagogy.
 
 
 def _fields(text: str) -> set[str]:
@@ -147,12 +148,12 @@ class StagedActivityTranslationTests(unittest.TestCase):
             path.name for path in (ROOT / "activities").iterdir()
             if path.is_dir() and (path / "activity.toml").is_file()
         }
-        registered = set(STAGED) | set(CURRICULUM_UI_ONLY) | {ENCYCLOPEDIA_PARTIAL}
+        registered = set(STAGED) | set(CURRICULUM_UI_ONLY)
         self.assertEqual(actual, registered)
         self.assertTrue(set(STAGED).isdisjoint(CURRICULUM_UI_ONLY))
         self.assertEqual(len(actual), 45)
 
-    def test_encyclopedia_partial_animals_and_navigation_does_not_claim_science_audio(self) -> None:
+    def test_encyclopedia_complete_written_catalogue_is_not_spoken_acceptance(self) -> None:
         base = ROOT / "activities/enciclopedia_greia"
         en = json.loads((base / "locales/en.json").read_text(encoding="utf-8"))
         it = json.loads((base / "locales/it.json").read_text(encoding="utf-8"))
@@ -165,15 +166,20 @@ class StagedActivityTranslationTests(unittest.TestCase):
                 staged = json.loads((base / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
                 strings = staged["strings"]
                 self.assertEqual(staged["audio"], {})
-                self.assertEqual(len(strings), 51)
-                self.assertEqual(len(set(en["strings"]) - set(strings)), 195)
-                self.assertTrue(set(strings).issubset(en["strings"]))
-                self.assertTrue(set(strings).issubset(it["strings"]))
-                for animal in ("lion", "elephant", "octopus", "bee", "penguin", "frog"):
-                    for suffix in ("title", "intro"):
-                        self.assertTrue(strings[f"{animal}.{suffix}"].strip())
-                self.assertTrue(strings["home.title"].strip())
-                self.assertTrue(strings["section.animals"].strip())
+                self.assertEqual(len(strings), 246)
+                self.assertEqual(set(strings), set(en["strings"]))
+                self.assertEqual(set(strings), set(it["strings"]))
+                self.assertTrue(all(isinstance(value, str) and value.strip() for value in strings.values()))
+                for category in ("animals", "space", "earth", "body", "machines", "history"):
+                    self.assertTrue(strings[f"section.{category}"])
+                for category in ("lion", "elephant", "octopus", "bee", "penguin", "frog",
+                                 "sun", "moon", "mars", "jupiter", "volcano",
+                                 "heart", "lungs", "gears", "airplane", "dinosaurs"):
+                    self.assertTrue(strings[f"{category}.title"])
+                    self.assertTrue(strings[f"{category}.intro"])
+                # Narration is still withheld: 200 source audio cues each
+                # require actual scripts/voices, never English clip reuse.
+                self.assertFalse(staged["audio"])
 
     def test_numeric_template_targets_remain_intact(self) -> None:
         """Dollar targets are consumed by old activities, not Python format()."""
