@@ -1,5 +1,89 @@
 # Greia — Current Engineering Handover
 
+## 2026-10-13 — Word Forest ES/FR real letter lessons, 45/45 text-key parity (SOURCE-WIP)
+
+**Latest state:** all 45 first-party Activity directories
+now have `locales/es.json` and `locales/fr.json`
+with **901/901 declared EN/IT source text keys
+per locale** (**1,802** values combined). This is
+source text-key staging only. No new Spanish/French
+voices, acceptance, native proofread, or device
+language promotion. All global/manifest
+selectable languages remain **EN/IT**.
+
+**New concrete implementation:** Word Forest
+`foresta_content.PHONICS_DATA` gained **21 Spanish
+and 21 French** curated first-letter/word lessons,
+retaining its existing pure six-field lesson tuple.
+Word Forest's 24 previously unfilled source
+`word.*`/`phonics.*` keys were authored in
+the ES/FR bundles and verified by source readback.
+The SoundManager now discovers per-locale assets
+from the domain catalogue, without enabling ES/FR
+until real audio has been recorded, approved and
+integrated. The code-owned source voice inventory
+now produces **252 explicit lesson audio cue rows**
+across EN/IT/ES/FR; **126 new ES/FR clips** await
+recording. Existing source speech is not
+automatically human-approved, and new spoken
+letter-name/phoneme and find-letter prompts
+stay `BLOCKED_TEXT` until approved scripts.
+New provider-free tests in
+`tests/test_word_forest_phonics_inventory.py`
+and updated `tests/test_staged_activity_translations.py`
+cover catalogue structure, source-only AST
+safety, 45/45 text parity, cue IDs and wrong
+claims of missing/new audio.
+
+**Real wrong-language defect fixed:** Leo's
+Alphabet `alfabeto_audio.py` previously
+fell back to **Italian spoken-letter recordings**
+when requested language sounds were absent.
+Now missing requested-language voice does
+not turn into a different language's voice.
+`tests/test_activity_alfabeto_leo.py`
+has a focused regression. Both changes were
+read back from GitHub, but no local checkout
+unit suite or rendered/audio acceptance has run.
+
+**Earlier source readback:** Eight GitHub
+readback batches inspected all **90 ES/FR
+Activity locale files** for keys, substitution
+variables and empty voice declarations;
+zero structural discrepancies. A follow-up
+readback after Word Forest's 24-key addition
+confirmed its final 34/34 keys per language.
+No other Activity file was changed in
+this slice. The main `PROGRESS.md` includes
+the exact latest classification and test
+pointers; prior 44/45 and 877/901 notes are
+intermediate history and superseded.
+
+**Next tasks:** finish localized phonemic
+curricula for Alphabet Leo, Rhyme Festival,
+Sound Workshop, and Magic Syllables;
+reconcile Encyclopedia's 200 legacy narration
+IDs per source language with exact approved
+scripts; produce the 126 Word Forest ES/FR
+phonics recordings and all other missing
+voice cues including EN/IT `my_creations.wav`;
+finish pinned Parent browser frontend
+translations and the remaining Shell literals;
+execute the focused GLA-014/015 test and GUI/audio
+acceptance without creating artificial
+English fallback or adding ES/FR selectors
+prematurely.
+
+**Evidence limit:** GitHub direct-to-main source
+commits and source readbacks, no full local
+checkout tests, no paid/provider calls, no
+Pygame GUI, human listening or hardware build.
+The local-agent instructions in
+`docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`
+and
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`
+are re-pinned and expanded.
+
 ## 2026-10-13 — FINAL current L4 source-text checkpoint: 44/45 bilingual source-key parity, NO ES/FR voice acceptance
 
 **Canonical implementation ledger:**
