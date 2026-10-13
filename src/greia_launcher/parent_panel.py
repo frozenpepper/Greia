@@ -2794,8 +2794,9 @@ class ParentSettingsOverlay:
                 ),
                 pygame, (61, 44, 31), 3 if (is_on and enabled) else 1, radius=10,
             )
-            state = "On" if (is_on and enabled) else (
-                "Unavailable" if not enabled else "Off"
+            state = self._ui_message(
+                "state.on" if (is_on and enabled) else
+                "state.unavailable" if not enabled else "state.off"
             )
             # One line, state right-aligned. Two stacked lines never fitted in
             # the height available beside the meter, and the second line was drawn
@@ -2835,10 +2836,10 @@ class ParentSettingsOverlay:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = self._get_text("Pointer feel", FontRole.TITLE, 22, (61, 44, 31), typography)
+        title = self._get_text(self._ui_message("pointer.title"), FontRole.TITLE, 22, (61, 44, 31), typography)
         screen.blit(title, (card.left + 20, card.top + 12))
         note = self._get_text(
-            "Comfort is preference — try the test area. Arrows move, Space selects, Esc closes.",
+            self._ui_message("pointer.note"),
             FontRole.BODY, 14, (118, 104, 93), typography,
         )
         screen.blit(note, (card.left + 20, card.top + 40))
@@ -2872,10 +2873,10 @@ class ParentSettingsOverlay:
 
         # --- Touchpad speed presets ---
         y = card.top + 62
-        lbl = self._get_text("Touchpad speed", FontRole.CONTROL, 15, (61, 44, 31), typography)
+        lbl = self._get_text(self._ui_message("pointer.touchpad.speed"), FontRole.CONTROL, 15, (61, 44, 31), typography)
         screen.blit(lbl, (left, y))
         if not has_touchpad:
-            hint = self._get_text("(no touchpad detected)", FontRole.BODY, 13, (118, 104, 93), typography)
+            hint = self._get_text(self._ui_message("pointer.touchpad.none"), FontRole.BODY, 13, (118, 104, 93), typography)
             screen.blit(hint, (left + lbl.get_width() + 8, y + 2))
         y += 20
         chip_w = max(40, (left_w - 8 * (len(presets) - 1)) // max(1, len(presets)))
@@ -2888,17 +2889,17 @@ class ParentSettingsOverlay:
                 (241, 185, 35) if active else ((235, 228, 214) if not has_touchpad else (255, 250, 240)),
                 pygame, (61, 44, 31), 3 if (active or focused) else 1, radius=10,
             )
-            short = name.split()[0][:5]
+            short = self._ui_message(f"pointer.preset.{name}").split()[0][:5]
             txt = self._get_text(short, FontRole.BODY, 13, (61, 44, 31), typography)
             screen.blit(txt, txt.get_rect(center=chip.center))
             self._targets.append(PanelHitTarget("pointer_touchpad_preset", name, chip))
 
         # --- Mouse speed presets ---
         y += row_h + 10
-        lbl = self._get_text("Mouse speed", FontRole.CONTROL, 15, (61, 44, 31), typography)
+        lbl = self._get_text(self._ui_message("pointer.mouse.speed"), FontRole.CONTROL, 15, (61, 44, 31), typography)
         screen.blit(lbl, (left, y))
         if not has_relative:
-            hint = self._get_text("(no mouse detected)", FontRole.BODY, 13, (118, 104, 93), typography)
+            hint = self._get_text(self._ui_message("pointer.mouse.none"), FontRole.BODY, 13, (118, 104, 93), typography)
             screen.blit(hint, (left + lbl.get_width() + 8, y + 2))
         y += 20
         for idx, name in enumerate(presets):
@@ -2910,7 +2911,7 @@ class ParentSettingsOverlay:
                 (241, 185, 35) if active else ((235, 228, 214) if not has_relative else (255, 250, 240)),
                 pygame, (61, 44, 31), 3 if (active or focused) else 1, radius=10,
             )
-            short = name.split()[0][:5]
+            short = self._ui_message(f"pointer.preset.{name}").split()[0][:5]
             txt = self._get_text(short, FontRole.BODY, 13, (61, 44, 31), typography)
             screen.blit(txt, txt.get_rect(center=chip.center))
             self._targets.append(PanelHitTarget("pointer_mouse_preset", name, chip))
@@ -2918,9 +2919,9 @@ class ParentSettingsOverlay:
         # --- Toggles ---
         y += row_h + 10
         toggles = [
-            ("touchpad_tap", "Tap to click", tap_on, has_touchpad),
-            ("natural_scrolling", "Natural scroll", natural_on, True),
-            ("disable_while_typing", "Calm while typing", dwt_on, has_touchpad),
+            ("touchpad_tap", self._ui_message("pointer.toggle.tap"), tap_on, has_touchpad),
+            ("natural_scrolling", self._ui_message("pointer.toggle.scroll"), natural_on, True),
+            ("disable_while_typing", self._ui_message("pointer.toggle.typing"), dwt_on, has_touchpad),
         ]
         tog_w = max(60, (left_w - 2 * 8) // 3)
         tog_h = max(40, min(52, min_touch))
@@ -2932,7 +2933,7 @@ class ParentSettingsOverlay:
                 (241, 185, 35) if (is_on and enabled) else ((235, 228, 214) if not enabled else (255, 250, 240)),
                 pygame, (61, 44, 31), 3 if (focused or (is_on and enabled)) else 1, radius=10,
             )
-            state = "On" if (is_on and enabled) else "Off"
+            state = self._ui_message("state.on" if (is_on and enabled) else "state.off")
             t1 = self._get_text(label, FontRole.BODY, 12, (61, 44, 31), typography)
             screen.blit(t1, t1.get_rect(center=(tog.centerx, tog.top + 14)))
             t2 = self._get_text(state, FontRole.CONTROL, 13, (61, 44, 31), typography)
@@ -2947,7 +2948,7 @@ class ParentSettingsOverlay:
             screen, reset_rect, (246, 236, 209), (255, 250, 240),
             pygame, (61, 44, 31), 3 if focused else 1, radius=10,
         )
-        lbl = self._get_text("Reset to defaults", FontRole.CONTROL, 14, (61, 44, 31), typography)
+        lbl = self._get_text(self._ui_message("pointer.reset"), FontRole.CONTROL, 14, (61, 44, 31), typography)
         screen.blit(lbl, lbl.get_rect(center=reset_rect.center))
         self._targets.append(PanelHitTarget("pointer_reset", None, reset_rect))
         if self._pointer_message:
@@ -2959,7 +2960,7 @@ class ParentSettingsOverlay:
         test_h = card.bottom - test_top - 12
         test_rect = pygame.Rect(right, test_top, max(120, test_w), max(80, test_h))
         self._blit_rounded_card(screen, test_rect, (246, 236, 209), (255, 250, 240), pygame, (220, 210, 190), 1, radius=12)
-        cap = self._get_text("Test area", FontRole.CONTROL, 14, (61, 44, 31), typography)
+        cap = self._get_text(self._ui_message("pointer.test"), FontRole.CONTROL, 14, (61, 44, 31), typography)
         screen.blit(cap, (test_rect.left + 10, test_rect.top + 6))
         margin = 10
         cell = max(min_touch, 56)
@@ -3002,18 +3003,18 @@ class ParentSettingsOverlay:
             return self._get_text(text, FontRole.CONTROL, 18, color, typography)
 
         top_bar = pygame.Rect(rect.left, rect.top, rect.width, 42)
-        status_text = f"Status: {snapshot.phase.value.title()}"
+        status_text = self._ui_message("wifi.status", phase=snapshot.phase.value.title())
         if snapshot.connected_ssid:
-            status_text += f" (Connected: {snapshot.connected_ssid})"
+            status_text += self._ui_message("wifi.connected", ssid=snapshot.connected_ssid)
         if snapshot.error:
-            status_text = f"Error: {snapshot.error}"
+            status_text = self._ui_message("wifi.error", detail=str(snapshot.error))
 
         status_surf = _body(status_text, (181, 46, 46) if snapshot.error else (61, 44, 31))
         screen.blit(status_surf, (top_bar.left, top_bar.top + 10))
 
         refresh_btn = pygame.Rect(top_bar.right - 110, top_bar.top, 100, 36)
         self._blit_rounded_card(screen, refresh_btn, (255, 250, 240), (246, 236, 209), pygame, (61, 44, 31), 1, radius=10)
-        lbl_refresh = _body("Scan")
+        lbl_refresh = _body(self._ui_message("wifi.scan"))
         screen.blit(lbl_refresh, lbl_refresh.get_rect(center=refresh_btn.center))
         self._targets.append(PanelHitTarget("wifi_refresh", None, refresh_btn))
 
@@ -3040,7 +3041,7 @@ class ParentSettingsOverlay:
             if network.security == WifiSecurity.PERSONAL:
                 label += " 🔒"
             elif network.security == WifiSecurity.ENTERPRISE:
-                label += " (Enterprise)"
+                label += self._ui_message("wifi.enterprise")
             txt_surf = _body(label)
             screen.blit(txt_surf, (item_rect.left + 12, item_rect.top + 10))
 
@@ -3048,7 +3049,7 @@ class ParentSettingsOverlay:
             item_y += 46
 
         if not snapshot.networks:
-            no_nets = _body("No networks found. Click Scan.", (118, 104, 93))
+            no_nets = _body(self._ui_message("wifi.empty"), (118, 104, 93))
             screen.blit(no_nets, no_nets.get_rect(center=list_rect.center))
 
         form_rect = pygame.Rect(list_rect.right + 20, top_bar.bottom + 10, rect.width // 2 - 10, rect.height - 52)
@@ -3056,30 +3057,30 @@ class ParentSettingsOverlay:
 
         selected = snapshot.selected_network
         if selected is not None:
-            lbl_title = _bold(f"Network: {selected.ssid}")
+            lbl_title = _bold(self._ui_message("wifi.network", ssid=selected.ssid))
             screen.blit(lbl_title, (form_rect.left + 16, form_rect.top + 16))
 
-            lbl_sec = _body(f"Security: {selected.security.value.upper()}", (118, 104, 93))
+            lbl_sec = _body(self._ui_message("wifi.security", level=selected.security.value.upper()), (118, 104, 93))
             screen.blit(lbl_sec, (form_rect.left + 16, form_rect.top + 46))
 
             if selected.security == WifiSecurity.PERSONAL:
-                pwd_label = _body("Password:")
+                pwd_label = _body(self._ui_message("wifi.password"))
                 screen.blit(pwd_label, (form_rect.left + 16, form_rect.top + 80))
 
                 pwd_box = pygame.Rect(form_rect.left + 16, form_rect.top + 106, form_rect.width - 32, 44)
                 self._blit_rounded_card(screen, pwd_box, (246, 236, 209), (255, 250, 240), pygame, (61, 44, 31), 1, radius=10)
 
-                masked = "•" * len(snapshot.passphrase) or "Type password…"
+                masked = "•" * len(snapshot.passphrase) or self._ui_message("wifi.password.placeholder")
                 txt = _body(masked, (61, 44, 31) if snapshot.passphrase else (150, 140, 130))
                 screen.blit(txt, (pwd_box.left + 12, pwd_box.top + 12))
 
             connect_btn = pygame.Rect(form_rect.left + 16, form_rect.bottom - 60, form_rect.width - 32, 44)
             self._blit_rounded_card(screen, connect_btn, (246, 236, 209), (241, 185, 35), pygame, (61, 44, 31), 2, radius=12)
-            lbl_conn = _bold("Connect")
+            lbl_conn = _bold(self._ui_message("wifi.connect"))
             screen.blit(lbl_conn, lbl_conn.get_rect(center=connect_btn.center))
             self._targets.append(PanelHitTarget("wifi_connect", None, connect_btn))
         else:
-            hint = _body("Select a Wi-Fi network from the list", (118, 104, 93))
+            hint = _body(self._ui_message("wifi.choose"), (118, 104, 93))
             screen.blit(hint, hint.get_rect(center=form_rect.center))
 
     def _draw_ssh_tab(
@@ -3099,11 +3100,11 @@ class ParentSettingsOverlay:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = self._get_text("SSH Maintenance Switch", FontRole.TITLE, 22, (61, 44, 31), typography)
+        title = self._get_text(self._ui_message("ssh.title"), FontRole.TITLE, 22, (61, 44, 31), typography)
         screen.blit(title, (card.left + 24, card.top + 20))
 
         if status is None:
-            waiting = self._get_text("Checking SSH status…", FontRole.BODY, 18, (118, 104, 93), typography)
+            waiting = self._get_text(self._ui_message("ssh.checking"), FontRole.BODY, 18, (118, 104, 93), typography)
             screen.blit(waiting, (card.left + 24, card.top + 70))
             return
 
@@ -3116,21 +3117,21 @@ class ParentSettingsOverlay:
         badge_rect = pygame.Rect(card.left + 24, card.top + 58, 140, 36)
         badge_bg = (47, 117, 81) if is_on else (181, 46, 46)
         self._blit_rounded_card(screen, badge_rect, (246, 236, 209), badge_bg, pygame, radius=10)
-        lbl_status = _bold("ENABLED" if is_on else "DISABLED", (255, 255, 255))
+        lbl_status = _bold(self._ui_message("ssh.enabled") if is_on else self._ui_message("ssh.disabled"), (255, 255, 255))
         screen.blit(lbl_status, lbl_status.get_rect(center=badge_rect.center))
 
         toggle_btn = pygame.Rect(badge_rect.right + 20, card.top + 58, 160, 36)
         self._blit_rounded_card(screen, toggle_btn, (246, 236, 209), (241, 185, 35), pygame, (61, 44, 31), 2, radius=10)
-        lbl_toggle = _bold("Turn OFF" if is_on else "Turn ON")
+        lbl_toggle = _bold(self._ui_message("ssh.turn_off") if is_on else self._ui_message("ssh.turn_on"))
         screen.blit(lbl_toggle, lbl_toggle.get_rect(center=toggle_btn.center))
         self._targets.append(PanelHitTarget("ssh_toggle", None, toggle_btn))
 
         y = card.top + 116
         lines = [
-            f"Administrative user: {status.username}",
-            f"Device IP: {status.host_ip}",
-            f"SSH Port: {status.port}",
-            f"Connection command: ssh {status.username}@{status.host_ip}",
+            self._ui_message("ssh.admin", username=status.username),
+            self._ui_message("ssh.ip", ip=status.host_ip),
+            self._ui_message("ssh.port", port=str(status.port)),
+            self._ui_message("ssh.command", username=status.username, ip=status.host_ip),
         ]
         for line in lines:
             line_surf = _body(line)
@@ -3139,7 +3140,7 @@ class ParentSettingsOverlay:
 
         note_y = card.bottom - 48
         note = _body(
-            "Note: SSH allows administrative terminal access. Keep disabled when not in use.",
+            self._ui_message("ssh.note"),
             (118, 104, 93),
         )
         screen.blit(note, (card.left + 24, note_y))
@@ -3162,16 +3163,16 @@ class ParentSettingsOverlay:
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
 
-        title = self._get_text("Remote Parent Companion & Pairing", FontRole.TITLE, 22, (61, 44, 31), typography)
+        title = self._get_text(self._ui_message("info.title"), FontRole.TITLE, 22, (61, 44, 31), typography)
         screen.blit(title, (card.left + 24, card.top + 20))
 
         y = card.top + 64
         lines = [
-            "Greia Parents is accessible from any browser on this home network.",
-            "1. Connect your phone or laptop to the same Wi-Fi network.",
-            f"2. Open http://{host_ip}:8766 in your browser.",
-            "3. mDNS Service: _greia-parent._tcp (Bonjour / Avahi auto-discovery).",
-            "4. Main Parent login: username 'greia', default password 'greia'.",
+            self._ui_message("info.intro"),
+            self._ui_message("info.step_wifi"),
+            self._ui_message("info.step_url", ip=host_ip),
+            self._ui_message("info.step_mdns"),
+            self._ui_message("info.step_login"),
         ]
         for line in lines:
             surf = self._get_text(line, FontRole.BODY, 18, (61, 44, 31), typography)
