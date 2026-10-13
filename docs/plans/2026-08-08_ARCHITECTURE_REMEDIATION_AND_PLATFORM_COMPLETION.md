@@ -3330,3 +3330,8 @@ width measures the translated text. Focused source
 test authored but not run; no visual proof or release
 gate closure. Continue the full inline-Shell/Activity
 source audit, not just bundle-key parity.
+
+
+### 2026-10-13 — Four-language Activity runtime text correctness: maze and memory game
+
+Continuing the owner-authorized L0–L6 localization workstream (full detail and source-test boundary in `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`), source-only corrections removed Italian live HUD/victory copy in Magical Labyrinth, and two-language-only matching-card/category labels in Wonder Match. Both now use existing profile-relative Activity localization without changing the shared system-language registry or advertised manifests; authoring bundles cover six actual difficulty IDs, four biome IDs, and 64 pictorial matching concepts in EN/IT/ES/FR. Added `tests/test_four_language_activity_runtime_text.py` for semantic key/render-path contracts, **unexecuted**. Cross-read connector source-key evidence only; no local Python, real GUI, voice, device, hardware or lifecycle acceptance. This does not advance or close remaining R-phase remediation gates.
