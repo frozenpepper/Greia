@@ -189,6 +189,41 @@ class ParentPanelLocaleStateTests(unittest.TestCase):
         self.assertTrue(panel._language_message_is_error)
         self.assertTrue(panel._language_message.startswith("Impossibile cambiare lingua:"))
 
+    def test_failed_pointer_speed_change_does_not_display_false_success(self) -> None:
+        panel = self._overlay("it")
+        panel._sync_language_selection()
+        panel.hardware_store = object()
+        panel._pointer_message = "Errore: non salvato"
+        panel._pointer_has_relative = lambda: True
+        panel._apply_hardware_change = lambda changes, message: False
+        panel._set_pointer_preset("mouse", "fast")
+        self.assertEqual(panel._pointer_message, "Errore: non salvato")
+
+    def test_failed_pointer_toggle_does_not_display_false_success(self) -> None:
+        panel = self._overlay("es")
+        panel._sync_language_selection()
+        panel.hardware_store = object()
+        panel._pointer_message = "No guardado"
+        panel._pointer_has_touchpad = lambda: True
+        panel._pointer_settings = lambda: SimpleNamespace(natural_scrolling=False)
+        panel._apply_hardware_change = lambda changes, message: False
+        panel._toggle_pointer_setting("natural_scrolling")
+        self.assertEqual(panel._pointer_message, "No guardado")
+
+    def test_pointer_success_message_uses_selected_locale_only(self) -> None:
+        panel = self._overlay("fr")
+        panel._sync_language_selection()
+        panel.hardware_store = object()
+        panel._pointer_message = ""
+        panel._pointer_has_relative = lambda: True
+        captured = []
+        panel._apply_hardware_change = lambda changes, message: captured.append(message) or True
+        panel._set_pointer_preset("mouse", "fast")
+        self.assertEqual(len(captured), 1)
+        self.assertIn("Vitesse de", captured[0])
+        self.assertIn("Souris", captured[0])
+        self.assertIn("Rapide", captured[0])
+
     def test_staged_french_and_spanish_are_not_advertised(self) -> None:
         self.assertEqual(tuple(x.locale for x in SUPPORTED_SYSTEM_LANGUAGES), ("en", "it"))
         panel = self._overlay("fr")
