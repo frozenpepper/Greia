@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.storie_della_mia_voce.title": "LES HISTOIRES DE MA VOIX",
+    "ui.welcome": "ENREGISTRE TA VOIX !",
+    "ui.scene_intro": "CHOISIS UNE SCÈNE !",
+    "ui.scene_intro_sub": "QUATRE SCÈNES À RACONTER AVEC TA VOIX",
+    "ui.scene_forest": "FORÊT",
+    "ui.scene_sea": "MER",
+    "ui.scene_sky": "CIEL",
+    "ui.scene_friends": "AMIS",
+    "ui.record": "ENREGISTRER",
+    "ui.stop": "ARRÊTER",
+    "ui.replay": "ÉCOUTER",
+    "ui.re_record": "RECOMMENCER",
+    "ui.next_scene": "SCÈNE SUIVANTE",
+    "ui.save": "SAUVER L'HISTOIRE",
+    "ui.saved": "HISTOIRE ENREGISTRÉE !",
+    "ui.mic_required_title": "MICROPHONE NÉCESSAIRE",
+    "ui.mic_required_body": "POUR ENREGISTRER TA VOIX, DEMANDE À UN ADULTE D'ACTIVER LE MICROPHONE DANS LES PARAMÈTRES.",
+    "ui.library": "MES HISTOIRES",
+    "ui.no_stories": "PAS ENCORE D'HISTOIRES !",
+    "ui.story": "HISTOIRE",
+    "ui.scenes": "SCÈNES",
+    "ui.durations": "DURÉE",
+    "activity.title": "LES HISTOIRES DE MA VOIX",
+    "ui.save_failed": "JE N'AI PAS PU L'ENREGISTRER. RÉESSAIE."
+  },
+  "audio": {}
+}

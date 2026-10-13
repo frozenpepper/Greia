@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Bahía de las orcas",
+    "activity.baia_delle_orche.title": "Bahía de las orcas",
+    "orca.kiko": "Kiko (cría)",
+    "orca.luna": "Luna (acróbata)",
+    "orca.oskar": "Oskar (mayor)",
+    "tool.feed": "ALIMENTAR",
+    "tool.cuddle": "ACARICIAR",
+    "tool.play": "JUGAR",
+    "tool.sing": "CANCIÓN",
+    "tool.aurora": "NOCHE",
+    "tool.day": "DÍA",
+    "tool.tito": "TITO",
+    "fact.fact_breach.title": "Saltos fuera del agua",
+    "fact.fact_breach.body": "Cuando las orcas saltan fuera del agua se llama breaching. Al caer producen un gran chapoteo que puede servir para comunicarse con otras orcas.",
+    "fact.fact_swallow.title": "Tragar peces enteros",
+    "fact.fact_swallow.body": "Las orcas no mastican como nosotros: usan los dientes para atrapar peces y después se los tragan enteros.",
+    "fact.fact_sleep.title": "Dormir con un ojo abierto",
+    "fact.fact_sleep.body": "Las orcas pueden descansar una mitad de su cerebro mientras la otra sigue despierta. Así pueden subir a respirar.",
+    "fact.fact_song.title": "Canciones de familia",
+    "fact.fact_song.body": "Las familias de orcas tienen llamadas y sonidos característicos que aprenden unas de otras.",
+    "fact.fact_pod.title": "Grupos familiares",
+    "fact.fact_pod.body": "Las crías de orca suelen permanecer con su madre y su grupo familiar durante muchos años, a veces toda la vida.",
+    "fact.fact_fin.title": "La aleta dorsal",
+    "fact.fact_fin.body": "La gran aleta del lomo de una orca se llama aleta dorsal y ayuda a mantener la estabilidad al nadar."
+  },
+  "audio": {}
+}

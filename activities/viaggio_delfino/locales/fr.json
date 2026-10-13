@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Le voyage du dauphin",
+    "activity.viaggio_delfino.title": "Le voyage du dauphin",
+    "chapter.coral_bay.name": "Baie de corail",
+    "chapter.kelp_forest.name": "Forêt de varech",
+    "chapter.open_sea.name": "Pleine mer",
+    "completion.title": "Quel voyage merveilleux !",
+    "completion.replay": "NAGE ENCORE !",
+    "completion.body": "Tu as ramassé $count perles pendant ton voyage !",
+    "presenter.welcome.caption": "Salut ! Moi, c'est Tito ! Bouge la souris ou utilise les flèches pour nager. Appuie sur la barre d'espace pour sauter hors de l'eau. Ramasse toutes les perles !",
+    "curiosity.delfino.breaching.caption": "Les dauphins peuvent bondir hors de l'eau de plusieurs mètres ! Ils le font, entre autres, pour jouer et communiquer.",
+    "curiosity.delfino.echolocation.caption": "Les dauphins émettent de petits clics et écoutent les échos. Ils trouvent ainsi des poissons même lorsqu'ils voient mal !",
+    "curiosity.delfino.blowhole.caption": "Un dauphin n'est pas un poisson : c'est un mammifère ! Il respire l'air par un orifice situé sur le dessus de sa tête.",
+    "curiosity.delfino.pods.caption": "Les dauphins vivent en groupes familiaux. Ensemble, ils trouvent leur nourriture et se protègent les uns les autres.",
+    "curiosity.delfino.teeth.caption": "Les dauphins ont de nombreuses petites dents, mais ils ne mâchent pas les poissons : ils les attrapent et les avalent entiers.",
+    "curiosity.delfino.whistle.caption": "Chaque dauphin peut avoir un sifflement particulier, presque comme un nom, qui permet aux autres de le reconnaître."
+  },
+  "audio": {}
+}

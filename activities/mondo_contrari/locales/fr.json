@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.mondo_contrari.title": "Le monde des contraires",
+    "activity.title": "Le monde des contraires",
+    "opposite.up": "En haut",
+    "opposite.down": "En bas",
+    "opposite.big": "Grand",
+    "opposite.small": "Petit",
+    "opposite.in": "Dedans",
+    "opposite.out": "Dehors",
+    "opposite.open": "Ouvert",
+    "opposite.closed": "Fermé",
+    "opposite.fast": "Rapide",
+    "opposite.slow": "Lent"
+  },
+  "audio": {}
+}

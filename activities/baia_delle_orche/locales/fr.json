@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "La baie des orques",
+    "activity.baia_delle_orche.title": "La baie des orques",
+    "orca.kiko": "Kiko (petit)",
+    "orca.luna": "Luna (acrobate)",
+    "orca.oskar": "Oskar (doyen)",
+    "tool.feed": "NOURRIR",
+    "tool.cuddle": "CÂLINER",
+    "tool.play": "JOUER",
+    "tool.sing": "CHANSON",
+    "tool.aurora": "NUIT",
+    "tool.day": "JOUR",
+    "tool.tito": "TITO",
+    "fact.fact_breach.title": "Les sauts hors de l'eau",
+    "fact.fact_breach.body": "Les orques sautent parfois hors de l'eau. Lorsqu'elles retombent, elles produisent une grande éclaboussure qui peut servir à communiquer.",
+    "fact.fact_swallow.title": "Avaler les poissons entiers",
+    "fact.fact_swallow.body": "Les orques ne mâchent pas comme nous : leurs dents attrapent les poissons, qu'elles avalent ensuite entiers.",
+    "fact.fact_sleep.title": "Dormir d'un seul œil",
+    "fact.fact_sleep.body": "Les orques peuvent laisser dormir une moitié de leur cerveau pendant que l'autre reste éveillée. Elles peuvent ainsi remonter respirer.",
+    "fact.fact_song.title": "Les chansons de famille",
+    "fact.fact_song.body": "Les familles d'orques ont des cris et des sons particuliers qu'elles apprennent les unes des autres.",
+    "fact.fact_pod.title": "Des groupes familiaux",
+    "fact.fact_pod.body": "Les petits orques restent souvent avec leur mère et leur groupe familial pendant de nombreuses années, parfois toute leur vie.",
+    "fact.fact_fin.title": "La nageoire dorsale",
+    "fact.fact_fin.body": "La grande nageoire sur le dos d'une orque s'appelle la nageoire dorsale. Elle aide l'animal à rester stable en nageant."
+  },
+  "audio": {}
+}

@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Théâtre de contes"
+  },
+  "audio": {}
+}

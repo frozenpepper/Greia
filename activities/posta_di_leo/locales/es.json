@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "El correo de Leo",
+    "activity.posta_di_leo.title": "El correo de Leo",
+    "activity.posta_di_leo.description": "¡Escribe y envía postales ilustradas a tus amigos con Leo!",
+    "prompt.recipient": "¿A quién quieres escribir?",
+    "prompt.stamp": "¡Elige un sello!",
+    "prompt.message": "Escribe tu mensaje aquí...",
+    "prompt.to": "Para:",
+    "button.send": "ENVIAR 💌",
+    "button.saved": "MIS POSTALES 📬",
+    "button.write": "NUEVA POSTAL ✏️",
+    "button.clear": "BORRAR 🗑️",
+    "button.delete": "ELIMINAR",
+    "button.cancel": "CANCELAR",
+    "dialog.full_title": "¡Buzón lleno!",
+    "dialog.full_body": "Tienes 20 postales guardadas.\nBorra una postal antigua para guardar una nueva.",
+    "dialog.delete_confirm": "¿Quieres eliminar esta postal?",
+    "recipient.momo": "Momo",
+    "recipient.dani": "Dani",
+    "recipient.lilli": "Lilli",
+    "recipient.leo": "Leo",
+    "recipient.pina": "Pina",
+    "recipient.tito": "Tito"
+  },
+  "audio": {}
+}

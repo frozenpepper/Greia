@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Le courrier de Leo",
+    "activity.posta_di_leo.title": "Le courrier de Leo",
+    "activity.posta_di_leo.description": "Écris et envoie des cartes postales illustrées à tes amis avec Leo !",
+    "prompt.recipient": "À qui veux-tu écrire ?",
+    "prompt.stamp": "Choisis un timbre !",
+    "prompt.message": "Écris ton message ici...",
+    "prompt.to": "À :",
+    "button.send": "ENVOYER 💌",
+    "button.saved": "MES CARTES 📬",
+    "button.write": "NOUVELLE CARTE ✏️",
+    "button.clear": "EFFACER 🗑️",
+    "button.delete": "SUPPRIMER",
+    "button.cancel": "ANNULER",
+    "dialog.full_title": "Boîte aux lettres pleine !",
+    "dialog.full_body": "Tu as 20 cartes postales enregistrées.\nSupprime une ancienne carte pour en créer une nouvelle.",
+    "dialog.delete_confirm": "Veux-tu supprimer cette carte postale ?",
+    "recipient.momo": "Momo",
+    "recipient.dani": "Dani",
+    "recipient.lilli": "Lilli",
+    "recipient.leo": "Leo",
+    "recipient.pina": "Pina",
+    "recipient.tito": "Tito"
+  },
+  "audio": {}
+}

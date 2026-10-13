@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "El viaje del delfín",
+    "activity.viaggio_delfino.title": "El viaje del delfín",
+    "chapter.coral_bay.name": "Bahía de coral",
+    "chapter.kelp_forest.name": "Bosque de algas",
+    "chapter.open_sea.name": "Mar abierto",
+    "completion.title": "¡Qué viaje tan maravilloso!",
+    "completion.replay": "¡VUELVE A NADAR!",
+    "completion.body": "¡Has recogido $count perlas por el camino!",
+    "presenter.welcome.caption": "¡Hola! ¡Soy Tito! Mueve el ratón o usa las flechas para nadar, y pulsa la barra espaciadora para saltar fuera del agua. ¡Recoge todas las perlas!",
+    "curiosity.delfino.breaching.caption": "¡Los delfines pueden saltar fuera del agua varios metros! Lo hacen, entre otras razones, para jugar y comunicarse.",
+    "curiosity.delfino.echolocation.caption": "Los delfines emiten pequeños chasquidos y escuchan el eco. ¡Así encuentran peces incluso cuando apenas pueden verlos!",
+    "curiosity.delfino.blowhole.caption": "Un delfín no es un pez: ¡es un mamífero! Respira aire por el orificio que tiene en la parte superior de la cabeza.",
+    "curiosity.delfino.pods.caption": "Los delfines viven en grupos familiares. Juntos encuentran comida y se protegen unos a otros.",
+    "curiosity.delfino.teeth.caption": "Los delfines tienen muchos dientes pequeños, pero no mastican el pescado: lo atrapan y se lo tragan entero.",
+    "curiosity.delfino.whistle.caption": "Cada delfín puede tener un silbido distintivo, casi como un nombre, que permite a otros reconocerlo."
+  },
+  "audio": {}
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Étoiles enchantées",
+    "activity.stelle_incantate.title": "Étoiles enchantées",
+    "activity.stelle_incantate.description": "Relie les étoiles dans l'ordre des nombres et regarde de vraies constellations apparaître dans le ciel nocturne avec Leo.",
+    "constellation.triangolo.name": "LE TRIANGLE",
+    "constellation.cassiopea.name": "CASSIOPÉE",
+    "constellation.cigno.name": "LE CYGNE",
+    "constellation.carro.name": "LA GRANDE OURSE",
+    "constellation.leone.name": "LE LION",
+    "constellation.orione.name": "ORION",
+    "curiosity.triangolo.fact": "Les astronomes du monde entier reconnaissent officiellement 88 constellations !",
+    "curiosity.cassiopea.fact": "Cassiopée était une reine des récits anciens ; ses étoiles dessinent un W dans le ciel.",
+    "curiosity.cigno.fact": "Le Cygne semble voler dans le ciel d'été, et ses étoiles dessinent une grande croix.",
+    "curiosity.carro.fact": "Deux étoiles de la Grande Ourse aident à trouver l'étoile Polaire !",
+    "curiosity.leone.fact": "Le Lion est une constellation connue depuis des milliers d'années.",
+    "curiosity.orione.fact": "Les étoiles d'une constellation semblent proches, mais beaucoup sont en réalité très éloignées !",
+    "victory.title": "QUEL CIEL MAGIQUE !",
+    "victory.subtitle": "Tu as illuminé toutes les constellations enchantées !",
+    "button.play_again": "ENCORE !"
+  },
+  "audio": {}
+}

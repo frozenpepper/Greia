@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.la_discesa_della_biglia.title": "LA BAJADA DE LA CANICA",
+    "ui.welcome": "¡LLEVA LA CANICA HASTA LA CESTA!",
+    "ui.play": "¡JUGAR!",
+    "ui.retry": "¡OTRA VEZ!",
+    "ui.next": "¡SIGUIENTE!",
+    "ui.back": "ATRÁS",
+    "ui.win": "¡EN LA CESTA!",
+    "ui.miss": "¡NO HA ENTRADO!",
+    "ui.new_best": "¡NUEVO RÉCORD!",
+    "ui.tool_slope": "RAMPA",
+    "ui.tool_bumper": "REBOTADOR",
+    "ui.tool_fan": "VENTILADOR",
+    "ui.tool_spring": "MUELLE",
+    "ui.basket_label": "CESTA",
+    "ui.level_label": "NIVEL",
+    "ui.best_label": "RÉCORD",
+    "ui.tools_label": "HERRAMIENTAS",
+    "ui.clear": "BORRAR",
+    "ui.drop": "¡SOLTAR!",
+    "activity.title": "LA BAJADA DE LA CANICA"
+  },
+  "audio": {}
+}

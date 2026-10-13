@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "locale": "es",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Laberinto mágico",
+    "activity.labirinto_magico.title": "Laberinto mágico",
+    "hud.stars": "★ ",
+    "hud.level": "Nivel",
+    "hud.easy": "Pequeño",
+    "hud.medium": "Aventura",
+    "hud.hard": "Experto",
+    "btn.hint": "✨ Luciérnaga",
+    "btn.hero": "🐾 Héroe",
+    "btn.biome": "🎨 Mundo",
+    "btn.new_maze": "🔄 Nuevo laberinto",
+    "btn.play_again": "🎉 ¡Otra vez!",
+    "victory.title": "¡Hurra! ¡Has llegado al castillo!",
+    "victory.subtitle": "¡Has completado el laberinto mágico!",
+    "biome.forest": "Bosque encantado 🌲",
+    "biome.castle": "Castillo de cristal 💎",
+    "biome.candy": "Valle de dulces 🍭",
+    "biome.space": "Cosmos estrellado 🚀",
+    "hero.unicorn": "Unicornio 🦄",
+    "hero.bunny": "Conejito 🐰",
+    "hero.kitty": "Gatito 🐱",
+    "hero.fox": "Zorro 🦊",
+    "hero.panda": "Panda 🐼",
+    "hero.dragon": "Dragón 🐲"
+  },
+  "audio": {}
+}

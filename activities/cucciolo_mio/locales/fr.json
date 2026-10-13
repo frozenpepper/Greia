@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "locale": "fr",
+  "direction": "ltr",
+  "strings": {
+    "activity.title": "Mon petit animal",
+    "pet.cat": "Chaton 🐱",
+    "pet.bunny": "Lapin 🐰",
+    "pet.puppy": "Chiot 🐶",
+    "tab.feed": "🐟 Nourrir",
+    "tab.bath": "🧼 Bain",
+    "tab.play": "🎾 Jouer",
+    "tab.sleep": "🌙 Dormir",
+    "tab.dress": "🎀 Habiller",
+    "msg.nom_nom": "Miam, miam ! C'est délicieux ! 💖",
+    "msg.sparkle": "Tout propre et brillant ! ✨",
+    "msg.play": "Hourra ! On s'amuse bien ! 🎾",
+    "msg.sleep": "Fais de beaux rêves, petit animal... 🌙",
+    "msg.dress": "Quelle belle tenue ! 🎀",
+    "stat.happiness": "Bonheur",
+    "stat.hunger": "Petit ventre",
+    "stat.clean": "Propreté"
+  },
+  "audio": {}
+}
