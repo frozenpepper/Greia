@@ -643,6 +643,60 @@ test commands and expected observable behavior.
   reason to weaken the audit or fake placeholder recordings.
 - **Last result:** SOURCE COMMITTED; UNEXECUTED on current main.
 
+### GLA-015 — Parent panel locale path and six staged Activity translations
+
+- **Status:** READY for source-only checks; actual ES/FR production voice
+  and complete-language promotion still BLOCKED by GLA-014.
+- **Priority:** P1; **minimum source SHA:** `8c952587dd36897749fe4bc7b13e55f99d1e9b92`.
+- **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
+  `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
+  `AGENTS.md` and §0 of this queue. Follow the source first-failure
+  rules and existing prepared Pygame environment; no source modifications.
+- **Exact sequential source commands**, each with log and exit code:
+  ```bash
+  python3 -m unittest discover -s tests -p 'test_panel_localization.py' -v
+  python3 -m unittest discover -s tests -p 'test_panel_frame_cache.py' -v
+  python3 -m unittest discover -s tests -p 'test_panel_layout.py' -v
+  python3 -m unittest discover -s tests -p 'test_staged_activity_translations.py' -v
+  python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
+  python3 -m unittest discover -s tests -p 'test_system_language.py' -v
+  python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-GLA015-locale-coverage.json
+  make verify
+  ```
+  Replace the example inventory path with the run's unique ignored
+  evidence directory as instructed by §0. A missing-audio inventory
+  entry is **expected** and is NOT voice acceptance. If
+  `make verify` fails solely because the newly accurate spoken-label
+  audit detects absent `my_creations.wav` for EN/IT, record exact
+  failure and stop; do not hide the portal, weaken validation, or
+  substitute a placeholder sound.
+- **Non-destructive GUI checks if GLA-001 passed:** record actual
+  Parent password dialog, tabs, device-language panel, successful
+  language change and error indication on both 1024×600 and
+  800×480. English and Italian are selectable, text switches and
+  cache does not keep an old-language header/tab; keyboard, touch
+  and pointer inputs remain intact. Use a disposable test device
+  settings directory, never mutate an owner's real Parent password
+  or profile. Preview Spanish/French stage copy *using test injection*
+  only, with no changed supported-language registry.
+- **Six staged Activity text packs:** `painting`, `writing`,
+  `shape_garden`, `piccola_serra`, `memory_meraviglie`,
+  `clinica_cuccioli`. Confirm ES/FR JSON is parseable, matches all
+  EN/IT semantic keys, preserves `{count}`, `{found}`,
+  `{total}`, `{moves}` placeholders and does not claim recorded
+  Spanish/French voice or manifest support. Review text fit at
+  1024×600/800×480 via existing Simulator/test-locales only when
+  supported by its injection APIs; otherwise note PREVIEW BLOCKED.
+  Do not fake supported Spanish/French Activity launch by changing
+  manifests/flags or copying English WAVs.
+- **Expected evidence:** exact checkout SHA, per-command exit code,
+  sample multilingual screenshots and measured text fits,
+  key-parity report and accurate missing-voice list; archive output
+  under one new unique ignored evidence directory. No GitHub
+  Actions, provider spending, installer images, flash, source
+  code edits or out-of-scope OS changes.
+- **Last result:** SOURCE COMMITTED, UNEXECUTED at current HEAD.
+
 ### GLA-009 — Installed lifecycle Acer / installer / first boot
 
 - **Status:** BLOCKED
