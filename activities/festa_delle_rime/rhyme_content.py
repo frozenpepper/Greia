@@ -1,6 +1,7 @@
-"""Bilingual rhyme and alliteration corpus for Festa delle Rime.
+"""Language-relative rhyme and alliteration curricula for Festa delle Rime.
 
-Contains only reviewed vocabulary from docs/reviews/2026-08-24_FESTA_DELLE_RIME_AUDIO_REVIEW.md.
+IT/EN voice review: docs/reviews/2026-08-24_FESTA_DELLE_RIME_AUDIO_REVIEW.md.
+ES/FR: staged educational candidates, NOT voice-approved or manifest-enabled.
 """
 
 from __future__ import annotations
@@ -75,8 +76,67 @@ ALLITERATION_FAMILIES_EN: Final[tuple[tuple[RhymeItem, ...], ...]] = (
 )
 
 
+
+# Spanish/French curriculum candidates. Native phonology and picture semantics
+# need human educational review; voice assets are NOT yet recorded/approved.
+RHYME_PAIRS_ES: Final[tuple[tuple[RhymeItem, RhymeItem], ...]] = (
+    (RhymeItem("gato", "🐱"), RhymeItem("pato", "🦆")),
+    (RhymeItem("mesa", "🍽️"), RhymeItem("fresa", "🍓")),
+    (RhymeItem("flor", "🌸"), RhymeItem("color", "🎨")),
+    (RhymeItem("camino", "🛤️"), RhymeItem("pepino", "🥒")),
+    (RhymeItem("sombrero", "🎩"), RhymeItem("cartero", "📬")),
+    (RhymeItem("estrella", "⭐"), RhymeItem("botella", "🍼")),
+    (RhymeItem("fruta", "🍎"), RhymeItem("ruta", "🛣️")),
+    (RhymeItem("luna", "🌙"), RhymeItem("cuna", "🛏️")),
+)
+
+ALLITERATION_FAMILIES_ES: Final[tuple[tuple[RhymeItem, ...], ...]] = (
+    (RhymeItem("mano", "🖐️"), RhymeItem("mesa", "🍽️"), RhymeItem("mono", "🐒")),
+    (RhymeItem("pato", "🦆"), RhymeItem("pera", "🍐"), RhymeItem("pelota", "⚽")),
+    (RhymeItem("luna", "🌙"), RhymeItem("libro", "📖"), RhymeItem("limon", "🍋")),
+    (RhymeItem("flor", "🌸"), RhymeItem("foca", "🦭"), RhymeItem("fuego", "🔥")),
+    (RhymeItem("toro", "🐂"), RhymeItem("tomate", "🍅"), RhymeItem("tren", "🚂")),
+    (RhymeItem("sol", "☀️"), RhymeItem("sapo", "🐸"), RhymeItem("silla", "🪑")),
+)
+
+RHYME_PAIRS_FR: Final[tuple[tuple[RhymeItem, RhymeItem], ...]] = (
+    (RhymeItem("chat", "🐱"), RhymeItem("rat", "🐭")),
+    (RhymeItem("bateau", "⛵"), RhymeItem("chapeau", "🎩")),
+    (RhymeItem("lapin", "🐰"), RhymeItem("sapin", "🌲")),
+    (RhymeItem("maison", "🏠"), RhymeItem("poisson", "🐟")),
+    (RhymeItem("fleur", "🌸"), RhymeItem("peur", "😨")),
+    (RhymeItem("poule", "🐔"), RhymeItem("boule", "⚽")),
+    (RhymeItem("robe", "👗"), RhymeItem("globe", "🌍")),
+    (RhymeItem("soleil", "☀️"), RhymeItem("oreille", "👂")),
+)
+
+ALLITERATION_FAMILIES_FR: Final[tuple[tuple[RhymeItem, ...], ...]] = (
+    (RhymeItem("maman", "👩"), RhymeItem("maison", "🏠"), RhymeItem("mouton", "🐑")),
+    (RhymeItem("pomme", "🍎"), RhymeItem("poule", "🐔"), RhymeItem("poisson", "🐟")),
+    (RhymeItem("lune", "🌙"), RhymeItem("lapin", "🐰"), RhymeItem("livre", "📖")),
+    (RhymeItem("fleur", "🌸"), RhymeItem("foret", "🌲"), RhymeItem("fourmi", "🐜")),
+    (RhymeItem("tasse", "☕"), RhymeItem("tortue", "🐢"), RhymeItem("tomate", "🍅")),
+    (RhymeItem("soleil", "☀️"), RhymeItem("souris", "🐭"), RhymeItem("savon", "🧼")),
+)
+
+
+_CORPORA: Final = {
+    "it": (RHYME_PAIRS_IT, ALLITERATION_FAMILIES_IT),
+    "en": (RHYME_PAIRS_EN, ALLITERATION_FAMILIES_EN),
+    "es": (RHYME_PAIRS_ES, ALLITERATION_FAMILIES_ES),
+    "fr": (RHYME_PAIRS_FR, ALLITERATION_FAMILIES_FR),
+}
+
+
 def get_corpus(locale: str) -> tuple[tuple[tuple[RhymeItem, RhymeItem], ...], tuple[tuple[RhymeItem, ...], ...]]:
-    """Return (rhyme_pairs, alliteration_families) for the requested locale."""
-    if locale == "en":
-        return RHYME_PAIRS_EN, ALLITERATION_FAMILIES_EN
-    return RHYME_PAIRS_IT, ALLITERATION_FAMILIES_IT
+    """Return only the requested lesson language; never teach Italian by accident.
+
+    Locale packs are staged independently of the Activity manifest and speech.
+    A caller requesting an unknown curriculum must fail rather than silently
+    use an incorrect first-language rhyme or phoneme.
+    """
+    language = locale.replace("_", "-").split("-", 1)[0].lower()
+    try:
+        return _CORPORA[language]
+    except KeyError as exc:
+        raise ValueError(f"unsupported rhyme curriculum language: {locale}") from exc

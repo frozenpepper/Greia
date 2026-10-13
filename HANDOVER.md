@@ -1,3 +1,24 @@
+## 2026-10-13 — ES/FR Rhyme and Sound Workshop native lesson candidates (SOURCE-WIP)
+
+GitHub multilingual work advanced beyond the preceding 45/45
+source-key milestone. `festa_delle_rime` now stages 8 authentic
+Spanish and 8 French rhyme pairs plus 6 alliteration families per
+language; `officina_dei_suoni` stages 8 phoneme groups × 3
+real word/picture examples in each locale. Their selection functions
+now reject unsupported curricula instead of pretending Italian
+lessons satisfy ES/FR. EN/IT sets remain unchanged, and both
+Activities still advertise only EN/IT.
+
+Added `tests/test_staged_es_fr_literacy_curricula.py`;
+**not executed** (GitHub source authoring/readback only). Native
+rhyme/phonetic assessment and all exact word/phoneme audio cues
+remain unreviewed/unrecorded. Do not promote ES/FR or send the
+inventory straight to Modal without approved scripts, voiced
+phonemes and native listening. Next source priorities are Alphabet
+Leo's true alphabet (including Ñ in Spanish) and Magic Syllables;
+existing Encyclopedia/Submarine/Parent Shell/HTML/voice gates remain.
+See the dated four-language `PROGRESS.md` entry for data scope.
+
 # Greia — Current Engineering Handover
 
 ## 2026-10-13 — Word Forest ES/FR real letter lessons, 45/45 text-key parity (SOURCE-WIP)

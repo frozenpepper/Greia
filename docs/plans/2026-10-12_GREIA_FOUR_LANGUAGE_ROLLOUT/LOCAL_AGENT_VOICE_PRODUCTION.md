@@ -468,3 +468,31 @@ row whose state isn't `INTEGRATED` or `EXISTING_ACCEPTED`.
 
 None of these boxes can be checked merely because a code
 commit has been made.
+
+
+### Staged Rhyme Festival and Sound Workshop curricula (2026-10-13)
+
+The Spanish/French curriculum **source** now exists in
+`activities/festa_delle_rime/rhyme_content.py` and
+`activities/officina_dei_suoni/sound_content.py`. These are
+candidate learning materials, not voice approvals. For
+`festa_delle_rime`, every unique `RhymeItem.item_id` across both
+`get_corpus(locale)` rhyme pairs and alliteration families is a
+spoken-word cue; for `officina_dei_suoni`, every
+`SoundUnit.audio_id` is an **isolated phoneme** cue and every
+`WordItem.word_id` is a complete **spoken word** cue. Add their
+per-locale expected file paths at
+`activities/<activity>/assets/audio/<locale>/<cue_id>.wav` to
+the full inventory, including EN/IT gaps. Check the actual runtime
+loader at source HEAD; avoid duplicate cues used in multiple games.
+
+**BLOCKED until reviewed:** exact pronunciation, stress, the
+phoneme articulation (not merely the letter name), regional
+variants and any accent lost in an ASCII cue filename; e.g.
+`fee` → French *fée*, `bebe` → *bébé*, and `lapiz` →
+Spanish *lápiz*. Review the image/word pairing and rhyme sound
+with native-speaking educators before freezing each recording
+script. Scene/instruction cues (`prompt_*`) need independent
+full scripts. Do not presume a spoken string from a key or generate
+silence for missing audio. The two manifests remain EN/IT; no
+recording integration/approval is claimed here.

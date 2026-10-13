@@ -740,3 +740,39 @@ those remain UNEXECUTED and belong to GLA-014/015.
 Four other literacy lesson engines, Encyclopedia
 narration, Submarine, Parent HTML and all
 missing EN/IT title WAVs remain OPEN.
+
+
+### 2026-10-13 — Staged phonics curricula for Rhyme Festival and Sound Workshop (SOURCE-WIP)
+
+Two further literacy engines now have genuinely locale-relative candidate
+curricula rather than a translated UI surrounding Italian content:
+
+- `festa_delle_rime/rhyme_content.py`: 8 Spanish and 8 French rhyme pairs,
+  plus 6 native-language alliteration families for each target locale.
+  The rhyme-generation algorithm is unchanged; only the corpus is new.
+- `officina_dei_suoni/sound_content.py`: 8 target phoneme/grapheme
+  groups per language, each with 3 real first-sound picture words (24 per
+  locale). Source word IDs are audio stems; visible labels retain
+  French/Spanish orthography (e.g. FÉE / BÉBÉ / LÁPIZ).
+- Both `get_corpus` and `get_sound_units` resolve regional locale
+  tags by base language, preserve EN/IT data, and raise for any
+  unsupported curriculum instead of silently returning Italian.
+  This fixes a latent wrong-language teaching trap at the owner seam.
+- Added focused pure-source regression
+  `tests/test_staged_es_fr_literacy_curricula.py` for lesson counts,
+  referential phoneme invariants, deterministic playable challenge
+  factories, fallback rejection and **no ES/FR manifest promotion**.
+
+**Not accepted for children:** the ES/FR vocabulary, pictures and rhyme/
+phoneme acoustics are authoring candidates, not native-speaker-reviewed
+lesson audio. Neither Activity's `activity.toml` changes from EN/IT.
+New word and phoneme audio remains missing, including existing EN/IT
+coverage gaps. Cue IDs are owned by the respective corpus (`item_id`,
+`audio_id` and `word_id`), and must be reconciled to exact scripts
+before Modal generation. Do not use an ASCII filename as the spoken
+accented script. The exact word inventory is now in source, not an
+approved voice manifest. No tests, listening, GUI or device runtime
+executed in this GitHub-only implementation slice; focused tests are
+written and awaiting local execution as already queued under GLA-015.
+Next curricula: Alphabet Leo (Spanish Ñ and French example/letter
+phonetics) and Magic Syllables (locale-true segmented words).
