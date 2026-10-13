@@ -38,11 +38,11 @@ from greia_platform.pygame_completion import CompletionContent, PygameCompletion
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
-    from .serra_content import PLANTS, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY
+    from .serra_content import PLANTS, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY, TOOL_DEFS
     from .serra_model import SerraModel
     from .serra_renderer import POT_RECTS, SerraRenderer
 else:
-    from serra_content import PLANTS, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY
+    from serra_content import PLANTS, REFERENCE_HEIGHT, REFERENCE_WIDTH, STORAGE_KEY, TOOL_DEFS
     from serra_model import SerraModel
     from serra_renderer import POT_RECTS, SerraRenderer
 
@@ -192,14 +192,21 @@ class SerraApp:
             primary_rect=pygame.Rect(392, 380, 240, 52),
         )
         self.completion_content = CompletionContent(
-            title=t("victory.title", "Che magnifico raccolto! 🌻🍓🥕"),
-            body_lines=(t("victory.subtitle", "La tua serra è un vero paradiso!"),),
-            primary_label=t("btn.play_again", "🎉 Coltiva Ancora!"),
+            title=t("victory.title", "🌻🍓🥕"),
+            body_lines=(t("victory.subtitle", "🌱"),),
+            primary_label=t("btn.play_again", "🔄"),
             achievement_count=3,
         )
 
         self.model = SerraModel()
-        self.renderer = SerraRenderer(self.typography)
+        self.renderer = SerraRenderer(
+            self.typography,
+            tool_labels={
+                key: t(key, {"tool.seeds": "🌱", "tool.water": "💧",
+                             "tool.sun": "☀️", "tool.harvest": "🧺"}[key])
+                for _, _, key, _ in TOOL_DEFS
+            },
+        )
         # UI selection state lives in the app, not the pure model.
         self.active_tool: int = 0
         self.selected_plant_type: int = 0
