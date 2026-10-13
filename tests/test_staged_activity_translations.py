@@ -27,16 +27,15 @@ STAGED = (
     "labirinto_magico", "mondo_contrari", "morbidi_mostriciattoli",
     "posta_di_leo", "stelle_incantate", "storie_della_mia_voce",
     "teatrino_fiabe", "viaggio_delfino", "sottomarino_giramondo",
-    "enciclopedia_greia",
+    "enciclopedia_greia", "foresta_parole",
 )
 
-# These five have translated *instructions*, not adapted reading curricula.
-# The Word Forest deliberately omits its English-specific spelling and
-# phonics example keys rather than pretending they match Spanish/French
-# letters, phonemes, or valid playable target words.
+# Four games have translated UI but their lesson engines still depend on
+# original-language sound/spelling assumptions; source text parity alone
+# is not classroom or gameplay adaptation.
 CURRICULUM_UI_ONLY = (
     "alfabeto_leo", "festa_delle_rime", "officina_dei_suoni",
-    "sillabe_magiche", "foresta_parole",
+    "sillabe_magiche",
 )
 
 # Source-key parity alone does not establish accurate narration or pedagogy.
@@ -119,17 +118,58 @@ class StagedActivityTranslationTests(unittest.TestCase):
                                 f"{activity}/{locale}/{key}/{token}",
                             )
 
-    def test_word_forest_english_phonics_content_is_explicitly_untranslated(self) -> None:
+    def test_word_forest_real_language_examples_match_letter_targets(self) -> None:
+        """Real ES/FR letter lessons are data, not a translation of EN labels."""
+        source = ast.parse(
+            (ROOT / "activities/foresta_parole/foresta_content.py")
+            .read_text(encoding="utf-8")
+        )
+        definitions = [
+            node for node in source.body
+            if isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == "PHONICS_DATA"
+        ]
+        self.assertEqual(len(definitions), 1)
+        curricula = ast.literal_eval(definitions[0].value)
         base = ROOT / "activities/foresta_parole/locales"
-        english = json.loads((base / "en.json").read_text(encoding="utf-8"))["strings"]
-        target_lesson_keys = {
-            key for key in english if key.startswith(("word.", "phonics."))
-        }
-        self.assertTrue(target_lesson_keys)
         for locale in ("es", "fr"):
-            ui = json.loads((base / f"{locale}.json").read_text(encoding="utf-8"))["strings"]
-            self.assertTrue(target_lesson_keys.isdisjoint(ui))
-            self.assertTrue(set(ui).issubset(english))
+            with self.subTest(locale=locale):
+                lessons = curricula[locale]
+                self.assertGreaterEqual(len(lessons), 20)
+                keys = set()
+                words = set()
+                strings = json.loads(
+                    (base / f"{locale}.json").read_text(encoding="utf-8")
+                )["strings"]
+                for lesson in lessons:
+                    self.assertEqual(len(lesson), 6)
+                    letter, stem, prompt, example, emoji, word_audio = lesson
+                    self.assertEqual(letter, letter.upper())
+                    self.assertEqual(stem, letter.lower())
+                    self.assertEqual(prompt, f"find_{stem}")
+                    self.assertTrue(example.casefold().startswith(letter.casefold()))
+                    self.assertTrue(emoji)
+                    self.assertTrue(word_audio.isascii() and word_audio.islower())
+                    self.assertTrue(word_audio.isalpha())
+                    self.assertNotIn(stem, keys)
+                    self.assertNotIn(example.casefold(), words)
+                    keys.add(stem)
+                    words.add(example.casefold())
+                    if f"phonics.{stem}" in strings:
+                        self.assertEqual(strings[f"phonics.{stem}"], example)
+                self.assertEqual(len(keys), len(lessons))
+                self.assertEqual(len(words), len(lessons))
+                self.assertEqual(
+                    set(strings),
+                    set(json.loads((base / "en.json").read_text(encoding="utf-8"))["strings"]),
+                )
+                self.assertTrue(all(strings[key] for key in strings if key.startswith("word.")))
+                voice_dir = ROOT / "activities/foresta_parole/assets/audio" / locale
+                self.assertFalse(
+                    voice_dir.is_dir(),
+                    "Do not add lesson locale to manifest until all speech is approved",
+                )
 
     def test_existing_dolphin_voice_cues_use_exact_caption_keys_in_both_base_locales(self) -> None:
         base = ROOT / "activities/viaggio_delfino/locales"
