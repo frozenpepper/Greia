@@ -80,31 +80,39 @@ def choose_language(*, root: Path, windowed: bool, demo: bool) -> str:
             )
             pygame.draw.rect(screen, (255, 250, 240), panel, border_radius=28)
             title = typography.render(
-                "Choose your language",
+                "Choose a language",
                 FontRole.TITLE,
                 max(30, min(44, height // 13)),
                 (61, 44, 31),
             )
             screen.blit(title, title.get_rect(center=(panel.centerx, panel.top + 42)))
             hint = typography.render(
-                "Language  •  Lingua  •  Idioma  •  Langue",
+                "Language  •  Lingua",
                 FontRole.BODY,
                 max(17, min(22, height // 28)),
                 (118, 104, 93),
             )
             screen.blit(hint, hint.get_rect(center=(panel.centerx, panel.top + 78)))
 
-            columns = 3 if width >= 760 else 2
             count = len(SUPPORTED_SYSTEM_LANGUAGES)
+            # The previous 12-language 3x4 table left two very wide, tiny
+            # buttons stranded at the top once only EN/IT became selectable.
+            # Keep the product choice group centered and child/parent-sized.
+            columns = min(count, 2 if width >= 540 else 1)
             rows = (count + columns - 1) // columns
             gap = max(8, min(14, width // 80))
-            grid_left = panel.left + max(18, width // 28)
-            grid_right = panel.right - max(18, width // 28)
-            grid_top = panel.top + 104
-            button_h = max(42, min(54, height // 10))
+            grid_available = panel.width - 2 * max(18, width // 28)
+            grid_width = min(grid_available, 620 if columns == 2 else 380)
+            grid_left = panel.centerx - grid_width // 2
+            grid_right = grid_left + grid_width
+            button_h = max(44, min(66, height // 7))
             continue_h = max(44, min(54, height // 10))
-            available_h = panel.bottom - grid_top - continue_h - 34
-            row_h = max(button_h, available_h // max(1, rows))
+            row_h = button_h + gap
+            group_h = rows * row_h - gap + continue_h + 36
+            grid_top = max(panel.top + 98, panel.centery - group_h // 2)
+            # At unusually short resolutions the button must remain inside
+            # the actual viewport rather than moving behind Continue.
+            grid_top = min(grid_top, panel.bottom - group_h - 14)
             cell_w = (grid_right - grid_left - gap * (columns - 1)) // columns
             hit_targets: list[tuple[int, Any]] = []
             pointer_position = pygame.mouse.get_pos()
@@ -142,7 +150,7 @@ def choose_language(*, root: Path, windowed: bool, demo: bool) -> str:
                 )
                 screen.blit(flag, flag.get_rect(midleft=(cell.left + 14, cell.centery)))
                 label = typography.render(
-                    language.name,
+                    language.native_name,
                     FontRole.CONTROL,
                     max(16, min(21, height // 30)),
                     (61, 44, 31),
@@ -154,7 +162,7 @@ def choose_language(*, root: Path, windowed: bool, demo: bool) -> str:
                 hit_targets.append((index, cell))
 
             continue_rect = pygame.Rect(0, 0, min(240, panel.width // 3), continue_h)
-            continue_rect.midbottom = (panel.centerx, panel.bottom - 14)
+            continue_rect.midtop = (panel.centerx, grid_top + rows * row_h + 26)
             pygame.draw.rect(screen, (255, 194, 52), continue_rect, border_radius=18)
             continue_label = typography.render(
                 "Continue",
