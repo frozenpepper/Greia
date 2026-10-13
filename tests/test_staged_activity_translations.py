@@ -29,6 +29,15 @@ STAGED = (
     "teatrino_fiabe", "viaggio_delfino",
 )
 
+# These five have translated *instructions*, not adapted reading curricula.
+# The Word Forest deliberately omits its English-specific spelling and
+# phonics example keys rather than pretending they match Spanish/French
+# letters, phonemes, or valid playable target words.
+CURRICULUM_UI_ONLY = (
+    "alfabeto_leo", "festa_delle_rime", "officina_dei_suoni",
+    "sillabe_magiche", "foresta_parole",
+)
+
 
 def _fields(text: str) -> set[str]:
     return {
@@ -59,6 +68,51 @@ class StagedActivityTranslationTests(unittest.TestCase):
                             f"{activity}/{locale}/{key}: missing interpolation placeholders"
                         )
                     self.assertEqual(localized["audio"], {})
+
+    def test_curriculum_ui_translations_do_not_claim_lesson_adaptation(self) -> None:
+        for activity in CURRICULUM_UI_ONLY:
+            base = ROOT / "activities" / activity
+            source = json.loads((base / "locales/en.json").read_text(encoding="utf-8"))
+            manifest = tomllib.loads((base / "activity.toml").read_text(encoding="utf-8"))
+            self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it"})
+            for locale in ("es", "fr"):
+                with self.subTest(activity=activity, locale=locale):
+                    bundle = json.loads((base / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+                    self.assertEqual(bundle["locale"], locale)
+                    self.assertEqual(bundle["audio"], {})
+                    self.assertTrue(bundle["strings"])
+                    self.assertEqual(set(bundle["strings"]) - set(source["strings"]), set())
+                    for key, value in bundle["strings"].items():
+                        self.assertTrue(value.strip())
+                        for token in ("$letter", "$word", "$score", "$stars", "$char"):
+                            self.assertEqual(
+                                token in value, token in source["strings"][key],
+                                f"{activity}/{locale}/{key}/{token}",
+                            )
+
+    def test_word_forest_english_phonics_content_is_explicitly_untranslated(self) -> None:
+        base = ROOT / "activities/foresta_parole/locales"
+        english = json.loads((base / "en.json").read_text(encoding="utf-8"))["strings"]
+        target_lesson_keys = {
+            key for key in english if key.startswith(("word.", "phonics."))
+        }
+        self.assertTrue(target_lesson_keys)
+        for locale in ("es", "fr"):
+            ui = json.loads((base / f"{locale}.json").read_text(encoding="utf-8"))["strings"]
+            self.assertTrue(target_lesson_keys.isdisjoint(ui))
+            self.assertTrue(set(ui).issubset(english))
+
+    def test_existing_dolphin_voice_cues_use_exact_caption_keys_in_both_base_locales(self) -> None:
+        base = ROOT / "activities/viaggio_delfino/locales"
+        for locale in ("en", "it"):
+            data = json.loads((base / f"{locale}.json").read_text(encoding="utf-8"))
+            cues = {k: v for k, v in data["audio"].items() if k.endswith(".voice")}
+            self.assertEqual(len(cues), 7)
+            for key, value in cues.items():
+                caption = key[:-6] + ".caption"
+                self.assertEqual(value["caption_key"], caption)
+                self.assertIn(caption, data["strings"])
+                self.assertTrue(data["strings"][caption].strip())
 
     def test_numeric_template_targets_remain_intact(self) -> None:
         """Dollar targets are consumed by old activities, not Python format()."""
