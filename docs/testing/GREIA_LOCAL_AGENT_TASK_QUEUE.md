@@ -656,7 +656,7 @@ test commands and expected observable behavior.
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `79d1b9cec214448097ed7fe0bc379e75878d3727`.
+- **Priority:** P1; **minimum source SHA:** `07a700310d26e40592353a5243ea36954287ea9d`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
@@ -747,6 +747,13 @@ test commands and expected observable behavior.
   report BLOCKED_TEXT on rhyme scripts and isolated phonemes;
   expected missing speech is not a test failure and not permission
   to promote either Activity language manifest.
+  Magic Syllables now uses exact ES (8×5) and FR (5×5)
+  authored syllable families; test the *actual* 6-orb
+  catcher and 4-tile builder paths. The updated ledger
+  must show **115 ES and 93 FR** Magic Syllables cues,
+  not the historical 173/190 from the old Italian grid.
+  In particular, written builder-only `syl_*` parts
+  must not have imaginary `find_*` recordings.
   Run `test_four_language_inventory.py` for
   source-text vs advertised-language distinction.
   No staged JSON/recording candidate counts as
@@ -773,6 +780,17 @@ test commands and expected observable behavior.
   voice plan until manual inline/external audio
   discovery, canonical speaker assignment,
   approved science scripts and human review.
+  Separate Parent browser repo source at
+  `frozenpepper/Greia-Parent-App-Html` now stages
+  61 EN/IT/ES/FR chrome keys. When the checked-out
+  external browser source is available, run `npm test`
+  at its exact current `main` HEAD with no remote
+  dependency installation or new API host, log command
+  exits and perform a read-only translated chrome
+  preview on a disposable browser profile. Do not
+  change the OS runtime pin or claim deployed/browser
+  four-language parity; most detail views are not yet
+  fully translated.
   Preserve source hashes, actual missing cues
   and `PATH_REVIEW_REQUIRED` states.
   Never synthesize from a category heading when

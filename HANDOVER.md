@@ -1,3 +1,43 @@
+## 2026-10-13 — Syllable correctness repair and external Parent browser translations (SOURCE-WIP)
+
+**Greia OS source:** `main` 07a700310d26e40592353a5243ea36954287ea9d
+(then this documentation commit). Magic Syllables ES/FR
+now uses explicit authored syllable families in explorer,
+catcher and builder, rather than the old Italian C+V
+cross-product. Preserved original IT/EN generator.
+Offline voice inventory corrected to **115 ES/93 FR**
+Magic Syllables source cues, with word-builder-only
+syllables counted once and phantom `find_*` audio removed.
+The revised count across all five staged ES/FR literacy
+Activities is **572 source recording candidates**,
+superseding earlier 727. Scripts/audio/native pedagogy
+still unapproved. Focused tests authored, not executed.
+
+**External Parent HTML repo:** `frozenpepper/Greia-Parent-App-Html`
+current source checkpoint `a6df96c2971391d7368646b6dcec5acd1049bfc9`.
+First-party four-language browser chrome catalogue:
+**61 semantic keys × EN/IT/ES/FR**. Integrated navigation,
+browser label/chrome, language setting selection feedback,
+device group/health, unavailable Wi-Fi and speaker control
+copy. Browser interface respects server canonical
+selectable-language list and follows authenticated
+device language when available. Many Parent detail views
+and discovery/login dialogs remain English; this is
+SOURCE-WIP, not full locale support.
+
+**Critical cross-repository integration:** Greia OS still
+pins the prior reviewed Parent HTML revision and exact
+file-integrity manifest. Do NOT publish the new Parent
+HTML client to installed images until the complete source
+is translated/reviewed, `npm test` and live browser
+screens are accepted, and the established pin/release
+integration regenerates exact files/hashes. No source
+runtime tests, native proofreading, Modal voices, Pygame,
+physical Greia or Parent live acceptance executed
+here. ES/FR selectors/Activity manifests remain disabled.
+See `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`
+and `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
+
 ## 2026-10-13 — All five literacy Activities now have ES/FR source candidates, NOT accepted speech (SOURCE-WIP)
 
 Latest `main` multilingual slice: Alphabet Leo gained real staged

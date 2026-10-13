@@ -3227,3 +3227,22 @@ test execution and all installer/hardware acceptance remain open.
 System and every Activity manifest still advertise EN/IT only.
 No architecture, lifecycle or non-lifecycle remediation gate
 was advanced/closed by this product-source slice.
+
+
+### 2026-10-13 — Four-language curriculum/runtime and external Parent HTML source progress
+
+Magic Syllables ES/FR modes now operate on explicit native
+candidate syllable families, replacing the incorrect Italian
+14×5 generator for staged locales. The recorded-cue
+ledger now matches real playable syllable/word paths:
+115 ES / 93 FR, not the former 173/190. Old EN/IT
+paths remain. The external Parents HTML repo began
+a semantic 61-key EN/IT/ES/FR browser catalogue and
+integrated navigation, common chrome, device language,
+health/group/Wi-Fi-unavailable and speaker controls.
+Greia OS selector, Activity manifests and exact Parent
+HTML content pin remain unchanged. New source tests
+exist but Python/Node, visual/native speaker,
+audio/hardware, and installed Parent acceptance
+have NOT run. Active architectural/lifecycle gates
+remain open; no release gate is closed.

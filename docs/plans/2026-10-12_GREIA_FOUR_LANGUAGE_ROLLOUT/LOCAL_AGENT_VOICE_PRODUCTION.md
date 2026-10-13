@@ -523,15 +523,20 @@ consonant/vowel teaching inventory, tabs and praise IDs.
 `sillabe_audio.SoundManager` owns real runtime playback stems:
 `letter_<consonant>`, `syl_<syllable>`,
 `find_<syllable>`, `word_<stem>`, and locale
-`praise_cues`. Current ES source census is 173 cues,
-FR is 190 because French word-builder parts add 17
-non-CV `syl_*` stems beyond the base consonant-vowel grid.
+`praise_cues`. The previous 173 ES/190 FR census relied on the Italian C+V
+generator and is superseded. The current actual source
+exposes 115 ES/93 FR cues (208 combined); explorer/catcher
+use explicit _FAMILIES_ES (8 letter groups, 40 syllables)
+and _FAMILIES_FR (5 groups, 25 syllables). Word-builder-only
+segments require `syl_*` audio but **no** `find_*`
+recording if never in a catcher round. Use the newly updated
+`tools/audit_greia_language_coverage.py` ledger to derive
+precise paths rather than inventing Italian grid combinations.
 Only `word_*` has a source-backed candidate written utterance;
 all phoneme, prompt, syllable decomposition and praise scripts
-are `BLOCKED_TEXT` until native approval. Most importantly,
-the explorer/catcher mode's current consonant × five vowel grid is
-retained from Italian; its actual French/Spanish pedagogical value
-and spoken sound alternatives must be approved or redesigned.
+are `BLOCKED_TEXT` until native approval. These explicit
+families are unreviewed linguistic candidates, not certified
+phonemes or permission for mass voice generation.
 A French visual split like `MAI-SON` does not prove the
 word's acoustic syllabification. The existing file inventory
 is **not** an instruction to generate all phonemic recordings

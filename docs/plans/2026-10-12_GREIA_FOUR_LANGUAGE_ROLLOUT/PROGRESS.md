@@ -888,3 +888,73 @@ current source test commands. Next work: deeper native phonemic
 datasets (especially French explorer/catcher), authentic scripts,
 remaining Parent HTML and Shell text and on-device acceptance;
 no release gate is being closed.
+
+
+### 2026-10-13 — Corrected locale-native Magic Syllables generation + Parent HTML browser integration (SOURCE-WIP)
+
+**Corrections to the preceding audio totals:** The previous source
+staged ES/FR written words, but the actual explorer/catcher and
+word-builder still generated too many Italian-derived C+V syllables.
+Those were *not reviewed native-language teaching units*. GitHub
+commits `5a53c016` and `07a70031` replace the ES/FR
+algorithmic generator with curated `_FAMILIES_ES` (8 groups,
+40 voiced candidate syllables) and `_FAMILIES_FR` (5 groups,
+25 syllables, including accents such as `MÉ`). The actual
+`SillabeSession` now uses these explicit lists for explorer,
+catcher targets/distractors and builder distractors; EN/IT retain
+their previous generation path. Source regression covers
+family validation, playable round counts, correct/duplicate
+targets, no nonexistent grapheme combinations, and recorded
+syllable stem selection. This remains **pending native phonetic
+and teacher review**, not verified spoken French/Spanish.
+
+The AST-only `tools/audit_greia_language_coverage.py`
+now inventories the actual ES/FR authored source families
+rather than the old 14×5 grid. **New current source audio
+requirements for Magic Syllables: 115 ES and 93 FR,
+208 combined**; builder-only syllables are inventoried as
+`syl_*`, but not as nonexistent `find_*` prompts.
+This supersedes the prior 173 ES / 190 FR / 363 combined.
+The corrected aggregate of staged ES/FR *code-owned
+literacy* cue candidates in the five Activities is now
+**572**, not 727: Word Forest 126, Rhyme Festival +
+Sound Workshop 124, Alphabet Leo 114, Magic Syllables 208.
+These are source-reported requirements and not recordings.
+All ambiguous letter/phoneme/prompt scripts remain BLOCKED_TEXT.
+
+**External Parents browser source:**
+`frozenpepper/Greia-Parent-App-Html` main has advanced through
+source commits `957bb847`, `f95cc5a6`, `32c0b552`,
+`8b456728`, `b5abee3b`, and `a6df96c2`.
+It now has a first-party `src/localization.js` staged catalogue
+with **61 semantic text keys in each of EN/IT/ES/FR**, and
+source integration for primary navigation, browser chrome,
+confirmation buttons, system-status labels, language-settings
+card, device grouping, Wi-Fi unavailable copy and speaker
+controls. The current parent app uses the device's actual
+`snapshot.language.locale` for authenticated browser
+chrome and the browser's supported preferred language
+preauthentication; the **API's language list** still
+owns which device languages are selectable. No duplicate
+browser-side device registry, network access or HTML
+injection was added. Targeted Node source tests
+and existing static source expectations were updated.
+
+**Not a pinned or releasable Parent browser:** many Home,
+Children, Activities, discovery/authentication and device
+detail strings remain English; full locale parity, visual
+legibility and native copy review are absent. The Greia OS
+`runtime/parent-app-client.toml` and byte-integrity
+manifest are intentionally **UNCHANGED**. Until the external
+client's entire source is localized, `npm test` and real
+browser/app acceptance pass, and the established release
+pin procedure republishes exact checked bytes, the
+installed OS has no claim to these new HTML strings.
+
+All work here is GitHub source-only. Executed evidence:
+GitHub branch/blob readbacks of changed source.
+No Python/Node suites, Pygame/DOM rendering, child tests,
+voices, physical Greia installs or hardware acceptance
+were run. Task queue GLA-015 tracks future source/GUI
+checks; do not ask a device agent to do paid voice work
+without exact approved scripts.
