@@ -165,10 +165,13 @@ class StagedActivityTranslationTests(unittest.TestCase):
                     set(json.loads((base / "en.json").read_text(encoding="utf-8"))["strings"]),
                 )
                 self.assertTrue(all(strings[key] for key in strings if key.startswith("word.")))
-                voice_dir = ROOT / "activities/foresta_parole/assets/audio" / locale
-                self.assertFalse(
-                    voice_dir.is_dir(),
-                    "Do not add lesson locale to manifest until all speech is approved",
+                manifest = tomllib.loads(
+                    (ROOT / "activities/foresta_parole/activity.toml")
+                    .read_text(encoding="utf-8")
+                )
+                self.assertEqual(
+                    set(manifest["activity"]["languages"]), {"en", "it"},
+                    "Candidate vocabulary does not authorize ES/FR launch",
                 )
 
     def test_existing_dolphin_voice_cues_use_exact_caption_keys_in_both_base_locales(self) -> None:
