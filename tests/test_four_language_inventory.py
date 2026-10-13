@@ -1,12 +1,14 @@
 """Provider-free source-inventory regression for four-language rollout."""
 from __future__ import annotations
 
+import csv
+import hashlib
 import json
 from pathlib import Path
 import tempfile
 import unittest
 
-from tools.audit_greia_language_coverage import build_inventory
+from tools.audit_greia_language_coverage import build_inventory, write_recording_ledger
 from tools.audit_launcher_spoken_labels import _load_collection_ids
 
 
@@ -95,6 +97,79 @@ class FourLanguageInventoryTests(unittest.TestCase):
             self.assertEqual(len(matches), 4)
             self.assertTrue(all(not x["file_exists"] for x in matches))
             self.assertTrue(all(x["state"] == "BLOCKED_TEXT" for x in matches))
+
+    def test_recording_ledger_uses_package_paths_and_no_fake_approval(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            activity = root / "activities" / "mini"
+            (activity / "locales" / "en" / "audio").mkdir(parents=True)
+            (activity / "activity.toml").write_text("[activity]\n", encoding="utf-8")
+            (activity / "locales" / "en" / "audio" / "activity-title.wav").write_bytes(b"known clip")
+            for locale in ("en", "it", "es", "fr"):
+                (activity / "locales" / f"{locale}.json").write_text(json.dumps({
+                    "locale": locale,
+                    "strings": {"activity.title": {
+                        "en": "Little Game", "it": "Gioco", "es": "Juego", "fr": "Jeu"
+                    }[locale]},
+                    "audio": {"activity.title": {
+                        "path": f"locales/{locale}/audio/activity-title.wav",
+                        "caption_key": "activity.title"
+                    }} if locale == "en" else {},
+                }), encoding="utf-8")
+            report = build_inventory(root)
+            output = root / "tmp" / "recording-ledger.csv"
+            count = write_recording_ledger(root, report, output)
+            with output.open(encoding="utf-8", newline="") as stream:
+                rows = list(csv.DictReader(stream))
+            self.assertEqual(count, len(rows))
+            title = {(x["locale"], x["cue_id"]): x for x in rows}
+            en = title[("en", "activity.title")]
+            self.assertEqual(en["state"], "EXISTING_REVIEW_PENDING")
+            self.assertEqual(en["existing_asset_sha256"],
+                             hashlib.sha256(b"known clip").hexdigest())
+            self.assertEqual(en["output_path"],
+                             "activities/mini/locales/en/audio/activity-title.wav")
+            self.assertNotEqual(en["state"], "EXISTING_ACCEPTED")
+            es = title[("es", "activity.title")]
+            self.assertEqual(es["state"], "MISSING_AUDIO")
+            self.assertEqual(es["exact_text"], "Juego")
+            self.assertEqual(es["speaker"], "UNASSIGNED")
+            self.assertEqual(es["output_path"],
+                             "activities/mini/locales/es/audio/activity-title.wav")
+
+    def test_launcher_spoken_text_comes_from_real_source_dictionary(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "activities" / "mini").mkdir(parents=True)
+            (root / "activities" / "mini" / "activity.toml").write_text(
+                "[activity]\n", encoding="utf-8"
+            )
+            source = root / "src" / "greia_launcher"
+            source.mkdir(parents=True)
+            (source / "catalogue_view.py").write_text(
+                'BROWSE_ACTIVITIES_ID = "browse"\n'
+                'MY_CREATIONS_PORTAL_ID = "my_creations"\n'
+                'PRIMARY_COLLECTION_IDS = ("create",)\n'
+                'DISCOVERY_GROUP_IDS = ("drawing",)\n'
+                '_CATEGORY_TRANSLATIONS: dict[str, dict[str, str]] = {\n'
+                '    MY_CREATIONS_PORTAL_ID: {\n'
+                '        "en": "My Creations", "it": "Le mie creazioni",\n'
+                '        "es": "Mis creaciones", "fr": "Mes créations"},\n'
+                '}\n',
+                encoding="utf-8",
+            )
+            report = build_inventory(root)
+            self.assertEqual(report["structural_errors"], [])
+            candidates = [
+                x for x in report["spoken_resources"]
+                if x["cue_id"] == "collection.my_creations"
+            ]
+            self.assertEqual(
+                {x["locale"]: x["text"] for x in candidates},
+                {"en": "My Creations", "it": "Le mie creazioni",
+                 "es": "Mis creaciones", "fr": "Mes créations"},
+            )
+            self.assertTrue(all(x["state"] == "MISSING_AUDIO" for x in candidates))
 
     def test_unsafe_audio_paths_cannot_be_reported_as_existing(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
