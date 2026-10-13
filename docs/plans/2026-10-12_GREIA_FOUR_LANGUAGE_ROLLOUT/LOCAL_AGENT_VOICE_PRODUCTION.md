@@ -173,10 +173,11 @@ These are **verified existing obligations**, not generic search terms:
 ### 2026-10-13 latest: all 45 Activities have ES/FR UI text bundles — VOICES/CURRICULUM STILL BLOCKED
 
 The full set of 45 bundled Activities now contains ES/FR JSON
-files. **44/45 have all 901 cumulative declared English/Italian
-string keys represented except for the 24 Word Forest
-language-dependent phonics/word keys**. The total
-translated bundle values are **877 per target locale**.
+files. **45/45 have all 901 cumulative declared English/Italian
+string keys represented**. The total source text
+value count is now **901 per target locale, 1,802
+ES+FR entries**. This is text-key completeness, not
+evidence of correctly narrated lessons.
 This is SOURCE-KEY parity, **NOT 45 accepted language
 translations**: inline strings, curriculum-specific
 logic, voice, line fit, scientific review and the
@@ -194,13 +195,31 @@ separately pinned Parent HTML client remain outstanding.
   and `sillabe_magiche`. Audio phonemes, letter
   exemplars and rhyme pairs must be recreated in
   each actual learning language, not copied.
-- **Word Forest** (`foresta_parole`) deliberately
-  contains only 10 translated UI strings per
-  new language: its **24 English-specific
-  `word.*`/`phonics.*` content keys** are
-  untranslated. DO NOT invent translated lesson
-  words unless the spelling model and phonics
-  mappings are correctly rebuilt/tested.
+- **Word Forest** (`foresta_parole`) now contains
+  all 34 locale text keys in ES/FR **plus 21
+  source-authored letter/example-word lesson tuples per
+  language**, distinct from the prior English and Italian
+  lessons. Those are candidate learning words, NOT
+  approved phoneme acoustics or shipped support. Its
+  code owns three audio cues per lesson:
+  letter `<letter>.wav`, prompt
+  `find_<letter>.wav`, and spoken example
+  `<word_stem>.wav`, under
+  `activities/foresta_parole/assets/audio/<locale>/`.
+  The provider-free voice inventory now reads the
+  literal `foresta_content.PHONICS_DATA` source via
+  AST and adds **252 code-owned candidates across
+  EN/IT/ES/FR** (20 IT + 22 EN + 21 ES + 21 FR
+  lessons, each with three distinct clips).
+  **126 new ES/FR lesson audio candidates** remain
+  unrecorded. The exact *word* script is present,
+  but the exact spoken *letter* and
+  *find-the-letter prompt* instructions are
+  deliberately `BLOCKED_TEXT`: a letter glyph alone
+  cannot establish whether the child should hear
+  the letter name or its phoneme. Author, approve
+  and translate these scripts first; the CSV must
+  not be fed directly to the voice engine.
 
 The **Encyclopedia** now has all **246 source
 text keys** staged for ES/FR across six animal
@@ -217,6 +236,7 @@ author new approved scripts. All science prose
 requires native and content-factual proofreading.
 
 **At least 90 missing ES/FR Activity titles** (45 × 2)
+and **126 ES/FR Word Forest phonics clips**
 are candidate ledger rows, plus Submarine's 55
 source audio cue IDs per language, Dolphin's
 seven caption-linked narrative cues and the many
