@@ -26,7 +26,18 @@
     "hero.kitty": "Chaton 🐱",
     "hero.fox": "Renard 🦊",
     "hero.panda": "Panda 🐼",
-    "hero.dragon": "Dragon 🐲"
+    "hero.dragon": "Dragon 🐲",
+    "difficulty.small": "Facile",
+    "difficulty.medium": "Moyen",
+    "difficulty.large": "Grand",
+    "difficulty.giant": "Géant",
+    "difficulty.epic": "Épique",
+    "difficulty.master": "Maître",
+    "biome.midnight_galaxy": "🌌 Galaxie",
+    "biome.emerald_forest": "🌲 Forêt",
+    "biome.crystal_kingdom": "💎 Cristal",
+    "biome.volcano_realm": "🌋 Volcan",
+    "btn.new_maze_short": "🔄 Nouveau"
   },
   "audio": {}
 }
