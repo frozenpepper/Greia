@@ -619,3 +619,26 @@ action/character speech, then finish Shell/
 Parent-browser UI and run actual tests.
 Never add ES/FR to the canonical registry
 until the full L6 acceptance gate passes.
+
+
+### 2026-10-13 — Contributor skill identity incident detected and repaired
+
+A previous GitHub-only file-update loop selected the wrong
+string variable and accidentally wrote the entire
+`greia-os-work` skill into the `greia-activity-authoring`
+path, and the entire Activity skill into the OS path.
+The mismatch was **not** a desired architecture change.
+We detected it by comparing frontmatter names with
+the requested paths, restored both full skill contents
+atomically to the correct canonical paths at
+`4957bc96` and verified the frontmatter through
+GitHub readback. Added
+`tests/test_greia_skill_identity.py`
+at `b1d2e14b` (three tests) to fail whenever
+the two skill-path/name/content contracts diverge;
+GLA-015 includes this focused source gate.
+No test execution was claimed.
+
+This skill incident does not alter or close the
+remaining locale content/voice gates. Explicitly
+preserve the existing EN/IT support restriction.
