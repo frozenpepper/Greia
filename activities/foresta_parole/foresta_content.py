@@ -27,12 +27,14 @@ GOLD: Final = (255, 205, 50)
 WHITE: Final = (255, 255, 255)
 DARK_TEXT: Final = (50, 38, 28)
 
-# CRITICAL AUDIO / TTS SYNTHESIS INSTRUCTIONS:
-# ============================================
-# When generating audio with TTS (e.g. macOS `say`), ALWAYS pass lowercase strings (.lower()).
-# Capital letters (like 'C' or 'C come Cane') cause macOS TTS to say "C maiuscola" or "capital C".
-# Target speech rate: ~180 wpm for Italian, ~185 wpm for English (gentle, toddler-friendly pace).
-# See `tools/generate_foresta_audio.py` to regenerate all audio assets.
+# RECORDING AUTHORITY:
+# Each tuple is (display_letter, letter_audio_stem, prompt_audio_stem,
+#                example_word, emoji, example_word_audio_stem).
+# The legacy English/Italian recordings are existing shipped assets.
+# All ES/FR tuple stems are authoring-time CANDIDATES with no audio yet.
+# Use the shared Greia voice pipeline and reviewed multilingual ledger;
+# never synthesize phonics with the on-device renderer or fake a sound
+# by copying another locale's recording.
 
 PHONICS_DATA: Final = {
     "it": [
@@ -80,6 +82,54 @@ PHONICS_DATA: Final = {
         ("V", "v", "find_v", "Volcano", "🌋", "volcano"),
         ("W", "w", "find_w", "Whale", "🐋", "whale"),
         ("Z", "z", "find_z", "Zebra", "🦓", "zebra"),
+    ],
+    # Source-authored candidate lessons for future ES/FR voice production.
+    # Not advertised by activity.toml until actual per-cue speech passes.
+    "es": [
+        ("A", "a", "find_a", "Abeja", "🐝", "abeja"),
+        ("B", "b", "find_b", "Barco", "⛵", "barco"),
+        ("C", "c", "find_c", "Casa", "🏠", "casa"),
+        ("D", "d", "find_d", "Dado", "🎲", "dado"),
+        ("E", "e", "find_e", "Elefante", "🐘", "elefante"),
+        ("F", "f", "find_f", "Flor", "🌸", "flor"),
+        ("G", "g", "find_g", "Gato", "🐱", "gato"),
+        ("I", "i", "find_i", "Isla", "🏝️", "isla"),
+        ("J", "j", "find_j", "Jirafa", "🦒", "jirafa"),
+        ("L", "l", "find_l", "Luna", "🌙", "luna"),
+        ("M", "m", "find_m", "Manzana", "🍎", "manzana"),
+        ("N", "n", "find_n", "Nube", "☁️", "nube"),
+        ("O", "o", "find_o", "Oso", "🐻", "oso"),
+        ("P", "p", "find_p", "Perro", "🐶", "perro"),
+        ("Q", "q", "find_q", "Queso", "🧀", "queso"),
+        ("R", "r", "find_r", "Rana", "🐸", "rana"),
+        ("S", "s", "find_s", "Sol", "☀️", "sol"),
+        ("T", "t", "find_t", "Tigre", "🐯", "tigre"),
+        ("U", "u", "find_u", "Uva", "🍇", "uva"),
+        ("V", "v", "find_v", "Vaca", "🐄", "vaca"),
+        ("Z", "z", "find_z", "Zapato", "👟", "zapato"),
+    ],
+    "fr": [
+        ("A", "a", "find_a", "Abeille", "🐝", "abeille"),
+        ("B", "b", "find_b", "Bateau", "⛵", "bateau"),
+        ("C", "c", "find_c", "Chat", "🐱", "chat"),
+        ("D", "d", "find_d", "Dauphin", "🐬", "dauphin"),
+        ("E", "e", "find_e", "Escargot", "🐌", "escargot"),
+        ("F", "f", "find_f", "Fleur", "🌸", "fleur"),
+        ("G", "g", "find_g", "Girafe", "🦒", "girafe"),
+        ("I", "i", "find_i", "Igloo", "🧊", "igloo"),
+        ("J", "j", "find_j", "Jardin", "🌳", "jardin"),
+        ("L", "l", "find_l", "Lune", "🌙", "lune"),
+        ("M", "m", "find_m", "Maison", "🏠", "maison"),
+        ("N", "n", "find_n", "Nuage", "☁️", "nuage"),
+        ("O", "o", "find_o", "Ours", "🐻", "ours"),
+        ("P", "p", "find_p", "Poisson", "🐟", "poisson"),
+        ("Q", "q", "find_q", "Quiche", "🥧", "quiche"),
+        ("R", "r", "find_r", "Renard", "🦊", "renard"),
+        ("S", "s", "find_s", "Soleil", "☀️", "soleil"),
+        ("T", "t", "find_t", "Tortue", "🐢", "tortue"),
+        ("U", "u", "find_u", "Usine", "🏭", "usine"),
+        ("V", "v", "find_v", "Vélo", "🚲", "velo"),
+        ("Z", "z", "find_z", "Zèbre", "🦓", "zebre"),
     ],
 }
 
