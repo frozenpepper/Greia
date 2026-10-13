@@ -601,6 +601,7 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
   python3 -m unittest discover -s tests -p 'test_four_language_inventory.py' -v
   python3 -m unittest discover -s tests -p 'test_word_forest_phonics_inventory.py' -v
+  python3 -m unittest discover -s tests -p 'test_staged_es_fr_literacy_curricula.py' -v
   python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-four-language-coverage.json --recording-ledger tmp/greia-four-language-recordings.csv
   PYTHONPATH=src python3 tools/audit_launcher_spoken_labels.py --locales en it --json
   make verify
@@ -692,8 +693,13 @@ test commands and expected observable behavior.
   lessons for **each** new language; they must pass actual
   letter/name/phoneme child-learning review and acquire real
   local recordings before becoming playable in ES/FR.
-  Four other literacy Activities still require native lesson
-  design, not just translated menus. Encyclopedia has
+  Rhyme Festival and Sound Workshop now have ES/FR candidate native
+  lesson corpora, with 124 explicitly inventoried new ES/FR word,
+  phoneme and odd-one-out voice candidates across both Activities.
+  Their word/phoneme scripts and recordings still require approval;
+  neither is advertised as ES/FR-supported. The other two literacy
+  Activities, Alphabet Leo and Magic Syllables, still require their
+  curriculum adaptations. Encyclopedia has
   all 246 ES/FR written source keys but 200 source narration
   cue mappings per language pending exact transcripts, approved
   scripts and new recordings. Submarine has 77 text keys and
@@ -712,6 +718,14 @@ test commands and expected observable behavior.
   `test_activity_alfabeto_leo.py` to verify the
   fixed wrong-language voice fallback: an absent ES/FR
   letter WAV must **not** result in an Italian spoken letter.
+  `test_staged_es_fr_literacy_curricula.py` checks both real
+  ES/FR lesson data sets, rejects silent Italian fallback,
+  exercises their deterministic challenge factories, and proves
+  the AST-based 124-candidate ES/FR speech inventory never
+  executes arbitrary catalogue code. The actual inventory must
+  report BLOCKED_TEXT on rhyme scripts and isolated phonemes;
+  expected missing speech is not a test failure and not permission
+  to promote either Activity language manifest.
   Run `test_four_language_inventory.py` for
   source-text vs advertised-language distinction.
   No staged JSON/recording candidate counts as

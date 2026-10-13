@@ -3194,3 +3194,19 @@ match their declared task identities, with a
 new provider-free structural regression test.
 All existing architecture/non-lifecycle and
 installed release gates remain OPEN where previously open.
+
+
+### 2026-10-13 — Scoped ES/FR literacy-source continuation (no remediation gate closed)
+
+Under the owner-authorized four-language rollout, Spanish/French
+candidate lesson tables were added for Rhyme Festival and Sound
+Workshop, with explicit fail-closed handling of unsupported
+curriculum languages. The offline voice census now extracts their
+code-owned sound/word identifiers using a safe literal-AST
+allowlist: 124 ES/FR recording candidates across the two games,
+not accepted audio. Source-only regression tests and the single
+GLA-015 local-agent task were updated. English/Italian datasets
+are retained; both Activity manifests and the canonical device
+selector still advertise EN/IT only. Language acceptance, source
+test execution, Simulator/voice review and physical evidence remain
+OPEN; no architecture or installer lifecycle gate is closed.
