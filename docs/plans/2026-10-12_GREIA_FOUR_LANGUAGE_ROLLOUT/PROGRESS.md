@@ -671,3 +671,68 @@ values through GitHub readback. Three additional
 local source tests were added to prevent recurrence,
 but those Python tests still await the local
 agent's actual execution.
+
+
+### 2026-10-13 — Word Forest real ES/FR candidate lessons and code-owned recording inventory
+
+**Supersedes the earlier 44/45, 877/901 and 24 omitted
+keys as the current source checkpoint.** GitHub source
+now contains **45/45 full EN/IT-declared text-key
+parity** in ES and FR: **901 strings per locale,
+1,802 ES+FR strings combined**, no new Activity
+`audio` mappings and no ES/FR manifest promotion.
+
+Actual new implementation:
+- `activities/foresta_parole/foresta_content.py`:
+  **21 Spanish + 21 French** language-relative
+  letter/example-word lesson tuples, reusing the existing
+  six-field domain vocabulary contract; no English words
+  substituted as phonics examples. The existing EN/IT
+  catalogues and all model/renderer semantics remain.
+- The two Word Forest locale JSONs now have the
+  **24 previously missing** `word.*` and `phonics.*`
+  translations each, all semantic keys and named
+  placeholders source-parity checked by GitHub readback.
+  These are authored candidates requiring native
+  phonological and pedagogical proofread.
+- `foresta_app.SoundManager` discovers code-owned
+  lesson banks by `PHONICS_DATA` locale, with no
+  synthetic language speech or manifest exposure.
+  The only selectable Word Forest locales remain IT/EN.
+- `tools/audit_greia_language_coverage.py` now
+  parses `PHONICS_DATA` as a source-only AST literal,
+  without importing or executing Activity code.
+  The CSV inventory adds **252 lesson audio cue
+  candidates** (20 IT, 22 EN, 21 ES, 21 FR ×
+  letter + prompt + example word). **126 ES/FR
+  clips are new/unrecorded**. A spoken word's
+  text can be inferred from its approved-candidate
+  printed example; whether the letter cue is a name
+  or phoneme and the exact find-letter prompt
+  **cannot** be inferred: marked `BLOCKED_TEXT`
+  until real reviewed scripts are authored.
+- `alfabeto_leo/alfabeto_audio.py` no longer falls
+  back to Italian when a locale's phonics WAVs
+  are missing. Wrong-language spoken pedagogy
+  must not be concealed as a fallback.
+- Provider-free tests added/extended:
+  `tests/test_word_forest_phonics_inventory.py`
+  (source AST non-execution, cue counts, no fake
+  ES/FR speech); `tests/test_staged_activity_translations.py`
+  (real initial-letter, word-audio stem, and
+  45/45 key equality); `tests/test_activity_alfabeto_leo.py`
+  (no missing-locale audio fallback). GLA-014/015
+  source commands/pins and voice brief updated.
+
+**Evidence:** Finished eight GitHub source-readback
+batches for all 90 ES/FR Activity JSONs and a
+post-edit two-file Word Forest parity readback.
+Zero structural key/placeholder/audio-map
+mismatches were observed; 45/45 total is now
+source-key complete. These are **not Pygame/UI,
+native linguistic, classroom, ASR, human voice,
+source `unittest` or hardware execution tests**;
+those remain UNEXECUTED and belong to GLA-014/015.
+Four other literacy lesson engines, Encyclopedia
+narration, Submarine, Parent HTML and all
+missing EN/IT title WAVs remain OPEN.
