@@ -81,5 +81,50 @@ class StagedLiteracyCurriculumTests(unittest.TestCase):
                 self.assertEqual(manifest["activity"]["languages"], ["it", "en"])
 
 
+    def test_source_only_inventory_contains_staged_voices_without_fake_scripts(self) -> None:
+        from tools.audit_greia_language_coverage import _literacy_lesson_audio
+
+        for activity, expected in (
+            ("festa_delle_rime", {"es": 31, "fr": 29}),
+            ("officina_dei_suoni", {"es": 32, "fr": 32}),
+        ):
+            errors: list[str] = []
+            cues = _literacy_lesson_audio(ROOT, activity, errors)
+            self.assertEqual(errors, [])
+            for locale, count in expected.items():
+                with self.subTest(activity=activity, locale=locale):
+                    relevant = [c for c in cues if c["locale"] == locale]
+                    self.assertEqual(len(relevant), count)
+                    self.assertEqual(len({c["cue_id"] for c in relevant}), count)
+                    self.assertTrue(all(c["source"] == f"activities/{activity}" for c in relevant))
+                    self.assertTrue(all(c["path"].startswith(f"assets/audio/{locale}/") for c in relevant))
+                    self.assertTrue(all(c["speaker"] == "UNASSIGNED" for c in relevant))
+                    if activity == "festa_delle_rime":
+                        self.assertTrue(all(c["state"] == "BLOCKED_TEXT" for c in relevant))
+                    else:
+                        blocked = [c for c in relevant if c["state"] == "BLOCKED_TEXT"]
+                        self.assertEqual(len(blocked), 8)
+                        self.assertTrue(any(c["text"] == "fée" for c in relevant) if locale == "fr" else
+                                        any(c["text"] == "lápiz" for c in relevant))
+
+    def test_inventory_never_executes_untrusted_lesson_source(self) -> None:
+        import tempfile
+        from tools.audit_greia_language_coverage import _literacy_lesson_audio
+
+        with tempfile.TemporaryDirectory() as temp:
+            package = Path(temp) / "activities" / "festa_delle_rime"
+            package.mkdir(parents=True)
+            sentinel = Path(temp) / "DANGER"
+            (package / "rhyme_content.py").write_text(
+                'RHYME_PAIRS_ES: Final = __import__("pathlib").Path('
+                + repr(str(sentinel)) + ').touch()\n',
+                encoding="utf-8",
+            )
+            errors: list[str] = []
+            self.assertEqual(_literacy_lesson_audio(Path(temp), "festa_delle_rime", errors), [])
+            self.assertTrue(errors)
+            self.assertFalse(sentinel.exists())
+
+
 if __name__ == "__main__":
     unittest.main()

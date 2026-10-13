@@ -1,3 +1,18 @@
+## 2026-10-13 — Four-language phonics recording inventory (SOURCE-WIP)
+
+The four-language voice CSV generator now includes the code-owned
+Rhyme Festival and Sound Workshop cues from their real source
+curricula without importing or executing game code. **124 ES/FR
+candidates** added across the two Activities (Rhyme 31 ES / 29 FR
+including `prompt_odd`; Sound 32 ES / 32 FR). Phoneme pronunciations,
+all rhyme narration and nonliteral cue IDs stay script-blocked, not
+silently manufactured. Written Sound Workshop words preserve
+accented forms in their candidate scripts. Safe static AST parsing
+with negative no-execution regression is in source; Python tests
+and audio/hardware acceptance are not executed. Details:
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PROGRESS.md`.
+The two Activities are still EN/IT only in manifests.
+
 ## 2026-10-13 — ES/FR Rhyme and Sound Workshop native lesson candidates (SOURCE-WIP)
 
 GitHub multilingual work advanced beyond the preceding 45/45

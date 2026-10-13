@@ -141,6 +141,146 @@ def _foresta_lesson_audio(root: Path, errors: list[str]) -> list[dict[str, Any]]
     return cues
 
 
+# Exactly these code-owned lesson constructors are allowed in the two
+# literacy corpora. Interpreting their AST shape is not executing source.
+_LESSON_CALL_ARITIES = {"RhymeItem": 2, "WordItem": 5, "SoundUnit": 5}
+
+
+def _literal_lesson_node(node: ast.AST) -> Any:
+    """Read a small typed literal construction tree; reject executable code."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, (ast.Tuple, ast.List)):
+        return tuple(_literal_lesson_node(item) for item in node.elts)
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+        name = node.func.id
+        if name not in _LESSON_CALL_ARITIES or node.keywords or len(node.args) != _LESSON_CALL_ARITIES[name]:
+            raise ValueError("unsupported lesson constructor")
+        return (name, *(_literal_lesson_node(item) for item in node.args))
+    raise ValueError("nonliteral lesson catalogue expression")
+
+
+def _literal_lesson_tables(path: Path, names: tuple[str, ...]) -> dict[str, Any]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    found: dict[str, Any] = {}
+    for node in tree.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            key = node.target.id
+            if key not in names:
+                continue
+            if key in found:
+                raise ValueError(f"duplicate lesson table: {key}")
+            found[key] = _literal_lesson_node(node.value)
+    if set(found) != set(names):
+        raise ValueError(f"missing lesson tables: {sorted(set(names) - set(found))}")
+    return found
+
+
+def _safe_lesson_audio_stem(value: Any) -> bool:
+    return (
+        isinstance(value, str) and bool(value)
+        and value.isascii() and value == value.lower()
+        and value.replace("_", "").isalnum()
+    )
+
+
+def _literacy_lesson_audio(root: Path, activity_name: str, errors: list[str]) -> list[dict[str, Any]]:
+    """Code-owned word/phoneme cues for two staged language-learning Activities.
+
+    A picture's item ID is not an approved spoken transcription. In particular,
+    ASCII IDs can omit accents. The full rhyme spoken script remains BLOCKED_TEXT.
+    Sound workshop word labels preserve the actual spelling, but isolated
+    phoneme scripts also remain blocked until phonological review.
+    """
+    config = {
+        "festa_delle_rime": ("rhyme_content.py", ("RHYME_PAIRS", "ALLITERATION_FAMILIES")),
+        "officina_dei_suoni": ("sound_content.py", ("SOUND_UNITS",)),
+    }
+    if activity_name not in config:
+        raise ValueError(f"unknown code-owned literacy Activity: {activity_name}")
+    filename, prefixes = config[activity_name]
+    package = root / "activities" / activity_name
+    path = package / filename
+    if not path.is_file():
+        return []
+    names = tuple(f"{prefix}_{locale.upper()}" for locale in LOCALES for prefix in prefixes)
+    try:
+        tables = _literal_lesson_tables(path, names)
+    except (SyntaxError, ValueError, TypeError, RecursionError, OSError, UnicodeError) as exc:
+        errors.append(f"{path}: cannot inventory literal literacy lessons: {exc}")
+        return []
+
+    cues: list[dict[str, Any]] = []
+    for locale in LOCALES:
+        terms: dict[str, str | None] = {}
+        try:
+            if activity_name == "festa_delle_rime":
+                pairs = tables[f"RHYME_PAIRS_{locale.upper()}"]
+                families = tables[f"ALLITERATION_FAMILIES_{locale.upper()}"]
+                if len(pairs) < 3 or len(families) < 3:
+                    raise ValueError("insufficient rhyme lessons")
+                for group in (*pairs, *families):
+                    if not isinstance(group, tuple) or len(group) not in (2, 3):
+                        raise ValueError("malformed rhyme group")
+                    for item in group:
+                        if not isinstance(item, tuple) or len(item) != 3 or item[0] != "RhymeItem":
+                            raise ValueError("malformed rhyme item")
+                        stem, symbol = item[1:]
+                        if not _safe_lesson_audio_stem(stem) or not isinstance(symbol, str) or not symbol:
+                            raise ValueError("unsafe rhyme word/audio stem")
+                        terms[stem] = None  # Need an authoritative *spoken* script.
+                terms["prompt_odd"] = None  # Actual code-owned odd-one-out narration.
+            else:
+                units = tables[f"SOUND_UNITS_{locale.upper()}"]
+                if len(units) < 3:
+                    raise ValueError("insufficient phoneme lessons")
+                for unit in units:
+                    if not isinstance(unit, tuple) or len(unit) != 6 or unit[0] != "SoundUnit":
+                        raise ValueError("malformed sound unit")
+                    _, phoneme_id, letter_upper, letter_lower, audio_id, words = unit
+                    if (not _safe_lesson_audio_stem(audio_id)
+                            or not isinstance(phoneme_id, str)
+                            or not isinstance(letter_upper, str)
+                            or not isinstance(letter_lower, str)
+                            or not isinstance(words, tuple) or len(words) < 3):
+                        raise ValueError("malformed phoneme/audio declaration")
+                    if audio_id in terms:
+                        raise ValueError(f"duplicate phoneme cue: {audio_id}")
+                    terms[audio_id] = None  # Isolated sound, not an English letter name.
+                    for word in words:
+                        if not isinstance(word, tuple) or len(word) != 6 or word[0] != "WordItem":
+                            raise ValueError("malformed sound word")
+                        _, stem, spelling, picture, initial_id, remainder = word
+                        if (not _safe_lesson_audio_stem(stem) or stem in terms
+                                or not isinstance(spelling, str) or not spelling
+                                or not isinstance(picture, str) or not picture
+                                or initial_id != phoneme_id
+                                or spelling != letter_upper + remainder):
+                            raise ValueError("inconsistent word/phoneme/audio entry")
+                        terms[stem] = spelling.casefold()
+        except (ValueError, TypeError, IndexError) as exc:
+            errors.append(f"{path}: invalid {locale} lessons: {exc}")
+            continue
+        for stem, script in sorted(terms.items()):
+            rel = f"assets/audio/{locale}/{stem}.wav"
+            _, exists = _audio_asset(package, rel)
+            cues.append({
+                "source": f"activities/{activity_name}",
+                "locale": locale,
+                "cue_id": f"literacy.{stem}",
+                "caption_key": None,
+                "text": script,
+                "path": rel,
+                "file_exists": exists,
+                "state": ("BLOCKED_TEXT" if script is None
+                          else "EXISTING_ASSET_NEEDS_REVIEW" if exists
+                          else "MISSING_AUDIO"),
+                "speaker": "UNASSIGNED",
+                "kind": "UNASSIGNED",
+            })
+    return cues
+
+
 def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     dirs = sorted(
         path for path in (root / "activities").iterdir()
@@ -261,6 +401,13 @@ def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], lis
             runtime_cues = _foresta_lesson_audio(root, errors)
             cues.extend(runtime_cues)
             entry["code_owned_phonics_audio"] = {
+                locale: sum(1 for cue in runtime_cues if cue["locale"] == locale)
+                for locale in LOCALES
+            }
+        if activity.name in ("festa_delle_rime", "officina_dei_suoni"):
+            runtime_cues = _literacy_lesson_audio(root, activity.name, errors)
+            cues.extend(runtime_cues)
+            entry["code_owned_literacy_audio"] = {
                 locale: sum(1 for cue in runtime_cues if cue["locale"] == locale)
                 for locale in LOCALES
             }

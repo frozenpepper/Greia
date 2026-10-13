@@ -776,3 +776,32 @@ executed in this GitHub-only implementation slice; focused tests are
 written and awaiting local execution as already queued under GLA-015.
 Next curricula: Alphabet Leo (Spanish Ñ and French example/letter
 phonetics) and Magic Syllables (locale-true segmented words).
+
+
+### 2026-10-13 — Code-owned bilingual-literacy voice ledger expansion (SOURCE-WIP)
+
+The four-language source inventory now **reads the actual staged
+`RHYME_PAIRS_*`/`ALLITERATION_FAMILIES_*` and `SOUND_UNITS_*` data
+as a narrowly whitelisted Python AST**, without importing Activity
+code or evaluating arbitrary expressions. One recording cue is emitted
+for each distinct word or sound used by Rhyme Festival and Sound
+Workshop, using their real runtime file stem and locale path.
+
+Current ES/FR candidates: **31 + 29** Rhyme Festival (including
+`prompt_odd` in each locale) and **32 + 32** Sound Workshop
+(8 isolated sound phonemes + 24 full words in each locale), totaling
+**124 Spanish/French code-owned recording candidates**. Existing
+IT/EN recordings are inventoried through the same source path and
+remain subject to the ledger's review states.
+
+The rhyme `item_id` is not a safe written pronunciation script
+(e.g. words with accents); every rhyme word and the odd-one-out cue
+remains `BLOCKED_TEXT` until source captions/scripts are approved.
+Isolated Sound Workshop phonemes also remain `BLOCKED_TEXT`,
+while written `WordItem.label` is preserved as the word-cue
+candidate, with accented `fée`, `bébé`, `lápiz` properly retained.
+No automatic recording, native review, human listening, or Activity
+language promotion. Added focused AST nonexecution, expected counts,
+voice-path and blocked-text test coverage to
+`tests/test_staged_es_fr_literacy_curricula.py`. The tests have been
+authored but not yet executed in a local checkout.
