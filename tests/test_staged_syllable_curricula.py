@@ -44,6 +44,7 @@ class StagedSyllableCurriculumTests(unittest.TestCase):
                     words_pool=list(corpus.words),
                     consonants_pool=corpus.consonants,
                     vowels_pool=corpus.vowels,
+                    syllable_families=corpus.syllable_families,
                     rng=random.Random(42),
                 )
                 for _ in corpus.words:
@@ -56,6 +57,55 @@ class StagedSyllableCurriculumTests(unittest.TestCase):
         for unsupported in ("de-DE", "zh-CN"):
             with self.assertRaises(ValueError):
                 get_syllable_curriculum(unsupported)
+
+    def test_staged_explorer_and_catcher_never_invent_phonemes(self) -> None:
+        for locale, expected_labels in (
+            ("es", "MPLSTNDF"), ("fr", "MPLTS"),
+        ):
+            with self.subTest(locale=locale):
+                curriculum = get_syllable_curriculum(locale)
+                self.assertEqual("".join(curriculum.consonants), expected_labels)
+                self.assertEqual(len(curriculum.syllable_families), len(expected_labels))
+                model = SillabeSession(
+                    words_pool=list(curriculum.words),
+                    consonants_pool=curriculum.consonants,
+                    vowels_pool=curriculum.vowels,
+                    syllable_families=curriculum.syllable_families,
+                    rng=random.Random(19),
+                )
+                approved = set(model.curriculum_syllables)
+                for label, family in curriculum.syllable_families:
+                    model.set_active_consonant(label)
+                    self.assertEqual(tuple(model.explorer_syllables()), family)
+                for _ in range(45):
+                    target, orbs = model.start_catcher_round()
+                    self.assertIn(target, approved)
+                    self.assertEqual(orbs.count(target), 2)
+                    self.assertEqual(len(orbs), 6)
+                    self.assertTrue(set(orbs) <= approved)
+                    self.assertEqual(len(set(orbs)), 5)
+                    word, tiles = model.start_word_round()
+                    self.assertEqual(len(tiles), 4)
+                    allowed_builder = approved | {
+                        syl for _, parts, _, _ in curriculum.words for syl in parts
+                    }
+                    self.assertTrue(set(tiles) <= allowed_builder)
+                    self.assertTrue(all(segment in tiles for segment in word[1]))
+                if locale == "fr":
+                    self.assertEqual(model.explorer_syllables(), list(curriculum.syllable_families[-1][1]))
+                    self.assertNotIn("ME", approved)
+                    self.assertIn("MÉ", approved)
+                    self.assertNotIn("BA", approved)
+                else:
+                    self.assertNotIn("CA", approved)  # Not in the ES explorer family list.
+
+    def test_broken_curated_families_fail_before_any_round(self) -> None:
+        with self.assertRaises(ValueError):
+            SillabeSession(
+                consonants_pool=("M",),
+                vowels_pool=("A", "E", "I", "O", "U"),
+                syllable_families=(("M", ("MA", "MA", "MI", "MO", "MU")),),
+            )
 
     def test_staged_languages_are_not_advertised(self) -> None:
         manifest = tomllib.loads((PACKAGE / "activity.toml").read_text(encoding="utf-8"))

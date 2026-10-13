@@ -112,6 +112,7 @@ class SillabeApp:
             words_pool=list(self._curriculum.words),
             consonants_pool=self._curriculum.consonants,
             vowels_pool=self._curriculum.vowels,
+            syllable_families=self._curriculum.syllable_families,
         )
         # Load persistent progression
         if storage is not None:

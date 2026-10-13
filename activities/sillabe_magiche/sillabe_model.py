@@ -31,8 +31,8 @@ class RandomSource(Protocol):
 class SillabeSession:
     """Own deterministic syllable-magic progression state.
 
-    The session knows the current locale's word pool and the Italian consonant/
-    vowel inventories, but it never touches pygame, storage or audio. The app
+    The session knows the active words and optional explicit letter-family
+    syllables, but never assumes spelling is a valid spoken sound. The app
     drives timers and presentation; the session decides correctness and scoring.
     """
 
@@ -40,6 +40,7 @@ class SillabeSession:
     consonants_pool: Sequence[str] = field(default_factory=tuple, repr=False)  # type: ignore[assignment]
     vowels_pool: Sequence[str] = field(default_factory=tuple, repr=False)  # type: ignore[assignment]
     rng: RandomSource = field(default_factory=random.Random, repr=False)  # type: ignore[assignment]
+    syllable_families: tuple[tuple[str, tuple[str, ...]], ...] = field(default_factory=tuple, repr=False)
 
     # Persistent progression
     score: int = 0
@@ -72,6 +73,19 @@ class SillabeSession:
     current_mode: str = "explorer"  # "explorer" | "catcher" | "builder"
 
     def __post_init__(self) -> None:
+        if self.syllable_families:
+            labels = [label for label, _ in self.syllable_families]
+            syllables = [item for _, family in self.syllable_families for item in family]
+            if (labels != list(self.consonants_pool)
+                    or len(labels) != len(set(labels))
+                    or any(len(family) != 5 for _, family in self.syllable_families)
+                    or len(syllables) != len(set(syllables))
+                    or any(not syl.startswith(label)
+                           for label, family in self.syllable_families for syl in family)):
+                raise ValueError("invalid locale-relative syllable family curriculum")
+            if len(syllables) < 6:
+                raise ValueError("insufficient distinct native syllables for matching")
+            self.target_syl = syllables[0]
         if self.score < 0:
             self.score = 0
         if self.stars < 0:
@@ -122,7 +136,19 @@ class SillabeSession:
         self.active_consonant = consonant
         self.consonant_index = list(self.consonants_pool).index(consonant)
 
+    @property
+    def curriculum_syllables(self) -> tuple[str, ...]:
+        """Audio and matching syllables must be part of the authored curriculum."""
+        if self.syllable_families:
+            return tuple(syl for _, family in self.syllable_families for syl in family)
+        return tuple(f"{c}{v}" for c in self.consonants_pool for v in self.vowels_pool)
+
     def explorer_syllables(self) -> list[str]:
+        if self.syllable_families:
+            for label, family in self.syllable_families:
+                if label == self.active_consonant:
+                    return list(family)
+            raise ValueError("selected consonant has no authored syllable family")
         return [f"{self.active_consonant}{v}" for v in self.vowels_pool]
 
     def on_explore(self, syl: str) -> None:
@@ -137,6 +163,17 @@ class SillabeSession:
 
         Returns the chosen target and the shuffled orb list. Caller owns placement.
         """
+        if self.syllable_families:
+            syllables = self.curriculum_syllables
+            self.target_syl = str(self.rng.choice(syllables))
+            other = [syl for syl in syllables if syl != self.target_syl]
+            orb_syls = [self.target_syl, self.target_syl, *self.rng.sample(other, 4)]
+            self.rng.shuffle(orb_syls)
+            self.catcher_state = "idle"
+            self.catcher_timer = 0.0
+            return self.target_syl, orb_syls
+
+        # Keep the established EN/IT seeded generator unchanged.
         # Choose target syllable
         c = self.rng.choice(list(self.consonants_pool))  # type: ignore[arg-type]
         v = self.rng.choice(list(self.vowels_pool))  # type: ignore[arg-type]
@@ -205,6 +242,21 @@ class SillabeSession:
         """
         self._sync_word_from_index()
         choices = [self.cur_s1, self.cur_s2]
+        if self.syllable_families:
+            # Native curriculum syllables + explicitly authored builder word
+            # segments. Never generate unaudited French C+V pronunciations.
+            candidates = dict.fromkeys((
+                *self.curriculum_syllables,
+                *(segment for _, segments, _, _ in self.words_pool for segment in segments),
+            ))
+            other = [syl for syl in candidates if syl not in choices]
+            if len(other) < 2:
+                raise ValueError("insufficient distinct authored syllable distractors")
+            choices.extend(self.rng.sample(other, 2))
+            self.rng.shuffle(choices)
+            return (self.cur_word_display,
+                    (self.cur_s1, self.cur_s2), self.cur_emoji, self.cur_stem), choices
+
         attempts = 0
         while len(choices) < 4 and attempts < 100:
             rc = self.rng.choice(list(self.consonants_pool))  # type: ignore[arg-type]

@@ -135,6 +135,30 @@ WORDS_DATA_FR: list[tuple[str, tuple[str, str], str, str]] = [
 ]
 
 
+
+# Explicit teaching syllables for ES/FR staged explorer/catcher modes.
+# Restrict the interactive cards to educator-reviewable syllables instead
+# of generating every Italian consonant × vowel combination; audio and
+# native pronunciation approval are still mandatory before promotion.
+_FAMILIES_ES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("M", ("MA", "ME", "MI", "MO", "MU")),
+    ("P", ("PA", "PE", "PI", "PO", "PU")),
+    ("L", ("LA", "LE", "LI", "LO", "LU")),
+    ("S", ("SA", "SE", "SI", "SO", "SU")),
+    ("T", ("TA", "TE", "TI", "TO", "TU")),
+    ("N", ("NA", "NE", "NI", "NO", "NU")),
+    ("D", ("DA", "DE", "DI", "DO", "DU")),
+    ("F", ("FA", "FE", "FI", "FO", "FU")),
+)
+
+_FAMILIES_FR: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("M", ("MA", "MÉ", "MI", "MO", "MU")),
+    ("P", ("PA", "PÉ", "PI", "PO", "PU")),
+    ("L", ("LA", "LÉ", "LI", "LO", "LU")),
+    ("T", ("TA", "TÉ", "TI", "TO", "TU")),
+    ("S", ("SA", "SÉ", "SI", "SO", "SU")),
+)
+
 @dataclass(frozen=True, slots=True)
 class SyllableCurriculum:
     """One coherent language's child-facing literacy and speech-cue settings."""
@@ -145,6 +169,7 @@ class SyllableCurriculum:
     tabs: tuple[str, str, str]
     consonant_heading: str
     praise_cues: tuple[str, ...]
+    syllable_families: tuple[tuple[str, tuple[str, ...]], ...] = ()
 
 
 _CURRICULA: dict[str, SyllableCurriculum] = {
@@ -152,21 +177,25 @@ _CURRICULA: dict[str, SyllableCurriculum] = {
         tuple(CONSONANTS_IT), tuple(VOWELS_IT), tuple(WORDS_DATA_IT),
         ("Sillabario", "Acchiappa", "Crea Parole"), "Consonanti",
         ("esatto", "fantastico", "super", "magnifico", "ottimo", "ben_fatto"),
+        (),
     ),
     "en": SyllableCurriculum(
         tuple(CONSONANTS_IT), tuple(VOWELS_IT), tuple(WORDS_DATA_EN),
         ("Syllabary", "Catch", "Words"), "Consonants",
         ("great_job", "wonderful", "you_did_it", "fantastic", "super", "well_done"),
+        (),
     ),
     "es": SyllableCurriculum(
-        tuple(CONSONANTS_IT), tuple(VOWELS_IT), tuple(WORDS_DATA_ES),
+        tuple(label for label, _ in _FAMILIES_ES), tuple(VOWELS_IT), tuple(WORDS_DATA_ES),
         ("Sílabas", "Atrapa", "Palabras"), "Consonantes",
         ("muy_bien", "genial", "lo_lograste"),
+        _FAMILIES_ES,
     ),
     "fr": SyllableCurriculum(
-        tuple(CONSONANTS_IT), tuple(VOWELS_IT), tuple(WORDS_DATA_FR),
+        tuple(label for label, _ in _FAMILIES_FR), tuple(VOWELS_IT), tuple(WORDS_DATA_FR),
         ("Syllabes", "Attrape", "Mots"), "Consonnes",
         ("bravo", "tres_bien", "tu_as_reussi"),
+        _FAMILIES_FR,
     ),
 }
 
