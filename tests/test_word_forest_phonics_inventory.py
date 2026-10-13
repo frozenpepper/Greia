@@ -49,6 +49,22 @@ class WordForestPhonicsInventoryTests(unittest.TestCase):
                     self.assertTrue(cue["text"])
                     self.assertEqual(cue["state"], "MISSING_AUDIO")
 
+
+    def test_missing_feedback_falls_back_without_a_foreign_language(self) -> None:
+        import json
+
+        app_source = (ACTIVITY_DIR / "foresta_app.py").read_text(encoding="utf-8")
+        self.assertNotIn("Ottimo lavoro!", app_source)
+        self.assertNotIn("Splendido!", app_source)
+        self.assertIn('self.resources.text("feedback.correct")', app_source)
+        self.assertIn('self.resources.text("feedback.word_complete")', app_source)
+        # Both keys have real copy in all four staged catalogues.
+        for locale in ("en", "it", "es", "fr"):
+            with self.subTest(locale=locale):
+                bundle = json.loads((ACTIVITY_DIR / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+                self.assertTrue(bundle["strings"]["feedback.correct"].strip())
+                self.assertTrue(bundle["strings"]["feedback.word_complete"].strip())
+
     def test_nonliteral_phonics_source_is_never_executed(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             package = Path(temp) / "activities/foresta_parole"

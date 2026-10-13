@@ -27,7 +27,6 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.child_text import display_text
 from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizedResources,
@@ -394,14 +393,15 @@ class ForestaApp:
                 for _ in range(35):
                     self.particles.append(Particle(512, 300, (255, 205, 50)))
             else:
-                # Localized praise for a single correct catch.
+                # Localized praise. Missing bundles use a language-neutral visual cue;
+                # an Italian sentence must never leak into another UI locale.
                 if self.resources is not None:
                     try:
                         self.feedback_text = self.resources.text("feedback.correct")
                     except Exception:
-                        self.feedback_text = display_text("Ottimo lavoro! ✨")
+                        self.feedback_text = "✨"
                 else:
-                    self.feedback_text = display_text("Ottimo lavoro! ✨")
+                    self.feedback_text = "✨"
                 self.feedback_timer = 1.8
         else:
             hit_orb.wobble()
@@ -450,9 +450,9 @@ class ForestaApp:
                     try:
                         self.feedback_text = self.resources.text("feedback.word_complete")
                     except Exception:
-                        self.feedback_text = display_text("Splendido! 🌟")
+                        self.feedback_text = "🌟"
                 else:
-                    self.feedback_text = display_text("Splendido! 🌟")
+                    self.feedback_text = "🌟"
                 self.celebration_phase = "praise_done"
                 self.celebration_timer = 1.6
         elif self.celebration_phase == "praise_done":
