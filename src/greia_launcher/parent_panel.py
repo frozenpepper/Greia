@@ -648,9 +648,7 @@ class ParentSettingsOverlay:
         """Apply microphone processing policy, refusing an unavailable backend."""
 
         if advanced and not self._audio_advanced_available:
-            self._audio_message = (
-                "Advanced noise reduction is not available on this Greia."
-            )
+            self._audio_message = self._ui_message("audio.processing.unavailable")
             return
         client, session = self._parent_client(), self._session
         if client is None or session is None:
@@ -661,16 +659,17 @@ class ParentSettingsOverlay:
                 session, enabled=enabled, advanced=advanced
             )
         except Exception as exc:
-            self._audio_message = f"Could not change noise cancelling: {exc}"
+            self._audio_message = self._ui_message("audio.processing.failed", detail=str(exc))
             return
         self._audio_processing_enabled = enabled
         self._audio_advanced_enabled = advanced
-        mode = (
-            "off"
-            if not enabled
-            else ("advanced" if advanced else "lightweight")
+        mode_key = (
+            "audio.mode.off" if not enabled else
+            "audio.mode.advanced" if advanced else "audio.mode.lightweight"
         )
-        self._audio_message = f"Noise cancelling set to {mode}."
+        self._audio_message = self._ui_message(
+            "audio.processing.changed", mode=self._ui_message(mode_key)
+        )
 
     def _toggle_microphone_processing(self, field: str) -> None:
         """Flip one noise cancelling control, keeping the pair coherent.
@@ -826,10 +825,10 @@ class ParentSettingsOverlay:
         if name not in names:
             return
         if which == "touchpad" and not self._pointer_has_touchpad():
-            self._pointer_message = "No touchpad detected — touchpad speed is not active."
+            self._pointer_message = self._ui_message("pointer.disabled.touchpad")
             return
         if which == "mouse" and not self._pointer_has_relative():
-            self._pointer_message = "No mouse detected — mouse speed is not active."
+            self._pointer_message = self._ui_message("pointer.disabled.mouse")
             return
         if self.hardware_store is None:
             return
@@ -837,12 +836,17 @@ class ParentSettingsOverlay:
             speed = float(preset_to_speed(name))
         except (KeyError, TypeError, ValueError):
             return
-        label = "Touchpad" if which == "touchpad" else "Mouse"
+        label = self._ui_message(
+            "pointer.device.touchpad" if which == "touchpad" else "pointer.device.mouse"
+        )
         field = "touchpad_speed" if which == "touchpad" else "mouse_speed"
-        self._apply_hardware_change({field: speed}, f"{label} speed: {name}.")
-        if self.hardware_store is None:
-            return
-        self._pointer_message = f"{label} feel set to {name}."
+        message = self._ui_message(
+            "pointer.speed.changed", device=label,
+            name=self._ui_message(f"pointer.preset.{name}"),
+        )
+        # Only the actual API result may report success. The old code
+        # overwrote failed writes with a cheerful false confirmation.
+        self._apply_hardware_change({field: speed}, message)
 
     def _step_pointer_preset(self, which: str, delta: int) -> None:
         names = list(speed_preset_names())
@@ -874,7 +878,7 @@ class ParentSettingsOverlay:
         try:
             updated = client.update_hardware_settings(session, changes)
         except Exception as exc:
-            self._pointer_message = f"Could not apply: {exc}"
+            self._pointer_message = self._ui_message("pointer.change.failed", detail=str(exc))
             return False
         self._pointer_settings = updated
         self._cached_pointer_settings = updated
@@ -886,7 +890,7 @@ class ParentSettingsOverlay:
         if field not in self._POINTER_TOGGLE_FIELDS:
             return
         if field in ("touchpad_tap", "disable_while_typing") and not self._pointer_has_touchpad():
-            self._pointer_message = "No touchpad detected — this switch is not active."
+            self._pointer_message = self._ui_message("pointer.disabled.toggle")
             return
         if self.hardware_store is None:
             return
@@ -895,11 +899,17 @@ class ParentSettingsOverlay:
             current = bool(getattr(settings, field, False))
         except Exception:
             current = False
-        self._apply_hardware_change(
-            {field: (not current)},
-            f"{'On' if not current else 'Off'} {field.replace('_', ' ')}.",
+        labels = {
+            "touchpad_tap": "pointer.toggle.tap",
+            "natural_scrolling": "pointer.toggle.scroll",
+            "disable_while_typing": "pointer.toggle.typing",
+        }
+        message = self._ui_message(
+            "pointer.toggle.changed",
+            state=self._ui_message("state.on" if not current else "state.off"),
+            setting=self._ui_message(labels[field]),
         )
-        self._pointer_message = f"{'On' if not current else 'Off'}: {field.replace('_', ' ')}."
+        self._apply_hardware_change({field: (not current)}, message)
 
     def _reset_pointer_defaults(self) -> None:
         client, session = self._parent_client(), self._session
@@ -907,24 +917,24 @@ class ParentSettingsOverlay:
             try:
                 updated = client.reset_hardware_settings(session)
             except Exception as exc:
-                self._pointer_message = f"Could not reset pointer settings: {exc}"
+                self._pointer_message = self._ui_message("pointer.reset.failed", detail=str(exc))
                 return
             self._pointer_settings = updated
             self._cached_pointer_settings = updated
             self._pointer_settings_read_at = time.monotonic()
-            self._pointer_message = "Pointer settings reset to defaults."
+            self._pointer_message = self._ui_message("pointer.reset.done")
             return
         if self.hardware_store is None:
             return
         try:
             updated = self.hardware_store.reset()
         except Exception as exc:
-            self._pointer_message = f"Could not reset pointer settings: {exc}"
+            self._pointer_message = self._ui_message("pointer.reset.failed", detail=str(exc))
             return
         self._cached_pointer_settings = updated
         self._pointer_settings_read_at = time.monotonic()
         self._pointer_focus = 0
-        self._pointer_message = "Pointer settings reset to defaults."
+        self._pointer_message = self._ui_message("pointer.reset.done")
 
     def _flash_pointer_test_target(self, index: int) -> None:
         try:
@@ -934,7 +944,7 @@ class ParentSettingsOverlay:
         if 0 <= index < self._POINTER_TEST_TARGETS:
             self._pointer_test_flash = index
             self._pointer_test_flash_at = time.monotonic()
-            self._pointer_message = "Tapped — try moving across the test area."
+            self._pointer_message = self._ui_message("pointer.test.done")
 
     def _pointer_focus_items(self) -> list[str]:
         items = [
