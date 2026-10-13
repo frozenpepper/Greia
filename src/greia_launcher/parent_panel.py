@@ -23,7 +23,7 @@ from greia_platform.microphone_level import (
 
 from greia_launcher import panel_layout
 from greia_launcher import panel_strings as text
-from greia_launcher.panel_localization import panel_message
+from greia_launcher.panel_localization import panel_message, panel_constant, panel_audio_preset
 from greia_launcher.parent_credential_client import (
     ChildAccount,
     ParentCredentialClient,
@@ -654,7 +654,7 @@ class ParentSettingsOverlay:
             return
         client, session = self._parent_client(), self._session
         if client is None or session is None:
-            self._audio_message = text.STATUS_OFFLINE
+            self._audio_message = self._copy("STATUS_OFFLINE")
             return
         try:
             client.set_microphone_processing(
@@ -869,7 +869,7 @@ class ParentSettingsOverlay:
 
         client, session = self._parent_client(), self._session
         if client is None or session is None:
-            self._pointer_message = text.STATUS_OFFLINE
+            self._pointer_message = self._copy("STATUS_OFFLINE")
             return False
         try:
             updated = client.update_hardware_settings(session, changes)
@@ -1075,6 +1075,10 @@ class ParentSettingsOverlay:
 
     def _ui_message(self, key: str, **variables: str) -> str:
         return panel_message(key, self._device_locale, **variables)
+
+    def _copy(self, name: str, **variables: str) -> str:
+        """Resolve named Parent forms without translating arbitrary field data."""
+        return panel_constant(name, self._device_locale, **variables)
 
     def _get_text(self, text: str, role: FontRole, size: int, color: tuple[int, int, int], typography: GreiaTypography) -> Any:
         """Render one label through the shared Greia typography service.
@@ -1773,9 +1777,9 @@ class ParentSettingsOverlay:
             self._accounts = list(client.list_child_accounts(session))
             self._accounts_loaded = True
         except ParentCredentialUnavailable:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
         except Exception:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
 
     def _set_accounts_message(self, message: str | None, *, error: bool = False) -> None:
         self._accounts_message = message
@@ -1788,18 +1792,18 @@ class ParentSettingsOverlay:
     def _create_account(self) -> None:
         client, session = self._parent_client(), self._session
         if client is None or session is None:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         name = self._account_name.strip()
         if not name:
-            self._set_accounts_message(text.ACCOUNTS_NAME_LABEL, error=True)
+            self._set_accounts_message(self._copy("ACCOUNTS_NAME_LABEL"), error=True)
             return
         age: int | None = None
         if self._account_age.strip():
             try:
                 age = int(self._account_age.strip())
             except ValueError:
-                self._set_accounts_message(text.ACCOUNTS_AGE_LABEL, error=True)
+                self._set_accounts_message(self._copy("ACCOUNTS_AGE_LABEL"), error=True)
                 return
         avatars = self._available_avatars()
         avatar = avatars[self._account_avatar_index % len(avatars)]
@@ -1811,16 +1815,16 @@ class ParentSettingsOverlay:
             self._set_accounts_message(exc.reason, error=True)
             return
         except ParentCredentialUnavailable:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         except Exception:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         self._account_name = ""
         self._account_age = ""
         self._accounts_mode = "list"
         self._text_field = None
-        self._set_accounts_message(text.STATUS_SAVED)
+        self._set_accounts_message(self._copy("STATUS_SAVED"))
         self._refresh_accounts()
 
     def _start_rename(self, account: ChildAccount) -> None:
@@ -1843,10 +1847,10 @@ class ParentSettingsOverlay:
         target = self._renaming
         name = self._account_name.strip()
         if target is None or not name:
-            self._set_accounts_message(text.ACCOUNTS_NAME_LABEL, error=True)
+            self._set_accounts_message(self._copy("ACCOUNTS_NAME_LABEL"), error=True)
             return
         if client is None or session is None:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         try:
             client.rename_child_account(session, target.profile_id, name)
@@ -1854,20 +1858,20 @@ class ParentSettingsOverlay:
             self._set_accounts_message(exc.reason, error=True)
             return
         except Exception:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         self._renaming = None
         self._account_name = ""
         self._account_age = ""
         self._accounts_mode = "list"
         self._text_field = None
-        self._set_accounts_message(text.STATUS_SAVED)
+        self._set_accounts_message(self._copy("STATUS_SAVED"))
         self._refresh_accounts()
 
     def _remove_account(self, account: ChildAccount) -> None:
         client, session = self._parent_client(), self._session
         if client is None or session is None:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         try:
             client.remove_child_account(session, account.profile_id)
@@ -1875,20 +1879,20 @@ class ParentSettingsOverlay:
             self._set_accounts_message(exc.reason, error=True)
             return
         except Exception:
-            self._set_accounts_message(text.STATUS_OFFLINE, error=True)
+            self._set_accounts_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         self._pending_remove = None
         self._accounts_mode = "list"
-        self._set_accounts_message(text.STATUS_SAVED)
+        self._set_accounts_message(self._copy("STATUS_SAVED"))
         self._refresh_accounts()
 
     def _change_password(self) -> None:
         client, session = self._parent_client(), self._session
         if client is None or session is None:
-            self._set_security_message(text.STATUS_OFFLINE, error=True)
+            self._set_security_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         if self._security_new != self._security_confirm:
-            self._set_security_message(text.SECURITY_MISMATCH, error=True)
+            self._set_security_message(self._copy("SECURITY_MISMATCH"), error=True)
             return
         try:
             client.change_parent_password(
@@ -1897,16 +1901,16 @@ class ParentSettingsOverlay:
         except ParentRequestFailed as exc:
             reason = exc.reason
             if "current" in reason.lower():
-                reason = text.SECURITY_CURRENT_WRONG
+                reason = self._copy("SECURITY_CURRENT_WRONG")
             self._set_security_message(reason, error=True)
             return
         except Exception:
-            self._set_security_message(text.STATUS_OFFLINE, error=True)
+            self._set_security_message(self._copy("STATUS_OFFLINE"), error=True)
             return
         self._security_current = ""
         self._security_new = ""
         self._security_confirm = ""
-        self._set_security_message(text.SECURITY_CHANGED)
+        self._set_security_message(self._copy("SECURITY_CHANGED"))
 
     def _cycle_avatar(self, step: int) -> None:
         count = len(self._available_avatars())
@@ -2037,8 +2041,8 @@ class ParentSettingsOverlay:
             editing = self._renaming is not None
             y = self._draw_card_header(
                 screen, pygame, typography, card, pad,
-                text.ACCOUNTS_EDIT if editing else text.ACCOUNTS_ADD,
-                text.ACCOUNTS_INTRO,
+                self._copy("ACCOUNTS_EDIT") if editing else self._copy("ACCOUNTS_ADD"),
+                self._copy("ACCOUNTS_INTRO"),
             )
             # Name and age share a row. Stacked, the form was taller than the
             # card at 600 px with a wrapped tab strip, and the action buttons
@@ -2047,10 +2051,10 @@ class ParentSettingsOverlay:
             age_w = min(220, inner_w // 3)
             name_w = inner_w - age_w - gap
             for index, (label, field, value, placeholder, field_w) in enumerate((
-                (text.ACCOUNTS_NAME_LABEL, "account_name", self._account_name,
-                 text.ACCOUNTS_NAME_PLACEHOLDER, name_w),
-                (text.ACCOUNTS_AGE_LABEL, "account_age", self._account_age,
-                 text.ACCOUNTS_AGE_PLACEHOLDER, age_w),
+                (self._copy("ACCOUNTS_NAME_LABEL"), "account_name", self._account_name,
+                 self._copy("ACCOUNTS_NAME_PLACEHOLDER"), name_w),
+                (self._copy("ACCOUNTS_AGE_LABEL"), "account_age", self._account_age,
+                 self._copy("ACCOUNTS_AGE_PLACEHOLDER"), age_w),
             )):
                 field_x = card.left + pad + (0 if index == 0 else name_w + gap)
                 caption = panel_layout.fit_text_block(
@@ -2067,7 +2071,7 @@ class ParentSettingsOverlay:
 
             avatars = self._available_avatars()
             caption = panel_layout.fit_text_block(
-                typography, text.ACCOUNTS_AVATAR_LABEL, FontRole.BODY, 15,
+                typography, self._copy("ACCOUNTS_AVATAR_LABEL"), FontRole.BODY, 15,
                 (118, 104, 93), inner_w,
             )
             panel_layout.blit_block(screen, caption, pygame, card.left + pad, y)
@@ -2122,9 +2126,9 @@ class ParentSettingsOverlay:
             gap = 12
             half = (inner_w - gap) // 2
             for index, (label, action) in enumerate((
-                (text.ACCOUNTS_CANCEL, "account_cancel"),
+                (self._copy("ACCOUNTS_CANCEL"), "account_cancel"),
                 (
-                    text.ACCOUNTS_SAVE if editing else text.ACCOUNTS_CREATE,
+                    self._copy("ACCOUNTS_SAVE") if editing else self._copy("ACCOUNTS_CREATE"),
                     "account_save" if editing else "account_create",
                 ),
             )):
@@ -2158,8 +2162,8 @@ class ParentSettingsOverlay:
         if self._accounts_mode == "confirm" and self._pending_remove is not None:
             y = self._draw_card_header(
                 screen, pygame, typography, card, pad,
-                text.ACCOUNTS_CONFIRM_REMOVE_TITLE,
-                text.ACCOUNTS_CONFIRM_REMOVE_BODY,
+                self._copy("ACCOUNTS_CONFIRM_REMOVE_TITLE"),
+                self._copy("ACCOUNTS_CONFIRM_REMOVE_BODY"),
             )
             name = panel_layout.fit_text_block(
                 typography, self._pending_remove.display_name, FontRole.TITLE, 20,
@@ -2170,8 +2174,8 @@ class ParentSettingsOverlay:
             gap = 12
             half = (inner_w - gap) // 2
             for index, (label, action, tone) in enumerate((
-                (text.ACCOUNTS_CANCEL, "account_remove_cancel", (246, 236, 209)),
-                (text.ACCOUNTS_CONFIRM_REMOVE_YES, "account_remove_confirm", (181, 46, 46)),
+                (self._copy("ACCOUNTS_CANCEL"), "account_remove_cancel", (246, 236, 209)),
+                (self._copy("ACCOUNTS_CONFIRM_REMOVE_YES"), "account_remove_confirm", (181, 46, 46)),
             )):
                 btn = pygame.Rect(card.left + pad + index * (half + gap), y, half, 48)
                 self._blit_rounded_card(
@@ -2194,7 +2198,7 @@ class ParentSettingsOverlay:
         add_w = 168
         y = self._draw_card_header(
             screen, pygame, typography, card, pad,
-            text.ACCOUNTS_TITLE, text.ACCOUNTS_INTRO, top=header_top,
+            self._copy("ACCOUNTS_TITLE"), self._copy("ACCOUNTS_INTRO"), top=header_top,
             reserve_right=add_w + 12,
         )
         y = max(y, header_top + 42 + 12)
@@ -2207,7 +2211,7 @@ class ParentSettingsOverlay:
             (61, 44, 31), 1, radius=12,
         )
         block = panel_layout.fit_single_line(
-            typography, text.ACCOUNTS_ADD, FontRole.CONTROL, 17, (61, 44, 31), add_w - 14
+            typography, self._copy("ACCOUNTS_ADD"), FontRole.CONTROL, 17, (61, 44, 31), add_w - 14
         )
         panel_layout.blit_block(
             screen, block, pygame, add_rect.centerx, add_rect.centery,
@@ -2220,7 +2224,7 @@ class ParentSettingsOverlay:
             self._refresh_accounts()
         if not self._accounts:
             empty = panel_layout.fit_text_block(
-                typography, text.ACCOUNTS_EMPTY, FontRole.BODY, 16,
+                typography, self._copy("ACCOUNTS_EMPTY"), FontRole.BODY, 16,
                 (118, 104, 93), inner_w,
             )
             panel_layout.blit_block(screen, empty, pygame, card.left + pad, y + 8)
@@ -2258,7 +2262,7 @@ class ParentSettingsOverlay:
                     (61, 44, 31), 1, radius=10,
                 )
                 rename_label = panel_layout.fit_single_line(
-                    typography, text.ACCOUNTS_RENAME, FontRole.CONTROL, 16,
+                    typography, self._copy("ACCOUNTS_RENAME"), FontRole.CONTROL, 16,
                     (61, 44, 31), rename_w - 12,
                 )
                 panel_layout.blit_block(
@@ -2273,7 +2277,7 @@ class ParentSettingsOverlay:
                     (181, 46, 46), 1, radius=10,
                 )
                 remove_label = panel_layout.fit_single_line(
-                    typography, text.ACCOUNTS_REMOVE, FontRole.CONTROL, 16,
+                    typography, self._copy("ACCOUNTS_REMOVE"), FontRole.CONTROL, 16,
                     (181, 46, 46), remove_w - 12,
                 )
                 panel_layout.blit_block(
@@ -2288,7 +2292,7 @@ class ParentSettingsOverlay:
         if at_limit:
             self._draw_status(
                 screen, pygame, typography, card, pad, y,
-                text.ACCOUNTS_LIMIT_REACHED.format(count=limit), True,
+                self._copy("ACCOUNTS_LIMIT_REACHED", count=str(limit)), True,
             )
         else:
             self._draw_status(
@@ -2311,7 +2315,7 @@ class ParentSettingsOverlay:
         action_w = 200
         y = self._draw_card_header(
             screen, pygame, typography, card, pad,
-            text.SECURITY_TITLE, text.SECURITY_INTRO, top=header_top,
+            self._copy("SECURITY_TITLE"), self._copy("SECURITY_INTRO"), top=header_top,
             reserve_right=action_w + 12,
         )
         # The action sits on the title's row, as "Add child" does on the accounts
@@ -2322,7 +2326,7 @@ class ParentSettingsOverlay:
             screen, action, (255, 250, 240), (241, 185, 35), pygame, (61, 44, 31), 2, radius=12
         )
         action_label = panel_layout.fit_single_line(
-            typography, text.SECURITY_CHANGE, FontRole.CONTROL, 16, (61, 44, 31),
+            typography, self._copy("SECURITY_CHANGE"), FontRole.CONTROL, 16, (61, 44, 31),
             action_w - 14,
         )
         panel_layout.blit_block(
@@ -2333,9 +2337,9 @@ class ParentSettingsOverlay:
         y = max(y, header_top + 42 + 14)
 
         for label, field, value in (
-            (text.SECURITY_CURRENT_LABEL, "security_current", self._security_current),
-            (text.SECURITY_NEW_LABEL, "security_new", self._security_new),
-            (text.SECURITY_CONFIRM_LABEL, "security_confirm", self._security_confirm),
+            (self._copy("SECURITY_CURRENT_LABEL"), "security_current", self._security_current),
+            (self._copy("SECURITY_NEW_LABEL"), "security_new", self._security_new),
+            (self._copy("SECURITY_CONFIRM_LABEL"), "security_confirm", self._security_confirm),
         ):
             caption = panel_layout.fit_text_block(
                 typography, label, FontRole.BODY, 15, (118, 104, 93), inner_w
@@ -2486,7 +2490,7 @@ class ParentSettingsOverlay:
                 )
 
         title = panel_layout.fit_text_block(
-            typography, text.AUDIO_INPUT_LABEL, FontRole.CONTROL, 18,
+            typography, self._copy("AUDIO_INPUT_LABEL"), FontRole.CONTROL, 18,
             (61, 44, 31), meter_w,
         )
         panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
@@ -2501,7 +2505,7 @@ class ParentSettingsOverlay:
             waiting = not reason or reason in {"starting", "reconnecting", "service stopped", "no service"}
             note = panel_layout.fit_text_block(
                 typography,
-                text.AUDIO_INPUT_WAITING if waiting else text.AUDIO_INPUT_UNAVAILABLE,
+                self._copy("AUDIO_INPUT_WAITING") if waiting else self._copy("AUDIO_INPUT_UNAVAILABLE"),
                 FontRole.BODY, 15, (150, 138, 126), meter_w,
             )
             panel_layout.blit_block(screen, note, pygame, card.left + pad, y)
@@ -2512,9 +2516,9 @@ class ParentSettingsOverlay:
             # level then painted over the gain controls below.
             return y + note.height + self._METER_RESERVED_TAIL
 
-        readout = text.AUDIO_INPUT_SILENT if quiet else f"{level.rms_dbfs:+.0f} dB"
+        readout = self._copy("AUDIO_INPUT_SILENT") if quiet else f"{level.rms_dbfs:+.0f} dB"
         if level.clipping:
-            readout = f"{text.AUDIO_INPUT_CLIPPING}  {level.rms_dbfs:+.0f} dB"
+            readout = f"{self._copy("AUDIO_INPUT_CLIPPING")}  {level.rms_dbfs:+.0f} dB"
         value = panel_layout.fit_single_line(
             typography, readout, FontRole.CONTROL, 16,
             (181, 46, 46) if level.clipping else (61, 44, 31), meter_w,
@@ -2571,13 +2575,13 @@ class ParentSettingsOverlay:
         # translated string that needs two lines pushes everything below it
         # down instead of landing on the first control.
         title = panel_layout.fit_text_block(
-            typography, text.AUDIO_TITLE, FontRole.TITLE, 22, (61, 44, 31), inner_w
+            typography, self._copy("AUDIO_TITLE"), FontRole.TITLE, 22, (61, 44, 31), inner_w
         )
         panel_layout.blit_block(screen, title, pygame, card.left + pad, y)
         y += title.height + 8
 
         intro = panel_layout.fit_text_block(
-            typography, text.AUDIO_INTRO, FontRole.BODY, 16, (118, 104, 93), inner_w
+            typography, self._copy("AUDIO_INTRO"), FontRole.BODY, 16, (118, 104, 93), inner_w
         )
         panel_layout.blit_block(screen, intro, pygame, card.left + pad, y)
         y += intro.height + 18
@@ -2618,7 +2622,7 @@ class ParentSettingsOverlay:
             screen, badge_rect, (246, 236, 209), (255, 250, 240), pygame,
             (241, 185, 35), 2, radius=12,
         )
-        badge_text = f"{text.AUDIO_LEVEL_LABEL}: {pct}%"
+        badge_text = f"{self._copy("AUDIO_LEVEL_LABEL")}: {pct}%"
         badge = panel_layout.fit_single_line(
             typography, badge_text, FontRole.CONTROL, 17, (61, 44, 31), meter_w - 24
         )
@@ -2647,8 +2651,8 @@ class ParentSettingsOverlay:
         pygame.draw.circle(screen, (255, 250, 240), (knob_x, track.centery), 4)
 
         for offset, delta, label in (
-            (meter_w + gap, -0.25, text.AUDIO_DECREASE),
-            (meter_w + gap + step_w + gap, 0.25, text.AUDIO_INCREASE),
+            (meter_w + gap, -0.25, self._copy("AUDIO_DECREASE")),
+            (meter_w + gap + step_w + gap, 0.25, self._copy("AUDIO_INCREASE")),
         ):
             btn = pygame.Rect(card.left + pad + offset, y, step_w, row_h)
             self._blit_rounded_card(
@@ -2666,7 +2670,7 @@ class ParentSettingsOverlay:
         y += row_h + 20
 
         presets_title = panel_layout.fit_text_block(
-            typography, text.AUDIO_PRESETS_TITLE, FontRole.CONTROL, 18,
+            typography, self._copy("AUDIO_PRESETS_TITLE"), FontRole.CONTROL, 18,
             (61, 44, 31), inner_w,
         )
         panel_layout.blit_block(screen, presets_title, pygame, card.left + pad, y)
@@ -2696,7 +2700,7 @@ class ParentSettingsOverlay:
                 align="center", bounds=p_rect,
             )
             name = panel_layout.fit_single_line(
-                typography, text.AUDIO_PRESET_NAMES[value], FontRole.BODY, 13,
+                typography, panel_audio_preset(value, self._device_locale), FontRole.BODY, 13,
                 (90, 80, 70), p_rect.width - 12,
             )
             panel_layout.blit_block(
@@ -2760,7 +2764,7 @@ class ParentSettingsOverlay:
         top = top - 4
 
         title = panel_layout.fit_text_block(
-            typography, text.AUDIO_NOISE_TITLE, FontRole.CONTROL, 15,
+            typography, self._copy("AUDIO_NOISE_TITLE"), FontRole.CONTROL, 15,
             (61, 44, 31), col_w, max_lines=1,
         )
         panel_layout.blit_block(screen, title, pygame, col_x, top)
@@ -2770,13 +2774,13 @@ class ParentSettingsOverlay:
         toggles = [
             (
                 "mic_processing",
-                text.AUDIO_NOISE_PROCESSING,
+                self._copy("AUDIO_NOISE_PROCESSING"),
                 self._audio_processing_enabled,
                 True,
             ),
             (
                 "mic_advanced",
-                text.AUDIO_NOISE_ADVANCED,
+                self._copy("AUDIO_NOISE_ADVANCED"),
                 self._audio_advanced_enabled and self._audio_processing_enabled,
                 self._audio_advanced_available and self._audio_processing_enabled,
             ),
