@@ -87,6 +87,28 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
         self.assertNotIn('theme_cfg["name_it"]', app)
         self.assertNotIn('theme_cfg["name_en"]', app)
 
+    def test_missing_resources_never_reintroduce_italian_completion_copy(self) -> None:
+        """A resource failure must not produce Italian under another profile."""
+        for relative_path, forbidden in (
+            (
+                "activities/memory_meraviglie/main.py",
+                ("Ottimo lavoro! Coppie trovate", "Che memoria fantastica",
+                 "Gioca Ancora!"),
+            ),
+            (
+                "activities/treno_numeri/treno_app.py",
+                ("Il treno è arrivato al capolinea", "Hai completato tutte le stazioni",
+                 "Gioca Ancora!"),
+            ),
+        ):
+            with self.subTest(path=relative_path):
+                source = (ROOT / relative_path).read_text(encoding="utf-8")
+                compile(source, str(ROOT / relative_path), "exec")
+                for phrase in forbidden:
+                    self.assertNotIn(phrase, source)
+
+
+
 
 if __name__ == "__main__":
     unittest.main()
