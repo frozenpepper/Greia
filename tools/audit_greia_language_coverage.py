@@ -295,6 +295,13 @@ def write_recording_ledger(root: Path, report: dict[str, Any], output: Path) -> 
         text_value = item.get("text")
         text_value = text_value if isinstance(text_value, str) else ""
         media_path = item.get("path") or ""
+        # Never hand the recording agent a path outside the owning package.
+        # Missing malformed paths need explicit authoring review, not a
+        # synthesized destination for voice output.
+        if media_path:
+            candidate = Path(media_path)
+            if candidate.is_absolute() or ".." in candidate.parts or "\\\\" in media_path:
+                media_path = ""
         # Activity bundle audio paths are relative to the Activity package;
         # system launcher labels are already relative to project root.
         if media_path and source.startswith("activities/"):
