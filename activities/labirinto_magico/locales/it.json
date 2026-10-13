@@ -26,7 +26,18 @@
     "hero.kitty": "Gattino 🐱",
     "hero.fox": "Volpina 🦊",
     "hero.panda": "Pandino 🐼",
-    "hero.dragon": "Draghetto 🐲"
+    "hero.dragon": "Draghetto 🐲",
+    "difficulty.small": "Facile",
+    "difficulty.medium": "Medio",
+    "difficulty.large": "Grande",
+    "difficulty.giant": "Gigante",
+    "difficulty.epic": "Epico",
+    "difficulty.master": "Maestro",
+    "biome.midnight_galaxy": "🌌 Galassia",
+    "biome.emerald_forest": "🌲 Bosco",
+    "biome.crystal_kingdom": "💎 Cristalli",
+    "biome.volcano_realm": "🌋 Vulcano",
+    "btn.new_maze_short": "🔄 Nuovo"
   },
   "audio": {
     "activity.title": {
