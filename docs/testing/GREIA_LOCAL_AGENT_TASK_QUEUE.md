@@ -643,11 +643,11 @@ test commands and expected observable behavior.
   reason to weaken the audit or fake placeholder recordings.
 - **Last result:** SOURCE COMMITTED; UNEXECUTED on current main.
 
-### GLA-015 — Parent panel locale path and six staged Activity translations
+### GLA-015 — Parent panel locale path and thirteen staged Activity translations
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `8c952587dd36897749fe4bc7b13e55f99d1e9b92`.
+- **Priority:** P1; **minimum source SHA:** `1e75dafeec890698c51a7057bb0d990f8aa6ec05`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
@@ -679,16 +679,23 @@ test commands and expected observable behavior.
   settings directory, never mutate an owner's real Parent password
   or profile. Preview Spanish/French stage copy *using test injection*
   only, with no changed supported-language registry.
-- **Six staged Activity text packs:** `painting`, `writing`,
+- **Thirteen staged Activity text packs:** `painting`, `writing`,
   `shape_garden`, `piccola_serra`, `memory_meraviglie`,
-  `clinica_cuccioli`. Confirm ES/FR JSON is parseable, matches all
+  `clinica_cuccioli`, `acquario_magico`, `torre_forme`,
+  `volo_draghetto`, `colline_allegre`, `quattro_stagioni`,
+  `corsa_bacche`, and `bottega_delle_misure`.
+  Confirm ES/FR JSON is parseable, matches all
   EN/IT semantic keys, preserves `{count}`, `{found}`,
   `{total}`, `{moves}` placeholders and does not claim recorded
   Spanish/French voice or manifest support. Review text fit at
   1024×600/800×480 via existing Simulator/test-locales only when
   supported by its injection APIs; otherwise note PREVIEW BLOCKED.
   Do not fake supported Spanish/French Activity launch by changing
-  manifests/flags or copying English WAVs.
+  manifests/flags or copying English WAVs. Check the workshop's
+  `prompt.compare_shorter_h` and `prompt.order_height` in both
+  new languages: here "shorter" means lower/less tall, while the
+  horizontal measure uses shorter length. Ask a native-language
+  reviewer to check the pedagogical distinction in context.
 - **Expected evidence:** exact checkout SHA, per-command exit code,
   sample multilingual screenshots and measured text fits,
   key-parity report and accurate missing-voice list; archive output
