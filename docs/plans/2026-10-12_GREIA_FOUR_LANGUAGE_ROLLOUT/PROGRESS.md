@@ -713,8 +713,12 @@ Actual new implementation:
   until real reviewed scripts are authored.
 - `alfabeto_leo/alfabeto_audio.py` no longer falls
   back to Italian when a locale's phonics WAVs
-  are missing. Wrong-language spoken pedagogy
-  must not be concealed as a fallback.
+  are missing. `alfabeto_model.LetterItem` now
+  also rejects unknown curriculum languages
+  instead of silently returning English words
+  and symbols. Both are fail-closed source
+  corrections; authentic ES/FR alphabet lesson
+  examples/voices are not yet authored.
 - Provider-free tests added/extended:
   `tests/test_word_forest_phonics_inventory.py`
   (source AST non-execution, cue counts, no fake

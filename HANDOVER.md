@@ -35,12 +35,16 @@ cover catalogue structure, source-only AST
 safety, 45/45 text parity, cue IDs and wrong
 claims of missing/new audio.
 
-**Real wrong-language defect fixed:** Leo's
+**Real wrong-language defects fixed:** Leo's
 Alphabet `alfabeto_audio.py` previously
 fell back to **Italian spoken-letter recordings**
-when requested language sounds were absent.
-Now missing requested-language voice does
-not turn into a different language's voice.
+when requested language sounds were absent;
+it no longer does. `LetterItem.word_for()`
+and `symbol_for()` also now reject unknown
+curriculum languages instead of silently
+returning **English** example content. Existing
+EN/IT and regional EN/IT tags continue to work.
+Neither fix advertises ES/FR as supported.
 `tests/test_activity_alfabeto_leo.py`
 has a focused regression. Both changes were
 read back from GitHub, but no local checkout
