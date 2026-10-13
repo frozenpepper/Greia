@@ -381,7 +381,7 @@ def _syllable_lesson_audio(root: Path, errors: list[str]) -> list[dict[str, Any]
     path = package / "sillabe_content.py"
     if not path.is_file():
         return []
-    names = ("CONSONANTS_IT", "VOWELS_IT") + tuple(
+    names = ("CONSONANTS_IT", "VOWELS_IT", "_FAMILIES_ES", "_FAMILIES_FR") + tuple(
         f"WORDS_DATA_{loc.upper()}" for loc in LOCALES
     )
     try:
@@ -408,11 +408,18 @@ def _syllable_lesson_audio(root: Path, errors: list[str]) -> list[dict[str, Any]
             loc = ast.literal_eval(key)
             if loc not in LOCALES or not isinstance(value, ast.Call) or not isinstance(value.func, ast.Name) or value.func.id != "SyllableCurriculum":
                 raise ValueError("unrecognized curriculum source declaration")
-            if len(value.args) != 6 or value.keywords:
+            if len(value.args) != 7 or value.keywords:
                 raise ValueError("malformed curriculum source declaration")
             cues = ast.literal_eval(value.args[5])
             if not isinstance(cues, tuple) or not cues:
                 raise ValueError("missing praise source cues")
+            families_ref = value.args[6]
+            if loc in ("es", "fr"):
+                if (not isinstance(families_ref, ast.Name)
+                        or families_ref.id != f"_FAMILIES_{loc.upper()}"):
+                    raise ValueError("staged curriculum must own its syllable families")
+            elif ast.literal_eval(families_ref) != ():
+                raise ValueError("EN/IT must retain the original generator")
             praise_by_locale[loc] = cues
         if set(praise_by_locale) != set(LOCALES):
             raise ValueError("missing praise-language source")
@@ -428,12 +435,36 @@ def _syllable_lesson_audio(root: Path, errors: list[str]) -> list[dict[str, Any]
             words = d[f"WORDS_DATA_{locale.upper()}"]
             if not isinstance(words, list) or not words:
                 raise ValueError("no syllable builder lessons")
-            for c in consonants:
-                terms[f"letter_{c.lower()}"] = None
-                for v in vowels:
-                    stem = f"{c}{v}".lower()
-                    terms[f"syl_{stem}"] = None
-                    terms[f"find_{stem}"] = None
+            if locale in ("es", "fr"):
+                # ES/FR catcher and explorer use these *exact* authored
+                # families, not the legacy 14 Italian consonant grid.
+                families = d[f"_FAMILIES_{locale.upper()}"]
+                if (not isinstance(families, tuple)
+                        or len(families) < 3
+                        or len({label for label, _ in families}) != len(families)):
+                    raise ValueError("invalid native syllable family declarations")
+                seen_syllables: set[str] = set()
+                for label, syllables in families:
+                    if (not isinstance(label, str)
+                            or not isinstance(syllables, tuple)
+                            or len(syllables) != 5 or len(set(syllables)) != 5):
+                        raise ValueError("invalid native syllable family")
+                    terms[f"letter_{label.lower()}"] = None
+                    for syllable in syllables:
+                        if (not isinstance(syllable, str)
+                                or not syllable.startswith(label)
+                                or syllable in seen_syllables):
+                            raise ValueError("duplicate or invalid native syllabus syllable")
+                        seen_syllables.add(syllable)
+                        terms[f"syl_{syllable.lower()}"] = None
+                        terms[f"find_{syllable.lower()}"] = None
+            else:
+                for c in consonants:
+                    terms[f"letter_{c.lower()}"] = None
+                    for v in vowels:
+                        stem = f"{c}{v}".lower()
+                        terms[f"syl_{stem}"] = None
+                        terms[f"find_{stem}"] = None
             for entry in words:
                 if not isinstance(entry, tuple) or len(entry) != 4:
                     raise ValueError("invalid word-builder entry")

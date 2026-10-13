@@ -120,11 +120,24 @@ class StagedSyllableCurriculumTests(unittest.TestCase):
         for locale in ("es", "fr"):
             with self.subTest(locale=locale):
                 scoped = [row for row in cues if row["locale"] == locale]
-                self.assertGreaterEqual(len(scoped), 170)
+                self.assertEqual(len(scoped), {"es": 115, "fr": 93}[locale])
                 self.assertEqual(len(scoped), len({row["path"] for row in scoped}))
                 self.assertEqual(len([row for row in scoped if row["path"].split("/")[-1].startswith("word_")]), 16)
                 self.assertTrue(any(row["state"] == "BLOCKED_TEXT" for row in scoped))
                 self.assertTrue(all(row["speaker"] == "UNASSIGNED" for row in scoped))
+                # A ledger must reflect actual on-screen and playable cues,
+                # not phantom combinations from the old Italian grid.
+                filenames = {row["path"].split("/")[-1] for row in scoped}
+                if locale == "fr":
+                    self.assertIn("find_mé.wav", filenames)
+                    self.assertNotIn("find_ba.wav", filenames)
+                    self.assertIn("syl_ba.wav", filenames)  # Builder-only part.
+                    self.assertNotIn("find_me.wav", filenames)
+                else:
+                    self.assertIn("find_ma.wav", filenames)
+                    self.assertNotIn("find_ca.wav", filenames)
+                    self.assertIn("syl_ca.wav", filenames)  # Builder-only part.
+
                 self.assertTrue(any(row["path"].endswith("word_bebe.wav") and row["text"] == "bébé" for row in scoped) if locale == "fr" else
                                 any(row["path"].endswith("word_luna.wav") and row["text"] == "luna" for row in scoped))
 
