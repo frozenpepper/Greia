@@ -16,7 +16,7 @@
     "feedback.word_complete": "¡Palabra completada!",
     "ui.replay_audio": "Repetir sonido",
     "ui.stars": "Estrellas",
-    "ui.explorer.formula": "Forma sílabas: $consonant + $vowels",
+    "ui.explorer.formula": "Sílabas con $consonant: $syllables",
     "ui.explorer.instruction": "¡Toca una ficha para escuchar su sílaba!",
     "ui.catcher.listen": "Escucha y toca:",
     "ui.builder.first_syllable": "1.ª sílaba",
