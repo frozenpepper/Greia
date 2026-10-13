@@ -23,6 +23,7 @@ from greia_platform.microphone_level import (
 
 from greia_launcher import panel_layout
 from greia_launcher import panel_strings as text
+from greia_launcher.panel_localization import panel_message
 from greia_launcher.parent_credential_client import (
     ChildAccount,
     ParentCredentialClient,
@@ -172,7 +173,9 @@ class ParentSettingsOverlay:
         self._ssh_results: "queue.Queue[SshStatus]" = queue.Queue()
         self._ssh_refresh_in_flight = False
         self._language_index = 0
+        self._device_locale = "en"
         self._language_message = ""
+        self._language_message_is_error = False
         self._audio_message = ""
         self._backdrop_surface: Any = None
         self._cached_mic_gain: float | None = None
@@ -1044,6 +1047,9 @@ class ParentSettingsOverlay:
             ),
             0,
         )
+        # Parent/device locale is not the currently active child's override.
+        # The setting comes from the same service that owns the picker.
+        self._device_locale = current
 
     def _apply_language(self, index: int) -> None:
         try:
@@ -1057,9 +1063,18 @@ class ParentSettingsOverlay:
                 ),
                 index,
             )
-            self._language_message = f"Language changed to {saved.name}."
+            self._device_locale = saved.locale
+            self._language_message_is_error = False
+            self._language_message = self._ui_message(
+                "language.changed",
+                name=self._ui_message(f"language.option.{saved.locale}"),
+            )
         except (SystemLanguageError, OSError, IndexError) as exc:
-            self._language_message = f"Could not change language: {exc}"
+            self._language_message_is_error = True
+            self._language_message = self._ui_message("language.failed", detail=str(exc))
+
+    def _ui_message(self, key: str, **variables: str) -> str:
+        return panel_message(key, self._device_locale, **variables)
 
     def _get_text(self, text: str, role: FontRole, size: int, color: tuple[int, int, int], typography: GreiaTypography) -> Any:
         """Render one label through the shared Greia typography service.
@@ -1176,7 +1191,9 @@ class ParentSettingsOverlay:
         "password_error_until",
         "_password_problem",
         "_language_index",
+        "_device_locale",
         "_language_message",
+        "_language_message_is_error",
         "_audio_message",
         "_cached_mic_gain",
         "_accounts",
@@ -1325,7 +1342,7 @@ class ParentSettingsOverlay:
         """Compose dim + large rounded chrome once per state change."""
 
         size = screen.get_size()
-        key = (base_key, self.state, size)
+        key = (base_key, self.state, size, self._device_locale)
         if (
             self._panel_base is not None
             and self._panel_base_key == key
@@ -1345,7 +1362,7 @@ class ParentSettingsOverlay:
 
             # Static header identity: title text and the close control.
             title = typography.render(
-                "Parent Settings", FontRole.TITLE, 24, (61, 44, 31)
+                self._ui_message("parent.title"), FontRole.TITLE, 24, (61, 44, 31)
             )
             base.blit(title, (panel_rect.left + 24, panel_rect.top + 16))
             close_btn = pygame.Rect(
@@ -1386,10 +1403,10 @@ class ParentSettingsOverlay:
                 pygame, (61, 44, 31), 3, radius=24,
             )
 
-        title = self._get_text("Parent Settings", FontRole.TITLE, 28, (61, 44, 31), typography)
+        title = self._get_text(self._ui_message("parent.title"), FontRole.TITLE, 28, (61, 44, 31), typography)
         screen.blit(title, title.get_rect(center=(card.centerx, card.top + 36)))
 
-        subtitle = self._get_text("Enter Parent Password", FontRole.BODY, 18, (118, 104, 93), typography)
+        subtitle = self._get_text(self._ui_message("auth.prompt"), FontRole.BODY, 18, (118, 104, 93), typography)
         screen.blit(subtitle, subtitle.get_rect(center=(card.centerx, card.top + 70)))
 
         input_rect = pygame.Rect(card.left + 30, card.top + 106, card_w - 60, 52)
@@ -1402,6 +1419,10 @@ class ParentSettingsOverlay:
 
         if time.monotonic() < self.password_error_until:
             reason = self._password_problem or _PASSWORD_REJECTED
+            if reason == _PASSWORD_REJECTED:
+                reason = self._ui_message("auth.rejected")
+            elif reason == _PASSWORD_CHECK_FAILED:
+                reason = self._ui_message("auth.unavailable")
             reason_surf = self._get_text(
                 reason, FontRole.BODY, 15, (181, 46, 46), typography
             )
@@ -1418,12 +1439,12 @@ class ParentSettingsOverlay:
         confirm_rect = pygame.Rect(card.right - 30 - btn_w, btn_y, btn_w, btn_h)
 
         self._blit_rounded_card(screen, cancel_rect, (255, 250, 240), (230, 220, 205), pygame, radius=14)
-        lbl_cancel = self._get_text("Cancel", FontRole.BODY, 18, (61, 44, 31), typography)
+        lbl_cancel = self._get_text(self._ui_message("auth.cancel"), FontRole.BODY, 18, (61, 44, 31), typography)
         screen.blit(lbl_cancel, lbl_cancel.get_rect(center=cancel_rect.center))
         self._targets.append(PanelHitTarget("cancel_auth", None, cancel_rect))
 
         self._blit_rounded_card(screen, confirm_rect, (255, 250, 240), (241, 185, 35), pygame, radius=14)
-        lbl_confirm = self._get_text("Unlock", FontRole.BODY, 18, (61, 44, 31), typography)
+        lbl_confirm = self._get_text(self._ui_message("auth.unlock"), FontRole.BODY, 18, (61, 44, 31), typography)
         screen.blit(lbl_confirm, lbl_confirm.get_rect(center=confirm_rect.center))
         self._targets.append(PanelHitTarget("confirm_auth", None, confirm_rect))
 
@@ -1449,7 +1470,7 @@ class ParentSettingsOverlay:
                 pygame, (61, 44, 31), 3, radius=24,
             )
 
-            title = self._get_text("Parent Settings", FontRole.TITLE, 24, (61, 44, 31), typography)
+            title = self._get_text(self._ui_message("parent.title"), FontRole.TITLE, 24, (61, 44, 31), typography)
             screen.blit(title, (header_rect.left + 24, header_rect.top + 16))
 
             close_btn = self._panel_close_button_rect((width, height))
@@ -1489,7 +1510,8 @@ class ParentSettingsOverlay:
         index = 0
         for row, row_widths_for_row in enumerate(row_widths):
             for column, tab_w in enumerate(row_widths_for_row):
-                label, tab_value = text.TABS[index]
+                _, tab_value = text.TABS[index]
+                label = self._ui_message(f"tab.{tab_value}")
                 tab_id = ParentPanelTab(tab_value)
                 is_active = self.active_tab == tab_id
                 tab_rect = pygame.Rect(tab_x, tab_row_top + row * (tab_h + tab_gap), tab_w, tab_h)
@@ -1591,16 +1613,17 @@ class ParentSettingsOverlay:
         font_body_size = 16
         card = pygame.Rect(rect.left, rect.top, rect.width, rect.height)
         self._blit_rounded_card(screen, card, (255, 250, 240), (246, 236, 209), pygame, radius=16)
-        title = self._get_text("Greia language", FontRole.TITLE, 22, (61, 44, 31), typography)
+        title = self._get_text(self._ui_message("language.title"), FontRole.TITLE, 22, (61, 44, 31), typography)
         screen.blit(title, (card.left + 20, card.top + 14))
-        note = self._get_text(
-            "This changes the device default. Activities use their own supported-language fallback.",
-            FontRole.BODY,
-            font_body_size,
-            (118, 104, 93),
-            typography,
+        note = panel_layout.fit_single_line(
+            typography, self._ui_message("language.note"),
+            FontRole.BODY, font_body_size, (118, 104, 93),
+            max(1, card.width - 40), min_size=11,
         )
-        screen.blit(note, (card.left + 20, card.top + 44))
+        panel_layout.blit_block(
+            screen, note, pygame, card.left + 20, card.top + 44,
+            bounds=card,
+        )
 
         columns = 3
         gap = 10
@@ -1630,8 +1653,15 @@ class ParentSettingsOverlay:
             )
             flag = self._get_text(language.flag, FontRole.DISPLAY, 28, (61, 44, 31), typography)
             screen.blit(flag, flag.get_rect(midleft=(cell.left + 10, cell.centery)))
-            label = self._get_text(language.name, FontRole.BODY, font_body_size, (61, 44, 31), typography)
-            screen.blit(label, label.get_rect(midleft=(cell.left + 54, cell.centery)))
+            label = panel_layout.fit_single_line(
+                typography, self._ui_message(f"language.option.{language.locale}"),
+                FontRole.BODY, font_body_size, (61, 44, 31),
+                max(1, cell.width - 60), min_size=11,
+            )
+            panel_layout.blit_block(
+                screen, label, pygame, cell.left + 54, cell.centery,
+                align="left", bounds=cell,
+            )
             self._targets.append(PanelHitTarget("language_select", index, cell))
 
         if self._language_message:
@@ -1639,7 +1669,7 @@ class ParentSettingsOverlay:
                 self._language_message,
                 FontRole.BODY,
                 font_body_size,
-                (181, 46, 46) if self._language_message.startswith("Could not") else (47, 117, 81),
+                (181, 46, 46) if self._language_message_is_error else (47, 117, 81),
                 typography,
             )
             screen.blit(message, (card.left + 20, card.bottom - 26))
