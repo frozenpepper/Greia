@@ -1,3 +1,7 @@
+## 2026-10-13 — Completion fallback follow-up (SOURCE-WIP)
+
+Current source/test checkpoint before documentation: `7bd94b329f4649535fc9a85026b856dc19151181`. After the substantive Maze / Wonder Match four-language render-path slice immediately below, a further inspection fixed a distinct wrong-language fallback in Number Train and Wonder Match completion displays. If `LocalizedResources` is absent/corrupt, both Activities now show neutral symbols rather than silently speaking to an English or future Spanish/French child in Italian. Existing proper localized success copy remains unchanged. Focused source regression `tests/test_four_language_activity_runtime_text.py` now contains **five authored tests**, none actually run. Run it through existing GLA-015 (plus accumulated source/GUI obligations), and inspect normal and missing-resource completion cases at 1024×600 and 800×480. ES/FR remain staged, audio and install/hardware acceptance outstanding; do not claim shipped language completeness.
+
 ## 2026-10-13 — Localized runtime Maze and Wonder Match labels (SOURCE-WIP)
 
 **Main implementation anchor before this documentation update:** `02213ed37e9d8e8b0318902a908225ef5b1d2cff`. **Localization authority:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md` and sibling `PROGRESS.md`; local agent task `GLA-015` in `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
