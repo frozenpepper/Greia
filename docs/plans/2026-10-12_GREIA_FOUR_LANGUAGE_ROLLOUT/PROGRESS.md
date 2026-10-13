@@ -642,3 +642,32 @@ No test execution was claimed.
 This skill incident does not alter or close the
 remaining locale content/voice gates. Explicitly
 preserve the existing EN/IT support restriction.
+
+
+### 2026-10-13 — GitHub readback structural audit (EXECUTED on source blobs, not Python runtime)
+
+Performed eight readback batches directly against GitHub
+`main` covering **all 45 built-in Activities × both
+staged target locales = 90 translated JSON files**.
+For each package, compared ES/FR semantic string keys
+against current `locales/en.json`, required complete
+key equality except the **24 deliberately omitted**
+`word.*`/`phonics.*` keys in Word Forest,
+checked named `{variable}` and `$name`
+template-token parity, and verified each new ES/FR
+`audio` dictionary is empty. Combined output:
+**1,754 translated string entries inspected, zero
+schema-key/placeholder/audio-mapping discrepancies**.
+This is source-content structural evidence only;
+it does not validate factual accuracy, native
+grammar, authentic spoken scripts, game action
+semantics, Pygame rendering, performance, or
+shipping release eligibility.
+
+After detecting swapped OS/Activity skill file
+contents, restored the files to their canonical
+locations and verified both `name:` frontmatter
+values through GitHub readback. Three additional
+local source tests were added to prevent recurrence,
+but those Python tests still await the local
+agent's actual execution.
