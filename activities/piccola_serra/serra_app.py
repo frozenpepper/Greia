@@ -177,7 +177,7 @@ class SerraApp:
         def t(key: str, default: str) -> str:
             if self.resources is not None:
                 try:
-                    res = self.resources.string(key)
+                    res = self.resources.text(key)
                     if res:
                         return res
                 except Exception:
