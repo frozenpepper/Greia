@@ -188,6 +188,17 @@ class FourLanguageInventoryTests(unittest.TestCase):
                         if x["source"] == "activities/unsafe" and x["locale"] == "en")
             self.assertFalse(item["file_exists"])
             self.assertEqual(item["state"], "MISSING_AUDIO")
+            output = root / "tmp" / "unsafe-recordings.csv"
+            write_recording_ledger(root, report, output)
+            with output.open(encoding="utf-8", newline="") as stream:
+                rows = list(csv.DictReader(stream))
+            row = next(
+                x for x in rows if x["source"] == "activities/unsafe"
+                and x["locale"] == "en"
+            )
+            self.assertEqual(row["state"], "PATH_REVIEW_REQUIRED")
+            self.assertEqual(row["output_path"], "")
+
 
 
 if __name__ == "__main__":
