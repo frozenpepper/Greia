@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 from typing import Any
 
 import pygame
@@ -19,6 +20,7 @@ from greia_platform.pygame_canvas import (
     activity_viewport_for_surface,
 )
 from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
+from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
 from greia_platform.typography import GreiaTypography
 
 try:
@@ -32,7 +34,7 @@ try:
         MazeEngine,
         MazeState,
     )
-    from maze_renderer import MazeRenderer
+    from maze_renderer import MazeHudLabels, MazeRenderer
 except ImportError:
     from .maze_art import MazeArt
     from .maze_audio import LabyrinthAudio
@@ -44,7 +46,7 @@ except ImportError:
         MazeEngine,
         MazeState,
     )
-    from .maze_renderer import MazeRenderer
+    from .maze_renderer import MazeHudLabels, MazeRenderer
 
 REFERENCE_WIDTH = 1024
 REFERENCE_HEIGHT = 600
@@ -82,6 +84,15 @@ class MazeApp:
         self.storage = get_storage()
         self.sounds = LabyrinthAudio()
         self.typography = GreiaTypography()
+        # ES/FR resources are staged; the effective runtime support remains EN/IT
+        # until the shared system-language acceptance gate promotes them.
+        support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
+        locale_context = resolve_activity_locale(get_profile_locale(), support)
+        if locale_context is None:
+            locale_context = resolve_activity_locale("it", support)
+        assert locale_context is not None
+        self.resources = LocalizedResources(Path(__file__).resolve().parent, locale_context)
+        self._hud_labels_cache: dict[tuple[int, int], MazeHudLabels] = {}
         self.completion = PygameCompletionScreen(
             self.typography,
             width=REFERENCE_WIDTH,
@@ -89,9 +100,9 @@ class MazeApp:
             primary_rect=pygame.Rect(382, 325, 260, 56),
         )
         self.completion_content = CompletionContent(
-            title="PORTALE RAGGIUNTO! 🌀",
-            body_lines=("Tito ha trovato l'uscita magica!",),
-            primary_label="NUOVO LABIRINTO 🔄",
+            title=self.resources.text("victory.title"),
+            body_lines=(self.resources.text("victory.subtitle"),),
+            primary_label=self.resources.text("btn.play_again"),
             achievement_count=5,
         )
         self.completion_presented = False
@@ -104,6 +115,21 @@ class MazeApp:
         self.celebration_particles: list[dict[str, Any]] = []
         self._load_saved_progress()
         self.start_game(self.canvas.surface, self.metrics)
+
+    def _hud_labels(self) -> MazeHudLabels:
+        """Resolve semantic HUD text only when the child's selection changes."""
+        selection = (self.diff_idx, self.biome_idx)
+        cached = self._hud_labels_cache.get(selection)
+        if cached is None:
+            difficulty = DIFFICULTIES[self.diff_idx]["id"]
+            biome = BIOMES[self.biome_idx]["id"]
+            cached = MazeHudLabels(
+                difficulty=self.resources.text(f"difficulty.{difficulty}"),
+                biome=self.resources.text(f"biome.{biome}"),
+                new_maze=self.resources.text("btn.new_maze_short"),
+            )
+            self._hud_labels_cache[selection] = cached
+        return cached
 
     def _load_saved_progress(self) -> None:
         if self.storage:
@@ -391,6 +417,7 @@ class MazeApp:
                     self.celebration_particles,
                     self.metrics,
                     t_now,
+                    labels=self._hud_labels(),
                 )
 
             self.canvas.present()
