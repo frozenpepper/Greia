@@ -535,3 +535,87 @@ runtime strings and all source audio owner scripts;
 integrate the separate Parent HTML client. Only
 then proceed to human-reviewed voice and selectable
 locale promotion under the accepted plan.
+
+
+## 2026-10-13 — FINAL source-text checkpoint: 44/45 exact key parity, 90 ES/FR bundles, voices still blocked
+
+**This section supersedes the intermediate 51/246
+and 180/246 Encyclopedia statements above.** The
+Encyclopedia's Spanish and French text packs now
+each contain **all 246** English/Italian source
+semantic string keys. Its six animal chapters,
+the Sun/planets/Moon, natural Earth systems,
+human physiology, machines/flight/bridges and
+ancient-history chapters have authored ES/FR
+text. Source commits `880848ab` (Space),
+`3f271e65` (Earth + Body), and `447c72e9`
+(Machines + History). The Spanish and French
+Encyclopedia audio maps are **both empty**.
+The existing English and Italian source packs
+each declare **200 voice cues**; those are
+not verified full transcripts of the UI
+headings. Native language/scientific copy review,
+exact narration transcription and approved
+recordings remain blocking.
+
+### Exact current 45-Activity text source classification
+
+- **40 regular packages** (including Submarine and
+  Encyclopedia): all source strings present in
+  both ES and FR, but new audio missing.
+- **Four literacy packages:** all declared UI
+  source strings present, but underlying
+  syllable/phoneme/rhyme/alphabet lessons
+  still require source-language-relative
+  curricula, pronunciation and gameplay tests.
+- **One Word Forest:** ES and FR have 10
+  interface keys; 24 English-dependent
+  `word.*`/`phonics.*` keys per locale remain
+  intentionally omitted rather than misaligned
+  to English-only spelling targets.
+
+**Result:** **44/45 source-key-complete packs**;
+**one intentionally partial** pack. **90 Spanish/
+French JSONs**, 45 each target language; **877
+translated string entries per target locale**,
+**1,754 combined**, against 901 EN/IT reference
+keys. Exactly **24 explicitly missing declared
+text keys per locale** remain, but many more
+runtime-inline/voice/curriculum requirements
+remain unmeasured. These are source inventory
+numbers, **NOT a percentage of accepted product
+localization**. All 45 `activity.toml` manifests
+and the global device/installer selector
+still list only English/Italian.
+
+Updated automated source regressions
+(`tests/test_staged_activity_translations.py`)
+expect the complete 246-key Encyclopedia,
+empty ES/FR voice maps and correct 45-package
+classification. Provider-free locale inventory
+now reports `SOURCE_TEXT_KEYS_ONLY` versus
+`INCOMPLETE_TEXT_KEYS` and separately reads
+manifest-advertised locales. GLA-014/015 and
+`LOCAL_AGENT_VOICE_PRODUCTION.md` now route
+the local agent through exact source verification,
+script provenance and human/content review
+before any approved speech production.
+
+**Unexecuted:** unit tests, `make verify`,
+Pygame GUI/fit screenshots, native speaker
+proofreading, spoken recording/listening,
+Parent browser app localization/release pin,
+installer build or Acer/Pi installed-device
+acceptance. These remain planned checks;
+source readback/commit is not their substitute.
+
+**Next engineering:** adapt Word Forest and
+other literacy teaching datasets to ES/FR,
+reconcile the **200 Encyclopedia audio cue
+IDs per source locale** to exact source
+narration scripts and review all language-specific
+facts, complete Submarine/other Activity
+action/character speech, then finish Shell/
+Parent-browser UI and run actual tests.
+Never add ES/FR to the canonical registry
+until the full L6 acceptance gate passes.
