@@ -170,89 +170,77 @@ These are **verified existing obligations**, not generic search terms:
    ledger rows. Do not mark a broad "Momo voice" task complete
    solely from an Activity title WAV.
 
-### 2026-10-13 current source stage: all 45 built-ins have ES/FR bundles; NOT 45 accepted languages
+### 2026-10-13 latest: all 45 Activities have ES/FR UI text bundles — VOICES/CURRICULUM STILL BLOCKED
 
-The 45 built-ins now all have staged `locales/es.json` and
-`locales/fr.json` files, but they have intentionally different
-coverage levels:
+The full set of 45 bundled Activities now contains ES/FR JSON
+files. **44/45 have all 901 cumulative declared English/Italian
+string keys represented except for the 24 Word Forest
+language-dependent phonics/word keys**. The total
+translated bundle values are **877 per target locale**.
+This is SOURCE-KEY parity, **NOT 45 accepted language
+translations**: inline strings, curriculum-specific
+logic, voice, line fit, scientific review and the
+separately pinned Parent HTML client remain outstanding.
 
-- **39 packages:** ES/FR bundles have **all currently declared
-  English/Italian text keys**. This is source-key parity, **not**
-  accepted UI, sound or gameplay translation. The latest adds
-  `baia_delle_orche`, `cucciolo_mio`,
-  `la_discesa_della_biglia`, `labirinto_magico`,
-  `mondo_contrari`, `morbidi_mostriciattoli`,
-  `posta_di_leo`, `stelle_incantate`,
-  `storie_della_mia_voce`, `teatrino_fiabe`,
-  `viaggio_delfino` and the 77-key
-  `sottomarino_giramondo`.
-- **Five literacy packages** have translated UI/instructions,
-  but the actual alphabet/rhyme/phonics/syllable/word examples
-  are **NOT adapted to each language**. `foresta_parole`
-  deliberately leaves its 24 English-specific
-  `word.*`/`phonics.*` source keys untranslated instead
-  of lying about language-correct spelling puzzles.
-  `alfabeto_leo`, `festa_delle_rime`,
-  `officina_dei_suoni` and `sillabe_magiche` have
-  source-key parity for UI strings but still need
-  local-language pedagogical content/voice.
-- **Encyclopedia:** ES/FR only the first 51 of 246
-  source text keys (navigation plus lion, elephant,
-  octopus, bee, penguin and frog). **195 keys per locale
-  remain untranslated.** The source declares **200
-  prerecorded audio cue keys per language**; they are
-  not 200 approved English/Italian transcripts and
-  must not be blindly voiced from short UI headings.
+- **40 other Activities**, including
+  `sottomarino_giramondo` and
+  `enciclopedia_greia`, have all their
+  EN/IT-declared source text keys translated to
+  Spanish/French in their respective JSON bundles.
+- **Four literacy Activities** also have full
+  source-key parity for UI texts, but not native
+  lesson/curriculum adaptation: `alfabeto_leo`,
+  `festa_delle_rime`, `officina_dei_suoni`
+  and `sillabe_magiche`. Audio phonemes, letter
+  exemplars and rhyme pairs must be recreated in
+  each actual learning language, not copied.
+- **Word Forest** (`foresta_parole`) deliberately
+  contains only 10 translated UI strings per
+  new language: its **24 English-specific
+  `word.*`/`phonics.*` content keys** are
+  untranslated. DO NOT invent translated lesson
+  words unless the spelling model and phonics
+  mappings are correctly rebuilt/tested.
 
-**At least 90 missing ES/FR Activity title voice candidates**
-(45 titles × two languages) appear in the generated
-`RECORDING_LEDGER.csv`. This is only a small subset:
-`sottomarino_giramondo` alone declares 55
-source audio cues per locale, including button actions,
-orders and 32 marine fact scripts. ES/FR textual
-marine facts are now drafted, **not recorded**; other
-audio cues without authored scripts remain
-`BLOCKED_TEXT`. Dolphin Journey has seven existing
-EN/IT narrated cues now explicitly linked to their
-caption keys in its two source locale bundles:
-review those captions against each existing recording
-before treating them as transcripts. Its ES/FR
-dialogue/facts are still text-only.
+The **Encyclopedia** now has all **246 source
+text keys** staged for ES/FR across six animal
+chapters, the solar system, oceans/Earth, human
+biology, machines/aviation and ancient history.
+Its EN and IT source locale bundles independently
+declare **200 audio cues per locale**, **NOT 200
+verified literal narrator transcripts**. ES/FR
+`audio={}` throughout. A short translated heading
+is not permission to generate a long fact narration
+with the same cue ID; the LLM/user must first
+reconcile actual source recording scripts or
+author new approved scripts. All science prose
+requires native and content-factual proofreading.
 
-Generate the ledger using the exact command in §2.
-Its source title text, expected paths and original
-asset hashes are real source facts, but every row's
-`speaker`, `kind`, provider, script approval and
-human audio acceptance must be filled separately.
-`EXISTING_REVIEW_PENDING` does not mean approved.
+**At least 90 missing ES/FR Activity titles** (45 × 2)
+are candidate ledger rows, plus Submarine's 55
+source audio cue IDs per language, Dolphin's
+seven caption-linked narrative cues and the many
+Encyclopedia facts, platform spoken labels, My
+Creations portal and legacy My Time incubator.
+No scripts/audio are accepted on the basis of
+source-key parity. Use `--recording-ledger` to
+generate the first exact source census, then
+manually reconcile ALL code-loaded/legacy cues,
+speaker assignments and recordings.
 
-**Known language and content review requirements:**
-- Number Train's `prompt.load` plural item names
-  are currently **dormant**: the active puzzle is
-  graphical and generated target counts are at least
-  two. It is *not* a reproduced 1-item gameplay bug.
-  If a localized text/spoken prompt is later wired
-  into runtime, author count-sensitive phrasing first.
-- `casa_del_dieci`, `bosco_numeri`,
-  `viaggio_delfino` and `foresta_parole`
-  use literal `$target`, `$num`, `$count`,
-  `$word` or `$letter` template markers.
-  Never read the markers aloud or erase them during
-  locale copy authoring.
-- `bottega_delle_misure` must distinguish length
-  from height in Spanish and French.
-- Curriculum Lessons (letters, syllables, rhyme and
-  phonics) require real locale-relative lesson data
-  and accepted speech; a visually translated menu
-  does **not** establish proper educational behavior.
-- `enciclopedia_greia` and
-  `sottomarino_giramondo` require narrative/science
-  review and exact transcript provenance per cue,
-  especially where English and Italian audio have
-  richer narration than the on-screen titles.
-- Existing My Time incubator EN/IT
-  `VOICE_PRODUCTION_BRIEF.md` remains authoritative;
-  review ES/FR scripts separately before synthesis.
+**Count and template truth:** Number Train currently
+generates counts >=2 and uses a graphical display.
+Its plural `prompt.load` text is dormant; do NOT
+report a reproduced 1-item bug. Add proper
+count-sensitive grammar when enabling a spoken/text
+prompt or allowing count 1. Keep literal `$num`,
+`$target`, `$count`, `$letter`, `$word`
+and curly named formatting variables intact.
+Measurement questions must distinguish height
+and length pedagogically. Dolphin EN/IT seven
+narrator/curiosity audio cues now have explicit
+`caption_key` links; human-check the text
+against those recordings, not an automatic PASS.
 
 Do not assume that per-locale JSON `audio` covers *every*
 spoken line: some legacy Activities still select WAVs
