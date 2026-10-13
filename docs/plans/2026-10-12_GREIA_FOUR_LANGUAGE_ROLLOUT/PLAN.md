@@ -7,6 +7,30 @@
 **Voice execution:** `LOCAL_AGENT_VOICE_PRODUCTION.md` in this directory.  
 **Progress:** append to `PROGRESS.md`; integration/acceptance tasks remain in the existing `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
 
+## Owner decision — 2026-10-14: text approved, complete voice production authorized
+
+The owner explicitly **approved all translations already authored in the
+English, Italian, Spanish and French source text catalogues**. This is an
+owner content/copy acceptance decision for those existing literal
+translations, including staged curriculum *written examples*. Stop
+holding available text solely for another generic translation approval.
+It does **not** assert there are no remaining untranslated inline Shell,
+Creations, Parent API or child-visible messages, and it does **not**
+conjure absent long-form narration/phoneme scripts. Native preschool
+pronunciation, syllable sound, scientifically accurate narration and
+actual rendered text fit remain separate *technical* verification tasks.
+
+The owner additionally instructed Greia's local agent to **record every
+missing spoken cue across all apps in all four languages**, including
+EN/IT repairs. Use the exact executable
+[`LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`](./LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md)
+alongside existing
+[`LOCAL_AGENT_VOICE_PRODUCTION.md`](./LOCAL_AGENT_VOICE_PRODUCTION.md).
+An already configured registered no-new-spend local producer may work
+without waiting for Modal; new paid/cloud expenditure still requires
+explicit amount/provider consent. New recordings and existing cues
+still need human listening; ES/FR remain **unselectable** until L6.
+
 ## 1. Product commitment
 
 The shipped selector must show **only usable supported product languages**.
