@@ -209,7 +209,7 @@ class DelfinoJourneyApp:
         body = self._text("completion.body", {"count": self.world.session_pearls})
         self.completion_screen = PygameCompletionScreen(self.typography)
         self.completion_screen.prepare(
-            CompletionContent(title=title or "BRAVO!", primary_label=replay or "ANCORA!", body_lines=(body,))
+            CompletionContent(title=title or "🐬🌟", primary_label=replay or "🔄", body_lines=(body,))
         )
         self._persist()
 
