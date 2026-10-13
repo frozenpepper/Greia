@@ -59,6 +59,7 @@ from .composition import (
     build_launcher_runtime_services,
     provisional_installed_display_session,
 )
+from .launch_feedback import launch_feedback
 from .key_chord import KeyChordTracker
 from .lifecycle import ActivityExitReason, ActivityResult, ActivitySessionState
 from .parent_credential_client import ParentCredentialClient
@@ -1006,7 +1007,7 @@ class LauncherApplication:
         picker_prepare_deadline = 0.0
         picker_next_prepare = 0.0
 
-        self._draw_launch_overlay(pygame, text="Starting…")
+        self._draw_launch_overlay(pygame, text=launch_feedback(getattr(self, "_active_locale", "en")).overlay)
         pygame.display.flip()
         self._on_frame_presented(pygame.display.get_surface(), pygame)
         _launch_feedback = time.monotonic()
@@ -1103,7 +1104,7 @@ class LauncherApplication:
                     and not is_ready
                     and now - _launch_feedback > 0.1
                 ):
-                    self._draw_launch_overlay(pygame, text="Starting…")
+                    self._draw_launch_overlay(pygame, text=launch_feedback(getattr(self, "_active_locale", "en")).overlay)
                     pygame.display.flip()
                     self._on_frame_presented(
                         pygame.display.get_surface(), pygame
@@ -1162,7 +1163,7 @@ class LauncherApplication:
         label = font.render(text, True, (61, 44, 31))
         screen.blit(label, label.get_rect(center=(center[0], center[1] + 25)))
         hint = self._typography.font(FontRole.BODY, 20)
-        hint_label = hint.render("Please wait…", True, (130, 120, 100))
+        hint_label = hint.render(launch_feedback(getattr(self, "_active_locale", "en")).wait, True, (130, 120, 100))
         screen.blit(hint_label, hint_label.get_rect(center=(center[0], center[1] + 65)))
 
     def _installed_root(self) -> bool:

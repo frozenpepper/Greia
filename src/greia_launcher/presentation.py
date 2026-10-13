@@ -30,6 +30,7 @@ from greia_platform.ui_core import BoundedCache
 from greia_platform.ui_motion import HoverMotion, InteractionVisualState, LaunchMotion
 from greia_platform.ui_scroll import ScrollModel
 
+from .launch_feedback import launch_feedback
 from .activity_icon import ActivityIconError, package_icon_path
 from .spoken_labels import SpokenLabelController
 from .catalogue_view import ALL_ACTIVITIES_ID, ActivityCatalogue, _category_title
@@ -2128,8 +2129,7 @@ class GreiaLauncherPresentation(LauncherApplication):
 
 def _launch_status_label(locale: str) -> str:
     """Short launcher-owned feedback in the child's selected UI language."""
-    language = locale.split("-")[0].lower() if locale else "it"
-    return "Avvio..." if language == "it" else "Starting..."
+    return launch_feedback(locale).badge
 
 
 _ACTIVITY_TITLE_CACHE: dict[tuple[str, str, str], str] = {}
