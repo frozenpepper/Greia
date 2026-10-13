@@ -16,6 +16,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import tomllib
 from typing import Any
 
 LOCALES = ("en", "it", "es", "fr")
@@ -65,6 +66,20 @@ def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], lis
     summary: dict[str, Any] = {}
     cues: list[dict[str, Any]] = []
     for activity in dirs:
+        try:
+            manifest = tomllib.loads(
+                (activity / "activity.toml").read_text(encoding="utf-8")
+            )
+            declaration = manifest.get("activity", {}).get("languages", [])
+            if not isinstance(declaration, list) or any(
+                not isinstance(item, str) for item in declaration
+            ):
+                errors.append(f"{activity.name}: invalid Activity language declaration")
+                declaration = []
+            supported_locales = tuple(declaration)
+        except (OSError, UnicodeError, tomllib.TOMLDecodeError, AttributeError) as exc:
+            errors.append(f"{activity.name}: cannot read Activity language declaration: {exc}")
+            supported_locales = ()
         bundles = {
             locale: _load_bundle(activity / "locales" / f"{locale}.json", errors)
             for locale in LOCALES
@@ -81,6 +96,8 @@ def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], lis
             "locale_text": {}, "locale_audio": {}, "source_strings": len(reference_keys),
             "source_spoken_keys": len(reference_audio),
             "audio_modules_to_review": [],
+            # Source bundle presence is not a claim of supported product locale.
+            "advertised_languages": list(supported_locales),
         }
         for file in sorted(activity.rglob("*.py")):
             try:
@@ -102,6 +119,14 @@ def _report_activity(root: Path, errors: list[str]) -> tuple[dict[str, Any], lis
                 "bundle_exists": bundle is not None,
                 "present_keys": len(strings),
                 "missing_reference_keys": missing_keys,
+                "advertised_by_manifest": locale in supported_locales,
+                # Text-key parity is not reviewed translation, playable
+                # language curriculum or verified narration.
+                "stage": (
+                    "NO_BUNDLE" if bundle is None else
+                    "INCOMPLETE_TEXT_KEYS" if missing_keys else
+                    "SOURCE_TEXT_KEYS_ONLY"
+                ),
             }
             audio_missing: list[str] = []
             for cue_id in sorted(reference_audio):
@@ -242,6 +267,14 @@ def build_inventory(root: Path) -> dict[str, Any]:
             "activity_keys_missing": sum(
                 len(a["locale_text"][locale]["missing_reference_keys"])
                 for a in activities.values()
+            ),
+            "text_key_complete_bundles": sum(
+                1 for a in activities.values()
+                if a["locale_text"][locale]["stage"] == "SOURCE_TEXT_KEYS_ONLY"
+            ),
+            "advertised_activity_locales": sum(
+                1 for a in activities.values()
+                if a["locale_text"][locale]["advertised_by_manifest"]
             ),
             "audio_inventory_rows": sum(1 for item in spoken if item["locale"] == locale),
             "audio_missing_or_unmapped": sum(
