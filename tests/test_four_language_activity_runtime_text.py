@@ -214,5 +214,24 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
             self.assertNotIn(f'"{obsolete}"', source)
 
 
+    def test_dolphin_journey_completion_has_locale_copy_and_neutral_failure_mode(self) -> None:
+        from string import Template
+
+        activity = ROOT / "activities/viaggio_delfino"
+        for language in LANGUAGES:
+            with self.subTest(language=language):
+                strings = _strings(activity, language)
+                for key in ("completion.title", "completion.replay", "completion.body"):
+                    self.assertTrue(strings.get(key, "").strip())
+                text = Template(strings["completion.body"]).substitute(count=7)
+                self.assertIn("7", text)
+        app = (activity / "delfino_app.py").read_text(encoding="utf-8")
+        compile(app, str(activity / "delfino_app.py"), "exec")
+        self.assertIn('self._text("completion.title")', app)
+        self.assertIn('self._text("completion.replay")', app)
+        self.assertNotIn('"BRAVO!"', app)
+        self.assertNotIn('"ANCORA!"', app)
+
+
 if __name__ == "__main__":
     unittest.main()
