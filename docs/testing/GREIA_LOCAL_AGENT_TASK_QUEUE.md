@@ -584,7 +584,7 @@ test commands and expected observable behavior.
   **voice generation:** BLOCKED pending reviewed text, supported
   provider and explicit paid/model run authority.
 - **Priority:** P1; **minimum source SHA:**
-  `cd3d220d5413120ff888d0ce2abc20bb9c127d57`.
+  `b3716733766aa62d8568e388360528b84809c603`.
 - **Source authority:**
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
   Follow the sibling **`LOCAL_AGENT_VOICE_PRODUCTION.md`** exactly
@@ -647,7 +647,7 @@ test commands and expected observable behavior.
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `cd3d220d5413120ff888d0ce2abc20bb9c127d57`.
+- **Priority:** P1; **minimum source SHA:** `b3716733766aa62d8568e388360528b84809c603`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
@@ -679,48 +679,62 @@ test commands and expected observable behavior.
   settings directory, never mutate an owner's real Parent password
   or profile. Preview Spanish/French stage copy *using test injection*
   only, with no changed supported-language registry.
-- **All 45 built-in Activity directories now contain staged ES/FR
-  JSON bundles, but are NOT 45 fully localized games.** Check:
-  - 39 full *source string-key parity* packages including
-    `viaggio_delfino`, `baia_delle_orche`,
-    `stelle_incantate`, `sottomarino_giramondo`
-    (55 source audio cues per locale).
-  - Five reading/phonics/rhyme/alphabet packages with
-    translated instructions but no language-specific
-    curriculum/voice adaptation. `foresta_parole` leaves
-    24 English-dependent examples deliberately absent
-    in ES/FR; do not copy English examples to obtain a
-    false key-parity PASS.
-  - Encyclopedia ES/FR contains 51/246 source keys
-    (six animal chapters + navigation), **195 missing**;
-    source declares **200 narration cues/locale** which
-    require real scripts and human review, not UI
-    headings used as fake transcripts.
-  - All manifest locale lists still only `en,it`,
-    all staged ES/FR `audio` maps still empty,
-    and the system language selector only EN/IT.
-  Run `test_staged_activity_translations.py` to ensure
-  these deliberate boundaries stay explicit; run the
-  coverage JSON to read `stage`,
-  `advertised_by_manifest`, `audio_missing_or_unmapped`
-  separately. Preserve literal `$word`, `$letter`,
-  `$count`, `$target` and curly placeholders.
-  Current Number Train source generates targets >=2 and
-  renders the puzzle graphically; do **not** diagnose
-  a 1-item singular bug without runtime evidence.
-  Check measurement height-vs-length distinctions
-  and dolphin narrator caption links. Review exactly
-  the current language facts and voice scripts in the
-  production ledger, not English subtitles copied
-  as finished audio.
-  For GUI preview, focus on a representative sample
-  of translated controls/text with 1024×600 and
-  800×480, plus explicit notes on unrendered/blocked
-  locales; never change manifests to make a screenshot
-  look multilingual. The recording CSV includes
-  **at least 90 ES/FR Activity-title candidates** plus
-  many other narration requirements. Inspect/reconcile
-  per voice; do not feed it straight to the generator.
+- **All 45 built-ins now have staged ES/FR text catalogues.**
+  The latest test/audit classifications are strict:
+  **44 packages have complete declared source-string keys**,
+  and only `foresta_parole` omits 24
+  `word.*`/`phonics.*` language-dependent keys.
+  Even those 44 are **not 44 playable translated games**.
+  Four literacy Activities still need authentic
+  lesson/curriculum adaptation despite complete
+  UI string keys. The Encyclopedia now has
+  all 246 ES/FR text keys, **but 200 EN/IT narration
+  cue IDs each** needing source transcript
+  reconciliation and ES/FR voice production.
+  Submarine has 77 textual keys and **55 audio cue
+  IDs per language**, while Dolphin Journey has
+  seven narrative caption-to-cue links.
+  Every ES/FR bundle still declares `audio={}`,
+  and all 45 manifests still advertise only
+  `en,it`. The global language selector remains EN/IT.
+- **Deterministic text checks:** run
+  `test_staged_activity_translations.py` to assert
+  all 45 packages accounted for, keys, literal
+  `$word`/`$letter`/`$count`/`$target`
+  tokens, `{variable}` fields,
+  seven Dolphin caption links, 77 Submarine
+  strings + voice aliases, 246 Encyclopedia
+  keys and 200 deliberately unvoiced cues.
+  The coverage JSON differentiates
+  `SOURCE_TEXT_KEYS_ONLY` from
+  `INCOMPLETE_TEXT_KEYS` and reports
+  `advertised_by_manifest`; **no staged JSON
+  counts as supported ES/FR language**.
+- **Human content/GUI review:** check a bounded sample
+  of visual text at 1024×600 and 800×480,
+  especially long Submarine naval orders, Dolphin
+  narration captions and Encyclopedia
+  multi-line science text. Inspect factual accuracy,
+  European Spanish/French pronunciation and
+  localization of word/rhyme/phonics lesson engines.
+  Height-versus-length concepts must remain correct.
+  The Number Train produces counts >=2 and
+  `prompt.load` is dormant; do not report
+  a reproduced one-item grammar defect.
+  If Simulator locale injection cannot actually
+  render staged ES/FR without changing
+  product support, mark PREVIEW BLOCKED:
+  never alter manifests to force screenshots.
+- **Voice backlog:** the generated source CSV has
+  at least **90 ES/FR title candidate rows** and
+  additional cue entries; this is not the full
+  voice plan until manual inline/external audio
+  discovery, canonical speaker assignment,
+  approved science scripts and human review.
+  Preserve source hashes, actual missing cues
+  and `PATH_REVIEW_REQUIRED` states.
+  Never synthesize from a category heading when
+  the real recorded script is different.
 - **Expected evidence:** exact checkout SHA, per-command exit code,
   sample multilingual screenshots and measured text fits,
   key-parity report and accurate missing-voice list; archive output
