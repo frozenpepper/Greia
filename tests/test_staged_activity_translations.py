@@ -38,6 +38,8 @@ CURRICULUM_UI_ONLY = (
     "sillabe_magiche", "foresta_parole",
 )
 
+ENCYCLOPEDIA_PARTIAL = "enciclopedia_greia"
+
 
 def _fields(text: str) -> set[str]:
     return {
@@ -139,6 +141,39 @@ class StagedActivityTranslationTests(unittest.TestCase):
                 self.assertEqual(value["caption_key"], caption)
                 self.assertIn(caption, data["strings"])
                 self.assertTrue(data["strings"][caption].strip())
+
+    def test_all_built_in_activities_are_accounted_for_by_source_stage(self) -> None:
+        actual = {
+            path.name for path in (ROOT / "activities").iterdir()
+            if path.is_dir() and (path / "activity.toml").is_file()
+        }
+        registered = set(STAGED) | set(CURRICULUM_UI_ONLY) | {ENCYCLOPEDIA_PARTIAL}
+        self.assertEqual(actual, registered)
+        self.assertTrue(set(STAGED).isdisjoint(CURRICULUM_UI_ONLY))
+        self.assertEqual(len(actual), 45)
+
+    def test_encyclopedia_partial_animals_and_navigation_does_not_claim_science_audio(self) -> None:
+        base = ROOT / "activities/enciclopedia_greia"
+        en = json.loads((base / "locales/en.json").read_text(encoding="utf-8"))
+        it = json.loads((base / "locales/it.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(en["strings"]), 246)
+        self.assertEqual(len(en["audio"]), 200)
+        manifest = tomllib.loads((base / "activity.toml").read_text(encoding="utf-8"))
+        self.assertEqual(set(manifest["activity"]["languages"]), {"en", "it"})
+        for locale in ("es", "fr"):
+            with self.subTest(locale=locale):
+                staged = json.loads((base / "locales" / f"{locale}.json").read_text(encoding="utf-8"))
+                strings = staged["strings"]
+                self.assertEqual(staged["audio"], {})
+                self.assertEqual(len(strings), 51)
+                self.assertEqual(len(set(en["strings"]) - set(strings)), 195)
+                self.assertTrue(set(strings).issubset(en["strings"]))
+                self.assertTrue(set(strings).issubset(it["strings"]))
+                for animal in ("lion", "elephant", "octopus", "bee", "penguin", "frog"):
+                    for suffix in ("title", "intro"):
+                        self.assertTrue(strings[f"{animal}.{suffix}"].strip())
+                self.assertTrue(strings["home.title"].strip())
+                self.assertTrue(strings["section.animals"].strip())
 
     def test_numeric_template_targets_remain_intact(self) -> None:
         """Dollar targets are consumed by old activities, not Python format()."""
