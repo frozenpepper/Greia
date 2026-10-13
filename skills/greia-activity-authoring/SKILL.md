@@ -213,13 +213,21 @@ missing/incorrect cues.
 
 All 45 built-in Activity packages have staged
 `locales/es.json` and `locales/fr.json` source text
-bundles. **44 packages have declared source-key parity**;
-Word Forest deliberately omits 24 language-specific
-spelling/phonics words until its target-letter logic
-has an actual Spanish/French curriculum. Four other
-letter/rhyme/syllable Activities have complete UI
-strings but still need language-relative playable
-teaching rules and approved pronunciation.
+bundles, now with **45/45 declared source-key parity**.
+Word Forest now owns 21 Spanish and 21 French
+letter-to-example-word lessons in its pure
+`foresta_content.PHONICS_DATA` domain catalogue;
+its 24 previously missing source `word.*`/
+`phonics.*` strings are now authored per locale.
+No ES/FR lessons are selectable until the
+required real speech clips, exact prompt scripts
+and pedagogical review pass. The source-only
+voice ledger separately inventories 126 new
+ES/FR phonics clips (letter, prompt and word).
+Four other letter/rhyme/syllable Activities have
+complete UI strings but still need
+language-relative playable teaching rules
+and approved pronunciation.
 The Encyclopedia now has all 246 source text
 keys in ES/FR but still needs its **200 source
 narration cues/locale** reconciled with exact scripts
