@@ -3210,3 +3210,20 @@ are retained; both Activity manifests and the canonical device
 selector still advertise EN/IT only. Language acceptance, source
 test execution, Simulator/voice review and physical evidence remain
 OPEN; no architecture or installer lifecycle gate is closed.
+
+
+### 2026-10-13 — Alphabet and syllable native-language staging (no remediation closure)
+
+Under the separately authorized language plan, Alphabet Leo now
+includes Spanish Ñ as a real 27th alphabet letter and ES/FR native
+example words; Magic Syllables now owns 16 ES/16 FR staged word-builder
+candidates through a strict curriculum selector. Locale-aware lesson
+navigation, audio IDs, labels and palette source wiring were updated.
+The static AST voice audit now detects 477 additional ES/FR required
+audio cues for those two Activities, with unknown phoneme/prompt
+scripts blocked. Added pure source tests and refreshed GLA-015.
+Native syllabification/phoneme assessment, audio, GUI, source
+test execution and all installer/hardware acceptance remain open.
+System and every Activity manifest still advertise EN/IT only.
+No architecture, lifecycle or non-lifecycle remediation gate
+was advanced/closed by this product-source slice.

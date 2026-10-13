@@ -805,3 +805,86 @@ language promotion. Added focused AST nonexecution, expected counts,
 voice-path and blocked-text test coverage to
 `tests/test_staged_es_fr_literacy_curricula.py`. The tests have been
 authored but not yet executed in a local checkout.
+
+
+### 2026-10-13 — Alphabet Leo and Magic Syllables multilingual candidate curricula; real code-audio census (SOURCE-WIP)
+
+**Four of five literacy Activities now have candidate ES/FR domain
+content** (Word Forest, Rhyme Festival, Sound Workshop, Alphabet Leo,
+Magic Syllables = five total; all five have staged ES/FR content).
+This statement covers source candidates only, NOT finished pedagogical
+curricula: e.g. Magic Syllables' explorer/catcher still use a legacy
+Italian-derived consonant × vowel teaching grid, and alphabet H / French
+grapheme behavior need native phonological assessment.
+
+**Magic Syllables:**
+- Added 16 real candidate two-written-syllable words in Spanish,
+  16 in French, with exact per-locale picture glyphs, syllable
+  boundaries and ASCII recording stems preserving accented display
+  words. The staged French data includes e.g. `VÉ-LO`, `BÉ-BÉ`,
+  `CHA-PEAU`, `GÂ-TEAU`; *actual spoken syllable divisions
+  require specialist approval*.
+- Pure `SyllableCurriculum` and `get_syllable_curriculum(locale)`
+  now own word corpus, consonant/vowel inventory, 3 mode titles,
+  consonant header and praise IDs. App palette hit-testing, drawing,
+  displayed mode titles, domain setup and audio praise dispatcher use
+  the resolver. Rejects unsupported languages rather than silently
+  displaying English words and Italian labels. EN/IT source arrays
+  and praise IDs retained.
+- `test_staged_syllable_curricula.py` added for word segmentation,
+  app domain model progression, unsupported locales, existing IT/EN
+  parity and nonpromotion.
+
+**Alphabet Leo:**
+- Kept original 26 EN/IT `LetterItem` records unchanged, staged
+  26 ES and 26 FR native-language written example words and pictures,
+  and added **Ñ as a real 27th Spanish alphabet letter**, correctly
+  placed between N and O. All navigation, guessing, discovery/parade,
+  strip rendering, shared tone inventory and SDL TEXTINPUT path
+  use the locale-relative alphabet. A child's saved discovered letters
+  are filtered against the currently selected curriculum.
+- Existing-only unsupported `word_for()` errors now allow staged
+  ES/FR source data; unknown target languages and attempts to use Ñ
+  under EN/IT still fail closed. Crucially, this does not teach
+  Spanish H as a spoken /h/; whether to play letter NAME or phoneme
+  must be pedagogically and acoustically reviewed.
+- `test_staged_alphabet_curricula.py` covers ES 27-letter
+  navigation, FR accents, two-language manifests, new saved
+  progress semantics, and exact new code-owned voice cue counts.
+  The old `test_activity_alfabeto_leo.py` unsupported-locale
+  check was updated to assert only actually unsupported tags.
+
+**Real source-owned recording census (no code execution/import):**
+- `tools/audit_greia_language_coverage.py` now reads literal
+  syllable and alphabet source data via AST, accounts for source
+  runtime playback (not only locale JSON `audio` bindings), and
+  exposes required *ES/FR* candidates as:
+    - Alphabet Leo: **58 ES**, **56 FR** (two spoken cues per alphabet
+      letter plus 4 shared prompts; including `letter_Ñ` and
+      `ask_Ñ`).
+    - Magic Syllables: **173 ES**, **190 FR** (letter, generated
+      CV syllable, find-syllable, word-builder, praise and all 17
+      additional French written-syllable audio stems).
+    - Combined **477 ES+FR source-owned voice candidates** in
+      these two Activities, additive to the previously inventoried
+      124 from Rhyme/Sound and 126 from Word Forest.
+  Read-only sources are safely parsed and never evaluated.
+  The words retain accent-bearing candidate written scripts;
+  the pronounced phoneme, instruction, letter-name, and praise
+  scripts remain `BLOCKED_TEXT`. Existing EN/IT cues are also
+  inventoried as gaps/review targets, not automatically accepted.
+- Two new test modules now cover literal-inventory counts, refusal
+  to execute malicious catalogue expressions, cue uniqueness/path
+  reconciliation and no unsupported-locale manifest promotion.
+
+**Evidence boundary:** all source committed on GitHub `main`,
+with exact blob/head readbacks where noted. Python tests,
+`make verify`, Pygame, native curriculum review, actual audio
+generation/listening, device provisioning and 4-language release
+promotion have **NOT RUN**. Spanish/French remain neither
+manifest-selectable in these Activities nor globally selectable.
+GLA-015 was extended in the sole local-agent task queue with
+current source test commands. Next work: deeper native phonemic
+datasets (especially French explorer/catcher), authentic scripts,
+remaining Parent HTML and Shell text and on-device acceptance;
+no release gate is being closed.

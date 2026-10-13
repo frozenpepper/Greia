@@ -496,3 +496,50 @@ script. Scene/instruction cues (`prompt_*`) need independent
 full scripts. Do not presume a spoken string from a key or generate
 silence for missing audio. The two manifests remain EN/IT; no
 recording integration/approval is claimed here.
+
+
+### Alphabet Leo and Magic Syllables new source owners (2026-10-13)
+
+**Alphabet Leo**: `activities/alfabeto_leo/alfabeto_model.py`
+owns four-language candidate example word/picture pairs and the
+locale-relative alphabet. ES has **27 letters including Ñ between N
+and O**; FR, IT, EN have 26. The actual playback filenames in
+`assets/audio/<locale>/` are `letter_<uppercase-letter>.wav`
+and `ask_<uppercase-letter>.wav`, plus `intro.wav`,
+`mode_guess_intro.wav`, `try_again.wav`, `well_done.wav`.
+Do **not** force ASCII approximation `N` for Spanish `Ñ`.
+The <letter> and question transcripts are currently
+`BLOCKED_TEXT`: the existing filename does not settle
+letter name versus phonemic /sound/, region-specific pronunciation,
+or a full grammatically gendered question. Spanish H and French H
+are normally silent; never infer /h/ from a capital letter label.
+Written examples (`EXAMPLES_ES/FR`) are only candidate display
+content and need native speaker/preschool pedagogy review.
+Inventory: 58 new ES cues, 56 FR cues.
+
+**Magic Syllables**: `activities/sillabe_magiche/sillabe_content.py`
+owns `get_syllable_curriculum(locale)`, two-part builder words,
+consonant/vowel teaching inventory, tabs and praise IDs.
+`sillabe_audio.SoundManager` owns real runtime playback stems:
+`letter_<consonant>`, `syl_<syllable>`,
+`find_<syllable>`, `word_<stem>`, and locale
+`praise_cues`. Current ES source census is 173 cues,
+FR is 190 because French word-builder parts add 17
+non-CV `syl_*` stems beyond the base consonant-vowel grid.
+Only `word_*` has a source-backed candidate written utterance;
+all phoneme, prompt, syllable decomposition and praise scripts
+are `BLOCKED_TEXT` until native approval. Most importantly,
+the explorer/catcher mode's current consonant × five vowel grid is
+retained from Italian; its actual French/Spanish pedagogical value
+and spoken sound alternatives must be approved or redesigned.
+A French visual split like `MAI-SON` does not prove the
+word's acoustic syllabification. The existing file inventory
+is **not** an instruction to generate all phonemic recordings
+automatically.
+
+These cues are included automatically by
+`tools/audit_greia_language_coverage.py` through literal AST
+source extraction. The named GLA-015 suite checks its counts
+and refuses executable source fragments. The output labels are
+staging candidates only. No spoken WAV is approved or included
+in ES/FR, and the manifests remain restricted to EN/IT.

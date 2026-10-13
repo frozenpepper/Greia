@@ -1,3 +1,41 @@
+## 2026-10-13 — All five literacy Activities now have ES/FR source candidates, NOT accepted speech (SOURCE-WIP)
+
+Latest `main` multilingual slice: Alphabet Leo gained real staged
+Spanish and French 26-letter examples plus a **27th Spanish Ñ**
+in navigation, guessing, renderer, progress and audio keys. Magic
+Syllables gained **16 ES + 16 FR** word-building candidates, a pure
+locale-aware lesson configuration and strict unsupported-locale
+rejection. The other three phonemic Activities' source candidates
+were added in preceding commits. Crucially, **staged does not mean
+pedagogically/aurally ready**: French orthographic splitting,
+letter/phoneme/name choice, H silence, isolated graphemes and
+the Italian-derived consonant-vowel explorer remain open reviews.
+
+The offline voice inventory now also counts **114 ES/FR Alphabet
+cues** (58 ES / 56 FR) and **363 ES/FR Magic Syllables cues**
+(173 ES / 190 FR), for **477 new candidates** across those
+two code-owned playback surfaces. Audio file stems and written
+word text are distinguished from unapproved letter/phoneme/prompt
+scripts; `BLOCKED_TEXT` prevents ungrounded mass voice generation.
+Total across Word Forest, Rhyme Festival, Sound Workshop, Alphabet
+Leo and Magic Syllables: **727 ES/FR code-owned recording
+candidates**, in addition to other Activity title/legacy voice
+mappings. These are inventory candidates, **NOT WAVs or approvals**.
+
+Focused source tests added/updated:
+`tests/test_staged_syllable_curricula.py`,
+`tests/test_staged_alphabet_curricula.py`,
+`tests/test_activity_alfabeto_leo.py`, and existing
+`test_staged_es_fr_literacy_curricula.py`.
+Updated `tools/audit_greia_language_coverage.py`, voice brief,
+and local-agent GLA-015. No Python suite, GUI/voice/native
+proofreading or hardware work has run in this GitHub-only slice.
+The installer/system supported languages and every
+built-in Activity manifest are **still EN/IT only**.
+See the latest dated `PROGRESS.md` entry for complete changes
+and limitations. Continue actual source implementation before
+requesting expensive/local device checks.
+
 ## 2026-10-13 — Four-language phonics recording inventory (SOURCE-WIP)
 
 The four-language voice CSV generator now includes the code-owned

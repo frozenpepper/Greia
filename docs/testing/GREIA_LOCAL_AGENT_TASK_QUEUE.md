@@ -602,6 +602,13 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_four_language_inventory.py' -v
   python3 -m unittest discover -s tests -p 'test_word_forest_phonics_inventory.py' -v
   python3 -m unittest discover -s tests -p 'test_staged_es_fr_literacy_curricula.py' -v
+  python3 -m unittest discover -s tests -p 'test_staged_alphabet_curricula.py' -v
+  python3 -m unittest discover -s tests -p 'test_staged_syllable_curricula.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_festa_delle_rime.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_officina_dei_suoni.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_sillabe_magiche.py' -v
+  python3 -m unittest discover -s tests -p 'test_four_language_inventory.py' -v
+  python3 -m unittest discover -s tests -p 'test_staged_es_fr_literacy_curricula.py' -v
   python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-four-language-coverage.json --recording-ledger tmp/greia-four-language-recordings.csv
   PYTHONPATH=src python3 tools/audit_launcher_spoken_labels.py --locales en it --json
   make verify
@@ -649,7 +656,7 @@ test commands and expected observable behavior.
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `0a513fa387c956aa329d2012a05f043d61d7f2ac`.
+- **Priority:** P1; **minimum source SHA:** `79d1b9cec214448097ed7fe0bc379e75878d3727`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
@@ -697,9 +704,14 @@ test commands and expected observable behavior.
   lesson corpora, with 124 explicitly inventoried new ES/FR word,
   phoneme and odd-one-out voice candidates across both Activities.
   Their word/phoneme scripts and recordings still require approval;
-  neither is advertised as ES/FR-supported. The other two literacy
-  Activities, Alphabet Leo and Magic Syllables, still require their
-  curriculum adaptations. Encyclopedia has
+  neither is advertised as ES/FR-supported. Alphabet Leo now adds
+  a 27th Spanish Ñ between N and O, with 26 distinct French examples,
+  navigation/audio/progression changes; Magic Syllables now stages
+  16 ES + 16 FR two-part builder words through a pure locale
+  curriculum resolver. The **French and Spanish phonemic
+  explorer/catcher teaching grids still require native redesign
+  or explicit approval**. None of the five literacy Activities is
+  audibly/pedagogically accepted for ES/FR. Encyclopedia has
   all 246 ES/FR written source keys but 200 source narration
   cue mappings per language pending exact transcripts, approved
   scripts and new recordings. Submarine has 77 text keys and
@@ -718,6 +730,15 @@ test commands and expected observable behavior.
   `test_activity_alfabeto_leo.py` to verify the
   fixed wrong-language voice fallback: an absent ES/FR
   letter WAV must **not** result in an Italian spoken letter.
+  `test_staged_alphabet_curricula.py` and
+  `test_staged_syllable_curricula.py` inspect native-language
+  letter and segmented-word candidates, Spanish Ñ, deterministic
+  alphabet navigation and Magic Syllables builder progression,
+  old EN/IT parity, rejection of unsupported teaching languages,
+  and 477 ES/FR code-owned audio cue IDs across the two games.
+  Their source-only AST inventory must report phoneme,
+  letter-name, question and praise transcripts as BLOCKED_TEXT.
+  These are NOT human audio approvals or license to run synthesis.
   `test_staged_es_fr_literacy_curricula.py` checks both real
   ES/FR lesson data sets, rejects silent Italian fallback,
   exercises their deterministic challenge factories, and proves
