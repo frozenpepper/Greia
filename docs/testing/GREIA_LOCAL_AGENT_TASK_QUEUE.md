@@ -584,7 +584,7 @@ test commands and expected observable behavior.
   **voice generation:** BLOCKED pending reviewed text, supported
   provider and explicit paid/model run authority.
 - **Priority:** P1; **minimum source SHA:**
-  `b1d2e14b18c77d07deae10e2f678cfa4336101d9`.
+  `f6ac3414961c7b727da316aed61237c0af4320de`.
 - **Source authority:**
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
   Follow the sibling **`LOCAL_AGENT_VOICE_PRODUCTION.md`** exactly
@@ -600,6 +600,7 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_system_language.py' -v
   python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
   python3 -m unittest discover -s tests -p 'test_four_language_inventory.py' -v
+  python3 -m unittest discover -s tests -p 'test_word_forest_phonics_inventory.py' -v
   python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-four-language-coverage.json --recording-ledger tmp/greia-four-language-recordings.csv
   PYTHONPATH=src python3 tools/audit_launcher_spoken_labels.py --locales en it --json
   make verify
@@ -647,7 +648,7 @@ test commands and expected observable behavior.
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `b1d2e14b18c77d07deae10e2f678cfa4336101d9`.
+- **Priority:** P1; **minimum source SHA:** `f6ac3414961c7b727da316aed61237c0af4320de`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
@@ -659,6 +660,8 @@ test commands and expected observable behavior.
   python3 -m unittest discover -s tests -p 'test_panel_frame_cache.py' -v
   python3 -m unittest discover -s tests -p 'test_panel_layout.py' -v
   python3 -m unittest discover -s tests -p 'test_staged_activity_translations.py' -v
+  python3 -m unittest discover -s tests -p 'test_word_forest_phonics_inventory.py' -v
+  python3 -m unittest discover -s tests -p 'test_activity_alfabeto_leo.py' -v
   python3 -m unittest discover -s tests -p 'test_installer_localization.py' -v
   python3 -m unittest discover -s tests -p 'test_system_language.py' -v
   python3 tools/audit_greia_language_coverage.py --root . --output tmp/greia-GLA015-locale-coverage.json --recording-ledger tmp/greia-GLA015-recordings.csv
@@ -680,38 +683,40 @@ test commands and expected observable behavior.
   settings directory, never mutate an owner's real Parent password
   or profile. Preview Spanish/French stage copy *using test injection*
   only, with no changed supported-language registry.
-- **All 45 built-ins now have staged ES/FR text catalogues.**
-  The latest test/audit classifications are strict:
-  **44 packages have complete declared source-string keys**,
-  and only `foresta_parole` omits 24
-  `word.*`/`phonics.*` language-dependent keys.
-  Even those 44 are **not 44 playable translated games**.
-  Four literacy Activities still need authentic
-  lesson/curriculum adaptation despite complete
-  UI string keys. The Encyclopedia now has
-  all 246 ES/FR text keys, **but 200 EN/IT narration
-  cue IDs each** needing source transcript
-  reconciliation and ES/FR voice production.
-  Submarine has 77 textual keys and **55 audio cue
-  IDs per language**, while Dolphin Journey has
-  seven narrative caption-to-cue links.
-  Every ES/FR bundle still declares `audio={}`,
-  and all 45 manifests still advertise only
-  `en,it`. The global language selector remains EN/IT.
-- **Deterministic text checks:** run
-  `test_staged_activity_translations.py` and
-  `test_greia_skill_identity.py` to assert
-  all 45 packages accounted for, keys, literal
-  `$word`/`$letter`/`$count`/`$target`
-  tokens, `{variable}` fields,
-  seven Dolphin caption links, 77 Submarine
-  strings + voice aliases, 246 Encyclopedia
-  keys and 200 deliberately unvoiced cues.
-  The coverage JSON differentiates
-  `SOURCE_TEXT_KEYS_ONLY` from
-  `INCOMPLETE_TEXT_KEYS` and reports
-  `advertised_by_manifest`; **no staged JSON
-  counts as supported ES/FR language**.
+- **All 45 built-ins have complete ES/FR source string-key parity**
+  (**901/901 keys per target language, 1,802 ES+FR string entries**).
+  This is structural staging, NOT accepted gameplay translation:
+  the language selector and all Activity manifests still advertise
+  only EN/IT, and all ES/FR Activity audio maps remain empty.
+  Word Forest now has 21 authored first-letter and example-word
+  lessons for **each** new language; they must pass actual
+  letter/name/phoneme child-learning review and acquire real
+  local recordings before becoming playable in ES/FR.
+  Four other literacy Activities still require native lesson
+  design, not just translated menus. Encyclopedia has
+  all 246 ES/FR written source keys but 200 source narration
+  cue mappings per language pending exact transcripts, approved
+  scripts and new recordings. Submarine has 77 text keys and
+  55 source audio IDs per language pending voice work.
+- **Deterministic source checks:** run
+  `test_staged_activity_translations.py` to assert all
+  45 bundles, placeholders, real letter/example match,
+  246 Encyclopedia source strings, 77 Submarine strings,
+  and seven Dolphin existing-audio caption associations.
+  Run `test_word_forest_phonics_inventory.py` to check
+  252 code-owned candidate phonics/audio cues across four
+  locales, including 126 new ES/FR candidates,
+  explicit BLOCKED_TEXT for unapproved spoken letter
+  and find-letter prompt scripts, and no code execution
+  from an unsafe curriculum source. Run
+  `test_activity_alfabeto_leo.py` to verify the
+  fixed wrong-language voice fallback: an absent ES/FR
+  letter WAV must **not** result in an Italian spoken letter.
+  Run `test_four_language_inventory.py` for
+  source-text vs advertised-language distinction.
+  No staged JSON/recording candidate counts as
+  supported language or accepted audio; preserve
+  all literal `$name` and `{variable}` placeholders.
 - **Human content/GUI review:** check a bounded sample
   of visual text at 1024×600 and 800×480,
   especially long Submarine naval orders, Dolphin
