@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import unittest
+import json
 from unittest.mock import Mock, patch
 
 os.environ["SDL_VIDEODRIVER"] = "dummy"
@@ -18,7 +19,15 @@ from activities.mondo_contrari.contrari_model import (
     ContrariModel,
     OppositeCategory,
 )
-from activities.mondo_contrari.contrari_renderer import ContrariRenderer
+from activities.mondo_contrari.contrari_renderer import (
+    CATEGORY_OPPOSITE_KEYS,
+    ContrariRenderer,
+)
+from greia_platform.localization import (
+    ActivityLocaleSupport,
+    LocalizedResources,
+    resolve_activity_locale,
+)
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1] / "activities" / "mondo_contrari"
 
@@ -159,6 +168,41 @@ class TestContrariRendererAndApp(unittest.TestCase):
         self.assertEqual(emit.call_args_list[0].args[1], {"category": "up_down"})
         self.assertEqual(emit.call_args_list[1].args[0], "mondo_contrari.all_opposites_completed")
         self.assertTrue(emit.call_args_list[0].kwargs["idempotency_key"])
+
+    def test_real_locale_catalogue_controls_all_ten_state_banners_and_tabs(self) -> None:
+        # Explicit four-language injection is a test-only fixture: production
+        # remains EN/IT until its voice and human-acceptance gates close.
+        support = ActivityLocaleSupport.localized(
+            ("it", "en", "es", "fr"), default_ui_locale="it"
+        )
+        expected_keys = {f"opposite.{state}"
+                         for pair in CATEGORY_OPPOSITE_KEYS.values() for state in pair}
+        for language in ("it", "en", "es", "fr"):
+            with self.subTest(language=language):
+                context = resolve_activity_locale(language, support)
+                self.assertIsNotNone(context)
+                resources = LocalizedResources(PACKAGE_ROOT, context)
+                strings = json.loads(
+                    (PACKAGE_ROOT / "locales" / f"{language}.json").read_text(encoding="utf-8")
+                )["strings"]
+                self.assertTrue(all(strings[key] for key in expected_keys))
+                renderer = ContrariRenderer(locale=language, resources=resources)
+                self.assertEqual(
+                    {state: resources.text(f"opposite.{state}")
+                     for pair in CATEGORY_OPPOSITE_KEYS.values() for state in pair},
+                    renderer._state_labels,
+                )
+                for category, (first, second) in CATEGORY_OPPOSITE_KEYS.items():
+                    tab_text = renderer._toolbar_labels[category]
+                    self.assertIn(renderer._state_labels[first], tab_text)
+                    self.assertIn(renderer._state_labels[second], tab_text)
+                    self.model.set_category(category)
+                    renderer.render(self.screen, self.model)
+                self.assertGreaterEqual(len(renderer._status_surfaces), 5)
+                self.assertEqual(len(renderer._toolbar_surfaces), 5)
+                # The first completed frame already cached the strings; no
+                # per-frame translation or rasterization is needed.
+                self.assertTrue(all(renderer._status_surfaces.values()))
 
     def test_render_all_categories_without_crash(self) -> None:
         for cat in OppositeCategory:
