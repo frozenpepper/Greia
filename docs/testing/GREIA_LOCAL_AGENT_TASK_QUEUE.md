@@ -584,7 +584,7 @@ test commands and expected observable behavior.
   **voice generation:** BLOCKED pending reviewed text, supported
   provider and explicit paid/model run authority.
 - **Priority:** P1; **minimum source SHA:**
-  `f6ac3414961c7b727da316aed61237c0af4320de`.
+  `0a513fa387c956aa329d2012a05f043d61d7f2ac`.
 - **Source authority:**
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
   Follow the sibling **`LOCAL_AGENT_VOICE_PRODUCTION.md`** exactly
@@ -648,7 +648,7 @@ test commands and expected observable behavior.
 
 - **Status:** READY for source-only checks; actual ES/FR production voice
   and complete-language promotion still BLOCKED by GLA-014.
-- **Priority:** P1; **minimum source SHA:** `f6ac3414961c7b727da316aed61237c0af4320de`.
+- **Priority:** P1; **minimum source SHA:** `0a513fa387c956aa329d2012a05f043d61d7f2ac`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
   `AGENTS.md` and §0 of this queue. Follow the source first-failure
