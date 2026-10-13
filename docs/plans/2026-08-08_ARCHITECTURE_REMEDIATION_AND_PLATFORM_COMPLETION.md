@@ -3167,3 +3167,30 @@ test execution, Parent client update, hardware/installer
 acceptance or architectural phase gate closure.
 Existing non-lifecycle remediation and release
 prerequisites remain open and unchanged.
+
+
+### 2026-10-13 — Multilingual content staging, education-language authority and skill integrity
+
+Continued under the separate active L0–L6 four-language plan
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`.
+The source tree now contains ES/FR locale JSONs for all 45
+built-in Activities with **44/45 full string-key parity**;
+the remaining 24 Word Forest keys require authentic
+language-relative playable spelling/phonics lessons.
+Other four literacy packages also require curriculum
+adaptation despite their copied UI-key structure.
+The Encyclopedia has all 246 ES/FR written keys but
+still has 200 distinct source audio cue IDs per EN/IT
+and no new ES/FR recordings. Submarine still needs
+translated voice for its 55 source audio cue IDs.
+No ES/FR manifest/registry promotion or release
+acceptance, OS provider dependencies, hardware,
+build or physical lifecycle change occurred here.
+Source-only tests extended; no runtime acceptance ran.
+The repository skill-file route swap was also corrected:
+`skills/greia-os-work/SKILL.md` and
+`skills/greia-activity-authoring/SKILL.md` now
+match their declared task identities, with a
+new provider-free structural regression test.
+All existing architecture/non-lifecycle and
+installed release gates remain OPEN where previously open.
