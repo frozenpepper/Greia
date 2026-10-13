@@ -223,3 +223,38 @@ outside bundles, and stage additional ES/FR Activities
 with complete placeholder parity; produce the exact
 approved dialogue text/recording ledger before the
 local agent is unblocked to produce voices.
+
+
+## 2026-10-13 — Additional L4 Activity translation staging: seven more built-ins
+
+Added accurate Spanish and French authored text bundles for
+`acquario_magico` (16 messages), `torre_forme` (12),
+`volo_draghetto` (12), `colline_allegre` (10),
+`quattro_stagioni` (12), `corsa_bacche` (11)
+and `bottega_delle_misure` (14). That is **87 more translated
+message keys per language**, 174 new localized messages in
+14 JSON files. These include everyday controls, victory labels,
+animal names, seasons and elementary measurement instructions.
+The measurement comparison distinguishes *shorter length*
+from *lower height* in Spanish and French; native-context review
+remains necessary before release.
+
+**L4 tally at this checkpoint:** 13 Activity packages, 26
+staged `es/fr` locale JSONs, **153 text keys per new
+language** (306 localized key values), all currently
+matching existing English/Italian semantic key sets.
+`tests/test_staged_activity_translations.py` now covers
+the 13-pack roster. `GLA-015` was updated to the latest
+source SHA and mandates explicit review of the height-versus-length
+distinction. `LOCAL_AGENT_VOICE_PRODUCTION.md` now explicitly
+lists **26 new ES/FR spoken title candidate rows** for these
+13 Activities, pending authoring approval and human recording.
+
+No `activity.toml` language advertisement or audio mapping
+has been added. No runtime source tests, GUI screenshots,
+actual sound generation or native-language proofreading
+performed. Both translation rounds are **SOURCE WIP**
+until the acceptance queue runs. Later L4 stages must still
+include all other first-party Activities, the encyclopedia,
+custom-code narrated text and platform Shell/Parent forms.
+Source `bb0d855c`; expanded test roster `1e75dafe`.
