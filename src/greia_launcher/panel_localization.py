@@ -31,7 +31,7 @@ _MESSAGES: dict[str, dict[str, str]] = {
     },
     "auth.unlock": {
         "en": "Unlock", "it": "Sblocca",
-        "es": "Sbloccar", "fr": "Déverrouiller",
+        "es": "Desbloquear", "fr": "Déverrouiller",
     },
     "auth.rejected": {
         "en": "Incorrect password", "it": "Password errata",
