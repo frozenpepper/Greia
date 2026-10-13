@@ -184,5 +184,35 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
                 self.assertIn("resources.text(", source)
 
 
+    def test_opposites_world_banners_and_toolbar_use_all_ten_locale_keys(self) -> None:
+        import tomllib
+
+        activity = ROOT / "activities/mondo_contrari"
+        states = ("up", "down", "big", "small", "in", "out",
+                  "open", "closed", "fast", "slow")
+        manifest = tomllib.loads((activity / "activity.toml").read_text(encoding="utf-8"))
+        self.assertEqual(set(manifest["activity"]["languages"]), {"it", "en"})
+        for language in LANGUAGES:
+            with self.subTest(language=language):
+                strings = _strings(activity, language)
+                self.assertTrue(all(
+                    strings.get(f"opposite.{state}", "").strip() for state in states
+                ))
+        source = (activity / "contrari_renderer.py").read_text(encoding="utf-8")
+        main = (activity / "main.py").read_text(encoding="utf-8")
+        compile(source, str(activity / "contrari_renderer.py"), "exec")
+        compile(main, str(activity / "main.py"), "exec")
+        self.assertIn('resources.text(f"opposite.{state}")', source)
+        self.assertIn("self._state_labels", source)
+        self.assertIn("self._toolbar_labels[cat]", source)
+        self.assertIn("self._typography.render(", source)
+        self.assertIn("resources=resources", main)
+        self.assertIn('resources.text("activity.title")', main)
+        for obsolete in ("SU!", "GIÙ!", "GRANDE!", "PICCOLO!",
+                         "DENTRO!", "FUORI!", "APERTO!", "CHIUSO!",
+                         "VELOCE!", "LENTO!", "CATEGORY_TITLES_EN"):
+            self.assertNotIn(f'"{obsolete}"', source)
+
+
 if __name__ == "__main__":
     unittest.main()
