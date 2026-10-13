@@ -14,7 +14,9 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 STAGED = (
     "painting", "writing", "shape_garden", "piccola_serra",
-    "memory_meraviglie", "clinica_cuccioli",
+    "memory_meraviglie", "clinica_cuccioli", "acquario_magico",
+    "torre_forme", "volo_draghetto", "colline_allegre",
+    "quattro_stagioni", "corsa_bacche", "bottega_delle_misure",
 )
 
 
