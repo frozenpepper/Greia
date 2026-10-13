@@ -26,7 +26,7 @@ STAGED = (
     "baia_delle_orche", "cucciolo_mio", "la_discesa_della_biglia",
     "labirinto_magico", "mondo_contrari", "morbidi_mostriciattoli",
     "posta_di_leo", "stelle_incantate", "storie_della_mia_voce",
-    "teatrino_fiabe", "viaggio_delfino",
+    "teatrino_fiabe", "viaggio_delfino", "sottomarino_giramondo",
 )
 
 # These five have translated *instructions*, not adapted reading curricula.
@@ -68,6 +68,32 @@ class StagedActivityTranslationTests(unittest.TestCase):
                             f"{activity}/{locale}/{key}: missing interpolation placeholders"
                         )
                     self.assertEqual(localized["audio"], {})
+
+    def test_submarine_orders_and_spoken_aliases_have_consistent_translation(self) -> None:
+        package = ROOT / "activities/sottomarino_giramondo/locales"
+        reference = json.loads((package / "en.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(reference["audio"]), 55)
+        for locale in ("es", "fr"):
+            strings = json.loads((package / f"{locale}.json").read_text(encoding="utf-8"))["strings"]
+            for direction in ("ahead", "stop", "left", "right", "compliment"):
+                self.assertEqual(
+                    strings[f"order.{direction}"], strings[f"voice.order.{direction}"],
+                    f"{locale}: spoken instruction and on-screen instruction disagree"
+                )
+            for kind in ("coral", "kelp", "krill"):
+                self.assertEqual(
+                    strings[f"voice.creature.{kind}"],
+                    strings[f"voice.creature_{kind}"],
+                    f"{locale}: old and new voice cue aliases disagree",
+                )
+            for creature in ("whale", "turtle", "dolphin", "manta",
+                             "clownfish", "coral", "kelp", "krill"):
+                for number in range(1, 5):
+                    self.assertTrue(strings[f"voice.fact.{creature}.{number}"].strip())
+            # Source audio contains explicit button/encounter cues whose
+            # approved recordings/transcripts still need manual extraction.
+            self.assertIn("voice.btn.light", reference["audio"])
+            self.assertNotIn("voice.btn.light", strings)
 
     def test_curriculum_ui_translations_do_not_claim_lesson_adaptation(self) -> None:
         for activity in CURRICULUM_UI_ONLY:
