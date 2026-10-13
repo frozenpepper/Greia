@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import unittest
 from types import SimpleNamespace
+from string import Formatter
 
 from greia_launcher.panel_localization import (
     LOCALES, _MESSAGES, audit_panel_messages, panel_message,
@@ -18,14 +19,41 @@ class ParentPanelTextTests(unittest.TestCase):
         self.assertEqual(audit_panel_messages(), [])
         self.assertGreaterEqual(len(_MESSAGES), 20)
         for key in _MESSAGES:
+            fields = {
+                name for _, name, _, _ in Formatter().parse(_MESSAGES[key]["en"])
+                if name is not None
+            }
             for locale in LOCALES:
-                self.assertTrue(panel_message(
-                    key, locale, **(
-                        {"name": "Italiano"} if key == "language.changed"
-                        else {"detail": "read-only"} if key == "language.failed"
-                        else {}
-                    ),
-                ))
+                with self.subTest(key=key, locale=locale):
+                    self.assertTrue(panel_message(
+                        key, locale, **{name: "test data" for name in fields}
+                    ))
+
+    def test_settings_keys_have_complete_translations_and_literal_machine_values(self) -> None:
+        for family in ("pointer.", "wifi.", "ssh.", "info."):
+            keys = [key for key in _MESSAGES if key.startswith(family)]
+            self.assertTrue(keys, family)
+            for key in keys:
+                source = _MESSAGES[key]["en"]
+                for locale in ("it", "es", "fr"):
+                    self.assertTrue(_MESSAGES[key][locale], key)
+                    self.assertTrue(panel_message(
+                        key, locale, **{
+                            name: "/dev/test {raw}"
+                            for _, name, _, _ in Formatter().parse(source)
+                            if name is not None
+                        }
+                    ))
+
+    def test_pointer_short_preset_labels_are_not_ambiguous(self) -> None:
+        from greia_platform.hardware_session import speed_preset_names
+        for locale in LOCALES:
+            names = [
+                panel_message(f"pointer.preset.short.{name}", locale)
+                for name in speed_preset_names()
+            ]
+            self.assertEqual(len(names), len(set(names)), locale)
+            self.assertTrue(all(2 <= len(name) <= 6 for name in names))
 
     def test_named_parent_form_constants_cover_all_four_languages(self) -> None:
         from greia_launcher import panel_strings
