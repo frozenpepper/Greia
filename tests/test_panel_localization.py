@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 from greia_launcher.panel_localization import (
     LOCALES, _MESSAGES, audit_panel_messages, panel_message,
+    panel_constant, panel_audio_preset, audit_panel_constants, _FORM_TRANSLATIONS,
 )
 from greia_launcher.parent_panel import ParentSettingsOverlay
 from greia_platform.system_language import SUPPORTED_SYSTEM_LANGUAGES
@@ -25,6 +26,52 @@ class ParentPanelTextTests(unittest.TestCase):
                         else {}
                     ),
                 ))
+
+    def test_named_parent_form_constants_cover_all_four_languages(self) -> None:
+        from greia_launcher import panel_strings
+        self.assertEqual(audit_panel_constants(), [])
+        self.assertGreaterEqual(len(_FORM_TRANSLATIONS), 48)
+        for name in _FORM_TRANSLATIONS:
+            english = getattr(panel_strings, name)
+            self.assertEqual(panel_constant(name, "en", **(
+                {"count": "7"} if "{count}" in english else {}
+            )), english.format(**({"count": "7"} if "{count}" in english else {})))
+            for locale in LOCALES:
+                translated = panel_constant(name, locale, **(
+                    {"count": "7"} if "{count}" in english else {}
+                ))
+                self.assertIsInstance(translated, str)
+                self.assertTrue(translated.strip())
+
+    def test_parent_account_deletion_and_security_warnings_do_not_fall_back(self) -> None:
+        from greia_launcher import panel_strings
+        for name in (
+            "ACCOUNTS_INTRO", "ACCOUNTS_CONFIRM_REMOVE_TITLE",
+            "ACCOUNTS_CONFIRM_REMOVE_BODY", "ACCOUNTS_CONFIRM_REMOVE_YES",
+            "SECURITY_INTRO", "SECURITY_MISMATCH", "SECURITY_CURRENT_WRONG",
+        ):
+            for locale in ("it", "es", "fr"):
+                with self.subTest(name=name, locale=locale):
+                    self.assertNotEqual(panel_constant(name, locale), getattr(panel_strings, name))
+
+    def test_parent_audio_presets_follow_display_locale_not_gain(self) -> None:
+        from greia_launcher import panel_strings
+        for gain in (1.0, 1.5, 2.0, 3.0, 4.0):
+            self.assertEqual(panel_audio_preset(gain, "en"), panel_strings.AUDIO_PRESET_NAMES[gain])
+            self.assertTrue(panel_audio_preset(gain, "it"))
+            self.assertTrue(panel_audio_preset(gain, "es"))
+            self.assertTrue(panel_audio_preset(gain, "fr"))
+        self.assertEqual(panel_audio_preset(4.0, "fr"), "Maximum")
+        self.assertEqual(panel_constant("AUDIO_LEVEL_LABEL", "es"), "Nivel")
+
+    def test_form_dynamic_variables_are_explicit_not_translated(self) -> None:
+        self.assertIn("7", panel_constant("ACCOUNTS_LIMIT_REACHED", "fr", count="7"))
+        with self.assertRaises(ValueError):
+            panel_constant("ACCOUNTS_LIMIT_REACHED", "fr")
+        with self.assertRaises(ValueError):
+            panel_constant("STATUS_SAVED", "it", count="7")
+        with self.assertRaises(KeyError):
+            panel_constant("UNOWNED_TEXT", "it")
 
     def test_english_and_italian_settings_have_distinct_copy(self) -> None:
         self.assertEqual(panel_message("parent.title", "en"), "Parent Settings")
