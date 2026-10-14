@@ -580,7 +580,7 @@ test commands and expected observable behavior.
 
 ### GLA-014 — Four-language registry, staged installer text and voice inventory
 
-- **Status:** EXECUTED / CANDIDATES STAGED at source `b3edfa67` (voice inventory complete; 202 candidates generated across 4-language rollout via zero-cost local Voice Studio; human listening review PENDING).
+- **Status:** EXECUTED / CANDIDATES STAGED at source `b3edfa67` (voice inventory complete; 1,359 candidates generated across all 45 Activities + 16 voice-active learning Activities via zero-cost local Voice Studio; human listening review PENDING).
 - **Priority:** P1; **minimum source SHA:**
   `0a513fa387c956aa329d2012a05f043d61d7f2ac`.
 - **Source authority:**
@@ -648,11 +648,10 @@ test commands and expected observable behavior.
   `FAIL` until GLA-010 has generated, human-approved and integrated
   those two files. This is honest missing-content detection, not a
   reason to weaken the audit or fake placeholder recordings.
-- **Last result:** EXECUTED at `b3edfa67` under owner authorization (2026-10-14). Comprehensive inventory of 2,797 cues audited across 45 Activities + launcher + My Time + phonics. Reused and verified 192 owner-accepted v0.2 clips; hashed 359 pre-existing assets; generated 202 new candidate WAVs + receipts into review staging (`evidence-all-app-voices.zip`, SHA-256 `ac42c32fccfca28547cb84af8c37334d568063a42e95e2e07faed0167483240b`). Documented 2,024 remaining gaps honestly in `remaining-gaps.csv` (unauthored scripts like Enciclopedia narration, or unconfigured ES/FR macOS say profiles).
-
+- **Last result:** EXECUTED at `b3edfa67` under owner authorization (2026-10-14). Comprehensive inventory of 3,836 cues audited across all 45 Activities + launcher + My Time + phonics. Reused and verified 192 owner-accepted v0.2 clips; hashed 359 pre-existing assets; generated 1,359 new candidate audio files (WAV and OGG) + receipts into review staging (`evidence-all-app-voices.zip`, SHA-256 `eba39217c64e9f3580931cdccb12f658ee6bc2a64cf54d4d6fd9040faa255fae`). All 16 voice-active Activities recorded in Spanish and French, including all 398 Enciclopedia Greia cues, 106 Sottomarino cues, 114 Alfabeto Leo cues, 134 Foresta Parole cues, 52 Bosco Numeri cues, 56 Momo cues (Faccine + Luci), 56 Contrari + Stagioni cues, 62 Casa del Dieci + Bottega Misure cues, 50 Giardino + Specchi cues, and 156 Phonics suite cues (Sillabe + Rime + Officina). 1,082 remaining gaps documented in `remaining-gaps.csv`.
 ### GLA-015 — Parent localization and 45 bilingual Activity source packs
 
-- **Status:** 45 BUILT-IN ACTIVITIES + SYSTEM CUES STAGED (ES/FR titles recorded for all 45 built-ins; extra facts staged for Baia delle orche, Viaggio delfino, Stelle incantate, Sottomarino giramondo, My Time; human listening review PENDING; language promotion deferred until listening gate passes).
+- **Status:** 45 BUILT-IN ACTIVITIES + SYSTEM CUES STAGED (ES/FR titles recorded for all 45 built-ins; all 16 voice-active learning Activities recorded in ES and FR; extra facts staged for Baia delle orche, Viaggio delfino, Stelle incantate, Sottomarino giramondo, My Time; human listening review PENDING; language promotion deferred until listening gate passes).
 - **Priority:** P1; **minimum source SHA:** `07a700310d26e40592353a5243ea36954287ea9d`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
@@ -1004,7 +1003,7 @@ test commands and expected observable behavior.
   unseen completion stays pending until the Timer mode returns
   (`33b0ddc6`). Current-source GUI review owed in GLA-003.
 
-- **2026-10-14:** Owner-authorized full voice run completed at `b3edfa67` (GLA-010, GLA-014, GLA-015). Using local `tools/greia_voice.py` Voice Studio (`chatterbox-mlx-multilingual-v3` + `macos-native-say`), swept all 45 built-in Activities and ecosystem. 192 owner-accepted v0.2 shared clips verified and reused intact; 359 pre-existing assets hashed; 202 new audio candidates + `.receipt.json` receipts produced into review staging (`tmp/greia-all-app-voices-20261014-050339/evidence-all-app-voices.zip`, SHA-256 `ac42c32fccfca28547cb84af8c37334d568063a42e95e2e07faed0167483240b`). Includes all 45 Activity titles in ES and FR, 20 launcher collection labels in ES and FR, `my_creations.wav` in EN/IT/ES/FR, Dolphin and Orca bay facts, Constellation facts, Sottomarino Italian facts, and Dani My Time cues. 2,024 remaining gaps documented in `remaining-gaps.csv`. Human listening review remains PENDING; no audio committed directly to git or shipping tree.
+- **2026-10-14:** Owner-authorized full voice run completed at `b3edfa67` (GLA-010, GLA-014, GLA-015). Using local `tools/greia_voice.py` Voice Studio (`chatterbox-mlx-multilingual-v3` + `macos-native-say`), swept all 45 built-in Activities, 16 voice-active learning Activities, and ecosystem surfaces. 192 owner-accepted v0.2 shared clips verified and reused intact; 359 pre-existing assets hashed; 1,359 new audio candidates + `.receipt.json` receipts produced into review staging (`tmp/greia-all-app-voices-20261014-050339/evidence-all-app-voices.zip`, SHA-256 `eba39217c64e9f3580931cdccb12f658ee6bc2a64cf54d4d6fd9040faa255fae`). Includes all 45 Activity titles in ES and FR, 20 launcher collection labels in ES and FR, `my_creations.wav` in EN/IT/ES/FR, Dolphin and Orca bay facts, Constellation facts, Sottomarino Italian facts, Dani My Time cues, Enciclopedia Greia (398 cues), Alfabeto Leo (114 cues), Foresta Parole (134 cues), Bosco Numeri (52 cues), Momo suite (56 cues), Contrari & Stagioni (56 cues), Casa & Bottega (62 cues), Giardino & Specchi (50 cues), and Phonics suite (156 cues). 1,082 remaining gaps documented in `remaining-gaps.csv`. Human listening review remains PENDING; no audio committed directly to git or shipping tree.
 
 When the GitHub developer changes an API or acceptance target, update the
 affected task in this SAME FILE in the same source commit, preserving all
