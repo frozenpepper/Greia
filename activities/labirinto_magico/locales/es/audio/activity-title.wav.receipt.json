@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T04:28:33.208093+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Laberinto mágico",
+    "cue_id": "labirinto_magico.title.es",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/labirinto_magico/es/activity-title.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "la verinto májico.",
+    "score": 0.5515,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 2,
+  "output": {
+    "path": "activities/labirinto_magico/locales/es/audio/activity-title.wav",
+    "bytes": 66450,
+    "sha256": "dae4bf47b39b5b6818c4501d9f4a4bf553ef4400498747f20c7f6e6473f8bba1"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

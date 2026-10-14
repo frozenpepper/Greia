@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T04:31:27.821678+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Nubes a dormir",
+    "cue_id": "nanna_delle_nuvolette.title.es",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/nanna_delle_nuvolette/es/activity-title.wav",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "No ves a dormir.",
+    "score": 0.7379,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/nanna_delle_nuvolette/locales/es/audio/activity-title.wav",
+    "bytes": 49030,
+    "sha256": "4f91b204f670a59edceab4def7f2d121b74a9ba2e5dfa7c15cbf997655b9e009"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

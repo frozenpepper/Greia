@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T16:02:07.948937+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "it",
+    "text": "M come Mela",
+    "cue_id": "foresta_parole.find_m",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/foresta_parole/it/find_m.wav",
+    "verification": "off",
+    "max_attempts": 1
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 175,
+    "synthesis_text": "m come mela"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/foresta_parole/assets/audio/it/find_m.wav",
+    "bytes": 39922,
+    "sha256": "e4ee79a7cd035403870f4a9b60a4e79ecf58f57aa9ded75517b6ec6ae6c6989b"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

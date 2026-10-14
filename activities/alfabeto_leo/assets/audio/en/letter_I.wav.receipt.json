@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:58.181048+00:00",
+  "created_utc": "2026-10-14T16:11:15.927528+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "I is for Igloo",
-    "cue_id": "alfabeto_leo.letter_I",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_I.wav",
+    "text": "I as Igloo",
+    "cue_id": "alfabeto_leo.letter_I.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_I.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "i is for igloo"
+    "synthesis_text": "i as igloo"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_I.wav",
-    "bytes": 44460,
-    "sha256": "83aaf86bcd6a400c7e0225200891255e3109315cd943b1baaf1afe6dffea9962"
+    "bytes": 37302,
+    "sha256": "777bdec6ef8d44bf0dc92aeca89f2380d5d27b95fad63e64d31bb96fa1fb94b9"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

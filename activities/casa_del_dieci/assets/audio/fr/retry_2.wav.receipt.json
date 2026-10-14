@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T11:57:05.688040+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Compte encore !",
+    "cue_id": "casa_del_dieci.retry_2.fr",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/casa_del_dieci/fr/retry_2.wav",
+    "verification": "auto",
+    "max_attempts": 1
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Colleopard",
+    "score": 0.2261,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/casa_del_dieci/assets/audio/fr/retry_2.wav",
+    "bytes": 35582,
+    "sha256": "7f79ce5e89f830e90e311e32c59a07c5a15c8d3a5c31c6737dd2f5d4f84b300c"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T16:04:21.953646+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "en",
+    "text": "W as Whale",
+    "cue_id": "foresta_parole.find_w",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/foresta_parole/en/find_w.wav",
+    "verification": "off",
+    "max_attempts": 1
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 180,
+    "synthesis_text": "w as whale"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/foresta_parole/assets/audio/en/find_w.wav",
+    "bytes": 43342,
+    "sha256": "6bdae71b35522366577c8f4907fc5f4ea8deb897cc5384c8b6e0a270bc4e2ca8"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

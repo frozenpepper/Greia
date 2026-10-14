@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T16:04:31.372777+00:00",
+  "request": {
+    "speaker": "dani",
+    "kind": "dani_system_speech",
+    "locale": "en",
+    "text": "You did it!",
+    "cue_id": "foresta_parole.you_did_it",
+    "output": "tmp/greia-all-app-voices-20261014-050339/review/foresta_parole/en/you_did_it.wav",
+    "verification": "off",
+    "max_attempts": 1
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": "greia.dani.system-v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Samantha",
+    "rate_wpm": 190,
+    "synthesis_text": "You did it!"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/foresta_parole/assets/audio/en/you_did_it.wav",
+    "bytes": 21316,
+    "sha256": "3854b738f0aae518a63fc024ff6a13fbf4887515917b823da2d5be3cd3d38de2"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

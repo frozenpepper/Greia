@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T16:14:50.745909+00:00",
+  "request": {
+    "speaker": "pedagogical",
+    "kind": "pedagogical_speech",
+    "locale": "it",
+    "text": "sole",
+    "cue_id": "sillabe_magiche.word_sole.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/sillabe_magiche/it/word_sole.wav",
+    "verification": "off",
+    "max_attempts": 1
+  },
+  "provider_id": "macos-native-say",
+  "voice_id": null,
+  "voice_registry_version": "v0.1",
+  "reference_sha256": null,
+  "generation_parameters": {
+    "voice": "Alice",
+    "rate_wpm": 175,
+    "synthesis_text": "sole"
+  },
+  "verification": {
+    "disposition": "NOT_APPLICABLE",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": null,
+    "score": null,
+    "detail": "ASR intentionally skipped for this semantic/utterance class"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/sillabe_magiche/assets/audio/it/word_sole.wav",
+    "bytes": 20780,
+    "sha256": "2d4dc7440b0cfb4f8b4ddac7a432ad7607a786bbb98228d876721cd85bd7b0a6"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

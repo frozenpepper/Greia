@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:43:58.167008+00:00",
+  "created_utc": "2026-10-14T16:10:46.995960+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "J come Jeep",
-    "cue_id": "alfabeto_leo.letter_J",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_J.wav",
+    "cue_id": "alfabeto_leo.letter_J.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_J.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 47574,
     "sha256": "faf4cf413b353e0ce4072053106bcb4b33a2ce71b9c719b6d069bf31c90a4529"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

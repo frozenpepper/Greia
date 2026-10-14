@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T14:42:06.119103+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Les fossiles et d'autres indices aident à reconstituer leur apparence",
+    "cue_id": "encyclopedia.history.dinosaurs.evidence.fr",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/fr/history/dinosaurs_evidence.ogg",
+    "verification": "auto",
+    "max_attempts": 1
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Pose, ais-dol, touz-ais, ais-dal, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais, ais,",
+    "score": 0.0107,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/fr/history/dinosaurs_evidence.ogg",
+    "bytes": 41030,
+    "sha256": "84941bc8369a6f855bb318fe607530a1e73bdde63f27315f1ee2743e6b39c9e9"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T13:45:58.653973+00:00",
+  "request": {
+    "speaker": "leo",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Respira y observa qué ocurre en tu pecho!",
+    "cue_id": "encyclopedia.body.lungs.intro.es",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/enciclopedia_greia/es/body/lungs_intro.ogg",
+    "verification": "auto",
+    "max_attempts": 1
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.leo.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "4fd8be1a5d9163aaa17f6bec0ce3f974793589bf3b10aa29b032e1afd0b0cc34",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Respira y observa Kail Kura en Tupetcho.",
+    "score": 0.7132,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/enciclopedia_greia/assets/audio/es/body/lungs_intro.ogg",
+    "bytes": 26345,
+    "sha256": "e276874aacc52079d4098460697080229025aea2d1226c852e112f75ffae46ce"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

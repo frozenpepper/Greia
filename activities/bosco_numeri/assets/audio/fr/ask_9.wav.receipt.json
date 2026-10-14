@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T11:41:54.016353+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Où est le numéro 9 ?",
+    "cue_id": "bosco_numeri.ask_9.fr",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/bosco_numeri/fr/ask_9.wav",
+    "verification": "auto",
+    "max_attempts": 1
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "WARN",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Ouai le numéro neuf.",
+    "score": 0.5772,
+    "detail": "transcript mismatch; regenerate or inspect manually"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/bosco_numeri/assets/audio/fr/ask_9.wav",
+    "bytes": 52558,
+    "sha256": "a8638d26a0d4da68605c39eb6c360a631fd65397292ca8852ba05365e39dc780"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

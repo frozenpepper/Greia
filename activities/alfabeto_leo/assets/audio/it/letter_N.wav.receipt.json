@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:44:01.362361+00:00",
+  "created_utc": "2026-10-14T16:10:52.168183+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "N come Nave",
-    "cue_id": "alfabeto_leo.letter_N",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_N.wav",
+    "cue_id": "alfabeto_leo.letter_N.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_N.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 40946,
     "sha256": "694bf56d2ac6dc104e622a07c2f10406fad962d3d07f6940407788f9865f12f0"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

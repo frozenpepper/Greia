@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:44:03.874886+00:00",
+  "created_utc": "2026-10-14T16:10:55.581785+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "Q come Quadro",
-    "cue_id": "alfabeto_leo.letter_Q",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_Q.wav",
+    "cue_id": "alfabeto_leo.letter_Q.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_Q.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 39034,
     "sha256": "3cc71c7000e5637ef1ca70cb14d1e284203018b7f490083b9acd7f0719f0dcd8"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

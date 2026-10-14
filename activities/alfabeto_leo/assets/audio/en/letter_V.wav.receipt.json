@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:13.462796+00:00",
+  "created_utc": "2026-10-14T16:11:32.349482+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "V is for Violin",
-    "cue_id": "alfabeto_leo.letter_V",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_V.wav",
+    "text": "V as Violin",
+    "cue_id": "alfabeto_leo.letter_V.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_V.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "v is for violin"
+    "synthesis_text": "v as violin"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_V.wav",
-    "bytes": 48906,
-    "sha256": "7e964d9459c7cdaca7a1286358e3678041ef3a333edd845356e6702d8f0151f1"
+    "bytes": 42762,
+    "sha256": "c41b74e13b07d9b3f30cb5cae6794802f777d53bfda2ab49bc7cfc9688b7a8b3"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

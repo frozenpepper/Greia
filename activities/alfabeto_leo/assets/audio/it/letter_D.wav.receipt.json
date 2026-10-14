@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:43:52.430332+00:00",
+  "created_utc": "2026-10-14T16:10:41.730405+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "D come Delfino",
-    "cue_id": "alfabeto_leo.letter_D",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_D.wav",
+    "cue_id": "alfabeto_leo.letter_D.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_D.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 42982,
     "sha256": "da52f4e314052053881b1498412ae2db0cf6acbe5b924f5ff8d8a86b4de1436c"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

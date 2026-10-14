@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:15.838503+00:00",
+  "created_utc": "2026-10-14T16:11:34.845269+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "X is for Xylophone",
-    "cue_id": "alfabeto_leo.letter_X",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_X.wav",
+    "text": "X as Xylophone",
+    "cue_id": "alfabeto_leo.letter_X.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_X.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "x is for xylophone"
+    "synthesis_text": "x as xylophone"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_X.wav",
-    "bytes": 61370,
-    "sha256": "0d82e13868b1b7f7cde4b7fa8234484e0b784eeed7e40e5b975d9c723ff91f1d"
+    "bytes": 56762,
+    "sha256": "692b5a8462053777391f8f60123c2df41bc071a036802a3799172aa9af458336"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

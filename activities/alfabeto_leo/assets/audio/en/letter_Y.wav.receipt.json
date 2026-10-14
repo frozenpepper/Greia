@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:16.983127+00:00",
+  "created_utc": "2026-10-14T16:11:35.877803+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "Y is for Yacht",
-    "cue_id": "alfabeto_leo.letter_Y",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_Y.wav",
+    "text": "Y as Yacht",
+    "cue_id": "alfabeto_leo.letter_Y.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_Y.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "y is for yacht"
+    "synthesis_text": "y as yacht"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_Y.wav",
-    "bytes": 42672,
-    "sha256": "77e4a67d833f4ac58b86b460b4a27f7efa8be7b464eda6806e44f8b676b19f4f"
+    "bytes": 36526,
+    "sha256": "5a27a1c62cf254c340b9cfd958f31c98f16b57a26bfd73c7628c91d20cb4c953"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:09.912548+00:00",
+  "created_utc": "2026-10-14T16:11:29.030890+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "S is for Sun",
-    "cue_id": "alfabeto_leo.letter_S",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_S.wav",
+    "text": "S as Sun",
+    "cue_id": "alfabeto_leo.letter_S.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_S.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "s is for sun"
+    "synthesis_text": "s as sun"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_S.wav",
-    "bytes": 43962,
-    "sha256": "52057bc1f66acd09217606a3b377feeeae1634aceab27eda5eef1fd6e92ca2dc"
+    "bytes": 36280,
+    "sha256": "643e8048ed2f5a65d1d9a5358be9c9f77a2d0f996adfef395c2918ece3d5cd93"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

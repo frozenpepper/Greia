@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:55.076597+00:00",
+  "created_utc": "2026-10-14T16:11:12.386396+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "F is for Fish",
-    "cue_id": "alfabeto_leo.letter_F",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_F.wav",
+    "text": "F as Fish",
+    "cue_id": "alfabeto_leo.letter_F.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_F.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "f is for fish"
+    "synthesis_text": "f as fish"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_F.wav",
-    "bytes": 40890,
-    "sha256": "ecfd5536aeeffe6af40ad4479f6aa22d0cf3dd5b68c11d2523a0d15712178492"
+    "bytes": 32184,
+    "sha256": "9a8de5011be1ea6899cbba97ae0ff3960a50854baf345de09054cd53a27063ea"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

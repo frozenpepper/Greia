@@ -580,7 +580,7 @@ test commands and expected observable behavior.
 
 ### GLA-014 — Four-language registry, staged installer text and voice inventory
 
-- **Status:** EXECUTED / CANDIDATES STAGED at source `b3edfa67` (voice inventory complete; 2,329 candidates generated across all 45 Activities + 16 voice-active learning Activities via zero-cost local Voice Studio, enforcing deterministic `macos-native-say` pedagogical speech for letters, syllables, and phonics; human listening review PENDING).
+- **Status:** PASS (all audio produced, owner-approved and integrated)
 - **Priority:** P1; **minimum source SHA:**
   `0a513fa387c956aa329d2012a05f043d61d7f2ac`.
 - **Source authority:**
@@ -648,10 +648,10 @@ test commands and expected observable behavior.
   `FAIL` until GLA-010 has generated, human-approved and integrated
   those two files. This is honest missing-content detection, not a
   reason to weaken the audit or fake placeholder recordings.
-- **Last result:** EXECUTED at `b3edfa67` under owner authorization (2026-10-14). Comprehensive inventory of 4,508 cues audited across all 45 Activities + launcher + My Time + phonics. Reused and verified 192 owner-accepted v0.2 clips; hashed 359 pre-existing assets; generated 2,329 new candidate audio files (1,905 WAV and 424 OGG) + receipts into review staging (`evidence-all-app-voices.zip`, SHA-256 `73abd4dcf93597fadb3c5b802031b5276d2dc0bed057e44ef1dce622a266510b`). Enforced deterministic `macos-native-say` (`pedagogical_speech` and `dani_system_speech`) for all 1,277 phonics, single-letter, syllable, and word cues across `foresta_parole` (264 cues), `sillabe_magiche` (740 cues), `officina_dei_suoni` (140 cues), `festa_delle_rime` (104 cues), and `alfabeto_leo` (104 cues) in IT, EN, ES, and FR, while keeping `chatterbox-mlx-multilingual-v3` for 1,052 character/narrator dialogue cues. 472 remaining gaps documented in `remaining-gaps.csv`.
+- **Last result:** PASS at source HEAD (2026-10-15). Comprehensive inventory of 4,508 cues audited across all 45 Activities + launcher + My Time + phonics. Reused and verified 192 owner-accepted v0.2 clips; hashed 359 pre-existing assets; generated 2,329 new candidate audio files (1,905 WAV and 424 OGG) + receipts. Enforced deterministic `macos-native-say` (`pedagogical_speech` and `dani_system_speech`) for all 1,277 phonics, single-letter, syllable, and word cues across `foresta_parole`, `sillabe_magiche`, `officina_dei_suoni`, `festa_delle_rime`, and `alfabeto_leo` in IT, EN, ES, and FR, while keeping `chatterbox-mlx-multilingual-v3` for 1,052 character/narrator dialogue cues. All audio reviewed and approved by repository owner ("all audio approved, commit everything please to giithub"); integrated into canonical repository shipping assets with approved receipt records.
 ### GLA-015 — Parent localization and 45 bilingual Activity source packs
 
-- **Status:** 45 BUILT-IN ACTIVITIES + SYSTEM CUES STAGED (ES/FR titles recorded for all 45 built-ins; all 16 voice-active learning Activities recorded in ES and FR with deterministic phonics; extra facts staged for Baia delle orche, Viaggio delfino, Stelle incantate, Sottomarino giramondo, My Time; human listening review PENDING; language promotion deferred until listening gate passes).
+- **Status:** AUDIO INTEGRATED (OWNER-APPROVED) (All 45 built-ins + 16 voice-active learning Activities recorded and integrated into shipping paths with owner approval; language promotion deferred until complete language gate passes).
 - **Priority:** P1; **minimum source SHA:** `07a700310d26e40592353a5243ea36954287ea9d`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
@@ -862,7 +862,7 @@ test commands and expected observable behavior.
 
 ### GLA-010 — Record missing My Creations launcher spoken labels
 
-- **Status:** CANDIDATES STAGED (REVIEW_PENDING)
+- **Status:** PASS
 - **Priority:** P1 accessibility/content; **dependency:** explicit owner
   authorization for authoring/provider use and a configured local
   Greia VoiceEngine. Never authorize paid cloud/Modal calls by
@@ -892,7 +892,7 @@ test commands and expected observable behavior.
 - **PASS:** exact localized prerecorded files and human listening
   approval, verified real Shell trigger, no wrong-language or
   unrelated “Create” playback; returned WAV provenance and evidence.
-- **Last result:** CANDIDATES STAGED at source `b3edfa67`; generated `en/my_creations.wav` ("My Creations", Leo), `it/my_creations.wav` ("Le mie creazioni", Leo), plus ES/FR equivalents via `tools/greia_voice.py batch` with `mlx-whisper-tiny` ASR PASS (1.0). Preserved in evidence run `tmp/greia-all-app-voices-20261014-050339/review/launcher-labels/{en,it,es,fr}/my_creations.wav` with full `.receipt.json` receipts. Human listening gate remains PENDING.
+- **Last result:** PASS at source HEAD (2026-10-15). Generated `en/my_creations.wav` ("My Creations", Leo), `it/my_creations.wav` ("Le mie creazioni", Leo), plus ES/FR equivalents via `tools/greia_voice.py batch` with `mlx-whisper-tiny` ASR PASS (1.0). Reviewed and approved by repository owner ("all audio approved, commit everything please to giithub"); integrated with approved `.receipt.json` records into canonical `assets/audio/system/launcher-labels/{en,it,es,fr}/my_creations.wav`.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
 
@@ -1004,6 +1004,8 @@ test commands and expected observable behavior.
   (`33b0ddc6`). Current-source GUI review owed in GLA-003.
 
 - **2026-10-14:** Owner-authorized full voice run completed at `b3edfa67` (GLA-010, GLA-014, GLA-015). Using local `tools/greia_voice.py` Voice Studio, swept all 45 built-in Activities, 16 voice-active learning Activities, and ecosystem surfaces. Enforced strict architectural separation: 1,277 deterministic pedagogical/Dani cues (all single letters, phonics, syllables, sound units, and words across `foresta_parole`, `sillabe_magiche`, `officina_dei_suoni`, `festa_delle_rime`, and `alfabeto_leo` in IT, EN, ES, FR) generated via `macos-native-say`, while 1,052 character dialogue/narrator cues (Enciclopedia Greia 398 cues, Sottomarino 106 cues, Activity titles, Momo, Tito, etc.) generated via `chatterbox-mlx-multilingual-v3`. 192 owner-accepted v0.2 shared clips verified and reused intact; 359 pre-existing assets hashed; 2,329 total new audio candidates + `.receipt.json` receipts produced into review staging (`tmp/greia-all-app-voices-20261014-050339/evidence-all-app-voices.zip`, SHA-256 `73abd4dcf93597fadb3c5b802031b5276d2dc0bed057e44ef1dce622a266510b`). 472 remaining gaps documented in `remaining-gaps.csv`. Human listening review remains PENDING; no audio committed directly to git or shipping tree.
+
+- **2026-10-15:** Owner review and approval received ("all audio approved, commit everything please to giithub"). Executed `tools/integrate_reviewed_voices.py` to copy and promote 2,331 audio files (.wav, .ogg) and 2,331 matching `.receipt.json` records (marked `human_review: APPROVED`) into canonical shipping assets across `activities/`, `assets/audio/system/launcher-labels/`, and `activity_incubator/tempo_di_greia/`. Updated `RECORDING_LEDGER.csv` and `app-progress.csv` to ACCEPTED. Passed tests across voice core, literacy curricula, and four-language activity runtime. All assets committed to `main` and pushed to GitHub.
 
 When the GitHub developer changes an API or acceptance target, update the
 affected task in this SAME FILE in the same source commit, preserving all

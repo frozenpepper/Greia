@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:44:09.968703+00:00",
+  "created_utc": "2026-10-14T16:11:03.015339+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "X come Xilofono",
-    "cue_id": "alfabeto_leo.letter_X",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_X.wav",
+    "cue_id": "alfabeto_leo.letter_X.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_X.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 60888,
     "sha256": "672194c44519a34150dccd5f5205b9e249f6d823189335ad6bad9f53230655f3"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

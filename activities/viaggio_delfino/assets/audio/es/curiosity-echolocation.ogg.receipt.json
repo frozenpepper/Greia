@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T04:59:39.374511+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Los delfines emiten pequeños chasquidos y escuchan el eco. ¡Así encuentran peces incluso cuando apenas pueden verlos!",
+    "cue_id": "curiosity.delfino.echolocation.voice",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-echolocation.ogg",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Los del fines se miten pequeños chasquidos y escuchan el eco. Así en cuentran veces incluso cuando apenas pueden verlos.",
+    "score": 0.8791,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/viaggio_delfino/assets/audio/es/curiosity-echolocation.ogg",
+    "bytes": 59841,
+    "sha256": "d41a420c2555764b3d46fcbc51b4e335563c3fd4afa0110f4fa41dd969c9e827"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

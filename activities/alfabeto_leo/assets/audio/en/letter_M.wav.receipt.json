@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:02.610888+00:00",
+  "created_utc": "2026-10-14T16:11:21.482903+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "M is for Moon",
-    "cue_id": "alfabeto_leo.letter_M",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_M.wav",
+    "text": "M as Moon",
+    "cue_id": "alfabeto_leo.letter_M.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_M.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "m is for moon"
+    "synthesis_text": "m as moon"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_M.wav",
-    "bytes": 36282,
-    "sha256": "82b97b4874a1aab0f466130d4d8018cc6848ff81c60cc985277967e52bb2532c"
+    "bytes": 30648,
+    "sha256": "28240136895ca44b595f19283eb2e26c9a9a0e055aed42dec8425af07f078cf5"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

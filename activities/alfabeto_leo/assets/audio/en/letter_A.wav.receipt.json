@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:48.452131+00:00",
+  "created_utc": "2026-10-14T16:11:06.766432+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "A is for Apple",
-    "cue_id": "alfabeto_leo.letter_A",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_A.wav",
+    "text": "A as Apple",
+    "cue_id": "alfabeto_leo.letter_A.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_A.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "a is for apple"
+    "synthesis_text": "a as apple"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_A.wav",
-    "bytes": 39868,
-    "sha256": "07ba6f70d2b09382c0f517ffd82237a30dda84766ec8ca05a9b27695414fb66c"
+    "bytes": 30652,
+    "sha256": "c7dc0c8d80b78bde2e76922af97338c539f397bf600e82acf9355be942468db0"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

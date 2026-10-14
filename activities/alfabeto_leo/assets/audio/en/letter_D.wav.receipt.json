@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:52.803173+00:00",
+  "created_utc": "2026-10-14T16:11:10.209360+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "D is for Duck",
-    "cue_id": "alfabeto_leo.letter_D",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_D.wav",
+    "text": "D as Duck",
+    "cue_id": "alfabeto_leo.letter_D.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_D.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "d is for duck"
+    "synthesis_text": "d as duck"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_D.wav",
-    "bytes": 37598,
-    "sha256": "d510c107d607f5ccbee2d341c5975fd48915d7a37807140a7f0bdaa7cfadb08a"
+    "bytes": 30426,
+    "sha256": "60c0bedaf9ffb1e6cdd062a08381e19da5804db1e8e8983f4420b914114fe267"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

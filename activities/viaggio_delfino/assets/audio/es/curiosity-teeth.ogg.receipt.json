@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T05:00:41.853812+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "Los delfines tienen muchos dientes pequeños, pero no mastican el pescado: lo atrapan y se lo tragan entero.",
+    "cue_id": "curiosity.delfino.teeth.voice",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/curiosity-teeth.ogg",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Los del fines tienen muchos dientes pequeños, pero no más tican el pescado. Lo atrapan y se lo tragan en tero.",
+    "score": 0.8995,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/viaggio_delfino/assets/audio/es/curiosity-teeth.ogg",
+    "bytes": 52689,
+    "sha256": "35df0817cc3a3c82076894d3bb6bcc9b51a3447f4f1d9baece777c0252b3bbb5"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

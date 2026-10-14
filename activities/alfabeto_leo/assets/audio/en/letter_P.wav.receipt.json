@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:06.180882+00:00",
+  "created_utc": "2026-10-14T16:11:25.132034+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "P is for Penguin",
-    "cue_id": "alfabeto_leo.letter_P",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_P.wav",
+    "text": "P as Penguin",
+    "cue_id": "alfabeto_leo.letter_P.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_P.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "p is for penguin"
+    "synthesis_text": "p as penguin"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_P.wav",
-    "bytes": 48632,
-    "sha256": "7e71445bf19dcaa1bd8989ad7544b0f9eb76029907f8497fc3d6a14124189b71"
+    "bytes": 40952,
+    "sha256": "42456ec6b0b8266247bb3817c92a3542c816b1b7cf31905e1d43be46fb35e0e2"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

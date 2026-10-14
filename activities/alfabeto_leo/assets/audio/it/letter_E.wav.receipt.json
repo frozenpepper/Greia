@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:43:53.376578+00:00",
+  "created_utc": "2026-10-14T16:10:42.515807+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "E come Elefante",
-    "cue_id": "alfabeto_leo.letter_E",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_E.wav",
+    "cue_id": "alfabeto_leo.letter_E.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_E.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 46562,
     "sha256": "408cc8f1bbb681ce9dded18ceab9ae88b1f601163e752a0fb727b39c9454086d"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

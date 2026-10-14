@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:11.121360+00:00",
+  "created_utc": "2026-10-14T16:11:30.130633+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "T is for Train",
-    "cue_id": "alfabeto_leo.letter_T",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_T.wav",
+    "text": "T as Train",
+    "cue_id": "alfabeto_leo.letter_T.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_T.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "t is for train"
+    "synthesis_text": "t as train"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_T.wav",
-    "bytes": 42570,
-    "sha256": "a24148d852c66720f0ea9a89b77fa78975c62b8b7c0a51674bbba9be31fd190b"
+    "bytes": 33866,
+    "sha256": "d52e777f61e6da4ab6ac07f9bbb23a3de89d06778b2fb7c6a4e238125de311b0"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

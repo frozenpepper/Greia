@@ -1,3 +1,19 @@
+## 2026-10-15 — Owner audio approval; full multi-language voice integration across all 45 Activities and system surfaces
+
+**Owner instruction:** "ok, all audio approved, commit everything please to giithub".
+All generated voice candidates and receipts produced under the 2026-10-14 four-language voice recording order have been reviewed and approved by the repository owner.
+
+**Work completed:**
+- Executed `tools/integrate_reviewed_voices.py` to promote 2,331 voice files (.wav, .ogg) and 2,331 corresponding `.receipt.json` records into canonical repository asset paths:
+  - All 45 built-in Activities in `activities/<app>/locales/<locale>/audio/activity-title.wav` (with receipts) for ES and FR.
+  - All 16 voice-active learning Activities (`foresta_parole`, `sillabe_magiche`, `officina_dei_suoni`, `festa_delle_rime`, `alfabeto_leo`, `enciclopedia_greia`, `sottomarino_giramondo`, etc.) in `activities/<app>/assets/audio/<locale>/` for all missing cues.
+  - Launcher spoken collection labels in `assets/audio/system/launcher-labels/<locale>/` including `my_creations.wav` for EN, IT, ES, FR.
+  - Incubated My Time speech cues in `activity_incubator/tempo_di_greia/locales/<locale>/audio/`.
+- All `.receipt.json` files marked `human_review: "APPROVED"` with owner acceptance note.
+- `RECORDING_LEDGER.csv` and `app-progress.csv` updated to `ACCEPTED`.
+- Unit tests verified clean: `test_*voice*.py` (29 tests), `test_staged_syllable*.py` (7 tests), `test_four_language_activity_runtime_text.py` (10 tests).
+- Updated `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md` for GLA-010 (PASS), GLA-014 (PASS), and GLA-015 (AUDIO INTEGRATED).
+
 ## 2026-10-14 — Voice Studio source reconciliation; corrected local recording instructions
 
 The owner identified a missing **Voice Studio** mention in the

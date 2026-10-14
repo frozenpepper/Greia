@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T05:01:35.559195+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "fr",
+    "text": "Salut ! Moi, c'est Tito ! Bouge la souris ou utilise les flèches pour nager. Appuie sur la barre d'espace pour sauter hors de l'eau. Ramasse toutes les perles !",
+    "cue_id": "presenter.welcome.voice",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/fr/presenter-welcome.ogg",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "fr",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Allez-o, moi c'estito ! Bouges la souris ou utilise les flèches pour nager. Appuyez sur la barre de spasse pour sauter hors de l'eau. Ramanz toutes les perles.",
+    "score": 0.8496,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/viaggio_delfino/assets/audio/fr/presenter-welcome.ogg",
+    "bytes": 73120,
+    "sha256": "8d27bef527e341d1711873664fa85eef1458fc743f474efe396ce7ed23a449d6"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

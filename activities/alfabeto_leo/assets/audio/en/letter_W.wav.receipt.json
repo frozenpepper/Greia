@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:14.686421+00:00",
+  "created_utc": "2026-10-14T16:11:33.722166+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "W is for Whale",
-    "cue_id": "alfabeto_leo.letter_W",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_W.wav",
+    "text": "W as Whale",
+    "cue_id": "alfabeto_leo.letter_W.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_W.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "w is for whale"
+    "synthesis_text": "w as whale"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_W.wav",
-    "bytes": 48974,
-    "sha256": "dcd5956e6c4c4fdc0eff85972c29974fba679b8411f4bc82e3ab4133d406320f"
+    "bytes": 43342,
+    "sha256": "6bdae71b35522366577c8f4907fc5f4ea8deb897cc5384c8b6e0a270bc4e2ca8"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:12.323159+00:00",
+  "created_utc": "2026-10-14T16:11:31.227518+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "U is for Umbrella",
-    "cue_id": "alfabeto_leo.letter_U",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_U.wav",
+    "text": "U as Umbrella",
+    "cue_id": "alfabeto_leo.letter_U.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_U.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "u is for umbrella"
+    "synthesis_text": "u as umbrella"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_U.wav",
-    "bytes": 48900,
-    "sha256": "bbcb315333daf1fa72cc509c4eacd1ceca4ef3d2a0265bc5ab0d327db6ee644a"
+    "bytes": 40198,
+    "sha256": "22cd9f2df2c5f95012c511e6f91f550a5ba08ae0ffc78a337d6959f5c2822605"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

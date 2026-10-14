@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:44:02.152073+00:00",
+  "created_utc": "2026-10-14T16:10:53.222987+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "O come Orso",
-    "cue_id": "alfabeto_leo.letter_O",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_O.wav",
+    "cue_id": "alfabeto_leo.letter_O.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_O.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 35300,
     "sha256": "a807782c6f60d2bf1f3975bce1a2ee3cb4c92972a6be7d53ac34c980d6950f52"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

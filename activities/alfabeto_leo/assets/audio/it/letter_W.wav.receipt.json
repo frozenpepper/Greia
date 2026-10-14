@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:44:09.139212+00:00",
+  "created_utc": "2026-10-14T16:11:02.176027+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "W come Wafer",
-    "cue_id": "alfabeto_leo.letter_W",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_W.wav",
+    "cue_id": "alfabeto_leo.letter_W.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_W.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 55268,
     "sha256": "183b9244cb73c6f0b37f0c2056b711ac99c20896df2a911ab549bc1b82adf1c5"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

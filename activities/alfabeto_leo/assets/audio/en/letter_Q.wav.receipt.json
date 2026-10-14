@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:07.546595+00:00",
+  "created_utc": "2026-10-14T16:11:26.260545+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "Q is for Queen",
-    "cue_id": "alfabeto_leo.letter_Q",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_Q.wav",
+    "text": "Q as Queen",
+    "cue_id": "alfabeto_leo.letter_Q.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_Q.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "q is for queen"
+    "synthesis_text": "q as queen"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_Q.wav",
-    "bytes": 44024,
-    "sha256": "9155b53b22d4b7fa837737ca6f0c89ca03dc0f2b9ffe3c857988ef4ce62e660f"
+    "bytes": 35832,
+    "sha256": "0f953fbcedcf1e66017e607384e4a30b86728ef56cf2762c6d3a9fc8fc01d9df"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

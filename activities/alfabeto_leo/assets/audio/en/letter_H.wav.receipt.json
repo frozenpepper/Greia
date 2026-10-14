@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:57.193294+00:00",
+  "created_utc": "2026-10-14T16:11:14.591494+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "H is for House",
-    "cue_id": "alfabeto_leo.letter_H",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_H.wav",
+    "text": "H as House",
+    "cue_id": "alfabeto_leo.letter_H.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_H.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "h is for house"
+    "synthesis_text": "h as house"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_H.wav",
-    "bytes": 44982,
-    "sha256": "8484f2ce9be48bdce585f7b3b3d1c0bc6099d36aeb8416d534dc361127244932"
+    "bytes": 36790,
+    "sha256": "1af7dcc709f85165c0a0ec566a4abcd24adf3616f90cdb5540f08a67156c2fc1"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

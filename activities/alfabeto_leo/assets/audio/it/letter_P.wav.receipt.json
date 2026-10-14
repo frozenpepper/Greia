@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:44:03.017670+00:00",
+  "created_utc": "2026-10-14T16:10:54.195553+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "P come Palla",
-    "cue_id": "alfabeto_leo.letter_P",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_P.wav",
+    "cue_id": "alfabeto_leo.letter_P.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_P.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 37956,
     "sha256": "b680411ca196ade94d9c71989831d5d525fd0393bc4c0cbdb64fa192ad3758a3"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

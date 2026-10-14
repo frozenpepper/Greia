@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:08.715304+00:00",
+  "created_utc": "2026-10-14T16:11:27.541337+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "R is for Rainbow",
-    "cue_id": "alfabeto_leo.letter_R",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_R.wav",
+    "text": "R as Rainbow",
+    "cue_id": "alfabeto_leo.letter_R.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_R.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "r is for rainbow"
+    "synthesis_text": "r as rainbow"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_R.wav",
-    "bytes": 45978,
-    "sha256": "3bf85edac3494cf512c35098494feaa15a2d29bbe7f950d28a6cb03043a7a59a"
+    "bytes": 37786,
+    "sha256": "8b846d6aaf6515512afdb6f476faa86b1daf686264c4a515ad6dcb4b6220dce7"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

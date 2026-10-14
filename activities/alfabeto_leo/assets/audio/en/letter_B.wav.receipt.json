@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:49.772192+00:00",
+  "created_utc": "2026-10-14T16:11:08.036121+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "B is for Boat",
-    "cue_id": "alfabeto_leo.letter_B",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_B.wav",
+    "text": "B as Boat",
+    "cue_id": "alfabeto_leo.letter_B.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_B.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "b is for boat"
+    "synthesis_text": "b as boat"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_B.wav",
-    "bytes": 37148,
-    "sha256": "00f0e02136cad5c824b8d6b4fee3a490f30d1f775d69712b16a5b1797724fa79"
+    "bytes": 29980,
+    "sha256": "f9eec16dcc0942321788ce011ccf2a18bfbcfdfd0cdf8380d714caa291883325"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

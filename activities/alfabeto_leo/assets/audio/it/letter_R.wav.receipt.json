@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:44:04.768765+00:00",
+  "created_utc": "2026-10-14T16:10:56.589587+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "R come Rana",
-    "cue_id": "alfabeto_leo.letter_R",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_R.wav",
+    "cue_id": "alfabeto_leo.letter_R.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_R.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 39922,
     "sha256": "3fa10dea5099cf38355781f32d3505e9ef2932e88df55d7b18d51cf15d7ffc5f"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

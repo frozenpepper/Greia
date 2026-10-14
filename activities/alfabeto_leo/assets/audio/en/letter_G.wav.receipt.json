@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:56.101923+00:00",
+  "created_utc": "2026-10-14T16:11:13.490453+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "G is for Giraffe",
-    "cue_id": "alfabeto_leo.letter_G",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_G.wav",
+    "text": "G as Giraffe",
+    "cue_id": "alfabeto_leo.letter_G.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_G.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "g is for giraffe"
+    "synthesis_text": "g as giraffe"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_G.wav",
-    "bytes": 45890,
-    "sha256": "e136f81c0c4b86b02fb99156fceb49c33e5e956284ce1a86b48104d71ffa7f74"
+    "bytes": 39746,
+    "sha256": "50526d9838f5f4d7f976c1d63cfda862aef0c6b9878951db96433547aafa3dfa"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

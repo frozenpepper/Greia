@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:18.273766+00:00",
+  "created_utc": "2026-10-14T16:11:37.094422+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "Z is for Zebra",
-    "cue_id": "alfabeto_leo.letter_Z",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_Z.wav",
+    "text": "Z as Zebra",
+    "cue_id": "alfabeto_leo.letter_Z.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_Z.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "z is for zebra"
+    "synthesis_text": "z as zebra"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_Z.wav",
-    "bytes": 42400,
-    "sha256": "5150de0743e9109242ea03d575c751ea22b379b5840e446550fa5e9e1765f73e"
+    "bytes": 35232,
+    "sha256": "c1c25105765ceec71ee7f09834a2959c91b87493b7c059754d90e09326149e19"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

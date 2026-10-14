@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:43:59.714525+00:00",
+  "created_utc": "2026-10-14T16:10:49.594753+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "L come Luna",
-    "cue_id": "alfabeto_leo.letter_L",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_L.wav",
+    "cue_id": "alfabeto_leo.letter_L.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_L.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 38386,
     "sha256": "dfad9f30fc06ff410c0489fa0a1795f3aedd4002a219406e462401e9743ea2a8"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

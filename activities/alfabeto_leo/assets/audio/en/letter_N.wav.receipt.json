@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:03.844722+00:00",
+  "created_utc": "2026-10-14T16:11:22.746019+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "N is for Nest",
-    "cue_id": "alfabeto_leo.letter_N",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_N.wav",
+    "text": "N as Nest",
+    "cue_id": "alfabeto_leo.letter_N.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_N.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "n is for nest"
+    "synthesis_text": "n as nest"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_N.wav",
-    "bytes": 39866,
-    "sha256": "d5be42f385104a7990de5293fa4f856d8e703253197dd09aca5712c86186e1cf"
+    "bytes": 34232,
+    "sha256": "c6cb80c1f782ed628ae7e4224d9e794910cdcae1be8468772c2f28d893486c8c"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

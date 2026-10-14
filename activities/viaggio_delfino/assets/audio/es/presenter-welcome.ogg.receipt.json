@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-14T04:58:56.015216+00:00",
+  "request": {
+    "speaker": "tito",
+    "kind": "character_dialogue",
+    "locale": "es",
+    "text": "¡Hola! ¡Soy Tito! Mueve el ratón o usa las flechas para nadar, y pulsa la barra espaciadora para saltar fuera del agua. ¡Recoge todas las perlas!",
+    "cue_id": "presenter.welcome.voice",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/viaggio_delfino/es/presenter-welcome.ogg",
+    "verification": "auto",
+    "max_attempts": 2
+  },
+  "provider_id": "chatterbox-mlx-multilingual-v3",
+  "voice_id": "greia.tito.v1",
+  "voice_registry_version": "v0.1",
+  "reference_sha256": "e5d38bdd6dededd12c43b4c570fc383692fdc03a15248c421fde95fe40597ad7",
+  "generation_parameters": {
+    "model_id": "mlx-community/chatterbox-multilingual-v3",
+    "lang_code": "es",
+    "model_load_count": 1
+  },
+  "verification": {
+    "disposition": "PASS",
+    "verifier_id": "mlx-whisper-tiny",
+    "transcript": "Hola, soy Tito. Mueve el batón o usa las flechas para nadar y púrsa la barra espaciodora para saltar fuera del agua. Debe coger todas las perlas.",
+    "score": 0.903,
+    "detail": "transcript is plausibly aligned; human listening still required"
+  },
+  "attempts": 1,
+  "output": {
+    "path": "activities/viaggio_delfino/assets/audio/es/presenter-welcome.ogg",
+    "bytes": 81355,
+    "sha256": "84fc4f2cc7c6c092922a40d96ab74172d0d31282db2306808d9e053840ef0714"
+  },
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
+}

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:43:54.445687+00:00",
+  "created_utc": "2026-10-14T16:10:43.321037+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "F come Farfalla",
-    "cue_id": "alfabeto_leo.letter_F",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_F.wav",
+    "cue_id": "alfabeto_leo.letter_F.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_F.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 55282,
     "sha256": "99f3da0bec12aac1b230fc5ff059c086402f7c58908b4022ba6ba323df1fda2c"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:49:05.010087+00:00",
+  "created_utc": "2026-10-14T16:11:23.955675+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "O is for Owl",
-    "cue_id": "alfabeto_leo.letter_O",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_O.wav",
+    "text": "O as Owl",
+    "cue_id": "alfabeto_leo.letter_O.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_O.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "o is for owl"
+    "synthesis_text": "o as owl"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_O.wav",
-    "bytes": 41312,
-    "sha256": "a2b6f929b3f25095ef79e70c348100c1b54d5c70c3b8c0e8111cb62c015e523b"
+    "bytes": 32608,
+    "sha256": "176488cc858c8845795fe0fd2d4dac930c05af31f15037b14d662aa3dc9341eb"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

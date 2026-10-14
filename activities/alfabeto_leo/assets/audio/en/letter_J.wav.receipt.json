@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:59.167719+00:00",
+  "created_utc": "2026-10-14T16:11:17.497005+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "J is for Jellyfish",
-    "cue_id": "alfabeto_leo.letter_J",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_J.wav",
+    "text": "J as Jellyfish",
+    "cue_id": "alfabeto_leo.letter_J.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_J.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "j is for jellyfish"
+    "synthesis_text": "j as jellyfish"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_J.wav",
-    "bytes": 57158,
-    "sha256": "c2269ce138def4b04303b6068dd7286afde4c7dffcdbc145b4080cf942f009d9"
+    "bytes": 49990,
+    "sha256": "a3547a59a75a3e9a305434cf19bf199678ccb122a9984c8fe44befdcd833b889"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

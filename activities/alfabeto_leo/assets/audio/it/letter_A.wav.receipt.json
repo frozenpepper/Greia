@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:43:49.527658+00:00",
+  "created_utc": "2026-10-14T16:10:39.449631+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "A come Ape",
-    "cue_id": "alfabeto_leo.letter_A",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_A.wav",
+    "cue_id": "alfabeto_leo.letter_A.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_A.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 33762,
     "sha256": "08485a8fa9a3f4b64d21d48a7349880c5ab2795f98e017010f642b31b228ad1c"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

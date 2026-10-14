@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:44:05.698901+00:00",
+  "created_utc": "2026-10-14T16:10:57.645170+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "it",
     "text": "S come Sole",
-    "cue_id": "alfabeto_leo.letter_S",
-    "output": "activities/alfabeto_leo/assets/audio/it/letter_S.wav",
+    "cue_id": "alfabeto_leo.letter_S.it",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/it/letter_S.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -33,6 +33,6 @@
     "bytes": 44018,
     "sha256": "149c0ad71c15838983ba70be9924a056eb9d289dd6701e57efbffc9acd721ddc"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }

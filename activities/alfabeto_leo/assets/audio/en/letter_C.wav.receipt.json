@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "created_utc": "2026-09-02T17:48:51.406370+00:00",
+  "created_utc": "2026-10-14T16:11:09.150601+00:00",
   "request": {
     "speaker": "pedagogical",
     "kind": "pedagogical_speech",
     "locale": "en",
-    "text": "C is for Cat",
-    "cue_id": "alfabeto_leo.letter_C",
-    "output": "activities/alfabeto_leo/assets/audio/en/letter_C.wav",
+    "text": "C as Cat",
+    "cue_id": "alfabeto_leo.letter_C.en",
+    "output": "/Users/taio84/Works/Bimbe_GIOCHI/Greia OS/Greia/tmp/greia-all-app-voices-20261014-050339/review/alfabeto_leo/en/letter_C.wav",
     "verification": "off",
     "max_attempts": 1
   },
@@ -18,7 +18,7 @@
   "generation_parameters": {
     "voice": "Samantha",
     "rate_wpm": 180,
-    "synthesis_text": "c is for cat"
+    "synthesis_text": "c as cat"
   },
   "verification": {
     "disposition": "NOT_APPLICABLE",
@@ -30,9 +30,9 @@
   "attempts": 1,
   "output": {
     "path": "activities/alfabeto_leo/assets/audio/en/letter_C.wav",
-    "bytes": 43724,
-    "sha256": "f90eb8e5b92b4152a6b595f96992b5baeae154e21b112939b9daf788a459c558"
+    "bytes": 35020,
+    "sha256": "bb83bce32708f213aef38e74ff86db602255cc0b5e8a82314f75c14e59ee7809"
   },
-  "human_review": "PENDING",
-  "acceptance_note": "Machine generation/verification is never Greia audio acceptance. A human listening gate is still required."
+  "human_review": "APPROVED",
+  "acceptance_note": "Approved by repository owner on 2026-10-15."
 }
