@@ -62,6 +62,27 @@ versus phoneme; those are `BLOCKED_SCRIPT` cue rows pending a complete
 script. Audio remains human-review pending and ES/FR are not selectable
 Greia product languages until their separate release gates close.
 
+## Voice Studio identity and existing owner-approved assets
+
+`SETUP.md` §7 and `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`
+§1 explicitly define **Voice Studio as the VoiceEngine authoring
+workflow**: semantic request → routed provider → optional verification
+→ review audio/receipt → human listening → accepted asset promotion.
+It is not automatically a separate GUI. The public production
+surface is `tools/greia_voice.py` (`generate`, `batch`,
+`serve`/`request`); do not build another Activity-owned speech
+producer because an instruction uses the term “studio”.
+
+Before generating shared voice speech, audit the accepted
+`assets/audio/characters/shared/v0.2/` catalogue, its
+`manifest.toml` and `review.csv`: **192 owner-approved EN/IT
+recordings (180 reactions and 12 introductions)** are DONE.
+Reusing accepted bytes, missing playback wiring and actually missing
+voice audio are separate ledger states. See
+`docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md`.
+The 2026-10-14 all-app agent work order explicitly respects this
+distinction.
+
 ## Semantic input
 
 Every generated cue needs:
