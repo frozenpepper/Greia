@@ -7,6 +7,12 @@
 **Voice execution:** `LOCAL_AGENT_VOICE_PRODUCTION.md` in this directory.  
 **Progress:** append to `PROGRESS.md`; integration/acceptance tasks remain in the existing `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
 
+## Owner design decision — 2026-10-15: unify runtime localization and spoken-asset lookup
+
+**New architecture/implementation slice:** [`SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`](./SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md). Retain the existing shared `greia_platform.localization` as the single Activity-facing localization owner: child/profile-selected locale, semantic text key, semantic prerecorded audio key, and resolved string/audio path. Consolidate direct Activity file lookups and launcher speech fallback into that layer; only update Activity-creation skill to the *implemented* API. Preserve all owner-approved committed recordings unchanged. **File modification by users is permitted; do not add anti-tamper/hash approval infrastructure.** For now every speech cue, including phonemes/letters/syllables, may use **requested-locale audio file → English file → silence**, with a single key→legacy-filename mapping where needed. No new running TTS or per-language duplicate catalogues. Existing `VOICE_GENERATION.md` strict native-phoneme fallback guidance is superseded as a future design constraint **once the shared implementation is migrated**; until then current code contracts remain what callers actually use.
+
+**Owner approval status:** All previously committed recordings are fully personally approved; old text saying audio generation/listening is entirely pending is historical and does not override this decision. The focused still-missing files are assigned to [`docs/testing/2026-10-15_GREIA_TARGETED_MISSING_VOICES_LOCAL_AGENT.md`](../../testing/2026-10-15_GREIA_TARGETED_MISSING_VOICES_LOCAL_AGENT.md). Release status remains EN/IT selectable, ES/FR staging until technical runtime/playback and visual acceptance; fallback alone should not be treated as a failure or as a security concern.
+
 ## Owner decision — 2026-10-14: text approved, complete voice production authorized
 
 The owner explicitly **approved all translations already authored in the
@@ -56,11 +62,14 @@ independently authored single-language Activity may remain valid under
 ADR 0028, with a visible real-language cue. A locale is not declared
 fully supported solely because a JSON file or voice sample exists.
 
-**No false fallback:** existing deterministic fallback remains a
-runtime safety net for incomplete packages and legacy devices, not a
-substitute for delivering the promised built-in locale. Any required
-fallback in the four-language release is a gap to resolve or a
-documented temporary exception that blocks language promotion.
+**English compatibility fallback (owner revised 2026-10-15):**
+when a selected-locale spoken file is absent, Greia may play the English
+version, **including for literacy/phoneme lessons for now**. This is
+intentional acceptable runtime behavior, not a language-release hard
+block, a voice-quality rejection or a prompt to regenerate approved
+files. Continue counting fallback occurrences in coverage reporting;
+ES/FR still need independent UI, installer, profile and real playback
+validation before being offered as fully selectable OS languages.
 
 ## 2. Ownership and invariants
 
