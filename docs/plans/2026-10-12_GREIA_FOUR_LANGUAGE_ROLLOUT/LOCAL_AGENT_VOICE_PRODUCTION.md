@@ -26,6 +26,32 @@ It provides the 45×4 sequential Activity pass, shared-system pass, live
 CLI commands, resumable ledger and deliverables; this existing document
 remains the detailed voice/script/architecture authority.
 
+## Voice Studio identity and already-accepted audio (2026-10-14 clarification)
+
+**Voice Studio is Greia's existing authoring workflow, not a second
+standalone synthesizer.** According to
+`docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`
+section 1 and `SETUP.md` section 7, it consists of semantic
+`tools/greia_voice.py` requests, `VoiceEngine` speaker/provider
+routing, optional advisory Whisper, packaged review audio plus
+receipts, human listening, then separately approved/versioned asset
+promotion. The source documentation explicitly says a GUI is **not
+required**. Inspect the canonical runbook
+`LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md` for this complete
+path. Do not bypass the engine through ad hoc direct synthesis or
+mistake a local desktop GUI for an established integrated provider.
+
+**Critical inventory distinction:** The Voice Studio already
+delivered `assets/audio/characters/shared/v0.2/`: **180 shared
+reactions + 12 character introductions = 192 owner-accepted EN/IT
+audio assets**, with manifest/review receipts (2026-08-28).
+`docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md` and
+`docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md`
+are authoritative for those bytes. Reuse them without re-recording;
+missing runtime resolver wiring is an integration defect, NOT
+missing voice. New ES/FR or otherwise genuinely missing cues still
+require the full Voice Studio generation/listening process.
+
 ## 0. Hard rules for this agent
 
 1. Always read the files above **before** operating. Never improvise new
