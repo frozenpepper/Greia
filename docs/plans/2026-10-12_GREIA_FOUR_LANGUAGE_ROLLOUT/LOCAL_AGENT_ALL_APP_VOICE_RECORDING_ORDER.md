@@ -4,9 +4,63 @@
 
 **Canonical repository:** frozenpepper/Greia, branch main. **Scope:** all 45 built-in Activities; every system/launcher/Creations/Parent spoken cue; the Encyclopedia; the My Time incubator; all canonical character/shared voice packs. Repair missing EN/IT recordings as well as creating ES/FR recordings. **Voice path:** only the existing tools/greia_voice.py semantic engine. **Authoring platform:** prefer Modal if an approved provider exists; at this checkpoint it does not, so an already-working, registered, zero-new-spend local provider is authorized for actual production. Do not wait for Modal if the local engine can complete a cue. No unapproved provider installations, model downloads, paid/cloud jobs, or new spend limits. Ask separately for a priced Modal implementation or expenditure if necessary.
 
+## Greia Voice Studio — the existing authoring workflow, not a new recorder
+
+**Use Greia's existing Voice Studio as the owner of all speech production.**
+The normative design (`docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`,
+section 1) calls **Voice Studio** the authoring workflow around
+`tools/greia_voice.py` / `VoiceEngine`. `SETUP.md`, section 7, explicitly
+states that this name does **not** imply a graphical UI. The authoritative
+GitHub `main` source exposes a semantic **CLI, one warm localhost service
+and a batch interface**, not a separate voice-recording GUI. If a newer
+Voice Studio desktop/web GUI is present *only on this workstation*,
+**document its exact executable path, version, source repo/commit, and
+whether it routes through VoiceEngine before use**; do not assume
+unverified buttons automatically integrate assets or mark them accepted.
+Never invent a second TTS/Voice Studio backend or run raw providers outside
+the canonical engine.
+
+Trace the **complete** existing Voice Studio path for each job:
+
+```text
+approved, exact text + cue_id + locale + semantic speaker/speech kind
+    -> tools/greia_voice.py (generate / batch / serve+request)
+    -> greia_voice_core.engine.VoiceEngine
+    -> greia_voice_core.registry.VoiceRegistry
+       (canonical speaker and anchor SHA-256)
+    -> registered greia_voice_core.providers.VoiceProvider
+       (Chatterbox MLX for natural characters, macOS native for pedagogical/Dani
+        when supported; doctor is authoritative about workstation readiness)
+    -> one locked worker -> SpeechVerifier (advisory Whisper where suitable)
+    -> AudioPipeline (WAV/OGG package and format checks)
+    -> candidate audio + adjacent .receipt.json (human_review = PENDING)
+    -> native-speaker listening, source/caption/path/identity verification
+    -> owner acceptance and **separate** versioned asset/integration commit
+```
+
+Do not mistake a successful `batch` exit, successful Whisper transcript,
+or a candidate receipt for fully accepted, installed audio. The local agent
+owns *recording candidates and review evidence*, not changing the release
+selector or silently claiming a Voice Studio GUI has performed integration.
+
+**Existing owner-accepted shared audio, do not re-record:**
+`assets/audio/characters/shared/v0.2/` already contains the **192
+owner-accepted EN/IT recordings: 180 shared reactions and 12 character
+introductions** (2026-08-28). The authority is
+`docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md`, plus
+`docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md`, and its
+`manifest.toml` / `review.csv` / receipts. Verify the exact bytes, mapped
+semantic family, locale and existing approval; classify valid rows
+`EXISTING_ACCEPTED`. Never regenerate this complete set or its historic
+retired v0.1 library. Separately note if an Activity's runtime
+**fails to resolve** an already-accepted shared cue: that is an
+`INTEGRATION_BLOCKED` wiring defect, not missing speech. New ES/FR
+shared utterances and genuinely new lines still need the Voice Studio
+review path, but never replace established EN/IT assets.
+
 ## 0. Read and respect these exact sources
 
-Read AGENTS.md, SETUP.md, HANDOVER.md, skills/greia-voice-production/SKILL.md, docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md, tools/greia_voice_core/README.md, and docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md. The last file is the detailed source/phonics/voice-identity authority; this work order gives the execution sequence. Use docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md as the *only* task queue (GLA-014/015 and GLA-010), not a new competing status system.
+Read AGENTS.md, SETUP.md **section 7 (Voice Studio)**, HANDOVER.md, skills/greia-voice-production/SKILL.md, docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md **section 1**, docs/design/GREIA_SHARED_CHARACTER_UTTERANCES.md, docs/agents/GREIA_SHARED_CHARACTER_UTTERANCE_RECORDING.md, docs/agents/GREIA_LOCAL_VOICE_PRODUCTION_SETUP.md, tools/greia_voice_core/README.md, and docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md. The last file is the detailed source/phonics/voice-identity authority; this work order gives the execution sequence. Use docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md as the *only* task queue (GLA-014/015 and GLA-010), not a new competing status system.
 
 Never change the system's supported-language registry, the Activity manifests, the installer, the pinned Parent browser client, release statuses, canonical voice reference hashes, or the child-device image. English/Italian remain the only selectable languages pending separate L6 release acceptance. Spanish/French may be generated **offline** without enabling them.
 
@@ -80,7 +134,7 @@ For each line of $RUN/inventory/apps-order.txt, process EN, IT, ES and FR in tha
 1. Read activity.toml, main.py, its renderer/app/model/audio modules and all four locales/{lang}.json files; identify the actual profile UI locale and the actual lesson/content language. Cross-check all files under assets/audio/, locales/*/audio/, and custom player loaders. A text label is not necessarily a spoken cue.
 2. Walk **all game modes** and narration states from the real source, not only the title. Include launch/welcome, instructions, questions, retries/errors, answer/praise, progress, achievements, completion/replay, scenes/chapters, saved creations and short accessibility descriptions where spoken. If runtime is available, exercise those flows with sound on and off; preserve screenshots/logs separately.
 3. Add to RECORDING_LEDGER.csv every actual required spoken cue per locale, including code-derived WAV/OGG path references, exact stable semantic cue ID, real full spoken words, canonical speaker, SpeechKind, consumer path, missing/existing hash, and runtime trigger. Use source-equivalent scripts already approved by the owner. Never infer a long encyclopedia narration from its short screen heading.
-4. Compare each candidate with the expected canonical path, existing sound bytes, receipt, locale, transcript and real playback. Classify PRESENT_REVIEW_NEEDED, ACCEPTED_EXISTING, MISSING_AUDIO, BLOCKED_SCRIPT, BAD_AUDIO, BAD_PATH or READY_TO_GENERATE. Do not overwrite any existing accepted clip.
+4. Compare each candidate with the expected canonical path, existing sound bytes, receipt, locale, transcript and real playback. Check the already accepted `v0.2` Voice Studio shared library before marking a reusable shared cue missing. Classify PRESENT_REVIEW_NEEDED, EXISTING_ACCEPTED, MISSING_AUDIO, BLOCKED_SCRIPT, BAD_AUDIO, BAD_PATH, INTEGRATION_BLOCKED (existing accepted sound not correctly wired), or READY_TO_GENERATE. Preserve accepted-source hashes and review manifests. Do not overwrite any existing accepted clip.
 5. For every genuinely missing row with a complete approved transcript, a verified speaker and a ready local provider: generate a *small* review batch into $RUN/review/... via section 5. Do this **now**, without pausing merely because other unrelated apps are blocked. Record its output file, receipt, SHA-256 and generation result. If a clip fails, preserve the failure, retry only within the engine's bounded policy and continue unrelated rows.
 6. Have the reviewer listen for the exact **native language**, natural age-appropriate prosody, correct character identity, pronunciation/stress and complete phrase. Especially test letter *name versus phoneme*, numbers, spelling, accent marks, silent H, syllables and scientific claims. ASR PASS is not human approval. Track NEEDS_HUMAN_REVIEW when no human is available; keep producing independent permitted clips but never silently label them accepted.
 7. Update that app's four rows in app-progress.csv, list remaining blockers and exact cue IDs. Commit **no source edits** on this voice-production pass; preserve reviewed candidate assets, receipts and evidence for the GitHub integration agent.
@@ -97,7 +151,7 @@ For each line of $RUN/inventory/apps-order.txt, process EN, IT, ES and FR in tha
 - **Rhyme Festival and Sound Workshop:** per-locale rhyme words, isolated phonemes, complete words and instructional prompts; validate actual accent, sound/rhyme pedagogy.
 - **Little Greenhouse, Labyrinth, Memory, Number Train, Opposites, Painting:** inspect recently fixed real display copy; do **not** assume every visual label should produce speech or that the presence of a translation proves an audio clip exists.
 - **My Time incubator:** read activity_incubator/tempo_di_greia/VOICE_PRODUCTION_BRIEF.md; eight known IT/EN semantic prompts plus source-required ES/FR equivalents. Keep this incubated app unpublished.
-- **Characters:** Leo, Lilli, Momo, Flash, Tito, Dani and the approved pedagogical voice. Audit central shared reactions, welcome/guidance/praise/retry/error and reusable cues; never clone from a different speaker's sample.
+- **Characters / already accepted Voice Studio work:** Leo, Lilli, Momo, Flash, Tito, Dani and the approved pedagogical voice. The **180 EN/IT shared reactions and 12 EN/IT character introductions were owner-accepted in v0.2**; verify/reuse these 192 actual assets, **do not re-record them**. Inspect v0.2 `manifest.toml`, `review.csv` and receipts. Report missing runtime resolver integration separately. Record genuinely absent ES/FR shared audio and new approved utterances only. Never clone from a different speaker's reference.
 
 If an Activity requires no speech, document how you determined that (source function and user path). **Do not fabricate prompts solely to fill a language quota.**
 
@@ -109,7 +163,7 @@ The installer may be text-only: document NO_SPOKEN_UX if so. Don't synthesize ev
 
 ## 5. Produce actual audio with the canonical engine
 
-A request is READY_TO_GENERATE only when all of: owner-approved **exact utterance** (not an arbitrary caption fragment), locale, canonical speaker, SpeechKind, unique cue ID, approved destination path, available provider, and no accepted existing clip are established. Valid kinds: character_dialogue, shared_character_utterance, pedagogical_speech, dani_system_speech. The engine accepts exact text via tools/greia_voice.py generate or an approved per-app JSONL via batch. Use its --help/README for details.
+A Voice Studio / VoiceEngine request is READY_TO_GENERATE only when all of: owner-approved **exact utterance** (not an arbitrary caption fragment), locale, canonical speaker, SpeechKind, unique cue ID, approved destination path, available provider, and no accepted existing clip are established. Valid kinds: character_dialogue, shared_character_utterance, pedagogical_speech, dani_system_speech. The engine accepts exact text via tools/greia_voice.py generate or an approved per-app JSONL via batch. Use its --help/README for details.
 
 **First** generate one representative cue for each required locale × speaker × kind; listen and record the sample decision before a large batch. Use real rows, not placeholder sample text. Example JSONL request structure (replace every value from an actual ledger row):
 
@@ -131,6 +185,8 @@ This instruction authorizes producing missing recordings on an **already configu
 ## 6. Deliver, preserve progress, and stop correctly
 
 Every run produces these artifacts under $RUN:
+
+- Voice Studio ownership/readiness note: canonical engine CLI version/source SHA, doctor report, provider/anchor verification and any separate workstation-only GUI discovery; explicit reuse count for the **192 accepted v0.2 EN/IT assets** and `INTEGRATION_BLOCKED` count for already-recorded-but-unwired runtime cues;
 
 - HEAD.txt, status-before.txt/status-after.txt, exact command logs/exits, doctor results and provider details;
 - inventory/apps-order.txt (45 entries), inventory/app-progress.csv (45×4 rows), complete enriched RECORDING_LEDGER.csv and language-coverage.json;
