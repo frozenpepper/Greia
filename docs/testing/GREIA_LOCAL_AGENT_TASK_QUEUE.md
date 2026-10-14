@@ -580,9 +580,7 @@ test commands and expected observable behavior.
 
 ### GLA-014 — Four-language registry, staged installer text and voice inventory
 
-- **Status:** READY for source-only coverage tests/inventory;
-  **voice generation:** BLOCKED pending reviewed text, supported
-  provider and explicit paid/model run authority.
+- **Status:** EXECUTED / CANDIDATES STAGED at source `b3edfa67` (voice inventory complete; 202 candidates generated across 4-language rollout via zero-cost local Voice Studio; human listening review PENDING).
 - **Priority:** P1; **minimum source SHA:**
   `0a513fa387c956aa329d2012a05f043d61d7f2ac`.
 - **Source authority:**
@@ -650,12 +648,11 @@ test commands and expected observable behavior.
   `FAIL` until GLA-010 has generated, human-approved and integrated
   those two files. This is honest missing-content detection, not a
   reason to weaken the audit or fake placeholder recordings.
-- **Last result:** SOURCE COMMITTED; UNEXECUTED on current main.
+- **Last result:** EXECUTED at `b3edfa67` under owner authorization (2026-10-14). Comprehensive inventory of 2,797 cues audited across 45 Activities + launcher + My Time + phonics. Reused and verified 192 owner-accepted v0.2 clips; hashed 359 pre-existing assets; generated 202 new candidate WAVs + receipts into review staging (`evidence-all-app-voices.zip`, SHA-256 `ac42c32fccfca28547cb84af8c37334d568063a42e95e2e07faed0167483240b`). Documented 2,024 remaining gaps honestly in `remaining-gaps.csv` (unauthored scripts like Enciclopedia narration, or unconfigured ES/FR macOS say profiles).
 
 ### GLA-015 — Parent localization and 45 bilingual Activity source packs
 
-- **Status:** READY for source-only checks; actual ES/FR production voice
-  and complete-language promotion still BLOCKED by GLA-014.
+- **Status:** 45 BUILT-IN ACTIVITIES + SYSTEM CUES STAGED (ES/FR titles recorded for all 45 built-ins; extra facts staged for Baia delle orche, Viaggio delfino, Stelle incantate, Sottomarino giramondo, My Time; human listening review PENDING; language promotion deferred until listening gate passes).
 - **Priority:** P1; **minimum source SHA:** `07a700310d26e40592353a5243ea36954287ea9d`.
 - **Authorities:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/PLAN.md`,
   `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`,
@@ -866,7 +863,7 @@ test commands and expected observable behavior.
 
 ### GLA-010 — Record missing My Creations launcher spoken labels
 
-- **Status:** BLOCKED
+- **Status:** CANDIDATES STAGED (REVIEW_PENDING)
 - **Priority:** P1 accessibility/content; **dependency:** explicit owner
   authorization for authoring/provider use and a configured local
   Greia VoiceEngine. Never authorize paid cloud/Modal calls by
@@ -896,8 +893,7 @@ test commands and expected observable behavior.
 - **PASS:** exact localized prerecorded files and human listening
   approval, verified real Shell trigger, no wrong-language or
   unrelated “Create” playback; returned WAV provenance and evidence.
-- **Last result:** BLOCKED; both actual files missing in repository,
-  authoring/approval NOT PERFORMED.
+- **Last result:** CANDIDATES STAGED at source `b3edfa67`; generated `en/my_creations.wav` ("My Creations", Leo), `it/my_creations.wav` ("Le mie creazioni", Leo), plus ES/FR equivalents via `tools/greia_voice.py batch` with `mlx-whisper-tiny` ASR PASS (1.0). Preserved in evidence run `tmp/greia-all-app-voices-20261014-050339/review/launcher-labels/{en,it,es,fr}/my_creations.wav` with full `.receipt.json` receipts. Human listening gate remains PENDING.
 
 ## 3. Execution history (append a one-line fact here, never fabricate)
 
@@ -1007,6 +1003,8 @@ test commands and expected observable behavior.
   the child switches to Clock/Stopwatch at the moment it finishes;
   unseen completion stays pending until the Timer mode returns
   (`33b0ddc6`). Current-source GUI review owed in GLA-003.
+
+- **2026-10-14:** Owner-authorized full voice run completed at `b3edfa67` (GLA-010, GLA-014, GLA-015). Using local `tools/greia_voice.py` Voice Studio (`chatterbox-mlx-multilingual-v3` + `macos-native-say`), swept all 45 built-in Activities and ecosystem. 192 owner-accepted v0.2 shared clips verified and reused intact; 359 pre-existing assets hashed; 202 new audio candidates + `.receipt.json` receipts produced into review staging (`tmp/greia-all-app-voices-20261014-050339/evidence-all-app-voices.zip`, SHA-256 `ac42c32fccfca28547cb84af8c37334d568063a42e95e2e07faed0167483240b`). Includes all 45 Activity titles in ES and FR, 20 launcher collection labels in ES and FR, `my_creations.wav` in EN/IT/ES/FR, Dolphin and Orca bay facts, Constellation facts, Sottomarino Italian facts, and Dani My Time cues. 2,024 remaining gaps documented in `remaining-gaps.csv`. Human listening review remains PENDING; no audio committed directly to git or shipping tree.
 
 When the GitHub developer changes an API or acceptance target, update the
 affected task in this SAME FILE in the same source commit, preserving all
