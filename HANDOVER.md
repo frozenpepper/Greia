@@ -1,3 +1,40 @@
+## 2026-10-14 — Voice Studio source reconciliation; corrected local recording instructions
+
+The owner identified a missing **Voice Studio** mention in the
+new four-language recording instructions. Verified from `SETUP.md`
+§7 and `docs/design/GREIA_VOICE_GENERATION_AND_CANONICAL_VOICES.md`
+§1: **Voice Studio is the existing VoiceEngine-based authoring
+workflow**; it is **not necessarily a graphical application**. Its
+canonical `tools/greia_voice.py` CLI was already the prescribed
+recording engine, but prior analysis did not explicitly trace or
+name the complete studio flow and did not foreground the existing
+accepted asset catalogue. Source checked: `VoiceEngine` routes
+through `VoiceRegistry` and registered providers, optional
+`WhisperVerifier`, `AudioPipeline`, review .receipt.json with
+`human_review=PENDING`, then human acceptance and separate
+versioned integration. No voice backend was run and no GUI
+or host-specific application was tested.
+
+**Important accepted inventory:** `assets/audio/characters/shared/v0.2/`
+already has **192 owner-accepted IT/EN clips**: 180 shared reactions
+and 12 introductions. This was verified against the design and
+recording authority, not from an audio-playback run. The local
+agent must **reuse** them, not create duplicate voices; missing
+runtime resolver integration must be classified separately. New
+ES/FR shared cues and other absent, valid-script clips remain
+recording tasks.
+
+**Fix committed on main:** The operative
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
+now has a top-level Voice Studio workflow map, doc links,
+v0.2 accepted-clip reuse, no-audio-vs-unwired distinction,
+and field evidence instructions. Supporting specialist
+`LOCAL_AGENT_VOICE_PRODUCTION.md` and voice skill now repeat
+the ownership and accepted-inventory truth. Keep all text
+translations owner-approved for production but do **not** call
+voice/technical acceptance complete without real evidence.
+No system selector, manifests, activities or providers changed.
+
 ## 2026-10-14 — Owner approves all current text translations; all-app voice recording instruction committed to main
 
 **Owner decision:** all existing EN/IT/ES/FR source-text translations accepted for recording use. This is approval of the *currently authored words*, not a statement that every runtime literal has already been localized or that unpublished complete narration scripts/phoneme-name decisions exist. Owner directs local agent to **record all missing spoken cues for every built-in Activity and system surface in all four languages**, including missing English/Italian repairs. Source changes made this turn are documentation/instructions only; no actual voice files were generated or reviewed.
