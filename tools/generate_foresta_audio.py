@@ -26,6 +26,8 @@ DEFAULT_REVIEW_DIR = PROJECT_ROOT / "tmp" / "voice-review" / "foresta_parole"
 PRAISE = {
     "it": [("ben_fatto", "Ben fatto!"), ("fantastico", "Fantastico!"), ("ottimo", "Ottimo!")],
     "en": [("great_job", "Great job!"), ("wonderful", "Wonderful!"), ("you_did_it", "You did it!")],
+    "es": [("bien_hecho", "¡Bien hecho!"), ("fantastico", "¡Fantástico!"), ("muy_bien", "¡Muy bien!")],
+    "fr": [("bien_joue", "Bien joué !"), ("fantastique", "Fantastique !"), ("tres_bien", "Très bien !")],
 }
 
 
@@ -45,9 +47,16 @@ def main() -> int:
     review_dir.mkdir(parents=True, exist_ok=True)
 
     requests: list[dict[str, object]] = []
-    for locale in ("it", "en"):
+    for locale in ("it", "en", "es", "fr"):
         for letter, letter_id, prompt_id, word_display, _emoji, word_stem in PHONICS_DATA[locale]:
-            association = f"{letter} come {word_display}" if locale == "it" else f"{letter} as {word_display}"
+            if locale == "it":
+                association = f"{letter} come {word_display}"
+            elif locale == "en":
+                association = f"{letter} as {word_display}"
+            elif locale == "es":
+                association = f"{letter} de {word_display}"
+            else:
+                association = f"{letter} comme {word_display}"
             for cue_id, text, filename in (
                 (prompt_id, association, f"{prompt_id}.wav"),
                 (letter_id, letter, f"{letter_id}.wav"),

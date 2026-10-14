@@ -23,6 +23,8 @@ class NativeSpeechProfile:
 MACOS_PEDAGOGICAL_PROFILES: dict[str, NativeSpeechProfile] = {
     "it": NativeSpeechProfile(voice="Alice", rate_wpm=175),
     "en": NativeSpeechProfile(voice="Samantha", rate_wpm=180),
+    "es": NativeSpeechProfile(voice="Mónica", rate_wpm=175),
+    "fr": NativeSpeechProfile(voice="Thomas", rate_wpm=175),
 }
 
 
@@ -32,6 +34,8 @@ MACOS_DANI_PROFILES: dict[str, NativeSpeechProfile] = {
     # deterministic rather than pretending to be a cloned canonical voice.
     "it": NativeSpeechProfile(voice="Alice", rate_wpm=185),
     "en": NativeSpeechProfile(voice="Samantha", rate_wpm=190),
+    "es": NativeSpeechProfile(voice="Mónica", rate_wpm=185),
+    "fr": NativeSpeechProfile(voice="Thomas", rate_wpm=185),
 }
 
 
