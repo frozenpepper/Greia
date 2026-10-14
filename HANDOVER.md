@@ -1,3 +1,11 @@
+## 2026-10-15 — Independent GitHub SOURCE REVIEW of four-language voice integration
+
+**Pinned reviewed source:** `e1ab2426cf1623ce46b000c2e92973033cdf3f64`; previous baseline `b3edfa6760d91c15d7616440a9e08e81d1eb76b9`. **Review report (authoritative findings):** `docs/reviews/2026-10-15_FOUR_LANGUAGE_VOICE_INTEGRATION_SOURCE_REVIEW.md`. This review is **source-only**; no binaries regenerated, no Python/Pygame, OS image, replay or hearing assessment was executed by the GitHub reviewer. The owner's reported content/audio approval remains recorded and is not being retracted.
+
+**Confirmed findings:** `tools/integrate_reviewed_voices.py` unconditionally overwrites canonical audio, sets every parseable receipt `human_review=APPROVED` without checking exact accepted ledger rows, tolerates missing receipts, does not validate destination/cue/locale/source SHA, and preserves absolute workstation `request.output` in committed receipts. Complete before/after Git-tree diff showed **609 previously existing audio blobs changed**. The **199 ES + 199 FR Encyclopedia narration assets** and **7 ES + 7 FR Dolphin narrated clips** lack corresponding ES/FR `audio` catalogue keys; both players require `LocalizedResources.audio_cue`. `bottega_delle_misure` and `casa_del_dieci` each lack ES and FR title recordings (4 total); Submarine ES/FR have 41 recordings each versus 55 EN, with 14 absent source-language cue stems per target. Submarine's dedicated EN/IT `sub_title.wav` path is valid and should not be falsely reported missing. All 45 real direct Activity manifests were accounted for. `GLA-014/015` and HANDOVER claim audio imported/owner approved, **not** completed four-language runtime mapping, speech and release acceptance.
+
+**Next exact work:** preserve every recorded candidate/accepted asset; repair promotion as manifest-driven fail-closed and non-overwriting, attach/detach portable review receipts, fill semantic ES/FR audio maps from existing recordings, inspect missing Submarine/two titles, then targeted source/player tests. Do not re-record all audio or enable ES/FR selector to paper over the defects. Report is committed on `main`.
+
 ## 2026-10-15 — Owner audio approval; full multi-language voice integration across all 45 Activities and system surfaces
 
 **Owner instruction:** "ok, all audio approved, commit everything please to giithub".
