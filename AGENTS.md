@@ -69,12 +69,26 @@ completing EN/IT gaps, and extending real installer/OS/Parent/Activity
 text and voice support to ES/FR. Its standing local-agent speech design and cue-source authority is
 `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_VOICE_PRODUCTION.md`.
 **Current executable voice-production work order:** `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/LOCAL_AGENT_ALL_APP_VOICE_RECORDING_ORDER.md`
-(owner instruction 2026-10-14). The owner approved every **currently authored**
-EN/IT/ES/FR text translation for recording; this does not fabricate missing
-spoken phoneme/narration scripts, accept generated audio, or promote ES/FR.
+(owner instruction 2026-10-14; archived full-run instruction). The owner approved
+every **currently authored** EN/IT/ES/FR text translation, and personally
+reviewed and approved **all committed recordings**. New missing files from
+the targeted task still need fresh acceptance. Neither decision promotes ES/FR.
 An available, registered zero-new-spend local Greia Voice Engine provider may
 be used to record without waiting for a future Modal provider, but paid
 cloud/model installation still needs separate explicit cost approval.
+**Owner-directed shared localization consolidation (2026-10-15):**
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`
+is the active bounded design for reusing the existing `LocalizedResources`
+owner for semantic text/audio IDs, file-exists selected-locale lookup and
+English fallback for **all** speech, and gradual migration of Activity-local
+loaders. Existing committed audio is **owner-reviewed and accepted**;
+never regenerate it for perceived provenance problems. The user does **not**
+want file anti-tampering, signing or elaborate asset verification; users may
+edit their files. Follow the focused new-recordings assignment in
+`docs/testing/2026-10-15_GREIA_TARGETED_MISSING_VOICES_LOCAL_AGENT.md`.
+Update the Activity-creation skill/voice companion **after the code API is real**;
+retain the current callable interface meanwhile. This refactor does not
+independently promote ES/FR system selection.
 The sole practical local-agent task queue remains
 `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`.
 The canonical selectable registry currently contains **only en/it**;
