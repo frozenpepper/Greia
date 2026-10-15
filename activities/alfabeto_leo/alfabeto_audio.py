@@ -95,35 +95,20 @@ class AlfabetoAudio:
         self.play_spoken("well_done")
 
     def _load_spoken_assets(self) -> None:
-        # Keep the existing filenames and preload the short child-directed
-        # voice clips, but let the platform select the language and fallback.
-        selected_dir = AUDIO_DIR / self.locale
-        english_dir = AUDIO_DIR / "en"
-        filenames = {
-            path.name
-            for directory in (selected_dir, english_dir)
-            if directory.is_dir()
-            for path in directory.glob("*.wav")
-        }
-        for filename in sorted(filenames):
-            stem = Path(filename).stem
-            if self._resources is not None:
-                # Older clips already use names like letter_A and letter_Ñ.
-                # The filename is the one-time compatibility alias.
-                cue_id = "spoken." + stem.replace("Ñ", "n_tilde").lower()
-                sound_path = self._resources.audio_path(
-                    cue_id, filename=filename
-                )
-            else:
-                sound_path = selected_dir / filename
-                if not sound_path.is_file():
-                    sound_path = english_dir / filename
-            if sound_path is None or not sound_path.is_file():
-                continue
+        """Decode approved clips; the Greia resolver owns locale selection."""
+        if self._resources is not None:
+            clips = self._resources.speech_paths()
+        else:
+            # Legacy direct construction can still load the selected folder.
+            folder = AUDIO_DIR / self.locale
+            clips = {
+                wav.stem: wav for wav in sorted(folder.glob("*.wav"))
+            }
+        for stem, path in clips.items():
             try:
-                self._spoken_sounds[stem] = pygame.mixer.Sound(str(sound_path))
+                self._spoken_sounds[stem] = pygame.mixer.Sound(str(path))
             except (pygame.error, OSError):
-                pass
+                continue
 
     def _build_sounds(self) -> None:
         """Build the bounded procedural set once, outside interaction hot paths."""
