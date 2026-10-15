@@ -12,6 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 import json
+import tomllib
 from pathlib import Path, PurePosixPath
 from string import Template
 from typing import Mapping
@@ -202,6 +203,51 @@ def resolve_activity_locale(
         fallback_chain=tuple(candidates),
         direction=direction,
     )
+
+
+def activity_resources(
+    package_root: Path,
+    *,
+    requested_locale: str | None = None,
+    supported_locales: tuple[str, ...] | None = None,
+    default_ui_locale: str | None = None,
+) -> "LocalizedResources":
+    """Compose one Activity's localized strings and audio from Greia settings.
+
+    Normally the Activity declares its supported UI languages in activity.toml;
+    only isolated staging/test callers need override these arguments. The
+    platform owns profile/device-language lookup, not each game's renderer.
+    """
+    root = package_root.resolve(strict=True)
+    if supported_locales is None:
+        try:
+            metadata = tomllib.loads((root / "activity.toml").read_text(encoding="utf-8"))
+            raw_languages = metadata["activity"]["languages"]
+        except (OSError, KeyError, TypeError, tomllib.TOMLDecodeError) as exc:
+            raise LocalizationError("Activity has no readable language declaration") from exc
+        if not isinstance(raw_languages, list) or not all(
+            isinstance(item, str) for item in raw_languages
+        ):
+            raise LocalizationError("Activity language declaration must be a list of locales")
+        supported_locales = tuple(raw_languages)
+    if not supported_locales:
+        raise LocalizationError("Activity declares no localized UI languages")
+    if requested_locale is None:
+        from .activity_api import get_profile_locale
+
+        requested_locale = get_profile_locale()
+    if default_ui_locale is None:
+        default_ui_locale = (
+            "it" if "it" in supported_locales else supported_locales[0]
+        )
+    support = ActivityLocaleSupport.localized(
+        supported_locales, default_ui_locale=default_ui_locale
+    )
+    context = resolve_activity_locale(requested_locale, support)
+    if context is None:
+        raise LocalizationError("Activity declares language-neutral UI")
+    return LocalizedResources(root, context)
+
 
 
 @dataclass(frozen=True, slots=True)
