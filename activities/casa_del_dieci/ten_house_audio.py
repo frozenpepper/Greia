@@ -10,6 +10,8 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 
 _SAMPLE_RATE: Final = 22_050
 
@@ -17,7 +19,13 @@ _SAMPLE_RATE: Final = 22_050
 class TenHouseAudio:
     """Prepare pedagogical speech clips, nonverbal feedback tones, and fail soft when unavailable."""
 
-    def __init__(self, package_root: Path | None = None, locale: str = "it") -> None:
+    def __init__(
+        self,
+        package_root: Path | None = None,
+        locale: str = "it",
+        resources: LocalizedResources | None = None,
+    ) -> None:
+        self._resources = resources
         self._locale = locale
         self._package_root = package_root
         self._speech_clips: dict[str, pygame.mixer.Sound] = {}
@@ -49,13 +57,30 @@ class TenHouseAudio:
     def _load_speech_clips(self) -> None:
         if self._package_root is None:
             return
-        audio_dir = self._package_root / "assets" / "audio" / self._locale
-        if not audio_dir.exists():
-            return
-        for wav_file in audio_dir.glob("*.wav"):
+        audio_root = self._package_root / "assets" / "audio"
+        selected = audio_root / self._locale
+        english = audio_root / "en"
+        # Retain eager short-cue decoding to avoid first-interaction hitches.
+        # Filename discovery is Activity-local; LANGUAGE selection is shared.
+        names = {
+            file.stem
+            for directory in (selected, english)
+            if directory.is_dir()
+            for file in directory.glob("*.wav")
+        }
+        for name in sorted(names):
+            if self._resources is not None:
+                path = self._resources.audio_path(
+                    name, filename=f"{name}.wav"
+                )
+            else:
+                path = selected / f"{name}.wav"
+                if not path.is_file():
+                    path = english / f"{name}.wav"
+            if path is None or not path.is_file():
+                continue
             try:
-                sound = pygame.mixer.Sound(str(wav_file))
-                self._speech_clips[wav_file.stem] = sound
+                self._speech_clips[name] = pygame.mixer.Sound(str(path))
             except (pygame.error, OSError):
                 continue
 
