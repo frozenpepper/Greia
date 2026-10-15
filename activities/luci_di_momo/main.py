@@ -14,17 +14,13 @@ from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .firefly_app import FireflyActivity
-    from .firefly_art import FireflyArt
     from .firefly_audio import FireflyAudio
     from .firefly_model import FireflyRoundFactory, FireflySession, REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from .firefly_renderer import FireflyRenderer
     from .firefly_services import GreiaFireflyEvents, GreiaFireflyProgress
 else:
     from firefly_app import FireflyActivity
-    from firefly_art import FireflyArt
     from firefly_audio import FireflyAudio
     from firefly_model import FireflyRoundFactory, FireflySession, REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from firefly_renderer import FireflyRenderer
     from firefly_services import GreiaFireflyEvents, GreiaFireflyProgress
 
 
@@ -43,22 +39,19 @@ def main() -> int:
     locale, resources = _locale_and_resources()
     typography = GreiaTypography()
     canvas = PygameReferenceCanvas(screen)
-    art = FireflyArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-    renderer = FireflyRenderer(art, typography, resources)
     progress = GreiaFireflyProgress()
     saved = progress.load()
     rng = random.Random()
     factory = FireflyRoundFactory(rng)
     session = FireflySession(factory.build_set(saved.level), level=saved.level, history=saved.history)
     session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
-    audio = FireflyAudio(Path(__file__).resolve().parent, locale=locale, resources=resources)
+    audio = FireflyAudio(Path(__file__).resolve().parent, locale=locale, resources=resources, rng=rng)
 
     app = FireflyActivity(
         screen=screen,
         canvas=canvas,
         session=session,
         factory=factory,
-        renderer=renderer,
         typography=typography,
         resources=resources,
         progress=progress,

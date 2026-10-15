@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Luci di Momo firefly jar, back layer: contact shadow and the glass interior.
+       Collected fireflies are drawn by the Activity between this layer and jar_front. -->
+  <defs>
+    <!-- aqua light -> aqua (glass tint) -->
+    <linearGradient id="luci_jar_glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E6F6F3"/>
+      <stop offset="1" stop-color="#CFEDE7"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="233" rx="66" ry="10" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="glass_back">
+    <path d="M80 76 C64 86 56 102 56 122 L56 204 C56 220 68 230 84 230 L172 230 C188 230 200 220 200 204 L200 122 C200 102 192 86 176 76 Z" fill="url(#luci_jar_glass)" opacity="0.3"/>
+    <path d="M70 212 C96 220 160 220 186 212" fill="none" stroke="#E6F6F3" stroke-width="2.5" stroke-linecap="round" opacity="0.45"/>
+  </g>
+</svg>

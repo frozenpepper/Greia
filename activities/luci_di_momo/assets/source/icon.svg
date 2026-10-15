@@ -1,11 +1,59 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-  <rect width="256" height="256" rx="54" fill="#263d63"/>
-  <circle cx="186" cy="58" r="18" fill="#fff1a6"/>
-  <circle cx="70" cy="74" r="12" fill="#ffd951"/>
-  <circle cx="196" cy="118" r="12" fill="#ffd951"/>
-  <circle cx="116" cy="52" r="12" fill="#ffd951"/>
-  <rect x="73" y="91" width="110" height="126" rx="28" fill="#ffe7a0" stroke="#704f39" stroke-width="14"/>
-  <path d="M96 98c0-42 64-42 64 0" fill="none" stroke="#704f39" stroke-width="12" stroke-linecap="round"/>
-  <circle cx="128" cy="154" r="33" fill="#ffd951"/>
-  <circle cx="128" cy="154" r="15" fill="#fff8c7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Luci di Momo: a jar of night with three glowing fireflies (learn -> orange tile). -->
+  <defs>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="luci_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- navy light -> navy (the night inside the jar) -->
+    <linearGradient id="luci_icon_night" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4A6283"/>
+      <stop offset="1" stop-color="#253B59"/>
+    </linearGradient>
+    <!-- grape light (mix 40% white) -> grape -->
+    <linearGradient id="luci_icon_lid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFA2DF"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+    <radialGradient id="luci_icon_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE08A" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFE08A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#luci_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="124" cy="222" rx="58" ry="8" fill="#8A5A2C" opacity="0.18"/>
+  </g>
+  <g id="jar" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M86 84 C70 94 62 110 62 130 L62 196 C62 210 72 220 86 220 L162 220 C176 220 186 210 186 196 L186 130 C186 110 178 94 162 84 Z" fill="url(#luci_icon_night)" stroke-width="5"/>
+    <rect x="84" y="68" width="80" height="20" rx="8" fill="#CFEDE7" stroke-width="4.5"/>
+    <rect x="76" y="44" width="96" height="28" rx="11" fill="url(#luci_icon_lid)" stroke-width="4.5"/>
+    <path d="M100 52 L100 64 M124 52 L124 64 M148 52 L148 64" fill="none" stroke="#6C4B74" stroke-width="3"/>
+  </g>
+  <g id="subject">
+    <circle cx="96" cy="128" r="30" fill="url(#luci_icon_glow)"/>
+    <circle cx="124" cy="158" r="30" fill="url(#luci_icon_glow)"/>
+    <circle cx="152" cy="188" r="30" fill="url(#luci_icon_glow)"/>
+    <g fill="#FFC234" stroke="#9A742A" stroke-width="3.5">
+      <circle cx="96" cy="128" r="14"/>
+      <circle cx="124" cy="158" r="14"/>
+      <circle cx="152" cy="188" r="14"/>
+    </g>
+    <g fill="#FFF1B0">
+      <circle cx="92" cy="124" r="5"/>
+      <circle cx="120" cy="154" r="5"/>
+      <circle cx="148" cy="184" r="5"/>
+    </g>
+    <path d="M74 118 C70 144 70 172 74 196" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.55"/>
+  </g>
+  <g id="accent">
+    <circle cx="206" cy="78" r="22" fill="url(#luci_icon_glow)"/>
+    <path d="M198 72 C188 60 176 64 178 72 C180 80 192 80 200 76 Z M214 72 C224 60 236 64 234 72 C232 80 220 80 212 76 Z" fill="#E6F4FB" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="206" cy="82" r="10" fill="#FFC234" stroke="#9A742A" stroke-width="3.5"/>
+    <path d="M206 30 Q208 40 218 42 Q208 44 206 54 Q204 44 194 42 Q204 40 206 30 Z" fill="#FBBF24" stroke="#9A742A" stroke-width="3" stroke-linejoin="round"/>
+  </g>
 </svg>

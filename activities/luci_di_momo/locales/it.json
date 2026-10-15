@@ -6,10 +6,8 @@
     "activity.title": "Luci di Momo",
     "activity.luci_di_momo.title": "Luci di Momo",
     "prompt.choose": "Quante luci hai visto?",
-    "prompt.tap_to_play": "Tocca per giocare!",
-    "button.listen": "🔊 Ascolta",
     "victory.title": "Il giardino risplende!",
-    "victory.subtitle": "Hai svegliato tutte le lucciole di Momo.",
+    "victory.subtitle": "Il barattolo di Momo è pieno di luce!",
     "button.play_again": "Gioca ancora"
   },
   "audio": {

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Luci di Momo firefly jar, front layer: glass contour, rim, grape lid and twine. -->
+  <defs>
+    <!-- grape light (mix 40% white) -> grape -->
+    <linearGradient id="luci_jar_lid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFA2DF"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+  </defs>
+  <g id="twine" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M100 38 C98 8 158 8 156 38" stroke="#4B372F" stroke-width="9"/>
+    <path d="M100 38 C98 8 158 8 156 38" stroke="#D9B98C" stroke-width="4"/>
+  </g>
+  <g id="glass" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M80 76 C64 86 56 102 56 122 L56 204 C56 220 68 230 84 230 L172 230 C188 230 200 220 200 204 L200 122 C200 102 192 86 176 76" fill="none" stroke-width="4"/>
+    <rect x="80" y="58" width="96" height="22" rx="9" fill="#CFEDE7" stroke-width="3.5"/>
+  </g>
+  <g id="glass_shine" fill="none" stroke="#FFFFFF" stroke-linecap="round">
+    <path d="M74 118 C69 146 69 178 74 202" stroke-width="9" opacity="0.7"/>
+    <path d="M184 124 L184 140" stroke-width="6" opacity="0.5"/>
+  </g>
+  <g id="lid" stroke="#6C4B74" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="74" y="32" width="108" height="30" rx="11" fill="url(#luci_jar_lid)" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M92 42 L92 54 M110 42 L110 54 M128 42 L128 54 M146 42 L146 54 M164 42 L164 54" fill="none" stroke-width="2.5"/>
+    <rect x="84" y="36" width="30" height="5" rx="2.5" fill="#FFFFFF" stroke="none" opacity="0.6"/>
+  </g>
+</svg>
