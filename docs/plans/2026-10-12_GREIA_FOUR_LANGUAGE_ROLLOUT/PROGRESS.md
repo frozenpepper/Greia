@@ -5,6 +5,20 @@
 **Single local task queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`  
 **Evidence status:** GitHub source commits, no newly executed full checkout tests / GUI / recording / physical install in this session.
 
+## 2026-10-15 — Shared Activity localization + prerecorded audio resolver: first implementation
+
+**Owner direction:** simple centralized semantic `text(key)` / `audio_path(key)`; the selected-language audio file wins, otherwise English, otherwise no speech (including phonemes for now). User modifications are allowed; no anti-tamper scheme. All previously committed recordings are personally owner-approved, untouched. This is the active new work slice in [`SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`](./SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md).
+
+**Implemented on GitHub `main`:**
+- `greia_platform.localization` now owns file-aware language lookup: `LocalizedResources.audio_path`, compatible `audio_cue`, canonical English audio-path projection, legacy Italian-only semantic alias projection, `activity_resources` manifest + profile factory, English missing-string fallback.
+- Launcher Activity title routing delegates to shared resolver. Its existing collection fallback still works.
+- Five Activity sound owners adopted shared path selection without touching Pygame SFX/gameplay: Measurement Workshop, Ten House, Magic Syllables, Alphabet Leo, Word Forest; factory used by the first two and Alphabet.
+- Encyclopedia, Dolphin and Submarine already used the shared `audio_cue` method, so their staged ES/FR narrator assets are now discoverable by a shared lookup. No duplicate ES/FR audio tables authored.
+- `tests/test_shared_localized_audio_paths.py` added, plus owner-directed fallback expectation updated in `tests/test_localization.py`. Tests include actual committed ES/FR asset paths and IT-only Submarine alarm path. **Authored only, not run in the GitHub connector environment.**
+- `skills/greia-activity-authoring/SKILL.md`, `VOICE_GENERATION.md`, `LAUNCHER_SPOKEN_LABELS.md` now describe the **implemented** new Activity API and legacy compatibility. Approved audio bytes, `activity.toml` supported-language declarations, OS language selector, installed system and installer remain untouched.
+
+**Still open:** other legacy file-scanning Activity sound owners; exact full Pygame/source regression and live playback; ES/FR acceptance and staged-to-release locale promotion; separately requested 35 genuinely missing new clips by local recording agent. Current project-wide validation is **UNVERIFIED**, not a PASS. Do not turn source code review into audio/GUI acceptance.
+
 ## 2026-10-12 — Initial owner-authorized implementation: L0 + L1 tooling + L2 installer catalogue staging
 
 ### Context
