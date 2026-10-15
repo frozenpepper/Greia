@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pygame
 
-from greia_platform.activity_api import get_profile_locale, get_storage, get_theme
+from greia_platform.activity_api import get_storage, get_theme
 from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
