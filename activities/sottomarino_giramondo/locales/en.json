@@ -79,7 +79,12 @@
     "voice.fact.krill.1": "Krill are tiny swimming shrimp-like creatures that travel in massive clouds!",
     "voice.fact.krill.2": "Krill are the favorite food of giant whales and many ocean fish!",
     "voice.fact.krill.3": "Some krill can glow in the dark ocean with brilliant bioluminescent light!",
-    "voice.fact.krill.4": "Altogether, all the krill on Earth weigh more than all humans combined!"
+    "voice.fact.krill.4": "Altogether, all the krill on Earth weigh more than all humans combined!",
+    "hud.encounter": "Close encounter",
+    "hud.order": "Captain's order",
+    "hud.order_done": "Order complete!",
+    "hud.curiosity": "Fun fact: $species",
+    "hud.curiosity_generic": "Sea fact"
   },
   "audio": {
     "activity.title": {

@@ -118,7 +118,6 @@ class DelfinoJourneyApp:
             self.renderer.warm_banner(self._text(chapter.name_key))
         for fact_id in FACT_IDS:
             self.renderer.warm_caption(self._caption_for(fact_id))
-        self.renderer.warm_caption(self._caption_for(WELCOME_FACT_ID))
 
         loaded = self.storage.load_progress()
         self._lifetime_pearls_base = loaded["total_pearls"]
@@ -300,12 +299,17 @@ class DelfinoJourneyApp:
                         pearls_count=self.world.session_pearls,
                         journey_fraction=fraction,
                         banner_text=self._banner_text,
+                        # The welcome is a spoken cue plus a wordless
+                        # swim/leap animation; only curiosity facts show a
+                        # caption bubble.
                         fact_caption=(
                             self._caption_for(self._active_fact)
-                            if self._active_fact
+                            if self._active_fact and self._active_fact != WELCOME_FACT_ID
                             else None
                         ),
                         tito_speaking=self._active_fact is not None,
+                        controls_hint=self._active_fact == WELCOME_FACT_ID,
+                        hint_clock=now,
                     ),
                 )
             else:

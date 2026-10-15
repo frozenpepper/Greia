@@ -10,12 +10,12 @@
     "prompt.stamp": "¡Elige un sello!",
     "prompt.message": "Escribe tu mensaje aquí...",
     "prompt.to": "Para:",
-    "button.send": "ENVIAR 💌",
-    "button.saved": "MIS POSTALES 📬",
-    "button.write": "NUEVA POSTAL ✏️",
-    "button.clear": "BORRAR 🗑️",
-    "button.delete": "ELIMINAR",
-    "button.cancel": "CANCELAR",
+    "button.send": "Enviar 💌",
+    "button.saved": "Mis postales 📬",
+    "button.write": "Nueva postal ✏️",
+    "button.clear": "Borrar 🗑️",
+    "button.delete": "Eliminar",
+    "button.cancel": "Cancelar",
     "dialog.full_title": "¡Buzón lleno!",
     "dialog.full_body": "Tienes 20 postales guardadas.\nBorra una postal antigua para guardar una nueva.",
     "dialog.delete_confirm": "¿Quieres eliminar esta postal?",
@@ -24,7 +24,8 @@
     "recipient.lilli": "Lilli",
     "recipient.leo": "Leo",
     "recipient.pina": "Pina",
-    "recipient.tito": "Tito"
+    "recipient.tito": "Tito",
+    "gallery.empty": "¡Todavía no hay postales!"
   },
   "audio": {}
 }

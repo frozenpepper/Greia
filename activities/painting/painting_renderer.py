@@ -16,6 +16,7 @@ from PIL import Image
 import pygame
 
 from greia_platform.activity_ui import draw_activity_pointer, load_icon, mix
+from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
     from .painting_content import BRUSH_SIZES, COLORS
@@ -58,7 +59,7 @@ class PaintingRenderer:
             "saved": "✓", "saving": "…", "error": "!",
         }
         self._status_labels: dict[str, pygame.Surface] = {}
-        self.status_font: pygame.font.Font | None = None
+        self._typography = GreiaTypography()
         self.empty_icon: pygame.Surface | None = None
         # Thumbnail cache is naturally bounded by MAX_PAINTINGS (48) and
         # the visible gallery window (6). Use dict with explicit limit.
@@ -151,10 +152,10 @@ class PaintingRenderer:
             pygame.draw.line(bg_surf, (235, 226, 208), (0, line_y), (w, line_y), 2)
         self._background_surface = bg_surf
 
-        # Pre-render status labels (bounded: 3 labels, small font once)
-        self.status_font = pygame.font.Font(None, self.metrics.px(16))
+        # Pre-render status labels once (bounded: 3 labels) through the shared
+        # typography so glyph fallback matches the rest of Greia.
         self._status_labels = {
-            key: self.status_font.render(value, True, (100, 116, 139))
+            key: self._typography.render(value, FontRole.CONTROL, self.metrics.px(17), (100, 116, 139))
             for key, value in self._status_text.items()
         }
 
@@ -169,7 +170,6 @@ class PaintingRenderer:
         self._scaled_card_frame = None
         self._background_surface = None
         self._status_labels.clear()
-        self.status_font = None
         # Keep thumbnail_cache but re-validate size on next get (size key)
         self._load_assets()
         self._precompute_ui_resources()

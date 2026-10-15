@@ -16,32 +16,24 @@ STORAGE_KEY: Final = "piccola_serra.progress.v1"
 PLANTS: list[dict[str, Any]] = [
     {
         "id": "sunflower",
-        "name_it": "Girasole 🌻",
-        "name_en": "Sunflower 🌻",
         "flower_color": (254, 240, 138),
         "center_color": (120, 53, 15),
         "petal_color": (234, 179, 8),
     },
     {
         "id": "strawberry",
-        "name_it": "Fragola 🍓",
-        "name_en": "Strawberry 🍓",
         "flower_color": (239, 68, 68),
         "center_color": (254, 202, 87),
         "petal_color": (244, 63, 94),
     },
     {
         "id": "tulip",
-        "name_it": "Tulipano 🌷",
-        "name_en": "Tulip 🌷",
         "flower_color": (236, 72, 153),
         "center_color": (244, 114, 182),
         "petal_color": (219, 39, 119),
     },
     {
         "id": "carrot",
-        "name_it": "Carota 🥕",
-        "name_en": "Carrot 🥕",
         "flower_color": (249, 115, 22),
         "center_color": (34, 197, 94),
         "petal_color": (234, 88, 12),

@@ -79,7 +79,12 @@
     "voice.fact.krill.1": "Il krill è formato da piccolissimi gamberetti che nuotano in enormi banchi luminosi!",
     "voice.fact.krill.2": "Il krill è il cibo preferito delle balene e di tanti pesci dell'oceano!",
     "voice.fact.krill.3": "Alcune specie di krill brillano al buio nell'abisso con una luce azzurra!",
-    "voice.fact.krill.4": "Tutti insieme, i banchi di krill pesano più di tutti gli umani del mondo!"
+    "voice.fact.krill.4": "Tutti insieme, i banchi di krill pesano più di tutti gli umani del mondo!",
+    "hud.encounter": "Incontro ravvicinato",
+    "hud.order": "Ordine del capitano",
+    "hud.order_done": "Ordine completato!",
+    "hud.curiosity": "Curiosità: $species",
+    "hud.curiosity_generic": "Curiosità marina"
   },
   "audio": {
     "activity.title": {

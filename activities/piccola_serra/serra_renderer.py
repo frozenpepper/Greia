@@ -9,10 +9,11 @@ would be cached with convert() once if assets were used (kept bounded).
 from __future__ import annotations
 
 import math
-from typing import Any, Mapping
+from typing import Any, Final, Mapping
 
 import pygame
 
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -24,6 +25,11 @@ _MAX_TEXT_CACHE = 64
 
 # Pot rects as pygame.Rect for hit-testing/rendering reuse.
 POT_RECTS: list[pygame.Rect] = [pygame.Rect(*t) for t in POT_RECT_TUPLES]
+
+
+# Child-visible controls start clear of the trusted Home/Back region, which
+# the platform reserves in full (both slots) so layout never jumps by context.
+_CHROME_CLEAR_X: Final = ActivitySystemChromeLayout.for_surface(1024, 600).protected_region.right + 18
 
 
 class SerraRenderer:
@@ -230,7 +236,7 @@ class SerraRenderer:
             pygame.draw.circle(surface, p["color"], (int(p["x"]), int(p["y"])), int(cur_sz))
 
     def _draw_hud(self, surface: pygame.Surface, harvest_count: int, target_harvest: int) -> None:
-        star_pill = pygame.Rect(80, 16, 140, 56)
+        star_pill = pygame.Rect(_CHROME_CLEAR_X, 16, 140, 56)
         pygame.draw.rect(surface, (255, 255, 255), star_pill, border_radius=18)
         pygame.draw.rect(surface, (234, 179, 8), star_pill, width=3, border_radius=18)
         pygame.draw.circle(surface, (234, 179, 8), (star_pill.left + 30, star_pill.centery), 16)
@@ -294,8 +300,8 @@ class SerraRenderer:
                 pygame.draw.arc(surface, bask_col, pygame.Rect(cx - 13, cy - 16, 26, 20), 0, 3.14, 3)
                 pygame.draw.circle(surface, (239, 68, 68), (cx - 4, cy - 5), 5)
                 pygame.draw.circle(surface, (234, 179, 8), (cx + 5, cy - 5), 5)
-            lbl_surf = self._cached_text(self._tool_labels.get(label_key, "✦"), FontRole.DISPLAY, 16, (255, 255, 255) if is_sel else col)
-            surface.blit(lbl_surf, (cx - lbl_surf.get_width() // 2, b_rect.bottom - 22))
+            lbl_surf = self._cached_text(self._tool_labels.get(label_key, "✦"), FontRole.DISPLAY, 18, (255, 255, 255) if is_sel else col)
+            surface.blit(lbl_surf, (cx - lbl_surf.get_width() // 2, b_rect.bottom - lbl_surf.get_height() - 4))
 
 
 __all__ = ["SerraRenderer", "POT_RECTS"]

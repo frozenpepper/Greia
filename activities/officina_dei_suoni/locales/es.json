@@ -8,8 +8,8 @@
     "prompt.find_sound": "¡Escucha el sonido y encuentra la imagen!",
     "prompt.first_sound": "¿Con qué sonido empieza?",
     "prompt.build_word": "¡Coloca la letra para formar la palabra!",
-    "button.listen": "ESCUCHAR",
-    "button.play_again": "JUGAR OTRA VEZ",
+    "button.listen": "Escuchar",
+    "button.play_again": "Jugar otra vez",
     "victory.title": "¡Taller de palabras!",
     "victory.subtitle": "¡Has completado todos los sonidos y palabras con Leo!"
   },

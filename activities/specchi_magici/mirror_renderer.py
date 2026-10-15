@@ -6,7 +6,7 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
+from greia_platform.localization import LocalizationError, LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -39,6 +39,20 @@ class MirrorRenderer:
         self._art = art
         self._typography = typography
         self._resources = resources
+        # Resolved once: the speaker pictogram stays even if the caption is absent.
+        try:
+            caption = resources.text("button.listen").strip()
+        except LocalizationError:
+            caption = ""
+        self._listen_text = f"🔊 {caption}" if caption else "🔊"
+        self._undo_text = f"↩️ {self._caption('button.undo')}".strip()
+        self._prompt_text = self._caption("prompt.place")
+
+    def _caption(self, key: str) -> str:
+        try:
+            return self._resources.text(key).strip()
+        except LocalizationError:
+            return ""
 
     def draw_scene(
         self,
@@ -238,8 +252,7 @@ class MirrorRenderer:
         pygame.draw.rect(target, btn_col, u_draw, border_radius=25)
         pygame.draw.rect(target, border_col, u_draw, width=3 if can_undo else 2, border_radius=25)
 
-        undo_label = f"↩️ {self._resources.text('button.undo')}"
-        undo_surf = self._typography.render(undo_label, FontRole.TITLE, 18, text_col)
+        undo_surf = self._typography.render(self._undo_text, FontRole.TITLE, 18, text_col)
         target.blit(
             undo_surf,
             (
@@ -249,8 +262,7 @@ class MirrorRenderer:
         )
 
     def _draw_prompt(self, target: pygame.Surface) -> None:
-        text = self._resources.text("prompt.place")
-        prompt_surf = self._typography.render(text, FontRole.TITLE, 26, (254, 240, 138))
+        prompt_surf = self._typography.render(self._prompt_text, FontRole.TITLE, 26, (254, 240, 138))
         p_x = REFERENCE_WIDTH // 2 - prompt_surf.get_width() // 2
         p_y = 405
         banner = pygame.Rect(p_x - 24, p_y - 6, prompt_surf.get_width() + 48, prompt_surf.get_height() + 12)
@@ -267,8 +279,7 @@ class MirrorRenderer:
         pygame.draw.rect(target, (254, 240, 138), LISTEN_BTN_RECT, border_radius=25)
         pygame.draw.rect(target, (217, 119, 6), LISTEN_BTN_RECT, width=3, border_radius=25)
 
-        listen_text = "🔊 ASCOLTA" if (self._resources.context.selected.value.startswith("it")) else "🔊 LISTEN"
-        l_surf = self._typography.render(listen_text, FontRole.TITLE, 18, (120, 53, 15))
+        l_surf = self._typography.render(self._listen_text, FontRole.TITLE, 18, (120, 53, 15))
         target.blit(
             l_surf,
             (LISTEN_BTN_RECT.centerx - l_surf.get_width() // 2, LISTEN_BTN_RECT.centery - l_surf.get_height() // 2),

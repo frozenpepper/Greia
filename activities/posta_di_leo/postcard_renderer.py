@@ -6,9 +6,9 @@ from typing import Final
 
 import pygame
 
-from greia_platform.child_text import display_text
-from greia_platform.localization import LocalizedResources
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.localization import LocalizationError, LocalizedResources
+from greia_platform.system_chrome import ActivitySystemChromeLayout
+from greia_platform.typography import FontRole, GreiaTypography, grapheme_boundaries
 
 if __package__:
     from .postcard_art import POSTCARD_BG, POSTCARD_BORDER, PostcardArt
@@ -29,7 +29,16 @@ GALLERY_BTN_RECT: Final[pygame.Rect] = pygame.Rect(310, 525, 280, 52)
 CLEAR_BTN_RECT: Final[pygame.Rect] = pygame.Rect(620, 525, 180, 52)
 SHARED_IMPORT_BTN_RECT: Final[pygame.Rect] = pygame.Rect(820, 525, 124, 52)
 SHARED_SHARE_BTN_RECT: Final[pygame.Rect] = pygame.Rect(742, 485, 170, 48)
-BACK_TO_EDITOR_RECT: Final[pygame.Rect] = pygame.Rect(80, 24, 240, 52)
+# Child-visible controls start clear of the trusted Home/Back region, which
+# the platform reserves in full (both slots) so layout never jumps by context.
+_CHROME_CLEAR_X: Final = ActivitySystemChromeLayout.for_surface(1024, 600).protected_region.right + 18
+BACK_TO_EDITOR_RECT: Final[pygame.Rect] = pygame.Rect(_CHROME_CLEAR_X, 24, 240, 52)
+
+
+# Handwriting lane inside the postcard: width left of the stamp divider.
+MESSAGE_LANE_WIDTH: Final = 480
+MODAL_MESSAGE_LANE_WIDTH: Final = 560
+MAX_MESSAGE_LINES: Final = 5
 
 
 class PostcardRenderer:
@@ -44,6 +53,41 @@ class PostcardRenderer:
         self._art = art
         self._typography = typography
         self._resources = resources
+        # One-entry wrap cache: the draft changes at most once per keystroke,
+        # not once per frame, so re-measuring every frame would be waste.
+        self._wrap_key: tuple[str, FontRole, int, int] | None = None
+        self._wrap_value: tuple[tuple[int, int], ...] = ()
+
+    def _wrapped_spans(
+        self, text: str, role: FontRole, size: int, max_width: int
+    ) -> tuple[tuple[int, int], ...]:
+        """Split ``text`` into ``(start, end)`` line spans that fit ``max_width``.
+
+        Breaks prefer the last space; a word wider than the lane is broken at
+        a grapheme boundary so emoji/accent clusters are never split.
+        """
+        key = (text, role, size, max_width)
+        if key == self._wrap_key:
+            return self._wrap_value
+        bounds = grapheme_boundaries(text)
+        spans: list[tuple[int, int]] = []
+        start = 0
+        last_space = -1
+        prev = 0
+        for bound in bounds[1:]:
+            if self._typography.measure(text[start:bound].rstrip(), role, size).width > max_width and prev > start:
+                end = last_space + 1 if last_space > start else prev
+                spans.append((start, end))
+                start = end
+                last_space = -1
+            if text[bound - 1] == " ":
+                last_space = bound - 1
+            prev = bound
+        if start < len(text) or not spans:
+            spans.append((start, len(text)))
+        self._wrap_key = key
+        self._wrap_value = tuple(spans)
+        return self._wrap_value
 
     def draw_editor(
         self,
@@ -103,12 +147,20 @@ class PostcardRenderer:
         # Header Badge
         header = f"{self._resources.text('button.saved')} ({library.count}/{MAX_SAVED_CARDS})"
         h_surf = self._typography.render(header, FontRole.TITLE, 24, (254, 240, 138))
-        target.blit(h_surf, (REFERENCE_WIDTH // 2 - h_surf.get_width() // 2, 34))
+        target.blit(h_surf, (REFERENCE_WIDTH // 2 + 110 - h_surf.get_width() // 2, 34))
 
         # Grid of saved cards (4 columns x 3 rows)
         if library.count == 0:
-            empty_txt = self._typography.render(display_text("Nessuna cartolina ancora!"), FontRole.BODY, 24, (148, 163, 184))
-            target.blit(empty_txt, (REFERENCE_WIDTH // 2 - empty_txt.get_width() // 2, 280))
+            # Pictogram first so a pre-reader understands the empty mailbox.
+            empty_icon = self._typography.render("📭", FontRole.DISPLAY, 72, (148, 163, 184))
+            target.blit(empty_icon, (REFERENCE_WIDTH // 2 - empty_icon.get_width() // 2, 220))
+            try:
+                empty_caption = self._resources.text("gallery.empty")
+            except LocalizationError:
+                empty_caption = ""
+            if empty_caption:
+                empty_txt = self._typography.render(empty_caption, FontRole.BODY, 24, (100, 116, 139))
+                target.blit(empty_txt, (REFERENCE_WIDTH // 2 - empty_txt.get_width() // 2, 320))
             return
 
         for idx, card in enumerate(library.cards):
@@ -291,30 +343,31 @@ class PostcardRenderer:
                 2,
             )
 
-        # Render draft message text
-        text_rect = pygame.Rect(POSTCARD_RECT.left + 30, POSTCARD_RECT.top + 30, 480, 320)
+        # Render draft message text (child-authored: shown exactly as typed),
+        # wrapped onto the ruled lines so it never runs under the stamps.
+        text_rect = pygame.Rect(POSTCARD_RECT.left + 30, POSTCARD_RECT.top + 30, MESSAGE_LANE_WIDTH, 320)
         if draft.text:
-            txt_surf = self._typography.render(
-                draft.text,
-                FontRole.DISPLAY,
-                32,
-                (30, 41, 59),
-            )
-            target.blit(txt_surf, (text_rect.left, text_rect.top + 10))
-
-            # Cursor
+            spans = self._wrapped_spans(draft.text, FontRole.DISPLAY, 32, MESSAGE_LANE_WIDTH)
+            cursor_line, cursor_x = 0, 0
+            for index, (a, b) in enumerate(spans[:MAX_MESSAGE_LINES]):
+                line = draft.text[a:b].rstrip()
+                ly = line_y_start + index * line_spacing
+                if line:
+                    txt_surf = self._typography.render(line, FontRole.DISPLAY, 32, (30, 41, 59))
+                    target.blit(txt_surf, (text_rect.left, ly - txt_surf.get_height() + 6))
+                if a <= draft.cursor <= b:
+                    cursor_line = index
+                    before = draft.text[a:draft.cursor]
+                    cursor_x = (
+                        self._typography.measure(before, FontRole.DISPLAY, 32).width if before else 0
+                    )
             if cursor_visible:
-                before_cursor = draft.text[:draft.cursor]
-                cursor_x = text_rect.left + (
-                    self._typography.render(before_cursor, FontRole.DISPLAY, 32, (0, 0, 0)).get_width()
-                    if before_cursor
-                    else 0
-                )
+                cy = line_y_start + min(cursor_line, MAX_MESSAGE_LINES - 1) * line_spacing
                 pygame.draw.line(
                     target,
                     (2, 132, 199),
-                    (cursor_x, text_rect.top + 14),
-                    (cursor_x, text_rect.top + 52),
+                    (text_rect.left + cursor_x, cy - 38),
+                    (text_rect.left + cursor_x, cy + 4),
                     3,
                 )
         else:
@@ -324,13 +377,13 @@ class PostcardRenderer:
                 24,
                 (148, 163, 184),
             )
-            target.blit(ph_surf, (text_rect.left, text_rect.top + 18))
+            target.blit(ph_surf, (text_rect.left + 8, line_y_start - ph_surf.get_height() + 6))
             if cursor_visible:
                 pygame.draw.line(
                     target,
                     (2, 132, 199),
-                    (text_rect.left, text_rect.top + 14),
-                    (text_rect.left, text_rect.top + 52),
+                    (text_rect.left, line_y_start - 38),
+                    (text_rect.left, line_y_start + 4),
                     3,
                 )
 
@@ -513,9 +566,16 @@ class PostcardRenderer:
         target.blit(avatar, (modal_rect.left + 30 + to_surf.get_width() + 15, modal_rect.top + 16))
 
         # Message Text
-        msg = card.text if card.text else "(Solo francobollo / Picture only)"
-        m_surf = self._typography.render(msg, FontRole.DISPLAY, 30, (30, 41, 59))
-        target.blit(m_surf, (modal_rect.left + 40, modal_rect.top + 130))
+        # Child-authored text is shown exactly as written; a stamp-only card
+        # simply shows its stamp (no fixed-language placeholder sentence).
+        if card.text:
+            for index, (a, b) in enumerate(
+                self._wrapped_spans(card.text, FontRole.DISPLAY, 30, MODAL_MESSAGE_LANE_WIDTH)[:MAX_MESSAGE_LINES]
+            ):
+                line = card.text[a:b].rstrip()
+                if line:
+                    m_surf = self._typography.render(line, FontRole.DISPLAY, 30, (30, 41, 59))
+                    target.blit(m_surf, (modal_rect.left + 40, modal_rect.top + 130 + index * 42))
 
         # Modal Controls
         if confirm_delete:

@@ -8,8 +8,8 @@
     "prompt.find_sound": "Ascolta il suono e trova l'immagine!",
     "prompt.first_sound": "Qual è il suono iniziale?",
     "prompt.build_word": "Metti la lettera per formare la parola!",
-    "button.listen": "ASCOLTA",
-    "button.play_again": "GIOCA ANCORA",
+    "button.listen": "Ascolta",
+    "button.play_again": "Gioca ancora",
     "victory.title": "Officina delle Parole!",
     "victory.subtitle": "Tutti i suoni e le parole sono completi con Leo!"
   },

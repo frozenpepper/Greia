@@ -10,12 +10,12 @@
     "prompt.stamp": "Choisis un timbre !",
     "prompt.message": "Écris ton message ici...",
     "prompt.to": "À :",
-    "button.send": "ENVOYER 💌",
-    "button.saved": "MES CARTES 📬",
-    "button.write": "NOUVELLE CARTE ✏️",
-    "button.clear": "EFFACER 🗑️",
-    "button.delete": "SUPPRIMER",
-    "button.cancel": "ANNULER",
+    "button.send": "Envoyer 💌",
+    "button.saved": "Mes cartes 📬",
+    "button.write": "Nouvelle carte ✏️",
+    "button.clear": "Effacer 🗑️",
+    "button.delete": "Supprimer",
+    "button.cancel": "Annuler",
     "dialog.full_title": "Boîte aux lettres pleine !",
     "dialog.full_body": "Tu as 20 cartes postales enregistrées.\nSupprime une ancienne carte pour en créer une nouvelle.",
     "dialog.delete_confirm": "Veux-tu supprimer cette carte postale ?",
@@ -24,7 +24,8 @@
     "recipient.lilli": "Lilli",
     "recipient.leo": "Leo",
     "recipient.pina": "Pina",
-    "recipient.tito": "Tito"
+    "recipient.tito": "Tito",
+    "gallery.empty": "Pas encore de cartes !"
   },
   "audio": {}
 }

@@ -7,10 +7,11 @@
     "activity.specchi_magici.title": "Espejos mágicos",
     "prompt.place": "¡Copia el reflejo del dibujo en el espejo mágico!",
     "prompt.hint": "¡Mira cómo se refleja cada forma!",
-    "button.undo": "DESHACER",
-    "button.play_again": "JUGAR OTRA VEZ",
+    "button.undo": "Deshacer",
+    "button.play_again": "Jugar otra vez",
     "victory.title": "¡Galería brillante!",
-    "victory.subtitle": "¡Todos los mosaicos reflejan su magia con Lilli!"
+    "victory.subtitle": "¡Todos los mosaicos reflejan su magia con Lilli!",
+    "button.listen": "Escuchar"
   },
   "audio": {}
 }

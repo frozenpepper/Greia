@@ -79,7 +79,12 @@
     "voice.fact.krill.1": "Le krill est composé de petits crustacés semblables à des crevettes qui nagent en immenses essaims !",
     "voice.fact.krill.2": "Le krill est une nourriture très importante pour les grandes baleines et beaucoup de poissons !",
     "voice.fact.krill.3": "Certaines espèces de krill brillent dans l'océan sombre grâce à la bioluminescence !",
-    "voice.fact.krill.4": "La masse totale du krill est immense, peut-être plus importante que celle de tous les humains réunis !"
+    "voice.fact.krill.4": "La masse totale du krill est immense, peut-être plus importante que celle de tous les humains réunis !",
+    "hud.encounter": "Rencontre rapprochée",
+    "hud.order": "Ordre du capitaine",
+    "hud.order_done": "Ordre exécuté !",
+    "hud.curiosity": "Le saviez-vous : $species",
+    "hud.curiosity_generic": "Savoir marin"
   },
   "audio": {}
 }

@@ -7,6 +7,7 @@ from typing import Final
 import pygame
 
 from greia_platform.localization import LocalizedResources
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -19,7 +20,10 @@ else:
     from sound_workshop_model import REFERENCE_WIDTH, WorkshopChallenge, SoundSession
 
 
-REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(80, 24, 180, 48)
+# Child-visible controls start clear of the trusted Home/Back region, which
+# the platform reserves in full (both slots) so layout never jumps by context.
+_CHROME_CLEAR_X: Final = ActivitySystemChromeLayout.for_surface(1024, 600).protected_region.right + 18
+REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(_CHROME_CLEAR_X, 24, 180, 48)
 TARGET_SOUND_RECT: Final[pygame.Rect] = pygame.Rect(452, 78, 120, 100)
 TARGET_PICTURE_RECT: Final[pygame.Rect] = pygame.Rect(452, 68, 120, 120)
 

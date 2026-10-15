@@ -10,12 +10,12 @@
     "prompt.stamp": "Scegli un francobollo!",
     "prompt.message": "Scrivi il tuo messaggio qui...",
     "prompt.to": "Per:",
-    "button.send": "SPEDISCI 💌",
-    "button.saved": "I MIEI MESSAGGI 📬",
-    "button.write": "NUOVA CARTOLINA ✏️",
-    "button.clear": "CANCELLA 🗑️",
-    "button.delete": "ELIMINA",
-    "button.cancel": "ANNULLA",
+    "button.send": "Spedisci 💌",
+    "button.saved": "I miei messaggi 📬",
+    "button.write": "Nuova cartolina ✏️",
+    "button.clear": "Cancella 🗑️",
+    "button.delete": "Elimina",
+    "button.cancel": "Annulla",
     "dialog.full_title": "Cassetta delle lettere piena!",
     "dialog.full_body": "Hai già 20 cartoline salvate.\nElimina una cartolina vecchia per salvarne una nuova.",
     "dialog.delete_confirm": "Vuoi eliminare questa cartolina?",
@@ -24,7 +24,8 @@
     "recipient.lilli": "Lilli",
     "recipient.leo": "Leo",
     "recipient.pina": "Pina",
-    "recipient.tito": "Tito"
+    "recipient.tito": "Tito",
+    "gallery.empty": "Ancora nessuna cartolina!"
   },
   "audio": {
     "activity.title": {

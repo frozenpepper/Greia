@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Tuple
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
+from greia_platform.localization import LocalizationError, LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -434,7 +434,7 @@ class CockpitPresenter:
             icon_cx = btn_rect.centerx
             icon_col = (20, 24, 32)
             self._draw_button_icon(surface, icon_type, icon_cx, icon_cy, icon_col, active or hover)
-            txt_surf = self.typography.render(label, FontRole.CONTROL, 9, (25, 30, 38))
+            txt_surf = self._fitted_label(label, FontRole.CONTROL, 12, btn_rect.width - 8, (25, 30, 38))
             surface.blit(txt_surf, (btn_rect.centerx - txt_surf.get_width() // 2, btn_rect.bottom - txt_surf.get_height() - 4))
         else:
             # Draw crisp, bold vector icon in upper portion of button
@@ -444,7 +444,7 @@ class CockpitPresenter:
             self._draw_button_icon(surface, icon_type, icon_cx, icon_cy, icon_col, active or hover)
 
             # Draw clear child-friendly label in lower portion of button
-            txt_surf = self.typography.render(label, FontRole.CONTROL, 13, (25, 30, 38))
+            txt_surf = self._fitted_label(label, FontRole.CONTROL, 14, btn_rect.width - 8, (25, 30, 38))
             surface.blit(txt_surf, (btn_rect.centerx - txt_surf.get_width() // 2, btn_rect.bottom - txt_surf.get_height() - 6))
 
     def _draw_button_icon(
@@ -542,7 +542,7 @@ class CockpitPresenter:
         color: Tuple[int, int, int],
         flashing: bool,
         hover: bool,
-        label: str = "Allarme"
+        label: str = ""
     ) -> None:
         cx = rect.centerx
         cy = rect.top + 34
@@ -592,7 +592,7 @@ class CockpitPresenter:
 
         # Bold label at bottom of button
         txt_col = (255, 245, 245) if flashing else (230, 215, 215)
-        txt_surf = self.typography.render(label, FontRole.CONTROL, 11, txt_col)
+        txt_surf = self._fitted_label(label, FontRole.CONTROL, 13, btn_rect.width - 8, txt_col)
         surface.blit(txt_surf, (btn_rect.centerx - txt_surf.get_width() // 2, btn_rect.bottom - txt_surf.get_height() - 5))
 
     def _render_discovery_hud(
@@ -622,7 +622,7 @@ class CockpitPresenter:
 
             self._draw_hud_banner(
                 surface,
-                header="INCONTRO RAVVICINATO",
+                header=self._copy(resources, "hud.encounter"),
                 body=prompt_txt,
                 border_color=(255, 180, 50, 220),
                 bg_color=(35, 20, 10, 235),
@@ -635,11 +635,11 @@ class CockpitPresenter:
             if ord_state.solved:
                 order_txt = resources.text("order.compliment")
                 txt_col = (120, 255, 150)
-                hdr = "ORDINE COMPLETATO!"
+                hdr = self._copy(resources, "hud.order_done")
             else:
                 order_txt = resources.text(ord_state.prompt_text_key)
                 txt_col = (255, 245, 130)
-                hdr = "ORDINE DEL CAPITANO"
+                hdr = self._copy(resources, "hud.order")
 
             self._draw_hud_banner(
                 surface,
@@ -652,11 +652,14 @@ class CockpitPresenter:
 
         # 3. Educational Fact banner when a marine species fact is active
         elif model.active_fact.display_timer > 0:
-            fact_key = model.active_fact.text_key
-            fact_txt = resources.text(fact_key)
-            if fact_txt != fact_key:
-                species_name = resources.text(f"creature.{model.active_fact.species}")
-                hdr = f"CURIOSITA: {species_name.upper()}" if species_name != f"creature.{model.active_fact.species}" else "CURIOSITA MARINA"
+            fact_txt = self._copy(resources, model.active_fact.text_key)
+            if fact_txt:
+                species_name = self._copy(resources, f"creature.{model.active_fact.species}")
+                hdr = (
+                    self._copy(resources, "hud.curiosity", species=species_name)
+                    if species_name
+                    else self._copy(resources, "hud.curiosity_generic")
+                )
                 self._draw_hud_banner(
                     surface,
                     header=hdr,
@@ -665,6 +668,28 @@ class CockpitPresenter:
                     bg_color=(12, 26, 44, 235),
                     text_color=(240, 250, 255),
                 )
+
+    def _fitted_label(
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        max_width: int,
+        color: Tuple[int, int, int],
+    ) -> pygame.Surface:
+        """Render a label at the largest size (down to a floor) that fits."""
+        fitted = size
+        while fitted > 9 and self.typography.measure(text, role, fitted).width > max_width:
+            fitted -= 1
+        return self.typography.render(text, role, fitted, color)
+
+    @staticmethod
+    def _copy(resources: LocalizedResources, key: str, **variables: str) -> str:
+        """Resolve child-visible copy; a missing key degrades to no caption."""
+        try:
+            return resources.text(key, variables or None).strip()
+        except LocalizationError:
+            return ""
 
     def _draw_hud_banner(
         self,
@@ -675,7 +700,7 @@ class CockpitPresenter:
         bg_color: Tuple[int, int, int, int],
         text_color: Tuple[int, int, int]
     ) -> None:
-        hdr_surf = self.typography.render(header, FontRole.SECONDARY, 11, (border_color[0], border_color[1], border_color[2]))
+        hdr_surf = self.typography.render(header, FontRole.SECONDARY, 13, (border_color[0], border_color[1], border_color[2]))
 
         # Wrap body text cleanly if long (max ~48 chars per line)
         words = body.split()

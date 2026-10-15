@@ -9,8 +9,8 @@
     "btn.undo": "Annulla",
     "btn.clear": "Pulisci",
     "btn.eraser": "Gomma",
-    "status.saved": "Salvo",
-    "status.saving": "Salva…",
+    "status.saved": "Salvato",
+    "status.saving": "Salvo…",
     "status.error": "Errore"
   },
   "audio": {

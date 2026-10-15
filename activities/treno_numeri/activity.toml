@@ -1,7 +1,7 @@
 [activity]
 id = "org.greia.treno-numeri"
 legacy_ids = []
-title_key = "activity.treno_numeri.title"
+title_key = "activity.title"
 version = "0.1.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]

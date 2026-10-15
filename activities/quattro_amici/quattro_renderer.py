@@ -699,9 +699,16 @@ class QuattroRenderer:
         mode_rect = pygame.Rect(mode_x, btn_y, 74, btn_h)
         pygame.draw.rect(self.surface, (255, 250, 240), mode_rect, border_radius=12)
         pygame.draw.rect(self.surface, (180, 140, 100), mode_rect, width=2, border_radius=12)
-        mode_text = "1P" if model.mode == GameMode.VS_CPU else "2P"
-        mode_lbl = self.typography.render(mode_text, FontRole.TITLE, 18, COLOR_TEXT_DARK)
-        self.surface.blit(mode_lbl, (mode_x + (74 - mode_lbl.get_width()) // 2, btn_y + (btn_h - mode_lbl.get_height()) // 2))
+        # Pictogram, not "1P"/"2P": one player disc (against Leo) or two
+        # player discs (two friends), using the same cached discs as the board.
+        players = (Player.FLASH,) if model.mode == GameMode.VS_CPU else (Player.FLASH, Player.LEO)
+        discs = [self._get_cached_disc(14, player) for player in players]
+        gap = 8
+        total_w = sum(d.get_width() for d in discs) + gap * (len(discs) - 1)
+        dx = mode_x + (74 - total_w) // 2
+        for disc in discs:
+            self.surface.blit(disc, (dx, btn_y + (btn_h - disc.get_height()) // 2))
+            dx += disc.get_width() + gap
 
         # Bottom "Play Again" button when game is over
         if model.status != GameStatus.IN_PROGRESS:

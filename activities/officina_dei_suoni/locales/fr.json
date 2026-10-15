@@ -8,8 +8,8 @@
     "prompt.find_sound": "Écoute le son et trouve l'image !",
     "prompt.first_sound": "Quel son entends-tu au début ?",
     "prompt.build_word": "Place la lettre pour former le mot !",
-    "button.listen": "ÉCOUTER",
-    "button.play_again": "REJOUER",
+    "button.listen": "Écouter",
+    "button.play_again": "Rejouer",
     "victory.title": "Atelier des mots !",
     "victory.subtitle": "Tu as terminé tous les sons et tous les mots avec Leo !"
   },

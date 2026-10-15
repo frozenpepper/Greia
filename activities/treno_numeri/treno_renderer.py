@@ -389,7 +389,7 @@ class TrenoRenderer:
             surface.blit(lbl_one, (b_c.centerx + 25, b_c.centery - lbl_one.get_height() // 2))
 
         # 9. Top Star Pill (HUD)
-        star_pill = pygame.Rect(80, 16, 130, 56)
+        star_pill = pygame.Rect(REFERENCE_WIDTH - 130 - 24, 16, 130, 56)
         pygame.draw.rect(surface, (255, 255, 255), star_pill, border_radius=18)
         pygame.draw.rect(surface, (234, 179, 8), star_pill, width=3, border_radius=18)
         pygame.draw.circle(surface, (234, 179, 8), (star_pill.left + 30, star_pill.centery), 16)

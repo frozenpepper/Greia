@@ -94,7 +94,12 @@ def _load_package_locale_tables(
     locales_dir: Path,
     requested_language: str,
 ) -> tuple[str, dict[str, str], dict[str, str], dict[str, str]]:
-    """Load the Activity's legacy ui/puppets/backdrops JSON for one locale."""
+    """Load the Activity's ui/puppet/backdrop copy for one locale.
+
+    The standard schema-v1 bundle namespaces these three families as
+    ``ui.*``, ``puppet.*`` and ``backdrop.*``; the loader returns them as
+    three small id -> text tables so call sites stay semantic.
+    """
     language = requested_language if requested_language in {"it", "en"} else "it"
     locale_file = locales_dir / f"{language}.json"
     if not locale_file.is_file():
@@ -104,20 +109,18 @@ def _load_package_locale_tables(
         raw = json.loads(locale_file.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return language, {}, {}, {}
-    if not isinstance(raw, dict):
+    strings = raw.get("strings", {}) if isinstance(raw, dict) else {}
+    if not isinstance(strings, dict):
         return language, {}, {}, {}
 
-    def table(name: str) -> dict[str, str]:
-        value = raw.get(name, {})
-        if not isinstance(value, dict):
-            return {}
+    def table(prefix: str) -> dict[str, str]:
         return {
-            str(key): str(item)
-            for key, item in value.items()
-            if isinstance(key, str) and isinstance(item, str)
+            key[len(prefix):]: item
+            for key, item in strings.items()
+            if isinstance(key, str) and isinstance(item, str) and key.startswith(prefix)
         }
 
-    return language, table("ui"), table("puppets"), table("backdrops")
+    return language, table("ui."), table("puppet."), table("backdrop.")
 
 
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
@@ -172,10 +175,9 @@ class TeatrinoApp:
         except RuntimeError:
             self.creations = None
 
-        # This Activity uses the older package JSON shape (ui/puppets/backdrops)
-        # rather than LocalizationBundle schema v1. Resolve the profile locale
-        # first, then load exactly that package bundle once; never pre-load
-        # Italian and merely remember that English was selected.
+        # Resolve the profile locale first, then load exactly that package
+        # bundle once; never pre-load Italian and merely remember that English
+        # was selected.
         self._active_locale = "it"
         locales_dir = Path(__file__).resolve().parent / "locales"
         try:
@@ -285,6 +287,14 @@ class TeatrinoApp:
 
     # -- text helper -------------------------------------------------------
 
+    def _ui(self, key: str) -> str:
+        """Localized UI copy from the selected bundle; empty when absent.
+
+        There is deliberately no fixed-language fallback sentence: a missing
+        key leaves only the control's pictogram.
+        """
+        return self.ui_strings.get(key, "")
+
     def get_text(self, text: str, role: FontRole, size: int, color: tuple) -> pygame.Surface:
         key = (text, role, size, color)
         res = self.text_cache.get(key)
@@ -367,10 +377,7 @@ class TeatrinoApp:
                     self.playback_audio_channel = None
                 self.feedback_text = (
                     "👏 "
-                    + self.ui_strings.get(
-                        "playback_complete",
-                        "Hooray for the show!",
-                    )
+                    + self._ui("playback_complete")
                 )
                 self.feedback_timer = 3.0
                 self.sound_mgr.play("applause")
@@ -445,10 +452,7 @@ class TeatrinoApp:
                 self.recording_narration_track = None
                 self.feedback_text = (
                     "⚠️ "
-                    + self.ui_strings.get(
-                        "narration_play_failed",
-                        "Could not play this narration.",
-                    )
+                    + self._ui("narration_play_failed")
                 )
                 self.feedback_timer = 2.5
                 self.sound_mgr.play("boing")
@@ -463,10 +467,7 @@ class TeatrinoApp:
         self.is_recording = True
         self.feedback_text = (
             "🔴 "
-            + self.ui_strings.get(
-                "recording_active",
-                "Recording in progress... Tell your story!",
-            )
+            + self._ui("recording_active")
         )
         self.feedback_timer = 3.0
         if self.recording_narration_track is None:
@@ -502,10 +503,7 @@ class TeatrinoApp:
             except ValueError:
                 self.feedback_text = (
                     "⚠️ "
-                    + self.ui_strings.get(
-                        "narration_play_failed",
-                        "Could not use this narration.",
-                    )
+                    + self._ui("narration_play_failed")
                 )
                 self.feedback_timer = feedback_seconds
                 self.sound_mgr.play("boing")
@@ -580,10 +578,7 @@ class TeatrinoApp:
         self.narration_import_feedback_until = now + 2.0
         self.feedback_text = (
             "🎧 "
-            + self.ui_strings.get(
-                "narration_imported",
-                "Narration ready!",
-            )
+            + self._ui("narration_imported")
         )
         self.feedback_timer = 2.0
 
@@ -683,10 +678,7 @@ class TeatrinoApp:
             self.library_shows = self.show_repo.list_shows()
             self.feedback_text = (
                 "⚠️ "
-                + self.ui_strings.get(
-                    "recording_save_failed",
-                    "Could not save this show.",
-                )
+                + self._ui("recording_save_failed")
             )
             self.feedback_timer = feedback_seconds
             self.sound_mgr.play("boing")
@@ -695,10 +687,7 @@ class TeatrinoApp:
         self.library_shows = self.show_repo.list_shows()
         self.feedback_text = (
             "🎉 "
-            + self.ui_strings.get(
-                "recording_saved",
-                "Show saved in your library!",
-            )
+            + self._ui("recording_saved")
         )
         self.feedback_timer = feedback_seconds
         try:
@@ -963,22 +952,16 @@ class TeatrinoApp:
                 self.mic_recorder.enabled = True
                 self.feedback_text = (
                     "🎙️ "
-                    + self.ui_strings.get("mic_source", "Microphone ready")
+                    + self._ui("mic_source")
                 )
             else:
                 new_state = self.mic_recorder.toggle()
                 self.feedback_text = (
                     "🎙️ "
-                    + self.ui_strings.get(
-                        "mic_active_feedback",
-                        "Microphone on",
-                    )
+                    + self._ui("mic_active_feedback")
                     if new_state
                     else "🔇 "
-                    + self.ui_strings.get(
-                        "mic_inactive_feedback",
-                        "Microphone off",
-                    )
+                    + self._ui("mic_inactive_feedback")
                 )
             self.feedback_timer = 2.5
             return
@@ -1008,7 +991,7 @@ class TeatrinoApp:
                 self.playback_frames = list(self.recorded_frames)
                 self.playback_sfx = list(self.recorded_sfx)
                 self.playback_duration = max(2.0, self.recorded_frames[-1]["t"])
-                self.feedback_text = f"▶️ {self.ui_strings.get('playing_show', 'Showtime!')}"
+                self.feedback_text = f"▶️ {self._ui('playing_show')}"
                 self.feedback_timer = 3.0
                 self.sound_mgr.play("trumpet")
                 if self.playback_audio_channel:
@@ -1033,17 +1016,14 @@ class TeatrinoApp:
                 self.sound_mgr.play("trumpet")
                 self.feedback_text = (
                     "▶️ "
-                    + self.ui_strings.get(
-                        "free_show_playing",
-                        "Puppet show!",
-                    )
+                    + self._ui("free_show_playing")
                 )
                 self.feedback_timer = 3.0
             return
         if 740 <= rx <= 805 and 16 <= ry <= 68:
             self.sound_mgr.play("boing")
             self.puppets_on_stage.clear()
-            self.feedback_text = f"✨ {self.ui_strings.get('stage_cleared', 'Stage ready!')}"
+            self.feedback_text = f"✨ {self._ui('stage_cleared')}"
             self.feedback_timer = 2.0
             return
         if 830 <= rx <= 900 and 24 <= ry <= 78:
@@ -1057,14 +1037,11 @@ class TeatrinoApp:
             self.active_bg_idx = (self.active_bg_idx + 1) % len(BG_CONFIGS)
             bg_id, _, fallback_name = BG_CONFIGS[self.active_bg_idx]
             scene_name = self.backdrop_names.get(bg_id, fallback_name)
-            scene_template = self.ui_strings.get(
-                "scene_changed",
-                "Scene: {scene}",
-            )
+            scene_template = self._ui("scene_changed")
             try:
-                scene_feedback = scene_template.format(scene=scene_name)
+                scene_feedback = scene_template.format(scene=scene_name) if scene_template else scene_name
             except (KeyError, ValueError):
-                scene_feedback = f"Scene: {scene_name}"
+                scene_feedback = scene_name
             self.feedback_text = f"✨ {scene_feedback}"
             self.feedback_timer = 2.0
             return
@@ -1136,14 +1113,14 @@ class TeatrinoApp:
             mic_border = MIC_GREEN if self.mic_recorder.enabled else (220, 38, 38)
             pygame.draw.rect(surf, mic_bg, mic_rect, border_radius=14)
             pygame.draw.rect(surf, mic_border, mic_rect, width=3, border_radius=14)
-            mic_label = f"🎙️ {self.ui_strings.get('mic_on', 'ON')}" if self.mic_recorder.enabled else f"🔇 {self.ui_strings.get('mic_off', 'OFF')}"
+            mic_label = f"🎙️ {self._ui('mic_on')}" if self.mic_recorder.enabled else f"🔇 {self._ui('mic_off')}"
             mic_s = self.get_text(mic_label, FontRole.TITLE, 14, mic_border)
             surf.blit(mic_s, (mic_rect.centerx - mic_s.get_width() // 2, mic_rect.centery - mic_s.get_height() // 2))
             lib_rect = pygame.Rect(225, 16, 120, 52)
             pygame.draw.rect(surf, (255, 250, 240), lib_rect, border_radius=14)
             pygame.draw.rect(surf, (61, 44, 31), lib_rect, width=2, border_radius=14)
             num_saved = len(self.library_shows)
-            lib_label = f"🎬 {self.ui_strings.get('stories', 'Stories')} ({num_saved})"
+            lib_label = f"🎬 {self._ui('stories')} ({num_saved})"
             lib_s = self.get_text(lib_label, FontRole.TITLE, 14, DARK_TEXT)
             surf.blit(lib_s, (lib_rect.centerx - lib_s.get_width() // 2, lib_rect.centery - lib_s.get_height() // 2))
             self._draw_narration_import_button(surf)
@@ -1151,7 +1128,7 @@ class TeatrinoApp:
             if self.is_recording:
                 pygame.draw.rect(surf, (255, 210, 210), rec_rect, border_radius=14)
                 pygame.draw.rect(surf, REC_RED, rec_rect, width=3, border_radius=14)
-                rec_label = f"⏹️ {self.ui_strings.get('stop', 'STOP')}"
+                rec_label = f"⏹️ {self._ui('stop')}"
                 rec_s = self.get_text(rec_label, FontRole.TITLE, 16, REC_RED)
                 surf.blit(rec_s, (rec_rect.centerx - rec_s.get_width() // 2, rec_rect.centery - rec_s.get_height() // 2))
                 meter_x = 425
@@ -1175,13 +1152,13 @@ class TeatrinoApp:
             else:
                 pygame.draw.rect(surf, (255, 250, 240), rec_rect, border_radius=14)
                 pygame.draw.rect(surf, (61, 44, 31), rec_rect, width=2, border_radius=14)
-                rec_label = f"🔴 {self.ui_strings.get('rec', 'REC')}"
+                rec_label = f"🔴 {self._ui('rec')}"
                 rec_s = self.get_text(rec_label, FontRole.TITLE, 16, DARK_TEXT)
                 surf.blit(rec_s, (rec_rect.centerx - rec_s.get_width() // 2, rec_rect.centery - rec_s.get_height() // 2))
             play_rect = pygame.Rect(560, 16, 130, 52)
             pygame.draw.rect(surf, (255, 250, 240), play_rect, border_radius=14)
             pygame.draw.rect(surf, (61, 44, 31), play_rect, width=2, border_radius=14)
-            play_label = f"▶️ {self.ui_strings.get('show', 'SHOW')}"
+            play_label = f"▶️ {self._ui('show')}"
             ply_s = self.get_text(play_label, FontRole.TITLE, 16, DARK_TEXT)
             surf.blit(ply_s, (play_rect.centerx - ply_s.get_width() // 2, play_rect.centery - ply_s.get_height() // 2))
             clear_rect = pygame.Rect(740, 16, 65, 52)
@@ -1193,12 +1170,12 @@ class TeatrinoApp:
             exit_rect = pygame.Rect(140, 16, 110, 52)
             pygame.draw.rect(surf, (255, 230, 230), exit_rect, border_radius=14)
             pygame.draw.rect(surf, (220, 38, 38), exit_rect, width=2, border_radius=14)
-            exit_s = self.get_text(f"⏹️ {self.ui_strings.get('exit_viewer', 'Exit')}", FontRole.TITLE, 15, (185, 28, 28))
+            exit_s = self.get_text(f"⏹️ {self._ui('exit_viewer')}", FontRole.TITLE, 15, (185, 28, 28))
             surf.blit(exit_s, (exit_rect.centerx - exit_s.get_width() // 2, exit_rect.centery - exit_s.get_height() // 2))
             rep_rect = pygame.Rect(265, 16, 120, 52)
             pygame.draw.rect(surf, (255, 250, 240), rep_rect, border_radius=14)
             pygame.draw.rect(surf, (61, 44, 31), rep_rect, width=2, border_radius=14)
-            rep_s = self.get_text(f"🔁 {self.ui_strings.get('replay_story', 'Replay')}", FontRole.TITLE, 15, DARK_TEXT)
+            rep_s = self.get_text(f"🔁 {self._ui('replay_story')}", FontRole.TITLE, 15, DARK_TEXT)
             surf.blit(rep_s, (rep_rect.centerx - rep_s.get_width() // 2, rep_rect.centery - rep_s.get_height() // 2))
             prog_bg = pygame.Rect(410, 24, 360, 34)
             pygame.draw.rect(surf, (20, 16, 30), prog_bg, border_radius=10)
@@ -1208,11 +1185,7 @@ class TeatrinoApp:
             if ratio > 0.0:
                 prog_fill = pygame.Rect(prog_bg.x + 3, prog_bg.y + 3, int((prog_bg.width - 6) * ratio), prog_bg.height - 6)
                 pygame.draw.rect(surf, STAGE_GOLD, prog_fill, border_radius=8)
-            t_title = self.ui_strings.get(
-                "story_generic", "Story"
-            ) if self.playback_show_meta else self.ui_strings.get(
-                "show_generic", "Show"
-            )
+            t_title = self._ui("story_generic") if self.playback_show_meta else self._ui("show_generic")
             time_str = f"🎬 {t_title} ({min(int(self.playback_duration), int(play_elapsed))}s / {int(self.playback_duration)}s)"
             t_s = self.get_text(time_str, FontRole.CONTROL, 12, (255, 250, 240))
             surf.blit(t_s, (prog_bg.centerx - t_s.get_width() // 2, prog_bg.centery - t_s.get_height() // 2))
@@ -1225,7 +1198,7 @@ class TeatrinoApp:
             pygame.draw.rect(surf, STAGE_GOLD, sc_rect, width=3, border_radius=14)
             sc_s = self.get_text(sc_icon, FontRole.DISPLAY, 26, DARK_TEXT)
             surf.blit(sc_s, (sc_rect.centerx - sc_s.get_width() // 2, sc_rect.centery - sc_s.get_height() // 2 - 4))
-            sc_lbl = self.get_text(self.ui_strings.get("scene", "Scene"), FontRole.CONTROL, 10, DARK_TEXT)
+            sc_lbl = self.get_text(self._ui("scene"), FontRole.CONTROL, 12, DARK_TEXT)
             surf.blit(sc_lbl, (sc_rect.centerx - sc_lbl.get_width() // 2, sc_rect.bottom - 13))
             for f_idx, (fx_id, fx_sym) in enumerate(FX_BUTTONS):
                 fy = 88 + f_idx * 58
@@ -1269,7 +1242,7 @@ class TeatrinoApp:
             box_rect = modal_layout["box"]
             pygame.draw.rect(surf, (255, 250, 240), box_rect, border_radius=20)
             pygame.draw.rect(surf, STAGE_GOLD, box_rect, width=4, border_radius=20)
-            hdr_surf = self.get_text(f"🎬 {self.ui_strings.get('stories', 'Stories')}", FontRole.DISPLAY, 26, DARK_TEXT)
+            hdr_surf = self.get_text(f"🎬 {self._ui('stories')}", FontRole.DISPLAY, 26, DARK_TEXT)
             surf.blit(hdr_surf, (box_rect.centerx - hdr_surf.get_width() // 2, box_rect.y + 16))
             cls_rect = modal_layout["close"]
             pygame.draw.rect(surf, (254, 226, 226), cls_rect, border_radius=10)
@@ -1278,8 +1251,10 @@ class TeatrinoApp:
             pygame.draw.line(surf, (185, 28, 28), (cx - 8, cy - 8), (cx + 8, cy + 8), 3)
             pygame.draw.line(surf, (185, 28, 28), (cx + 8, cy - 8), (cx - 8, cy + 8), 3)
             if not self.library_shows:
+                empty_icon = self.get_text("🎬", FontRole.DISPLAY, 72, DARK_TEXT)
+                surf.blit(empty_icon, (box_rect.centerx - empty_icon.get_width() // 2, box_rect.centery - 130))
                 no_s = self.get_text(
-                    self.ui_strings.get("no_stories", "No saved stories yet!"),
+                    self._ui("no_stories"),
                     FontRole.TITLE,
                     18,
                     (140, 100, 60),
@@ -1307,14 +1282,11 @@ class TeatrinoApp:
                         micro = self.puppet_micro_thumbs.get(actor_id, self.puppet_micro_thumbs.get("lilli"))
                         if micro is not None:
                             surf.blit(micro, (c_rect.x + 70 + a_idx * 34, c_rect.centery - 19))
-                    title_template = self.ui_strings.get(
-                        "story_number",
-                        "Story {number}",
-                    )
+                    title_template = self._ui("story_number")
                     try:
                         title_text = title_template.format(number=s_idx + 1)
                     except (KeyError, ValueError):
-                        title_text = f"Story {s_idx + 1}"
+                        title_text = f"{s_idx + 1}"
                     title_s = self.get_text(
                         title_text,
                         FontRole.TITLE,
@@ -1328,7 +1300,7 @@ class TeatrinoApp:
                     surf.blit(dur_s, (c_rect.x + 190, c_rect.y + 46))
                     pygame.draw.rect(surf, (220, 255, 225), ply_btn_rect, border_radius=12)
                     pygame.draw.rect(surf, MIC_GREEN, ply_btn_rect, width=2, border_radius=12)
-                    ply_btn_s = self.get_text(f"▶️ {self.ui_strings.get('play_story', 'Watch')}", FontRole.TITLE, 15, (20, 100, 40))
+                    ply_btn_s = self.get_text(f"▶️ {self._ui('play_story')}", FontRole.TITLE, 15, (20, 100, 40))
                     surf.blit(ply_btn_s, (ply_btn_rect.centerx - ply_btn_s.get_width() // 2, ply_btn_rect.centery - ply_btn_s.get_height() // 2))
                     pygame.draw.rect(surf, (255, 230, 230), del_btn_rect, border_radius=12)
                     pygame.draw.rect(surf, (220, 38, 38), del_btn_rect, width=2, border_radius=12)
@@ -1339,14 +1311,15 @@ class TeatrinoApp:
                         prev_rect = modal_layout["prev_btn"]
                         pygame.draw.rect(surf, (255, 250, 240), prev_rect, border_radius=10)
                         pygame.draw.rect(surf, STAGE_GOLD, prev_rect, width=2, border_radius=10)
-                        p_txt = self.get_text("◀ Indietro", FontRole.CONTROL, 12, DARK_TEXT)
-                        surf.blit(p_txt, (prev_rect.centerx - p_txt.get_width() // 2, prev_rect.centery - p_txt.get_height() // 2))
+                        # Drawn arrow: language-neutral, no glyph-fallback risk.
+                        pcx, pcy = prev_rect.center
+                        pygame.draw.polygon(surf, DARK_TEXT, [(pcx + 6, pcy - 9), (pcx + 6, pcy + 9), (pcx - 8, pcy)])
                     if (self.library_page + 1) * modal_layout["cards_per_page"] < len(self.library_shows):
                         next_rect = modal_layout["next_btn"]
                         pygame.draw.rect(surf, (255, 250, 240), next_rect, border_radius=10)
                         pygame.draw.rect(surf, STAGE_GOLD, next_rect, width=2, border_radius=10)
-                        n_txt = self.get_text("Avanti ▶", FontRole.CONTROL, 12, DARK_TEXT)
-                        surf.blit(n_txt, (next_rect.centerx - n_txt.get_width() // 2, next_rect.centery - n_txt.get_height() // 2))
+                        ncx, ncy = next_rect.center
+                        pygame.draw.polygon(surf, DARK_TEXT, [(ncx - 6, ncy - 9), (ncx - 6, ncy + 9), (ncx + 8, ncy)])
 
         if self.feedback_text and self.app_mode == "stage":
             fb_surf = self.get_text(self.feedback_text, FontRole.TITLE, 19, STAGE_GOLD)
@@ -1358,7 +1331,7 @@ class TeatrinoApp:
     # -- main loop --------------------------------------------------------
 
     def run(self) -> int:
-        pygame.display.set_caption("Teatrino delle Fiabe")
+        pygame.display.set_caption(self._ui("window_title") or "Greia")
         ready_published = False
         self.running = True
         try:

@@ -63,6 +63,11 @@ class HudView:
     banner_text: str | None
     fact_caption: str | None
     tito_speaking: bool
+    #: Show the language-neutral "how to swim" animation (the welcome cue is
+    #: spoken by Tito; pre-readers get this picture instead of a paragraph).
+    controls_hint: bool = False
+    #: Monotonic seconds, used only to phase the hint animation.
+    hint_clock: float = 0.0
 
 
 class DelfinoRenderer:
@@ -144,6 +149,56 @@ class DelfinoRenderer:
 
         if caption:
             self._wrapped_caption(caption)
+
+    # ---------------------------------------------------------- controls hint
+
+    def _draw_key(
+        self,
+        surface: pygame.Surface,
+        rect: pygame.Rect,
+        pressed: bool,
+        arrow: str | None,
+    ) -> None:
+        """Draw one chunky keycap, optionally with a triangle arrow."""
+
+        face = rect.move(0, 5 if pressed else 0)
+        pygame.draw.rect(surface, (120, 92, 52), rect.move(0, 6), border_radius=14)
+        pygame.draw.rect(surface, (255, 226, 130) if pressed else (255, 252, 242), face, border_radius=14)
+        pygame.draw.rect(surface, (238, 186, 92), face, 3, border_radius=14)
+        if arrow is None:
+            return
+        cx, cy = face.center
+        if arrow == "up":
+            points = [(cx - 13, cy + 8), (cx + 13, cy + 8), (cx, cy - 12)]
+        else:
+            points = [(cx - 13, cy - 8), (cx + 13, cy - 8), (cx, cy + 12)]
+        pygame.draw.polygon(surface, (146, 96, 22), points)
+
+    def _draw_controls_hint(self, surface: pygame.Surface, clock: float) -> None:
+        """Animated, wordless swim/leap hint shown while Tito's welcome plays.
+
+        Up/Down keys light alternately (swim), then the wide key presses with a
+        leaping arc above it (jump). Entirely drawn: no text, no new assets.
+        """
+
+        step = int(clock / 0.55) % 4  # up, down, up, down; space cycles on 1.65 s
+        up_rect = pygame.Rect(0, 0, 62, 62)
+        down_rect = pygame.Rect(0, 0, 62, 62)
+        up_rect.center = (REFERENCE_WIDTH // 2 - 60, 244)
+        down_rect.center = (REFERENCE_WIDTH // 2 - 60, 318)
+        self._draw_key(surface, up_rect, step % 2 == 0, "up")
+        self._draw_key(surface, down_rect, step % 2 == 1, "down")
+
+        space_rect = pygame.Rect(0, 0, 170, 62)
+        space_rect.center = (REFERENCE_WIDTH // 2 + 110, 318)
+        space_pressed = (clock % 1.65) > 1.2
+        self._draw_key(surface, space_rect, space_pressed, None)
+        # Leaping arc over the wide key: grows while it is "pressed".
+        arc_rect = pygame.Rect(0, 0, 120, 64)
+        arc_rect.midbottom = (space_rect.centerx, space_rect.top - 8)
+        pygame.draw.arc(surface, (255, 252, 242), arc_rect, 0.15, math.pi - 0.15, 6 if space_pressed else 4)
+        tip = (arc_rect.right - 8, arc_rect.centery + 2)
+        pygame.draw.polygon(surface, (255, 252, 242), [(tip[0] - 9, tip[1] - 11), (tip[0] + 9, tip[1] - 6), (tip[0] - 1, tip[1] + 8)])
 
     # ---------------------------------------------------------------- world
 
@@ -313,6 +368,9 @@ class DelfinoRenderer:
             pygame.draw.circle(surface, (238, 186, 92), (bubble_x, bubble_y), 11, 2)
             for i, dx in enumerate((-4, 1, 6)):
                 pygame.draw.circle(surface, (196, 148, 84), (bubble_x + dx, bubble_y), 1 + (i == 1))
+
+        if view.controls_hint:
+            self._draw_controls_hint(surface, view.hint_clock)
 
         # Chapter celebration banner (transient).
         if view.banner_text:

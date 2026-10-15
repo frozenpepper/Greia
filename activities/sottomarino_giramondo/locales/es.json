@@ -79,7 +79,12 @@
     "voice.fact.krill.1": "¡El kril está formado por pequeños crustáceos parecidos a gambas que nadan en enormes enjambres!",
     "voice.fact.krill.2": "¡El kril es un alimento muy importante para las grandes ballenas y muchos peces!",
     "voice.fact.krill.3": "¡Algunas especies de kril pueden brillar en el océano oscuro gracias a la bioluminiscencia!",
-    "voice.fact.krill.4": "¡La biomasa del kril es enorme, posiblemente mayor que la de todos los seres humanos juntos!"
+    "voice.fact.krill.4": "¡La biomasa del kril es enorme, posiblemente mayor que la de todos los seres humanos juntos!",
+    "hud.encounter": "Encuentro cercano",
+    "hud.order": "Orden del capitán",
+    "hud.order_done": "¡Orden cumplida!",
+    "hud.curiosity": "Curiosidad: $species",
+    "hud.curiosity_generic": "Curiosidad marina"
   },
   "audio": {}
 }

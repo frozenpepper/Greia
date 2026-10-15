@@ -62,6 +62,11 @@ MODE_LABEL_KEYS: Final = {
 }
 
 
+# Caption lane under each round emotion button (buttons are 94 px wide with a
+# 48 px screen margin; this keeps captions clear of the mirror and screen edge).
+EMOTION_CAPTION_WIDTH: Final = 128
+
+
 class MomoRenderer:
     """Render the magic mirror, animated facial features of Momo, and generous touch controls."""
 
@@ -97,14 +102,14 @@ class MomoRenderer:
         # Free mirror emotion buttons (3 on left, 3 on right)
         btn_sz = 94
         self.left_buttons: list[tuple[Emotion, pygame.Rect]] = [
-            (Emotion.HAPPY, pygame.Rect(40, 110, btn_sz, btn_sz)),
-            (Emotion.SURPRISED, pygame.Rect(40, 235, btn_sz, btn_sz)),
-            (Emotion.SILLY, pygame.Rect(40, 360, btn_sz, btn_sz)),
+            (Emotion.HAPPY, pygame.Rect(48, 95, btn_sz, btn_sz)),
+            (Emotion.SURPRISED, pygame.Rect(48, 235, btn_sz, btn_sz)),
+            (Emotion.SILLY, pygame.Rect(48, 375, btn_sz, btn_sz)),
         ]
         self.right_buttons: list[tuple[Emotion, pygame.Rect]] = [
-            (Emotion.SAD, pygame.Rect(REFERENCE_WIDTH - 40 - btn_sz, 110, btn_sz, btn_sz)),
-            (Emotion.ANGRY, pygame.Rect(REFERENCE_WIDTH - 40 - btn_sz, 235, btn_sz, btn_sz)),
-            (Emotion.SLEEPY, pygame.Rect(REFERENCE_WIDTH - 40 - btn_sz, 360, btn_sz, btn_sz)),
+            (Emotion.SAD, pygame.Rect(REFERENCE_WIDTH - 48 - btn_sz, 95, btn_sz, btn_sz)),
+            (Emotion.ANGRY, pygame.Rect(REFERENCE_WIDTH - 48 - btn_sz, 235, btn_sz, btn_sz)),
+            (Emotion.SLEEPY, pygame.Rect(REFERENCE_WIDTH - 48 - btn_sz, 375, btn_sz, btn_sz)),
         ]
 
         # Quiz choice buttons (bottom center)
@@ -355,14 +360,16 @@ class MomoRenderer:
                 pygame.draw.circle(surf, bg, rect.center, rect.width // 2)
                 pygame.draw.circle(surf, accent if is_active else (200, 200, 210), rect.center, rect.width // 2, 4 if is_active else 2)
 
-                # Icon preview
-                self._draw_emotion_icon(surf, emo, rect.centerx, rect.centery - 8)
+                # Icon preview, centred in the round button; the caption sits
+                # below the button where the full word fits at a legible size
+                # (inside the 94 px circle the longest word shrank to ~11 px).
+                self._draw_emotion_icon(surf, emo, rect.centerx, rect.centery)
                 lbl_name = self._label(
-                    self._emotion_labels[emo], 15, rect.width - 10,
-                    accent if is_active else (80, 80, 80),
+                    self._emotion_labels[emo], 18, EMOTION_CAPTION_WIDTH,
+                    (60, 50, 70),
                 )
                 if lbl_name is not None:
-                    surf.blit(lbl_name, lbl_name.get_rect(center=(rect.centerx, rect.centery + 24)))
+                    surf.blit(lbl_name, lbl_name.get_rect(midtop=(rect.centerx, rect.bottom + 4)))
 
         # 3. Controls in Quiz Mode
         else:

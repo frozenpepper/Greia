@@ -7,10 +7,11 @@
     "activity.specchi_magici.title": "Specchi Magici",
     "prompt.place": "Rifletti il disegno sullo specchio magico!",
     "prompt.hint": "Guarda come si riflette ogni forma!",
-    "button.undo": "ANNULLA",
-    "button.play_again": "GIOCA ANCORA",
+    "button.undo": "Annulla",
+    "button.play_again": "Gioca ancora",
     "victory.title": "Galleria Splendente!",
-    "victory.subtitle": "Tutti i mosaici riflettono la magia con Lilli!"
+    "victory.subtitle": "Tutti i mosaici riflettono la magia con Lilli!",
+    "button.listen": "Ascolta"
   },
   "audio": {
     "activity.title": {
