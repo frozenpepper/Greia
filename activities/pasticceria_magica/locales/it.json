@@ -7,7 +7,7 @@
     "mode.orders": "🧁 Ordini Golosi",
     "mode.patterns": "🍪 Sequenze Biscotto",
     "mode.free": "🎨 Decora Libero",
-    "btn.serve": "🔔 SERVI!",
+    "btn.serve": "🔔 Servi!",
     "btn.clear": "🧹 Pulisci",
     "prompt.order": "Prepara: ",
     "prompt.pattern": "Quale biscotto completa la sequenza?",
@@ -22,7 +22,16 @@
     "topping.star": "Stellina",
     "topping.chocolate": "Cioccolato",
     "topping.cherry": "Ciliegia",
-    "topping.cookie": "Biscottino"
+    "topping.cookie": "Biscottino",
+    "tab.orders": "Ordini",
+    "tab.patterns": "Sequenze",
+    "tab.free": "Libero",
+    "panel.order": "Ricetta dolce",
+    "panel.free": "Decora a piacere!",
+    "panel.pantry": "Dispensa topping",
+    "action.clear": "Pulisci",
+    "action.serve": "Servi!",
+    "feedback.masterpiece": "Che capolavoro! ✨"
   },
   "audio": {
     "activity.title": {

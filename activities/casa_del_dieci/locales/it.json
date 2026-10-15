@@ -10,10 +10,12 @@
     "prompt.add": "Quante stanze accese in tutto?",
     "prompt.take_away": "Quante stanze restano accese?",
     "prompt.missing_part": "Quante stanze mancano per fare $target?",
-    "button.confirm": "CONFERMA",
-    "button.play_again": "GIOCA ANCORA",
+    "button.confirm": "Conferma",
+    "button.play_again": "Gioca ancora",
     "victory.title": "Casa Completata!",
-    "victory.subtitle": "Hai risolto tutte le stanze con Dani!"
+    "victory.subtitle": "Hai risolto tutte le stanze con Dani!",
+    "hud.listen": "Ascolta",
+    "goal.turn_on": "Accendi $target"
   },
   "audio": {
     "activity.title": {

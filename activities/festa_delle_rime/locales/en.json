@@ -8,8 +8,8 @@
     "prompt.rhyme": "Listen and tap the lantern that rhymes!",
     "prompt.odd": "Tap the lantern that does not rhyme!",
     "prompt.sound": "Tap the lantern with the same beginning sound!",
-    "button.replay": "LISTEN",
-    "button.play_again": "PLAY AGAIN",
+    "button.replay": "Listen",
+    "button.play_again": "Play again",
     "victory.title": "Glowing Festival!",
     "victory.subtitle": "All rhyme lanterns are glowing bright with Leo!"
   },

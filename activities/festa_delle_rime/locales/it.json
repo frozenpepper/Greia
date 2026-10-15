@@ -8,8 +8,8 @@
     "prompt.rhyme": "Ascolta e tocca la lanterna che fa rima!",
     "prompt.odd": "Tocca la lanterna che non fa rima!",
     "prompt.sound": "Tocca la lanterna con lo stesso suono iniziale!",
-    "button.replay": "ASCOLTA",
-    "button.play_again": "GIOCA ANCORA",
+    "button.replay": "Ascolta",
+    "button.play_again": "Gioca ancora",
     "victory.title": "Festa Splendente!",
     "victory.subtitle": "Tutte le lanterne delle rime brillano con Leo!"
   },

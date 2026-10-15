@@ -12,6 +12,7 @@ import random
 import pygame
 
 from greia_platform.activity_ui import mix
+from greia_platform.child_text import display_text
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -353,7 +354,7 @@ class ForestaRenderer:
         big_l_surf = self._cached_text(cur_letter, FontRole.DISPLAY, 52, DARK_TEXT)
         surface.blit(big_l_surf, (letter_pill.centerx - big_l_surf.get_width() // 2, letter_pill.centery - big_l_surf.get_height() // 2))
 
-        hint_str = f"{cur_word} {cur_emoji}"
+        hint_str = f"{display_text(cur_word)} {cur_emoji}"
         hint_surf = self._cached_text(hint_str, FontRole.TITLE, 34, DARK_TEXT)
         surface.blit(hint_surf, (_CARD_RECT.x + 104, _CARD_RECT.y + 12))
 

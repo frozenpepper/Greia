@@ -19,9 +19,9 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.child_text import display_text
 from greia_platform.localization import (
     ActivityLocaleSupport,
+    LocalizationError,
     LocalizedResources,
     resolve_activity_locale,
 )
@@ -132,7 +132,6 @@ class PasticceriaApp:
         model: PasticceriaModel,
         renderer: PasticceriaRenderer,
         resources,
-        active_locale: str,
     ) -> None:
         self._screen = screen
         self._canvas = canvas
@@ -141,7 +140,6 @@ class PasticceriaApp:
         self._model = model
         self._renderer = renderer
         self._resources = resources
-        self._active_locale = active_locale
         self._theme = get_theme()
         self._sounds = SoundManager()
         try:
@@ -266,23 +264,23 @@ class PasticceriaApp:
                         self._sounds.play("chime")
                         self._model.apply_correct_pattern()
                         self._renderer.spawn_at(cx + 55, cy + 55, "🌟", GOLD, 20)
-                        self._model.feedback_text = self._localized_text("feedback.pattern_correct", "Sequenza completata! 🌟", "Pattern completed! 🌟")
+                        self._model.feedback_text = self._localized_text("feedback.pattern_correct", "🌟")
                         self._model.feedback_timer = 2.5
                         self._safe_emit("pattern.solved", f"pat-{time.time()}")
                     else:
                         self._sounds.play("drop")
-                        self._model.feedback_text = self._localized_text("feedback.try_again", "Riprova 💕", "Try again 💕")
+                        self._model.feedback_text = self._localized_text("feedback.try_again", "💕")
                         self._model.feedback_timer = 1.5
                     break
 
-    def _localized_text(self, key: str, fallback_it: str, fallback_en: str) -> str:
+    def _localized_text(self, key: str, neutral: str) -> str:
+        """Resolve feedback copy; without it only the pictogram is shown."""
         if self._resources is not None:
             try:
                 return self._resources.text(key)
-            except Exception:
+            except LocalizationError:
                 pass
-        raw = fallback_it if self._active_locale == "it" else fallback_en
-        return display_text(raw)
+        return neutral
 
     def _handle_serve(self) -> None:
         self._sounds.play("ding")
@@ -293,17 +291,17 @@ class PasticceriaApp:
                 # capture before mutate for particle origin consistent
                 self._model.apply_correct_order()
                 self._renderer.spawn_random_center(["🍰", "✨", "🍓", "💖"], GOLD, 30)
-                self._model.feedback_text = self._localized_text("feedback.perfect", "Perfetto! Delizioso! ✨🍰", "Perfect! Delicious! ✨🍰")
+                self._model.feedback_text = self._localized_text("feedback.perfect", "✨🍰")
                 self._model.feedback_timer = 3.0
                 self._safe_emit("recipe.completed", f"recipe-{time.time()}")
             else:
                 self._sounds.play("drop")
-                self._model.feedback_text = self._localized_text("feedback.try_again", "Controlla la ricetta 💕", "Check the recipe 💕")
+                self._model.feedback_text = self._localized_text("feedback.try_again", "💕")
                 self._model.feedback_timer = 2.5
         else:
             self._sounds.play("fanfare")
             self._renderer.spawn_random_center(["✨"], GOLD, 25)
-            self._model.feedback_text = self._localized_text("feedback.perfect", "Che capolavoro! ✨", "What a masterpiece! ✨")
+            self._model.feedback_text = self._localized_text("feedback.masterpiece", "✨")
             self._model.feedback_timer = 2.5
 
     def _step_frame(self) -> None:

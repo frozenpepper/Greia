@@ -19,7 +19,12 @@
     "msg.dress": "¡Qué guapo te has puesto! 🎀",
     "stat.happiness": "Alegría",
     "stat.hunger": "Barriguita",
-    "stat.clean": "Limpieza"
+    "stat.clean": "Limpieza",
+    "label.feed": "Comida",
+    "label.bath": "Baño",
+    "label.play": "Juegos",
+    "label.sleep": "Dormir",
+    "label.dress": "Vestir"
   },
   "audio": {}
 }

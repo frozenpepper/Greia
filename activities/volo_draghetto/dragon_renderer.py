@@ -43,9 +43,16 @@ except ImportError:
 class DragonRenderer:
     """Composites game elements, parallax sky, dragon, particles, and tactile HUD."""
 
-    def __init__(self, art: DragonArtLibrary, typography: GreiaTypography) -> None:
+    def __init__(
+        self,
+        art: DragonArtLibrary,
+        typography: GreiaTypography,
+        look_label: str = "",
+    ) -> None:
         self._art = art
         self._typography = typography
+        # Localized caption (case policy already applied); empty = crown only.
+        self._accessory_caption = " ".join(part for part in ("👑", look_label.strip()) if part)
         self._text_cache: dict[tuple[str, str, int, tuple[int, int, int]], pygame.Surface] = {}
 
     def _render_cached_text(
@@ -144,7 +151,7 @@ class DragonRenderer:
         acc_box = pygame.Rect(580, 14, 136, 44)
         pygame.draw.rect(surface, WHITE, acc_box, border_radius=14)
         pygame.draw.rect(surface, (190, 140, 210), acc_box, width=2, border_radius=14)
-        acc_label = self._render_cached_text("👑 Look", FontRole.TITLE, 20, DARK_TEXT)
+        acc_label = self._render_cached_text(self._accessory_caption, FontRole.TITLE, 20, DARK_TEXT)
         surface.blit(acc_label, acc_label.get_rect(center=acc_box.center))
 
         # Star & Score HUD (Top Right: x=728..988, y=14..58)

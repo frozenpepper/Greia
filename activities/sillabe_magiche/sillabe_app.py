@@ -131,9 +131,9 @@ class SillabeApp:
 
         # Geometry (reference space)
         self._tabs = [
-            ("explorer", "📖 " + self._curriculum.tabs[0], pygame.Rect(180, 16, 175, 58)),
-            ("catcher", "🎯 " + self._curriculum.tabs[1], pygame.Rect(370, 16, 175, 58)),
-            ("builder", "🧩 " + self._curriculum.tabs[2], pygame.Rect(560, 16, 175, 58)),
+            ("explorer", "📖 " + display_text(self._curriculum.tabs[0]), pygame.Rect(180, 16, 175, 58)),
+            ("catcher", "🎯 " + display_text(self._curriculum.tabs[1]), pygame.Rect(370, 16, 175, 58)),
+            ("builder", "🧩 " + display_text(self._curriculum.tabs[2]), pygame.Rect(560, 16, 175, 58)),
         ]
         self._audio_btn_rect = pygame.Rect(755, 14, 68, 62)
         self._star_jar_rect = pygame.Rect(835, 14, 130, 62)

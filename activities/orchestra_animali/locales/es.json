@@ -4,14 +4,23 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Orquesta mágica",
-    "inst.piano": "Piano 🎹",
-    "inst.drums": "Batería 🥁",
-    "inst.trumpet": "Trompeta 🎺",
-    "inst.guitar": "Guitarra 🎸",
-    "inst.maracas": "Maracas 🪇",
+    "inst.piano": "Piano",
+    "inst.drums": "Batería",
+    "inst.trumpet": "Trompeta",
+    "inst.guitar": "Guitarra",
+    "inst.maracas": "Maracas",
     "prompt.free": "¡Toca los instrumentos o pulsa las teclas arcoíris!",
     "feedback.perfect": "¡Muy bien! ¡Qué melodía tan bonita! 🌟🎶",
-    "hud.stars": "★ "
+    "hud.stars": "★ ",
+    "hud.title": "Orquesta mágica",
+    "note.c": "Do",
+    "note.d": "Re",
+    "note.e": "Mi",
+    "note.f": "Fa",
+    "note.g": "Sol",
+    "note.a": "La",
+    "note.b": "Si",
+    "note.c_high": "Do"
   },
   "audio": {}
 }

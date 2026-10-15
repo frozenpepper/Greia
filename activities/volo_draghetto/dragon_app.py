@@ -85,11 +85,11 @@ class DragonFlightApp:
         self.art = DragonArtLibrary()
         self.audio = DragonAudio()
         self.typography = GreiaTypography()
-        self.renderer = DragonRenderer(self.art, self.typography)
 
         self._resources: LocalizedResources | None = None
         self._active_locale = "it"
         self._init_localization()
+        self.renderer = DragonRenderer(self.art, self.typography, self._localized_label("hud.look"))
 
         self._storage: Any = None
         self._load_storage()
@@ -106,6 +106,15 @@ class DragonFlightApp:
             self._active_locale = context.selected.language if context else "it"
         except Exception:
             self._active_locale = "it"
+
+    def _localized_label(self, key: str) -> str:
+        """Resolve one caption once; empty means pictogram only."""
+        if self._resources is None:
+            return ""
+        try:
+            return self._resources.text(key)
+        except Exception:
+            return ""
 
     def _load_storage(self) -> None:
         try:

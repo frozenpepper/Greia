@@ -13,10 +13,19 @@
     "prompt.order_height": "Ordina i pacchi dal più basso al più alto!",
     "prompt.measure": "Misura il pacco con i blocchetti di legno!",
     "prompt.shelf": "Quanti blocchetti misura questo ripiano?",
-    "button.confirm": "CONFERMA",
-    "button.play_again": "GIOCA ANCORA",
+    "button.confirm": "Conferma",
+    "button.play_again": "Gioca ancora",
     "victory.title": "Bottega Pronta!",
-    "victory.subtitle": "Tutti i pacchi sono stati misurati e consegnati con Dani!"
+    "victory.subtitle": "Tutti i pacchi sono stati misurati e consegnati con Dani!",
+    "hud.listen": "Ascolta",
+    "goal.longest": "Più lungo",
+    "goal.shortest": "Più corto",
+    "goal.tallest": "Più alto",
+    "goal.lowest": "Più basso",
+    "goal.order": "Ordina: 1 - 2 - 3",
+    "goal.count_blocks": "Conta i blocchi",
+    "goal.which_fits": "Quale entra?",
+    "goal.measure": "Misura"
   },
   "audio": {
     "activity.title": {

@@ -6,15 +6,27 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
+from greia_platform.localization import LocalizationError, LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
     from .ten_house_art import TenHouseArt
-    from .ten_house_model import OperationMode, TenHouseChallenge, TenHouseSession, REFERENCE_WIDTH
+    from .ten_house_model import (
+        OperationMode,
+        REFERENCE_WIDTH,
+        ROOM_COUNT,
+        TenHouseChallenge,
+        TenHouseSession,
+    )
 else:
     from ten_house_art import TenHouseArt
-    from ten_house_model import OperationMode, TenHouseChallenge, TenHouseSession, REFERENCE_WIDTH
+    from ten_house_model import (
+        OperationMode,
+        REFERENCE_WIDTH,
+        ROOM_COUNT,
+        TenHouseChallenge,
+        TenHouseSession,
+    )
 
 
 # 2x5 Window rects
@@ -55,6 +67,12 @@ class TenHouseRenderer:
         self._art = art
         self._typography = typography
         self._resources = resources
+        self._listen_label = self._resolve("hud.listen")
+        # One resolved "turn on N" line per possible target, built once.
+        self._turn_on_labels = {
+            value: self._resolve("goal.turn_on", {"target": value})
+            for value in range(ROOM_COUNT + 1)
+        }
 
         # Cache numbers 0..10
         self._number_surfaces = {
@@ -65,6 +83,13 @@ class TenHouseRenderer:
             value: typography.render(str(value), FontRole.TITLE, 16, (180, 83, 9))
             for value in range(1, 11)
         }
+
+    def _resolve(self, key: str, variables: dict[str, object] | None = None) -> str:
+        """Resolve one label once; a missing key degrades to pictograms only."""
+        try:
+            return self._resources.text(key, variables).strip()
+        except LocalizationError:
+            return ""
 
     def draw_scene(
         self,
@@ -176,7 +201,12 @@ class TenHouseRenderer:
         hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
         pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
 
-        label = self._typography.render("🔊 ASCOLTA", FontRole.TITLE, 18, (255, 255, 255))
+        label = self._typography.render(
+            " ".join(part for part in ("🔊", self._listen_label) if part),
+            FontRole.TITLE,
+            18,
+            (255, 255, 255),
+        )
         target.blit(
             label,
             (
@@ -240,7 +270,10 @@ class TenHouseRenderer:
     ) -> None:
         p_y = 412
         if challenge.mode == OperationMode.COMPOSE:
-            target_str = f"🎯 ACCENDI {challenge.target} 💡"
+            turn_on = self._turn_on_labels.get(challenge.target, "")
+            target_str = " ".join(
+                part for part in ("🎯", turn_on or str(challenge.target), "💡") if part
+            )
             t_surf = self._typography.render(target_str, FontRole.DISPLAY, 30, (254, 240, 138))
 
             count_str = f"💡 {session.lit_count} / {challenge.target}"

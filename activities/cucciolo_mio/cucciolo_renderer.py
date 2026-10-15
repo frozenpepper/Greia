@@ -12,6 +12,7 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizationError, LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 from greia_platform.ui_core import BoundedCache
 
@@ -49,13 +50,30 @@ else:
 
 _MAX_LABEL_CACHE: Final = 64
 _MAX_VALUE_CACHE: Final = 32
+_TAB_ICONS: Final[dict[str, str]] = {
+    "feed": "🐟",
+    "bath": "🧼",
+    "play": "🎾",
+    "sleep": "🌙",
+    "dress": "🎀",
+}
 
 
 class CuccioloRenderer:
     """Own backdrop and bounded text surfaces; stateless drawing otherwise."""
 
-    def __init__(self, typography: GreiaTypography) -> None:
+    def __init__(
+        self,
+        typography: GreiaTypography,
+        resources: LocalizedResources | None = None,
+    ) -> None:
         self._typography = typography
+        # Tab captions are resolved once (case policy applied by the bundle);
+        # without resources the tabs show their pictograms only.
+        self._tab_labels = {
+            tab_id: self._resolve_label(resources, f"label.{tab_id}")
+            for tab_id in _TAB_ICONS
+        }
         self._backdrop_day: pygame.Surface | None = None
         self._backdrop_night: pygame.Surface | None = None
         # Bounded caches: key -> Surface
@@ -70,6 +88,15 @@ class CuccioloRenderer:
         # Feedback cache is small and bounded
         self._feedback_cache: BoundedCache[tuple[str, int], pygame.Surface] = BoundedCache(8)
         self._build_backdrops()
+
+    @staticmethod
+    def _resolve_label(resources: LocalizedResources | None, key: str) -> str:
+        if resources is None:
+            return ""
+        try:
+            return resources.text(key).strip()
+        except LocalizationError:
+            return ""
 
     def invalidate(self) -> None:
         """Clear derived caches after resize/theme change."""
@@ -122,7 +149,6 @@ class CuccioloRenderer:
         hunger: int,
         cleanliness: int,
         active_tab: str,
-        active_locale: str,
         particles: list[Particle],
         bubbles: list[tuple[float, float, float]],
         ball_pos: list[float],
@@ -227,13 +253,7 @@ class CuccioloRenderer:
             t_msg = self._cached_feedback(feedback_msg, 26, DARK_TEXT)
             surface.blit(t_msg, t_msg.get_rect(center=f_rect.center))
 
-        tabs = [
-            ("feed", "🐟", "Pappa" if active_locale == "it" else "Treats"),
-            ("bath", "🧼", "Bagnetto" if active_locale == "it" else "Bath"),
-            ("play", "🎾", "Giochi" if active_locale == "it" else "Play"),
-            ("sleep", "🌙", "Nanna" if active_locale == "it" else "Sleep"),
-            ("dress", "🎀", "Look" if active_locale == "it" else "Dress"),
-        ]
+        tabs = [(tab_id, icon, self._tab_labels[tab_id]) for tab_id, icon in _TAB_ICONS.items()]
         for idx, (tab_id, tab_icon, tab_label) in enumerate(tabs):
             tx = 95 + idx * 170
             t_active = (active_tab == tab_id)

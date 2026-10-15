@@ -7,14 +7,15 @@
     "hud.stars": "★ ",
     "hud.score": "Score : ",
     "prompt.guide": "Déplace le pointeur ou utilise les flèches pour voler parmi les nuages !",
-    "msg.rainbow_dash": "🌈 FONCE, ARC-EN-CIEL ! 🌟",
+    "msg.rainbow_dash": "🌈 Fonce, arc-en-ciel ! 🌟",
     "msg.star_milestone": "Bravo ! Tu as ramassé 20 étoiles ! 🌟✨",
     "btn.accessories": "🎀 Accessoires",
     "acc.none": "Aucun",
     "acc.bow": "Nœud rose 🎀",
     "acc.crown": "Couronne royale 👑",
     "acc.glasses": "Lunettes de soleil 😎",
-    "acc.flower": "Couronne de fleurs 🌸"
+    "acc.flower": "Couronne de fleurs 🌸",
+    "hud.look": "Style"
   },
   "audio": {}
 }

@@ -7,7 +7,7 @@
     "mode.orders": "🧁 Pedidos dulces",
     "mode.patterns": "🍪 Series de galletas",
     "mode.free": "🎨 Decoración libre",
-    "btn.serve": "🔔 ¡SERVIR!",
+    "btn.serve": "🔔 ¡Servir!",
     "btn.clear": "🧹 Borrar",
     "prompt.order": "Prepara: ",
     "prompt.pattern": "¿Qué galleta sigue en la serie?",
@@ -22,7 +22,16 @@
     "topping.star": "Estrella",
     "topping.chocolate": "Chocolate",
     "topping.cherry": "Cereza",
-    "topping.cookie": "Galleta"
+    "topping.cookie": "Galleta",
+    "tab.orders": "Pedidos",
+    "tab.patterns": "Series",
+    "tab.free": "Libre",
+    "panel.order": "Pedido dulce",
+    "panel.free": "¡Decora a tu gusto!",
+    "panel.pantry": "Despensa",
+    "action.clear": "Limpiar",
+    "action.serve": "¡Sirve!",
+    "feedback.masterpiece": "¡Qué obra maestra! ✨"
   },
   "audio": {}
 }

@@ -5,7 +5,7 @@ import random
 
 import pygame
 
-from greia_platform.child_text import display_text
+from greia_platform.localization import LocalizationError
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -45,6 +45,19 @@ else:
 _MAX_TEXT_CACHE = 64
 _MAX_ICON_CACHE = 32
 _MAX_PARTICLES = 96
+
+# Semantic label keys resolved once; capitals come from the case policy.
+_LABEL_KEYS = (
+    "tab.orders",
+    "tab.patterns",
+    "tab.free",
+    "panel.order",
+    "panel.free",
+    "panel.pantry",
+    "action.clear",
+    "action.serve",
+    "prompt.pattern",
+)
 
 
 class Particle:
@@ -87,11 +100,11 @@ class PasticceriaRenderer:
         self,
         typography: GreiaTypography,
         resources=None,
-        active_locale: str = "it",
     ) -> None:
         self._typography = typography
         self._resources = resources
-        self._active_locale = active_locale
+        # A missing bundle or key degrades to pictograms, never to a fixed language.
+        self._labels = {key: self._resolve(key) for key in _LABEL_KEYS}
         self._backdrop: pygame.Surface = self._build_backdrop()
         self._backdrop_converted = False
         # Bounded caches: text surfaces and topping icons.
@@ -175,16 +188,35 @@ class PasticceriaRenderer:
         self._icon_cache[key] = rendered
         return rendered
 
-    def _localized(self, key: str, fallback_it: str, fallback_en: str) -> str:
-        # Prefer localized resources when available; fall back to display_text handling.
-        if self._resources is not None:
-            try:
-                return self._resources.text(key)
-            except Exception:
-                pass
-        # display_text applies uppercase policy; choose fallback by locale.
-        raw = fallback_it if self._active_locale == "it" else fallback_en
-        return display_text(raw)
+    def _resolve(self, key: str) -> str:
+        if self._resources is None:
+            return ""
+        try:
+            return self._resources.text(key).strip()
+        except LocalizationError:
+            return ""
+
+    def _caption(self, lead: str, key: str) -> str:
+        """Join an optional pictogram with a resolved label."""
+        return " ".join(part for part in (lead, self._labels.get(key, "")) if part)
+
+    def _fit_text(
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        color: tuple[int, int, int],
+        max_width: int,
+        *,
+        min_size: int = 13,
+    ) -> pygame.Surface:
+        """Cached text that shrinks (never clips) to fit longer translations."""
+        current = size
+        surf = self._cached_text(text, role, current, color)
+        while surf.get_width() > max_width and current > min_size:
+            current -= 1
+            surf = self._cached_text(text, role, current, color)
+        return surf
 
     # -- particles --
     @property
@@ -223,14 +255,14 @@ class PasticceriaRenderer:
         btn2_c = GOLD if mode == "patterns" else WHITE
         btn3_c = GOLD if mode == "free" else WHITE
         for b_name, b_col, b_x in [
-            ("🧁 Ordini" if self._active_locale == "it" else "🧁 Orders", btn1_c, 230),
-            ("🍪 Sequenze" if self._active_locale == "it" else "🍪 Patterns", btn2_c, 405),
-            ("🎨 Libero" if self._active_locale == "it" else "🎨 Free", btn3_c, 580),
+            (self._caption("🧁", "tab.orders"), btn1_c, 230),
+            (self._caption("🍪", "tab.patterns"), btn2_c, 405),
+            (self._caption("🎨", "tab.free"), btn3_c, 580),
         ]:
             b_rect = pygame.Rect(b_x, 12, 160, 52)
             pygame.draw.rect(surface, b_col, b_rect, border_radius=16)
             pygame.draw.rect(surface, (200, 160, 130), b_rect, width=2, border_radius=16)
-            m_surf = self._cached_text(b_name, FontRole.TITLE, 22, DARK_TEXT)
+            m_surf = self._fit_text(b_name, FontRole.TITLE, 22, DARK_TEXT, b_rect.width - 16)
             surface.blit(m_surf, m_surf.get_rect(center=b_rect.center))
 
         # 3. Top-Right HUD Badge
@@ -248,11 +280,8 @@ class PasticceriaRenderer:
                 pygame.draw.rect(surface, WHITE, ticket_rect, border_radius=20)
                 pygame.draw.rect(surface, (255, 200, 220), ticket_rect, width=3, border_radius=20)
                 pygame.draw.rect(surface, PINK, (20, 90, 250, 50), border_top_left_radius=20, border_top_right_radius=20)
-                r_title = self._cached_text(
-                    display_text("📋 Ricetta Dolce" if self._active_locale == "it" else "📋 Sweet Order"),
-                    FontRole.TITLE,
-                    22,
-                    WHITE,
+                r_title = self._fit_text(
+                    self._caption("📋", "panel.order"), FontRole.TITLE, 22, WHITE, 226
                 )
                 surface.blit(r_title, r_title.get_rect(center=(145, 115)))
 
@@ -272,11 +301,8 @@ class PasticceriaRenderer:
                 ticket_rect = pygame.Rect(20, 90, 250, 220)
                 pygame.draw.rect(surface, WHITE, ticket_rect, border_radius=20)
                 pygame.draw.rect(surface, (255, 200, 220), ticket_rect, width=3, border_radius=20)
-                f_title = self._cached_text(
-                    display_text("🎨 Decora a piacere!" if self._active_locale == "it" else "🎨 Decorate freely!"),
-                    FontRole.TITLE,
-                    22,
-                    DARK_TEXT,
+                f_title = self._fit_text(
+                    self._caption("🎨", "panel.free"), FontRole.TITLE, 22, DARK_TEXT, 226
                 )
                 surface.blit(f_title, f_title.get_rect(center=(145, 200)))
 
@@ -296,11 +322,8 @@ class PasticceriaRenderer:
             # Right Pantry Shelf
             pantry_card = pygame.Rect(705, 90, 295, 350)
             pygame.draw.rect(surface, SHELF_COLOR, pantry_card, border_radius=20)
-            p_title = self._cached_text(
-                display_text("Dispensa Topping" if self._active_locale == "it" else "Pantry Toppings"),
-                FontRole.TITLE,
-                22,
-                WHITE,
+            p_title = self._fit_text(
+                self._labels["panel.pantry"], FontRole.TITLE, 22, WHITE, 270
             )
             surface.blit(p_title, p_title.get_rect(center=(852, 115)))
 
@@ -320,7 +343,7 @@ class PasticceriaRenderer:
             pygame.draw.rect(surface, (230, 240, 250), clean_rect, border_radius=18)
             pygame.draw.rect(surface, (180, 205, 230), clean_rect, width=3, border_radius=18)
             c_icon = self._cached_text("🧹", FontRole.DISPLAY, 48, DARK_TEXT)
-            c_label = self._cached_text(display_text("Pulisci" if self._active_locale == "it" else "Clear"), FontRole.TITLE, 18, DARK_TEXT)
+            c_label = self._fit_text(self._labels["action.clear"], FontRole.TITLE, 18, DARK_TEXT, clean_rect.width - 12)
             surface.blit(c_icon, c_icon.get_rect(center=(clean_rect.centerx, clean_rect.centery - 14)))
             surface.blit(c_label, c_label.get_rect(center=(clean_rect.centerx, clean_rect.centery + 24)))
 
@@ -329,7 +352,7 @@ class PasticceriaRenderer:
             pygame.draw.rect(surface, GOLD, serve_rect, border_radius=18)
             pygame.draw.rect(surface, (220, 150, 20), serve_rect, width=3, border_radius=18)
             s_icon = self._cached_text("🔔", FontRole.DISPLAY, 48, DARK_TEXT)
-            s_label = self._cached_text("SERVI!" if self._active_locale == "it" else "SERVE!", FontRole.DISPLAY, 20, DARK_TEXT)
+            s_label = self._fit_text(self._labels["action.serve"], FontRole.DISPLAY, 20, DARK_TEXT, serve_rect.width - 12)
             surface.blit(s_icon, s_icon.get_rect(center=(serve_rect.centerx, serve_rect.centery - 14)))
             surface.blit(s_label, s_label.get_rect(center=(serve_rect.centerx, serve_rect.centery + 24)))
 
@@ -337,11 +360,8 @@ class PasticceriaRenderer:
             seq, _, candidates = model.current_pattern
             pygame.draw.rect(surface, WHITE, (120, 120, 784, 210), border_radius=24)
             pygame.draw.rect(surface, PINK, (120, 120, 784, 210), width=3, border_radius=24)
-            p_prompt = self._cached_text(
-                display_text("Quale biscotto completa la sequenza?" if self._active_locale == "it" else "Which cookie completes the pattern?"),
-                FontRole.TITLE,
-                26,
-                DARK_TEXT,
+            p_prompt = self._fit_text(
+                self._labels["prompt.pattern"], FontRole.TITLE, 26, DARK_TEXT, 740
             )
             surface.blit(p_prompt, p_prompt.get_rect(center=(512, 160)))
 

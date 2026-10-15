@@ -21,16 +21,15 @@ from greia_platform.activity_api import (
     activity_stop_requested,
     emit_activity_event,
     get_creations,
-    get_profile_locale,
     get_storage,
     get_theme,
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import (
-    ActivityLocaleSupport,
+    LocalizationError,
     LocalizedResources,
-    resolve_activity_locale,
+    activity_resources,
 )
 from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
@@ -78,6 +77,9 @@ else:  # pragma: no cover - runtime/script fallback
     from orchestra_renderer import OrchestraRenderer
 
 
+_NOTE_STEPS = ("c", "d", "e", "f", "g", "a", "b", "c_high")
+
+
 def _is_safe_point(surface: pygame.Surface, position: tuple[int, int]) -> bool:
     vp = activity_viewport_for_surface(surface)
     x, y = position
@@ -109,7 +111,9 @@ class OrchestraApp:
     backing_import_state: str = ""
     backing_feedback_until: float = 0.0
     backing_notes_played: int = 0
+    resources: LocalizedResources | None = None
     is_it: bool = True
+    title: str = ""
     note_labels: list[str] = field(default_factory=list)
     instruments: list[InstrumentCard] = field(default_factory=list)
     particles: list[Particle] = field(default_factory=list)
@@ -123,15 +127,17 @@ class OrchestraApp:
         if self.renderer is None:
             self.renderer = OrchestraRenderer(self.typography)
         if not self.note_labels:
-            self.note_labels = NOTE_NAMES_IT if self.is_it else NOTE_NAMES_EN
+            self.note_labels = self._resolve_note_labels()
         if not self.instruments:
             self.instruments = [
-                InstrumentCard("piano", "🎹", "Pianoforte", "Piano", "piano", 150, 230, (59, 130, 246)),
-                InstrumentCard("drums", "🥁", "Batteria", "Drums", "drums", 330, 210, (239, 68, 68)),
-                InstrumentCard("trumpet", "🎺", "Tromba", "Trumpet", "trumpet", 512, 230, (234, 179, 8)),
-                InstrumentCard("guitar", "🎸", "Chitarra", "Guitar", "guitar", 694, 210, (249, 115, 22)),
-                InstrumentCard("maracas", "🪇", "Maracas", "Maracas", "maracas", 874, 230, (34, 197, 94)),
+                InstrumentCard("piano", "🎹", "piano", 150, 230, (59, 130, 246), self._label("inst.piano")),
+                InstrumentCard("drums", "🥁", "drums", 330, 210, (239, 68, 68), self._label("inst.drums")),
+                InstrumentCard("trumpet", "🎺", "trumpet", 512, 230, (234, 179, 8), self._label("inst.trumpet")),
+                InstrumentCard("guitar", "🎸", "guitar", 694, 210, (249, 115, 22), self._label("inst.guitar")),
+                InstrumentCard("maracas", "🪇", "maracas", 874, 230, (34, 197, 94), self._label("inst.maracas")),
             ]
+        if not self.title:
+            self.title = self._label("hud.title")
         if self.storage is None:
             try:
                 self.storage = get_storage()
@@ -399,6 +405,21 @@ class OrchestraApp:
         except Exception:
             pass
 
+    def _label(self, key: str) -> str:
+        """Resolve one caption once at construction; empty means pictogram only."""
+        if self.resources is None:
+            return ""
+        try:
+            return self.resources.text(key).strip()
+        except LocalizationError:
+            return ""
+
+    def _resolve_note_labels(self) -> list[str]:
+        """Note names come from the locale bundle (letters vs solfege)."""
+        fallback = NOTE_NAMES_IT if self.is_it else NOTE_NAMES_EN
+        labels = [self._label(f"note.{step}") for step in _NOTE_STEPS]
+        return labels if all(labels) else list(fallback)
+
     # ------------------------------------------------------------------
     # Per-frame update
     # ------------------------------------------------------------------
@@ -435,13 +456,13 @@ class OrchestraApp:
         assert self.renderer is not None
         surf = self.canvas.surface
         self.renderer.draw_background(surf)
-        self.renderer.draw_instruments(surf, self.instruments, self.is_it)
+        self.renderer.draw_instruments(surf, self.instruments)
         self.renderer.draw_particles(surf, self.particles)
         self.renderer.draw_piano_keys(surf, self.key_highlight_timers, self.note_labels)
         self.renderer.draw_hud(
             surf,
             self.stars,
-            self.is_it,
+            title=self.title,
             backing_enabled=self.backing_player.track is not None,
             backing_state=self.backing_player.state,
             backing_import_enabled=(
@@ -503,13 +524,13 @@ def build_app(
     typography = GreiaTypography()
     renderer = OrchestraRenderer(typography)
     audio = SoundManager()
+    resources: LocalizedResources | None
+    try:
+        resources = activity_resources(Path(__file__).resolve().parent)
+    except (LocalizationError, OSError):
+        resources = None
     if is_it is None:
-        try:
-            support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-            ctx = resolve_activity_locale(get_profile_locale(), support)
-            is_it = (ctx.selected.language == "it") if ctx else True
-        except Exception:
-            is_it = True
+        is_it = resources is None or resources.context.selected.language == "it"
     if storage is None:
         try:
             storage = get_storage()
@@ -529,6 +550,7 @@ def build_app(
         renderer=renderer,
         storage=storage,
         creations=creations,
+        resources=resources,
         is_it=is_it,
     )
 

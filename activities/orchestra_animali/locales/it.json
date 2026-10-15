@@ -4,14 +4,23 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "L'Orchestra Magica",
-    "inst.piano": "Pianoforte 🎹",
-    "inst.drums": "Batteria 🥁",
-    "inst.trumpet": "Tromba 🎺",
-    "inst.guitar": "Chitarra 🎸",
-    "inst.maracas": "Maracas 🪇",
+    "inst.piano": "Pianoforte",
+    "inst.drums": "Batteria",
+    "inst.trumpet": "Tromba",
+    "inst.guitar": "Chitarra",
+    "inst.maracas": "Maracas",
     "prompt.free": "Tocca gli strumenti o suona la tastiera arcobaleno!",
     "feedback.perfect": "Ottimo lavoro! Melodia meravigliosa! 🌟🎶",
-    "hud.stars": "★ "
+    "hud.stars": "★ ",
+    "hud.title": "Orchestra Magica",
+    "note.c": "Do",
+    "note.d": "Re",
+    "note.e": "Mi",
+    "note.f": "Fa",
+    "note.g": "Sol",
+    "note.a": "La",
+    "note.b": "Si",
+    "note.c_high": "Do"
   },
   "audio": {
     "activity.title": {

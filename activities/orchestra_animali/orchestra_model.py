@@ -42,17 +42,16 @@ class InstrumentCard:
         self,
         inst_id: str,
         icon: str,
-        name_it: str,
-        name_en: str,
         sound_name: str,
         x: float,
         y: float,
         color: tuple[int, int, int],
+        label: str = "",
     ) -> None:
         self.inst_id = inst_id
         self.icon = icon
-        self.name_it = name_it
-        self.name_en = name_en
+        # Localized, case-policy-resolved caption; empty means pictogram only.
+        self.label = label
         self.sound_name = sound_name
         self.x = x
         self.y = y

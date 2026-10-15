@@ -19,7 +19,12 @@
     "msg.dress": "Quelle belle tenue ! 🎀",
     "stat.happiness": "Bonheur",
     "stat.hunger": "Petit ventre",
-    "stat.clean": "Propreté"
+    "stat.clean": "Propreté",
+    "label.feed": "Repas",
+    "label.bath": "Bain",
+    "label.play": "Jeux",
+    "label.sleep": "Dodo",
+    "label.dress": "Habiller"
   },
   "audio": {}
 }

@@ -26,6 +26,7 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.child_text import display_text
 from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
@@ -404,7 +405,7 @@ class ForestaApp:
             if word_complete:
                 self.celebration_phase = "letter_done"
                 self.celebration_timer = 0.9
-                self.feedback_text = f"{self.model.cur_word} {self.model.cur_emoji}"
+                self.feedback_text = f"{display_text(self.model.cur_word)} {self.model.cur_emoji}"
                 self.feedback_timer = 5.0
                 for _ in range(35):
                     self.particles.append(Particle(512, 300, (255, 205, 50)))

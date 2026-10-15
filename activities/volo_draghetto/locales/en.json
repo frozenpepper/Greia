@@ -7,14 +7,15 @@
     "hud.stars": "★ ",
     "hud.score": "Score: ",
     "prompt.guide": "Move the pointer or arrow keys to fly across the clouds!",
-    "msg.rainbow_dash": "🌈 RAINBOW DASH! 🌟",
+    "msg.rainbow_dash": "🌈 Rainbow dash! 🌟",
     "msg.star_milestone": "Awesome! 20 Stars collected! 🌟✨",
     "btn.accessories": "🎀 Accessories",
     "acc.none": "None",
     "acc.bow": "Pink Bow 🎀",
     "acc.crown": "Royal Crown 👑",
     "acc.glasses": "Sunglasses 😎",
-    "acc.flower": "Flower Crown 🌸"
+    "acc.flower": "Flower Crown 🌸",
+    "hud.look": "Look"
   },
   "audio": {
     "activity.title": {

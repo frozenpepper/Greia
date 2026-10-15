@@ -13,10 +13,19 @@
     "prompt.order_height": "Order the parcels from shortest to tallest!",
     "prompt.measure": "Measure the parcel with wooden unit blocks!",
     "prompt.shelf": "How many blocks fit on this shelf?",
-    "button.confirm": "CONFIRM",
-    "button.play_again": "PLAY AGAIN",
+    "button.confirm": "Confirm",
+    "button.play_again": "Play again",
     "victory.title": "Workshop Ready!",
-    "victory.subtitle": "All parcels have been measured and delivered with Dani!"
+    "victory.subtitle": "All parcels have been measured and delivered with Dani!",
+    "hud.listen": "Listen",
+    "goal.longest": "Longest",
+    "goal.shortest": "Shortest",
+    "goal.tallest": "Tallest",
+    "goal.lowest": "Shortest",
+    "goal.order": "Order: 1 - 2 - 3",
+    "goal.count_blocks": "Count the blocks",
+    "goal.which_fits": "Which fits?",
+    "goal.measure": "Measure"
   },
   "audio": {
     "activity.title": {

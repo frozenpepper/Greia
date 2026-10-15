@@ -8,8 +8,8 @@
     "prompt.rhyme": "¡Escucha y toca el farol que rima!",
     "prompt.odd": "¡Toca el farol que no rima!",
     "prompt.sound": "¡Toca el farol que empieza por el mismo sonido!",
-    "button.replay": "ESCUCHAR",
-    "button.play_again": "JUGAR OTRA VEZ",
+    "button.replay": "Escuchar",
+    "button.play_again": "Jugar otra vez",
     "victory.title": "¡Festival brillante!",
     "victory.subtitle": "¡Todos los faroles de rimas brillan con Leo!"
   },

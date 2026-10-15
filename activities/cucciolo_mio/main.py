@@ -78,14 +78,14 @@ __all__ = [
 ]
 
 
-def _localized_resources() -> tuple[LocalizedResources | None, str]:
+def _localized_resources() -> LocalizedResources | None:
     package_root = Path(__file__).parent
     support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
     profile_lang = get_profile_locale()
     context = resolve_activity_locale(profile_lang, support)
     if context is None:
-        return None, "it"
-    return LocalizedResources(package_root, context), context.selected.language
+        return None
+    return LocalizedResources(package_root, context)
 
 
 def main() -> int:
@@ -104,7 +104,7 @@ def main() -> int:
         except Exception:
             storage = None
 
-        resources, active_locale = _localized_resources()
+        resources = _localized_resources()
 
         app = CuccioloApp(
             screen=screen,
@@ -114,7 +114,6 @@ def main() -> int:
             theme=theme,
             storage=storage,
             resources=resources,
-            active_locale=active_locale,
         )
         return app.run()
     finally:

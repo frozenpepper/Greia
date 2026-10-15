@@ -10,10 +10,12 @@
     "prompt.add": "Combien de pièces sont éclairées en tout ?",
     "prompt.take_away": "Combien de pièces restent éclairées ?",
     "prompt.missing_part": "Combien de pièces faut-il encore pour arriver à $target ?",
-    "button.confirm": "VALIDER",
-    "button.play_again": "REJOUER",
+    "button.confirm": "Valider",
+    "button.play_again": "Rejouer",
     "victory.title": "Maison terminée !",
-    "victory.subtitle": "Tu as résolu tous les défis avec Dani !"
+    "victory.subtitle": "Tu as résolu tous les défis avec Dani !",
+    "hud.listen": "Écoute",
+    "goal.turn_on": "Allume $target"
   },
   "audio": {}
 }

@@ -19,7 +19,12 @@
     "msg.dress": "What a fabulous look! 🎀",
     "stat.happiness": "Happiness",
     "stat.hunger": "Tummy",
-    "stat.clean": "Clean"
+    "stat.clean": "Clean",
+    "label.feed": "Treats",
+    "label.bath": "Bath",
+    "label.play": "Play",
+    "label.sleep": "Sleep",
+    "label.dress": "Dress"
   },
   "audio": {
     "activity.title": {

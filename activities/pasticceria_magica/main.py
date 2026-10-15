@@ -114,7 +114,6 @@ def main() -> int:
         profile_lang = get_profile_locale()
         context = resolve_activity_locale(profile_lang, support)
         resources = LocalizedResources(package_root, context) if context else None
-        active_locale = context.selected.language if context else "it"
 
         # Domain model with persisted progress.
         model = PasticceriaModel()
@@ -125,7 +124,7 @@ def main() -> int:
         except Exception:
             pass
 
-        renderer = PasticceriaRenderer(typography, resources, active_locale)
+        renderer = PasticceriaRenderer(typography, resources)
         app = PasticceriaApp(
             screen=screen,
             canvas=canvas,
@@ -134,7 +133,6 @@ def main() -> int:
             model=model,
             renderer=renderer,
             resources=resources,
-            active_locale=active_locale,
         )
         return app.run()
     finally:

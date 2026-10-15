@@ -7,6 +7,7 @@ from typing import Final
 import pygame
 
 from greia_platform.activity_api import get_shared_visual_path
+from greia_platform.child_text import display_text
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -159,7 +160,7 @@ class RhymeArt:
         # Word label tag at bottom of lantern
         tag_rect = pygame.Rect(body_rect.centerx - 52, body_rect.bottom - 36, 104, 26)
         pygame.draw.rect(target, (15, 23, 42, 220), tag_rect, border_radius=12)
-        word_surf = self._typography.render(item.item_id[:10], FontRole.TITLE, 16, (254, 240, 138))
+        word_surf = self._typography.render(display_text(item.item_id[:10]), FontRole.TITLE, 16, (254, 240, 138))
         target.blit(
             word_surf,
             (tag_rect.centerx - word_surf.get_width() // 2, tag_rect.centery - word_surf.get_height() // 2),

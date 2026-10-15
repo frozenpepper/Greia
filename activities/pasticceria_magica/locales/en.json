@@ -7,7 +7,7 @@
     "mode.orders": "🧁 Sweet Orders",
     "mode.patterns": "🍪 Cookie Patterns",
     "mode.free": "🎨 Free Decorate",
-    "btn.serve": "🔔 SERVE!",
+    "btn.serve": "🔔 Serve!",
     "btn.clear": "🧹 Clear",
     "prompt.order": "Prepare: ",
     "prompt.pattern": "Which cookie completes the pattern?",
@@ -22,7 +22,16 @@
     "topping.star": "Star",
     "topping.chocolate": "Chocolate",
     "topping.cherry": "Cherry",
-    "topping.cookie": "Cookie"
+    "topping.cookie": "Cookie",
+    "tab.orders": "Orders",
+    "tab.patterns": "Patterns",
+    "tab.free": "Free",
+    "panel.order": "Sweet order",
+    "panel.free": "Decorate freely!",
+    "panel.pantry": "Pantry toppings",
+    "action.clear": "Clear",
+    "action.serve": "Serve!",
+    "feedback.masterpiece": "What a masterpiece! ✨"
   },
   "audio": {
     "activity.title": {

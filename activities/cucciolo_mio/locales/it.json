@@ -19,7 +19,12 @@
     "msg.dress": "Che look favoloso! 🎀",
     "stat.happiness": "Felicità",
     "stat.hunger": "Pancino",
-    "stat.clean": "Pulizia"
+    "stat.clean": "Pulizia",
+    "label.feed": "Pappa",
+    "label.bath": "Bagnetto",
+    "label.play": "Giochi",
+    "label.sleep": "Nanna",
+    "label.dress": "Look"
   },
   "audio": {
     "activity.title": {

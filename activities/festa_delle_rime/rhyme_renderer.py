@@ -6,20 +6,26 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
+from greia_platform.localization import LocalizationError, LocalizedResources
+from greia_platform.system_chrome import ActivitySystemChromeLayout
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
     from .rhyme_art import RhymeArt
     from .rhyme_content import RhymeMode
-    from .rhyme_model import REFERENCE_WIDTH, RhymeChallenge, RhymeSession
+    from .rhyme_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, RhymeChallenge, RhymeSession
 else:
     from rhyme_art import RhymeArt
     from rhyme_content import RhymeMode
-    from rhyme_model import REFERENCE_WIDTH, RhymeChallenge, RhymeSession
+    from rhyme_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, RhymeChallenge, RhymeSession
 
 
-REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(80, 24, 180, 48)
+# The Listen pill starts clear of the trusted Home/Back region, which the
+# platform reserves in full (both slots) so layout never jumps with context.
+_PROTECTED_CHROME: Final = ActivitySystemChromeLayout.for_surface(
+    REFERENCE_WIDTH, REFERENCE_HEIGHT
+).protected_region
+REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(_PROTECTED_CHROME.right + 18, 24, 180, 48)
 TARGET_RECT: Final[pygame.Rect] = pygame.Rect(442, 85, 140, 150)
 
 
@@ -36,8 +42,12 @@ class RhymeRenderer:
         self._typography = typography
         self._resources = resources
 
+        try:
+            caption = resources.text("button.replay").strip()
+        except LocalizationError:
+            caption = ""  # Neutral fallback: speaker pictogram only.
         self._replay_label = typography.render(
-            f"🔊 {resources.text('button.replay')}",
+            f"🔊 {caption}" if caption else "🔊",
             FontRole.TITLE,
             20,
             (255, 255, 255),
@@ -173,7 +183,7 @@ class RhymeRenderer:
         hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
         pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
 
-        speaker_icon = self._typography.render("🔊 ASCOLTA", FontRole.TITLE, 22, (255, 255, 255))
+        speaker_icon = self._replay_label
         target.blit(
             speaker_icon,
             (

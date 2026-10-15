@@ -115,7 +115,7 @@ class OrchestraRenderer:
     # Instruments
     # ------------------------------------------------------------------
 
-    def draw_instruments(self, surface: pygame.Surface, instruments: list[InstrumentCard], is_it: bool) -> None:
+    def draw_instruments(self, surface: pygame.Surface, instruments: list[InstrumentCard]) -> None:
         for inst in instruments:
             ox = int(inst.x)
             oy = int(inst.y)
@@ -135,8 +135,9 @@ class OrchestraRenderer:
             pygame.draw.circle(surface, border_col, (ox, oy), int(inst.radius), width=border_w)
             char_surf = self._typography.render(inst.icon, FontRole.DISPLAY, 54, DARK_TEXT)
             surface.blit(char_surf, (ox - char_surf.get_width() // 2, oy - char_surf.get_height() // 2 - 6))
-            lbl_text = inst.name_it if is_it else inst.name_en
-            lbl_surf = self._typography.render(lbl_text, FontRole.CONTROL, 14, (255, 255, 255))
+            if not inst.label:
+                continue
+            lbl_surf = self._typography.render(inst.label, FontRole.CONTROL, 14, (255, 255, 255))
             badge_w = max(80, lbl_surf.get_width() + 16)
             badge_rect = pygame.Rect(ox - badge_w // 2, oy + 30, badge_w, 24)
             pygame.draw.rect(surface, (30, 24, 45), badge_rect, border_radius=8)
@@ -194,8 +195,8 @@ class OrchestraRenderer:
         self,
         surface: pygame.Surface,
         stars: int,
-        is_it: bool,
         *,
+        title: str = "",
         backing_enabled: bool = False,
         backing_state: str = "empty",
         backing_import_enabled: bool = True,
@@ -283,7 +284,7 @@ class OrchestraRenderer:
         title_rect = pygame.Rect(360, 16, 304, 52)
         pygame.draw.rect(surface, (255, 250, 240), title_rect, border_radius=14)
         pygame.draw.rect(surface, (30, 41, 59), title_rect, width=2, border_radius=14)
-        title_str = "🎵 Orchestra Magica 🎶" if is_it else "🎵 Magic Orchestra 🎶"
+        title_str = " ".join(part for part in ("🎵", title, "🎶") if part)
         t_surf = self._typography.render(title_str, FontRole.TITLE, 20, DARK_TEXT)
         surface.blit(t_surf, (title_rect.centerx - t_surf.get_width() // 2, title_rect.centery - t_surf.get_height() // 2))
         hud_rect = pygame.Rect(820, 12, 160, 56)

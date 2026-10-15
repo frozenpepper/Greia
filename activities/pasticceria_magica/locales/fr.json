@@ -7,7 +7,7 @@
     "mode.orders": "🧁 Commandes sucrées",
     "mode.patterns": "🍪 Suites de biscuits",
     "mode.free": "🎨 Décoration libre",
-    "btn.serve": "🔔 SERVIR !",
+    "btn.serve": "🔔 Servir !",
     "btn.clear": "🧹 Effacer",
     "prompt.order": "Prépare : ",
     "prompt.pattern": "Quel biscuit complète la suite ?",
@@ -22,7 +22,16 @@
     "topping.star": "Étoile",
     "topping.chocolate": "Chocolat",
     "topping.cherry": "Cerise",
-    "topping.cookie": "Biscuit"
+    "topping.cookie": "Biscuit",
+    "tab.orders": "Commandes",
+    "tab.patterns": "Suites",
+    "tab.free": "Libre",
+    "panel.order": "Commande sucrée",
+    "panel.free": "Décore comme tu veux !",
+    "panel.pantry": "Garde-manger",
+    "action.clear": "Effacer",
+    "action.serve": "Sers !",
+    "feedback.masterpiece": "Quel chef-d'œuvre ! ✨"
   },
   "audio": {}
 }

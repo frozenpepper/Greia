@@ -6,7 +6,7 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
+from greia_platform.localization import LocalizationError, LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -47,7 +47,32 @@ CHOICE_RECTS: Final[tuple[pygame.Rect, ...]] = (
     pygame.Rect(446, 460, 130, 92),
     pygame.Rect(602, 460, 130, 92),
 )
-REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(175, 485, 140, 44)
+# Sits beside Dani's head, above the numeric choice row (CHOICE_RECTS start at y=460).
+REPLAY_RECT: Final[pygame.Rect] = pygame.Rect(175, 404, 140, 44)
+
+# Semantic label keys resolved once from the Activity locale bundles.
+_LABEL_KEYS: Final[tuple[str, ...]] = (
+    "hud.listen",
+    "goal.longest",
+    "goal.shortest",
+    "goal.tallest",
+    "goal.lowest",
+    "goal.order",
+    "goal.count_blocks",
+    "goal.which_fits",
+    "goal.measure",
+)
+
+
+def _resolve_labels(resources: LocalizedResources) -> dict[str, str]:
+    """Resolve every HUD/goal label once; a missing key degrades to symbols."""
+    labels: dict[str, str] = {}
+    for key in _LABEL_KEYS:
+        try:
+            labels[key] = resources.text(key).strip()
+        except LocalizationError:
+            labels[key] = ""
+    return labels
 
 
 class MeasureRenderer:
@@ -62,6 +87,7 @@ class MeasureRenderer:
         self._art = art
         self._typography = typography
         self._resources = resources
+        self._labels = _resolve_labels(resources)
 
         # Cache numbers 1..9
         self._number_surfaces = {
@@ -205,7 +231,9 @@ class MeasureRenderer:
         hl = r_draw.inflate(-16, -r_draw.height + 8).move(0, -r_draw.height // 2 + 8)
         pygame.draw.rect(target, (186, 230, 253, 100), hl, border_radius=4)
 
-        label = self._typography.render("🔊 ASCOLTA", FontRole.TITLE, 18, (255, 255, 255))
+        label = self._typography.render(
+            self._decorated("🔊", "hud.listen"), FontRole.TITLE, 18, (255, 255, 255)
+        )
         target.blit(
             label,
             (
@@ -214,22 +242,27 @@ class MeasureRenderer:
             ),
         )
 
+    def _decorated(self, lead: str, key: str, trail: str = "") -> str:
+        """Frame one resolved label with its pictograms (symbols only if missing)."""
+        return " ".join(part for part in (lead, self._labels.get(key, ""), trail) if part)
+
     def _draw_goal_placard(self, target: pygame.Surface, challenge: MeasureChallenge) -> None:
         """Draw the high-contrast goal placard at top center."""
         p_y = 20
         if challenge.mode == MeasureMode.COMPARE:
             if challenge.attribute == Attribute.LENGTH:
-                text = "🎯 PIÙ LUNGO 📦" if "longer" in challenge.prompt_key else "🎯 PIÙ CORTO 📦"
+                key = "goal.longest" if "longer" in challenge.prompt_key else "goal.shortest"
             else:
-                text = "🎯 PIÙ ALTO 📦" if "taller" in challenge.prompt_key else "🎯 PIÙ BASSO 📦"
+                key = "goal.tallest" if "taller" in challenge.prompt_key else "goal.lowest"
+            text = self._decorated("🎯", key, "📦")
         elif challenge.mode == MeasureMode.ORDER:
-            text = "🎯 ORDINA: 1 - 2 - 3"
+            text = self._decorated("🎯", "goal.order")
         elif challenge.mode == MeasureMode.MEASURE:
-            text = "🎯 CONTA I BLOCCHI 📏"
+            text = self._decorated("🎯", "goal.count_blocks", "📏")
         elif challenge.mode == MeasureMode.SHELF:
-            text = "🎯 QUALE ENTRA? 🚪"
+            text = self._decorated("🎯", "goal.which_fits", "🚪")
         else:
-            text = "🎯 MISURA 📏"
+            text = self._decorated("🎯", "goal.measure", "📏")
 
         surf = self._typography.render(text, FontRole.TITLE, 22, (254, 240, 138))
         p_x = REFERENCE_WIDTH // 2 - surf.get_width() // 2

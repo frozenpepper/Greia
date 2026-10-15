@@ -18,8 +18,7 @@ import pygame
 
 from greia_platform.activity_api import activity_stop_requested, emit_activity_event, mark_activity_ready
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.child_text import display_text
-from greia_platform.localization import LocalizedResources
+from greia_platform.localization import LocalizationError, LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 
@@ -128,7 +127,6 @@ class CuccioloApp:
         theme,
         storage,
         resources: LocalizedResources | None,
-        active_locale: str,
     ) -> None:
         self._screen = screen
         self._canvas = canvas
@@ -137,9 +135,8 @@ class CuccioloApp:
         self._theme = theme
         self._storage = storage
         self._resources = resources
-        self._active_locale = active_locale
         self._sounds = SoundManager()
-        self._renderer = CuccioloRenderer(typography)
+        self._renderer = CuccioloRenderer(typography, resources)
 
         self._pet = PetEntity(512.0, 340.0, species="cat")
         self._happiness = 5
@@ -263,7 +260,7 @@ class CuccioloApp:
                 if self._active_tab == "sleep":
                     self._pet.is_sleeping = True
                     self._sounds.play("sparkle")
-                    self._feedback_msg = self._resources.text("msg.sleep") if self._resources else display_text("Sogni d'oro... 🌙")
+                    self._feedback_msg = self._message("msg.sleep", "🌙")
                     self._feedback_timer = 2.5
                     self._safe_emit("pet.tucked_in", f"sleep-{time.time()}")
                 else:
@@ -277,7 +274,7 @@ class CuccioloApp:
             self._sounds.play("crunch")
             for _ in range(16):
                 self._add_particle(Particle(self._pet.x, self._pet.y - 40, "💖", PINK))
-            self._feedback_msg = self._resources.text("msg.nom_nom") if self._resources else display_text("Gnam gnam! 💖")
+            self._feedback_msg = self._message("msg.nom_nom", "💖")
             self._feedback_timer = 2.0
             self._safe_emit("pet.fed", f"feed-{time.time()}")
 
@@ -293,7 +290,7 @@ class CuccioloApp:
                 self._happiness = min(5, self._happiness + 1)
                 for _ in range(20):
                     self._add_particle(Particle(self._pet.x, self._pet.y, "✨", GOLD))
-                self._feedback_msg = self._resources.text("msg.sparkle") if self._resources else display_text("Tutto pulito! ✨")
+                self._feedback_msg = self._message("msg.sparkle", "✨")
                 self._feedback_timer = 2.0
                 self._pet.bubble_count = 0
                 self._bubbles.clear()
@@ -312,8 +309,17 @@ class CuccioloApp:
             self._sounds.play("sparkle")
             for _ in range(14):
                 self._add_particle(Particle(self._pet.x, self._pet.y - 60, "🎀", PINK))
-            self._feedback_msg = self._resources.text("msg.dress") if self._resources else display_text("Che bel look! 🎀")
+            self._feedback_msg = self._message("msg.dress", "🎀")
             self._feedback_timer = 2.0
+
+    def _message(self, key: str, neutral: str) -> str:
+        """Resolve feedback copy; without it only the pictogram is shown."""
+        if self._resources is not None:
+            try:
+                return self._resources.text(key)
+            except LocalizationError:
+                pass
+        return neutral
 
     def _add_particle(self, particle: Particle) -> None:
         self._particles.append(particle)
@@ -388,7 +394,6 @@ class CuccioloApp:
             self._hunger,
             self._cleanliness,
             self._active_tab,
-            self._active_locale,
             self._particles,
             self._bubbles,
             self._ball_pos,
