@@ -80,38 +80,28 @@ class SoundManager:
             self._enabled = False
 
     def _init_sounds(self) -> None:
-        audio_dir = Path(__file__).resolve().parent / "assets" / "audio"
-        # Keep existing approved WAV filenames, but give language selection to
-        # the shared resolver. A single Activity preloads just its own locale,
-        # plus compatible English fallback stems.
-        languages = (self._locale,) if self._resources else tuple(PHONICS_DATA)
-        for loc in languages:
-            selected_dir = audio_dir / loc
-            english_dir = audio_dir / "en"
-            filenames = {
-                path.name
-                for directory in (selected_dir, english_dir)
-                if directory.is_dir()
-                for path in directory.glob("*.wav")
+        # The platform resolves which physical recording belongs to each
+        # stem. Keep this game's Pygame cache and effects here, not the
+        # locale directory/search policy.
+        if self._resources is not None:
+            voices = {
+                (self._locale, stem): path
+                for stem, path in self._resources.speech_paths().items()
             }
-            for filename in sorted(filenames):
-                stem = Path(filename).stem
-                if self._resources is not None:
-                    # This legacy game uses filename-stem cue IDs. The shared
-                    # resolver owns their locale and fallback from now on.
-                    audio_path = self._resources.audio_path(
-                        "speech.legacy", filename=filename
-                    )
-                else:
-                    audio_path = selected_dir / filename
-                    if not audio_path.is_file():
-                        audio_path = english_dir / filename
-                if audio_path is None or not audio_path.is_file():
-                    continue
-                try:
-                    self._sounds[f"{loc}:{stem.lower()}"] = pygame.mixer.Sound(str(audio_path))
-                except (OSError, pygame.error):
-                    continue
+        else:
+            # Historical direct SoundManager() callers, such as isolated
+            # SFX tests, have no Activity context.
+            root = Path(__file__).resolve().parent / "assets" / "audio"
+            voices = {
+                (loc, path.stem): path
+                for loc in PHONICS_DATA
+                for path in sorted((root / loc).glob("*.wav"))
+            }
+        for (loc, stem), path in voices.items():
+            try:
+                self._sounds[f"{loc}:{stem.lower()}"] = pygame.mixer.Sound(str(path))
+            except (OSError, pygame.error):
+                continue
 
         pop_samples = [
             int(math.sin(2 * math.pi * (600 + (1200 - i) * 0.8) * (i / 22050.0)) * max(0.0, 1.0 - (i / 22050.0) / 0.05) * 14000)
