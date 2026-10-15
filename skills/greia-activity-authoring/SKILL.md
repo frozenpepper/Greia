@@ -249,6 +249,54 @@ interpolation with `tests/test_staged_activity_translations.py`.
 Do not translate a lesson's target content language as if it
 were ordinary UI text.
 
+## 7A. Mandatory Greia localization API for new Activities
+
+**Implemented shared owner (2026-10-15):** `greia_platform.localization`,
+with `activity_resources(package_root)` as the composition factory and
+`LocalizedResources.text(key, variables)` /
+`LocalizedResources.audio_path(key)` as the two Activity-facing lookups.
+This consolidates ordinary text and prerecorded speech across child languages.
+
+```python
+from pathlib import Path
+from greia_platform.localization import activity_resources
+
+resources = activity_resources(Path(__file__).resolve().parent)
+caption = resources.text("instruction.find_letter", {"letter": "A"})
+voice_path = resources.audio_path("instruction.find_letter")
+if voice_path is not None:
+    audio_owner.play_voice_file(voice_path)  # Activity's own sound method
+```
+
+The last line is an example of a game-owned playback method, **not**
+a Greia-platform or guaranteed existing method name. Localization returns
+a string or file path, never plays audio itself.
+
+Strings live in `locales/<locale>.json` with stable semantic IDs.
+New narration can live at
+`assets/audio/<locale>/<semantic-id>.wav` or `.ogg`; legacy
+English JSON cue paths are projected into the selected locale automatically.
+For existing nonstandard legacy filenames, `audio_path(key,
+filename="existing-stem.wav")` is available. Activity launch language
+comes from the Greia profile/device setting and manifest, **not** an
+Activity-maintained language selector.
+
+For all speech, **including literacy and phonics for now**, choose
+selected-language file if present, otherwise English, otherwise silence.
+Keep procedural sound effects, speech channels, event ordering and
+caching in the Activity sound owner; do not write per-Activity locale
+directory scanners or duplicate the same audio map four times.
+All **already committed** voice files are owner-reviewed and accepted.
+No anti-tamper system; user-edited files are permitted.
+
+**Migration status:** the shared resolver, launcher Activity titles,
+Measurement Workshop, Ten House, Magic Syllables, Alphabet Leo and Word
+Forest have source adaptations. Other Activities may still use legacy
+loaders and should migrate incrementally without replacing their
+approved audio. Complete runtime/source tests separately; no ES/FR
+selector promotion is implied. See
+`docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`.
+
 ## 8. Greia already owns voice production
 
 Normal Activity narration/instructions are **authoring-time prerecorded audio**.
