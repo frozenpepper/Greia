@@ -436,16 +436,27 @@ class LocalizedResources:
                 if cue is not None and cue.path.is_file():
                     return cue
 
-        # English is the canonical semantic key -> stable filename table.
-        if english is not None and selected.language != "en":
+        # Reuse one existing semantic key -> filename mapping for every
+        # translation; EN is preferred, but legacy IT-only mappings can
+        # supply the filename for otherwise unmapped cues such as the
+        # Submarine alarm. The contents of files are never modified.
+        templates = (
+            (english,) + tuple(
+                bundle for bundle in self._bundles if bundle is not english
+            )
+            if english is not None else self._bundles
+        )
+        for bundle in templates:
             for lookup in keys:
-                cue = english.audio.get(lookup)
-                if cue is not None:
-                    projected = _project_locale_audio(
-                        self.package_root, cue.path, selected.value
-                    )
-                    if projected is not None and projected.is_file():
-                        return LocalizedAudioCue(projected, cue.caption_key)
+                cue = bundle.audio.get(lookup)
+                if cue is None:
+                    continue
+                projected = _project_locale_audio(
+                    self.package_root, cue.path, bundle.locale.value,
+                    selected.value,
+                )
+                if projected is not None and projected.is_file():
+                    return LocalizedAudioCue(projected, cue.caption_key)
 
         for candidate in self._conventional_audio(selected.value, key, filename):
             if candidate.is_file():
@@ -457,6 +468,18 @@ class LocalizedResources:
                     cue = english.audio.get(lookup)
                     if cue is not None and cue.path.is_file():
                         return cue
+            # An IT-only legacy cue map can still identify the filename
+            # of an existing English audio clip without inventing a mapping.
+            for bundle in templates:
+                for lookup in keys:
+                    cue = bundle.audio.get(lookup)
+                    if cue is None:
+                        continue
+                    english_path = _project_locale_audio(
+                        self.package_root, cue.path, bundle.locale.value, "en"
+                    )
+                    if english_path is not None and english_path.is_file():
+                        return LocalizedAudioCue(english_path, cue.caption_key)
             for candidate in self._conventional_audio("en", key, filename):
                 if candidate.is_file():
                     return LocalizedAudioCue(candidate)
@@ -479,15 +502,17 @@ class LocalizedResources:
         )
 
 
-def _project_locale_audio(root: Path, source: Path, locale: str) -> Path | None:
-    """Substitute only an actual locale-directory component of an audio path."""
+def _project_locale_audio(
+    root: Path, source: Path, source_locale: str, target_locale: str
+) -> Path | None:
+    """Substitute one locale-directory component of a known audio path."""
     try:
         parts = list(source.relative_to(root).parts)
     except ValueError:
         return None
     for index, part in enumerate(parts):
-        if part == "en" and index > 0 and parts[index - 1] in {"audio", "locales"}:
-            parts[index] = locale
+        if part == source_locale and index > 0 and parts[index - 1] in {"audio", "locales"}:
+            parts[index] = target_locale
             return root.joinpath(*parts)
     return None
 
