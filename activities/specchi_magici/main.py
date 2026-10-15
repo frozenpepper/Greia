@@ -57,7 +57,7 @@ def main() -> int:
     factory = MirrorRoundFactory(rng)
     session = MirrorSession(factory.build_set(saved.level), level=saved.level, history=saved.history)
     session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
-    audio = MirrorAudio(Path(__file__).resolve().parent, locale=locale)
+    audio = MirrorAudio(Path(__file__).resolve().parent, locale=locale, resources=resources)
 
     app = MirrorActivity(
         screen=screen,
