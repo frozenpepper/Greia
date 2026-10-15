@@ -349,6 +349,65 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
                 self.assertEqual(res.audio_path(key), root / relative)
                 self.assertTrue((root / relative).is_file())
 
+    def test_regional_locale_uses_base_language_before_english(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _bundle(root, "es-MX", strings={"welcome": "Regional"})
+            _bundle(root, "es", strings={"lesson": "Español"})
+            _bundle(root, "en", strings={"lesson": "English"})
+            _bundle(root, "it", strings={"lesson": "Italiano"})
+            english = _put(root, "assets/audio/en/lesson.wav")
+            spanish = _put(root, "assets/audio/es/lesson.wav")
+            context = resolve_activity_locale(
+                "es-MX",
+                ActivityLocaleSupport.localized(
+                    ("it", "en", "es", "es-MX"),
+                    default_ui_locale="it",
+                ),
+            )
+            assert context is not None
+            resources = LocalizedResources(root, context)
+            self.assertEqual(resources.text("lesson"), "ESPAÑOL")
+            self.assertEqual(resources.audio_path("lesson"), spanish)
+            self.assertEqual(resources.speech_paths()["lesson"], spanish)
+            self.assertEqual(
+                resources.audio_path("lesson", allow_fallback=False), spanish
+            )
+            spanish.unlink()
+            self.assertEqual(resources.audio_path("lesson"), english)
+            self.assertIsNone(
+                resources.audio_path("lesson", allow_fallback=False)
+            )
+
+    def test_unmapped_audio_variant_prefers_variant_filename(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _bundle(root, "en")
+            _bundle(root, "it")
+            default = _put(root, "assets/audio/en/welcome.wav")
+            female = _put(root, "assets/audio/en/welcome.feminine.wav")
+            resources = _context(root, "it")
+            self.assertEqual(resources.audio_path("welcome"), default)
+            self.assertEqual(
+                resources.audio_path("welcome", variant="feminine"), female
+            )
+
+    def test_migrated_activity_factories_respect_real_manifest_languages(self) -> None:
+        repo = Path(__file__).resolve().parents[1]
+        for name in (
+            "foresta_parole", "sillabe_magiche",
+            "festa_delle_rime", "officina_dei_suoni",
+            "luci_di_momo", "il_giardino_dei_numeri",
+            "specchi_magici", "mondo_contrari",
+            "baia_delle_orche", "bosco_numeri",
+        ):
+            root = repo / "activities" / name
+            with self.subTest(activity=name):
+                english = activity_resources(root, requested_locale="en")
+                self.assertEqual(english.context.selected.value, "en")
+                staged = activity_resources(root, requested_locale="fr")
+                self.assertEqual(staged.context.selected.value, "it")
+
 
 if __name__ == "__main__":
     unittest.main()
