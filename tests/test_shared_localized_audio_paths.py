@@ -11,6 +11,7 @@ from greia_platform.localization import (
     ActivityLocaleSupport,
     LocalizationError,
     LocalizedResources,
+    activity_resources,
     resolve_activity_locale,
 )
 
@@ -145,6 +146,49 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
             _bundle(root, "it", strings={"intro": "Ciao"})
             _bundle(root, "es", strings={})
             self.assertEqual(_context(root, "es").text("intro"), "HELLO")
+
+    def test_manifest_factory_keeps_release_locale_separate_from_staging(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "activity.toml").write_text(
+                '[activity]\\nlanguages = ["it", "en"]\\n', encoding="utf-8"
+            )
+            _bundle(root, "en", strings={"title": "English"})
+            _bundle(root, "it", strings={"title": "Italiano"})
+            _bundle(root, "fr", strings={"title": "Français"})
+            installed = activity_resources(root, requested_locale="fr")
+            self.assertEqual(installed.context.selected.value, "it")
+            staged = activity_resources(
+                root, requested_locale="fr",
+                supported_locales=("it", "en", "fr"),
+            )
+            self.assertEqual(staged.context.selected.value, "fr")
+
+    def test_real_committed_multilingual_narration_resolves_without_es_fr_audio_maps(self) -> None:
+        repository = Path(__file__).resolve().parents[1]
+        cases = (
+            ("enciclopedia_greia", "es", "encyclopedia.animals.intro",
+             "assets/audio/es/animals/intro.ogg"),
+            ("enciclopedia_greia", "fr", "encyclopedia.animals.intro",
+             "assets/audio/fr/animals/intro.ogg"),
+            ("viaggio_delfino", "es", "presenter.welcome.voice",
+             "assets/audio/es/presenter-welcome.ogg"),
+            ("viaggio_delfino", "fr", "presenter.welcome.voice",
+             "assets/audio/fr/presenter-welcome.ogg"),
+            ("sottomarino_giramondo", "es", "voice.fact.whale.1",
+             "audio/es/sub_fact_whale_1.wav"),
+            ("sottomarino_giramondo", "fr", "voice.fact.whale.1",
+             "audio/fr/sub_fact_whale_1.wav"),
+        )
+        for activity, locale, key, relative in cases:
+            with self.subTest(activity=activity, locale=locale, key=key):
+                root = repository / "activities" / activity
+                res = activity_resources(
+                    root, requested_locale=locale,
+                    supported_locales=("it", "en", "es", "fr"),
+                )
+                self.assertEqual(res.audio_path(key), root / relative)
+                self.assertTrue((root / relative).is_file())
 
 
 if __name__ == "__main__":
