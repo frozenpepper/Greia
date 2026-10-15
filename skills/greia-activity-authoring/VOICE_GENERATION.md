@@ -162,19 +162,42 @@ However, accepted asset bytes do not prove that every Activity runtime path alre
 
 Canonical character introductions are OS/shared presentation content. Do not rerecord "Hi, I'm Leo/Lilli/..." independently in every Activity.
 
-### Selected-language audio authority
+### Shared locale-aware audio resolution (owner decision 2026-10-15)
 
-The platform `LocalizedResources.audio_cue(key)` preserves the normal
-per-key locale fallback for ordinary optional sounds. For **required
-spoken instructions, narration or pronunciation**, resolve using
-`audio_cue(key, allow_fallback=False)`: a missing recording must not
-speak another language just because that happens to be the package default.
-This is decided by the **locale bundle that owns the semantic key**, not by
-the physical filename, parent folder, or hand-authored path heuristic.
-A clip may live anywhere inside Greia's validated package-media root.
-An absent selected-locale cue is an unfulfilled release requirement, not
-permission to auto-translate or synthesize at child runtime. Record
-the missing clip and keep human listening and per-locale authoring gates open.
+The shared Greia runtime subsystem now owns localized prerecorded-audio
+lookup through `greia_platform.localization.LocalizedResources`.
+Activity code requests stable semantic IDs through `audio_path(key)`
+(fail-soft `Path | None`), or the compatibility `audio_cue(key)`
+(`LocalizedAudioCue`, raising on absence). Do not duplicate language
+folder resolution in a new Activity SoundManager.
+
+**Resolution:** an existing recording for the selected Activity UI locale
+wins. If absent, use the **English** recording. This policy includes
+phoneme/letter/syllable pronunciation cues **for now**, by explicit
+owner direction. An absent selected-locale file is a useful coverage
+observation, **not** a runtime rejection or a reason to regenerate
+already approved assets.
+
+New Activities follow the convention
+`assets/audio/<locale>/<semantic-id>.wav` (or `.ogg`), using the same
+ID in each language; launcher titles use
+`locales/<locale>/audio/activity-title.wav`. Where a legacy English
+bundle declares a different filename, `LocalizedResources` projects
+that **one** canonical path into the requested locale and tries its
+actual file before English. For other legacy filenames, provide a
+single `filename="existing-name.wav"` argument to `audio_path`.
+
+Use the existing `activity_resources(package_root)` composition
+factory: it reads the Activity manifest's supported languages and
+the active child profile/device locale. The localization resolver
+does not decode audio or create a Pygame mixer; the Activity sound
+owner handles only cache/channels/playback and procedural effects.
+
+All previously committed recordings are **personally owner-approved**.
+Do not recertify, re-record or alter them. New recordings continue to
+require owner listening approval. No source/signature tamper checking
+is required: users are allowed to modify installed media.
+
 
 ## 6. Semantic cue IDs and localization
 
