@@ -1,10 +1,18 @@
-# My Time — Voice production brief (SOURCE DESIGN, no audio generated)
+# My Time — Voice production brief (approved recordings, runtime acceptance pending)
 
-**Status:** playback/controller source is wired, but audio production,
-locale audio mappings, provider authorization, human listening and real
-in-Activity sound acceptance are still outstanding. **Never ship** the current
-`activity_incubator/tempo_di_greia/` as a normal first-party game based on
-this text alone.
+**Status, 2026-10-15:** All 16 packaged Italian/English WAV clips (title
+plus seven interaction cues per locale) have been personally reviewed and
+approved by the owner. The previously empty `audio` dictionaries do **not**
+prevent playback anymore: `time_audio.py` requests semantic IDs through
+`LocalizedResources.audio_path(key, filename="<key_with_underscores>.wav")`,
+which finds approved files under `locales/<locale>/audio/` and falls back
+to English. The launcher can also resolve the existing
+`activity_title.wav` spelling without renaming it.
+
+**My Time remains incubated, not release-accepted.** Runtime Pygame
+speech/interaction, sound timing and installed-device testing have not yet
+been executed and verified during this GitHub-only source migration.
+Do not enable My Time merely because audio lookup is now connected.
 
 **Authorities:** `skills/greia-voice-production/SKILL.md`,
 `skills/greia-activity-authoring/VOICE_GENERATION.md`,
@@ -57,10 +65,11 @@ resolver before promotion.
 4. Listen to all Italian/English cues on ordinary speakers **and**
    small child-device speakers. Reject mismatch, unnatural cadence,
    clipping, silence and inappropriate synthetic voice identity.
-5. Integrate only reviewed clips with `locales/<locale>/audio/`
-   and canonical locale JSON audio tables. Title audio specifically
-   must match Greia's first-party launcher-label path, codec, rate,
-   mono and caption contracts.
+5. **Completed for IT/EN and owner-approved:** the recordings are
+   already packaged below `locales/<locale>/audio/`. Greia's shared
+   filename-first resolver now connects them without one JSON mapping
+   per language. Existing title files use `activity_title.wav`, a
+   recognized legacy convention. Do not re-record/rename these clips.
 6. Implement one shared Activity cue controller using accepted
    platform speech/feedback APIs; don't call a random mixer channel,
    stomp other Activities' voices, or make runtime synthesis requests.
@@ -71,19 +80,20 @@ resolver before promotion.
    `release` selection. Generation receipts alone never prove
    listened acceptance.
 
-**Source prepared, not verified:** `time_speech.py` owns the single pending
-instruction and first-use/replay/terminal cue semantics;
-`time_audio.py` indexes package-local WAV/OGG through
-Greia `LocalizedResources.audio_cue(key, allow_fallback=False)`, then
-lazily decodes only a requested clip after the first usable frame.
-The cache is bounded to seven semantic cues; invalid audio is
-suppressed after the first failed decode. The semantic key belongs
-to the chosen locale bundle, irrespective of the actual clip directory; `time_app.py` triggers cues and
-conditionally renders an 88×72 speaker/replay control only when the currently
-relevant instruction is actually installed. This does not generate clips.
-Voice is stopped on normal/exceptional Activity exit. Required prompts never
-fall back to another language; missing mapped audio means no speech and no
-fake replay button, and **blocks production acceptance**.
+**Voice source implemented, runtime unverified:** `time_speech.py`
+owns sequencing, the single pending instruction and first-use/replay/terminal
+cues. `time_audio.py` uses `LocalizedResources.audio_path()` and its
+legacy underscore-filename alias for the seven approved speech cues; all
+selected-locale cues, including phonemes elsewhere in Greia, now permit
+English audio fallback when the selected-language file is absent. Clips
+decode lazily after the first useful Activity frame, not at startup.
+`main.py` uses the shared `activity_resources` manifest/profile
+factory. The normal Activity's audio owner still controls its own mixer,
+cache and interruptions. New focused source test cases were committed
+to `tests/test_activity_time_audio.py`,
+`tests/test_launcher_spoken_labels.py` and
+`tests/test_shared_localized_audio_paths.py`, but no Python execution
+or Pygame playback evidence is claimed here.
 
 **Additional sequencing guarantee (SOURCE-WIP):** A timer that is
 already complete when the Activity starts cannot speak before READY.
@@ -94,7 +104,8 @@ immediately relevant instructional recording. Closing the Activity
 prevents any subsequent cue from starting. These cases are covered by
 new provider-free tests but **not yet locally executed or heard**.
 
-**Still not performed:** voice generation, owner approval, human listening,
-actual IT/EN cue mapping, validated WAV formats, real audio playback,
-controller/touch/keyboard verification, exact-SHA full Shell acceptance.
-The title WAV for the launcher remains an independent obligation.
+**Still not performed:** running the new/old Python unit tests, live
+headless/GUI playback, first-frame replay and exit timing verification,
+small-device speaker quality checks, real Shell launch and installed
+Acer acceptance. No new audio production, owner approval or locale JSON
+mapping is required for **existing** IT/EN My Time speech files.
