@@ -5,6 +5,17 @@
 **Single local task queue:** `docs/testing/GREIA_LOCAL_AGENT_TASK_QUEUE.md`  
 **Evidence status:** GitHub source commits, no newly executed full checkout tests / GUI / recording / physical install in this session.
 
+## 2026-10-15 — Shared Activity localization: additional speech integration
+
+**Source implemented on `main`, no changes to any approved voice asset.**
+
+- `LocalizedResources.audio_path` now checks both existing ordinary speech layouts: `assets/audio/<lang>/` and `locales/<lang>/audio/`. `LocalizedResources.speech_paths()` enumerates the localized or fallback-English prerecorded files for older eager-preloading Activities; mixed-case filenames are accepted via explicit filename aliases. This consolidates path lookup without moving or regenerating recordings.
+- Migrated **11 additional Activity-level speech consumers**: Number Forest, Rhyme Festival, Sound Workshop, Momo's Lights, Momo's Faces, Opposites, Four Seasons, Number Garden, Orca Bay, Magic Mirrors, and Quattro Amici. The first ten now use `audio_path`/`speech_paths` for Activity-packaged voice; Quattro Amici uses `shared_character_audio_path` for the shared v0.2 character recordings. Each Activity retains sound effects, speech queues, channels and mixer ownership. All updated composition roots pass existing shared localization resources where applicable.
+- Source inventory identified that `faccine_momo`, `mondo_contrari` and `quattro_stagioni` have prior EN/IT voice WAVs under `locales/<lang>/audio/`, while newly accepted ES/FR equivalents were committed under `assets/audio/<lang>/`. This was a real accessibility defect; file-aware shared resolution now spans both instead of copying files into new locations.
+- `tests/test_shared_localized_audio_paths.py` extended to exercise both layouts, mixed-case stems, real shared character clips, and ten real ES/FR Activity clip filenames; their expected paths were verified against the nontruncated current GitHub tree, including Spanish curriculum-specific stems. No new test suite or governance machinery created.
+- Skills updated for `speech_paths` and platform-owned shared character voice lookup. Exact rationale/paths live in `SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md` (same plan folder).
+- **Testing:** GitHub source readback and path inventory only. No runnable checkout, Python unit invocation, audio decode/Pygame GUI playback, installer or physical-device acceptance in this session. These are **UNEXECUTED**, not PASS. Existing selector remains EN/IT; ES/FR release decision still open. The 35 narrowly missing voice files remain assigned to the separate local agent recording order.
+
 ## 2026-10-15 — Shared Activity localization + prerecorded audio resolver: first implementation
 
 **Owner direction:** simple centralized semantic `text(key)` / `audio_path(key)`; the selected-language audio file wins, otherwise English, otherwise no speech (including phonemes for now). User modifications are allowed; no anti-tamper scheme. All previously committed recordings are personally owner-approved, untouched. This is the active new work slice in [`SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`](./SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md).
