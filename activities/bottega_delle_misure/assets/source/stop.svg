@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 184" width="24" height="184">
+  <!-- Bottega delle Misure: sunshine end-stop. Parcel and blocks both start against its right face (the start line). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="stop_post" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="post">
+    <rect x="2" y="2" width="20" height="180" rx="7" fill="url(#stop_post)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M8 10 V60" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

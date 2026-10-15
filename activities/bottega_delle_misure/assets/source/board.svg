@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 656 96" width="656" height="96">
+  <!-- Bottega delle Misure: wall-mounted measuring board. Parcels rest on its top edge; unit blocks lie in the front groove (x 138-650). -->
+  <defs>
+    <!-- orange light -> orange light 2 (pine plank) -->
+    <linearGradient id="board_plank" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6CB98"/>
+      <stop offset="1" stop-color="#E9A863"/>
+    </linearGradient>
+  </defs>
+  <g id="brackets" fill="#C98136" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+    <path d="M40 80 L40 94 L70 94 Z"/>
+    <path d="M616 80 L616 94 L586 94 Z"/>
+  </g>
+  <g id="plank">
+    <rect x="2" y="2" width="652" height="80" rx="10" fill="url(#board_plank)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M14 10 H118" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+    <path d="M20 40 C50 36 80 44 112 39 M18 62 C52 58 84 66 114 60" fill="none" stroke="#C98A4C" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+  </g>
+  <g id="groove">
+    <rect x="136" y="10" width="512" height="64" rx="6" fill="#B87A3E" stroke="#976433" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M140 16 H644" fill="none" stroke="#8E5A26" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

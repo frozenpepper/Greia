@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 376 44" width="376" height="44">
+  <!-- Bottega delle Misure: balance beam. Rotates about its centre (188, 22); pans hang at x 18 and 358 (centre +-170). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="balance_beam_bar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="bar">
+    <rect x="10" y="14" width="356" height="16" rx="8" fill="url(#balance_beam_bar)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M22 18 H120" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <g id="ends" fill="#F59E0B" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+    <circle cx="18" cy="22" r="8"/>
+    <circle cx="358" cy="22" r="8"/>
+  </g>
+  <g id="hub">
+    <circle cx="188" cy="22" r="18" fill="#FFC234" stroke="#4B372F" stroke-width="3.5"/>
+    <circle cx="188" cy="22" r="6" fill="#F46F61" stroke="#4B372F" stroke-width="2.5"/>
+  </g>
+</svg>

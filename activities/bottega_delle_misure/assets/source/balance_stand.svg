@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 230" width="140" height="230">
+  <!-- Bottega delle Misure: toy balance stand. Pivot at (70, 16); the base stands on the bench at y 222. -->
+  <defs>
+    <!-- coral light -> coral -->
+    <linearGradient id="balance_stand_base" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- sunshine light -> gold deep -->
+    <linearGradient id="balance_stand_post" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="70" cy="224" rx="58" ry="6" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="post">
+    <rect x="61" y="14" width="18" height="180" rx="7" fill="url(#balance_stand_post)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+  <g id="base">
+    <path d="M30 222 C30 196 46 184 70 184 C94 184 110 196 110 222 Z" fill="url(#balance_stand_base)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M14 222 H126" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+    <path d="M48 200 C54 193 62 190 70 190" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+  </g>
+  <g id="pivot">
+    <circle cx="70" cy="16" r="13" fill="#F46F61" stroke="#4B372F" stroke-width="3.5"/>
+    <circle cx="66" cy="12" r="3.5" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+</svg>

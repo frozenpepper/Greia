@@ -1,10 +1,14 @@
-"""Thin Greia composition root for La Bottega delle Misure."""
+"""Thin Greia composition root for La Bottega delle Misure (The Measurement Workshop).
+
+``activity.toml`` points here. Real work lives in cohort modules: content
+(scene geometry), model (pure rules), services (storage/events), art,
+renderer, controls, audio and the app lifecycle.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
 import random
-import time
 
 import pygame
 
@@ -15,24 +19,20 @@ from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .measure_app import BottegaActivity
-    from .measure_art import MeasureArt
     from .measure_audio import MeasureAudio
-    from .measure_model import MeasureRoundFactory, MeasureSession, REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from .measure_renderer import MeasureRenderer
+    from .measure_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .measure_model import Delivery, TaskFactory
     from .measure_services import GreiaMeasureEvents, GreiaMeasureProgress
 else:
     from measure_app import BottegaActivity
-    from measure_art import MeasureArt
     from measure_audio import MeasureAudio
-    from measure_model import MeasureRoundFactory, MeasureSession, REFERENCE_HEIGHT, REFERENCE_WIDTH
-    from measure_renderer import MeasureRenderer
+    from measure_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from measure_model import Delivery, TaskFactory
     from measure_services import GreiaMeasureEvents, GreiaMeasureProgress
 
 
 def _resources() -> LocalizedResources:
-    return activity_resources(
-        Path(__file__).resolve().parent, requested_locale=get_profile_locale()
-    )
+    return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
 
 
 def main() -> int:
@@ -45,35 +45,22 @@ def main() -> int:
     resources = _resources()
     typography = GreiaTypography()
     canvas = PygameReferenceCanvas(screen)
-    art = MeasureArt(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-    renderer = MeasureRenderer(art, typography, resources)
-    progress = GreiaMeasureProgress()
-    saved = progress.load()
     rng = random.Random()
-    factory = MeasureRoundFactory(rng)
-    session = MeasureSession(factory.build_set(saved.level), level=saved.level, history=saved.history)
-    session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
-
-    package_root = Path(__file__).resolve().parent
-    locale_lang = resources.context.selected.language if hasattr(resources.context, "selected") else "it"
+    progress = GreiaMeasureProgress()
+    delivery = Delivery(TaskFactory(rng), progress.load())
     app = BottegaActivity(
         screen=screen,
         canvas=canvas,
-        session=session,
-        factory=factory,
-        renderer=renderer,
+        delivery=delivery,
         typography=typography,
         resources=resources,
+        audio=MeasureAudio(resources, rng=rng),
         progress=progress,
         events=GreiaMeasureEvents(),
-        audio=MeasureAudio(package_root, locale=locale_lang, resources=resources),
-        rng=rng,
-        session_id=session_id,
     )
     try:
         return app.run()
     finally:
-        typography.clear()
         pygame.quit()
 
 

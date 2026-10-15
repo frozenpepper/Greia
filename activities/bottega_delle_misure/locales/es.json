@@ -9,23 +9,9 @@
     "prompt.compare_shorter": "¡Toca el paquete más corto!",
     "prompt.compare_taller": "¡Toca el paquete más alto!",
     "prompt.compare_shorter_h": "¡Toca el paquete más bajo!",
-    "prompt.order_length": "¡Ordena los paquetes del más corto al más largo!",
-    "prompt.order_height": "¡Ordena los paquetes del más bajo al más alto!",
     "prompt.measure": "¡Mide el paquete con bloques de madera!",
-    "prompt.shelf": "¿Cuántos bloques caben en este estante?",
-    "button.confirm": "Confirmar",
     "button.play_again": "Jugar otra vez",
-    "victory.title": "¡Taller listo!",
-    "victory.subtitle": "¡Has medido y entregado todos los paquetes con Dani!",
-    "hud.listen": "Escucha",
-    "goal.longest": "Más largo",
-    "goal.shortest": "Más corto",
-    "goal.tallest": "Más alto",
-    "goal.lowest": "Más bajo",
-    "goal.order": "Ordena: 1 - 2 - 3",
-    "goal.count_blocks": "Cuenta los bloques",
-    "goal.which_fits": "¿Cuál cabe?",
-    "goal.measure": "Mide"
+    "victory.title": "¡Taller listo!"
   },
   "audio": {}
 }

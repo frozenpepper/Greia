@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 136" width="180" height="136">
+  <!-- Bottega delle Misure: hanging balance pan. Hangs from (90, 6); a parcel rests on the rim line y 104. -->
+  <defs>
+    <!-- sunshine light -> gold deep -->
+    <linearGradient id="balance_pan_bowl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD36B"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <g id="strings" fill="none" stroke="#4B372F" stroke-width="2.5" stroke-linecap="round">
+    <path d="M90 8 L14 104 M90 8 L166 104 M90 8 L90 104"/>
+  </g>
+  <circle cx="90" cy="8" r="6" fill="#FFC234" stroke="#4B372F" stroke-width="3"/>
+  <g id="bowl">
+    <path d="M6 104 H174 C170 122 150 132 90 132 C30 132 10 122 6 104 Z" fill="url(#balance_pan_bowl)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M24 112 C40 118 60 120 80 120" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" opacity="0.6"/>
+  </g>
+</svg>

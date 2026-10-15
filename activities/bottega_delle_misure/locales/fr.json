@@ -9,23 +9,9 @@
     "prompt.compare_shorter": "Touche le paquet le plus court !",
     "prompt.compare_taller": "Touche le paquet le plus haut !",
     "prompt.compare_shorter_h": "Touche le paquet le moins haut !",
-    "prompt.order_length": "Range les paquets du plus court au plus long !",
-    "prompt.order_height": "Range les paquets du moins haut au plus haut !",
     "prompt.measure": "Mesure le paquet avec des blocs en bois !",
-    "prompt.shelf": "Combien de blocs tiennent sur cette étagère ?",
-    "button.confirm": "Valider",
     "button.play_again": "Rejouer",
-    "victory.title": "Atelier terminé !",
-    "victory.subtitle": "Tu as mesuré et livré tous les paquets avec Dani !",
-    "hud.listen": "Écoute",
-    "goal.longest": "Plus long",
-    "goal.shortest": "Plus court",
-    "goal.tallest": "Plus haut",
-    "goal.lowest": "Plus bas",
-    "goal.order": "Range : 1 - 2 - 3",
-    "goal.count_blocks": "Compte les blocs",
-    "goal.which_fits": "Lequel rentre ?",
-    "goal.measure": "Mesure"
+    "victory.title": "Atelier terminé !"
   },
   "audio": {}
 }

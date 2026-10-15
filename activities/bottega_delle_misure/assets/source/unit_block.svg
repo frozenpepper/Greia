@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Bottega delle Misure: one wooden unit block (the measuring unit). Never numbered. -->
+  <defs>
+    <!-- orange light steps (natural beech) -->
+    <linearGradient id="unit_block_wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FDE3C2"/>
+      <stop offset="1" stop-color="#F6B56C"/>
+    </linearGradient>
+  </defs>
+  <g id="block">
+    <rect x="3" y="3" width="58" height="58" rx="9" fill="url(#unit_block_wood)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M14 26 C26 23 38 29 50 25 M14 43 C28 40 38 46 50 42" fill="none" stroke="#D2955A" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+    <path d="M12 11 H34" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

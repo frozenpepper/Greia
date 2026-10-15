@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 160" width="1024" height="160">
+  <!-- Bottega delle Misure: Dani's long workbench (top slab, apron, legs); drawn over the shared wood floor. -->
+  <defs>
+    <!-- orange shade light -> orange shade (oak top) -->
+    <linearGradient id="bench_top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#EBB679"/>
+      <stop offset="1" stop-color="#D98E42"/>
+    </linearGradient>
+    <!-- orange shade -> orange deep (apron) -->
+    <linearGradient id="bench_apron" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C98136"/>
+      <stop offset="1" stop-color="#B46F2C"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="512" cy="152" rx="470" ry="7" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="legs" fill="#C98136" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round">
+    <rect x="40" y="56" width="34" height="98" rx="6"/>
+    <rect x="950" y="56" width="34" height="98" rx="6"/>
+    <rect x="486" y="56" width="34" height="98" rx="6"/>
+  </g>
+  <g id="leg_shade" fill="#A8692C" opacity="0.5">
+    <rect x="62" y="60" width="9" height="90" rx="3"/>
+    <rect x="972" y="60" width="9" height="90" rx="3"/>
+    <rect x="508" y="60" width="9" height="90" rx="3"/>
+  </g>
+  <g id="apron">
+    <rect x="18" y="26" width="988" height="40" rx="8" fill="url(#bench_apron)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M150 46 H360 M640 46 H880" fill="none" stroke="#8E5A26" stroke-width="2.5" stroke-linecap="round" opacity="0.55"/>
+  </g>
+  <g id="top">
+    <rect x="4" y="4" width="1016" height="30" rx="10" fill="url(#bench_top)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M24 13 H300" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.55"/>
+    <path d="M420 22 C520 18 620 26 760 21" fill="none" stroke="#B9763A" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+  </g>
+</svg>

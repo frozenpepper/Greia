@@ -21,7 +21,8 @@ adaptive_difficulty = true
 skills = [
   { id = "math.measurement.non_standard_units", weight = 3 },
   { id = "math.comparison.length_height", weight = 3 },
-  { id = "math.ordering.seriation", weight = 2 },
+  { id = "math.comparison.weight", weight = 2 },
+  { id = "math.counting.cardinality", weight = 1 },
 ]
 events = [
   { id = "measure.parcel_completed", kind = "milestone" },
@@ -34,11 +35,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "pointer"
+profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["touch"]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["touch", "keyboard", "audio.basic"]
 
 [permissions]
 requested = []
