@@ -33,6 +33,16 @@ After auditing every `activities/*/*audio.py` and checking the real GitHub asset
 
 **Verification classification:** GitHub source/asset paths reviewed; new tests authored and path expectations checked against Git tree; **no Python unittest/Pygame/GUI execution performed in this connector-only session**. GitHub Actions had no registered results for the earlier HEAD. Do not report PASS or four-language runtime acceptance. Continue with focused source/runtime tests when a runnable checkout is available, and repair any regressions before advertising ES/FR.
 
+## Third implementation slice — My Time compatibility and tests (2026-10-15)
+
+- Audited all remaining top-level `activities/*/*audio.py` modules: the unconverted modules are procedural-effects engines or runtime recording/live user audio, not unintegrated packaged voice locale selectors. Also checked incubated `tempo_di_greia` and found a real missing connection.
+- **My Time repaired:** `activity_incubator/tempo_di_greia/time_audio.py` previously used `audio_cue(key, allow_fallback=False)` even though both EN/IT `locales/*.json` catalogues have empty audio maps. All 14 interaction recordings (seven EN, seven IT) were physically present under `locales/<locale>/audio/<semantic_key_with_underscores>.wav`. The transport now uses `audio_path(key, filename=key.replace('.', '_') + '.wav')`, selecting actual requested-language audio then English if missing. It still lazily decodes after first frame and owns its single channel.
+- `activity_incubator/tempo_di_greia/main.py` now uses `activity_resources(package_root)`, removing another locale/profile bootstrap implementation.
+- **Launcher title alias:** `LocalizedResources.audio_path('activity.title')` handles either standard `activity-title.wav` or legacy `activity_title.wav` under `locales/<locale>/audio`, selected language then English. This makes My Time's two accepted title recordings accessible through the unchanged launcher title controller.
+- **Regression tests updated/added:** `tests/test_activity_time_audio.py` corrects an obsolete expectation of Italian fallback when English voice absent, tests all real My Time accepted semantic files, and tests French-file/English-file mixing by key. `tests/test_shared_localized_audio_paths.py` and `tests/test_launcher_spoken_labels.py` check standard and underscore title compatibility without renaming files.
+- `activity_incubator/tempo_di_greia/VOICE_PRODUCTION_BRIEF.md` updated from stale 'nothing recorded' status to owner-approved EN/IT recordings and **unverified live playback**. No WAV/OGG/receipt modifications, no new provider calls, no extra process/scaffolding.
+- **Execution status:** GitHub source commits and exact media paths checked. Python test runs, Pygame UI, local-device voice playback and complete release acceptance have **not** yet run. My Time remains incubated; ES/FR system selector stays disabled. **Next high-value action:** run focused Python suites on a runnable checkout and fix actual failures, then continue only demonstrated remaining language path issues.
+
 ## Accepted owner decisions
 
 - Every previously committed voice recording was personally reviewed and **approved by the owner**. Its bytes are final: preserve; do not regenerate or reapprove.
