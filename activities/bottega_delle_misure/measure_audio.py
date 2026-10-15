@@ -56,30 +56,20 @@ class MeasureAudio:
     def _load_speech_clips(self) -> None:
         if self._package_root is None:
             return
-        audio_root = self._package_root / "assets" / "audio"
-        selected = audio_root / self._locale
-        english = audio_root / "en"
-        # Retain eager short-cue decoding to avoid first-interaction hitches.
-        # Filename discovery is Activity-local; LANGUAGE selection is shared.
-        names = {
-            file.stem
-            for directory in (selected, english)
-            if directory.is_dir()
-            for file in directory.glob("*.wav")
-        }
-        for name in sorted(names):
-            if self._resources is not None:
-                path = self._resources.audio_path(
-                    name, filename=f"{name}.wav"
-                )
-            else:
-                path = selected / f"{name}.wav"
-                if not path.is_file():
-                    path = english / f"{name}.wav"
-            if path is None or not path.is_file():
-                continue
+        if self._resources is not None:
+            # One platform-owned directory/fallback policy for every game.
+            paths = self._resources.speech_paths()
+        else:
+            # Backward-compatible standalone audio-owner construction.
+            audio = self._package_root / "assets" / "audio"
+            paths = {
+                path.stem: path
+                for locale in ("en", self._locale)
+                for path in sorted((audio / locale).glob("*.wav"))
+            }
+        for stem, path in paths.items():
             try:
-                self._speech_clips[name] = pygame.mixer.Sound(str(path))
+                self._speech_clips[stem] = pygame.mixer.Sound(str(path))
             except (pygame.error, OSError):
                 continue
 
