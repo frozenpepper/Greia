@@ -1,12 +1,11 @@
-"""Greia composition root for My Time (source-only pre-audio candidate)."""
+"""Greia composition root for My Time."""
 from __future__ import annotations
 
 from pathlib import Path
 
 import pygame
 
-from greia_platform.activity_api import get_profile_locale
-from greia_platform.localization import ActivityLocaleSupport, LocalizedResources, resolve_activity_locale
+from greia_platform.localization import activity_resources
 
 if __package__:
     from .time_app import TimeActivity
@@ -25,13 +24,8 @@ def main() -> int:
     screen = pygame.display.get_surface()
     if screen is None:
         screen = pygame.display.set_mode((1024, 600), pygame.RESIZABLE)
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    context = resolve_activity_locale(get_profile_locale(), support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-    assert context is not None
-    locale = context.selected.value.split("-")[0]
-    resources = LocalizedResources(Path(__file__).resolve().parent, context)
+    resources = activity_resources(Path(__file__).resolve().parent)
+    locale = resources.context.selected.language
     words = {key: resources.text(key) for key in WORD_KEYS}
     speech = TimeSpeech(LocalTimeSpeechTransport(resources))
     return TimeActivity(screen, locale, words, speech=speech).run()
