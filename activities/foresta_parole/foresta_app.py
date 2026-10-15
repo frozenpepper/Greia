@@ -68,7 +68,11 @@ class SoundManager:
     a cached ``pygame.mixer.Sound`` and calls ``play()``.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self, resources: LocalizedResources | None = None, locale: str = "it"
+    ) -> None:
+        self._resources = resources
+        self._locale = locale
         self._sounds: dict[str, pygame.mixer.Sound] = {}
         self._enabled = False
         try:
@@ -81,16 +85,37 @@ class SoundManager:
 
     def _init_sounds(self) -> None:
         audio_dir = Path(__file__).resolve().parent / "assets" / "audio"
-        # Source-declared locale sets are loaded only when their files exist.
-        # This does not advertise a language or synthesize missing speech.
-        for loc in PHONICS_DATA:
-            loc_dir = audio_dir / loc
-            if loc_dir.exists():
-                for wav in loc_dir.glob("*.wav"):
-                    try:
-                        self._sounds[f"{loc}:{wav.stem.lower()}"] = pygame.mixer.Sound(str(wav))
-                    except Exception:
-                        pass
+        # Keep existing approved WAV filenames, but give language selection to
+        # the shared resolver. A single Activity preloads just its own locale,
+        # plus compatible English fallback stems.
+        languages = (self._locale,) if self._resources else tuple(PHONICS_DATA)
+        for loc in languages:
+            selected_dir = audio_dir / loc
+            english_dir = audio_dir / "en"
+            filenames = {
+                path.name
+                for directory in (selected_dir, english_dir)
+                if directory.is_dir()
+                for path in directory.glob("*.wav")
+            }
+            for filename in sorted(filenames):
+                stem = Path(filename).stem
+                if self._resources is not None:
+                    # This legacy game uses filename-stem cue IDs. The shared
+                    # resolver owns their locale and fallback from now on.
+                    audio_path = self._resources.audio_path(
+                        "speech.legacy", filename=filename
+                    )
+                else:
+                    audio_path = selected_dir / filename
+                    if not audio_path.is_file():
+                        audio_path = english_dir / filename
+                if audio_path is None or not audio_path.is_file():
+                    continue
+                try:
+                    self._sounds[f"{loc}:{stem.lower()}"] = pygame.mixer.Sound(str(audio_path))
+                except (OSError, pygame.error):
+                    continue
 
         pop_samples = [
             int(math.sin(2 * math.pi * (600 + (1200 - i) * 0.8) * (i / 22050.0)) * max(0.0, 1.0 - (i / 22050.0) / 0.05) * 14000)
@@ -151,9 +176,18 @@ class SoundManager:
             self.play("chime")
 
     def play_praise(self, locale: str = "it") -> None:
-        praise_keys = ["ben_fatto", "fantastico", "ottimo"] if locale == "it" else ["great_job", "wonderful", "you_did_it"]
-        chosen = random.choice(praise_keys)
+        praise_cues = {
+            "it": ("ben_fatto", "fantastico", "ottimo"),
+            "en": ("great_job", "wonderful", "you_did_it"),
+            "es": ("bien_hecho", "fantastico", "muy_bien"),
+            "fr": ("bien_joue", "fantastique", "tres_bien"),
+        }
+        cues = praise_cues.get(locale, praise_cues["en"])
+        index = random.randrange(len(cues))
+        chosen = cues[index]
         key = f"{locale}:{chosen}"
+        if key not in self._sounds:
+            key = f"{locale}:{praise_cues['en'][index]}"
         if key in self._sounds:
             self.play(key)
         else:
@@ -206,7 +240,6 @@ class ForestaApp:
         self.metrics = ChildUiMetrics.for_size(*self.screen.get_size())
         self.canvas = PygameReferenceCanvas(self.screen)
         self.typography = GreiaTypography()
-        self.sounds = SoundManager()
 
         try:
             self.storage = get_storage()
@@ -220,6 +253,7 @@ class ForestaApp:
         context = resolve_activity_locale(profile_lang, support)
         self.resources = LocalizedResources(package_root, context) if context else None
         self.active_locale = context.selected.language if context else "it"
+        self.sounds = SoundManager(resources=self.resources, locale=self.active_locale)
         vocab_items = PHONICS_DATA.get(self.active_locale, PHONICS_DATA["it"])
 
         # Persistent counters.
