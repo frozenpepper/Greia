@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="emblem_voice_handle" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="230" rx="30" ry="5" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <!-- voice arcs on both sides, coloured like the story scenes -->
+  <g id="fx_back" fill="none" stroke-linecap="round">
+    <path d="M178 54 A60 60 0 0 1 178 130 M78 54 A60 60 0 0 0 78 130" stroke="#4B372F" stroke-width="18"/>
+    <path d="M178 54 A60 60 0 0 1 178 130 M78 54 A60 60 0 0 0 78 130" stroke="#FFC234" stroke-width="11"/>
+    <path d="M204 32 A90 90 0 0 1 204 152 M52 32 A90 90 0 0 0 52 152" stroke="#4B372F" stroke-width="18"/>
+    <path d="M204 32 A90 90 0 0 1 204 152 M52 32 A90 90 0 0 0 52 152" stroke="#F46F61" stroke-width="11"/>
+  </g>
+  <g id="subject" stroke="#4B372F" stroke-width="5" stroke-linejoin="round">
+    <path d="M104 136 L152 136 L141 218 C140 224 135 227 128 227 C121 227 116 224 115 218 Z" fill="url(#emblem_voice_handle)"/>
+    <circle cx="128" cy="176" r="8" fill="#F46F61" stroke-width="3.5"/>
+    <rect x="90" y="22" width="76" height="120" rx="38" fill="#EEDDBA"/>
+    <path d="M108 56 L148 56 M102 78 L154 78 M102 100 L154 100" fill="none" stroke="#B5A389" stroke-width="6" stroke-linecap="round"/>
+    <rect x="94" y="126" width="68" height="20" rx="10" fill="#4B607B"/>
+    <ellipse cx="108" cy="42" rx="9" ry="7" fill="#FFFFFF" opacity="0.85" stroke="none" transform="rotate(-30 108 42)"/>
+  </g>
+</svg>

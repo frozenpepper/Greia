@@ -1,24 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- Front Left Block (A) -->
-  <g transform="translate(42, 110)">
-    <rect x="0" y="0" width="76" height="76" rx="14" fill="#FF5252" stroke="#D32F2F" stroke-width="6"/>
-    <text x="38" y="54" font-family="Arial, sans-serif" font-weight="900" font-size="46" fill="#FFFFFF" text-anchor="middle">A</text>
+  <defs>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="syllables_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#syllables_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
   </g>
-  <!-- Back Center High Block (BA) -->
-  <g transform="translate(90, 42)">
-    <rect x="0" y="0" width="80" height="80" rx="14" fill="#42A5F5" stroke="#1976D2" stroke-width="6"/>
-    <text x="40" y="54" font-family="Arial, sans-serif" font-weight="900" font-size="36" fill="#FFFFFF" text-anchor="middle">BA</text>
+  <g id="shadow">
+    <ellipse cx="124" cy="214" rx="90" ry="8" fill="#8E5F33" opacity="0.18"/>
   </g>
-  <!-- Front Right Block (MA) -->
-  <g transform="translate(138, 110)">
-    <rect x="0" y="0" width="76" height="76" rx="14" fill="#FFCA28" stroke="#FFA000" stroke-width="6"/>
-    <text x="38" y="54" font-family="Arial, sans-serif" font-weight="900" font-size="34" fill="#5D4037" text-anchor="middle">MA</text>
+  <!-- consonant piece + vowel piece clicking together into one syllable -->
+  <g id="subject" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M44 108 C44 100 50 94 58 94 L122 94 C130 94 134 100 134 108 L134 126 C122 120 112 128 112 140 C112 152 122 160 134 154 L134 190 C134 198 130 204 122 204 L58 204 C50 204 44 198 44 190 Z" fill="#9464C9"/>
+    <path d="M140 108 C140 100 144 94 152 94 L206 94 C214 94 220 100 220 108 L220 190 C220 198 214 204 206 204 L152 204 C144 204 140 198 140 190 L140 156 C128 162 118 154 118 140 C118 126 128 118 140 124 Z" fill="#44B8AE"/>
+    <path d="M54 110 L70 106 M150 110 L166 106" fill="none" stroke="#FFFFFF" stroke-width="5" opacity="0.6"/>
+    <!-- B and A as paths -->
+    <path d="M70 120 L70 180 M70 120 L88 120 C110 120 110 148 88 148 L70 148 M88 148 C114 148 114 180 88 180 L70 180" fill="none" stroke="#FFFBEB" stroke-width="10"/>
+    <path d="M158 182 L180 120 L202 182 M166 162 L194 162" fill="none" stroke="#FFFBEB" stroke-width="10"/>
   </g>
-  <!-- Magic Wand & Sparkles -->
-  <g transform="translate(180, 40) rotate(-35)">
-    <rect x="0" y="0" width="10" height="70" rx="4" fill="#795548"/>
-    <rect x="0" y="0" width="10" height="18" rx="3" fill="#ECEFF1"/>
-    <polygon points="5,-14 9,-4 19,-4 11,2 14,12 5,6 -4,12 -1,2 -9,-4 1,-4" fill="#FFD54F"/>
+  <!-- magic wand touching the join: the two sounds become one syllable -->
+  <g id="accent_wand" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M150 58 L204 34" fill="none" stroke-width="13"/>
+    <path d="M150 58 L204 34" fill="none" stroke="#D85683" stroke-width="6"/>
+    <path d="M136 36 L141 52 L158 52 L144 62 L150 78 L136 68 L122 78 L128 62 L114 52 L131 52 Z" fill="#FBBF24" stroke="#9A742A" stroke-width="3.5"/>
   </g>
-  <polygon points="70,36 73,43 80,43 75,48 77,55 70,51 63,55 65,48 60,43 67,43" fill="#FFD54F"/>
+  <g id="accent_sparkle" fill="#FFFBEB">
+    <circle cx="100" cy="62" r="5"/>
+    <circle cx="90" cy="44" r="3.5"/>
+  </g>
 </svg>

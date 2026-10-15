@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- coral light (mix 35% white) -> coral -->
+    <linearGradient id="voice_stories_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A198"/>
+      <stop offset="1" stop-color="#F46F61"/>
+    </linearGradient>
+    <!-- ocean light -> ocean -->
+    <linearGradient id="voice_stories_handle" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#voice_stories_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="106" cy="226" rx="34" ry="6" fill="#8F4D43" opacity="0.18"/>
+  </g>
+  <!-- voice arcs coloured like the story scenes: sky, forest, sea -->
+  <g id="accent_waves" fill="none" stroke-linecap="round">
+    <path d="M154 58 A52 52 0 0 1 154 118" stroke="#4B372F" stroke-width="17"/>
+    <path d="M154 58 A52 52 0 0 1 154 118" stroke="#FFC234" stroke-width="10"/>
+    <path d="M172 46 A74 74 0 0 1 172 130" stroke="#4B372F" stroke-width="17"/>
+    <path d="M172 46 A74 74 0 0 1 172 130" stroke="#59B86A" stroke-width="10"/>
+    <path d="M190 33 A96 96 0 0 1 190 143" stroke="#4B372F" stroke-width="17"/>
+    <path d="M190 33 A96 96 0 0 1 190 143" stroke="#4A91D8" stroke-width="10"/>
+  </g>
+  <g id="subject" transform="rotate(16 96 140)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round">
+    <path d="M74 128 L118 128 L108 210 C107 216 103 219 96 219 C89 219 85 216 84 210 Z" fill="url(#voice_stories_handle)"/>
+    <circle cx="96" cy="170" r="7" fill="#F46F61" stroke-width="3"/>
+    <rect x="62" y="40" width="68" height="92" rx="34" fill="#EEDDBA"/>
+    <path d="M78 66 L114 66 M74 84 L118 84 M74 102 L118 102" fill="none" stroke="#B5A389" stroke-width="5" stroke-linecap="round"/>
+    <rect x="66" y="120" width="60" height="18" rx="9" fill="#4B607B"/>
+    <ellipse cx="80" cy="56" rx="8" ry="6" fill="#FFFFFF" opacity="0.85" stroke="none" transform="rotate(-30 80 56)"/>
+  </g>
+</svg>

@@ -1,44 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f59e0b"/>
-      <stop offset="100%" stop-color="#d97706"/>
-    </linearGradient>
-    <linearGradient id="box" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fef08a"/>
-      <stop offset="100%" stop-color="#fde047"/>
-    </linearGradient>
-    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#d97706"/>
-      <stop offset="100%" stop-color="#b45309"/>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="measure_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
     </linearGradient>
   </defs>
-  <!-- Background rounded card -->
-  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
-  
-  <!-- Parcel / Gift Box -->
-  <rect x="52" y="56" width="152" height="100" rx="14" fill="url(#box)" stroke="#ca8a04" stroke-width="4"/>
-  <!-- Ribbon Vertical -->
-  <rect x="114" y="56" width="28" height="100" fill="#f43f5e"/>
-  <!-- Ribbon Horizontal -->
-  <rect x="52" y="94" width="152" height="24" fill="#f43f5e"/>
-  <!-- Bow on top -->
-  <ellipse cx="106" cy="48" rx="16" ry="10" fill="#fb7185"/>
-  <ellipse cx="150" cy="48" rx="16" ry="10" fill="#fb7185"/>
-  <circle cx="128" cy="48" r="8" fill="#e11d48"/>
-
-  <!-- Wooden Ruler / Measuring Rail below -->
-  <rect x="36" y="174" width="184" height="42" rx="8" fill="url(#wood)" stroke="#78350f" stroke-width="3"/>
-  <!-- Ruler Unit Ticks & Blocks -->
-  <!-- Block 1 -->
-  <rect x="42" y="180" width="38" height="30" rx="4" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
-  <text x="61" y="202" font-family="sans-serif" font-size="16" font-weight="bold" fill="#78350f" text-anchor="middle">1</text>
-  <!-- Block 2 -->
-  <rect x="84" y="180" width="38" height="30" rx="4" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
-  <text x="103" y="202" font-family="sans-serif" font-size="16" font-weight="bold" fill="#78350f" text-anchor="middle">2</text>
-  <!-- Block 3 -->
-  <rect x="126" y="180" width="38" height="30" rx="4" fill="#fde68a" stroke="#b45309" stroke-width="2"/>
-  <text x="145" y="202" font-family="sans-serif" font-size="16" font-weight="bold" fill="#78350f" text-anchor="middle">3</text>
-  <!-- Empty rail slot 4 -->
-  <rect x="168" y="180" width="46" height="30" rx="4" fill="#92400e" opacity="0.6"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#measure_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="222" rx="94" ry="7" fill="#8E5F33" opacity="0.18"/>
+  </g>
+  <!-- three parcels to compare: short, medium, tall -->
+  <g id="subject" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="38" y="150" width="56" height="48" rx="6" fill="#4A91D8"/><rect x="104" y="112" width="50" height="86" rx="6" fill="#59B86A"/><rect x="166" y="72" width="50" height="126" rx="6" fill="#D85683"/>
+    <path d="M66 152 L66 196 M129 114 L129 196 M191 74 L191 196" fill="none" stroke="#FFFBEB" stroke-width="8"/>
+    <rect x="34" y="142" width="64" height="16" rx="5" fill="#89B8E6"/><rect x="100" y="104" width="58" height="16" rx="5" fill="#93D19E"/><rect x="162" y="64" width="58" height="16" rx="5" fill="#E691AE"/>
+    <path d="M45 168 L45 186 M111 130 L111 150 M173 90 L173 112" fill="none" stroke="#FFFFFF" stroke-width="5" opacity="0.6"/>
+    <g fill="#FFFBEB" stroke-width="3.5"><ellipse cx="57" cy="135" rx="10" ry="6.5" transform="rotate(-25 57 135)"/><ellipse cx="75" cy="135" rx="10" ry="6.5" transform="rotate(25 75 135)"/><circle cx="66" cy="139" r="5.5"/><ellipse cx="120" cy="97" rx="10" ry="6.5" transform="rotate(-25 120 97)"/><ellipse cx="138" cy="97" rx="10" ry="6.5" transform="rotate(25 138 97)"/><circle cx="129" cy="101" r="5.5"/><ellipse cx="182" cy="57" rx="10" ry="6.5" transform="rotate(-25 182 57)"/><ellipse cx="200" cy="57" rx="10" ry="6.5" transform="rotate(25 200 57)"/><circle cx="191" cy="61" r="5.5"/></g>
+  </g>
+  <!-- the ruler they stand on -->
+  <g id="accent_ruler" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="28" y="196" width="200" height="24" rx="6" fill="#FFC234" stroke-width="4.5"/>
+    <path d="M48 198 L48 210 M68 198 L68 206 M88 198 L88 210 M108 198 L108 206 M128 198 L128 210 M148 198 L148 206 M168 198 L168 210 M188 198 L188 206 M208 198 L208 210" fill="none" stroke-width="3.5"/>
+  </g>
 </svg>

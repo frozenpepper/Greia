@@ -1,43 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="owl_body" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#7E57C2"/>
-      <stop offset="100%" stop-color="#512DA8"/>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="word_forest_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
     </linearGradient>
-    <linearGradient id="owl_tummy" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#EDE7F6"/>
-      <stop offset="100%" stop-color="#D1C4E9"/>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="word_forest_crown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93D19E"/>
+      <stop offset="1" stop-color="#59B86A"/>
     </linearGradient>
   </defs>
-  <!-- Oak Branch -->
-  <path d="M24 190 Q120 170 232 195" fill="none" stroke="#795548" stroke-width="14" stroke-linecap="round"/>
-  <circle cx="68" cy="180" r="14" fill="#66BB6A"/>
-  <circle cx="82" cy="172" r="10" fill="#81C784"/>
-  <circle cx="188" cy="185" r="14" fill="#66BB6A"/>
-  <!-- Owl Body -->
-  <ellipse cx="128" cy="120" rx="58" ry="64" fill="url(#owl_body)"/>
-  <!-- Ear Tufts -->
-  <polygon points="80,72 88,38 108,65" fill="#512DA8"/>
-  <polygon points="176,72 168,38 148,65" fill="#512DA8"/>
-  <!-- Belly -->
-  <ellipse cx="128" cy="138" rx="38" ry="40" fill="url(#owl_tummy)"/>
-  <!-- Belly Feather Scallops -->
-  <path d="M116 126 Q128 132 140 126 M110 142 Q128 150 146 142 M116 158 Q128 164 140 158" fill="none" stroke="#9575CD" stroke-width="3" stroke-linecap="round"/>
-  <!-- Big Eyes -->
-  <circle cx="102" cy="98" r="22" fill="#FFF59D"/>
-  <circle cx="102" cy="98" r="16" fill="#FFA000"/>
-  <circle cx="102" cy="98" r="10" fill="#212121"/>
-  <circle cx="98" cy="94" r="4" fill="#FFFFFF"/>
-  <circle cx="154" cy="98" r="22" fill="#FFF59D"/>
-  <circle cx="154" cy="98" r="16" fill="#FFA000"/>
-  <circle cx="154" cy="98" r="10" fill="#212121"/>
-  <circle cx="150" cy="94" r="4" fill="#FFFFFF"/>
-  <!-- Beak -->
-  <polygon points="120,108 136,108 128,124" fill="#FF7043"/>
-  <!-- Letter Sparkles -->
-  <text x="180" y="68" font-family="Arial, sans-serif" font-weight="bold" font-size="28" fill="#FFD54F">A</text>
-  <text x="52" y="78" font-family="Arial, sans-serif" font-weight="bold" font-size="24" fill="#80D8FF">B</text>
-  <!-- Feet Claws -->
-  <ellipse cx="114" cy="184" rx="8" ry="4" fill="#FF7043"/>
-  <ellipse cx="142" cy="184" rx="8" ry="4" fill="#FF7043"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#word_forest_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="104" cy="220" rx="58" ry="8" fill="#8E5F33" opacity="0.18"/>
+  </g>
+  <g id="subject_tree" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M92 220 C98 196 98 170 94 146 L118 146 C114 170 114 196 120 220 Z" fill="#B87735" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M60 150 C34 150 26 118 46 104 C36 78 62 54 86 64 C96 38 136 38 146 62 C170 54 192 78 180 102 C198 118 188 150 164 150 Z" fill="url(#word_forest_crown)" stroke="#51714A" stroke-width="4.5"/>
+    <ellipse cx="80" cy="82" rx="14" ry="8" fill="#FFFFFF" opacity="0.6" transform="rotate(-20 80 82)"/>
+    <!-- small letter fruits still on the branches -->
+    <g stroke="#4B372F" stroke-width="3.5">
+      <circle cx="76" cy="122" r="12" fill="#D85683"/>
+      <circle cx="132" cy="96" r="12" fill="#FFC234"/>
+      <circle cx="158" cy="128" r="10" fill="#9464C9"/>
+    </g>
+  </g>
+  <!-- the letter the child catches, falling from the tree -->
+  <g id="accent_motion" fill="none" stroke="#FFFBEB" stroke-width="6" stroke-linecap="round">
+    <path d="M196 136 L200 150 M214 132 L216 144"/>
+  </g>
+  <g id="subject_letter" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="186" cy="186" r="34" fill="#FFFBEB" stroke-width="4.5"/>
+    <ellipse cx="172" cy="168" rx="8" ry="5" fill="#FFFFFF" stroke="none" transform="rotate(-30 172 168)"/>
+    <path d="M170 204 L186 164 L202 204 M176 192 L196 192" fill="none" stroke="#4A91D8" stroke-width="9"/>
+  </g>
 </svg>

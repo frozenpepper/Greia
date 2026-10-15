@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- leaf light (mix 35% white) -> leaf -->
+    <linearGradient id="encyclopedia_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93D19E"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- sunshine -> orange -->
+    <linearGradient id="encyclopedia_planet" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#FFC234"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#encyclopedia_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="218" rx="86" ry="9" fill="#516B47" opacity="0.18"/>
+  </g>
+  <g id="subject_book" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round">
+    <!-- cover peeking under the open pages -->
+    <path d="M30 150 L128 164 L226 150 L226 198 C190 192 156 196 128 212 C100 196 66 192 30 198 Z" fill="#4A91D8"/>
+    <path d="M38 136 C70 128 104 134 128 152 L128 202 C104 186 70 182 38 188 Z" fill="#FFFBEB"/>
+    <path d="M218 136 C186 128 152 134 128 152 L128 202 C152 186 186 182 218 188 Z" fill="#F7EBCB"/>
+    <path d="M56 152 C76 148 96 152 112 160 M56 168 C76 164 96 168 112 176 M144 160 C160 152 180 148 200 152 M144 176 C160 168 180 164 200 168" fill="none" stroke="#B5A389" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+  <g id="subject_planet" stroke="#4B372F" stroke-linejoin="round">
+    <!-- ringed planet popping out of the book: the far half of the ring sits behind -->
+    <path d="M70 104 C70 92 186 66 186 78" fill="none" stroke-width="16" stroke-linecap="round"/>
+    <path d="M70 104 C70 92 186 66 186 78" fill="none" stroke="#D85683" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="128" cy="92" r="38" fill="url(#encyclopedia_planet)" stroke-width="4.5"/>
+    <path d="M100 78 C120 70 144 70 162 76" fill="none" stroke="#F7BD7E" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="112" cy="70" rx="9" ry="6" fill="#FFFFFF" opacity="0.85" stroke="none" transform="rotate(-30 112 70)"/>
+    <path d="M66 106 C66 124 194 92 190 76" fill="none" stroke-width="16" stroke-linecap="round"/>
+    <path d="M66 106 C66 124 194 92 190 76" fill="none" stroke="#D85683" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <g id="accent" stroke="#9A742A" stroke-width="3" stroke-linejoin="round" fill="#FBBF24">
+    <path d="M200 30 Q203 44 216 47 Q203 50 200 64 Q197 50 184 47 Q197 44 200 30 Z"/>
+    <path d="M50 40 Q52 49 60 51 Q52 53 50 62 Q48 53 40 51 Q48 49 50 40 Z"/>
+  </g>
+</svg>

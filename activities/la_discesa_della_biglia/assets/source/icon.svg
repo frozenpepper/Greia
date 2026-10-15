@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- ocean light (mix 35% white) -> ocean -->
+    <linearGradient id="marble_run_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#89B8E6"/>
+      <stop offset="1" stop-color="#4A91D8"/>
+    </linearGradient>
+    <!-- raspberry light -> raspberry -->
+    <linearGradient id="marble_run_marble" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#E691AE"/>
+      <stop offset="1" stop-color="#D85683"/>
+    </linearGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#marble_run_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="74" cy="222" rx="42" ry="7" fill="#4B5B73" opacity="0.18"/>
+  </g>
+  <g id="basket" stroke="#51714A" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <!-- a finished marble already resting in the basket -->
+    <circle cx="70" cy="178" r="14" fill="#FFC234" stroke="#9C7631" stroke-width="3.5"/>
+    <ellipse cx="65" cy="173" rx="4.5" ry="3" fill="#FFFFFF" opacity="0.9" stroke="none"/>
+    <path d="M40 186 L108 186 L100 214 C98 220 94 222 88 222 L60 222 C54 222 50 220 48 214 Z" fill="#59B86A"/>
+    <path d="M47 200 L102 200" fill="none" stroke-width="3"/>
+    <path d="M62 188 L66 220 M86 188 L82 220" fill="none" stroke-width="3"/>
+    <rect x="33" y="178" width="82" height="13" rx="6.5" fill="#93D19E"/>
+  </g>
+  <g id="ramps" fill="none" stroke-linecap="round">
+    <path d="M214 148 L110 170" stroke="#4B372F" stroke-width="30"/>
+    <path d="M214 148 L110 170" stroke="#F39A38" stroke-width="22"/>
+    <path d="M210 142 L112 163" stroke="#F7BD7E" stroke-width="6"/>
+    <path d="M42 96 L182 124" stroke="#4B372F" stroke-width="30"/>
+    <path d="M42 96 L182 124" stroke="#F39A38" stroke-width="22"/>
+    <path d="M46 90 L180 117" stroke="#F7BD7E" stroke-width="6"/>
+  </g>
+  <g id="pegs" fill="#976433" stroke="#4B372F" stroke-width="3.5">
+    <circle cx="44" cy="97" r="7"/>
+    <circle cx="180" cy="124" r="7"/>
+    <circle cx="212" cy="149" r="7"/>
+    <circle cx="112" cy="170" r="7"/>
+  </g>
+  <g id="accent">
+    <circle cx="202" cy="116" r="5" fill="#FFFFFF" opacity="0.85"/>
+    <circle cx="213" cy="130" r="4" fill="#FFFFFF" opacity="0.65"/>
+    <path d="M198 32 Q201 46 214 49 Q201 52 198 66 Q195 52 182 49 Q195 46 198 32 Z" fill="#FBBF24" stroke="#9A742A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M28 48 Q44 44 60 50 M22 68 Q42 64 62 70" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g id="subject">
+    <circle cx="98" cy="66" r="28" fill="url(#marble_run_marble)" stroke="#8A4555" stroke-width="4"/>
+    <path d="M76 80 C86 64 104 56 122 60" fill="none" stroke="#FBE1EA" stroke-width="7" stroke-linecap="round" opacity="0.85"/>
+    <ellipse cx="88" cy="53" rx="8" ry="5.5" fill="#FFFFFF" transform="rotate(-30 88 53)"/>
+  </g>
+</svg>

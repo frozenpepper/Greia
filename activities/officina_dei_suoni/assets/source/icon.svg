@@ -1,37 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0284c7" />
-      <stop offset="100%" stop-color="#0f172a" />
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="sound_workshop_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
     </linearGradient>
-    <linearGradient id="tile_grad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#fef08a" />
-      <stop offset="100%" stop-color="#fde047" />
-    </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
-
-  <!-- Background Squircle -->
-  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bg)" stroke="#38bdf8" stroke-width="12" />
-
-  <!-- Workshop Gear / Machine Cog in background -->
-  <circle cx="256" cy="240" r="160" fill="#0369a1" opacity="0.5" />
-  <circle cx="256" cy="240" r="120" fill="#075985" />
-
-  <!-- Connecting Sound Rail -->
-  <rect x="100" y="226" width="312" height="28" rx="14" fill="#334155" />
-  <circle cx="160" cy="240" r="16" fill="#ec4899" filter="url(#glow)" />
-  <circle cx="256" cy="240" r="16" fill="#eab308" filter="url(#glow)" />
-  <circle cx="352" cy="240" r="16" fill="#22c55e" filter="url(#glow)" />
-
-  <!-- Central Wooden / Golden Letter Tile [ M ] -->
-  <rect x="180" y="270" width="152" height="152" rx="28" fill="url(#tile_grad)" stroke="#ca8a04" stroke-width="8" />
-  <text x="256" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="100" font-weight="900" text-anchor="middle" fill="#854d0e">M</text>
-
-  <!-- Sound Waves / Music Note -->
-  <path d="M 370 140 Q 410 180 370 220" fill="none" stroke="#38bdf8" stroke-width="10" stroke-linecap="round" />
-  <path d="M 395 120 Q 450 180 395 240" fill="none" stroke="#bae6fd" stroke-width="10" stroke-linecap="round" />
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#sound_workshop_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="180" cy="220" rx="44" ry="7" fill="#8E5F33" opacity="0.18"/>
+  </g>
+  <!-- hero: a round, friendly open mouth saying the first sound -->
+  <g id="subject_mouth" stroke="#4B372F" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M30 104 C30 76 54 62 88 62 C122 62 146 76 146 104 C146 138 120 164 88 164 C56 164 30 138 30 104 Z" fill="#D85683"/>
+    <path d="M50 104 C50 88 66 82 88 82 C110 82 126 88 126 104 C126 128 110 144 88 144 C66 144 50 128 50 104 Z" fill="#6A3040"/>
+    <path d="M58 90 C70 84 106 84 118 90 L116 102 C102 106 74 106 60 102 Z" fill="#FFFBEB" stroke-width="3.5"/>
+    <path d="M62 132 C68 118 108 118 114 132 C106 140 98 144 88 144 C78 144 70 140 62 132 Z" fill="#F46F61" stroke-width="3.5"/>
+    <path d="M44 86 C50 78 58 74 66 72" fill="none" stroke="#FFFFFF" stroke-width="5" opacity="0.6"/>
+  </g>
+  <!-- the sound travels out ... -->
+  <g id="accent_waves" fill="none" stroke="#FFFBEB" stroke-width="8" stroke-linecap="round">
+    <path d="M164 82 Q174 104 164 126"/>
+    <path d="M184 68 Q200 104 184 140" opacity="0.8"/>
+  </g>
+  <!-- ... onto its wooden letter tile -->
+  <g id="accent_tile" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="136" y="140" width="84" height="76" rx="14" fill="#B87735" stroke-width="4.5"/>
+    <rect x="143" y="145" width="70" height="62" rx="10" fill="#EEDDBA" stroke="none"/>
+    <path d="M157 196 L157 158 L178 184 L199 158 L199 196" fill="none" stroke="#4A91D8" stroke-width="10"/>
+  </g>
 </svg>
