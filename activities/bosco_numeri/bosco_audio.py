@@ -47,12 +47,8 @@ class BoscoAudio:
         if cached is not None:
             return cached
 
-        locale = self.resources.context.selected.language
-        path = self.root / "assets" / "audio" / locale / f"{name}.wav"
-        if not path.is_file():
-            path = self.root / "assets" / "audio" / "it" / f"{name}.wav"
-
-        if not path.is_file():
+        path = self.resources.audio_path(name, filename=f"{name}.wav")
+        if path is None:
             return None
         try:
             sound = pygame.mixer.Sound(str(path))
