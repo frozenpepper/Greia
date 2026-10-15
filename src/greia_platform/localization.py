@@ -391,6 +391,35 @@ class LocalizedResources:
         )
         return cue.path if cue is not None else None
 
+    def speech_paths(self) -> dict[str, Path]:
+        """List short prerecorded clips for eager Activity sound caches.
+
+        The locale resolver owns file discovery and English fallback; an
+        Activity may keep its own mixer, channels and sound decoding. Both
+        existing package speech directories work without per-locale JSON.
+        These are filenames, not a promise that every semantic cue exists.
+        """
+        selected = self.context.selected.value
+        folders = (
+            self.package_root / "assets" / "audio" / selected,
+            self.package_root / "locales" / selected / "audio",
+            self.package_root / "assets" / "audio" / "en",
+            self.package_root / "locales" / "en" / "audio",
+        )
+        names: dict[str, str] = {}
+        for folder in folders:
+            if not folder.is_dir():
+                continue
+            for candidate in sorted(folder.iterdir()):
+                if candidate.is_file() and candidate.suffix.lower() in _ALLOWED_AUDIO_SUFFIXES:
+                    names.setdefault(candidate.stem, candidate.name)
+        result: dict[str, Path] = {}
+        for stem, filename in names.items():
+            path = self.audio_path(stem, filename=filename)
+            if path is not None:
+                result[stem] = path
+        return result
+
     def audio_cue(
         self,
         key: str,
