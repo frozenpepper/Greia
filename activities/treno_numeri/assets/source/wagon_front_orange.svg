@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 296 132" width="296" height="132">
+  <!-- Treno Numeri: open wagon, front side and chassis in front of the cargo (orange). -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="wagon_front_orange_side" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="wagon_front">
+    <rect x="6" y="66" width="284" height="38" rx="12" fill="url(#wagon_front_orange_side)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="22" y="71" width="252" height="5" rx="2.5" fill="#FFFFFF" opacity="0.5"/>
+    <path d="M20 90 H276" stroke="#976433" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="20" cy="81" r="3.5" fill="#976433"/>
+    <circle cx="276" cy="81" r="3.5" fill="#976433"/>
+  </g>
+  <g id="chassis">
+    <rect x="12" y="100" width="272" height="12" rx="6" fill="#253B59" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="0" y="101" width="14" height="9" rx="3" fill="#253B59" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+    <rect x="282" y="101" width="14" height="9" rx="3" fill="#253B59" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -22,12 +22,6 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
             PROJECT_ROOT / "activities" / "piccola_serra" / "serra_renderer.py",
             PROJECT_ROOT / "activities" / "piccola_serra" / "serra_model.py",
         ),
-        "treno": (
-            PROJECT_ROOT / "activities" / "treno_numeri" / "main.py",
-            PROJECT_ROOT / "activities" / "treno_numeri" / "treno_app.py",
-            PROJECT_ROOT / "activities" / "treno_numeri" / "treno_renderer.py",
-            PROJECT_ROOT / "activities" / "treno_numeri" / "treno_model.py",
-        ),
     }
 
     def _source(self, activity: str) -> str:
@@ -83,42 +77,6 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
             "serra must gate particle update on non-victory",
         )
 
-        treno = self._source("treno")
-        # Terminal gate (victory + completion) must be before active arrival logic.
-        # Monolith used `if is_victory:` / `if train_state == "arriving":`;
-        # decomposed uses `if self.model.is_victory:` / `if self.train_state == ...`.
-        # Accept either but ensure ordering of the gate before arrival update.
-        self.assertIn("completion_presented", treno)
-        arrival_markers = [
-            'if train_state == "arriving":',
-            'if self.train_state == "arriving":',
-            'if train_state == \'arriving\':',
-        ]
-        arrival_idx = min(
-            (treno.index(m) for m in arrival_markers if m in treno),
-            default=None,
-        )
-        self.assertIsNotNone(arrival_idx, "treno must contain arrival train_state check")
-        assert arrival_idx is not None
-        # Victory gate variants.
-        victory_markers = [
-            "if is_victory:\n            if not completion_presented:",
-            "if self.model.is_victory:\n                if not self.completion_presented:",
-            "if self.model.is_victory:",
-        ]
-        victory_idx = min(
-            (treno.index(m) for m in victory_markers if m in treno),
-            default=None,
-        )
-        self.assertIsNotNone(victory_idx, "treno must contain victory gate")
-        assert victory_idx is not None
-        self.assertLess(victory_idx, arrival_idx)
-        if "if is_victory:\n            if not completion_presented:" in treno:
-            self.assertLess(
-                treno.index("if is_victory:\n            if not completion_presented:"),
-                treno.index("if train_state == \"arriving\":"),
-            )
-
     def test_completion_facts_are_declared_and_once_only_terminal_transitions(self) -> None:
         maze = self._source("labirinto")
         self.assertEqual(maze.count('emit_activity_event(\n                            "maze.completed"'), 1)
@@ -127,20 +85,27 @@ class FirstPartyTerminalRenderingContractTests(unittest.TestCase):
         # Harvest completion is emitted once; one-liner vs multi-line still counts once.
         self.assertEqual(serra.count('"greenhouse.harvest_completed"'), 1)
 
-        treno = self._source("treno")
-        self.assertEqual(treno.count('"train.station_completed"'), 1)
-        self.assertEqual(treno.count('"train.journey_completed"'), 1)
-        self.assertNotIn('"train.problem_solved"', treno)
-        # Keys are scoped per journey so a replayed journey is never
-        # deduplicated against the previous one (see treno_numeri tests).
-        self.assertIn(
-            'idempotency_key=f"train:{self._journey_id}:station:{self.model.round_idx}"',
-            treno,
-            "station idempotency key must be present",
+    def test_number_express_uses_the_shared_completion_overlay(self) -> None:
+        """Treno Numeri moved to the ADR 0037 kit: the shared cast completion
+        scene is a modal Overlay (no per-Activity terminal loop), facts are
+        published once each, and keys are scoped per journey so a replayed
+        journey is never deduplicated against the previous one."""
+
+        root = PROJECT_ROOT / "activities" / "treno_numeri"
+        app = (root / "treno_app.py").read_text(encoding="utf-8")
+        services = (root / "treno_services.py").read_text(encoding="utf-8")
+        self.assertIn("CompletionOverlay(self.completion", app)
+        self.assertIn("CompletionScene(self.kit", app)
+        self.assertIn("self.completion.prepare(", app)
+        self.assertIsNone(
+            re.search(r"Surface\(\(REFERENCE_WIDTH,\s*REFERENCE_HEIGHT\),\s*pygame\.SRCALPHA\)", app)
         )
-        self.assertIn(
-            'idempotency_key=f"train:{self._journey_id}:completed"', treno
-        )
+        self.assertEqual(services.count('"train.station_completed"'), 1)
+        self.assertEqual(services.count('"train.journey_completed"'), 1)
+        self.assertNotIn('"train.problem_solved"', services)
+        self.assertIn('f"train:{journey_id}:station:{index}"', services)
+        self.assertIn('f"train:{journey_id}:completed"', services)
+        self.assertEqual(app.count("self._journey_id = uuid4().hex"), 2)  # start + restart
 
 
 if __name__ == "__main__":

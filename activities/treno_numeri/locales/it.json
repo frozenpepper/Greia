@@ -4,21 +4,8 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Il Treno dei Numeri",
-    "prompt.load": "Carica {count} {item} nel vagone!",
-    "hud.station": "Stazione {number}",
-    "hud.score": "Stelle: ★ {stars}",
-    "btn.whistle": "🚂 Fischia!",
-    "btn.depart": "🟢 Parti!",
-    "btn.reset": "🔄 Riprova",
-    "btn.play_again": "🎉 Gioca Ancora!",
-    "victory.title": "Evviva! Il treno è arrivato al capolinea! 🚂🌟",
-    "victory.subtitle": "Ottimo lavoro! Hai completato tutte le stazioni!",
-    "item.apple": "mele 🍎",
-    "item.carrot": "carote 🥕",
-    "item.banana": "banane 🍌",
-    "item.strawberry": "fragole 🍓",
-    "item.pumpkin": "zucche 🎃",
-    "item.orange": "arance 🍊"
+    "victory.title": "Ogni carico era giusto!",
+    "button.play_again": "Gioca ancora"
   },
   "audio": {
     "activity.title": {

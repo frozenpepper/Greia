@@ -11,14 +11,18 @@ categories = ["learn", "play"]
 discovery_tags = ["numbers", "puzzles"]
 
 [education]
-categories = ["early_math", "counting", "fine_motor"]
+categories = ["early_math", "counting", "number_recognition"]
 difficulty = 2
 recommended_age_min = 4
-recommended_age_max = 7
+recommended_age_max = 5
+difficulty_min = 1
+difficulty_max = 5
+adaptive_difficulty = true
 skills = [
   { id = "math.counting.cardinality", weight = 3 },
-  { id = "math.matching.quantity", weight = 2 },
-  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "math.quantity.numeral_match", weight = 2 },
+  { id = "math.comparison.quantity", weight = 2 },
+  { id = "math.counting.one_to_one", weight = 1 },
 ]
 events = [
   { id = "train.station_completed", kind = "milestone" },
@@ -34,8 +38,8 @@ entrypoint = "main.py"
 profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+required_capabilities = ["display", "pointer"]
+optional_capabilities = ["touch", "keyboard", "audio.basic"]
 
 [permissions]
 requested = []

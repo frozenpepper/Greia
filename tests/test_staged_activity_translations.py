@@ -252,31 +252,19 @@ class StagedActivityTranslationTests(unittest.TestCase):
                         if token in original:
                             self.assertIn(token, text[key], f"{activity}/{locale}/{key}")
 
-    def test_number_train_plurals_match_reachable_count_targets(self) -> None:
-        """No fabricated 'one apple' bug: the actual train generates >=2.
+    def test_number_train_has_no_dormant_plural_copy(self) -> None:
+        """The reworked train asks pictorially (numeral + dot card, chimes).
 
-        Its prompt.load source string is currently dormant in the renderer.
-        If station generation ever allows 1, this test must fail until
-        the actual consumer and ES/FR item variants handle singular.
+        The old dormant ``prompt.load`` "{count} {item}" string and emoji item
+        plurals are gone, so no singular/plural form can be mistranslated now
+        that orders start at 1. Spoken orders wait for approved voice.
         """
-        source = ast.parse(
-            (ROOT / "activities/treno_numeri/treno_content.py").read_text(encoding="utf-8")
-        )
-        literals = {}
-        for node in source.body:
-            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
-                if node.target.id in {"ADDITION_PAIRS", "COUNT_CHOICES"}:
-                    literals[node.target.id] = ast.literal_eval(node.value)
-        self.assertEqual(set(literals), {"ADDITION_PAIRS", "COUNT_CHOICES"})
-        targets = [sum(pair) for pair in literals["ADDITION_PAIRS"]] + list(literals["COUNT_CHOICES"])
-        self.assertTrue(targets)
-        self.assertGreaterEqual(min(targets), 2)
         for locale in ("en", "it", "es", "fr"):
             text = json.loads(
                 (ROOT / "activities/treno_numeri/locales" / f"{locale}.json").read_text(encoding="utf-8")
             )["strings"]
-            self.assertIn("{count}", text["prompt.load"])
-            self.assertIn("{item}", text["prompt.load"])
+            self.assertNotIn("prompt.load", text, locale)
+            self.assertFalse([key for key in text if key.startswith("item.")], locale)
 
     def test_dollar_variables_remain_unchanged_in_every_staged_locale(self) -> None:
         """Legacy activity strings use Template($name), not str.format()."""

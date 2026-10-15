@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 296 132" width="296" height="132">
+  <!-- Treno Numeri: open wagon, back wall behind the cargo (orange). Five bays = a five-frame. -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="wagon_back_orange_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8C288"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="wagon_back">
+    <rect x="10" y="12" width="276" height="70" rx="14" fill="url(#wagon_back_orange_wall)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="26" y="17" width="244" height="5" rx="2.5" fill="#FFFFFF" opacity="0.45"/>
+    <rect x="20" y="28" width="256" height="52" rx="9" fill="#C98136" stroke="#976433" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+  <g id="bays" fill="#F8C288" stroke="#976433" stroke-width="2" stroke-linejoin="round">
+    <rect x="64.6" y="25" width="6" height="56" rx="3"/>
+    <rect x="118.2" y="25" width="6" height="56" rx="3"/>
+    <rect x="171.8" y="25" width="6" height="56" rx="3"/>
+    <rect x="225.4" y="25" width="6" height="56" rx="3"/>
+  </g>
+</svg>

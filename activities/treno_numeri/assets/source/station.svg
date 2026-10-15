@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 240" width="1024" height="240">
+  <!-- Treno Numeri: track bed and station platform strip (placed at y 360 on the 1024x600 scene). -->
+  <g id="track_bed">
+    <rect x="0" y="6" width="1024" height="44" fill="#B5A389"/>
+    <path d="M8 10 h22 v14 h-22 Z M48 10 h22 v14 h-22 Z M88 10 h22 v14 h-22 Z M128 10 h22 v14 h-22 Z M168 10 h22 v14 h-22 Z M208 10 h22 v14 h-22 Z M248 10 h22 v14 h-22 Z M288 10 h22 v14 h-22 Z M328 10 h22 v14 h-22 Z M368 10 h22 v14 h-22 Z M408 10 h22 v14 h-22 Z M448 10 h22 v14 h-22 Z M488 10 h22 v14 h-22 Z M528 10 h22 v14 h-22 Z M568 10 h22 v14 h-22 Z M608 10 h22 v14 h-22 Z M648 10 h22 v14 h-22 Z M688 10 h22 v14 h-22 Z M728 10 h22 v14 h-22 Z M768 10 h22 v14 h-22 Z M808 10 h22 v14 h-22 Z M848 10 h22 v14 h-22 Z M888 10 h22 v14 h-22 Z M928 10 h22 v14 h-22 Z M968 10 h22 v14 h-22 Z M1008 10 h22 v14 h-22 Z" fill="#AD7134" stroke="#976433" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="-4" y="5" width="1032" height="9" rx="3" fill="#8D8F93" stroke="#4B372F" stroke-width="2.5"/>
+    <path d="M0 7.5 H1024" stroke="#FFFFFF" stroke-width="1.8" opacity="0.6"/>
+  </g>
+  <g id="platform">
+    <rect x="0" y="44" width="1024" height="196" fill="#EEDDBA"/>
+    <rect x="-4" y="44" width="1032" height="16" fill="#FFFBEB" stroke="#4B372F" stroke-width="3"/>
+    <rect x="0" y="60" width="1024" height="9" fill="#FFC234"/>
+    <path d="M0 69 H1024" stroke="#D29F33" stroke-width="2.5"/>
+    <path d="M128 72 V240 M256 72 V240 M384 72 V240 M512 72 V240 M640 72 V240 M768 72 V240 M896 72 V240 M0 156 H1024" stroke="#DCC7A2" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

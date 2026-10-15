@@ -4,21 +4,8 @@
   "direction": "ltr",
   "strings": {
     "activity.title": "Le train des nombres",
-    "prompt.load": "Charge {count} {item} dans le wagon !",
-    "hud.station": "Gare {number}",
-    "hud.score": "Étoiles : ★ {stars}",
-    "btn.whistle": "🚂 Siffler !",
-    "btn.depart": "🟢 En route !",
-    "btn.reset": "🔄 Recommencer",
-    "btn.play_again": "🎉 Rejouer !",
-    "victory.title": "Hourra ! Le train est arrivé au terminus ! 🚂🌟",
-    "victory.subtitle": "Bravo ! Tu as terminé toutes les gares !",
-    "item.apple": "pommes 🍎",
-    "item.carrot": "carottes 🥕",
-    "item.banana": "bananes 🍌",
-    "item.strawberry": "fraises 🍓",
-    "item.pumpkin": "citrouilles 🎃",
-    "item.orange": "oranges 🍊"
+    "victory.title": "Chaque chargement était parfait !",
+    "button.play_again": "Rejouer"
   },
   "audio": {}
 }
