@@ -10,6 +10,8 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 
 _SAMPLE_RATE: Final = 22_050
 MAX_QUEUE_LEN: Final = 4
@@ -56,7 +58,11 @@ class SpeechQueue:
 class SoundWorkshopAudio:
     """Load package pedagogical speech clips and prepare nonverbal feedback chimes."""
 
-    def __init__(self, package_root: Path, locale: str = "it") -> None:
+    def __init__(
+        self, package_root: Path, locale: str = "it",
+        resources: LocalizedResources | None = None,
+    ) -> None:
+        self._resources = resources
         self._locale = locale
         self._package_root = package_root
         self._speech_clips: dict[str, pygame.mixer.Sound] = {}
@@ -82,6 +88,15 @@ class SoundWorkshopAudio:
             self._sfx_clips = {}
 
     def _load_speech_clips(self) -> None:
+        if self._resources is not None:
+            # The shared resolver owns locale-specific discovery and English
+            # fallback. This Activity still owns decoding and speech channels.
+            for stem, path in self._resources.speech_paths().items():
+                try:
+                    self._speech_clips[stem] = pygame.mixer.Sound(str(path))
+                except (pygame.error, OSError):
+                    continue
+            return
         audio_dir = self._package_root / "assets" / "audio" / self._locale
         if not audio_dir.exists():
             return
