@@ -69,7 +69,7 @@ def main() -> int:
         resources=resources,
         progress=progress,
         events=GreiaTenHouseEvents(),
-        audio=TenHouseAudio(package_root, locale=locale_lang),
+        audio=TenHouseAudio(package_root, locale=locale_lang, resources=resources),
         rng=rng,
         session_id=session_id,
     )
