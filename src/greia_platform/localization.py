@@ -266,6 +266,21 @@ class LocalizedResources:
             LocalizationBundle.load(self.package_root, locale)
             for locale in context.fallback_chain
         )
+        # English can be a sound fallback even if the Activity default is IT.
+        self._english_bundle = next(
+            (bundle for bundle in self._bundles if bundle.locale.value == "en"), None
+        )
+        if self._english_bundle is None and (self.package_root / "locales" / "en.json").is_file():
+            self._english_bundle = LocalizationBundle.load(
+                self.package_root, LocaleTag.parse("en")
+            )
+        ordered = list(self._bundles[:1])
+        if self._english_bundle is not None and self._english_bundle not in ordered:
+            ordered.append(self._english_bundle)
+        for bundle in self._bundles[1:]:
+            if bundle not in ordered:
+                ordered.append(bundle)
+        self._text_bundles = tuple(ordered)
 
     def text(
         self,
@@ -283,7 +298,7 @@ class LocalizedResources:
         key = _resource_key(key)
         lookup_keys = _variant_keys(key, variant)
         value: str | None = None
-        for bundle in self._bundles:
+        for bundle in self._text_bundles:
             for lookup_key in lookup_keys:
                 value = bundle.strings.get(lookup_key)
                 if value is not None:
@@ -310,6 +325,26 @@ class LocalizedResources:
                 f"localized string {key!r} has an unresolved/invalid placeholder"
             ) from exc
 
+
+    def audio_path(
+        self,
+        key: str,
+        *,
+        variant: str | None = None,
+        filename: str | None = None,
+        allow_fallback: bool = True,
+    ) -> Path | None:
+        """Find the actual prerecorded speech file, without playing it.
+
+        Resolve the selected-language file first, using any explicit local
+        mapping, the English catalogue's stable filename, or conventional
+        assets/audio files. Otherwise try the English recording.
+        """
+        cue = self._resolve_audio(
+            key, variant=variant, filename=filename, allow_fallback=allow_fallback
+        )
+        return cue.path if cue is not None else None
+
     def audio_cue(
         self,
         key: str,
@@ -317,23 +352,98 @@ class LocalizedResources:
         variant: str | None = None,
         allow_fallback: bool = True,
     ) -> LocalizedAudioCue:
-        """Resolve a semantic clip with explicit locale-fallback authority.
+        """Compatibility API for callers expecting a cue or an exception."""
+        cue = self._resolve_audio(key, variant=variant, allow_fallback=allow_fallback)
+        if cue is None:
+            raise LocalizationError(f"missing localized audio cue: {key}")
+        return cue
 
-        By default, existing callers keep Greia's per-resource fallback.
-        Set `allow_fallback=False` for spoken language content that must
-        match the child's selected locale (for example, prerequisite teaching
-        instructions). This is a catalogue decision, independent of how
-        package authors organize their safe audio paths.
-        """
+    def _resolve_audio(
+        self,
+        key: str,
+        *,
+        variant: str | None = None,
+        filename: str | None = None,
+        allow_fallback: bool = True,
+    ) -> LocalizedAudioCue | None:
         key = _resource_key(key)
-        lookup_keys = _variant_keys(key, variant)
-        bundles = self._bundles if allow_fallback else self._bundles[:1]
-        for bundle in bundles:
-            for lookup_key in lookup_keys:
-                cue = bundle.audio.get(lookup_key)
-                if cue is not None:
+        keys = _variant_keys(key, variant)
+        if filename is not None:
+            name = PurePosixPath(filename)
+            if (
+                name.name != filename
+                or name.suffix.lower() not in _ALLOWED_AUDIO_SUFFIXES
+                or filename in {".", ".."}
+                or "\\" in filename
+            ):
+                raise LocalizationError("audio filename must be one WAV/OGG basename")
+
+        selected = self.context.selected
+        english = self._english_bundle
+        preferred = next(
+            (bundle for bundle in self._bundles if bundle.locale == selected), None
+        )
+
+        if preferred is not None:
+            for lookup in keys:
+                cue = preferred.audio.get(lookup)
+                if cue is not None and cue.path.is_file():
                     return cue
-        raise LocalizationError(f"missing localized audio cue: {key}")
+
+        # English is the canonical semantic key -> stable filename table.
+        if english is not None and selected.language != "en":
+            for lookup in keys:
+                cue = english.audio.get(lookup)
+                if cue is not None:
+                    projected = _project_locale_audio(
+                        self.package_root, cue.path, selected.value
+                    )
+                    if projected is not None and projected.is_file():
+                        return LocalizedAudioCue(projected, cue.caption_key)
+
+        for candidate in self._conventional_audio(selected.value, key, filename):
+            if candidate.is_file():
+                return LocalizedAudioCue(candidate)
+
+        if allow_fallback and selected.language != "en":
+            if english is not None:
+                for lookup in keys:
+                    cue = english.audio.get(lookup)
+                    if cue is not None and cue.path.is_file():
+                        return cue
+            for candidate in self._conventional_audio("en", key, filename):
+                if candidate.is_file():
+                    return LocalizedAudioCue(candidate)
+        return None
+
+    def _conventional_audio(
+        self, locale: str, key: str, filename: str | None
+    ) -> tuple[Path, ...]:
+        if filename is not None:
+            names = (filename,)
+        elif key == "activity.title":
+            return (
+                self.package_root / "locales" / locale / "audio" / "activity-title.wav",
+            )
+        else:
+            names = (f"{key}.ogg", f"{key}.wav")
+        return tuple(
+            self.package_root / "assets" / "audio" / locale / name
+            for name in names
+        )
+
+
+def _project_locale_audio(root: Path, source: Path, locale: str) -> Path | None:
+    """Substitute only an actual locale-directory component of an audio path."""
+    try:
+        parts = list(source.relative_to(root).parts)
+    except ValueError:
+        return None
+    for index, part in enumerate(parts):
+        if part == "en" and index > 0 and parts[index - 1] in {"audio", "locales"}:
+            parts[index] = locale
+            return root.joinpath(*parts)
+    return None
 
 
 def _variant_keys(key: str, variant: str | None) -> tuple[str, ...]:
