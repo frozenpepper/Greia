@@ -58,7 +58,7 @@ def main() -> int:
     session = RhymeSession(factory.build_set(saved.level), level=saved.level, history=saved.history)
     session_id = f"{int(time.time())}-{rng.randrange(1_000_000):06d}"
 
-    audio = RhymeAudio(Path(__file__).resolve().parent, locale=locale)
+    audio = RhymeAudio(Path(__file__).resolve().parent, locale=locale, resources=resources)
     speech_queue = SpeechQueue(audio)
 
     app = RhymeActivity(
