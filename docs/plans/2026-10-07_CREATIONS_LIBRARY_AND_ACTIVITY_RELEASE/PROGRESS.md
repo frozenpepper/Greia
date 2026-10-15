@@ -4,6 +4,10 @@
 **Master plan:** [PLAN.md](./PLAN.md)  
 **Run this ledger with:** `AGENTS.md` + `HANDOVER.md` + current `main`.
 
+## 2026-10-15 — P7 Activity Quality Program started
+
+All 45 Activities played headlessly and design-audited (docs/reviews/activities/2026-10-15_activity_design_audit/). Decisions and waves: [P7_ACTIVITY_QUALITY_PROGRAM.md](./P7_ACTIVITY_QUALITY_PROGRAM.md). Child-facing language/case pass over all 45 committed (5086085d, 1c8b8e60, 661df616, 3ee4bda1); Shell Home redesign 5e7e089e. Source + headless desktop evidence only.
+
 ## A. At-a-glance checkpoint — 2026-10-08
 
 - Program: **P1 adaptive capacity SOURCE-WIP**, **P2 broker/SDK SOURCE-WIP**, **P3 universal gallery + authenticated trusted modal SOURCE-WIP**, **P4 PNG round-trip SOURCE-WIP**, and **P5 WAV + UTF-8 interoperability SOURCE-WIP**. One shared launcher-composed `VolumeBudget` now guards Activity private storage, Creations and history growth at 75% used / 512 MiB free; shipped private Activity namespaces scale to 25% of the actual writable volume (32 MiB is only the legacy minimum floor). No complete checkout/GUI/audio/text/capacity acceptance has run. Wayland/KMSDRM and P6–P8 remain open.

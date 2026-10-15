@@ -246,6 +246,8 @@ GLA-008 and spoken-label authoring GLA-010.
 
 ### P7 — Deep quality and visual review of **all 45** existing built-ins
 
+> **2026-10-15 execution record:** [P7_ACTIVITY_QUALITY_PROGRAM.md](./P7_ACTIVITY_QUALITY_PROGRAM.md) — design principles, catalogue merges (45 → 38 + 3 new), curriculum ladders, platform foundations F0–F6, shared art library and execution waves, from the four 2026-10-15 design audits.
+
 For **every** item in §5, inspect `activity.toml`, actual main launch path, modules, saved data, content, input, sounds, text/localization, visual assets, screenshot, events, difficulty/age claims, gameplay value, CPU/RAM budget, and suitability to 3/4/5-year-olds.
 
 Checklist per Activity:
