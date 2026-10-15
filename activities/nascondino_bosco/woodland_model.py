@@ -1,276 +1,134 @@
-"""Domain model and state invariants for Nascondino nel Bosco."""
+"""Rules of Woodland Hide & Seek (pure, no Pygame).
+
+A round happens in one season scene. Some of the scene's hiding places are
+chosen at random; before every request all friends hide again (new places),
+so every request is a fresh visual search. The child is asked to find one
+named friend and taps a hiding place:
+
+* the asked friend is there -> found (it joins Lilli; the place's position
+  word is the reward);
+* someone else is there -> that friend shows itself ("not me"), a miss;
+* the request never ends in failure: retries are unlimited.
+
+Four finds end the round. The ladder adapts from the misses of the round.
+"""
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 import random
-from typing import Final, Sequence
 
-REFERENCE_WIDTH: Final = 1024
-REFERENCE_HEIGHT: Final = 600
-STORAGE_KEY: Final = "nascondino_bosco.progress.v2"
-
-
-@dataclass(frozen=True, slots=True)
-class AnimalDefinition:
-    """Stable animal metadata and identification."""
-
-    id: str
-    name_key: str
-    primary_color: tuple[int, int, int]
-    secondary_color: tuple[int, int, int]
-    clue_kind: str
+if __package__:
+    from .woodland_content import FINDS_PER_ROUND, FRIEND_IDS, LEVELS, MAX_LEVEL, Anchor, Level, Season
+else:
+    from woodland_content import FINDS_PER_ROUND, FRIEND_IDS, LEVELS, MAX_LEVEL, Anchor, Level, Season
 
 
-ALL_ANIMALS: Final[tuple[AnimalDefinition, ...]] = (
-    AnimalDefinition(
-        id="fox",
-        name_key="animal.fox",
-        primary_color=(249, 115, 22),
-        secondary_color=(255, 237, 213),
-        clue_kind="fox_tail",
-    ),
-    AnimalDefinition(
-        id="bunny",
-        name_key="animal.bunny",
-        primary_color=(255, 255, 255),
-        secondary_color=(244, 114, 182),
-        clue_kind="bunny_ears",
-    ),
-    AnimalDefinition(
-        id="owl",
-        name_key="animal.owl",
-        primary_color=(161, 98, 7),
-        secondary_color=(254, 240, 138),
-        clue_kind="owl_eyes",
-    ),
-    AnimalDefinition(
-        id="frog",
-        name_key="animal.frog",
-        primary_color=(34, 197, 94),
-        secondary_color=(187, 247, 208),
-        clue_kind="frog_eyes",
-    ),
-    AnimalDefinition(
-        id="squirrel",
-        name_key="animal.squirrel",
-        primary_color=(217, 119, 6),
-        secondary_color=(254, 215, 170),
-        clue_kind="squirrel_tail",
-    ),
-    AnimalDefinition(
-        id="hedgehog",
-        name_key="animal.hedgehog",
-        primary_color=(120, 53, 15),
-        secondary_color=(254, 243, 199),
-        clue_kind="hedgehog_nose",
-    ),
-)
-
-ANIMALS_BY_ID: Final[dict[str, AnimalDefinition]] = {
-    animal.id: animal for animal in ALL_ANIMALS
-}
+class Pick(StrEnum):
+    FOUND = "found"
+    WRONG = "wrong"
+    IGNORED = "ignored"
 
 
 @dataclass(frozen=True, slots=True)
-class HidingSpotDefinition:
-    """A natural hiding spot physically grounded in the woodland scene."""
+class PickOutcome:
+    pick: Pick
+    spot: int = -1
+    friend_id: str | None = None
+    task_misses: int = 0
 
-    spot_id: str
-    kind: str
-    cx: int
-    cy: int
-    width: int
-    height: int
+
+@dataclass(slots=True)
+class HideRound:
+    """State of one round: places, who hides where, who is asked, who is found."""
+
+    season: Season
+    level: int
+    rng: random.Random = field(default_factory=random.Random)
+    finds_needed: int = FINDS_PER_ROUND
+    spots: tuple[Anchor, ...] = ()
+    hiding: list[str | None] = field(default_factory=list)
+    target: str | None = None
+    found: list[str] = field(default_factory=list)
+    misses: int = 0
+    task_misses: int = 0
+    first_try_finds: int = 0
+
+    def __post_init__(self) -> None:
+        self.level = max(0, min(MAX_LEVEL, int(self.level)))
+        if not self.spots:
+            count = min(self.ladder.spots, len(self.season.anchors))
+            chosen = self.rng.sample(self.season.anchors, count)
+            # Back row first (draw order and keyboard reading order).
+            self.spots = tuple(sorted(chosen, key=lambda anchor: (anchor.y, anchor.x)))
+        if not self.hiding:
+            self.hide_again()
 
     @property
-    def rect_tuple(self) -> tuple[int, int, int, int]:
-        return (
-            self.cx - self.width // 2,
-            self.cy - self.height // 2,
-            self.width,
-            self.height,
-        )
-
-    def contains(self, px: int, py: int) -> bool:
-        left = self.cx - self.width // 2
-        top = self.cy - self.height // 2
-        return left <= px <= left + self.width and top <= py <= top + self.height
-
-
-# Grounded scene spot anchors matching forest_meadow_day_v1 geometry:
-# 1. tree.hero.01 hollow at left trunk (x=146, y=398)
-# 2. bush.round.01 on left ground (x=125, y=475)
-# 3. log.fallen.01 in center meadow (x=485, y=485)
-# 4. rock.cluster.large.01 on right ground (x=715, y=480)
-# 5. bush.flowering.01 on right edge (x=890, y=470)
-GROUNDED_SPOTS: Final[tuple[HidingSpotDefinition, ...]] = (
-    HidingSpotDefinition(
-        spot_id="hero_tree_hollow",
-        kind="tree_hollow",
-        cx=146,
-        cy=398,
-        width=70,
-        height=80,
-    ),
-    HidingSpotDefinition(
-        spot_id="left_round_bush",
-        kind="round_bush",
-        cx=125,
-        cy=475,
-        width=150,
-        height=110,
-    ),
-    HidingSpotDefinition(
-        spot_id="center_fallen_log",
-        kind="fallen_log",
-        cx=485,
-        cy=485,
-        width=180,
-        height=100,
-    ),
-    HidingSpotDefinition(
-        spot_id="right_rock_cluster",
-        kind="rock_cluster",
-        cx=715,
-        cy=480,
-        width=160,
-        height=100,
-    ),
-    HidingSpotDefinition(
-        spot_id="right_flowering_bush",
-        kind="flowering_bush",
-        cx=890,
-        cy=470,
-        width=150,
-        height=110,
-    ),
-)
-
-
-@dataclass(slots=True)
-class LeapingAnimal:
-    """Active leap presentation state when a spot is clicked."""
-
-    animal_id: str
-    cx: int
-    cy: int
-    is_target: bool
-    t: float = 0.0
-    duration: float = 0.95
+    def ladder(self) -> Level:
+        return LEVELS[self.level]
 
     @property
-    def is_finished(self) -> bool:
-        return self.t >= self.duration
+    def complete(self) -> bool:
+        return len(self.found) >= self.finds_needed
+
+    @property
+    def target_spot(self) -> int | None:
+        if self.target is None:
+            return None
+        try:
+            return self.hiding.index(self.target)
+        except ValueError:
+            return None
+
+    def hide_again(self) -> None:
+        """Everyone still hiding picks a new place; ask for one of them."""
+
+        if self.complete:
+            self.target = None
+            self.hiding = [None] * len(self.spots)
+            return
+        waiting = [friend for friend in FRIEND_IDS if friend not in self.found]
+        previous = self.target
+        candidates = [friend for friend in waiting if friend != previous] or waiting
+        self.target = self.rng.choice(candidates)
+        decoys = [friend for friend in waiting if friend != self.target]
+        self.rng.shuffle(decoys)
+        hiders = [self.target, *decoys[: len(self.spots) - 1]]
+        while len(hiders) < len(self.spots):
+            hiders.append(None)  # only if the friend list were ever too short
+        self.rng.shuffle(hiders)
+        self.hiding = hiders
+        self.task_misses = 0
+
+    def choose(self, spot: int) -> PickOutcome:
+        """The child picked hiding place ``spot``."""
+
+        if self.complete or not 0 <= spot < len(self.spots) or self.target is None:
+            return PickOutcome(Pick.IGNORED, spot)
+        friend = self.hiding[spot]
+        if friend == self.target:
+            if self.task_misses == 0:
+                self.first_try_finds += 1
+            outcome = PickOutcome(Pick.FOUND, spot, friend, self.task_misses)
+            self.found.append(friend)
+            self.hiding[spot] = None
+            self.target = None
+            return outcome
+        self.misses += 1
+        self.task_misses += 1
+        return PickOutcome(Pick.WRONG, spot, friend, self.task_misses)
 
 
-@dataclass(slots=True)
-class Particle:
-    """Lightweight sparkle particle during reward/reveal."""
+def adapt_level(level: int, misses: int) -> int:
+    """Next round's rung: a near-perfect round climbs, a hard one steps back."""
 
-    x: float
-    y: float
-    vx: float
-    vy: float
-    color: tuple[int, int, int]
-    size: float
-    life: float = 1.0
-
-    def update(self, dt: float) -> bool:
-        self.x += self.vx
-        self.y += self.vy
-        self.life -= dt * 1.5
-        return self.life > 0.0
+    if misses <= 1:
+        return min(MAX_LEVEL, level + 1)
+    if misses >= 5:
+        return max(0, level - 1)
+    return level
 
 
-@dataclass(slots=True)
-class WoodlandGameState:
-    """Pure domain state of a Nascondino session."""
-
-    spots: tuple[HidingSpotDefinition, ...] = GROUNDED_SPOTS
-    total_to_find: int = 4
-    total_stars: int = 0
-    hiding_map: dict[str, str] = field(default_factory=dict)
-    target_animal_id: str = "fox"
-    found_count: int = 0
-    is_victory: bool = False
-    found_spot_ids: set[str] = field(default_factory=set)
-    leaping_animal: LeapingAnimal | None = None
-    particles: list[Particle] = field(default_factory=list)
-
-    def start_round(self) -> None:
-        """Shuffle animals into spots and choose a new search target."""
-        num_spots = len(self.spots)
-        available = list(ALL_ANIMALS)
-        chosen_animals = random.sample(available, min(num_spots, len(available)))
-        self.hiding_map = {
-            spot.spot_id: animal.id
-            for spot, animal in zip(self.spots, chosen_animals)
-        }
-        self.target_animal_id = random.choice(list(self.hiding_map.values()))
-        self.found_count = 0
-        self.found_spot_ids.clear()
-        self.is_victory = False
-        self.leaping_animal = None
-        self.particles.clear()
-
-    def inspect_spot(self, spot_id: str) -> tuple[bool, str | None]:
-        """Child clicked on a spot.
-
-        Returns (is_target, animal_id). If target matched, advances count and
-        selects next target animal or enters victory.
-        """
-        if self.is_victory:
-            return False, None
-        animal_id = self.hiding_map.get(spot_id)
-        if animal_id is None or spot_id in self.found_spot_ids:
-            return False, None
-
-        spot = next((s for s in self.spots if s.spot_id == spot_id), None)
-        if spot is not None:
-            self.leaping_animal = LeapingAnimal(
-                animal_id=animal_id,
-                cx=spot.cx,
-                cy=spot.cy,
-                is_target=(animal_id == self.target_animal_id),
-            )
-            # Spawn bounded sparkles
-            for _ in range(10):
-                self.particles.append(
-                    Particle(
-                        x=float(spot.cx),
-                        y=float(spot.cy),
-                        vx=random.uniform(-3.5, 3.5),
-                        vy=random.uniform(-5.0, -1.0),
-                        color=(254, 240, 138),
-                        size=random.uniform(5.0, 9.0),
-                    )
-                )
-
-        is_target = animal_id == self.target_animal_id
-        if is_target:
-            self.found_spot_ids.add(spot_id)
-            self.found_count += 1
-            self.total_stars += 1
-            if self.found_count >= self.total_to_find:
-                self.is_victory = True
-            else:
-                remaining = [
-                    a_id
-                    for candidate_spot, a_id in self.hiding_map.items()
-                    if candidate_spot not in self.found_spot_ids
-                ]
-                if remaining:
-                    self.target_animal_id = random.choice(remaining)
-
-        return is_target, animal_id
-
-    def update_animations(self, dt: float) -> None:
-        """Advance time-based presentation entities."""
-        if self.leaping_animal is not None:
-            self.leaping_animal.t += dt
-            if self.leaping_animal.is_finished:
-                self.leaping_animal = None
-
-        if self.particles:
-            self.particles = [p for p in self.particles if p.update(dt)]
+__all__ = ["HideRound", "Pick", "PickOutcome", "adapt_level"]

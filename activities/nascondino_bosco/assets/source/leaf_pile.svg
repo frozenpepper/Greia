@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- nascondino_bosco prop: autumn leaf pile ("under the leaves"). Shape and colours from the
+       shared woodland_autumn scene kit leaf piles; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- orange light (mix 30% white) -> leaf-pile orange #E58A3A -->
+    <linearGradient id="leaf_pile_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F2AE6B"/>
+      <stop offset="1" stop-color="#E58A3A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="256" cy="232" rx="200" ry="14" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="pile">
+    <path d="M58 232 C60 190 100 150 150 134 C176 104 232 90 268 104 C304 92 352 106 372 134 C420 148 456 190 456 232 Z" fill="url(#leaf_pile_fill)" stroke="#976333" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M300 232 C340 214 400 200 440 186 C452 202 456 216 456 232 Z" fill="#C8742F" opacity="0.45"/>
+    <path d="M112 182 C124 160 146 146 170 142" fill="none" stroke="#FBD9B0" stroke-width="7" stroke-linecap="round"/>
+    <g stroke="#976333" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(150 150) rotate(30)" fill="#F39A38"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(206 118) rotate(-40)" fill="#F46F61"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(268 108) rotate(60)" fill="#FFC234"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(330 120) rotate(-20)" fill="#F39A38"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(390 152) rotate(45)" fill="#F46F61"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(110 204) rotate(80)" fill="#FFC234"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(186 186) rotate(-60)" fill="#F46F61"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(252 168) rotate(15)" fill="#F39A38"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(318 190) rotate(-75)" fill="#FFC234"/>
+      <path d="M0 -16 C11 -7 11 7 0 16 C-11 7 -11 -7 0 -16 Z" transform="translate(392 208) rotate(25)" fill="#F39A38"/>
+    </g>
+  </g>
+</svg>

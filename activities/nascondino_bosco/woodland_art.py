@@ -1,405 +1,217 @@
-"""Visual art, background baking, and cached sprites for Nascondino nel Bosco."""
+"""Prepared, bounded art for Woodland Hide & Seek.
+
+* Season backdrops are shared scene-kit layers (``bg.<kit>.*``) composed once
+  through the scene-composition runtime (``SceneDefinition`` rendered by
+  ``PygameSceneRenderer``) into one opaque surface per season.
+* Friends are shared library creatures (``creature.woodland.*``, full
+  ``default`` variant), clipped by their hiding place while they peek.
+* Hiding props are shared library props or this package's own props
+  (``assets/source/*.svg`` -> ``assets/runtime/*.png``).
+* Lilli's poses and FX come from the shared library.
+
+Every surface is scaled once per size and kept in a hard-bounded cache;
+drawing only blits. Missing art degrades to simple fallbacks, never a crash.
+"""
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 from typing import Final
 
 import pygame
 
+from greia_platform.activity_controls import ControlArt
 from greia_platform.pygame_scene import PygameSceneRenderer, SceneRenderError
-from greia_platform.scene import load_scene
-from greia_platform.scene_actor import SceneActorDefinition, actor_scene_sample
 from greia_platform.ui_core import BoundedCache
 
-try:
-    from woodland_model import (
-        ALL_ANIMALS,
-        GROUNDED_SPOTS,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        AnimalDefinition,
-        HidingSpotDefinition,
-    )
-except ImportError:
-    from .woodland_model import (
-        ALL_ANIMALS,
-        GROUNDED_SPOTS,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        AnimalDefinition,
-        HidingSpotDefinition,
-    )
+if __package__:
+    from .woodland_content import FRIENDS_BY_ID, REFERENCE_HEIGHT, REFERENCE_WIDTH, PropKind, Season
+else:
+    from woodland_content import FRIENDS_BY_ID, REFERENCE_HEIGHT, REFERENCE_WIDTH, PropKind, Season
 
-LILLI_ACTOR: Final = SceneActorDefinition(
-    actor_id="lilli",
-    asset_id="character.lilli",
-    rect=(50, 105, 150, 150),
-    shadow_asset_id="shadow.contact.small.01",
-    shadow_rect=(78, 232, 96, 24),
-    z=56,
-    parallax=0.28,
-    idle_amplitude=3.0,
-    idle_period_seconds=2.4,
-    blink_period_seconds=4.8,
-    blink_duration_seconds=0.18,
-)
+PACKAGE_ROOT: Final[Path] = Path(__file__).resolve().parent
+RUNTIME_DIR: Final[Path] = PACKAGE_ROOT / "assets" / "runtime"
+HOST: Final = "lilli"
+HALO: Final = (255, 226, 138)
+FX_SIZES: Final[dict[str, int]] = {
+    "sparkle": 110,
+    "star_burst": 170,
+    "leaf_drift": 120,
+    "snow": 120,
+    "dust_puff": 120,
+    "ripple": 120,
+    "confetti": 220,
+}
+DEFAULT_PEEK_TOP: Final = 0.36
 
 
-def _draw_legacy_forest_background(surf: pygame.Surface) -> None:
-    """Fail-soft fallback background when shared visual assets are unavailable."""
-    surf.fill((186, 230, 253))  # Soft sky
-    pygame.draw.circle(surf, (254, 240, 138), (140, 90), 45)
+class WoodlandArt:
+    """Own every prepared surface the renderer blits (bounded, built lazily once)."""
 
-    # Distant hills & treeline
-    for bx in range(0, REFERENCE_WIDTH, 120):
-        pygame.draw.polygon(
-            surf,
-            (74, 222, 128),
-            [(bx, 380), (bx + 60, 220), (bx + 120, 380)],
-        )
+    def __init__(
+        self,
+        *,
+        art: ControlArt | None = None,
+        runtime_dir: Path = RUNTIME_DIR,
+        scene_renderer: PygameSceneRenderer | None = None,
+    ) -> None:
+        # Content art gets its own bounded loader so it never evicts kit glyphs.
+        self._art = art if art is not None else ControlArt(max_entries=64)
+        self._runtime_dir = runtime_dir
+        self._scene_renderer = scene_renderer
+        self._backdrops: BoundedCache[str, pygame.Surface] = BoundedCache(2)
+        self._private: BoundedCache[str, pygame.Surface | None] = BoundedCache(8)
+        self._props: BoundedCache[tuple[str, int, int], pygame.Surface | None] = BoundedCache(16)
+        self._misc: BoundedCache[tuple, pygame.Surface] = BoundedCache(12)
+        self._peek_tops: dict[str, float] = {}
+        self._fx: dict[str, tuple[pygame.Surface, ...]] = {}
 
-    # Ground
-    pygame.draw.rect(surf, (34, 197, 94), (0, 380, REFERENCE_WIDTH, 220))
-    pygame.draw.ellipse(surf, (22, 163, 74), pygame.Rect(-60, 370, 500, 100))
-    pygame.draw.ellipse(surf, (22, 163, 74), pygame.Rect(400, 370, 700, 100))
+    @property
+    def loader(self) -> ControlArt:
+        return self._art
 
-    # Hero Oak tree trunk on left
-    pygame.draw.rect(surf, (120, 53, 15), (70, 200, 90, 220), border_radius=12)
-    pygame.draw.circle(surf, (34, 197, 94), (115, 180), 95)
+    # -- backdrops ------------------------------------------------------------
 
-    # Bush & log props
-    pygame.draw.ellipse(surf, (22, 163, 74), pygame.Rect(50, 440, 150, 80))
-    pygame.draw.rect(surf, (90, 55, 35), (400, 460, 170, 50), border_radius=10)
-    pygame.draw.ellipse(surf, (100, 116, 139), pygame.Rect(630, 450, 170, 70))
-    pygame.draw.ellipse(surf, (34, 197, 94), pygame.Rect(810, 435, 160, 80))
+    def backdrop(self, season: Season) -> pygame.Surface:
+        """The season's layered shared backdrop, composed once (opaque)."""
 
-
-class WoodlandArtLibrary:
-    """Pre-renders static woodland background and manages bounded sprite caches."""
-
-    def __init__(self, root_path: Path | None = None) -> None:
-        if root_path is None:
-            # Resolves repo root from activities/nascondino_bosco/
-            root_path = Path(__file__).resolve().parents[2]
-        self._root = root_path
-        self._portrait_cache: BoundedCache[tuple[str, int], pygame.Surface] = BoundedCache(32)
-        self._bg_surface: pygame.Surface | None = None
-        self._hollow_overlay: pygame.Surface | None = None
-
-    def get_background(self) -> pygame.Surface:
-        """Return the pre-baked 1024x600 opaque woodland background."""
-        if self._bg_surface is None:
-            self._bg_surface = self._bake_background()
-        return self._bg_surface
-
-    def _bake_background(self) -> pygame.Surface:
-        """Render the rich vector scene once onto an opaque converted Surface."""
-        bg = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
-        if pygame.display.get_init() and pygame.display.get_surface():
-            try:
-                bg = bg.convert()
-            except Exception:
-                pass
-
-        scene_file = self._root / "assets" / "scenes" / "forest_meadow_day_v1.toml"
-        baked_cleanly = False
-
-        if scene_file.is_file():
-            try:
-                scene = load_scene(scene_file)
-                renderer = PygameSceneRenderer.for_activity(max_entries=32)
-                # Render background & midground scenery (z <= 59)
-                renderer.draw(
-                    scene,
-                    bg,
-                    elapsed_seconds=0.0,
-                    motion_enabled=False,
-                    clear=True,
-                    max_z=59,
-                )
-                # Render Lilli Mascot Guide
-                lilli_scene = actor_scene_sample(
-                    LILLI_ACTOR,
-                    canvas_size=scene.canvas_size,
-                    elapsed_seconds=0.0,
-                    fit=scene.fit,
-                    motion_enabled=False,
-                )
-                renderer.draw(
-                    lilli_scene,
-                    bg,
-                    elapsed_seconds=0.0,
-                    motion_enabled=False,
-                    clear=False,
-                )
-                baked_cleanly = True
-            except Exception:
-                baked_cleanly = False
-
-        if not baked_cleanly:
-            _draw_legacy_forest_background(bg)
-
-        # Cut the dark hollow directly into the left hero oak tree trunk centered at (146, 398)
-        # 1. Outer Dark Bark Collar / Shadow Rim
-        pygame.draw.ellipse(bg, (42, 22, 12), pygame.Rect(118, 364, 56, 68))
-        # 2. Wooden rim chamfer
-        pygame.draw.ellipse(bg, (80, 44, 24), pygame.Rect(121, 367, 50, 62))
-        # 3. Deep dark hollow aperture
-        pygame.draw.ellipse(bg, (22, 10, 5), pygame.Rect(124, 370, 44, 56))
-        pygame.draw.ellipse(bg, (10, 4, 2), pygame.Rect(127, 374, 38, 48))
-        # 4. Sunlit upper lip highlight
-        pygame.draw.arc(bg, (190, 130, 80), pygame.Rect(121, 366, 50, 24), 0.2, 2.9, 2)
-
-        return bg
-
-    def get_animal_portrait(self, animal_id: str, size: int) -> pygame.Surface:
-        """Return a cached high-quality animal portrait surface."""
-        key = (animal_id, size)
-        cached = self._portrait_cache.get(key)
+        cached = self._backdrops.get(season.season_id)
         if cached is not None:
             return cached
+        surface = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
+        if not self._compose_scene(season, surface):
+            self._compose_layers(season, surface)
+        if pygame.display.get_surface() is not None:
+            surface = surface.convert()
+        self._backdrops[season.season_id] = surface
+        return surface
 
-        surf = pygame.Surface((size, size), pygame.SRCALPHA)
-        cx = size // 2
-        cy = size // 2
-        r = size // 2
-        dark = (30, 41, 59)
+    def _compose_scene(self, season: Season, surface: pygame.Surface) -> bool:
+        try:
+            renderer = self._scene_renderer or PygameSceneRenderer.for_activity(max_entries=6)
+            renderer.draw(season.scene(), surface, motion_enabled=False, clear=True)
+            if self._scene_renderer is None:
+                renderer.clear()  # layers are baked; drop the scaled copies
+            return True
+        except (SceneRenderError, Exception):  # noqa: BLE001 - any failure -> layered fallback
+            return False
 
-        if animal_id == "fox":
-            # Orange Fox with white cheeks & perky ears
-            pygame.draw.circle(surf, (249, 115, 22), (cx, cy), r)
-            pygame.draw.circle(surf, dark, (cx, cy), r, 2)
-            # Ears
-            pygame.draw.polygon(
-                surf,
-                (249, 115, 22),
-                [(cx - r, cy - r // 3), (cx - r * 3 // 4, cy - r), (cx - r // 4, cy - r // 2)],
-            )
-            pygame.draw.polygon(
-                surf,
-                dark,
-                [(cx - r, cy - r // 3), (cx - r * 3 // 4, cy - r), (cx - r // 4, cy - r // 2)],
-                2,
-            )
-            pygame.draw.polygon(
-                surf,
-                (249, 115, 22),
-                [(cx + r, cy - r // 3), (cx + r * 3 // 4, cy - r), (cx + r // 4, cy - r // 2)],
-            )
-            pygame.draw.polygon(
-                surf,
-                dark,
-                [(cx + r, cy - r // 3), (cx + r * 3 // 4, cy - r), (cx + r // 4, cy - r // 2)],
-                2,
-            )
-            # Cheeks & snout
-            pygame.draw.circle(surf, (255, 237, 213), (cx - r // 3, cy + r // 4), r // 3)
-            pygame.draw.circle(surf, (255, 237, 213), (cx + r // 3, cy + r // 4), r // 3)
-            pygame.draw.circle(surf, dark, (cx - r // 3, cy - r // 6), max(2, r // 6))
-            pygame.draw.circle(surf, dark, (cx + r // 3, cy - r // 6), max(2, r // 6))
-            pygame.draw.circle(surf, dark, (cx, cy + r // 5), max(2, r // 7))
+    def _compose_layers(self, season: Season, surface: pygame.Surface) -> None:
+        """Fallback when the scene runtime cannot resolve the catalogue."""
 
-        elif animal_id == "bunny":
-            # Soft White Bunny with tall pink-lined ears
-            pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(cx - r // 2, cy - r, r // 3, r))
-            pygame.draw.ellipse(surf, dark, pygame.Rect(cx - r // 2, cy - r, r // 3, r), 2)
-            pygame.draw.ellipse(
-                surf, (244, 114, 182), pygame.Rect(cx - r // 2 + 2, cy - r + 4, r // 3 - 4, r - 8)
-            )
-            pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(cx + r // 6, cy - r, r // 3, r))
-            pygame.draw.ellipse(surf, dark, pygame.Rect(cx + r // 6, cy - r, r // 3, r), 2)
-            pygame.draw.ellipse(
-                surf, (244, 114, 182), pygame.Rect(cx + r // 6 + 2, cy - r + 4, r // 3 - 4, r - 8)
-            )
-            # Face
-            pygame.draw.circle(surf, (255, 255, 255), (cx, cy + r // 4), r * 3 // 4)
-            pygame.draw.circle(surf, dark, (cx, cy + r // 4), r * 3 // 4, 2)
-            pygame.draw.circle(surf, dark, (cx - r // 4, cy + r // 6), max(2, r // 7))
-            pygame.draw.circle(surf, dark, (cx + r // 4, cy + r // 6), max(2, r // 7))
-            pygame.draw.circle(surf, (244, 114, 182), (cx, cy + r // 3), max(2, r // 8))
+        surface.fill((207, 234, 247))
+        pygame.draw.rect(surface, (122, 190, 110), (0, 390, REFERENCE_WIDTH, REFERENCE_HEIGHT - 390))
+        loader = ControlArt(max_entries=len(season.layers) + 1)
+        for asset_id in season.layers:
+            image = loader.image(asset_id, (REFERENCE_WIDTH, REFERENCE_HEIGHT))
+            if image is not None:
+                surface.blit(image, (0, 0))
+        loader.clear()
 
-        elif animal_id == "owl":
-            # Wise Brown Owl with big bright yellow eyes & orange beak
-            pygame.draw.circle(surf, (161, 98, 7), (cx, cy), r)
-            pygame.draw.circle(surf, dark, (cx, cy), r, 2)
-            # Big eyes
-            pygame.draw.circle(surf, (254, 240, 138), (cx - r // 3, cy - r // 6), r // 3)
-            pygame.draw.circle(surf, (254, 240, 138), (cx + r // 3, cy - r // 6), r // 3)
-            pygame.draw.circle(surf, dark, (cx - r // 3, cy - r // 6), r // 3, 2)
-            pygame.draw.circle(surf, dark, (cx + r // 3, cy - r // 6), r // 3, 2)
-            pygame.draw.circle(surf, dark, (cx - r // 3, cy - r // 6), r // 6)
-            pygame.draw.circle(surf, dark, (cx + r // 3, cy - r // 6), r // 6)
-            # Beak
-            pygame.draw.polygon(
-                surf, (249, 115, 22), [(cx - 4, cy), (cx + 4, cy), (cx, cy + r // 3)]
-            )
-            pygame.draw.polygon(
-                surf, dark, [(cx - 4, cy), (cx + 4, cy), (cx, cy + r // 3)], 1
-            )
+    # -- props ------------------------------------------------------------------
 
-        elif animal_id == "frog":
-            # Cheerful Green Frog with protruding eyes & happy smile
-            pygame.draw.circle(surf, (34, 197, 94), (cx, cy), r)
-            pygame.draw.circle(surf, (34, 197, 94), (cx - r // 2, cy - r // 2), r // 3)
-            pygame.draw.circle(surf, (34, 197, 94), (cx + r // 2, cy - r // 2), r // 3)
-            pygame.draw.circle(surf, (255, 255, 255), (cx - r // 2, cy - r // 2), r // 5)
-            pygame.draw.circle(surf, (255, 255, 255), (cx + r // 2, cy - r // 2), r // 5)
-            pygame.draw.circle(surf, dark, (cx - r // 2, cy - r // 2), r // 8)
-            pygame.draw.circle(surf, dark, (cx + r // 2, cy - r // 2), r // 8)
-            pygame.draw.circle(surf, dark, (cx, cy), r, 2)
-            pygame.draw.arc(
-                surf, dark, pygame.Rect(cx - r // 2, cy - r // 4, r, r // 2), 3.4, 6.0, 3
-            )
+    def prop(self, kind: PropKind, size: tuple[int, int]) -> pygame.Surface | None:
+        """Hiding-place art scaled once to ``size`` (``None`` for water)."""
 
-        elif animal_id == "squirrel":
-            # Golden Squirrel with light muzzle & cute round eyes
-            pygame.draw.circle(surf, (217, 119, 6), (cx, cy), r)
-            pygame.draw.circle(surf, dark, (cx, cy), r, 2)
-            pygame.draw.circle(surf, (254, 215, 170), (cx - r // 3, cy + r // 4), r // 3)
-            pygame.draw.circle(surf, (254, 215, 170), (cx + r // 3, cy + r // 4), r // 3)
-            pygame.draw.circle(surf, dark, (cx - r // 4, cy - r // 6), max(2, r // 7))
-            pygame.draw.circle(surf, dark, (cx + r // 4, cy - r // 6), max(2, r // 7))
-            pygame.draw.circle(surf, dark, (cx, cy + r // 5), max(2, r // 8))
+        key = (kind.kind_id, int(size[0]), int(size[1]))
+        if key in self._props:
+            return self._props[key]
+        image: pygame.Surface | None = None
+        if kind.asset_id is not None:
+            image = self._art.image(kind.asset_id, size)
+        elif kind.art_file is not None:
+            source = self._private_source(kind.art_file)
+            if source is not None:
+                image = pygame.transform.smoothscale(source, (int(size[0]), int(size[1])))
+        self._props[key] = image
+        return image
 
-        else:  # hedgehog
-            # Brown Hedgehog with warm creamy face & dark nose
-            pygame.draw.circle(surf, (120, 53, 15), (cx, cy), r)
-            pygame.draw.circle(surf, dark, (cx, cy), r, 2)
-            pygame.draw.circle(surf, (254, 243, 199), (cx - r // 4, cy + r // 6), r // 2)
-            pygame.draw.circle(surf, dark, (cx - r // 3, cy), max(2, r // 7))
-            pygame.draw.circle(surf, dark, (cx - r * 2 // 3, cy + r // 6), max(2, r // 6))
+    def _private_source(self, name: str) -> pygame.Surface | None:
+        if name in self._private:
+            return self._private[name]
+        image: pygame.Surface | None
+        try:
+            image = pygame.image.load(str(self._runtime_dir / name))
+            if pygame.display.get_surface() is not None:
+                image = image.convert_alpha()
+        except (OSError, pygame.error):
+            image = None
+        self._private[name] = image
+        return image
 
-        if pygame.display.get_init() and pygame.display.get_surface():
-            try:
-                surf = surf.convert_alpha()
-            except Exception:
-                pass
+    # -- friends ----------------------------------------------------------------
 
-        self._portrait_cache[key] = surf
-        return surf
+    def full(self, friend_id: str, size: int) -> pygame.Surface | None:
+        return self._art.image(FRIENDS_BY_ID[friend_id].asset_id, size)
 
-    def draw_peeking_clue(
-        self,
-        target_surface: pygame.Surface,
-        spot: HidingSpotDefinition,
-        animal_id: str,
-        t_now: float,
-    ) -> None:
-        """Render a subtle, grounded animated clue at a hiding spot."""
-        sx, sy = spot.cx, spot.cy
+    def peek_top(self, friend_id: str) -> float:
+        """Top of the friend's head as a fraction of its art canvas (measured once)."""
 
-        if spot.kind == "tree_hollow":
-            # Clue inside tree hollow
-            if animal_id == "owl":
-                # Blinking glowing owl eyes in the dark hollow
-                blink = abs(math.sin(t_now * 2.8)) > 0.18
-                if blink:
-                    pygame.draw.circle(target_surface, (254, 240, 138), (sx - 14, sy), 9)
-                    pygame.draw.circle(target_surface, (20, 20, 30), (sx - 14, sy), 5)
-                    pygame.draw.circle(target_surface, (254, 240, 138), (sx + 14, sy), 9)
-                    pygame.draw.circle(target_surface, (20, 20, 30), (sx + 14, sy), 5)
-            elif animal_id == "squirrel":
-                # Squirrel tail peeking out of hollow
-                sway = math.sin(t_now * 4.0) * 8.0
-                pygame.draw.circle(
-                    target_surface, (217, 119, 6), (int(sx + 24 + sway), sy - 10), 16
-                )
-                pygame.draw.circle(
-                    target_surface, (254, 215, 170), (int(sx + 30 + sway), sy - 14), 8
-                )
-            else:
-                portrait = self.get_animal_portrait(animal_id, 34)
-                target_surface.blit(portrait, (sx - 17, sy - 17))
+        cached = self._peek_tops.get(friend_id)
+        if cached is not None:
+            return cached
+        value = DEFAULT_PEEK_TOP
+        image = self.full(friend_id, 256)
+        if image is not None:
+            bounds = image.get_bounding_rect(min_alpha=40)
+            if bounds.height > 0:
+                value = bounds.top / image.get_height()
+        self._peek_tops[friend_id] = value
+        return value
 
-        elif spot.kind in ("round_bush", "flowering_bush"):
-            # Clue peeking above/beside bush
-            if animal_id == "bunny":
-                # Twitching ears over bush
-                ear_w = math.sin(t_now * 5.5) * 3.5
-                pygame.draw.ellipse(
-                    target_surface,
-                    (255, 255, 255),
-                    pygame.Rect(sx - 18 + ear_w, sy - 60, 14, 34),
-                )
-                pygame.draw.ellipse(
-                    target_surface,
-                    (244, 114, 182),
-                    pygame.Rect(sx - 15 + ear_w, sy - 56, 8, 22),
-                )
-                pygame.draw.ellipse(
-                    target_surface,
-                    (255, 255, 255),
-                    pygame.Rect(sx + 4 - ear_w, sy - 60, 14, 34),
-                )
-                pygame.draw.ellipse(
-                    target_surface,
-                    (244, 114, 182),
-                    pygame.Rect(sx + 7 - ear_w, sy - 56, 8, 22),
-                )
-            elif animal_id == "fox":
-                # Wagging bushy orange tail on the side
-                tail_w = math.sin(t_now * 4.0) * 12.0
-                pygame.draw.circle(
-                    target_surface, (249, 115, 22), (int(sx + 45 + tail_w), sy - 20), 18
-                )
-                pygame.draw.circle(
-                    target_surface, (255, 237, 213), (int(sx + 55 + tail_w), sy - 24), 9
-                )
-            elif animal_id == "hedgehog":
-                # Sniffing little nose peeking from leaves
-                sniff = math.sin(t_now * 7.0) * 2.5
-                pygame.draw.circle(
-                    target_surface, (254, 243, 199), (int(sx + sniff), sy - 40), 15
-                )
-                pygame.draw.circle(
-                    target_surface, (30, 41, 59), (int(sx - 10 + sniff), sy - 40), 5
-                )
-            else:
-                portrait = self.get_animal_portrait(animal_id, 32)
-                target_surface.blit(portrait, (sx - 16, sy - 45))
+    # -- cast / FX / glow ---------------------------------------------------------
 
-        elif spot.kind == "fallen_log":
-            # Clue peeking over the fallen log
-            if animal_id == "frog":
-                # Bouncing frog eyes over log
-                f_y = sy - 45 + math.sin(t_now * 4.5) * 6.0
-                pygame.draw.circle(target_surface, (34, 197, 94), (sx - 14, int(f_y)), 10)
-                pygame.draw.circle(target_surface, (255, 255, 255), (sx - 14, int(f_y)), 6)
-                pygame.draw.circle(target_surface, (30, 41, 59), (sx - 14, int(f_y)), 3)
-                pygame.draw.circle(target_surface, (34, 197, 94), (sx + 14, int(f_y)), 10)
-                pygame.draw.circle(target_surface, (255, 255, 255), (sx + 14, int(f_y)), 6)
-                pygame.draw.circle(target_surface, (30, 41, 59), (sx + 14, int(f_y)), 3)
-            elif animal_id == "squirrel":
-                tail_w = math.sin(t_now * 5.0) * 10.0
-                pygame.draw.circle(
-                    target_surface, (217, 119, 6), (int(sx + 35 + tail_w), sy - 45), 18
-                )
-                pygame.draw.circle(
-                    target_surface, (254, 215, 170), (int(sx + 42 + tail_w), sy - 50), 9
-                )
-            else:
-                portrait = self.get_animal_portrait(animal_id, 32)
-                target_surface.blit(portrait, (sx - 16, sy - 48))
+    def cast_pose(self, variant: str, height: int) -> pygame.Surface | None:
+        return self._art.image(f"character.{HOST}", height, variant=variant)
 
-        else:  # rock_cluster
-            # Clue peeking around the rocks
-            if animal_id == "hedgehog":
-                sniff = math.sin(t_now * 8.0) * 3.0
-                pygame.draw.circle(
-                    target_surface, (254, 243, 199), (int(sx - 20 + sniff), sy - 35), 16
-                )
-                pygame.draw.circle(
-                    target_surface, (30, 41, 59), (int(sx - 32 + sniff), sy - 35), 5
-                )
-            elif animal_id == "owl":
-                blink = abs(math.sin(t_now * 3.0)) > 0.15
-                if blink:
-                    pygame.draw.circle(target_surface, (254, 240, 138), (sx - 12, sy - 42), 8)
-                    pygame.draw.circle(target_surface, (20, 20, 30), (sx - 12, sy - 42), 4)
-                    pygame.draw.circle(target_surface, (254, 240, 138), (sx + 12, sy - 42), 8)
-                    pygame.draw.circle(target_surface, (20, 20, 30), (sx + 12, sy - 42), 4)
-            else:
-                portrait = self.get_animal_portrait(animal_id, 32)
-                target_surface.blit(portrait, (sx - 16, sy - 45))
+    def fx_frames(self, name: str) -> tuple[pygame.Surface, ...]:
+        cached = self._fx.get(name)
+        if cached is not None:
+            return cached
+        size = FX_SIZES.get(name, 120)
+        frames = []
+        for variant in ("default", "frame_2", "frame_3"):
+            image = self._art.image(f"fx.{name}", size, variant=variant)
+            if image is not None:
+                frames.append(image)
+        self._fx[name] = tuple(frames)
+        return self._fx[name]
+
+    def ripple(self, width: int) -> pygame.Surface | None:
+        """Flattened library ripple marking a pond hiding place."""
+
+        key = ("ripple", width)
+        cached = self._misc.get(key)
+        if cached is None:
+            image = self._art.image("fx.ripple", (width, max(8, width // 3)))
+            if image is None:
+                return None
+            cached = image
+            self._misc[key] = cached
+        return cached
+
+    def glow(self, size: tuple[int, int]) -> pygame.Surface:
+        """Warm hint glow drawn on the ground around a hiding place."""
+
+        key = ("glow", *size)
+        cached = self._misc.get(key)
+        if cached is None:
+            width, height = size
+            cached = pygame.Surface((width, height), pygame.SRCALPHA)
+            for inset, alpha in ((0, 60), (8, 100), (16, 150)):
+                rect = pygame.Rect(inset, inset, width - 2 * inset, height - 2 * inset)
+                if rect.width > 0 and rect.height > 0:
+                    pygame.draw.ellipse(cached, (*HALO, alpha), rect, width=7)
+            self._misc[key] = cached
+        return cached
+
+    def clear(self) -> None:
+        self._backdrops.clear()
+        self._private.clear()
+        self._props.clear()
+        self._misc.clear()
+        self._peek_tops.clear()
+        self._fx.clear()
+
+
+__all__ = ["HOST", "WoodlandArt"]

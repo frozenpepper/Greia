@@ -11,14 +11,23 @@ categories = ["explore", "play"]
 discovery_tags = ["nature", "puzzles"]
 
 [education]
-categories = ["visual_attention", "nature_lexicon", "observation"]
-difficulty = 2
+# Lilli's woodland hide-and-seek: find the asked friend among peeking
+# friends (visual search), then see where it hid (position phrase with
+# behind / under / in; spoken only once approved recordings exist). One
+# loop; a five-rung ladder (more places, smaller and shorter peeks) adapts
+# from the misses of each four-find round.
+categories = ["visual_attention", "spatial_language", "nature_lexicon"]
+difficulty = 1
 recommended_age_min = 3
-recommended_age_max = 7
+recommended_age_max = 5
+difficulty_min = 1
+difficulty_max = 5
+adaptive_difficulty = true
 skills = [
   { id = "cognition.observation.visual_search", weight = 3 },
+  { id = "language.vocabulary.position_words", weight = 2 },
   { id = "lexicon.nature.animals", weight = 2 },
-  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "motor.pointer.target_selection", weight = 1 },
 ]
 events = [
   { id = "woodland.animal_found", kind = "milestone" },

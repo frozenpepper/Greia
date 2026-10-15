@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- nascondino_bosco prop: snow drift ("under the snow"). Snow colours/contour derived from the
+       shared woodland_snow scene kit drifts, one step deeper so the drift reads on snowy ground;
+       recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- white -> sky shade (mix sky #CFEAF7 with ocean 15%) -->
+    <linearGradient id="snow_drift_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D6E4F2"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="256" cy="232" rx="204" ry="15" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="twig">
+    <path d="M378 140 L404 96 M394 114 L418 106" fill="none" stroke="#8A5A3B" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="420" cy="104" r="7" fill="#F46F61" stroke="#4B372F" stroke-width="2"/>
+    <circle cx="408" cy="94" r="6" fill="#F46F61" stroke="#4B372F" stroke-width="2"/>
+  </g>
+  <g id="drift">
+    <path d="M56 232 C58 190 98 154 150 150 C170 116 230 98 276 112 C320 100 374 118 392 150 C434 160 458 196 458 232 Z" fill="url(#snow_drift_fill)" stroke="#7F98B8" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M286 232 C340 210 404 198 450 188 C456 204 458 218 458 232 Z" fill="#B9CCE2" opacity="0.85"/>
+    <path d="M150 150 C176 140 204 140 226 150 M300 140 C326 132 352 134 372 146 M120 198 C150 188 180 188 206 196" fill="none" stroke="#A9BCD3" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M176 126 C196 114 226 106 252 110" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+    <path d="M100 206 L104 196 L108 206 L118 210 L108 214 L104 224 L100 214 L90 210 Z" fill="#FFFFFF" stroke="#7F98B8" stroke-width="1.8" stroke-linejoin="round"/>
+  </g>
+</svg>

@@ -1,29 +1,78 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Woodland Hide & Seek icon: a hedgehog (shared creature.woodland.hedgehog peek art) peeking over
+       the Activity's hiding bush. Explore Collection -> leaf tile. Recipe GREIA_SVG_AUTHORING_RULES.md. -->
   <defs>
-    <linearGradient id="lens" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#E1F5FE" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#81D4FA" stop-opacity="0.6"/>
+    <!-- leaf light (mix 35% white) -> leaf: explore Collection tile -->
+    <linearGradient id="nascondino_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- foliage light -> foliage shade (scene kit #6DB25A mixed 20% ink) -->
+    <linearGradient id="nascondino_icon_bush" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FCB7E"/>
+      <stop offset="1" stop-color="#4E9A5C"/>
+    </linearGradient>
+    <linearGradient id="nascondino_icon_hh_spike" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#A8968A"/>
+      <stop offset="1" stop-color="#7A6656"/>
+    </linearGradient>
+    <!-- peach light -> peach -->
+    <linearGradient id="nascondino_icon_hh_face" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FCEBD6"/>
+      <stop offset="1" stop-color="#F0C9A0"/>
     </linearGradient>
   </defs>
-  <!-- Forest Tree Base & Layers -->
-  <rect x="74" y="170" width="24" height="46" rx="6" fill="#795548"/>
-  <polygon points="86,60 36,130 136,130" fill="#43A047"/>
-  <polygon points="86,100 24,180 148,180" fill="#2E7D32"/>
-  <!-- Peek-a-boo Creature Eyes in Tree -->
-  <circle cx="76" cy="148" r="6" fill="#FFFFFF"/>
-  <circle cx="75" cy="148" r="3" fill="#212121"/>
-  <circle cx="96" cy="148" r="6" fill="#FFFFFF"/>
-  <circle cx="95" cy="148" r="3" fill="#212121"/>
-  <!-- Magnifying Glass -->
-  <g transform="translate(100, 70)">
-    <!-- Handle -->
-    <rect x="80" y="80" width="22" height="68" rx="8" fill="#8D6E63" stroke="#5D4037" stroke-width="4" transform="rotate(45 80 80)"/>
-    <!-- Glass Rim & Lens -->
-    <circle cx="50" cy="50" r="48" fill="url(#lens)" stroke="#FFD54F" stroke-width="10"/>
-    <path d="M22 28 C34 18 58 18 76 28" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
-    <!-- Magnified Eye Inside Lens -->
-    <circle cx="52" cy="52" r="16" fill="#FFFFFF"/>
-    <circle cx="54" cy="52" r="9" fill="#0288D1"/>
-    <circle cx="50" cy="48" r="4" fill="#FFFFFF"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#nascondino_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="128" cy="214" rx="92" ry="10" fill="#3F6E3A" opacity="0.22"/>
+  </g>
+  <g id="subject">
+    <g id="hedgehog" transform="translate(54 22) scale(0.58)">
+      <g id="spines">
+        <path d="M41.4 186.0 L53.0 159.6 L28.0 142.8 L51.8 124.6 L38.5 99.0 L68.8 93.3 L70.2 64.9 L99.8 73.1 L115.7 48.7 L137.6 68.8 L164.1 54.2 L173.1 81.4 L203.9 80.1 L197.8 108.0 L225.7 120.3 L206.0 142.2 L224.2 165.2 L195.5 175.9 Q128 230 41.4 186.0 Z" fill="url(#nascondino_icon_hh_spike)" stroke="#4B372F" stroke-width="6.0" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M92 70 L104 86 M128 56 L128 76 M164 70 L152 86" fill="none" stroke="#C9BAAE" stroke-width="4.2" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g id="ears">
+        <path d="M84 104 C74 92 80 78 94 80 C102 84 102 96 96 104 Z" fill="#F0C9A0" stroke="#4B372F" stroke-width="5.1" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M172 104 C182 92 176 78 162 80 C154 84 154 96 160 104 Z" fill="#F0C9A0" stroke="#4B372F" stroke-width="5.1" stroke-linejoin="round" stroke-linecap="round"/>
+      </g>
+      <g id="head">
+        <path d="M128 92 C164 92 186 118 186 152 C186 188 160 212 128 212 C96 212 70 188 70 152 C70 118 92 92 128 92 Z" fill="url(#nascondino_icon_hh_face)" stroke="#4B372F" stroke-width="6.0" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M88.1 122.7 C86.2 120 89.2 114.7 94.6 111 C100.1 107.3 106.1 106.5 107.9 109.3 C109.8 112 106.8 117.3 101.4 121 C95.9 124.7 89.9 125.5 88.1 122.7 Z" fill="#FFFFFF" opacity="0.7"/>
+        <ellipse cx="128" cy="164" rx="9" ry="7" fill="#594047" stroke="#4B372F" stroke-width="3.4"/>
+        <ellipse cx="125" cy="162" rx="3" ry="2" fill="#FFFFFF" opacity="0.6"/>
+        <ellipse cx="90" cy="166" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+        <ellipse cx="166" cy="166" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+        <ellipse cx="108" cy="140" rx="9.0" ry="11.5" fill="#342C35"/>
+        <ellipse cx="148" cy="140" rx="9.0" ry="11.5" fill="#342C35"/>
+        <ellipse cx="111" cy="136" rx="3.1" ry="3.4" fill="#FFFFFF"/>
+        <ellipse cx="151" cy="136" rx="3.1" ry="3.4" fill="#FFFFFF"/>
+        <circle cx="106.0" cy="144" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+        <circle cx="146.0" cy="144" r="1.6" fill="#FFFFFF" opacity="0.8"/>
+        <ellipse cx="128" cy="180" rx="4.5" ry="5" fill="#8A3B2E" stroke="#4B372F" stroke-width="3.4"/>
+      </g>
+    </g>
+    <path transform="translate(20.5 116) scale(0.42)" d="M78 232 C50 232 42 198 64 184 C44 160 60 126 92 128 C90 96 124 76 154 88 C168 58 214 48 240 70 C262 44 312 46 330 70 C358 54 398 66 404 98 C438 94 466 120 458 150 C484 162 484 202 460 214 C464 228 452 232 440 232 Z" fill="url(#nascondino_icon_bush)" stroke="#3F6E3A" stroke-width="10" stroke-linejoin="round"/>
+    <g id="paws" transform="translate(54 22) scale(0.58)">
+      <g id="paws_on_edge">
+    <ellipse cx="96" cy="198" rx="14" ry="9" fill="#F0C9A0" stroke="#4B372F" stroke-width="4.2"/>
+    <ellipse cx="160" cy="198" rx="14" ry="9" fill="#F0C9A0" stroke="#4B372F" stroke-width="4.2"/>
+  </g>
+    </g>
+    <path d="M52 168 C54 158 62 150 72 150" fill="none" stroke="#E2F3D8" stroke-width="5" stroke-linecap="round"/>
+    <g fill="#FFFBEB" stroke="#3F6E3A" stroke-width="2.5">
+      <circle cx="84" cy="186" r="7"/>
+      <circle cx="176" cy="176" r="7"/>
+    </g>
+    <g fill="#FFC234">
+      <circle cx="84" cy="186" r="3"/>
+      <circle cx="176" cy="176" r="3"/>
+    </g>
+  </g>
+  <g id="accent">
+    <path d="M206 44 L212 59 L227 65 L212 71 L206 86 L200 71 L185 65 L200 59 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
   </g>
 </svg>

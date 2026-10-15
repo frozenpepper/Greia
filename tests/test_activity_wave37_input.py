@@ -12,8 +12,10 @@ from unittest.mock import Mock, patch
 
 import pygame
 
-from activities.nascondino_bosco.woodland_app import WoodlandApp
-from activities.nascondino_bosco.woodland_model import WoodlandGameState
+from activities.nascondino_bosco.woodland_app import AppState, WoodlandApp
+from activities.nascondino_bosco.woodland_content import FINDS_PER_ROUND, SEASONS
+from activities.nascondino_bosco.woodland_model import HideRound, Pick
+from activities.nascondino_bosco.woodland_services import WoodlandProgress
 from activities.piccola_serra.serra_app import SerraApp
 from activities.piccola_serra.serra_model import SerraModel
 from activities.acquario_magico.acquarium_app import (
@@ -24,72 +26,81 @@ from activities.acquario_magico.acquarium_app import (
 )
 from activities.acquario_magico.acquarium_model import AquariumSession
 from greia_platform.localization import activity_resources
+from greia_platform.pygame_canvas import PygameReferenceCanvas
+from greia_platform.typography import GreiaTypography
 from pathlib import Path
+import random
 
 AQUARIUM_DIR = Path(__file__).resolve().parents[1] / "activities" / "acquario_magico"
+WOODLAND_DIR = Path(__file__).resolve().parents[1] / "activities" / "nascondino_bosco"
 
 
 class WoodlandKeyboardCycleTests(TestCase):
+    """Hide & Seek through the shared control kit: keys only, no window."""
+
     def build_app(self) -> WoodlandApp:
-        app = WoodlandApp.__new__(WoodlandApp)
-        app.state = WoodlandGameState()
-        app.state.start_round()
-        app.selected_spot_index = 0
-        app.audio = Mock()
-        app.storage = None
-        return app
+        surface = pygame.Surface((1024, 600))
+        self.now = [500.0]
+        self.events = SimpleNamespace(friend_found=Mock(), round_completed=Mock())
+        progress = SimpleNamespace(load=lambda: WoodlandProgress(), save=Mock())
+        return WoodlandApp(
+            screen=surface,
+            canvas=PygameReferenceCanvas(surface),
+            typography=GreiaTypography(),
+            resources=activity_resources(WOODLAND_DIR, requested_locale="en"),
+            audio=Mock(has_name=Mock(return_value=False), say_name=Mock(return_value=False)),
+            progress=progress,
+            events=self.events,
+            rng=random.Random(5),
+            clock=lambda: self.now[0],
+        )
+
+    def advance(self, app: WoodlandApp, seconds: float) -> None:
+        end = self.now[0] + seconds
+        while self.now[0] < end:
+            self.now[0] += 0.05
+            app.step()
+
+    def focus_spot(self, app: WoodlandApp, target: str) -> None:
+        for _ in range(12):
+            for key in (pygame.K_RIGHT, pygame.K_DOWN, pygame.K_LEFT, pygame.K_UP):
+                if app.controls.layer.focused_id == target:
+                    return
+                app.press(key)
 
     def test_four_unique_keyboard_discoveries_and_replay(self) -> None:
         app = self.build_app()
-        with patch("activities.nascondino_bosco.woodland_app.emit_activity_event") as publish:
-            for expected_found in range(1, app.state.total_to_find + 1):
-                target_index = next(
-                    i for i, spot in enumerate(app.state.spots)
-                    if spot.spot_id not in app.state.found_spot_ids
-                    and app.state.hiding_map[spot.spot_id] == app.state.target_animal_id
-                )
-                while app.selected_spot_index != target_index:
-                    self.assertTrue(app._handle_keydown(pygame.K_RIGHT))
-                self.assertTrue(app._handle_keydown(pygame.K_RETURN))
-                self.assertEqual(app.state.found_count, expected_found)
-                self.assertEqual(len(app.state.found_spot_ids), expected_found)
-                if not app.state.is_victory:
-                    focused = app.state.spots[app.selected_spot_index].spot_id
-                    self.assertNotIn(focused, app.state.found_spot_ids)
-            self.assertTrue(app.state.is_victory)
-            self.assertEqual(app.state.total_stars, app.state.total_to_find)
-            self.assertEqual(
-                [c.args[0] for c in publish.call_args_list].count("woodland.animal_found"),
-                app.state.total_to_find,
-            )
-            self.assertEqual(
-                [c.args[0] for c in publish.call_args_list].count("woodland.round_completed"),
-                1,
-            )
-            self.assertTrue(app._handle_keydown(pygame.K_SPACE))
-            self.assertFalse(app.state.is_victory)
-            self.assertEqual(app.state.found_count, 0)
-            self.assertFalse(app.state.found_spot_ids)
-            self.assertEqual(app.selected_spot_index, 0)
+        self.advance(app, 1.0)
+        for expected in range(1, FINDS_PER_ROUND + 1):
+            target = f"spot.{app.round.target_spot}"
+            self.focus_spot(app, target)
+            self.assertEqual(app.controls.layer.focused_id, target)
+            self.assertTrue(app.press(pygame.K_SPACE))
+            self.assertEqual(len(app.round.found), expected)
+            self.assertEqual(len(set(app.round.found)), expected)
+            self.advance(app, 3.2)
+        self.assertEqual(app.state, AppState.TERMINAL)
+        self.assertEqual(self.events.friend_found.call_count, FINDS_PER_ROUND)
+        self.assertEqual(self.events.round_completed.call_count, 1)
+        self.assertTrue(app.press(pygame.K_RETURN))
+        self.assertEqual(app.state, AppState.PLAYING)
+        self.assertEqual(app.round.found, [])
 
     def test_rewarded_spot_cannot_be_counted_again(self) -> None:
-        state = WoodlandGameState()
-        state.start_round()
-        spot_id = next(
-            spot for spot, animal in state.hiding_map.items()
-            if animal == state.target_animal_id
-        )
-        self.assertTrue(state.inspect_spot(spot_id)[0])
-        stars = state.total_stars
-        self.assertEqual(state.inspect_spot(spot_id), (False, None))
-        self.assertEqual(state.total_stars, stars)
+        game = HideRound(SEASONS[0], 1, random.Random(3))
+        spot = game.target_spot
+        self.assertIs(game.choose(spot).pick, Pick.FOUND)
+        self.assertIs(game.choose(spot).pick, Pick.IGNORED)
+        self.assertEqual(len(game.found), 1)
 
-    def test_keyboard_direction_is_cyclic(self) -> None:
+    def test_keyboard_focus_moves_between_places(self) -> None:
         app = self.build_app()
-        self.assertTrue(app._handle_keydown(pygame.K_LEFT))
-        self.assertEqual(app.selected_spot_index, len(app.state.spots) - 1)
-        self.assertTrue(app._handle_keydown(pygame.K_DOWN))
-        self.assertEqual(app.selected_spot_index, 0)
+        self.advance(app, 1.0)
+        start = app.controls.layer.focused_id
+        self.assertTrue(start.startswith("spot."))
+        app.press(pygame.K_RIGHT)
+        self.assertTrue(app.controls.layer.focused_id.startswith("spot."))
+        self.assertTrue(app.controls.layer.focus_visible)
 
 
 class GreenhouseKeyboardCycleTests(TestCase):

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- nascondino_bosco prop: hiding bush, autumn. Leaf colours and contour from the shared
+       woodland_autumn scene kit; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- orange light (mix 35% white) -> autumn foliage #E58A3A -->
+    <linearGradient id="bush_autumn_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5BC7E"/>
+      <stop offset="1" stop-color="#E58A3A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="256" cy="232" rx="196" ry="14" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="bush">
+    <path d="M78 232 C50 232 42 198 64 184 C44 160 60 126 92 128 C90 96 124 76 154 88 C168 58 214 48 240 70 C262 44 312 46 330 70 C358 54 398 66 404 98 C438 94 466 120 458 150 C484 162 484 202 460 214 C464 228 452 232 440 232 Z" fill="url(#bush_autumn_fill)" stroke="#976333" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M300 232 C340 222 380 222 440 232 C452 232 464 228 460 214 C484 202 484 162 458 150 C452 178 420 200 380 206 C350 212 318 222 300 232 Z" fill="#C8742F" opacity="0.5"/>
+    <g fill="none" stroke="#976333" stroke-width="2.5" stroke-linecap="round">
+      <path d="M150 150 C162 138 182 138 194 148"/>
+      <path d="M290 118 C304 106 324 106 336 116"/>
+      <path d="M352 176 C366 164 386 164 398 174"/>
+      <path d="M200 196 C214 184 234 184 246 194"/>
+      <path d="M96 192 C108 182 124 182 134 190"/>
+    </g>
+    <path d="M100 150 C102 126 124 108 150 110" fill="none" stroke="#FBD9B0" stroke-width="7" stroke-linecap="round"/>
+    <g stroke="#976333" stroke-width="2" stroke-linejoin="round">
+      <path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z" transform="translate(236 118) rotate(35)" fill="#F46F61"/>
+      <path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z" transform="translate(402 140) rotate(-40)" fill="#FFC234"/>
+      <path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z" transform="translate(142 204) rotate(70)" fill="#FFC234"/>
+      <path d="M0 -12 C8 -5 8 5 0 12 C-8 5 -8 -5 0 -12 Z" transform="translate(318 184) rotate(-15)" fill="#F46F61"/>
+    </g>
+  </g>
+</svg>

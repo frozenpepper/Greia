@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- nascondino_bosco prop: hiding bush, spring/summer. Foliage colours and contour from the
+       shared woodland/meadow scene kits (bg.meadow_day.foreground); recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- foliage light (mix 35% white) -> meadow foliage #6DB25A -->
+    <linearGradient id="bush_green_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BCF8C"/>
+      <stop offset="1" stop-color="#6DB25A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="256" cy="232" rx="196" ry="14" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="bush">
+    <path d="M78 232 C50 232 42 198 64 184 C44 160 60 126 92 128 C90 96 124 76 154 88 C168 58 214 48 240 70 C262 44 312 46 330 70 C358 54 398 66 404 98 C438 94 466 120 458 150 C484 162 484 202 460 214 C464 228 452 232 440 232 Z" fill="url(#bush_green_fill)" stroke="#51714A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M300 232 C340 222 380 222 440 232 C452 232 464 228 460 214 C484 202 484 162 458 150 C452 178 420 200 380 206 C350 212 318 222 300 232 Z" fill="#5E9E4E" opacity="0.55"/>
+    <g fill="none" stroke="#51714A" stroke-width="2.5" stroke-linecap="round">
+      <path d="M150 150 C162 138 182 138 194 148"/>
+      <path d="M290 118 C304 106 324 106 336 116"/>
+      <path d="M352 176 C366 164 386 164 398 174"/>
+      <path d="M200 196 C214 184 234 184 246 194"/>
+      <path d="M96 192 C108 182 124 182 134 190"/>
+    </g>
+    <path d="M100 150 C102 126 124 108 150 110" fill="none" stroke="#C5E8B6" stroke-width="7" stroke-linecap="round"/>
+    <g fill="#FFFBEB" stroke="#51714A" stroke-width="1.8">
+      <circle cx="232" cy="120" r="7"/>
+      <circle cx="404" cy="140" r="7"/>
+      <circle cx="140" cy="206" r="7"/>
+    </g>
+    <g fill="#FFC234">
+      <circle cx="232" cy="120" r="2.8"/>
+      <circle cx="404" cy="140" r="2.8"/>
+      <circle cx="140" cy="206" r="2.8"/>
+    </g>
+  </g>
+</svg>

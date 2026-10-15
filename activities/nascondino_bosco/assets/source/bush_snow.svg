@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 256" width="512" height="256">
+  <!-- nascondino_bosco prop: hiding bush under snow. Evergreen and snow colours/contours from the
+       shared woodland_snow scene kit; recipe GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- evergreen light (mix 30% white) -> evergreen #4E8F6A -->
+    <linearGradient id="bush_snow_fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7EAE91"/>
+      <stop offset="1" stop-color="#4E8F6A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="256" cy="232" rx="196" ry="14" fill="#6A5147" opacity="0.15"/>
+  </g>
+  <g id="bush">
+    <path d="M78 232 C50 232 42 198 64 184 C44 160 60 126 92 128 C90 96 124 76 154 88 C168 58 214 48 240 70 C262 44 312 46 330 70 C358 54 398 66 404 98 C438 94 466 120 458 150 C484 162 484 202 460 214 C464 228 452 232 440 232 Z" fill="url(#bush_snow_fill)" stroke="#3F5E52" stroke-width="3.5" stroke-linejoin="round"/>
+    <g fill="none" stroke="#3F5E52" stroke-width="2.5" stroke-linecap="round">
+      <path d="M150 176 C162 164 182 164 194 174"/>
+      <path d="M352 182 C366 170 386 170 398 180"/>
+      <path d="M232 204 C246 192 266 192 278 202"/>
+    </g>
+    <path d="M60 150 C52 128 72 118 92 128 C90 96 124 76 154 88 C168 58 214 48 240 70 C262 44 312 46 330 70 C358 54 398 66 404 98 C438 94 466 120 458 150 C444 160 430 150 420 158 C408 170 394 156 382 162 C368 172 352 160 340 168 C324 176 312 160 298 166 C284 174 270 160 256 166 C240 174 228 160 214 166 C200 172 188 158 174 164 C160 172 148 158 134 164 C118 170 108 158 96 162 C82 168 66 162 60 150 Z" fill="#FFFFFF" stroke="#A9BCD3" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M110 118 C122 98 146 92 166 100" fill="none" stroke="#E3EBF5" stroke-width="7" stroke-linecap="round"/>
+    <path d="M300 150 C330 146 370 140 410 132" fill="none" stroke="#D5E1EE" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>
