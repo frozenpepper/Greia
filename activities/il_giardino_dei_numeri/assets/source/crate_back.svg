@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 416 150" width="416" height="150">
+  <defs>
+    <!-- orange shade (mix 25% ink) light step → base -->
+    <linearGradient id="crate_back_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#DEB182"/>
+      <stop offset="1" stop-color="#C98136"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="208" cy="141" rx="196" ry="8" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="crate_back">
+    <rect x="10" y="12" width="396" height="90" rx="16" fill="url(#crate_back_wall)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="26" y="17" width="364" height="6" rx="3" fill="#FFFFFF" opacity="0.4"/>
+    <rect x="20" y="30" width="376" height="70" rx="10" fill="#9F6834" stroke="#976433" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M30 40 H386" stroke="#AD7134" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <g id="dividers" fill="#DEB182" stroke="#976433" stroke-width="2" stroke-linejoin="round">
+    <rect x="90" y="26" width="8" height="76" rx="3"/>
+    <rect x="166" y="26" width="8" height="76" rx="3"/>
+    <rect x="242" y="26" width="8" height="76" rx="3"/>
+    <rect x="318" y="26" width="8" height="76" rx="3"/>
+  </g>
+</svg>

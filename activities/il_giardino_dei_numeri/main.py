@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+import random
 
 import pygame
 
+from greia_platform.activity_api import get_profile_locale
 from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
 from greia_platform.typography import GreiaTypography
@@ -13,20 +15,17 @@ from greia_platform.typography import GreiaTypography
 if __package__:
     from .giardino_app import GiardinoApp
     from .giardino_audio import GiardinoAudio
-    from .giardino_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, GardenModel
-    from .giardino_renderer import GiardinoRenderer
-    from .giardino_services import GiardinoServices
+    from .giardino_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, GardenSession, RoundFactory
+    from .giardino_services import GreiaGardenEvents, GreiaGardenProgress
 else:
     from giardino_app import GiardinoApp
     from giardino_audio import GiardinoAudio
-    from giardino_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, GardenModel
-    from giardino_renderer import GiardinoRenderer
-    from giardino_services import GiardinoServices
+    from giardino_model import REFERENCE_HEIGHT, REFERENCE_WIDTH, GardenSession, RoundFactory
+    from giardino_services import GreiaGardenEvents, GreiaGardenProgress
 
 
-def _locale_and_resources() -> tuple[str, LocalizedResources]:
-    resources = activity_resources(Path(__file__).resolve().parent)
-    return resources.context.selected.language, resources
+def _resources() -> LocalizedResources:
+    return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
 
 
 def main() -> int:
@@ -36,25 +35,27 @@ def main() -> int:
         screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
     pygame.mouse.set_visible(True)
 
-    canvas = PygameReferenceCanvas(screen)
+    resources = _resources()
     typography = GreiaTypography()
-    locale, resources = _locale_and_resources()
-    audio = GiardinoAudio(locale=locale, resources=resources)
-    services = GiardinoServices()
-    renderer = GiardinoRenderer(canvas, typography, resources)
-    model = GardenModel()
-
+    canvas = PygameReferenceCanvas(screen)
+    rng = random.Random()
+    progress = GreiaGardenProgress()
+    session = GardenSession(RoundFactory(rng), progress.load())
     app = GiardinoApp(
         screen=screen,
         canvas=canvas,
-        renderer=renderer,
-        audio=audio,
-        services=services,
-        resources=resources,
+        session=session,
         typography=typography,
-        model=model,
+        resources=resources,
+        audio=GiardinoAudio(locale=resources.context.selected.language, resources=resources),
+        progress=progress,
+        events=GreiaGardenEvents(),
+        rng=rng,
     )
-    return app.run()
+    try:
+        return app.run()
+    finally:
+        pygame.quit()
 
 
 if __name__ == "__main__":

@@ -1,317 +1,282 @@
-"""Storybook visual renderer for Il Giardino dei Numeri."""
+"""Storybook scene presentation for Il Giardino dei Numeri.
+
+The renderer owns the meadow, Dani, the crate, garden objects, number badges,
+FX and the cardinality close card. Kit controls (answer cards, replay voice,
+progress dots) and their focus ring are drawn afterwards by the shared
+``ControlLayer``. Per-frame work is blits only: every surface comes prepared
+from ``GardenArt``; animation is expressed as offsets and prepared sizes.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass, field
 import math
-from pathlib import Path
+import time
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
-from greia_platform.pygame_canvas import PygameReferenceCanvas
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
 if __package__:
+    from .giardino_art import WELL_ITEM_SIZE, GardenArt
     from .giardino_model import (
-        BASKET_RADIUS,
-        BASKET_X,
-        BASKET_Y,
+        DANI_MIDBOTTOM,
+        ITEM_SIZE,
+        POP_ITEM_SIZE,
         GardenItem,
-        GardenModel,
-        ItemKind,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
+        GardenRound,
+        crate_origin,
+        crate_rows,
+        well_position,
     )
 else:
+    from giardino_art import WELL_ITEM_SIZE, GardenArt
     from giardino_model import (
-        BASKET_RADIUS,
-        BASKET_X,
-        BASKET_Y,
+        DANI_MIDBOTTOM,
+        ITEM_SIZE,
+        POP_ITEM_SIZE,
         GardenItem,
-        GardenModel,
-        ItemKind,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
+        GardenRound,
+        crate_origin,
+        crate_rows,
+        well_position,
     )
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DANI_ASSET_DIR = PROJECT_ROOT / "assets" / "visual" / "runtime" / "v1" / "characters"
+HOP_SECONDS = 0.5
+POP_SECONDS = 0.34
+BADGE_SECONDS = 0.95
+DROP_SECONDS = 0.32
+DROP_STAGGER = 0.07
+CLOSE_CARD_CENTER = (470, 300)
+MAX_FX = 10
+# Seconds each shared FX animation stays on screen (frames spread across it).
+FX_SECONDS = {"sparkle": 0.42, "ripple": 0.45, "star_burst": 0.75, "confetti": 1.5}
+FX_DEFAULT_SECONDS = 0.5
+FX_DRIFT = {"confetti": 70.0}
 
 
-TITO_ASSET_DIR = PROJECT_ROOT / "assets" / "visual" / "runtime" / "v1" / "characters"
+class GardenCast:
+    """Dani with the shared feedback grammar plus a pointing hint pose.
+
+    ``CastFeedback`` owns cheer (correct) and think (try again); this wrapper
+    adds ``point`` for graduated hints and round starts, drawn only while the
+    feedback friend is idle so the grammar stays unambiguous.
+    """
+
+    def __init__(self, feedback: CastFeedback, point: pygame.Surface | None, clock: Callable[[], float]) -> None:
+        self.feedback = feedback
+        self._point = point
+        self._clock = clock
+        self._point_until = 0.0
+
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    @property
+    def pointing(self) -> bool:
+        return self._clock() < self._point_until and self._point is not None
+
+    def point(self, seconds: float = 1.8) -> None:
+        self._point_until = self._clock() + seconds
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    def update(self) -> bool:
+        was_pointing = self._point_until > 0.0
+        changed = self.feedback.update()
+        if was_pointing and not self.pointing:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, target: pygame.Surface, midbottom: tuple[int, int]) -> None:
+        if self.pointing and self.feedback.pose is CastPose.IDLE:
+            target.blit(self._point, self._point.get_rect(midbottom=midbottom))  # type: ignore[union-attr]
+            return
+        self.feedback.draw(target, midbottom)
 
 
-class GiardinoRenderer:
-    """Draws a warm, engaging, storybook toddler counting garden."""
+@dataclass(slots=True)
+class SceneMotion:
+    """Bounded, time-stamped animation state owned by the app."""
 
-    def __init__(
-        self,
-        canvas: PygameReferenceCanvas,
-        typography: GreiaTypography,
-        resources: LocalizedResources,
+    round_started: float = 0.0
+    hops: dict[int, float] = field(default_factory=dict)  # item_id -> start
+    pops: dict[int, float] = field(default_factory=dict)  # item_id -> start
+    badges: dict[int, tuple[float, int]] = field(default_factory=dict)  # item_id -> (start, number)
+    fx: list[tuple[str, tuple[int, int], float]] = field(default_factory=list)
+    close_number: int | None = None
+    close_started: float = 0.0
+    wobble_started: float | None = None
+
+    def clear(self, now: float) -> None:
+        self.round_started = now
+        self.hops.clear()
+        self.pops.clear()
+        self.badges.clear()
+        self.fx.clear()
+        self.close_number = None
+        self.wobble_started = None
+
+    def add_fx(self, name: str, position: tuple[int, int], now: float) -> None:
+        self.fx.append((name, position, now))
+        del self.fx[:-MAX_FX]
+
+    def active(self, now: float) -> bool:
+        if now - self.round_started < DROP_SECONDS + DROP_STAGGER * 10:
+            return True
+        if any(now - start < HOP_SECONDS for start in self.hops.values()):
+            return True
+        if any(now - start < POP_SECONDS for start in self.pops.values()):
+            return True
+        if any(now - start < BADGE_SECONDS for start, _ in self.badges.values()):
+            return True
+        if self.close_number is not None and now - self.close_started < 0.5:
+            return True
+        return any(now - start < _fx_seconds(name) for name, _, start in self.fx)
+
+    def prune(self, now: float) -> None:
+        self.fx = [entry for entry in self.fx if now - entry[2] < _fx_seconds(entry[0])]
+        for item_id in [key for key, start in self.pops.items() if now - start >= POP_SECONDS]:
+            del self.pops[item_id]
+        for item_id in [key for key, (start, _) in self.badges.items() if now - start >= BADGE_SECONDS]:
+            del self.badges[item_id]
+
+
+def _fx_seconds(name: str) -> float:
+    return FX_SECONDS.get(name, FX_DEFAULT_SECONDS)
+
+
+def _ease_out(t: float) -> float:
+    t = max(0.0, min(1.0, t))
+    return 1.0 - (1.0 - t) ** 3
+
+
+class GardenRenderer:
+    """Compose one frame of the garden from prepared surfaces."""
+
+    def __init__(self, art: GardenArt, cast: GardenCast | None = None, *, clock: Callable[[], float] = time.monotonic) -> None:
+        self.art = art
+        self.cast = cast
+        self._clock = clock
+
+    def draw(self, target: pygame.Surface, round_: GardenRound, motion: SceneMotion) -> None:
+        now = self._clock()
+        target.blit(self.art.background, (0, 0))
+        if self.cast is not None:
+            self.cast.draw(target, DANI_MIDBOTTOM)
+        self._draw_crate(target, round_, motion, now)
+        flying: list[GardenItem] = []
+        for item in round_.items:
+            if not item.counted:
+                self._draw_field_item(target, round_, item, motion, now)
+            elif now - motion.hops.get(item.item_id, -10.0) < HOP_SECONDS:
+                flying.append(item)
+        for item in flying:
+            self._draw_flying(target, round_, item, motion, now)
+        self._draw_badges(target, round_, motion, now)
+        if motion.close_number is not None:
+            self._draw_close(target, motion, now)
+        self._draw_fx(target, motion, now)
+
+    # -- crate ----------------------------------------------------------------
+
+    def _draw_crate(self, target: pygame.Surface, round_: GardenRound, motion: SceneMotion, now: float) -> None:
+        wells = round_.spec.wells
+        landed = {
+            item.order - 1: item
+            for item in round_.items
+            if item.counted and now - motion.hops.get(item.item_id, -10.0) >= HOP_SECONDS
+        }
+        small = self.art.item(round_.kind, WELL_ITEM_SIZE)
+        big = self.art.item(round_.kind, 82)
+        for row in range(crate_rows(wells)):
+            origin = crate_origin(row, wells)
+            if self.art.crate_back is not None:
+                target.blit(self.art.crate_back, origin)
+            for column in range(5):
+                index = row * 5 + column
+                item = landed.get(index)
+                if item is None or small is None:
+                    continue
+                popping = now - motion.pops.get(item.item_id, -10.0) < POP_SECONDS
+                image = big if popping and big is not None else small
+                target.blit(image, image.get_rect(midbottom=well_position(index, wells)))
+            if self.art.crate_front is not None:
+                target.blit(self.art.crate_front, origin)
+
+    # -- field objects ----------------------------------------------------------
+
+    def _draw_field_item(
+        self, target: pygame.Surface, round_: GardenRound, item: GardenItem, motion: SceneMotion, now: float
     ) -> None:
-        self.canvas = canvas
-        self.typography = typography
-        self.resources = resources
-        self._dani_images: dict[str, pygame.Surface] = {}
-        self._load_character_assets()
+        popping = now - motion.pops.get(item.item_id, -10.0) < POP_SECONDS
+        image = self.art.item(round_.kind, POP_ITEM_SIZE if popping else ITEM_SIZE)
+        if image is None:
+            return
+        appear = (now - motion.round_started - DROP_STAGGER * item.item_id) / DROP_SECONDS
+        if appear <= 0.0:
+            return
+        dy = -46.0 * (1.0 - _ease_out(appear))
+        target.blit(image, image.get_rect(center=(int(item.x), int(item.y + dy))))
 
-    def _load_character_assets(self) -> None:
-        moods = ["neutral", "happy", "surprised", "blink"]
-        for mood in moods:
-            path = DANI_ASSET_DIR / f"dani_{mood}.png"
-            if path.is_file():
-                try:
-                    img = pygame.image.load(str(path))
-                    # Scale Dani to a friendly toddler-sized character (~170x170)
-                    self._dani_images[mood] = pygame.transform.smoothscale(img, (170, 170))
-                except Exception:
-                    pass
-
-    def render(self, model: GardenModel, anim_time: float) -> None:
-        surf = self.canvas.surface
-
-        # 1. Background sky, hills, fence and sunny meadow
-        self._draw_background(surf, anim_time)
-
-        # 2. Touch ripples from empty taps
-        self._draw_ripples(surf, model.ripple_effects)
-
-        # 3. Dani's picnic basket (grounded on grass)
-        self._draw_basket(surf, model)
-
-        # 4. Dani the Robot (standing on grass beside basket)
-        self._draw_dani(surf, model, anim_time)
-
-        # 5. Interactive countable items
-        for item in model.items:
-            self._draw_item(surf, item, anim_time)
-
-        # 6. Top status / title banner
-        self._draw_status(surf, model)
-
-        # 7. Celebration sparkles when complete
-        if model.celebrating:
-            self._draw_celebration(surf, model, anim_time)
-
-    def _draw_background(self, surf: pygame.Surface, anim_time: float) -> None:
-        # Sky: soft pleasant toddler blue
-        surf.fill((185, 225, 250))
-
-        # Big warm smiling sun in top-right
-        sun_x, sun_y = 930, 75
-        pulse = 2.5 * math.sin(anim_time * 2.0)
-        # Sun rays
-        for i in range(12):
-            angle = i * (math.pi / 6.0) + anim_time * 0.15
-            rx1 = sun_x + math.cos(angle) * (52 + pulse)
-            ry1 = sun_y + math.sin(angle) * (52 + pulse)
-            rx2 = sun_x + math.cos(angle) * (66 + pulse)
-            ry2 = sun_y + math.sin(angle) * (66 + pulse)
-            pygame.draw.line(surf, (255, 230, 120), (int(rx1), int(ry1)), (int(rx2), int(ry2)), 4)
-        pygame.draw.circle(surf, (255, 225, 90), (sun_x, sun_y), int(46 + pulse))
-        pygame.draw.circle(surf, (255, 200, 50), (sun_x, sun_y), int(40 + pulse))
-
-        # Soft drifting storybook clouds
-        cloud_offsets = [
-            (160.0 + (anim_time * 10.0) % 1150.0 - 120.0, 85.0, 1.0),
-            (560.0 + (anim_time * 7.0) % 1150.0 - 120.0, 120.0, 0.85),
-            (980.0 + (anim_time * 9.0) % 1150.0 - 120.0, 95.0, 0.75),
-        ]
-        for cx, cy, sc in cloud_offsets:
-            c_rad = int(32 * sc)
-            pygame.draw.circle(surf, (255, 255, 255), (int(cx), int(cy)), c_rad)
-            pygame.draw.circle(surf, (255, 255, 255), (int(cx - 22 * sc), int(cy + 6 * sc)), int(24 * sc))
-            pygame.draw.circle(surf, (255, 255, 255), (int(cx + 24 * sc), int(cy + 6 * sc)), int(26 * sc))
-            pygame.draw.circle(surf, (255, 255, 255), (int(cx), int(cy + 10 * sc)), int(28 * sc))
-
-        # Distant rolling hills (pastel sage green)
-        pygame.draw.ellipse(surf, (160, 215, 135), (-120, 260, 750, 360))
-        pygame.draw.ellipse(surf, (145, 205, 120), (320, 240, 850, 380))
-
-        # Wooden garden fence posts along the horizon
-        fence_y = 355
-        for fx in range(60, REFERENCE_WIDTH - 40, 55):
-            pygame.draw.rect(surf, (235, 210, 175), (fx, fence_y, 14, 55), border_radius=4)
-            pygame.draw.polygon(surf, (235, 210, 175), [(fx, fence_y), (fx + 7, fence_y - 10), (fx + 14, fence_y)])
-        pygame.draw.line(surf, (215, 190, 155), (40, fence_y + 18), (REFERENCE_WIDTH - 40, fence_y + 18), 5)
-        pygame.draw.line(surf, (215, 190, 155), (40, fence_y + 38), (REFERENCE_WIDTH - 40, fence_y + 38), 5)
-
-        # Foreground lush meadow ground
-        pygame.draw.rect(surf, (120, 195, 80), (0, 390, REFERENCE_WIDTH, 210))
-
-        # Gentle grass blades and daisies in foreground
-        daisies = [(100, 540), (220, 480), (380, 560), (520, 490), (660, 550)]
-        for dx, dy in daisies:
-            # Grass blades
-            pygame.draw.arc(surf, (90, 165, 55), (dx - 10, dy - 10, 20, 20), 0.5, 2.5, 3)
-            pygame.draw.arc(surf, (90, 165, 55), (dx - 3, dy - 14, 20, 20), 0.8, 2.8, 3)
-            # Daisy petals
-            pygame.draw.circle(surf, (255, 255, 255), (dx, dy - 12), 4)
-            pygame.draw.circle(surf, (255, 220, 60), (dx, dy - 12), 2)
-
-    def _draw_ripples(self, surf: pygame.Surface, ripples: list[tuple[float, float, float]]) -> None:
-        for rx, ry, age in ripples:
-            alpha_ratio = max(0.0, 1.0 - (age / 0.6))
-            radius = int(14 + age * 60)
-            color = (255, 255, 255, int(180 * alpha_ratio))
-            circle_surf = pygame.Surface((radius * 2 + 4, radius * 2 + 4), pygame.SRCALPHA)
-            pygame.draw.circle(circle_surf, color, (radius + 2, radius + 2), radius, width=4)
-            surf.blit(circle_surf, (int(rx - radius - 2), int(ry - radius - 2)))
-
-    def _draw_basket(self, surf: pygame.Surface, model: GardenModel) -> None:
-        bx = int(BASKET_X)
-        by = int(BASKET_Y)
-
-        # Basket shadow grounded firmly on grass
-        pygame.draw.ellipse(surf, (85, 145, 55), (bx - 65, by + 32, 130, 26))
-
-        # Basket body (cozy warm woven basket)
-        basket_rect = pygame.Rect(bx - 55, by - 10, 110, 50)
-        pygame.draw.rect(surf, (215, 155, 90), basket_rect, border_radius=14)
-        pygame.draw.rect(surf, (180, 120, 60), basket_rect, width=3, border_radius=14)
-
-        # Cross weave pattern
-        for ox in range(-40, 45, 16):
-            pygame.draw.line(surf, (175, 115, 55), (bx + ox, by - 8), (bx + ox + 6, by + 36), 2)
-            pygame.draw.line(surf, (175, 115, 55), (bx + ox + 6, by - 8), (bx + ox, by + 36), 2)
-
-        # Red checkered cloth interior liner
-        pygame.draw.ellipse(surf, (235, 75, 75), (bx - 48, by - 22, 96, 26))
-        pygame.draw.ellipse(surf, (255, 255, 255), (bx - 42, by - 19, 84, 20), width=2)
-
-        # Basket rim
-        pygame.draw.ellipse(surf, (235, 180, 115), (bx - 58, by - 26, 116, 24))
-        pygame.draw.ellipse(surf, (175, 115, 55), (bx - 58, by - 26, 116, 24), width=3)
-
-        # Bright count badge on basket (e.g. 2/3)
-        badge_rect = pygame.Rect(bx - 28, by + 12, 56, 30)
-        pygame.draw.rect(surf, (255, 255, 255), badge_rect, border_radius=15)
-        pygame.draw.rect(surf, (180, 120, 60), badge_rect, width=3, border_radius=15)
-        num_str = f"{model.counted_count}/{model.target_count}"
-        text_surf = self.typography.render(num_str, FontRole.TITLE, 18, (80, 45, 15))
-        surf.blit(text_surf, text_surf.get_rect(center=badge_rect.center))
-
-    def _draw_dani(self, surf: pygame.Surface, model: GardenModel, anim_time: float) -> None:
-        # Dani stands on the meadow to the right of the basket
-        dani_x = 910
-        # When jumping with joy, offset vertically
-        jump_offset = (
-            -35.0 * math.sin(math.pi * min(1.0, (0.35 - model.dani_jump) / 0.35))
-            if model.dani_jump > 0.0
-            else 0.0
-        )
-        dani_y = 425 + jump_offset
-
-        # Soft shadow under Dani on the ground
-        shadow_scale = 1.0 - abs(jump_offset) / 60.0
-        sw = int(90 * max(0.5, shadow_scale))
-        sh = int(22 * max(0.5, shadow_scale))
-        pygame.draw.ellipse(surf, (85, 145, 55), (dani_x - sw // 2, 495 - sh // 2, sw, sh))
-
-        mood = model.dani_mood
-        if mood not in self._dani_images:
-            mood = "happy" if model.celebrating else "neutral"
-
-        if mood in self._dani_images:
-            img = self._dani_images[mood]
-            # Gentle breathing motion
-            breath_y = 2.5 * math.sin(anim_time * 3.0)
-            surf.blit(img, (dani_x - img.get_width() // 2, int(dani_y - img.get_height() // 2 + breath_y)))
-
-    def _draw_procedural_dani(
-        self, surf: pygame.Surface, cx: float, cy: float, mood: str, anim_time: float
+    def _draw_flying(
+        self, target: pygame.Surface, round_: GardenRound, item: GardenItem, motion: SceneMotion, now: float
     ) -> None:
-        head_rect = pygame.Rect(int(cx - 50), int(cy - 50), 100, 90)
-        pygame.draw.rect(surf, (70, 195, 195), head_rect, border_radius=24)
-        pygame.draw.rect(surf, (35, 145, 145), head_rect, width=4, border_radius=24)
-        # Antenna
-        pygame.draw.line(surf, (35, 145, 145), (int(cx), int(cy - 50)), (int(cx), int(cy - 78)), 5)
-        pygame.draw.circle(surf, (255, 210, 50), (int(cx), int(cy - 82)), 12)
-        # Screen
-        face_rect = pygame.Rect(int(cx - 38), int(cy - 36), 76, 62)
-        pygame.draw.rect(surf, (25, 45, 75), face_rect, border_radius=16)
-        # Glowing eyes
-        eye_col = (130, 235, 255)
-        pygame.draw.circle(surf, eye_col, (int(cx - 18), int(cy - 6)), 8)
-        pygame.draw.circle(surf, eye_col, (int(cx + 18), int(cy - 6)), 8)
-        pygame.draw.arc(surf, eye_col, (int(cx - 14), int(cy + 4), 28, 16), 3.14, 6.28, 3)
+        t = (now - motion.hops[item.item_id]) / HOP_SECONDS
+        t = max(0.0, min(1.0, t))
+        end_x, end_y = well_position(item.order - 1, round_.spec.wells)
+        end_y -= WELL_ITEM_SIZE / 2
+        x = item.x + (end_x - item.x) * t
+        y = item.y + (end_y - item.y) * t - 120.0 * math.sin(math.pi * t)
+        size = ITEM_SIZE if t < 0.25 else 96 if t < 0.5 else 82 if t < 0.75 else WELL_ITEM_SIZE
+        image = self.art.item(round_.kind, size)
+        if image is not None:
+            target.blit(image, image.get_rect(center=(int(x), int(y))))
 
-    def _draw_item(self, surf: pygame.Surface, item: GardenItem, anim_time: float) -> None:
-        cx, cy = item.current_pos
+    def _draw_badges(self, target: pygame.Surface, round_: GardenRound, motion: SceneMotion, now: float) -> None:
+        for item_id, (start, number) in motion.badges.items():
+            age = now - start
+            if age >= BADGE_SECONDS or not 0 <= item_id < len(round_.items):
+                continue
+            item = round_.items[item_id]
+            if item.counted:
+                x, y = well_position(item.order - 1, round_.spec.wells)
+                y -= WELL_ITEM_SIZE + 18
+            else:
+                x, y = int(item.x), int(item.y - ITEM_SIZE // 2 - 14)
+            rise = int(10 * _ease_out(age / 0.3))
+            badge = self.art.badge(number)
+            target.blit(badge, badge.get_rect(center=(x, y - rise)))
 
-        # Bounce & wobble scaling
-        scale = 1.0
-        if item.pulse_timer > 0.0:
-            scale = 1.0 + 0.38 * math.sin(math.pi * (item.pulse_timer / 0.5))
-        elif item.giggle_timer > 0.0:
-            scale = 1.0 + 0.18 * math.sin(math.pi * 4.0 * (item.giggle_timer / 0.3))
-        else:
-            scale = 1.0 + 0.04 * math.sin(anim_time * 2.5 + item.item_id)
+    def _draw_fx(self, target: pygame.Surface, motion: SceneMotion, now: float) -> None:
+        for name, position, start in motion.fx:
+            frames = self.art.fx_frames(name)
+            duration = _fx_seconds(name)
+            age = now - start
+            if not frames or age >= duration:
+                continue
+            frame = frames[min(len(frames) - 1, int(age / duration * len(frames)))]
+            drift = int(FX_DRIFT.get(name, 0.0) * age / duration)
+            target.blit(frame, frame.get_rect(center=(position[0], position[1] + drift)))
 
-        # Ground drop shadow while on the field
-        if item.fly_progress <= 0.0:
-            sw = int(72 * scale)
-            sh = int(22 * scale)
-            pygame.draw.ellipse(surf, (85, 145, 55), (int(cx - sw // 2), int(cy + 36 * scale), sw, sh))
+    def _draw_close(self, target: pygame.Surface, motion: SceneMotion, now: float) -> None:
+        card = self.art.close_card(motion.close_number or 1)
+        age = now - motion.close_started
+        rise = int(36 * (1.0 - _ease_out(age / 0.35)))
+        target.blit(card, card.get_rect(center=(CLOSE_CARD_CENTER[0], CLOSE_CARD_CENTER[1] + rise)))
 
-        # Draw cute glowing backing circle
-        backing_radius = int(48 * scale)
-        backing_surf = pygame.Surface((backing_radius * 2 + 8, backing_radius * 2 + 8), pygame.SRCALPHA)
-        bg_col = (255, 255, 255, 210) if not item.counted else (255, 245, 180, 240)
-        border_col = (220, 200, 160) if not item.counted else (255, 180, 40)
-        pygame.draw.circle(backing_surf, bg_col, (backing_radius + 4, backing_radius + 4), backing_radius)
-        pygame.draw.circle(backing_surf, border_col, (backing_radius + 4, backing_radius + 4), backing_radius, width=3)
-        surf.blit(backing_surf, (int(cx - backing_radius - 4), int(cy - backing_radius - 4)))
 
-        # Render cute item emoji
-        emoji_size = int(58 * scale)
-        emoji_surf = self.typography.render(item.symbol, FontRole.DISPLAY, emoji_size, (40, 40, 40))
-        surf.blit(emoji_surf, emoji_surf.get_rect(center=(int(cx), int(cy))))
-
-        # Glowing Number Badge (shown when counted: 1, 2, 3...)
-        if item.counted:
-            self._draw_count_badge(surf, cx, cy - 42 * scale, item.order_counted)
-
-    def _draw_count_badge(self, surf: pygame.Surface, cx: float, cy: float, count: int) -> None:
-        badge_radius = 24
-        # Glowing sunny badge
-        pygame.draw.circle(surf, (255, 200, 40), (int(cx), int(cy)), badge_radius)
-        pygame.draw.circle(surf, (255, 240, 120), (int(cx), int(cy)), badge_radius - 3)
-        pygame.draw.circle(surf, (210, 130, 20), (int(cx), int(cy)), badge_radius, width=2)
-        txt = self.typography.render(str(count), FontRole.DISPLAY, 26, (140, 50, 10))
-        surf.blit(txt, txt.get_rect(center=(int(cx), int(cy))))
-
-    def _draw_status(self, surf: pygame.Surface, model: GardenModel) -> None:
-        # Title Banner in center (safe from top-left Home)
-        banner_w, banner_h = 420, 54
-        bx = (REFERENCE_WIDTH - banner_w) // 2
-        by = 18
-
-        pygame.draw.rect(surf, (255, 255, 255), (bx, by, banner_w, banner_h), border_radius=27)
-        pygame.draw.rect(surf, (130, 195, 100), (bx, by, banner_w, banner_h), width=3, border_radius=27)
-
-        if model.celebrating:
-            title_text = self.resources.text("ui.well_done")
-        else:
-            title_text = self.resources.text("ui.touch_to_count")
-
-        txt = self.typography.render(title_text, FontRole.TITLE, 24, (50, 120, 40))
-        surf.blit(txt, txt.get_rect(center=(REFERENCE_WIDTH // 2, by + banner_h // 2)))
-
-    def _draw_celebration(self, surf: pygame.Surface, model: GardenModel, anim_time: float) -> None:
-        # Colorful celebration confetti & star bursts
-        t = model.celebration_timer
-        cx = int(BASKET_X)
-        cy = int(BASKET_Y - 40)
-        colors = [(255, 90, 90), (255, 210, 50), (90, 210, 120), (70, 170, 255), (220, 110, 240)]
-
-        for i in range(24):
-            angle = i * (2.0 * math.pi / 24.0) + (i * 0.2)
-            speed = 80.0 + (i % 5) * 35.0
-            dist = min(220.0, t * speed)
-            px = cx + math.cos(angle) * dist
-            py = cy + math.sin(angle) * dist + (t * 40.0)  # Gravity
-            col = colors[i % len(colors)]
-            size = max(3, int(8 - t * 2.0))
-            pygame.draw.circle(surf, col, (int(px), int(py)), size)
+__all__ = ["GardenCast", "GardenRenderer", "SceneMotion"]

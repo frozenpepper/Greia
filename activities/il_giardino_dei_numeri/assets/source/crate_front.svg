@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 416 150" width="416" height="150">
+  <defs>
+    <!-- orange shade (mix 25% ink) light step → base -->
+    <linearGradient id="crate_front_board" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E2B482"/>
+      <stop offset="1" stop-color="#C98136"/>
+    </linearGradient>
+  </defs>
+  <g id="crate_front">
+    <rect x="6" y="84" width="404" height="54" rx="16" fill="url(#crate_front_board)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="22" y="89" width="372" height="6" rx="3" fill="#FFFFFF" opacity="0.45"/>
+    <path d="M20 112 H396" stroke="#976433" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M300 126 H380" stroke="#AD7134" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M36 101 H120" stroke="#AD7134" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <g id="nails" fill="#976433">
+    <circle cx="24" cy="101" r="3.5"/>
+    <circle cx="392" cy="101" r="3.5"/>
+    <circle cx="24" cy="125" r="3.5"/>
+    <circle cx="392" cy="125" r="3.5"/>
+  </g>
+</svg>

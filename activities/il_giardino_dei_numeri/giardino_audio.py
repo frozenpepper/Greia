@@ -1,4 +1,11 @@
-"""Audio manager and synthesis for Il Giardino dei Numeri."""
+"""Approved speech plus small synthesized chimes for Il Giardino dei Numeri.
+
+Speech uses only recorded, approved clips: this package's cues (intro, prompt,
+count_1..count_5, praise, basket_full) through ``LocalizedResources`` and Dani's
+shared reaction library (``encourage.retry``). Missing cues (for example
+``count_6``..``count_10`` until they are recorded) stay silent; the game
+remains fully pictorial. Chimes are generated once at start-up.
+"""
 
 from __future__ import annotations
 
@@ -8,229 +15,179 @@ from typing import Final
 
 import pygame
 
-from greia_platform.localization import LocalizedResources
-
+from greia_platform.localization import LocalizedResources, shared_character_audio_path
 from greia_platform.pygame_audio import append_mono_pcm16, current_pcm16_mixer_spec
 
-MAX_SIMULTANEOUS_CHANNELS: Final[int] = 4
-AUDIO_DIR = Path(__file__).resolve().parent / "assets" / "audio"
+SPEECH_CHANNEL: Final[int] = 0
+FIRST_SFX_CHANNEL: Final[int] = 2
+LAST_SFX_CHANNEL: Final[int] = 4
+PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+# C major pentatonic climbing two octaves: one gentle step per counted object.
+_COUNT_NOTES: Final[tuple[float, ...]] = (
+    523.25, 587.33, 659.25, 783.99, 880.00, 1046.5, 1174.7, 1318.5, 1568.0, 1760.0,
+)
+_SHARED_RETRY: Final[str] = "encourage.retry"
 
 
 class GiardinoAudio:
-    """Soft, cheerful musical and spoken feedback for toddler counting."""
+    """Own the speech/chime sounds; every call fails soft without a mixer."""
 
     def __init__(
-        self, locale: str = "it", resources: LocalizedResources | None = None
+        self,
+        locale: str = "it",
+        resources: LocalizedResources | None = None,
+        *,
+        project_root: Path = PROJECT_ROOT,
     ) -> None:
         self._resources = resources
         self.locale = locale.split("-")[0]
+        self._project_root = project_root
         self._sounds: dict[str, pygame.mixer.Sound] = {}
-        self._spoken_sounds: dict[str, pygame.mixer.Sound] = {}
+        self._speech: dict[str, pygame.mixer.Sound] = {}
         self._available = False
+        self.last_speech: str | None = None
         try:
             if pygame.mixer.get_init() is not None:
+                pygame.mixer.set_num_channels(max(pygame.mixer.get_num_channels(), LAST_SFX_CHANNEL + 1))
                 self._build_sounds()
-                self._load_spoken_assets()
+                self._load_speech()
                 self._available = True
-        except (pygame.error, RuntimeError):
+        except (pygame.error, RuntimeError, OSError):
             self._available = False
 
-    def play(self, sound_name: str) -> None:
+    # -- queries ----------------------------------------------------------
+
+    def has_speech(self, cue: str) -> bool:
+        return cue in self._speech
+
+    def speech_busy(self) -> bool:
+        if not self._available:
+            return False
+        try:
+            return pygame.mixer.Channel(SPEECH_CHANNEL).get_busy()
+        except (pygame.error, RuntimeError):
+            return False
+
+    # -- speech -----------------------------------------------------------
+
+    def say(self, cue: str, then: str | None = None) -> None:
+        """Speak one cue now, optionally queueing exactly one follow-up cue."""
+
+        self.last_speech = cue
         if not self._available:
             return
-        sound = self._sounds.get(sound_name)
-        if sound is not None:
-            try:
-                for i in range(2, MAX_SIMULTANEOUS_CHANNELS):
-                    ch = pygame.mixer.Channel(i)
-                    if not ch.get_busy():
-                        ch.play(sound)
-                        return
-                pygame.mixer.Channel(2).play(sound)
-            except (pygame.error, RuntimeError):
-                pass
+        first = self._speech.get(cue)
+        follow = self._speech.get(then) if then else None
+        try:
+            channel = pygame.mixer.Channel(SPEECH_CHANNEL)
+            if first is not None:
+                channel.play(first)
+                if follow is not None:
+                    channel.queue(follow)
+            elif follow is not None:
+                channel.play(follow)
+        except (pygame.error, RuntimeError):
+            return
 
-    def play_spoken(self, cue_name: str) -> None:
-        """Play voice on dedicated voice channel (channel 0)."""
+    def say_number(self, number: int, then: str | None = None) -> None:
+        self.say(f"count_{max(1, min(10, int(number)))}", then)
+
+    def stop_speech(self) -> None:
         if not self._available:
             return
-        sound = self._spoken_sounds.get(cue_name)
-        if sound is not None:
-            try:
-                pygame.mixer.Channel(0).play(sound)
-            except (pygame.error, RuntimeError):
-                pass
+        try:
+            pygame.mixer.Channel(SPEECH_CHANNEL).stop()
+        except (pygame.error, RuntimeError):
+            return
 
-    def play_intro(self) -> None:
-        """Play friendly opening prompt for pre-readers."""
-        self.play_spoken("intro")
+    # -- effects ----------------------------------------------------------
 
-    def play_count(self, count: int) -> None:
-        """Play ascending musical chime and Dani's spoken voice for numbers 1 to 5."""
-        clamped = max(1, min(5, count))
-        self.play(f"count_{clamped}")
-        self.play_spoken(f"count_{clamped}")
+    def play(self, name: str) -> None:
+        if not self._available:
+            return
+        sound = self._sounds.get(name)
+        if sound is None:
+            return
+        try:
+            for index in range(FIRST_SFX_CHANNEL, LAST_SFX_CHANNEL + 1):
+                channel = pygame.mixer.Channel(index)
+                if not channel.get_busy():
+                    channel.play(sound)
+                    return
+            pygame.mixer.Channel(FIRST_SFX_CHANNEL).play(sound)
+        except (pygame.error, RuntimeError):
+            return
 
-    def play_celebration(self) -> None:
-        """Play celebration music and Dani's cheer."""
-        self.play("celebrate")
-        self.play_spoken("well_done")
+    def chime(self, number: int) -> None:
+        self.play(f"chime_{max(1, min(10, int(number)))}")
 
-    def play_basket_full(self) -> None:
-        """Play praise when basket is full."""
-        self.play("rustle")
-        self.play_spoken("basket_full")
+    # -- loading ----------------------------------------------------------
 
-    def _load_spoken_assets(self) -> None:
+    def _load_speech(self) -> None:
         if self._resources is not None:
-            files = self._resources.speech_paths()
+            files = dict(self._resources.speech_paths())
         else:
-            # Compatibility for tests constructing a standalone audio owner.
-            loc_dir = AUDIO_DIR / self.locale
-            if not loc_dir.is_dir():
-                loc_dir = AUDIO_DIR / "en"
-            files = {path.stem: path for path in loc_dir.glob("*.wav")}
+            folder = Path(__file__).resolve().parent / "assets" / "audio" / self.locale
+            if not folder.is_dir():
+                folder = folder.parent / "en"
+            files = {path.stem: path for path in sorted(folder.glob("*.wav"))}
+        shared = shared_character_audio_path(self._project_root, "dani", _SHARED_RETRY, self.locale)
+        if shared is not None:
+            files["retry"] = shared
         for stem, path in files.items():
             try:
-                self._spoken_sounds[stem] = pygame.mixer.Sound(str(path))
+                self._speech[stem] = pygame.mixer.Sound(str(path))
             except (pygame.error, OSError):
-                pass
+                continue
 
     def _build_sounds(self) -> None:
         spec = current_pcm16_mixer_spec()
         if spec is None:
             return
-        sample_rate, channel_count = spec
+        rate, channels = spec
+        for index, frequency in enumerate(_COUNT_NOTES, start=1):
+            self._sounds[f"chime_{index}"] = _chime(rate, channels, 0.4, frequency)
+        self._sounds["pop"] = _sweep(rate, channels, 0.16, 520.0, 880.0, 9000)
+        self._sounds["boop"] = _sweep(rate, channels, 0.22, 420.0, 330.0, 7000)
+        self._sounds["ripple"] = _sweep(rate, channels, 0.22, 440.0, 640.0, 6000)
+        self._sounds["fanfare"] = _fanfare(rate, channels)
 
-        pentatonic = {
-            "count_1": 523.25,
-            "count_2": 587.33,
-            "count_3": 659.25,
-            "count_4": 783.99,
-            "count_5": 880.00,
-        }
-        for name, freq in pentatonic.items():
-            self._sounds[name] = self._synthesize_chime(
-                sample_rate,
-                channel_count,
-                0.55,
-                freq,
-            )
 
-        self._sounds["giggle"] = self._synthesize_giggle(
-            sample_rate,
-            channel_count,
-            0.35,
-        )
-        self._sounds["ripple"] = self._synthesize_droplet(
-            sample_rate,
-            channel_count,
-            0.25,
-            440.0,
-        )
-        self._sounds["rustle"] = self._synthesize_rustle(
-            sample_rate,
-            channel_count,
-            0.30,
-        )
-        self._sounds["celebrate"] = self._synthesize_fanfare(sample_rate, channel_count)
+def _chime(rate: int, channels: int, duration: float, frequency: float) -> pygame.mixer.Sound:
+    buffer = bytearray()
+    for index in range(int(rate * duration)):
+        t = index / rate
+        envelope = math.exp(-4.5 * t / duration)
+        angle = 2.0 * math.pi * frequency * t
+        value = math.sin(angle) + 0.35 * math.sin(2.0 * angle)
+        append_mono_pcm16(buffer, int(value * envelope * 11000), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
 
-    @staticmethod
-    def _synthesize_chime(
-        sample_rate: int,
-        channel_count: int,
-        duration: float,
-        freq: float,
-    ) -> pygame.mixer.Sound:
-        num_samples = int(sample_rate * duration)
-        buf = bytearray()
-        harmonics = (1.0, 0.45, 0.20, 0.08)
-        for i in range(num_samples):
-            t = i / sample_rate
-            env = math.exp(-4.5 * (t / duration))
-            val = 0.0
-            for h_idx, amp in enumerate(harmonics):
-                val += amp * math.sin(2.0 * math.pi * freq * (h_idx + 1) * t)
-            sample_val = int(val * env * 14000)
-            append_mono_pcm16(buf, sample_val, channel_count)
-        return pygame.mixer.Sound(buffer=bytes(buf))
 
-    @staticmethod
-    def _synthesize_giggle(
-        sample_rate: int,
-        channel_count: int,
-        duration: float,
-    ) -> pygame.mixer.Sound:
-        num_samples = int(sample_rate * duration)
-        buf = bytearray()
-        for i in range(num_samples):
-            t = i / sample_rate
-            env = math.sin(math.pi * (t / duration))
-            freq = 600.0 + 150.0 * math.sin(16.0 * math.pi * t)
-            val = math.sin(2.0 * math.pi * freq * t)
-            sample_val = int(val * env * 10000)
-            append_mono_pcm16(buf, sample_val, channel_count)
-        return pygame.mixer.Sound(buffer=bytes(buf))
+def _sweep(rate: int, channels: int, duration: float, start: float, end: float, volume: int) -> pygame.mixer.Sound:
+    buffer = bytearray()
+    phase = 0.0
+    for index in range(int(rate * duration)):
+        t = index / rate
+        frequency = start + (end - start) * (t / duration)
+        phase += 2.0 * math.pi * frequency / rate
+        envelope = math.sin(math.pi * t / duration)
+        append_mono_pcm16(buffer, int(math.sin(phase) * envelope * volume), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
 
-    @staticmethod
-    def _synthesize_droplet(
-        sample_rate: int,
-        channel_count: int,
-        duration: float,
-        start_freq: float,
-    ) -> pygame.mixer.Sound:
-        num_samples = int(sample_rate * duration)
-        buf = bytearray()
-        for i in range(num_samples):
-            t = i / sample_rate
-            env = math.exp(-8.0 * (t / duration))
-            freq = start_freq + 200.0 * (t / duration)
-            val = math.sin(2.0 * math.pi * freq * t)
-            sample_val = int(val * env * 9000)
-            append_mono_pcm16(buf, sample_val, channel_count)
-        return pygame.mixer.Sound(buffer=bytes(buf))
 
-    @staticmethod
-    def _synthesize_rustle(
-        sample_rate: int,
-        channel_count: int,
-        duration: float,
-    ) -> pygame.mixer.Sound:
-        num_samples = int(sample_rate * duration)
-        buf = bytearray()
-        for i in range(num_samples):
-            t = i / sample_rate
-            env = math.sin(math.pi * (t / duration))
-            val = (
-                math.sin(2.0 * math.pi * 180.0 * t) * 0.7
-                + math.sin(2.0 * math.pi * 320.0 * t) * 0.3
-            )
-            sample_val = int(val * env * 10000)
-            append_mono_pcm16(buf, sample_val, channel_count)
-        return pygame.mixer.Sound(buffer=bytes(buf))
+def _fanfare(rate: int, channels: int) -> pygame.mixer.Sound:
+    notes = ((0.0, 0.15, 523.25), (0.12, 0.15, 659.25), (0.24, 0.15, 783.99), (0.36, 0.45, 1046.5))
+    buffer = bytearray()
+    for index in range(int(rate * 0.85)):
+        t = index / rate
+        value = 0.0
+        for start, length, frequency in notes:
+            if start <= t < start + length:
+                local = t - start
+                value += math.sin(2.0 * math.pi * frequency * local) * math.exp(-3.5 * local / length)
+        append_mono_pcm16(buffer, int(value * 11000), channels)
+    return pygame.mixer.Sound(buffer=bytes(buffer))
 
-    @staticmethod
-    def _synthesize_fanfare(
-        sample_rate: int,
-        channel_count: int,
-    ) -> pygame.mixer.Sound:
-        notes = [
-            (0.0, 0.15, 523.25),
-            (0.12, 0.15, 659.25),
-            (0.24, 0.15, 783.99),
-            (0.36, 0.45, 1046.5),
-        ]
-        total_duration = 0.85
-        num_samples = int(sample_rate * total_duration)
-        buf = bytearray()
-        for i in range(num_samples):
-            t = i / sample_rate
-            sample_sum = 0.0
-            for start, dur, freq in notes:
-                if start <= t < start + dur:
-                    local_t = t - start
-                    env = math.exp(-3.5 * (local_t / dur))
-                    sample_sum += math.sin(2.0 * math.pi * freq * local_t) * env
-            sample_val = int(sample_sum * 12000)
-            append_mono_pcm16(buf, sample_val, channel_count)
-        return pygame.mixer.Sound(buffer=bytes(buf))
+
+__all__ = ["GiardinoAudio"]

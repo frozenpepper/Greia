@@ -5,10 +5,8 @@
   "strings": {
     "activity.il_giardino_dei_numeri.title": "El Jardín de los Números",
     "activity.title": "El Jardín de los Números",
-    "ui.touch_to_count": "¡Toca y cuenta!",
-    "ui.keep_counting": "¡Cuenta con Dani!",
-    "ui.well_done": "¡Muy bien!",
-    "ui.next": "¡Más! ▶"
+    "victory.title": "¡Lo contaste todo!",
+    "button.play_again": "Jugar otra vez"
   },
   "audio": {}
 }
