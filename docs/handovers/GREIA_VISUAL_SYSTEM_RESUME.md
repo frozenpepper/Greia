@@ -1,7 +1,7 @@
 # Greia Visual System — Current Resume File
 
 **Status:** current visual-workstream continuation contract  
-**Last reviewed:** 2026-10-15  
+**Last reviewed:** 2026-10-15 (design and art tranche)  
 **Repository:** `frozenpepper/Greia`  
 **Branch:** `main`  
 **Visual-system guide:** `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md`  
@@ -13,7 +13,21 @@
 
 ---
 
-# 2026-10-15 — Art direction reset (read first)
+# 2026-10-15 — Current phase: W2 Activity reworks on the library and kit (read first)
+
+**Phase:** the art-direction reset waves are done (cast poses, P0 Activity icons, complete flat core icons) and the **shared art library v1 is registered** (catalogue 0.6.0; `bg.*`, `prop.*`, `creature.*`, `icon.hud.*`, `fx.*`, cast variants; inventory in `assets/visual/README.md`). The shared Activity control kit (ADR 0037) and the storybook Shell redesign (Home, picker, Collection pages, Sea theme folder, My Creations, launch screen) are committed. Execution record: `docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY_PROGRAM.md` (wave W2 = number, literacy and creative ladders first; no Activity merges; grouping by Shell theme folders). Evidence: SOURCE + headless desktop review only.
+
+**Next actions:**
+1. Reworked Activities take scenes, props, creatures, HUD glyphs, FX and cast poses from the library by semantic ID and controls from the kit; no Activity-private cast or biome redraws, no emoji as content.
+2. Add an asset only for a demonstrated gap: author per `docs/design/GREIA_SVG_AUTHORING_RULES.md` (Opus), append to `assets/catalog/shared_visuals_v1_source.toml` (an identical source/output/size under a second ID is an alias and renders once), run `make visual-assets` then `make visual-assets-check`, commit SVG + PNG + catalogues together.
+3. Strengthen the theme-folder tile silhouette; enlarge the delete-confirm dialog; then a Simulator visual review of the redesigned Shell (still only headless desktop reviewed).
+4. Owner voice approval is pending (shared spoken numbers, Sound Blender/Story Time); it is not an art task.
+
+**Rules:** one drawing per animal; flat recipe only; installed runtime visuals are `assets/visual/runtime/` + catalogues (~8.9 MB), never SVG masters; label evidence accurately (SOURCE, DESKTOP VISUAL REVIEW); the Encyclopedia E3 pack and E4 subplan are unaffected.
+
+---
+
+# 2026-10-15 — Art direction reset
 
 Decisions (main agent, 2026-10-15; evidence: `docs/reviews/visual/2026-10-15_asset_library_audit/REVIEW.md`):
 

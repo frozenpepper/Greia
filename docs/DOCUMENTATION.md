@@ -41,7 +41,7 @@ AWARDS_BADGES_AND_CELEBRATIONS.md
 
 ### 2.3 Normative architecture — accepted ADRs
 
-Accepted ADRs own architectural decisions. Current cross-cutting accepted decisions include ADR 0012 through ADR 0034 where present, especially:
+Accepted ADRs own architectural decisions. Current cross-cutting accepted decisions include ADR 0012 through ADR 0037 where present, especially:
 
 ```text
 0012 platform architecture constitution
@@ -61,6 +61,7 @@ Accepted ADRs own architectural decisions. Current cross-cutting accepted decisi
 0032 profile presentation/grammatical agreement
 0033 fail-soft Activity cross-bindings/dev-noise scrub
 0034 child text letter-case policy
+0037 shared Activity control kit (buttons/HUD/prompt/completion + focus navigation)
 ```
 
 `docs/architecture/GREIA_ARCHITECTURE.md` is a living synthesis, not a second ADR system.
@@ -120,6 +121,14 @@ probe-identity mismatch, single-machine evidence) across the Acer, UEFI and ARM
 reference targets. It is subordinate to the blocking architecture plan and does
 not supersede it. Root-cause instances are recorded in
 `docs/INSTALLATION_ISSUES_LOG.md`.
+
+The Activity quality execution record (P7: design principles, catalogue decisions, curriculum ladders, platform foundations F0-F6, shared-library and rework waves, append-only progress log) lives beside that plan and is subordinate to it:
+
+```text
+docs/plans/2026-10-07_CREATIONS_LIBRARY_AND_ACTIVITY_RELEASE/P7_ACTIVITY_QUALITY_PROGRAM.md
+```
+
+The binding SVG authoring recipe (canvas, palette tokens, strokes, shading, forbidden constructs, budgets, review procedure) is owned by `docs/design/GREIA_SVG_AUTHORING_RULES.md`; `docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` indexes it and `skills/greia-visual-authoring/SKILL.md` operationalizes it.
 
 Plans may be long because historical progress is intentionally retained. Do not copy their entire evidence history into `HANDOVER.md`.
 
@@ -245,6 +254,8 @@ This is a navigation map, not a substitute for reading source.
 | Voice Production Engine | `tools/greia_voice.py`, `tools/greia_voice_core/` |
 | Shared accepted character audio | `assets/audio/characters/shared/v0.2/` |
 | Visual semantic catalogue/runtime cache | `src/greia_platform/assets.py`, `src/greia_platform/pygame_visual_assets.py` |
+| Shared-visual selection (library v1) | `assets/catalog/shared_visuals_v1_source.toml` (hand-edited), `assets/catalog/shared_visuals_v1.toml` (generated), `tools/build_visual_renditions.py` |
+| Shared Activity control kit / cast feedback / completion scene (ADR 0037) | `src/greia_platform/activity_controls.py`, `src/greia_platform/activity_feedback.py`, `src/greia_platform/pygame_completion.py` |
 | Image composition/build | `build/profiles/`, `build/package-sets/`, `build/overlay/` and canonical builders |
 | Developer remote client | `tools/greia_remote.py` |
 | Developer privileged control | `src/greia_platform/developer_control.py`, `src/greia_platform/developer_input.py` |

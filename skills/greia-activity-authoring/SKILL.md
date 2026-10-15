@@ -228,7 +228,7 @@ Four other letter/rhyme/syllable Activities have
 complete UI strings but still need
 language-relative playable teaching rules
 and approved pronunciation.
-The Encyclopedia now has all 246 source text
+The Encyclopedia now has all 260 source text
 keys in ES/FR but still needs its **200 source
 narration cues/locale** reconciled with exact scripts
 and newly recorded/listened translated voice.
@@ -469,7 +469,7 @@ The platform-owned PNG/WAV/UTF-8 `CreationLibrary` has a guarded Activity transf
 
 Painting is the reference PNG integration: normal autosaves stay private; an explicit up-arrow publishes an immutable snapshot; from Painting's own gallery a down-arrow requests `image/png`, the Activity polls at a bounded cadence, and a child-selected one-use handle is imported as a new independent editable private painting after digest/type validation. This latest interaction is **SOURCE-WIP and not yet accepted in a complete checkout/GUI**. New consumers should copy the semantic pattern only after the consolidated acceptance is green. The cross-Activity implementation and 45-Activity release review remain tracked in the single Creations PLAN/PROGRESS; Shape Garden is not yet a persistent stamp editor and must not be treated as one without the planned project-model work.
 
-### Use the shared control kit (ADR 0037, Proposed)
+### Use the shared control kit (ADR 0037, Accepted)
 
 Do not hand-draw buttons, mode tabs, HUD counters, prompt bubbles, try-again banners or completion cards. Compose them from `greia_platform.activity_controls` (+ `activity_feedback`, `pygame_completion`), which gives one look, cached rendering and keyboard / D-pad / stick / south-button focus for free. Reference pilots: `activities/casa_del_dieci/ten_house_controls.py`, `activities/pasticceria_magica/pasticceria_controls.py`.
 
@@ -500,6 +500,12 @@ cast = CastFeedback("dani", height=170, art=kit.art)                  # cast.cor
 - Labels must come from `LocalizedResources.text` (already CAPITALS per ADR 0034). HUD/system glyphs: `kit.glyph("listen" | "replay" | "check" | "trophy" | "bell" | "clear")`; stars: `kit.star(size, filled=...)`.
 - Completion: `PygameCompletionScreen(typography, scene=CompletionScene(kit, character="dani", star_total=N))`, then `surfaces.push_overlay(CompletionOverlay(completion, on_primary=restart, on_secondary=next_or_None))`; add `secondary_label` to `CompletionContent` for a "next" button.
 - Mutate control state (`label`, `value`, `visible`, `enabled`, `selected`) only when the model changes; the kit caches every state/content surface in bounded LRU caches, so `draw` stays blits only.
+
+### Shared art library and Shell theme folders
+
+- **Shared art library:** reuse scenes, props, creatures, HUD glyphs, FX and cast poses by semantic ID (`bg.*`, `prop.*`, `creature.*`, `icon.hud.*`, `fx.*`, `character.<id>` variants) instead of drawing private art; inventory and registration rules are in `assets/visual/README.md` and `skills/greia-visual-authoring/SKILL.md`. Never redraw a cast member inside an Activity.
+- **Theme folders:** one Activity is one experience; the Shell groups related Activities. Add a theme to the manifest's `discovery_tags` (e.g. `discovery_tags = ["sea", "nature"]`) to join that theme's Shell folder. A theme becomes a one-level folder only if it is listed in `FOLDER_THEME_IDS` (`src/greia_launcher/catalogue_view.py`, currently `sea`) and has at least 3 visible members after Parent/age filtering; adding a new folder theme is a platform change (icon + constant + test), not an Activity change. Do not build multi-game hubs inside one Activity.
+- **Pointer and input parity:** `PygameReferenceCanvas.present()` already draws the platform pointer (`pointer=True` default); do not draw your own cursor, and keep calling `present()` every frame on completion screens so the pointer stays live. A `hybrid` input profile must still provide keyboard and controller paths for every action (kit focus navigation does this for kit controls; custom hit targets need `ExternalTarget`).
 
 ### Performance is correctness
 

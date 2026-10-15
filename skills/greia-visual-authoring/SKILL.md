@@ -6,7 +6,7 @@ description: Task router for Greia visual asset creation, reuse, adaptation, sce
 # Greia Visual Authoring — task router
 
 **Status:** living derived contributor router  
-**Reviewed:** 2026-10-15
+**Reviewed:** 2026-10-15 (shared library v1)
 
 Keep this file small. It tells an agent **what to read for the visual task**; it is not a duplicate art/style/runtime manual.
 
@@ -22,6 +22,23 @@ These apply to substantive Greia visual work:
 6. Do not imitate protected Greia Home/Back/system chrome with Activity artwork.
 7. Meaningful visual work requires inspection of actual rendered pixels. A producer-written `PASS` is not visual acceptance.
 8. If visual work changes Activity runtime code/assets/resources, also follow the Activity authoring router and final Simulator launch gate.
+
+## Use the shared art library first (catalogue 0.6.0)
+
+Before drawing anything, look for it in the registered library (inventory: `assets/visual/README.md`, selection: `assets/catalog/shared_visuals_v1_source.toml`, generated runtime catalogue: `assets/catalog/shared_visuals_v1.toml`, PNGs: `assets/visual/runtime/v1/`):
+
+| Family | ID pattern |
+|---|---|
+| Biome layers, wallpapers, rooms, stage (1024×600) | `bg.<biome>.<layer>` |
+| Props: food, vocab nouns, everyday, nature, blocks, shapes, instruments | `prop.<family>.<name>` |
+| Creatures: pets (need states), marine, woodland | `creature.<role>.<name>` |
+| HUD glyphs | `icon.hud.<name>` (control-kit glyphs: `ui/controls/v1`) |
+| FX frames | `fx.<name>` |
+| Cast variants (pose_cheer/point/think/wave/play, sad, angry, silly) | `character.<id>` variants |
+
+Consume by semantic ID through the catalogue and the bounded PNG cache; never scan folders. Search with `python3 tools/visual_authoring_library.py search <need>`. Compose controls from the control kit (ADR 0037), not from art.
+
+**Registering a new shared asset** (demonstrated gap only): author the SVG per the rules below, add a `[[visuals]]`/`[[visuals.variants]]` block to `shared_visuals_v1_source.toml` (`id`, `kind`, `role`; variant `name`, `source`, `output`, `width`, `height`), run `make visual-assets` then `make visual-assets-check`, and commit SVG, PNG and both catalogues. **Alias:** a second ID may declare the identical source/output/size as an existing one (e.g. `prop.vocab.cat` = `creature.pet.kitten` neutral); the builder renders it once. Never add a second drawing for an animal that already has a creature. `tests/test_shared_visual_library.py` fails on a missing/mis-sized rendition or an unregistered PNG.
 
 ## Authoring or redrawing any SVG (mandatory recipe, 2026-10-15)
 

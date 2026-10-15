@@ -26,6 +26,7 @@ Before changing implementation or architecture, read:
 7. **`docs/adr/0018-lightweight-ui-foundation.md` — mandatory lightweight Screen/Overlay/Collection UI architecture and low-resource UI rules**;
 8. **`docs/adr/0019-platform-owned-activity-system-navigation.md` — mandatory platform-owned Activity Home/Back chrome and protected-input architecture**;
 9. **`docs/adr/0020-runtime-neutral-input-profiles-and-controller-support.md` — mandatory runtime-neutral input profiles, controller support and physical-input authority**;
+   - **`docs/adr/0037-shared-activity-control-kit.md` — shared Activity control kit (buttons/HUD/prompt/completion, focus navigation) extending ADR 0018–0020; use it instead of hand-drawn Activity controls**;
 10. **`docs/engineering/ENGINEERING_FOUNDATIONS.md` — mandatory OOP, polymorphism, maintainability, dependency and performance guidance**;
 11. **`docs/product/PHASE0_CORE_CREATION_ACTIVITIES.md` — mandatory first-user-ready-image writing and painting requirement**;
 12. **`docs/product/ACTIVITY_SYSTEM_NAVIGATION.md` — mandatory universal Home/Back child-navigation requirement**;
@@ -33,6 +34,7 @@ Before changing implementation or architecture, read:
 14. **`docs/plans/2026-08-08_ARCHITECTURE_REMEDIATION_AND_PLATFORM_COMPLETION.md` — MANDATORY ACTIVE IMPLEMENTATION PLAN for its remaining non-lifecycle obligations**;
 15. **`docs/plans/2026-09-15_MULTIPLATFORM_RELEASE_INSTALL_UPDATE_COMPLETION.md` — MANDATORY CURRENT INSTALL/UPDATE/RELEASE LIFECYCLE ROUTE (ADR 0036 successor plan; owns install/update/release sequencing and closure criteria)**;
 16. **`docs/design/GREIA_ART_GRAPHICS_SYSTEM.md` — MANDATORY MAIN ENTRY POINT for Greia art/graphics/visual-asset architecture, source-library structure, composition, runtime rendition/caching and documentation navigation whenever the work touches visual assets or visual integration**;
+    - **`docs/design/GREIA_SVG_AUTHORING_RULES.md` — binding SVG recipe for every new or redrawn shared or Activity-private vector asset (Opus is the selected SVG authoring model)**;
 17. **`docs/plans/2026-08-20_GREIA_VISUAL_FOUNDATION_AND_ASSET_SYSTEM.md` — MANDATORY CURRENT ART/VISUAL WORKSTREAM PLAN whenever designing, generating, refining, reviewing, integrating, or migrating Greia character art, scenes, props, FX, reusable visual assets, or visual UI treatment**;
 18. **`docs/handovers/GREIA_VISUAL_SYSTEM_RESUME.md` — current visual-workstream resume contract when continuing art/graphics work across sessions**;
 19. `HANDOVER.md`;

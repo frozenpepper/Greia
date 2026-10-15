@@ -41,7 +41,7 @@ Narrower authorities:
 | Art/core-asset requirements | `docs/design/GREIA_VISUAL_ART_AND_CORE_ASSET_REQUIREMENTS.md` |
 | Character construction grammar | `docs/design/GREIA_CONSTRAINT_NATIVE_CHARACTER_GRAMMAR.md` |
 | Character expressions/motion | `docs/design/GREIA_CHARACTER_EXPRESSIONS_AND_MOTION.md` |
-| Source-tree inventory | `assets/visual/README.md` |
+| Source-tree inventory and shared library v1 families | `assets/visual/README.md`, `assets/catalog/shared_visuals_v1_source.toml` |
 | Pack inventory | `assets/visual/packs_v0.1.toml` |
 | Visual-library inventory | `assets/visual/library_v0.1.toml` |
 | Activity Simulator architecture/use | `docs/development/GREIA_ACTIVITY_SIMULATOR.md` |
@@ -294,7 +294,20 @@ Light/shadow overlays should remain independently removable where reuse benefits
 
 # 8. Current reusable source library
 
-Existing broad source coverage:
+**Current runtime source: the shared art library v1 (2026-10-15, catalogue 0.6.0).** New Activity and Shell visuals consume it by semantic ID; the source-tree summary is `assets/visual/README.md` ("Shared art library v1") and the selection is `assets/catalog/shared_visuals_v1_source.toml`.
+
+| Family | ID pattern | Contents |
+|---|---|---|
+| Biome scene layers and wallpapers (1024×600) | `bg.<biome>.<layer>` | meadow_day, night_sky, underwater, sea_surface, sky_clouds, woodland pond/autumn/snow, indoor_room walls and floors, stage, 8 wallpapers |
+| Props | `prop.<family>.<name>` | food, vocab nouns, everyday, nature, blocks (+colours, outline slots), shapes, instruments |
+| Creatures | `creature.<role>.<name>` | pets (readable need states), marine (incl. orca), woodland (peek/full/asleep); `prop.vocab.<animal>` aliases the creature art |
+| HUD glyphs | `icon.hud.<name>` | 33 control/HUD glyphs (control-kit glyphs keep `ui/controls/v1`) |
+| FX frames | `fx.<name>` | 17 multi-frame effects (`default` = peak frame) |
+| Cast variants | `character.<id>` variants | pose_cheer, pose_point, pose_think, pose_wave, pose_play, sad, angry, silly |
+
+Reuse these before drawing anything new; add to the library (never an Activity-private cast or biome redraw) only for a demonstrated gap, under `GREIA_SVG_AUTHORING_RULES.md`. The pre-reset environment packs below remain SOURCE/provenance pools and design references: they use superseded blur-filter dialects, are **not** the runtime source for new work, and are not installed on the image (only `assets/visual/runtime/` plus catalogues are).
+
+Earlier broad source coverage (provenance pools, not runtime sources):
 
 ```text
 assets/visual/environments/forest_meadow/v0.2/
@@ -331,6 +344,8 @@ Primary source pack:
 ```text
 assets/visual/ui/v0.1/
 ```
+
+Activity-facing controls (pills, icon buttons, tool strips, HUD chips, progress dots, prompt banners, completion card, stars and HUD glyphs) are the flat control-kit art under `assets/visual/ui/controls/v1/`, composed by `greia_platform.activity_controls` per ADR 0037. Activities must not hand-draw equivalents. The packs below are the earlier UI v0.1 source.
 
 Current source families include:
 
@@ -935,6 +950,8 @@ this new sheet.
 # 24. Current implementation snapshot
 
 The authoritative live checkpoint remains the active plan and resume file, but the stable architecture currently has these important facts:
+
+Added 2026-10-15 at **SOURCE + headless DESKTOP VISUAL REVIEW** scope only: shared art library v1 (families above, catalogue 0.6.0), complete flat core-icon family (29 icons), on-model cast poses/expressions, shared Activity control-kit art (ADR 0037) and the storybook Shell redesign (Home, picker, Collection pages, Sea theme folder, My Creations, launch screen). No Simulator/VM/physical visual acceptance yet; no Activity consumes the library yet.
 
 Accepted at **SIMULATOR VISUAL REVIEW** scope:
 
