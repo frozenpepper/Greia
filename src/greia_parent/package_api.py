@@ -14,7 +14,12 @@ from greia_parent.api_server import (
 from greia_parent.protocol import API_BASE, api_index_payload
 from greia_parent.server import parse_args
 from greia_parent.static_client import ParentStaticClient
-from greia_platform.activities import ActivityRegistry, ActivityValidationError
+from greia_platform.activities import (
+    ActivityManifest,
+    ActivityRegistration,
+    ActivityRegistry,
+    ActivityValidationError,
+)
 from greia_platform.activity_package_format import ACTIVITY_PACKAGE_MEDIA_TYPE
 from greia_platform.activity_packages import (
     MAX_ARCHIVE_BYTES,
@@ -56,14 +61,7 @@ class PackageParentApiApplication(ParentApiApplication):
             }
         )
 
-    def activities_payload(self) -> list[dict[str, object]]:
-        # Parent-installed Activities are a distinct trust source. Never fold
-        # them into the immutable built-in root merely for discovery convenience.
-        # The parent active set is consumed through its versioned generation
-        # index when available (published atomically with the set); a legacy
-        # layout falls back to a fail-closed validated scan so hygiene is
-        # never bypassed. Built-ins are always discovered from the immutable
-        # root; the two validated lists are only concatenated for display.
+    def _built_in_registrations(self) -> tuple[ActivityRegistration, ...]:
         built_in_source = ActivitySource(
             self.root / "activities",
             PackageTrust.BUILT_IN,
@@ -72,11 +70,42 @@ class PackageParentApiApplication(ParentApiApplication):
         built_in_registry = ActivityRegistry(
             (built_in_source,), self.package_service.runtime
         )
-        parent_registrations = self.package_service.load_active_registrations()
-        registrations = (
-            *built_in_registry.discover_registrations(),
-            *parent_registrations,
+        return built_in_registry.discover_registrations()
+
+    def _catalogue_registrations(self) -> tuple[ActivityRegistration, ...]:
+        # Parent-installed Activities are a distinct trust source. Never fold
+        # them into the immutable built-in root merely for discovery convenience.
+        # The parent active set is consumed through its versioned generation
+        # index when available (published atomically with the set); a legacy
+        # layout falls back to a fail-closed validated scan so hygiene is
+        # never bypassed. Built-ins are always discovered from the immutable
+        # root; the two validated lists are only concatenated.
+        return (
+            *self._built_in_registrations(),
+            *self.package_service.load_active_registrations(),
         )
+
+    def policy_activity_catalogue(self) -> tuple[ActivityManifest, ...]:
+        """Apply Parent discovery policy to built-ins plus installed Activities.
+
+        This mirrors the child Shell, which composes the built-in and
+        Parent-installed sources and evaluates the same profile policy over
+        both. When the installed set cannot be loaded, the Shell omits it and
+        keeps the built-ins; the Parent policy view degrades identically so
+        built-in choices stay editable and stale installed overrides can still
+        be cleared.
+        """
+        built_ins = self._built_in_registrations()
+        try:
+            installed = self.package_service.load_active_registrations()
+        except (ActivityPackageError, ActivityValidationError, OSError):
+            installed = ()
+        return tuple(
+            registration.manifest for registration in (*built_ins, *installed)
+        )
+
+    def activities_payload(self) -> list[dict[str, object]]:
+        registrations = self._catalogue_registrations()
         return [
             {
                 "activity_id": registration.manifest.activity_id,

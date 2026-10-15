@@ -1,3 +1,20 @@
+## 2026-10-16 — Parent API Activity policy now covers Parent-installed Activities
+
+**Evidence class: SOURCE only** (local macOS checkout, Python 3.12). No Linux image, VM, Acer or Pi run; the HTML Parent client was not exercised in a browser.
+
+**Defect:** `PUT/GET /api/v1/profiles/{id}/activity-policy` validated override ids and computed `effective_activity_ids` from the built-in registry only, while the package-enabled composition's `GET /activities` also lists Parent-installed Activities. The HTML Parent client (`Greia-Parent-App-Html`, `src/views_activities.js`) PUTs an override entry for *every* listed Activity (`null` = automatic), so "Save Activity choices" returned 400 `invalid_activity_policy` as soon as one Activity had been installed through `POST /activities/install`, and installed Activities could not be shown/hidden per child. The child Shell already applied profile policy to built-ins + Parent-installed Activities (`greia_launcher/presentation.py` composes both sources and runs the same `ActivityDiscoveryService`), so Parent and Shell disagreed.
+
+**Fix (`src/greia_parent/api_server.py`, `src/greia_parent/package_api.py`):**
+- New overridable hook `ParentApiApplication.policy_activity_catalogue()` (base: built-ins) used for both override validation and `effective_activity_ids`; `PackageParentApiApplication` overrides it with built-ins + the active Parent-installed set — the same registrations `GET /activities` lists (shared `_catalogue_registrations()`); no new registry. If the installed set cannot be loaded, the policy view degrades to built-ins, mirroring the Shell's fallback.
+- Clearing (`null` / `"default"`) is accepted for any well-formed id, so stale overrides left behind by Activity removal can always be dropped; a non-automatic value for an unlisted id is still rejected.
+- Catalogue resolved once per update (was discovered twice), and a complete PUT body no longer projects the current policy first. Built-in validated discovery costs ~14 s per call on this Mac dev tree, so the PUT path previously took ~40 s; worth measuring on the Acer.
+
+**Tests:** `tests/test_parent_api.py::PackageActivityPolicyCatalogueTests` (6): installed Activity in catalogue + effective set; `always_hide`/`always_show` for an installed id accepted and applied; client-shaped HTTP PUT with `null` for every listed id → 200; stale id cleared with `null`/`"default"` after uninstall (non-null still rejected); base composition clears unknown ids but rejects malformed ids; unloadable installed set degrades to built-ins. Focused run: 6/6 OK. Full gate: `make verify` test step ran 4,852 tests: 2 failures, 8 skipped, both outside the Parent API and both passing when re-run in isolation on this tree and on clean `origin/main` (`test_activity_sottomarino…test_app_loop_follows_orders_to_a_star_and_saves`: no voice cue spoken; `test_headless_greia_activity…test_real_activity_bootstrap_publishes_frames_to_owned_bridge`: exit 4). They look load-dependent: concurrent test processes were running during the suite. Treat them as flaky, not fixed. `test_parent_api.py` re-run on the final code: 34/34 OK. `make validate shell-check footprint`: exit 0.
+
+**Docs:** `docs/design/PARENT_CONTROLS_USAGE_LIMITS_AND_ACTIVITY_VISIBILITY.md` §3.2 states the catalogue/clearing contract.
+
+**Next:** exercise "Save Activity choices" from the HTML Parent client against a developer image with one Parent-installed Activity (PHYSICAL/VM evidence still owed). Developer-remote Activities (developer mode) are not listed by the Parent API and therefore remain non-overridable; clearing them still works.
+
 ## 2026-10-15 — Design & art tranche: Shell redesign, shared art library, control kit, custody fixes, P7 program
 
 **Evidence class: SOURCE + headless desktop review only** (Pygame dummy drivers at 1024×600 / 800×480 / 480×320). No Linux image, VM, Acer, Pi or audible/physical evidence. Complements the "New primary agent" entry below; it does not repeat it. Commits `ba4e6ab6..d98806e2` on `main`; the main agent owns the full-suite run.

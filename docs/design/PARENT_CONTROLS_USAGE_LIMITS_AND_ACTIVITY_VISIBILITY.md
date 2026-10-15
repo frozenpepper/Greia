@@ -97,6 +97,8 @@ Each card should expose, where available:
 
 The current implementation uses the existing Parent API `activity-policy` endpoint. The displayed `Shown to child` / `Hidden from child` state comes from `effective_activity_ids`, not from reconstructing the platform policy in JavaScript.
 
+The policy applies to the same catalogue `GET /activities` lists for that composition (`ParentApiApplication.policy_activity_catalogue()`): built-ins only in the base API, built-ins plus Parent-installed Activities in the package-enabled API — matching the child Shell, which evaluates the same profile policy over both sources and falls back to built-ins only when the installed set cannot be loaded. A non-automatic override is accepted only for a listed Activity; clearing (`null` or `"default"`) is accepted for any well-formed id, so stale overrides left behind by Activity removal can always be dropped.
+
 ### 3.3 Automatic age modes
 
 Expose the platform modes in parent language:
