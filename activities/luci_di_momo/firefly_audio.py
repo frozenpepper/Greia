@@ -10,6 +10,8 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 
 _SAMPLE_RATE: Final = 22_050
 
@@ -17,7 +19,11 @@ _SAMPLE_RATE: Final = 22_050
 class FireflyAudio:
     """Prepare Momo speech clips, nonverbal feedback tones, and fail soft when unavailable."""
 
-    def __init__(self, package_root: Path | None = None, locale: str = "it") -> None:
+    def __init__(
+        self, package_root: Path | None = None, locale: str = "it",
+        resources: LocalizedResources | None = None,
+    ) -> None:
+        self._resources = resources
         self._locale = locale
         self._package_root = package_root
         self._speech_clips: dict[str, pygame.mixer.Sound] = {}
@@ -47,6 +53,15 @@ class FireflyAudio:
 
     def _load_speech_clips(self) -> None:
         if self._package_root is None:
+            return
+        if self._resources is not None:
+            # The shared resolver owns locale-specific discovery and English
+            # fallback. This Activity still owns decoding and speech channels.
+            for stem, path in self._resources.speech_paths().items():
+                try:
+                    self._speech_clips[stem] = pygame.mixer.Sound(str(path))
+                except (pygame.error, OSError):
+                    continue
             return
         audio_dir = self._package_root / "assets" / "audio" / self._locale
         if not audio_dir.exists():
