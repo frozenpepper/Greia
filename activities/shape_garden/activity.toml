@@ -14,10 +14,13 @@ discovery_tags = ["drawing", "making"]
 categories = ["creativity", "geometry", "fine_motor"]
 difficulty = 2
 recommended_age_min = 3
+# Free composition with eight named shapes: the child chooses, drags, sizes,
+# turns, recolours and layers each one; optional ghost pictures (house,
+# flower, ...) ask for a shape by its outline. No right/wrong, no rounds.
 skills = [
-  { id = "motor.pointer.control", weight = 3 },
+  { id = "creativity.visual_composition", weight = 3 },
   { id = "math.geometry.shape_recognition", weight = 2 },
-  { id = "creativity.visual_composition", weight = 2 },
+  { id = "motor.pointer.control", weight = 2 },
 ]
 events = [
   { id = "creation.completed", kind = "creation" },
@@ -33,7 +36,7 @@ profile = "pointer"
 
 [requirements]
 required_capabilities = ["display", "pointer"]
-optional_capabilities = []
+optional_capabilities = ["touch"]
 
 [permissions]
 requested = []
@@ -42,5 +45,8 @@ requested = []
 schema_version = 1
 
 [creations]
+# Deliberate share publishes one flattened 1024x600 "composition" PNG;
+# autosaved gardens stay private. A child's PNG from My Creations can become
+# the garden backdrop (kept as an independent private copy).
 produces = ["image/png"]
 consumes = ["image/png"]

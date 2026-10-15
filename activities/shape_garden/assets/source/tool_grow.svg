@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- shape_garden tool_grow: make bigger; a coral circle with two arrows pushing outward to the corners -->
+  <g id="subject" stroke="#4B372F" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="48" cy="48" r="20" fill="#F46F61" stroke-width="4.5"/>
+    <ellipse cx="41" cy="40" rx="6" ry="4" fill="#FFFFFF" opacity="0.8" stroke="none" transform="rotate(-30 41 40)"/>
+    <path d="M66 30 L82 14" fill="none" stroke-width="5"/>
+    <path d="M68 12 L84 12 L84 28 Z" fill="#FFFBEB" stroke-width="4"/>
+    <path d="M30 66 L14 82" fill="none" stroke-width="5"/>
+    <path d="M28 84 L12 84 L12 68 Z" fill="#FFFBEB" stroke-width="4"/>
+  </g>
+</svg>

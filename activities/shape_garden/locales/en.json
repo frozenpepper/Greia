@@ -5,10 +5,14 @@
   "strings": {
     "activity.shape_garden.title": "Shape Garden",
     "activity.title": "Shape Garden",
-    "btn.clear": "Clear",
     "shape.circle": "Circle",
     "shape.square": "Square",
-    "shape.triangle": "Triangle"
+    "shape.triangle": "Triangle",
+    "shape.rectangle": "Rectangle",
+    "shape.star": "Star",
+    "shape.heart": "Heart",
+    "shape.oval": "Oval",
+    "shape.diamond": "Diamond"
   },
   "audio": {
     "activity.title": {

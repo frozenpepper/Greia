@@ -5,10 +5,14 @@
   "strings": {
     "activity.shape_garden.title": "Giardino delle Forme",
     "activity.title": "Giardino delle Forme",
-    "btn.clear": "Pulisci",
     "shape.circle": "Cerchio",
     "shape.square": "Quadrato",
-    "shape.triangle": "Triangolo"
+    "shape.triangle": "Triangolo",
+    "shape.rectangle": "Rettangolo",
+    "shape.star": "Stella",
+    "shape.heart": "Cuore",
+    "shape.oval": "Ovale",
+    "shape.diamond": "Rombo"
   },
   "audio": {
     "activity.title": {
