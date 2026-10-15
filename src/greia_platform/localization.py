@@ -555,8 +555,12 @@ class LocalizedResources:
         if filename is not None:
             names = (filename,)
         elif key == "activity.title":
+            # Modern Activities use a hyphen; the existing My Time incubator
+            # uses an underscore. Both are already approved on-disk names.
+            directory = self.package_root / "locales" / locale / "audio"
             return (
-                self.package_root / "locales" / locale / "audio" / "activity-title.wav",
+                directory / "activity-title.wav",
+                directory / "activity_title.wav",
             )
         else:
             names = (f"{key}.ogg", f"{key}.wav")
