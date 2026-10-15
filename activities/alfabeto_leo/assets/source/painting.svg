@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Alfabeto di Leo picture "painting" (IT Q come Quadro): framed landscape on a nail. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine/orange step -->
+    <linearGradient id="alfabeto_painting_frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD873"/>
+      <stop offset="1" stop-color="#F3A93A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="234" rx="78" ry="9" fill="#6A5147" opacity="0.10"/>
+  </g>
+  <g id="painting">
+    <path d="M62 62 L128 26 L194 62" fill="none" stroke="#4B372F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="128" cy="24" r="7" fill="#A2A4A6" stroke="#4B372F" stroke-width="3.5"/>
+    <rect x="30" y="56" width="196" height="158" rx="12" fill="url(#alfabeto_painting_frame)" stroke="#4B372F" stroke-width="5"/>
+    <rect x="50" y="76" width="156" height="118" rx="5" fill="#CFEAF7" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="170" cy="104" r="16" fill="#FFC234" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M70 108 C70 100 82 96 88 102 C94 94 108 98 106 108 Z" fill="#FFFFFF" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M52 164 C76 140 104 138 130 154 C154 140 182 140 204 156 L204 192 L52 192 Z" fill="#59B86A" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M52 178 C90 162 150 162 204 176 L204 192 L52 192 Z" fill="#9BD4A6" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M92 150 L92 132" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="92" cy="126" r="12" fill="#3E8A4E" stroke="#4B372F" stroke-width="3.5"/>
+    <circle cx="150" cy="180" r="5" fill="#F46F61"/>
+    <circle cx="166" cy="184" r="5" fill="#FFFBEB"/>
+    <path d="M40 72 L40 120" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.75"/>
+  </g>
+</svg>

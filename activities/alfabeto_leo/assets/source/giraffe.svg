@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Alfabeto di Leo picture "giraffe" (EN G as Giraffe, ES J de Jirafa). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="alfabeto_giraffe_coat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFDA85"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="112" cy="232" rx="78" ry="13" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="giraffe">
+    <path d="M46 150 C34 160 30 174 32 190" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+    <path d="M32 190 C26 196 28 206 34 204 C40 204 40 196 32 190 Z" fill="#B87735" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="58" y="168" width="20" height="62" rx="9" fill="#F0B43A" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="116" y="168" width="20" height="62" rx="9" fill="#F0B43A" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M150 154 L118 152 L162 64 C166 54 182 52 190 60 Z" fill="url(#alfabeto_giraffe_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="100" cy="152" rx="62" ry="38" fill="url(#alfabeto_giraffe_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="76" y="172" width="20" height="60" rx="9" fill="url(#alfabeto_giraffe_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="134" y="172" width="20" height="60" rx="9" fill="url(#alfabeto_giraffe_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M128 118 L156 62" fill="none" stroke="#B87735" stroke-width="9" stroke-linecap="round"/>
+    <path d="M70 136 C76 128 88 130 88 140 C88 148 76 150 70 144 Z M104 128 C112 122 124 126 122 136 C120 144 106 144 104 136 Z M92 160 C98 154 110 156 110 164 C108 172 96 172 92 166 Z M128 154 C134 148 144 152 142 160 C140 166 130 166 128 160 Z M54 160 C58 154 66 156 66 162 C66 168 58 170 54 166 Z M150 120 C154 114 162 116 160 124 C158 130 150 128 150 120 Z M162 90 C166 84 174 86 172 94 C170 100 162 98 162 90 Z" fill="#B87735"/>
+    <path d="M176 38 L172 18 M192 38 L194 18" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="172" cy="16" r="7" fill="#B87735" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="194" cy="16" r="7" fill="#B87735" stroke="#4B372F" stroke-width="4"/>
+    <path d="M166 50 C150 44 144 52 150 58 C156 62 164 58 166 50 Z" fill="url(#alfabeto_giraffe_coat)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="186" cy="56" rx="28" ry="24" fill="url(#alfabeto_giraffe_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="208" cy="68" rx="20" ry="15" fill="#FFE7B3" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <circle cx="206" cy="64" r="2.6" fill="#4B372F"/>
+    <circle cx="216" cy="66" r="2.6" fill="#4B372F"/>
+    <path d="M198 76 Q206 82 214 76" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="184" cy="50" rx="6" ry="8" fill="#342C35"/>
+    <circle cx="182" cy="47" r="2.4" fill="#FFFFFF"/>
+    <ellipse cx="174" cy="66" rx="8" ry="5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="70" cy="132" rx="16" ry="7" fill="#FFFFFF" opacity="0.6" transform="rotate(-20 70 132)"/>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Alfabeto di Leo picture "hotel" (IT H come Hotel): tall hotel with a star sign and an awning. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- peach light -> peach -->
+    <linearGradient id="alfabeto_hotel_wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FCECDE"/>
+      <stop offset="1" stop-color="#F8D8BD"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="84" ry="13" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="hotel">
+    <path d="M128 50 L128 40" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+    <rect x="80" y="14" width="96" height="30" rx="10" fill="#4A91D8" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M102 21 L105 27 L111 28 L106 32 L108 38 L102 35 L96 38 L98 32 L93 28 L99 27 Z M128 21 L131 27 L137 28 L132 32 L134 38 L128 35 L122 38 L124 32 L119 28 L125 27 Z M154 21 L157 27 L163 28 L158 32 L160 38 L154 35 L148 38 L150 32 L145 28 L151 27 Z" fill="#FFC234" stroke="#4B372F" stroke-width="2" stroke-linejoin="round"/>
+    <rect x="58" y="62" width="140" height="170" rx="8" fill="url(#alfabeto_hotel_wall)" stroke="#4B372F" stroke-width="5"/>
+    <rect x="48" y="50" width="160" height="22" rx="8" fill="#F46F61" stroke="#4B372F" stroke-width="5"/>
+    <rect x="74" y="86" width="26" height="26" rx="5" fill="#CFEAF7" stroke="#4B372F" stroke-width="4"/>
+    <rect x="115" y="86" width="26" height="26" rx="5" fill="#CFEAF7" stroke="#4B372F" stroke-width="4"/>
+    <rect x="156" y="86" width="26" height="26" rx="5" fill="#CFEAF7" stroke="#4B372F" stroke-width="4"/>
+    <rect x="74" y="126" width="26" height="26" rx="5" fill="#CFEAF7" stroke="#4B372F" stroke-width="4"/>
+    <rect x="115" y="126" width="26" height="26" rx="5" fill="#FFE7A1" stroke="#4B372F" stroke-width="4"/>
+    <rect x="156" y="126" width="26" height="26" rx="5" fill="#CFEAF7" stroke="#4B372F" stroke-width="4"/>
+    <rect x="74" y="166" width="26" height="26" rx="5" fill="#FFE7A1" stroke="#4B372F" stroke-width="4"/>
+    <rect x="156" y="166" width="26" height="26" rx="5" fill="#CFEAF7" stroke="#4B372F" stroke-width="4"/>
+    <rect x="112" y="186" width="32" height="46" rx="5" fill="#4A91D8" stroke="#4B372F" stroke-width="4.5"/>
+    <path d="M128 188 L128 232" fill="none" stroke="#4B372F" stroke-width="3"/>
+    <path d="M104 170 L152 170 L158 184 C154 190 148 190 145 184 C141 190 135 190 132 184 C128 190 122 190 119 184 C115 190 109 190 106 184 C103 190 97 190 98 184 Z" fill="#F46F61" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M116 172 L113 184 M128 172 L128 184 M140 172 L143 184" fill="none" stroke="#FFFBEB" stroke-width="5" stroke-linecap="round"/>
+    <path d="M66 84 L66 150" fill="none" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Alfabeto di Leo picture "zebra" (EN/IT Z, FR Z comme Zèbre). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cream -> cream/sand step -->
+    <linearGradient id="alfabeto_zebra_coat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFDF5"/>
+      <stop offset="1" stop-color="#F6ECD2"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="120" cy="232" rx="82" ry="13" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="zebra">
+    <path d="M42 134 C30 142 26 158 28 172" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+    <path d="M28 170 C20 178 24 190 30 188 C38 188 38 178 28 170 Z" fill="#4B372F"/>
+    <rect x="56" y="160" width="20" height="68" rx="9" fill="#EDE2C8" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="124" y="160" width="20" height="68" rx="9" fill="#EDE2C8" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M136 112 C146 92 160 70 174 54 L196 70 C186 94 170 124 160 142 Z" fill="url(#alfabeto_zebra_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M152 108 L174 116 M162 90 L182 98 M172 74 L190 82" fill="none" stroke="#4B372F" stroke-width="8" stroke-linecap="round"/>
+    <path d="M134 114 C144 92 158 68 174 52" fill="none" stroke="#4B372F" stroke-width="14" stroke-linecap="round"/>
+    <ellipse cx="100" cy="140" rx="64" ry="38" fill="url(#alfabeto_zebra_coat)"/>
+    <path d="M70 104 C68 118 74 128 82 134 M98 102 C94 118 98 132 106 140 M126 104 C120 118 122 132 130 142 M50 118 C54 130 62 136 70 140 M56 162 C64 156 74 158 82 164 M150 124 C144 130 144 140 150 148" fill="none" stroke="#4B372F" stroke-width="9" stroke-linecap="round"/>
+    <ellipse cx="100" cy="140" rx="64" ry="38" fill="none" stroke="#4B372F" stroke-width="5"/>
+    <rect x="76" y="164" width="20" height="66" rx="9" fill="url(#alfabeto_zebra_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="142" y="164" width="20" height="66" rx="9" fill="url(#alfabeto_zebra_coat)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M78 186 L94 186 M78 204 L94 204 M144 186 L160 186 M144 204 L160 204" fill="none" stroke="#4B372F" stroke-width="6" stroke-linecap="round"/>
+    <path d="M76 220 L96 220 L96 224 C96 228 92 230 88 230 L84 230 C80 230 76 228 76 224 Z M142 220 L162 220 L162 224 C162 228 158 230 154 230 L150 230 C146 230 142 228 142 224 Z" fill="#4B372F"/>
+    <path d="M180 46 L176 24 L192 38 Z M196 44 L198 22 L208 42 Z" fill="url(#alfabeto_zebra_coat)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <ellipse cx="204" cy="80" rx="24" ry="40" fill="url(#alfabeto_zebra_coat)" stroke="#4B372F" stroke-width="5" transform="rotate(-38 204 80)"/>
+    <path d="M190 52 C186 58 186 64 188 68 M222 74 C216 76 214 82 216 88" fill="none" stroke="#4B372F" stroke-width="5" stroke-linecap="round"/>
+    <ellipse cx="224" cy="104" rx="17" ry="14" fill="#83858A" stroke="#4B372F" stroke-width="4.5" transform="rotate(-38 224 104)"/>
+    <circle cx="228" cy="102" r="2.6" fill="#30343A"/>
+    <ellipse cx="208" cy="78" rx="6" ry="8" fill="#342C35"/>
+    <circle cx="206" cy="75" r="2.4" fill="#FFFFFF"/>
+    <ellipse cx="200" cy="96" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="74" cy="118" rx="14" ry="6" fill="#FFFFFF" opacity="0.7" transform="rotate(-20 74 118)"/>
+  </g>
+</svg>

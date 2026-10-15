@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Alfabeto di Leo picture "igloo" (EN I as Igloo, FR I comme Igloo). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- sky light -> sky -->
+    <linearGradient id="alfabeto_igloo_dome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F3FAFD"/>
+      <stop offset="1" stop-color="#CFEAF7"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="222" rx="112" ry="16" fill="#6A5147" opacity="0.12"/>
+  </g>
+  <g id="igloo">
+    <path d="M16 214 C26 196 56 192 128 192 C200 192 230 196 240 214 C232 222 200 224 128 224 C56 224 24 222 16 214 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M36 204 A92 92 0 0 1 220 204 Z" fill="url(#alfabeto_igloo_dome)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M42 180 L214 180 M52 156 L204 156 M72 132 L184 132" fill="none" stroke="#89B8E6" stroke-width="4" stroke-linecap="round"/>
+    <path d="M66 180 L66 204 M190 180 L190 204 M80 156 L80 180 M176 156 L176 180 M104 132 L104 156 M152 132 L152 156 M128 118 L128 132" fill="none" stroke="#89B8E6" stroke-width="4" stroke-linecap="round"/>
+    <path d="M92 206 L92 172 C92 150 164 150 164 172 L164 206 Z" fill="url(#alfabeto_igloo_dome)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M108 206 L108 180 C108 164 148 164 148 180 L148 206 Z" fill="#253B59" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M60 168 C66 146 82 128 104 120" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+</svg>

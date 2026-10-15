@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Alfabeto di Leo picture "koala" (IT K come Koala, FR K comme Koala). Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- charcoal light steps (55% / 40% white) -->
+    <linearGradient id="alfabeto_koala_fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C1C2C4"/>
+      <stop offset="1" stop-color="#A2A4A6"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="232" rx="66" ry="11" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="koala">
+    <path d="M78 228 C64 196 74 150 128 148 C182 150 192 196 178 228 Z" fill="url(#alfabeto_koala_fur)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M100 226 C94 204 104 180 128 180 C152 180 162 204 156 226 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M30 190 C70 186 150 176 228 150" fill="none" stroke="#7C8B4F" stroke-width="10" stroke-linecap="round"/>
+    <path d="M44 188 C38 172 48 160 60 166 C62 178 56 186 44 188 Z M206 158 C210 142 224 140 230 150 C224 160 216 162 206 158 Z M186 166 C186 182 198 190 206 184 C204 172 196 166 186 166 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M86 192 C92 180 108 178 112 188 C114 196 102 202 92 200 C86 198 84 196 86 192 Z M170 192 C164 180 148 178 144 188 C142 196 154 202 164 200 C170 198 172 196 170 192 Z" fill="url(#alfabeto_koala_fur)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <circle cx="66" cy="70" r="36" fill="url(#alfabeto_koala_fur)" stroke="#4B372F" stroke-width="5"/>
+    <circle cx="190" cy="70" r="36" fill="url(#alfabeto_koala_fur)" stroke="#4B372F" stroke-width="5"/>
+    <circle cx="68" cy="72" r="20" fill="#F5D6DF"/>
+    <circle cx="188" cy="72" r="20" fill="#F5D6DF"/>
+    <ellipse cx="128" cy="104" rx="66" ry="58" fill="url(#alfabeto_koala_fur)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M114 100 C114 88 142 88 142 100 L142 124 C142 138 114 138 114 124 Z" fill="#4B372F"/>
+    <ellipse cx="122" cy="102" rx="5" ry="7" fill="#FFFFFF" opacity="0.5"/>
+    <ellipse cx="96" cy="96" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="94" cy="93" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="160" cy="96" rx="6.5" ry="8.5" fill="#342C35"/>
+    <circle cx="158" cy="93" r="2.6" fill="#FFFFFF"/>
+    <ellipse cx="86" cy="122" rx="10" ry="6" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="170" cy="122" rx="10" ry="6" fill="#FDA4AF" opacity="0.55"/>
+    <path d="M118 144 Q128 150 138 144" fill="none" stroke="#4B372F" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="88" cy="68" rx="14" ry="6" fill="#FFFFFF" opacity="0.6" transform="rotate(-30 88 68)"/>
+  </g>
+</svg>

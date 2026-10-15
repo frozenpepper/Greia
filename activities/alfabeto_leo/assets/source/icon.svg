@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- L'Alfabeto di Leo (Leo's Letter Garden) Activity icon: a big letter A half traced, a start dot and a sprouting flower. Flat tile recipe (GREIA_SVG_AUTHORING_RULES §7, learn -> orange). -->
+  <defs>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="alfabeto_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#alfabeto_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
+  </g>
+  <g id="shadow">
+    <ellipse cx="124" cy="214" rx="74" ry="9" fill="#9A5F2C" opacity="0.18"/>
+  </g>
+  <g id="subject" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M118 46 L66 200 M118 46 L170 200 M86 142 L150 142" stroke="#4B372F" stroke-width="40"/>
+    <path d="M118 46 L66 200 M118 46 L170 200 M86 142 L150 142" stroke="#FFFBEB" stroke-width="29"/>
+    <path d="M118 46 L66 200 M118 46 L146 129" stroke="#4A91D8" stroke-width="19"/>
+    <path d="M112 66 L96 112" stroke="#89B8E6" stroke-width="5"/>
+  </g>
+  <g id="accent">
+    <circle cx="146" cy="129" r="16" fill="#FFFBEB" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="146" cy="129" r="9" fill="#59B86A" stroke="#4B372F" stroke-width="3"/>
+    <path d="M200 214 L200 178" fill="none" stroke="#3E8A4E" stroke-width="6" stroke-linecap="round"/>
+    <path d="M200 196 C188 188 182 194 184 202 C192 204 198 202 200 196 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M200 156 C206 146 220 150 216 162 C228 162 228 176 216 176 C220 188 206 190 200 182 C194 190 180 188 184 176 C172 176 172 162 184 162 C180 150 194 146 200 156 Z" fill="#D85683" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <circle cx="200" cy="169" r="7" fill="#FFC234" stroke="#4B372F" stroke-width="3"/>
+  </g>
+</svg>

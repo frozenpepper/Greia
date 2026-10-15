@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Alfabeto di Leo picture "yogurt" (IT Y come Yogurt, FR Y comme Yaourt): yogurt pot with a spoon. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- cream -> sand step -->
+    <linearGradient id="alfabeto_yogurt_pot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F3EAD6"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="230" rx="70" ry="11" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="yogurt">
+    <path d="M150 92 L184 22" fill="none" stroke="#4B372F" stroke-width="13" stroke-linecap="round"/>
+    <path d="M150 92 L184 22" fill="none" stroke="#C1C2C4" stroke-width="6" stroke-linecap="round"/>
+    <path d="M60 86 L76 222 C77 228 82 232 88 232 L168 232 C174 232 179 228 180 222 L196 86 Z" fill="url(#alfabeto_yogurt_pot)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M67 140 L189 140 L182 196 L74 196 Z" fill="#E89AB5" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M128 182 C112 172 108 158 116 152 C120 149 125 150 128 154 C131 150 136 149 140 152 C148 158 144 172 128 182 Z" fill="#F46F61" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M122 152 L128 144 L134 152" fill="#59B86A" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="124" cy="164" r="1.8" fill="#FFFBEB"/>
+    <circle cx="133" cy="166" r="1.8" fill="#FFFBEB"/>
+    <ellipse cx="128" cy="86" rx="72" ry="16" fill="#FFFBEB" stroke="#4B372F" stroke-width="5"/>
+    <path d="M78 84 C96 76 160 76 178 84 C160 92 96 92 78 84 Z" fill="#F7EEDB"/>
+    <path d="M70 84 C58 64 66 44 94 40 C110 38 122 46 124 58 C112 62 92 70 82 86 Z" fill="#CFEAF7" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <ellipse cx="152" cy="84" rx="20" ry="6" fill="#C1C2C4" stroke="#4B372F" stroke-width="3.5"/>
+    <path d="M78 104 L86 212" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>

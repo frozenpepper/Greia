@@ -3,13 +3,15 @@ from __future__ import annotations
 
 from pathlib import Path
 import sys
+import random
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "activities" / "alfabeto_leo"))
 
 from alfabeto_model import (  # noqa: E402
-    LETTERS_CATALOGUE, AlfabetoModel, GameMode, get_letter_catalogue,
+    LETTERS_CATALOGUE, PICTURE_PENDING, GardenPlanner, GardenRound, StepKind,
+    get_letter_catalogue, teaching_groups,
 )
 
 
@@ -32,7 +34,7 @@ class StagedAlphabetCurriculumTests(unittest.TestCase):
         self.assertEqual(letters[14].word_for("es-MX"), "ÑANDÚ")
         for item in letters:
             self.assertTrue(item.word_for("es").startswith(item.char))
-            self.assertTrue(item.symbol_for("es"))
+            self.assertTrue(item.picture_for("es"))
         with self.assertRaises(ValueError):
             letters[14].word_for("en")
 
@@ -42,32 +44,26 @@ class StagedAlphabetCurriculumTests(unittest.TestCase):
         self.assertEqual(letters[21].word_for("fr-FR"), "VÉLO")
         for item in letters:
             self.assertTrue(item.word_for("fr").startswith(item.char))
-            self.assertTrue(item.symbol_for("fr"))
+            self.assertTrue(item.picture_for("fr"))
         with self.assertRaises(ValueError):
             get_letter_catalogue("zh-CN")
 
-    def test_spanish_navigation_guessing_and_parade_include_enye(self) -> None:
-        model = AlfabetoModel(locale="es")
-        self.assertTrue(model.select_letter("Ñ"))
-        self.assertEqual(model.current_index, 14)
-        self.assertEqual(model.active_letter.char, "Ñ")
-        self.assertEqual(model.step(1).char, "O")
-        self.assertEqual(model.step(-1).char, "Ñ")
-        model.switch_mode(GameMode.GUESS)
-        self.assertEqual(len(model.guess_choices), 3)
-        for item in model.letters:
-            model.select_letter(item.char)
-        events = model.update(0.02)
-        self.assertEqual(events.count("alphabet.parade_completed"), 1)
-        self.assertEqual(len(model.discovered_letters), 27)
-        self.assertEqual(model.update(0.02), [])
-        reloaded = AlfabetoModel(locale="es")
-        reloaded.restore_discoveries(model.discovered_letters)
-        self.assertEqual(reloaded.update(0.02), [])
-        self.assertEqual(len(reloaded.discovered_letters), 27)
-        italian = AlfabetoModel(locale="it")
-        italian.restore_discoveries({"Ñ", "A", "B"})
-        self.assertNotIn("Ñ", italian.discovered_letters)
+    def test_spanish_teaching_groups_and_garden_round_include_enye(self) -> None:
+        groups = teaching_groups("es")
+        self.assertEqual(sum(len(group) for group in groups), 27)
+        enye_group = next(index for index, group in enumerate(groups) if "Ñ" in group)
+        planner = GardenPlanner(random.Random(4), locale="es")
+        round_ = GardenRound(planner.build(enye_group), group=enye_group)
+        self.assertIn("Ñ", [item.char for item in round_.letters])
+        enye = next(step for step in round_.steps if step.kind is StepKind.MEET and step.letter.char == "Ñ")
+        self.assertEqual(enye.letter.word_for("es"), "ÑANDÚ")
+        self.assertEqual(enye.letter.picture_for("es"), PICTURE_PENDING)  # staged: no art yet
+        # Italian/English/French lessons never offer Ñ, not even as a decoy.
+        for locale in ("it", "en", "fr"):
+            planner = GardenPlanner(random.Random(4), locale=locale)
+            for group in range(planner.group_count + 1):
+                for step in planner.build(group):
+                    self.assertNotIn("Ñ", [item.char for item in step.choices] + [step.letter.char])
 
     def test_activity_stays_two_language_until_voice_approved(self) -> None:
         import tomllib

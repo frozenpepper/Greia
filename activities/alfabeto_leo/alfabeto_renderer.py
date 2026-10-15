@@ -1,340 +1,378 @@
-"""Storybook visual renderer for L'Alfabeto di Leo."""
+"""Letter-garden scene presentation for L'Alfabeto di Leo.
+
+Draw order: cached meadow + paper card (static layer) → garden beds with the
+letters planted this round → the step on the card (meet: big letter + its
+picture; find: the picture sign; trace: hollow letter, the child's ink, the
+start dot and the demonstrating hand; bloom: the coloured letter and its
+picture popping out) → Leo → speaking/hint glows → kit controls → FX.
+
+All images come pre-scaled from ``AlfabetoArt``; per frame there are only
+blits, a few integer offsets and two tiny vector marks (start dot ring and
+direction arrow) on the tracing guide. No text is rendered: letters are
+stroke-font art, prompts are spoken.
+"""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import math
-from pathlib import Path
+from typing import Final, Sequence
 
 import pygame
 
-from greia_platform.localization import LocalizedResources, display_text
-from greia_platform.pygame_canvas import PygameReferenceCanvas
-from greia_platform.typography import FontRole, GreiaTypography
+from greia_platform.activity_controls import BodyShape, ControlKit, mix
 
 if __package__:
-    from .alfabeto_model import (
-        AlfabetoModel,
-        GameMode,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-    )
+    from .alfabeto_art import CREAM, INK, AlfabetoArt, TraceInk
+    from .alfabeto_controls import LEO_HEIGHT, LEO_MIDBOTTOM, GardenLayout
+    from .alfabeto_model import GardenStep, LetterItem, StepKind
+    from .alfabeto_trace import TraceGuide
 else:
-    from alfabeto_model import (
-        AlfabetoModel,
-        GameMode,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-    )
+    from alfabeto_art import CREAM, INK, AlfabetoArt, TraceInk
+    from alfabeto_controls import LEO_HEIGHT, LEO_MIDBOTTOM, GardenLayout
+    from alfabeto_model import GardenStep, LetterItem, StepKind
+    from alfabeto_trace import TraceGuide
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-LEO_ASSET_DIR = PROJECT_ROOT / "assets" / "visual" / "runtime" / "v1" / "characters"
+
+CARD_FILL: Final = (255, 248, 228)
+LEAF: Final = (89, 184, 106)
+GARDEN_FLOWER: Final = 74
+GARDEN_GLYPH: Final = 70
+FLIGHT_GLYPH: Final = 84
+SPEAKING_LIFT: Final = 8
+BLOOM_SECONDS: Final = 0.9
+HAND_SIZE: Final = 92
+# Fingertip of icon.hud.drag_hint (96-unit master), as a fraction of its size.
+HAND_TIP: Final = (0.60, 0.12)
+
+
+@dataclass(frozen=True, slots=True)
+class TraceView:
+    """Tracing state the renderer needs (geometry is local to the trace box)."""
+
+    guide: TraceGuide
+    ink: TraceInk
+    stroke_index: int
+    head: tuple[float, float] | None
+    progress: float = 0.0
+    demo_point: tuple[float, float] | None = None
+    start_pulse: bool = False
+    complete: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class SceneState:
+    """Everything the renderer needs for one frame (built by the app)."""
+
+    step: GardenStep | None
+    picture: str
+    planted: Sequence[LetterItem] = ()
+    garden_count: int = 3
+    speaking: str | None = None
+    hint_target: str | None = None
+    pulse_phase: int = 0
+    shake: tuple[str, int] | None = None
+    leo_pointing: bool = False
+    trace: TraceView | None = None
+    bloom: float | None = None
+    flight: tuple[LetterItem, tuple[int, int], tuple[int, int], float] | None = None
+    sparkle_at: tuple[tuple[int, int], float] | None = None
+    finale: float | None = None
+    celebrating_choice: int | None = None
+    # Finale recap: each planted letter with its example picture.
+    bouquet: Sequence[tuple[LetterItem, str]] = ()
 
 
 class AlfabetoRenderer:
-    """Draws Leo's cozy treehouse library and giant letter cards."""
+    """Render the letter garden; geometry comes from ``GardenLayout``."""
 
-    def __init__(
-        self,
-        canvas: PygameReferenceCanvas,
-        typography: GreiaTypography,
-        resources: LocalizedResources,
-    ) -> None:
-        self.canvas = canvas
-        self.typography = typography
-        self.resources = resources
-        self._leo_images: dict[str, pygame.Surface] = {}
-        self._load_character_assets()
+    def __init__(self, art: AlfabetoArt) -> None:
+        self._art = art
+        self.cast = None  # CastFeedback, injected by the app (shares the kit art cache)
+        self.kit: ControlKit | None = None
+        self._static: pygame.Surface | None = None
+        self._static_key: tuple | None = None
+        self._point = art.cast_pose("leo", "pose_point", LEO_HEIGHT)
+        self._start_dot: dict[int, pygame.Surface] = {}
+        self._guides: dict[tuple[str, int, int], TraceGuide] = {}
 
-    def _load_character_assets(self) -> None:
-        moods = ["neutral", "happy", "surprised", "blink"]
-        for mood in moods:
-            path = LEO_ASSET_DIR / f"leo_{mood}.png"
-            if path.is_file():
-                try:
-                    img = pygame.image.load(str(path))
-                    # Scale Leo to a friendly character size (~180x180)
-                    self._leo_images[mood] = pygame.transform.smoothscale(img, (180, 180))
-                except Exception:
-                    pass
+    @property
+    def art(self) -> AlfabetoArt:
+        return self._art
 
-    def render(self, model: AlfabetoModel, anim_time: float) -> None:
-        surf = self.canvas.surface
+    # -- caches -------------------------------------------------------------------
+    def _static_layer(self, geometry: GardenLayout) -> pygame.Surface:
+        """Meadow backdrop + paper card, rebuilt only on relayout."""
 
-        # 1. Warm cozy treehouse room & window
-        self._draw_background(surf, anim_time)
-
-        # 2. Leo the Owl (on his cozy perch on the left)
-        self._draw_leo(surf, model, anim_time)
-
-        # 3. Top Banner & Mode Toggle
-        self._draw_top_bar(surf, model)
-
-        # 4. Mode-specific content
-        if model.mode == GameMode.EXPLORE:
-            self._draw_explore_mode(surf, model, anim_time)
+        key = (tuple(geometry.card),)
+        if self._static is not None and self._static_key == key:
+            return self._static
+        surface = self._art.background.copy()
+        card = geometry.card
+        if self.kit is not None:
+            body = self.kit.painter.body(BodyShape.PANEL, (card.width, card.height + 10), CARD_FILL, lip=10, contour_width=5, highlight=False)
+            surface.blit(body, card.topleft)
         else:
-            self._draw_guess_mode(surf, model, anim_time)
+            pygame.draw.rect(surface, CARD_FILL, card, border_radius=28)
+            pygame.draw.rect(surface, INK, card, width=4, border_radius=28)
+        self._static = surface
+        self._static_key = key
+        return surface
 
-        # 5. Celebration sparkles on correct guess
-        if model.celebrating:
-            self._draw_celebration(surf, anim_time)
+    def guide(self, char: str, size: tuple[int, int]) -> TraceGuide:
+        """Letter geometry fitted to a local box (computed once per letter/size)."""
 
-    def _draw_background(self, surf: pygame.Surface, anim_time: float) -> None:
-        # Cozy warm cream wall
-        surf.fill((253, 246, 235))
+        key = (char, int(size[0]), int(size[1]))
+        guide = self._guides.get(key)
+        if guide is None:
+            if len(self._guides) >= 12:
+                self._guides.clear()
+            guide = TraceGuide.fit(char, (0, 0, key[1], key[2]))
+            self._guides[key] = guide
+        return guide
 
-        # Festive pastel bunting flags across top
-        bunting_colors = [(245, 110, 110), (100, 180, 245), (255, 210, 70), (120, 215, 130), (220, 140, 230)]
-        flag_w, flag_h = 44, 38
-        for i in range(12):
-            fx = 150 + i * 60
-            fy = 6
-            col = bunting_colors[i % len(bunting_colors)]
-            pygame.draw.polygon(surf, col, [(fx, fy), (fx + flag_w, fy), (fx + flag_w // 2, fy + flag_h)])
-        pygame.draw.line(surf, (205, 180, 150), (140, 6), (880, 6), 2)
+    def start_dot(self, diameter: int) -> pygame.Surface:
+        """Green "start here" dot with a cream ring (built once per size)."""
 
-        # Arched window in upper-right with blue sky and sun
-        wx, wy, ww, wh = 750, 60, 220, 250
-        # Window frame shadow & base
-        pygame.draw.rect(surf, (200, 230, 255), (wx, wy, ww, wh), border_radius=30)
-        pygame.draw.rect(surf, (220, 175, 120), (wx, wy, ww, wh), width=6, border_radius=30)
-        # Outside scenery through window: warm sun & little cloud
-        sun_pulse = 2.0 * math.sin(anim_time * 2.0)
-        pygame.draw.circle(surf, (255, 220, 70), (wx + 155, wy + 70), int(34 + sun_pulse))
-        pygame.draw.circle(surf, (255, 255, 255), (wx + 65, wy + 110), 22)
-        pygame.draw.circle(surf, (255, 255, 255), (wx + 85, wy + 110), 26)
-        pygame.draw.circle(surf, (255, 255, 255), (wx + 105, wy + 110), 20)
-        # Window mullions
-        pygame.draw.line(surf, (220, 175, 120), (wx + ww // 2, wy), (wx + ww // 2, wy + wh), 4)
-        pygame.draw.line(surf, (220, 175, 120), (wx, wy + wh // 2), (wx + ww, wy + wh // 2), 4)
+        diameter = max(12, int(diameter))
+        cached = self._start_dot.get(diameter)
+        if cached is not None:
+            return cached
+        if len(self._start_dot) > 6:
+            self._start_dot.clear()
+        s = 2
+        big = pygame.Surface((diameter * s, diameter * s), pygame.SRCALPHA)
+        r = diameter * s // 2
+        pygame.draw.circle(big, INK, (r, r), r)
+        pygame.draw.circle(big, CREAM, (r, r), int(r * 0.86))
+        pygame.draw.circle(big, INK, (r, r), int(r * 0.66))
+        pygame.draw.circle(big, LEAF, (r, r), int(r * 0.56))
+        pygame.draw.circle(big, mix(LEAF, (255, 255, 255), 0.45), (int(r * 0.8), int(r * 0.8)), int(r * 0.16))
+        surface = pygame.transform.smoothscale(big, (diameter, diameter))
+        self._start_dot[diameter] = surface
+        return surface
 
-        # Warm wooden floor at bottom
-        pygame.draw.rect(surf, (230, 195, 150), (0, 480, REFERENCE_WIDTH, 120))
-        pygame.draw.line(surf, (205, 165, 120), (0, 480), (REFERENCE_WIDTH, 480), 4)
-        for px in range(120, REFERENCE_WIDTH, 180):
-            pygame.draw.line(surf, (215, 175, 130), (px, 480), (px, 600), 2)
+    # -- frame --------------------------------------------------------------------
+    def draw_scene(self, target: pygame.Surface, geometry: GardenLayout, state: SceneState, *, draw_controls) -> None:
+        target.blit(self._static_layer(geometry), (0, 0))
+        self._draw_garden(target, geometry, state)
+        step = state.step
+        if step is not None:
+            if step.kind is StepKind.MEET:
+                self._draw_meet(target, geometry, state)
+            elif step.is_find:
+                self._draw_find(target, geometry, state)
+            elif step.kind is StepKind.TRACE:
+                self._draw_trace(target, geometry, state)
+        elif state.bouquet:
+            self._draw_bouquet(target, geometry, state)
+        self._draw_leo(target, state)
+        self._draw_choice_glows(target, geometry, state)
+        draw_controls(target, _control_offsets(state))
+        self._draw_fx(target, geometry, state)
 
-    def _draw_leo(self, surf: pygame.Surface, model: AlfabetoModel, anim_time: float) -> None:
-        cx = 125
-        cy = 235
+    def _draw_garden(self, target: pygame.Surface, geometry: GardenLayout, state: SceneState) -> None:
+        flower = self._art.picture("prop.nature.flower", GARDEN_FLOWER)
+        for index, item in enumerate(state.planted):
+            if state.flight is not None and index == len(state.planted) - 1:
+                continue  # still flying into its bed
+            slot = geometry.garden_slot(state.garden_count, index)
+            glyph = self._art.glyphs.tile(item.char, GARDEN_GLYPH, item.color)
+            base_y = slot.bottom - 4
+            if flower is not None:
+                target.blit(flower, flower.get_rect(midbottom=(slot.centerx + 34, base_y)))
+            target.blit(glyph, glyph.get_rect(midbottom=(slot.centerx - 22, base_y)))
 
-        # Cozy wooden branch perch for Leo
-        pygame.draw.rect(surf, (165, 115, 65), (20, cy + 65, 170, 22), border_radius=10)
-        pygame.draw.rect(surf, (135, 90, 45), (20, cy + 65, 170, 22), width=3, border_radius=10)
-        # Green leaves sprouting from branch
-        pygame.draw.circle(surf, (95, 185, 75), (170, cy + 60), 14)
-        pygame.draw.circle(surf, (115, 205, 90), (185, cy + 72), 12)
+    def _draw_meet(self, target: pygame.Surface, geometry: GardenLayout, state: SceneState) -> None:
+        step = state.step
+        assert step is not None
+        box = geometry.meet_letter
+        picture = self._art.picture(state.picture, geometry.meet_picture.width)
+        if picture is None:  # staged words without art: the letter alone, centred
+            box = geometry.card.inflate(-60, -50)
+        guide = self.guide(step.letter.char, box.size)
+        if state.speaking == "letter" or state.hint_target == "letter":
+            glow = self._art.glow(int(min(box.width, box.height) * 1.1))
+            target.blit(glow, glow.get_rect(center=box.center))
+        letter = self._art.glyphs.solid(guide, box.size, step.letter.color)
+        target.blit(letter, box.topleft)
+        if picture is not None:
+            lift = -6 if state.speaking == "letter" else 0
+            target.blit(picture, picture.get_rect(center=geometry.meet_picture.move(0, lift).center))
 
-        # Gentle breathing motion
-        breathe_y = 3.0 * math.sin(anim_time * 2.8)
+    def _draw_find(self, target: pygame.Surface, geometry: GardenLayout, state: SceneState) -> None:
+        picture = self._art.picture(state.picture, geometry.find_picture.width)
+        if picture is not None:
+            target.blit(picture, geometry.find_picture.topleft)
 
-        # Check character PNG
-        mood = "happy" if model.celebrating else ("blink" if int(anim_time * 2.0) % 7 == 0 else "neutral")
-        if mood not in self._leo_images:
-            mood = "neutral"
+    def _draw_trace(self, target: pygame.Surface, geometry: GardenLayout, state: SceneState) -> None:
+        view = state.trace
+        step = state.step
+        if view is None or step is None:
+            return
+        box = geometry.trace_box
+        if state.bloom is not None or view.complete:
+            self._draw_bloom(target, geometry, state, view)
+            return
+        picture = self._art.picture(state.picture, geometry.trace_picture.width)
+        if picture is not None:
+            faded = picture  # the goal: the picture that blooms when the letter is done
+            target.blit(faded, faded.get_rect(center=geometry.trace_picture.center))
+        target.blit(self._art.glyphs.hollow(view.guide, box.size), box.topleft)
+        target.blit(view.ink.surface, box.topleft)
+        stroke = view.guide.strokes[view.stroke_index] if view.stroke_index < len(view.guide.strokes) else None
+        if stroke is not None:
+            self._draw_stroke_cue(target, box, view, stroke, state.pulse_phase)
+        if view.demo_point is not None:
+            hand = self._art.hud("drag_hint", HAND_SIZE)
+            if hand is not None:
+                x = box.left + view.demo_point[0] - HAND_SIZE * HAND_TIP[0]
+                y = box.top + view.demo_point[1] - HAND_SIZE * HAND_TIP[1]
+                target.blit(hand, (int(x), int(y)))
 
-        if mood in self._leo_images:
-            img = self._leo_images[mood]
-            surf.blit(img, (cx - img.get_width() // 2, int(cy - img.get_height() // 2 + breathe_y)))
+    def _draw_stroke_cue(self, target, box: pygame.Rect, view: TraceView, stroke, pulse_phase: int) -> None:
+        """Green dot where the ink ends plus an arrow just ahead, along the stroke."""
+
+        band = view.guide.band
+        head = view.head if view.head is not None else stroke.start
+        ahead = view.progress + band * 1.45
+        if ahead < stroke.length - band * 0.4:
+            ax, ay = stroke.point_at(ahead)
+            dx, dy = stroke.direction_at(ahead - band * 0.3)
+            nx, ny = -dy, dx
+            length, wing = band * 0.42, band * 0.3
+            cx, cy = box.left + ax, box.top + ay
+            points = [
+                (cx + dx * length, cy + dy * length),
+                (cx - dx * length * 0.6 + nx * wing, cy - dy * length * 0.6 + ny * wing),
+                (cx - dx * length * 0.6 - nx * wing, cy - dy * length * 0.6 - ny * wing),
+            ]
+            polygon = [(int(round(x)), int(round(y))) for x, y in points]
+            pygame.draw.polygon(target, LEAF, polygon)
+            pygame.draw.polygon(target, INK, polygon, max(2, int(band * 0.07)))
+        big = view.start_pulse and pulse_phase % 2 == 0
+        dot = self.start_dot(int(band * (1.05 if big else 0.86)))
+        target.blit(dot, dot.get_rect(center=(int(box.left + head[0]), int(box.top + head[1]))))
+
+    def _draw_bloom(self, target, geometry: GardenLayout, state: SceneState, view: TraceView) -> None:
+        step = state.step
+        assert step is not None
+        box = geometry.trace_box
+        t = 1.0 if state.bloom is None else max(0.0, min(1.0, state.bloom / BLOOM_SECONDS))
+        if state.flight is None:
+            glow = self._art.glow(int(min(box.width, box.height) * (0.9 + 0.3 * t)))
+            target.blit(glow, glow.get_rect(center=box.center))
+            target.blit(self._art.glyphs.solid(view.guide, box.size, step.letter.color), box.topleft)
+        picture_rect = geometry.trace_picture
+        # Pop: three cached sizes (small → over-size → settle), never a per-frame scale.
+        if t < 0.35:
+            scale = 0.7
+        elif t < 0.7:
+            scale = 1.15
         else:
-            # Fallback procedural owl
-            self._draw_procedural_leo(surf, cx, cy + breathe_y, mood)
+            scale = 1.0
+        size = int(picture_rect.width * scale)
+        picture = self._art.picture(state.picture, size)
+        if picture is not None:
+            target.blit(picture, picture.get_rect(center=picture_rect.center))
 
-    def _draw_procedural_leo(self, surf: pygame.Surface, cx: float, cy: float, mood: str) -> None:
-        # Body
-        pygame.draw.ellipse(surf, (185, 125, 75), (cx - 50, cy - 55, 100, 110))
-        # Belly
-        pygame.draw.ellipse(surf, (250, 235, 205), (cx - 35, cy - 25, 70, 75))
-        # Round glasses
-        pygame.draw.circle(surf, (255, 255, 255), (int(cx - 20), int(cy - 20)), 18)
-        pygame.draw.circle(surf, (255, 255, 255), (int(cx + 20), int(cy - 20)), 18)
-        pygame.draw.circle(surf, (70, 40, 20), (int(cx - 20), int(cy - 20)), 18, width=3)
-        pygame.draw.circle(surf, (70, 40, 20), (int(cx + 20), int(cy - 20)), 18, width=3)
-        pygame.draw.line(surf, (70, 40, 20), (int(cx - 2), int(cy - 20)), (int(cx + 2), int(cy - 20)), 3)
-        # Eyes
-        pygame.draw.circle(surf, (50, 30, 15), (int(cx - 18), int(cy - 20)), 6)
-        pygame.draw.circle(surf, (50, 30, 15), (int(cx + 18), int(cy - 20)), 6)
-        # Beak
-        pygame.draw.polygon(surf, (245, 140, 30), [(int(cx - 6), int(cy - 8)), (int(cx + 6), int(cy - 8)), (int(cx), int(cy + 2))])
+    def _draw_bouquet(self, target: pygame.Surface, geometry: GardenLayout, state: SceneState) -> None:
+        """Finale: the round's letters side by side, each above its picture."""
 
-    def _draw_top_bar(self, surf: pygame.Surface, model: AlfabetoModel) -> None:
-        # Title Banner in center (safe from top-left Home)
-        banner_w, banner_h = 420, 52
-        bx = (REFERENCE_WIDTH - banner_w) // 2
-        by = 18
+        card = geometry.card.inflate(-40, -36)
+        count = len(state.bouquet)
+        width = card.width // max(1, count)
+        letter_size = min(176, width - 24, int(card.height * 0.52))
+        picture_size = min(128, int(card.height * 0.36))
+        for index, (item, picture_id) in enumerate(state.bouquet):
+            cx = card.left + width * index + width // 2
+            glyph = self._art.glyphs.tile(item.char, letter_size, item.color)
+            target.blit(glyph, glyph.get_rect(midtop=(cx, card.top)))
+            picture = self._art.picture(picture_id, picture_size)
+            if picture is not None:
+                target.blit(picture, picture.get_rect(midbottom=(cx, card.bottom)))
 
-        pygame.draw.rect(surf, (255, 255, 255), (bx, by, banner_w, banner_h), border_radius=26)
-        pygame.draw.rect(surf, (220, 180, 130), (bx, by, banner_w, banner_h), width=3, border_radius=26)
+    def _draw_leo(self, target: pygame.Surface, state: SceneState) -> None:
+        cast = self.cast
+        if state.leo_pointing and self._point is not None and (cast is None or not cast.animating):
+            target.blit(self._point, self._point.get_rect(midbottom=LEO_MIDBOTTOM))
+            return
+        if cast is not None:
+            cast.draw(target, LEO_MIDBOTTOM)
 
-        if model.mode == GameMode.EXPLORE:
-            title_text = self.resources.text("ui.mode_explore_title")
-        else:
-            title_text = self.resources.text("ui.mode_guess_title")
+    def _draw_choice_glows(self, target: pygame.Surface, geometry: GardenLayout, state: SceneState) -> None:
+        step = state.step
+        if step is None or not step.is_find:
+            return
+        count = len(step.choices)
+        for index in range(count):
+            tag = f"choice.{index}"
+            speaking = state.speaking == tag
+            hinted = state.hint_target == tag
+            celebrating = state.celebrating_choice == index
+            if not (speaking or hinted or celebrating):
+                continue
+            big = speaking or celebrating or state.pulse_phase % 2 == 0
+            rect = geometry.choice_rect(count, index).move(0, -SPEAKING_LIFT if speaking else 0)
+            glow = self._art.glow(int(rect.width * (1.6 if big else 1.38)))
+            target.blit(glow, glow.get_rect(center=rect.center))
 
-        txt = self.typography.render(title_text, FontRole.TITLE, 22, (95, 55, 25))
-        surf.blit(txt, txt.get_rect(center=(REFERENCE_WIDTH // 2, by + banner_h // 2)))
+    def _draw_fx(self, target: pygame.Surface, geometry: GardenLayout, state: SceneState) -> None:
+        if state.sparkle_at is not None:
+            (x, y), t = state.sparkle_at
+            sparkle = self._art.fx("fx.sparkle", _bucket(int(120 * (0.9 + 0.6 * min(1.0, t)))))
+            if sparkle is not None:
+                target.blit(sparkle, sparkle.get_rect(center=(x, y - int(16 * t))))
+        if state.bloom is not None and state.flight is None:
+            # The letter "blooms into" its picture: a bloom burst on the picture,
+            # sparkles over the finished letter.
+            t = max(0.0, min(1.0, state.bloom / BLOOM_SECONDS))
+            if t < 0.95:
+                spot = geometry.trace_picture
+                bloom = self._art.fx("fx.bloom", _bucket(int(spot.width * (0.7 + 0.8 * t))))
+                if bloom is not None:
+                    target.blit(bloom, bloom.get_rect(center=spot.center))
+                sparkle = self._art.fx("fx.sparkle", _bucket(int(geometry.trace_box.height * (0.5 + 0.4 * t))))
+                if sparkle is not None:
+                    target.blit(sparkle, sparkle.get_rect(center=geometry.trace_box.center))
+        if state.flight is not None:
+            item, start, end, t = state.flight
+            t = max(0.0, min(1.0, t))
+            ease = 1 - (1 - t) ** 2
+            control = ((start[0] + end[0]) / 2, min(start[1], end[1]) - 90)
+            x = (1 - ease) ** 2 * start[0] + 2 * (1 - ease) * ease * control[0] + ease ** 2 * end[0]
+            y = (1 - ease) ** 2 * start[1] + 2 * (1 - ease) * ease * control[1] + ease ** 2 * end[1]
+            glyph = self._art.glyphs.tile(item.char, FLIGHT_GLYPH, item.color)
+            target.blit(glyph, glyph.get_rect(center=(int(x), int(y))))
+        if state.finale is not None:
+            self._draw_finale(target, geometry, state.finale)
 
-        # Mode switch button in top-right
-        btn_w, btn_h = 175, 48
-        btn_x = REFERENCE_WIDTH - btn_w - 30
-        btn_y = 20
+    def _draw_finale(self, target: pygame.Surface, geometry: GardenLayout, elapsed: float) -> None:
+        spots = ((420, 170, 0.0), (820, 140, 0.3), (620, 110, 0.6), (900, 300, 0.9), (380, 320, 1.15))
+        for x, y, delay in spots:
+            local = elapsed - delay
+            if 0 <= local < 0.9:
+                image = self._art.fx("fx.confetti" if int(delay * 10) % 2 == 0 else "fx.star_burst", 168)
+                if image is not None:
+                    target.blit(image, image.get_rect(center=(x, y - int(30 * local))))
 
-        btn_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
-        pygame.draw.rect(surf, (255, 255, 255), btn_rect, border_radius=24)
-        pygame.draw.rect(surf, (110, 175, 230), btn_rect, width=3, border_radius=24)
 
-        next_mode_label = (
-            self.resources.text("ui.switch_to_guess")
-            if model.mode == GameMode.EXPLORE
-            else self.resources.text("ui.switch_to_explore")
-        )
-        mode_txt = self.typography.render(next_mode_label, FontRole.TITLE, 17, (45, 105, 170))
-        surf.blit(mode_txt, mode_txt.get_rect(center=btn_rect.center))
+def _control_offsets(state: SceneState) -> dict[str, tuple[int, int]]:
+    """Per-control draw offsets: the spoken tile lifts, a wrong pick shakes."""
 
-    def _draw_explore_mode(self, surf: pygame.Surface, model: AlfabetoModel, anim_time: float) -> None:
-        letter = model.active_letter
-        card_w, card_h = 320, 310
-        cx = REFERENCE_WIDTH // 2
-        cy = 240
+    offsets: dict[str, tuple[int, int]] = {}
+    if state.speaking is not None and state.speaking.startswith("choice."):
+        offsets[state.speaking] = (0, -SPEAKING_LIFT)
+    if state.shake is not None:
+        control_id, dx = state.shake
+        offsets[control_id] = (dx, 0)
+    return offsets
 
-        # Bounce on reveal
-        scale = 1.0
-        if model.reveal_timer > 0.0:
-            scale = 1.0 + 0.15 * math.sin(math.pi * (model.reveal_timer / 0.6))
 
-        w = int(card_w * scale)
-        h = int(card_h * scale)
-        card_rect = pygame.Rect(cx - w // 2, cy - h // 2, w, h)
+def _bucket(size: int) -> int:
+    """Quantise animated FX sizes so only a few scaled copies are ever cached."""
 
-        # Card Shadow
-        pygame.draw.rect(surf, (215, 200, 180), (card_rect.x + 5, card_rect.y + 8, card_rect.w, card_rect.h), border_radius=32)
+    return max(16, int(math.ceil(size / 24.0) * 24))
 
-        # Card Base
-        pygame.draw.rect(surf, (255, 255, 255), card_rect, border_radius=32)
-        pygame.draw.rect(surf, letter.color, card_rect, width=6, border_radius=32)
 
-        # GIANT Capital Letter
-        letter_surf = self.typography.render(letter.char, FontRole.DISPLAY, int(88 * scale), letter.color)
-        surf.blit(letter_surf, letter_surf.get_rect(center=(cx - int(70 * scale), cy - int(45 * scale))))
-
-        # Cute Object Symbol / Emoji matching child language
-        symbol = letter.symbol_for(model.locale)
-        symbol_surf = self.typography.render(symbol, FontRole.DISPLAY, int(76 * scale), (40, 40, 40))
-        surf.blit(symbol_surf, symbol_surf.get_rect(center=(cx + int(70 * scale), cy - int(45 * scale))))
-
-        # Object Word (Capitalized)
-        word = letter.word_for(model.locale)
-        word_formatted = display_text(word)
-        word_surf = self.typography.render(word_formatted, FontRole.TITLE, int(36 * scale), (60, 60, 60))
-        surf.blit(word_surf, word_surf.get_rect(center=(cx, cy + int(70 * scale))))
-
-        # Bottom letter carousel strip
-        self._draw_letter_strip(surf, model)
-
-    def _draw_letter_strip(self, surf: pygame.Surface, model: AlfabetoModel) -> None:
-        strip_y = 505
-        btn_size = 64
-        spacing = 16
-        cur_idx = model.current_index
-        total = len(model.letters)
-
-        # Previous button (drawn triangle instead of tofu font)
-        prev_rect = pygame.Rect(135, strip_y, 52, btn_size)
-        pygame.draw.rect(surf, (255, 255, 255), prev_rect, border_radius=18)
-        pygame.draw.rect(surf, (210, 175, 130), prev_rect, width=3, border_radius=18)
-        px, py = prev_rect.center
-        pygame.draw.polygon(surf, (130, 85, 40), [(px + 8, py - 12), (px - 10, py), (px + 8, py + 12)])
-
-        # 7 visible letter buttons
-        start_x = 205
-        visible_count = 7
-        half = visible_count // 2
-        for i in range(visible_count):
-            offset = i - half
-            idx = (cur_idx + offset) % total
-            item = model.letters[idx]
-            bx = start_x + i * (btn_size + spacing)
-            brect = pygame.Rect(bx, strip_y, btn_size, btn_size)
-
-            is_current = (offset == 0)
-            bg_color = item.color if is_current else (255, 255, 255)
-            text_color = (255, 255, 255) if is_current else item.color
-            border_color = (40, 40, 40) if is_current else (215, 210, 200)
-
-            pygame.draw.rect(surf, bg_color, brect, border_radius=20)
-            pygame.draw.rect(surf, border_color, brect, width=3 if is_current else 2, border_radius=20)
-
-            c_txt = self.typography.render(item.char, FontRole.TITLE, 28, text_color)
-            surf.blit(c_txt, c_txt.get_rect(center=brect.center))
-
-        # Next button (drawn triangle instead of tofu font)
-        next_rect = pygame.Rect(start_x + visible_count * (btn_size + spacing), strip_y, 52, btn_size)
-        pygame.draw.rect(surf, (255, 255, 255), next_rect, border_radius=18)
-        pygame.draw.rect(surf, (210, 175, 130), next_rect, width=3, border_radius=18)
-        nx, ny = next_rect.center
-        pygame.draw.polygon(surf, (130, 85, 40), [(nx - 8, ny - 12), (nx + 10, ny), (nx - 8, ny + 12)])
-
-    def _draw_guess_mode(self, surf: pygame.Surface, model: AlfabetoModel, anim_time: float) -> None:
-        target = model.target_letter
-        word = target.word_for(model.locale)
-        symbol = target.symbol_for(model.locale)
-
-        # Target card in upper middle
-        t_w, t_h = 240, 180
-        tx = (REFERENCE_WIDTH - t_w) // 2
-        ty = 110
-        t_rect = pygame.Rect(tx, ty, t_w, t_h)
-
-        pygame.draw.rect(surf, (255, 255, 255), t_rect, border_radius=28)
-        pygame.draw.rect(surf, (230, 185, 130), t_rect, width=4, border_radius=28)
-
-        # Big Target Symbol / Emoji
-        sym_surf = self.typography.render(symbol, FontRole.DISPLAY, 72, (40, 40, 40))
-        surf.blit(sym_surf, sym_surf.get_rect(center=(tx + t_w // 2, ty + 65)))
-
-        # Prompt Word: e.g. "S COME SOLE" / "WHERE IS S?"
-        if model.guess_solved:
-            prompt = f"{target.char}! {word}!"
-        else:
-            prompt = self.resources.text("ui.guess_prompt", {"char": target.char})
-
-        prompt_txt = self.typography.render(display_text(prompt), FontRole.TITLE, 24, (120, 60, 20))
-        surf.blit(prompt_txt, prompt_txt.get_rect(center=(tx + t_w // 2, ty + 140)))
-
-        # 3 Big Choice Cards
-        card_w, card_h = 145, 165
-        spacing = 40
-        total_w = 3 * card_w + 2 * spacing
-        start_x = (REFERENCE_WIDTH - total_w) // 2
-        card_y = 330
-
-        for i, choice in enumerate(model.guess_choices):
-            cx = start_x + i * (card_w + spacing)
-            cy = card_y
-
-            # Wobble animation on wrong tap
-            wobble_x = 0.0
-            if model.wobble_card == choice.char and model.wobble_timer > 0.0:
-                wobble_x = 14.0 * math.sin(model.wobble_timer * 28.0)
-
-            crect = pygame.Rect(int(cx + wobble_x), cy, card_w, card_h)
-
-            is_correct_and_solved = (model.guess_solved and choice.char == target.char)
-            bg_col = (255, 255, 255) if not is_correct_and_solved else (255, 245, 180)
-            border_col = choice.color if not is_correct_and_solved else (240, 160, 30)
-
-            pygame.draw.rect(surf, bg_col, crect, border_radius=28)
-            pygame.draw.rect(surf, border_col, crect, width=5 if is_correct_and_solved else 3, border_radius=28)
-
-            txt = self.typography.render(choice.char, FontRole.DISPLAY, 80, choice.color)
-            surf.blit(txt, txt.get_rect(center=crect.center))
-
-    def _draw_celebration(self, surf: pygame.Surface, anim_time: float) -> None:
-        colors = [(255, 80, 80), (255, 210, 50), (90, 215, 120), (70, 175, 255), (225, 110, 240)]
-        for i in range(20):
-            ang = i * (2.0 * math.pi / 20.0) + anim_time * 2.0
-            rad = 80 + int(40 * math.sin(anim_time * 6.0 + i))
-            px = int(REFERENCE_WIDTH // 2 + math.cos(ang) * rad)
-            py = int(240 + math.sin(ang) * rad)
-            col = colors[i % len(colors)]
-            pygame.draw.circle(surf, col, (px, py), 6)
+__all__ = ["AlfabetoRenderer", "SceneState", "TraceView"]

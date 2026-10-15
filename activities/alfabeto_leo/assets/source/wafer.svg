@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Alfabeto di Leo picture "wafer" (IT W come Wafer, ES W de Wafle): two layered wafer biscuits. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <g id="shadow">
+    <ellipse cx="128" cy="222" rx="104" ry="13" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="wafer">
+    <path d="M30 168 L176 168 L226 140 L80 140 Z" fill="#F8C288" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M30 168 L176 168 L176 214 L30 214 Z" fill="#F39A38" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M176 168 L226 140 L226 186 L176 214 Z" fill="#D9862F" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M32 182 L174 182 M32 198 L174 198" fill="none" stroke="#FFFBEB" stroke-width="6"/>
+    <path d="M178 182 L224 156 M178 198 L224 172" fill="none" stroke="#FFFBEB" stroke-width="6"/>
+    <path d="M66 168 L114 140 M102 168 L150 140 M140 168 L188 140 M52 154 L198 154" fill="none" stroke="#D9862F" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M54 102 L184 102 L222 78 L92 78 Z" fill="#F8C288" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M54 102 L184 102 L184 142 L54 142 Z" fill="#F39A38" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M184 102 L222 78 L222 118 L184 142 Z" fill="#D9862F" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M56 115 L182 115 M56 129 L182 129" fill="none" stroke="#FFFBEB" stroke-width="5"/>
+    <path d="M186 115 L220 94 M186 129 L220 108" fill="none" stroke="#FFFBEB" stroke-width="5"/>
+    <path d="M88 102 L126 78 M120 102 L158 78 M152 102 L190 78 M74 90 L204 90" fill="none" stroke="#D9862F" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M64 92 L84 82" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  </g>
+</svg>

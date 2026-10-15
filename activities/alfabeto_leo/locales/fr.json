@@ -5,11 +5,8 @@
   "strings": {
     "activity.alfabeto_leo.title": "L'Alphabet de Leo",
     "activity.title": "L'Alphabet de Leo",
-    "ui.mode_explore_title": "Découvre les lettres !",
-    "ui.mode_guess_title": "Trouve la lettre !",
-    "ui.switch_to_guess": "Chercher ! 🔍",
-    "ui.switch_to_explore": "Alphabet 🔤",
-    "ui.guess_prompt": "Où est $char ?"
+    "victory.title": "Tes lettres ont fleuri !",
+    "button.play_again": "Rejouer"
   },
   "audio": {}
 }
