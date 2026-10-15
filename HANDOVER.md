@@ -1,3 +1,15 @@
+## 2026-10-15 — New primary agent: source gate green locally, Shell fail-soft, Activity UI text pass
+
+**Who/where:** Claude Opus 5.5 is now the project's primary agent, working on a local checkout (macOS, Python 3.12, Pygame 2.6.1) directly on `main`, delegating bounded work to subagents. Local `main` was fast-forwarded from `e1ab2426` to `a76d694d` before work.
+
+**Evidence (SOURCE only):** first full local execution — baseline 4,334 tests / 185 failures / 67 errors; now **`make verify` PASS (4,372 tests OK, 8 skipped)**. All 45 Activities launch and render a first frame headlessly at 1024×600 (`tools/headless_greia_activity.py`). No Linux image, VM, Acer, Pi or audible playback evidence.
+
+**Fixed:** test hermeticity (`tests/hermetic_volume.py`, resolved temp roots, quoted paths; pytest-only modules converted so `make verify` runs them); Shell no longer crashes at profile selection when child-data headroom is exhausted (history/achievements degrade, writes still refused); Simulator models an 8 GiB device volume instead of the host disk; Parent panel pointer-settings crash; ~17 Activities' hardcoded Italian / case-policy bypass / glyph boxes / wrong profile language; many stale tests. Details: architecture-remediation plan progress entry of 2026-10-15.
+
+**Decisions:** (1) SVG art authoring model bake-off (Haiku/Sonnet/Opus/Fable, identical brief: Activity icon, on-model Leo pose, layered scene) → **Opus** selected for all Greia SVG authoring. (2) Icon/art family direction: flat constraint-native vector per style guide §20; the 39 glossy-3D core icons are the outlier to be redrawn. (3) Owner removed ~3 GB of ignored leftovers (TBag/runs, tmp/, Archive.zip, old review zips).
+
+**Open / next:** Activity launch still fails closed (`PLATFORM_FAILURE`) on a full device because `start_session` is refused — next fail-soft step; remaining ~27 Activities not yet audited for language/case leaks; image group names `pip*` vs `greia*` migration unfinished; asset-library pass and Activity design/gameplay upgrades (owner mandate 2026-10-15) starting.
+
 ## 2026-10-15 — Greia shared localization: regional fallback + 13 Activity entrypoints
 
 **Owner's active direction:** One Greia localization handler returns child-visible strings or existing approved prerecorded audio paths by stable IDs; all speech (including phonemes) uses selected-language recording, otherwise English, otherwise silence. No file anti-tamper infrastructure. All 3,723 shipping WAV/OGG/FLAC/MP3 artifacts remain approved and unmodified. The active plan is `docs/plans/2026-10-12_GREIA_FOUR_LANGUAGE_ROLLOUT/SHARED_LOCALIZATION_AND_AUDIO_RESOLVER.md`, tracked by its sibling `PROGRESS.md`. Keep ES/FR staged in the selector until proper independent release/playback acceptance.
