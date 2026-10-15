@@ -151,6 +151,48 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
             self.assertEqual(res.audio_path("activity.title"), title)
             self.assertIsNone(res.audio_path("missing"))
 
+    def test_eager_speech_discovery_handles_two_legacy_directories_and_english(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for locale in ("en", "it", "es", "fr"):
+                _bundle(root, locale)
+            spanish = _put(root, "assets/audio/es/intro.wav")
+            _put(root, "assets/audio/en/intro.wav")
+            english = _put(root, "locales/en/audio/well_done.wav")
+            uppercase = _put(root, "assets/audio/en/letter_A.wav")
+            _put(root, "locales/es/audio/activity-title.wav")
+
+            resolved = _context(root, "es").speech_paths()
+            self.assertEqual(resolved["intro"], spanish)
+            self.assertEqual(resolved["well_done"], english)
+            self.assertEqual(resolved["letter_A"], uppercase)
+            self.assertNotIn("missing.wav", resolved)
+
+            # A missing ES title recording correctly uses English if present;
+            # this fixture has only ES title, so no unrelated language wins.
+            self.assertEqual(
+                resolved["activity-title"],
+                root / "locales" / "es" / "audio" / "activity-title.wav",
+            )
+
+    def test_legacy_locale_audio_directory_uses_english_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for loc in ("it", "en", "fr"):
+                _bundle(root, loc)
+            english = _put(root, "locales/en/audio/shape_circle.wav")
+            _put(root, "locales/it/audio/shape_circle.wav")
+            resources = _context(root, "fr")
+            self.assertEqual(
+                resources.audio_path("shape.circle", filename="shape_circle.wav"),
+                english,
+            )
+            french = _put(root, "locales/fr/audio/shape_circle.wav")
+            self.assertEqual(
+                resources.audio_path("shape.circle", filename="shape_circle.wav"),
+                french,
+            )
+
     def test_invalid_alias_filename_does_not_escape_package(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
