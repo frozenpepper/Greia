@@ -20,7 +20,7 @@ def main() -> int:
             (1024, 600), pygame.RESIZABLE
         )
     pygame.mouse.set_visible(True)
-    app = build_app(screen, locale="it")
+    app = build_app(screen)
     return app.run()
 
 

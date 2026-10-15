@@ -11,7 +11,15 @@
     "level.canyon": "Canyon rocheux 🏔️",
     "level.space": "Gouffre cosmique 🌌",
     "victory.title": "Hourra ! Le pont est très solide ! 🐾🎉",
-    "victory.subtitle": "Le chiot a traversé jusqu'au pique-nique sans danger !"
+    "victory.subtitle": "Le chiot a traversé jusqu'au pique-nique sans danger !",
+    "block.wood": "Bois",
+    "block.stone": "Pierre",
+    "block.shroom": "Champignon",
+    "block.rainbow": "Arc-en-ciel",
+    "ui.clear": "Effacer",
+    "ui.go": "Allez !",
+    "ui.well_done": "Bravo !",
+    "ui.play_again": "Rejouer"
   },
   "audio": {}
 }

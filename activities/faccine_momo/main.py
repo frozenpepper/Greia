@@ -36,7 +36,7 @@ def main() -> int:
 
     model = MomoModel()
     audio = MomoAudio(package_root, locale=locale, resources=resources)
-    renderer = MomoRenderer()
+    renderer = MomoRenderer(resources=resources)
 
     app = MomoActivity(
         screen=screen,

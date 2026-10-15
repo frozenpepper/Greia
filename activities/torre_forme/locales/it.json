@@ -14,7 +14,11 @@
     "btn.left": "Sinistra",
     "btn.right": "Destra",
     "btn.drop": "Giù",
-    "btn.clean": "Nuove Forme"
+    "btn.clean": "Nuove Forme",
+    "hud.stars": "Stelle: $stars",
+    "hud.height": "Altezza: $height / $goal",
+    "hint.pick_block": "Scegli un blocco e posizionalo!",
+    "celebration.achievement": "Stelle: $stars | Altezza massima: $height piani!"
   },
   "audio": {
     "activity.title": {

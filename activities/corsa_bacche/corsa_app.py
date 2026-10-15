@@ -14,11 +14,7 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import (
     PygameReferenceCanvas,
     activity_viewport_for_surface,
@@ -77,12 +73,12 @@ class CorsaApp:
         pygame.mouse.set_visible(True)
 
         self.model: CorsaModel = CorsaModel()
-        self.renderer: CorsaRenderer = CorsaRenderer()
         self.audio: CorsaAudio = CorsaAudio()
 
         self._active_locale: str = locale
         self._resources: LocalizedResources | None = None
         self._init_localization(locale)
+        self.renderer: CorsaRenderer = CorsaRenderer(resources=self._resources)
 
         self.running: bool = True
         self.ready_published: bool = False
@@ -95,8 +91,7 @@ class CorsaApp:
     def _init_localization(self, preferred_locale: str) -> None:
         pkg_root = Path(__file__).parent
         try:
-            support = ActivityLocaleSupport.load(pkg_root / "locales")
-            self._resources = support.resources_for(preferred_locale)
+            self._resources = activity_resources(pkg_root, requested_locale=preferred_locale)
         except Exception:
             self._resources = None
 

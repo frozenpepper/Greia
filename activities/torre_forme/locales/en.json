@@ -14,7 +14,11 @@
     "btn.left": "Left",
     "btn.right": "Right",
     "btn.drop": "Drop",
-    "btn.clean": "New Shapes"
+    "btn.clean": "New Shapes",
+    "hud.stars": "Stars: $stars",
+    "hud.height": "Height: $height / $goal",
+    "hint.pick_block": "Pick a block and place it!",
+    "celebration.achievement": "Stars: $stars | Top height: $height floors!"
   },
   "audio": {
     "activity.title": {

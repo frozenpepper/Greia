@@ -16,6 +16,7 @@ from typing import Any
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_completion import CompletionContent, PygameCompletionScreen
 from greia_platform.pygame_scene import PygameSceneRenderer
 from greia_platform.scene import SceneDefinition, SceneFit, SceneNode
@@ -51,6 +52,17 @@ PLAY_AGAIN_RECT = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT // 2 
 GO_RECT = pygame.Rect(REFERENCE_WIDTH - 180, 16, 160, 60)
 CLEAR_RECT = pygame.Rect(REFERENCE_WIDTH - 360, 16, 165, 60)
 STAR_PILL_RECT = pygame.Rect(80, 16, 130, 60)
+# Semantic locale-bundle keys resolved once by the renderer.
+_COPY_KEYS = (
+    "block.wood",
+    "block.stone",
+    "block.shroom",
+    "block.rainbow",
+    "ui.clear",
+    "ui.go",
+    "ui.well_done",
+    "ui.play_again",
+)
 _MAX_ICON_CACHE = 32
 _MAX_PARTICLES = 64
 
@@ -104,8 +116,21 @@ def _draw_block_icon_procedural(surface: pygame.Surface, block_id: str, cx: int,
 class PontiRenderer:
     """Own Pygame presentation for Costruiamo Ponti."""
 
-    def __init__(self, typography: GreiaTypography, run_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        typography: GreiaTypography,
+        run_dir: Path | None = None,
+        resources: LocalizedResources | None = None,
+    ) -> None:
         self._typography = typography
+        # Child-visible copy is resolved once from the Activity's locale
+        # bundles (case policy applied by ``resources.text``). Without
+        # resources the controls show only their pictograms: there is no
+        # fixed-language fallback sentence.
+        self._copy: dict[str, str] = {
+            key: resources.text(key) if resources else ""
+            for key in _COPY_KEYS
+        }
         self._run_dir = run_dir or (Path(__file__).resolve().parent / "assets" / "runtime")
         # Bounded caches
         self._block_surfs: dict[str, pygame.Surface] = {}
@@ -115,7 +140,7 @@ class PontiRenderer:
         self._river_abyss_surf: pygame.Surface
         self._canyon_abyss_surf: pygame.Surface
         self._icon_scale_cache: dict[tuple[str, int], pygame.Surface] = {}
-        self._label_cache: dict[tuple[str, int, tuple[int, int, int]], pygame.Surface] = {}
+        self._label_cache: dict[tuple[str, int, tuple[int, int, int], int | None], pygame.Surface] = {}
         self._star_value: int | None = None
         self._star_surface: pygame.Surface | None = None
         self._particles: list[Particle] = []
@@ -126,7 +151,11 @@ class PontiRenderer:
             typography, width=REFERENCE_WIDTH, height=REFERENCE_HEIGHT, primary_rect=PLAY_AGAIN_RECT
         )
         self._completion_content = CompletionContent(
-            title="OTTIMO LAVORO!", primary_label="GIOCA ANCORA", achievement_count=5
+            # CompletionContent requires non-empty text; the neutral stand-ins
+            # are celebratory symbols, never a fixed-language phrase.
+            title=self._copy["ui.well_done"] or "\u2b50",
+            primary_label=self._copy["ui.play_again"] or "\U0001f504",
+            achievement_count=5,
         )
         self._load_assets()
         self._build_static_surfaces()
@@ -270,15 +299,25 @@ class PontiRenderer:
         self._icon_scale_cache[key] = scaled
         return scaled
 
-    def _label(self, text: str, size: int, color: tuple[int, int, int]) -> pygame.Surface:
-        key = (text, size, color)
+    def _label(
+        self,
+        text: str,
+        size: int,
+        color: tuple[int, int, int],
+        max_width: int | None = None,
+    ) -> pygame.Surface:
+        key = (text, size, color, max_width)
         cached = self._label_cache.get(key)
         if cached is not None:
             return cached
         # Bounded label cache – finite labels (4 palette + stars).
         if len(self._label_cache) >= 32:
             self._label_cache.clear()
-        surf = self._typography.render(text, FontRole.DISPLAY, size, color)
+        fitted = size
+        if max_width is not None:
+            while fitted > 11 and self._typography.measure(text, FontRole.DISPLAY, fitted).width > max_width:
+                fitted -= 1
+        surf = self._typography.render(text, FontRole.DISPLAY, fitted, color)
         self._label_cache[key] = surf
         return surf
 
@@ -557,7 +596,6 @@ class PontiRenderer:
             pygame.draw.circle(surf, p.color, (int(p.x), int(p.y)), int(p.size))
 
         # Bottom palette
-        block_labels = {"wood": "LEGNO", "stone": "PIETRA", "shroom": "FUNGO", "rainbow": "ARCOBALENO"}
         for b_idx, blk in enumerate(BLOCKS):
             btn_rect = pygame.Rect(180 + b_idx * 170, PALETTE_Y, 140, 96)
             is_sel = (str(blk["id"]) == model.selected_block_id)
@@ -567,9 +605,9 @@ class PontiRenderer:
             else:
                 pygame.draw.rect(surf, (203, 213, 225), btn_rect, width=2, border_radius=22)
             self._draw_block_icon(surf, str(blk["id"]), btn_rect.centerx, btn_rect.top + 34, 46)
-            lbl = block_labels.get(str(blk["id"]), "")
+            lbl = self._copy.get(f"block.{blk['id']}", "")
             t_col = (180, 83, 9) if is_sel else (71, 85, 105)
-            lbl_surf = self._label(lbl, 16, t_col)
+            lbl_surf = self._label(lbl, 16, t_col, btn_rect.width - 12)
             surf.blit(lbl_surf, (btn_rect.centerx - lbl_surf.get_width() // 2, btn_rect.bottom - 24))
 
         # Top controls
@@ -589,7 +627,7 @@ class PontiRenderer:
         cy = clear_btn.centery
         pygame.draw.line(surf, (120, 53, 15), (cx - 12, cy - 10), (cx + 4, cy + 6), 4)
         pygame.draw.polygon(surf, (234, 179, 8), [(cx + 2, cy + 2), (cx + 14, cy - 4), (cx + 10, cy + 14), (cx - 2, cy + 10)])
-        c_txt = self._label("PULISCI", 18, (71, 85, 105))
+        c_txt = self._label(self._copy["ui.clear"], 18, (71, 85, 105), clear_btn.width - 64)
         surf.blit(c_txt, (clear_btn.left + 52, clear_btn.centery - c_txt.get_height() // 2))
 
         go_btn = GO_RECT
@@ -602,7 +640,7 @@ class PontiRenderer:
         pygame.draw.ellipse(surf, (255, 255, 255), pygame.Rect(bx + 2, by - 20, 6, 14))
         pygame.draw.circle(surf, (20, 20, 30), (bx - 4, by - 2), 2)
         pygame.draw.circle(surf, (20, 20, 30), (bx + 4, by - 2), 2)
-        go_txt = self._label("VAI!", 24, (255, 255, 255))
+        go_txt = self._label(self._copy["ui.go"], 24, (255, 255, 255), go_btn.width - 96)
         surf.blit(go_txt, (go_btn.left + 54, go_btn.centery - go_txt.get_height() // 2))
         pygame.draw.polygon(surf, (255, 255, 255), [(go_btn.right - 35, go_btn.centery - 12), (go_btn.right - 15, go_btn.centery), (go_btn.right - 35, go_btn.centery + 12)])
 

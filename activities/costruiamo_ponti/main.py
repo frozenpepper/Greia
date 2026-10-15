@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pygame
 
+from greia_platform.localization import activity_resources
+
 if __package__:
     from .ponti_app import BridgeAudio, PontiApp
     from .ponti_content import (
@@ -55,7 +57,9 @@ def main() -> int:
         if screen is None:
             screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
         pygame.mouse.set_visible(False)
-        app = PontiApp(screen=screen)
+        resources = activity_resources(Path(__file__).resolve().parent)
+        pygame.display.set_caption(resources.text("activity.title"))
+        app = PontiApp(screen=screen, resources=resources)
         return app.run()
     finally:
         pygame.quit()

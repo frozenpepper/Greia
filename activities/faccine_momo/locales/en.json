@@ -10,7 +10,9 @@
     "emotion.surprised": "Surprised",
     "emotion.silly": "Silly",
     "emotion.angry": "Angry",
-    "emotion.sleepy": "Sleepy"
+    "emotion.sleepy": "Sleepy",
+    "ui.mode_free_mirror": "Free mirror",
+    "ui.mode_guess_emotion": "How does it feel?"
   },
   "audio": {
     "activity.title": {

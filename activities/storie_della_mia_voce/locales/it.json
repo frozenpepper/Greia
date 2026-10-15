@@ -6,7 +6,7 @@
     "activity.storie_della_mia_voce.title": "STORIE DELLA MIA VOCE",
     "ui.welcome": "REGISTRA LA TUA VOCE!",
     "ui.scene_intro": "SCEGLI UNA SCENA!",
-    "ui.scene_intro_sub": "QUATRO SCHERMATE DA RIEMPIRE CON LA TUA VOCE",
+    "ui.scene_intro_sub": "QUATTRO SCENE DA RIEMPIRE CON LA TUA VOCE",
     "ui.scene_forest": "FORESTA",
     "ui.scene_sea": "MARE",
     "ui.scene_sky": "CIELO",
@@ -26,7 +26,12 @@
     "ui.scenes": "SCENE",
     "ui.durations": "DURATA",
     "activity.title": "STORIE DELLA MIA VOCE",
-    "ui.save_failed": "NON SONO RIUSCITO A SALVARE. RIPROVA."
+    "ui.save_failed": "NON SONO RIUSCITO A SALVARE. RIPROVA.",
+    "ui.replay_good": "Bella!",
+    "ui.replay_retry": "Riprova!",
+    "ui.another_story": "Un'altra storia",
+    "ui.back": "Indietro",
+    "ui.new_story": "Nuova"
   },
   "audio": {
     "activity.title": {

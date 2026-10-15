@@ -11,7 +11,15 @@
     "level.canyon": "Rocky Canyon 🏔️",
     "level.space": "Cosmic Abyss 🌌",
     "victory.title": "Hooray! The bridge is super strong! 🐾🎉",
-    "victory.subtitle": "The puppy safely made it across to the picnic!"
+    "victory.subtitle": "The puppy safely made it across to the picnic!",
+    "block.wood": "Wood",
+    "block.stone": "Stone",
+    "block.shroom": "Mushroom",
+    "block.rainbow": "Rainbow",
+    "ui.clear": "Clear",
+    "ui.go": "Go!",
+    "ui.well_done": "Great job!",
+    "ui.play_again": "Play again"
   },
   "audio": {
     "activity.title": {

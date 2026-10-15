@@ -50,6 +50,46 @@ PLAY_GREEN: Final = (34, 197, 94)
 PLAY_DARK: Final = (22, 101, 52)
 
 
+def draw_icon(
+    surf: pygame.Surface,
+    kind: str,
+    center: tuple[int, int],
+    size: int,
+    color: tuple[int, int, int],
+) -> None:
+    """Draw one language-neutral pictogram.
+
+    Arrows/play/redo are drawn as shapes: the Greia text font has no glyphs
+    for them, so rendering the characters would show missing-glyph boxes.
+    """
+    cx, cy = center
+    r = size // 2
+    thick = max(3, size // 8)
+    if kind == "play":
+        pygame.draw.polygon(
+            surf, color, [(cx - r // 2, cy - r), (cx - r // 2, cy + r), (cx + r, cy)]
+        )
+    elif kind in ("back", "next"):
+        sign = -1 if kind == "back" else 1
+        tip = (cx + sign * r, cy)
+        tail = (cx - sign * r, cy)
+        pygame.draw.line(surf, color, tail, (cx + sign * (r - thick), cy), thick)
+        pygame.draw.polygon(
+            surf,
+            color,
+            [tip, (cx + sign * (r // 4), cy - r // 2 - 2), (cx + sign * (r // 4), cy + r // 2 + 2)],
+        )
+    elif kind == "redo":
+        box = pygame.Rect(cx - r, cy - r, 2 * r, 2 * r)
+        pygame.draw.arc(surf, color, box, math.radians(40), math.radians(320), thick)
+        # Arrow head at the arc's open end (upper right).
+        hx = cx + int(r * math.cos(math.radians(40)))
+        hy = cy - int(r * math.sin(math.radians(40)))
+        pygame.draw.polygon(
+            surf, color, [(hx + 6, hy - 4), (hx - 8, hy - 8), (hx + 1, hy + 9)]
+        )
+
+
 @dataclass
 class VoiceRenderer:
     surface: pygame.Surface
@@ -125,17 +165,17 @@ class VoiceRenderer:
         library_btn = self.library_btn_rect
         pygame.draw.rect(surf, BUTTON_BG, library_btn, border_radius=20)
         pygame.draw.rect(surf, BUTTON_BORDER, library_btn, width=3, border_radius=20)
-        library_label = text_fn("LE MIE STORIE", DARK_TEXT)
+        library_label = text_fn("ui.library", DARK_TEXT, max_width=library_btn.width - 20)
         surf.blit(
             library_label,
             library_label.get_rect(center=library_btn.center),
         )
         # Title
-        title = text_fn("SCEGLI UNA SCENA!", DARK_TEXT)
+        title = text_fn("ui.scene_intro", DARK_TEXT, 34)
         surf.blit(
             title, title.get_rect(center=(REFERENCE_WIDTH // 2, 100))
         )
-        subtitle = text_fn("QUATRO SCHERMATE DA RIEMPIRE CON LA TUA VOCE", DARK_TEXT)
+        subtitle = text_fn("ui.scene_intro_sub", DARK_TEXT, 22, REFERENCE_WIDTH - 80)
         surf.blit(
             subtitle, subtitle.get_rect(center=(REFERENCE_WIDTH // 2, 150))
         )
@@ -194,7 +234,7 @@ class VoiceRenderer:
                 pygame.draw.circle(surf, (255, 255, 255), (fx - 4, cy - 2), 3)
                 pygame.draw.circle(surf, (255, 255, 255), (fx + 4, cy - 2), 3)
         # Label
-        label = text_fn(scene.label_key.upper(), DARK_TEXT)
+        label = text_fn(scene.label_key, DARK_TEXT, 22, rect.width + 16)
         surf.blit(
             label, label.get_rect(center=(rect.centerx, rect.bottom + 24))
         )
@@ -209,7 +249,7 @@ class VoiceRenderer:
         pygame.draw.rect(surf, scene.primary_color, (0, 0, REFERENCE_WIDTH, 220))
         pygame.draw.rect(surf, scene.secondary_color, (0, 220, REFERENCE_WIDTH, 12))
         # Title
-        title = text_fn(scene.label_key.upper(), WHITE)
+        title = text_fn(scene.label_key, WHITE, 40, REFERENCE_WIDTH - 200)
         surf.blit(title, title.get_rect(center=(REFERENCE_WIDTH // 2, 100)))
         # Mic button (huge red disc) with pulsing aura
         pulse = int(4 + abs(math.sin(time_remaining * 6)) * 6)
@@ -249,14 +289,14 @@ class VoiceRenderer:
             pygame.draw.rect(surf, (255, 255, 255), (REFERENCE_WIDTH // 2 - 120, 460, 240, 14), border_radius=7)
             pygame.draw.rect(surf, (34, 197, 94), (REFERENCE_WIDTH // 2 - 120, 460, bar_w, 14), border_radius=7)
         # Time remaining
-        time_label = text_fn(f"{time_remaining:4.1f}s", WHITE)
+        time_label = text_fn(f"{time_remaining:4.1f}s", DARK_TEXT, 26)
         surf.blit(time_label, time_label.get_rect(center=(REFERENCE_WIDTH // 2, 430)))
         # Top right "indietro" pill
         self._draw_back_pill(surf, text_fn)
         # Bottom STOP label
-        stop_label = text_fn("STOP", WHITE)
+        stop_label = text_fn("ui.stop", DARK_TEXT, 26)
         surf.blit(
-            stop_label, stop_label.get_rect(center=(mx, my + 130))
+            stop_label, stop_label.get_rect(center=(mx, my + 200))
         )
 
     def draw_replay(
@@ -271,36 +311,40 @@ class VoiceRenderer:
         surf.fill(BACKDROP_COLOR)
         pygame.draw.rect(surf, scene.primary_color, (0, 0, REFERENCE_WIDTH, 220))
         pygame.draw.rect(surf, scene.secondary_color, (0, 220, REFERENCE_WIDTH, 12))
-        title = text_fn(scene.label_key.upper(), WHITE)
+        title = text_fn(scene.label_key, WHITE, 40, REFERENCE_WIDTH - 200)
         surf.blit(title, title.get_rect(center=(REFERENCE_WIDTH // 2, 100)))
         # Big status area
         status = text_fn(
             "ui.save_failed"
             if save_error
-            else ("BELLA!" if has_recording else "RIPROVA!"),
+            else ("ui.replay_good" if has_recording else "ui.replay_retry"),
             MIC_DARK if save_error else DARK_TEXT,
+            30,
+            REFERENCE_WIDTH - 120,
         )
         surf.blit(status, status.get_rect(center=(REFERENCE_WIDTH // 2, 320)))
-        dur = text_fn(f"{duration:4.1f}s", DARK_TEXT)
+        dur = text_fn(f"{duration:4.1f}s", DARK_TEXT, 24)
         surf.blit(dur, dur.get_rect(center=(REFERENCE_WIDTH // 2, 360)))
         # Buttons
         self._draw_tactile_button(
-            surf, self.replay_btn_rect, "▶", text_fn,
+            surf, self.replay_btn_rect, "icon:play", text_fn,
             base=(PLAY_GREEN, PLAY_DARK),
         )
         self._draw_tactile_button(
-            surf, self.rerecord_btn_rect, "↺", text_fn,
+            surf, self.rerecord_btn_rect, "icon:redo", text_fn,
             base=((180, 83, 9), (120, 53, 9)),
         )
-        # "PROSSIMA SCENA" button (top right)
+        # "next scene" button (top right)
         self._draw_back_pill(surf, text_fn)
-        next_label = text_fn("PROSSIMA SCENA →", DARK_TEXT)
-        surf.blit(next_label, next_label.get_rect(center=(REFERENCE_WIDTH // 2, REFERENCE_HEIGHT - 50)))
+        self._draw_tactile_button(
+            surf, self.next_btn_rect, "ui.next_scene", text_fn,
+            base=((56, 189, 248), (12, 74, 110)), icon="next",
+        )
 
     def draw_saved(self, story, text_fn) -> None:
         surf = self.surface
         surf.fill(BACKDROP_COLOR)
-        title = text_fn("STORIA SALVATA!", (22, 101, 52))
+        title = text_fn("ui.saved", (22, 101, 52), 34)
         surf.blit(title, title.get_rect(center=(REFERENCE_WIDTH // 2, 80)))
         # Four scene thumbnails
         for i, scene in enumerate(SCENES):
@@ -313,14 +357,14 @@ class VoiceRenderer:
                 dur = story.scene_durations.get(scene.scene_id, 0.0)
                 tag = text_fn(f"{dur:3.1f}s", (22, 101, 52))
                 surf.blit(
-                    tag, tag.get_rect(center=(rect.centerx, rect.bottom + 38))
+                    tag, tag.get_rect(center=(rect.centerx, rect.bottom + 50))
                 )
         # Library + New buttons
         lib = pygame.Rect(140, 460, 280, 80)
         new = pygame.Rect(REFERENCE_WIDTH - 420, 460, 280, 80)
-        self._draw_tactile_button(surf, lib, "LE MIE STORIE", text_fn,
+        self._draw_tactile_button(surf, lib, "ui.library", text_fn,
                                   base=((56, 189, 248), (12, 74, 110)))
-        self._draw_tactile_button(surf, new, "UN'ALTRA STORIA", text_fn,
+        self._draw_tactile_button(surf, new, "ui.another_story", text_fn,
                                   base=((34, 197, 94), (22, 101, 52)))
 
     @staticmethod
@@ -372,13 +416,13 @@ class VoiceRenderer:
     ) -> None:
         surf = self.surface
         surf.fill(BACKDROP_COLOR)
-        title = text_fn("LE MIE STORIE", DARK_TEXT)
+        title = text_fn("ui.library", DARK_TEXT, 32)
         surf.blit(title, title.get_rect(center=(REFERENCE_WIDTH // 2, 60)))
         stories = library.stories
         start_index = max(0, int(page)) * 4
         visible = stories[start_index : start_index + 4]
         if library.count == 0:
-            empty = text_fn("ANCORA NESSUNA STORIA!", (148, 163, 184))
+            empty = text_fn("ui.no_stories", (110, 123, 140), 28, REFERENCE_WIDTH - 80)
             surf.blit(empty, empty.get_rect(center=(REFERENCE_WIDTH // 2, 280)))
         else:
             for local_index, story in enumerate(visible):
@@ -464,7 +508,7 @@ class VoiceRenderer:
                 self._draw_tactile_button(
                     surf,
                     self.library_play_rect(local_index),
-                    "▶",
+                    "icon:play",
                     text_fn,
                     base=((PLAY_GREEN, PLAY_DARK)),
                 )
@@ -482,7 +526,7 @@ class VoiceRenderer:
             self._draw_tactile_button(
                 surf,
                 self.library_prev_rect(),
-                "←",
+                "icon:back",
                 text_fn,
                 base=((56, 189, 248), (12, 74, 110)),
             )
@@ -490,7 +534,7 @@ class VoiceRenderer:
             self._draw_tactile_button(
                 surf,
                 self.library_next_rect(),
-                "→",
+                "icon:next",
                 text_fn,
                 base=((56, 189, 248), (12, 74, 110)),
             )
@@ -498,7 +542,7 @@ class VoiceRenderer:
         self._draw_tactile_button(
             surf,
             self.library_new_rect(),
-            "+ NUOVA",
+            f"+ {text_fn.resolve('ui.new_story')}",
             text_fn,
             base=((34, 197, 94), (22, 101, 52)),
         )
@@ -506,7 +550,7 @@ class VoiceRenderer:
     def draw_mic_required(self, text_fn) -> None:
         surf = self.surface
         surf.fill(BACKDROP_COLOR)
-        title = text_fn("SERVE IL MICROFONO", (180, 83, 9))
+        title = text_fn("ui.mic_required_title", (180, 83, 9), 32, REFERENCE_WIDTH - 80)
         surf.blit(title, title.get_rect(center=(REFERENCE_WIDTH // 2, 200)))
         # Big mic icon
         pygame.draw.circle(surf, (200, 200, 200), (REFERENCE_WIDTH // 2, 320), 60)
@@ -515,10 +559,7 @@ class VoiceRenderer:
             pygame.Rect(REFERENCE_WIDTH // 2 - 12, 290, 24, 40),
             border_radius=12,
         )
-        body = text_fn(
-            "PER REGISTRARE LA TUA VOCE, CHIEDI AD UN ADULTO DI ACCENDERE IL MICROFONO IN IMPOSTAZIONI.",
-            (148, 163, 184),
-        )
+        body = text_fn.resolve("ui.mic_required_body")
         # Word wrap (very simple)
         words = body.split(" ")
         lines: list[str] = []
@@ -534,15 +575,15 @@ class VoiceRenderer:
             lines.append(cur)
         for i, line in enumerate(lines[:5]):
             surf.blit(
-                text_fn(line, (148, 163, 184)),
-                text_fn(line, (148, 163, 184)).get_rect(
-                    center=(REFERENCE_WIDTH // 2, 420 + i * 26)
+                text_fn(line, (100, 113, 130), 20),
+                text_fn(line, (100, 113, 130), 20).get_rect(
+                    center=(REFERENCE_WIDTH // 2, 420 + i * 28)
                 ),
             )
         # Back to launcher
         back = pygame.Rect(REFERENCE_WIDTH // 2 - 120, REFERENCE_HEIGHT - 90, 240, 64)
-        self._draw_tactile_button(surf, back, "← INDIETRO", text_fn,
-                                  base=((148, 163, 184), (71, 85, 105)))
+        self._draw_tactile_button(surf, back, "ui.back", text_fn,
+                                  base=((148, 163, 184), (71, 85, 105)), icon="back")
 
     # ------------------------------------------------------------------
     # Helpers
@@ -551,21 +592,36 @@ class VoiceRenderer:
     def _draw_back_pill(self, surf: pygame.Surface, text_fn) -> None:
         pygame.draw.rect(surf, BUTTON_BG, self.back_btn_rect, border_radius=20)
         pygame.draw.rect(surf, BUTTON_BORDER, self.back_btn_rect, width=3, border_radius=20)
-        surf.blit(
-            text_fn("←", DARK_TEXT),
-            text_fn("←", DARK_TEXT).get_rect(center=self.back_btn_rect.center),
-        )
+        draw_icon(surf, "back", self.back_btn_rect.center, 26, DARK_TEXT)
 
     def _draw_tactile_button(
         self, surf: pygame.Surface, rect: pygame.Rect, glyph: str,
         text_fn, base: tuple[tuple[int, int, int], tuple[int, int, int]],
+        icon: str | None = None,
     ) -> None:
+        """Draw a pill button.
+
+        ``glyph`` is a text key/literal, or ``"icon:<kind>"`` for a drawn
+        pictogram. ``icon`` adds a pictogram left of a text label.
+        """
         primary, dark = base
         shadow = rect.move(0, 4)
         pygame.draw.rect(surf, (180, 190, 210), shadow, border_radius=rect.height // 2)
         pygame.draw.rect(surf, primary, rect, border_radius=rect.height // 2)
         pygame.draw.rect(surf, dark, rect, width=3, border_radius=rect.height // 2)
-        surf.blit(
-            text_fn(glyph, WHITE),
-            text_fn(glyph, WHITE).get_rect(center=rect.center),
-        )
+        if glyph.startswith("icon:"):
+            draw_icon(surf, glyph[5:], rect.center, min(30, rect.height - 24), WHITE)
+            return
+        if icon is not None:
+            icon_size = min(26, rect.height - 28)
+            draw_icon(
+                surf, icon, (rect.left + rect.height // 2 + 6, rect.centery), icon_size, WHITE
+            )
+            lane = pygame.Rect(
+                rect.left + rect.height // 2 + 6 + icon_size, rect.top,
+                rect.width - rect.height // 2 - 6 - icon_size - 16, rect.height,
+            )
+        else:
+            lane = rect.inflate(-24, 0)
+        label = text_fn(glyph, WHITE, max_width=lane.width)
+        surf.blit(label, label.get_rect(center=lane.center))

@@ -14,7 +14,11 @@
     "btn.left": "Izquierda",
     "btn.right": "Derecha",
     "btn.drop": "Soltar",
-    "btn.clean": "Formas nuevas"
+    "btn.clean": "Formas nuevas",
+    "hud.stars": "Estrellas: $stars",
+    "hud.height": "Altura: $height / $goal",
+    "hint.pick_block": "¡Elige un bloque y colócalo!",
+    "celebration.achievement": "Estrellas: $stars | Altura máxima: $height pisos."
   },
   "audio": {}
 }

@@ -12,6 +12,9 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+from greia_platform.typography import FontRole, GreiaTypography
+
 try:
     from corsa_content import (
         CELL_SIZE,
@@ -97,16 +100,50 @@ except ImportError:
 class CorsaRenderer:
     """Renders the game state onto the reference 1024x600 surface."""
 
-    def __init__(self) -> None:
-        pygame.font.init()
-        # Clean typography for HUD
-        self.hud_font = pygame.font.Font(None, 28)
-        self.big_font = pygame.font.Font(None, 44)
-        self.banner_font = pygame.font.Font(None, 52)
+    def __init__(
+        self,
+        resources: LocalizedResources | None = None,
+        typography: GreiaTypography | None = None,
+    ) -> None:
+        # Platform typography renders text and color emoji; the pygame default
+        # font has neither emoji nor symbol glyphs (they showed as boxes).
+        self._typography = typography or GreiaTypography()
+        # Child-visible copy is resolved once from the locale bundles
+        # (``resources.text`` applies the child letter-case policy). Without
+        # resources only the emoji remain: no fixed-language fallback text.
+        self._copy: dict[str, str] = {
+            key: resources.text(key) if resources else ""
+            for key in ("msg.level_clear", "msg.oops")
+        }
+        self._text_cache: dict[tuple, pygame.Surface] = {}
 
         # Particle effects for sparkles and star trails
         self.particles: list[dict[str, float | tuple[int, int, int]]] = []
         self._anim_timer: float = 0.0
+
+    def _text(
+        self,
+        text: str,
+        size: int,
+        color: tuple[int, int, int],
+        max_width: int | None = None,
+    ) -> pygame.Surface:
+        """Cached mixed text/emoji line, shrunk (to a floor) to ``max_width``."""
+        key = (text, size, color, max_width)
+        cached = self._text_cache.get(key)
+        if cached is None:
+            fitted = size
+            if max_width is not None:
+                while (
+                    fitted > 12
+                    and self._typography.measure(text, FontRole.TITLE, fitted).width > max_width
+                ):
+                    fitted -= 1
+            if len(self._text_cache) >= 128:
+                self._text_cache.clear()
+            cached = self._typography.render(text, FontRole.TITLE, fitted, color)
+            self._text_cache[key] = cached
+        return cached
 
     def render(self, surface: pygame.Surface, model: CorsaModel, dt: float) -> None:
         """Render one complete frame onto surface."""
@@ -365,7 +402,7 @@ class CorsaRenderer:
                 pygame.draw.line(surface, (40, 30, 20), (eye_x - 3, eye_y), (eye_x + 3, eye_y), 2)
                 # Floating "Zzz"
                 z_offset = (self._anim_timer * 15.0) % 20.0
-                z_surf = self.hud_font.render("z", True, (130, 150, 220))
+                z_surf = self._text("z", 22, (130, 150, 220))
                 surface.blit(z_surf, (int(cx) - 4, int(cy) - 22 - int(z_offset)))
             else:
                 pygame.draw.circle(surface, (40, 30, 20), (eye_x, eye_y), 2)
@@ -443,17 +480,17 @@ class CorsaRenderer:
         pygame.draw.circle(surface, COLOR_STRAWBERRY, (bx, by), 9)
         pygame.draw.circle(surface, COLOR_STRAWBERRY_LEAF, (bx, by - 8), 3)
         berry_text = f"{model.berries_collected} / {model.total_berries}"
-        berry_surf = self.hud_font.render(berry_text, True, COLOR_HUD_TEXT)
+        berry_surf = self._text(berry_text, 24, COLOR_HUD_TEXT)
         surface.blit(berry_surf, (bx + 16, hud_bar_y + 6))
 
         # 3. Score Stars
         sx = 490
-        star_surf = self.hud_font.render(f"★ {model.score}", True, (215, 155, 20))
+        star_surf = self._text(f"⭐ {model.score}", 24, (215, 155, 20))
         surface.blit(star_surf, (sx, hud_bar_y + 6))
 
         # 4. Level Indicator
         lx = 640
-        lvl_surf = self.hud_font.render(f"🌱 L{model.level_config.level_number}", True, (60, 110, 50))
+        lvl_surf = self._text(f"🌱 L{model.level_config.level_number}", 24, (60, 110, 50))
         surface.blit(lvl_surf, (lx, hud_bar_y + 6))
 
         # 5. Rainbow Aura Active Meter
@@ -466,7 +503,7 @@ class CorsaRenderer:
             # Rainbow fill
             r_idx = int(self._anim_timer * 10.0) % len(COLOR_RAINBOW)
             pygame.draw.rect(surface, COLOR_RAINBOW[r_idx], (rx, hud_bar_y + 8, bar_w, 18), border_radius=9)
-            star_label = self.hud_font.render("✨", True, (255, 255, 255))
+            star_label = self._text("✨", 24, (255, 255, 255))
             surface.blit(star_label, (rx + bar_w - 14, hud_bar_y + 6))
 
     def _draw_completion_banner(self, surface: pygame.Surface, model: CorsaModel) -> None:
@@ -481,9 +518,11 @@ class CorsaRenderer:
         pygame.draw.rect(surface, (255, 252, 240), (bx, by, banner_w, banner_h), border_radius=24)
         pygame.draw.rect(surface, COLOR_GOLDEN_BERRY, (bx, by, banner_w, banner_h), width=4, border_radius=24)
 
-        text_surf = self.banner_font.render("🍓 Livello Completato! 🎉", True, (50, 120, 50))
+        text_surf = self._text(
+            self._copy["msg.level_clear"] or "🍓🎉", 38, (50, 120, 50), banner_w - 40
+        )
         tx = bx + (banner_w - text_surf.get_width()) // 2
-        ty = by + 28
+        ty = by + (banner_h - text_surf.get_height()) // 2
         surface.blit(text_surf, (tx, ty))
 
     def _draw_apple_banner(self, surface: pygame.Surface) -> None:
@@ -495,7 +534,9 @@ class CorsaRenderer:
         pygame.draw.rect(surface, (255, 252, 240), (bx, by, banner_w, banner_h), border_radius=20)
         pygame.draw.rect(surface, (220, 70, 70), (bx, by, banner_w, banner_h), width=3, border_radius=20)
 
-        text_surf = self.big_font.render("🍎 Momo mangia una mela e riparte!", True, (180, 50, 50))
+        text_surf = self._text(
+            f"🍎 {self._copy['msg.oops']}".strip(), 30, (180, 50, 50), banner_w - 40
+        )
         tx = bx + (banner_w - text_surf.get_width()) // 2
-        ty = by + 22
+        ty = by + (banner_h - text_surf.get_height()) // 2
         surface.blit(text_surf, (tx, ty))

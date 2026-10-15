@@ -26,6 +26,7 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.localization import LocalizedResources
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
 from greia_platform.typography import GreiaTypography
 
@@ -140,6 +141,7 @@ class PontiApp:
         model: PontiModel | None = None,
         renderer: PontiRenderer | None = None,
         audio: BridgeAudio | None = None,
+        resources: LocalizedResources | None = None,
     ) -> None:
         self._screen = screen
         self._canvas = canvas or PygameReferenceCanvas(screen)
@@ -168,7 +170,7 @@ class PontiApp:
 
         self._model = model or PontiModel(total_stars=total_stars)
         # Ensure renderer shares the same typography for bounded cache sharing.
-        self._renderer = renderer or PontiRenderer(self._typography)
+        self._renderer = renderer or PontiRenderer(self._typography, resources=resources)
         self._audio = audio or BridgeAudio()
         self._storage = storage
         self._running = True

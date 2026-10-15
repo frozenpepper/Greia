@@ -26,7 +26,12 @@
     "ui.scenes": "ESCENAS",
     "ui.durations": "DURACIÓN",
     "activity.title": "HISTORIAS CON MI VOZ",
-    "ui.save_failed": "NO HE PODIDO GUARDARLA. INTÉNTALO OTRA VEZ."
+    "ui.save_failed": "NO HE PODIDO GUARDARLA. INTÉNTALO OTRA VEZ.",
+    "ui.replay_good": "¡Genial!",
+    "ui.replay_retry": "¡Otra vez!",
+    "ui.another_story": "Otra historia",
+    "ui.back": "Atrás",
+    "ui.new_story": "Nueva"
   },
   "audio": {}
 }

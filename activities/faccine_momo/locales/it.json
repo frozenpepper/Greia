@@ -10,7 +10,9 @@
     "emotion.surprised": "Sorpreso",
     "emotion.silly": "Buffo",
     "emotion.angry": "Arrabbiato",
-    "emotion.sleepy": "Sonno"
+    "emotion.sleepy": "Sonno",
+    "ui.mode_free_mirror": "Specchio libero",
+    "ui.mode_guess_emotion": "Come si sente?"
   },
   "audio": {
     "activity.title": {

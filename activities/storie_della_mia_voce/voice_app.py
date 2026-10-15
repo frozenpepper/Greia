@@ -29,12 +29,7 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.child_text import display_text
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.typography import FontRole, GreiaTypography
 
 from voice_audio import VoicePlayback
@@ -457,60 +452,101 @@ class VoiceApp:
         elif self.phase == Phase.MIC_REQUIRED:
             self.renderer.draw_mic_required(text_fn)
 
-    def _make_text_fn(self):
-        """Return a callable that turns a semantic string into a
-        rendered pygame.Surface.
+    def _make_text_fn(self) -> "LocalizedTextSurfaces":
+        """Return the app's single cached text callable (built lazily once).
 
-        The caller may pass either a literal string (rendered
-        verbatim with the ADR 0034 capitals policy) or a
-        semantic key like ``"ui.scene_forest"`` (resolved through
-        the localized resources before rendering).
+        The renderer passes either a semantic key (``"ui.scene_forest"``,
+        resolved once through the Activity's ``LocalizedResources``) or a
+        neutral literal such as a duration or arrow glyph. Surfaces are cached
+        so unchanged copy is never re-rasterized per frame.
         """
-        typography = self.typography
-        resources = self.resources
+        text_fn = self.__dict__.get("_text_fn")
+        if text_fn is None:
+            text_fn = LocalizedTextSurfaces(self.typography, self.resources)
+            self.__dict__["_text_fn"] = text_fn
+        return text_fn
 
-        def _resolve(text: str) -> str:
-            if not isinstance(text, str) or not text:
-                return text
-            # Resolve a semantic key if the resources have it. The
-            # key may have been upper-cased by a renderer so always
-            # look it up case-insensitively: the resource keys are
-            # lower-case semantic ids and the lookup fails otherwise.
-            lowered = text.lower()
-            if lowered.startswith("ui.") or lowered.startswith("activity."):
-                try:
-                    return resources.text(lowered)
-                except Exception:
-                    return text
-            return text
 
-        def fn(text: str, color: tuple[int, int, int]) -> pygame.Surface:
-            return typography.render(
-                display_text(_resolve(text)), FontRole.DISPLAY, 18, color
-            )
+class LocalizedTextSurfaces:
+    """Resolve semantic UI keys once and cache rendered text surfaces.
 
-        return fn
+    ``resolve(text)`` returns the display string (case policy is applied by
+    ``LocalizedResources.text``; neutral literals such as times and arrows are used verbatim).
+    A missing key renders nothing rather than showing a key or fixed-language
+    sentence. The surface cache is bounded and cleared wholesale.
+    """
+
+    _MAX_SURFACES: Final = 128
+
+    def __init__(self, typography: GreiaTypography, resources: LocalizedResources) -> None:
+        self._typography = typography
+        self._resources = resources
+        self._strings: dict[str, str] = {}
+        self._surfaces: dict[tuple[str, tuple[int, int, int], int, int | None], pygame.Surface] = {}
+
+    def resolve(self, text: str) -> str:
+        if not isinstance(text, str) or not text:
+            return ""
+        cached = self._strings.get(text)
+        if cached is not None:
+            return cached
+        if text.startswith("ui.") or text.startswith("activity."):
+            try:
+                value = self._resources.text(text)
+            except Exception:
+                value = ""
+        else:
+            value = text  # neutral literal (number, unit, symbol): never re-cased
+        if len(self._strings) >= self._MAX_SURFACES:
+            self._strings.clear()
+        self._strings[text] = value
+        return value
+
+    def __call__(
+        self,
+        text: str,
+        color: tuple[int, int, int],
+        size: int = 18,
+        max_width: int | None = None,
+    ) -> pygame.Surface:
+        """Cached surface for ``text``; shrinks (to a floor) to fit ``max_width``."""
+        key = (text, tuple(color), size, max_width)
+        surface = self._surfaces.get(key)
+        if surface is None:
+            if len(self._surfaces) >= self._MAX_SURFACES:
+                self._surfaces.clear()
+            resolved = self.resolve(text)
+            fitted = size
+            if max_width is not None:
+                while (
+                    fitted > 10
+                    and self._typography.measure(resolved, FontRole.DISPLAY, fitted).width
+                    > max_width
+                ):
+                    fitted -= 1
+            surface = self._typography.render(resolved, FontRole.DISPLAY, fitted, color)
+            self._surfaces[key] = surface
+        return surface
 
 
 def build_app(
     screen: pygame.Surface,
-    locale: str = "it",
+    locale: str | None = None,
     package_root: "Path | None" = None,
 ) -> VoiceApp:
-    """Composition root for the headless launch / simulator gate."""
+    """Composition root for the headless launch / simulator gate.
+
+    ``locale`` is only for isolated embedders/tests; normal launches inherit
+    the child's profile language through ``activity_resources``.
+    """
     pygame.init()
-    pygame.display.set_caption("Storie della Mia Voce")
     metrics = ChildUiMetrics.for_size(*screen.get_size())
     theme = get_theme()
     typography = GreiaTypography()
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    context = resolve_activity_locale(locale, support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-    assert context is not None
     from pathlib import Path
     root = package_root or Path(__file__).resolve().parent
-    resources = LocalizedResources(root, context)
+    resources = activity_resources(root, requested_locale=locale)
+    pygame.display.set_caption(resources.text("activity.title"))
     recorder = VoiceRecorder()
     playback = VoicePlayback()
     storage = VoiceStorage.load()

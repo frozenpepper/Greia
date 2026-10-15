@@ -10,7 +10,9 @@
     "emotion.surprised": "Sorprendido",
     "emotion.silly": "Gracioso",
     "emotion.angry": "Enfadado",
-    "emotion.sleepy": "Con sueño"
+    "emotion.sleepy": "Con sueño",
+    "ui.mode_free_mirror": "Espejo libre",
+    "ui.mode_guess_emotion": "¿Cómo se siente?"
   },
   "audio": {}
 }

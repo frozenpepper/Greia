@@ -34,7 +34,7 @@ def main() -> int:
 
     model = TreeModel()
     audio = TreeAudio(package_root, locale=locale, resources=resources)
-    renderer = TreeRenderer()
+    renderer = TreeRenderer(resources=resources)
 
     app = TreeActivity(
         screen=screen,

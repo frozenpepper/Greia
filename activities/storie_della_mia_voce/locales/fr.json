@@ -26,7 +26,12 @@
     "ui.scenes": "SCÈNES",
     "ui.durations": "DURÉE",
     "activity.title": "LES HISTOIRES DE MA VOIX",
-    "ui.save_failed": "JE N'AI PAS PU L'ENREGISTRER. RÉESSAIE."
+    "ui.save_failed": "JE N'AI PAS PU L'ENREGISTRER. RÉESSAIE.",
+    "ui.replay_good": "Super !",
+    "ui.replay_retry": "Réessaie !",
+    "ui.another_story": "Une autre histoire",
+    "ui.back": "Retour",
+    "ui.new_story": "Nouvelle"
   },
   "audio": {}
 }

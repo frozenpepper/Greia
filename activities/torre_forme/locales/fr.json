@@ -14,7 +14,11 @@
     "btn.left": "Gauche",
     "btn.right": "Droite",
     "btn.drop": "Lâcher",
-    "btn.clean": "Nouvelles formes"
+    "btn.clean": "Nouvelles formes",
+    "hud.stars": "Étoiles : $stars",
+    "hud.height": "Hauteur : $height / $goal",
+    "hint.pick_block": "Choisis un bloc et place-le !",
+    "celebration.achievement": "Étoiles : $stars | Hauteur maximale : $height étages !"
   },
   "audio": {}
 }

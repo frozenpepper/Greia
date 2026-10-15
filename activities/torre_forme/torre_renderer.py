@@ -14,6 +14,7 @@ import random
 from typing import Any
 import pygame
 
+from greia_platform.child_text import display_text
 from greia_platform.localization import LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 
@@ -89,6 +90,38 @@ class Particle:
     max_life: float
 
 
+def _draw_symbol(
+    surface: pygame.Surface,
+    kind: str,
+    center: tuple[int, int],
+    size: int,
+    color: tuple[int, int, int],
+) -> None:
+    """Draw a language-neutral control pictogram as shapes.
+
+    The Greia text font has no arrow glyphs, so characters such as the
+    triangles/rotation arrow would render as missing-glyph boxes.
+    """
+    cx, cy = center
+    r = size // 2
+    if kind == "left":
+        pts = [(cx - r, cy), (cx + r // 2 + 2, cy - r), (cx + r // 2 + 2, cy + r)]
+    elif kind == "right":
+        pts = [(cx + r, cy), (cx - r // 2 - 2, cy - r), (cx - r // 2 - 2, cy + r)]
+    elif kind == "down":
+        pts = [(cx, cy + r), (cx - r, cy - r // 2 - 2), (cx + r, cy - r // 2 - 2)]
+    elif kind == "rotate":
+        box = pygame.Rect(cx - r, cy - r, 2 * r, 2 * r)
+        pygame.draw.arc(surface, color, box, math.radians(40), math.radians(320), 5)
+        hx = cx + int(r * math.cos(math.radians(40)))
+        hy = cy - int(r * math.sin(math.radians(40)))
+        pygame.draw.polygon(surface, color, [(hx + 8, hy - 5), (hx - 9, hy - 10), (hx + 1, hy + 11)])
+        return
+    else:
+        return
+    pygame.draw.polygon(surface, color, pts)
+
+
 class TorreRenderer:
     """Storybook wooden toy graphics renderer for Torre delle Forme."""
 
@@ -99,6 +132,8 @@ class TorreRenderer:
     ) -> None:
         self.typography = typography
         self.resources = resources
+        self._strings: dict[tuple[str, tuple[tuple[str, object], ...]], str] = {}
+        self._text_surfaces: dict[tuple, pygame.Surface] = {}
         self.particles: list[Particle] = []
 
         # Interactive UI Rectangles
@@ -124,13 +159,26 @@ class TorreRenderer:
         # Celebration Replay Button
         self.replay_button_rect = pygame.Rect(370, 420, 284, 76)
 
-    def _t(self, key: str, default: str) -> str:
-        if self.resources is not None:
+    def _t(self, key: str, **variables: object) -> str:
+        """Resolve one localized UI string once per distinct (key, values).
+
+        ``LocalizedResources.text`` already applies the child letter-case
+        policy. A missing resource renders nothing; there is deliberately no
+        fixed-language fallback sentence.
+        """
+        if self.resources is None:
+            return ""
+        cache_key = (key, tuple(sorted(variables.items())))
+        cached = self._strings.get(cache_key)
+        if cached is None:
             try:
-                return self.resources.text(key)
+                cached = self.resources.text(key, variables or None)
             except Exception:
-                return default
-        return default
+                cached = ""
+            if len(self._strings) >= 64:
+                self._strings.clear()
+            self._strings[cache_key] = cached
+        return cached
 
     def _render_text(
         self,
@@ -138,8 +186,21 @@ class TorreRenderer:
         size: int,
         color: tuple[int, int, int],
         role: FontRole = FontRole.BODY,
+        max_width: int | None = None,
     ) -> pygame.Surface:
-        return self.typography.render(text, role, size, color)
+        """Render one cached line, shrunk (to a floor) to fit ``max_width``."""
+        key = (text, size, color, role, max_width)
+        cached = self._text_surfaces.get(key)
+        if cached is None:
+            fitted = size
+            if max_width is not None:
+                while fitted > 10 and self.typography.measure(text, role, fitted).width > max_width:
+                    fitted -= 1
+            if len(self._text_surfaces) >= 128:
+                self._text_surfaces.clear()
+            cached = self.typography.render(text, role, fitted, color)
+            self._text_surfaces[key] = cached
+        return cached
 
     def spawn_particles(
         self,
@@ -542,7 +603,7 @@ class TorreRenderer:
         badge_rect = pygame.Rect(cat_cx - 50, 510, 100, 28)
         pygame.draw.rect(surface, (255, 252, 245), badge_rect, border_radius=14)
         pygame.draw.rect(surface, (148, 98, 56), badge_rect, width=2, border_radius=14)
-        lbl = self._render_text("Lilli", 16, (78, 56, 40), FontRole.TITLE)
+        lbl = self._render_text(display_text("Lilli"), 16, (78, 56, 40), FontRole.TITLE)
         surface.blit(lbl, lbl.get_rect(center=badge_rect.center))
 
     def _draw_controls_and_meters(
@@ -550,11 +611,11 @@ class TorreRenderer:
     ) -> None:
         # Mode Selection Tabs (Top Right)
         modes = [
-            (TowerMode.FREE_BUILD, self.mode_free_rect, "1. Libero", "mode.free_build"),
-            (TowerMode.SLOW_FALL, self.mode_slow_rect, "2. Piano", "mode.slow_fall"),
-            (TowerMode.TOWER_CHALLENGE, self.mode_chal_rect, "3. Sfida", "mode.challenge"),
+            (TowerMode.FREE_BUILD, self.mode_free_rect, "mode.free_build"),
+            (TowerMode.SLOW_FALL, self.mode_slow_rect, "mode.slow_fall"),
+            (TowerMode.TOWER_CHALLENGE, self.mode_chal_rect, "mode.challenge"),
         ]
-        for m_val, rect, default_lbl, key in modes:
+        for m_val, rect, key in modes:
             is_active = model.mode == m_val
             bg = (245, 158, 11) if is_active else (255, 250, 240)
             border = (180, 83, 9) if is_active else (200, 170, 140)
@@ -562,8 +623,7 @@ class TorreRenderer:
 
             pygame.draw.rect(surface, bg, rect, border_radius=16)
             pygame.draw.rect(surface, border, rect, width=3 if is_active else 2, border_radius=16)
-            text = self._t(key, default_lbl)
-            lbl = self._render_text(text, 16, text_col, FontRole.CONTROL)
+            lbl = self._render_text(self._t(key), 16, text_col, FontRole.CONTROL, rect.width - 16)
             surface.blit(lbl, lbl.get_rect(center=rect.center))
 
         # Star & Height Meter Panel (x=620..990, y=78..130)
@@ -572,13 +632,13 @@ class TorreRenderer:
         pygame.draw.rect(surface, COLOR_PANEL_BORDER, panel_rect, width=2, border_radius=16)
 
         # Stars count
-        stars_str = f"Stelle: {model.total_stars}"
-        stars_lbl = self._render_text(stars_str, 20, (217, 119, 6), FontRole.TITLE)
+        stars_str = self._t("hud.stars", stars=model.total_stars)
+        stars_lbl = self._render_text(stars_str, 20, (217, 119, 6), FontRole.TITLE, 130)
         surface.blit(stars_lbl, (644, 94))
 
         # Height meter
-        h_str = f"Altezza: {model.current_height} / 10"
-        h_lbl = self._render_text(h_str, 20, (30, 64, 175), FontRole.TITLE)
+        h_str = self._t("hud.height", height=model.current_height, goal=10)
+        h_lbl = self._render_text(h_str, 20, (30, 64, 175), FontRole.TITLE, 210)
         surface.blit(h_lbl, (780, 94))
 
         # Mode Specific Content:
@@ -596,7 +656,7 @@ class TorreRenderer:
         pygame.draw.rect(surface, (110, 68, 38), shelf_base, width=2, border_radius=6)
 
         # Shelf label
-        shelf_title = self._render_text("Scegli un blocco e posizionalo!", 16, (110, 75, 45), FontRole.TITLE)
+        shelf_title = self._render_text(self._t("hint.pick_block"), 16, (110, 75, 45), FontRole.TITLE, 364)
         surface.blit(shelf_title, (640, 154))
 
         # 3 Shelf slots
@@ -615,8 +675,9 @@ class TorreRenderer:
         btn = self.new_shapes_rect
         pygame.draw.rect(surface, (34, 197, 94), btn, border_radius=14)
         pygame.draw.rect(surface, (21, 128, 61), btn, width=3, border_radius=14)
-        lbl_text = self._t("btn.clean", "Nuove Forme")
-        btn_lbl = self._render_text(lbl_text, 18, (255, 255, 255), FontRole.CONTROL)
+        btn_lbl = self._render_text(
+            self._t("btn.clean"), 18, (255, 255, 255), FontRole.CONTROL, btn.width - 20
+        )
         surface.blit(btn_lbl, btn_lbl.get_rect(center=btn.center))
 
     def _draw_mini_shape(
@@ -646,21 +707,19 @@ class TorreRenderer:
             pygame.draw.circle(surface, (0, 0, 0, 30), (r_rect.centerx + 2, r_rect.centery + 4), r_rect.width // 2)
             pygame.draw.circle(surface, (250, 204, 21), r_rect.center, r_rect.width // 2)
             pygame.draw.circle(surface, (217, 119, 6), r_rect.center, r_rect.width // 2, 4)
-            lbl = self._render_text("↻", 32, (120, 53, 15), FontRole.TITLE)
-            surface.blit(lbl, lbl.get_rect(center=r_rect.center))
+            _draw_symbol(surface, "rotate", r_rect.center, 36, (120, 53, 15))
 
         # 2. Steering buttons: Left [◀], Down [▼], Right [▶]
         buttons = [
-            (self.left_button_rect, "◀", (59, 130, 246), (29, 78, 216)),
-            (self.down_button_rect, "▼", (34, 197, 94), (21, 128, 61)),
-            (self.right_button_rect, "▶", (59, 130, 246), (29, 78, 216)),
+            (self.left_button_rect, "left", (59, 130, 246), (29, 78, 216)),
+            (self.down_button_rect, "down", (34, 197, 94), (21, 128, 61)),
+            (self.right_button_rect, "right", (59, 130, 246), (29, 78, 216)),
         ]
         for rect, sym, fill, border in buttons:
             pygame.draw.rect(surface, (0, 0, 0, 30), rect.move(2, 4), border_radius=20)
             pygame.draw.rect(surface, fill, rect, border_radius=20)
             pygame.draw.rect(surface, border, rect, width=4, border_radius=20)
-            lbl = self._render_text(sym, 32, (255, 255, 255), FontRole.TITLE)
-            surface.blit(lbl, lbl.get_rect(center=rect.center))
+            _draw_symbol(surface, sym, rect.center, 34, (255, 255, 255))
 
     def _draw_particles(self, surface: pygame.Surface) -> None:
         for p in self.particles:
@@ -686,22 +745,24 @@ class TorreRenderer:
         pygame.draw.rect(surface, (217, 119, 6), banner_rect, width=6, border_radius=28)
 
         # Title text
-        title_text = self._t(
-            "celebration.title", "Evviva! Che splendida torre hai costruito!"
+        t_lbl = self._render_text(
+            self._t("celebration.title"), 26, (120, 53, 15), FontRole.TITLE, banner_rect.width - 48
         )
-        t_lbl = self._render_text(title_text, 26, (120, 53, 15), FontRole.TITLE)
         surface.blit(t_lbl, t_lbl.get_rect(center=(banner_rect.centerx, banner_rect.top + 50)))
 
         # Subtitle
-        sub_text = self._t(
-            "celebration.subtitle", "La torre di legno è altissima e colorata!"
+        s_lbl = self._render_text(
+            self._t("celebration.subtitle"), 20, (78, 56, 40), FontRole.BODY, banner_rect.width - 48
         )
-        s_lbl = self._render_text(sub_text, 20, (78, 56, 40), FontRole.BODY)
         surface.blit(s_lbl, s_lbl.get_rect(center=(banner_rect.centerx, banner_rect.top + 95)))
 
         # Height & Stars achievement
-        achieve_str = f"Stelle: {model.total_stars} | Altezza Massima: {model.current_height} Piani!"
-        a_lbl = self._render_text(achieve_str, 20, (30, 64, 175), FontRole.TITLE)
+        achieve_str = self._t(
+            "celebration.achievement", stars=model.total_stars, height=model.current_height
+        )
+        a_lbl = self._render_text(
+            achieve_str, 20, (30, 64, 175), FontRole.TITLE, banner_rect.width - 48
+        )
         surface.blit(a_lbl, a_lbl.get_rect(center=(banner_rect.centerx, banner_rect.top + 140)))
 
         # Chunky yellow Replay button [Costruisci Ancora 🔄]
@@ -716,8 +777,9 @@ class TorreRenderer:
         pygame.draw.rect(surface, (250, 204, 21), p_rect, border_radius=24)
         pygame.draw.rect(surface, (217, 119, 6), p_rect, width=5, border_radius=24)
 
-        replay_text = self._t("btn.replay", "Costruisci Ancora")
-        r_lbl = self._render_text(replay_text, 24, (120, 53, 15), FontRole.TITLE)
+        r_lbl = self._render_text(
+            self._t("btn.replay"), 24, (120, 53, 15), FontRole.TITLE, btn_rect.width - 28
+        )
         surface.blit(r_lbl, r_lbl.get_rect(center=p_rect.center))
 
     def hit_test_grid(self, pos: tuple[int, int]) -> tuple[int, int] | None:

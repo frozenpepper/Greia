@@ -8,6 +8,7 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -100,9 +101,21 @@ class DustParticle:
 class CollineRenderer:
     """Hardware-friendly cached storybook renderer for Colline Allegre."""
 
-    def __init__(self, typography: GreiaTypography) -> None:
+    def __init__(
+        self,
+        typography: GreiaTypography,
+        resources: LocalizedResources | None = None,
+    ) -> None:
         self._typography = typography
-        self._text_cache: dict[tuple[str, str, int, tuple[int, int, int]], pygame.Surface] = {}
+        # Child-visible copy is resolved once from the Activity locale
+        # bundles (``resources.text`` applies the child letter-case policy).
+        # Without resources only the pictograms remain: no fixed-language
+        # fallback sentence is ever drawn.
+        self._copy: dict[str, str] = {
+            key: resources.text(key) if resources else ""
+            for key in ("ui.go", "ui.brake", "ui.perfect_landing", "ui.boing")
+        }
+        self._text_cache: dict[tuple, pygame.Surface] = {}
         self._sky_surface: pygame.Surface | None = None
         self._confetti: list[ConfettiParticle] = []
         self._dust: list[DustParticle] = []
@@ -114,13 +127,22 @@ class CollineRenderer:
         self.brake_pedal_rect = pygame.Rect(140, REFERENCE_HEIGHT - 120, 92, 92)
 
     def _render_cached_text(
-        self, text: str, role: FontRole, size: int, color: tuple[int, int, int]
+        self,
+        text: str,
+        role: FontRole,
+        size: int,
+        color: tuple[int, int, int],
+        max_width: int | None = None,
     ) -> pygame.Surface:
-        key = (text, role.name, size, color)
+        key = (text, role.name, size, color, max_width)
         cached = self._text_cache.get(key)
         if cached is not None:
             return cached
-        surf = self._typography.render(text, role, size, color)
+        fitted = size
+        if max_width is not None:
+            while fitted > 10 and self._typography.measure(text, role, fitted).width > max_width:
+                fitted -= 1
+        surf = self._typography.render(text, role, fitted, color)
         if len(self._text_cache) > 200:
             self._text_cache.clear()
         self._text_cache[key] = surf
@@ -446,7 +468,7 @@ class CollineRenderer:
         if veh.perfect_landing_active:
             lift = int(veh.perfect_landing_timer * 40.0)
             txt_surf = self._render_cached_text(
-                "ATTERRAGGIO PERFETTO! ⭐", FontRole.TITLE, 22, (255, 240, 80)
+                f"{self._copy['ui.perfect_landing']} ⭐".strip(), FontRole.TITLE, 22, (255, 240, 80)
             )
             rect = txt_surf.get_rect(center=(sx, sy - 85 - lift))
             # Background pill
@@ -457,7 +479,9 @@ class CollineRenderer:
 
         # Comical Flip Boing Banner
         if veh.bounce_active:
-            txt_surf = self._render_cached_text("💥 BOING! 💥", FontRole.TITLE, 28, (255, 80, 80))
+            txt_surf = self._render_cached_text(
+                f"💥 {self._copy['ui.boing']} 💥".replace("  ", " "), FontRole.TITLE, 28, (255, 80, 80)
+            )
             rect = txt_surf.get_rect(center=(sx, sy - 90))
             pill = rect.inflate(24, 12)
             pygame.draw.rect(surface, WHITE, pill, border_radius=14)
@@ -508,7 +532,7 @@ class CollineRenderer:
         pygame.draw.circle(surface, gas_outline, (gx, gy), r, 4)
 
         # [VAI] text & icon
-        vai_txt = self._render_cached_text("VAI!", FontRole.CONTROL, 22, WHITE)
+        vai_txt = self._render_cached_text(self._copy["ui.go"], FontRole.CONTROL, 22, WHITE, 78)
         v_rect = vai_txt.get_rect(center=(gx, gy - 8))
         surface.blit(vai_txt, v_rect)
         # Double arrows
@@ -524,7 +548,7 @@ class CollineRenderer:
         pygame.draw.circle(surface, brk_outline, (bx, by), br, 4)
 
         # [FRENA] text & icon
-        frena_txt = self._render_cached_text("FRENA", FontRole.CONTROL, 16, WHITE)
+        frena_txt = self._render_cached_text(self._copy["ui.brake"], FontRole.CONTROL, 16, WHITE, 70)
         f_rect = frena_txt.get_rect(center=(bx, by - 6))
         surface.blit(frena_txt, f_rect)
         # Stop square

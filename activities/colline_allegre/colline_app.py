@@ -77,11 +77,10 @@ class CollineApp:
         self.world = CollineWorld(difficulty=2)
         self.audio = CollineAudio()
         self.typography = GreiaTypography()
-        self.renderer = CollineRenderer(self.typography)
-
         self._resources: LocalizedResources | None = None
         self._active_locale = locale
         self._init_localization()
+        self.renderer = CollineRenderer(self.typography, resources=self._resources)
 
         self._storage: Any = None
         self._best_distance: float = 0.0

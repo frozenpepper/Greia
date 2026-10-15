@@ -7,6 +7,9 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+from greia_platform.typography import FontRole, GreiaTypography
+
 if __package__:
     from .momo_model import (
         REFERENCE_HEIGHT,
@@ -49,20 +52,35 @@ EMOTION_ACCENTS: Final = {
     Emotion.SLEEPY: (92, 107, 192),
 }
 
-EMOTION_LABELS: Final = {
-    Emotion.HAPPY: "FELICE",
-    Emotion.SAD: "TRISTE",
-    Emotion.SURPRISED: "SORPRESO",
-    Emotion.SILLY: "BUFFO",
-    Emotion.ANGRY: "ARRABBIATO",
-    Emotion.SLEEPY: "SONNO",
+# Semantic copy keys. Display strings come from the Activity's locale bundles
+# (resolved once in the renderer); there is no fixed-language fallback, so an
+# independently constructed renderer shows only the pictograms.
+EMOTION_LABEL_KEYS: Final = {emotion: f"emotion.{emotion.value}" for emotion in Emotion}
+MODE_LABEL_KEYS: Final = {
+    GameMode.FREE_MIRROR: "ui.mode_free_mirror",
+    GameMode.GUESS_EMOTION: "ui.mode_guess_emotion",
 }
 
 
 class MomoRenderer:
     """Render the magic mirror, animated facial features of Momo, and generous touch controls."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        resources: LocalizedResources | None = None,
+        typography: GreiaTypography | None = None,
+    ) -> None:
+        self._typography = typography or GreiaTypography()
+        self._emotion_labels: dict[Emotion, str] = {
+            emotion: resources.text(key) if resources else ""
+            for emotion, key in EMOTION_LABEL_KEYS.items()
+        }
+        self._mode_labels: dict[GameMode, str] = {
+            mode: resources.text(key) if resources else ""
+            for mode, key in MODE_LABEL_KEYS.items()
+        }
+        # Bounded cache of fitted label surfaces (rasterized once per state).
+        self._label_surfaces: dict[tuple[str, int, int, tuple[int, int, int]], pygame.Surface] = {}
         self._reference_surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
         self.mirror_center = (512, 280)
         self.mirror_radius_x = 195
@@ -319,17 +337,14 @@ class MomoRenderer:
         pygame.draw.line(surf, color, (x, y + size), (x + size, y + size), 3)
 
     def _render_ui(self, surf: pygame.Surface, model: MomoModel) -> None:
-        font_large = pygame.font.Font(None, 28)
-        font_small = pygame.font.Font(None, 20)
-
         # 1. Mode Toggle Button (Top Center)
         is_quiz = model.mode == GameMode.GUESS_EMOTION
         mode_rect = self.mode_button_rect
         pygame.draw.rect(surf, (255, 255, 255), mode_rect, border_radius=27)
         pygame.draw.rect(surf, (255, 145, 0) if is_quiz else (171, 71, 188), mode_rect, 4, border_radius=27)
-        mode_text = "COME SI SENTE?" if is_quiz else "SPECCHIO LIBERO"
-        lbl = font_large.render(mode_text, True, (60, 60, 60))
-        surf.blit(lbl, lbl.get_rect(center=mode_rect.center))
+        lbl = self._label(self._mode_labels[model.mode], 22, mode_rect.width - 28, (60, 60, 60))
+        if lbl is not None:
+            surf.blit(lbl, lbl.get_rect(center=mode_rect.center))
 
         # 2. Controls in Free Mirror Mode
         if model.mode == GameMode.FREE_MIRROR:
@@ -342,8 +357,12 @@ class MomoRenderer:
 
                 # Icon preview
                 self._draw_emotion_icon(surf, emo, rect.centerx, rect.centery - 8)
-                lbl_name = font_small.render(EMOTION_LABELS[emo], True, accent if is_active else (80, 80, 80))
-                surf.blit(lbl_name, lbl_name.get_rect(center=(rect.centerx, rect.centery + 24)))
+                lbl_name = self._label(
+                    self._emotion_labels[emo], 15, rect.width - 10,
+                    accent if is_active else (80, 80, 80),
+                )
+                if lbl_name is not None:
+                    surf.blit(lbl_name, lbl_name.get_rect(center=(rect.centerx, rect.centery + 24)))
 
         # 3. Controls in Quiz Mode
         else:
@@ -353,9 +372,33 @@ class MomoRenderer:
                 pygame.draw.rect(surf, (255, 255, 255), rect, border_radius=24)
                 pygame.draw.rect(surf, accent, rect, 4, border_radius=24)
 
-                self._draw_emotion_icon(surf, choice_emo, rect.centerx - 45, rect.centery)
-                lbl_ch = font_large.render(EMOTION_LABELS[choice_emo], True, (50, 50, 50))
-                surf.blit(lbl_ch, lbl_ch.get_rect(center=(rect.centerx + 30, rect.centery)))
+                self._draw_emotion_icon(surf, choice_emo, rect.x + 46, rect.centery)
+                lbl_ch = self._label(
+                    self._emotion_labels[choice_emo], 22, rect.width - 84, (50, 50, 50)
+                )
+                if lbl_ch is not None:
+                    # Text lane: right of the icon, inside the rounded button.
+                    lane = pygame.Rect(rect.x + 72, rect.y, rect.width - 84, rect.height)
+                    surf.blit(lbl_ch, lbl_ch.get_rect(midleft=lane.midleft))
+
+    def _label(
+        self, text: str, size: int, max_width: int, color: tuple[int, int, int]
+    ) -> pygame.Surface | None:
+        """Cached label, shrunk (down to a floor) to fit ``max_width``."""
+
+        if not text:
+            return None
+        key = (text, size, max_width, color)
+        cached = self._label_surfaces.get(key)
+        if cached is None:
+            fitted = size
+            while fitted > 11 and self._typography.measure(text, FontRole.CONTROL, fitted).width > max_width:
+                fitted -= 1
+            if len(self._label_surfaces) >= 64:
+                self._label_surfaces.clear()
+            cached = self._typography.render(text, FontRole.CONTROL, fitted, color)
+            self._label_surfaces[key] = cached
+        return cached
 
     def _draw_emotion_icon(self, surf: pygame.Surface, emo: Emotion, cx: int, cy: int) -> None:
         # Mini expressive face icon inside button

@@ -469,14 +469,14 @@ class RampRenderer:
         clear_btn = pygame.Rect(80, 84, 200, 48)
         pygame.draw.rect(self.surface, (241, 245, 249), clear_btn, border_radius=18)
         pygame.draw.rect(self.surface, (148, 163, 184), clear_btn, width=3, border_radius=18)
-        ctxt = text_fn("PULISCI", (71, 85, 105))
+        ctxt = text_fn("ui.clear", (71, 85, 105))
         self.surface.blit(ctxt, ctxt.get_rect(center=clear_btn.center))
         # "FAI CADERE!" = run / drop
         go_btn = pygame.Rect(REFERENCE_WIDTH - 280, 84, 200, 48)
         col = (34, 197, 94) if not finished else (148, 163, 184)
         pygame.draw.rect(self.surface, col, go_btn, border_radius=18)
         pygame.draw.rect(self.surface, (22, 101, 52), go_btn, width=3, border_radius=18)
-        gtxt = text_fn("FAI CADERE!", (255, 255, 255))
+        gtxt = text_fn("ui.drop", (255, 255, 255))
         self.surface.blit(gtxt, gtxt.get_rect(center=go_btn.center))
 
     def _draw_result_banner(
@@ -491,15 +491,15 @@ class RampRenderer:
             return
         # Big centered banner
         if outcome == "hit":
-            title = "NEL CESTO!"
+            title = "ui.win"
             title_color = (22, 101, 52)
             sub = self._format_time(elapsed)
             if best_time is not None and abs(best_time - elapsed) < 0.05:
-                sub = f"RECORD!  {sub}"
+                sub = f"{text_fn.resolve('ui.new_best')}  {sub}"
         else:
-            title = "FUORI!"
+            title = "ui.miss"
             title_color = (180, 83, 9)
-            sub = "ANCORA!"
+            sub = "ui.retry"
         banner = pygame.Rect(0, 0, 720, 120)
         banner.center = (REFERENCE_WIDTH // 2, REFERENCE_HEIGHT // 2)
         pygame.draw.rect(self.surface, (255, 255, 255), banner, border_radius=24)

@@ -7,6 +7,9 @@ from typing import Final
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+from greia_platform.typography import FontRole, GreiaTypography
+
 if __package__:
     from .tree_model import (
         REFERENCE_HEIGHT,
@@ -59,7 +62,20 @@ FOLIAGE_COLORS: Final = {
 class TreeRenderer:
     """Render the scenic seasons tree, day/night cycle, weather particles, and Tito."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        resources: LocalizedResources | None = None,
+        typography: GreiaTypography | None = None,
+    ) -> None:
+        self._typography = typography or GreiaTypography()
+        # Season names come from the Activity's locale bundles, resolved once
+        # (the resources already apply the child text-case policy). Without
+        # resources the tabs keep their symbol only; no fixed-language fallback.
+        self._season_labels: dict[Season, str] = {
+            season: resources.text(f"season.{season.value}") if resources else ""
+            for season in Season
+        }
+        self._label_surfaces: dict[tuple[Season, bool], pygame.Surface] = {}
         self._reference_surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
         self._sky_surf = pygame.Surface((REFERENCE_WIDTH, REFERENCE_HEIGHT))
         self._stars: list[tuple[float, float, float]] = [
@@ -541,19 +557,12 @@ class TreeRenderer:
             self._draw_weather_icon(surf, mode, rect.centerx, rect.centery, is_active)
 
         # 3. Season Buttons (Bottom Center)
-        season_labels = {
-            Season.SPRING: "PRIMAVERA",
-            Season.SUMMER: "ESTATE",
-            Season.AUTUMN: "AUTUNNO",
-            Season.WINTER: "INVERNO",
-        }
         season_accent = {
             Season.SPRING: (255, 105, 180),
             Season.SUMMER: (76, 175, 80),
             Season.AUTUMN: (245, 124, 0),
             Season.WINTER: (33, 150, 243),
         }
-        font = pygame.font.Font(None, 24)
         for season, rect in self.season_buttons.items():
             is_active = model.season == season
             accent = season_accent[season]
@@ -564,8 +573,28 @@ class TreeRenderer:
 
             # Seasonal symbol & title
             self._draw_season_symbol(surf, season, rect.centerx, rect.centery - 12)
-            lbl = font.render(season_labels[season], True, accent if is_active else (80, 95, 110))
-            surf.blit(lbl, lbl.get_rect(center=(rect.centerx, rect.centery + 18)))
+            lbl = self._season_label_surface(season, is_active, accent, rect.width - 30)
+            if lbl is not None:
+                surf.blit(lbl, lbl.get_rect(center=(rect.centerx, rect.centery + 18)))
+
+    def _season_label_surface(
+        self, season: Season, active: bool, accent: tuple[int, int, int], max_width: int
+    ) -> pygame.Surface | None:
+        """Cached, width-fitted season tab label (rendered once per state)."""
+
+        text = self._season_labels[season]
+        if not text:
+            return None
+        key = (season, active)
+        cached = self._label_surfaces.get(key)
+        if cached is None:
+            color = accent if active else (80, 95, 110)
+            size = 22
+            while size > 12 and self._typography.measure(text, FontRole.CONTROL, size).width > max_width:
+                size -= 1
+            cached = self._typography.render(text, FontRole.CONTROL, size, color)
+            self._label_surfaces[key] = cached
+        return cached
 
     def _draw_weather_icon(self, surf: pygame.Surface, mode: WeatherMode, cx: int, cy: int, active: bool) -> None:
         if mode == WeatherMode.SUN:

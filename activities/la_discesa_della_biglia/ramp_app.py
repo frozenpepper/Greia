@@ -26,13 +26,8 @@ from greia_platform.activity_api import (
     mark_activity_ready,
 )
 from greia_platform.activity_ui import ChildUiMetrics
-from greia_platform.child_text import display_text
 from greia_platform.pygame_canvas import PygameReferenceCanvas, activity_viewport_for_surface
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.typography import FontRole, GreiaTypography
 
 if __package__:
@@ -352,19 +347,62 @@ class RampApp:
         self.engine = RampEngine(level=LEVELS[self.level_index])
         self.phase = Phase.PALETTE
 
-    def _make_text_fn(self):
-        # The renderer needs a callable that turns a string into a
-        # pygame.Surface with the right color. We use GreiaTypography
-        # so the ADR 0034 capitals policy is respected for every
-        # child-facing string.
-        typography = self.typography
+    def _make_text_fn(self) -> "LocalizedTextSurfaces":
+        """Return the app's single cached text callable (built lazily once)."""
+        text_fn = self.__dict__.get("_text_fn")
+        if text_fn is None:
+            text_fn = LocalizedTextSurfaces(self.typography, self.resources)
+            self.__dict__["_text_fn"] = text_fn
+        return text_fn
 
-        def fn(text: str, color: tuple[int, int, int]) -> pygame.Surface:
-            return typography.render(
-                display_text(text), FontRole.DISPLAY, 18, color
+
+class LocalizedTextSurfaces:
+    """Resolve semantic UI keys once and cache rendered text surfaces.
+
+    ``resolve(text)`` returns the display string: semantic keys go through the
+    Activity's ``LocalizedResources`` (which applies the child letter-case
+    policy) and neutral literals (times, symbols) are used verbatim.
+    A missing key renders nothing instead of a key or a fixed-language
+    sentence. Both caches are bounded and cleared wholesale.
+    """
+
+    _MAX_ENTRIES: Final = 128
+
+    def __init__(self, typography: GreiaTypography, resources: LocalizedResources) -> None:
+        self._typography = typography
+        self._resources = resources
+        self._strings: dict[str, str] = {}
+        self._surfaces: dict[tuple[str, tuple[int, int, int]], pygame.Surface] = {}
+
+    def resolve(self, text: str) -> str:
+        if not isinstance(text, str) or not text:
+            return ""
+        cached = self._strings.get(text)
+        if cached is not None:
+            return cached
+        if text.startswith("ui.") or text.startswith("activity."):
+            try:
+                value = self._resources.text(text)
+            except Exception:
+                value = ""
+        else:
+            value = text  # neutral literal (number, unit, symbol): never re-cased
+        if len(self._strings) >= self._MAX_ENTRIES:
+            self._strings.clear()
+        self._strings[text] = value
+        return value
+
+    def __call__(self, text: str, color: tuple[int, int, int]) -> pygame.Surface:
+        key = (text, tuple(color))
+        surface = self._surfaces.get(key)
+        if surface is None:
+            if len(self._surfaces) >= self._MAX_ENTRIES:
+                self._surfaces.clear()
+            surface = self._typography.render(
+                self.resolve(text), FontRole.DISPLAY, 18, color
             )
-
-        return fn
+            self._surfaces[key] = surface
+        return surface
 
 
 def math_hypot(x: float, y: float) -> float:
@@ -373,22 +411,21 @@ def math_hypot(x: float, y: float) -> float:
 
 def build_app(
     screen: pygame.Surface,
-    locale: str = "it",
+    locale: str | None = None,
     package_root: Path | None = None,
 ) -> RampApp:
-    """Composition root for the headless launch / simulator gate."""
+    """Composition root for the headless launch / simulator gate.
+
+    ``locale`` is only for isolated embedders/tests; normal launches inherit
+    the child's profile language through ``activity_resources``.
+    """
     pygame.init()
-    pygame.display.set_caption("La Discesa della Biglia")
     metrics = ChildUiMetrics.for_size(*screen.get_size())
     theme = get_theme()
     typography = GreiaTypography()
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    context = resolve_activity_locale(locale, support)
-    if context is None:
-        context = resolve_activity_locale("it", support)
-    assert context is not None
     root = package_root or Path(__file__).resolve().parent
-    resources = LocalizedResources(root, context)
+    resources = activity_resources(root, requested_locale=locale)
+    pygame.display.set_caption(resources.text("activity.title"))
     audio = RampAudio()
     storage = RampStorage.load()
     events = RampEvents()
