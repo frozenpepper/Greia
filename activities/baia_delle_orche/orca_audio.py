@@ -9,6 +9,8 @@ import wave
 
 import pygame
 
+from greia_platform.localization import LocalizedResources
+
 
 def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
     """Pack signed 16-bit mono audio samples into a valid in-memory WAV byte stream."""
@@ -46,7 +48,8 @@ class OrcaAudio(Protocol):
 class PygameOrcaAudio:
     """Synthesizes and caches cute, realistic, non-blocking marine sounds and Tito character voice clips."""
 
-    def __init__(self) -> None:
+    def __init__(self, resources: LocalizedResources | None = None) -> None:
+        self._resources = resources
         self._sounds: dict[str, pygame.mixer.Sound] = {}
         self._voice_cache: dict[tuple[str, str], pygame.mixer.Sound] = {}
         self._voice_channel: pygame.mixer.Channel | None = None
@@ -178,17 +181,26 @@ class PygameOrcaAudio:
     def play_voice(self, key: str, locale: str = "it") -> None:
         if not self._enabled:
             return
-        loc = "it" if locale.startswith("it") else "en"
+        if self._resources is not None:
+            loc = self._resources.context.selected.language
+            path = self._resources.audio_path(
+                f"tito.{key}", filename=f"tito_{key}.wav"
+            )
+        else:
+            # Older unit-test callers may still construct the audio class on
+            # its own. The shipped Activity supplies shared resources.
+            loc = locale.split("-", 1)[0]
+            path = AUDIO_DIR / loc / f"tito_{key}.wav"
+            if not path.is_file():
+                path = AUDIO_DIR / "en" / f"tito_{key}.wav"
         cache_key = (key, loc)
         snd = self._voice_cache.get(cache_key)
-        if snd is None:
-            p = AUDIO_DIR / loc / f"tito_{key}.wav"
-            if p.exists():
-                try:
-                    snd = pygame.mixer.Sound(str(p))
-                    self._voice_cache[cache_key] = snd
-                except Exception:
-                    pass
+        if snd is None and path is not None and path.is_file():
+            try:
+                snd = pygame.mixer.Sound(str(path))
+                self._voice_cache[cache_key] = snd
+            except (pygame.error, OSError):
+                pass
         if snd is not None:
             try:
                 if self._voice_channel is not None:
