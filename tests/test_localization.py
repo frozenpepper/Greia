@@ -184,14 +184,17 @@ class LocalizationBundleTests(unittest.TestCase):
             assert context is not None
             resources = LocalizedResources(root, context)
 
-            # The legacy per-key fallback remains the default.
-            fallback = resources.audio_cue("voice.instruction")
-            self.assertEqual(fallback.path, root / "audio" / "italian.wav")
+            # English no longer falls back to Italian audio just because IT
+            # is the package default. Every spoken cue uses English as its
+            # compatibility language, not another unrelated language.
+            self.assertIsNone(resources.audio_path("voice.instruction"))
+            with self.assertRaisesRegex(LocalizationError, "missing localized audio cue"):
+                resources.audio_cue("voice.instruction")
             with self.assertRaisesRegex(LocalizationError, "missing localized audio cue"):
                 resources.audio_cue("voice.instruction", allow_fallback=False)
 
-            # English audio may live anywhere inside the validated package;
-            # semantic locale ownership, not pathname, makes it English.
+            # An explicit English audio mapping remains compatible even when
+            # its canonical file is outside the new locale-folder layout.
             self._write_bundle(
                 root, "en", strings={"instruction": "Touch here"},
                 audio={"voice.instruction": {
