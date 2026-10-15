@@ -15,11 +15,14 @@
 7. **Child work is sacred.** Every saved item reachable; no silent eviction; deliberate delete with preview; no blank saves.
 8. **Acer floor.** Static composition cached, bounded caches, no per-frame decode/scale, app-loop tests (not only model tests).
 
-## 2. Catalogue decisions (45 → 38 + 3 new = 41 cards)
+## 2. Catalogue decisions
+
+**All remaining MERGE rows are ON HOLD (2026-10-15):** the design audits had no real child-play data. No merge is executed until the owner confirms it against what children actually enjoyed. Real child preference outranks an auditor's overlap analysis.
+
 
 | Decision | Result | Notes |
 |---|---|---|
-| MERGE `baia_delle_orche` + `sottomarino_giramondo` into **`acquario_magico` → "Ocean"** | 1 card (reef / surface / dive modes, observation missions, Captain-says listening game) | creature.marine.* set serves Ocean, Journeys, Encyclopedia |
+| ~~MERGE baia + sottomarino into acquario~~ **REVERSED by owner 2026-10-15:** `acquario_magico`, `baia_delle_orche` and `sottomarino_giramondo` were the three most-preferred Activities in real child testing. They stay **three separate cards**; each is polished in its own identity (shared creature.marine.* art only). | 3 cards | Child-testing evidence overrides auditor merge proposals |
 | MERGE `volo_draghetto` into **`viaggio_delfino` → "Journeys"** | 1 card (sea world + sky world, finite courses) | |
 | MERGE `clinica_cuccioli` into **`cucciolo_mio` → "Pet House"** | 1 card (read needs from body language; routines) | Nanna stays separate as calm wind-down with a real task |
 | MERGE `bosco_numeri` into **`il_giardino_dei_numeri`** | 1 card | ten-frame + numeral-find stages move to Giardino |
