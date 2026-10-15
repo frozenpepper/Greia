@@ -115,6 +115,30 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
             )
             self.assertEqual(_context(root, "fr").audio_path("activity.title"), title_fr)
 
+    def test_my_time_underscore_activity_title_uses_selected_locale_or_english(self) -> None:
+        root = Path(__file__).resolve().parents[1] / "activity_incubator" / "tempo_di_greia"
+        english = root / "locales" / "en" / "audio" / "activity_title.wav"
+        italian = root / "locales" / "it" / "audio" / "activity_title.wav"
+        self.assertTrue(english.is_file())
+        self.assertTrue(italian.is_file())
+        self.assertEqual(
+            activity_resources(root, requested_locale="it").audio_path("activity.title"),
+            italian,
+        )
+        self.assertEqual(
+            activity_resources(root, requested_locale="en").audio_path("activity.title"),
+            english,
+        )
+
+    def test_legacy_underscore_title_falls_back_to_english_without_italian_substitution(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for language in ("en", "it", "fr"):
+                _bundle(root, language)
+            en = _put(root, "locales/en/audio/activity_title.wav")
+            _put(root, "locales/it/audio/activity_title.wav")
+            self.assertEqual(_context(root, "fr").audio_path("activity.title"), en)
+
     def test_italian_only_legacy_alias_projects_alarm_to_fr_and_en(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
