@@ -400,6 +400,7 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
             "luci_di_momo", "il_giardino_dei_numeri",
             "specchi_magici", "mondo_contrari",
             "baia_delle_orche", "bosco_numeri",
+            "quattro_amici", "faccine_momo", "quattro_stagioni",
         ):
             root = repo / "activities" / name
             with self.subTest(activity=name):
