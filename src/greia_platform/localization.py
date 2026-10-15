@@ -415,7 +415,10 @@ class LocalizedResources:
                     names.setdefault(candidate.stem, candidate.name)
         result: dict[str, Path] = {}
         for stem, filename in names.items():
-            path = self.audio_path(stem, filename=filename)
+            # A legacy physical filename can contain capital letters or
+            # spelling-specific glyphs. The semantic ID remains portable;
+            # the explicit filename is the compatibility alias.
+            path = self.audio_path("speech.file", filename=filename)
             if path is not None:
                 result[stem] = path
         return result
