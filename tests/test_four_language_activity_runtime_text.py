@@ -7,6 +7,7 @@ No imports from the Activities are required: their imports pull in Pygame.
 from __future__ import annotations
 
 import ast
+import re
 import json
 from pathlib import Path
 import unittest
@@ -55,28 +56,29 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
                          'biome["name_it"]'):
             self.assertNotIn(old_copy, app)
 
-    def test_memory_card_names_and_theme_labels_cover_all_four_languages(self) -> None:
-        themes = _items_from_module(MEMORY / "memory_content.py", "THEMES")
-        card_ids = [item["id"] for theme in themes for item in theme["items"]]
-        self.assertEqual(64, len(card_ids))
-        self.assertEqual(64, len(set(card_ids)))
-        required = {f"item.{item_id}" for item_id in card_ids}
-        required.update(f"theme.{theme['id']}" for theme in themes)
+    def test_memory_picture_names_and_completion_cover_all_four_languages(self) -> None:
+        # The 2026-10-15 Wonder Match rework replaced the four text-chip themes
+        # (64 items) with five picture-chosen sticker albums of 8 library
+        # pictures; card faces carry no words, names are spoken.
+        content = (MEMORY / "memory_content.py").read_text(encoding="utf-8")
+        ids = re.findall(r'^\s+"([a-z_]+)": "(?:prop|creature)\.', content, re.MULTILINE)
+        self.assertEqual(40, len(ids))
+        self.assertEqual(40, len(set(ids)))
+        required = {f"item.{item_id}" for item_id in ids}
+        required.update({"victory.title", "victory.subtitle", "button.play_again", "button.albums"})
         for language in LANGUAGES:
             with self.subTest(language=language):
                 strings = _strings(MEMORY, language)
                 self.assertFalse(required.difference(strings))
                 self.assertTrue(all(strings[key].strip() for key in required))
 
-    def test_memory_live_card_and_theme_display_uses_semantic_keys(self) -> None:
+    def test_memory_completion_uses_semantic_keys(self) -> None:
         app = (MEMORY / "memory_app.py").read_text(encoding="utf-8")
         compile(app, str(MEMORY / "memory_app.py"), "exec")
-        self.assertIn('self.resources.text(f"item.{item[\'id\']}")', app)
-        self.assertIn('self.resources.text(f"theme.{theme_cfg[\'id\']}")', app)
-        self.assertNotIn('item["label_it"]', app)
-        self.assertNotIn('item["label_en"]', app)
-        self.assertNotIn('theme_cfg["name_it"]', app)
-        self.assertNotIn('theme_cfg["name_en"]', app)
+        for key in ("victory.title", "victory.subtitle", "button.play_again", "button.albums"):
+            self.assertIn(f'self._text("{key}"', app)
+        for old_copy in ('item["label_it"]', 'theme_cfg["name_it"]', "label_en", "name_en"):
+            self.assertNotIn(old_copy, app)
 
     def test_missing_resources_never_reintroduce_italian_completion_copy(self) -> None:
         """A resource failure must not produce Italian under another profile."""
@@ -154,7 +156,7 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
         self.assertIn("    def text(", api)
         self.assertNotIn("    def string(", api)
         for relative_path in (
-            "activities/memory_meraviglie/main.py",
+            "activities/memory_meraviglie/memory_app.py",
             "activities/treno_numeri/treno_app.py",
             "activities/piccola_serra/serra_app.py",
         ):
@@ -179,14 +181,16 @@ class FourLanguageRuntimeTextContract(unittest.TestCase):
                 self.assertTrue(all(
                     strings.get(f"opposite.{state}", "").strip() for state in states
                 ))
-        source = (activity / "contrari_renderer.py").read_text(encoding="utf-8")
+        # The tabbed toy became one guided loop: the concept word is spoken and
+        # its localized caption ("opposite.<state>") appears after the child acts.
+        source = (activity / "contrari_app.py").read_text(encoding="utf-8")
+        model = (activity / "contrari_model.py").read_text(encoding="utf-8")
         main = (activity / "main.py").read_text(encoding="utf-8")
-        compile(source, str(activity / "contrari_renderer.py"), "exec")
+        compile(source, str(activity / "contrari_app.py"), "exec")
         compile(main, str(activity / "main.py"), "exec")
-        self.assertIn('resources.text(f"opposite.{state}")', source)
-        self.assertIn("self._state_labels", source)
-        self.assertIn("self._toolbar_labels[cat]", source)
-        self.assertIn("self._typography.render(", source)
+        self.assertIn("self.resources.text(pole.text_key)", source)
+        self.assertIn('return f"opposite.{self.value}"', model)
+        self.assertIn('self.resources.text("victory.title")', source)
         self.assertIn("resources=resources", main)
         self.assertIn('resources.text("activity.title")', main)
         for obsolete in ("SU!", "GIÙ!", "GRANDE!", "PICCOLO!",

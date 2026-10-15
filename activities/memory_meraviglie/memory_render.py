@@ -1,280 +1,305 @@
-"""La Memoria delle Meraviglie — stateless card illustration drawing.
+"""Frame composition for Wonder Match (blits only).
 
-Each supported ``item_id`` is a small inline drawing routine. These
-helpers do not own state; the renderer decides when to call them and
-which surface to blit into.
+``BoardMotion`` holds the short-lived presentation state (card turn-overs,
+miss wiggles, glow halos, FX, stickers flying to the album page, Lilli's
+peek); ``LilliCast`` wraps the shared ``CastFeedback`` with Lilli's point and
+wave poses; ``MemoryRenderer`` draws the picker and the board from the model
+plus that motion state. Every surface comes prepared from ``MemoryArt`` --
+the only per-frame work is choosing which cached surface to blit where.
 """
 
 from __future__ import annotations
 
+from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass, field
 import math
 
 import pygame
 
+from greia_platform.activity_feedback import CastFeedback, CastPose
 
-def draw_card_illustration(
-    surface: pygame.Surface,
-    item_id: str,
-    cx: int,
-    cy: int,
-    size: int,
-) -> None:
-    r = size // 2
-    dark = (30, 41, 59)
-    white = (255, 255, 255)
+if __package__:
+    from .memory_art import MemoryArt, Side
+    from .memory_content import PICKER_SCENE, Album
+    from .memory_layout import LILLI_HEIGHT, LILLI_MIDBOTTOM, BoardLayout
+    from .memory_model import CardState, MemoryBoard, StickerBook
+else:
+    from memory_art import MemoryArt, Side
+    from memory_content import PICKER_SCENE, Album
+    from memory_layout import LILLI_HEIGHT, LILLI_MIDBOTTOM, BoardLayout
+    from memory_model import CardState, MemoryBoard, StickerBook
 
-    if item_id == "lion":
-        pygame.draw.circle(surface, (217, 119, 6), (cx, cy), r)
-        pygame.draw.circle(surface, (251, 191, 36), (cx, cy), r * 3 // 4)
-        pygame.draw.circle(surface, (217, 119, 6), (cx - r * 3 // 5, cy - r * 3 // 5), r // 4)
-        pygame.draw.circle(surface, (217, 119, 6), (cx + r * 3 // 5, cy - r * 3 // 5), r // 4)
-        pygame.draw.circle(surface, dark, (cx - r // 4, cy - r // 8), max(2, r // 8))
-        pygame.draw.circle(surface, dark, (cx + r // 4, cy - r // 8), max(2, r // 8))
-        pygame.draw.polygon(surface, (180, 83, 9), [(cx - r // 6, cy + r // 8), (cx + r // 6, cy + r // 8), (cx, cy + r // 4)])
-        pygame.draw.circle(surface, dark, (cx, cy), r, 2)
-
-    elif item_id == "panda":
-        pygame.draw.circle(surface, dark, (cx - r * 3 // 5, cy - r * 3 // 5), r // 3)
-        pygame.draw.circle(surface, dark, (cx + r * 3 // 5, cy - r * 3 // 5), r // 3)
-        pygame.draw.circle(surface, white, (cx, cy), r * 4 // 5)
-        pygame.draw.circle(surface, dark, (cx, cy), r * 4 // 5, 2)
-        pygame.draw.ellipse(surface, dark, pygame.Rect(cx - r // 2, cy - r // 3, r // 3, r // 2))
-        pygame.draw.ellipse(surface, dark, pygame.Rect(cx + r // 6, cy - r // 3, r // 3, r // 2))
-        pygame.draw.circle(surface, white, (cx - r // 3, cy - r // 6), max(2, r // 10))
-        pygame.draw.circle(surface, white, (cx + r // 3, cy - r // 6), max(2, r // 10))
-        pygame.draw.circle(surface, dark, (cx, cy + r // 5), max(2, r // 8))
-
-    elif item_id == "cat":
-        pygame.draw.polygon(surface, (249, 115, 22), [(cx - r * 3 // 4, cy - r // 4), (cx - r * 3 // 4, cy - r * 4 // 5), (cx - r // 4, cy - r // 2)])
-        pygame.draw.polygon(surface, (249, 115, 22), [(cx + r * 3 // 4, cy - r // 4), (cx + r * 3 // 4, cy - r * 4 // 5), (cx + r // 4, cy - r // 2)])
-        pygame.draw.circle(surface, (253, 186, 116), (cx, cy), r * 3 // 4)
-        pygame.draw.circle(surface, dark, (cx, cy), r * 3 // 4, 2)
-        pygame.draw.circle(surface, (16, 185, 129), (cx - r // 4, cy - r // 8), max(2, r // 7))
-        pygame.draw.circle(surface, (16, 185, 129), (cx + r // 4, cy - r // 8), max(2, r // 7))
-        pygame.draw.circle(surface, dark, (cx - r // 4, cy - r // 8), max(1, r // 12))
-        pygame.draw.circle(surface, dark, (cx + r // 4, cy - r // 8), max(1, r // 12))
-        pygame.draw.polygon(surface, (244, 114, 182), [(cx - r // 8, cy + r // 8), (cx + r // 8, cy + r // 8), (cx, cy + r // 4)])
-
-    elif item_id == "dog":
-        pygame.draw.ellipse(surface, (180, 83, 9), pygame.Rect(cx - r * 9 // 10, cy - r // 2, r // 2, r * 9 // 10))
-        pygame.draw.ellipse(surface, (180, 83, 9), pygame.Rect(cx + r * 2 // 5, cy - r // 2, r // 2, r * 9 // 10))
-        pygame.draw.circle(surface, (217, 119, 6), (cx, cy), r * 3 // 4)
-        pygame.draw.circle(surface, dark, (cx, cy), r * 3 // 4, 2)
-        pygame.draw.ellipse(surface, (254, 243, 199), pygame.Rect(cx - r // 3, cy, r * 2 // 3, r // 2))
-        pygame.draw.circle(surface, dark, (cx - r // 4, cy - r // 8), max(2, r // 8))
-        pygame.draw.circle(surface, dark, (cx + r // 4, cy - r // 8), max(2, r // 8))
-        pygame.draw.circle(surface, dark, (cx, cy + r // 6), max(2, r // 7))
-
-    elif item_id == "bunny":
-        pygame.draw.ellipse(surface, white, pygame.Rect(cx - r // 2, cy - r * 9 // 10, r // 3, r * 4 // 5))
-        pygame.draw.ellipse(surface, (244, 114, 182), pygame.Rect(cx - r * 2 // 5, cy - r * 4 // 5, r // 6, r * 3 // 5))
-        pygame.draw.ellipse(surface, white, pygame.Rect(cx + r // 6, cy - r * 9 // 10, r // 3, r * 4 // 5))
-        pygame.draw.ellipse(surface, (244, 114, 182), pygame.Rect(cx + r // 4, cy - r * 4 // 5, r // 6, r * 3 // 5))
-        pygame.draw.circle(surface, white, (cx, cy + r // 6), r * 3 // 5)
-        pygame.draw.circle(surface, dark, (cx, cy + r // 6), r * 3 // 5, 2)
-        pygame.draw.circle(surface, dark, (cx - r // 5, cy + r // 12), max(2, r // 9))
-        pygame.draw.circle(surface, dark, (cx + r // 5, cy + r // 12), max(2, r // 9))
-        pygame.draw.circle(surface, (244, 114, 182), (cx, cy + r // 4), max(2, r // 8))
-
-    elif item_id == "frog":
-        pygame.draw.circle(surface, (74, 222, 128), (cx - r // 2, cy - r // 3), r // 3)
-        pygame.draw.circle(surface, (74, 222, 128), (cx + r // 2, cy - r // 3), r // 3)
-        pygame.draw.circle(surface, white, (cx - r // 2, cy - r // 3), r // 5)
-        pygame.draw.circle(surface, white, (cx + r // 2, cy - r // 3), r // 5)
-        pygame.draw.circle(surface, dark, (cx - r // 2, cy - r // 3), r // 9)
-        pygame.draw.circle(surface, dark, (cx + r // 2, cy - r // 3), r // 9)
-        pygame.draw.ellipse(surface, (74, 222, 128), pygame.Rect(cx - r * 3 // 4, cy - r // 4, r * 3 // 2, r * 4 // 5))
-        pygame.draw.circle(surface, dark, (cx, cy + r // 6), r * 3 // 4, 2)
-        pygame.draw.arc(surface, dark, pygame.Rect(cx - r // 3, cy, r * 2 // 3, r // 3), 3.4, 6.0, 3)
-
-    elif item_id == "cupcake":
-        pygame.draw.polygon(surface, (251, 146, 60), [(cx - r // 2, cy), (cx + r // 2, cy), (cx + r // 3, cy + r * 3 // 4), (cx - r // 3, cy + r * 3 // 4)])
-        pygame.draw.polygon(surface, dark, [(cx - r // 2, cy), (cx + r // 2, cy), (cx + r // 3, cy + r * 3 // 4), (cx - r // 3, cy + r * 3 // 4)], 2)
-        pygame.draw.circle(surface, (244, 114, 182), (cx, cy - r // 5), r // 2)
-        pygame.draw.circle(surface, (244, 114, 182), (cx - r // 3, cy), r // 3)
-        pygame.draw.circle(surface, (244, 114, 182), (cx + r // 3, cy), r // 3)
-        pygame.draw.circle(surface, (239, 68, 68), (cx, cy - r // 2), max(3, r // 5))
-        pygame.draw.circle(surface, dark, (cx, cy - r // 2), max(3, r // 5), 2)
-
-    elif item_id == "icecream":
-        pygame.draw.polygon(surface, (217, 119, 6), [(cx - r // 3, cy), (cx + r // 3, cy), (cx, cy + r * 4 // 5)])
-        pygame.draw.polygon(surface, dark, [(cx - r // 3, cy), (cx + r // 3, cy), (cx, cy + r * 4 // 5)], 2)
-        pygame.draw.circle(surface, (251, 146, 60), (cx, cy - r // 8), r * 2 // 5)
-        pygame.draw.circle(surface, (244, 114, 182), (cx, cy - r // 2), r // 3)
-        pygame.draw.circle(surface, dark, (cx, cy - r // 8), r * 2 // 5, 2)
-        pygame.draw.circle(surface, dark, (cx, cy - r // 2), r // 3, 2)
-
-    elif item_id == "donut":
-        pygame.draw.circle(surface, (217, 119, 6), (cx, cy), r * 4 // 5)
-        pygame.draw.circle(surface, (244, 114, 182), (cx, cy), r * 3 // 4)
-        pygame.draw.circle(surface, white, (cx, cy), r // 3)
-        pygame.draw.circle(surface, dark, (cx, cy), r * 4 // 5, 2)
-        pygame.draw.circle(surface, dark, (cx, cy), r // 3, 2)
-        for dx, dy, col in [(-r // 3, -r // 3, (234, 179, 8)), (r // 3, -r // 3, (56, 189, 248)), (0, r // 2, (34, 197, 94))]:
-            pygame.draw.circle(surface, col, (cx + dx, cy + dy), max(2, r // 8))
-
-    elif item_id == "strawberry":
-        pygame.draw.polygon(surface, (239, 68, 68), [(cx - r * 3 // 5, cy - r // 3), (cx + r * 3 // 5, cy - r // 3), (cx, cy + r * 4 // 5)])
-        pygame.draw.circle(surface, (239, 68, 68), (cx - r // 4, cy - r // 3), r // 3)
-        pygame.draw.circle(surface, (239, 68, 68), (cx + r // 4, cy - r // 3), r // 3)
-        pygame.draw.polygon(surface, dark, [(cx - r * 3 // 5, cy - r // 3), (cx + r * 3 // 5, cy - r // 3), (cx, cy + r * 4 // 5)], 2)
-        pygame.draw.ellipse(surface, (34, 197, 94), pygame.Rect(cx - r // 2, cy - r * 3 // 4, r, r // 3))
-        for dx, dy in [(-r // 5, 0), (r // 5, 0), (0, r // 3)]:
-            pygame.draw.circle(surface, (254, 240, 138), (cx + dx, cy + dy), max(1, r // 10))
-
-    elif item_id == "cookie":
-        pygame.draw.circle(surface, (180, 83, 9), (cx, cy), r * 4 // 5)
-        pygame.draw.circle(surface, dark, (cx, cy), r * 4 // 5, 2)
-        for dx, dy in [(-r // 3, -r // 4), (r // 4, -r // 3), (0, 0), (-r // 4, r // 3), (r // 3, r // 4)]:
-            pygame.draw.circle(surface, (69, 26, 3), (cx + dx, cy + dy), max(2, r // 7))
-
-    elif item_id == "rocket":
-        pygame.draw.polygon(surface, (239, 68, 68), [(cx, cy - r * 4 // 5), (cx + r // 3, cy + r // 3), (cx - r // 3, cy + r // 3)])
-        pygame.draw.polygon(surface, (59, 130, 246), [(cx - r // 3, cy), (cx - r * 3 // 4, cy + r // 2), (cx - r // 3, cy + r // 2)])
-        pygame.draw.polygon(surface, (59, 130, 246), [(cx + r // 3, cy), (cx + r * 3 // 4, cy + r // 2), (cx + r // 3, cy + r // 2)])
-        pygame.draw.circle(surface, (56, 189, 248), (cx, cy - r // 6), r // 4)
-        pygame.draw.circle(surface, dark, (cx, cy - r // 6), r // 4, 2)
-        pygame.draw.polygon(surface, (245, 158, 11), [(cx - r // 4, cy + r // 3), (cx + r // 4, cy + r // 3), (cx, cy + r * 4 // 5)])
-
-    elif item_id == "car":
-        pygame.draw.rect(surface, (220, 38, 38), pygame.Rect(cx - r * 3 // 4, cy - r // 8, r * 3 // 2, r // 2), border_radius=6)
-        pygame.draw.ellipse(surface, (56, 189, 248), pygame.Rect(cx - r // 2, cy - r // 2, r, r // 2))
-        pygame.draw.circle(surface, dark, (cx - r // 2, cy + r * 3 // 8), r // 4)
-        pygame.draw.circle(surface, (148, 163, 184), (cx - r // 2, cy + r * 3 // 8), r // 8)
-        pygame.draw.circle(surface, dark, (cx + r // 2, cy + r * 3 // 8), r // 4)
-        pygame.draw.circle(surface, (148, 163, 184), (cx + r // 2, cy + r * 3 // 8), r // 8)
-        pygame.draw.rect(surface, dark, pygame.Rect(cx - r * 3 // 4, cy - r // 8, r * 3 // 2, r // 2), width=2, border_radius=6)
-
-    elif item_id == "train":
-        pygame.draw.rect(surface, (59, 130, 246), pygame.Rect(cx - r * 3 // 4, cy - r // 4, r * 3 // 2, r // 2), border_radius=4)
-        pygame.draw.rect(surface, (239, 68, 68), pygame.Rect(cx + r // 6, cy - r * 3 // 5, r * 2 // 5, r * 4 // 5), border_radius=4)
-        pygame.draw.rect(surface, dark, pygame.Rect(cx - r // 2, cy - r // 2, r // 4, r // 3))
-        pygame.draw.circle(surface, dark, (cx - r // 2, cy + r // 3), r // 4)
-        pygame.draw.circle(surface, dark, (cx, cy + r // 3), r // 4)
-        pygame.draw.circle(surface, dark, (cx + r // 2, cy + r // 3), r // 4)
-
-    elif item_id == "boat":
-        pygame.draw.polygon(surface, (180, 83, 9), [(cx - r * 3 // 4, cy + r // 8), (cx + r * 3 // 4, cy + r // 8), (cx + r // 2, cy + r // 2), (cx - r // 2, cy + r // 2)])
-        pygame.draw.polygon(surface, dark, [(cx - r * 3 // 4, cy + r // 8), (cx + r * 3 // 4, cy + r // 8), (cx + r // 2, cy + r // 2), (cx - r // 2, cy + r // 2)], 2)
-        pygame.draw.polygon(surface, white, [(cx, cy - r * 3 // 4), (cx + r // 2, cy), (cx, cy)])
-        pygame.draw.polygon(surface, (239, 68, 68), [(cx - r // 2, cy), (cx, cy - r // 2), (cx, cy)])
-
-    elif item_id == "sunflower":
-        for i in range(8):
-            ang = i * math.pi / 4
-            px = cx + int(math.cos(ang) * r * 3 // 5)
-            py = cy + int(math.sin(ang) * r * 3 // 5)
-            pygame.draw.circle(surface, (234, 179, 8), (px, py), r // 3)
-        pygame.draw.circle(surface, (120, 53, 15), (cx, cy), r // 2)
-        pygame.draw.circle(surface, dark, (cx, cy), r // 2, 2)
-
-    elif item_id == "mushroom":
-        pygame.draw.rect(surface, white, pygame.Rect(cx - r // 4, cy, r // 2, r * 3 // 5), border_radius=6)
-        pygame.draw.rect(surface, dark, pygame.Rect(cx - r // 4, cy, r // 2, r * 3 // 5), width=2, border_radius=6)
-        pygame.draw.ellipse(surface, (239, 68, 68), pygame.Rect(cx - r * 4 // 5, cy - r * 3 // 5, r * 8 // 5, r * 4 // 5))
-        pygame.draw.ellipse(surface, dark, pygame.Rect(cx - r * 4 // 5, cy - r * 3 // 5, r * 8 // 5, r * 4 // 5), 2)
-        pygame.draw.circle(surface, white, (cx - r // 3, cy - r // 5), max(2, r // 6))
-        pygame.draw.circle(surface, white, (cx + r // 3, cy - r // 5), max(2, r // 6))
-        pygame.draw.circle(surface, white, (cx, cy - r // 3), max(2, r // 5))
-
-    elif item_id == "rainbow":
-        colors = [(239, 68, 68), (245, 158, 11), (234, 179, 8), (34, 197, 94), (59, 130, 246), (168, 85, 247)]
-        for idx, col in enumerate(colors):
-            rad = r - idx * max(2, r // 8)
-            if rad > 2:
-                pygame.draw.arc(surface, col, pygame.Rect(cx - rad, cy - rad + r // 3, rad * 2, rad * 2), 0.0, math.pi, max(2, r // 8))
-        pygame.draw.circle(surface, white, (cx - r * 2 // 3, cy + r // 3), r // 4)
-        pygame.draw.circle(surface, white, (cx + r * 2 // 3, cy + r // 3), r // 4)
-
-    elif item_id == "star":
-        pts = []
-        for i in range(10):
-            ang = i * math.pi / 5 - math.pi / 2
-            rad = r * 4 // 5 if i % 2 == 0 else r * 2 // 5
-            pts.append((cx + int(math.cos(ang) * rad), cy + int(math.sin(ang) * rad)))
-        pygame.draw.polygon(surface, (254, 202, 87), pts)
-        pygame.draw.polygon(surface, (180, 83, 9), pts, 2)
-        pygame.draw.circle(surface, white, (cx - r // 5, cy - r // 5), max(2, r // 8))
-
-    elif item_id == "sun":
-        for i in range(8):
-            ang = i * math.pi / 4
-            p1 = (cx + int(math.cos(ang) * r * 3 // 5), cy + int(math.sin(ang) * r * 3 // 5))
-            p2 = (cx + int(math.cos(ang) * r * 9 // 10), cy + int(math.sin(ang) * r * 9 // 10))
-            pygame.draw.line(surface, (245, 158, 11), p1, p2, max(2, r // 7))
-        pygame.draw.circle(surface, (234, 179, 8), (cx, cy), r // 2)
-        pygame.draw.circle(surface, (180, 83, 9), (cx, cy), r // 2, 2)
-        pygame.draw.circle(surface, dark, (cx - r // 6, cy - r // 10), max(1, r // 12))
-        pygame.draw.circle(surface, dark, (cx + r // 6, cy - r // 10), max(1, r // 12))
-        pygame.draw.arc(surface, dark, pygame.Rect(cx - r // 5, cy - r // 10, r * 2 // 5, r // 3), 3.4, 6.0, 2)
-
-    elif item_id == "moon":
-        pygame.draw.circle(surface, (253, 224, 71), (cx, cy), r * 3 // 4)
-        pygame.draw.circle(surface, white, (cx + r // 3, cy - r // 4), r * 3 // 5)
-        pygame.draw.circle(surface, (202, 138, 4), (cx, cy), r * 3 // 4, 2)
-
-    elif item_id == "tree":
-        pygame.draw.rect(surface, (120, 53, 15), pygame.Rect(cx - r // 6, cy, r // 3, r * 3 // 4))
-        pygame.draw.circle(surface, (34, 197, 94), (cx, cy - r // 3), r // 2)
-        pygame.draw.circle(surface, (22, 163, 74), (cx - r // 3, cy - r // 8), r * 2 // 5)
-        pygame.draw.circle(surface, (22, 163, 74), (cx + r // 3, cy - r // 8), r * 2 // 5)
-        pygame.draw.circle(surface, (20, 83, 45), (cx, cy - r // 4), r * 3 // 5, 2)
-
-    elif item_id == "butterfly":
-        pygame.draw.circle(surface, (236, 72, 153), (cx - r // 2, cy - r // 3), r // 3)
-        pygame.draw.circle(surface, (236, 72, 153), (cx + r // 2, cy - r // 3), r // 3)
-        pygame.draw.circle(surface, (168, 85, 247), (cx - r // 3, cy + r // 4), r // 4)
-        pygame.draw.circle(surface, (168, 85, 247), (cx + r // 3, cy + r // 4), r // 4)
-        pygame.draw.ellipse(surface, dark, pygame.Rect(cx - r // 8, cy - r // 2, r // 4, r))
-
-    elif item_id == "fish":
-        pygame.draw.ellipse(surface, (249, 115, 22), pygame.Rect(cx - r * 3 // 5, cy - r // 3, r * 6 // 5, r * 2 // 3))
-        pygame.draw.polygon(surface, (249, 115, 22), [(cx + r // 3, cy), (cx + r * 4 // 5, cy - r // 3), (cx + r * 4 // 5, cy + r // 3)])
-        pygame.draw.circle(surface, white, (cx - r // 3, cy - r // 10), max(2, r // 7))
-        pygame.draw.circle(surface, dark, (cx - r // 3, cy - r // 10), max(1, r // 12))
-
-    else:
-        pygame.draw.circle(surface, (244, 114, 182), (cx, cy), r * 3 // 4)
-        pygame.draw.circle(surface, white, (cx, cy), r // 2)
-        pygame.draw.circle(surface, dark, (cx, cy), r * 3 // 4, 2)
-        pygame.draw.circle(surface, (254, 240, 138), (cx, cy), r // 4)
+FLIP_SECONDS = 0.26
+WOBBLE_SECONDS = 0.5
+FLIGHT_SECONDS = 0.62
+POP_SECONDS = 0.45
+DEAL_STAGGER = 0.045
+FX_SECONDS = 0.6
+MAX_FX = 24
+TRAY = (255, 251, 235, 150)
 
 
-def compute_grid_layout(
-    grid_cfg: dict,
-    card_count: int,
-    *,
-    reference_width: int = 1024,
-    reference_height: int = 600,
-) -> tuple[int, int, list[pygame.Rect]]:
-    """Cell size and rect list for the card grid.
+@dataclass(slots=True)
+class Flight:
+    start: float
+    origin: tuple[int, int]
+    target: tuple[int, int]
+    asset_id: str
+    duration: float = FLIGHT_SECONDS
 
-    Layout sits inside a generous top/bottom margin so the bottom toolbar
-    buttons (new/theme/grid) and the top star pill never overlap the
-    play area. Returns (card_w, card_h, [pygame.Rect, ...]).
-    """
-    cols = grid_cfg["cols"]
-    rows = grid_cfg["rows"]
-    top_y = 80
-    bottom_y = reference_height - 65
-    avail_w = reference_width - 120
-    avail_h = bottom_y - top_y
+    def position(self, now: float) -> tuple[int, int] | None:
+        t = (now - self.start) / self.duration
+        if t < 0 or t >= 1:
+            return None
+        ease = 1 - (1 - t) ** 3
+        x = self.origin[0] + (self.target[0] - self.origin[0]) * ease
+        y = self.origin[1] + (self.target[1] - self.origin[1]) * ease - math.sin(math.pi * t) * 70
+        return int(x), int(y)
 
-    gap_x = 12 if cols >= 5 else 16
-    gap_y = 10 if rows >= 4 else 14
 
-    card_w = min(170, (avail_w - (cols - 1) * gap_x) // cols)
-    card_h = min(210, (avail_h - (rows - 1) * gap_y) // rows)
-    grid_w = cols * card_w + (cols - 1) * gap_x
-    grid_h = rows * card_h + (rows - 1) * gap_y
-    grid_ox = (reference_width - grid_w) // 2
-    grid_oy = top_y + (avail_h - grid_h) // 2
+@dataclass(slots=True)
+class BoardMotion:
+    """Presentation-only timers for the current board (bounded, cleared per board)."""
 
-    rects: list[pygame.Rect] = []
-    for i in range(card_count):
-        c = i % cols
-        r = i // cols
-        rx = grid_ox + c * (card_w + gap_x)
-        ry = grid_oy + r * (card_h + gap_y)
-        rects.append(pygame.Rect(rx, ry, card_w, card_h))
-    return card_w, card_h, rects
+    deal_start: float = -10.0
+    flips: dict[int, tuple[float, Side, Side]] = field(default_factory=dict)
+    wobbles: dict[int, float] = field(default_factory=dict)
+    halos: dict[int, tuple[float, float]] = field(default_factory=dict)
+    peek: set[int] = field(default_factory=set)
+    gone: set[int] = field(default_factory=set)
+    flights: list[Flight] = field(default_factory=list)
+    incoming: set[str] = field(default_factory=set)
+    pops: dict[str, float] = field(default_factory=dict)
+    fx: deque = field(default_factory=lambda: deque(maxlen=MAX_FX))
+
+    def clear(self) -> None:
+        self.deal_start = -10.0
+        self.flips.clear()
+        self.wobbles.clear()
+        self.halos.clear()
+        self.peek.clear()
+        self.gone.clear()
+        self.flights.clear()
+        self.incoming.clear()
+        self.pops.clear()
+        self.fx.clear()
+
+    def turn(self, index: int, now: float, from_side: Side, to_side: Side) -> None:
+        self.flips[index] = (now, from_side, to_side)
+
+    def add_fx(self, name: str, position: tuple[int, int], start: float) -> None:
+        self.fx.append((name, position, start))
+
+    def active(self, now: float, card_count: int) -> bool:
+        if now - self.deal_start < DEAL_STAGGER * card_count + 0.2:
+            return True
+        if any(now - start < FLIP_SECONDS for start, _, _ in self.flips.values()):
+            return True
+        if any(now - start < WOBBLE_SECONDS for start in self.wobbles.values()):
+            return True
+        if any(start <= now + 0.05 and now < end for start, end in self.halos.values()):
+            return True
+        if any(now - start < FX_SECONDS for _, _, start in self.fx):
+            return True
+        if any(now - start < POP_SECONDS for start in self.pops.values()):
+            return True
+        return bool(self.flights)
+
+    def prune(self, now: float) -> None:
+        for index in [i for i, (start, _, _) in self.flips.items() if now - start >= FLIP_SECONDS]:
+            del self.flips[index]
+        for index in [i for i, start in self.wobbles.items() if now - start >= WOBBLE_SECONDS]:
+            del self.wobbles[index]
+        for index in [i for i, (_, end) in self.halos.items() if now >= end]:
+            del self.halos[index]
+        for subject in [s for s, start in self.pops.items() if now - start >= POP_SECONDS]:
+            del self.pops[subject]
+        self.flights = [flight for flight in self.flights if now - flight.start < flight.duration]
+        while self.fx and now - self.fx[0][2] >= FX_SECONDS:
+            self.fx.popleft()
+
+
+class LilliCast:
+    """Lilli: shared cheer/think feedback plus point (hints) and wave (picker)."""
+
+    def __init__(self, feedback: CastFeedback, art: MemoryArt, clock: Callable[[], float]) -> None:
+        self.feedback = feedback
+        self._clock = clock
+        self._point = art.cast_pose("pose_point", LILLI_HEIGHT)
+        self._wave = art.cast_pose("pose_wave", LILLI_HEIGHT)
+        self._point_until = 0.0
+        self.waving = False
+
+    @property
+    def pose(self) -> CastPose:
+        return self.feedback.pose
+
+    @property
+    def pointing(self) -> bool:
+        return self._clock() < self._point_until and self.feedback.pose is CastPose.IDLE
+
+    @property
+    def animating(self) -> bool:
+        return self.feedback.animating or self.pointing
+
+    def correct(self) -> None:
+        self._point_until = 0.0
+        self.feedback.correct()
+
+    def try_again(self) -> None:
+        self._point_until = 0.0
+        self.feedback.try_again()
+
+    def point(self, seconds: float) -> None:
+        self.feedback.reset()
+        self._point_until = self._clock() + seconds
+
+    def reset(self) -> None:
+        self._point_until = 0.0
+        self.feedback.reset()
+
+    def update(self) -> bool:
+        changed = self.feedback.update()
+        if self._point_until and self._clock() >= self._point_until:
+            self._point_until = 0.0
+            changed = True
+        return changed
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self.waving and self._wave is not None and self.feedback.pose is CastPose.IDLE:
+            surface.blit(self._wave, self._wave.get_rect(midbottom=LILLI_MIDBOTTOM))
+            return
+        if self.pointing and self._point is not None:
+            bob = int(math.sin((self._point_until - self._clock()) * 7.0) * 3)
+            surface.blit(self._point, self._point.get_rect(midbottom=(LILLI_MIDBOTTOM[0], LILLI_MIDBOTTOM[1] + bob)))
+            return
+        self.feedback.draw(surface, LILLI_MIDBOTTOM)
+
+
+class MemoryRenderer:
+    """Compose picker and board frames from prepared art."""
+
+    def __init__(self, art: MemoryArt, cast: LilliCast, clock: Callable[[], float]) -> None:
+        self._art = art
+        self._cast = cast
+        self._clock = clock
+        self._backdrop_key: tuple | None = None
+        self._backdrop: pygame.Surface | None = None
+
+    # -- picker -----------------------------------------------------------------
+
+    def draw_picker(self, surface: pygame.Surface) -> None:
+        surface.blit(self._art.background(PICKER_SCENE), (0, 0))
+        self._cast.draw(surface)
+
+    # -- board ------------------------------------------------------------------
+
+    def draw_board(
+        self,
+        surface: pygame.Surface,
+        album: Album,
+        board: MemoryBoard,
+        layout: BoardLayout,
+        book: StickerBook,
+        motion: BoardMotion,
+    ) -> None:
+        now = self._clock()
+        surface.blit(self._board_backdrop(album, layout), (0, 0))
+        self._draw_page(surface, album, layout, book, motion, now)
+        for index, (halo_start, halo_end) in motion.halos.items():
+            if halo_start <= now < halo_end and index < len(layout.cards):
+                rect = layout.cards[index]
+                surface.blit(self._art.halo(rect.size), (rect.x - 14, rect.y - 14))
+        for index, card in enumerate(board.cards):
+            if index < len(layout.cards):
+                self._draw_card(surface, index, card.state, album.subject(card.subject_id).asset_id, layout, motion, now)
+        for name, position, start in motion.fx:
+            elapsed = now - start
+            frames = self._art.fx_frames(name)
+            if 0 <= elapsed < FX_SECONDS and frames:
+                frame = frames[min(len(frames) - 1, int(elapsed / FX_SECONDS * len(frames)))]
+                surface.blit(frame, frame.get_rect(center=position))
+        for flight in motion.flights:
+            position = flight.position(now)
+            sticker = self._art.sticker(flight.asset_id, layout.sticker_size)
+            if position is not None and sticker is not None:
+                surface.blit(sticker, sticker.get_rect(center=position))
+        self._cast.draw(surface)
+
+    def _board_backdrop(self, album: Album, layout: BoardLayout) -> pygame.Surface:
+        """Album scene + a soft cream table under the grid, composed once per board."""
+
+        key = (album.album_id, tuple(layout.grid))
+        if self._backdrop is None or key != self._backdrop_key:
+            base = self._art.background(album.scene).copy()
+            tray = pygame.Surface(layout.grid.inflate(36, 36).size, pygame.SRCALPHA)
+            pygame.draw.rect(tray, TRAY, tray.get_rect(), border_radius=34)
+            base.blit(tray, layout.grid.inflate(36, 36).topleft)
+            self._backdrop = base
+            self._backdrop_key = key
+        return self._backdrop
+
+    def _draw_page(
+        self,
+        surface: pygame.Surface,
+        album: Album,
+        layout: BoardLayout,
+        book: StickerBook,
+        motion: BoardMotion,
+        now: float,
+    ) -> None:
+        surface.blit(self._art.page(layout.panel.size, album), layout.panel.topleft)
+        for well, subject in zip(layout.wells, album.subjects):
+            surface.blit(self._art.well(well.width), well.topleft)
+            collected = book.has(album.album_id, subject.subject_id) and subject.subject_id not in motion.incoming
+            image = (
+                self._art.sticker(subject.asset_id, layout.sticker_size)
+                if collected
+                else self._art.silhouette(subject.asset_id, layout.sticker_size)
+            )
+            if image is None:
+                continue
+            centre = well.center
+            popped = motion.pops.get(subject.subject_id)
+            if collected and popped is not None and now - popped < POP_SECONDS:
+                lift = int(math.sin(math.pi * (now - popped) / POP_SECONDS) * 10)
+                centre = (centre[0], centre[1] - lift)
+            surface.blit(image, image.get_rect(center=centre))
+
+    def _draw_card(
+        self,
+        surface: pygame.Surface,
+        index: int,
+        state: CardState,
+        asset_id: str,
+        layout: BoardLayout,
+        motion: BoardMotion,
+        now: float,
+    ) -> None:
+        rect = layout.cards[index]
+        if now < motion.deal_start + DEAL_STAGGER * index:
+            return
+        if index in motion.gone:
+            surface.blit(self._art.empty_card(rect.size), rect.topleft)
+            return
+        size = rect.size
+        x = rect.x
+        wobble = motion.wobbles.get(index)
+        if wobble is not None and now - wobble < WOBBLE_SECONDS:
+            elapsed = now - wobble
+            x += int(8 * (1 - elapsed / WOBBLE_SECONDS) * math.sin(elapsed * 42))
+        flip = motion.flips.get(index)
+        if flip is not None and now - flip[0] < FLIP_SECONDS:
+            progress = (now - flip[0]) / FLIP_SECONDS
+            side = flip[1] if progress < 0.5 else flip[2]
+            step = 0 if progress < 0.25 or progress >= 0.75 else 1
+            frame = self._art.card_squash(side, size, asset_id, step)
+            surface.blit(frame, (x + (size[0] - frame.get_width()) // 2, rect.y))
+            return
+        face_up = state is not CardState.DOWN or index in motion.peek
+        side = Side.FACE if face_up else Side.BACK
+        surface.blit(self._art.card(side, size, asset_id), (x, rect.y))
+
+
+__all__ = ["BoardMotion", "Flight", "LilliCast", "MemoryRenderer"]

@@ -16,14 +16,19 @@ emblems = [
 ]
 
 [education]
-categories = ["working_memory", "visual_matching", "lexicon"]
+categories = ["working_memory", "visual_matching", "attention", "lexicon"]
 difficulty = 2
 recommended_age_min = 3
-recommended_age_max = 8
+recommended_age_max = 7
+difficulty_min = 1
+difficulty_max = 4
+adaptive_difficulty = true
 skills = [
   { id = "cognition.working_memory.visual", weight = 3 },
   { id = "cognition.matching.pairs", weight = 3 },
-  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "cognition.attention.visual", weight = 2 },
+  { id = "lexicon.everyday.nouns", weight = 1 },
+  { id = "motor.pointer.target_selection", weight = 1 },
 ]
 events = [
   { id = "memory.pair_found", kind = "milestone" },

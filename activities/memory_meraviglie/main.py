@@ -1,151 +1,77 @@
-"""La Memoria delle Meraviglie — Greia composition root.
+"""Wonder Match (La Memoria delle Meraviglie) — thin Greia composition root.
 
-Thin bootstrap: build collaborators (storage, audio, completion screen,
-locale, canvas) and enter the Activity lifecycle. The real work lives
-in :mod:`memory_app`, :mod:`memory_audio`, :mod:`memory_render` and
-:mod:`memory_content`.
+Build the collaborators (resources, audio, storage-backed progress, events,
+canvas) and enter the Activity lifecycle. The real work lives in
+:mod:`memory_app` (flow), :mod:`memory_model` (rules), :mod:`memory_render`
+and :mod:`memory_art` (presentation), :mod:`memory_controls` (shared control
+kit), :mod:`memory_audio`, :mod:`memory_services` and :mod:`memory_content`.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+import random
 
 import pygame
 
-from greia_platform.activity_api import (
-    activity_stop_requested,
-    get_storage,
-    get_theme,
-    mark_activity_ready,
-)
-from greia_platform.activity_ui import ChildUiMetrics
+from greia_platform.activity_api import get_profile_locale
 from greia_platform.localization import LocalizedResources, activity_resources
 from greia_platform.pygame_canvas import PygameReferenceCanvas
-from greia_platform.pygame_completion import (
-    CompletionContent,
-    PygameCompletionScreen,
-)
 from greia_platform.typography import GreiaTypography
 
 if __package__:
     from .memory_app import MemoryApp
     from .memory_audio import MemoryAudio
-    from .memory_content import (
-        GRID_CONFIGS,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        THEMES,
-    )
+    from .memory_content import ALBUMS, LEVELS, REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from .memory_services import GreiaMemoryEvents, GreiaMemoryProgress
 else:
     from memory_app import MemoryApp
     from memory_audio import MemoryAudio
-    from memory_content import (
-        GRID_CONFIGS,
-        REFERENCE_HEIGHT,
-        REFERENCE_WIDTH,
-        THEMES,
-    )
+    from memory_content import ALBUMS, LEVELS, REFERENCE_HEIGHT, REFERENCE_WIDTH
+    from memory_services import GreiaMemoryEvents, GreiaMemoryProgress
 
-# Backwards-compatible re-exports for legacy tests/tools that import
-# these names directly from the activity's main module.
 __all__ = [
-    "GRID_CONFIGS",
+    "ALBUMS",
+    "LEVELS",
     "MemoryApp",
     "MemoryAudio",
     "REFERENCE_HEIGHT",
     "REFERENCE_WIDTH",
-    "THEMES",
     "main",
 ]
 
 
-def _localized(
-    resources: LocalizedResources | None, key: str, default: str
-) -> str:
-    if resources is None:
-        return default
+def _resources() -> LocalizedResources | None:
     try:
-        value = resources.text(key)
+        return activity_resources(Path(__file__).resolve().parent, requested_locale=get_profile_locale())
     except Exception:
-        return default
-    return value or default
+        return None
 
 
 def main() -> int:
     pygame.init()
     screen = pygame.display.get_surface()
     if screen is None:
-        screen = pygame.display.set_mode(
-            (REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE
-        )
-    pygame.mouse.set_visible(False)
+        screen = pygame.display.set_mode((REFERENCE_WIDTH, REFERENCE_HEIGHT), pygame.RESIZABLE)
+    pygame.mouse.set_visible(True)
 
-    get_theme()
-    metrics = ChildUiMetrics.for_size(*screen.get_size())
-    canvas = PygameReferenceCanvas(screen)
-    typography = GreiaTypography()
-    sounds = MemoryAudio()
-
-    try:
-        storage = get_storage()
-    except Exception:
-        storage = None
-
-    package_root = Path(__file__).resolve().parent
-    resources = activity_resources(package_root)
-    active_locale = resources.context.selected.language
-
-    play_again_rect = pygame.Rect(
-        REFERENCE_WIDTH // 2 - 120,
-        REFERENCE_HEIGHT // 2 + 80,
-        240,
-        52,
-    )
-    completion = PygameCompletionScreen(
-        typography,
-        width=REFERENCE_WIDTH,
-        height=REFERENCE_HEIGHT,
-        primary_rect=play_again_rect,
-    )
-    completion_content = CompletionContent(
-        title=_localized(resources, "victory.title", "🌟"),
-        body_lines=(_localized(resources, "victory.subtitle", "★"),),
-        primary_label=_localized(resources, "btn.play_again", "🔄"),
-        achievement_count=3,
-    )
-
+    resources = _resources()
+    locale = resources.context.selected.language if resources is not None else "en"
+    rng = random.Random()
     app = MemoryApp(
         screen=screen,
-        canvas=canvas,
-        metrics=metrics,
-        typography=typography,
-        sounds=sounds,
+        canvas=PygameReferenceCanvas(screen),
+        typography=GreiaTypography(),
         resources=resources,
-        active_locale=active_locale,
-        storage=storage,
-        completion=completion,
-        completion_content=completion_content,
+        audio=MemoryAudio(resources, locale=locale, rng=rng),
+        progress=GreiaMemoryProgress(),
+        events=GreiaMemoryEvents(),
+        rng=rng,
     )
-
-    clock = pygame.time.Clock()
-    while app._running and not activity_stop_requested():
-        for event in pygame.event.get():
-            app.handle_event(event)
-        app._update()
-        app._draw()
-        # Present the frame so the first usable frame is on the display
-        # BEFORE we tell the Shell the Activity is ready. MemoryApp._draw
-        # already calls pygame.display.flip() for the active state; this
-        # second flip is a no-op when the screen is in the same state and
-        # guarantees the readiness invariant the platform checks.
-        pygame.display.flip()
-        if not app.ready_published:
-            mark_activity_ready()
-            app.ready_published = True
-        clock.tick(30)
-    app._persist_progress()
-    pygame.quit()
-    return 0
+    try:
+        return app.run()
+    finally:
+        pygame.quit()
 
 
 if __name__ == "__main__":

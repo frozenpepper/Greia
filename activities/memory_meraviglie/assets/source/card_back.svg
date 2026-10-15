@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 256" width="232" height="256">
+  <defs>
+    <!-- grape light (mix 40% white) → grape: Wonder Match card back -->
+    <linearGradient id="memory_back_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BFA2DF"/>
+      <stop offset="1" stop-color="#9464C9"/>
+    </linearGradient>
+    <!-- gold → gold_deep (star) -->
+    <linearGradient id="memory_back_star" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FBBF24"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <rect x="11" y="17" width="212" height="234" rx="28" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="card">
+    <rect x="8" y="8" width="216" height="236" rx="28" fill="url(#memory_back_body)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <rect x="24" y="24" width="184" height="204" rx="18" fill="none" stroke="#FFFBEB" stroke-width="3" opacity="0.75"/>
+    <ellipse cx="62" cy="40" rx="30" ry="8" fill="#FFFFFF" opacity="0.32"/>
+  </g>
+  <g id="sparkles">
+    <path d="M52 64 L56 74 L66 78 L56 82 L52 92 L48 82 L38 78 L48 74 Z" fill="#E8DDF7" stroke="#6F4E8C" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M180 64 L184 74 L194 78 L184 82 L180 92 L176 82 L166 78 L176 74 Z" fill="#E8DDF7" stroke="#6F4E8C" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M52 166 L56 176 L66 180 L56 184 L52 194 L48 184 L38 180 L48 176 Z" fill="#E8DDF7" stroke="#6F4E8C" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M180 166 L184 176 L194 180 L184 184 L180 194 L176 184 L166 180 L176 176 Z" fill="#E8DDF7" stroke="#6F4E8C" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <g id="medallion">
+    <circle cx="116" cy="128" r="56" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5"/>
+    <circle cx="116" cy="128" r="45" fill="#E8DDF7"/>
+    <path d="M116 90 L127.2 113.2 L152.6 116.1 L133.7 133.6 L138.6 158.7 L116 146.2 L93.4 158.7 L98.3 133.6 L79.4 116.1 L104.8 113.2 Z" fill="url(#memory_back_star)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <ellipse cx="106" cy="114" rx="6" ry="4" fill="#FFFFFF" opacity="0.8" transform="rotate(-30 106 114)"/>
+  </g>
+</svg>

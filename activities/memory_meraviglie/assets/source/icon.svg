@@ -1,26 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
   <defs>
-    <linearGradient id="card_front" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="100%" stop-color="#F5F5F5"/>
+    <!-- orange light (mix 35% white) → orange: learn Collection tile -->
+    <linearGradient id="memory_icon_tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+    <!-- cast cream → cream token (card faces) -->
+    <linearGradient id="memory_icon_face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFBEB"/>
+      <stop offset="1" stop-color="#F7EBCB"/>
+    </linearGradient>
+    <!-- coral light40 → coral (apple) -->
+    <linearGradient id="memory_icon_apple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8A9A0"/>
+      <stop offset="1" stop-color="#F46F61"/>
     </linearGradient>
   </defs>
-  <!-- Back Card Shadow & Body -->
-  <rect x="90" y="38" width="118" height="150" rx="20" fill="#42A5F5" stroke="#1E88E5" stroke-width="6" transform="rotate(14 149 113)"/>
-  <circle cx="149" cy="113" r="32" fill="#E3F2FD" transform="rotate(14 149 113)"/>
-  <polygon points="149,95 153,106 164,106 156,113 159,124 149,117 139,124 142,113 134,106 145,106" fill="#1E88E5" transform="rotate(14 149 113)"/>
-  <!-- Front Overlapping Matching Card -->
-  <rect x="42" y="64" width="118" height="150" rx="20" fill="url(#card_front)" stroke="#FFB300" stroke-width="6" transform="rotate(-8 101 139)"/>
-  <!-- Inner Star Emblem -->
-  <g transform="rotate(-8 101 139)">
-    <circle cx="101" cy="139" r="36" fill="#FFF8E1" stroke="#FFD54F" stroke-width="4"/>
-    <!-- Smiling Golden Star -->
-    <polygon points="101,115 106,129 121,129 110,138 114,152 101,143 88,152 92,138 81,129 96,129" fill="#FFC107"/>
-    <!-- Star Face -->
-    <circle cx="97" cy="135" r="2.5" fill="#5D4037"/>
-    <circle cx="105" cy="135" r="2.5" fill="#5D4037"/>
-    <path d="M98 140 Q101 144 104 140" fill="none" stroke="#5D4037" stroke-width="2" stroke-linecap="round"/>
+  <g id="tile_bg">
+    <rect width="256" height="256" rx="48" fill="url(#memory_icon_tile)"/>
+    <rect x="22" y="22" width="212" height="212" rx="34" fill="#FFF6E3" opacity="0.22"/>
   </g>
-  <!-- Sparkles -->
-  <polygon points="186,40 190,48 198,48 192,54 194,62 186,57 178,62 180,54 174,48 182,48" fill="#FFD54F"/>
+  <g id="shadow">
+    <ellipse cx="128" cy="214" rx="84" ry="10" fill="#8A5A34" opacity="0.18"/>
+  </g>
+  <g id="subject">
+    <g id="card_left" transform="rotate(-11 84 132)">
+      <rect x="40" y="66" width="88" height="132" rx="16" fill="url(#memory_icon_face)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+      <g id="apple_left">
+        <path d="M84 116 C70 104 52 112 54 132 C56 152 70 166 84 160 C98 166 112 152 114 132 C116 112 98 104 84 116 Z" fill="url(#memory_icon_apple)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+        <path d="M84 116 C84 108 86 102 90 96" fill="none" stroke="#4B372F" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M90 104 C96 94 108 94 112 100 C104 108 96 108 90 104 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+        <ellipse cx="68" cy="128" rx="5" ry="8" fill="#FFFFFF" opacity="0.8"/>
+      </g>
+    </g>
+    <g id="card_right" transform="rotate(11 172 132)">
+      <rect x="128" y="66" width="88" height="132" rx="16" fill="url(#memory_icon_face)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+      <g id="apple_right">
+        <path d="M172 116 C158 104 140 112 142 132 C144 152 158 166 172 160 C186 166 200 152 202 132 C204 112 186 104 172 116 Z" fill="url(#memory_icon_apple)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+        <path d="M172 116 C172 108 174 102 178 96" fill="none" stroke="#4B372F" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M178 104 C184 94 196 94 200 100 C192 108 184 108 178 104 Z" fill="#59B86A" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+        <ellipse cx="156" cy="128" rx="5" ry="8" fill="#FFFFFF" opacity="0.8"/>
+      </g>
+    </g>
+  </g>
+  <g id="accent">
+    <path d="M128 30 L135 47 L152 54 L135 61 L128 78 L121 61 L104 54 L121 47 Z" fill="#FBBF24" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+  </g>
 </svg>
