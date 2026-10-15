@@ -352,10 +352,18 @@ class LocalizedResources:
             self._english_bundle = LocalizationBundle.load(
                 self.package_root, LocaleTag.parse("en")
             )
-        ordered = list(self._bundles[:1])
+        # Most-specific translation, then its base language, then English.
+        # An Activity's IT default remains a final compatibility option.
+        ordered: list[LocalizationBundle] = []
+        for locale in context.selected.fallback_chain():
+            bundle = next(
+                (item for item in self._bundles if item.locale == locale), None
+            )
+            if bundle is not None and bundle not in ordered:
+                ordered.append(bundle)
         if self._english_bundle is not None and self._english_bundle not in ordered:
             ordered.append(self._english_bundle)
-        for bundle in self._bundles[1:]:
+        for bundle in self._bundles:
             if bundle not in ordered:
                 ordered.append(bundle)
         self._text_bundles = tuple(ordered)
@@ -431,12 +439,18 @@ class LocalizedResources:
         existing package speech directories work without per-locale JSON.
         These are filenames, not a promise that every semantic cue exists.
         """
-        selected = self.context.selected.value
-        folders = (
-            self.package_root / "assets" / "audio" / selected,
-            self.package_root / "locales" / selected / "audio",
-            self.package_root / "assets" / "audio" / "en",
-            self.package_root / "locales" / "en" / "audio",
+        languages = tuple(dict.fromkeys(
+            (locale.value for locale in self.context.selected.fallback_chain())
+        ))
+        if "en" not in languages:
+            languages += ("en",)
+        folders = tuple(
+            folder
+            for language in languages
+            for folder in (
+                self.package_root / "assets" / "audio" / language,
+                self.package_root / "locales" / language / "audio",
+            )
         )
         names: dict[str, str] = {}
         for folder in folders:
@@ -488,65 +502,60 @@ class LocalizedResources:
             ):
                 raise LocalizationError("audio filename must be one WAV/OGG basename")
 
-        selected = self.context.selected
         english = self._english_bundle
-        preferred = next(
-            (bundle for bundle in self._bundles if bundle.locale == selected), None
-        )
-
-        if preferred is not None:
-            for lookup in keys:
-                cue = preferred.audio.get(lookup)
-                if cue is not None and cue.path.is_file():
-                    return cue
-
-        # Reuse one existing semantic key -> filename mapping for every
-        # translation; EN is preferred, but legacy IT-only mappings can
-        # supply the filename for otherwise unmapped cues such as the
-        # Submarine alarm. The contents of files are never modified.
+        # English provides the ordinary semantic -> filename template. Old
+        # IT-only mappings remain valid aliases for their existing filenames.
         templates = (
             (english,) + tuple(
-                bundle for bundle in self._bundles if bundle is not english
+                item for item in self._bundles if item is not english
             )
             if english is not None else self._bundles
         )
+
+        # A regional locale falls back to its own base language, not directly
+        # to English (e.g. es-MX -> es -> en). The manifest's IT default
+        # should never be used as the speech fallback for Spanish/French.
+        local_variants = self.context.selected.fallback_chain()
+        for locale in local_variants:
+            cue = self._audio_for_locale(locale, keys, filename, templates)
+            if cue is not None:
+                return cue
+        if allow_fallback and all(loc.language != "en" for loc in local_variants):
+            return self._audio_for_locale(
+                LocaleTag.parse("en"), keys, filename, templates
+            )
+        return None
+
+    def _audio_for_locale(
+        self,
+        locale: LocaleTag,
+        keys: tuple[str, ...],
+        filename: str | None,
+        templates: tuple[LocalizationBundle, ...],
+    ) -> LocalizedAudioCue | None:
+        own = next(
+            (item for item in self._bundles if item.locale == locale), None
+        )
+        if own is not None:
+            for key in keys:
+                cue = own.audio.get(key)
+                if cue is not None and cue.path.is_file():
+                    return cue
+
         for bundle in templates:
-            for lookup in keys:
-                cue = bundle.audio.get(lookup)
+            for key in keys:
+                cue = bundle.audio.get(key)
                 if cue is None:
                     continue
                 projected = _project_locale_audio(
-                    self.package_root, cue.path, bundle.locale.value,
-                    selected.value,
+                    self.package_root, cue.path, bundle.locale.value, locale.value
                 )
                 if projected is not None and projected.is_file():
                     return LocalizedAudioCue(projected, cue.caption_key)
 
-        for candidate in self._conventional_audio(selected.value, key, filename):
+        for candidate in self._conventional_audio(locale.value, keys[-1], filename):
             if candidate.is_file():
                 return LocalizedAudioCue(candidate)
-
-        if allow_fallback and selected.language != "en":
-            if english is not None:
-                for lookup in keys:
-                    cue = english.audio.get(lookup)
-                    if cue is not None and cue.path.is_file():
-                        return cue
-            # An IT-only legacy cue map can still identify the filename
-            # of an existing English audio clip without inventing a mapping.
-            for bundle in templates:
-                for lookup in keys:
-                    cue = bundle.audio.get(lookup)
-                    if cue is None:
-                        continue
-                    english_path = _project_locale_audio(
-                        self.package_root, cue.path, bundle.locale.value, "en"
-                    )
-                    if english_path is not None and english_path.is_file():
-                        return LocalizedAudioCue(english_path, cue.caption_key)
-            for candidate in self._conventional_audio("en", key, filename):
-                if candidate.is_file():
-                    return LocalizedAudioCue(candidate)
         return None
 
     def _conventional_audio(
