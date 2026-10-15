@@ -114,6 +114,28 @@ class SharedLocalizedAudioPathTests(unittest.TestCase):
             )
             self.assertEqual(_context(root, "fr").audio_path("activity.title"), title_fr)
 
+    def test_italian_only_legacy_alias_projects_alarm_to_fr_and_en(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _bundle(root, "en")
+            _bundle(root, "es")
+            _bundle(root, "fr")
+            _bundle(root, "it", audio={
+                "voice.btn.alarm": {"path": "audio/it/sub_btn_alarm.wav"}
+            })
+            _put(root, "audio/it/sub_btn_alarm.wav")
+            french = _put(root, "audio/fr/sub_btn_alarm.wav")
+            english = _put(root, "audio/en/sub_btn_alarm.wav")
+            self.assertEqual(
+                _context(root, "fr").audio_path("voice.btn.alarm"), french
+            )
+            self.assertEqual(
+                _context(root, "es").audio_path("voice.btn.alarm"), english
+            )
+            self.assertEqual(
+                _context(root, "en").audio_path("voice.btn.alarm"), english
+            )
+
     def test_conventional_names_work_without_json_audio_maps(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
