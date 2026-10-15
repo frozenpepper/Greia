@@ -8,10 +8,9 @@
     "prompt.find_sound": "Listen to the sound and find the picture!",
     "prompt.first_sound": "What is the beginning sound?",
     "prompt.build_word": "Place the letter to build the word!",
-    "button.listen": "Listen",
     "button.play_again": "Play again",
-    "victory.title": "Word Workshop!",
-    "victory.subtitle": "All sounds and words are complete with Leo!"
+    "victory.title": "Great sound work!",
+    "victory.subtitle": "Dani's Sound Machine made every word!"
   },
   "audio": {
     "activity.title": {

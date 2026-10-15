@@ -44,7 +44,7 @@ def main() -> int:
     typography = GreiaTypography()
     canvas = PygameReferenceCanvas(screen)
     art = SoundWorkshopArt(REFERENCE_WIDTH, REFERENCE_HEIGHT, typography)
-    renderer = SoundWorkshopRenderer(art, typography, resources)
+    renderer = SoundWorkshopRenderer(art)
     progress = GreiaWorkshopProgress()
     saved = progress.load()
     rng = random.Random()
@@ -73,6 +73,9 @@ def main() -> int:
     try:
         return app.run()
     finally:
+        speech_queue.clear()
+        app.kit.clear()
+        art.clear()
         typography.clear()
         pygame.quit()
 

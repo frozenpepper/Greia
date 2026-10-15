@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Officina dei Suoni picture "branch" (IT ramo): forked wooden branch with three small leaves. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- leaf light -> leaf -->
+    <linearGradient id="branch_leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="128" cy="226" rx="96" ry="10" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="wood">
+    <path d="M28 206 C80 180 140 140 226 70" fill="none" stroke="#4B372F" stroke-width="26" stroke-linecap="round"/>
+    <path d="M118 150 C134 112 140 88 136 52" fill="none" stroke="#4B372F" stroke-width="18" stroke-linecap="round"/>
+    <path d="M70 182 C66 160 72 142 84 128" fill="none" stroke="#4B372F" stroke-width="15" stroke-linecap="round"/>
+    <path d="M28 206 C80 180 140 140 226 70" fill="none" stroke="#B9783E" stroke-width="17" stroke-linecap="round"/>
+    <path d="M118 150 C134 112 140 88 136 52" fill="none" stroke="#B9783E" stroke-width="10" stroke-linecap="round"/>
+    <path d="M70 182 C66 160 72 142 84 128" fill="none" stroke="#B9783E" stroke-width="7" stroke-linecap="round"/>
+    <path d="M44 192 C90 168 140 134 200 86" fill="none" stroke="#DDA56E" stroke-width="4" stroke-linecap="round"/>
+    <path d="M30 206 C40 200 46 198 52 196" fill="none" stroke="#976333" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <g id="leaves">
+    <path d="M136 54 C120 30 124 12 140 4 C156 18 154 38 136 54 Z" fill="url(#branch_leaf)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M226 70 C230 44 246 34 254 36 C254 56 244 70 226 70 Z" fill="url(#branch_leaf)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M84 128 C70 108 74 90 90 84 C104 98 100 116 84 128 Z" fill="url(#branch_leaf)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+  </g>
+</svg>

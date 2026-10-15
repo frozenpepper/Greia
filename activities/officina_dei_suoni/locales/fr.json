@@ -8,10 +8,9 @@
     "prompt.find_sound": "Écoute le son et trouve l'image !",
     "prompt.first_sound": "Quel son entends-tu au début ?",
     "prompt.build_word": "Place la lettre pour former le mot !",
-    "button.listen": "Écouter",
     "button.play_again": "Rejouer",
-    "victory.title": "Atelier des mots !",
-    "victory.subtitle": "Tu as terminé tous les sons et tous les mots avec Leo !"
+    "victory.title": "Bravo pour les sons !",
+    "victory.subtitle": "La Machine à sons de Dani a fait tous les mots !"
   },
   "audio": {}
 }

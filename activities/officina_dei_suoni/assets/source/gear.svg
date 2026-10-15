@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Officina dei Suoni: workshop gear that turns while the Sound Machine works. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- turquoise light (mix 40% white) -> turquoise -->
+    <linearGradient id="sound_gear_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8FD4CE"/>
+      <stop offset="1" stop-color="#44B8AE"/>
+    </linearGradient>
+  </defs>
+  <g id="gear">
+    <path d="M107.0 50.7 L121.2 54.2 L121.2 73.8 L107.0 77.3 L103.8 85.0 L111.4 97.5 L97.5 111.4 L85.0 103.8 L77.3 107.0 L73.8 121.2 L54.2 121.2 L50.7 107.0 L43.0 103.8 L30.5 111.4 L16.6 97.5 L24.2 85.0 L21.0 77.3 L6.8 73.8 L6.8 54.2 L21.0 50.7 L24.2 43.0 L16.6 30.5 L30.5 16.6 L43.0 24.2 L50.7 21.0 L54.2 6.8 L73.8 6.8 L77.3 21.0 L85.0 24.2 L97.5 16.6 L111.4 30.5 L103.8 43.0 Z" fill="url(#sound_gear_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <circle cx="64" cy="64" r="30" fill="none" stroke="#469C92" stroke-width="4"/>
+    <circle cx="64" cy="64" r="16" fill="#FFFBEB" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="64" cy="64" r="6" fill="#4B372F"/>
+    <circle cx="46" cy="40" r="5" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+</svg>

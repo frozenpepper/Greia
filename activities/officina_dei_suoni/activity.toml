@@ -2,19 +2,24 @@
 id = "org.greia.officina-dei-suoni"
 legacy_ids = []
 title_key = "activity.officina_dei_suoni.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
 [presentation]
 categories = ["learn", "play"]
-discovery_tags = ["words", "puzzles"]
+discovery_tags = ["words"]
 
 [education]
+# Dani's Sound Machine: hear a first sound and feed the machine the picture
+# that starts with it (no letters shown), then the capital letter for a word's
+# first sound, then build short words by filling their first and a later
+# sound slot. Letter sounds only (letter names belong to Leo's Letter Garden).
+# Adaptive stages 1-3 of the same loop; wrong choices are eliminated.
 categories = ["language", "phonemic_awareness", "letter_sound", "word_building"]
-difficulty = 3
-recommended_age_min = 5
-recommended_age_max = 7
+difficulty = 2
+recommended_age_min = 4
+recommended_age_max = 6
 difficulty_min = 1
 difficulty_max = 3
 adaptive_difficulty = true
@@ -34,11 +39,11 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
-profile = "hybrid"
+profile = "navigation"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+required_capabilities = ["display", "audio.basic"]
+optional_capabilities = ["pointer", "touch", "keyboard"]
 
 [permissions]
 requested = []

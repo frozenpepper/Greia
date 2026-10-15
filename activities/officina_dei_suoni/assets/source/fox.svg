@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Officina dei Suoni picture "fox" (EN /f/, FR renard): storybook fox standing in side view, deliberately unlike Tito's front-facing Puff. Flat Greia vector (GREIA_SVG_AUTHORING_RULES). -->
+  <defs>
+    <!-- orange light (mix 20% white) -> orange -->
+    <linearGradient id="fox_fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F5AE60"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="132" cy="230" rx="78" ry="10" fill="#6A5147" opacity="0.14"/>
+  </g>
+  <g id="legs">
+    <rect x="92" y="180" width="17" height="48" rx="8" fill="#976333" stroke="#4B372F" stroke-width="3.5"/>
+    <rect x="114" y="184" width="17" height="44" rx="8" fill="#976333" stroke="#4B372F" stroke-width="3.5"/>
+    <rect x="160" y="184" width="17" height="44" rx="8" fill="#976333" stroke="#4B372F" stroke-width="3.5"/>
+    <rect x="180" y="180" width="17" height="48" rx="8" fill="#976333" stroke="#4B372F" stroke-width="3.5"/>
+  </g>
+  <g id="tail">
+    <path d="M186 168 C214 166 232 140 228 100 C246 112 254 146 244 172 C234 198 204 204 184 194 Z" fill="url(#fox_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M228 100 C242 108 250 124 251 140 C240 136 230 122 228 100 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+  </g>
+  <g id="body">
+    <path d="M84 150 C96 130 160 126 188 146 C206 160 204 190 184 198 C156 208 106 206 90 194 C76 182 76 164 84 150 Z" fill="url(#fox_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M86 168 C96 186 114 194 134 192 C120 184 108 170 104 154 C96 154 88 160 86 168 Z" fill="#FFFBEB"/>
+    <ellipse cx="146" cy="146" rx="22" ry="6" fill="#FFFFFF" opacity="0.55" transform="rotate(-6 146 146)"/>
+  </g>
+  <g id="head">
+    <path d="M66 74 L72 36 L94 66 Z" fill="url(#fox_fur)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M94 70 L108 36 L118 76 Z" fill="url(#fox_fur)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M73 64 L75 48 L84 61 Z" fill="#976333"/>
+    <path d="M100 66 L107 50 L111 70 Z" fill="#976333"/>
+    <path d="M58 84 C70 64 110 62 124 84 C134 100 128 126 110 136 C92 146 70 142 54 130 L24 116 C18 113 18 106 24 104 Z" fill="url(#fox_fur)" stroke="#4B372F" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M26 114 L54 128 C70 140 92 144 108 136 C94 128 86 116 82 104 C66 108 46 110 26 114 Z" fill="#FFFBEB"/>
+    <path d="M24 116 L54 130 C70 142 92 146 110 136" fill="none" stroke="#4B372F" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="24" cy="109" r="7" fill="#4B372F"/>
+    <ellipse cx="84" cy="92" rx="6" ry="7.5" fill="#342C35"/>
+    <circle cx="86" cy="89" r="2.4" fill="#FFFFFF"/>
+    <ellipse cx="100" cy="112" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+  </g>
+</svg>
