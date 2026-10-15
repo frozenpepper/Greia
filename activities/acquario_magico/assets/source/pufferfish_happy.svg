@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- acquario_magico pufferfish - happy. Activity-private non-cast creature, flat Greia vector
+       matching creature.marine.* (shared-library candidate creature.marine.pufferfish). -->
+  <defs>
+    <!-- sunshine light -> sunshine -->
+    <linearGradient id="pufferfish_happy_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFDE8C"/>
+      <stop offset="1" stop-color="#FFC234"/>
+    </linearGradient>
+  </defs>
+  <g id="character">
+    <g id="fins">
+      <path d="M76 128 C58 108 40 96 30 104 C26 116 28 124 34 128 C28 132 26 140 30 152 C40 160 58 148 76 128 Z" fill="url(#pufferfish_happy_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="spines">
+      <path d="M175.9 168.9 L176.9 185.5 L161.1 180.5 Z M149.5 185.4 L142.2 200.3 L131 188 Z M118.5 186.5 L104.7 195.7 L101.1 179.4 Z M91.1 171.9 L74.5 172.9 L79.5 157.1 Z M73.5 114.5 L64.3 100.7 L80.6 97.1 Z M88.1 87.1 L87.1 70.5 L102.9 75.5 Z M114.5 70.6 L121.8 55.7 L133 68 Z M145.5 69.5 L159.3 60.3 L162.9 76.6 Z M172.9 84.1 L189.5 83.1 L184.5 98.9 Z" fill="#FBC07F" stroke="#4B372F" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="body">
+      <circle cx="132" cy="128" r="62" fill="url(#pufferfish_happy_body)" stroke="#4B372F" stroke-width="3.5"/>
+      <path d="M74.5 151.2 C104.1 140.4 159.9 140.4 189.5 151.2 A62 62 0 0 1 74.5 151.2 Z" fill="#FFFBEB" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M98.5 102 a7.4 6 0 1 0 14.9 0 a7.4 6 0 1 0 -14.9 0 Z M122.7 89.6 a6.2 5 0 1 0 12.4 0 a6.2 5 0 1 0 -12.4 0 Z M88 126.8 a5.6 4.5 0 1 0 11.2 0 a5.6 4.5 0 1 0 -11.2 0 Z M134.5 109.4 a5 4 0 1 0 9.9 0 a5 4 0 1 0 -9.9 0 Z" fill="#DBA633"/>
+      <ellipse cx="106" cy="89.6" rx="16.1" ry="7.4" transform="rotate(-24 106 89.6)" fill="#FFFFFF" opacity="0.7"/>
+    </g>
+    <g id="fin_front">
+      <path d="M137 135.4 C153 127.4 167 139.4 163 153.4 C151 157.4 141 149.4 137 135.4 Z" fill="#FFDE8C" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+    <g id="face">
+      <path d="M158 113.6 Q168 99.6 178 113.6" fill="none" stroke="#342C35" stroke-width="4.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <ellipse cx="166" cy="136.6" rx="8" ry="5" fill="#FDA4AF" opacity="0.5"/>
+      <path d="M178.8 133.4 Q187.8 133.4 195.8 127.4 Q188.8 147.4 178.8 133.4 Z" fill="#8A3B2E" stroke="#4B372F" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    </g>
+  </g>
+  <g id="fx">
+    <path d="M226 52 Q227.7 60.3 236 62 Q227.7 63.7 226 72 Q224.3 63.7 216 62 Q224.3 60.3 226 52 Z" fill="#FDE68A" stroke="#8A5A12" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="44" cy="62" r="6.3" fill="#E6F6FD" stroke="#4F86A8" stroke-width="2" opacity="0.9"/><ellipse cx="41.8" cy="59.8" rx="1.8" ry="1.3" fill="#FFFFFF"/>
+  </g>
+</svg>

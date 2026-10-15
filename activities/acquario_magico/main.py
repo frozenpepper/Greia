@@ -1,7 +1,8 @@
 """Acquario Magico — Greia composition root.
 
 Thin bootstrap. The real work lives in :mod:`acquarium_app`,
-:mod:`acquarium_audio`, :mod:`acquarium_assets`, :mod:`acquarium_content`,
+:mod:`acquarium_audio`, :mod:`acquarium_assets`, :mod:`acquarium_cast`,
+:mod:`acquarium_content`, :mod:`acquarium_controls`, :mod:`acquarium_missions`,
 :mod:`acquarium_model` and :mod:`acquarium_renderer`.
 
 The Activity runs under Greia platform authority: it does not
@@ -16,7 +17,6 @@ viewport geometry through the shared
 
 from __future__ import annotations
 
-import time
 from pathlib import Path
 
 import pygame
@@ -27,18 +27,13 @@ from greia_platform.activity_api import (
     get_theme,
     mark_activity_ready,
 )
-from greia_platform.activity_ui import ChildUiMetrics
 from greia_platform.localization import LocalizedResources, activity_resources
-from greia_platform.pygame_canvas import PygameReferenceCanvas
-from greia_platform.typography import GreiaTypography
 
 if __package__:
-    from .acquarium_app import AquariumApp
-    from .acquarium_audio import AquariumAudio
+    from .acquarium_app import build_app
     from .acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
 else:
-    from acquarium_app import AquariumApp
-    from acquarium_audio import AquariumAudio
+    from acquarium_app import build_app
     from acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH
 
 
@@ -62,15 +57,7 @@ def main() -> int:
         storage = get_storage()
     except Exception:
         storage = None
-    app = AquariumApp(
-        screen=screen,
-        canvas=PygameReferenceCanvas(screen),
-        metrics=ChildUiMetrics.for_size(*screen.get_size()),
-        typography=GreiaTypography(),
-        resources=resources,
-        audio=AquariumAudio(),
-        storage=storage,
-    )
+    app = build_app(screen, resources, storage=storage)
 
     # READY is published only after the first frame has actually been presented.
     while not activity_stop_requested():
@@ -78,13 +65,7 @@ def main() -> int:
             app.handle_event(event)
         if not app._running:
             break
-        app.session.update(0.033)
-        if (
-            app.storage is not None
-            and time.monotonic() - app.last_save_time > 10.0
-        ):
-            app.last_save_time = time.monotonic()
-            app._autosave()
+        app.advance(0.033)
         app._draw()
         if not app.ready_published:
             mark_activity_ready()

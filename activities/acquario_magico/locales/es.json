@@ -9,7 +9,6 @@
     "tool.bubbles": "Burbujas",
     "tool.day": "Día",
     "tool.night": "Noche",
-    "tool.glow": "Brillo nocturno",
     "creature.clownfish": "Pez payaso",
     "creature.turtle": "Tortuga marina",
     "creature.octopus": "Pulpo",
@@ -18,7 +17,21 @@
     "creature.seahorse": "Caballito de mar",
     "creature.jellyfish": "Medusa luminosa",
     "creature.starfish": "Estrella de mar",
-    "chest.treasure": "Cofre del tesoro"
+    "chest.treasure": "Cofre del tesoro",
+    "mission.find.clownfish": "Busca el pez payaso",
+    "mission.find.turtle": "Busca la tortuga marina",
+    "mission.find.octopus": "Busca el pulpo",
+    "mission.find.dolphin": "Busca el delfín",
+    "mission.find.puffer": "Busca el pez globo",
+    "mission.find.seahorse": "Busca el caballito de mar",
+    "mission.find.jellyfish": "Busca la medusa",
+    "mission.find.starfish": "Busca la estrella de mar",
+    "mission.feed.clownfish": "Da de comer al pez payaso",
+    "mission.feed.turtle": "Da de comer a la tortuga",
+    "mission.feed.octopus": "Da de comer al pulpo",
+    "mission.feed.dolphin": "Da de comer al delfín",
+    "mission.feed.puffer": "Da de comer al pez globo",
+    "mission.feed.seahorse": "Da de comer al caballito"
   },
   "audio": {}
 }

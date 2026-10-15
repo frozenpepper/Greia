@@ -20,9 +20,13 @@ from activities.acquario_magico.acquarium_app import (
     AquariumApp,
     CHEST_RECT,
     _safe_saved_counter,
+    build_app as build_aquarium,
 )
 from activities.acquario_magico.acquarium_model import AquariumSession
-from activities.acquario_magico.acquarium_renderer import ToolLayout
+from greia_platform.localization import activity_resources
+from pathlib import Path
+
+AQUARIUM_DIR = Path(__file__).resolve().parents[1] / "activities" / "acquario_magico"
 
 
 class WoodlandKeyboardCycleTests(TestCase):
@@ -147,10 +151,12 @@ class GreenhouseKeyboardCycleTests(TestCase):
 
 class AquariumKeyboardAndRecoveryTests(TestCase):
     def build_app(self) -> AquariumApp:
-        app = AquariumApp.__new__(AquariumApp)
+        # Real app (shared control kit owns Space/Enter/arrows); empty tank,
+        # no optional missions, so each key's effect is observable alone.
+        app = build_aquarium(pygame.Surface((1024, 600)), activity_resources(AQUARIUM_DIR, requested_locale="en"), audio=Mock())
+        app.missions_enabled = False
+        app._missions.enabled = False
         app.session = AquariumSession()
-        app.audio = Mock()
-        app._renderer = SimpleNamespace(tool_layout=ToolLayout.default())
         app.keyboard_cursor = (512, 300)
         return app
 
@@ -167,7 +173,8 @@ class AquariumKeyboardAndRecoveryTests(TestCase):
             app._handle_keydown(pygame.K_3)
             app._handle_keydown(pygame.K_RETURN)
             self.assertGreater(len(app.session.bubbles), 0)
-            app._handle_keydown(pygame.K_SPACE)
+            # Space is the standard ACTIVATE key now; night has its own key.
+            app._handle_keydown(pygame.K_n)
             self.assertTrue(app.session.glow_mode)
             app.keyboard_cursor = CHEST_RECT.center
             app._handle_keydown(pygame.K_RETURN)
@@ -182,6 +189,7 @@ class AquariumKeyboardAndRecoveryTests(TestCase):
         self.assertEqual(app.keyboard_cursor, (70, 85))
         for _ in range(50):
             app._handle_keydown(pygame.K_RIGHT)
+        for _ in range(9):  # one more Down would leave the water for the toolbar
             app._handle_keydown(pygame.K_DOWN)
         self.assertEqual(app.keyboard_cursor, (954, 490))
 

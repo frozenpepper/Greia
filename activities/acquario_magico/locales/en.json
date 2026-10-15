@@ -9,7 +9,6 @@
     "tool.bubbles": "Bubbles",
     "tool.day": "Day",
     "tool.night": "Night",
-    "tool.glow": "Night Glow",
     "creature.clownfish": "Clownfish",
     "creature.turtle": "Sea Turtle",
     "creature.octopus": "Octopus",
@@ -18,7 +17,21 @@
     "creature.seahorse": "Seahorse",
     "creature.jellyfish": "Glowing Jellyfish",
     "creature.starfish": "Starfish",
-    "chest.treasure": "Treasure Chest"
+    "chest.treasure": "Treasure Chest",
+    "mission.find.clownfish": "Find the clownfish",
+    "mission.find.turtle": "Find the sea turtle",
+    "mission.find.octopus": "Find the octopus",
+    "mission.find.dolphin": "Find the dolphin",
+    "mission.find.puffer": "Find the pufferfish",
+    "mission.find.seahorse": "Find the seahorse",
+    "mission.find.jellyfish": "Find the jellyfish",
+    "mission.find.starfish": "Find the starfish",
+    "mission.feed.clownfish": "Feed the hungry clownfish",
+    "mission.feed.turtle": "Feed the hungry turtle",
+    "mission.feed.octopus": "Feed the hungry octopus",
+    "mission.feed.dolphin": "Feed the hungry dolphin",
+    "mission.feed.puffer": "Feed the hungry pufferfish",
+    "mission.feed.seahorse": "Feed the hungry seahorse"
   },
   "audio": {
     "activity.title": {

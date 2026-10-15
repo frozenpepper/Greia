@@ -1,157 +1,77 @@
-"""Acquario Magico — drawing helpers.
+"""Acquario Magico — scene drawing.
 
-The renderer is a small set of stateless draw helpers plus the
-:class:`AquariumRenderer` that owns the prepared tool label
-surfaces and the resource surfaces used by the active frame.
+:class:`AquariumRenderer` draws the tank content (scene, chest, food,
+creatures, bubbles, particles, library FX, name tags and mission cues). The
+shared control kit draws every control on top; the app draws Tito.
 
-Drawing rules:
+Drawing rules (Acer floor):
 
 - the day/night scene is a pre-baked background owned by
   :class:`AquariumAssetCache`; the renderer never regenerates it
-- the sunlight ray layer is a small per-frame alpha surface
-  (one layer, not per-ray)
-- the per-creature sprite lookup uses
-  ``assets.scaled(filename, w, h, facing_right)`` which is the
-  measurement-validated 2026-08-22 cache
-- the creature's spin transform is bounded (a 30° wobble, no
-  continuous rotation): ``pygame.transform.rotate`` is therefore
-  bounded to a small handful of entries in practice; the renderer
-  does not pre-bake rotations because the angle depends on
-  ``spin_t`` and a tiny ``sin(8x)*30`` envelope.
+- every sprite comes pre-scaled from the bounded asset cache; ``draw_*``
+  only blits (name-tag text is rendered once per species and cached)
+- the dolphin's spin is a bounded ±30° wobble, the only per-frame transform
 """
 
 from __future__ import annotations
 
 import math
 import time
-from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
 import pygame
 
-from greia_platform.system_chrome import ActivitySystemChromeLayout
-from greia_platform.typography import FontRole, GreiaTypography
-
 if __package__:
     from .acquarium_assets import AquariumAssetCache
-    from .acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, ToolIndex
+    from .acquarium_content import NAME_TAG_SECONDS
 else:
     from acquarium_assets import AquariumAssetCache
-    from acquarium_content import REFERENCE_HEIGHT, REFERENCE_WIDTH, ToolIndex
+    from acquarium_content import NAME_TAG_SECONDS
 
+# Library FX: semantic id -> frame variants, and the drawn box (logical px).
+_FX_FRAMES: dict[str, tuple[str, ...]] = {
+    "bubble_pop": ("default", "frame_2", "frame_3"),
+    "sparkle": ("default", "frame_2"),
+    "star_burst": ("default", "frame_2", "frame_3"),
+    "heart_pop": ("default", "frame_2", "frame_3"),
+    "splash": ("default", "frame_2", "frame_3"),
+    "confetti": ("default", "frame_2", "frame_3"),
+}
+_FX_BOX = {"bubble_pop": 54, "sparkle": 72, "star_burst": 120, "heart_pop": 80, "splash": 90, "confetti": 170}
 
-# The HUD pill starts clear of the trusted Home/Back region, which the
-# platform reserves in full (both slots) so layout never jumps with context.
-_HUD_LEFT = (
-    ActivitySystemChromeLayout.for_surface(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-    .protected_region.right
-    + 8
-)
-
-
-@dataclass
-class ToolLayout:
-    """Pre-computed geometry of the bottom toolbar buttons.
-
-    The renderer reads the same rectangles the lifecycle uses
-    for hit-testing, so the visual and the input agree.
-    """
-
-    tool_y: int
-    rects: list[tuple[pygame.Rect, int, tuple[int, int, int]]]
-
-    @classmethod
-    def default(cls) -> "ToolLayout":
-        tool_y = REFERENCE_HEIGHT - 85
-        rects: list[tuple[pygame.Rect, int, tuple[int, int, int]]] = [
-            (pygame.Rect(100, tool_y, 180, 72), ToolIndex.SPAWN, (34, 197, 94)),
-            (pygame.Rect(310, tool_y, 180, 72), ToolIndex.FEED, (249, 115, 22)),
-            (pygame.Rect(520, tool_y, 180, 72), ToolIndex.BUBBLES, (56, 189, 248)),
-            (pygame.Rect(730, tool_y, 180, 72), ToolIndex.DAY_NIGHT, (168, 85, 247)),
-        ]
-        return cls(tool_y=tool_y, rects=rects)
+NameTagFactory = Callable[[str], Optional[pygame.Surface]]
+HintRingFactory = Callable[[tuple[int, int]], pygame.Surface]
 
 
 class AquariumRenderer:
-    """Owner of the prepared label surfaces and draw routines.
-
-    The renderer holds the cached typography label surfaces for
-    the four tool buttons. The label surface key is the tool
-    index (``0``..``3``) and the day/night label uses
-    ``"night"``/``"day"`` keys for the toggle.
-    """
+    """Owner of the per-frame draw routines for the tank content."""
 
     def __init__(
         self,
         assets: AquariumAssetCache,
-        typography: GreiaTypography,
-        label_text: dict[str, str],
+        name_tag: NameTagFactory | None = None,
+        hint_ring: HintRingFactory | None = None,
     ) -> None:
         self._assets = assets
-        self._typography = typography
-        self._label_text = label_text
-        self._label_surfaces: dict[Any, pygame.Surface] = {
-            ToolIndex.SPAWN: typography.render(label_text["add_fish"], FontRole.DISPLAY, 16, (255, 255, 255)),
-            ToolIndex.FEED: typography.render(label_text["feed"], FontRole.DISPLAY, 16, (255, 255, 255)),
-            ToolIndex.BUBBLES: typography.render(label_text["bubbles"], FontRole.DISPLAY, 16, (255, 255, 255)),
-            "night": typography.render(label_text["night"], FontRole.DISPLAY, 16, (255, 255, 255)),
-            "day": typography.render(label_text["day"], FontRole.DISPLAY, 16, (255, 255, 255)),
-        }
-        self.tool_layout = ToolLayout.default()
-        # Creature counter label: one surface per distinct count, bounded.
-        self._count_surfaces: dict[int, pygame.Surface] = {}
+        self._name_tag = name_tag
+        self._hint_ring = hint_ring
+        self._name_tags: dict[str, Optional[pygame.Surface]] = {}
 
     # ------------------------------------------------------------------
-    # Background
+    # Scene
     # ------------------------------------------------------------------
 
     def draw_background(self, surface: pygame.Surface, glow_mode: bool, t_now: float) -> None:
         surface.blit(self._assets.background(glow_mode), (0, 0))
-        if glow_mode:
-            self._draw_night_jellies(surface, t_now)
-        else:
-            self._draw_day_sunbeams(surface, t_now)
 
-    def _draw_night_jellies(self, surface: pygame.Surface, t_now: float) -> None:
-        for jx, jy in [(220, 180), (780, 210), (480, 130)]:
-            jelly_y = int(jy + math.sin(t_now * 1.8 + jx) * 14)
-            pygame.draw.circle(surface, (168, 85, 247), (jx, jelly_y), 16)
-            pygame.draw.circle(surface, (232, 121, 249), (jx, jelly_y), 10)
-
-    def _draw_day_sunbeams(self, surface: pygame.Surface, t_now: float) -> None:
-        ray_layer = pygame.Surface((REFERENCE_WIDTH, 420), pygame.SRCALPHA)
-        for ray_i, rx in enumerate([160, 360, 580, 800]):
-            sway = math.sin(t_now * 0.8 + ray_i * 1.5) * 20
-            pts = [
-                (rx - 15, 0),
-                (rx + 25, 0),
-                (rx + 55 + sway, 380),
-                (rx - 25 + sway, 380),
-            ]
-            alpha = int(14 + math.sin(t_now * 1.4 + ray_i) * 5)
-            pygame.draw.polygon(ray_layer, (254, 240, 138, alpha), pts)
-        surface.blit(ray_layer, (0, 0))
-
-    # ------------------------------------------------------------------
-    # Decorative props
-    # ------------------------------------------------------------------
-
-    def draw_chest(
-        self,
-        surface: pygame.Surface,
-        chest_rect: pygame.Rect,
-        open_lift: float,
-    ) -> None:
-        chest_surf = self._assets.scaled("chest.png", 112, 88)
-        if chest_surf is None:
+    def draw_chest(self, surface: pygame.Surface, chest_rect: pygame.Rect, open_timer: float) -> None:
+        name = "chest_open.png" if open_timer > 0 else "chest.png"
+        chest = self._assets.scaled(name, chest_rect.width, chest_rect.height)
+        if chest is None:
+            pygame.draw.rect(surface, (167, 110, 52), chest_rect, border_radius=10)
             return
-        if open_lift > 0:
-            lift_y = int(chest_rect.top - 6)
-            surface.blit(chest_surf, (chest_rect.left, lift_y))
-            pygame.draw.circle(surface, (253, 224, 71), (chest_rect.centerx, lift_y + 35), 14)
-            pygame.draw.circle(surface, (255, 255, 255), (chest_rect.centerx, lift_y + 35), 7)
-        else:
-            surface.blit(chest_surf, (chest_rect.left, chest_rect.top))
+        lift = int(math.sin(min(1.0, (2.5 - open_timer) * 3.0) * math.pi) * 4) if open_timer > 0 else 0
+        surface.blit(chest, (chest_rect.left, chest_rect.top - lift))
 
     # ------------------------------------------------------------------
     # Dynamic content
@@ -159,39 +79,90 @@ class AquariumRenderer:
 
     def draw_food(self, surface: pygame.Surface, pellets: list[dict[str, Any]]) -> None:
         for pellet in pellets:
-            fx, fy, fsz = int(pellet["x"]), int(pellet["y"]), int(pellet["size"])
-            pygame.draw.circle(surface, (245, 158, 11), (fx, fy), fsz)
-            pygame.draw.circle(surface, (254, 240, 138), (fx - 1, fy - 1), max(1, fsz // 2))
+            diameter = 12 if pellet["size"] < 6.5 else 16
+            sprite = self._assets.scaled("pellet.png", diameter, diameter)
+            fx, fy = int(pellet["x"]), int(pellet["y"])
+            if sprite is not None:
+                surface.blit(sprite, (fx - diameter // 2, fy - diameter // 2))
+            else:
+                pygame.draw.circle(surface, (243, 154, 56), (fx, fy), diameter // 2)
 
-    def draw_creatures(self, surface: pygame.Surface, creatures: list[dict[str, Any]]) -> None:
+    def draw_creatures(
+        self,
+        surface: pygame.Surface,
+        creatures: list[dict[str, Any]],
+        *,
+        glow_mode: bool = False,
+        t_now: float = 0.0,
+        hint_uid: int | None = None,
+        hungry_uid: int | None = None,
+    ) -> None:
         for creature in creatures:
             species = creature["spec"]
             cx = int(creature["x"])
             cy = int(creature["y"])
-            facing_right = creature["facing"] > 0
-            cw = species.get("w", 72)
-            ch = species.get("h", 54)
+            box = (species.get("w", 72), species.get("h", 54))
+            if glow_mode and species.get("glows"):
+                pulse = 0.5 + 0.5 * math.sin(t_now * 2.2 + creature["uid"])
+                radius = int(max(box) * (0.78 + 0.08 * pulse)) // 4 * 4
+                glow = self._assets.glow(radius)
+                surface.blit(glow, glow.get_rect(center=(cx, cy)))
+            if creature["uid"] == hint_uid:
+                self._draw_hint_ripple(surface, (cx, cy), box, t_now)
+
+            variant = "default"
             if creature["puffed_t"] > 0 and species["id"] == "puffer":
-                cw = int(cw * 1.4)
-                ch = int(ch * 1.4)
-
-            creature_surf = self._assets.scaled(
-                f"{species['id']}.png", cw, ch, facing_right=facing_right
-            )
-            if creature_surf is not None:
-                if creature["spin_t"] > 0:
-                    rotation = int(math.sin(creature["spin_t"] * 8.0) * 30.0)
-                    image = pygame.transform.rotate(creature_surf, rotation)
-                else:
-                    image = creature_surf
-                surface.blit(image, image.get_rect(center=(cx, cy)))
+                variant = "puffed"
+                box = (int(box[0] * 1.4), int(box[1] * 1.4))
+            elif creature["happy_t"] > 0:
+                variant = "happy"
+            image = self._assets.creature(species, variant, box, creature["facing"] > 0)
+            if image is None:
+                self._draw_creature_vector_fallback(surface, creature, cx, cy, creature["facing"] > 0)
             else:
-                self._draw_creature_vector_fallback(surface, creature, cx, cy, facing_right)
+                if creature["spin_t"] > 0:
+                    image = pygame.transform.rotate(image, int(math.sin(creature["spin_t"] * 8.0) * 30.0))
+                surface.blit(image, image.get_rect(center=(cx, cy)))
 
-            if creature["happy_t"] > 0:
-                heart_y = int(cy - ch // 2 - 14 - math.sin(creature["happy_t"] * 4.0) * 4)
-                pygame.draw.circle(surface, (244, 63, 94), (cx, heart_y), 7)
-                pygame.draw.circle(surface, (255, 255, 255), (cx - 2, heart_y - 2), 3)
+            if creature["uid"] == hungry_uid:
+                side = 1 if creature["facing"] > 0 else -1
+                self._draw_hungry_bubble(surface, cx + side * (box[0] // 2 + 10), cy - box[1] // 2, t_now)
+            if creature.get("name_t", 0.0) > 0:
+                self._draw_name_tag(surface, creature, cx, cy - box[1] // 2)
+
+    def _draw_hint_ripple(self, surface: pygame.Surface, center: tuple[int, int], box: tuple[int, int], t_now: float) -> None:
+        """Pulse the kit's focus ring around the mission target ("this one!")."""
+
+        step = (0, 8, 16, 8)[int(t_now * 5.0) % 4]
+        size = (int(max(box) * 1.2) // 8 * 8 + step,) * 2
+        if self._hint_ring is not None:
+            ring = self._hint_ring(size)
+            surface.blit(ring, ring.get_rect(center=center))
+        else:
+            pygame.draw.circle(surface, (255, 194, 52), center, size[0] // 2, 5)
+
+    def _draw_hungry_bubble(self, surface: pygame.Surface, cx: int, top: int, t_now: float) -> None:
+        bob = int(math.sin(t_now * 3.0) * 3)
+        bubble = self._assets.bubble(48)
+        center = (cx, top + bob)
+        if bubble is not None:
+            surface.blit(bubble, bubble.get_rect(center=center))
+        pellet = self._assets.scaled("pellet.png", 22, 22)
+        if pellet is not None:
+            surface.blit(pellet, pellet.get_rect(center=center))
+
+    def _draw_name_tag(self, surface: pygame.Surface, creature: dict[str, Any], cx: int, top: int) -> None:
+        species_id = creature["spec"]["id"]
+        if species_id not in self._name_tags:
+            self._name_tags[species_id] = self._name_tag(species_id) if self._name_tag is not None else None
+        tag = self._name_tags[species_id]
+        if tag is None:
+            return
+        remaining = creature["name_t"]
+        rise = int(min(1.0, (NAME_TAG_SECONDS - remaining) * 6.0) * 6)
+        rect = tag.get_rect(midbottom=(cx, top - 4 - rise))
+        rect.clamp_ip(surface.get_rect().inflate(-8, -8))
+        surface.blit(tag, rect)
 
     def _draw_creature_vector_fallback(
         self,
@@ -208,13 +179,17 @@ class AquariumRenderer:
         )
         eye_x = cx + (base_size // 2 if facing_right else -base_size // 2)
         pygame.draw.circle(surface, (255, 255, 255), (eye_x, cy - base_size // 6), 6)
-        pygame.draw.circle(surface, (15, 23, 42), (eye_x, cy - base_size // 6), 3)
+        pygame.draw.circle(surface, (52, 44, 53), (eye_x, cy - base_size // 6), 3)
 
     def draw_bubbles(self, surface: pygame.Surface, bubbles: list[dict[str, Any]]) -> None:
         for bubble in bubbles:
-            bx, by, bsz = int(bubble["x"]), int(bubble["y"]), int(bubble["size"])
-            pygame.draw.circle(surface, (255, 255, 255), (bx, by), bsz, 2)
-            pygame.draw.circle(surface, (255, 255, 255), (bx - bsz // 3, by - bsz // 3), max(1, bsz // 4))
+            diameter = int(bubble["size"] * 1.4)
+            sprite = self._assets.bubble(diameter)
+            bx, by = int(bubble["x"]), int(bubble["y"])
+            if sprite is not None:
+                surface.blit(sprite, sprite.get_rect(center=(bx, by)))
+            else:
+                pygame.draw.circle(surface, (230, 246, 253), (bx, by), diameter // 2, 2)
 
     def draw_particles(self, surface: pygame.Surface, particles: list[dict[str, Any]]) -> None:
         for particle in particles:
@@ -223,108 +198,17 @@ class AquariumRenderer:
                 surface, particle["color"], (int(particle["x"]), int(particle["y"])), int(current_size)
             )
 
-    # ------------------------------------------------------------------
-    # HUD + toolbar
-    # ------------------------------------------------------------------
-
-    def draw_hud(self, surface: pygame.Surface, creature_count: int) -> None:
-        hud_pill = pygame.Rect(_HUD_LEFT, 16, 170, 56)
-        pygame.draw.rect(surface, (255, 255, 255), hud_pill, border_radius=18)
-        pygame.draw.rect(surface, (56, 189, 248), hud_pill, width=3, border_radius=18)
-        pygame.draw.circle(surface, (56, 189, 248), (hud_pill.left + 28, hud_pill.centery), 16)
-        mini = self._assets.scaled("clownfish.png", 26, 20)
-        if mini is not None:
-            surface.blit(mini, mini.get_rect(center=(hud_pill.left + 28, hud_pill.centery)))
-        label = self._count_label(creature_count)
-        surface.blit(label, (hud_pill.left + 54, hud_pill.centery - label.get_height() // 2))
-
-    def _count_label(self, creature_count: int) -> pygame.Surface:
-        cached = self._count_surfaces.get(creature_count)
-        if cached is None:
-            if len(self._count_surfaces) >= 32:
-                self._count_surfaces.clear()
-            cached = self._typography.render(
-                f"{creature_count} / 20", FontRole.DISPLAY, 22, (2, 132, 199)
-            )
-            self._count_surfaces[creature_count] = cached
-        return cached
-
-    def draw_toolbar(
-        self,
-        surface: pygame.Surface,
-        active_tool: int,
-        glow_mode: bool,
-        spawn_selector_idx: int,
-    ) -> None:
-        for button_rect, tool_idx, color in self.tool_layout.rects:
-            is_active = active_tool == tool_idx
-            button_color = color if not glow_mode or tool_idx != ToolIndex.DAY_NIGHT else (147, 51, 234)
-            pygame.draw.rect(surface, button_color, button_rect, border_radius=20)
-            pygame.draw.rect(
-                surface,
-                (254, 240, 138) if is_active else (255, 255, 255),
-                button_rect,
-                width=4 if is_active else 2,
-                border_radius=20,
-            )
-            cx, cy = button_rect.centerx, button_rect.top + 24
-            if tool_idx == ToolIndex.SPAWN:
-                self._draw_spawn_button(surface, cx, cy, spawn_selector_idx)
-                label = self._label_surfaces[ToolIndex.SPAWN]
-            elif tool_idx == ToolIndex.FEED:
-                self._draw_feed_button(surface, cx, cy)
-                label = self._label_surfaces[ToolIndex.FEED]
-            elif tool_idx == ToolIndex.BUBBLES:
-                self._draw_bubbles_button(surface, cx, cy)
-                label = self._label_surfaces[ToolIndex.BUBBLES]
-            else:
-                if glow_mode:
-                    self._draw_night_button(surface, cx, cy, button_color)
-                    label = self._label_surfaces["night"]
-                else:
-                    self._draw_day_button(surface, cx, cy)
-                    label = self._label_surfaces["day"]
-            surface.blit(label, (cx - label.get_width() // 2, button_rect.bottom - 24))
-
-    def _draw_spawn_button(self, surface: pygame.Surface, cx: int, cy: int, spawn_selector_idx: int) -> None:
-        if __package__:
-            from .acquarium_content import SPECIES
-        else:
-            from acquarium_content import SPECIES
-
-        current_species = SPECIES[spawn_selector_idx % len(SPECIES)]
-        icon = self._assets.scaled(f"{current_species['id']}.png", 36, 28)
-        if icon is not None:
-            surface.blit(icon, icon.get_rect(center=(cx, cy)))
-
-    @staticmethod
-    def _draw_feed_button(surface: pygame.Surface, cx: int, cy: int) -> None:
-        pygame.draw.circle(surface, (254, 240, 138), (cx - 8, cy), 7)
-        pygame.draw.circle(surface, (245, 158, 11), (cx + 8, cy), 7)
-        pygame.draw.circle(surface, (251, 146, 60), (cx, cy - 6), 6)
-
-    @staticmethod
-    def _draw_bubbles_button(surface: pygame.Surface, cx: int, cy: int) -> None:
-        pygame.draw.circle(surface, (255, 255, 255), (cx - 8, cy + 4), 9, 2)
-        pygame.draw.circle(surface, (255, 255, 255), (cx + 8, cy - 4), 11, 2)
-
-    @staticmethod
-    def _draw_night_button(surface: pygame.Surface, cx: int, cy: int, button_color: tuple[int, int, int]) -> None:
-        pygame.draw.circle(surface, (254, 240, 138), (cx, cy), 12)
-        pygame.draw.circle(surface, button_color, (cx + 5, cy - 3), 10)
-
-    @staticmethod
-    def _draw_day_button(surface: pygame.Surface, cx: int, cy: int) -> None:
-        pygame.draw.circle(surface, (254, 240, 138), (cx, cy), 11)
-        for angle in range(0, 360, 45):
-            rad = math.radians(angle)
-            pygame.draw.line(
-                surface,
-                (254, 240, 138),
-                (cx + int(math.cos(rad) * 13), cy + int(math.sin(rad) * 13)),
-                (cx + int(math.cos(rad) * 18), cy + int(math.sin(rad) * 18)),
-                2,
-            )
+    def draw_effects(self, surface: pygame.Surface, effects: list[dict[str, Any]]) -> None:
+        for effect in effects:
+            frames = _FX_FRAMES.get(effect["kind"])
+            if not frames:
+                continue
+            progress = effect["age"] / max(0.01, effect["life"])
+            frame = frames[min(len(frames) - 1, int(progress * len(frames)))]
+            size = int(_FX_BOX.get(effect["kind"], 80) * effect.get("scale", 1.0)) // 8 * 8
+            image = self._assets.shared_fit(f"fx.{effect['kind']}", (max(16, size), max(16, size)), frame)
+            if image is not None:
+                surface.blit(image, image.get_rect(center=(int(effect["x"]), int(effect["y"]))))
 
 
 def now_seconds() -> float:
@@ -337,26 +221,4 @@ def now_seconds() -> float:
     return time.monotonic()
 
 
-def safe_now_seconds(fallback: float) -> float:
-    """Return :func:`now_seconds` while surviving test patching.
-
-    Helper tests that monkeypatch ``time.time`` or
-    ``time.monotonic`` to validate phase determinism should not
-    crash the renderer. This wrapper catches the import
-    substitution so a mock that does not return a float still
-    produces a usable number.
-    """
-
-    try:
-        value = now_seconds()
-    except Exception:
-        return fallback
-    return value if isinstance(value, (int, float)) else fallback
-
-
-__all__ = [
-    "AquariumRenderer",
-    "ToolLayout",
-    "now_seconds",
-    "safe_now_seconds",
-]
+__all__ = ["AquariumRenderer", "now_seconds"]

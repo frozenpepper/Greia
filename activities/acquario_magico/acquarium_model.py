@@ -8,7 +8,8 @@ The session owns:
 - the transient particles
 - the treasure chest state
 - the day/night ``glow_mode`` flag
-- the persistent counters (creatures fed, bubbles popped)
+- the transient library FX (bubble pops, sparkles, star bursts)
+- the persistent counters (creatures fed, bubbles popped, stars)
 
 Update rules (creature physics, food falling, bubble rise,
 particle life decay, chest-open timer) live here as plain
@@ -25,31 +26,54 @@ from typing import Any
 
 if __package__:
     from .acquarium_content import (
+        FLOOR_CREATURE_Y,
+        MAX_BUBBLES,
         MAX_CREATURES,
+        MAX_EFFECTS,
+        MAX_FOOD_PELLETS,
+        MAX_PARTICLES,
+        MAX_PERSISTED_CREATURES,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
         SPECIES,
+        WATER_BOTTOM_Y,
+        WATER_TOP_Y,
         ToolIndex,
     )
 else:
     from acquarium_content import (
+        FLOOR_CREATURE_Y,
+        MAX_BUBBLES,
         MAX_CREATURES,
+        MAX_EFFECTS,
+        MAX_FOOD_PELLETS,
+        MAX_PARTICLES,
+        MAX_PERSISTED_CREATURES,
         REFERENCE_HEIGHT,
         REFERENCE_WIDTH,
         SPECIES,
+        WATER_BOTTOM_Y,
+        WATER_TOP_Y,
         ToolIndex,
     )
 
+# Short-lived library FX (``fx.*`` frame sequences) and their lifetimes.
+EFFECT_LIFETIMES: dict[str, float] = {
+    "bubble_pop": 0.36,
+    "sparkle": 0.5,
+    "star_burst": 0.6,
+    "heart_pop": 0.7,
+    "splash": 0.45,
+    "confetti": 1.1,
+}
 
-def default_creature_factory() -> list[dict[str, Any]]:
-    """Balanced starter tank used when no saved creatures exist.
 
-    Eight creatures, one per species, with simple positions and
-    alternate facings. Kept as a factory so the application can
-    ignore return ordering when persistence is loaded.
-    """
+def _cap(items: list[Any], limit: int) -> None:
+    """Drop the oldest entries so a transient list never exceeds ``limit``."""
 
-    return []
+    overflow = len(items) - limit
+    if overflow > 0:
+        del items[:overflow]
 
 
 @dataclass
@@ -68,11 +92,16 @@ class AquariumSession:
     spawn_selector_idx: int = 0
     total_fed: int = 0
     total_popped: int = 0
+    stars: int = 0
     chest_open_timer: float = 0.0
     creatures: list[dict[str, Any]] = field(default_factory=list)
     food_pellets: list[dict[str, Any]] = field(default_factory=list)
     bubbles: list[dict[str, Any]] = field(default_factory=list)
     particles: list[dict[str, Any]] = field(default_factory=list)
+    effects: list[dict[str, Any]] = field(default_factory=list)
+    # uids of creatures that ate since the app last drained the list.
+    meals: list[int] = field(default_factory=list)
+    _next_uid: int = 1
 
     # ------------------------------------------------------------------
     # Spawning and population management
@@ -100,12 +129,13 @@ class AquariumSession:
         vx = (1.0 if facing > 0 else -1.0) * speed * random.uniform(0.8, 1.2)
 
         if species["behavior"] == "floor":
-            y = float(REFERENCE_HEIGHT - 110)
+            y = float(FLOOR_CREATURE_Y)
             vy = 0.0
         else:
             vy = random.uniform(-0.3, 0.3)
 
         creature = {
+            "uid": self._next_uid,
             "spec": species,
             "x": float(x),
             "y": float(y),
@@ -118,7 +148,9 @@ class AquariumSession:
             "puffed_t": 0.0,
             "spin_t": 0.0,
             "happy_t": 0.0,
+            "name_t": 0.0,
         }
+        self._next_uid += 1
         self.creatures.append(creature)
         return creature
 
@@ -132,7 +164,7 @@ class AquariumSession:
         self.spawn_creature(620, 360, 4, 1)   # Puffer
         self.spawn_creature(180, 320, 5, 1)   # Seahorse
         self.spawn_creature(820, 200, 6, -1)  # Jellyfish
-        self.spawn_creature(320, REFERENCE_HEIGHT - 110, 7, 1)  # Starfish
+        self.spawn_creature(320, FLOOR_CREATURE_Y, 7, 1)  # Starfish
 
     def restore_saved_population(self, saved_creatures: list[dict[str, Any]]) -> None:
         """Rebuild creatures from a saved snapshot.
@@ -141,7 +173,9 @@ class AquariumSession:
         the tank can never be left empty by a stale save file.
         """
 
-        for saved in saved_creatures[:16]:
+        for saved in saved_creatures[:MAX_PERSISTED_CREATURES]:
+            if not isinstance(saved, dict):
+                continue
             spec_id = saved.get("id")
             try:
                 s_idx = next(
@@ -150,11 +184,33 @@ class AquariumSession:
             except StopIteration:
                 s_idx = 0
             self.spawn_creature(
-                saved.get("x", random.uniform(100, 900)),
-                saved.get("y", random.uniform(120, 440)),
+                _saved_coordinate(saved.get("x"), 60.0, REFERENCE_WIDTH - 60.0),
+                _saved_coordinate(saved.get("y"), float(WATER_TOP_Y), float(WATER_BOTTOM_Y)),
                 s_idx,
-                saved.get("facing", 1),
+                1 if saved.get("facing", 1) != -1 else -1,
             )
+
+    def creature_by_uid(self, uid: int) -> dict[str, Any] | None:
+        for creature in self.creatures:
+            if creature["uid"] == uid:
+                return creature
+        return None
+
+    def show_name(self, creature: dict[str, Any], seconds: float) -> None:
+        """Show this creature's name tag for a moment (one tag at a time)."""
+
+        for other in self.creatures:
+            other["name_t"] = 0.0
+        creature["name_t"] = float(seconds)
+
+    def emit_effect(self, kind: str, x: float, y: float, scale: float = 1.0) -> None:
+        """Start one library FX animation (bounded; oldest dropped first)."""
+
+        life = EFFECT_LIFETIMES.get(kind)
+        if life is None:
+            return
+        self.effects.append({"kind": kind, "x": float(x), "y": float(y), "age": 0.0, "life": life, "scale": scale})
+        _cap(self.effects, MAX_EFFECTS)
 
     # ------------------------------------------------------------------
     # Tool-side effect helpers
@@ -174,6 +230,7 @@ class AquariumSession:
                     "color": (245, 158, 11),
                 }
             )
+        _cap(self.food_pellets, MAX_FOOD_PELLETS)
 
     def emit_bubble_storm(self, count: int, x_low: int, x_high: int, y_low: int, y_high: int) -> None:
         for _ in range(count):
@@ -186,6 +243,7 @@ class AquariumSession:
                     "size": random.uniform(8, 26),
                 }
             )
+        _cap(self.bubbles, MAX_BUBBLES)
 
     def emit_sparkles(self, count: int, cx: float, cy: float, color: tuple[int, int, int] = (253, 224, 71)) -> None:
         for _ in range(count):
@@ -201,6 +259,7 @@ class AquariumSession:
                     "decay": random.uniform(0.03, 0.05),
                 }
             )
+        _cap(self.particles, MAX_PARTICLES)
 
     # ------------------------------------------------------------------
     # Per-frame simulation
@@ -218,13 +277,15 @@ class AquariumSession:
         self.food_pellets = self._update_food_pellets()
         self.bubbles = self._update_bubbles()
         self.particles = self._update_particles()
+        _cap(self.particles, MAX_PARTICLES)
+        self.effects = self._update_effects(dt)
 
     def _update_creature(self, creature: dict[str, Any], dt: float) -> None:
         species = creature["spec"]
         creature["swim_t"] += 0.06
         speed = species.get("speed", 1.2)
 
-        for timer_key in ("puffed_t", "spin_t", "happy_t"):
+        for timer_key in ("puffed_t", "spin_t", "happy_t", "name_t"):
             if creature[timer_key] > 0:
                 creature[timer_key] = max(0.0, creature[timer_key] - dt)
 
@@ -235,7 +296,8 @@ class AquariumSession:
 
         # Swimming creatures: food seeking vs cruising
         seeking_food = False
-        if self.food_pellets and behavior != "jellyfish":
+        # Only eaters chase food (jellyfish drift, starfish walk the sand).
+        if self.food_pellets and species.get("eats", True):
             closest = min(
                 self.food_pellets,
                 key=lambda pellet: (pellet["x"] - creature["x"]) ** 2 + (pellet["y"] - creature["y"]) ** 2,
@@ -255,6 +317,8 @@ class AquariumSession:
                     if closest in self.food_pellets:
                         self.food_pellets.remove(closest)
                     self.total_fed += 1
+                    self.meals.append(creature["uid"])
+                    _cap(self.meals, MAX_CREATURES)
                     creature["happy_t"] = 1.2
                     if species["id"] == "puffer":
                         creature["puffed_t"] = 1.5
@@ -274,7 +338,7 @@ class AquariumSession:
         """Starfish-style floor walker: stays on the sand, walks left/right."""
 
         creature["x"] += creature["vx"]
-        creature["y"] = float(REFERENCE_HEIGHT - 110)
+        creature["y"] = float(FLOOR_CREATURE_Y)
         if creature["x"] < 80:
             creature["x"] = 80
             creature["vx"] = abs(creature["vx"])
@@ -305,8 +369,8 @@ class AquariumSession:
         elif creature["vx"] < -0.35:
             creature["facing"] = -1
 
-        min_y = 90
-        max_y = REFERENCE_HEIGHT - 130
+        min_y = WATER_TOP_Y
+        max_y = WATER_BOTTOM_Y
         if creature["x"] < 60:
             creature["x"] = 60
             creature["vx"] = abs(creature["vx"])
@@ -357,6 +421,16 @@ class AquariumSession:
                 surviving.append(bubble)
             else:
                 self.total_popped += 1
+                if bubble["size"] >= 14:
+                    self.emit_effect("bubble_pop", bubble["x"], 66.0, bubble["size"] / 22.0)
+        return surviving
+
+    def _update_effects(self, dt: float) -> list[dict[str, Any]]:
+        surviving: list[dict[str, Any]] = []
+        for effect in self.effects:
+            effect["age"] += dt
+            if effect["age"] < effect["life"]:
+                surviving.append(effect)
         return surviving
 
     def _update_particles(self) -> list[dict[str, Any]]:
@@ -383,3 +457,15 @@ class AquariumSession:
                     "decay": 0.06,
                 }
             )
+
+
+def _saved_coordinate(value: Any, low: float, high: float) -> float:
+    """Stale/corrupt saved positions must not place creatures off-tank."""
+
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return random.uniform(low, high)
+    if not math.isfinite(parsed):
+        return random.uniform(low, high)
+    return max(low, min(high, parsed))

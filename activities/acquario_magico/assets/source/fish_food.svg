@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- acquario_magico fish-food shaker (Feed tool glyph). Activity-private, HUD-glyph grammar;
+       shared-library candidate prop.sea.food_pellet / icon.hud.feed. -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="fish_food_lid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BE7A"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="subject">
+    <path d="M22 40 C22 34 26 32 32 32 L56 32 C62 32 66 34 66 40 L66 80 C66 86 62 88 56 88 L32 88 C26 88 22 86 22 80 Z" fill="#E6F6FD" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M24 62 L64 62 L64 80 C64 84 61 86 56 86 L32 86 C27 86 24 84 24 80 Z" fill="#F39A38"/>
+    <path d="M32 66 a3.5 3.5 0 1 1 0.1 0 Z M44 70 a3.5 3.5 0 1 1 0.1 0 Z M54 65 a3.5 3.5 0 1 1 0.1 0 Z M38 77 a3.5 3.5 0 1 1 0.1 0 Z M52 78 a3.5 3.5 0 1 1 0.1 0 Z" fill="#B8642A"/>
+    <path d="M22 40 C22 34 26 32 32 32 L56 32 C62 32 66 34 66 40 L66 80 C66 86 62 88 56 88 L32 88 C26 88 22 86 22 80 Z" fill="none" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M18 22 C18 18 21 16 25 16 L63 16 C67 16 70 18 70 22 L70 32 L18 32 Z" fill="url(#fish_food_lid)" stroke="#4B372F" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M29 40 L29 56" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <g id="accent">
+    <path d="M80 30 a5 5 0 1 1 0.1 0 Z M84 50 a4.5 4.5 0 1 1 0.1 0 Z M77 66 a4 4 0 1 1 0.1 0 Z" fill="#F39A38" stroke="#4B372F" stroke-width="2.5"/>
+  </g>
+</svg>

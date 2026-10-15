@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- acquario_magico food pellet sprite. Activity-private prop; shared-library candidate prop.sea.food_pellet. -->
+  <defs>
+    <!-- orange light -> orange -->
+    <linearGradient id="pellet_body" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#F7BE7A"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <path d="M16 5 C23 5 28 10 27 16 C26 23 21 27 15 27 C9 27 5 22 5 16 C5 10 10 5 16 5 Z" fill="url(#pellet_body)" stroke="#4B372F" stroke-width="2.5" stroke-linejoin="round"/>
+  <ellipse cx="12.5" cy="11.5" rx="3.6" ry="2.4" fill="#FFFFFF" opacity="0.75"/>
+</svg>

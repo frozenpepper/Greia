@@ -9,7 +9,6 @@
     "tool.bubbles": "Bolle",
     "tool.day": "Giorno",
     "tool.night": "Notte",
-    "tool.glow": "Bagliore Notturno",
     "creature.clownfish": "Pesce Pagliaccio",
     "creature.turtle": "Tartaruga",
     "creature.octopus": "Polipetto",
@@ -18,7 +17,21 @@
     "creature.seahorse": "Cavalluccio Marino",
     "creature.jellyfish": "Medusa Luminosa",
     "creature.starfish": "Stella Marina",
-    "chest.treasure": "Forziere dei Tesori"
+    "chest.treasure": "Forziere dei Tesori",
+    "mission.find.clownfish": "Trova il pesce pagliaccio",
+    "mission.find.turtle": "Trova la tartaruga",
+    "mission.find.octopus": "Trova il polipetto",
+    "mission.find.dolphin": "Trova il delfino",
+    "mission.find.puffer": "Trova il pesce palla",
+    "mission.find.seahorse": "Trova il cavalluccio marino",
+    "mission.find.jellyfish": "Trova la medusa",
+    "mission.find.starfish": "Trova la stella marina",
+    "mission.feed.clownfish": "Dai la pappa al pesce pagliaccio",
+    "mission.feed.turtle": "Dai la pappa alla tartaruga",
+    "mission.feed.octopus": "Dai la pappa al polipetto",
+    "mission.feed.dolphin": "Dai la pappa al delfino",
+    "mission.feed.puffer": "Dai la pappa al pesce palla",
+    "mission.feed.seahorse": "Dai la pappa al cavalluccio"
   },
   "audio": {
     "activity.title": {

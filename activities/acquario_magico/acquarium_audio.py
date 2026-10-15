@@ -1,10 +1,12 @@
-"""Acquario Magico — synthesized sound bank.
+"""Acquario Magico — synthesized sound bank plus Tito's approved voice.
 
-The Activity ships without packaged audio assets. ``AquariumAudio``
+The Activity ships without packaged effect audio. ``AquariumAudio``
 synthesizes the five short cues (bubble, nibble, glow, chest,
-splash) once at construction time. Playback is then a name lookup,
-which means the frame loop never re-decodes or re-synthesizes
-audio.
+splash) once at construction time, and loads Tito's owner-approved
+shared character takes (``celebrate.success``, ``praise.general``)
+once through the platform resolver (selected language, then English).
+Playback is then a name lookup, which means the frame loop never
+re-decodes or re-synthesizes audio. No new speech is generated here.
 
 The mixer may be unavailable in headless runs; ``play`` is then
 a no-op.
@@ -14,11 +16,18 @@ from __future__ import annotations
 
 import io
 import math
+from pathlib import Path
 import random
 import struct
 import wave
 
 import pygame
+
+from greia_platform.localization import shared_character_audio_path
+
+# Shared character takes this Activity uses (owner-approved v0.2 library).
+VOICE_SPEAKER = "tito"
+VOICE_CUES = ("celebrate.success", "praise.general")
 
 
 def _synth_wav(samples: list[int], rate: int = 22050) -> bytes:
@@ -45,8 +54,9 @@ class AquariumAudio:
     verify the bank's name keys without a real mixer.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, locale: str | None = None) -> None:
         self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._voices: dict[str, pygame.mixer.Sound] = {}
         try:
             if not pygame.mixer.get_init():
                 pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
@@ -54,6 +64,33 @@ class AquariumAudio:
         except Exception:
             # Mixer may be unavailable in headless test runs; the bank
             # is then empty and play() is a no-op.
+            pass
+        if locale:
+            self._load_voices(locale)
+
+    def _load_voices(self, locale: str) -> None:
+        project_root = Path(__file__).resolve().parents[2]
+        for cue in VOICE_CUES:
+            try:
+                path = shared_character_audio_path(project_root, VOICE_SPEAKER, cue, locale)
+            except Exception:
+                path = None
+            if path is None:
+                continue
+            try:
+                self._voices[cue] = pygame.mixer.Sound(str(path))
+            except Exception:
+                continue
+
+    def say(self, cue: str) -> None:
+        """Play one approved Tito take (silent when it is unavailable)."""
+
+        voice = self._voices.get(cue)
+        if voice is None:
+            return
+        try:
+            voice.play()
+        except Exception:
             pass
 
     def _init_sounds(self) -> None:
