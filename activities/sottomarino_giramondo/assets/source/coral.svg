@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- sottomarino_giramondo coral: a small reef clump (staghorn coral, brain coral, tube sponges) on a sand rock.
+       Activity-private prop in the bg.underwater.* grammar; shared-library candidate prop.sea.coral. -->
+  <defs>
+    <!-- turquoise light -> turquoise -->
+    <linearGradient id="coral_brain" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#86D3CC"/><stop offset="1" stop-color="#44B8AE"/></linearGradient>
+    <!-- orange light -> orange -->
+    <linearGradient id="coral_tube" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#F8C188"/><stop offset="1" stop-color="#F39A38"/></linearGradient>
+  </defs>
+  <g id="shadow"><ellipse cx="128" cy="236" rx="96" ry="12" fill="#6A5147" opacity="0.16"/></g>
+  <g id="staghorn">
+    <path d="M86 226 C84 190 72 158 58 126" fill="none" stroke="#4B372F" stroke-width="23" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M82 186 C96 166 102 146 100 118" fill="none" stroke="#4B372F" stroke-width="23" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M124 226 C126 182 122 142 128 94" fill="none" stroke="#4B372F" stroke-width="23" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M126 164 C140 150 150 132 152 108" fill="none" stroke="#4B372F" stroke-width="23" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M124 130 C112 120 106 106 108 92" fill="none" stroke="#4B372F" stroke-width="23" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M86 226 C84 190 72 158 58 126" fill="none" stroke="#F46F61" stroke-width="16.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M82 186 C96 166 102 146 100 118" fill="none" stroke="#F46F61" stroke-width="16.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M124 226 C126 182 122 142 128 94" fill="none" stroke="#F46F61" stroke-width="16.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M126 164 C140 150 150 132 152 108" fill="none" stroke="#F46F61" stroke-width="16.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M124 130 C112 120 106 106 108 92" fill="none" stroke="#F46F61" stroke-width="16.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M62 132 C66 144 72 156 76 168 M124 102 C124 118 124 134 124 150" fill="none" stroke="#F8A096" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+    <circle cx="58" cy="126" r="3" fill="#FCD3CE"/>
+    <circle cx="100" cy="118" r="3" fill="#FCD3CE"/>
+    <circle cx="128" cy="94" r="3" fill="#FCD3CE"/>
+    <circle cx="152" cy="108" r="3" fill="#FCD3CE"/>
+    <circle cx="108" cy="92" r="3" fill="#FCD3CE"/>
+  </g>
+  <g id="tubes">
+    <rect x="30" y="190" width="22" height="44" rx="11" fill="url(#coral_tube)" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="41" cy="196" rx="6" ry="3.5" fill="#B5652A"/>
+    <rect x="12" y="208" width="18" height="28" rx="9" fill="url(#coral_tube)" stroke="#4B372F" stroke-width="3.5"/>
+    <ellipse cx="21" cy="213" rx="4.5" ry="2.8" fill="#B5652A"/>
+  </g>
+  <g id="rock">
+    <path d="M36 236 C40 214 70 206 128 208 C190 206 222 216 226 236 Z" fill="#EEDDBA" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M70 218 C86 213 104 212 118 213" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  </g>
+  <g id="brain">
+    <path d="M150 230 C148 196 166 176 192 176 C218 176 236 196 234 230 Z" fill="url(#coral_brain)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M162 222 C164 206 172 196 184 194 C196 196 204 206 210 200 C216 194 222 204 224 222 M176 222 C178 212 186 208 194 212 C202 216 208 212 212 218" fill="none" stroke="#2F8A82" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="176" cy="188" rx="9" ry="4.5" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+</svg>

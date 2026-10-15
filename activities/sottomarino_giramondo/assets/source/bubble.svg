@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- sottomarino_giramondo bubble sprite (same drawing as acquario_magico bubble), same bubble grammar as creature.marine.* happy FX.
+       Activity-private; shared-library candidate fx.bubble. -->
+  <circle cx="32" cy="32" r="25" fill="#E6F6FD" fill-opacity="0.5" stroke="#4F86A8" stroke-width="5"/>
+  <ellipse cx="23" cy="22" rx="8" ry="5.5" transform="rotate(-30 23 22)" fill="#FFFFFF" opacity="0.9"/>
+  <path d="M44 44 Q48 39 49 33" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+</svg>

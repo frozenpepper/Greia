@@ -13,7 +13,10 @@ from pathlib import Path
 import random
 import struct
 import wave
-from typing import Optional
+from collections import OrderedDict
+from dataclasses import dataclass
+import enum
+from typing import Callable, Optional
 
 import pygame
 
@@ -38,6 +41,8 @@ class SubmarineAudio:
 
     def __init__(self) -> None:
         self._sounds: dict[str, pygame.mixer.Sound] = {}
+        self._voice_sounds: OrderedDict[str, pygame.mixer.Sound] = OrderedDict()
+        self._voice_channel = None
         try:
             if not pygame.mixer.get_init():
                 pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
@@ -176,6 +181,9 @@ class SubmarineAudio:
 
         # Dedicated voice playback channel to prevent speech overlap
         try:
+            # Reserve the voice channel so effects never occupy it (otherwise
+            # a celebration chime would delay the captain's next line).
+            pygame.mixer.set_reserved(2)
             self._voice_channel = pygame.mixer.Channel(1)
         except Exception:
             self._voice_channel = None
@@ -204,17 +212,130 @@ class SubmarineAudio:
             pass
         return False
 
+    _MAX_VOICE_SOUNDS = 12
+
     def play_voice(self, cue_path: Path | str) -> bool:
-        """Play a localized voice line on the dedicated voice channel."""
+        """Play a localized voice line on the dedicated voice channel.
+
+        Decoded clips are kept in a small LRU so a repeated line (orders,
+        instrument names) is not decoded from disk every time.
+        """
         try:
             p = Path(cue_path)
-            if p.is_file():
-                snd = pygame.mixer.Sound(str(p))
-                if self._voice_channel is not None:
-                    self._voice_channel.play(snd)
-                else:
-                    snd.play()
-                return True
+            key = str(p)
+            snd = self._voice_sounds.get(key)
+            if snd is None:
+                if not p.is_file():
+                    return False
+                snd = pygame.mixer.Sound(key)
+                self._voice_sounds[key] = snd
+                while len(self._voice_sounds) > self._MAX_VOICE_SOUNDS:
+                    self._voice_sounds.popitem(last=False)
+            else:
+                self._voice_sounds.move_to_end(key)
+            if self._voice_channel is not None:
+                self._voice_channel.play(snd)
+            else:
+                snd.play()
+            return True
         except Exception:
             pass
         return False
+
+    def stop_voice(self) -> None:
+        try:
+            if self._voice_channel is not None:
+                self._voice_channel.stop()
+        except Exception:
+            pass
+
+
+class SpeechPriority(enum.IntEnum):
+    """Lower value = spoken first. Facts never delay an order."""
+
+    URGENT = 0   # orders, visitors at the glass, praise
+    NORMAL = 1   # instrument names, creature names
+    LOW = 2      # sea facts
+
+
+@dataclass
+class _QueuedCue:
+    key: str
+    priority: SpeechPriority
+    queued_at: float
+
+
+class SpeechQueue:
+    """Bounded, prioritised queue of voice cues spoken one after another.
+
+    * at most ``capacity`` cues wait; a new cue evicts the least important;
+    * a cue already waiting is not queued twice, and the same cue is not
+      repeated within ``repeat_gap`` seconds (button mashing stays calm);
+    * non-urgent cues that waited longer than ``stale_after`` are dropped,
+      so a creature's name is never heard long after it swam by.
+    """
+
+    def __init__(
+        self,
+        *,
+        capacity: int = 3,
+        repeat_gap: float = 4.0,
+        stale_after: float = 6.0,
+        pause: float = 0.4,
+    ) -> None:
+        self.capacity = int(capacity)
+        self.repeat_gap = float(repeat_gap)
+        self.stale_after = float(stale_after)
+        self.pause = float(pause)
+        self._items: list[_QueuedCue] = []
+        self._last_spoken: dict[str, float] = {}
+        self._cooldown = 0.0
+        self._now = 0.0
+
+    @property
+    def pending(self) -> tuple[str, ...]:
+        return tuple(item.key for item in self._items)
+
+    def push(self, key: str, priority: SpeechPriority = SpeechPriority.NORMAL, *, force: bool = False) -> bool:
+        if not key:
+            return False
+        if any(item.key == key for item in self._items):
+            return False
+        if not force and self._now - self._last_spoken.get(key, -1e9) < self.repeat_gap:
+            return False
+        if priority is SpeechPriority.URGENT:
+            # An order or visitor makes queued facts irrelevant.
+            self._items = [item for item in self._items if item.priority is not SpeechPriority.LOW]
+        self._items.append(_QueuedCue(key, priority, self._now))
+        self._items.sort(key=lambda item: (item.priority, item.queued_at))
+        while len(self._items) > self.capacity:
+            self._items.pop()  # the least important / newest of the lowest tier
+        return any(item.key == key for item in self._items)
+
+    def drop(self, priority: SpeechPriority) -> None:
+        self._items = [item for item in self._items if item.priority is not priority]
+
+    def clear(self) -> None:
+        self._items.clear()
+
+    def update(self, dt: float, busy: bool, speak: Callable[[str], bool]) -> Optional[str]:
+        """Advance time; speak the next cue when the voice channel is free."""
+
+        self._now += max(0.0, dt)
+        if self._cooldown > 0:
+            self._cooldown -= dt
+            return None
+        if busy:
+            return None
+        while self._items:
+            item = self._items.pop(0)
+            if item.priority is not SpeechPriority.URGENT and self._now - item.queued_at > self.stale_after:
+                continue
+            if speak(item.key):
+                self._last_spoken[item.key] = self._now
+                if len(self._last_spoken) > 64:
+                    oldest = min(self._last_spoken, key=self._last_spoken.get)
+                    del self._last_spoken[oldest]
+                self._cooldown = self.pause
+                return item.key
+        return None

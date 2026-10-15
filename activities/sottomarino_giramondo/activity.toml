@@ -2,7 +2,7 @@
 id = "org.greia.sottomarino-giramondo"
 legacy_ids = []
 title_key = "activity.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -16,10 +16,11 @@ difficulty = 1
 recommended_age_min = 3
 recommended_age_max = 8
 skills = [
-  { id = "sensory.visual_tracking.motion", weight = 3 },
-  { id = "lexicon.nature.marine", weight = 2 },
-  { id = "motor.pointer.target_selection", weight = 2 },
+  { id = "lexicon.nature.marine", weight = 3 },
+  { id = "language.listening_comprehension", weight = 2 },
   { id = "cognition.cause_and_effect", weight = 2 },
+  { id = "sensory.visual_tracking.motion", weight = 1 },
+  { id = "motor.pointer.target_selection", weight = 1 },
 ]
 events = [
   { id = "submarine.instrument_used", kind = "milestone" },
@@ -34,11 +35,15 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
+# Hybrid: game-style piloting (arrows / D-pad / left stick steer, surface and
+# dive; Space / Enter / south sound the alarm) plus the cockpit focus ring
+# (Tab / Shift+Tab or controller shoulder buttons; Space then presses the
+# focused control). Pointer/touch use the cockpit directly.
 profile = "hybrid"
 
 [requirements]
 required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+optional_capabilities = ["keyboard", "touch", "controller"]
 
 [permissions]
 requested = []

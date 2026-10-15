@@ -1,13 +1,19 @@
-"""Sottomarino Giramondo — Procedural & Bounded Graphic Generator.
+"""Sottomarino Giramondo — bounded art owner.
 
-Generates and caches all tactile cockpit assets, gauges, marine creatures,
-and porthole masks at native reference resolution (1024x600).
-Zero external image files required; renders crisp, warm, and highly tactile.
+The brass porthole, riveted bulkhead and cockpit instruments are the
+Activity's own fantasy and stay hand-built (baked once). Creatures come from
+the shared Greia library (``creature.marine.*``) resolved semantically; the
+coral clump, kelp stalk, krill swarm, bubble and the octopus hugging the glass
+are Activity-private renditions under ``assets/runtime`` (SVG sources beside
+them). One owner decodes, crops and scales; drawing only blits.
 """
 
 from __future__ import annotations
 
+from collections import OrderedDict
+from collections.abc import Callable
 import math
+from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 import pygame
@@ -20,370 +26,386 @@ PORTHOLE_CENTER_X = 512
 PORTHOLE_CENTER_Y = 218
 PORTHOLE_RADIUS = 175
 
+ASSETS_DIR = Path(__file__).resolve().parent / "assets" / "runtime"
+# Colour key for the porthole hole in the baked opaque cockpit layer.
+HOLE_KEY = (255, 0, 255)
 
-def _create_porthole_mask(width: int, height: int) -> pygame.Surface:
-    """Pre-bake a mask that punches out the round glass porthole with rivets and steel bulkhead."""
-    mask = pygame.Surface((width, height), pygame.SRCALPHA)
-    # Fill cockpit surround with industrial steel bulkhead color
-    bulkhead_color = (40, 52, 66)
-    mask.fill(bulkhead_color)
+VisualResolver = Callable[[str, str], Path]
+
+# kind -> ("shared", asset id, variant) | ("private", stem, "")
+CREATURE_ART: Dict[str, Tuple[str, str, str]] = {
+    "clownfish": ("shared", "creature.marine.clownfish", "default"),
+    "turtle": ("shared", "creature.marine.turtle", "default"),
+    "dolphin": ("shared", "creature.marine.dolphin", "default"),
+    "manta": ("shared", "creature.marine.manta", "default"),
+    "angler": ("shared", "creature.marine.anglerfish", "default"),
+    "whale": ("shared", "creature.marine.whale", "default"),
+    "shark": ("shared", "creature.marine.shark", "happy"),
+    "octopus": ("private", "octopus_hug", ""),
+    "coral": ("private", "coral", ""),
+    "kelp": ("private", "kelp", ""),
+    "krill": ("private", "krill", ""),
+    "bubble": ("private", "bubble", ""),
+}
+
+# Largest dimension (px at distance z = 1, size 1.0) of each kind: the
+# original cockpit's sprite scale, so creatures keep their familiar sizes.
+KIND_UNIT_PX: Dict[str, float] = {
+    "clownfish": 36.0,
+    "turtle": 49.5,
+    "dolphin": 67.5,
+    "manta": 72.0,
+    "angler": 45.0,
+    "whale": 99.0,
+    "coral": 81.0,
+    "kelp": 117.0,
+    "krill": 67.5,
+    "bubble": 13.5,
+}
+# Nothing outgrows the glass as it passes close (the old sprites ballooned
+# into blurry blocks that hid the view).
+MAX_SPRITE_PX = 270
+MIN_SPRITE_PX = 8
+# Perspective sizes are quantized geometrically so a session touches a small,
+# bounded set of scaled surfaces.
+_SIZE_STEP = 1.08
+_MAX_SCALED = 192
+
+# Ocean colours per zone (top, bottom), as the original cockpit.
+_ZONE_COLOURS = {
+    "shallow": ((25, 140, 190), (15, 80, 130)),
+    "twilight": ((15, 60, 110), (8, 30, 70)),
+    "abyss": ((8, 15, 45), (3, 6, 20)),
+}
+_LIGHT_BOOST = ((45, 55, 40), (35, 45, 35))
+
+# Instrument colours (cockpit buttons and their picture badges).
+INSTRUMENT_COLOURS: Dict[str, Tuple[int, int, int]] = {
+    "light": (245, 210, 60),
+    "sonar": (80, 190, 225),
+    "bubbles": (100, 220, 160),
+    "horn": (240, 120, 70),
+    "steer_left": (60, 150, 220),
+    "steer_right": (60, 150, 220),
+    "ahead": (65, 185, 120),
+    "stop": (220, 80, 80),
+    "surface": (120, 200, 235),
+    "dive": (70, 120, 205),
+    "action": (220, 50, 50),
+}
+ICON_INK = (20, 24, 32)
+
+
+def _default_resolver(asset_id: str, variant: str) -> Path:
+    from greia_platform.activity_api import get_shared_visual_path
+
+    return get_shared_visual_path(asset_id, variant=variant)
+
+
+def _convert(image: pygame.Surface, *, alpha: bool = True) -> pygame.Surface:
+    """Convert once to the display format when a display exists."""
+
+    if pygame.display.get_surface() is not None:
+        try:
+            return image.convert_alpha() if alpha else image.convert()
+        except pygame.error:
+            return image
+    return image
+
+
+def _create_cockpit_bulkhead(width: int, height: int) -> pygame.Surface:
+    """Bake the opaque steel bulkhead and brass porthole rim (hole = colour key)."""
+
+    mask = pygame.Surface((width, height))
+    mask.fill((40, 52, 66))
 
     # Bulkhead plate seams & structural rivets on the sides
-    seam_x_left = 240
-    seam_x_right = 784
-    for sx in (seam_x_left, seam_x_right):
+    for sx in (240, 784):
         pygame.draw.line(mask, (25, 33, 42), (sx, 0), (sx, 435), 3)
         pygame.draw.line(mask, (65, 82, 102), (sx + 2, 0), (sx + 2, 435), 1)
         for ry in range(40, 420, 50):
-            pygame.draw.circle(mask, (25, 33, 42), (sx - 15, ry + 2), 5)
-            pygame.draw.circle(mask, (75, 96, 120), (sx - 15, ry), 5)
-            pygame.draw.circle(mask, (130, 160, 195), (sx - 16, ry - 1), 2)
-            pygame.draw.circle(mask, (25, 33, 42), (sx + 15, ry + 2), 5)
-            pygame.draw.circle(mask, (75, 96, 120), (sx + 15, ry), 5)
-            pygame.draw.circle(mask, (130, 160, 195), (sx + 14, ry - 1), 2)
+            for ox in (-15, 15):
+                pygame.draw.circle(mask, (25, 33, 42), (sx + ox, ry + 2), 5)
+                pygame.draw.circle(mask, (75, 96, 120), (sx + ox, ry), 5)
+                pygame.draw.circle(mask, (130, 160, 195), (sx + ox - 1, ry - 1), 2)
 
-    # Cut out transparent circle for the ocean viewport
-    pygame.draw.circle(mask, (0, 0, 0, 0), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), PORTHOLE_RADIUS)
+    pygame.draw.circle(mask, HOLE_KEY, (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), PORTHOLE_RADIUS)
 
-    # Heavy industrial brass & bronze porthole bezel ring
     rim_outer = PORTHOLE_RADIUS + 26
     rim_inner = PORTHOLE_RADIUS - 4
+    centre = (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y)
+    pygame.draw.circle(mask, (125, 85, 20), centre, rim_outer + 2, 28)
+    pygame.draw.circle(mask, (218, 168, 52), centre, rim_outer, 24)
+    pygame.draw.circle(mask, (140, 95, 22), centre, rim_outer + 1, 3)
+    pygame.draw.circle(mask, (255, 225, 110), centre, rim_inner + 2, 3)
 
-    # Dark bronze base ring
-    pygame.draw.circle(mask, (125, 85, 20), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_outer + 2, 28)
-    # Warm gleaming brass body
-    pygame.draw.circle(mask, (218, 168, 52), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_outer, 24)
-    # Outer dark shadow groove
-    pygame.draw.circle(mask, (140, 95, 22), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_outer + 1, 3)
-    # Inner bright gold bevel
-    pygame.draw.circle(mask, (255, 225, 110), (PORTHOLE_CENTER_X, PORTHOLE_CENTER_Y), rim_inner + 2, 3)
-
-    # 16 Heavy brass hex bolts around the rim with highlights
     for i in range(16):
         angle = i * (math.pi * 2 / 16)
         rx = PORTHOLE_CENTER_X + int((PORTHOLE_RADIUS + 13) * math.cos(angle))
         ry = PORTHOLE_CENTER_Y + int((PORTHOLE_RADIUS + 13) * math.sin(angle))
-        # Bolt shadow
         pygame.draw.circle(mask, (90, 60, 15), (rx, ry + 1), 7)
-        # Bolt head
         pygame.draw.circle(mask, (235, 190, 75), (rx, ry), 6)
-        # Glint highlight
         pygame.draw.circle(mask, (255, 250, 210), (rx - 2, ry - 2), 2)
-
-    # Soft glass reflection sheen arcs across top-left of porthole
-    glass_sheen = pygame.Surface((width, height), pygame.SRCALPHA)
-    pygame.draw.arc(
-        glass_sheen,
-        (255, 255, 255, 70),
-        (PORTHOLE_CENTER_X - PORTHOLE_RADIUS + 12, PORTHOLE_CENTER_Y - PORTHOLE_RADIUS + 12, (PORTHOLE_RADIUS - 12) * 2, (PORTHOLE_RADIUS - 12) * 2),
-        math.radians(105),
-        math.radians(165),
-        18
-    )
-    pygame.draw.arc(
-        glass_sheen,
-        (255, 255, 255, 40),
-        (PORTHOLE_CENTER_X - PORTHOLE_RADIUS + 25, PORTHOLE_CENTER_Y - PORTHOLE_RADIUS + 25, (PORTHOLE_RADIUS - 25) * 2, (PORTHOLE_RADIUS - 25) * 2),
-        math.radians(115),
-        math.radians(155),
-        8
-    )
-    mask.blit(glass_sheen, (0, 0))
+    mask.set_colorkey(HOLE_KEY)
     return mask
 
 
+def _create_glass_sheen() -> pygame.Surface:
+    """Soft reflection arcs across the top-left of the glass (porthole-sized)."""
+
+    size = PORTHOLE_RADIUS * 2
+    sheen = pygame.Surface((size, size), pygame.SRCALPHA)
+    r = PORTHOLE_RADIUS
+    pygame.draw.arc(sheen, (255, 255, 255, 70), (12, 12, (r - 12) * 2, (r - 12) * 2),
+                    math.radians(105), math.radians(165), 18)
+    pygame.draw.arc(sheen, (255, 255, 255, 40), (25, 25, (r - 25) * 2, (r - 25) * 2),
+                    math.radians(115), math.radians(155), 8)
+    return sheen
+
+
+def draw_instrument_icon(
+    surface: pygame.Surface,
+    icon_type: str,
+    cx: int,
+    cy: int,
+    color: Tuple[int, int, int] = ICON_INK,
+) -> None:
+    """Bold vector symbols for the cockpit instruments (pre-reader legible)."""
+
+    if icon_type == "light":
+        pygame.draw.circle(surface, color, (cx, cy - 4), 13)
+        pygame.draw.polygon(surface, color, [(cx - 10, cy), (cx + 10, cy), (cx + 6, cy + 12), (cx - 6, cy + 12)])
+        pygame.draw.rect(surface, (100, 100, 100), (cx - 5, cy + 13, 10, 4), border_radius=2)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 4, cy - 7), 3)
+        for p1, p2 in (
+            ((cx, cy - 20), (cx, cy - 26)),
+            ((cx - 14, cy - 14), (cx - 20, cy - 19)),
+            ((cx + 14, cy - 14), (cx + 20, cy - 19)),
+            ((cx - 17, cy - 3), (cx - 23, cy - 3)),
+            ((cx + 17, cy - 3), (cx + 23, cy - 3)),
+        ):
+            pygame.draw.line(surface, color, p1, p2, 3)
+    elif icon_type == "sonar":
+        pygame.draw.circle(surface, color, (cx, cy + 6), 5)
+        pygame.draw.arc(surface, color, (cx - 13, cy - 7, 26, 26), 0.5, 2.64, 3)
+        pygame.draw.arc(surface, color, (cx - 22, cy - 16, 44, 44), 0.5, 2.64, 3)
+        pygame.draw.line(surface, color, (cx, cy + 6), (cx, cy + 18), 3)
+        pygame.draw.line(surface, color, (cx - 9, cy + 18), (cx + 9, cy + 18), 3)
+    elif icon_type == "bubbles":
+        pygame.draw.circle(surface, color, (cx - 9, cy + 5), 11, 3)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 6, cy + 2), 3)
+        pygame.draw.circle(surface, color, (cx + 9, cy - 5), 8, 3)
+        pygame.draw.circle(surface, (255, 255, 255), (cx + 11, cy - 7), 2)
+        pygame.draw.circle(surface, color, (cx - 2, cy - 14), 5, 2)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 1, cy - 15), 1)
+    elif icon_type == "horn":
+        pygame.draw.rect(surface, color, (cx - 19, cy - 6, 9, 12), border_radius=2)
+        pygame.draw.polygon(surface, color, [(cx - 10, cy - 6), (cx + 4, cy - 14), (cx + 4, cy + 14), (cx - 10, cy + 6)])
+        pygame.draw.arc(surface, color, (cx + 3, cy - 9, 12, 18), -1.1, 1.1, 3)
+        pygame.draw.arc(surface, color, (cx + 9, cy - 15, 18, 30), -1.1, 1.1, 3)
+    elif icon_type == "steer_left":
+        pygame.draw.polygon(surface, color, [
+            (cx - 13, cy), (cx + 3, cy - 11), (cx + 3, cy - 4),
+            (cx + 12, cy - 4), (cx + 12, cy + 4), (cx + 3, cy + 4), (cx + 3, cy + 11)])
+    elif icon_type == "steer_right":
+        pygame.draw.polygon(surface, color, [
+            (cx + 13, cy), (cx - 3, cy - 11), (cx - 3, cy - 4),
+            (cx - 12, cy - 4), (cx - 12, cy + 4), (cx - 3, cy + 4), (cx - 3, cy + 11)])
+    elif icon_type == "ahead":
+        pygame.draw.polygon(surface, color, [
+            (cx, cy - 12), (cx + 11, cy + 3), (cx + 4, cy + 3),
+            (cx + 4, cy + 11), (cx - 4, cy + 11), (cx - 4, cy + 3), (cx - 11, cy + 3)])
+    elif icon_type == "dive":
+        pygame.draw.polygon(surface, color, [
+            (cx, cy + 12), (cx + 11, cy - 3), (cx + 4, cy - 3),
+            (cx + 4, cy - 11), (cx - 4, cy - 11), (cx - 4, cy - 3), (cx - 11, cy - 3)])
+    elif icon_type == "surface":
+        pygame.draw.polygon(surface, color, [
+            (cx, cy - 12), (cx + 11, cy + 1), (cx + 4, cy + 1),
+            (cx + 4, cy + 7), (cx - 4, cy + 7), (cx - 4, cy + 1), (cx - 11, cy + 1)])
+        pygame.draw.line(surface, color, (cx - 11, cy + 11), (cx + 11, cy + 11), 3)
+    elif icon_type == "stop":
+        pygame.draw.rect(surface, color, (cx - 9, cy - 9, 18, 18), border_radius=3)
+    elif icon_type == "action":
+        # The red alarm beacon dome.
+        pygame.draw.circle(surface, (150, 25, 25), (cx, cy), 17)
+        pygame.draw.circle(surface, (235, 60, 50), (cx, cy), 14)
+        pygame.draw.line(surface, (255, 220, 220), (cx, cy - 12), (cx, cy + 12), 2)
+        pygame.draw.circle(surface, (255, 255, 255), (cx - 5, cy - 5), 3)
+
+
 class SubmarineArt:
-    """Owner of cached visual surfaces for creatures and instruments."""
+    """Owner of every decoded/scaled surface the cockpit draws.
 
-    def __init__(self) -> None:
-        self.porthole_mask = _create_porthole_mask(REFERENCE_WIDTH, REFERENCE_HEIGHT)
-        self._sprite_cache: Dict[str, pygame.Surface] = {}
-        self._bake_creatures()
+    Fixed working set: the baked bulkhead, glass sheen, six zone backdrops,
+    one source per creature kind and a few badges/FX. Perspective sprites
+    live in a hard-capped LRU (``_MAX_SCALED``). Missing art degrades to
+    ``None``; the presenter then simply skips that sprite.
+    """
 
-    def _bake_creatures(self) -> None:
-        # Pre-render marine creature sprites to keep hot render loop fast
-        self._sprite_cache["clownfish"] = self._render_clownfish()
-        self._sprite_cache["turtle"] = self._render_turtle()
-        self._sprite_cache["dolphin"] = self._render_dolphin()
-        self._sprite_cache["manta"] = self._render_manta()
-        self._sprite_cache["angler"] = self._render_angler()
-        self._sprite_cache["whale"] = self._render_whale()
-        self._sprite_cache["bubble"] = self._render_bubble()
-        self._sprite_cache["octopus"] = self._render_octopus()
-        self._sprite_cache["shark"] = self._render_shark()
-        self._sprite_cache["coral"] = self._render_coral()
-        self._sprite_cache["kelp"] = self._render_kelp()
-        self._sprite_cache["krill"] = self._render_krill()
+    def __init__(self, resolver: VisualResolver | None = None) -> None:
+        self._resolver = resolver if resolver is not None else _default_resolver
+        self.bulkhead = _convert(_create_cockpit_bulkhead(REFERENCE_WIDTH, REFERENCE_HEIGHT), alpha=False)
+        self.bulkhead.set_colorkey(HOLE_KEY)
+        self.glass_sheen = _convert(_create_glass_sheen())
+        self._sources: Dict[str, Optional[pygame.Surface]] = {}
+        self._scaled: OrderedDict[tuple, pygame.Surface] = OrderedDict()
+        self._backdrops: Dict[Tuple[str, bool], pygame.Surface] = {}
+        self._badges: Dict[Tuple[str, int], pygame.Surface] = {}
+        self._fx: Dict[str, list[pygame.Surface]] = {}
+        for kind in CREATURE_ART:
+            self._sources[kind] = self._load(kind)
+
+    # -- decoding -----------------------------------------------------------
+
+    def _load(self, kind: str) -> Optional[pygame.Surface]:
+        source, ref, variant = CREATURE_ART[kind]
+        try:
+            path = ASSETS_DIR / f"{ref}.png" if source == "private" else Path(self._resolver(ref, variant))
+            image = pygame.image.load(str(path))
+        except Exception:
+            return None
+        image = _convert(image)
+        bounds = image.get_bounding_rect(min_alpha=8)
+        if bounds.width <= 0 or bounds.height <= 0:
+            return None
+        return image.subsurface(bounds).copy()
 
     def get_sprite(self, name: str) -> Optional[pygame.Surface]:
-        return self._sprite_cache.get(name)
+        """Return the cropped full-resolution source for ``name``."""
 
-    def _render_clownfish(self) -> pygame.Surface:
-        surf = pygame.Surface((80, 50), pygame.SRCALPHA)
-        # Orange oval body
-        pygame.draw.ellipse(surf, (255, 110, 30), (10, 10, 55, 30))
-        # White stripes
-        pygame.draw.ellipse(surf, (255, 255, 255), (32, 8, 10, 34))
-        pygame.draw.ellipse(surf, (255, 255, 255), (48, 12, 7, 26))
-        # Black stripe outlines
-        pygame.draw.arc(surf, (30, 30, 30), (32, 8, 10, 34), 0, math.pi * 2, 2)
-        # Tail fin
-        pygame.draw.polygon(surf, (255, 90, 20), [(15, 25), (0, 12), (0, 38)])
-        # Eye
-        pygame.draw.circle(surf, (255, 255, 255), (56, 20), 5)
-        pygame.draw.circle(surf, (20, 20, 20), (58, 20), 3)
-        return surf
+        return self._sources.get(name)
 
-    def _render_turtle(self) -> pygame.Surface:
-        surf = pygame.Surface((110, 80), pygame.SRCALPHA)
-        # Shell
-        pygame.draw.ellipse(surf, (40, 140, 70), (25, 20, 60, 45))
-        pygame.draw.ellipse(surf, (70, 180, 100), (30, 24, 50, 36))
-        # Flippers
-        pygame.draw.ellipse(surf, (50, 150, 80), (60, 10, 35, 18))  # front-top
-        pygame.draw.ellipse(surf, (50, 150, 80), (60, 52, 35, 18))  # front-bottom
-        pygame.draw.ellipse(surf, (40, 120, 65), (15, 16, 22, 14))  # rear-top
-        pygame.draw.ellipse(surf, (40, 120, 65), (15, 50, 22, 14))  # rear-bottom
-        # Head
-        pygame.draw.ellipse(surf, (60, 160, 90), (80, 32, 25, 20))
-        # Eye
-        pygame.draw.circle(surf, (20, 20, 20), (96, 38), 3)
-        return surf
+    # -- perspective sprites ------------------------------------------------
 
-    def _render_dolphin(self) -> pygame.Surface:
-        surf = pygame.Surface((150, 80), pygame.SRCALPHA)
-        # Sleek grey-blue curved body
-        pygame.draw.ellipse(surf, (90, 140, 180), (25, 22, 105, 40))
-        pygame.draw.ellipse(surf, (210, 235, 250), (45, 40, 75, 22))  # Belly
-        # Dorsal fin
-        pygame.draw.polygon(surf, (80, 130, 170), [(70, 25), (85, 5), (95, 25)])
-        # Tail flukes
-        pygame.draw.polygon(surf, (80, 130, 170), [(28, 42), (5, 25), (12, 42), (5, 58)])
-        # Snout / beak
-        pygame.draw.ellipse(surf, (90, 140, 180), (120, 38, 26, 14))
-        # Eye and cute smile
-        pygame.draw.circle(surf, (20, 20, 20), (120, 34), 4)
-        pygame.draw.circle(surf, (255, 255, 255), (121, 33), 1)
-        return surf
+    def unit_size(self, kind: str, size_base: float, scale: float) -> int:
+        """Largest dimension in px for a creature at perspective ``scale``."""
 
-    def _render_manta(self) -> pygame.Surface:
-        surf = pygame.Surface((160, 110), pygame.SRCALPHA)
-        # Diamond wings
-        points = [(80, 15), (150, 55), (80, 95), (20, 55)]
-        pygame.draw.polygon(surf, (60, 75, 95), points)
-        # Belly inner diamond
-        inner = [(80, 28), (135, 55), (80, 82), (35, 55)]
-        pygame.draw.polygon(surf, (220, 230, 240), inner)
-        # Tail
-        pygame.draw.line(surf, (40, 50, 65), (20, 55), (0, 55), 4)
-        # Horns / cephalic lobes
-        pygame.draw.ellipse(surf, (60, 75, 95), (140, 42, 18, 10))
-        pygame.draw.ellipse(surf, (60, 75, 95), (140, 58, 18, 10))
-        return surf
+        return int(min(MAX_SPRITE_PX, max(MIN_SPRITE_PX, KIND_UNIT_PX.get(kind, 40.0) * size_base * scale)))
 
-    def _render_angler(self) -> pygame.Surface:
-        surf = pygame.Surface((100, 70), pygame.SRCALPHA)
-        # Round chubby deep-sea body
-        pygame.draw.ellipse(surf, (45, 35, 55), (20, 20, 65, 45))
-        # Big glowing yellow lure on stalk
-        pygame.draw.arc(surf, (80, 70, 90), (45, 0, 40, 30), 0, math.pi * 0.8, 3)
-        pygame.draw.circle(surf, (255, 240, 100), (48, 10), 9)
-        pygame.draw.circle(surf, (255, 255, 200), (48, 10), 5)
-        # Tail
-        pygame.draw.polygon(surf, (45, 35, 55), [(22, 42), (5, 28), (5, 56)])
-        # Eye
-        pygame.draw.circle(surf, (255, 255, 255), (70, 32), 6)
-        pygame.draw.circle(surf, (20, 20, 20), (72, 32), 4)
-        return surf
+    def scaled(self, kind: str, longest: int, *, flip: bool = False) -> Optional[pygame.Surface]:
+        """Return ``kind`` scaled so its longest side ≈ ``longest`` px (cached)."""
 
-    def _render_whale(self) -> pygame.Surface:
-        surf = pygame.Surface((220, 110), pygame.SRCALPHA)
-        # Huge gentle blue whale body
-        pygame.draw.ellipse(surf, (40, 85, 140), (35, 25, 165, 65))
-        # Pleated throat lines
-        pygame.draw.ellipse(surf, (160, 200, 240), (80, 55, 110, 32))
-        # Tail flukes
-        pygame.draw.polygon(surf, (35, 75, 125), [(42, 55), (5, 25), (18, 55), (5, 85)])
-        # Eye
-        pygame.draw.circle(surf, (20, 20, 20), (175, 48), 5)
-        pygame.draw.circle(surf, (255, 255, 255), (176, 47), 2)
-        return surf
+        source = self._sources.get(kind)
+        if source is None:
+            return None
+        bucket = int(round(math.log(max(MIN_SPRITE_PX, longest)) / math.log(_SIZE_STEP)))
+        key = (kind, bucket, flip)
+        cached = self._scaled.get(key)
+        if cached is not None:
+            self._scaled.move_to_end(key)
+            return cached
+        target = _SIZE_STEP ** bucket
+        w, h = source.get_size()
+        factor = target / max(w, h)
+        size = (max(2, int(round(w * factor))), max(2, int(round(h * factor))))
+        image = pygame.transform.smoothscale(source, size)
+        if flip:
+            image = pygame.transform.flip(image, True, False)
+        self._scaled[key] = image
+        while len(self._scaled) > _MAX_SCALED:
+            self._scaled.popitem(last=False)
+        return image
 
-    def _render_bubble(self) -> pygame.Surface:
-        surf = pygame.Surface((30, 30), pygame.SRCALPHA)
-        pygame.draw.circle(surf, (200, 240, 255, 180), (15, 15), 12, 2)
-        pygame.draw.circle(surf, (255, 255, 255, 220), (11, 10), 3)
-        return surf
+    @property
+    def scaled_count(self) -> int:
+        return len(self._scaled)
 
-    def _render_octopus(self) -> pygame.Surface:
-        """Encounter: Friendly cuddly coral-orange octopus hugging porthole glass with 8 tentacles."""
-        surf = pygame.Surface((380, 380), pygame.SRCALPHA)
-        cx, cy = 190, 160
+    def encounter_sprite(self, kind: str, longest: int) -> Optional[pygame.Surface]:
+        return self.scaled(kind, longest)
 
-        # Tentacle path definitions: list of (x, y, radius) nodes from body out to glass edge
-        tentacle_paths = [
-            # 0: Up-left curling around top glass rim
-            [(160, 185, 18), (125, 160, 16), (90, 125, 14), (65, 85, 12), (48, 52, 10), (40, 25, 8)],
-            # 1: Far left waving
-            [(150, 195, 18), (110, 205, 16), (72, 195, 14), (42, 175, 12), (20, 155, 9)],
-            # 2: Down-left wrapping bottom-left
-            [(155, 215, 18), (120, 255, 16), (90, 290, 14), (60, 325, 12), (42, 355, 9)],
-            # 3: Down-center-left pressing glass
-            [(170, 225, 18), (155, 270, 16), (140, 315, 14), (132, 355, 11), (130, 372, 8)],
-            # 4: Down-center-right pressing glass
-            [(210, 225, 18), (225, 270, 16), (240, 315, 14), (248, 355, 11), (250, 372, 8)],
-            # 5: Down-right wrapping bottom-right
-            [(225, 215, 18), (260, 255, 16), (290, 290, 14), (320, 325, 12), (338, 355, 9)],
-            # 6: Far right waving
-            [(230, 195, 18), (270, 205, 16), (308, 195, 14), (338, 175, 12), (360, 155, 9)],
-            # 7: Up-right curling around top glass rim
-            [(220, 185, 18), (255, 160, 16), (290, 125, 14), (315, 85, 12), (332, 52, 10), (340, 25, 8)],
-        ]
+    # -- backdrops ----------------------------------------------------------
 
-        main_col = (248, 115, 72)
-        shadow_col = (205, 80, 45)
-        suction_rim = (255, 215, 195)
-        suction_center = (240, 150, 130)
+    def backdrop(self, zone: str, lights_on: bool) -> pygame.Surface:
+        """Porthole-sized ocean backdrop for a zone (baked once per state)."""
 
-        # 1. Draw 8 Tentacle Limbs (under-shadow + fleshy main tube)
-        for nodes in tentacle_paths:
-            # Under-shadow
-            for i in range(len(nodes) - 1):
-                p1, p2 = nodes[i], nodes[i + 1]
-                pygame.draw.line(surf, shadow_col, (p1[0], p1[1] + 2), (p2[0], p2[1] + 2), int(p1[2] * 2))
-                pygame.draw.circle(surf, shadow_col, (p1[0], p1[1] + 2), p1[2])
-            # Main tentacle flesh
-            for i in range(len(nodes) - 1):
-                p1, p2 = nodes[i], nodes[i + 1]
-                pygame.draw.line(surf, main_col, (p1[0], p1[1]), (p2[0], p2[1]), int(p1[2] * 2 - 2))
-                pygame.draw.circle(surf, main_col, (p1[0], p1[1]), p1[2] - 1)
-            last = nodes[-1]
-            pygame.draw.circle(surf, main_col, (last[0], last[1]), last[2])
+        key = (zone, bool(lights_on))
+        cached = self._backdrops.get(key)
+        if cached is not None:
+            return cached
+        top, bottom = _ZONE_COLOURS.get(zone, _ZONE_COLOURS["shallow"])
+        if lights_on:
+            top = tuple(min(255, c + d) for c, d in zip(top, _LIGHT_BOOST[0]))
+            bottom = tuple(min(255, c + d) for c, d in zip(bottom, _LIGHT_BOOST[1]))
+        # The original water colour fills the glass; it deepens only gently
+        # toward the bottom so the zone's mood is unchanged.
+        bottom = tuple(int(t * 0.72 + b * 0.28) for t, b in zip(top, bottom))
+        size = PORTHOLE_RADIUS * 2
+        surface = pygame.Surface((size, size))
+        for y in range(size):
+            t = y / (size - 1)
+            colour = tuple(int(a + (b - a) * t) for a, b in zip(top, bottom))
+            pygame.draw.line(surface, colour, (0, y), (size, y))
+        if zone == "shallow" and not lights_on:
+            rays = pygame.Surface((size, size), pygame.SRCALPHA)
+            for ray in range(4):
+                rx = PORTHOLE_RADIUS - 100 + ray * 70
+                pygame.draw.polygon(rays, (255, 255, 220, 25),
+                                    [(rx + 10, 0), (rx + 30, 0), (rx + 40, size), (rx, size)])
+            surface.blit(rays, (0, 0))
+        elif lights_on:
+            # The floodlight's soft cone from the bottom of the glass.
+            cone = pygame.Surface((size, size), pygame.SRCALPHA)
+            pygame.draw.polygon(cone, (255, 240, 170, 26),
+                                [(size // 2 - 40, size), (size // 2 + 40, size), (size - 10, 0), (10, 0)])
+            surface.blit(cone, (0, 0))
+        surface = _convert(surface, alpha=False)
+        self._backdrops[key] = surface
+        return surface
 
-        # 2. Draw Suction Cups Pressed on the Glass along each tentacle
-        for nodes in tentacle_paths:
-            # Place suction cups at intermediate nodes
-            for node in nodes[1:]:
-                nx, ny, nr = node
-                s_rad = max(4, int(nr * 0.75))
-                # Outer ring pressed against glass
-                pygame.draw.circle(surf, suction_rim, (nx, ny), s_rad + 2)
-                # Concave center
-                pygame.draw.circle(surf, suction_center, (nx, ny), s_rad)
-                # White glass contact glint
-                pygame.draw.circle(surf, (255, 255, 255), (nx - 1, ny - 1), max(1, s_rad // 2))
+    # -- badges and pictures --------------------------------------------------
 
-        # 3. Cute Bulbous Head / Mantle
-        # Mantle back shadow
-        pygame.draw.ellipse(surf, shadow_col, (cx - 72, cy - 88, 144, 132))
-        # Mantle main body
-        pygame.draw.ellipse(surf, main_col, (cx - 70, cy - 90, 140, 128))
-        # Top mantle highlight sheen
-        pygame.draw.ellipse(surf, (255, 160, 125), (cx - 50, cy - 84, 100, 48))
+    def instrument_badge(self, instrument: str, size: int) -> pygame.Surface:
+        """A small rounded badge in the instrument's colour with its symbol."""
 
-        # Rosy blushing cheeks
-        pygame.draw.circle(surf, (255, 140, 140, 180), (cx - 44, cy + 8), 12)
-        pygame.draw.circle(surf, (255, 140, 140, 180), (cx + 44, cy + 8), 12)
+        key = (instrument, int(size))
+        cached = self._badges.get(key)
+        if cached is not None:
+            return cached
+        base = 64
+        badge = pygame.Surface((base, base), pygame.SRCALPHA)
+        colour = INSTRUMENT_COLOURS.get(instrument, (200, 200, 200))
+        pygame.draw.rect(badge, (75, 55, 47), (0, 0, base, base), border_radius=16)
+        pygame.draw.rect(badge, colour, (3, 3, base - 6, base - 6), border_radius=13)
+        draw_instrument_icon(badge, instrument, base // 2, base // 2 + 2)
+        if size != base:
+            badge = pygame.transform.smoothscale(badge, (int(size), int(size)))
+        self._badges[key] = badge
+        return badge
 
-        # Big friendly cartoon eyes looking forward
-        # Left eye
-        pygame.draw.circle(surf, (255, 255, 255), (cx - 28, cy - 10), 18)
-        pygame.draw.circle(surf, (20, 24, 30), (cx - 26, cy - 10), 11)
-        pygame.draw.circle(surf, (255, 255, 255), (cx - 29, cy - 14), 5)
-        pygame.draw.circle(surf, (255, 255, 255), (cx - 23, cy - 7), 2)
-        # Right eye
-        pygame.draw.circle(surf, (255, 255, 255), (cx + 28, cy - 10), 18)
-        pygame.draw.circle(surf, (20, 24, 30), (cx + 26, cy - 10), 11)
-        pygame.draw.circle(surf, (255, 255, 255), (cx + 23, cy - 14), 5)
-        pygame.draw.circle(surf, (255, 255, 255), (cx + 29, cy - 7), 2)
+    def picture(self, kind: str, size: int) -> Optional[pygame.Surface]:
+        """A creature thumbnail fitting a ``size`` square (cached via LRU)."""
 
-        # Cheerful sweet smile
-        pygame.draw.arc(surf, (150, 35, 20), (cx - 18, cy + 4, 36, 24), math.pi, 0, 4)
-        return surf
+        return self.scaled(kind, size)
 
-    def _render_shark(self) -> pygame.Surface:
-        """Encounter: Friendly smiling shark waving a fin."""
-        surf = pygame.Surface((300, 220), pygame.SRCALPHA)
-        # Body
-        pygame.draw.ellipse(surf, (90, 115, 140), (50, 50, 200, 100))
-        # White belly
-        pygame.draw.ellipse(surf, (240, 245, 250), (90, 95, 150, 50))
-        # Big dorsal fin
-        pygame.draw.polygon(surf, (80, 105, 130), [(140, 55), (170, 10), (195, 55)])
-        # Pectoral fin waving
-        pygame.draw.polygon(surf, (80, 105, 130), [(130, 120), (110, 175), (160, 135)])
-        # Happy smile
-        pygame.draw.arc(surf, (30, 30, 30), (180, 95, 45, 30), math.pi * 0.9, 0, 4)
-        # Kind eye
-        pygame.draw.circle(surf, (255, 255, 255), (210, 75), 10)
-        pygame.draw.circle(surf, (20, 20, 20), (212, 75), 5)
-        pygame.draw.circle(surf, (255, 255, 255), (213, 73), 2)
-        return surf
+    def picture_row(self, parts: list[pygame.Surface], gap: int = 6) -> Optional[pygame.Surface]:
+        parts = [p for p in parts if p is not None]
+        if not parts:
+            return None
+        width = sum(p.get_width() for p in parts) + gap * (len(parts) - 1)
+        height = max(p.get_height() for p in parts)
+        row = pygame.Surface((width, height), pygame.SRCALPHA)
+        x = 0
+        for part in parts:
+            row.blit(part, (x, (height - part.get_height()) // 2))
+            x += part.get_width() + gap
+        return row
 
-    def _render_coral(self) -> pygame.Surface:
-        """Colorful branching coral reef formation."""
-        surf = pygame.Surface((180, 160), pygame.SRCALPHA)
-        # Base rock shelf
-        pygame.draw.ellipse(surf, (60, 55, 70), (20, 120, 140, 35))
-        # Orange/Pink staghorn branches
-        coral_col = (255, 105, 120)
-        branches = [
-            [(45, 130), (50, 80), (35, 45), (45, 20)],
-            [(50, 80), (70, 50), (75, 25)],
-            [(90, 130), (90, 70), (85, 30), (100, 15)],
-            [(90, 70), (115, 50), (120, 25)],
-            [(135, 130), (130, 80), (145, 50), (140, 25)],
-        ]
-        for b in branches:
-            pygame.draw.lines(surf, coral_col, False, b, 14)
-            for pt in b:
-                pygame.draw.circle(surf, coral_col, pt, 7)
-        # Brain coral dome on side
-        pygame.draw.circle(surf, (110, 210, 160), (140, 115), 24)
-        pygame.draw.circle(surf, (80, 175, 130), (140, 115), 20, 3)
-        return surf
+    # -- effects ---------------------------------------------------------------
 
-    def _render_kelp(self) -> pygame.Surface:
-        """Tall undulating kelp stalk with golden-green fronds."""
-        surf = pygame.Surface((140, 260), pygame.SRCALPHA)
-        kelp_stem = (40, 130, 60)
-        kelp_leaf = (70, 175, 80)
-        kelp_light = (110, 210, 110)
-        # Stem wave
-        stem_pts = [(70, 255), (65, 200), (75, 140), (60, 80), (70, 15)]
-        pygame.draw.lines(surf, kelp_stem, False, stem_pts, 8)
-        # Fronds branching out with air bladders
-        leaf_data = [
-            (65, 200, -35, 18),
-            (70, 170, 40, -15),
-            (75, 135, -45, 12),
-            (65, 100, 42, -10),
-            (60, 65, -40, 8),
-            (68, 30, 35, -8),
-        ]
-        for lx, ly, dx, dy in leaf_data:
-            # Gas bladder
-            pygame.draw.circle(surf, (130, 210, 90), (lx, ly), 5)
-            # Long flowing leaf blade
-            pygame.draw.ellipse(surf, kelp_leaf, (min(lx, lx + dx), min(ly, ly + dy), abs(dx) + 15, 22))
-            pygame.draw.ellipse(surf, kelp_light, (min(lx, lx + dx) + 3, min(ly, ly + dy) + 3, abs(dx) + 8, 12))
-        return surf
+    def fx_frames(self, fx_id: str, size: int) -> list[pygame.Surface]:
+        """Shared ``fx.<id>`` frames (default, frame_2, frame_3) at ``size``."""
 
-    def _render_krill(self) -> pygame.Surface:
-        """Sparkling cluster of translucent bioluminescent krill."""
-        surf = pygame.Surface((150, 100), pygame.SRCALPHA)
-        krill_positions = [
-            (25, 30), (45, 20), (70, 35), (95, 25), (120, 40),
-            (35, 60), (60, 55), (85, 70), (110, 65), (75, 85)
-        ]
-        for kx, ky in krill_positions:
-            # Glowing aura
-            pygame.draw.circle(surf, (80, 200, 255, 60), (kx, ky), 10)
-            # Translucent shrimp body
-            pygame.draw.ellipse(surf, (255, 140, 100, 220), (kx - 8, ky - 3, 16, 7))
-            # Bioluminescent blue photophore light
-            pygame.draw.circle(surf, (140, 240, 255), (kx + 2, ky + 1), 3)
-            pygame.draw.circle(surf, (255, 255, 255), (kx + 2, ky + 1), 1)
-            # Tiny tail
-            pygame.draw.line(surf, (255, 120, 80, 200), (kx - 8, ky), (kx - 12, ky - 2), 2)
-        return surf
+        key = f"{fx_id}@{size}"
+        cached = self._fx.get(key)
+        if cached is not None:
+            return cached
+        frames: list[pygame.Surface] = []
+        for variant in ("default", "frame_2", "frame_3"):
+            try:
+                image = pygame.image.load(str(self._resolver(f"fx.{fx_id}", variant)))
+            except Exception:
+                continue
+            frames.append(pygame.transform.smoothscale(_convert(image), (size, size)))
+        self._fx[key] = frames
+        return frames

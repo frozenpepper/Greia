@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 400" width="120" height="400">
+  <!-- sottomarino_giramondo kelp: one kelp stalk for the Kelp Forest zone (same drawing as acquario_magico kelp).
+       Activity-private scene prop in the bg.underwater.* grammar (leaf token, material contour #4A7A4E);
+       shared-library candidate prop.sea.kelp. -->
+  <defs>
+    <!-- leaf light (mix 25% white) -> leaf -->
+    <linearGradient id="kelp_leaf" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#86CB92"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+  </defs>
+  <g id="kelp">
+    <path d="M60 398 C45 340 75 280 55 220 C35 160 80 100 60 32" fill="none" stroke="#4A7A4E" stroke-width="14" stroke-linecap="round"/>
+    <path d="M60 398 C45 340 75 280 55 220 C35 160 80 100 60 32" fill="none" stroke="#59B86A" stroke-width="8" stroke-linecap="round"/>
+    <path d="M62 350 C90 340 110 310 95 288 C80 308 65 334 62 350 Z" fill="url(#kelp_leaf)" stroke="#4A7A4E" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M58 310 C30 300 10 270 25 248 C40 268 55 294 58 310 Z" fill="url(#kelp_leaf)" stroke="#4A7A4E" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M64 250 C95 240 115 205 100 183 C85 203 70 234 64 250 Z" fill="url(#kelp_leaf)" stroke="#4A7A4E" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M54 200 C22 190 5 155 20 133 C38 153 52 184 54 200 Z" fill="url(#kelp_leaf)" stroke="#4A7A4E" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M68 140 C96 130 112 95 98 78 C84 96 72 124 68 140 Z" fill="url(#kelp_leaf)" stroke="#4A7A4E" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M58 90 C32 80 18 50 32 33 C46 50 56 75 58 90 Z" fill="url(#kelp_leaf)" stroke="#4A7A4E" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M60 34 C52 22 54 10 62 4 C70 12 68 24 60 34 Z" fill="url(#kelp_leaf)" stroke="#4A7A4E" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M70 336 C80 326 88 314 92 300 M50 296 C40 286 32 274 28 262 M74 236 C84 226 94 212 98 198 M44 186 C34 176 26 162 22 148 M76 126 C86 116 94 104 96 92 M48 76 C42 66 36 54 34 44" fill="none" stroke="#C9EBC0" stroke-width="2.4" stroke-linecap="round" opacity="0.8"/>
+  </g>
+</svg>

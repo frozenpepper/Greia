@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- sottomarino_giramondo octopus_hug: the friendly octopus hugging the porthole glass (encounter).
+       Same drawing grammar as creature.marine.octopus but kept coral-orange like the original encounter (ink #4B372F); arms spread on the glass
+       show their suckers. Activity-private; shared-library candidate creature.marine.octopus variant "hug". -->
+  <defs>
+    <!-- orange light -> coral-orange (the original cockpit octopus hue) -->
+    <linearGradient id="octopus_hug_body" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FDB497"/>
+      <stop offset="1" stop-color="#F47A50"/>
+    </linearGradient>
+  </defs>
+  <g id="arms">
+    <path d="M100 110 C78 96 58 70 46 42 C40 28 28 26 24 36" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M92 132 C70 134 46 130 28 120 C16 114 8 124 16 132" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M96 150 C80 172 60 196 42 212 C32 222 40 234 48 226" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M114 160 C110 188 102 212 96 232 C94 244 104 248 107 239" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M142 160 C146 188 154 212 160 232 C162 244 152 248 149 239" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M160 150 C176 172 196 196 214 212 C224 222 216 234 208 226" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M164 132 C186 134 210 130 228 120 C240 114 248 124 240 132" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M156 110 C178 96 198 70 210 42 C216 28 228 26 232 36" fill="none" stroke="#4B372F" stroke-width="25" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M100 110 C78 96 58 70 46 42 C40 28 28 26 24 36" fill="none" stroke="#F7875C" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M92 132 C70 134 46 130 28 120 C16 114 8 124 16 132" fill="none" stroke="#F7875C" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M96 150 C80 172 60 196 42 212 C32 222 40 234 48 226" fill="none" stroke="#F7875C" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M114 160 C110 188 102 212 96 232 C94 244 104 248 107 239" fill="none" stroke="#F7875C" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M142 160 C146 188 154 212 160 232 C162 244 152 248 149 239" fill="none" stroke="#F7875C" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M160 150 C176 172 196 196 214 212 C224 222 216 234 208 226" fill="none" stroke="#F7875C" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M164 132 C186 134 210 130 228 120 C240 114 248 124 240 132" fill="none" stroke="#F7875C" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M156 110 C178 96 198 70 210 42 C216 28 228 26 232 36" fill="none" stroke="#F7875C" stroke-width="18.5" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+  <g id="suckers">
+    <circle cx="70" cy="80" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="54" cy="56" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="62" cy="132" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="40" cy="127" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="72" cy="186" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="55" cy="202" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="107" cy="196" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="100" cy="218" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="149" cy="196" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="156" cy="218" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="184" cy="186" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="201" cy="202" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="194" cy="132" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="216" cy="127" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="186" cy="80" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+    <circle cx="202" cy="56" r="4.6" fill="#FFE3D6" stroke="#C9603A" stroke-width="1.8"/>
+  </g>
+  <g id="head">
+    <path d="M128 50 C172 50 194 80 194 112 C194 146 168 166 128 166 C88 166 62 146 62 112 C62 80 84 50 128 50 Z" fill="url(#octopus_hug_body)" stroke="#4B372F" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M84 84 C81 80 85 72 93 67 C101 62 109 61 112 65 C114 69 110 76 102 81 C94 86 87 88 84 84 Z" fill="#FFFFFF" opacity="0.7"/>
+    <circle cx="160" cy="70" r="6.5" fill="#FED2BF"/>
+    <circle cx="176" cy="90" r="4.5" fill="#FED2BF"/>
+  </g>
+  <g id="face">
+    <ellipse cx="90" cy="130" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="166" cy="130" rx="9" ry="5.5" fill="#FDA4AF" opacity="0.55"/>
+    <ellipse cx="108" cy="112" rx="11" ry="14" fill="#342C35"/>
+    <ellipse cx="148" cy="112" rx="11" ry="14" fill="#342C35"/>
+    <ellipse cx="111.5" cy="107" rx="3.8" ry="4.4" fill="#FFFFFF"/>
+    <ellipse cx="151.5" cy="107" rx="3.8" ry="4.4" fill="#FFFFFF"/>
+    <circle cx="105" cy="117" r="1.8" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="145" cy="117" r="1.8" fill="#FFFFFF" opacity="0.8"/>
+    <path d="M112 134 Q128 158 144 134 Q128 140 112 134 Z" fill="#8A3B2E" stroke="#72513F" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+</svg>
