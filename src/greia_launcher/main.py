@@ -17,6 +17,7 @@ from greia_platform.activities import (
     RuntimeCatalogue,
 )
 from greia_platform.assets import AssetCatalogue, AssetCatalogueError
+from greia_platform.creation_capacity import VolumeBudget
 from greia_platform.pygame_visual_assets import (
     PygameVisualSurfaceCache,
     VisualSurfaceCacheError,
@@ -559,6 +560,15 @@ class LauncherApplication:
         """Return the device HAL for runtime services."""
         return None if self._installed_root() else _development_hal()
 
+    def _runtime_volume_budget(self) -> VolumeBudget | None:
+        """Return an injected child-data volume budget, or ``None`` for production.
+
+        ``None`` keeps the production default: measure the real filesystem that
+        holds durable profile data. Only host-variation shells (the developer
+        Simulator) override this to model a synthetic device volume.
+        """
+        return None
+
     def _runtime_adapters(
         self,
     ) -> Sequence[Any] | Mapping[str, Any] | None:
@@ -583,6 +593,7 @@ class LauncherApplication:
             history_policy_path=self.paths.history_policy,
             progression_policy_path=self.paths.progression_policy,
             hal=self._runtime_hal(),
+            volume_budget=self._runtime_volume_budget(),
             runtime_adapters=self._runtime_adapters(),
         )
 

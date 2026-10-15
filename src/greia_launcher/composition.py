@@ -192,6 +192,7 @@ def build_launcher_runtime_services(
     progression_policy_path: Path,
     achievement_policy_path: Path | None = None,
     hal: GreiaHAL | None = None,
+    volume_budget: VolumeBudget | None = None,
     python_executable: Path | None = None,
     browser_executable: Path | None = None,
     runtime_adapters: (
@@ -200,7 +201,10 @@ def build_launcher_runtime_services(
 ) -> LauncherRuntimeServices:
     """Build the shared device/runtime/permission/history/achievement authorities.
 
-    ``hal`` and ``runtime_adapters`` are deliberate variation seams. Callers
+    ``hal``, ``volume_budget`` and ``runtime_adapters`` are deliberate
+    variation seams (``volume_budget`` lets a developer simulator model its
+    synthetic device volume instead of the host disk; the production default
+    measures the real child-data filesystem). Callers
     must inject only those missing-machine/runtime facts; they must not rebuild
     PermissionBroker, storage, history or achievement composition in parallel.
 
@@ -227,7 +231,7 @@ def build_launcher_runtime_services(
         )
     )
     runtime_manager = RuntimeManager(adapters, device_capabilities)
-    volume_budget = VolumeBudget()
+    volume_budget = volume_budget if volume_budget is not None else VolumeBudget()
     storage_service = ActivityStorageService(
         StoragePolicy.load(storage_policy_path),
         volume_budget=volume_budget,

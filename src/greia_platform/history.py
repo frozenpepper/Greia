@@ -47,6 +47,16 @@ class HistoryError(RuntimeError):
     """Platform history/progression state could not be safely read or changed."""
 
 
+class HistoryCapacityError(HistoryError):
+    """History growth was refused by the platform child-data headroom policy.
+
+    Distinct from corruption: the database is intact (or simply absent) and
+    reads of existing state remain valid. Read-side consumers such as
+    achievements and Parent progress may degrade to a neutral empty state,
+    while writers keep failing closed so the machine can still boot.
+    """
+
+
 class HistoryPolicyError(HistoryError):
     """History or progression policy is invalid."""
 
@@ -676,7 +686,26 @@ class ProfileHistoryStore:
                 f"{actual} ({exc.strerror})"
             ) from exc
 
+    def _schema_is_current(self) -> bool:
+        """Whether an already-created database needs no schema write at all.
+
+        Opening a current-version database for reading must keep working when
+        the volume is past its growth headroom: nothing is written, so there is
+        nothing for the capacity policy to refuse.
+        """
+
+        if not self._db_path.is_file():
+            return False
+        try:
+            with self._connect() as connection:
+                version = int(connection.execute("PRAGMA user_version").fetchone()[0])
+        except (HistoryError, sqlite3.DatabaseError):
+            return False
+        return version == _HISTORY_SCHEMA_VERSION
+
     def _initialize_schema(self) -> None:
+        if self._schema_is_current():
+            return
         existed = self._db_path.exists()
         try:
             with self._volume_budget.write_reservation(
@@ -783,7 +812,7 @@ class ProfileHistoryStore:
             if self._db_path.exists():
                 os.chmod(self._db_path, 0o660)
         except VolumeSpaceError as exc:
-            raise HistoryError(
+            raise HistoryCapacityError(
                 "history storage would violate platform child-data headroom"
             ) from exc
         except sqlite3.DatabaseError as exc:
@@ -839,7 +868,7 @@ class ProfileHistoryStore:
                         connection.rollback()
                         raise
         except VolumeSpaceError as exc:
-            raise HistoryError(
+            raise HistoryCapacityError(
                 "history write would violate platform child-data headroom"
             ) from exc
 

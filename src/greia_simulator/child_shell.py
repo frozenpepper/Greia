@@ -21,6 +21,7 @@ from .device import (
 from .remote_bridge import DEFAULT_REMOTE_PORT
 from .runtime import SimulatorPythonRuntimeAdapter
 from .shell_window import SimulatorShellWindowController
+from .volume import simulated_volume_budget
 from .system_chrome import (
     SimulatorSystemChromeBackend,
     SimulatorSystemChromeRemoteBridge,
@@ -62,6 +63,10 @@ class GreiaSimulatorChildShell(GreiaChildShell):
 
     def _runtime_hal(self):
         return self.simulated_device.to_hal()
+
+    def _runtime_volume_budget(self):
+        # Model the simulated device volume, not the developer's host disk.
+        return simulated_volume_budget(self.paths.profiles_dir)
 
     def _runtime_adapters(self):
         remote_port = (

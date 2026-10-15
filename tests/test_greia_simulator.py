@@ -36,6 +36,7 @@ from greia_platform.trust import ActivitySource, PackageTrust
 from greia_platform.ui_preferences import UiPreferencesStore
 from greia_simulator.app import SimulatorDesktopApp
 from greia_simulator.child_shell import GreiaSimulatorChildShell
+from greia_simulator.volume import simulated_volume_budget
 from greia_simulator.device import (
     DEFAULT_CAPABILITIES,
     HAL_SIMULATABLE_CAPABILITIES,
@@ -148,6 +149,7 @@ def _services_for(
     runtime: RuntimeCatalogue,
     device: SimulatedDeviceProfile,
     manifests: tuple[ActivityManifest, ...],
+    volume_budget=None,
 ):
     adapter = SimulatorPythonRuntimeAdapter(
         device,
@@ -162,6 +164,7 @@ def _services_for(
         history_policy_path=REPO / "runtime" / "history-policy.toml",
         progression_policy_path=REPO / "runtime" / "progression-policy.toml",
         hal=device.to_hal(),
+        volume_budget=volume_budget,
         runtime_adapters=(adapter,),
     )
     return adapter, services
@@ -821,7 +824,13 @@ pygame.quit()
             registration = workspace.load_activity(_write_activity(base / "source", body=body))
             device = SimulatedDeviceProfile(640, 480, DEFAULT_CAPABILITIES)
             manifests = (*_builtin_manifests(runtime), registration.manifest)
-            _, services = _services_for(runtime, device, manifests)
+            # Model the simulated device volume, not this host's disk fullness.
+            _, services = _services_for(
+                runtime,
+                device,
+                manifests,
+                volume_budget=simulated_volume_budget(workspace.profiles_root),
+            )
             profile = workspace.profile_store().context(workspace.profiles()[0].profile_id)
             authority = services.permission_broker.issue(registration)
             supervisor = ProfileVisualActivitySupervisor(

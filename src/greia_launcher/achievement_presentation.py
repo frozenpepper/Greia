@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 import time
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from greia_platform.achievements import (
     AchievementError,
     AchievementSnapshot,
 )
+from greia_platform.history import HistoryError
 from greia_platform.pygame_achievements import PygameAchievementBadgeRenderer
 from greia_platform.typography import FontRole
 
@@ -18,6 +20,8 @@ from .achievement_localization import (
     resolve_achievement_locale,
 )
 from .main import HitTarget
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -41,10 +45,17 @@ class AchievementLibraryMixin:
 
     _ACHIEVEMENTS_PER_PAGE = 6
     _CELEBRATION_INTRO_SECONDS = 0.34
+    # After a refresh failure the draw path must not reopen the history
+    # database every frame; one retry per interval is enough for recovery.
+    _ACHIEVEMENT_REFRESH_RETRY_SECONDS = 5.0
+    _achievement_retry_at = 0.0
+    _achievement_failure_logged = False
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self._achievement_snapshot: AchievementSnapshot | None = None
+        self._achievement_retry_at = 0.0
+        self._achievement_failure_logged = False
         self._achievement_selected = 0
         self._achievement_library_seen_ids: tuple[str, ...] = ()
         self._achievement_queue: list[AchievementEntry] = []
@@ -66,6 +77,7 @@ class AchievementLibraryMixin:
     def _activate_profile(self, profile: Any, pygame: Any) -> None:
         super()._activate_profile(profile, pygame)
         self._achievement_selected = 0
+        self._achievement_retry_at = 0.0
         self._refresh_achievement_locale()
         # Do not replay historical/reconstructed achievements as a popup storm.
         self._refresh_achievements()
@@ -111,11 +123,25 @@ class AchievementLibraryMixin:
         if service is None or profile is None:
             self._achievement_snapshot = None
             return None
+        if time.monotonic() < self._achievement_retry_at:
+            return None
         try:
             snapshot = service.refresh(profile)
-        except (AchievementError, OSError, ValueError):
+        except (AchievementError, HistoryError, OSError, ValueError) as exc:
+            # Achievements are read-side enrichment: a broken or unreadable
+            # history store must never take down the child Shell. Log once,
+            # hide the badge UI, and retry at a bounded interval.
+            if not self._achievement_failure_logged:
+                self._achievement_failure_logged = True
+                logger.warning(
+                    "Achievements unavailable for the active profile: %s", exc
+                )
             self._achievement_snapshot = None
+            self._achievement_retry_at = (
+                time.monotonic() + self._ACHIEVEMENT_REFRESH_RETRY_SECONDS
+            )
             return None
+        self._achievement_failure_logged = False
         self._achievement_snapshot = snapshot
         return snapshot
 

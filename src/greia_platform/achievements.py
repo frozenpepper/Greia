@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 import os
 import shutil
@@ -18,9 +19,12 @@ from .achievement_art import (
     emblem_map,
 )
 from .activities import ActivityManifest
-from .history import HistorySummary, PlatformHistoryService
+from .history import HistoryCapacityError, HistorySummary, PlatformHistoryService
 from .profiles import ProfileContext
 
+logger = logging.getLogger(__name__)
+
+_NEUTRAL_HISTORY_SUMMARY = HistorySummary((), (), (), ())
 
 _STATE_SCHEMA_VERSION = 1
 _ALLOWED_TIERS = frozenset({"bronze", "silver", "gold", "special"})
@@ -286,6 +290,7 @@ class ProfileAchievementService:
         self.history_service = history_service
         self._clock = clock
         self._state_lock = threading.RLock()
+        self._capacity_warned_profiles: set[str] = set()
         self._known_ids = frozenset(
             definition.achievement_id for definition in self.policy.achievements
         )
@@ -299,8 +304,30 @@ class ProfileAchievementService:
     ) -> "ProfileAchievementService":
         return cls(AchievementPolicy.load(path, activities), history_service)
 
+    def _read_summary(self, profile: ProfileContext) -> HistorySummary:
+        """Read history aggregates; degrade to neutral when growth is refused.
+
+        A volume past its headroom may be unable to create the history database
+        for a brand-new profile. Achievements are read-side enrichment, so the
+        child sees no new unlocks instead of losing the Shell. Writers keep
+        failing closed. Corruption or unrelated history errors still raise.
+        """
+
+        try:
+            return self.history_service.open(profile).summary()
+        except HistoryCapacityError as exc:
+            profile_id = profile.profile.profile_id
+            if profile_id not in self._capacity_warned_profiles:
+                self._capacity_warned_profiles.add(profile_id)
+                logger.warning(
+                    "Achievements are showing a neutral state because history "
+                    "cannot be created within child-data headroom: %s",
+                    exc,
+                )
+            return _NEUTRAL_HISTORY_SUMMARY
+
     def refresh(self, profile: ProfileContext) -> AchievementSnapshot:
-        summary = self.history_service.open(profile).summary()
+        summary = self._read_summary(profile)
         with self._state_lock:
             state = self._read_state(profile)
             now = _timestamp(self._clock())
