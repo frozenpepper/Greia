@@ -2,7 +2,7 @@
 id = "org.greia.la-discesa-della-biglia"
 legacy_ids = []
 title_key = "activity.la_discesa_della_biglia.title"
-version = "0.1.0"
+version = "0.2.0"
 icon = "package:assets/icon.png"
 languages = ["it", "en"]
 
@@ -11,25 +11,27 @@ categories = ["play", "learn"]
 discovery_tags = ["building", "puzzles"]
 
 [education]
-categories = ["spatial_reasoning", "physics_intuition", "construction"]
+# Tito's Marble Run: cause and effect / early physics and planning. Each board
+# is a picture puzzle: the child puts a few wooden pieces into fixed shining
+# slots (ramp, then bumper, then funnel -- one new piece per set of four
+# boards), presses GO, watches the run and adjusts; the path of the last run
+# stays visible. Sets are a fixed authored ladder (no adaptive difficulty);
+# repeated misses bring a demonstration, never a penalty, and nothing is timed.
+categories = ["spatial_reasoning", "physics_intuition", "problem_solving"]
 difficulty = 2
 recommended_age_min = 4
 recommended_age_max = 7
-# Three fixed physical layouts with open-ended tool placement; no adaptive D1-D4.
 skills = [
   { id = "physics.motion.gravity", weight = 3 },
-  { id = "physics.collision.bounce", weight = 3 },
+  { id = "cognition.cause_and_effect", weight = 3 },
   { id = "spatial.planning.tool_placement", weight = 3 },
-  { id = "motor.pointer.drag_and_drop", weight = 2 },
-  { id = "cognition.cause_and_effect", weight = 2 },
+  { id = "physics.collision.bounce", weight = 2 },
 ]
 events = [
   { id = "ramp.run_started", kind = "milestone" },
-  { id = "ramp.tool_placed", kind = "milestone" },
   { id = "ramp.basket_hit", kind = "milestone" },
   { id = "ramp.basket_missed", kind = "milestone" },
-  { id = "ramp.level_completed", kind = "completion" },
-  { id = "ramp.personal_best", kind = "score", score_order = "lower_better" },
+  { id = "ramp.set_completed", kind = "completion" },
 ]
 
 [runtime]
@@ -38,14 +40,18 @@ api_version = "0.1"
 entrypoint = "main.py"
 
 [input]
+# Drag/tap on the board plus kit focus (arrows / D-pad / stick + Space /
+# south button) over tray, slots and GO: every action works without a pointer.
 profile = "hybrid"
 
 [requirements]
-required_capabilities = ["display", "pointer", "audio.basic"]
-optional_capabilities = ["keyboard", "touch"]
+required_capabilities = ["display"]
+optional_capabilities = ["keyboard", "pointer", "touch", "audio.basic"]
 
 [permissions]
 requested = []
 
 [storage]
+# Platform save schema stays 1: the progress payload carries its own version
+# (ramp_services.SCHEMA_VERSION) and migrates the first release's best times.
 schema_version = 1

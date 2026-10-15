@@ -1,156 +1,155 @@
-"""La Discesa della Biglia — durable progress + event reporting.
+"""Greia persistence and event adapters for Tito's Marble Run.
 
-This module is the Activity's narrow seam to the platform. It
-owns the per-profile progress shape (per-level best times) and
-the named helper that the lifecycle layer uses to emit semantic
-events through the platform's ActivityEventClient.
+Storage keeps the original key (``la_discesa_della_biglia.progress.v1``) so
+existing child saves load. The first release stored ``{"best_times": {level:
+seconds}}`` for three free-placement levels that no longer exist; schema 2
+keeps those times verbatim under ``best_times`` (child data is never dropped)
+and adds which set of boards comes next plus simple lifetime counters.
 
-The Activity never writes global Greia reward files, never
-increments Greia Star balances, and never grants badges. It
-reports facts; Greia decides rewards.
+Events report facts only (Greia decides rewards) and carry per-visit
+idempotency keys so a replayed visit is never deduplicated against an old one.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
+from typing import Final, Protocol
 
 from greia_platform.activity_api import emit_activity_event, get_storage
 
 if __package__:
-    from .ramp_content import ProgressState, empty_progress
+    from .ramp_content import BOARD_SETS
+    from .ramp_model import RampProgress
 else:
-    from ramp_content import ProgressState, empty_progress
+    from ramp_content import BOARD_SETS
+    from ramp_model import RampProgress
+
+STORAGE_KEY: Final = "la_discesa_della_biglia.progress.v1"
+SCHEMA_VERSION: Final = 2
+_COUNTER_LIMIT: Final = 10_000_000
+_LEGACY_LIMIT: Final = 64  # bounded copy of the first release's best times
 
 
-STORAGE_KEY = "la_discesa_della_biglia.progress.v1"
+def _counter(raw: dict, key: str) -> int:
+    value = raw.get(key, 0)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return 0
+    return max(0, min(_COUNTER_LIMIT, int(value)))
 
 
-@dataclass(frozen=True, slots=True)
-class RampStorage:
-    """Per-profile progress wrapper around the platform Activity storage."""
+def _best_times(raw: dict) -> dict[str, float]:
+    times = raw.get("best_times", {})
+    result: dict[str, float] = {}
+    if not isinstance(times, dict):
+        return result
+    for level_id, value in times.items():
+        if len(result) >= _LEGACY_LIMIT:
+            break
+        if isinstance(level_id, str) and isinstance(value, (int, float)) and not isinstance(value, bool) and value > 0:
+            result[level_id] = float(value)
+    return result
 
-    _progress: ProgressState
 
-    @classmethod
-    def load(cls) -> "RampStorage":
-        storage = get_storage()
-        if storage is None:
-            return cls(empty_progress())
-        try:
-            raw = storage.kv_get(STORAGE_KEY, {})
-        except Exception:
-            return cls(empty_progress())
-        if not isinstance(raw, dict):
-            return cls(empty_progress())
-        best_times_raw = raw.get("best_times", {})
-        best_times: dict[str, float] = {}
-        if isinstance(best_times_raw, dict):
-            for level_id, value in best_times_raw.items():
-                if not isinstance(level_id, str) or not isinstance(value, (int, float)):
-                    continue
-                v = float(value)
-                if v > 0:
-                    best_times[level_id] = v
-        return cls(ProgressState(best_times=best_times))
+def progress_from_payload(raw: object) -> RampProgress:
+    """Parse schema 2, migrate the first release's best times, else start fresh."""
 
-    def best_time(self, level_id: str) -> float | None:
-        return self._progress.best_times.get(level_id)
-
-    def record_completion(self, level_id: str, elapsed: float) -> tuple[bool, float | None]:
-        """Record a level completion. Returns (improved, new_best).
-
-        The improved flag is True iff this run was faster than any
-        previously recorded run. The full state is also persisted.
-        """
-        existing = self._progress.best_times.get(level_id)
-        improved = existing is None or elapsed < existing
-        if not improved:
-            return False, existing
-        new_state = ProgressState(
-            best_times={**self._progress.best_times, level_id: elapsed}
+    if not isinstance(raw, dict):
+        return RampProgress()
+    legacy = _best_times(raw)
+    if raw.get("schema_version") == SCHEMA_VERSION:
+        next_set = _counter(raw, "next_set") % len(BOARD_SETS)
+        return RampProgress(
+            next_set=next_set,
+            boards_solved=_counter(raw, "boards_solved"),
+            sets_completed=_counter(raw, "sets_completed"),
+            legacy_best_times=legacy,
         )
-        storage = get_storage()
-        if storage is not None:
-            try:
-                storage.kv_set(
-                    STORAGE_KEY,
-                    {"best_times": dict(new_state.best_times)},
-                )
-            except Exception:
-                pass
-        return True, elapsed
+    return RampProgress(legacy_best_times=legacy)
 
-    def reset(self) -> None:
-        storage = get_storage()
-        if storage is None:
+
+def progress_payload(progress: RampProgress) -> dict:
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "next_set": max(0, progress.next_set) % len(BOARD_SETS),
+        "boards_solved": min(_COUNTER_LIMIT, max(0, progress.boards_solved)),
+        "sets_completed": min(_COUNTER_LIMIT, max(0, progress.sets_completed)),
+        "best_times": dict(progress.legacy_best_times),
+    }
+
+
+class ProgressPort(Protocol):
+    def load(self) -> RampProgress: ...
+    def save(self, progress: RampProgress) -> None: ...
+
+
+class EventPort(Protocol):
+    def run_started(self, visit_id: str, board_id: str, run: int) -> None: ...
+    def basket_hit(self, visit_id: str, board_id: str, runs: int) -> None: ...
+    def basket_missed(self, visit_id: str, board_id: str, run: int, outcome: str) -> None: ...
+    def set_completed(self, visit_id: str, set_id: str, boards: int) -> None: ...
+
+
+class GreiaRampProgress:
+    """Profile-scoped Greia Storage adapter (never raises into the game loop)."""
+
+    def __init__(self, storage=None) -> None:
+        self._storage = storage
+
+    def _resolve(self):
+        if self._storage is None:
+            self._storage = get_storage()
+        return self._storage
+
+    def load(self) -> RampProgress:
+        try:
+            storage = self._resolve()
+            raw = storage.kv_get(STORAGE_KEY) if storage is not None else None
+        except Exception:
+            return RampProgress()
+        return progress_from_payload(raw)
+
+    def save(self, progress: RampProgress) -> None:
+        try:
+            storage = self._resolve()
+            if storage is not None:
+                storage.kv_set(STORAGE_KEY, progress_payload(progress))
+        except Exception:
             return
-        try:
-            storage.kv_set(STORAGE_KEY, {"best_times": {}})
-        except Exception:
-            pass
 
 
-class RampEvents:
-    """Named wrapper around the platform's event client.
+class GreiaRampEvents:
+    """Publish the manifest-declared facts, scoped per visit."""
 
-    Each method maps to a declared event id in `activity.toml`. The
-    manifest is the contract; this class is a typed convenience.
-    """
+    def run_started(self, visit_id: str, board_id: str, run: int) -> None:
+        self._emit("ramp.run_started", {"board": board_id, "run": run}, f"biglia:{visit_id}:{board_id}:r{run}")
 
-    @staticmethod
-    def run_started(level_id: str) -> None:
-        _emit("ramp.run_started", {"level": level_id})
+    def basket_hit(self, visit_id: str, board_id: str, runs: int) -> None:
+        self._emit("ramp.basket_hit", {"board": board_id, "runs": runs}, f"biglia:{visit_id}:{board_id}:hit")
 
-    @staticmethod
-    def tool_placed(tool_kind: str) -> None:
-        _emit("ramp.tool_placed", {"tool": tool_kind})
-
-    @staticmethod
-    def basket_hit(level_id: str, elapsed: float) -> None:
-        _emit(
-            "ramp.basket_hit",
-            {"level": level_id, "elapsed": round(elapsed, 2)},
-        )
-
-    @staticmethod
-    def basket_missed(level_id: str, elapsed: float) -> None:
-        _emit(
+    def basket_missed(self, visit_id: str, board_id: str, run: int, outcome: str) -> None:
+        self._emit(
             "ramp.basket_missed",
-            {"level": level_id, "elapsed": round(elapsed, 2)},
+            {"board": board_id, "run": run, "outcome": outcome},
+            f"biglia:{visit_id}:{board_id}:m{run}",
         )
+
+    def set_completed(self, visit_id: str, set_id: str, boards: int) -> None:
+        self._emit("ramp.set_completed", {"set": set_id, "boards": boards}, f"biglia:{visit_id}:completed")
 
     @staticmethod
-    def level_completed(level_id: str, elapsed: float, improved: bool) -> None:
-        _emit(
-            "ramp.level_completed",
-            {
-                "level": level_id,
-                "elapsed": round(elapsed, 2),
-                "improved": improved,
-            },
-        )
-
-    @staticmethod
-    def personal_best(level_id: str, elapsed: float) -> None:
-        # `score` event: numeric `score` + correct score_order in
-        # the manifest. The ActivityHistory service uses these to
-        # record the personal best; the Greia progression policy
-        # decides whether the run earns a Star.
-        _emit(
-            "ramp.personal_best",
-            {
-                "level": level_id,
-                "score": round(elapsed, 2),
-            },
-        )
+    def _emit(event_id: str, payload: dict, key: str) -> None:
+        try:
+            emit_activity_event(event_id, payload, idempotency_key=key)
+        except Exception:
+            return
 
 
-def _emit(event_id: str, payload: dict[str, Any]) -> None:
-    # The ActivityEventClient is the platform's IPC; it can be
-    # unavailable in the simulator. We try/except so a missing
-    # broker is a no-op for the simulator gate, not an error.
-    try:
-        emit_activity_event(event_id, payload=payload)
-    except Exception:
-        pass
+__all__ = [
+    "EventPort",
+    "GreiaRampEvents",
+    "GreiaRampProgress",
+    "ProgressPort",
+    "SCHEMA_VERSION",
+    "STORAGE_KEY",
+    "progress_from_payload",
+    "progress_payload",
+]

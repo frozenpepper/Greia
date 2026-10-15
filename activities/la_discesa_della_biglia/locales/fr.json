@@ -3,26 +3,11 @@
   "locale": "fr",
   "direction": "ltr",
   "strings": {
-    "activity.la_discesa_della_biglia.title": "LA DESCENTE DE LA BILLE",
-    "ui.welcome": "GUIDE LA BILLE JUSQU'AU PANIER !",
-    "ui.play": "JOUER !",
-    "ui.retry": "ENCORE !",
-    "ui.next": "SUIVANT !",
-    "ui.back": "RETOUR",
-    "ui.win": "DANS LE PANIER !",
-    "ui.miss": "RATÉ !",
-    "ui.new_best": "NOUVEAU RECORD !",
-    "ui.tool_slope": "RAMPE",
-    "ui.tool_bumper": "REBONDISSEUR",
-    "ui.tool_fan": "VENTILATEUR",
-    "ui.tool_spring": "RESSORT",
-    "ui.basket_label": "PANIER",
-    "ui.level_label": "NIVEAU",
-    "ui.best_label": "RECORD",
-    "ui.tools_label": "OUTILS",
-    "ui.clear": "EFFACER",
-    "ui.drop": "LÂCHER !",
-    "activity.title": "LA DESCENTE DE LA BILLE"
+    "activity.title": "La descente de la bille",
+    "activity.la_discesa_della_biglia.title": "La descente de la bille",
+    "btn.go": "Partez !",
+    "victory.title": "Quel parcours !",
+    "btn.play_again": "Rejouer"
   },
   "audio": {}
 }

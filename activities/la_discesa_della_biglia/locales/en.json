@@ -3,26 +3,11 @@
   "locale": "en",
   "direction": "ltr",
   "strings": {
-    "activity.la_discesa_della_biglia.title": "THE MARBLE'S DESCENT",
-    "ui.welcome": "GUIDE THE MARBLE TO THE BASKET!",
-    "ui.play": "PLAY!",
-    "ui.retry": "AGAIN!",
-    "ui.next": "NEXT!",
-    "ui.back": "BACK",
-    "ui.win": "IN THE BASKET!",
-    "ui.miss": "MISSED!",
-    "ui.new_best": "NEW BEST TIME!",
-    "ui.tool_slope": "SLOPE",
-    "ui.tool_bumper": "BUMPER",
-    "ui.tool_fan": "FAN",
-    "ui.tool_spring": "SPRING",
-    "ui.basket_label": "BASKET",
-    "ui.level_label": "LEVEL",
-    "ui.best_label": "BEST",
-    "ui.tools_label": "TOOLS",
-    "ui.clear": "CLEAR",
-    "ui.drop": "DROP!",
-    "activity.title": "THE MARBLE'S DESCENT"
+    "activity.title": "The Marble's Descent",
+    "activity.la_discesa_della_biglia.title": "The Marble's Descent",
+    "btn.go": "Go!",
+    "victory.title": "What a marble run!",
+    "btn.play_again": "Play again"
   },
   "audio": {
     "activity.title": {

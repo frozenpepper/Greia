@@ -1,70 +1,97 @@
-"""La Discesa della Biglia — deterministic physics engine.
+"""Tito's Marble Run — deterministic fixed-step marble physics (no Pygame).
 
-The engine owns one marble and a set of placed tools. It integrates
-with sub-steps so fast-moving objects never tunnel through tools
-on the reference floor. All units are reference pixels and seconds
-so the engine is fully unit-testable without Pygame.
+One run = one marble rolling through the board's colliders (frame walls,
+fixed shelves, the basket and the child's placed pieces). Every collider is a
+``Capsule`` (a thick segment, or a circle), so ramps, funnels, bumpers,
+shelves and the basket share one contact rule:
 
-The engine does not know about rendering, audio, or Greia
-services. That separation is required by the engineering skill so
-the physics semantics can be covered by deterministic contract
-tests independently from the visual layer.
+* push the marble out along the contact normal;
+* fast impacts bounce with the collider's restitution, slow ones just stop the
+  normal motion, so the marble settles and *rolls* along a plank (gravity's
+  component along the plank does the rest);
+* while touching anything the marble loses a little speed (rolling drag).
+
+The integrator runs at a fixed ``STEP_SECONDS`` with an accumulator and a
+per-frame step cap, so a run is identical on a fast desktop and on the Acer
+floor, and tests replay it exactly. Every run ends: basket, off the open
+bottom of the board, at rest, or at the hard time cap (no soft-lock).
 """
 
 from __future__ import annotations
 
-import math
+from collections import deque
+from collections.abc import Iterable
 from dataclasses import dataclass, field
+from enum import StrEnum
+import math
 from typing import Final
 
 if __package__:
     from .ramp_content import (
-        FAN_WIND,
-        FRICTION_PER_SECOND,
+        AIR_DRAG,
+        BOARD_HEIGHT,
+        BOARD_WIDTH,
+        BOUNCE_MIN,
         GRAVITY,
+        HIT_SOUND_MIN,
         MARBLE_RADIUS,
-        MARBLE_START,
         MAX_RUN_SECONDS,
-        PHYSICS_SUBSTEPS,
-        PLAYFIELD_BOTTOM,
-        PLAYFIELD_LEFT,
-        PLAYFIELD_RIGHT,
-        PLAYFIELD_TOP,
+        MAX_SPEED,
+        MAX_STEPS_PER_FRAME,
+        PLANK_RADIUS,
         REST_RADIUS,
         REST_SECONDS,
-        RESTITUTION,
-        SPRING_IMPULSE,
-        SPRING_RADIUS,
-        TOOL_BUMPER_RADIUS,
-        TOOL_RADIUS,
-        Level,
-        PlacedTool,
-        ToolKind,
+        ROLL_DRAG,
+        SHELF_RESTITUTION,
+        STEP_SECONDS,
+        Basket,
+        Capsule,
+        Shelf,
+        Start,
+        board_walls,
     )
 else:
     from ramp_content import (
-        FAN_WIND,
-        FRICTION_PER_SECOND,
+        AIR_DRAG,
+        BOARD_HEIGHT,
+        BOARD_WIDTH,
+        BOUNCE_MIN,
         GRAVITY,
+        HIT_SOUND_MIN,
         MARBLE_RADIUS,
-        MARBLE_START,
         MAX_RUN_SECONDS,
-        PHYSICS_SUBSTEPS,
-        PLAYFIELD_BOTTOM,
-        PLAYFIELD_LEFT,
-        PLAYFIELD_RIGHT,
-        PLAYFIELD_TOP,
+        MAX_SPEED,
+        MAX_STEPS_PER_FRAME,
+        PLANK_RADIUS,
         REST_RADIUS,
         REST_SECONDS,
-        RESTITUTION,
-        SPRING_IMPULSE,
-        SPRING_RADIUS,
-        TOOL_BUMPER_RADIUS,
-        TOOL_RADIUS,
-        Level,
-        PlacedTool,
-        ToolKind,
+        ROLL_DRAG,
+        SHELF_RESTITUTION,
+        STEP_SECONDS,
+        Basket,
+        Capsule,
+        Shelf,
+        Start,
+        board_walls,
     )
+
+TRAIL_EVERY: Final = 3  # record a trail dot every N physics steps
+TRAIL_LIMIT: Final = 240  # bounded trail (~6 s of dots)
+
+
+class Outcome(StrEnum):
+    BASKET = "basket"
+    LOST = "lost"  # rolled off the open bottom of the board
+    STOPPED = "stopped"  # came to rest (or hit the time cap) outside the basket
+
+
+@dataclass(frozen=True, slots=True)
+class Hit:
+    """A fresh impact (for clack sounds and the bumper's squash)."""
+
+    tag: str
+    position: tuple[float, float]
+    speed: float
 
 
 @dataclass
@@ -73,389 +100,170 @@ class Marble:
     y: float
     vx: float = 0.0
     vy: float = 0.0
-    on_tool: bool = False  # set per sub-step; used for restitution
+    spin: float = 0.0  # rolled angle (radians), for the swirl on the marble
 
 
-@dataclass(frozen=True, slots=True)
-class CollisionEvent:
-    """A semantic collision reported by the engine for this sub-step.
+def _closest_on_segment(px: float, py: float, a: tuple[float, float], b: tuple[float, float]) -> tuple[float, float]:
+    ax, ay = a
+    bx, by = b
+    dx, dy = bx - ax, by - ay
+    length2 = dx * dx + dy * dy
+    if length2 <= 1e-9:
+        return ax, ay
+    t = ((px - ax) * dx + (py - ay) * dy) / length2
+    t = 0.0 if t < 0.0 else 1.0 if t > 1.0 else t
+    return ax + dx * t, ay + dy * t
 
-    The engine reports a basket hit, a tool hit, a missed-marble (left
-    the playfield without touching the basket) or a settled (stopped
-    in the basket). The Activity turn layer translates these into
-    the right Greia event.
-    """
 
-    kind: str  # "basket_hit" | "tool_hit" | "missed" | "settled"
-    tool_kind: str | None = None
-    position: tuple[float, float] = (0.0, 0.0)
+def shelf_capsules(shelves: Iterable[Shelf]) -> tuple[Capsule, ...]:
+    return tuple(Capsule(shelf.a, shelf.b, PLANK_RADIUS, SHELF_RESTITUTION, "shelf") for shelf in shelves)
 
 
 @dataclass
-class RampEngine:
-    """Deterministic physics state for one running play attempt."""
+class MarbleRun:
+    """One deterministic run of the marble through a fixed set of colliders."""
 
-    level: Level
-    tools: list[PlacedTool] = field(default_factory=list)
-    marble: Marble = field(
-        default_factory=lambda: Marble(MARBLE_START[0], MARBLE_START[1])
-    )
+    start: Start
+    basket: Basket
+    colliders: tuple[Capsule, ...]
+    marble: Marble = field(init=False)
     elapsed: float = 0.0
-    finished: bool = False
-    outcome: str | None = None  # "hit" | "missed" | "settled" | None
-    spent_tools: set[int] = field(default_factory=set)
+    steps: int = 0
+    outcome: Outcome | None = None
+    trail: deque = field(default_factory=lambda: deque(maxlen=TRAIL_LIMIT))
+    _accumulator: float = 0.0
     _rest_anchor: tuple[float, float] = (0.0, 0.0)
-    _rest_timer: float = 0.0
+    _rest_time: float = 0.0
+    _touching: set[str] = field(default_factory=set)
 
-    def reset_marble(self) -> None:
-        self.marble = Marble(MARBLE_START[0], MARBLE_START[1])
-        self.elapsed = 0.0
-        self.finished = False
-        self.outcome = None
-        self.spent_tools = set()
+    def __post_init__(self) -> None:
+        self.colliders = (*board_walls(), *self.basket.capsules(), *self.colliders)
+        self.marble = Marble(self.start.x, self.start.y, self.start.vx, 0.0)
         self._rest_anchor = (self.marble.x, self.marble.y)
-        self._rest_timer = 0.0
+        self.trail.append((self.marble.x, self.marble.y))
 
-    def add_tool(self, tool: PlacedTool) -> bool:
-        if self.finished:
-            return False
-        # Tool placement is a normal additive semantic; the engine
-        # does not enforce a maximum count because that is a balance
-        # decision owned by the level, not the engine.
-        self.tools.append(tool)
-        return True
+    @property
+    def finished(self) -> bool:
+        return self.outcome is not None
 
-    def basket_position(self) -> tuple[float, float]:
-        if not self.level.basket_moves:
-            return self.level.basket_x, self.level.basket_y
-        if self.level.basket_period <= 0:
-            return self.level.basket_x, self.level.basket_y
-        phase = (self.elapsed / self.level.basket_period) * 2.0 * math.pi
-        return (
-            self.level.basket_x
-            + self.level.basket_amplitude * math.sin(phase),
-            self.level.basket_y,
-        )
+    # -- stepping -----------------------------------------------------------
 
-    def step(self, frame_dt: float) -> list[CollisionEvent]:
-        """Advance the simulation by `frame_dt` seconds.
+    def advance(self, dt: float) -> list[Hit]:
+        """Advance by a frame delta (fixed sub-steps, capped per frame)."""
 
-        Returns a list of semantic events emitted during the step.
-        The caller decides how to render / score / persist them.
-        """
         if self.finished:
             return []
-        events: list[CollisionEvent] = []
-        # Clamp dt so a paused tab cannot make the marble teleport
-        dt = min(frame_dt, 1.0 / 15.0)
-        sub_dt = dt / float(PHYSICS_SUBSTEPS)
-        for _ in range(PHYSICS_SUBSTEPS):
+        self._accumulator = min(self._accumulator + max(0.0, dt), STEP_SECONDS * MAX_STEPS_PER_FRAME)
+        hits: list[Hit] = []
+        while self._accumulator >= STEP_SECONDS and not self.finished:
+            self._accumulator -= STEP_SECONDS
+            hits.extend(self.step())
+        return hits
+
+    def run_to_end(self, max_steps: int = 0) -> Outcome:
+        """Simulate the whole run (tests, the solver, hint planning)."""
+
+        limit = max_steps or int(MAX_RUN_SECONDS / STEP_SECONDS) + 2
+        for _ in range(limit):
             if self.finished:
                 break
-            self.elapsed += sub_dt
-            sub_events = self._substep(sub_dt)
-            if not self.finished:
-                sub_events.extend(self._check_termination(sub_dt))
-            events.extend(sub_events)
-        return events
+            self.step()
+        if self.outcome is None:
+            self.outcome = Outcome.STOPPED
+        return self.outcome
 
-    def _check_termination(self, sub_dt: float) -> list[CollisionEvent]:
-        """End a run whose marble has come to rest or has run too long.
+    def step(self) -> list[Hit]:
+        """One fixed physics step."""
 
-        Resting is detected by displacement, not speed: a marble pressed into
-        a flat slope keeps accumulating normal velocity while not moving.
-        """
-        marble = self.marble
-        ax, ay = self._rest_anchor
-        if math.hypot(marble.x - ax, marble.y - ay) > REST_RADIUS:
-            self._rest_anchor = (marble.x, marble.y)
-            self._rest_timer = 0.0
-        else:
-            self._rest_timer += sub_dt
-        if self._rest_timer >= REST_SECONDS or self.elapsed >= MAX_RUN_SECONDS:
-            self.finished = True
-            self.outcome = "settled"
-            return [CollisionEvent("settled", position=(marble.x, marble.y))]
-        return []
+        if self.finished:
+            return []
+        dt = STEP_SECONDS
+        m = self.marble
+        m.vy += GRAVITY * dt
+        drag = 1.0 - AIR_DRAG * dt
+        m.vx *= drag
+        m.vy *= drag
+        speed = math.hypot(m.vx, m.vy)
+        if speed > MAX_SPEED:
+            m.vx *= MAX_SPEED / speed
+            m.vy *= MAX_SPEED / speed
+        m.x += m.vx * dt
+        m.y += m.vy * dt
+        hits = self._collide(dt)
+        m.spin += m.vx * dt / MARBLE_RADIUS
+        self.elapsed += dt
+        self.steps += 1
+        if self.steps % TRAIL_EVERY == 0:
+            self.trail.append((m.x, m.y))
+        self._check_end(dt)
+        return hits
 
-    # ------------------------------------------------------------------
-    # Internal
-    # ------------------------------------------------------------------
-
-    def _substep(self, sub_dt: float) -> list[CollisionEvent]:
-        marble = self.marble
-        # Gravity
-        marble.vy += GRAVITY * sub_dt
-        # Linear damping (approximation of rolling/air drag)
-        damp = max(0.0, 1.0 - FRICTION_PER_SECOND * sub_dt)
-        marble.vx *= damp
-        marble.vy *= damp
-        # Integrate
-        marble.x += marble.vx * sub_dt
-        marble.y += marble.vy * sub_dt
-        # Wall collisions
-        events: list[CollisionEvent] = []
-        if marble.x - MARBLE_RADIUS < PLAYFIELD_LEFT:
-            marble.x = PLAYFIELD_LEFT + MARBLE_RADIUS
-            marble.vx = -marble.vx * RESTITUTION
-        elif marble.x + MARBLE_RADIUS > PLAYFIELD_RIGHT:
-            marble.x = PLAYFIELD_RIGHT - MARBLE_RADIUS
-            marble.vx = -marble.vx * RESTITUTION
-        if marble.y - MARBLE_RADIUS < PLAYFIELD_TOP:
-            marble.y = PLAYFIELD_TOP + MARBLE_RADIUS
-            marble.vy = -marble.vy * RESTITUTION
-        if marble.y - MARBLE_RADIUS > PLAYFIELD_BOTTOM:
-            self.finished = True
-            self.outcome = "missed"
-            events.append(
-                CollisionEvent("missed", position=(marble.x, marble.y))
-            )
-            return events
-        # Tool collisions
-        for tool_index, tool in enumerate(self.tools):
-            sub = self._collide_tool(marble, tool_index, tool, sub_dt)
-            if sub is not None:
-                events.append(sub)
-        # Obstacles (level geometry)
-        for ox, oy, orad in self.level.obstacles:
-            sub = self._collide_circle(
-                marble, ox, oy, orad + MARBLE_RADIUS, restitution=RESTITUTION
-            )
-            if sub is not None:
-                events.append(
-                    CollisionEvent(
-                        "tool_hit", tool_kind="obstacle",
-                        position=(ox, oy),
-                    )
-                )
-        # Basket
-        bx, by = self.basket_position()
-        in_basket = self._collide_basket(marble, bx, by, self.level.basket_radius)
-        if in_basket:
-            self.finished = True
-            self.outcome = "hit"
-            events.append(CollisionEvent("basket_hit", position=(bx, by)))
-        return events
-
-    def _collide_tool(
-        self, marble: Marble, tool_index: int, tool: PlacedTool, sub_dt: float
-    ) -> CollisionEvent | None:
-        kind = tool.spec.kind
-        if kind == ToolKind.SLOPE:
-            return self._collide_slope(marble, tool, sub_dt)
-        if kind == ToolKind.BUMPER:
-            return self._collide_bumper(marble, tool)
-        if kind == ToolKind.FAN:
-            return self._collide_fan(marble, tool, sub_dt)
-        if kind == ToolKind.SPRING:
-            return self._collide_spring(marble, tool_index, tool)
-        return None
-
-    def _collide_slope(
-        self, marble: Marble, tool: PlacedTool, sub_dt: float
-    ) -> CollisionEvent | None:
-        """Slope = upper face of a thick line segment + two endpoint
-        hemispheres.
-
-        The slope's *upper* face is the only solid side. The lower
-        face and the side walls are open so the marble can fall
-        under or past the slope when the child places it
-        poorly. The two endpoints are full hemispheres (rounded
-        corners), so the marble cannot tunnel through the corners.
-        """
-        ang = tool.angle
-        half_len = 38.0
-        thickness = 8.0
-        # Surface direction (along the segment) and upward normal
-        sx, sy = math.cos(ang), math.sin(ang)
-        # Two perpendicular normals: "up" (perpendicular rotated 90
-        # CCW) and "down" (CW). The slope's upper face uses "up".
-        up_nx, up_ny = -sy, sx
-        down_nx, down_ny = sy, -sx
-        rel_mx = marble.x - tool.x
-        rel_my = marble.y - tool.y
-        # Project onto the slope's surface axis to find the closest
-        # point on the (infinite) line.
-        proj_along = rel_mx * sx + rel_my * sy
-        # Distance from the marble to the slope line (signed: positive
-        # = above the upper face, negative = below the lower face).
-        perp_dist = rel_mx * up_nx + rel_my * up_ny
-        # Decide contact geometry
-        endpoint_hit = abs(proj_along) > half_len
-        if endpoint_hit:
-            # Endpoint: full hemisphere of radius (thickness + marble_r)
-            end_sign = 1.0 if proj_along > 0 else -1.0
-            end_cx = tool.x + end_sign * half_len * sx
-            end_cy = tool.y + end_sign * half_len * sy
-            dx = marble.x - end_cx
-            dy = marble.y - end_cy
-            dist = math.hypot(dx, dy)
-            contact_radius = thickness + MARBLE_RADIUS
-            if dist >= contact_radius:
-                return None
+    def _collide(self, dt: float) -> list[Hit]:
+        m = self.marble
+        hits: list[Hit] = []
+        touching: set[str] = set()
+        for capsule in self.colliders:
+            reach = capsule.radius + MARBLE_RADIUS
+            # Cheap bounding reject before the exact distance.
+            if m.x < min(capsule.a[0], capsule.b[0]) - reach or m.x > max(capsule.a[0], capsule.b[0]) + reach:
+                continue
+            if m.y < min(capsule.a[1], capsule.b[1]) - reach or m.y > max(capsule.a[1], capsule.b[1]) + reach:
+                continue
+            px, py = _closest_on_segment(m.x, m.y, capsule.a, capsule.b)
+            dx, dy = m.x - px, m.y - py
+            dist2 = dx * dx + dy * dy
+            if dist2 >= reach * reach:
+                continue
+            dist = math.sqrt(dist2)
             if dist < 1e-6:
-                push_nx, push_ny = 0.0, -1.0
+                nx, ny = 0.0, -1.0
             else:
-                push_nx = dx / dist
-                push_ny = dy / dist
-            overlap = contact_radius - dist
-            marble.x += push_nx * overlap
-            marble.y += push_ny * overlap
-            v_dot_n = marble.vx * push_nx + marble.vy * push_ny
-            if v_dot_n < 0:
-                marble.vx -= (1.0 + RESTITUTION) * v_dot_n * push_nx
-                marble.vy -= (1.0 + RESTITUTION) * v_dot_n * push_ny
-            return CollisionEvent(
-                "tool_hit", tool_kind=ToolKind.SLOPE.value,
-                position=(end_cx, end_cy),
-            )
-        # On the segment: only the upper face is solid
-        if perp_dist >= 0:
-            # Marble is above the slope's upper face: solid collision
-            target_perp = -(thickness + MARBLE_RADIUS)
-            dx = -perp_dist - (thickness + MARBLE_RADIUS)
-            # actually target perp is the marble center's distance from
-            # the slope center; we want the marble to sit at
-            # perp_dist = -(thickness + MARBLE_RADIUS)
-            correction = target_perp - perp_dist  # negative number
-            marble.x += up_nx * correction
-            marble.y += up_ny * correction
-            v_dot_n = marble.vx * up_nx + marble.vy * up_ny
-            if v_dot_n < 0:
-                marble.vx -= (1.0 + RESTITUTION) * v_dot_n * up_nx
-                marble.vy -= (1.0 + RESTITUTION) * v_dot_n * up_ny
-            return CollisionEvent(
-                "tool_hit", tool_kind=ToolKind.SLOPE.value,
-                position=(tool.x + proj_along * sx, tool.y + proj_along * sy),
-            )
-        # Marble is below the upper face. If it is also above the
-        # lower face (perp_dist > -thickness - MARBLE_RADIUS) it has
-        # tunnelled through the slope from above; resolve by pushing
-        # it back to the upper side.
-        if perp_dist > -(thickness + MARBLE_RADIUS):
-            # Tunneled through: push back to the upper face
-            target_perp = -(thickness + MARBLE_RADIUS)
-            correction = target_perp - perp_dist
-            marble.x += up_nx * correction
-            marble.y += up_ny * correction
-            v_dot_n = marble.vx * up_nx + marble.vy * up_ny
-            if v_dot_n < 0:
-                marble.vx -= (1.0 + RESTITUTION) * v_dot_n * up_nx
-                marble.vy -= (1.0 + RESTITUTION) * v_dot_n * up_ny
-            return CollisionEvent(
-                "tool_hit", tool_kind=ToolKind.SLOPE.value,
-                position=(tool.x + proj_along * sx, tool.y + proj_along * sy),
-            )
-        # Marble is below the lower face: no collision
-        return None
+                nx, ny = dx / dist, dy / dist
+            m.x += nx * (reach - dist)
+            m.y += ny * (reach - dist)
+            vn = m.vx * nx + m.vy * ny
+            if vn < 0.0:
+                bounce = capsule.restitution if -vn > BOUNCE_MIN else 0.0
+                m.vx -= (1.0 + bounce) * vn * nx
+                m.vy -= (1.0 + bounce) * vn * ny
+                if -vn > HIT_SOUND_MIN and capsule.tag not in self._touching:
+                    hits.append(Hit(capsule.tag, (px, py), -vn))
+            touching.add(capsule.tag)
+        if touching:
+            roll = 1.0 - ROLL_DRAG * dt
+            m.vx *= roll
+            m.vy *= roll
+        self._touching = touching
+        return hits
 
-    def _collide_bumper(
-        self, marble: Marble, tool: PlacedTool
-    ) -> CollisionEvent | None:
-        event = self._collide_circle(
-            marble, tool.x, tool.y, TOOL_BUMPER_RADIUS + MARBLE_RADIUS,
-            restitution=1.05,
-        )
-        if event is not None:
-            return CollisionEvent(
-                "tool_hit", tool_kind=ToolKind.BUMPER.value,
-                position=(tool.x, tool.y),
-            )
-        return None
-
-    def _collide_fan(
-        self, marble: Marble, tool: PlacedTool, sub_dt: float
-    ) -> CollisionEvent | None:
-        # Fan is a no-contact wind zone in a small radius. Push the
-        # marble horizontally (right) while it is in range, falloff
-        # linearly with distance.
-        dx = marble.x - tool.x
-        dy = marble.y - tool.y
-        radius = 70.0
-        d2 = dx * dx + dy * dy
-        if d2 > radius * radius:
-            return None
-        falloff = 1.0 - math.sqrt(d2) / radius
-        marble.vx += FAN_WIND * falloff * sub_dt
-        return CollisionEvent(
-            "tool_hit", tool_kind=ToolKind.FAN.value,
-            position=(tool.x, tool.y),
-        )
-
-    def _collide_spring(
-        self, marble: Marble, tool_index: int, tool: PlacedTool
-    ) -> CollisionEvent | None:
-        # Spring triggers once on contact, fires an outward impulse
-        # from its center, then becomes inert for the rest of the run
-        # so the marble can fly away cleanly.
-        if tool_index in self.spent_tools:
-            return None
-        event = self._collide_circle(
-            marble, tool.x, tool.y, SPRING_RADIUS + MARBLE_RADIUS,
-            restitution=RESTITUTION,
-        )
-        if event is None:
-            return None
-        # Outward impulse
-        dx = marble.x - tool.x
-        dy = marble.y - tool.y
-        mag = math.hypot(dx, dy) or 1.0
-        marble.vx += (dx / mag) * SPRING_IMPULSE
-        marble.vy += (dy / mag) * SPRING_IMPULSE - 40.0
-        self.spent_tools.add(tool_index)
-        return CollisionEvent(
-            "tool_hit", tool_kind=ToolKind.SPRING.value,
-            position=(tool.x, tool.y),
-        )
-
-    def _collide_circle(
-        self,
-        marble: Marble,
-        cx: float,
-        cy: float,
-        radius: float,
-        restitution: float,
-    ) -> CollisionEvent | None:
-        dx = marble.x - cx
-        dy = marble.y - cy
-        d2 = dx * dx + dy * dy
-        if d2 >= radius * radius:
-            return None
-        if d2 < 1e-6:
-            # Marble is exactly at the circle centre: push down so
-            # the marble drops out of the bottom and the reflection
-            # reverses any downward velocity.
-            nx, ny = 0.0, 1.0
-            d = 0.0
+    def _check_end(self, dt: float) -> None:
+        m = self.marble
+        if self.basket.holds(m.x, m.y):
+            self.outcome = Outcome.BASKET
+            return
+        if m.y - MARBLE_RADIUS > BOARD_HEIGHT:
+            self.outcome = Outcome.LOST
+            return
+        ax, ay = self._rest_anchor
+        if (m.x - ax) ** 2 + (m.y - ay) ** 2 > REST_RADIUS * REST_RADIUS:
+            self._rest_anchor = (m.x, m.y)
+            self._rest_time = 0.0
         else:
-            d = math.sqrt(d2)
-            nx = dx / d
-            ny = dy / d
-        # Push out
-        overlap = radius - d
-        marble.x += nx * overlap
-        marble.y += ny * overlap
-        # Reflect velocity along the contact normal
-        v_dot_n = marble.vx * nx + marble.vy * ny
-        if v_dot_n < 0:
-            marble.vx -= (1.0 + restitution) * v_dot_n * nx
-            marble.vy -= (1.0 + restitution) * v_dot_n * ny
-        return CollisionEvent(
-            "tool_hit", tool_kind=None, position=(cx, cy)
+            self._rest_time += dt
+        if self._rest_time >= REST_SECONDS or self.elapsed >= MAX_RUN_SECONDS:
+            self.outcome = Outcome.STOPPED
+
+    # -- presentation helpers ------------------------------------------------
+
+    def drawn_position(self) -> tuple[float, float]:
+        """Marble centre clamped to the board (a lost marble never draws outside)."""
+
+        m = self.marble
+        r = MARBLE_RADIUS
+        return (
+            max(r, min(BOARD_WIDTH - r, m.x)),
+            max(r, min(BOARD_HEIGHT - r, m.y)),
         )
 
-    def _collide_basket(
-        self, marble: Marble, bx: float, by: float, radius: float
-    ) -> bool:
-        # The basket is "open" from above: the marble enters when its
-        # centre drops below the basket lip and is within the
-        # horizontal radius, with a small velocity check to avoid
-        # catching the marble on the basket's top arc.
-        if marble.y < by - radius * 0.4:
-            return False
-        if marble.y > by + radius * 0.9:
-            return False
-        dx = marble.x - bx
-        if abs(dx) > radius * 0.7:
-            return False
-        return marble.vy >= 0  # only on the way down
+
+__all__ = ["Hit", "Marble", "MarbleRun", "Outcome", "TRAIL_LIMIT", "shelf_capsules"]
