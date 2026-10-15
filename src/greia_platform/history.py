@@ -11,7 +11,7 @@ import tomllib
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Mapping
+from typing import Callable, Iterable, Iterator, Mapping, Protocol
 
 from .activities import ActivityEventDefinition, ActivityManifest
 from .creation_capacity import VolumeBudget, VolumeSpaceError
@@ -257,6 +257,85 @@ class PlatformHistoryService:
 
     def recover_unfinished(self, profile: ProfileContext) -> int:
         return self.open(profile).recover_unfinished_sessions()
+
+
+class SessionHistoryRecorder(Protocol):
+    """Narrow per-session surface the supervisor and event broker depend on."""
+
+    policy: HistoryPolicy
+    profile: ProfileContext
+
+    def emit_event(
+        self,
+        manifest: ActivityManifest,
+        progression: ProgressionPolicy,
+        *,
+        session_id: str,
+        event_id: str,
+        idempotency_key: str,
+        score: object = None,
+        payload: object = None,
+    ) -> EventReceipt: ...
+
+    def mark_ready(self, session_id: str, *, ready_at: float | None = None) -> None: ...
+
+    def finish_session(
+        self,
+        session_id: str,
+        exit_reason: object,
+        *,
+        active_duration_seconds: object = None,
+        ended_at: float | None = None,
+    ) -> None: ...
+
+
+class UnrecordedSessionHistory:
+    """Fail-soft stand-in used when history growth is refused for a session.
+
+    The Activity still launches and runs, but nothing is written: no session
+    row, no events, no reward/progression mutation. Every event is dropped by
+    raising ``HistoryCapacityError``, which the event broker reports to the
+    Activity as an ordinary rejected event (``emit_activity_event`` returns
+    ``None``), so sandboxed Activities keep a valid broker contract. This is
+    deliberately fail-soft, never fail-open: it can only ever write less.
+    """
+
+    _MAX_DROPPED_COUNT = 1_000_000
+
+    def __init__(self, profile: ProfileContext, policy: HistoryPolicy) -> None:
+        self.profile = profile
+        self.policy = policy
+        self.dropped_events = 0
+
+    def emit_event(
+        self,
+        manifest: ActivityManifest,
+        progression: ProgressionPolicy,
+        *,
+        session_id: str,
+        event_id: str,
+        idempotency_key: str,
+        score: object = None,
+        payload: object = None,
+    ) -> EventReceipt:
+        del manifest, progression, session_id, event_id, idempotency_key, score, payload
+        self.dropped_events = min(self.dropped_events + 1, self._MAX_DROPPED_COUNT)
+        raise HistoryCapacityError(
+            "session is unrecorded because child-data headroom is exhausted"
+        )
+
+    def mark_ready(self, session_id: str, *, ready_at: float | None = None) -> None:
+        del session_id, ready_at
+
+    def finish_session(
+        self,
+        session_id: str,
+        exit_reason: object,
+        *,
+        active_duration_seconds: object = None,
+        ended_at: float | None = None,
+    ) -> None:
+        del session_id, exit_reason, active_duration_seconds, ended_at
 
 
 class ProfileHistoryStore:

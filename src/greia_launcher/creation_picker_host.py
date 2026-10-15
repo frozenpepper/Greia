@@ -11,6 +11,7 @@ from typing import Any
 from greia_platform.creation_audio_pygame import PygameRecordingPreview
 from greia_platform.creation_gallery import CreationsGalleryController, GalleryMode
 from greia_platform.creation_gallery_screen import CreationsGalleryScreen
+from greia_platform.creation_capacity import VolumeBudget
 from greia_platform.creations import CreationLibrary
 from greia_platform.ui_core import UiEventResult
 
@@ -34,7 +35,9 @@ class ActivityCreationPickerHost:
         profile: Any,
         typography: Any,
         locale: str,
+        volume_budget: VolumeBudget | None = None,
     ) -> None:
+        self._volume_budget = volume_budget
         self._supervisor = supervisor
         self._shell_window_backend = shell_window_backend
         self._session = session
@@ -150,7 +153,9 @@ class ActivityCreationPickerHost:
         if not isinstance(request_id, str) or not request_id:
             raise CreationPickerHostError("creation picker received an invalid request")
         try:
-            library = CreationLibrary(self._profile.creations_dir)
+            library = CreationLibrary(
+                self._profile.creations_dir, volume_budget=self._volume_budget
+            )
             controller = CreationsGalleryController(
                 library,
                 mode=GalleryMode.PICKER,

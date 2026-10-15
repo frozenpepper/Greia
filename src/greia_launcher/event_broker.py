@@ -15,9 +15,10 @@ from greia_platform.event_protocol import EventProtocolError, receive_message, s
 from greia_platform.history import (
     EventIdempotencyConflict,
     EventValidationError,
+    HistoryCapacityError,
     HistoryError,
-    ProfileHistoryStore,
     ProgressionPolicy,
+    SessionHistoryRecorder,
 )
 
 
@@ -69,6 +70,15 @@ class _EventRequestHandler(socketserver.BaseRequestHandler):
                     "message": "event was rejected by Greia policy",
                 },
             )
+        except HistoryCapacityError:
+            send_message(
+                self.request,
+                {
+                    "ok": False,
+                    "error_code": "history_unavailable",
+                    "message": "event was not recorded because storage headroom is exhausted",
+                },
+            )
         except (HistoryError, EventProtocolError):
             send_message(
                 self.request,
@@ -99,7 +109,7 @@ class _EventUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServe
     def __init__(
         self,
         socket_path: Path,
-        store: ProfileHistoryStore,
+        store: SessionHistoryRecorder,
         manifest: ActivityManifest,
         progression: ProgressionPolicy,
         session_id: str,
@@ -190,7 +200,7 @@ class ActivityEventBroker:
     @classmethod
     def start(
         cls,
-        store: ProfileHistoryStore,
+        store: SessionHistoryRecorder,
         manifest: ActivityManifest,
         progression: ProgressionPolicy,
         session_id: str,

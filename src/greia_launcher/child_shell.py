@@ -197,7 +197,12 @@ class GreiaChildShell(
         from greia_platform.profiles import ProfileError
 
         try:
-            library = CreationLibrary(self._active_profile.creations_dir)
+            library = CreationLibrary(
+                self._active_profile.creations_dir,
+                volume_budget=getattr(
+                    getattr(self, "runtime_services", None), "volume_budget", None
+                ),
+            )
             controller = CreationsGalleryController(
                 library, audio_player=PygameRecordingPreview(),
             )

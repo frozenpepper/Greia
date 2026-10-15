@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import sqlite3
 from pathlib import Path
@@ -11,9 +12,11 @@ from greia_platform.creation_capacity import VolumeBudget
 from greia_platform.creations import CreationLibrary, CreationLibraryError
 from greia_platform.device_capabilities import DeviceCapabilityService
 from greia_platform.history import (
+    HistoryCapacityError,
     HistoryError,
     PlatformHistoryService,
-    ProfileHistoryStore,
+    SessionHistoryRecorder,
+    UnrecordedSessionHistory,
 )
 from greia_platform.permissions import ActivityAuthority
 from greia_platform.profiles import ProfileContext, ProfileError
@@ -57,6 +60,8 @@ from .storage_broker import (
 
 SANDBOX_ACTIVITY_ROOT = Path("/run/greia-activity-data")
 SANDBOX_CUSTOMIZATION_ROOT = Path("/run/greia-customization")
+logger = logging.getLogger(__name__)
+
 PRODUCTION_ROOT = Path("/opt/greia-os")
 PRODUCTION_BWRAP = Path("/usr/bin/bwrap")
 _DEVELOPMENT_CAPABILITIES = frozenset(
@@ -167,7 +172,7 @@ class ActivitySupervisor:
         self._history_service = history_service
         self._event_broker_factory = event_broker_factory
         self._display_coordinator = display_coordinator
-        self._history_stores: dict[str, ProfileHistoryStore] = {}
+        self._history_stores: dict[str, SessionHistoryRecorder] = {}
         self._session_resources: dict[str, tuple[SessionResource, ...]] = {}
         self._runtime_preparations: dict[str, RuntimeLaunchPreparation] = {}
         self._display_leases: dict[str, DisplaySessionLease] = {}
@@ -236,7 +241,7 @@ class ActivitySupervisor:
         if authority.activity_id != manifest.activity_id:
             raise ActivityLifecycleError("Activity authority identity does not match manifest")
         session_id = new_activity_session_id()
-        history_store: ProfileHistoryStore | None = None
+        history_store: SessionHistoryRecorder | None = None
         if self._history_service is not None:
             try:
                 history_store = self._history_service.open(profile)
@@ -244,6 +249,18 @@ class ActivitySupervisor:
                     manifest,
                     session_id=session_id,
                     package_digest=authority.package_digest,
+                )
+            except HistoryCapacityError as exc:
+                # The volume is past its growth headroom: keep the child able
+                # to play, but record nothing (fail-soft, never fail-open).
+                logger.warning(
+                    "Launching %s as an unrecorded session; progression and "
+                    "history are paused until space is freed: %s",
+                    manifest.activity_id,
+                    exc,
+                )
+                history_store = UnrecordedSessionHistory(
+                    profile, self._history_service.history_policy
                 )
             except HistoryError:
                 return self._failed_launch_session(
@@ -608,6 +625,8 @@ class ActivitySupervisor:
                     reason.value,
                     active_duration_seconds=max(0.0, ended_at - session.started_at),
                 )
+            except HistoryCapacityError as exc:
+                self._warn_history_paused(session.activity_id, exc)
             except HistoryError:
                 reason = ActivityExitReason.PLATFORM_FAILURE
 
@@ -642,7 +661,7 @@ class ActivitySupervisor:
         control: ActivityLifecycleControl | None = None,
         started_at: float | None = None,
         resources: tuple[SessionResource, ...] = (),
-        history_store: ProfileHistoryStore | None = None,
+        history_store: SessionHistoryRecorder | None = None,
         reason: ActivityExitReason = ActivityExitReason.LAUNCH_FAILURE,
     ) -> ActivitySession:
         started = monotonic_now() if started_at is None else started_at
@@ -700,9 +719,22 @@ class ActivitySupervisor:
             return True
         try:
             history_store.mark_ready(session.session_id)
+        except HistoryCapacityError as exc:
+            # A healthy running Activity is not failed because history is full.
+            self._warn_history_paused(session.activity_id, exc)
+            return True
         except HistoryError:
             return False
         return True
+
+    @staticmethod
+    def _warn_history_paused(activity_id: str, exc: Exception) -> None:
+        logger.warning(
+            "History write skipped for %s because child-data headroom is "
+            "exhausted: %s",
+            activity_id,
+            exc,
+        )
 
     def _present_display_session(self, session_id: str) -> bool:
         lease = self._display_leases.get(session_id)

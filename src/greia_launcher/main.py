@@ -1064,6 +1064,11 @@ class LauncherApplication:
                             profile=self._active_profile,
                             typography=self._typography,
                             locale=getattr(self, "_active_locale", "en"),
+                            volume_budget=getattr(
+                                getattr(self, "runtime_services", None),
+                                "volume_budget",
+                                None,
+                            ),
                         )
                         # Allow a bounded focus-settling interval after the child
                         # window reports READY; never poll X11 indefinitely.
