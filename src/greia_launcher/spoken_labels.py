@@ -16,7 +16,13 @@ from pathlib import Path
 from typing import Any
 
 from greia_platform.activities import ActivityManifest
-from greia_platform.localization import LocalizationBundle, LocalizationError, LocaleTag
+from greia_platform.localization import (
+    ActivityLocaleSupport,
+    LocalizationError,
+    LocalizedResources,
+    LocaleTag,
+    resolve_activity_locale,
+)
 from greia_platform.ui_core import BoundedCache
 
 
@@ -45,26 +51,35 @@ _TITLE_AUDIO_CACHE: BoundedCache[tuple[str, str], Path | None] = BoundedCache(12
 
 
 def activity_title_audio(manifest: ActivityManifest, locale: str) -> Path | None:
-    """Resolve one Activity's localized launcher-title audio cue, if supplied."""
+    """Resolve the launcher title through the shared Greia speech resolver.
 
+    This is a catalogue locale, independent from which languages the Activity
+    currently advertises for gameplay. A missing selected-language file uses
+    the existing English compatibility recording.
+    """
     cache_key = (str(manifest.root.resolve()), locale)
     if cache_key in _TITLE_AUDIO_CACHE:
         return _TITLE_AUDIO_CACHE[cache_key]
 
     resolved: Path | None = None
-    for candidate in locale_candidates(locale):
-        bundle_path = manifest.root / "locales" / f"{candidate.value}.json"
-        if not bundle_path.is_file():
-            continue
+    candidates = locale_candidates(locale)
+    languages = tuple(
+        candidate.value
+        for candidate in candidates
+        if (manifest.root / "locales" / f"{candidate.value}.json").is_file()
+    )
+    if languages:
+        default = "en" if "en" in languages else languages[0]
         try:
-            cue = LocalizationBundle.load(manifest.root, candidate).audio.get(
-                ACTIVITY_TITLE_CUE
+            support = ActivityLocaleSupport.localized(
+                languages, default_ui_locale=default
             )
+            context = resolve_activity_locale(locale, support)
+            if context is not None:
+                resources = LocalizedResources(manifest.root, context)
+                resolved = resources.audio_path(ACTIVITY_TITLE_CUE)
         except (LocalizationError, OSError):
-            continue
-        if cue is not None and cue.path.is_file():
-            resolved = cue.path
-            break
+            resolved = None
 
     _TITLE_AUDIO_CACHE[cache_key] = resolved
     return resolved
