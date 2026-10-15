@@ -297,7 +297,10 @@ shared character v0.2 library, not each Activity; do not duplicate or
 rerecord them in an Activity package.
 
 For all speech, **including literacy and phonics for now**, choose
-selected-language file if present, otherwise English, otherwise silence.
+selected-language file if present, then its base-language file for a
+regional locale (`es-MX → es`, `fr-CA → fr`), otherwise English,
+otherwise silence. Text keys follow the same regional/base ordering
+before their existing last-resort package default.
 Keep procedural sound effects, speech channels, event ordering and
 caching in the Activity sound owner; do not write per-Activity locale
 directory scanners or duplicate the same audio map four times.
