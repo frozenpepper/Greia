@@ -15,9 +15,12 @@ from greia_platform.pygame_effects import transformed_rect
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
 from greia_platform.ui_motion import InteractionVisualState
 
+from greia_platform.responsive_layout import UiRect
+
 from .catalogue_view import ALL_ACTIVITIES_ID, _category_title
+from .home_layout import CollectionHomeLayout, portal_icon_rect
 from .main import HitTarget
-from .portal_geometry import portal_icon_center, portal_icon_size
+from .shared_ui_presentation import CAPTION_CREAM, CAPTION_INK, draw_caption_pill
 
 
 _COLLECTION_VISUAL_ERRORS = (
@@ -29,6 +32,29 @@ _COLLECTION_VISUAL_ERRORS = (
     ValueError,
 )
 
+# Collection hue per Home portal (GREIA_SVG_AUTHORING_RULES §7, accepted
+# 2026-10-15). My Creations takes sunshine: the warm "treasure" gold reads as
+# "things I kept", is clearly different from the adjacent coral Create, and is
+# not any other Collection's hue (turquoise stays reserved for music).
+_COLLECTION_PORTAL_HUES = {
+    "create": "coral",
+    "my_creations": "sunshine",
+    "play": "ocean",
+    "learn": "orange",
+    "explore": "leaf",
+    "my_greia": "grape",
+}
+# Theme-token values for the primitive fallback only (runtime/theme-defaults.toml).
+_FALLBACK_HUES = {
+    "default": (68, 184, 174),
+    "coral": (244, 111, 97),
+    "sunshine": (255, 194, 52),
+    "ocean": (74, 145, 216),
+    "orange": (243, 154, 56),
+    "leaf": (89, 184, 106),
+    "grape": (148, 100, 201),
+}
+
 
 class CollectionFirstHomeMixin:
     """Present primary Collections as the child-facing Greia Home.
@@ -38,13 +64,13 @@ class CollectionFirstHomeMixin:
     Collections as large portal destinations. Entering a Collection reuses the
     already-proven Activity catalogue/card path. Local Back returns here.
 
-    The reviewed ``ui.portal.frame`` asset is optional and fail-soft. If its
-    generated rendition is missing or corrupt, Collection Home remains usable
-    with a primitive circular fallback while the rest of the shared UI stays
-    enabled.
+    Home is laid out by :class:`~greia_launcher.home_layout.CollectionHomeLayout`
+    (one responsive semantic layout) over the shared storybook scene. Each
+    portal uses the ``ui.portal.collection`` art in its Collection hue; the
+    focused portal adds ``ui.portal.collection_focus``. Both are optional and
+    fail-soft: if a rendition is missing or corrupt, Home stays usable with a
+    primitive tile fallback while the rest of the shared UI stays enabled.
     """
-
-    _PORTAL_SOURCE_SIZE = 520
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -62,13 +88,14 @@ class CollectionFirstHomeMixin:
         surface = pygame.display.get_surface()
         width = surface.get_width() if surface is not None else 1024
         height = surface.get_height() if surface is not None else 600
-        if height <= 400:
-            # Six Home destinations cannot fit in one vertical column on a
-            # compact landscape screen. Use two shallow rows instead.
+        if width >= height:
+            # Landscape screens (480x320 up to 1280x800 and wider) show the six
+            # Home destinations as three columns x two rows: shallow rows keep
+            # every portal large instead of stacking three short rows.
             return 3 if width >= 480 else 2 if width >= 320 else 1
-        if width >= 900:
-            return 3
         if width >= 620:
+            return 3
+        if width >= 320:
             return 2
         return 1
 
@@ -198,31 +225,34 @@ class CollectionFirstHomeMixin:
             return
         self._render_collection_home(screen, theme, pygame)
 
+    def _home_reserved_rects(self, width: int, height: int) -> tuple[UiRect, ...]:
+        """Return the protected corner controls the Home layout must not touch."""
+
+        reserved: list[UiRect] = []
+        if self._active_profile is not None:
+            badge = self._home_profile_badge_size(height)
+            reserved.append(UiRect(14, 10, badge, badge))
+        # Achievement star (AchievementLibraryMixin) plus its count pill, or
+        # the gentle error badge, occupy the same top-right corner.
+        star = max(58, min(76, height // 8))
+        reserved.append(UiRect(width - star - 14, 10, star + 4, star + 4))
+        return tuple(reserved)
+
+    @staticmethod
+    def _home_profile_badge_size(height: int) -> int:
+        return max(62, min(86, height // 7))
+
     def _render_collection_home(self, screen: Any, theme: Any, pygame: Any) -> None:
         width, height = screen.get_size()
 
-        # Reuse the accepted large Shell tray as framing, but Home content is
-        # Collections rather than Activity cards plus filter controls. Draw it
-        # before profile chrome so the panel can never cover the switcher.
-        panel_top = max(52, min(62, height // 10))
-        draw_panel = getattr(self, "_draw_shared_shell_panel", None)
-        if draw_panel is not None:
-            draw_panel(
-                screen,
-                pygame,
-                top=panel_top,
-                bottom_margin=4,
-                max_width=width - 24,
-                theme=theme,
-            )
-
-        inner = getattr(self, "_shared_panel_inner_rect", None)
-        if inner is None:
-            inner = pygame.Rect(24, panel_top + 18, width - 48, height - panel_top - 42)
+        # Home stands directly on the storybook meadow (no big empty tray).
+        draw_scene = getattr(self, "_draw_shell_scene_backdrop", None)
+        if draw_scene is not None:
+            draw_scene(screen, pygame, theme=theme)
 
         # Keep the same active-profile route available on top of Home framing.
         if self._active_profile is not None:
-            badge_size = max(62, min(86, height // 7))
+            badge_size = self._home_profile_badge_size(height)
             badge = pygame.Rect(14, 10, badge_size, badge_size)
             pygame.draw.rect(screen, theme.panel, badge, border_radius=22)
             pygame.draw.rect(screen, theme.accent, badge, width=5, border_radius=22)
@@ -251,132 +281,78 @@ class CollectionFirstHomeMixin:
             self._home_collection_selected, len(collections) - 1
         )
 
-        columns = min(self._home_columns(pygame), len(collections))
-        rows = (len(collections) + columns - 1) // columns
-        gap_x = max(20, min(44, inner.width // 20))
-        gap_y = max(14, min(24, inner.height // 20))
-        label_size = max(17, min(23, inner.height // 18))
-        label_gap = max(4, min(8, inner.height // 60))
-        label_approx_h = label_size + 4
-
-        avail_cell_w = max(1, (inner.width - gap_x * (columns - 1)) // columns)
-        avail_cell_h = max(1, (inner.height - gap_y * (rows - 1)) // rows)
-        # 141 = 136 reference portal +4% so Collection buttons match the
-        # larger Activity-card scale; label font size stays unchanged.
-        portal_size = max(
-            60 if height <= 400 else 76,
-            min(
-                141,
-                avail_cell_w - 12,
-                avail_cell_h - label_gap - label_approx_h - 12,
-            ),
+        layout = CollectionHomeLayout.compute(
+            width,
+            height,
+            len(collections),
+            self._home_columns(pygame),
+            reserved=self._home_reserved_rects(width, height),
         )
-        item_height = portal_size + label_gap + label_approx_h
-        total_height = rows * item_height + gap_y * (rows - 1)
-        origin_y = inner.top + max(0, (inner.height - total_height) // 2)
+
+        # The child's own cast friend greets them from the free margin.
+        greeter = getattr(self, "_draw_profile_greeter", None)
+        if layout.greeter is not None and greeter is not None:
+            avatar_id = (
+                self._active_profile.profile.avatar_id
+                if self._active_profile is not None
+                else None
+            )
+            greeter(screen, layout.greeter, avatar_id, "pose_cheer", pygame)
 
         pointer = self._pointer_pos(pygame)
         pointer_active = self._is_pointer_active(pygame)
-        visual_cache = getattr(self, "_visual_cache", None)
+        compact = width <= 800
 
         for index, collection in enumerate(collections):
-            row = index // columns
-            column = index % columns
-            row_start = row * columns
-            row_count = min(columns, len(collections) - row_start)
-            row_width = row_count * portal_size + max(0, row_count - 1) * gap_x
-            row_origin_x = inner.centerx - row_width // 2
-            x = row_origin_x + column * (portal_size + gap_x)
-            y = origin_y + row * (item_height + gap_y)
-
-            portal_rect = pygame.Rect(x, y, portal_size, portal_size)
-            hit_rect = pygame.Rect(x, y, portal_size, item_height)
+            portal = layout.portals[index]
+            hit = layout.hits[index]
+            portal_rect = pygame.Rect(portal.x, portal.y, portal.width, portal.height)
+            hit_rect = pygame.Rect(hit.x, hit.y, hit.width, hit.height)
+            focused = index == self._home_collection_selected
             hovered = pointer_active and hit_rect.collidepoint(pointer)
-            selected = index == self._home_collection_selected
-            state = InteractionVisualState(hovered=hovered, selected=selected)
+            # Hover lifts the portal; only the one focused portal (keyboard /
+            # controller / last choice) wears the ring, so there is never more
+            # than one selection marker on screen.
+            state = InteractionVisualState(hovered=hovered or focused, selected=False)
             target = transformed_rect(portal_rect, self._HOVER.sample(state), pygame)
 
-            portal_surface = None
-            if (
-                not self._shared_collection_portal_disabled
-                and visual_cache is not None
-            ):
-                try:
-                    portal_surface = visual_cache.get(
-                        "ui.portal.frame",
-                        variant="default",
-                        size=target.size,
-                    )
-                except _COLLECTION_VISUAL_ERRORS:
-                    self._shared_collection_portal_disabled = True
-                except pygame.error:
-                    self._shared_collection_portal_disabled = True
-
-            if portal_surface is not None:
-                screen.blit(portal_surface, target)
-            else:
-                # Narrow fallback: preserve Collection-first information
-                # architecture even when only this optional artwork is broken.
-                radius = max(20, min(target.width, target.height) // 2 - 3)
-                pygame.draw.circle(screen, theme.panel, target.center, radius)
-                pygame.draw.circle(
-                    screen,
-                    theme.accent if state.emphasized else theme.text,
-                    target.center,
-                    radius,
-                    width=5 if state.emphasized else 3,
-                )
-
-            if state.emphasized:
-                pygame.draw.circle(
-                    screen,
-                    theme.accent,
-                    target.center,
-                    max(18, min(target.width, target.height) // 2 - 9),
-                    width=max(3, portal_size // 44),
-                )
+            self._draw_home_portal(
+                screen, target, collection.collection_id, focused, theme, pygame
+            )
 
             # Size from the untransformed portal so hover motion reuses the
-            # cached icon; centre on the drawn frame's opening.
-            icon_size = portal_icon_size(portal_rect.width)
+            # cached icon; centre on the drawn art's cream window.
+            icon_box = portal_icon_rect(
+                UiRect(target.x, target.y, target.width, target.height)
+            )
+            icon_size = portal_icon_rect(portal).width
             icon = self._category_shadowed_icon(
                 collection.icon_id or "backpack",
                 icon_size,
-                shadow_alpha=44,
+                shadow_alpha=40,
                 shadow_offset=max(2, icon_size // 28),
                 pygame=pygame,
             )
             screen.blit(
                 icon,
-                icon.get_rect(center=portal_icon_center(target.center, target.height)),
+                icon.get_rect(
+                    center=(
+                        icon_box.x + icon_box.width // 2,
+                        icon_box.y + icon_box.height // 2,
+                    )
+                ),
             )
 
             # A six-portal layout should not squeeze a long saved-work label
-            # into unreadable miniature text on the 480–800px canvases.
+            # into unreadable miniature text on the 480-800px canvases.
             label_text = _category_title(
                 collection.collection_id,
                 self._active_locale,
-                compact=width <= 800,
+                compact=compact,
             )
-            label = self._category_label_surface(
-                label_text,
-                label_size,
-                theme.text,
-                pygame,
-            )
-            max_label_width = max(40, portal_size + gap_x - 4)
-            if label.get_width() > max_label_width:
-                label = pygame.transform.smoothscale(
-                    label,
-                    (
-                        max_label_width,
-                        max(1, round(label.get_height() * max_label_width / label.get_width())),
-                    ),
-                )
-            label_y = y + portal_size + label_gap + label.get_height() // 2
-            screen.blit(
-                label,
-                label.get_rect(center=(portal_rect.centerx, label_y)),
+            self._draw_home_label(
+                screen, layout.labels[index], label_text, layout.label_font_px,
+                focused, theme, pygame,
             )
             self._targets.append(
                 HitTarget("home_collection", collection.collection_id, hit_rect)
@@ -384,3 +360,95 @@ class CollectionFirstHomeMixin:
 
         if (self._last_result and not self._last_result.succeeded) or self._catalogue_error:
             self._draw_error_badge(screen, pygame)
+
+    def _draw_home_portal(
+        self,
+        screen: Any,
+        rect: Any,
+        collection_id: str,
+        focused: bool,
+        theme: Any,
+        pygame: Any,
+    ) -> None:
+        """Draw one Collection portal tile (shared art, primitive fallback)."""
+
+        hue = _COLLECTION_PORTAL_HUES.get(collection_id, "default")
+        visual_cache = getattr(self, "_visual_cache", None)
+        tile = ring = None
+        if not self._shared_collection_portal_disabled and visual_cache is not None:
+            try:
+                tile = visual_cache.get(
+                    "ui.portal.collection", variant=hue, size=rect.size
+                )
+                if focused:
+                    ring = visual_cache.get(
+                        "ui.portal.collection_focus", variant="default", size=rect.size
+                    )
+            except _COLLECTION_VISUAL_ERRORS:
+                self._shared_collection_portal_disabled = True
+                tile = ring = None
+            except pygame.error:
+                self._shared_collection_portal_disabled = True
+                tile = ring = None
+        if tile is not None:
+            screen.blit(tile, rect)
+            if ring is not None:
+                screen.blit(ring, rect)
+            return
+
+        # Narrow fallback: keep Collection-first information architecture and a
+        # visible focus even when only this optional artwork is broken.
+        body = pygame.Rect(
+            rect.x + round(rect.width * 28 / 288),
+            rect.y + round(rect.height * 26 / 304),
+            round(rect.width * 232 / 288),
+            round(rect.height * 250 / 304),
+        )
+        radius = max(8, body.width // 4)
+        pygame.draw.rect(
+            screen, _FALLBACK_HUES.get(hue, theme.accent), body, border_radius=radius
+        )
+        pygame.draw.rect(screen, CAPTION_INK, body, width=3, border_radius=radius)
+        window = body.width * 90 // 232
+        pygame.draw.circle(screen, CAPTION_CREAM, body.center, window)
+        if focused:
+            pygame.draw.rect(
+                screen, theme.accent, body.inflate(14, 14), width=5,
+                border_radius=radius + 7,
+            )
+
+    def _draw_home_label(
+        self,
+        screen: Any,
+        slot: UiRect,
+        text: str,
+        font_px: int,
+        focused: bool,
+        theme: Any,
+        pygame: Any,
+    ) -> None:
+        """Draw a Collection caption on a cream pill that never overlaps a portal."""
+
+        # Keep half the pill height as padding on each side of the text.
+        max_text_w = max(24, slot.width - slot.height)
+        size = font_px
+        label = self._category_label_surface(text, size, theme.text, pygame)
+        # Prefer a smaller real font size over squashing glyphs.
+        while label.get_width() > max_text_w and size > 12:
+            size -= 1
+            label = self._category_label_surface(text, size, theme.text, pygame)
+        if label.get_width() > max_text_w:
+            label = pygame.transform.smoothscale(
+                label,
+                (
+                    max_text_w,
+                    max(1, round(label.get_height() * max_text_w / label.get_width())),
+                ),
+            )
+        draw_caption_pill(
+            screen,
+            pygame,
+            pygame.Rect(slot.x, slot.y, slot.width, slot.height),
+            label,
+            focused=focused,
+        )

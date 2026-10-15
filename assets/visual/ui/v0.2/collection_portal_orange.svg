@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 304" width="288" height="304">
+  <!-- Greia Collection portal tile (orange). Canvas 288x304: tile body x28-260 y26-262,
+       slab (physical thickness) to y276, contact shadow y290. Cream window centre (144,140) r90;
+       the Shell draws the flat core icon inside the window. Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <defs>
+    <!-- orange light (mix 35% white) -> orange -->
+    <linearGradient id="collection_portal_orange_body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7BD7E"/>
+      <stop offset="1" stop-color="#F39A38"/>
+    </linearGradient>
+  </defs>
+  <g id="shadow">
+    <ellipse cx="144" cy="289" rx="112" ry="10" fill="#6A5147" opacity="0.16"/>
+  </g>
+  <g id="slab">
+    <rect x="28" y="40" width="232" height="236" rx="58" fill="#C98136" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+  </g>
+  <g id="body">
+    <rect x="28" y="26" width="232" height="236" rx="58" fill="url(#collection_portal_orange_body)" stroke="#4B372F" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M62 52 C84 40 120 36 150 37" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" opacity="0.55"/>
+  </g>
+  <g id="window">
+    <circle cx="144" cy="140" r="90" fill="#B07234" stroke="#4B372F" stroke-width="4"/>
+    <circle cx="144" cy="144" r="80" fill="#FFFBEB"/>
+    <path d="M86 122 C94 96 116 80 140 76" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>

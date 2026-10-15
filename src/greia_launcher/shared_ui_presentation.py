@@ -35,6 +35,33 @@ _SHARED_VISUAL_ERRORS = (
 )
 
 
+# Caption pill tokens shared by Home portal labels and profile names
+# (runtime/theme-defaults.toml cocoa-ink family + cast cream/gold).
+CAPTION_INK = (75, 55, 47)
+CAPTION_CREAM = (255, 251, 235)
+CAPTION_FOCUS = (255, 194, 52)
+CAPTION_SHADOW = (205, 186, 150)
+
+
+def draw_caption_pill(screen: Any, pygame: Any, slot: Any, label: Any, *, focused: bool) -> None:
+    """Draw ``label`` centred on a cream (focused: sunshine) pill inside ``slot``.
+
+    The pill hugs the text but never exceeds ``slot``, so neighbouring
+    captions keep their gap and never overlap a portal or another caption.
+    """
+
+    pill_w = min(slot.width, label.get_width() + max(16, slot.height))
+    pill = pygame.Rect(0, 0, pill_w, slot.height)
+    pill.center = slot.center
+    radius = pill.height // 2
+    pygame.draw.rect(screen, CAPTION_SHADOW, pill.move(0, 2), border_radius=radius)
+    pygame.draw.rect(
+        screen, CAPTION_FOCUS if focused else CAPTION_CREAM, pill, border_radius=radius
+    )
+    pygame.draw.rect(screen, CAPTION_INK, pill, width=2, border_radius=radius)
+    screen.blit(label, label.get_rect(center=pill.center))
+
+
 class SharedUiCategoryButtonMixin:
     """Render root Activity-category controls with shared button artwork.
 
@@ -147,8 +174,12 @@ class SharedUiCategoryButtonMixin:
 
 
 class SharedUiShellPanelMixin:
-    """Place reviewed shared panel artwork behind real Shell content.
+    """Place the storybook scene and reviewed panel artwork behind Shell content.
 
+    Every Shell surface stands on one cached backdrop: theme background colour,
+    then the child's wallpaper or (by default) the transparent-sky
+    ``bg.meadow_day.home`` scene, then optionally the large tray. The profile
+    picker and Collection Home omit the tray; Collection pages keep it.
     The panel is visual framing only. Existing profile/activity layout, hit
     targets, category navigation and lifecycle remain authoritative in the base
     presentation. Missing/corrupt optional artwork falls back to the normal
@@ -157,20 +188,17 @@ class SharedUiShellPanelMixin:
 
     _PANEL_SOURCE_WIDTH = 640
     _PANEL_SOURCE_HEIGHT = 420
+    # Storybook meadow behind every Shell surface (transparent sky layer).
+    _SCENE_ASSET_ID = "bg.meadow_day.home"
+    _SCENE_SOURCE_SIZE = (1024, 600)
 
     def _render_profile_picker_content(
         self, screen: Any, theme: Any, pygame: Any
     ) -> None:
-        height = screen.get_height()
-        header_size = max(70, min(100, height // 6))
-        self._draw_shared_shell_panel(
-            screen,
-            pygame,
-            top=header_size + 4,
-            bottom_margin=14,
-            max_width=940,
-            theme=theme,
-        )
+        # The picker shares the Home storybook meadow instead of a big empty
+        # tray: profile cards stand directly on the scene. The base picker
+        # then uses its panel-free layout (no stale panel bounds survive).
+        self._draw_shell_scene_backdrop(screen, pygame, theme=theme)
         super()._render_profile_picker_content(screen, theme, pygame)
 
     def _render_activities_content(self, screen: Any, theme: Any, pygame: Any) -> None:
@@ -215,6 +243,60 @@ class SharedUiShellPanelMixin:
             bottom_margin=bottom_margin,
             max_width=max_width,
         )
+
+    def _draw_shell_scene_backdrop(
+        self, screen: Any, pygame: Any, *, theme: Any = None
+    ) -> None:
+        """Blit the cached storybook scene backdrop without the large tray.
+
+        Used by surfaces whose content stands directly on the scene (profile
+        picker, Collection Home). Clears the panel content bounds so callers
+        never lay out against a tray that is not drawn.
+        """
+
+        self._shared_panel_inner_rect = None
+        self._shell_panel_layout = None
+        self._ensure_shared_panel_backdrop(screen, theme, pygame, panel=False)
+
+    def _shell_scene_layer(self, size: tuple[int, int], pygame: Any) -> Any | None:
+        """Return the meadow scene COVER-fitted to ``size`` (composition-time only).
+
+        The 1024x600 rendition is decoded once through the bounded visual
+        cache; cropping/scaling happens only while a backdrop is composed, and
+        the composed backdrop is what every frame blits. Bottom-anchored so the
+        ground stays visible on very wide screens. Missing or corrupt artwork
+        disables only this decoration.
+        """
+
+        visual_cache = getattr(self, "_visual_cache", None)
+        if visual_cache is None or getattr(self, "_shared_scene_disabled", False):
+            return None
+        try:
+            source = visual_cache.get(
+                self._SCENE_ASSET_ID,
+                variant="default",
+                size=self._SCENE_SOURCE_SIZE,
+            )
+        except _SHARED_VISUAL_ERRORS:
+            self._shared_scene_disabled = True
+            return None
+        except pygame.error:
+            self._shared_scene_disabled = True
+            return None
+        width, height = size
+        source_w, source_h = source.get_size()
+        scale = max(width / source_w, height / source_h)
+        crop_w = max(1, min(source_w, int(round(width / scale))))
+        crop_h = max(1, min(source_h, int(round(height / scale))))
+        crop = pygame.Rect((source_w - crop_w) // 2, source_h - crop_h, crop_w, crop_h)
+        try:
+            region = source.subsurface(crop)
+            if region.get_size() == (width, height):
+                return region
+            return pygame.transform.smoothscale(region, (width, height))
+        except (ValueError, pygame.error):
+            self._shared_scene_disabled = True
+            return None
 
     @classmethod
     def compute_shell_panel_layout(
@@ -277,6 +359,7 @@ class SharedUiShellPanelMixin:
         top: int = 72,
         bottom_margin: int = 18,
         max_width: int = 1180,
+        panel: bool = True,
     ) -> None:
         visual_cache = getattr(self, "_visual_cache", None)
         if visual_cache is None:
@@ -304,26 +387,26 @@ class SharedUiShellPanelMixin:
             "scene",
             theme.background,
             wallpaper_token,
-            int(top),
-            int(bottom_margin),
-            int(max_width),
+            (int(top), int(bottom_margin), int(max_width)) if panel else None,
             width,
             height,
         )
         backdrop = self._backdrop_cache.get(backdrop_key)
         if backdrop is None:
-            try:
-                panel_surface = visual_cache.get(
-                    "ui.panel.base",
-                    variant="default",
-                    size=panel_rect.size,
-                )
-            except _SHARED_VISUAL_ERRORS:
-                self._shared_panel_disabled = True
-                return
-            except pygame.error:
-                self._shared_panel_disabled = True
-                return
+            panel_surface = None
+            if panel:
+                try:
+                    panel_surface = visual_cache.get(
+                        "ui.panel.base",
+                        variant="default",
+                        size=panel_rect.size,
+                    )
+                except _SHARED_VISUAL_ERRORS:
+                    self._shared_panel_disabled = True
+                    return
+                except pygame.error:
+                    self._shared_panel_disabled = True
+                    return
 
             backdrop = pygame.Surface((width, height)).convert()
             backdrop.fill(theme.background)
@@ -331,12 +414,21 @@ class SharedUiShellPanelMixin:
                 theme, (width, height), pygame
             )
             if wallpaper is not None:
+                # A child-chosen wallpaper is personal: it replaces the scene.
                 backdrop.blit(wallpaper, (0, 0))
-            backdrop.blit(panel_surface, panel_rect)
+            else:
+                # Transparent sky: the child's background colour stays visible.
+                scene = self._shell_scene_layer((width, height), pygame)
+                if scene is not None:
+                    backdrop.blit(scene, (0, 0))
+            if panel_surface is not None:
+                backdrop.blit(panel_surface, panel_rect)
             self._backdrop_cache[backdrop_key] = backdrop
 
         screen.blit(backdrop, (0, 0))
         self._last_scene_backdrop = backdrop
+        if not panel:
+            return
 
         self._shared_panel_inner_rect = pygame.Rect(
             layout.content_rect.x,

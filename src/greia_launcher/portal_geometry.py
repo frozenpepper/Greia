@@ -1,8 +1,9 @@
 """Icon placement inside the shared Collection portal frame (``ui.portal.frame``).
 
-Home Collection portals and adaptive-discovery sub-Collection portals draw the
-same frame art, so both size and centre their core icon here instead of each
-renderer guessing a fraction of the outer rect.
+Adaptive-discovery sub-Collection portals draw this frame art, so they size and
+centre their core icon here instead of guessing a fraction of the outer rect.
+(The root Collection Home uses the flat ``ui.portal.collection`` tiles laid out
+by :mod:`greia_launcher.home_layout`.)
 
 Geometry source: ``assets/visual/ui/v0.1/portal_frame.svg`` (520 viewBox) has
 its cream opening at r=154 centred on (260, 250), i.e. a diameter of ~59 % of

@@ -1,5 +1,5 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.4.0"
+catalog_version = "0.5.0"
 status = "candidate-runtime-rendition-source"
 runtime_consumed = false
 notes = "Explicit build-time selection of reviewed SVG masters for raster runtime renditions. This file is not directory discovery."
@@ -153,6 +153,92 @@ source = "visual/ui/v0.1/portal_frame.svg"
 output = "visual/runtime/v1/ui/portal_frame.png"
 width = 520
 height = 520
+
+# Collection Home portal tiles (flat recipe, docs/design/GREIA_SVG_AUTHORING_RULES.md).
+# One variant per Collection hue; the Shell maps create->coral,
+# my_creations->sunshine, play->ocean, learn->orange, explore->leaf,
+# my_greia->grape and any other Collection to the turquoise default.
+
+[[visuals]]
+id = "ui.portal.collection"
+kind = "ui"
+role = "collection_destination"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.2/collection_portal.svg"
+output = "visual/runtime/v1/ui/collection_portal.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "coral"
+source = "visual/ui/v0.2/collection_portal_coral.svg"
+output = "visual/runtime/v1/ui/collection_portal_coral.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "sunshine"
+source = "visual/ui/v0.2/collection_portal_sunshine.svg"
+output = "visual/runtime/v1/ui/collection_portal_sunshine.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "ocean"
+source = "visual/ui/v0.2/collection_portal_ocean.svg"
+output = "visual/runtime/v1/ui/collection_portal_ocean.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "orange"
+source = "visual/ui/v0.2/collection_portal_orange.svg"
+output = "visual/runtime/v1/ui/collection_portal_orange.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "leaf"
+source = "visual/ui/v0.2/collection_portal_leaf.svg"
+output = "visual/runtime/v1/ui/collection_portal_leaf.png"
+width = 288
+height = 304
+
+[[visuals.variants]]
+name = "grape"
+source = "visual/ui/v0.2/collection_portal_grape.svg"
+output = "visual/runtime/v1/ui/collection_portal_grape.png"
+width = 288
+height = 304
+
+[[visuals]]
+id = "ui.portal.collection_focus"
+kind = "ui"
+role = "focus_indicator"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/ui/v0.2/collection_portal_focus.svg"
+output = "visual/runtime/v1/ui/collection_portal_focus.png"
+width = 288
+height = 304
+
+# Shell Home / profile-picker backdrop: meadow_day landscape with a transparent
+# sky so the child's theme background colour stays visible.
+
+[[visuals]]
+id = "bg.meadow_day.home"
+kind = "environment"
+role = "shell_backdrop"
+
+[[visuals.variants]]
+name = "default"
+source = "visual/environments/meadow_day/v0.1/home_landscape.svg"
+output = "visual/runtime/v1/meadow_day/home_landscape.png"
+width = 1024
+height = 600
 
 [[visuals]]
 id = "ui.shadow.soft"

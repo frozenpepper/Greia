@@ -1374,7 +1374,11 @@ class LauncherApplication:
             self._draw_empty(screen, pygame)
             return
 
-        columns = min(4 if width >= 900 else 3 if width >= 700 else 2, len(self.profiles))
+        if height <= 400 and width >= 480:
+            # Short landscape screens: one wide row keeps each card finger-sized.
+            columns = min(4, len(self.profiles))
+        else:
+            columns = min(4 if width >= 900 else 3 if width >= 700 else 2, len(self.profiles))
         page = calculate_grid_page(
             len(self.profiles), self._profile_selected, columns=columns, max_rows=2
         )
@@ -1422,8 +1426,8 @@ class LauncherApplication:
 
             max_tile_w = max(1, (avail_w - gap * (page.columns - 1)) // page.columns)
             max_tile_h = max(1, (avail_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
-            tile_w = min(213, max_tile_w)
-            tile_h = min(205, max_tile_h)
+            tile_w = min(224, max_tile_w)
+            tile_h = min(236, max_tile_h)
             tile_w = max(1, min(max_tile_w, max(110, tile_w)))
             tile_h = max(1, min(max_tile_h, max(120, tile_h)))
             total_w = page.columns * tile_w + (page.columns - 1) * gap
@@ -1449,8 +1453,8 @@ class LauncherApplication:
 
             max_tile_w = max(1, (usable_w - gap * (page.columns - 1)) // page.columns)
             max_tile_h = max(1, (available_h - gap * max(0, page.rows - 1)) // max(1, page.rows))
-            tile_w = min(213, max_tile_w)
-            tile_h = min(205, max_tile_h)
+            tile_w = min(224, max_tile_w)
+            tile_h = min(236, max_tile_h)
             tile_w = max(1, min(max_tile_w, max(110, tile_w)))
             tile_h = max(1, min(max_tile_h, max(120, tile_h)))
             total_w = page.columns * tile_w + (page.columns - 1) * gap

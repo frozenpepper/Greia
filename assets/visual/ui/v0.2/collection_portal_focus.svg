@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 304" width="288" height="304">
+  <!-- Greia Collection portal focus ring: overlays collection_portal*.svg on the same 288x304 canvas.
+       Gold band with ink edges around tile body + slab, plus two sparkles. Recipe: GREIA_SVG_AUTHORING_RULES.md. -->
+  <g id="ring">
+    <rect x="11" y="9" width="266" height="284" rx="74" fill="none" stroke="#4B372F" stroke-width="15" stroke-linejoin="round"/>
+    <rect x="11" y="9" width="266" height="284" rx="74" fill="none" stroke="#FBBF24" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M60 14 C90 8 140 6 180 8" fill="none" stroke="#FFFBEB" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+  </g>
+  <g id="fx" fill="#FBBF24" stroke="#4B372F" stroke-width="3" stroke-linejoin="round">
+    <path d="M262 4 L267 19 L282 24 L267 29 L262 44 L257 29 L242 24 L257 19 Z"/>
+    <path d="M24 262 L28 273 L39 277 L28 281 L24 292 L20 281 L9 277 L20 273 Z"/>
+  </g>
+</svg>

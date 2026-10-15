@@ -1,6 +1,6 @@
 catalog_id = "greia.shared-visuals.v1"
-catalog_version = "0.4.0"
-source_sha256 = "633f633a3696e7962abd6496a6ed2a8392bff682a1f496945f99939b58181f2e"
+catalog_version = "0.5.0"
+source_sha256 = "79df13ede716a5ec3724a935711dba70b612e2c2c1a306627127f79729cec25d"
 generated_note = "Build-time PNG renditions from explicit reviewed SVG masters; runtime must not discover or rasterize SVG source."
 
 [[visuals]]
@@ -18,6 +18,14 @@ role = "light_overlay"
 
 [visuals.variants]
 default = "visual/runtime/v1/forest_meadow/sunlight_rays.png"
+
+[[visuals]]
+id = "bg.meadow_day.home"
+kind = "environment"
+role = "shell_backdrop"
+
+[visuals.variants]
+default = "visual/runtime/v1/meadow_day/home_landscape.png"
 
 [[visuals]]
 id = "bush.flowering.01"
@@ -284,6 +292,28 @@ role = "panel"
 
 [visuals.variants]
 default = "visual/runtime/v1/ui/panel_base.png"
+
+[[visuals]]
+id = "ui.portal.collection"
+kind = "ui"
+role = "collection_destination"
+
+[visuals.variants]
+coral = "visual/runtime/v1/ui/collection_portal_coral.png"
+default = "visual/runtime/v1/ui/collection_portal.png"
+grape = "visual/runtime/v1/ui/collection_portal_grape.png"
+leaf = "visual/runtime/v1/ui/collection_portal_leaf.png"
+ocean = "visual/runtime/v1/ui/collection_portal_ocean.png"
+orange = "visual/runtime/v1/ui/collection_portal_orange.png"
+sunshine = "visual/runtime/v1/ui/collection_portal_sunshine.png"
+
+[[visuals]]
+id = "ui.portal.collection_focus"
+kind = "ui"
+role = "focus_indicator"
+
+[visuals.variants]
+default = "visual/runtime/v1/ui/collection_portal_focus.png"
 
 [[visuals]]
 id = "ui.portal.frame"

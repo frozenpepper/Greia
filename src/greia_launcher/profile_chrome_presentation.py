@@ -8,11 +8,24 @@ launcher. The shared avatar frame is optional and fail-soft.
 from __future__ import annotations
 
 from typing import Any
+import zlib
 
 from greia_platform.assets import AssetCatalogueError
+from greia_platform.pygame_effects import transformed_rect
 from greia_platform.pygame_visual_assets import VisualSurfaceCacheError
+from greia_platform.ui_motion import InteractionVisualState
 
+from greia_platform.responsive_layout import UiRect
+
+from .home_layout import (
+    PORTAL_ART_HEIGHT,
+    PORTAL_ART_WIDTH,
+    greeter_rect,
+    layout_scale,
+    portal_icon_rect,
+)
 from .presentation import _mix
+from .shared_ui_presentation import draw_caption_pill
 from .system_chrome import resolve_trusted_action_minimum_px
 
 
@@ -24,6 +37,36 @@ _SHARED_PROFILE_VISUAL_ERRORS = (
     OSError,
     ValueError,
 )
+
+# Profile avatar IDs that are canonical cast faces (core_icons_v1.toml):
+# the Home greeter is that same character, so the child sees "their" friend.
+_AVATAR_CAST_CHARACTER = {
+    "unicorn": "lilli",
+    "robot": "dani",
+    "owl": "leo",
+    "green_monster": "momo",
+}
+# Leo is the cast's thoughtful guide: he greets on the profile picker and for
+# non-cast avatars (dinosaur, wizard, future IDs).
+_DEFAULT_GREETER_CHARACTER = "leo"
+
+
+# Profile cards reuse the Collection portal art. Each child keeps one stable
+# hue (derived from the opaque profile ID, never its position) so a card does
+# not change colour when siblings are added.
+_PROFILE_PORTAL_HUES = ("grape", "ocean", "coral", "leaf", "orange", "default")
+
+
+def profile_portal_hue(profile_id: str) -> str:
+    """Return the stable ``ui.portal.collection`` variant for a profile card."""
+
+    return _PROFILE_PORTAL_HUES[zlib.crc32(profile_id.encode("utf-8")) % len(_PROFILE_PORTAL_HUES)]
+
+
+def greeter_character_for(avatar_id: str | None) -> str:
+    """Return the canonical cast ID that greets a profile with ``avatar_id``."""
+
+    return _AVATAR_CAST_CHARACTER.get(avatar_id or "", _DEFAULT_GREETER_CHARACTER)
 
 
 class SharedUiProfileChromeMixin:
@@ -72,6 +115,58 @@ class SharedUiProfileChromeMixin:
             pygame,
         )
 
+    def _render_profile_picker_content(
+        self, screen: Any, theme: Any, pygame: Any
+    ) -> None:
+        super()._render_profile_picker_content(screen, theme, pygame)
+        if not self.profiles:
+            return
+        if any(target.action == "profile_page" for target in self._targets):
+            # Paging arrows own the side margins; the greeter steps aside.
+            return
+        content = getattr(self, "_page_content_rect", None)
+        if content is None:
+            return
+        rect = greeter_rect(
+            screen.get_width(), screen.get_height(), free_right_edge=content.x
+        )
+        if rect is not None:
+            self._draw_profile_greeter(screen, rect, None, "pose_point", pygame)
+
+    def _draw_profile_greeter(
+        self,
+        screen: Any,
+        rect: UiRect,
+        avatar_id: str | None,
+        pose: str,
+        pygame: Any,
+    ) -> bool:
+        """Blit the canonical cast greeter for ``avatar_id`` into ``rect``.
+
+        Presentation only: a cached shared ``character.<id>`` pose rendition.
+        It owns no hit target and is fail-soft (returns False when the
+        optional artwork is unavailable).
+        """
+
+        visual_cache = getattr(self, "_visual_cache", None)
+        if visual_cache is None or getattr(self, "_shared_greeter_disabled", False):
+            return False
+        character = greeter_character_for(avatar_id)
+        try:
+            surface = visual_cache.get(
+                f"character.{character}",
+                variant=pose,
+                size=(rect.width, rect.height),
+            )
+        except _SHARED_PROFILE_VISUAL_ERRORS:
+            self._shared_greeter_disabled = True
+            return False
+        except pygame.error:
+            self._shared_greeter_disabled = True
+            return False
+        screen.blit(surface, (rect.x, rect.y))
+        return True
+
     def _avatar_frame_surface(self, size: int, pygame: Any) -> Any | None:
         visual_cache = getattr(self, "_visual_cache", None)
         if visual_cache is None:
@@ -102,6 +197,10 @@ class SharedUiProfileChromeMixin:
         """Polymorphic profile card presentation with framed avatar artwork."""
         if getattr(self, "_shared_profile_frame_disabled", False) or getattr(self, "_visual_cache", None) is None:
             super()._draw_profile_card(screen, rect, profile, selected, hovered, theme, pygame)
+            return
+        if self._draw_profile_portal_card(
+            screen, rect, profile, selected, hovered, theme, pygame
+        ):
             return
 
         frame_size = max(
@@ -187,6 +286,106 @@ class SharedUiProfileChromeMixin:
         if profile.has_secret:
             lock = self._load_icon("yellow_star", max(26, drawn.width // 7), pygame)
             screen.blit(lock, lock.get_rect(topright=(drawn.right - 8, drawn.top + 8)))
+
+    def _draw_profile_portal_card(
+        self,
+        screen: Any,
+        rect: Any,
+        profile: Any,
+        selected: bool,
+        hovered: bool,
+        theme: Any,
+        pygame: Any,
+    ) -> bool:
+        """Draw a picker card in the Home portal family; False means fall back.
+
+        The card rectangle stays the authoritative hit target. Inside it the
+        portal tile (in the profile's stable hue) carries the avatar in its
+        cream window and the name sits on the same caption pill as Home
+        labels, so choosing yourself looks like choosing a Home destination.
+        """
+
+        if getattr(self, "_shared_profile_portal_disabled", False):
+            return False
+        visual_cache = getattr(self, "_visual_cache", None)
+        if visual_cache is None:
+            return False
+        # Same scale family as the Home portals: one card never dwarfs the
+        # screen on 480x320 nor shrinks below a Home portal on 1280x800.
+        scale = layout_scale(screen.get_width(), screen.get_height())
+        font_size = max(16, min(32, int(round(26 * scale)), rect.height // 7))
+        pill_h = font_size + max(8, int(round(12 * scale)))
+        gap = max(3, int(round(5 * scale)))
+        art_h = rect.height - pill_h - gap
+        art_w = min(
+            rect.width,
+            int(round(168 * scale)),
+            int(round(art_h * PORTAL_ART_WIDTH / PORTAL_ART_HEIGHT)),
+        )
+        art_h = int(round(art_w * PORTAL_ART_HEIGHT / PORTAL_ART_WIDTH))
+        if art_w < 40:
+            return False
+        group_top = rect.top + max(0, (rect.height - art_h - gap - pill_h) // 2)
+        art = pygame.Rect(0, 0, art_w, art_h)
+        art.midtop = (rect.centerx, group_top)
+        state = InteractionVisualState(hovered=selected or hovered)
+        drawn = transformed_rect(art, self._HOVER.sample(state), pygame)
+        try:
+            tile = visual_cache.get(
+                "ui.portal.collection",
+                variant=profile_portal_hue(profile.profile_id),
+                size=drawn.size,
+            )
+            ring = (
+                visual_cache.get(
+                    "ui.portal.collection_focus", variant="default", size=drawn.size
+                )
+                if selected
+                else None
+            )
+        except _SHARED_PROFILE_VISUAL_ERRORS:
+            self._shared_profile_portal_disabled = True
+            return False
+        except pygame.error:
+            self._shared_profile_portal_disabled = True
+            return False
+        screen.blit(tile, drawn)
+        if ring is not None:
+            screen.blit(ring, drawn)
+
+        window = portal_icon_rect(UiRect(drawn.x, drawn.y, drawn.width, drawn.height))
+        # Avatars are whole characters, so they fill a little more of the window.
+        avatar_size = max(24, int(round(art_w * 0.56)))
+        avatar = self._load_icon(profile.avatar_id, avatar_size, pygame)
+        screen.blit(
+            avatar,
+            avatar.get_rect(
+                center=(window.x + window.width // 2, window.y + window.height // 2)
+            ),
+        )
+
+        slot = pygame.Rect(rect.left, art.bottom + gap, rect.width, pill_h)
+        name = self._profile_name_surface(
+            self._child_display_text(profile.display_name),
+            font_size,
+            max(24, rect.width - pill_h - 8),
+            theme.text,
+            pygame,
+        )
+        draw_caption_pill(screen, pygame, slot, name, focused=selected)
+
+        if profile.has_secret:
+            lock = self._load_icon("yellow_star", max(22, art_w // 6), pygame)
+            screen.blit(
+                lock,
+                lock.get_rect(
+                    center=(
+                        drawn.right - drawn.width * 40 // PORTAL_ART_WIDTH,
+                        drawn.top + drawn.height * 44 // PORTAL_ART_HEIGHT,
+                    )
+                ),
+            )
+        return True
 
     def _overlay_active_profile_frame(
         self,

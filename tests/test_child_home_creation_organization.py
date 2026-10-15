@@ -82,7 +82,9 @@ class ChildHomeCreationOrganizationTests(unittest.TestCase):
         for size, columns in (
             ((480, 320), 3),
             ((640, 360), 3),
-            ((800, 480), 2),
+            ((800, 480), 3),
+            ((1280, 800), 3),
+            ((600, 1024), 2),
             ((1024, 600), 3),
         ):
             with self.subTest(size=size):

@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 600" width="1024" height="600">
+  <!-- Greia Shell Home / profile-picker backdrop: meadow_day landscape layer.
+       Transparent sky so the child's chosen theme background shows through.
+       Interaction-critical area x112-912 is kept calm; decoration lives at the edges.
+       Recipe: docs/design/GREIA_SVG_AUTHORING_RULES.md (scene layer). -->
+  <defs>
+    <!-- leaf light (mix 40% white) -> leaf -->
+    <linearGradient id="home_landscape_meadow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9BD4A6"/>
+      <stop offset="1" stop-color="#59B86A"/>
+    </linearGradient>
+    <!-- sky light -> sky (far hills haze) -->
+    <linearGradient id="home_landscape_far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#C9DDF0"/>
+      <stop offset="1" stop-color="#DDEBF2"/>
+    </linearGradient>
+    <!-- sunshine glow -->
+    <radialGradient id="home_landscape_sun_glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFE7A6" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#FFE7A6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <g id="sky">
+    <circle cx="902" cy="206" r="64" fill="url(#home_landscape_sun_glow)"/>
+    <circle cx="902" cy="206" r="32" fill="#FFD35C" stroke="#E9A93B" stroke-width="3"/>
+    <path d="M884 194 C889 187 897 183 905 183" fill="none" stroke="#FFF1C2" stroke-width="5" stroke-linecap="round"/>
+    <g fill="#FFFDF6" stroke="#B9CBD8" stroke-width="2.5" stroke-linejoin="round">
+      <path d="M74 236 C68 222 85 211 99 219 C105 202 133 200 142 216 C155 208 175 216 172 231 C184 234 183 250 169 250 L83 250 C68 250 64 240 74 236 Z"/>
+      <path d="M622 38 C617 26 632 18 644 24 C651 11 675 11 681 24 C693 19 706 27 703 39 C713 42 712 54 700 54 L629 54 C616 54 612 44 622 38 Z"/>
+      <path d="M792 82 C787 70 801 63 812 68 C818 57 838 57 843 68 C853 64 864 71 861 82 C870 85 868 96 858 96 L800 96 C789 96 786 88 792 82 Z" opacity="0.9"/>
+    </g>
+  </g>
+
+  <g id="far">
+    <path d="M0 384 C60 352 130 344 200 362 C260 330 340 328 410 360 C470 342 540 340 610 362 C680 334 770 330 840 356 C910 340 980 342 1024 360 L1024 460 L0 460 Z" fill="url(#home_landscape_far)"/>
+  </g>
+
+  <g id="mid">
+    <path d="M0 418 C90 392 190 390 280 410 C370 396 470 400 560 418 C650 398 760 392 860 410 C930 400 990 402 1024 412 L1024 500 L0 500 Z" fill="#B5DDA6" stroke="#7FA877" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M40 412 C110 398 190 397 250 406" fill="none" stroke="#D3EDC6" stroke-width="5" stroke-linecap="round"/>
+    <path d="M610 410 C680 397 760 395 830 404" fill="none" stroke="#D3EDC6" stroke-width="5" stroke-linecap="round"/>
+    <g id="mid_trees" stroke="#51714A" stroke-width="2" stroke-linejoin="round">
+      <path d="M318 410 L318 396" fill="none" stroke-width="3" stroke-linecap="round"/>
+      <path d="M306 398 C298 396 299 382 308 381 C307 370 322 366 327 374 C335 369 345 378 340 386 C347 390 343 400 335 398 C328 403 313 403 306 398 Z" fill="#7CBF73"/>
+      <path d="M708 406 L708 392" fill="none" stroke-width="3" stroke-linecap="round"/>
+      <path d="M697 394 C690 392 691 380 699 379 C698 370 711 366 715 373 C722 369 731 377 727 384 C733 387 730 396 723 394 C717 399 704 399 697 394 Z" fill="#86C67A"/>
+    </g>
+  </g>
+
+  <g id="ground">
+    <path d="M0 478 C120 462 250 460 380 472 C470 480 560 482 650 472 C770 458 900 460 1024 474 L1024 600 L0 600 Z" fill="url(#home_landscape_meadow)" stroke="#51714A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M14 476 C120 464 240 463 360 473" fill="none" stroke="#C8EBC4" stroke-width="5" stroke-linecap="round"/>
+    <path d="M664 472 C780 460 900 461 1010 473" fill="none" stroke="#C8EBC4" stroke-width="5" stroke-linecap="round"/>
+    <g fill="none" stroke="#4E9A5C" stroke-width="3" stroke-linecap="round" opacity="0.55">
+      <path d="M180 532 C200 526 222 526 240 532"/>
+      <path d="M460 548 C486 541 514 541 540 548"/>
+      <path d="M760 530 C782 524 806 524 826 530"/>
+      <path d="M330 576 C352 570 376 570 396 576"/>
+      <path d="M620 584 C642 578 668 578 688 584"/>
+    </g>
+  </g>
+
+  <g id="tree_right" transform="translate(-34 0)">
+    <ellipse cx="958" cy="486" rx="62" ry="9" fill="#6A5147" opacity="0.14"/>
+    <path d="M948 486 L951 400 L966 400 L969 486 Z" fill="#9A6A45" stroke="#4B372F" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M957 430 L938 410 M961 418 L982 398" fill="none" stroke="#4B372F" stroke-width="3" stroke-linecap="round"/>
+    <path d="M900 404 C872 400 870 364 896 356 C888 322 922 300 948 314 C960 288 1004 290 1012 318 C1040 316 1052 352 1032 368 C1048 388 1030 414 1006 410 C994 428 960 430 944 418 C930 426 908 420 900 404 Z" fill="#6DB25A" stroke="#51714A" stroke-width="3.5" stroke-linejoin="round"/>
+    <path d="M904 360 C906 340 924 326 944 330" fill="none" stroke="#A6D98F" stroke-width="6" stroke-linecap="round"/>
+    <path d="M1010 396 C1024 390 1032 380 1032 370" fill="none" stroke="#56985B" stroke-width="6" stroke-linecap="round"/>
+    <g fill="#F46F61" stroke="#4B372F" stroke-width="2">
+      <circle cx="928" cy="378" r="6"/>
+      <circle cx="978" cy="344" r="6"/>
+      <circle cx="1000" cy="390" r="6"/>
+    </g>
+  </g>
+
+  <g id="bush_left">
+    <path d="M14 488 C4 470 18 446 40 450 C46 426 80 420 94 440 C112 428 140 442 136 464 C152 468 154 490 140 494 L22 494 C14 494 12 490 14 488 Z" fill="#7CC07A" stroke="#51714A" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M28 462 C32 452 42 448 52 450" fill="none" stroke="#B5E0A6" stroke-width="5" stroke-linecap="round"/>
+    <g fill="#FFFBEB" stroke="#51714A" stroke-width="1.8">
+      <circle cx="62" cy="462" r="5"/>
+      <circle cx="102" cy="452" r="5"/>
+      <circle cx="118" cy="476" r="5"/>
+    </g>
+    <g fill="#FFC234">
+      <circle cx="62" cy="462" r="2"/>
+      <circle cx="102" cy="452" r="2"/>
+      <circle cx="118" cy="476" r="2"/>
+    </g>
+  </g>
+
+  <g id="flowers">
+    <g><path d="M190 506 L190 490" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#F5A3C0" stroke="#4B372F" stroke-width="1.8"><circle cx="185" cy="487" r="4.5"/><circle cx="195" cy="487" r="4.5"/><circle cx="190" cy="482" r="4.5"/><circle cx="190" cy="492" r="4.5"/></g><circle cx="190" cy="487" r="2.6" fill="#FFC234"/></g>
+    <g><path d="M226 512 L226 498" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#FFFBEB" stroke="#4B372F" stroke-width="1.8"><circle cx="221" cy="495" r="4.5"/><circle cx="231" cy="495" r="4.5"/><circle cx="226" cy="490" r="4.5"/><circle cx="226" cy="500" r="4.5"/></g><circle cx="226" cy="495" r="2.6" fill="#FFC234"/></g>
+    <g><path d="M848 504 L848 488" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#BFA2DF" stroke="#4B372F" stroke-width="1.8"><circle cx="843" cy="485" r="4.5"/><circle cx="853" cy="485" r="4.5"/><circle cx="848" cy="480" r="4.5"/><circle cx="848" cy="490" r="4.5"/></g><circle cx="848" cy="485" r="2.6" fill="#FFC234"/></g>
+    <g><path d="M884 514 L884 500" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#F5A3C0" stroke="#4B372F" stroke-width="1.8"><circle cx="879" cy="497" r="4.5"/><circle cx="889" cy="497" r="4.5"/><circle cx="884" cy="492" r="4.5"/><circle cx="884" cy="502" r="4.5"/></g><circle cx="884" cy="497" r="2.6" fill="#FFC234"/></g>
+    <g><path d="M120 560 L120 544" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#FFFBEB" stroke="#4B372F" stroke-width="1.8"><circle cx="115" cy="541" r="4.5"/><circle cx="125" cy="541" r="4.5"/><circle cx="120" cy="536" r="4.5"/><circle cx="120" cy="546" r="4.5"/></g><circle cx="120" cy="541" r="2.6" fill="#FFC234"/></g>
+    <g><path d="M940 560 L940 544" stroke="#51714A" stroke-width="2.5" stroke-linecap="round"/><g fill="#FFFBEB" stroke="#4B372F" stroke-width="1.8"><circle cx="935" cy="541" r="4.5"/><circle cx="945" cy="541" r="4.5"/><circle cx="940" cy="536" r="4.5"/><circle cx="940" cy="546" r="4.5"/></g><circle cx="940" cy="541" r="2.6" fill="#FFC234"/></g>
+  </g>
+
+  <g id="foreground">
+    <path d="M0 600 C4 584 10 572 16 566 C18 578 22 584 26 588 C28 572 34 560 40 552 C42 568 42 580 44 588 C50 578 58 572 66 570 C62 582 62 592 64 600 Z" fill="#6DB25A" stroke="#51714A" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M1024 600 C1020 584 1014 572 1008 566 C1006 578 1002 584 998 588 C996 572 990 560 984 552 C982 568 982 580 980 588 C974 578 966 572 958 570 C962 582 962 592 960 600 Z" fill="#6DB25A" stroke="#51714A" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+</svg>
