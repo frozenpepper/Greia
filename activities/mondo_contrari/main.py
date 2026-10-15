@@ -6,12 +6,7 @@ from pathlib import Path
 
 import pygame
 
-from greia_platform.activity_api import get_profile_locale
-from greia_platform.localization import (
-    ActivityLocaleSupport,
-    LocalizedResources,
-    resolve_activity_locale,
-)
+from greia_platform.localization import activity_resources
 
 if __package__:
     from .contrari_app import ContrariActivity
@@ -41,18 +36,15 @@ def main() -> int:
     pygame.mouse.set_visible(True)
 
     package_root = Path(__file__).resolve().parent
-    support = ActivityLocaleSupport.localized(("it", "en"), default_ui_locale="it")
-    context = resolve_activity_locale(get_profile_locale(), support)
-    assert context is not None
-    resources = LocalizedResources(package_root, context)
+    resources = activity_resources(package_root)
     pygame.display.set_caption(resources.text("activity.title"))
 
     model = ContrariModel()
     audio = ContrariAudio(
-        package_root, locale=context.selected.language, resources=resources
+        package_root, locale=resources.context.selected.language, resources=resources
     )
     renderer = ContrariRenderer(
-        locale=context.selected.language,
+        locale=resources.context.selected.language,
         resources=resources,
     )
 
